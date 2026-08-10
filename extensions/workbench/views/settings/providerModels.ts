@@ -8,7 +8,10 @@ import {
   select,
   span,
 } from "@vaakx-dev/vrui";
+import type { IconNode } from "@vaakx-dev/vrui";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Star } from "lucide";
+
+import type { UiControls } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { ProviderDescription, ProviderModel } from "../../models.ts";
@@ -18,6 +21,7 @@ import { settingRow } from "./shared.ts";
 export function providerModels(
   controller: WorkbenchController,
   state: WorkbenchState,
+  controls: UiControls,
   provider: ProviderDescription,
 ): HTMLElement {
   return div(
@@ -34,7 +38,7 @@ export function providerModels(
           {
             class: "settings-select",
             value: selected,
-            onChange: (event) => void controller.agent.selectModel(
+            onChange: (event) => void controller.selection.select(
               provider.id,
               (event.target as HTMLSelectElement).value,
             ),
@@ -53,6 +57,7 @@ export function providerModels(
     ),
     dynamicChild(state.providerModels, (catalog) => modelList(
       controller,
+      controls,
       provider.id,
       catalog[provider.id] ?? [],
     )),
@@ -62,6 +67,7 @@ export function providerModels(
 
 function modelList(
   controller: WorkbenchController,
+  controls: UiControls,
   provider: string,
   models: ProviderModel[],
 ): HTMLElement {
@@ -74,7 +80,7 @@ function modelList(
         button(
           {
             class: "provider-model-name",
-            onClick: () => void controller.agent.selectModel(provider, model.slug),
+            onClick: () => void controller.selection.select(provider, model.slug),
           },
           span({ class: "provider-model-label" }, model.name),
           span({ class: "provider-model-slug" }, model.slug),
@@ -83,53 +89,62 @@ function modelList(
       ),
       div(
         { class: "provider-model-actions" },
-        modelAction(
-          model.favorite ? "Remove favorite" : "Favorite model",
-          Star,
-          () => void controller.models.favorite(provider, model.slug),
-          model.favorite,
-        ),
-        modelAction(
-          "Move model up",
-          ArrowUp,
-          () => void controller.models.move(provider, model.slug, -1),
-          false,
-          index === 0,
-        ),
-        modelAction(
-          "Move model down",
-          ArrowDown,
-          () => void controller.models.move(provider, model.slug, 1),
-          false,
-          index === models.length - 1,
-        ),
-        modelAction(
-          model.hidden ? "Show model" : "Hide model",
-          model.hidden ? Eye : EyeOff,
-          () => void controller.models.hide(provider, model.slug),
+        ...modelActions(controller, provider, model, index, models.length).map((action) =>
+          controls.iconButton({
+            label: action.label,
+            variant: "dense",
+            className: "model-action",
+            selected: action.selected,
+            disabled: action.disabled,
+            renderIcon: (size) => icon(action.icon, size),
+            onClick: action.run,
+          })
         ),
       ),
     )),
   );
 }
 
-function modelAction(
-  label: string,
-  actionIcon: Parameters<typeof icon>[0],
-  run: () => void,
-  active = false,
-  disabled = false,
-): HTMLButtonElement {
-  return button(
+interface ModelAction {
+  label: string;
+  icon: IconNode;
+  run: () => void;
+  selected?: boolean;
+  disabled?: boolean;
+}
+
+function modelActions(
+  controller: WorkbenchController,
+  provider: string,
+  model: ProviderModel,
+  index: number,
+  count: number,
+): ModelAction[] {
+  return [
     {
-      class: ["model-action", { active }],
-      disabled,
-      "aria-label": label,
-      "data-tooltip": label,
-      onClick: run,
+      label: model.favorite ? "Remove favorite" : "Favorite model",
+      icon: Star,
+      run: () => void controller.models.favorite(provider, model.slug),
+      selected: model.favorite,
     },
-    icon(actionIcon, 13),
-  );
+    {
+      label: "Move model up",
+      icon: ArrowUp,
+      run: () => void controller.models.move(provider, model.slug, -1),
+      disabled: index === 0,
+    },
+    {
+      label: "Move model down",
+      icon: ArrowDown,
+      run: () => void controller.models.move(provider, model.slug, 1),
+      disabled: index === count - 1,
+    },
+    {
+      label: model.hidden ? "Show model" : "Hide model",
+      icon: model.hidden ? Eye : EyeOff,
+      run: () => void controller.models.hide(provider, model.slug),
+    },
+  ];
 }
 
 function modelAdd(

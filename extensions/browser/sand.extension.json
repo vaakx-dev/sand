@@ -1,0 +1,8 @@
+{
+  "id": "sand.browser",
+  "name": "Sand Browser",
+  "version": "0.0.1",
+  "description": "Native browser surface",
+  "ui": "./ui.ts",
+  "styles": ["./browser.css"]
+}

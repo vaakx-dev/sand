@@ -3,5 +3,6 @@
   "name": "Read Tool",
   "version": "0.0.1",
   "description": "file reader with offset and truncation support",
-  "main": "./main.ts"
+  "main": "./main.ts",
+  "ui": "./ui.ts"
 }

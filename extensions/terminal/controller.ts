@@ -5,11 +5,13 @@ import {
   numberValue,
   objectValue,
   stringValue,
+  withoutKey,
   type JsonValue,
   type RuntimeClient,
   type RuntimeEvent,
 } from "@sand/extension-api";
 
+import { commands } from "./api.ts";
 import type { TerminalPane, TerminalStream } from "./models.ts";
 import type { TerminalState } from "./state.ts";
 
@@ -49,7 +51,7 @@ export class TerminalController {
     this.state.open.set(true);
     this.state.opening.set(true);
     const opened = await this.guard(async () => {
-      const pane = await this.command<Omit<TerminalPane, "status">>("terminal.open");
+      const pane = await this.runtime.command<Omit<TerminalPane, "status">>(commands.open);
       this.state.panes.update((panes) => [...panes, { ...pane, status: "running" }]);
       this.state.commands.update((commands) => ({ ...commands, [pane.id]: "" }));
       this.state.ready.update((ready) => ({ ...ready, [pane.id]: true }));
@@ -67,7 +69,7 @@ export class TerminalController {
     this.state.commands.update((commands) => ({ ...commands, [id]: "" }));
     this.state.ready.update((ready) => ({ ...ready, [id]: false }));
     await this.guard(async () => {
-      const written = await this.command<boolean>("terminal.write", { id, data: command });
+      const written = await this.runtime.command<boolean>(commands.write, { id, data: command });
       if (written) return;
       this.state.ready.update((ready) => ({ ...ready, [id]: true }));
       this.state.error.set("Terminal is no longer running");
@@ -76,14 +78,14 @@ export class TerminalController {
 
   async close(id: string): Promise<void> {
     await this.guard(async () => {
-      await this.command("terminal.close", { id });
+      await this.runtime.command(commands.close, { id });
     });
     const panes = this.state.panes.get().filter((pane) => pane.id !== id);
     batch(() => {
       this.state.panes.set(panes);
       this.state.lines.update((lines) => lines.filter((line) => line.terminalId !== id));
-      this.state.commands.update((commands) => omit(commands, id));
-      this.state.ready.update((ready) => omit(ready, id));
+      this.state.commands.update((commands) => withoutKey(commands, id));
+      this.state.ready.update((ready) => withoutKey(ready, id));
       this.state.activeId.set(panes.at(-1)?.id ?? null);
       if (panes.length === 0) this.state.open.set(false);
     });
@@ -129,10 +131,6 @@ export class TerminalController {
     ]);
   }
 
-  private command<T = JsonValue>(id: string, params: JsonValue = null): Promise<T> {
-    return this.runtime.call<T>("commands.execute", { id, params });
-  }
-
   private async guard(task: () => Promise<void>): Promise<boolean> {
     try {
       await task();
@@ -149,10 +147,4 @@ function terminalStream(value: string): TerminalStream {
   return value === "command" || value === "stderr" || value === "prompt" || value === "status"
     ? value
     : "stdout";
-}
-
-function omit<T>(value: Record<string, T>, key: string): Record<string, T> {
-  const next = { ...value };
-  delete next[key];
-  return next;
 }

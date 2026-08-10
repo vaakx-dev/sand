@@ -1,11 +1,6 @@
 node_modules/
 dist/
 target/
-.sand/cache/
-.sand/sessions/
-.sand/orchestration.sqlite3*
-.sand/tool-output/
-.sand/settings.json
-.sand/auth/
+.sand/*
 src-tauri/gen/
 *.log

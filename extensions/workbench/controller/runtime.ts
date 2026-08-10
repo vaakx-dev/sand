@@ -18,7 +18,7 @@ export class ControllerRuntime {
   }
 
   command<T = JsonValue>(id: string, params: JsonValue = null): Promise<T> {
-    return this.call<T>("commands.execute", { id, params });
+    return this.context.runtime.command<T>(id, params);
   }
 
   async save(values: [string, JsonValue][]): Promise<void> {

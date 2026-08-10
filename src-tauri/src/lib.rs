@@ -1,5 +1,5 @@
 mod acp;
-mod orchestration;
+mod journal;
 mod runtime;
 
 use std::sync::Arc;

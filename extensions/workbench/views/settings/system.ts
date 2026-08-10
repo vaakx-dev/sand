@@ -24,25 +24,6 @@ export function keybindingsPage(state: WorkbenchState): HTMLElement {
   );
 }
 
-export function sourcePage(
-  controller: WorkbenchController,
-  state: WorkbenchState,
-): HTMLElement {
-  return page(
-    "Source Control",
-    settingRow(
-      "Repository",
-      state.gitStatus.map((value) => value || "This project is not a Git repository."),
-      button({
-        class: "secondary-button",
-        onClick: () => state.gitRepository.get()
-          ? void controller.git.refresh()
-          : void controller.git.initialize(),
-      }, state.gitRepository.map((repository) => repository ? "Refresh" : "Initialize Git")),
-    ),
-  );
-}
-
 export function extensionsPage(
   controller: WorkbenchController,
   state: WorkbenchState,

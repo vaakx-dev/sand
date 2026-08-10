@@ -3,21 +3,19 @@ import {
   stringValue,
   type AgentAttempt,
   type AgentMessage,
+  type AgentQueuedTurn,
   type AgentRun,
   type AgentThreadSummary,
   type JsonObject,
   type RuntimeEvent,
 } from "@sand/extension-api";
 
-import { GitController } from "./git.ts";
 import { ControllerRuntime } from "./runtime.ts";
-import { upsertThread } from "./threadSummary.ts";
+import { clearThread } from "../threads/selection.ts";
+import { upsertThread } from "../threads/summary.ts";
 
 export class WorkbenchEvents {
-  constructor(
-    private readonly runtime: ControllerRuntime,
-    private readonly git: GitController,
-  ) {}
+  constructor(private readonly runtime: ControllerRuntime) {}
 
   start(): void {
     this.runtime.context.runtime.subscribe((event) => this.onEvent(event));
@@ -26,39 +24,42 @@ export class WorkbenchEvents {
   private onEvent(event: RuntimeEvent): void {
     const state = this.runtime.state;
     const payload = objectValue(event.payload);
-    const currentThread = state.threadId.get();
+    const currentThread = state.threads.current.get();
     const threadId = stringValue(payload.threadId);
     const belongsToCurrent = !threadId || threadId === currentThread;
 
     switch (event.kind) {
-      case "orchestration.delta":
+      case "agent.delta":
         if (belongsToCurrent) {
-          state.agentDelta.update((value) => value + stringValue(payload.delta));
+          state.threads.delta.update((value) => value + stringValue(payload.delta));
         }
         break;
-      case "orchestration.message":
+      case "agent.delta.reset":
+        if (belongsToCurrent) state.threads.delta.set("");
+        break;
+      case "agent.message":
         if (belongsToCurrent) this.addMessage(payload);
         break;
-      case "orchestration.status":
+      case "agent.status":
         this.updateStatus(payload, threadId, belongsToCurrent);
         break;
-      case "orchestration.thread":
+      case "threads.changed":
         this.updateThread(payload);
         break;
-      case "orchestration.thread_deleted":
+      case "threads.deleted":
         this.deleteThread(threadId);
         break;
-      case "orchestration.error":
+      case "agent.error":
         if (belongsToCurrent) this.runtime.notice(stringValue(payload.message));
         break;
-      case "orchestration.run":
+      case "agent.run":
         if (belongsToCurrent) this.updateRun(payload);
         break;
-      case "orchestration.attempt":
+      case "agent.attempt":
         if (belongsToCurrent) this.updateAttempt(payload);
         break;
-      case "workspace.changed":
-        void this.git.refresh();
+      case "agent.queue":
+        if (belongsToCurrent) this.updateQueue(payload);
         break;
     }
   }
@@ -67,18 +68,18 @@ export class WorkbenchEvents {
     const state = this.runtime.state;
     const message = payload.message as unknown as AgentMessage;
     if (!message?.id) return;
-    state.messages.update((items) =>
+    state.threads.messages.update((items) =>
       items.some((item) => item.id === message.id) ? items : [...items, message],
     );
-    if (message.role === "assistant") state.agentDelta.set("");
+    if (message.role === "assistant") state.threads.delta.set("");
   }
 
   private updateStatus(payload: JsonObject, threadId: string, current: boolean): void {
     const state = this.runtime.state;
     const status = (stringValue(payload.status) || "idle") as AgentThreadSummary["status"];
-    if (current) state.agentStatus.set(status);
+    if (current) state.threads.status.set(status);
     if (!threadId) return;
-    state.threads.update((threads) => threads.map((thread) =>
+    state.threads.items.update((threads) => threads.map((thread) =>
       thread.id === threadId
         ? {
             ...thread,
@@ -92,13 +93,17 @@ export class WorkbenchEvents {
   private updateThread(payload: JsonObject): void {
     const summary = payload.thread as unknown as AgentThreadSummary;
     if (!summary?.id) return;
-    upsertThread(this.runtime.state, summary);
+    const state = this.runtime.state;
+    upsertThread(state.threads, summary);
+    if (state.threads.current.get() === summary.id) {
+      state.threads.queue.set(summary.queuedTurns ?? []);
+    }
   }
 
   private updateRun(payload: JsonObject): void {
     const run = payload.run as unknown as AgentRun;
     if (!run?.id) return;
-    this.runtime.state.runs.update((runs) => [
+    this.runtime.state.threads.runs.update((runs) => [
       ...runs.filter((item) => item.id !== run.id),
       run,
     ]);
@@ -107,21 +112,23 @@ export class WorkbenchEvents {
   private updateAttempt(payload: JsonObject): void {
     const attempt = payload.attempt as unknown as AgentAttempt;
     if (!attempt?.id) return;
-    this.runtime.state.attempts.update((attempts) => [
+    this.runtime.state.threads.attempts.update((attempts) => [
       ...attempts.filter((item) => item.id !== attempt.id),
       attempt,
     ]);
   }
 
+  private updateQueue(payload: JsonObject): void {
+    const queued = payload.queuedTurns as unknown as AgentQueuedTurn[];
+    this.runtime.state.threads.queue.set(Array.isArray(queued) ? queued : []);
+  }
+
   private deleteThread(id: string): void {
     if (!id) return;
     const state = this.runtime.state;
-    state.threads.update((threads) => threads.filter((thread) => thread.id !== id));
-    if (state.threadId.get() === id) {
-      state.threadId.set(null);
-      state.messages.set([]);
-      state.runs.set([]);
-      state.attempts.set([]);
+    state.threads.items.update((threads) => threads.filter((thread) => thread.id !== id));
+    if (state.threads.current.get() === id) {
+      clearThread(state);
     }
   }
 

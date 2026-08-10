@@ -1,91 +1,90 @@
-import {
-  derive,
-  div,
-  dynamicChild,
-  keep,
-  onTimeout,
-  onWindow,
-  portal,
-  show,
-} from "@vaakx-dev/vrui";
+import { derive, div, keep, onTimeout, onWindow, portal, show } from "@vaakx-dev/vrui";
 
 import type { UiRegistry } from "@sand/extension-api";
 
+import { workbenchSlots } from "../api.ts";
 import type { WorkbenchController } from "../controller.ts";
 import type { WorkbenchState } from "../state.ts";
-import { agentPanel } from "./agent.ts";
-import { projectOverlays } from "./projects.ts";
+import { agentView } from "./agent.ts";
 import { settingsWorkspace } from "./settings.ts";
 import { sidebar } from "./sidebar.ts";
-import { topbar, windowControls } from "./shell/chrome.ts";
+import { header, windowControls } from "./shell/chrome.ts";
 import { paneResizer, SIDEBAR_MAX, SIDEBAR_MIN } from "./shell/resizer.ts";
 import { globalKeyDown } from "./shell/shortcuts.ts";
-import { threadContextMenu } from "./sidebar/threadMenu.ts";
-import { threadRenameDialog } from "./sidebar/threadDialog.ts";
-import { threadHoverCard } from "./sidebar/threadRow.ts";
-import { uiSlot } from "./shared/slot.ts";
+import { renameDialog } from "./sidebar/threads/dialog.ts";
+import { contextMenu } from "./sidebar/threads/menu.ts";
+import { hoverCard } from "./sidebar/threads/preview.ts";
+import { mountMeasuredUiSlot, uiSlot } from "./shared/slot.ts";
 
 export function shell(
   controller: WorkbenchController,
   state: WorkbenchState,
   ui: UiRegistry,
 ): HTMLElement {
-  const columns = derive(() => {
-    const left = state.sidebarOpen.get() ? state.sidebarWidth.get() : 0;
-    const leftGrip = state.sidebarOpen.get() ? 3 : 0;
-    return `${left}px ${leftGrip}px minmax(0, 1fr) auto`;
-  });
-  const sidebarSpace = derive(() => state.sidebarOpen.get() ? state.sidebarWidth.get() + 3 : 0);
+  const sidebarWidth = state.sidebarWidth.map((width) => `${width}px`);
+  const sidebarColumn = derive(() => state.sidebarOpen.get() ? sidebarWidth.get() : "0px");
+  const sidebarGrip = state.sidebarOpen.map((open) => open ? "3px" : "0px");
+  const sidebarSpace = derive(() => state.sidebarOpen.get()
+    ? `${state.sidebarWidth.get() + 3}px`
+    : "0px");
+  const brandWidth = derive(() => state.sidebarOpen.get() ? sidebarWidth.get() : "84px");
 
   return div(
     {
       class: "workbench",
       "data-theme": state.theme,
       "data-appearance": state.appearance,
-      style: { "--workbench-sidebar-space": sidebarSpace.map((width) => `${width}px`) },
+      style: {
+        "--workbench-brand-width": brandWidth,
+        "--workbench-sidebar-column": sidebarColumn,
+        "--workbench-sidebar-grip": sidebarGrip,
+        "--workbench-sidebar-space": sidebarSpace,
+      },
       onMount: (element) => onWindow(
         element,
         "keydown",
         (event) => globalKeyDown(event as KeyboardEvent, controller, state),
       ),
     },
+    header(controller, state, ui.slots, ui.controls),
+    div({ class: "sidebar-slot" }, sidebar(controller, state, ui.slots, ui.controls)),
     div(
-      {
-        class: ["body", {
-          "sidebar-visible": state.sidebarOpen,
-        }],
-        style: { gridTemplateColumns: columns },
-      },
-      div({ class: "sidebar-slot" }, sidebar(controller, state)),
-      div(
-        { class: "resizer-slot" },
-        keep(state.sidebarOpen, () => paneResizer(
-          "left",
-          state.sidebarWidth,
-          SIDEBAR_MIN,
-          SIDEBAR_MAX,
-          controller,
-        )),
-      ),
-      dynamicChild(
-        state.activity,
-        (activity) => activity === "settings"
-          ? settingsWorkspace(controller, state)
-          : div(
-              { class: "center-shell" },
-              topbar(controller, state, ui.slots),
-              div({ class: "main-column" }, agentPanel(controller, state)),
-              uiSlot(ui.slots, "workbench.bottom", "bottom-slot"),
-            ),
-        div({ class: "center-slot" }),
-      ),
-      uiSlot(ui.slots, "workbench.right", "right-slot"),
+      { class: "resizer-slot" },
+      keep(state.sidebarOpen, () => paneResizer(
+        "left",
+        state.sidebarWidth,
+        SIDEBAR_MIN,
+        SIDEBAR_MAX,
+        controller,
+      )),
     ),
-    windowControls(),
-    portal("overlays", threadHoverCard(state)),
-    portal("overlays", threadContextMenu(controller, state)),
-    portal("overlays", threadRenameDialog(controller, state)),
-    portal("overlays", projectOverlays(controller, state)),
+    div(
+      { class: "center-slot" },
+      div(
+        {
+          class: "center-shell",
+          hidden: state.activity.map((activity) => activity === "settings"),
+        },
+        div({ class: "main-column" }, agentView(controller, state, ui.tools, ui.controls)),
+        uiSlot(ui.slots, workbenchSlots.bottom, "bottom-slot"),
+      ),
+      settingsWorkspace(controller, state, ui.controls),
+    ),
+    uiSlot(ui.slots, workbenchSlots.auxiliary, "extension-slot"),
+    div({
+      class: "layout-actions",
+      hidden: state.activity.map((activity) => activity === "settings"),
+      onMount: mountMeasuredUiSlot(
+        ui.slots,
+        workbenchSlots.layoutActions,
+        "--layout-actions-width",
+      ),
+    }),
+    windowControls(ui.controls),
+    portal("overlays", hoverCard(state)),
+    portal("overlays", contextMenu(controller, state)),
+    portal("overlays", renameDialog(controller, state)),
+    portal("overlays", uiSlot(ui.slots, workbenchSlots.overlays, "extension-overlays")),
     portal(
       "overlays",
       show(state.notice.map(Boolean), () => div(

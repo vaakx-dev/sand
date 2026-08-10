@@ -1,11 +1,10 @@
-.center-shell { min-width: 0; min-height: 0; display: grid; grid-template-rows: 40px minmax(0, 1fr) auto; }
+.center-shell { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
 .main-column { min-width: 0; min-height: 0; display: grid; background: var(--bg); }
-.agent-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg); }
-.agent-panel.new-thread { display: grid; place-items: center; padding: 40px 20px 120px; }
+.agent-view { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--bg); }
+.agent-view.new-thread { display: grid; place-items: center; padding: 40px 20px 120px; }
 .new-thread-center { width: min(768px, 100%); display: flex; flex-direction: column; align-items: center; gap: 30px; }
 .new-thread-heading { color: var(--text); font-size: clamp(23px, 2vw, 31px); font-weight: 520; letter-spacing: -.035em; text-align: center; }
-.new-thread-heading span { border-bottom: 1px dotted #777780; }
-.agent-panel > .panel-header { border-bottom-color: var(--border); background: var(--bg); }
+.new-thread-heading span { border-bottom: 1px dotted var(--border-strong); }
 .messages { min-height: 0; flex: 1; overflow: auto; padding: 38px max(20px, calc((100% - 768px) / 2)) 18px; display: flex; flex-direction: column; gap: 18px; }
 .message-list { display: flex; flex-direction: column; gap: 25px; }
 .message { display: flex; flex-direction: column; gap: 6px; }

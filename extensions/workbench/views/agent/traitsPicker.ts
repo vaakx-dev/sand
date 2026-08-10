@@ -68,7 +68,7 @@ function optionSection(
         class: ["traits-row", { active: selected.map((value) => value === option.id) }],
         onClick: () => {
           set(option.id);
-          void controller.agent.saveOptions();
+          void controller.selection.saveOptions();
         },
       },
       span(option.label),

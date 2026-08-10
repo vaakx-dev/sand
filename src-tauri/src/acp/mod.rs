@@ -50,8 +50,8 @@ impl From<serde_json::Error> for Error {
     }
 }
 
-impl From<crate::orchestration::OrchestrationError> for Error {
-    fn from(error: crate::orchestration::OrchestrationError) -> Self {
+impl From<crate::journal::JournalError> for Error {
+    fn from(error: crate::journal::JournalError) -> Self {
         Self::Journal(error.to_string())
     }
 }

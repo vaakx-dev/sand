@@ -1,5 +1,5 @@
 import type { EventApi, JsonValue } from "@sand/extension-api";
-import { resolveWorkspacePath } from "../../packages/extension-runtime/src/index.ts";
+import { resolveWorkspacePath } from "@sand/extension-runtime";
 
 interface ProcessRecord {
   process: Bun.Subprocess<"pipe", "pipe", "pipe">;

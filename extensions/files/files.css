@@ -5,10 +5,7 @@
 .files-active-path { min-width: 0; display: contents; }
 .files-separator { color: var(--faint); }
 .files-path { min-width: 0; overflow: hidden; color: var(--text); text-overflow: ellipsis; white-space: nowrap; }
-.files-toolbar-action, .files-small-action { display: grid; place-items: center; color: var(--muted); background: transparent; cursor: pointer; }
-.files-toolbar-action { width: 28px; min-width: 28px; max-width: 28px; height: 28px; min-height: 28px; max-height: 28px; border-radius: var(--control-radius); }
-.files-toolbar-action:not(:disabled):hover, .files-small-action:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
-.files-toolbar-action.active { color: var(--text); background: var(--control-selected-bg); }
+.files-toolbar-action, .files-small-action { color: var(--muted); }
 .files-error { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--danger); font-size: 10px; }
 .files-workspace { min-width: 0; min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 320px); }
 .files-workspace.explorer-hidden { grid-template-columns: minmax(0, 1fr); }
@@ -19,8 +16,7 @@
 .file-tab.active { color: var(--text); background: var(--bg); }
 .file-tab-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 .file-dirty { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--text); }
-.file-tab-close { width: 20px; min-width: 20px; max-width: 20px; height: 20px; min-height: 20px; max-height: 20px; display: grid; place-items: center; border-radius: 4px; color: var(--faint); background: transparent; cursor: pointer; }
-.file-tab-close:not(:disabled):hover { color: var(--text); background: var(--surface-3); }
+.file-tab-close { color: var(--faint); }
 .file-code { min-width: 0; min-height: 0; flex: 1; overflow: hidden; background: var(--bg); --editor-selection: #303035; --syntax-comment: #68766b; --syntax-keyword: #b39ac5; --syntax-function: #a7a9ae; --syntax-type: #b9a777; --syntax-variable: #c7c8cc; --syntax-string: #9fb486; --syntax-number: #bc9878; --syntax-property: #8eadaa; --syntax-operator: #a3a7af; --syntax-meta: #8d919a; --syntax-heading: #c1af82; --syntax-link: #9b9da4; }
 .file-code .cm-selectionBackground, .file-code .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background: var(--editor-selection) !important; }
 .file-code .cm-content ::selection { color: inherit; background: var(--editor-selection); }
@@ -36,7 +32,6 @@
 .files-search { min-width: 0; height: 29px; flex: 1; display: flex; align-items: center; gap: 6px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px; color: var(--faint); }
 .files-search:focus-within { border-color: var(--border-strong); color: var(--muted); background: var(--surface); }
 .files-search-input { min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; color: var(--text); background: transparent; font-size: 11px; }
-.files-small-action { width: 22px; min-width: 22px; max-width: 22px; height: 22px; min-height: 22px; max-height: 22px; border-radius: 4px; }
 .files-tree, .files-results { min-height: 0; flex: 1; overflow: auto; padding: 5px 0 12px; }
 .files-tree-row { width: 100%; min-width: 0; height: 27px; display: flex; align-items: center; gap: 5px; padding-right: 8px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; white-space: nowrap; }
 .files-tree-row:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
@@ -49,7 +44,7 @@
 .files-result-path { overflow: hidden; color: var(--text); font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
 .files-result-text { overflow: hidden; font: 10px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .files-no-results { padding: 34px 12px; color: var(--faint); text-align: center; font-size: 10.5px; }
-@container right-panel (max-width: 720px) {
+@container (max-width: 720px) {
   .files-workspace:not(.explorer-hidden) { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(220px, 1fr) minmax(180px, 42%); }
   .files-explorer { border-top: 1px solid var(--border); border-left: 0; }
 }

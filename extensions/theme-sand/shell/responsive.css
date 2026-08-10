@@ -1,5 +1,4 @@
 @media (max-width: 1050px) {
-  .right-panel { min-width: 300px; }
   .top-action { width: 28px; padding: 0; justify-content: center; font-size: 0; }
   .top-action .vrui-icon { font-size: initial; }
   .composer-chip { font-size: 0; }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use tokio::sync::mpsc;
 
-use crate::orchestration::{Orchestration, OrchestrationError, Record};
+use crate::journal::{Journal, JournalError, Record};
 
 #[derive(Debug)]
 pub struct Event {
@@ -14,44 +14,31 @@ pub struct Event {
 #[derive(Clone)]
 pub struct Events {
     sender: mpsc::UnboundedSender<Event>,
-    orchestration: Arc<Orchestration>,
+    journal: Arc<Journal>,
 }
 
 impl Events {
-    pub fn channel(orchestration: Arc<Orchestration>) -> (Self, mpsc::UnboundedReceiver<Event>) {
+    pub fn channel(journal: Arc<Journal>) -> (Self, mpsc::UnboundedReceiver<Event>) {
         let (sender, receiver) = mpsc::unbounded_channel();
-        (
-            Self {
-                sender,
-                orchestration,
-            },
-            receiver,
-        )
+        (Self { sender, journal }, receiver)
     }
 
-    pub fn record(
-        &self,
-        kind: impl Into<String>,
-        payload: Value,
-    ) -> Result<(), OrchestrationError> {
+    pub fn record(&self, kind: impl Into<String>, payload: Value) -> Result<(), JournalError> {
         let kind = kind.into();
-        match self.orchestration.append(Record {
+        match self.journal.append(Record {
             kind: kind.clone(),
             payload: payload.clone(),
         }) {
             Ok(event) => {
                 self.emit(
-                    "orchestration.event",
-                    serde_json::to_value(event).expect("orchestration event is serializable"),
+                    "journal.event",
+                    serde_json::to_value(event).expect("journal event is serializable"),
                 );
                 self.emit(kind, payload);
                 Ok(())
             }
             Err(error) => {
-                self.emit(
-                    "orchestration.error",
-                    json!({ "message": error.to_string() }),
-                );
+                self.emit("journal.error", json!({ "message": error.to_string() }));
                 Err(error)
             }
         }

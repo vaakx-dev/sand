@@ -52,7 +52,7 @@ impl RuntimePaths {
             user_extensions: config.join("extensions"),
             cache: workspace.join(".sand/cache"),
             config,
-            journal: workspace.join(".sand/orchestration.sqlite3"),
+            journal: workspace.join(".sand/journal.sqlite3"),
             workspace,
             root,
         })

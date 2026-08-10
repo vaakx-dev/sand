@@ -18,7 +18,6 @@
     "runtime/**/*.ts",
     "extensions/**/*.ts",
     "packages/**/*.ts",
-    "tests/**/*.ts",
     "vite.config.ts"
   ]
 }

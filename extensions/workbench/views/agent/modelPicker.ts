@@ -1,5 +1,7 @@
-import { button, derive, div, dynamicChild, icon, input, onRaf, span, stop } from "@vaakx-dev/vrui";
+import { derive, div, dynamicChild, icon, input, onRaf, span, stop } from "@vaakx-dev/vrui";
 import { Search, Star } from "lucide";
+
+import type { UiControls } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import { findProvider, modelName } from "../../modelCatalog.ts";
@@ -16,6 +18,7 @@ interface PickerModel {
 export function modelPicker(
   controller: WorkbenchController,
   state: WorkbenchState,
+  controls: UiControls,
 ): HTMLElement {
   const visibleModels = derive(() => {
     const source = state.modelSource.get();
@@ -33,7 +36,7 @@ export function modelPicker(
       || model.name.toLowerCase().includes(query));
   });
   const choose = ({ provider, model }: PickerModel) => {
-    void controller.agent.selectModel(provider, model.slug);
+    void controller.selection.select(provider, model.slug);
   };
   const move = (amount: number) => {
     const last = Math.max(0, visibleModels.get().length - 1);
@@ -52,27 +55,25 @@ export function modelPicker(
       { class: "model-picker composer-popover", onClick: stop },
       div(
         { class: "model-picker-rail" },
-        button(
-          {
-            class: ["model-rail-button favorite", {
-              active: state.modelSource.map((value) => value === "favorites"),
-            }],
-            "aria-label": "Favorites",
-            onClick: () => selectSource(state, "favorites"),
-          },
-          icon(Star, 18),
-        ),
+        controls.iconButton({
+          label: "Favorites",
+          variant: "rail",
+          className: ["model-rail-button", "favorite"],
+          selected: state.modelSource.map((value) => value === "favorites"),
+          tooltip: false,
+          renderIcon: (size) => icon(Star, size),
+          onClick: () => selectSource(state, "favorites"),
+        }),
         div({ class: "model-rail-divider" }),
-        ...state.providers.get().map((provider) => button(
-          {
-            class: ["model-rail-button", {
-              active: state.modelSource.map((value) => value === provider.id),
-            }],
-            "aria-label": provider.name,
-            onClick: () => selectSource(state, provider.id),
-          },
-          providerIcon(provider, 18),
-        )),
+        ...state.providers.get().map((provider) => controls.iconButton({
+          label: provider.name,
+          variant: "rail",
+          className: "model-rail-button",
+          selected: state.modelSource.map((value) => value === provider.id),
+          tooltip: false,
+          renderIcon: (size) => providerIcon(provider, size),
+          onClick: () => selectSource(state, provider.id),
+        })),
       ),
       div(
         { class: "model-picker-main" },
@@ -114,6 +115,7 @@ export function modelPicker(
             entry,
             index,
             choose,
+            controls,
           )),
           models.length === 0 ? div({ class: "model-picker-empty" }, "No matching models") : null,
         )),
@@ -128,6 +130,7 @@ function modelRow(
   entry: PickerModel,
   index: number,
   choose: (model: PickerModel) => void,
+  controls: UiControls,
 ): HTMLElement {
   const { provider, model } = entry;
   const description = findProvider(state.providers.get(), provider);
@@ -163,17 +166,18 @@ function modelRow(
       ),
     ),
     index < 5 ? span({ class: "model-shortcut" }, `Ctrl+${index + 1}`) : null,
-    button(
-      {
-        class: ["model-favorite", { active: favorite }],
-        "aria-label": favorite.map((value) => value ? "Remove from favorites" : "Add to favorites"),
-        onClick: (event) => {
-          event.stopPropagation();
-          void controller.models.favorite(provider, model.slug);
-        },
+    controls.iconButton({
+      label: favorite.map((value) => value ? "Remove from favorites" : "Add to favorites"),
+      variant: "dense",
+      className: "model-favorite",
+      selected: favorite,
+      tooltip: false,
+      renderIcon: (size) => icon(Star, size),
+      onClick: (event) => {
+        event.stopPropagation();
+        void controller.models.favorite(provider, model.slug);
       },
-      icon(Star, 14),
-    ),
+    }),
   );
 }
 

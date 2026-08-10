@@ -19,7 +19,7 @@ mod worker;
 
 use crate::{
     acp::{Acp, Error as AcpError, Events as AcpEvents},
-    orchestration::{Orchestration, OrchestrationError},
+    journal::{Journal, JournalError},
 };
 use paths::{RuntimePaths, bun_executable};
 use worker::PendingSender;
@@ -43,7 +43,7 @@ pub enum RuntimeError {
     #[error("{0}")]
     Request(String),
     #[error(transparent)]
-    Orchestration(#[from] OrchestrationError),
+    Journal(#[from] JournalError),
     #[error(transparent)]
     Acp(#[from] AcpError),
 }
@@ -62,16 +62,16 @@ pub struct Runtime {
     events: StdMutex<VecDeque<RuntimeEvent>>,
     next_request: AtomicU64,
     next_event: AtomicU64,
-    orchestration: Arc<Orchestration>,
+    journal: Arc<Journal>,
     acp: Arc<Acp>,
 }
 
 impl Runtime {
     pub async fn start(app: &AppHandle) -> Result<Arc<Self>, RuntimeError> {
         let paths = RuntimePaths::resolve(app)?;
-        let orchestration = Arc::new(Orchestration::open(&paths.journal)?);
-        let snapshot = orchestration.snapshot();
-        let (acp_events, acp_event_rx) = AcpEvents::channel(Arc::clone(&orchestration));
+        let journal = Arc::new(Journal::open(&paths.journal)?);
+        let snapshot = journal.snapshot();
+        let (acp_events, acp_event_rx) = AcpEvents::channel(Arc::clone(&journal));
         let acp = Acp::new(paths.workspace.clone(), &snapshot, acp_events);
         let bun = bun_executable();
         let mut command = Command::new(bun);
@@ -102,7 +102,7 @@ impl Runtime {
             events: StdMutex::new(VecDeque::new()),
             next_request: AtomicU64::new(1),
             next_event: AtomicU64::new(1),
-            orchestration,
+            journal,
             acp,
         });
 
@@ -111,7 +111,7 @@ impl Runtime {
         tokio::spawn(Self::read_acp_events(Arc::clone(&runtime), acp_event_rx));
 
         runtime
-            .request_worker("orchestration.restore".to_owned(), snapshot)
+            .request_worker("threads.restore".to_owned(), snapshot)
             .await?;
 
         Ok(runtime)
@@ -122,14 +122,14 @@ impl Runtime {
             return self.request_acp(&method, params).await;
         }
         match method.as_str() {
-            "orchestration.threads" => return Ok(self.orchestration.threads()),
-            "orchestration.thread" => {
+            "threads.list" => return Ok(self.journal.threads()),
+            "threads.get" => {
                 let id = required_parameter(&params, "id")?;
-                return Ok(self.orchestration.thread(id)?);
+                return Ok(self.journal.thread(id)?);
             }
-            "orchestration.events" => {
+            "journal.events" => {
                 let id = required_parameter(&params, "threadId")?;
-                return Ok(self.orchestration.events(id)?);
+                return Ok(self.journal.events(id)?);
             }
             _ => {}
         }

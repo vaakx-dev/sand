@@ -8,7 +8,7 @@ use tokio::{
 };
 
 use super::{Runtime, RuntimeError};
-use crate::orchestration::Record;
+use crate::journal::Record;
 
 pub(super) type PendingSender = oneshot::Sender<Result<Value, String>>;
 
@@ -111,18 +111,17 @@ impl Runtime {
 
     async fn handle_message(&self, message: WireMessage) {
         if let Some(record) = message.record {
-            match self.orchestration.append(Record {
+            match self.journal.append(Record {
                 kind: record.kind,
                 payload: record.payload,
             }) {
                 Ok(event) => self.push_event(
-                    "orchestration.event",
-                    serde_json::to_value(event).expect("orchestration event is serializable"),
+                    "journal.event",
+                    serde_json::to_value(event).expect("journal event is serializable"),
                 ),
-                Err(error) => self.push_event(
-                    "orchestration.error",
-                    json!({ "message": error.to_string() }),
-                ),
+                Err(error) => {
+                    self.push_event("journal.error", json!({ "message": error.to_string() }))
+                }
             }
         }
 

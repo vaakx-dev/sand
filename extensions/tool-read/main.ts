@@ -6,7 +6,7 @@ import {
   requiredString,
   type HostExtension,
 } from "@sand/extension-api";
-import { resolveWorkspacePath } from "../../packages/extension-runtime/src/index.ts";
+import { resolveWorkspacePath } from "@sand/extension-runtime";
 
 const MAX_LINES = 2_000;
 const MAX_BYTES = 50 * 1024;

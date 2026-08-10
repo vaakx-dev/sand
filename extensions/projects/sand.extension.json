@@ -1,0 +1,9 @@
+{
+  "id": "sand.projects",
+  "name": "Sand Projects",
+  "version": "0.0.1",
+  "description": "Project registry, picker, cloning, switching, and project UI",
+  "main": "./main.ts",
+  "ui": "./ui.ts",
+  "styles": ["./projects.css"]
+}

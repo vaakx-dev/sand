@@ -1,5 +1,4 @@
 import {
-  button,
   derive,
   div,
   effect,
@@ -11,8 +10,10 @@ import {
   show,
   span,
 } from "@vaakx-dev/vrui";
-import type { MaybeReactive } from "@vaakx-dev/vrui";
+import type { IconNode, MaybeReactive } from "@vaakx-dev/vrui";
 import { Plus, SquareSplitHorizontal, SquareSplitVertical, Trash2 } from "lucide";
+
+import type { UiControls } from "@sand/extension-api";
 
 import type { TerminalController } from "./controller.ts";
 import type { TerminalPane } from "./models.ts";
@@ -21,7 +22,11 @@ import type { TerminalState } from "./state.ts";
 const MIN_HEIGHT = 120;
 const MAX_HEIGHT = 620;
 
-export function terminalView(controller: TerminalController, state: TerminalState): HTMLElement {
+export function terminalView(
+  controller: TerminalController,
+  state: TerminalState,
+  controls: UiControls,
+): HTMLElement {
   const columns = derive(() => state.layout.get() === "columns"
     ? `repeat(${Math.max(1, state.panes.get().length)}, minmax(0, 1fr))`
     : "minmax(0, 1fr)"
@@ -32,12 +37,12 @@ export function terminalView(controller: TerminalController, state: TerminalStat
   );
   return div(
     {
-      class: "terminal-panel",
+      class: "terminal-drawer",
       hidden: state.visible.map((visible) => !visible),
       style: { height: state.height.map((height) => `${height}px`) },
     },
     resizeGrip(controller, state),
-    terminalActions(controller, state),
+    terminalActions(controller, state, controls),
     show(state.error.map(Boolean), () => div({ class: "terminal-error" }, state.error)),
     list(
       state.panes,
@@ -54,34 +59,52 @@ export function terminalView(controller: TerminalController, state: TerminalStat
   );
 }
 
-function terminalActions(controller: TerminalController, state: TerminalState): HTMLElement {
+function terminalActions(
+  controller: TerminalController,
+  state: TerminalState,
+  controls: UiControls,
+): HTMLElement {
+  const actions: Array<{
+    label: string;
+    icon: IconNode;
+    run: () => void;
+    disabled?: MaybeReactive<boolean>;
+  }> = [
+    {
+      label: "Split Terminal Vertically (Ctrl+Shift+D)",
+      icon: SquareSplitVertical,
+      run: () => void controller.create("columns"),
+    },
+    {
+      label: "Split Terminal Horizontally",
+      icon: SquareSplitHorizontal,
+      run: () => void controller.create("rows"),
+    },
+    {
+      label: "New Terminal (Ctrl+N)",
+      icon: Plus,
+      run: () => void controller.create(),
+    },
+    {
+      label: "Close Terminal",
+      icon: Trash2,
+      run: () => {
+        const id = state.activeId.get();
+        if (id) void controller.close(id);
+      },
+      disabled: state.activeId.map((id) => !id),
+    },
+  ];
   return div(
     { class: "terminal-actions" },
-    action("Split Terminal Vertically (Ctrl+Shift+D)", SquareSplitVertical, () => void controller.create("columns")),
-    action("Split Terminal Horizontally", SquareSplitHorizontal, () => void controller.create("rows")),
-    action("New Terminal (Ctrl+N)", Plus, () => void controller.create()),
-    action("Close Terminal", Trash2, () => {
-      const id = state.activeId.get();
-      if (id) void controller.close(id);
-    }, state.activeId.map((id) => !id)),
-  );
-}
-
-function action(
-  label: string,
-  actionIcon: Parameters<typeof icon>[0],
-  run: () => void,
-  disabled: MaybeReactive<boolean> = false,
-): HTMLElement {
-  return button(
-    {
-      class: "terminal-action",
-      "aria-label": label,
-      "data-tooltip": label,
-      disabled,
-      onClick: run,
-    },
-    icon(actionIcon, 13),
+    ...actions.map((action) => controls.iconButton({
+      label: action.label,
+      variant: "compact",
+      className: "terminal-action",
+      disabled: action.disabled,
+      renderIcon: (size) => icon(action.icon, size),
+      onClick: action.run,
+    })),
   );
 }
 

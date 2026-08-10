@@ -1,43 +1,56 @@
-import { details, div, dynamicChild, effect, el, icon, onRaf, show, span, summary } from "@vaakx-dev/vrui";
-import { Check, Circle, Eye, SquarePen, SquareTerminal, Wrench } from "lucide";
+import { derive, details, div, dynamicChild, effect, el, icon, onRaf, show, sig, span, summary } from "@vaakx-dev/vrui";
+import { Check, Circle, Wrench } from "lucide";
 
 import {
   jsonText,
   type AgentMessage,
   type AgentRun,
   type AgentToolCall,
+  type UiToolRegistry,
 } from "@sand/extension-api";
 
 import type { WorkbenchState } from "../../state.ts";
 import { markdown } from "./markdown.ts";
 
-export function conversationView(state: WorkbenchState): HTMLElement {
+export function conversationView(state: WorkbenchState, tools: UiToolRegistry): HTMLElement {
+  const toolRevision = sig(0);
+  const messages = derive(() => {
+    toolRevision.get();
+    return state.threads.messages.get();
+  });
   return div(
     {
       class: "messages",
-      onMount: (element) => effect(() => {
-        state.messages.get();
-        state.agentDelta.get();
-        return onRaf(() => {
-          element.scrollTop = element.scrollHeight;
+      onMount: (element) => {
+        const unsubscribe = tools.subscribe(() => toolRevision.update((value) => value + 1));
+        const stop = effect(() => {
+          state.threads.messages.get();
+          state.threads.delta.get();
+          return onRaf(() => {
+            element.scrollTop = element.scrollHeight;
+          });
         });
-      }),
+        return () => {
+          unsubscribe();
+          stop();
+        };
+      },
     },
-    dynamicChild(state.messages, (messages) => div(
+    dynamicChild(messages, (messages) => div(
       { class: "message-list" },
-      ...messages.map((message, index) => messageView(message, messages, index)),
+      ...messages.map((message, index) => messageView(message, messages, index, tools)),
     )),
-    dynamicChild(state.runs, (runs) => div(
+    dynamicChild(state.threads.runs, (runs) => div(
       { class: "run-events" },
       ...runs.filter((run) => run.status === "interrupted" || run.status === "error")
         .map(runEvent),
     )),
     show(
-      state.agentDelta.map(Boolean),
+      state.threads.delta.map(Boolean),
       () => div(
         { class: "assistant-turn streaming" },
         workDivider("Working"),
-        div({ class: "message-content" }, state.agentDelta),
+        div({ class: "message-content" }, state.threads.delta),
       ),
     ),
   );
@@ -55,6 +68,7 @@ function messageView(
   message: AgentMessage,
   messages: AgentMessage[],
   index: number,
+  tools: UiToolRegistry,
 ): HTMLElement {
   if (message.role === "tool" || message.role === "system") {
     return div({ class: "message-hidden" });
@@ -82,7 +96,7 @@ function messageView(
     firstAssistant ? workDivider(workedFor(messages[userIndex], end)) : null,
     message.content.trim() ? markdown(message.content) : null,
     message.toolCalls?.length
-      ? toolCalls(message.toolCalls, resultByCall)
+      ? toolCalls(message.toolCalls, resultByCall, tools)
       : null,
   );
 }
@@ -90,6 +104,7 @@ function messageView(
 function toolCalls(
   calls: AgentToolCall[],
   results: Map<string, AgentMessage>,
+  tools: UiToolRegistry,
 ): HTMLElement {
   return div(
     { class: "tool-call-group" },
@@ -97,19 +112,27 @@ function toolCalls(
       { class: "tool-call-count" },
       calls.length === 1 ? "1 tool call" : `${calls.length} tool calls`,
     ),
-    ...calls.map((call) => toolCall(call, results.get(call.id))),
+    ...calls.map((call) => toolCall(call, results.get(call.id), tools)),
   );
 }
 
-function toolCall(call: AgentToolCall, result?: AgentMessage): HTMLElement {
+function toolCall(
+  call: AgentToolCall,
+  result: AgentMessage | undefined,
+  tools: UiToolRegistry,
+): HTMLElement {
   const complete = Boolean(result);
+  const presentation = tools.get(call.name);
   return details(
     { class: ["tool-call", { complete }] },
     summary(
       { class: "tool-call-summary" },
-      div({ class: "tool-call-icon" }, toolIcon(call.name)),
-      span({ class: "tool-call-label" }, toolLabel(call.name)),
-      span({ class: "tool-call-preview" }, toolPreview(call)),
+      div(
+        { class: "tool-call-icon" },
+        presentation?.renderIcon(13) ?? icon(Wrench, 13),
+      ),
+      span({ class: "tool-call-label" }, presentation?.label ?? toolLabel(call.name)),
+      span({ class: "tool-call-preview" }, presentation?.preview?.(call.arguments) ?? ""),
       span(
         { class: "tool-call-state" },
         complete ? icon(Check, 12) : icon(Circle, 10),
@@ -129,26 +152,8 @@ function toolCall(call: AgentToolCall, result?: AgentMessage): HTMLElement {
   );
 }
 
-function toolIcon(name: string): HTMLElement {
-  if (name === "bash") return icon(SquareTerminal, 13);
-  if (name === "read") return icon(Eye, 13);
-  if (name === "write" || name === "edit") return icon(SquarePen, 13);
-  return icon(Wrench, 13);
-}
-
 function toolLabel(name: string): string {
-  if (name === "bash") return "Ran command";
-  if (name === "read") return "Read file";
-  if (name === "write") return "Wrote file";
-  if (name === "edit") return "Edited file";
   return name.replaceAll("_", " ");
-}
-
-function toolPreview(call: AgentToolCall): string {
-  const value = call.arguments.command ?? call.arguments.path;
-  if (typeof value !== "string") return "";
-  const compact = value.replace(/\s+/gu, " ").trim();
-  return compact.length > 110 ? `${compact.slice(0, 107)}...` : compact;
 }
 
 function previousUserIndex(messages: AgentMessage[], index: number): number {

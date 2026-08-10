@@ -1,0 +1,8 @@
+{
+  "id": "sand.external-open",
+  "name": "Sand External Open",
+  "version": "0.0.1",
+  "description": "Workspace actions for external editors and system file managers",
+  "main": "./main.ts",
+  "ui": "./ui.ts"
+}

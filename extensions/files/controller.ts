@@ -7,10 +7,9 @@ import {
   type RuntimeEvent,
   type UiEvent,
   type UiSurfaceRegistry,
-  type WorkspaceFileNode,
-  type WorkspaceSearchResult,
 } from "@sand/extension-api";
 
+import { commands, type FileNode, type SearchResult } from "./api.ts";
 import type { FilesState } from "./state.ts";
 
 export class FilesController {
@@ -22,11 +21,11 @@ export class FilesController {
 
   async initialize(): Promise<void> {
     await this.guard(async () => {
-      const [workspace, tree] = await Promise.all([
-        this.command<{ root: string }>("workspace.info"),
-        this.command<WorkspaceFileNode[]>("workspace.tree", { depth: 8 }),
+      const [runtime, tree] = await Promise.all([
+        this.runtime.call<{ workspace: string }>("runtime.info"),
+        this.runtime.command<FileNode[]>(commands.tree, { depth: 8 }),
       ]);
-      this.state.root.set(workspace.root);
+      this.state.root.set(runtime.workspace);
       this.state.tree.set(tree);
     });
   }
@@ -37,7 +36,7 @@ export class FilesController {
 
   async refresh(): Promise<void> {
     await this.guard(async () => {
-      this.state.tree.set(await this.command<WorkspaceFileNode[]>("workspace.tree", { depth: 8 }));
+      this.state.tree.set(await this.runtime.command<FileNode[]>(commands.tree, { depth: 8 }));
     });
   }
 
@@ -53,7 +52,7 @@ export class FilesController {
       return;
     }
     await this.guard(async () => {
-      const content = await this.command<string>("workspace.read", { path });
+      const content = await this.runtime.command<string>(commands.read, { path });
       const name = path.split(/[\\/]/u).at(-1) || path;
       this.state.tabs.update((tabs) => [...tabs, { path, name, content, savedContent: content }]);
       this.state.activePath.set(path);
@@ -71,7 +70,7 @@ export class FilesController {
     const file = this.state.activeFile.get();
     if (!file) return;
     await this.guard(async () => {
-      await this.command("workspace.write", { path: file.path, content: file.content });
+      await this.runtime.command(commands.write, { path: file.path, content: file.content });
       this.state.tabs.update((tabs) => tabs.map((item) =>
         item.path === file.path ? { ...item, savedContent: item.content } : item
       ));
@@ -96,7 +95,7 @@ export class FilesController {
       return;
     }
     await this.guard(async () => {
-      const matches = await this.command<WorkspaceSearchResult[]>("workspace.search", { query });
+      const matches = await this.runtime.command<SearchResult[]>(commands.search, { query });
       this.state.matches.set(matches.slice(0, 500));
       this.state.searchMode.set(true);
     });
@@ -125,15 +124,11 @@ export class FilesController {
     const file = this.state.tabs.get().find((item) => item.path === path);
     if (!file || file.content !== file.savedContent) return;
     await this.guard(async () => {
-      const content = await this.command<string>("workspace.read", { path });
+      const content = await this.runtime.command<string>(commands.read, { path });
       this.state.tabs.update((tabs) => tabs.map((item) =>
         item.path === path ? { ...item, content, savedContent: content } : item
       ));
     });
-  }
-
-  private command<T = JsonValue>(id: string, params: JsonValue = null): Promise<T> {
-    return this.runtime.call<T>("commands.execute", { id, params });
   }
 
   private async guard(task: () => Promise<void>): Promise<void> {

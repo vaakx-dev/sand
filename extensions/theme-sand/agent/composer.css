@@ -1,6 +1,9 @@
 .composer { padding: 12px max(16px, calc((100% - 790px) / 2)) 14px; background: var(--bg); }
 .composer.centered { width: 100%; padding: 0; }
 .composer-box { position: relative; overflow: visible; border: 1px solid var(--border-strong); border-radius: 16px; background: var(--surface); box-shadow: 0 10px 30px #0003; }
+.composer-queue { min-width: 0; height: 31px; display: flex; align-items: center; gap: 9px; margin: 7px 8px 0; padding: 0 9px; border-radius: 7px; color: var(--muted); background: var(--surface-2); font-size: 10px; }
+.composer-queue > span:first-child { flex: 0 0 auto; color: var(--text); font-weight: 600; }
+.composer-queue-prompt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .prompt-input { width: 100%; min-height: 76px; max-height: 210px; padding: 13px 14px 9px; resize: none; border: 0; outline: 0; background: transparent; line-height: 1.5; }
 .composer-actions { display: flex; align-items: center; justify-content: space-between; padding: 5px 6px; }
 .composer-tools { min-width: 0; display: flex; align-items: center; gap: 2px; overflow: hidden; }
@@ -14,9 +17,7 @@
 .composer-popover { position: absolute; bottom: 38px; z-index: var(--z-popover); overflow: hidden; border: 1px solid var(--border-strong); border-radius: 10px; color: var(--text); background: var(--surface-2); box-shadow: 0 18px 60px #000a; pointer-events: auto; }
 .model-picker { left: 6px; width: min(360px, calc(100vw - 30px)); height: 350px; display: flex; }
 .model-picker-rail { width: 43px; flex: 0 0 43px; display: flex; flex-direction: column; gap: 3px; padding: 5px; border-right: 1px solid var(--border); background: var(--surface); }
-.model-rail-button { --button-icon-size: 18px; position: relative; width: 33px; min-width: 33px; max-width: 33px; height: 33px; min-height: 33px; max-height: 33px; flex: 0 0 33px; display: grid; place-items: center; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; }
-.model-rail-button:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
-.model-rail-button.active { color: var(--text); background: var(--control-selected-bg); }
+.model-rail-button { position: relative; color: var(--muted); }
 .model-rail-button.active::after { content: ""; position: absolute; right: -5px; top: 7px; bottom: 7px; width: 2px; border-radius: 2px; background: var(--accent); }
 .model-rail-button.favorite svg { fill: currentColor; }
 .model-rail-divider { margin: 1px 0 2px; border-top: 1px solid var(--border); }
@@ -32,8 +33,8 @@
 .model-picker-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 650; }
 .model-picker-provider { display: flex; align-items: center; gap: 5px; color: var(--faint); font-size: 10px; }
 .model-shortcut, .default-badge { height: 17px; display: inline-flex; align-items: center; padding: 0 5px; border-radius: 5px; color: var(--faint); background: var(--surface-3); font-size: 9px; }
-.model-favorite { width: 25px; min-width: 25px; max-width: 25px; height: 25px; min-height: 25px; max-height: 25px; flex: 0 0 25px; display: grid; place-items: center; border-radius: 5px; color: var(--faint); background: transparent; cursor: pointer; }
-.model-favorite:not(:disabled):hover, .model-favorite.active { color: #d8a720; }
+.model-favorite { color: var(--faint); }
+.model-favorite:not(:disabled):hover, .model-favorite.active { color: var(--favorite); }
 .model-favorite.active svg { fill: currentColor; }
 .model-picker-empty { padding: 40px 12px; color: var(--faint); text-align: center; }
 .traits-picker { left: 155px; width: 148px; padding: 5px; }
@@ -43,6 +44,9 @@
 .traits-row:not(:disabled):hover { background: var(--row-hover); }
 .traits-row.active { background: var(--control-selected-bg); box-shadow: inset 2px 0 var(--accent); }
 .traits-divider { margin: 5px 2px; border-top: 1px solid var(--border); }
-.send-button { width: 31px; min-width: 31px; max-width: 31px; height: 31px; min-height: 31px; max-height: 31px; display: grid; place-items: center; flex: 0 0 31px; border-radius: 50%; color: var(--bg); background: var(--text); cursor: pointer; }
+.send-button { color: var(--bg); background: var(--text); }
 .send-button:not(:disabled):hover { background: var(--muted); }
-.send-button.stop { background: #d94b57; color: white; }
+.send-button.stop { background: var(--danger); color: white; }
+.composer-run-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; }
+.composer-steer { height: 28px; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border-radius: 6px; color: var(--muted); background: transparent; font-size: 10px; cursor: pointer; }
+.composer-steer:not(:disabled):hover { color: var(--text); background: var(--row-hover); }

@@ -12,6 +12,7 @@ import { ChevronDown, ChevronRight } from "lucide";
 import type {
   AgentProviderConnection,
   AgentProviderConnectionState,
+  UiControls,
 } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
@@ -29,12 +30,13 @@ const AVAILABLE: AgentProviderConnectionState = {
 export function providersPage(
   controller: WorkbenchController,
   state: WorkbenchState,
+  controls: UiControls,
 ): HTMLElement {
   return page(
     "Providers",
     dynamicChild(state.providers, (providers) => div(
       { class: "provider-list" },
-      ...providers.map((provider) => providerCard(controller, state, provider)),
+      ...providers.map((provider) => providerCard(controller, state, controls, provider)),
     )),
   );
 }
@@ -42,6 +44,7 @@ export function providersPage(
 function providerCard(
   controller: WorkbenchController,
   state: WorkbenchState,
+  controls: UiControls,
   provider: ProviderDescription,
 ): HTMLElement {
   const open = state.providerSections.map((sections) => sections[provider.id] ?? false);
@@ -70,7 +73,7 @@ function providerCard(
             { class: "provider-description provider-static-description" },
             provider.presentation?.description || AVAILABLE.description,
           ),
-      providerModels(controller, state, provider),
+      providerModels(controller, state, controls, provider),
     )),
   );
 }

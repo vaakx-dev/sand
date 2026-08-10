@@ -11,7 +11,7 @@ export type ThreadStatus =
   | "failed"
   | "ready";
 
-export interface ThreadLifecycleSummary {
+export interface ThreadLifecycleSummary<QueuedTurn = unknown> {
   status: AgentThreadStatus;
   pinned: boolean;
   unread: boolean;
@@ -32,6 +32,7 @@ export interface ThreadLifecycleSummary {
   hasPendingApprovals?: boolean;
   hasPendingUserInput?: boolean;
   backgroundStatus?: ThreadBackgroundStatus;
+  queuedTurns?: QueuedTurn[];
   changeRequestState?: ThreadChangeRequestState;
   changeRequestChangedAt?: string;
 }
@@ -43,7 +44,6 @@ export interface ThreadLifecycleOptions {
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const HOUR_MS = 60 * 60 * 1_000;
-const QUEUED_TURN_GRACE_MS = 2 * 60 * 1_000;
 
 export function threadLastActivityAt(thread: ThreadLifecycleSummary): string {
   return latestTime(
@@ -54,23 +54,19 @@ export function threadLastActivityAt(thread: ThreadLifecycleSummary): string {
   ) ?? thread.updatedAt;
 }
 
-export function hasQueuedTurn(thread: ThreadLifecycleSummary, now: number): boolean {
-  const messageAt = time(thread.latestUserMessageAt);
-  if (messageAt === null || thread.status === "error" || thread.status === "interrupted") return false;
-  if (Math.abs(now - messageAt) > QUEUED_TURN_GRACE_MS) return false;
-  const turnAt = time(thread.latestTurnStartedAt);
-  return turnAt === null || turnAt < messageAt;
+export function hasQueuedTurns(thread: ThreadLifecycleSummary): boolean {
+  return Boolean(thread.queuedTurns?.length);
 }
 
-export function canSettleThread(thread: ThreadLifecycleSummary, now: number): boolean {
+export function canSettleThread(thread: ThreadLifecycleSummary, _now: number): boolean {
   if (thread.hasPendingApprovals || thread.hasPendingUserInput) return false;
   if (thread.status === "running") return false;
-  return !hasQueuedTurn(thread, now);
+  return !hasQueuedTurns(thread);
 }
 
-export function canSnoozeThread(thread: ThreadLifecycleSummary, now: number): boolean {
+export function canSnoozeThread(thread: ThreadLifecycleSummary, _now: number): boolean {
   if (thread.hasPendingApprovals || thread.hasPendingUserInput) return false;
-  return !hasQueuedTurn(thread, now);
+  return !hasQueuedTurns(thread);
 }
 
 export function threadRaisedHandWhileSnoozed(thread: ThreadLifecycleSummary): boolean {

@@ -1,3 +1,6 @@
+import { icon } from "@vaakx-dev/vrui";
+import { Files as FilesIcon } from "lucide";
+
 import type { UiExtension } from "@sand/extension-api";
 
 import { FilesController } from "./controller.ts";
@@ -13,9 +16,9 @@ const extension: UiExtension = {
       id: "files",
       label: "Files",
       description: "Browse, search, and edit workspace files.",
-      icon: "files",
       order: 30,
-      render: () => filesView(controller, state),
+      renderIcon: (size) => icon(FilesIcon, size),
+      render: () => filesView(controller, state, context.ui.controls),
     });
     context.ui.commands.register({
       id: "files.show",

@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { objectSchema, requiredString, type HostExtension } from "@sand/extension-api";
-import { shellArguments } from "../../packages/extension-runtime/src/index.ts";
+import { shellArguments } from "@sand/extension-runtime";
 
 const MAX_LINES = 2_000;
 const MAX_BYTES = 50 * 1024;

@@ -1,4 +1,7 @@
-import { selectProviderOption, type JsonValue } from "@sand/extension-api";
+import {
+  selectProviderOption,
+  type JsonValue,
+} from "@sand/extension-api";
 
 import {
   findModel,

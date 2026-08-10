@@ -3,5 +3,6 @@
   "name": "Bash Tool",
   "version": "0.0.1",
   "description": "unrestricted shell execution",
-  "main": "./main.ts"
+  "main": "./main.ts",
+  "ui": "./ui.ts"
 }

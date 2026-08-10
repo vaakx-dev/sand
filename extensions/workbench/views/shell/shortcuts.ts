@@ -1,6 +1,6 @@
 import type { WorkbenchController } from "../../controller.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { groupThreads } from "../sidebar/threadGroups.ts";
+import { group } from "../sidebar/threads/groups.ts";
 
 export function globalKeyDown(
   event: KeyboardEvent,
@@ -17,7 +17,7 @@ export function globalKeyDown(
     const thread = orderedThreads(state)[Number(event.key) - 1];
     if (thread) {
       event.preventDefault();
-      void controller.agent.openThread(thread.id);
+      void controller.threads.open(thread.id);
     }
     return;
   }
@@ -43,23 +43,19 @@ function matchesKeybinding(event: KeyboardEvent, keybinding: string): boolean {
 }
 
 function closeOverlays(state: WorkbenchState): void {
-  state.openMenuOpen.set(false);
   state.modelPickerOpen.set(false);
   state.traitsOpen.set(false);
-  state.projectMenuOpen.set(false);
-  state.projectPickerOpen.set(false);
-  state.projectSourceOpen.set(false);
-  state.threadMenu.set(null);
-  state.threadSnoozeOpen.set(false);
-  state.threadPreview.set(null);
-  state.threadRename.set(null);
+  state.threads.menu.set(null);
+  state.threads.snoozeOpen.set(false);
+  state.threads.preview.set(null);
+  state.threads.rename.set(null);
 }
 
 function orderedThreads(state: WorkbenchState) {
-  const groups = groupThreads(state.threads.get(), {
+  const groups = group(state.threads.items.get(), {
     query: "",
     now: Date.now(),
-    autoSettleAfterDays: state.autoSettleDays.get(),
+    autoSettleAfterDays: state.threads.autoSettleDays.get(),
   });
   return [...groups.pinned, ...groups.active, ...groups.snoozed, ...groups.settled];
 }

@@ -3,6 +3,15 @@ import type { ThreadLifecycleSummary } from "./thread.ts";
 
 export type AgentRole = "system" | "user" | "assistant" | "tool";
 export type AgentRunStatus = "running" | "complete" | "error" | "cancelled" | "interrupted";
+export type AgentAttemptReason = "start" | "steer" | "recovery";
+
+export interface AgentQueuedTurn {
+  id: string;
+  prompt: string;
+  provider: string;
+  model: string;
+  createdAt: string;
+}
 
 export interface AgentToolCall {
   id: string;
@@ -19,13 +28,16 @@ export interface AgentMessage {
   createdAt: string;
 }
 
-export interface AgentThreadSummary extends ThreadLifecycleSummary {
+export interface AgentThreadSummary extends ThreadLifecycleSummary<AgentQueuedTurn> {
   id: string;
   title: string;
   provider: string;
   model: string;
+  listed?: boolean;
   activeRunId?: string;
   activeAttemptId?: string;
+  recoverableRunId?: string;
+  recoverableAttemptId?: string;
 }
 
 export interface AgentThread extends AgentThreadSummary {
@@ -43,6 +55,7 @@ export interface AgentRun {
   createdAt: string;
   completedAt?: string;
   error?: string;
+  recoveredFromRunId?: string;
 }
 
 export interface AgentAttempt {
@@ -51,12 +64,14 @@ export interface AgentAttempt {
   runId: string;
   provider: string;
   status: AgentRunStatus;
+  reason: AgentAttemptReason;
   createdAt: string;
   completedAt?: string;
   error?: string;
+  stopReason?: "steered" | "cancelled" | "interrupted";
 }
 
-export interface OrchestrationEvent {
+export interface JournalEvent {
   sequence: number;
   id: string;
   kind: string;

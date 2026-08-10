@@ -29,9 +29,8 @@
 .provider-model-slug { flex: 1 1 auto; color: var(--faint); font: 9px var(--mono); }
 .model-hidden-label { flex: 0 0 auto; color: var(--faint); font-size: 9px; text-transform: uppercase; letter-spacing: .04em; }
 .provider-model-actions { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 26px); gap: 2px; }
-.model-action { width: 25px; min-width: 25px; max-width: 25px; height: 25px; min-height: 25px; max-height: 25px; display: grid; place-items: center; flex: 0 0 25px; border-radius: 5px; color: var(--faint); background: transparent; cursor: pointer; }
-.model-action:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
-.model-action.active { color: #d8a720; }
+.model-action { color: var(--faint); }
+.model-action.active { color: var(--favorite); }
 .model-action.active svg { fill: currentColor; }
 .model-add-row { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px 0 0; }
 .model-slug-input { min-width: 0; height: 32px; flex: 1; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; outline: 0; color: var(--text); background: var(--bg); }

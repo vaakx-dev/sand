@@ -10,8 +10,7 @@
     "build": "vite build",
     "check": "tsc --noEmit && cargo check --manifest-path src-tauri/Cargo.toml",
     "dev": "vite",
-    "tauri": "tauri",
-    "test": "bun test tests"
+    "tauri": "tauri"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",

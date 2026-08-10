@@ -9,7 +9,6 @@ export class PreferencesController {
     const state = this.runtime.state;
     return this.runtime.save([
       ["workbench.sidebarWidth", state.sidebarWidth.get()],
-      ["workbench.sidebarOpen", state.sidebarOpen.get()],
     ]);
   }
 
@@ -24,7 +23,7 @@ export class PreferencesController {
   saveBehavior(): Promise<void> {
     const state = this.runtime.state;
     const values: [string, JsonValue][] = [
-      ["workbench.autoSettleDays", state.autoSettleDays.get()],
+      ["workbench.autoSettleDays", state.threads.autoSettleDays.get()],
     ];
     return this.runtime.save(values);
   }

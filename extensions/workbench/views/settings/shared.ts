@@ -4,7 +4,7 @@ import type { WorkbenchState } from "../../state.ts";
 
 export function page(title: string, ...children: (HTMLElement | null)[]): HTMLElement {
   return div(
-    { class: "settings-page panel-scroll" },
+    { class: "settings-page" },
     div({ class: "settings-page-content" }, h1(title), ...children),
   );
 }

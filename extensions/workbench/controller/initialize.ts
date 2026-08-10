@@ -1,7 +1,6 @@
 import { batch } from "@vaakx-dev/vrui";
 
 import {
-  booleanValue,
   errorMessage,
   numberValue,
   objectValue,
@@ -14,12 +13,7 @@ import {
   type JsonValue,
 } from "@sand/extension-api";
 
-import type {
-  GitDiff,
-  GitStatus,
-  ProjectDescription,
-  ProviderDescription,
-} from "../models.ts";
+import type { ProviderDescription } from "../models.ts";
 import { ControllerRuntime } from "./runtime.ts";
 import {
   findModel,
@@ -33,15 +27,12 @@ import {
 } from "./values.ts";
 
 export async function initializeWorkbench(runtime: ControllerRuntime): Promise<void> {
-  const [workspace, providers, threads, extensions, settings, gitStatus, gitDiff, projects] = await Promise.all([
-    runtime.command<{ root: string }>("workspace.info"),
-    runtime.call<ProviderDescription[]>("orchestration.providers"),
-    runtime.call<AgentThreadSummary[]>("orchestration.threads"),
+  const [workspace, providers, threads, extensions, settings] = await Promise.all([
+    runtime.call<{ workspace: string }>("runtime.info"),
+    runtime.call<ProviderDescription[]>("agent.providers"),
+    runtime.call<AgentThreadSummary[]>("threads.list"),
     runtime.call<ExtensionDescription[]>("extensions.list"),
     runtime.call<JsonObject>("settings.all"),
-    runtime.command<GitStatus>("git.status"),
-    runtime.command<GitDiff>("git.diff"),
-    runtime.command<ProjectDescription[]>("projects.list"),
   ]);
   const connections = await connectionStates(runtime, providers);
   const savedProvider = stringValue(settings["workbench.provider"]);
@@ -62,22 +53,18 @@ export async function initializeWorkbench(runtime: ControllerRuntime): Promise<v
   const state = runtime.state;
 
   batch(() => {
-    state.root.set(workspace.root);
+    state.root.set(workspace.workspace);
     state.providers.set(providers);
-    state.threads.set(threads);
+    state.threads.items.set(threads);
     state.extensions.set(extensions);
     state.settings.set(settings);
-    state.gitStatus.set(gitStatus.output || gitStatus.error);
-    state.gitDiff.set(gitDiff.diff || gitDiff.error);
-    state.gitRepository.set(gitStatus.repository);
     state.providerConnections.set(connections);
-    state.projects.set(projects);
     state.sidebarWidth.set(numberValue(settings["workbench.sidebarWidth"], 272));
-    state.sidebarOpen.set(booleanValue(settings["workbench.sidebarOpen"], true));
+    state.sidebarOpen.set(true);
     state.appearance.set(appearanceValue(settings["workbench.appearance"]));
     state.theme.set(stringValue(settings["workbench.theme"]) || "sand");
     const autoSettleDays = settings["workbench.autoSettleDays"];
-    state.autoSettleDays.set(autoSettleDays === null
+    state.threads.autoSettleDays.set(autoSettleDays === null
       ? null
       : typeof autoSettleDays === "number" && autoSettleDays >= 0
         ? autoSettleDays

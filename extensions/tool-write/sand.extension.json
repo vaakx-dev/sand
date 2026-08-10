@@ -3,5 +3,6 @@
   "name": "Write Tool",
   "version": "0.0.1",
   "description": "file writer",
-  "main": "./main.ts"
+  "main": "./main.ts",
+  "ui": "./ui.ts"
 }

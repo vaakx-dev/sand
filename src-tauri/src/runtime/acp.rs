@@ -9,11 +9,11 @@ impl Runtime {
         params: Value,
     ) -> Result<Value, RuntimeError> {
         match method {
-            "acp.agents" => Ok(self.orchestration.acp_agents()),
-            "acp.sessions" => Ok(self.orchestration.acp_sessions()),
+            "acp.agents" => Ok(self.journal.acp_agents()),
+            "acp.sessions" => Ok(self.journal.acp_sessions()),
             "acp.session" => {
                 let id = required_parameter(&params, "id")?;
-                Ok(self.orchestration.acp_session(id)?)
+                Ok(self.journal.acp_session(id)?)
             }
             "acp.connect" => Ok(self.acp.connect(params).await?),
             "acp.disconnect" => Ok(self.acp.disconnect(params).await?),

@@ -26,10 +26,10 @@ export function generalPage(
       select(
         {
           class: "settings-select",
-          value: state.autoSettleDays.map((days) => days === null ? "off" : String(days)),
+          value: state.threads.autoSettleDays.map((days) => days === null ? "off" : String(days)),
           onChange: (event) => {
             const value = (event.target as HTMLSelectElement).value;
-            state.autoSettleDays.set(value === "off" ? null : Number(value));
+            state.threads.autoSettleDays.set(value === "off" ? null : Number(value));
             void controller.preferences.saveBehavior();
           },
         },

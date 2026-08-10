@@ -1,6 +1,7 @@
 import { errorMessage, type UiExtension } from "@sand/extension-api";
 
 import { WorkbenchController } from "./controller.ts";
+import { workbenchEvents } from "./api.ts";
 import { createState } from "./state.ts";
 import { shell } from "./views/shell.ts";
 
@@ -13,43 +14,22 @@ const extension: UiExtension = {
       id: "workbench.sidebar",
       label: "View: Toggle Sidebar",
       keybinding: "Ctrl+B",
-      run: () => {
-        state.sidebarOpen.toggle()();
-        void controller.preferences.saveLayout();
-      },
+      run: () => controller.toggleSidebar(),
     });
     context.ui.commands.register({
       id: "workbench.threads",
       label: "View: Threads",
-      run: () => state.activity.set("threads"),
+      run: () => controller.navigation.show("threads"),
     });
     context.ui.commands.register({
       id: "workbench.extensions",
       label: "View: Extensions",
-      run: () => state.activity.set("extensions"),
+      run: () => controller.navigation.show("extensions"),
     });
     context.ui.commands.register({
       id: "workbench.settings",
       label: "View: Settings",
-      run: () => state.activity.set("settings"),
-    });
-    context.ui.commands.register({
-      id: "projects.switch",
-      label: "Projects: Switch Project",
-      keybinding: "Ctrl+K",
-      run: () => controller.projects.openPicker("switch"),
-    });
-    context.ui.commands.register({
-      id: "workbench.open",
-      label: "Workspace: Open",
-      keybinding: "Ctrl+O",
-      run: () => state.openMenuOpen.toggle()(),
-    });
-    context.ui.commands.register({
-      id: "agent.new",
-      label: "Agent: New Session",
-      keybinding: "Ctrl+N",
-      run: () => controller.projects.openPicker("newThread"),
+      run: () => controller.navigation.show("settings"),
     });
     context.ui.commands.register({
       id: "extensions.reload",
@@ -59,6 +39,9 @@ const extension: UiExtension = {
 
     state.commands.set(context.ui.commands.list());
     context.ui.commands.subscribe(() => state.commands.set(context.ui.commands.list()));
+    context.ui.events.subscribe((event) => {
+      if (event.kind === workbenchEvents.newThreadSelected) controller.threads.new();
+    });
     context.ui.mount(shell(controller, state, context.ui));
 
     try {

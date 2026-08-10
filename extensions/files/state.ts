@@ -1,6 +1,6 @@
 import { derive, sig } from "@vaakx-dev/vrui";
 
-import type { WorkspaceFileNode, WorkspaceSearchResult } from "@sand/extension-api";
+import type { FileNode, SearchResult } from "./api.ts";
 import type { OpenFile } from "./models.ts";
 
 export function createFilesState() {
@@ -8,10 +8,10 @@ export function createFilesState() {
   const activePath = sig<string | null>(null);
   return {
     root: sig(""),
-    tree: sig<WorkspaceFileNode[]>([]),
+    tree: sig<FileNode[]>([]),
     expanded: sig<Record<string, boolean>>({}),
     query: sig(""),
-    matches: sig<WorkspaceSearchResult[]>([]),
+    matches: sig<SearchResult[]>([]),
     searchMode: sig(false),
     explorerOpen: sig(true),
     tabs,

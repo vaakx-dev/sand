@@ -1,41 +1,44 @@
 import type { UiExtensionContext } from "@sand/extension-api";
 
 import type { WorkbenchState } from "./state.ts";
-import { AgentController } from "./controller/agent.ts";
-import { ExternalController } from "./controller/external.ts";
 import { WorkbenchEvents } from "./controller/events.ts";
-import { GitController } from "./controller/git.ts";
 import { initializeWorkbench } from "./controller/initialize.ts";
 import { ModelsController } from "./controller/models.ts";
+import { NavigationController } from "./controller/navigation.ts";
 import { PreferencesController } from "./controller/preferences.ts";
-import { ProjectsController } from "./controller/projects.ts";
 import { ProvidersController } from "./controller/providers.ts";
+import { RunController } from "./controller/run.ts";
 import { ControllerRuntime } from "./controller/runtime.ts";
+import { SelectionController } from "./controller/selection.ts";
+import { ThreadController } from "./threads/controller.ts";
 
 export class WorkbenchController {
-  readonly agent: AgentController;
-  readonly git: GitController;
+  readonly runs: RunController;
+  readonly threads: ThreadController;
   readonly models: ModelsController;
+  readonly navigation: NavigationController;
+  readonly selection: SelectionController;
   readonly preferences: PreferencesController;
-  readonly projects: ProjectsController;
   readonly providers: ProvidersController;
-  readonly external: ExternalController;
 
   private readonly runtime: ControllerRuntime;
   private readonly events: WorkbenchEvents;
   private readonly commands: UiExtensionContext["ui"]["commands"];
 
-  constructor(context: UiExtensionContext, state: WorkbenchState) {
+  constructor(
+    context: UiExtensionContext,
+    private readonly state: WorkbenchState,
+  ) {
     this.commands = context.ui.commands;
     this.runtime = new ControllerRuntime(context, state);
-    this.git = new GitController(this.runtime);
-    this.agent = new AgentController(this.runtime, () => this.git.refresh());
     this.models = new ModelsController(this.runtime);
+    this.navigation = new NavigationController(context.ui.events, state);
+    this.selection = new SelectionController(this.runtime);
+    this.runs = new RunController(this.runtime, this.selection);
+    this.threads = new ThreadController(this.runtime, this.selection);
     this.preferences = new PreferencesController(this.runtime);
-    this.projects = new ProjectsController(this.runtime, () => this.agent.newThread());
-    this.providers = new ProvidersController(this.runtime, (id) => this.agent.selectProvider(id));
-    this.external = new ExternalController(this.runtime);
-    this.events = new WorkbenchEvents(this.runtime, this.git);
+    this.providers = new ProvidersController(this.runtime, (id) => this.selection.selectProvider(id));
+    this.events = new WorkbenchEvents(this.runtime);
   }
 
   async initialize(): Promise<void> {
@@ -45,5 +48,10 @@ export class WorkbenchController {
 
   executeCommand(id: string): Promise<void> {
     return this.commands.execute(id);
+  }
+
+  toggleSidebar(): void {
+    this.state.sidebarOpen.toggle()();
+    void this.preferences.saveLayout();
   }
 }
