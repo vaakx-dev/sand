@@ -41,7 +41,6 @@ export class AgentController {
           ...sessions.filter((item) => item.id !== session.id),
         ]);
       });
-      this.runtime.context.ui.events.emit("workbench.session.changed", { sessionId: session.id });
     });
   }
 
@@ -53,7 +52,6 @@ export class AgentController {
 
   newSession(): void {
     clearSession(this.runtime.state);
-    this.runtime.context.ui.events.emit("workbench.session.changed", { sessionId: null });
   }
 
   async openSession(id: string): Promise<void> {
@@ -67,11 +65,14 @@ export class AgentController {
         state.model.set(session.model);
         state.agentStatus.set(session.status);
         state.agentDelta.set("");
+        state.tools.set([]);
+        state.planDescription.set("");
+        state.planSteps.set([]);
+        state.planUpdatedAt.set("");
       });
       this.replaceSummary(await this.runtime.call<AgentSessionSummary>("agent.visit", {
         sessionId: id,
       }));
-      this.runtime.context.ui.events.emit("workbench.session.changed", { sessionId: id });
     });
     await this.onSessionOpen();
   }

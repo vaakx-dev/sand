@@ -1,88 +1,58 @@
 import { describe, expect, test } from "bun:test";
 
-import type {
-  JsonValue,
-  RuntimeClient,
-  UiSurfaceContribution,
-  UiSurfaceRegistry,
-} from "@sand/extension-api";
-import { RightController } from "../extensions/right-sidebar/controller.ts";
-import { createRightState } from "../extensions/right-sidebar/state.ts";
+import {
+  closePanelTab,
+  DEFAULT_BROWSER_URL,
+  openPanel,
+  requestBrowserNavigation,
+  updateBrowserLocation,
+} from "../extensions/workbench/panel.ts";
+import { createState } from "../extensions/workbench/state.ts";
 
-const runtime: RuntimeClient = {
-  async call<T = JsonValue>(): Promise<T> {
-    return undefined as T;
-  },
-  subscribe() {
-    return () => undefined;
-  },
-};
+describe("right panel tabs", () => {
+  test("creates independent browser instances and resets closed browsers", () => {
+    const state = createState();
+    openPanel(state, "browser");
+    openPanel(state, "browser");
 
-const surfaces: UiSurfaceRegistry = {
-  register() {
-    return () => undefined;
-  },
-  list() {
-    return [];
-  },
-  subscribe() {
-    return () => undefined;
-  },
-  async open() {},
-  onOpen() {
-    return () => undefined;
-  },
-};
+    const browsers = state.rightTabs.get().filter((tab) => tab.view === "browser");
+    expect(browsers).toHaveLength(2);
+    expect(browsers[0]?.id).not.toBe(browsers[1]?.id);
 
-function surface(id: string, multiple = false): UiSurfaceContribution {
-  return {
-    id,
-    label: id,
-    description: id,
-    icon: "file",
-    multiple,
-    render: () => ({}) as HTMLElement,
-  };
-}
+    const first = browsers[0];
+    if (!first || first.view !== "browser") throw new Error("missing browser tab");
+    first.input.set("google.com");
+    requestBrowserNavigation(first);
+    expect(first.url.get()).toBe("https://google.com");
 
-describe("right sidebar surfaces", () => {
-  test("reuses singleton surfaces", () => {
-    const state = createRightState();
-    const controller = new RightController(runtime, surfaces, state);
-    const plan = surface("plan");
-
-    controller.openSurface(plan);
-    controller.openSurface(plan);
-
-    expect(state.tabs.get()).toHaveLength(1);
-    expect(state.activeTab.get()?.surface.id).toBe("plan");
-    expect(state.open.get()).toBe(true);
+    closePanelTab(state, first.id);
+    openPanel(state, "browser");
+    const latest = state.rightTabs.get().at(-1);
+    if (!latest || latest.view !== "browser") throw new Error("missing replacement browser tab");
+    expect(latest.url.get()).toBe(DEFAULT_BROWSER_URL);
+    expect(latest.input.get()).toBe(DEFAULT_BROWSER_URL);
   });
 
-  test("creates independent instances for multiple surfaces", () => {
-    const state = createRightState();
-    const controller = new RightController(runtime, surfaces, state);
-    const browser = surface("browser", true);
+  test("updates the address without issuing a duplicate navigation", () => {
+    const state = createState();
+    openPanel(state, "browser");
+    const tab = state.rightActiveTab.get();
+    if (!tab || tab.view !== "browser") throw new Error("missing browser tab");
+    const request = tab.request.get();
 
-    controller.openSurface(browser);
-    controller.openSurface(browser);
+    updateBrowserLocation(tab, "https://www.iana.org/domains");
 
-    const tabs = state.tabs.get();
-    expect(tabs).toHaveLength(2);
-    expect(tabs[0]?.id).not.toBe(tabs[1]?.id);
+    expect(tab.input.get()).toBe("https://www.iana.org/domains");
+    expect(tab.url.get()).toBe("https://www.iana.org/domains");
+    expect(tab.request.get()).toEqual(request);
   });
 
-  test("selects an adjacent tab after closing the active one", () => {
-    const state = createRightState();
-    const controller = new RightController(runtime, surfaces, state);
-    controller.openSurface(surface("files"));
-    controller.openSurface(surface("plan"));
-    const active = state.activeId.get();
-    if (!active) throw new Error("missing active surface");
+  test("reuses singleton surfaces such as Plan", () => {
+    const state = createState();
+    openPanel(state, "tasks");
+    openPanel(state, "tasks");
 
-    controller.closeTab(active);
-
-    expect(state.tabs.get()).toHaveLength(1);
-    expect(state.activeTab.get()?.surface.id).toBe("files");
+    expect(state.rightTabs.get().filter((tab) => tab.view === "tasks")).toHaveLength(1);
+    expect(state.rightActiveTab.get()?.view).toBe("tasks");
   });
 });

@@ -1,8 +1,0 @@
-{
-  "id": "sand.right-sidebar",
-  "name": "Sand Right Sidebar",
-  "version": "0.0.1",
-  "description": "Extension-owned right panel, surface hosting, diff, and browser",
-  "ui": "./ui.ts",
-  "styles": ["./right-sidebar.css"]
-}

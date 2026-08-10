@@ -9,7 +9,11 @@ export class PreferencesController {
     const state = this.runtime.state;
     return this.runtime.save([
       ["workbench.sidebarWidth", state.sidebarWidth.get()],
+      ["workbench.right_width", state.rightWidth.get()],
       ["workbench.sidebarOpen", state.sidebarOpen.get()],
+      ["workbench.right_open", state.rightOpen.get()],
+      ["workbench.right_maximized", state.rightMaximized.get()],
+      ["workbench.terminal_height", state.terminalHeight.get()],
     ]);
   }
 
@@ -24,6 +28,8 @@ export class PreferencesController {
   saveBehavior(): Promise<void> {
     const state = this.runtime.state;
     const values: [string, JsonValue][] = [
+      ["workbench.word_wrap", state.wordWrap.get()],
+      ["workbench.auto_open_tasks", state.autoOpenTasks.get()],
       ["workbench.autoSettleDays", state.autoSettleDays.get()],
     ];
     return this.runtime.save(values);

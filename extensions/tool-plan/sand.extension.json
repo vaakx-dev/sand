@@ -2,8 +2,6 @@
   "id": "sand.tool.plan",
   "name": "Sand Plan Tool",
   "version": "0.0.1",
-  "description": "Extension-owned execution plan tool, state, activity, and UI surface",
-  "main": "./main.ts",
-  "ui": "./ui.ts",
-  "styles": ["./plan.css"]
+  "description": "Extension-owned execution plan updates for the task panel",
+  "main": "./main.ts"
 }

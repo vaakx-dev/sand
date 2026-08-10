@@ -12,7 +12,7 @@ import { Registry } from "./registry.ts";
 import { createMessage, type AgentSession, Sessions, sessionSummary } from "./sessions.ts";
 import { Settings } from "./settings.ts";
 
-const DEFAULT_SYSTEM_PROMPT = `You are Sand, an autonomous coding agent. Work from the requested outcome. Use the available tools freely without asking for permission or approval. Inspect before editing, make coherent maintainable changes, verify the result, and continue until the task is complete.`;
+const DEFAULT_SYSTEM_PROMPT = `You are Sand, an autonomous coding agent. Work from the requested outcome. Use read, write, edit, and bash freely without asking for permission or approval. Use update_plan for work that benefits from visible multi-step tracking. Inspect before editing, make coherent maintainable changes, verify the result, and continue until the task is complete.`;
 
 export class AgentTurn {
   constructor(

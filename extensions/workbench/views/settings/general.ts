@@ -3,7 +3,7 @@ import { derive, dynamicChild, h2, option, select } from "@vaakx-dev/vrui";
 import type { WorkbenchController } from "../../controller.ts";
 import type { ReasoningEffort } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { page, settingRow } from "./shared.ts";
+import { page, settingRow, toggle } from "./shared.ts";
 
 const REASONING: { value: ReasoningEffort; label: string }[] = [
   { value: "low", label: "Low" },
@@ -24,6 +24,11 @@ export function generalPage(
 
   return page(
     "General",
+    settingRow(
+      "Auto-open task panel",
+      "Open the right-side task panel when the agent publishes steps or starts a tool.",
+      toggle(state.autoOpenTasks, () => void controller.preferences.saveBehavior()),
+    ),
     settingRow(
       "Settle inactive threads",
       "Move quiet threads into the Settled shelf after the selected number of days.",

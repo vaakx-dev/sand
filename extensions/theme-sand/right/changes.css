@@ -1,0 +1,4 @@
+.changes-view { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.git-status { flex: 0 0 auto; max-height: 130px; overflow: auto; padding: 9px 11px; border-bottom: 1px solid var(--border); color: var(--muted); font: 11px/1.5 var(--mono); white-space: pre-wrap; }
+.diff-output { min-height: 0; flex: 1; margin: 0; padding: 12px; overflow: auto; color: var(--text); background: var(--bg); font: 11.5px/1.55 var(--mono); white-space: pre; }
+.diff-output.wrapped, .editor-textarea.wrapped { white-space: pre-wrap; overflow-wrap: anywhere; }

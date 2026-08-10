@@ -2,6 +2,6 @@
   "id": "sand.workbench",
   "name": "Sand Workbench",
   "version": "0.0.1",
-  "description": "The core Sand shell, agent conversation, projects, threads, and settings",
+  "description": "The complete Sand desktop user interface",
   "ui": "./ui.ts"
 }

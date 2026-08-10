@@ -1,5 +1,5 @@
 import { details, div, dynamicChild, effect, el, icon, onRaf, show, span, summary } from "@vaakx-dev/vrui";
-import { Check, Circle, Eye, SquarePen, SquareTerminal, Wrench } from "lucide";
+import { Check, Circle, Eye, ListTodo, SquarePen, SquareTerminal, Wrench } from "lucide";
 
 import {
   jsonText,
@@ -119,6 +119,7 @@ function toolIcon(name: string): HTMLElement {
   if (name === "bash") return icon(SquareTerminal, 13);
   if (name === "read") return icon(Eye, 13);
   if (name === "write" || name === "edit") return icon(SquarePen, 13);
+  if (name === "update_plan") return icon(ListTodo, 13);
   return icon(Wrench, 13);
 }
 
@@ -127,6 +128,7 @@ function toolLabel(name: string): string {
   if (name === "read") return "Read file";
   if (name === "write") return "Wrote file";
   if (name === "edit") return "Edited file";
+  if (name === "update_plan") return "Updated plan";
   return name.replaceAll("_", " ");
 }
 

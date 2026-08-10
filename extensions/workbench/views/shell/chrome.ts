@@ -6,17 +6,18 @@ import {
   FolderOpen,
   GitBranch,
   Minus,
+  PanelBottom,
   PanelLeftOpen,
+  PanelRightOpen,
   Square,
   X,
 } from "lucide";
 
-import type { UiSlotRegistry } from "@sand/extension-api";
-
 import type { WorkbenchController } from "../../controller.ts";
+import { togglePanel } from "../../panel.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { projectName } from "../format.ts";
-import { uiSlot } from "../shared/slot.ts";
+import { iconButton } from "../shared/iconButton.ts";
 
 export function windowControls(): HTMLElement {
   const window = getCurrentWindow();
@@ -37,11 +38,7 @@ export function windowControls(): HTMLElement {
   );
 }
 
-export function topbar(
-  controller: WorkbenchController,
-  state: WorkbenchState,
-  slots: UiSlotRegistry,
-): HTMLElement {
+export function topbar(controller: WorkbenchController, state: WorkbenchState): HTMLElement {
   return div(
     { class: "topbar", "data-tauri-drag-region": "" },
     show(state.sidebarOpen.map((open) => !open), () => button(
@@ -74,7 +71,29 @@ export function topbar(
         icon(GitBranch, 13),
         "Initialize Git",
       )),
-      uiSlot(slots, "workbench.topbar.actions", "top-panel-controls"),
+      show(state.rightOpen.map((open) => !open), () => div(
+        { class: "top-panel-controls" },
+        div({ class: "top-panel-control-spacer" }),
+        div({ class: "top-panel-control-spacer" }),
+        iconButton(
+          {
+            label: "Toggle terminal drawer (Ctrl+J)",
+            selected: state.bottomOpen,
+            onClick: () => void controller.terminal.toggle(),
+          },
+          icon(PanelBottom, 15),
+        ),
+        iconButton(
+          {
+            label: "Open files and changes",
+            onClick: () => {
+              togglePanel(state);
+              void controller.preferences.saveLayout();
+            },
+          },
+          icon(PanelRightOpen, 15),
+        ),
+      )),
     ),
   );
 }
@@ -100,13 +119,13 @@ function openAction(controller: WorkbenchController, state: WorkbenchState): HTM
         }),
       },
       button(
-        { class: "open-menu-row", onClick: () => void controller.external.open("vscode") },
+        { class: "open-menu-row", onClick: () => void controller.workspace.openExternal("vscode") },
         icon(Code2, 14),
         span("VS Code"),
         span({ class: "open-shortcut" }, "Ctrl+O"),
       ),
       button(
-        { class: "open-menu-row", onClick: () => void controller.external.open("explorer") },
+        { class: "open-menu-row", onClick: () => void controller.workspace.openExternal("explorer") },
         icon(FolderOpen, 14),
         span("Explorer"),
       ),

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, expect, test } from "bun:test";
 
 import type { EventApi, JsonValue } from "@sand/extension-api";
-import { TerminalProcesses } from "../extensions/terminal/processes.ts";
+import { Terminals } from "../extensions/workspace/terminals.ts";
 
 interface TerminalEvent {
   kind: string;
@@ -13,7 +13,7 @@ interface TerminalEvent {
 }
 
 let workspace = "";
-let terminals: TerminalProcesses | null = null;
+let terminals: Terminals | null = null;
 let events: TerminalEvent[] = [];
 
 beforeEach(async () => {
@@ -25,7 +25,7 @@ beforeEach(async () => {
       events.push({ kind, payload: payload as Record<string, JsonValue> });
     },
   };
-  terminals = new TerminalProcesses(workspace, eventApi);
+  terminals = new Terminals(workspace, eventApi);
 });
 
 afterEach(async () => {

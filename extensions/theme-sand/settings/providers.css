@@ -14,7 +14,7 @@
 .provider-models { min-width: 0; border-top: 1px solid var(--border); }
 .provider-models > .setting-row { min-width: 0; }
 .provider-model-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 8px 9px; border-top: 1px solid var(--border); }
-.provider-model-list { width: 100%; max-height: 270px; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; }
+.provider-model-list { width: 100%; max-height: 270px; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; }
 .provider-model-row { width: 100%; min-width: 0; min-height: 38px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; padding: 3px 4px 3px 8px; color: var(--muted); border-bottom: 1px solid var(--border); }
 .provider-model-row:first-child { border-top: 1px solid var(--border); }
 .provider-model-row.hidden { opacity: .52; }

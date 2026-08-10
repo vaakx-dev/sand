@@ -7,11 +7,8 @@ import {
   type RuntimeEvent,
   type UiBundle,
   type UiCommand,
-  type UiEvent,
   type UiExtension,
   type UiRegistry,
-  type UiSlotContribution,
-  type UiSurfaceContribution,
 } from "@sand/extension-api";
 
 class Commands {
@@ -82,104 +79,9 @@ class Client implements RuntimeClient {
   }
 }
 
-class Slots {
-  private readonly contributions = new Map<string, Map<string, UiSlotContribution>>();
-  private readonly mounts = new Map<string, Set<HTMLElement>>();
-
-  register(contribution: UiSlotContribution): () => void {
-    const slot = this.contributions.get(contribution.slot) ?? new Map();
-    if (slot.has(contribution.id)) throw new Error(`UI slot contribution already registered: ${contribution.id}`);
-    slot.set(contribution.id, contribution);
-    this.contributions.set(contribution.slot, slot);
-    this.sync(contribution.slot);
-    return () => {
-      slot.delete(contribution.id);
-      this.sync(contribution.slot);
-    };
-  }
-
-  mount(slot: string, container: HTMLElement): () => void {
-    const mounts = this.mounts.get(slot) ?? new Set();
-    mounts.add(container);
-    this.mounts.set(slot, mounts);
-    this.sync(slot);
-    return () => mounts.delete(container);
-  }
-
-  private sync(slot: string): void {
-    const nodes = [...(this.contributions.get(slot)?.values() ?? [])]
-      .sort((left, right) => (left.order ?? 0) - (right.order ?? 0) || left.id.localeCompare(right.id))
-      .map((contribution) => contribution.node);
-    for (const mount of this.mounts.get(slot) ?? []) mount.replaceChildren(...nodes);
-  }
-}
-
-class Surfaces {
-  private readonly surfaces = new Map<string, UiSurfaceContribution>();
-  private readonly listeners = new Set<() => void>();
-  private readonly openListeners = new Set<(surface: UiSurfaceContribution) => void>();
-
-  register(surface: UiSurfaceContribution): () => void {
-    if (this.surfaces.has(surface.id)) throw new Error(`UI surface already registered: ${surface.id}`);
-    if (!surface.render && !surface.open) throw new Error(`UI surface has no action: ${surface.id}`);
-    this.surfaces.set(surface.id, surface);
-    this.notify();
-    return () => {
-      this.surfaces.delete(surface.id);
-      this.notify();
-    };
-  }
-
-  list(): UiSurfaceContribution[] {
-    return [...this.surfaces.values()].sort((left, right) =>
-      (left.order ?? 0) - (right.order ?? 0) || left.label.localeCompare(right.label)
-    );
-  }
-
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  async open(id: string): Promise<void> {
-    const surface = this.surfaces.get(id);
-    if (!surface) throw new Error(`unknown UI surface: ${id}`);
-    if (surface.render) {
-      for (const listener of this.openListeners) listener(surface);
-      return;
-    }
-    await surface.open?.();
-  }
-
-  onOpen(listener: (surface: UiSurfaceContribution) => void): () => void {
-    this.openListeners.add(listener);
-    return () => this.openListeners.delete(listener);
-  }
-
-  private notify(): void {
-    for (const listener of this.listeners) listener();
-  }
-}
-
-class UiEvents {
-  private readonly listeners = new Set<(event: UiEvent) => void>();
-
-  emit<T>(kind: string, payload: T): void {
-    for (const listener of this.listeners) listener({ kind, payload });
-  }
-
-  subscribe(listener: (event: UiEvent) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-}
-
 const desktop = "__TAURI_INTERNALS__" in window;
 const runtime = new Client(desktop);
 const commands = new Commands();
-const slots = new Slots();
-const surfaces = new Surfaces();
-const events = new UiEvents();
 let mounted = false;
 const ui: UiRegistry = {
   mount(node) {
@@ -190,9 +92,6 @@ const ui: UiRegistry = {
     mounted = true;
   },
   commands,
-  slots,
-  surfaces,
-  events,
 };
 
 if (desktop) void start();
@@ -201,20 +100,8 @@ else showFailure(new Error("the desktop runtime is required; start Sand through 
 async function start(): Promise<void> {
   try {
     const bundles = await runtime.call<UiBundle[]>("extensions.ui");
-    const failures: string[] = [];
-    for (const bundle of bundles) {
-      try {
-        await activate(bundle);
-      } catch (error) {
-        const message = `${bundle.manifest.id}: ${errorMessage(error)}`;
-        failures.push(message);
-        console.error(`UI extension failed: ${message}`);
-      }
-    }
-    if (!mounted) {
-      const detail = failures.length ? ` (${failures.join("; ")})` : "";
-      throw new Error(`no enabled UI extension mounted a workbench${detail}`);
-    }
+    for (const bundle of bundles) await activate(bundle);
+    if (!mounted) throw new Error("no enabled UI extension mounted a workbench");
   } catch (error) {
     showFailure(error);
   }
