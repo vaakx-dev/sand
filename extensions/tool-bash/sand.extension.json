@@ -1,0 +1,7 @@
+{
+  "id": "sand.tool.bash",
+  "name": "Bash Tool",
+  "version": "0.0.1",
+  "description": "unrestricted shell execution",
+  "main": "./main.ts"
+}

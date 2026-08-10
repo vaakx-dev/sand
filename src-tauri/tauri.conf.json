@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sand",
+  "version": "0.0.1",
+  "identifier": "works.sand.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Sand",
+        "decorations": false,
+        "width": 1440,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 640,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "../runtime/": "runtime/",
+      "../extensions/": "extensions/",
+      "../packages/extension-api/": "packages/extension-api/",
+      "../packages/extension-runtime/": "packages/extension-runtime/",
+      "../node_modules/@vaakx-dev/vrui/": "node_modules/@vaakx-dev/vrui/",
+      "../node_modules/lucide/": "node_modules/lucide/",
+      "../package.json": "package.json"
+    }
+  }
+}

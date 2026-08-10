@@ -1,0 +1,7 @@
+{
+  "id": "sand.workspace",
+  "name": "Workspace",
+  "version": "0.0.1",
+  "description": "Workspace browsing, search, Git, and terminal commands",
+  "main": "./main.ts"
+}

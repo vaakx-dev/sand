@@ -1,0 +1,20 @@
+[package]
+name = "sand"
+version = "0.0.1"
+description = "An extension-native agent workbench"
+authors = ["Sand contributors"]
+edition = "2024"
+
+[lib]
+name = "sand_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2.11.5", features = ["unstable"] }
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "process", "sync"] }

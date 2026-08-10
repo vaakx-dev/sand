@@ -1,0 +1,80 @@
+.thread-tools { position: relative; z-index: var(--z-chrome); flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 30px; gap: 4px; padding: 8px 9px 7px; }
+.thread-search { height: 30px; min-width: 0; display: flex; align-items: center; gap: 7px; padding: 0 8px; border-radius: 6px; color: var(--faint); background: transparent; }
+.thread-search:hover, .thread-search:focus-within { background: var(--row-hover); color: var(--muted); }
+.thread-search-input { min-width: 0; flex: 1; padding: 0; border: 0; outline: 0; background: transparent; font-size: 12px; font-weight: 540; }
+.thread-search-input::placeholder { color: var(--muted); }
+.thread-search-clear { width: 20px; height: 20px; display: grid; place-items: center; flex: 0 0 20px; border-radius: 4px; color: var(--faint); background: transparent; cursor: pointer; }
+.thread-search-clear:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.project-scope-row { grid-column: 1 / -1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 30px; gap: 4px; }
+.project-scope { height: 30px; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; }
+.project-scope:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.project-scope-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 12px; font-weight: 560; }
+.new-project-button { align-self: center; }
+.project-popover { position: absolute; top: 72px; left: 9px; right: 9px; z-index: var(--z-popover); padding: 5px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-2); box-shadow: 0 18px 50px #000a; }
+.project-popover-row { width: 100%; min-width: 0; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 7px; border-radius: 6px; background: transparent; cursor: pointer; text-align: left; }
+.project-popover-row:not(:disabled):hover { background: var(--row-hover); }
+.project-popover-row.active { background: var(--control-selected-bg); }
+.project-popover-row > .project-popover-name { flex: 1; }
+.project-popover-row > .vrui-icon:last-child { margin-left: auto; color: var(--faint); }
+.project-popover-name { overflow: hidden; color: var(--text); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.thread-scroll, .panel-scroll { min-height: 0; flex: 1; overflow: auto; scrollbar-width: thin; scrollbar-color: #37373c transparent; }
+.thread-scroll { padding: 0 8px 10px; }
+.thread-section { display: flex; flex-direction: column; gap: 2px; }
+.thread-card { position: relative; min-width: 0; min-height: 74px; padding: 8px 9px; border-radius: 7px; color: var(--muted); cursor: pointer; }
+.thread-card[draggable="true"] { cursor: grab; }
+.thread-card[draggable="true"]:active { cursor: grabbing; }
+.thread-card:hover { background: var(--row-hover); color: var(--text); }
+.thread-card.active { background: var(--control-selected-bg); color: var(--text); }
+.thread-card.slim { min-height: 34px; padding-top: 7px; padding-bottom: 7px; opacity: .68; }
+.thread-card.slim:hover, .thread-card.slim.active { opacity: 1; }
+.thread-card-content { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.thread-card-top { height: 14px; display: flex; align-items: center; gap: 5px; color: var(--faint); }
+.thread-project { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.thread-status-label { min-width: 0; overflow: hidden; color: var(--faint); font-size: 10px; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
+.thread-status-label.working, .thread-hover-status.working { color: var(--working); }
+.thread-status-label.approval, .thread-status-label.input, .thread-hover-status.approval, .thread-hover-status.input { color: var(--warning); }
+.thread-status-label.failed, .thread-hover-status.failed { color: var(--danger); }
+.thread-status-label.monitoring, .thread-hover-status.monitoring { color: var(--accent); }
+.thread-card.woke .thread-status-label { color: var(--warning); }
+.thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 12px; font-weight: 580; }
+.thread-meta { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 7px; overflow: hidden; color: var(--faint); font-size: 10px; }
+.thread-meta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-slim-row { min-width: 0; display: flex; align-items: center; gap: 8px; color: var(--faint); }
+.thread-slim-row .thread-title { flex: 1; color: inherit; font-weight: 500; }
+.thread-row-slot { position: relative; width: 76px; min-width: 76px; height: 22px; margin-left: auto; display: flex; align-items: center; justify-content: flex-end; overflow: hidden; }
+.thread-slim-row .thread-row-slot { width: 32px; min-width: 32px; }
+.thread-time { min-width: 0; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.thread-row-actions { position: absolute; inset: 0 0 0 auto; display: none; align-items: center; justify-content: flex-end; gap: 2px; background: var(--row-hover); }
+.thread-card.active .thread-row-actions { background: var(--control-selected-bg); }
+.thread-row-action, .thread-pin-state { width: 22px; min-width: 22px; max-width: 22px; height: 22px; min-height: 22px; max-height: 22px; display: grid; place-items: center; flex: 0 0 22px; border-radius: 5px; color: var(--muted); background: transparent; cursor: pointer; }
+.thread-row-action:not(:disabled):hover, .thread-pin-state:not(:disabled):hover { color: var(--text); background: var(--control-selected-bg); }
+.thread-card:hover .thread-row-slot.actionable > .thread-status-label, .thread-card:focus-within .thread-row-slot.actionable > .thread-status-label { display: none; }
+.thread-card:hover .thread-row-slot.actionable > .thread-row-actions, .thread-card:focus-within .thread-row-slot.actionable > .thread-row-actions { display: flex; }
+.thread-slim-row .thread-row-action { position: absolute; right: 0; display: none; background: var(--row-hover); }
+.thread-card.active .thread-slim-row .thread-row-action { background: var(--control-selected-bg); }
+.thread-card.slim:hover .thread-time, .thread-card.slim:focus-within .thread-time { display: none; }
+.thread-card.slim:hover .thread-row-action, .thread-card.slim:focus-within .thread-row-action { display: grid; }
+.thread-hover-card { position: fixed; z-index: var(--z-preview); width: 220px; min-height: 106px; display: flex; flex-direction: column; gap: 7px; padding: 10px; border: 1px solid var(--border-strong); border-radius: 8px; color: var(--muted); background: var(--surface-2); box-shadow: 0 18px 55px #000a; pointer-events: none; }
+.thread-hover-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 650; }
+.thread-hover-line { display: flex; align-items: center; gap: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.thread-hover-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid var(--border); color: var(--faint); font-size: 10px; }
+.thread-menu-layer { position: fixed; inset: 0; z-index: var(--z-menu); }
+.thread-menu { position: fixed; width: 172px; padding: 5px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-2); box-shadow: 0 18px 55px #000a; }
+.thread-menu-row { width: 100%; height: var(--menu-row-height); display: flex; align-items: center; gap: 8px; padding: 0 var(--content-inset); border-radius: var(--control-radius); color: var(--text); background: transparent; cursor: pointer; text-align: left; }
+.thread-menu-row:not(:disabled):hover { background: var(--row-hover); }
+.thread-menu-row > span:first-child { min-width: 0; flex: 1; }
+.thread-menu-row.danger { color: var(--danger); }
+.thread-menu-divider { height: 1px; margin: 6px 5px; background: var(--border); }
+.thread-snooze-wrap { position: relative; }
+.thread-snooze-menu { position: absolute; top: -5px; left: calc(100% - 2px); width: 188px; padding: 5px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-2); box-shadow: 0 18px 55px #000a; }
+.thread-card.unread .thread-title { font-weight: 700; }
+.thread-card.unread .thread-title::before { content: ""; width: 5px; height: 5px; display: inline-block; margin: 0 6px 1px 0; border-radius: 50%; background: var(--accent); }
+.thread-divider { height: 1px; margin: 6px 10px; background: var(--border); }
+.thread-shelf { margin-top: 8px; }
+.thread-shelf.snoozed .shelf-toggle, .thread-shelf.snoozed .thread-time { color: var(--accent); }
+.shelf-toggle { width: 100%; height: 30px; display: flex; align-items: center; gap: 7px; padding: 0 8px; color: var(--faint); background: transparent; cursor: pointer; text-align: left; font-size: 10px; font-weight: 620; }
+.shelf-toggle:not(:disabled):hover { color: var(--muted); }
+.shelf-line { height: 1px; flex: 1; background: var(--border); }
+.show-more-threads { width: 100%; height: 32px; display: flex; align-items: center; gap: 7px; padding: 0 8px; border-radius: 6px; color: var(--faint); background: transparent; cursor: pointer; text-align: left; font-size: 10px; }
+.show-more-threads:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.sidebar-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 16px; color: var(--faint); text-align: center; font-size: 11px; }

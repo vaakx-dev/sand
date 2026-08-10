@@ -1,0 +1,7 @@
+{
+  "id": "sand.tool.write",
+  "name": "Write Tool",
+  "version": "0.0.1",
+  "description": "file writer",
+  "main": "./main.ts"
+}

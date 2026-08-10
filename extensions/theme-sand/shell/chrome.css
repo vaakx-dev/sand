@@ -1,0 +1,32 @@
+.topbar { position: relative; z-index: var(--z-chrome); height: 40px; display: flex; align-items: center; min-width: 0; border-bottom: 1px solid var(--border); background: var(--bg); }
+.topbar > .sidebar-trigger { flex: 0 0 28px; margin: 0 3px 0 8px; }
+.sidebar-trigger, .icon-button, .sidebar-menu-icon { width: var(--control-height); min-width: var(--control-height); max-width: var(--control-height); height: var(--control-height); min-height: var(--control-height); max-height: var(--control-height); flex: 0 0 var(--control-height); display: inline-grid; place-items: center; border-radius: var(--control-radius); color: var(--muted); background: transparent; cursor: pointer; }
+.sidebar-trigger:not(:disabled):hover, .icon-button:not(:disabled):hover, .sidebar-menu-icon:not(:disabled):hover { color: var(--text); background: var(--control-hover-bg); }
+.sidebar-trigger.active, .icon-button.active, .sidebar-menu-icon.active { color: var(--text); background: var(--control-selected-bg); }
+button[data-tooltip] { position: relative; }
+button[data-tooltip]::after { content: attr(data-tooltip); position: absolute; top: calc(100% + 7px); left: 50%; z-index: var(--z-tooltip); width: max-content; max-width: 230px; padding: 5px 7px; border: 1px solid var(--border-strong); border-radius: 6px; color: var(--text); background: var(--surface-2); box-shadow: 0 8px 28px #0008; font-size: 10px; font-weight: 500; line-height: 1.25; opacity: 0; pointer-events: none; transform: translateX(-50%); }
+button[data-tooltip]:not(:disabled):hover::after, button[data-tooltip]:not(:disabled):focus-visible::after { opacity: 1; }
+.sidebar-trigger[data-tooltip]::after { left: 0; transform: none; }
+.composer button[data-tooltip]::after { top: auto; bottom: calc(100% + 7px); }
+.topbar-breadcrumb { min-width: 0; flex: 1; display: flex; align-items: center; gap: 8px; padding: 0 14px; color: var(--faint); }
+.sidebar-trigger + .topbar-breadcrumb { padding-left: 5px; }
+.breadcrumb-project { color: var(--muted); }
+.breadcrumb-slash { color: var(--faint); }
+.topbar-title { min-width: 0; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 560; color: var(--text); }
+.top-actions { display: flex; align-items: center; gap: 2px; padding: 0 calc(var(--window-controls-width) + var(--window-action-inset)) 0 8px; }
+.top-panel-controls { width: 112px; flex: 0 0 112px; display: grid; grid-template-columns: repeat(4, 28px); align-items: center; }
+.top-panel-control-spacer { width: 28px; height: 28px; }
+.body.right-panel-visible .top-actions { padding-right: 8px; }
+.open-action-wrap { position: relative; }
+.open-menu { position: absolute; top: 32px; left: 0; z-index: var(--z-popover); width: 156px; padding: 5px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface-2); box-shadow: 0 14px 50px #0009; }
+.open-menu-row { width: 100%; height: var(--menu-row-height); display: flex; align-items: center; gap: 7px; padding: 0 var(--content-inset); border-radius: var(--control-radius); color: var(--text); background: transparent; cursor: pointer; text-align: left; }
+.open-menu-row:not(:disabled):hover { background: var(--row-hover); }
+.open-menu-row > span:nth-child(2) { flex: 1; }
+.open-shortcut { color: var(--faint); font-size: 9px; }
+.window-controls { position: fixed; top: 0; right: 0; z-index: var(--z-window); height: 40px; display: flex; align-items: stretch; }
+.window-control { --button-icon-size: 13px; width: 40px; min-width: 40px; max-width: 40px; flex: 0 0 40px; display: grid; place-items: center; color: var(--muted); background: transparent; cursor: pointer; }
+.window-control:not(:disabled):hover { color: var(--text); background: var(--surface-3); }
+.window-control.close:not(:disabled):hover { color: white; background: #c42b36; }
+.top-action { height: 28px; display: inline-flex; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--sidebar); cursor: pointer; white-space: nowrap; font-size: 11px; font-weight: 580; }
+.top-action:not(:disabled):hover { border-color: var(--border-strong); color: var(--text); background: var(--row-hover); }
+.top-action.active { border-color: var(--border-strong); color: var(--text); background: var(--control-selected-bg); }

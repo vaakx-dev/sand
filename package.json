@@ -1,0 +1,27 @@
+{
+  "name": "sand",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "check": "tsc --noEmit && cargo check --manifest-path src-tauri/Cargo.toml",
+    "dev": "vite",
+    "tauri": "tauri",
+    "test": "bun test tests"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui",
+    "lucide": "^1.16.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/bun": "^1.3.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}

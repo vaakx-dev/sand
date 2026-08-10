@@ -1,0 +1,36 @@
+.project-overlays { display: contents; }
+.project-overlay { z-index: var(--z-modal); padding-top: 6vh; }
+.project-modal { width: min(575px, calc(100vw - 32px)); max-height: min(620px, calc(100vh - 80px)); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 13px; background: var(--surface); box-shadow: 0 30px 100px #000c; }
+.project-search { height: 51px; flex: 0 0 51px; display: flex; align-items: center; gap: 8px; padding: 0 9px; color: var(--faint); }
+.project-search:focus-within { color: var(--muted); }
+.project-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--text); background: transparent; font-size: 13px; }
+.project-back { width: 26px; min-width: 26px; max-width: 26px; height: 26px; min-height: 26px; max-height: 26px; flex: 0 0 26px; display: grid; place-items: center; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; }
+.project-back:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.project-section-label { display: block; padding: 1px 16px 7px; color: var(--faint); font-size: 10px; }
+.project-list { min-height: 0; flex: 1; overflow-y: auto; padding: 0 8px 7px; scrollbar-width: thin; }
+.project-row { width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 6px 9px; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+.project-row:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.project-row.active { color: var(--text); background: var(--control-selected-bg); }
+.project-row.current .project-row-name::after { content: "Current"; margin-left: 8px; color: var(--faint); font-size: 9px; font-weight: 500; }
+.project-row-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.project-row-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 13px; font-weight: 620; }
+.project-row-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); font-size: 10px; }
+.project-shortcut { color: var(--faint); font: 10px var(--mono); }
+.project-empty { padding: 60px 20px; color: var(--faint); text-align: center; }
+.project-modal-footer { min-height: 40px; flex: 0 0 40px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 10px; }
+.project-modal-footer .keybinding { display: inline-flex; align-items: center; justify-content: center; }
+.source-search-label { color: var(--text); font-size: 13px; font-weight: 600; }
+.source-list { padding-bottom: 10px; }
+.source-row { width: 100%; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 7px 9px; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; text-align: left; }
+.source-row:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
+.source-row.active { color: var(--text); background: var(--control-selected-bg); }
+.source-modal:focus { outline: 0; }
+.source-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.source-name { color: var(--text); font-size: 13px; font-weight: 610; }
+.source-detail { color: var(--faint); font-size: 10px; }
+.git-source-form { min-height: 220px; flex: 1; padding: 18px 16px; }
+.git-source-form .project-section-label { padding: 0 0 8px; }
+.git-source-input { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 7px; outline: 0; color: var(--text); background: var(--bg); }
+.git-source-input:focus { border-color: var(--accent); }
+.git-source-help { display: block; margin: 8px 0 18px; color: var(--faint); font-size: 10px; line-height: 1.5; }
+.clone-button { height: 31px; padding: 0 10px; border-radius: 6px; cursor: pointer; }

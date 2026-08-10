@@ -1,0 +1,21 @@
+.tasks-view { width: 100%; min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.tasks-summary { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--border); }
+.tasks-label { color: #5899eb; font-size: 10px; font-weight: 680; text-transform: uppercase; }
+.tasks-time { color: var(--faint); font-size: 10px; text-transform: capitalize; }
+.tasks-description { padding: 14px 12px; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.plan-section { padding: 0 9px 12px; }
+.plan-section-label { display: block; padding: 8px 6px; color: var(--faint); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.task-activity-label { margin: 0 9px; }
+.plan-steps { display: flex; flex-direction: column; gap: 4px; }
+.plan-step { min-height: 38px; display: flex; align-items: flex-start; gap: 9px; padding: 9px; border-radius: 7px; color: var(--muted); line-height: 1.4; }
+.plan-step.in_progress { color: var(--text); background: var(--accent-bg); }
+.plan-step.completed { color: var(--faint); }
+.plan-step > .vrui-icon { margin-top: 1px; }
+.tasks-list { display: flex; flex-direction: column; gap: 5px; padding: 0 9px; }
+.task-row { min-height: 42px; display: flex; align-items: flex-start; gap: 9px; padding: 9px; border-radius: 7px; color: var(--muted); }
+.task-row.running { background: #1b2330; color: #d8e7fa; }
+.task-row.complete { color: var(--faint); }
+.task-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.task-name { color: inherit; font-weight: 600; }
+.task-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); font: 9px var(--mono); }
+.tasks-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 16px; color: var(--faint); font-size: 11px; }

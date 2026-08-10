@@ -1,0 +1,9 @@
+node_modules/
+dist/
+target/
+.sand/cache/
+.sand/sessions/
+.sand/settings.json
+.sand/auth/
+src-tauri/gen/
+*.log

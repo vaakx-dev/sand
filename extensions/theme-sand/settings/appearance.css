@@ -1,0 +1,22 @@
+.appearance-description { display: block; margin: -16px 0 24px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.appearance-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.appearance-mode { display: flex; min-width: 0; flex-direction: column; gap: 8px; padding: 7px; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: var(--surface); cursor: pointer; }
+.appearance-mode:not(:disabled):hover { color: var(--text); background: var(--surface-2); }
+.appearance-mode.active { border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+.theme-wireframe { position: relative; height: 94px; overflow: hidden; border-radius: 6px; border: 1px solid var(--border); background: #0f0f10; }
+.theme-wireframe.light { background: #f7f7f8; }
+.theme-wireframe.system { background: linear-gradient(90deg, #f7f7f8 50%, #0f0f10 50%); }
+.theme-wireframe span { position: absolute; display: block; border-radius: 3px; background: #2a2a2d; }
+.theme-wireframe span:nth-child(1) { inset: 7px auto 7px 7px; width: 24%; }
+.theme-wireframe span:nth-child(2) { top: 14px; left: 34%; right: 10px; height: 8px; }
+.theme-wireframe span:nth-child(3) { top: 29px; left: 34%; right: 22%; height: 36px; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.theme-card { min-width: 0; display: flex; flex-direction: column; gap: 7px; padding: 7px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--faint); cursor: pointer; text-align: left; font-size: 10px; }
+.theme-card:not(:disabled):hover { background: var(--surface-2); }
+.theme-card.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.theme-preview { height: 88px; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--border); border-radius: 6px; }
+.theme-preview-half { position: relative; overflow: hidden; }
+.theme-preview-half > span:first-child { position: absolute; inset: 0 auto 0 0; width: 28%; }
+.theme-preview-half > span:last-child { position: absolute; left: 37%; right: 9%; top: 18%; bottom: 24%; border-radius: 4px; border-bottom: 3px solid currentColor; }
+.theme-card-label { color: var(--text); font-size: 12px; font-weight: 620; }
+

@@ -1,0 +1,60 @@
+{
+  "id": "sand.theme.defaults",
+  "name": "Sand Themes",
+  "version": "0.0.1",
+  "description": "built-in themes implemented as a CSS-only extension",
+  "styles": [
+    "./foundation/theme.css",
+    "./shell/layout.css",
+    "./shell/chrome.css",
+    "./sidebar/threads.css",
+    "./sidebar/panels.css",
+    "./agent/conversation.css",
+    "./agent/composer.css",
+    "./right/chrome.css",
+    "./right/tasks.css",
+    "./right/browser.css",
+    "./right/changes.css",
+    "./right/files.css",
+    "./terminal/terminal.css",
+    "./overlays/common.css",
+    "./overlays/projects.css",
+    "./settings/layout.css",
+    "./settings/providers.css",
+    "./settings/system.css",
+    "./settings/appearance.css",
+    "./shell/responsive.css"
+  ],
+  "themes": [
+    {
+      "id": "sand",
+      "label": "Sand",
+      "dark": { "canvas": "#0f0f10", "sidebar": "#151516", "surface": "#1d1d20", "text": "#dedee2", "accent": "#6c9cff" },
+      "light": { "canvas": "#f7f7f8", "sidebar": "#eeeeef", "surface": "#ffffff", "text": "#202024", "accent": "#336ee8" }
+    },
+    {
+      "id": "grove",
+      "label": "Grove",
+      "dark": { "canvas": "#0d1210", "sidebar": "#111914", "surface": "#18221c", "text": "#dbe6de", "accent": "#75b587" },
+      "light": { "canvas": "#f4f7f3", "sidebar": "#e8eee8", "surface": "#ffffff", "text": "#243127", "accent": "#397b4e" }
+    },
+    {
+      "id": "ocean",
+      "label": "Ocean",
+      "dark": { "canvas": "#0b1016", "sidebar": "#101822", "surface": "#172333", "text": "#d8e4ef", "accent": "#5aa9ec" },
+      "light": { "canvas": "#f2f7fb", "sidebar": "#e6eff7", "surface": "#ffffff", "text": "#1f3040", "accent": "#2776b8" }
+    },
+    {
+      "id": "ember",
+      "label": "Ember",
+      "dark": { "canvas": "#15100e", "sidebar": "#1c1411", "surface": "#271b17", "text": "#ecdfd7", "accent": "#e17a52" },
+      "light": { "canvas": "#faf5f1", "sidebar": "#f2e8e1", "surface": "#ffffff", "text": "#3c2921", "accent": "#bd5836" }
+    },
+    {
+      "id": "iris",
+      "label": "Iris",
+      "dark": { "canvas": "#110f17", "sidebar": "#181421", "surface": "#211b2d", "text": "#e5deed", "accent": "#a986d8" },
+      "light": { "canvas": "#f8f4fb", "sidebar": "#eee7f4", "surface": "#ffffff", "text": "#33283d", "accent": "#7652a4" }
+    }
+  ]
+}
