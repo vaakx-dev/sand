@@ -12,7 +12,6 @@ import {
 
 import type {
   ChatGptAuth,
-  FileTreeNode,
   GitDiff,
   GitStatus,
   ProjectDescription,
@@ -27,9 +26,8 @@ import {
 } from "./values.ts";
 
 export async function initializeWorkbench(runtime: ControllerRuntime): Promise<void> {
-  const [workspace, tree, providers, sessions, extensions, settings, gitStatus, gitDiff, auth, projects] = await Promise.all([
+  const [workspace, providers, sessions, extensions, settings, gitStatus, gitDiff, auth, projects] = await Promise.all([
     runtime.command<{ root: string }>("workspace.info"),
-    runtime.command<FileTreeNode[]>("workspace.tree", { depth: 6 }),
     runtime.call<ProviderDescription[]>("agent.providers"),
     runtime.call<AgentSessionSummary[]>("agent.sessions"),
     runtime.call<ExtensionDescription[]>("extensions.list"),
@@ -56,7 +54,6 @@ export async function initializeWorkbench(runtime: ControllerRuntime): Promise<v
 
   batch(() => {
     state.root.set(workspace.root);
-    state.tree.set(tree);
     state.providers.set(providers);
     state.sessions.set(sessions);
     state.extensions.set(extensions);
@@ -67,18 +64,9 @@ export async function initializeWorkbench(runtime: ControllerRuntime): Promise<v
     state.chatgptAuth.set(auth);
     state.projects.set(projects);
     state.sidebarWidth.set(numberValue(settings["workbench.sidebarWidth"], 272));
-    state.rightWidth.set(numberValue(settings["workbench.right_width"], 430));
-    state.terminalHeight.set(numberValue(settings["workbench.terminal_height"], 260));
     state.sidebarOpen.set(booleanValue(settings["workbench.sidebarOpen"], true));
-    const rightOpen = booleanValue(settings["workbench.right_open"], false);
-    state.rightOpen.set(rightOpen);
-    state.rightMaximized.set(booleanValue(settings["workbench.right_maximized"], false));
-    state.rightTabs.set([]);
-    state.rightActiveId.set(null);
     state.appearance.set(appearanceValue(settings["workbench.appearance"]));
     state.theme.set(stringValue(settings["workbench.theme"]) || "sand");
-    state.wordWrap.set(booleanValue(settings["workbench.word_wrap"], true));
-    state.autoOpenTasks.set(booleanValue(settings["workbench.auto_open_tasks"], true));
     const autoSettleDays = settings["workbench.autoSettleDays"];
     state.autoSettleDays.set(autoSettleDays === null
       ? null

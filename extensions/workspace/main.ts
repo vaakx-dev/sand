@@ -12,15 +12,9 @@ import { registerGit } from "./git.ts";
 import { registerOpenCommands } from "./open.ts";
 import { registerProjects } from "./projects.ts";
 import { search } from "./search.ts";
-import { Terminals } from "./terminals.ts";
-
-let activeTerminals: Terminals | null = null;
 
 const extension: HostExtension = {
   async activate(context) {
-    const terminals = new Terminals(context.workspace, context.events);
-    activeTerminals = terminals;
-
     context.commands.register("workspace.info", () => ({ root: context.workspace }));
     context.commands.register("workspace.tree", (params) => {
       const value = objectValue(params);
@@ -49,27 +43,9 @@ const extension: HostExtension = {
         optionalString(value.glob),
       );
     });
-    context.commands.register("terminal.open", (params) =>
-      terminals.open(optionalString(objectValue(params).cwd))
-    );
-    context.commands.register("terminal.write", (params) => {
-      const value = objectValue(params);
-      return terminals.write(
-        requiredString(value, "id"),
-        requiredString(value, "data"),
-      );
-    });
-    context.commands.register("terminal.close", (params) =>
-      terminals.stop(requiredString(objectValue(params), "id"))
-    );
-
     await registerProjects(context);
     registerGit(context);
     registerOpenCommands(context);
-  },
-  async deactivate() {
-    await activeTerminals?.closeAll();
-    activeTerminals = null;
   },
 };
 

@@ -1,4 +1,4 @@
-import { derive, sig } from "@vaakx-dev/vrui";
+import { sig } from "@vaakx-dev/vrui";
 
 import type { JsonObject } from "@sand/extension-api";
 
@@ -6,21 +6,13 @@ import type {
   Activity,
   AppearanceMode,
   ChatGptAuth,
-  EditorTab,
-  FileTreeNode,
-  PlanStep,
   ProjectDescription,
   ProjectPickerIntent,
   ProviderDescription,
   ProviderModels,
   ReasoningEffort,
-  RightTab,
-  SearchResult,
   SettingsSection,
   ServiceTier,
-  TerminalLine,
-  TerminalPane,
-  ToolActivity,
 } from "./models.ts";
 import type {
   AgentMessage,
@@ -33,8 +25,6 @@ export function createState() {
   const activity = sig<Activity>("threads");
   const sidebarOpen = sig(true);
   const sidebarWidth = sig(272);
-  const rightOpen = sig(false);
-  const rightWidth = sig(430);
   const settledOpen = sig(true);
   const snoozedOpen = sig(false);
   const settledLimit = sig(10);
@@ -59,16 +49,7 @@ export function createState() {
   const settingsSection = sig<SettingsSection>("general");
   const appearance = sig<AppearanceMode>("system");
   const theme = sig("sand");
-  const wordWrap = sig(true);
-  const autoOpenTasks = sig(true);
   const root = sig("");
-  const tree = sig<FileTreeNode[]>([]);
-  const tabs = sig<EditorTab[]>([]);
-  const activePath = sig<string | null>(null);
-  const activeTab = derive(() => tabs.get().find((tab) => tab.path === activePath.get()) ?? null);
-  const dirty = derive(() => tabs.get().some((tab) => tab.content !== tab.savedContent));
-  const searchQuery = sig("");
-  const searchResults = sig<SearchResult[]>([]);
   const providers = sig<ProviderDescription[]>([]);
   const sessions = sig<AgentSessionSummary[]>([]);
   const provider = sig("echo");
@@ -92,25 +73,6 @@ export function createState() {
   const sessionId = sig<string | null>(null);
   const agentStatus = sig<AgentSessionSummary["status"]>("idle");
   const agentDelta = sig("");
-  const tools = sig<ToolActivity[]>([]);
-  const planDescription = sig("");
-  const planSteps = sig<PlanStep[]>([]);
-  const planUpdatedAt = sig("");
-  const terminal = sig<TerminalLine[]>([]);
-  const terminalPanes = sig<TerminalPane[]>([]);
-  const terminalActiveId = sig<string | null>(null);
-  const terminalLayout = sig<"columns" | "rows">("columns");
-  const terminalCommands = sig<Record<string, string>>({});
-  const terminalReady = sig<Record<string, boolean>>({});
-  const terminalHeight = sig(260);
-  const bottomOpen = sig(false);
-  const rightTabs = sig<RightTab[]>([]);
-  const rightActiveId = sig<string | null>(null);
-  const rightActiveTab = derive(() =>
-    rightTabs.get().find((tab) => tab.id === rightActiveId.get()) ?? null
-  );
-  const rightAddOpen = sig(false);
-  const rightMaximized = sig(false);
   const gitStatus = sig("");
   const gitDiff = sig("");
   const gitRepository = sig(false);
@@ -125,8 +87,6 @@ export function createState() {
     activity,
     sidebarOpen,
     sidebarWidth,
-    rightOpen,
-    rightWidth,
     settledOpen,
     snoozedOpen,
     settledLimit,
@@ -151,16 +111,7 @@ export function createState() {
     settingsSection,
     appearance,
     theme,
-    wordWrap,
-    autoOpenTasks,
     root,
-    tree,
-    tabs,
-    activePath,
-    activeTab,
-    dirty,
-    searchQuery,
-    searchResults,
     providers,
     sessions,
     provider,
@@ -184,23 +135,6 @@ export function createState() {
     sessionId,
     agentStatus,
     agentDelta,
-    tools,
-    planDescription,
-    planSteps,
-    planUpdatedAt,
-    terminal,
-    terminalPanes,
-    terminalActiveId,
-    terminalLayout,
-    terminalCommands,
-    terminalReady,
-    terminalHeight,
-    bottomOpen,
-    rightTabs,
-    rightActiveId,
-    rightActiveTab,
-    rightAddOpen,
-    rightMaximized,
     gitStatus,
     gitDiff,
     gitRepository,

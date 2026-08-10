@@ -2,16 +2,19 @@ import { describe, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
-const manifestPath = resolve(process.cwd(), "extensions/theme-sand/sand.extension.json");
-const browserPath = resolve(process.cwd(), "extensions/workbench/views/right/browser.ts");
-const nativeBrowserPath = resolve(
-  process.cwd(),
-  "extensions/workbench/views/right/nativeBrowser.ts",
-);
+const manifestPaths = [
+  "extensions/theme-sand/sand.extension.json",
+  "extensions/files/sand.extension.json",
+  "extensions/right-sidebar/sand.extension.json",
+  "extensions/terminal/sand.extension.json",
+  "extensions/tool-plan/sand.extension.json",
+].map((path) => resolve(process.cwd(), path));
+const browserPath = resolve(process.cwd(), "extensions/right-sidebar/browser.ts");
+const surfacesPath = resolve(process.cwd(), "extensions/right-sidebar/ui.ts");
+const planPath = resolve(process.cwd(), "extensions/tool-plan/ui.ts");
 const capabilityPath = resolve(process.cwd(), "src-tauri/capabilities/main.json");
 const cargoPath = resolve(process.cwd(), "src-tauri/Cargo.toml");
 const rustPath = resolve(process.cwd(), "src-tauri/src/lib.rs");
-const surfacesPath = resolve(process.cwd(), "extensions/workbench/views/right/surfaces.ts");
 const threadsPath = resolve(process.cwd(), "extensions/workbench/views/sidebar/threads.ts");
 const pickerPath = resolve(process.cwd(), "extensions/workbench/views/projects/picker.ts");
 
@@ -69,30 +72,33 @@ describe("Sand UI contracts", () => {
     expect(theme).toContain("grid-template-columns: repeat(4, 28px)");
     expect(theme).toContain(".right-add-menu { position: absolute;");
     expect(theme).toContain("right: 0;");
+    expect(theme).toContain(".right-panel-host.open) .top-actions { padding-right: 8px;");
+    expect(theme).toContain(".right-panel-host.open) .top-panel-controls { display: none;");
   });
 
   test("uses a native browser surface instead of a blocked iframe", async () => {
-    const [browser, nativeBrowser, capability, cargo, rust, surfaces] = await Promise.all([
+    const [browser, capability, cargo, rust, surfaces, plan] = await Promise.all([
       readFile(browserPath, "utf8"),
-      readFile(nativeBrowserPath, "utf8"),
       readFile(capabilityPath, "utf8"),
       readFile(cargoPath, "utf8"),
       readFile(rustPath, "utf8"),
       readFile(surfacesPath, "utf8"),
+      readFile(planPath, "utf8"),
     ]);
 
     expect(browser).not.toContain("iframe");
     expect(browser).toContain("native_browser(state, tab)");
-    expect(nativeBrowser).toContain("new Webview(");
-    expect(nativeBrowser).toContain("resize_observer(");
-    expect(nativeBrowser).toContain('listen<BrowserNavigation>("sand://browser-navigated"');
+    expect(browser).toContain("new Webview(");
+    expect(browser).toContain("resize_observer(");
+    expect(browser).toContain('listen<BrowserNavigation>("sand://browser-navigated"');
     expect(capability).toContain("core:webview:allow-create-webview");
     expect(capability).toContain("core:webview:allow-webview-close");
     expect(capability).toContain("core:event:allow-listen");
     expect(cargo).toContain('features = ["unstable"]');
     expect(rust).toContain(".on_page_load(|webview, payload|");
     expect(rust).toContain('"sand://browser-navigated"');
-    expect(surfaces).toContain('{ id: "tasks", label: "Plan"');
+    expect(surfaces).not.toContain('id: "plan"');
+    expect(plan).toContain('id: "plan"');
   });
 
   test("keeps provider model catalogs on one scroll axis", async () => {
@@ -117,10 +123,10 @@ describe("Sand UI contracts", () => {
 });
 
 async function readTheme(): Promise<string> {
-  const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as { styles: string[] };
-  const root = dirname(manifestPath);
-  const styles = await Promise.all(
-    manifest.styles.map((path) => readFile(resolve(root, path), "utf8")),
-  );
-  return styles.join("\n");
+  const styles = await Promise.all(manifestPaths.flatMap(async (manifestPath) => {
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as { styles?: string[] };
+    const root = dirname(manifestPath);
+    return Promise.all((manifest.styles ?? []).map((path) => readFile(resolve(root, path), "utf8")));
+  }));
+  return styles.flat().join("\n");
 }

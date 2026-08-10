@@ -21,11 +21,6 @@ export function globalKeyDown(
     }
     return;
   }
-  if (modifier && !event.shiftKey && event.key === "`") {
-    event.preventDefault();
-    void controller.executeCommand("workbench.terminal");
-    return;
-  }
   const command = state.commands.get().find((item) =>
     item.keybinding && matchesKeybinding(event, item.keybinding)
   );
@@ -49,7 +44,6 @@ function matchesKeybinding(event: KeyboardEvent, keybinding: string): boolean {
 
 function closeOverlays(state: WorkbenchState): void {
   state.openMenuOpen.set(false);
-  state.rightAddOpen.set(false);
   state.modelPickerOpen.set(false);
   state.traitsOpen.set(false);
   state.projectMenuOpen.set(false);

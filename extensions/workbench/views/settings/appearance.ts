@@ -4,7 +4,7 @@ import type { ThemeContribution } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { page, settingRow, toggle } from "./shared.ts";
+import { page } from "./shared.ts";
 
 export function appearancePage(
   controller: WorkbenchController,
@@ -39,12 +39,6 @@ export function appearancePage(
         .flatMap((extension) => extension.themes ?? [])
         .map((theme) => themeCard(controller, state, theme)),
     )),
-    h2({ class: "settings-section-heading" }, "Interface"),
-    settingRow(
-      "Word wrap",
-      "Wrap long lines in code, diffs, and file previews by default.",
-      toggle(state.wordWrap, () => void controller.preferences.saveBehavior()),
-    ),
   );
 }
 

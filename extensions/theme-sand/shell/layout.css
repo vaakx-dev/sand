@@ -1,7 +1,7 @@
 .body { display: grid; width: 100%; min-width: 0; min-height: 0; height: 100%; }
-.sidebar-slot, .center-slot, .right-slot, .resizer-slot { min-width: 0; min-height: 0; overflow: hidden; }
-.sidebar-slot, .center-slot, .right-slot { display: flex; }
-.sidebar-slot > *, .center-slot > *, .right-slot > * { min-width: 0; min-height: 0; flex: 1; }
+.sidebar-slot, .center-slot, .resizer-slot { min-width: 0; min-height: 0; overflow: hidden; }
+.sidebar-slot, .center-slot { display: flex; }
+.sidebar-slot > *, .center-slot > * { min-width: 0; min-height: 0; flex: 1; }
 .resizer-slot { position: relative; }
 .resizer { position: relative; z-index: var(--z-resizer); width: 3px; cursor: col-resize; background: transparent; }
 .resizer::after { content: ""; position: absolute; inset: 0 -2px; }
@@ -11,4 +11,3 @@
 .sidebar-chrome { height: 40px; flex: 0 0 40px; display: flex; align-items: center; gap: 7px; padding: 0 9px; border-bottom: 1px solid var(--border); }
 .sidebar-wordmark { color: var(--text); font-size: 13px; font-weight: 670; }
 .sidebar-view { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-

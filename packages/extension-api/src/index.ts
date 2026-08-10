@@ -47,6 +47,20 @@ export type {
 
 export type ThemeAppearance = "light" | "dark";
 
+export interface WorkspaceFileNode {
+  name: string;
+  path: string;
+  kind: "directory" | "file";
+  children?: WorkspaceFileNode[];
+}
+
+export interface WorkspaceSearchResult {
+  path: string;
+  line: number;
+  column: number;
+  text: string;
+}
+
 export interface ThemePreview {
   canvas: string;
   sidebar: string;
@@ -108,9 +122,53 @@ export interface UiCommandRegistry {
   execute(id: string): Promise<void>;
 }
 
+export interface UiSlotContribution {
+  id: string;
+  slot: string;
+  node: HTMLElement;
+  order?: number;
+}
+
+export interface UiSlotRegistry {
+  register(contribution: UiSlotContribution): () => void;
+  mount(slot: string, container: HTMLElement): () => void;
+}
+
+export interface UiSurfaceContribution {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  order?: number;
+  multiple?: boolean;
+  render?(instanceId: string): HTMLElement;
+  open?(): void | Promise<void>;
+}
+
+export interface UiSurfaceRegistry {
+  register(surface: UiSurfaceContribution): () => void;
+  list(): UiSurfaceContribution[];
+  subscribe(listener: () => void): () => void;
+  open(id: string): Promise<void>;
+  onOpen(listener: (surface: UiSurfaceContribution) => void): () => void;
+}
+
+export interface UiEvent<T = unknown> {
+  kind: string;
+  payload: T;
+}
+
+export interface UiEventRegistry {
+  emit<T = unknown>(kind: string, payload: T): void;
+  subscribe(listener: (event: UiEvent) => void): () => void;
+}
+
 export interface UiRegistry {
   mount(node: HTMLElement): void;
   commands: UiCommandRegistry;
+  slots: UiSlotRegistry;
+  surfaces: UiSurfaceRegistry;
+  events: UiEventRegistry;
 }
 
 export interface UiExtensionContext {

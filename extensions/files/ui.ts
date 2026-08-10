@@ -1,0 +1,42 @@
+import type { UiExtension } from "@sand/extension-api";
+
+import { FilesController } from "./controller.ts";
+import { createFilesState } from "./state.ts";
+import { filesView } from "./view.ts";
+
+const extension: UiExtension = {
+  async activate(context) {
+    const state = createFilesState();
+    const controller = new FilesController(context.runtime, context.ui.surfaces, state);
+
+    context.ui.surfaces.register({
+      id: "files",
+      label: "Files",
+      description: "Browse, search, and edit workspace files.",
+      icon: "files",
+      order: 30,
+      render: () => filesView(controller, state),
+    });
+    context.ui.commands.register({
+      id: "files.show",
+      label: "View: Files",
+      run: () => controller.show(),
+    });
+    context.ui.commands.register({
+      id: "files.save",
+      label: "File: Save",
+      keybinding: "Ctrl+S",
+      run: () => controller.save(),
+    });
+    context.ui.commands.register({
+      id: "files.refresh",
+      label: "Files: Refresh",
+      run: () => controller.refresh(),
+    });
+    context.ui.events.subscribe((event) => controller.onUiEvent(event));
+    context.runtime.subscribe((event) => controller.onRuntimeEvent(event));
+    await controller.initialize();
+  },
+};
+
+export default extension;

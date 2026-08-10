@@ -1,6 +1,0 @@
-.browser-view { min-width: 0; min-height: 0; flex: 1; display: grid; grid-template-rows: 42px minmax(0, 1fr); }
-.browser-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--border); }
-.browser-address { min-width: 0; height: 29px; flex: 1; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; outline: 0; color: var(--text); background: var(--surface); font: 11px var(--mono); }
-.browser-address:focus { border-color: var(--border-strong); }
-.browser-native-host { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg); }
-.browser-status { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: var(--muted); background: var(--bg); text-align: center; font-size: 11px; }

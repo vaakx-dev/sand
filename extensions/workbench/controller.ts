@@ -2,6 +2,7 @@ import type { UiExtensionContext } from "@sand/extension-api";
 
 import type { WorkbenchState } from "./state.ts";
 import { AgentController } from "./controller/agent.ts";
+import { ExternalController } from "./controller/external.ts";
 import { WorkbenchEvents } from "./controller/events.ts";
 import { GitController } from "./controller/git.ts";
 import { initializeWorkbench } from "./controller/initialize.ts";
@@ -9,8 +10,6 @@ import { ModelsController } from "./controller/models.ts";
 import { PreferencesController } from "./controller/preferences.ts";
 import { ProjectsController } from "./controller/projects.ts";
 import { ControllerRuntime } from "./controller/runtime.ts";
-import { TerminalController } from "./controller/terminal.ts";
-import { WorkspaceController } from "./controller/workspace.ts";
 
 export class WorkbenchController {
   readonly agent: AgentController;
@@ -18,8 +17,7 @@ export class WorkbenchController {
   readonly models: ModelsController;
   readonly preferences: PreferencesController;
   readonly projects: ProjectsController;
-  readonly terminal: TerminalController;
-  readonly workspace: WorkspaceController;
+  readonly external: ExternalController;
 
   private readonly runtime: ControllerRuntime;
   private readonly events: WorkbenchEvents;
@@ -33,9 +31,8 @@ export class WorkbenchController {
     this.models = new ModelsController(this.runtime);
     this.preferences = new PreferencesController(this.runtime);
     this.projects = new ProjectsController(this.runtime, () => this.agent.newSession());
-    this.terminal = new TerminalController(this.runtime);
-    this.workspace = new WorkspaceController(this.runtime);
-    this.events = new WorkbenchEvents(this.runtime, this.workspace, this.git, this.terminal);
+    this.external = new ExternalController(this.runtime);
+    this.events = new WorkbenchEvents(this.runtime, this.git);
   }
 
   async initialize(): Promise<void> {

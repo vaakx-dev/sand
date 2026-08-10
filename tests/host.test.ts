@@ -123,9 +123,16 @@ afterAll(async () => {
 describe("extension host protocol", () => {
   test("discovers host and UI extensions", () => {
     const extensions = response<unknown[]>(2);
-    const bundles = response<{ source?: string; styles: string[] }[]>(3);
+    const bundles = response<{ manifest: { id: string }; source?: string; styles: string[] }[]>(3);
     expect(extensions.length).toBeGreaterThanOrEqual(8);
-    expect(bundles).toHaveLength(2);
+    expect(bundles.map((bundle) => bundle.manifest.id)).toEqual(expect.arrayContaining([
+      "sand.workbench",
+      "sand.files",
+      "sand.right-sidebar",
+      "sand.terminal",
+      "sand.tool.plan",
+      "sand.theme.defaults",
+    ]));
     expect(bundles.find((bundle) => bundle.source)?.source?.length).toBeGreaterThan(10_000);
     expect(bundles.flatMap((bundle) => bundle.styles).join("\n").length).toBeGreaterThan(10_000);
   });
