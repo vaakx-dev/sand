@@ -1,9 +1,10 @@
 import { details, div, dynamicChild, effect, el, icon, onRaf, show, span, summary } from "@vaakx-dev/vrui";
-import { Check, Circle, Eye, ListTodo, SquarePen, SquareTerminal, Wrench } from "lucide";
+import { Check, Circle, Eye, SquarePen, SquareTerminal, Wrench } from "lucide";
 
 import {
   jsonText,
   type AgentMessage,
+  type AgentRun,
   type AgentToolCall,
 } from "@sand/extension-api";
 
@@ -26,6 +27,11 @@ export function conversationView(state: WorkbenchState): HTMLElement {
       { class: "message-list" },
       ...messages.map((message, index) => messageView(message, messages, index)),
     )),
+    dynamicChild(state.runs, (runs) => div(
+      { class: "run-events" },
+      ...runs.filter((run) => run.status === "interrupted" || run.status === "error")
+        .map(runEvent),
+    )),
     show(
       state.agentDelta.map(Boolean),
       () => div(
@@ -34,6 +40,14 @@ export function conversationView(state: WorkbenchState): HTMLElement {
         div({ class: "message-content" }, state.agentDelta),
       ),
     ),
+  );
+}
+
+function runEvent(run: AgentRun): HTMLElement {
+  return div(
+    { class: ["run-event", run.status] },
+    span({ class: "run-event-title" }, run.status === "interrupted" ? "Run interrupted" : "Run failed"),
+    run.error ? span({ class: "run-event-detail" }, run.error) : null,
   );
 }
 
@@ -119,7 +133,6 @@ function toolIcon(name: string): HTMLElement {
   if (name === "bash") return icon(SquareTerminal, 13);
   if (name === "read") return icon(Eye, 13);
   if (name === "write" || name === "edit") return icon(SquarePen, 13);
-  if (name === "update_plan") return icon(ListTodo, 13);
   return icon(Wrench, 13);
 }
 
@@ -128,7 +141,6 @@ function toolLabel(name: string): string {
   if (name === "read") return "Read file";
   if (name === "write") return "Wrote file";
   if (name === "edit") return "Edited file";
-  if (name === "update_plan") return "Updated plan";
   return name.replaceAll("_", " ");
 }
 

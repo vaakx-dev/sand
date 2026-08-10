@@ -9,41 +9,40 @@ import {
   show,
 } from "@vaakx-dev/vrui";
 
+import type { UiRegistry } from "@sand/extension-api";
+
 import type { WorkbenchController } from "../controller.ts";
 import type { WorkbenchState } from "../state.ts";
 import { agentPanel } from "./agent.ts";
 import { projectOverlays } from "./projects.ts";
-import { rightPanel } from "./right.ts";
 import { settingsWorkspace } from "./settings.ts";
 import { sidebar } from "./sidebar.ts";
 import { topbar, windowControls } from "./shell/chrome.ts";
-import { paneResizer, RIGHT_MAX, RIGHT_MIN, SIDEBAR_MAX, SIDEBAR_MIN } from "./shell/resizer.ts";
+import { paneResizer, SIDEBAR_MAX, SIDEBAR_MIN } from "./shell/resizer.ts";
 import { globalKeyDown } from "./shell/shortcuts.ts";
 import { threadContextMenu } from "./sidebar/threadMenu.ts";
 import { threadRenameDialog } from "./sidebar/threadDialog.ts";
 import { threadHoverCard } from "./sidebar/threadRow.ts";
-import { terminal } from "./terminal.ts";
+import { uiSlot } from "./shared/slot.ts";
 
-export function shell(controller: WorkbenchController, state: WorkbenchState): HTMLElement {
+export function shell(
+  controller: WorkbenchController,
+  state: WorkbenchState,
+  ui: UiRegistry,
+): HTMLElement {
   const columns = derive(() => {
     const left = state.sidebarOpen.get() ? state.sidebarWidth.get() : 0;
     const leftGrip = state.sidebarOpen.get() ? 3 : 0;
-    const rightVisible = state.rightOpen.get() && state.activity.get() !== "settings";
-    if (rightVisible && state.rightMaximized.get()) {
-      return `${left}px ${leftGrip}px 0 0 minmax(0, 1fr)`;
-    }
-    const right = rightVisible ? state.rightWidth.get() : 0;
-    const rightGrip = rightVisible ? 3 : 0;
-    return `${left}px ${leftGrip}px minmax(360px, 1fr) ${rightGrip}px ${right}px`;
+    return `${left}px ${leftGrip}px minmax(0, 1fr) auto`;
   });
-  const rightVisible = derive(() => state.rightOpen.get() && state.activity.get() !== "settings");
-  const rightResizable = derive(() => rightVisible.get() && !state.rightMaximized.get());
+  const sidebarSpace = derive(() => state.sidebarOpen.get() ? state.sidebarWidth.get() + 3 : 0);
 
   return div(
     {
       class: "workbench",
       "data-theme": state.theme,
       "data-appearance": state.appearance,
+      style: { "--workbench-sidebar-space": sidebarSpace.map((width) => `${width}px`) },
       onMount: (element) => onWindow(
         element,
         "keydown",
@@ -54,8 +53,6 @@ export function shell(controller: WorkbenchController, state: WorkbenchState): H
       {
         class: ["body", {
           "sidebar-visible": state.sidebarOpen,
-          "right-panel-visible": rightVisible,
-          "right-panel-maximized": state.rightMaximized,
         }],
         style: { gridTemplateColumns: columns },
       },
@@ -76,25 +73,13 @@ export function shell(controller: WorkbenchController, state: WorkbenchState): H
           ? settingsWorkspace(controller, state)
           : div(
               { class: "center-shell" },
-              topbar(controller, state),
-              div({ class: "main-column" }, agentPanel(controller, state), terminal(controller, state)),
+              topbar(controller, state, ui.slots),
+              div({ class: "main-column" }, agentPanel(controller, state)),
+              uiSlot(ui.slots, "workbench.bottom", "bottom-slot"),
             ),
         div({ class: "center-slot" }),
       ),
-      div(
-        { class: "resizer-slot" },
-        keep(rightResizable, () => paneResizer(
-          "right",
-          state.rightWidth,
-          RIGHT_MIN,
-          RIGHT_MAX,
-          controller,
-        )),
-      ),
-      div(
-        { class: "right-slot" },
-        keep(rightVisible, () => rightPanel(controller, state)),
-      ),
+      uiSlot(ui.slots, "workbench.right", "right-slot"),
     ),
     windowControls(),
     portal("overlays", threadHoverCard(state)),

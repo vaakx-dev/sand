@@ -1,6 +1,45 @@
+import type { AgentProvider, AgentTool } from "./agent.ts";
 import type { JsonObject, JsonValue } from "./json.ts";
-import type { ThreadLifecycleSummary } from "./thread.ts";
 
+export { selectProviderOption } from "./agent.ts";
+export type {
+  AgentAttempt,
+  AgentMessage,
+  AgentModelTraits,
+  AgentProvider,
+  AgentProviderConnection,
+  AgentProviderConnectionState,
+  AgentProviderDescription,
+  AgentProviderIcon,
+  AgentProviderModel,
+  AgentProviderOption,
+  AgentProviderPresentation,
+  AgentProviderRequest,
+  AgentProviderResponse,
+  AgentRole,
+  AgentRun,
+  AgentRunStatus,
+  AgentThread,
+  AgentThreadSummary,
+  AgentTool,
+  AgentToolCall,
+  AgentToolDefinition,
+  AgentToolExecution,
+  OrchestrationEvent,
+} from "./agent.ts";
+export { acpRuntime } from "./acp.ts";
+export type {
+  AcpAgentRecord,
+  AcpAgentStatus,
+  AcpConnectRequest,
+  AcpNewSessionRequest,
+  AcpPromptRequest,
+  AcpRuntime,
+  AcpSessionRecord,
+  AcpSessionStatus,
+  AcpSetConfigRequest,
+  AcpSetModeRequest,
+} from "./acp.ts";
 export {
   booleanValue,
   errorMessage,
@@ -35,7 +74,7 @@ export {
   threadWokeAt,
 } from "./thread.ts";
 export type {
-  AgentSessionStatus,
+  AgentThreadStatus,
   ThreadBackgroundStatus,
   ThreadChangeRequestState,
   ThreadLifecycleOptions,
@@ -46,6 +85,20 @@ export type {
 } from "./thread.ts";
 
 export type ThemeAppearance = "light" | "dark";
+
+export interface WorkspaceFileNode {
+  name: string;
+  path: string;
+  kind: "directory" | "file";
+  children?: WorkspaceFileNode[];
+}
+
+export interface WorkspaceSearchResult {
+  path: string;
+  line: number;
+  column: number;
+  text: string;
+}
 
 export interface ThemePreview {
   canvas: string;
@@ -108,9 +161,53 @@ export interface UiCommandRegistry {
   execute(id: string): Promise<void>;
 }
 
+export interface UiSlotContribution {
+  id: string;
+  slot: string;
+  node: HTMLElement;
+  order?: number;
+}
+
+export interface UiSlotRegistry {
+  register(contribution: UiSlotContribution): () => void;
+  mount(slot: string, container: HTMLElement): () => void;
+}
+
+export interface UiSurfaceContribution {
+  id: string;
+  label: string;
+  description: string;
+  icon: string;
+  order?: number;
+  multiple?: boolean;
+  render?(instanceId: string): HTMLElement;
+  open?(): void | Promise<void>;
+}
+
+export interface UiSurfaceRegistry {
+  register(surface: UiSurfaceContribution): () => void;
+  list(): UiSurfaceContribution[];
+  subscribe(listener: () => void): () => void;
+  open(id: string): Promise<void>;
+  onOpen(listener: (surface: UiSurfaceContribution) => void): () => void;
+}
+
+export interface UiEvent<T = unknown> {
+  kind: string;
+  payload: T;
+}
+
+export interface UiEventRegistry {
+  emit<T = unknown>(kind: string, payload: T): void;
+  subscribe(listener: (event: UiEvent) => void): () => void;
+}
+
 export interface UiRegistry {
   mount(node: HTMLElement): void;
   commands: UiCommandRegistry;
+  slots: UiSlotRegistry;
+  surfaces: UiSurfaceRegistry;
+  events: UiEventRegistry;
 }
 
 export interface UiExtensionContext {
@@ -123,68 +220,6 @@ export interface UiExtension {
   activate(context: UiExtensionContext): void | Promise<void>;
 }
 
-export type AgentRole = "system" | "user" | "assistant" | "tool";
-
-export interface AgentToolCall {
-  id: string;
-  name: string;
-  arguments: JsonObject;
-}
-
-export interface AgentMessage {
-  id: string;
-  role: AgentRole;
-  content: string;
-  toolCalls?: AgentToolCall[];
-  toolCallId?: string;
-  createdAt: string;
-}
-
-export interface AgentSessionSummary extends ThreadLifecycleSummary {
-  id: string;
-  title: string;
-  provider: string;
-  model: string;
-}
-
-export interface AgentToolDefinition {
-  name: string;
-  description: string;
-  parameters: JsonObject;
-}
-
-export interface AgentProviderRequest {
-  sessionId: string;
-  model: string;
-  messages: AgentMessage[];
-  tools: AgentToolDefinition[];
-  settings: JsonObject;
-  signal: AbortSignal;
-  onDelta(delta: string): void;
-}
-
-export interface AgentProviderResponse {
-  content: string;
-  toolCalls: AgentToolCall[];
-}
-
-export interface AgentProvider {
-  id: string;
-  name: string;
-  defaultModel?: string;
-  complete(request: AgentProviderRequest): Promise<AgentProviderResponse>;
-}
-
-export interface AgentTool {
-  definition: AgentToolDefinition;
-  execute(input: JsonObject, signal: AbortSignal, execution?: AgentToolExecution): Promise<JsonValue>;
-}
-
-export interface AgentToolExecution {
-  sessionId: string;
-  callId: string;
-}
-
 export type RuntimeCommand = (params: JsonValue) => JsonValue | Promise<JsonValue>;
 
 export interface SettingsApi {
@@ -195,6 +230,7 @@ export interface SettingsApi {
 
 export interface EventApi {
   emit(kind: string, payload: JsonValue): void;
+  record(kind: string, payload: JsonValue): void;
 }
 
 export interface HostExtensionContext {

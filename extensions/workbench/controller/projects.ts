@@ -6,7 +6,7 @@ import { ControllerRuntime } from "./runtime.ts";
 export class ProjectsController {
   constructor(
     private readonly runtime: ControllerRuntime,
-    private readonly newSession: () => void,
+    private readonly newThread: () => void,
   ) {}
 
   openPicker(intent: ProjectPickerIntent): void {
@@ -23,7 +23,7 @@ export class ProjectsController {
     const intent = state.projectPickerIntent.get();
     state.projectPickerOpen.set(false);
     if (samePath(state.root.get(), path)) {
-      if (intent === "newThread") this.newSession();
+      if (intent === "newThread") this.newThread();
       return;
     }
     await this.switchTo(path);

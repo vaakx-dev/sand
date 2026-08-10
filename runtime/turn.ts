@@ -2,6 +2,7 @@ import {
   errorMessage,
   jsonText,
   type AgentProvider,
+  type AgentThread,
   type AgentToolCall,
   type JsonObject,
   type JsonValue,
@@ -9,61 +10,66 @@ import {
 
 import { Events } from "./events.ts";
 import { Registry } from "./registry.ts";
-import { createMessage, type AgentSession, Sessions, sessionSummary } from "./sessions.ts";
+import { createMessage, ThreadStore } from "./threadStore.ts";
 import { Settings } from "./settings.ts";
 
-const DEFAULT_SYSTEM_PROMPT = `You are Sand, an autonomous coding agent. Work from the requested outcome. Use read, write, edit, and bash freely without asking for permission or approval. Use update_plan for work that benefits from visible multi-step tracking. Inspect before editing, make coherent maintainable changes, verify the result, and continue until the task is complete.`;
+const DEFAULT_SYSTEM_PROMPT = `You are Sand, an autonomous coding agent. Work from the requested outcome. Use the available tools freely without asking for permission or approval. Inspect before editing, make coherent maintainable changes, verify the result, and continue until the task is complete.`;
 
 export class AgentTurn {
   constructor(
     private readonly registry: Registry,
     private readonly settings: Settings,
     private readonly events: Events,
-    private readonly sessions: Sessions,
-    private readonly session: AgentSession,
+    private readonly threads: ThreadStore,
+    private readonly thread: AgentThread,
     private readonly provider: AgentProvider,
     private readonly signal: AbortSignal,
     private readonly maxSteps: number,
+    private readonly runId: string,
+    private readonly attemptId: string,
   ) {}
 
   async run(): Promise<void> {
     const systemPrompt = this.settings.get("agent.systemPrompt", DEFAULT_SYSTEM_PROMPT);
     const providerSettings = this.settings.get<JsonObject>(`provider.${this.provider.id}`, {});
-    const messages = this.session.messages.some((item) => item.role === "system")
-      ? this.session.messages
-      : [createMessage("system", systemPrompt), ...this.session.messages];
+    const messages = this.thread.messages.some((item) => item.role === "system")
+      ? this.thread.messages
+      : [createMessage("system", systemPrompt), ...this.thread.messages];
 
     for (let step = 0; step < this.maxSteps; step += 1) {
       if (this.signal.aborted) throw new DOMException("cancelled", "AbortError");
       const response = await this.provider.complete({
-        sessionId: this.session.id,
-        model: this.session.model,
+        threadId: this.thread.id,
+        runId: this.runId,
+        attemptId: this.attemptId,
+        model: this.thread.model,
         messages,
         tools: [...this.registry.tools.values()].map((tool) => tool.definition),
         settings: providerSettings,
         signal: this.signal,
         onDelta: (delta) => {
-          this.events.emit("agent.delta", { sessionId: this.session.id, delta });
+          this.events.emit("orchestration.delta", {
+            threadId: this.thread.id,
+            runId: this.runId,
+            attemptId: this.attemptId,
+            delta,
+          });
         },
       });
       const assistant = createMessage("assistant", response.content);
       assistant.toolCalls = response.toolCalls;
       messages.push(assistant);
-      this.session.messages.push(assistant);
-      this.events.emit("agent.message", {
-        sessionId: this.session.id,
+      this.thread.messages.push(assistant);
+      this.events.record("message.appended", this.messageRecord(assistant));
+      this.events.emit("orchestration.message", {
+        threadId: this.thread.id,
+        runId: this.runId,
+        attemptId: this.attemptId,
         message: assistant as unknown as JsonValue,
       });
-      await this.sessions.persist(this.session);
+      await this.threads.persist(this.thread);
 
       if (!response.toolCalls.length) {
-        this.session.status = "complete";
-        this.session.statusChangedAt = new Date().toISOString();
-        this.session.latestTurnCompletedAt = this.session.statusChangedAt;
-        this.session.unread = true;
-        this.events.emit("agent.status", { sessionId: this.session.id, status: "complete" });
-        await this.sessions.persist(this.session);
-        this.events.emit("agent.session", { session: sessionSummary(this.session) });
         return;
       }
 
@@ -72,13 +78,16 @@ export class AgentTurn {
         const toolMessage = createMessage("tool", jsonText(result));
         toolMessage.toolCallId = call.id;
         messages.push(toolMessage);
-        this.session.messages.push(toolMessage);
-        this.events.emit("agent.message", {
-          sessionId: this.session.id,
+        this.thread.messages.push(toolMessage);
+        this.events.record("message.appended", this.messageRecord(toolMessage));
+        this.events.emit("orchestration.message", {
+          threadId: this.thread.id,
+          runId: this.runId,
+          attemptId: this.attemptId,
           message: toolMessage as unknown as JsonValue,
         });
       }
-      await this.sessions.persist(this.session);
+      await this.threads.persist(this.thread);
     }
     throw new Error(`agent reached the ${this.maxSteps}-step limit`);
   }
@@ -86,29 +95,52 @@ export class AgentTurn {
   private async executeTool(call: AgentToolCall): Promise<JsonValue> {
     const tool = this.registry.tools.get(call.name);
     if (!tool) return { error: `unknown tool: ${call.name}` };
-    this.events.emit("agent.tool_start", {
-      sessionId: this.session.id,
+    const started = {
+      threadId: this.thread.id,
+      runId: this.runId,
+      attemptId: this.attemptId,
       call: call as unknown as JsonValue,
-    });
+    };
+    this.events.record("tool.started", started);
+    this.events.emit("orchestration.tool_start", started);
     try {
       const result = await tool.execute(call.arguments, this.signal, {
-        sessionId: this.session.id,
+        threadId: this.thread.id,
+        runId: this.runId,
+        attemptId: this.attemptId,
         callId: call.id,
       });
-      this.events.emit("agent.tool_end", {
-        sessionId: this.session.id,
+      const completed = {
+        threadId: this.thread.id,
+        runId: this.runId,
+        attemptId: this.attemptId,
         callId: call.id,
         result,
-      });
+      };
+      this.events.record("tool.completed", completed);
+      this.events.emit("orchestration.tool_end", completed);
       return result;
     } catch (error) {
       const result = { error: errorMessage(error) };
-      this.events.emit("agent.tool_end", {
-        sessionId: this.session.id,
+      const completed = {
+        threadId: this.thread.id,
+        runId: this.runId,
+        attemptId: this.attemptId,
         callId: call.id,
         result,
-      });
+      };
+      this.events.record("tool.completed", completed);
+      this.events.emit("orchestration.tool_end", completed);
       return result;
     }
+  }
+
+  private messageRecord(message: ReturnType<typeof createMessage>): JsonValue {
+    return {
+      threadId: this.thread.id,
+      runId: this.runId,
+      attemptId: this.attemptId,
+      message: message as unknown as JsonValue,
+    };
   }
 }

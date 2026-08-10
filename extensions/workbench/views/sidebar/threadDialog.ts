@@ -21,7 +21,7 @@ export function threadRenameDialog(
         }),
         onKeyDown: (event) => {
           if (event.key === "Escape") state.threadRename.set(null);
-          if (event.key === "Enter") void controller.agent.renameSession();
+          if (event.key === "Enter") void controller.agent.renameThread();
         },
       }),
       div(
@@ -31,7 +31,7 @@ export function threadRenameDialog(
           "Cancel",
         ),
         button(
-          { class: "primary-button", onClick: () => void controller.agent.renameSession() },
+          { class: "primary-button", onClick: () => void controller.agent.renameThread() },
           "Rename",
         ),
       ),

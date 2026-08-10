@@ -7,14 +7,14 @@ describe("project picker intent", () => {
   test("creates a new draft when the current project is selected", async () => {
     const state = createState();
     state.root.set("D:\\app\\codeit");
-    state.sessionId.set("existing-thread");
+    state.threadId.set("existing-thread");
     state.projectQuery.set("old query");
     let drafts = 0;
     const controller = new ProjectsController(
       { state } as never,
       () => {
         drafts += 1;
-        state.sessionId.set(null);
+        state.threadId.set(null);
       },
     );
 
@@ -25,7 +25,7 @@ describe("project picker intent", () => {
 
     await controller.select("d:\\APP\\codeit");
     expect(drafts).toBe(1);
-    expect(state.sessionId.get()).toBeNull();
+    expect(state.threadId.get()).toBeNull();
     expect(state.projectPickerOpen.get()).toBe(false);
   });
 

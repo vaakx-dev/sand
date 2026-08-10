@@ -7,7 +7,7 @@
 .composer-chip { height: 26px; display: inline-flex; align-items: center; gap: 5px; padding: 0 7px; border-radius: 5px; color: var(--muted); background: transparent; cursor: pointer; white-space: nowrap; font-size: 11px; }
 .composer-chip:not(:disabled):hover { color: var(--text); background: var(--row-hover); }
 .composer-chip.active { color: var(--text); background: var(--control-selected-bg); }
-.openai-icon { display: inline-block; flex: 0 0 auto; fill: currentColor; }
+.provider-mark { fill: currentColor; }
 .model-trigger { max-width: 180px; }
 .composer-model-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .composer-popover-layer { position: absolute; inset: 0; z-index: calc(var(--z-popover) - 1); pointer-events: none; }
@@ -24,7 +24,7 @@
 .model-search { height: 43px; flex: 0 0 43px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--border); color: var(--faint); }
 .model-search:focus-within { color: var(--muted); border-bottom-color: var(--accent); }
 .model-search-input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
-.model-list-picker { min-height: 0; flex: 1; overflow-y: auto; padding: 5px; scrollbar-width: thin; }
+.model-list-picker { min-height: 0; flex: 1; overflow-y: auto; padding: 5px; }
 .model-picker-row { width: 100%; min-height: 51px; display: flex; align-items: center; gap: 7px; padding: 7px 7px 7px 9px; border-radius: 7px; color: var(--text); background: transparent; cursor: pointer; text-align: left; }
 .model-picker-row:not(:disabled):hover { background: var(--row-hover); }
 .model-picker-row.selected, .model-picker-row.highlighted { background: var(--control-selected-bg); }
@@ -43,6 +43,6 @@
 .traits-row:not(:disabled):hover { background: var(--row-hover); }
 .traits-row.active { background: var(--control-selected-bg); box-shadow: inset 2px 0 var(--accent); }
 .traits-divider { margin: 5px 2px; border-top: 1px solid var(--border); }
-.send-button { width: 31px; min-width: 31px; max-width: 31px; height: 31px; min-height: 31px; max-height: 31px; display: grid; place-items: center; flex: 0 0 31px; border-radius: 50%; color: #dbe7ff; background: #1d3d79; cursor: pointer; }
-.send-button:not(:disabled):hover { background: #28509b; }
+.send-button { width: 31px; min-width: 31px; max-width: 31px; height: 31px; min-height: 31px; max-height: 31px; display: grid; place-items: center; flex: 0 0 31px; border-radius: 50%; color: var(--bg); background: var(--text); cursor: pointer; }
+.send-button:not(:disabled):hover { background: var(--muted); }
 .send-button.stop { background: #d94b57; color: white; }

@@ -12,15 +12,16 @@ import {
   snoozeWakeLabel,
   threadLastActivityAt,
   threadStatus,
-  type AgentSessionSummary,
+  type AgentThreadSummary,
   type ThreadSection,
   type ThreadStatus,
 } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
+import { findModel, findProvider, modelName } from "../../modelCatalog.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { openaiIcon } from "../agent/icons.ts";
 import { projectName, relativeTime, workingDuration } from "../format.ts";
+import { providerIcon } from "../shared/providerIcon.ts";
 import { snoozePresets } from "./snoozePresets.ts";
 
 export function threadHoverCard(state: WorkbenchState): HTMLElement {
@@ -28,7 +29,7 @@ export function threadHoverCard(state: WorkbenchState): HTMLElement {
     derive(() => state.sidebarOpen.get() && state.activity.get() === "threads"
       ? state.threadPreview.get()
       : null),
-    (session) => session
+    (thread) => thread
       ? div(
           {
             class: "thread-hover-card",
@@ -37,37 +38,42 @@ export function threadHoverCard(state: WorkbenchState): HTMLElement {
               top: state.threadPreviewTop.map((top) => `${top}px`),
             },
           },
-          span({ class: "thread-hover-title" }, session.title),
+          span({ class: "thread-hover-title" }, thread.title),
           div({ class: "thread-hover-line" }, icon(Folder, 12), state.root.map(projectName)),
-          div({ class: "thread-hover-line" }, openaiIcon(12), session.model),
           div(
-            { class: ["thread-hover-status", threadStatus(session)] },
-            hoverStatus(session, state.autoSettleDays.get()),
-            span(relativeTime(threadLastActivityAt(session))),
+            { class: "thread-hover-line" },
+            providerIcon(findProvider(state.providers.get(), thread.provider), 12),
+            threadModelName(state, thread),
+          ),
+          div(
+            { class: ["thread-hover-status", threadStatus(thread)] },
+            hoverStatus(thread, state.autoSettleDays.get()),
+            span(relativeTime(threadLastActivityAt(thread))),
           ),
         )
       : div({ hidden: true }),
   );
 }
 
-export function sessionRow(
+export function threadRow(
   controller: WorkbenchController,
   state: WorkbenchState,
   clock: Sig<number>,
-  session: AgentSessionSummary,
+  thread: AgentThreadSummary,
   section: ThreadSection,
 ): HTMLElement {
   const slim = section === "snoozed" || section === "settled";
-  const open = () => void controller.agent.openSession(session.id);
-  const providerIcon = session.provider === "chatgpt" || session.model.toLowerCase().startsWith("gpt")
-    ? openaiIcon(12)
-    : null;
+  const open = () => void controller.agent.openThread(thread.id);
+  const threadProviderIcon = providerIcon(
+    findProvider(state.providers.get(), thread.provider),
+    12,
+  );
   return div(
     {
       class: ["thread-card", section, {
-        active: state.sessionId.map((id) => id === session.id),
-        unread: session.unread,
-        woke: clock.map((now) => isThreadWoke(session, now)),
+        active: state.threadId.map((id) => id === thread.id),
+        unread: thread.unread,
+        woke: clock.map((now) => isThreadWoke(thread, now)),
         slim,
       }],
       role: "button",
@@ -76,7 +82,7 @@ export function sessionRow(
       onClick: open,
       onDragStart: (event) => {
         if (section !== "pinned") return;
-        event.dataTransfer?.setData("application/x-sand-thread", session.id);
+        event.dataTransfer?.setData("application/x-sand-thread", thread.id);
         if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
       },
       onDragOver: (event) => {
@@ -86,28 +92,28 @@ export function sessionRow(
         if (section !== "pinned") return;
         event.preventDefault();
         const source = event.dataTransfer?.getData("application/x-sand-thread");
-        if (!source || source === session.id) return;
+        if (!source || source === thread.id) return;
         const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
-        const pins = state.sessions.get().filter((item) => item.pinned).sort(comparePinnedThreads);
-        const targetIndex = pins.findIndex((item) => item.id === session.id);
+        const pins = state.threads.get().filter((item) => item.pinned).sort(comparePinnedThreads);
+        const targetIndex = pins.findIndex((item) => item.id === thread.id);
         const afterTarget = pins[targetIndex + 1]?.id;
         const beforeId = event.clientY < bounds.top + bounds.height / 2
-          ? session.id
+          ? thread.id
           : afterTarget;
         void controller.agent.reorderPin(source, beforeId);
       },
       onMouseEnter: (event) => {
         const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
         state.threadPreviewTop.set(Math.max(8, Math.min(bounds.top, window.innerHeight - 126)));
-        state.threadPreview.set(session);
+        state.threadPreview.set(thread);
       },
       onMouseLeave: () => {
-        if (state.threadPreview.get()?.id === session.id) state.threadPreview.set(null);
+        if (state.threadPreview.get()?.id === thread.id) state.threadPreview.set(null);
       },
       onContextMenu: (event) => {
         event.preventDefault();
         state.threadPreview.set(null);
-        state.threadMenu.set({ session, x: event.clientX, y: event.clientY });
+        state.threadMenu.set({ thread, x: event.clientX, y: event.clientY });
       },
       onKeyDown: (event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -116,28 +122,28 @@ export function sessionRow(
       },
     },
     slim
-      ? slimContent(controller, session, section, clock)
-      : fullContent(controller, state, session, section, clock, providerIcon),
+      ? slimContent(controller, thread, section, clock)
+      : fullContent(controller, state, thread, section, clock, threadProviderIcon),
   );
 }
 
 function slimContent(
   controller: WorkbenchController,
-  session: AgentSessionSummary,
+  thread: AgentThreadSummary,
   section: "snoozed" | "settled",
   clock: Sig<number>,
 ): HTMLElement {
   return div(
     { class: "thread-slim-row" },
     icon(MessageSquare, 13),
-    span({ class: "thread-title" }, session.title),
+    span({ class: "thread-title" }, thread.title),
     span(
       { class: "thread-row-slot" },
       span(
         { class: "thread-time" },
-        clock.map((now) => section === "snoozed" && session.snoozedUntil
-          ? snoozeWakeLabel(session.snoozedUntil, now)
-          : relativeTime(settledTimestamp(session), now)),
+        clock.map((now) => section === "snoozed" && thread.snoozedUntil
+          ? snoozeWakeLabel(thread.snoozedUntil, now)
+          : relativeTime(settledTimestamp(thread), now)),
       ),
       button(
         {
@@ -145,8 +151,8 @@ function slimContent(
           "aria-label": section === "snoozed" ? "Wake thread now" : "Un-settle thread",
           "data-tooltip": section === "snoozed" ? "Wake thread now" : "Un-settle thread",
           onClick: stopThen(() => section === "snoozed"
-            ? void controller.agent.snoozeSession(session.id)
-            : void controller.agent.settleSession(session.id, false)),
+            ? void controller.agent.snoozeThread(thread.id)
+            : void controller.agent.settleThread(thread.id, false)),
         },
         icon(section === "snoozed" ? AlarmClockOff : Undo2, 13),
       ),
@@ -157,14 +163,14 @@ function slimContent(
 function fullContent(
   controller: WorkbenchController,
   state: WorkbenchState,
-  session: AgentSessionSummary,
+  thread: AgentThreadSummary,
   section: "pinned" | "active",
   clock: Sig<number>,
-  providerIcon: SVGSVGElement | null,
+  threadProviderIcon: HTMLElement,
 ): HTMLElement {
   const now = Date.now();
-  const canSettle = canSettleThread(session, now);
-  const canSnooze = canSnoozeThread(session, now);
+  const canSettle = canSettleThread(thread, now);
+  const canSnooze = canSnoozeThread(thread, now);
   return div(
     { class: "thread-card-content" },
     div(
@@ -177,7 +183,7 @@ function fullContent(
               class: "thread-pin-state",
               "aria-label": "Unpin thread",
               "data-tooltip": "Unpin thread",
-              onClick: stopThen(() => void controller.agent.pinSession(session.id, false)),
+              onClick: stopThen(() => void controller.agent.pinThread(thread.id, false)),
             },
             icon(Pin, 11),
           )
@@ -185,8 +191,8 @@ function fullContent(
       span(
         { class: ["thread-row-slot", { actionable: canSettle || canSnooze }] },
         span(
-          { class: ["thread-status-label", threadStatus(session)] },
-          clock.map((value) => rowStatusLabel(session, value)),
+          { class: ["thread-status-label", threadStatus(thread)] },
+          clock.map((value) => rowStatusLabel(thread, value)),
         ),
         canSettle || canSnooze
           ? span(
@@ -197,8 +203,8 @@ function fullContent(
                       class: "thread-row-action",
                       "aria-label": "Snooze thread for one hour",
                       "data-tooltip": "Snooze for 1 hour",
-                      onClick: stopThen(() => void controller.agent.snoozeSession(
-                        session.id,
+                      onClick: stopThen(() => void controller.agent.snoozeThread(
+                        thread.id,
                         snoozePresets()[0]?.until,
                       )),
                     },
@@ -211,7 +217,7 @@ function fullContent(
                       class: "thread-row-action",
                       "aria-label": "Settle thread",
                       "data-tooltip": "Settle thread",
-                      onClick: stopThen(() => void controller.agent.settleSession(session.id, true)),
+                      onClick: stopThen(() => void controller.agent.settleThread(thread.id, true)),
                     },
                     icon(Check, 13),
                   )
@@ -220,24 +226,35 @@ function fullContent(
           : null,
       ),
     ),
-    span({ class: "thread-title" }, session.title),
-    div({ class: "thread-meta" }, span(session.model), providerIcon),
+    span({ class: "thread-title" }, thread.title),
+    div(
+      { class: "thread-meta" },
+      span(threadModelName(state, thread)),
+      threadProviderIcon,
+    ),
   );
 }
 
-function rowStatusLabel(session: AgentSessionSummary, now: number): string {
-  if (isThreadWoke(session, now)) return "Woke";
-  const status = threadStatus(session);
+function threadModelName(state: WorkbenchState, thread: AgentThreadSummary): string {
+  return modelName(
+    findModel(state.providerModels.get(), thread.provider, thread.model),
+    thread.model,
+  );
+}
+
+function rowStatusLabel(thread: AgentThreadSummary, now: number): string {
+  if (isThreadWoke(thread, now)) return "Woke";
+  const status = threadStatus(thread);
   if (status === "working") {
     return `Working ${workingDuration(
-      session.latestTurnStartedAt ?? session.statusChangedAt ?? session.updatedAt,
+      thread.latestTurnStartedAt ?? thread.statusChangedAt ?? thread.updatedAt,
       now,
     )}`;
   }
   if (status === "ready") {
-    return session.unread && session.status === "complete"
+    return thread.unread && thread.status === "complete"
       ? "Completed"
-      : relativeTime(threadLastActivityAt(session), now);
+      : relativeTime(threadLastActivityAt(thread), now);
   }
   return statusLabel(status);
 }
@@ -252,13 +269,13 @@ function statusLabel(status: Exclude<ThreadStatus, "ready">): string {
   }
 }
 
-function hoverStatus(session: AgentSessionSummary, autoSettleAfterDays: number | null): string {
+function hoverStatus(thread: AgentThreadSummary, autoSettleAfterDays: number | null): string {
   const now = Date.now();
-  if (isThreadWoke(session, now)) return "Woke";
-  if (session.snoozedUntil && Date.parse(session.snoozedUntil) > now) {
-    return `Snoozed, ${snoozeWakeLabel(session.snoozedUntil, now)}`;
+  if (isThreadWoke(thread, now)) return "Woke";
+  if (thread.snoozedUntil && Date.parse(thread.snoozedUntil) > now) {
+    return `Snoozed, ${snoozeWakeLabel(thread.snoozedUntil, now)}`;
   }
-  if (isThreadSettled(session, { now, autoSettleAfterDays })) return "Settled";
-  const status = threadStatus(session);
+  if (isThreadSettled(thread, { now, autoSettleAfterDays })) return "Settled";
+  const status = threadStatus(thread);
   return status === "ready" ? "Ready" : statusLabel(status);
 }

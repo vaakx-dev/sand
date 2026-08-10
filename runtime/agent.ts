@@ -1,18 +1,18 @@
 import {
-  canSettleThread,
-  canSnoozeThread,
   errorMessage,
-  isThreadSettled,
-  isThreadSnoozed,
+  type AgentAttempt,
+  type AgentRun,
+  type AgentRunStatus,
   type JsonObject,
   type JsonValue,
-  type ThreadChangeRequestState,
 } from "@sand/extension-api";
 
 import { Events } from "./events.ts";
 import { Registry } from "./registry.ts";
-import { createMessage, Sessions, sessionSummary } from "./sessions.ts";
+import { createMessage, ThreadStore, threadSummary } from "./threadStore.ts";
+import { ThreadLifecycle } from "./lifecycle.ts";
 import { Settings } from "./settings.ts";
+import { timestamp } from "./time.ts";
 import { TitleGenerator } from "./title.ts";
 import { AgentTurn } from "./turn.ts";
 
@@ -20,27 +20,34 @@ interface StartRequest {
   prompt: string;
   provider?: string;
   model?: string;
-  sessionId?: string;
+  threadId?: string;
   maxSteps?: number;
 }
 
+interface ActiveRun {
+  controller: AbortController;
+  run: AgentRun;
+  attempt: AgentAttempt;
+}
+
 export class AgentHarness {
-  private readonly sessions: Sessions;
+  private readonly threads: ThreadStore;
   private readonly titles: TitleGenerator;
-  private readonly running = new Map<string, AbortController>();
+  private readonly running = new Map<string, ActiveRun>();
+  readonly lifecycle: ThreadLifecycle;
 
   constructor(
     private readonly registry: Registry,
     private readonly settings: Settings,
     private readonly events: Events,
-    sessionDirectory: string,
   ) {
-    this.sessions = new Sessions(sessionDirectory);
-    this.titles = new TitleGenerator(registry, settings, events, this.sessions);
+    this.threads = new ThreadStore(events);
+    this.titles = new TitleGenerator(registry, settings, events, this.threads);
+    this.lifecycle = new ThreadLifecycle(this.threads, settings, events);
   }
 
-  async load(): Promise<void> {
-    await this.sessions.load();
+  restore(snapshot: JsonValue): void {
+    this.threads.restore(snapshot);
   }
 
   providers(): JsonValue {
@@ -48,7 +55,10 @@ export class AgentHarness {
       id: provider.id,
       name: provider.name,
       defaultModel: provider.defaultModel ?? "",
-    }));
+      modelDefaults: provider.modelDefaults,
+      models: provider.models,
+      presentation: provider.presentation,
+    })) as unknown as JsonValue;
   }
 
   tools(): JsonValue {
@@ -61,236 +71,187 @@ export class AgentHarness {
     return tool.execute(input, new AbortController().signal);
   }
 
-  sessionsList(): JsonValue {
-    return this.sessions.list();
-  }
-
-  session(id: string): JsonValue {
-    const session = this.sessions.require(id);
-    return structuredClone(session) as unknown as JsonValue;
-  }
-
   async start(request: StartRequest): Promise<JsonValue> {
     const prompt = request.prompt?.trim();
     if (!prompt) throw new Error("prompt is required");
-    const providerId = request.provider || "echo";
+    const providerId = request.provider || this.registry.providers.keys().next().value;
+    if (!providerId) throw new Error("no agent provider is registered");
     const provider = this.registry.providers.get(providerId);
     if (!provider) throw new Error(`unknown provider: ${providerId}`);
     const model = request.model || provider.defaultModel || "default";
 
-    const firstMessage = !request.sessionId;
-    const session = request.sessionId
-      ? this.sessions.require(request.sessionId)
-      : this.sessions.create(prompt, providerId, model);
-    if (this.running.has(session.id)) throw new Error("session is already running");
+    const firstMessage = !request.threadId;
+    const thread = request.threadId
+      ? this.threads.require(request.threadId)
+      : this.threads.create(prompt, providerId, model);
+    if (this.running.has(thread.id)) throw new Error("thread is already running");
 
     const startedAt = timestamp();
-    session.provider = providerId;
-    session.model = model;
-    session.status = "running";
-    session.statusChangedAt = startedAt;
-    session.latestTurnStartedAt = startedAt;
-    session.settledOverride = undefined;
-    session.settledAt = undefined;
-    session.snoozedAt = undefined;
-    session.snoozedUntil = undefined;
-    session.wakeAcknowledgedAt = startedAt;
-    session.lastVisitedAt = startedAt;
-    session.unread = false;
+    const run: AgentRun = {
+      id: crypto.randomUUID(),
+      threadId: thread.id,
+      provider: providerId,
+      model,
+      status: "running",
+      createdAt: startedAt,
+    };
+    const attempt: AgentAttempt = {
+      id: crypto.randomUUID(),
+      threadId: thread.id,
+      runId: run.id,
+      provider: providerId,
+      status: "running",
+      createdAt: startedAt,
+    };
+    thread.provider = providerId;
+    thread.model = model;
+    thread.status = "running";
+    thread.statusChangedAt = startedAt;
+    thread.latestTurnStartedAt = startedAt;
+    thread.settledOverride = undefined;
+    thread.settledAt = undefined;
+    thread.snoozedAt = undefined;
+    thread.snoozedUntil = undefined;
+    thread.wakeAcknowledgedAt = startedAt;
+    thread.lastVisitedAt = startedAt;
+    thread.unread = false;
+    thread.activeRunId = run.id;
+    thread.activeAttemptId = attempt.id;
     const message = createMessage("user", prompt);
-    session.messages.push(message);
-    session.latestUserMessageAt = message.createdAt;
-    await this.sessions.persist(session);
+    thread.messages.push(message);
+    thread.latestUserMessageAt = message.createdAt;
+    this.events.record("run.started", lifecycleRecord(thread, run, attempt));
+    this.events.record("message.appended", messageRecord(thread.id, run.id, attempt.id, message));
+    await this.threads.persist(thread);
 
     const controller = new AbortController();
-    this.running.set(session.id, controller);
-    this.events.emit("agent.message", {
-      sessionId: session.id,
-      message: session.messages.at(-1) as unknown as JsonValue,
+    this.running.set(thread.id, { controller, run, attempt });
+    this.events.emit("orchestration.message", {
+      threadId: thread.id,
+      runId: run.id,
+      attemptId: attempt.id,
+      message: thread.messages.at(-1) as unknown as JsonValue,
     });
-    this.events.emit("agent.status", { sessionId: session.id, status: "running" });
-    this.events.emit("agent.session", { session: sessionSummary(session) });
+    this.publishLifecycle(thread, run, attempt);
 
     if (firstMessage) {
-      void this.titles.generate(session, prompt, controller.signal).catch(() => {});
+      void this.titles.generate(thread, prompt, controller.signal).catch(() => {});
     }
 
     const turn = new AgentTurn(
       this.registry,
       this.settings,
       this.events,
-      this.sessions,
-      session,
+      this.threads,
+      thread,
       provider,
       controller.signal,
       request.maxSteps ?? 50,
+      run.id,
+      attempt.id,
     );
     void turn.run()
+      .then(() => this.finish(thread, run, attempt, "complete"))
       .catch(async (error) => {
-        session.status = controller.signal.aborted ? "cancelled" : "error";
-        session.statusChangedAt = timestamp();
-        session.latestTurnCompletedAt = session.statusChangedAt;
-        session.unread = true;
-        this.events.emit("agent.error", {
-          sessionId: session.id,
-          message: errorMessage(error),
-        });
-        this.events.emit("agent.status", { sessionId: session.id, status: session.status });
-        await this.sessions.persist(session);
-        this.events.emit("agent.session", { session: sessionSummary(session) });
+        const cancelled = controller.signal.aborted;
+        await this.finish(
+          thread,
+          run,
+          attempt,
+          cancelled ? "cancelled" : "error",
+          cancelled ? undefined : errorMessage(error),
+        );
       })
-      .finally(() => this.running.delete(session.id));
+      .finally(() => this.running.delete(thread.id));
 
-    return structuredClone(session) as unknown as JsonValue;
+    return structuredClone({ ...thread, runs: [run], attempts: [attempt] }) as unknown as JsonValue;
   }
 
-  cancel(sessionId: string): JsonValue {
-    const controller = this.running.get(sessionId);
-    if (!controller) return false;
-    controller.abort();
+  cancel(threadId: string): JsonValue {
+    const active = this.running.get(threadId);
+    if (!active) return false;
+    active.controller.abort();
     return true;
   }
 
-  async pin(sessionId: string, pinned: boolean): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    const now = timestamp();
-    if (pinned) {
-      const orderKey = session.pinOrderKey ?? this.sessions.nextPinOrderKey();
-      if (isThreadSnoozed(session, Date.parse(now))) {
-        session.snoozedAt = undefined;
-        session.snoozedUntil = undefined;
-        session.wakeAcknowledgedAt = now;
-      }
-      if (isThreadSettled(session, this.lifecycleOptions(now))) {
-        session.settledOverride = "active";
-        session.settledAt = undefined;
-      }
-      session.pinned = true;
-      session.pinnedAt ||= now;
-      session.pinOrderKey = orderKey;
-    } else {
-      session.pinned = false;
-      session.pinnedAt = undefined;
-      session.pinOrderKey = undefined;
+  private async finish(
+    thread: ReturnType<ThreadStore["require"]>,
+    run: AgentRun,
+    attempt: AgentAttempt,
+    status: Exclude<AgentRunStatus, "running" | "interrupted">,
+    error?: string,
+  ): Promise<void> {
+    const completedAt = timestamp();
+    Object.assign(run, { status, completedAt, ...(error ? { error } : {}) });
+    Object.assign(attempt, { status, completedAt, ...(error ? { error } : {}) });
+    thread.status = status;
+    thread.statusChangedAt = completedAt;
+    thread.latestTurnCompletedAt = completedAt;
+    thread.unread = true;
+    thread.activeRunId = undefined;
+    thread.activeAttemptId = undefined;
+    this.events.record(`run.${status}`, lifecycleRecord(thread, run, attempt));
+    await this.threads.persist(thread);
+    this.publishLifecycle(thread, run, attempt);
+    if (error) {
+      this.events.emit("orchestration.error", {
+        threadId: thread.id,
+        runId: run.id,
+        attemptId: attempt.id,
+        message: error,
+      });
     }
-    return this.persistAndPublish(session);
   }
 
-  async settle(sessionId: string, settled: boolean): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    const now = timestamp();
-    if (settled && !canSettleThread(session, Date.parse(now))) {
-      throw new Error("cannot settle a thread with active or pending work");
-    }
-    session.settledOverride = settled ? "settled" : "active";
-    session.settledAt = settled ? now : undefined;
-    if (settled) {
-      session.pinned = false;
-      session.pinnedAt = undefined;
-      session.pinOrderKey = undefined;
-      session.snoozedAt = undefined;
-      session.snoozedUntil = undefined;
-      session.wakeAcknowledgedAt = now;
-    }
-    return this.persistAndPublish(session);
+  private publishLifecycle(
+    thread: ReturnType<ThreadStore["require"]>,
+    run: AgentRun,
+    attempt: AgentAttempt,
+  ): void {
+    this.events.emit("orchestration.status", {
+      threadId: thread.id,
+      runId: run.id,
+      attemptId: attempt.id,
+      status: thread.status,
+    });
+    this.events.emit("orchestration.run", {
+      threadId: thread.id,
+      run: run as unknown as JsonValue,
+    });
+    this.events.emit("orchestration.attempt", {
+      threadId: thread.id,
+      attempt: attempt as unknown as JsonValue,
+    });
+    this.events.emit("orchestration.thread", { thread: threadSummary(thread) });
   }
 
-  async rename(sessionId: string, title: string): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    const clean = title.trim();
-    if (!clean) throw new Error("thread title is required");
-    session.title = clean.slice(0, 120);
-    await this.sessions.persist(session, false);
-    return this.publish(session);
-  }
-
-  async unread(sessionId: string, unread: boolean): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    session.unread = unread;
-    await this.sessions.persist(session, false);
-    return this.publish(session);
-  }
-
-  async snooze(sessionId: string, until: string | undefined): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    const now = timestamp();
-    if (!canSnoozeThread(session, Date.parse(now))) {
-      throw new Error("cannot snooze a thread waiting for attention");
-    }
-    if (until) {
-      const wakeAt = Date.parse(until);
-      if (!Number.isFinite(wakeAt) || wakeAt <= Date.parse(now)) {
-        throw new Error("snooze time must be in the future");
-      }
-      session.snoozedAt = now;
-      session.snoozedUntil = until;
-      session.wakeAcknowledgedAt = now;
-    } else {
-      session.snoozedAt = undefined;
-      session.snoozedUntil = undefined;
-      session.wakeAcknowledgedAt = now;
-    }
-    return this.persistAndPublish(session);
-  }
-
-  async visit(sessionId: string): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    const now = timestamp();
-    session.lastVisitedAt = now;
-    session.wakeAcknowledgedAt = now;
-    session.unread = false;
-    await this.sessions.persist(session, false);
-    return this.publish(session);
-  }
-
-  async reorderPin(sessionId: string, beforeId?: string): Promise<JsonValue> {
-    const changed = await this.sessions.reorderPin(sessionId, beforeId);
-    const summaries = changed.map((session) => sessionSummary(session));
-    for (const summary of summaries) this.events.emit("agent.session", { session: summary });
-    return summaries;
-  }
-
-  async changeRequest(
-    sessionId: string,
-    state: ThreadChangeRequestState | undefined,
-  ): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    if (session.changeRequestState === state) return sessionSummary(session);
-    session.changeRequestChangedAt = timestamp();
-    session.changeRequestState = state;
-    return this.persistAndPublish(session);
-  }
-
-  async delete(sessionId: string): Promise<JsonValue> {
-    const session = this.sessions.require(sessionId);
-    if (session.status === "running") throw new Error("cannot delete a running session");
-    await this.sessions.remove(sessionId);
-    this.events.emit("agent.session_deleted", { sessionId });
-    return true;
-  }
-
-  private publish(session: ReturnType<Sessions["require"]>): JsonValue {
-    const summary = sessionSummary(session);
-    this.events.emit("agent.session", { session: summary });
-    return summary;
-  }
-
-  private async persistAndPublish(session: ReturnType<Sessions["require"]>): Promise<JsonValue> {
-    await this.sessions.persist(session, false);
-    return this.publish(session);
-  }
-
-  private lifecycleOptions(now: string): { now: number; autoSettleAfterDays: number | null } {
-    const configured = this.settings.get<JsonValue>("workbench.autoSettleDays", 3);
-    return {
-      now: Date.parse(now),
-      autoSettleAfterDays: typeof configured === "number" && configured >= 0
-        ? configured
-        : null,
-    };
-  }
 }
 
-function timestamp(): string {
-  return new Date().toISOString();
+function lifecycleRecord(
+  thread: ReturnType<ThreadStore["require"]>,
+  run: AgentRun,
+  attempt: AgentAttempt,
+): JsonValue {
+  return {
+    threadId: thread.id,
+    runId: run.id,
+    attemptId: attempt.id,
+    thread: structuredClone(thread) as unknown as JsonValue,
+    run: structuredClone(run) as unknown as JsonValue,
+    attempt: structuredClone(attempt) as unknown as JsonValue,
+  };
+}
+
+function messageRecord(
+  threadId: string,
+  runId: string,
+  attemptId: string,
+  message: ReturnType<typeof createMessage>,
+): JsonValue {
+  return {
+    threadId,
+    runId,
+    attemptId,
+    message: message as unknown as JsonValue,
+  };
 }

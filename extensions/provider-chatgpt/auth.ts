@@ -224,8 +224,10 @@ function base64url(value: Uint8Array): string {
 
 function authStatus(credentials: Credentials | null): JsonValue {
   return {
-    authenticated: Boolean(credentials),
-    accountId: credentials?.accountId || "",
-    expiresAt: credentials ? new Date(credentials.expires).toISOString() : "",
+    available: Boolean(credentials),
+    label: credentials ? "Available" : "Signed out",
+    description: credentials
+      ? `Connected to ChatGPT account ${credentials.accountId.slice(0, 10)}… Tokens refresh automatically.`
+      : "Browser sign-in uses Codex access from an eligible ChatGPT subscription. No API key is used.",
   };
 }

@@ -1,19 +1,30 @@
 import {
   button,
-  derive,
   div,
   dynamicChild,
   icon,
   show,
   span,
+  type Sig,
 } from "@vaakx-dev/vrui";
 import { ChevronDown, ChevronRight } from "lucide";
+
+import type {
+  AgentProviderConnection,
+  AgentProviderConnectionState,
+} from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { ProviderDescription } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { providerModels } from "./providerModels.ts";
 import { page } from "./shared.ts";
+
+const AVAILABLE: AgentProviderConnectionState = {
+  available: true,
+  label: "Available",
+  description: "This provider is ready to use.",
+};
 
 export function providersPage(
   controller: WorkbenchController,
@@ -34,9 +45,8 @@ function providerCard(
   provider: ProviderDescription,
 ): HTMLElement {
   const open = state.providerSections.map((sections) => sections[provider.id] ?? false);
-  const connected = provider.id === "chatgpt"
-    ? state.chatgptAuth.prop("authenticated")
-    : derive(() => true);
+  const connection = provider.presentation?.connection;
+  const status = state.providerConnections.map((states) => states[provider.id] ?? AVAILABLE);
 
   return div(
     { class: "provider-settings-card" },
@@ -46,50 +56,52 @@ function providerCard(
         "aria-expanded": open,
         onClick: () => controller.models.toggleProvider(provider.id),
       },
-      span({ class: ["provider-dot", { connected }] }),
+      span({ class: ["provider-dot", { available: status.map((value) => value.available) }] }),
       span({ class: "provider-name" }, provider.name),
       span({ class: "provider-version" }, provider.id),
-      span(
-        { class: ["auth-state", { connected }] },
-        connected.map((value) => value ? "Available" : "Signed out"),
-      ),
+      span({ class: "provider-state" }, status.map((value) => value.label)),
       dynamicChild(open, (value) => icon(value ? ChevronDown : ChevronRight, 14)),
     ),
     show(open, () => div(
       { class: "provider-settings-body" },
-      provider.id === "chatgpt" ? chatgptAuth(controller, state) : span(
-        { class: "provider-description" },
-        "This provider is supplied by a host extension and runs locally without credentials.",
-      ),
+      connection
+        ? connectionControls(controller, state, provider.id, connection, status)
+        : span(
+            { class: "provider-description provider-static-description" },
+            provider.presentation?.description || AVAILABLE.description,
+          ),
       providerModels(controller, state, provider),
     )),
   );
 }
 
-function chatgptAuth(
+function connectionControls(
   controller: WorkbenchController,
   state: WorkbenchState,
+  provider: string,
+  connection: AgentProviderConnection,
+  status: Sig<AgentProviderConnectionState>,
 ): HTMLElement {
+  const busy = state.providerConnectionBusy.map((states) => states[provider] ?? false);
   return div(
-    { class: "provider-auth" },
-    span(
-      { class: "provider-description" },
-      state.chatgptAuth.map((auth) => auth.authenticated
-        ? `Connected to ChatGPT account ${auth.accountId.slice(0, 10)}… Tokens refresh automatically.`
-        : "Browser sign-in uses Codex access from an eligible ChatGPT subscription. No API key is used."),
-    ),
-    dynamicChild(state.chatgptAuth, (auth) => auth.authenticated
+    { class: "provider-connection" },
+    span({ class: "provider-description" }, status.map((value) => value.description)),
+    dynamicChild(status, (value) => value.available
       ? button(
-          { class: "secondary-button", onClick: () => void controller.agent.logout() },
-          "Sign out",
+          {
+            class: "secondary-button",
+            disabled: busy,
+            onClick: () => void controller.providers.disconnect(provider),
+          },
+          connection.disconnectLabel,
         )
       : button(
           {
             class: "primary-button",
-            disabled: state.authBusy,
-            onClick: () => void controller.agent.login(),
+            disabled: busy,
+            onClick: () => void controller.providers.connect(provider),
           },
-          state.authBusy.map((busy) => busy ? "Waiting for browser…" : "Sign in with ChatGPT"),
+          busy.map((value) => value ? connection.connectingLabel : connection.connectLabel),
         )),
   );
 }

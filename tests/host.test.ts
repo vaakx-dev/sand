@@ -9,6 +9,7 @@ interface WireMessage {
   result?: unknown;
   error?: string;
   event?: { kind: string; payload: unknown };
+  record?: { kind: string; payload: unknown };
 }
 
 const root = resolve(import.meta.dir, "..");
@@ -47,7 +48,7 @@ beforeAll(async () => {
       method: "commands.execute",
       params: { id: "workspace.read", params: { path: "hello.txt" } },
     },
-    { id: 6, method: "agent.providers", params: null },
+    { id: 6, method: "orchestration.providers", params: null },
     {
       id: 18,
       method: "settings.set",
@@ -58,28 +59,28 @@ beforeAll(async () => {
     },
     {
       id: 7,
-      method: "agent.start",
+      method: "orchestration.start",
       params: { prompt: "protocol smoke", provider: "echo", model: "local" },
     },
-    { id: 8, method: "agent.tools", params: null },
+    { id: 8, method: "orchestration.tools", params: null },
     {
       id: 9,
-      method: "agent.tool",
+      method: "orchestration.tool",
       params: { name: "write", input: { path: "tools.txt", content: "alpha\nbeta\n" } },
     },
     {
       id: 10,
-      method: "agent.tool",
+      method: "orchestration.tool",
       params: { name: "edit", input: { path: "tools.txt", edits: [{ oldText: "beta", newText: "gamma" }] } },
     },
     {
       id: 11,
-      method: "agent.tool",
+      method: "orchestration.tool",
       params: { name: "read", input: { path: "tools.txt" } },
     },
     {
       id: 12,
-      method: "agent.tool",
+      method: "orchestration.tool",
       params: { name: "bash", input: { command: "echo sand-tool-smoke", timeout: 5 } },
     },
     {
@@ -89,7 +90,7 @@ beforeAll(async () => {
     },
     {
       id: 14,
-      method: "agent.tool",
+      method: "orchestration.tool",
       params: {
         name: "update_plan",
         input: { explanation: "test", plan: [{ step: "Verify plan extension", status: "completed" }] },
@@ -123,9 +124,16 @@ afterAll(async () => {
 describe("extension host protocol", () => {
   test("discovers host and UI extensions", () => {
     const extensions = response<unknown[]>(2);
-    const bundles = response<{ source?: string; styles: string[] }[]>(3);
+    const bundles = response<{ manifest: { id: string }; source?: string; styles: string[] }[]>(3);
     expect(extensions.length).toBeGreaterThanOrEqual(8);
-    expect(bundles).toHaveLength(2);
+    expect(bundles.map((bundle) => bundle.manifest.id)).toEqual(expect.arrayContaining([
+      "sand.workbench",
+      "sand.files",
+      "sand.right-sidebar",
+      "sand.terminal",
+      "sand.tool.plan",
+      "sand.theme.defaults",
+    ]));
     expect(bundles.find((bundle) => bundle.source)?.source?.length).toBeGreaterThan(10_000);
     expect(bundles.flatMap((bundle) => bundle.styles).join("\n").length).toBeGreaterThan(10_000);
   });
@@ -153,7 +161,16 @@ describe("extension host protocol", () => {
   });
 
   test("uses ChatGPT subscription auth without an API key", () => {
-    expect(response<{ authenticated: boolean }>(13).authenticated).toBe(false);
+    expect(response<{ available: boolean }>(13).available).toBe(false);
+    const provider = response<{
+      id: string;
+      presentation?: {
+        icon?: { path: string };
+        connection?: { statusCommand: string };
+      };
+    }[]>(6).find((item) => item.id === "chatgpt");
+    expect(provider?.presentation?.connection?.statusCommand).toBe("chatgpt.auth.status");
+    expect(provider?.presentation?.icon?.path.length).toBeGreaterThan(100);
   });
 
   test("executes workspace extension commands", async () => {
@@ -169,14 +186,15 @@ describe("extension host protocol", () => {
   test("runs an agent turn through a provider extension", () => {
     const providers = response<{ id: string }[]>(6);
     expect(providers.some((provider) => provider.id === "echo")).toBe(true);
-    expect(messages.some((message) => message.event?.kind === "agent.delta")).toBe(true);
+    expect(messages.some((message) => message.event?.kind === "orchestration.delta")).toBe(true);
     expect(response<{ status: string }>(7).status).toBe("running");
+    expect(messages.some((message) => message.record?.kind === "run.started")).toBe(true);
   });
 
   test("generates a thread title with its independent provider settings", () => {
     const update = messages.find((message) =>
-      message.event?.kind === "agent.session"
-      && (message.event.payload as { session?: { title?: string } }).session?.title
+      message.event?.kind === "orchestration.thread"
+      && (message.event.payload as { thread?: { title?: string } }).thread?.title
         ?.includes("Extension host is ready")
     );
     expect(update).toBeDefined();
@@ -184,7 +202,8 @@ describe("extension host protocol", () => {
 
   test("publishes plans from an independent extension", () => {
     expect(response<{ plan: unknown[] }>(14).plan).toHaveLength(1);
-    expect(messages.some((message) => message.event?.kind === "agent.plan")).toBe(true);
+    expect(messages.some((message) => message.event?.kind === "orchestration.plan")).toBe(true);
+    expect(messages.some((message) => message.record?.kind === "plan.updated")).toBe(true);
   });
 
   test("reloads host and UI extensions coherently", () => {

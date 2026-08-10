@@ -1,16 +1,10 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
+import type { WorkspaceFileNode } from "@sand/extension-api";
 import { resolveWorkspacePath } from "../../packages/extension-runtime/src/index.ts";
 
 const OMIT = new Set([".git", ".sand", "dist", "node_modules", "target"]);
-
-export interface FileTreeNode {
-  name: string;
-  path: string;
-  kind: "directory" | "file";
-  children?: FileTreeNode[];
-}
 
 export async function readText(workspace: string, path: string): Promise<string> {
   return readFile(resolveWorkspacePath(workspace, path), "utf8");
@@ -27,14 +21,14 @@ export async function tree(
   path = ".",
   maxDepth = 5,
   maxEntries = 1_500,
-): Promise<FileTreeNode[]> {
+): Promise<WorkspaceFileNode[]> {
   const root = resolveWorkspacePath(workspace, path);
   let count = 0;
 
-  const visit = async (directory: string, depth: number): Promise<FileTreeNode[]> => {
+  const visit = async (directory: string, depth: number): Promise<WorkspaceFileNode[]> => {
     if (depth > maxDepth || count >= maxEntries) return [];
     const entries = await readdir(directory, { withFileTypes: true });
-    const nodes: FileTreeNode[] = [];
+    const nodes: WorkspaceFileNode[] = [];
     for (const entry of entries.sort((left, right) => {
       if (left.isDirectory() !== right.isDirectory()) return left.isDirectory() ? -1 : 1;
       return left.name.localeCompare(right.name);

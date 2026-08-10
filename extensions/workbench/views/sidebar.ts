@@ -3,7 +3,7 @@ import { ArrowLeft, PanelLeftClose, Settings } from "lucide";
 
 import type { WorkbenchController } from "../controller.ts";
 import type { WorkbenchState } from "../state.ts";
-import { explorerView, extensionsView, searchView } from "./sidebar/panels.ts";
+import { extensionsView } from "./sidebar/panels.ts";
 import { settingsNavigation } from "./sidebar/settings.ts";
 import { footerButton } from "./sidebar/shared.ts";
 import { threadsView } from "./sidebar/threads.ts";
@@ -25,10 +25,9 @@ function expandedSidebar(
     dynamicChild(state.activity, (activity) => {
       switch (activity) {
         case "threads": return threadsView(controller, state);
-        case "search": return searchView(controller, state);
         case "extensions": return extensionsView(controller, state);
         case "settings": return settingsNavigation(state);
-        default: return explorerView(controller, state);
+        default: return threadsView(controller, state);
       }
     }),
     dynamicChild(state.activity, (activity) => div(

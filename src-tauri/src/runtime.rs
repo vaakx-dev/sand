@@ -1,26 +1,28 @@
 use std::{
     collections::{HashMap, VecDeque},
     process::Stdio,
-    sync::{
-        Arc, Mutex as StdMutex,
-        atomic::{AtomicU64, Ordering},
-    },
+    sync::{Arc, Mutex as StdMutex, atomic::AtomicU64},
 };
 
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde::Serialize;
+use serde_json::Value;
 use tauri::AppHandle;
 use tokio::{
-    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     process::{Child, ChildStdin, Command},
-    sync::{Mutex, oneshot},
+    sync::Mutex,
 };
 
+mod acp;
+mod events;
 mod paths;
+mod worker;
 
+use crate::{
+    acp::{Acp, Error as AcpError, Events as AcpEvents},
+    orchestration::{Orchestration, OrchestrationError},
+};
 use paths::{RuntimePaths, bun_executable};
-
-const EVENT_LIMIT: usize = 4_000;
+use worker::PendingSender;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeError {
@@ -40,6 +42,10 @@ pub enum RuntimeError {
     Stopped,
     #[error("{0}")]
     Request(String),
+    #[error(transparent)]
+    Orchestration(#[from] OrchestrationError),
+    #[error(transparent)]
+    Acp(#[from] AcpError),
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -49,23 +55,6 @@ pub struct RuntimeEvent {
     pub payload: Value,
 }
 
-#[derive(Debug, Deserialize)]
-struct WireEvent {
-    kind: String,
-    #[serde(default)]
-    payload: Value,
-}
-
-#[derive(Debug, Deserialize)]
-struct WireMessage {
-    id: Option<u64>,
-    result: Option<Value>,
-    error: Option<String>,
-    event: Option<WireEvent>,
-}
-
-type PendingSender = oneshot::Sender<Result<Value, String>>;
-
 pub struct Runtime {
     stdin: Mutex<ChildStdin>,
     _child: Mutex<Child>,
@@ -73,11 +62,17 @@ pub struct Runtime {
     events: StdMutex<VecDeque<RuntimeEvent>>,
     next_request: AtomicU64,
     next_event: AtomicU64,
+    orchestration: Arc<Orchestration>,
+    acp: Arc<Acp>,
 }
 
 impl Runtime {
     pub async fn start(app: &AppHandle) -> Result<Arc<Self>, RuntimeError> {
         let paths = RuntimePaths::resolve(app)?;
+        let orchestration = Arc::new(Orchestration::open(&paths.journal)?);
+        let snapshot = orchestration.snapshot();
+        let (acp_events, acp_event_rx) = AcpEvents::channel(Arc::clone(&orchestration));
+        let acp = Acp::new(paths.workspace.clone(), &snapshot, acp_events);
         let bun = bun_executable();
         let mut command = Command::new(bun);
         command
@@ -107,125 +102,45 @@ impl Runtime {
             events: StdMutex::new(VecDeque::new()),
             next_request: AtomicU64::new(1),
             next_event: AtomicU64::new(1),
+            orchestration,
+            acp,
         });
 
         tokio::spawn(Self::read_stdout(Arc::clone(&runtime), stdout));
         tokio::spawn(Self::read_stderr(Arc::clone(&runtime), stderr));
+        tokio::spawn(Self::read_acp_events(Arc::clone(&runtime), acp_event_rx));
+
+        runtime
+            .request_worker("orchestration.restore".to_owned(), snapshot)
+            .await?;
 
         Ok(runtime)
     }
 
     pub async fn request(&self, method: String, params: Value) -> Result<Value, RuntimeError> {
-        let id = self.next_request.fetch_add(1, Ordering::Relaxed);
-        let body = serde_json::to_vec(&json!({
-            "id": id,
-            "method": method,
-            "params": params,
-        }))
-        .expect("runtime request is serializable");
-        let (sender, receiver) = oneshot::channel();
-        self.pending.lock().await.insert(id, sender);
-
-        let send_result = async {
-            let mut stdin = self.stdin.lock().await;
-            stdin.write_all(&body).await?;
-            stdin.write_all(b"\n").await?;
-            stdin.flush().await
+        if method.starts_with("acp.") {
+            return self.request_acp(&method, params).await;
         }
-        .await;
-
-        if let Err(error) = send_result {
-            self.pending.lock().await.remove(&id);
-            return Err(RuntimeError::Send(error));
-        }
-
-        receiver
-            .await
-            .map_err(|_| RuntimeError::Stopped)?
-            .map_err(RuntimeError::Request)
-    }
-
-    pub fn events_after(&self, after: u64) -> Vec<RuntimeEvent> {
-        self.events
-            .lock()
-            .expect("runtime event queue lock is not poisoned")
-            .iter()
-            .filter(|event| event.seq > after)
-            .cloned()
-            .collect()
-    }
-
-    async fn read_stdout(runtime: Arc<Self>, stdout: tokio::process::ChildStdout) {
-        let mut lines = BufReader::new(stdout).lines();
-        loop {
-            match lines.next_line().await {
-                Ok(Some(line)) => match serde_json::from_str::<WireMessage>(&line) {
-                    Ok(message) => runtime.handle_message(message).await,
-                    Err(error) => runtime.push_event(
-                        "runtime.protocol_error",
-                        json!({ "message": error.to_string(), "line": line }),
-                    ),
-                },
-                Ok(None) => break,
-                Err(error) => {
-                    runtime.push_event(
-                        "runtime.read_error",
-                        json!({ "message": error.to_string() }),
-                    );
-                    break;
-                }
+        match method.as_str() {
+            "orchestration.threads" => return Ok(self.orchestration.threads()),
+            "orchestration.thread" => {
+                let id = required_parameter(&params, "id")?;
+                return Ok(self.orchestration.thread(id)?);
             }
+            "orchestration.events" => {
+                let id = required_parameter(&params, "threadId")?;
+                return Ok(self.orchestration.events(id)?);
+            }
+            _ => {}
         }
-
-        runtime.push_event(
-            "runtime.exit",
-            json!({ "message": "extension runtime stopped" }),
-        );
-        let pending = std::mem::take(&mut *runtime.pending.lock().await);
-        for (_, sender) in pending {
-            let _ = sender.send(Err("extension runtime stopped".to_owned()));
-        }
+        self.request_worker(method, params).await
     }
+}
 
-    async fn read_stderr(runtime: Arc<Self>, stderr: tokio::process::ChildStderr) {
-        let mut lines = BufReader::new(stderr).lines();
-        while let Ok(Some(line)) = lines.next_line().await {
-            runtime.push_event("runtime.log", json!({ "message": line }));
-        }
-    }
-
-    async fn handle_message(&self, message: WireMessage) {
-        if let Some(event) = message.event {
-            self.push_event(&event.kind, event.payload);
-        }
-
-        let Some(id) = message.id else {
-            return;
-        };
-        let Some(sender) = self.pending.lock().await.remove(&id) else {
-            return;
-        };
-
-        let response = match message.error {
-            Some(error) => Err(error),
-            None => Ok(message.result.unwrap_or(Value::Null)),
-        };
-        let _ = sender.send(response);
-    }
-
-    fn push_event(&self, kind: &str, payload: Value) {
-        let seq = self.next_event.fetch_add(1, Ordering::Relaxed);
-        let mut events = self
-            .events
-            .lock()
-            .expect("runtime event queue lock is not poisoned");
-        events.push_back(RuntimeEvent {
-            seq,
-            kind: kind.to_owned(),
-            payload,
-        });
-        while events.len() > EVENT_LIMIT {
-            events.pop_front();
-        }
-    }
+fn required_parameter<'a>(params: &'a Value, key: &str) -> Result<&'a str, RuntimeError> {
+    params
+        .get(key)
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| RuntimeError::Request(format!("{key} is required")))
 }

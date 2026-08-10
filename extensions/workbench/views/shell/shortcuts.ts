@@ -14,16 +14,11 @@ export function globalKeyDown(
     && !state.modelPickerOpen.get()
     && /^[1-9]$/.test(event.key)
   ) {
-    const session = orderedSessions(state)[Number(event.key) - 1];
-    if (session) {
+    const thread = orderedThreads(state)[Number(event.key) - 1];
+    if (thread) {
       event.preventDefault();
-      void controller.agent.openSession(session.id);
+      void controller.agent.openThread(thread.id);
     }
-    return;
-  }
-  if (modifier && !event.shiftKey && event.key === "`") {
-    event.preventDefault();
-    void controller.executeCommand("workbench.terminal");
     return;
   }
   const command = state.commands.get().find((item) =>
@@ -49,7 +44,6 @@ function matchesKeybinding(event: KeyboardEvent, keybinding: string): boolean {
 
 function closeOverlays(state: WorkbenchState): void {
   state.openMenuOpen.set(false);
-  state.rightAddOpen.set(false);
   state.modelPickerOpen.set(false);
   state.traitsOpen.set(false);
   state.projectMenuOpen.set(false);
@@ -61,8 +55,8 @@ function closeOverlays(state: WorkbenchState): void {
   state.threadRename.set(null);
 }
 
-function orderedSessions(state: WorkbenchState) {
-  const groups = groupThreads(state.sessions.get(), {
+function orderedThreads(state: WorkbenchState) {
+  const groups = groupThreads(state.threads.get(), {
     query: "",
     now: Date.now(),
     autoSettleAfterDays: state.autoSettleDays.get(),

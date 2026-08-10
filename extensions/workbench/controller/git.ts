@@ -17,10 +17,10 @@ export class GitController {
         this.runtime.state.gitDiff.set(diff.diff || diff.error);
         this.runtime.state.gitRepository.set(status.repository);
       });
-      const sessionId = this.runtime.state.sessionId.get();
-      if (sessionId) {
-        await this.runtime.call("agent.changeRequest", {
-          sessionId,
+      const threadId = this.runtime.state.threadId.get();
+      if (threadId) {
+        await this.runtime.call("orchestration.thread.changeRequest", {
+          threadId,
           ...(status.changeRequestState ? { state: status.changeRequestState } : {}),
         });
       }

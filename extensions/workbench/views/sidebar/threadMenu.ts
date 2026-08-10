@@ -7,7 +7,7 @@ import {
   comparePinnedThreads,
   isThreadSettled,
   isThreadSnoozed,
-  type AgentSessionSummary,
+  type AgentThreadSummary,
 } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
@@ -19,25 +19,25 @@ export function threadContextMenu(
   state: WorkbenchState,
 ): HTMLElement {
   return dynamicChild(state.threadMenu, (menu) => menu
-    ? menuView(controller, state, menu.session, menu.x, menu.y)
+    ? menuView(controller, state, menu.thread, menu.x, menu.y)
     : div({ hidden: true }));
 }
 
 function menuView(
   controller: WorkbenchController,
   state: WorkbenchState,
-  session: AgentSessionSummary,
+  thread: AgentThreadSummary,
   x: number,
   y: number,
 ): HTMLElement {
   const now = Date.now();
-  const snoozed = isThreadSnoozed(session, now);
-  const settled = isThreadSettled(session, {
+  const snoozed = isThreadSnoozed(thread, now);
+  const settled = isThreadSettled(thread, {
     now,
     autoSettleAfterDays: state.autoSettleDays.get(),
   });
-  const pins = state.sessions.get().filter((item) => item.pinned).sort(comparePinnedThreads);
-  const pinIndex = pins.findIndex((item) => item.id === session.id);
+  const pins = state.threads.get().filter((item) => item.pinned).sort(comparePinnedThreads);
+  const pinIndex = pins.findIndex((item) => item.id === thread.id);
   return div(
     {
       class: "thread-menu-layer",
@@ -55,36 +55,36 @@ function menuView(
         onPointerLeave: () => state.threadSnoozeOpen.set(false),
       },
       menuButton(
-        session.pinned ? "Unpin thread" : "Pin thread",
-        () => run(state, controller.agent.pinSession(session.id, !session.pinned)),
+        thread.pinned ? "Unpin thread" : "Pin thread",
+        () => run(state, controller.agent.pinThread(thread.id, !thread.pinned)),
       ),
       pinIndex > 0
-        ? menuButton("Move pinned thread up", () => run(state, controller.agent.movePin(session.id, "up")))
+        ? menuButton("Move pinned thread up", () => run(state, controller.agent.movePin(thread.id, "up")))
         : null,
       pinIndex >= 0 && pinIndex < pins.length - 1
-        ? menuButton("Move pinned thread down", () => run(state, controller.agent.movePin(session.id, "down")))
+        ? menuButton("Move pinned thread down", () => run(state, controller.agent.movePin(thread.id, "down")))
         : null,
-      canSettleThread(session, now)
+      canSettleThread(thread, now)
         ? menuButton(settled ? "Un-settle thread" : "Settle thread", () =>
-            run(state, controller.agent.settleSession(session.id, !settled)))
+            run(state, controller.agent.settleThread(thread.id, !settled)))
         : null,
       snoozed
-        ? menuButton("Wake thread", () => run(state, controller.agent.snoozeSession(session.id)))
-        : canSnoozeThread(session, now)
-          ? snoozeControl(controller, state, session)
+        ? menuButton("Wake thread", () => run(state, controller.agent.snoozeThread(thread.id)))
+        : canSnoozeThread(thread, now)
+          ? snoozeControl(controller, state, thread)
           : null,
       menuButton("Rename thread", () => {
         close(state);
-        controller.agent.beginRename(session);
+        controller.agent.beginRename(thread);
       }),
-      menuButton(session.unread ? "Mark read" : "Mark unread", () =>
-        run(state, controller.agent.setUnread(session.id, !session.unread))),
+      menuButton(thread.unread ? "Mark read" : "Mark unread", () =>
+        run(state, controller.agent.setUnread(thread.id, !thread.unread))),
       div({ class: "thread-menu-divider" }),
-      session.status === "running"
+      thread.status === "running"
         ? null
         : menuButton(
             "Delete",
-            () => run(state, controller.agent.deleteSession(session.id)),
+            () => run(state, controller.agent.deleteThread(thread.id)),
             "danger",
           ),
     ),
@@ -94,7 +94,7 @@ function menuView(
 function snoozeControl(
   controller: WorkbenchController,
   state: WorkbenchState,
-  session: AgentSessionSummary,
+  thread: AgentThreadSummary,
 ): HTMLElement {
   return div(
     {
@@ -111,7 +111,7 @@ function snoozeControl(
           { class: "thread-snooze-menu" },
           ...snoozePresets().map((preset) => menuButton(
             preset.label,
-            () => run(state, controller.agent.snoozeSession(session.id, preset.until)),
+            () => run(state, controller.agent.snoozeThread(thread.id, preset.until)),
           )),
         )
       : div({ hidden: true })),

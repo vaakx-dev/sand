@@ -2,9 +2,16 @@ import { button, derive, div, dynamicChild, icon, input, onRaf, span, stop } fro
 import { Search, Star } from "lucide";
 
 import type { WorkbenchController } from "../../controller.ts";
+import { findProvider, modelName } from "../../modelCatalog.ts";
+import type { ProviderModel } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { openaiIcon } from "./icons.ts";
 import { closeOnOutside } from "./popover.ts";
+import { providerIcon } from "../shared/providerIcon.ts";
+
+interface PickerModel {
+  provider: string;
+  model: ProviderModel;
+}
 
 export function modelPicker(
   controller: WorkbenchController,
@@ -13,19 +20,20 @@ export function modelPicker(
   const visibleModels = derive(() => {
     const source = state.modelSource.get();
     const query = state.modelQuery.get().trim().toLowerCase();
-    const provider = source === "favorites" ? state.provider.get() : source;
-    const models = state.providerModels.get()[provider] ?? [];
-    const selected = source === "favorites"
-      ? models.filter((model) => model.favorite && !model.hidden)
-      : models.filter((model) => !model.hidden);
-    return selected
-      .map((model) => model.slug)
-      .filter((model) => !query || model.toLowerCase().includes(query));
+    const catalog = state.providerModels.get();
+    const models = source === "favorites"
+      ? Object.entries(catalog).flatMap(([provider, entries]) => entries
+          .filter((model) => model.favorite && !model.hidden)
+          .map((model) => ({ provider, model })))
+      : (catalog[source] ?? [])
+          .filter((model) => !model.hidden)
+          .map((model) => ({ provider: source, model }));
+    return models.filter(({ model }) => !query
+      || model.slug.toLowerCase().includes(query)
+      || model.name.toLowerCase().includes(query));
   });
-  const choose = (model: string) => {
-    const source = state.modelSource.get();
-    const provider = source === "favorites" ? state.provider.get() : source;
-    void controller.agent.selectModel(provider, model);
+  const choose = ({ provider, model }: PickerModel) => {
+    void controller.agent.selectModel(provider, model.slug);
   };
   const move = (amount: number) => {
     const last = Math.max(0, visibleModels.get().length - 1);
@@ -50,10 +58,7 @@ export function modelPicker(
               active: state.modelSource.map((value) => value === "favorites"),
             }],
             "aria-label": "Favorites",
-            onClick: () => {
-              state.modelSource.set("favorites");
-              state.modelIndex.set(0);
-            },
+            onClick: () => selectSource(state, "favorites"),
           },
           icon(Star, 18),
         ),
@@ -64,12 +69,9 @@ export function modelPicker(
               active: state.modelSource.map((value) => value === provider.id),
             }],
             "aria-label": provider.name,
-            onClick: () => {
-              state.modelSource.set(provider.id);
-              state.modelIndex.set(0);
-            },
+            onClick: () => selectSource(state, provider.id),
           },
-          openaiIcon(18),
+          providerIcon(provider, 18),
         )),
       ),
       div(
@@ -94,23 +96,22 @@ export function modelPicker(
                 move(-1);
               }
               if (event.key === "Enter") {
-                const model = visibleModels.get()[state.modelIndex.get()];
-                if (model) choose(model);
+                const selected = visibleModels.get()[state.modelIndex.get()];
+                if (selected) choose(selected);
               }
               if ((event.ctrlKey || event.metaKey) && /^[1-5]$/.test(event.key)) {
-                const model = visibleModels.get()[Number(event.key) - 1];
-                if (model) choose(model);
+                const selected = visibleModels.get()[Number(event.key) - 1];
+                if (selected) choose(selected);
               }
             },
           }),
         ),
         dynamicChild(visibleModels, (models) => div(
           { class: "model-list-picker" },
-          ...models.map((model, index) => modelRow(
+          ...models.map((entry, index) => modelRow(
             controller,
             state,
-            currentProvider(state),
-            model,
+            entry,
             index,
             choose,
           )),
@@ -124,35 +125,42 @@ export function modelPicker(
 function modelRow(
   controller: WorkbenchController,
   state: WorkbenchState,
-  provider: string,
-  model: string,
+  entry: PickerModel,
   index: number,
-  choose: (model: string) => void,
+  choose: (model: PickerModel) => void,
 ): HTMLElement {
+  const { provider, model } = entry;
+  const description = findProvider(state.providers.get(), provider);
   const favorite = state.providerModels.map((catalog) =>
-    catalog[provider]?.find((item) => item.slug === model)?.favorite ?? false
+    catalog[provider]?.find((item) => item.slug === model.slug)?.favorite ?? false
+  );
+  const selected = derive(() =>
+    state.provider.get() === provider && state.model.get() === model.slug
   );
   return div(
     {
       class: ["model-picker-row", {
-        selected: state.model.map((value) => value === model),
+        selected,
         highlighted: state.modelIndex.map((value) => value === index),
       }],
       role: "option",
       tabIndex: 0,
-      onClick: () => choose(model),
+      onClick: () => choose(entry),
       onMouseEnter: () => state.modelIndex.set(index),
       onKeyDown: (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          choose(model);
-        }
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        choose(entry);
       },
     },
     div(
       { class: "model-picker-copy" },
-      span({ class: "model-picker-name" }, modelLabel(model)),
-      span({ class: "model-picker-provider" }, openaiIcon(11), "ChatGPT subscription"),
+      span({ class: "model-picker-name" }, modelName(model, model.slug)),
+      span(
+        { class: "model-picker-provider" },
+        providerIcon(description, 11),
+        description?.name || provider,
+      ),
     ),
     index < 5 ? span({ class: "model-shortcut" }, `Ctrl+${index + 1}`) : null,
     button(
@@ -161,7 +169,7 @@ function modelRow(
         "aria-label": favorite.map((value) => value ? "Remove from favorites" : "Add to favorites"),
         onClick: (event) => {
           event.stopPropagation();
-          void controller.models.favorite(provider, model);
+          void controller.models.favorite(provider, model.slug);
         },
       },
       icon(Star, 14),
@@ -169,14 +177,7 @@ function modelRow(
   );
 }
 
-function currentProvider(state: WorkbenchState): string {
-  const source = state.modelSource.get();
-  return source === "favorites" ? state.provider.get() : source;
-}
-
-function modelLabel(model: string): string {
-  return model
-    .split("-")
-    .map((part) => part === "gpt" ? "GPT" : part[0]!.toUpperCase() + part.slice(1))
-    .join("-");
+function selectSource(state: WorkbenchState, source: string): void {
+  state.modelSource.set(source);
+  state.modelIndex.set(0);
 }

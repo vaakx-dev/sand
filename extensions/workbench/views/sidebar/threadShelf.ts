@@ -2,18 +2,18 @@ import { button, derive, div, dynamicChild, icon, list, show, span } from "@vaak
 import type { Sig } from "@vaakx-dev/vrui";
 import { ChevronDown, ChevronRight, Plus } from "lucide";
 
-import type { AgentSessionSummary } from "@sand/extension-api";
+import type { AgentThreadSummary } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { sessionRow } from "./threadRow.ts";
+import { threadRow } from "./threadRow.ts";
 
 interface ShelfOptions {
   label: string;
   className: string;
   section: "snoozed" | "settled";
   open: Sig<boolean>;
-  sessions: Sig<AgentSessionSummary[]>;
+  threads: Sig<AgentThreadSummary[]>;
   total: Sig<number>;
   hidden?: Sig<number>;
   pageSize?: number;
@@ -43,9 +43,9 @@ export function threadShelf(
       dynamicChild(options.open, (open) => icon(open ? ChevronDown : ChevronRight, 12)),
     ),
     list(
-      options.sessions,
-      (session) => session.id,
-      (session) => sessionRow(controller, state, clock, session.get(), options.section),
+      options.threads,
+      (thread) => thread.id,
+      (thread) => threadRow(controller, state, clock, thread.get(), options.section),
       div({ class: "thread-section slim" }),
     ),
     hidden && showMore

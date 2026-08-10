@@ -32,11 +32,14 @@ const extension: HostExtension = {
       async execute(input: JsonObject, _signal: AbortSignal, execution?: AgentToolExecution): Promise<JsonValue> {
         const plan = validatePlan(input.plan);
         const payload = {
-          sessionId: execution?.sessionId ?? "",
+          threadId: execution?.threadId ?? "",
+          runId: execution?.runId ?? "",
+          attemptId: execution?.attemptId ?? "",
           explanation: typeof input.explanation === "string" ? input.explanation : "",
           plan,
         };
-        context.events.emit("agent.plan", payload);
+        context.events.record("plan.updated", payload);
+        context.events.emit("orchestration.plan", payload);
         return payload;
       },
     };

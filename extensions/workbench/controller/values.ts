@@ -1,30 +1,29 @@
-import type { JsonValue } from "@sand/extension-api";
+import {
+  objectValue,
+  stringValue,
+  type AgentProviderConnectionState,
+  type JsonValue,
+} from "@sand/extension-api";
 
 import {
-  CHATGPT_MODELS,
   type AppearanceMode,
   type ProviderDescription,
-  type ProviderModel,
   type ProviderModels,
-  type ReasoningEffort,
-  type ServiceTier,
 } from "../models.ts";
+import { providerModel } from "../modelCatalog.ts";
 
 export function appearanceValue(value: JsonValue | undefined): AppearanceMode {
   return value === "light" || value === "dark" ? value : "system";
 }
 
-export function reasoningValue(
-  value: JsonValue | undefined,
-  fallback: ReasoningEffort = "high",
-): ReasoningEffort {
-  return value === "low" || value === "medium" || value === "high" || value === "xhigh" || value === "max" || value === "ultra"
-    ? value
-    : fallback;
-}
-
-export function serviceTierValue(value: JsonValue | undefined): ServiceTier {
-  return value === "fast" ? "fast" : "standard";
+export function providerConnectionValue(value: JsonValue): AgentProviderConnectionState {
+  const state = objectValue(value);
+  const available = state.available === true;
+  return {
+    available,
+    label: stringValue(state.label, available ? "Available" : "Unavailable"),
+    description: stringValue(state.description, "No connection details are available."),
+  };
 }
 
 export function providerModelsValue(
@@ -35,20 +34,36 @@ export function providerModelsValue(
     ? value
     : {};
   return Object.fromEntries(providers.map((provider) => {
-    const fallback = provider.id === "chatgpt" ? [...CHATGPT_MODELS] : [provider.defaultModel];
     const storedModels = stored[provider.id];
-    const entries = Array.isArray(storedModels)
-      ? storedModels.flatMap((item) => modelValue(item) ?? [])
-      : fallback.filter(Boolean).map((slug, index) => ({
-          slug,
-          favorite: provider.id === "chatgpt" && index < 2,
+    const preferences = Array.isArray(storedModels)
+      ? uniquePreferences(storedModels.flatMap((item) => preferenceValue(item) ?? []))
+      : [];
+    const ordered = preferences.length > 0
+      ? [
+          ...preferences,
+          ...provider.models
+            .filter((model) => !preferences.some((item) => item.slug === model.slug))
+            .map((model) => ({
+              slug: model.slug,
+              favorite: model.defaultFavorite === true,
+              hidden: false,
+            })),
+        ]
+      : provider.models.map((model) => ({
+          slug: model.slug,
+          favorite: model.defaultFavorite === true,
           hidden: false,
         }));
-    return [provider.id, uniqueModels(entries)];
+    return [provider.id, ordered.map((preference) => providerModel(
+      provider,
+      preference.slug,
+      preference.favorite,
+      preference.hidden,
+    ))];
   }));
 }
 
-function modelValue(value: JsonValue): ProviderModel | null {
+function preferenceValue(value: JsonValue): ModelPreference | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const slug = typeof value.slug === "string" ? value.slug.trim() : "";
   if (!slug) return null;
@@ -59,11 +74,17 @@ function modelValue(value: JsonValue): ProviderModel | null {
   };
 }
 
-function uniqueModels(models: ProviderModel[]): ProviderModel[] {
+function uniquePreferences(models: ModelPreference[]): ModelPreference[] {
   const seen = new Set<string>();
   return models.filter((model) => {
     if (seen.has(model.slug)) return false;
     seen.add(model.slug);
     return true;
   });
+}
+
+interface ModelPreference {
+  slug: string;
+  favorite: boolean;
+  hidden: boolean;
 }

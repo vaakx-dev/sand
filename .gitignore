@@ -3,6 +3,8 @@ dist/
 target/
 .sand/cache/
 .sand/sessions/
+.sand/orchestration.sqlite3*
+.sand/tool-output/
 .sand/settings.json
 .sand/auth/
 src-tauri/gen/

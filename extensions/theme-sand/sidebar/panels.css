@@ -9,28 +9,13 @@
 .settings-nav-button.active { color: var(--text); background: var(--control-selected-bg); }
 .panel-header { height: 42px; flex: 0 0 42px; padding: 0 9px 0 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
 .panel-title { color: var(--text); font-size: 11px; font-weight: 650; letter-spacing: .02em; }
-.file-tree { padding: 6px 0 12px; }
-.file-row { width: 100%; min-height: 27px; display: flex; align-items: center; gap: 6px; padding-right: 8px; color: var(--text); background: transparent; cursor: pointer; white-space: nowrap; text-align: left; }
-.file-row:not(:disabled):hover { background: var(--row-hover); color: var(--text); }
-.file-row.directory { color: var(--muted); cursor: default; }
-.file-row .vrui-icon { color: var(--faint); }
-.file-name { overflow: hidden; text-overflow: ellipsis; }
-.search-box { padding: 9px; display: flex; gap: 5px; border-bottom: 1px solid var(--border); }
-.text-input { min-width: 0; width: 100%; height: 31px; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
-.text-input:hover { border-color: var(--border-strong); }
 .primary-button, .secondary-button { min-height: 30px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 6px; cursor: pointer; white-space: nowrap; font-size: 11px; font-weight: 600; }
 .primary-button { color: var(--bg); background: var(--text); }
 .primary-button:not(:disabled):hover { background: #f0f0f2; }
 .secondary-button { border: 1px solid var(--border); color: var(--text); background: var(--surface); }
 .secondary-button:not(:disabled):hover { border-color: var(--border-strong); background: var(--surface-3); }
-.result-row { width: 100%; padding: 8px 10px; border-bottom: 1px solid var(--border); background: transparent; cursor: pointer; text-align: left; }
-.result-row:not(:disabled):hover { background: var(--row-hover); }
-.result-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 11px; }
-.result-text { margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font: 10.5px var(--mono); }
 .extension-row { padding: 10px 11px; border-bottom: 1px solid var(--border); }
 .extension-name { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
 .extension-meta { margin-top: 4px; color: var(--faint); font-size: 10px; }
 .extension-contributions { margin-top: 6px; color: var(--muted); font: 10px/1.45 var(--mono); overflow-wrap: anywhere; }
 .badge { padding: 2px 5px; border-radius: 4px; color: var(--muted); background: var(--surface-3); font-size: 8px; text-transform: uppercase; letter-spacing: .05em; }
-.auth-state { color: var(--faint); font-size: 9px; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; }
-.auth-state.connected { color: var(--success); }

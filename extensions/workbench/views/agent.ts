@@ -2,13 +2,13 @@ import { button, derive, div, dynamicChild, icon, show, span, textarea } from "@
 import { ChevronDown, Send, Square } from "lucide";
 
 import type { WorkbenchController } from "../controller.ts";
+import { findModel, findProvider, modelName, optionLabel } from "../modelCatalog.ts";
 import type { WorkbenchState } from "../state.ts";
 import { conversationView } from "./agent/conversation.ts";
-import { openaiIcon } from "./agent/icons.ts";
-import { reasoningLabel } from "./agent/labels.ts";
 import { modelPicker } from "./agent/modelPicker.ts";
 import { traitsPicker } from "./agent/traitsPicker.ts";
 import { projectName } from "./format.ts";
+import { providerIcon } from "./shared/providerIcon.ts";
 
 export function agentPanel(
   controller: WorkbenchController,
@@ -51,6 +51,23 @@ function composer(
   centered: boolean,
 ): HTMLElement {
   const running = state.agentStatus.map((status) => status === "running");
+  const selectedModel = derive(() => findModel(
+    state.providerModels.get(),
+    state.provider.get(),
+    state.model.get(),
+  ));
+  const traitsAvailable = selectedModel.map((model) =>
+    Boolean(model && (model.reasoning.length > 0 || model.serviceTiers.length > 0))
+  );
+  const traitsLabel = derive(() => {
+    const model = selectedModel.get();
+    if (!model) return "";
+    return [
+      optionLabel(model.reasoning, state.reasoning.get()),
+      optionLabel(model.serviceTiers, state.serviceTier.get()),
+    ].filter(Boolean).join(" · ");
+  });
+
   return div(
     { class: ["composer", { centered }] },
     div(
@@ -80,24 +97,28 @@ function composer(
                 state.modelPickerOpen.toggle()();
               },
             },
-            openaiIcon(14),
-            span({ class: "composer-model-label" }, state.model),
+            dynamicChild(state.provider, (provider) => providerIcon(
+              findProvider(state.providers.get(), provider),
+              14,
+            )),
+            span(
+              { class: "composer-model-label" },
+              selectedModel.map((model) => modelName(model, state.model.get())),
+            ),
             icon(ChevronDown, 11),
           ),
-          button(
+          show(traitsAvailable, () => button(
             {
               class: ["composer-chip", { active: state.traitsOpen }],
-              "data-tooltip": "Reasoning and service tier",
+              "data-tooltip": "Model options",
               onClick: () => {
                 state.modelPickerOpen.set(false);
                 state.traitsOpen.toggle()();
               },
             },
-            state.reasoning.map(reasoningLabel),
-            " · ",
-            state.serviceTier.map((value) => value === "fast" ? "Fast" : "Standard"),
+            traitsLabel,
             icon(ChevronDown, 11),
-          ),
+          )),
         ),
         dynamicChild(running, (isRunning) => isRunning
           ? button(

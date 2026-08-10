@@ -47,8 +47,7 @@ const extensions = new ExtensionManager(
   registry,
 );
 await extensions.reload();
-const agent = new AgentHarness(registry, settings, events, join(workspace, ".sand", "sessions"));
-await agent.load();
+const agent = new AgentHarness(registry, settings, events);
 
 events.emit("runtime.ready", {
   appRoot,
@@ -94,50 +93,55 @@ async function dispatch(method: string, params: JsonValue): Promise<JsonValue> {
       if (!command) throw new Error(`unknown command: ${id}`);
       return (await command(object.params ?? null)) ?? null;
     }
-    case "agent.providers":
+    case "orchestration.restore":
+      agent.restore(params);
+      return true;
+    case "orchestration.providers":
       return agent.providers();
-    case "agent.tools":
+    case "orchestration.tools":
       return agent.tools();
-    case "agent.tool":
+    case "orchestration.tool":
       return agent.tool(requiredString(object, "name"), objectValue(object.input ?? null));
-    case "agent.sessions":
-      return agent.sessionsList();
-    case "agent.session":
-      return agent.session(requiredString(object, "id"));
-    case "agent.start":
+    case "orchestration.start":
       return agent.start({
         prompt: requiredString(object, "prompt"),
         provider: optionalString(object.provider),
         model: optionalString(object.model),
-        sessionId: optionalString(object.sessionId),
+        threadId: optionalString(object.threadId),
         maxSteps: optionalNumber(object.maxSteps),
       });
-    case "agent.cancel":
-      return agent.cancel(requiredString(object, "session_id"));
-    case "agent.pin":
-      return agent.pin(requiredString(object, "session_id"), Boolean(object.pinned));
-    case "agent.pin.reorder":
-      return agent.reorderPin(
-        requiredString(object, "session_id"),
+    case "orchestration.cancel":
+      return agent.cancel(requiredString(object, "threadId"));
+    case "orchestration.thread.pin":
+      return agent.lifecycle.pin(requiredString(object, "threadId"), Boolean(object.pinned));
+    case "orchestration.thread.pin.reorder":
+      return agent.lifecycle.reorderPin(
+        requiredString(object, "threadId"),
         optionalString(object.beforeId),
       );
-    case "agent.settle":
-      return agent.settle(requiredString(object, "session_id"), Boolean(object.settled));
-    case "agent.rename":
-      return agent.rename(requiredString(object, "session_id"), requiredString(object, "title"));
-    case "agent.unread":
-      return agent.unread(requiredString(object, "session_id"), Boolean(object.unread));
-    case "agent.snooze":
-      return agent.snooze(requiredString(object, "session_id"), optionalString(object.until));
-    case "agent.visit":
-      return agent.visit(requiredString(object, "session_id"));
-    case "agent.changeRequest":
-      return agent.changeRequest(
-        requiredString(object, "session_id"),
+    case "orchestration.thread.settle":
+      return agent.lifecycle.settle(requiredString(object, "threadId"), Boolean(object.settled));
+    case "orchestration.thread.rename":
+      return agent.lifecycle.rename(
+        requiredString(object, "threadId"),
+        requiredString(object, "title"),
+      );
+    case "orchestration.thread.unread":
+      return agent.lifecycle.unread(requiredString(object, "threadId"), Boolean(object.unread));
+    case "orchestration.thread.snooze":
+      return agent.lifecycle.snooze(
+        requiredString(object, "threadId"),
+        optionalString(object.until),
+      );
+    case "orchestration.thread.visit":
+      return agent.lifecycle.visit(requiredString(object, "threadId"));
+    case "orchestration.thread.changeRequest":
+      return agent.lifecycle.changeRequest(
+        requiredString(object, "threadId"),
         changeRequestState(optionalString(object.state)),
       );
-    case "agent.delete":
-      return agent.delete(requiredString(object, "session_id"));
+    case "orchestration.thread.delete":
+      return agent.lifecycle.delete(requiredString(object, "threadId"));
     default:
       throw new Error(`unknown runtime method: ${method}`);
   }

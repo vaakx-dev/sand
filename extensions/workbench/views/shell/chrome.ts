@@ -6,18 +6,17 @@ import {
   FolderOpen,
   GitBranch,
   Minus,
-  PanelBottom,
   PanelLeftOpen,
-  PanelRightOpen,
   Square,
   X,
 } from "lucide";
 
+import type { UiSlotRegistry } from "@sand/extension-api";
+
 import type { WorkbenchController } from "../../controller.ts";
-import { togglePanel } from "../../panel.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { projectName } from "../format.ts";
-import { iconButton } from "../shared/iconButton.ts";
+import { uiSlot } from "../shared/slot.ts";
 
 export function windowControls(): HTMLElement {
   const window = getCurrentWindow();
@@ -38,7 +37,11 @@ export function windowControls(): HTMLElement {
   );
 }
 
-export function topbar(controller: WorkbenchController, state: WorkbenchState): HTMLElement {
+export function topbar(
+  controller: WorkbenchController,
+  state: WorkbenchState,
+  slots: UiSlotRegistry,
+): HTMLElement {
   return div(
     { class: "topbar", "data-tauri-drag-region": "" },
     show(state.sidebarOpen.map((open) => !open), () => button(
@@ -58,9 +61,9 @@ export function topbar(controller: WorkbenchController, state: WorkbenchState): 
       icon(FolderOpen, 13),
       span({ class: "breadcrumb-project" }, state.root.map(projectName)),
       span({ class: "breadcrumb-slash" }, "/"),
-      span({ class: "topbar-title" }, state.sessionId.map((id) => {
+      span({ class: "topbar-title" }, state.threadId.map((id) => {
         if (!id) return "New thread";
-        return state.sessions.get().find((session) => session.id === id)?.title || "Thread";
+        return state.threads.get().find((thread) => thread.id === id)?.title || "Thread";
       })),
     ),
     div(
@@ -71,29 +74,7 @@ export function topbar(controller: WorkbenchController, state: WorkbenchState): 
         icon(GitBranch, 13),
         "Initialize Git",
       )),
-      show(state.rightOpen.map((open) => !open), () => div(
-        { class: "top-panel-controls" },
-        div({ class: "top-panel-control-spacer" }),
-        div({ class: "top-panel-control-spacer" }),
-        iconButton(
-          {
-            label: "Toggle terminal drawer (Ctrl+J)",
-            selected: state.bottomOpen,
-            onClick: () => void controller.terminal.toggle(),
-          },
-          icon(PanelBottom, 15),
-        ),
-        iconButton(
-          {
-            label: "Open files and changes",
-            onClick: () => {
-              togglePanel(state);
-              void controller.preferences.saveLayout();
-            },
-          },
-          icon(PanelRightOpen, 15),
-        ),
-      )),
+      uiSlot(slots, "workbench.topbar.actions", "top-panel-controls"),
     ),
   );
 }
@@ -119,13 +100,13 @@ function openAction(controller: WorkbenchController, state: WorkbenchState): HTM
         }),
       },
       button(
-        { class: "open-menu-row", onClick: () => void controller.workspace.openExternal("vscode") },
+        { class: "open-menu-row", onClick: () => void controller.external.open("vscode") },
         icon(Code2, 14),
         span("VS Code"),
         span({ class: "open-shortcut" }, "Ctrl+O"),
       ),
       button(
-        { class: "open-menu-row", onClick: () => void controller.workspace.openExternal("explorer") },
+        { class: "open-menu-row", onClick: () => void controller.external.open("explorer") },
         icon(FolderOpen, 14),
         span("Explorer"),
       ),

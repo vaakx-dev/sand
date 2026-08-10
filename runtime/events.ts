@@ -8,4 +8,8 @@ export class Events implements EventApi {
   emit(kind: string, payload: JsonValue): void {
     this.write({ event: { kind, payload } });
   }
+
+  record(kind: string, payload: JsonValue): void {
+    this.write({ record: { kind, payload } });
+  }
 }

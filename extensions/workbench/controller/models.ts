@@ -1,6 +1,13 @@
-import type { JsonValue } from "@sand/extension-api";
+import { selectProviderOption, type JsonValue } from "@sand/extension-api";
 
-import type { ReasoningEffort } from "../models.ts";
+import {
+  findModel,
+  findProvider,
+  firstModel,
+  providerModel,
+} from "../modelCatalog.ts";
+import type { ProviderModel, ProviderModels } from "../models.ts";
+import type { WorkbenchState } from "../state.ts";
 import { ControllerRuntime } from "./runtime.ts";
 
 export class ModelsController {
@@ -26,9 +33,11 @@ export class ModelsController {
       this.runtime.notice(`${slug} is already in ${provider}`);
       return;
     }
+    const description = findProvider(state.providers.get(), provider);
+    if (!description) return;
     state.providerModels.update((catalog) => ({
       ...catalog,
-      [provider]: [...models, { slug, favorite: false, hidden: false }],
+      [provider]: [...models, providerModel(description, slug)],
     }));
     this.setInput(provider, "");
     await this.saveCatalog();
@@ -50,6 +59,7 @@ export class ModelsController {
     }
     if (visible && state.titleProvider.get() === provider && state.titleModel.get() === slug) {
       state.titleModel.set(visible);
+      syncTitleReasoning(state);
       await this.saveTitle();
     }
   }
@@ -69,18 +79,21 @@ export class ModelsController {
 
   async titleProvider(id: string): Promise<void> {
     const state = this.runtime.state;
-    const models = state.providerModels.get()[id] ?? [];
+    const provider = findProvider(state.providers.get(), id);
+    const model = firstModel(state.providerModels.get(), provider);
     state.titleProvider.set(id);
-    state.titleModel.set(models.find((model) => !model.hidden)?.slug || models[0]?.slug || "");
+    state.titleModel.set(model?.slug || "");
+    syncTitleReasoning(state);
     await this.saveTitle();
   }
 
   async titleModel(slug: string): Promise<void> {
     this.runtime.state.titleModel.set(slug);
+    syncTitleReasoning(this.runtime.state);
     await this.saveTitle();
   }
 
-  async titleReasoning(reasoning: ReasoningEffort): Promise<void> {
+  async titleReasoning(reasoning: string): Promise<void> {
     this.runtime.state.titleReasoning.set(reasoning);
     await this.saveTitle();
   }
@@ -88,11 +101,7 @@ export class ModelsController {
   private async update(
     provider: string,
     slug: string,
-    change: (model: { slug: string; favorite: boolean; hidden: boolean }) => {
-      slug: string;
-      favorite: boolean;
-      hidden: boolean;
-    },
+    change: (model: ProviderModel) => ProviderModel,
   ): Promise<void> {
     this.runtime.state.providerModels.update((catalog) => ({
       ...catalog,
@@ -104,7 +113,7 @@ export class ModelsController {
   private saveCatalog(): Promise<void> {
     return this.runtime.saveOne(
       "workbench.providerModels",
-      this.runtime.state.providerModels.get() as unknown as JsonValue,
+      catalogPreferences(this.runtime.state.providerModels.get()) as unknown as JsonValue,
     ).then((settings) => this.runtime.state.settings.set(settings));
   }
 
@@ -116,4 +125,24 @@ export class ModelsController {
       reasoning: state.titleReasoning.get(),
     }).then((settings) => state.settings.set(settings));
   }
+}
+
+function syncTitleReasoning(state: WorkbenchState): void {
+  const model = findModel(
+    state.providerModels.get(),
+    state.titleProvider.get(),
+    state.titleModel.get(),
+  );
+  state.titleReasoning.set(selectProviderOption(
+    state.titleReasoning.get(),
+    model?.reasoning ?? [],
+    model?.defaultReasoning ?? "",
+  ));
+}
+
+function catalogPreferences(catalog: ProviderModels) {
+  return Object.fromEntries(Object.entries(catalog).map(([provider, models]) => [
+    provider,
+    models.map(({ slug, favorite, hidden }) => ({ slug, favorite, hidden })),
+  ]));
 }

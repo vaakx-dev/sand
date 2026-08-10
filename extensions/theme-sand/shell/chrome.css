@@ -14,9 +14,7 @@ button[data-tooltip]:not(:disabled):hover::after, button[data-tooltip]:not(:disa
 .breadcrumb-slash { color: var(--faint); }
 .topbar-title { min-width: 0; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 560; color: var(--text); }
 .top-actions { display: flex; align-items: center; gap: 2px; padding: 0 calc(var(--window-controls-width) + var(--window-action-inset)) 0 8px; }
-.top-panel-controls { width: 112px; flex: 0 0 112px; display: grid; grid-template-columns: repeat(4, 28px); align-items: center; }
-.top-panel-control-spacer { width: 28px; height: 28px; }
-.body.right-panel-visible .top-actions { padding-right: 8px; }
+.top-panel-controls { width: 56px; flex: 0 0 56px; display: grid; grid-template-columns: repeat(2, 28px); align-items: center; }
 .open-action-wrap { position: relative; }
 .open-menu { position: absolute; top: 32px; left: 0; z-index: var(--z-popover); width: 156px; padding: 5px; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--surface-2); box-shadow: 0 14px 50px #0009; }
 .open-menu-row { width: 100%; height: var(--menu-row-height); display: flex; align-items: center; gap: 7px; padding: 0 var(--content-inset); border-radius: var(--control-radius); color: var(--text); background: transparent; cursor: pointer; text-align: left; }

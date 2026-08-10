@@ -1,4 +1,4 @@
-export type AgentSessionStatus = "idle" | "running" | "complete" | "error" | "cancelled";
+export type AgentThreadStatus = "idle" | "running" | "complete" | "error" | "cancelled" | "interrupted";
 export type ThreadSettlementOverride = "settled" | "active";
 export type ThreadChangeRequestState = "open" | "closed" | "merged";
 export type ThreadBackgroundStatus = "working" | "monitoring";
@@ -12,7 +12,7 @@ export type ThreadStatus =
   | "ready";
 
 export interface ThreadLifecycleSummary {
-  status: AgentSessionStatus;
+  status: AgentThreadStatus;
   pinned: boolean;
   unread: boolean;
   createdAt: string;
@@ -56,7 +56,7 @@ export function threadLastActivityAt(thread: ThreadLifecycleSummary): string {
 
 export function hasQueuedTurn(thread: ThreadLifecycleSummary, now: number): boolean {
   const messageAt = time(thread.latestUserMessageAt);
-  if (messageAt === null || thread.status === "error") return false;
+  if (messageAt === null || thread.status === "error" || thread.status === "interrupted") return false;
   if (Math.abs(now - messageAt) > QUEUED_TURN_GRACE_MS) return false;
   const turnAt = time(thread.latestTurnStartedAt);
   return turnAt === null || turnAt < messageAt;
@@ -77,7 +77,8 @@ export function threadRaisedHandWhileSnoozed(thread: ThreadLifecycleSummary): bo
   if (thread.hasPendingApprovals || thread.hasPendingUserInput) return true;
   const snoozedAt = time(thread.snoozedAt);
   if (snoozedAt === null) return false;
-  if (thread.status === "error" && newer(thread.statusChangedAt, snoozedAt)) return true;
+  if ((thread.status === "error" || thread.status === "interrupted")
+    && newer(thread.statusChangedAt, snoozedAt)) return true;
   if (
     (thread.changeRequestState === "merged" || thread.changeRequestState === "closed")
     && newer(thread.changeRequestChangedAt, snoozedAt)
@@ -145,7 +146,7 @@ export function threadStatus(thread: ThreadLifecycleSummary): ThreadStatus {
   if (thread.hasPendingApprovals) return "approval";
   if (thread.hasPendingUserInput) return "input";
   if (thread.status === "running" || thread.backgroundStatus === "working") return "working";
-  if (thread.status === "error") return "failed";
+  if (thread.status === "error" || thread.status === "interrupted") return "failed";
   if (thread.backgroundStatus === "monitoring") return "monitoring";
   return "ready";
 }

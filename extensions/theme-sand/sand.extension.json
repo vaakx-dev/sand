@@ -5,18 +5,13 @@
   "description": "built-in themes implemented as a CSS-only extension",
   "styles": [
     "./foundation/theme.css",
+    "./foundation/scrollbars.css",
     "./shell/layout.css",
     "./shell/chrome.css",
     "./sidebar/threads.css",
     "./sidebar/panels.css",
     "./agent/conversation.css",
     "./agent/composer.css",
-    "./right/chrome.css",
-    "./right/tasks.css",
-    "./right/browser.css",
-    "./right/changes.css",
-    "./right/files.css",
-    "./terminal/terminal.css",
     "./overlays/common.css",
     "./overlays/projects.css",
     "./settings/layout.css",
@@ -29,8 +24,8 @@
     {
       "id": "sand",
       "label": "Sand",
-      "dark": { "canvas": "#0f0f10", "sidebar": "#151516", "surface": "#1d1d20", "text": "#dedee2", "accent": "#6c9cff" },
-      "light": { "canvas": "#f7f7f8", "sidebar": "#eeeeef", "surface": "#ffffff", "text": "#202024", "accent": "#336ee8" }
+      "dark": { "canvas": "#0f0f10", "sidebar": "#151516", "surface": "#1d1d20", "text": "#dedee2", "accent": "#f0f0f2" },
+      "light": { "canvas": "#f7f7f8", "sidebar": "#eeeeef", "surface": "#ffffff", "text": "#202024", "accent": "#4f4f57" }
     },
     {
       "id": "grove",

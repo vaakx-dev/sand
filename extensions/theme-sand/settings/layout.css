@@ -13,5 +13,5 @@
 .settings-value { color: var(--text); font-size: 11px; }
 .settings-select { width: min(100%, 260px); height: 32px; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--sidebar); }
 .switch { width: 30px; height: 18px; padding: 2px; display: flex; align-items: center; border-radius: 10px; background: #27272b; cursor: pointer; }
-.switch.on { justify-content: flex-end; background: #2763cf; }
+.switch.on { justify-content: flex-end; background: var(--accent); }
 .switch-knob { width: 14px; height: 14px; border-radius: 50%; background: var(--bg); }

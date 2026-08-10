@@ -17,7 +17,7 @@
 .project-popover-row > .project-popover-name { flex: 1; }
 .project-popover-row > .vrui-icon:last-child { margin-left: auto; color: var(--faint); }
 .project-popover-name { overflow: hidden; color: var(--text); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.thread-scroll, .panel-scroll { min-height: 0; flex: 1; overflow: auto; scrollbar-width: thin; scrollbar-color: #37373c transparent; }
+.thread-scroll, .panel-scroll { min-height: 0; flex: 1; overflow: auto; }
 .thread-scroll { padding: 0 8px 10px; }
 .thread-section { display: flex; flex-direction: column; gap: 2px; }
 .thread-card { position: relative; min-width: 0; min-height: 74px; padding: 8px 9px; border-radius: 7px; color: var(--muted); cursor: pointer; }

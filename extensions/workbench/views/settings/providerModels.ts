@@ -39,7 +39,7 @@ export function providerModels(
               (event.target as HTMLSelectElement).value,
             ),
           },
-          ...models.map((model) => option({ value: model.slug }, model.slug)),
+          ...models.map((model) => option({ value: model.slug }, model.name)),
         );
       }),
     ),
@@ -73,10 +73,11 @@ function modelList(
         { class: "provider-model-copy" },
         button(
           {
-            class: "provider-model-slug",
+            class: "provider-model-name",
             onClick: () => void controller.agent.selectModel(provider, model.slug),
           },
-          model.slug,
+          span({ class: "provider-model-label" }, model.name),
+          span({ class: "provider-model-slug" }, model.slug),
         ),
         model.hidden ? span({ class: "model-hidden-label" }, "Hidden") : null,
       ),

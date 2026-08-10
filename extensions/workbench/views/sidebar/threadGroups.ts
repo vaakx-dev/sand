@@ -4,16 +4,16 @@ import {
   compareSettledThreads,
   compareSnoozedThreads,
   threadSection,
-  type AgentSessionSummary,
+  type AgentThreadSummary,
   type ThreadLifecycleOptions,
 } from "@sand/extension-api";
 
 export interface ThreadGroups {
-  matching: AgentSessionSummary[];
-  pinned: AgentSessionSummary[];
-  active: AgentSessionSummary[];
-  snoozed: AgentSessionSummary[];
-  settled: AgentSessionSummary[];
+  matching: AgentThreadSummary[];
+  pinned: AgentThreadSummary[];
+  active: AgentThreadSummary[];
+  snoozed: AgentThreadSummary[];
+  settled: AgentThreadSummary[];
 }
 
 export interface ThreadGroupOptions extends ThreadLifecycleOptions {
@@ -21,13 +21,13 @@ export interface ThreadGroupOptions extends ThreadLifecycleOptions {
 }
 
 export function groupThreads(
-  sessions: AgentSessionSummary[],
+  threads: AgentThreadSummary[],
   options: ThreadGroupOptions,
 ): ThreadGroups {
   const query = options.query.trim().toLowerCase();
   const matching = query
-    ? sessions.filter((session) => session.title.toLowerCase().includes(query))
-    : [...sessions];
+    ? threads.filter((thread) => thread.title.toLowerCase().includes(query))
+    : [...threads];
   const groups: ThreadGroups = {
     matching,
     pinned: [],
@@ -36,7 +36,7 @@ export function groupThreads(
     settled: [],
   };
 
-  for (const session of matching) groups[threadSection(session, options)].push(session);
+  for (const thread of matching) groups[threadSection(thread, options)].push(thread);
   groups.pinned.sort(stable(comparePinnedThreads));
   groups.active.sort(stable(compareActiveThreads));
   groups.snoozed.sort(stable(compareSnoozedThreads));
@@ -45,7 +45,7 @@ export function groupThreads(
 }
 
 function stable(
-  compare: (left: AgentSessionSummary, right: AgentSessionSummary) => number,
-): (left: AgentSessionSummary, right: AgentSessionSummary) => number {
+  compare: (left: AgentThreadSummary, right: AgentThreadSummary) => number,
+): (left: AgentThreadSummary, right: AgentThreadSummary) => number {
   return (left, right) => compare(left, right) || left.id.localeCompare(right.id);
 }

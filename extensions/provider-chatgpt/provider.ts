@@ -1,7 +1,9 @@
 import {
   numberValue,
   objectValue,
+  selectProviderOption,
   stringValue,
+  type AgentModelTraits,
   type AgentMessage,
   type AgentProvider,
   type AgentProviderRequest,
@@ -11,6 +13,12 @@ import {
 } from "@sand/extension-api";
 
 import type { ChatGptAuth } from "./auth.ts";
+import {
+  CHATGPT_DEFAULT_MODEL,
+  CHATGPT_MODEL_DEFAULTS,
+  CHATGPT_MODELS,
+} from "./models.ts";
+import { CHATGPT_PRESENTATION, CHATGPT_PROVIDER_NAME } from "./presentation.ts";
 
 const API_URL = "https://chatgpt.com/backend-api/codex/responses";
 
@@ -23,8 +31,11 @@ interface PendingCall {
 
 export class ChatGptProvider implements AgentProvider {
   readonly id = "chatgpt";
-  readonly name = "ChatGPT subscription";
-  readonly defaultModel = "gpt-5.6-sol";
+  readonly name = CHATGPT_PROVIDER_NAME;
+  readonly defaultModel = CHATGPT_DEFAULT_MODEL;
+  readonly modelDefaults = CHATGPT_MODEL_DEFAULTS;
+  readonly models = CHATGPT_MODELS;
+  readonly presentation = CHATGPT_PRESENTATION;
 
   constructor(private readonly auth: ChatGptAuth) {}
 
@@ -39,12 +50,12 @@ export class ChatGptProvider implements AgentProvider {
       accept: "text/event-stream",
       "content-type": "application/json",
     };
-    if (request.sessionId) headers["session-id"] = request.sessionId;
+    if (request.threadId) headers["session-id"] = request.threadId;
 
     const response = await fetch(API_URL, {
       method: "POST",
       headers,
-      body: JSON.stringify(requestBody(request)),
+      body: JSON.stringify(requestBody(request, this.traits(request.model))),
       signal: request.signal,
     });
     if (!response.ok) {
@@ -52,9 +63,13 @@ export class ChatGptProvider implements AgentProvider {
     }
     return readStream(response, request);
   }
+
+  private traits(model: string): AgentModelTraits {
+    return this.models.find((item) => item.slug === model) ?? this.modelDefaults;
+  }
 }
 
-function requestBody(request: AgentProviderRequest): JsonObject {
+function requestBody(request: AgentProviderRequest, traits: AgentModelTraits): JsonObject {
   const instructions = request.messages
     .filter((message) => message.role === "system")
     .map((message) => message.content)
@@ -74,20 +89,33 @@ function requestBody(request: AgentProviderRequest): JsonObject {
     })),
     "tool_choice": "auto",
     "parallel_tool_calls": true,
-    reasoning: { effort: reasoningEffort(request.settings), summary: "auto" },
-    "service_tier": request.settings.serviceTier === "fast" ? "priority" : "default",
+    reasoning: { effort: reasoningEffort(request.settings, traits), summary: "auto" },
+    "service_tier": serviceTier(request.settings, traits),
     text: { verbosity: "low" },
     include: ["reasoning.encrypted_content"],
-    "prompt_cache_key": request.sessionId || crypto.randomUUID(),
+    "prompt_cache_key": request.threadId || crypto.randomUUID(),
   };
 }
 
-function reasoningEffort(settings: JsonObject): string {
-  const effort = settings.reasoning;
+function reasoningEffort(settings: JsonObject, traits: AgentModelTraits): string {
+  const effort = selectProviderOption(
+    settings.reasoning,
+    traits.reasoning,
+    traits.defaultReasoning,
+  );
   if (effort === "low" || effort === "medium" || effort === "high" || effort === "xhigh") {
     return effort;
   }
   return effort === "max" || effort === "ultra" ? "xhigh" : "high";
+}
+
+function serviceTier(settings: JsonObject, traits: AgentModelTraits): string {
+  const tier = selectProviderOption(
+    settings.serviceTier,
+    traits.serviceTiers,
+    traits.defaultServiceTier,
+  );
+  return tier === "fast" ? "priority" : "default";
 }
 
 function responsesInput(messages: AgentMessage[]): JsonValue[] {

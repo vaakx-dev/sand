@@ -1,18 +1,9 @@
 import { derive, dynamicChild, h2, option, select } from "@vaakx-dev/vrui";
 
 import type { WorkbenchController } from "../../controller.ts";
-import type { ReasoningEffort } from "../../models.ts";
+import { findModel } from "../../modelCatalog.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { page, settingRow, toggle } from "./shared.ts";
-
-const REASONING: { value: ReasoningEffort; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "xhigh", label: "Extra High" },
-  { value: "max", label: "Max" },
-  { value: "ultra", label: "Ultra" },
-];
+import { page, settingRow } from "./shared.ts";
 
 export function generalPage(
   controller: WorkbenchController,
@@ -21,14 +12,14 @@ export function generalPage(
   const titleModels = derive(() =>
     (state.providerModels.get()[state.titleProvider.get()] ?? []).filter((model) => !model.hidden)
   );
+  const titleModel = derive(() => findModel(
+    state.providerModels.get(),
+    state.titleProvider.get(),
+    state.titleModel.get(),
+  ));
 
   return page(
     "General",
-    settingRow(
-      "Auto-open task panel",
-      "Open the right-side task panel when the agent publishes steps or starts a tool.",
-      toggle(state.autoOpenTasks, () => void controller.preferences.saveBehavior()),
-    ),
     settingRow(
       "Settle inactive threads",
       "Move quiet threads into the Settled shelf after the selected number of days.",
@@ -76,22 +67,25 @@ export function generalPage(
             (event.target as HTMLSelectElement).value,
           ),
         },
-        ...models.map((model) => option({ value: model.slug }, model.slug)),
+        ...models.map((model) => option({ value: model.slug }, model.name)),
       )),
     ),
     settingRow(
       "Thinking",
       "Reasoning effort used for thread-title generation.",
-      select(
+      dynamicChild(titleModel, (model) => select(
         {
           class: "settings-select",
           value: state.titleReasoning,
+          disabled: !model?.reasoning.length,
           onChange: (event) => void controller.models.titleReasoning(
-            (event.target as HTMLSelectElement).value as ReasoningEffort,
+            (event.target as HTMLSelectElement).value,
           ),
         },
-        ...REASONING.map((item) => option({ value: item.value }, item.label)),
-      ),
+        ...(model?.reasoning.length
+          ? model.reasoning.map((item) => option({ value: item.id }, item.label))
+          : [option({ value: "" }, "Not supported")]),
+      )),
     ),
   );
 }

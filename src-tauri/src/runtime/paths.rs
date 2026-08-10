@@ -12,6 +12,7 @@ pub(super) struct RuntimePaths {
     pub(super) workspace: PathBuf,
     pub(super) cache: PathBuf,
     pub(super) config: PathBuf,
+    pub(super) journal: PathBuf,
 }
 
 impl RuntimePaths {
@@ -51,6 +52,7 @@ impl RuntimePaths {
             user_extensions: config.join("extensions"),
             cache: workspace.join(".sand/cache"),
             config,
+            journal: workspace.join(".sand/orchestration.sqlite3"),
             workspace,
             root,
         })

@@ -1,12 +1,15 @@
 import {
+  errorMessage,
   objectValue,
+  selectProviderOption,
   stringValue,
+  type AgentThread,
   type JsonObject,
 } from "@sand/extension-api";
 
 import { Events } from "./events.ts";
 import { Registry } from "./registry.ts";
-import { createMessage, type AgentSession, Sessions, sessionSummary } from "./sessions.ts";
+import { createMessage, ThreadStore, threadSummary } from "./threadStore.ts";
 import { Settings } from "./settings.ts";
 
 const TITLE_PROMPT = "Create a concise thread title from the user's first message. Return only the title, with no quotation marks, markdown, explanation, or ending punctuation. Use at most eight words.";
@@ -16,22 +19,45 @@ export class TitleGenerator {
     private readonly registry: Registry,
     private readonly settings: Settings,
     private readonly events: Events,
-    private readonly sessions: Sessions,
+    private readonly threads: ThreadStore,
   ) {}
 
-  async generate(session: AgentSession, prompt: string, signal: AbortSignal): Promise<void> {
+  async generate(thread: AgentThread, prompt: string, signal: AbortSignal): Promise<void> {
+    const runId = crypto.randomUUID();
+    const attemptId = crypto.randomUUID();
     const selected = objectValue(this.settings.get<JsonObject>("agent.titleGeneration", {}));
-    const providerId = stringValue(selected.provider, "chatgpt");
-    const provider = this.registry.providers.get(providerId);
+    const provider = this.registry.providers.get(stringValue(selected.provider))
+      ?? this.registry.providers.values().next().value;
     if (!provider) return;
     const model = stringValue(selected.model, provider.defaultModel || "default");
+    const modelTraits = provider.models.find((item) => item.slug === model)
+      ?? provider.modelDefaults;
+    const reasoning = selectProviderOption(
+      selected.reasoning,
+      modelTraits.reasoning,
+      modelTraits.defaultReasoning,
+    );
+    const serviceTier = selectProviderOption(
+      undefined,
+      modelTraits.serviceTiers,
+      modelTraits.defaultServiceTier,
+    );
     const providerSettings = {
       ...this.settings.get<JsonObject>(`provider.${provider.id}`, {}),
-      reasoning: stringValue(selected.reasoning, "medium"),
-      serviceTier: "standard",
+      reasoning,
+      serviceTier,
     };
+    this.events.record("title.started", {
+      threadId: thread.id,
+      runId,
+      attemptId,
+      provider: provider.id,
+      model,
+    });
     const response = await provider.complete({
-      sessionId: session.id,
+      threadId: thread.id,
+      runId,
+      attemptId,
       model,
       messages: [
         createMessage("system", TITLE_PROMPT),
@@ -41,12 +67,26 @@ export class TitleGenerator {
       settings: providerSettings,
       signal,
       onDelta() {},
+    }).catch((error) => {
+      this.events.record("title.failed", {
+        threadId: thread.id,
+        runId,
+        attemptId,
+        error: errorMessage(error),
+      });
+      throw error;
     });
     const title = cleanTitle(response.content);
     if (!title || signal.aborted) return;
-    session.title = title;
-    await this.sessions.persist(session, false);
-    this.events.emit("agent.session", { session: sessionSummary(session) });
+    thread.title = title;
+    await this.threads.persist(thread, false);
+    this.events.record("title.completed", {
+      threadId: thread.id,
+      runId,
+      attemptId,
+      title,
+    });
+    this.events.emit("orchestration.thread", { thread: threadSummary(thread) });
   }
 }
 

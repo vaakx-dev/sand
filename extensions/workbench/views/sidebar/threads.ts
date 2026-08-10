@@ -12,13 +12,13 @@ import {
 } from "@vaakx-dev/vrui";
 import { ChevronDown, FolderOpen, Plus, Search, SquarePen, X } from "lucide";
 
-import type { AgentSessionSummary } from "@sand/extension-api";
+import type { AgentThreadSummary } from "@sand/extension-api";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { projectMenu } from "./projectMenu.ts";
 import { groupThreads } from "./threadGroups.ts";
-import { sessionRow } from "./threadRow.ts";
+import { threadRow } from "./threadRow.ts";
 import { threadShelf } from "./threadShelf.ts";
 
 export function threadsView(
@@ -27,7 +27,7 @@ export function threadsView(
 ): HTMLElement {
   const clock = sig(Date.now());
   const groups = derive(() => groupThreads(
-    state.sessions.get(),
+    state.threads.get(),
     {
       query: state.threadQuery.get(),
       now: clock.get(),
@@ -41,13 +41,13 @@ export function threadsView(
   const visibleSnoozed = derive(() => visibleShelf(
     snoozed.get(),
     state.snoozedOpen.get(),
-    state.sessionId.get(),
+    state.threadId.get(),
   ));
   const visibleSettled = derive(() => {
     return visibleShelf(
       settled.get(),
       state.settledOpen.get(),
-      state.sessionId.get(),
+      state.threadId.get(),
       state.settledLimit.get(),
     );
   });
@@ -63,18 +63,18 @@ export function threadsView(
       { class: "thread-scroll" },
       list(
         pinned,
-        (session) => session.id,
-        (session) => sessionRow(controller, state, clock, session.get(), "pinned"),
+        (thread) => thread.id,
+        (thread) => threadRow(controller, state, clock, thread.get(), "pinned"),
         div({ class: "thread-section pinned" }),
       ),
-      show(pinned.map((sessions) => sessions.length > 0), () => div({ class: "thread-divider" })),
+      show(pinned.map((threads) => threads.length > 0), () => div({ class: "thread-divider" })),
       list(
         active,
-        (session) => session.id,
-        (session) => sessionRow(controller, state, clock, session.get(), "active"),
+        (thread) => thread.id,
+        (thread) => threadRow(controller, state, clock, thread.get(), "active"),
         div({ class: "thread-section" }),
       ),
-      show(snoozed.map((sessions) => sessions.length > 0), () => threadShelf(
+      show(snoozed.map((threads) => threads.length > 0), () => threadShelf(
         controller,
         state,
         clock,
@@ -83,11 +83,11 @@ export function threadsView(
           className: "snoozed",
           section: "snoozed",
           open: state.snoozedOpen,
-          sessions: visibleSnoozed,
-          total: snoozed.map((sessions) => sessions.length),
+          threads: visibleSnoozed,
+          total: snoozed.map((threads) => threads.length),
         },
       )),
-      show(settled.map((sessions) => sessions.length > 0), () => threadShelf(
+      show(settled.map((threads) => threads.length > 0), () => threadShelf(
         controller,
         state,
         clock,
@@ -96,8 +96,8 @@ export function threadsView(
           className: "settled",
           section: "settled",
           open: state.settledOpen,
-          sessions: visibleSettled,
-          total: settled.map((sessions) => sessions.length),
+          threads: visibleSettled,
+          total: settled.map((threads) => threads.length),
           hidden: hiddenSettled,
           pageSize: 25,
           showMore: () => state.settledLimit.update((value) => value + 25),
@@ -176,15 +176,15 @@ function threadTools(controller: WorkbenchController, state: WorkbenchState): HT
 }
 
 function visibleShelf(
-  sessions: AgentSessionSummary[],
+  threads: AgentThreadSummary[],
   open: boolean,
   selectedId: string | null,
-  limit = sessions.length,
-): AgentSessionSummary[] {
-  const selected = sessions.find((session) => session.id === selectedId);
+  limit = threads.length,
+): AgentThreadSummary[] {
+  const selected = threads.find((thread) => thread.id === selectedId);
   if (!open) return selected ? [selected] : [];
-  const visible = sessions.slice(0, limit);
-  return selected && !visible.some((session) => session.id === selected.id)
+  const visible = threads.slice(0, limit);
+  return selected && !visible.some((thread) => thread.id === selected.id)
     ? [...visible, selected]
     : visible;
 }

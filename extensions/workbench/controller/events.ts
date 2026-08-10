@@ -1,26 +1,22 @@
 import {
   objectValue,
   stringValue,
+  type AgentAttempt,
   type AgentMessage,
-  type AgentSessionSummary,
+  type AgentRun,
+  type AgentThreadSummary,
   type JsonObject,
   type RuntimeEvent,
 } from "@sand/extension-api";
 
-import type { PlanStep, ToolActivity } from "../models.ts";
-import { openPanel } from "../panel.ts";
 import { GitController } from "./git.ts";
 import { ControllerRuntime } from "./runtime.ts";
-import { upsertSession } from "./sessionSummary.ts";
-import { TerminalController } from "./terminal.ts";
-import { WorkspaceController } from "./workspace.ts";
+import { upsertThread } from "./threadSummary.ts";
 
 export class WorkbenchEvents {
   constructor(
     private readonly runtime: ControllerRuntime,
-    private readonly workspace: WorkspaceController,
     private readonly git: GitController,
-    private readonly terminal: TerminalController,
   ) {}
 
   start(): void {
@@ -30,55 +26,38 @@ export class WorkbenchEvents {
   private onEvent(event: RuntimeEvent): void {
     const state = this.runtime.state;
     const payload = objectValue(event.payload);
-    const currentSession = state.sessionId.get();
-    const sessionId = stringValue(payload.sessionId);
-    const belongsToCurrent = !sessionId || sessionId === currentSession;
+    const currentThread = state.threadId.get();
+    const threadId = stringValue(payload.threadId);
+    const belongsToCurrent = !threadId || threadId === currentThread;
 
     switch (event.kind) {
-      case "agent.delta":
+      case "orchestration.delta":
         if (belongsToCurrent) {
           state.agentDelta.update((value) => value + stringValue(payload.delta));
         }
         break;
-      case "agent.message":
+      case "orchestration.message":
         if (belongsToCurrent) this.addMessage(payload);
         break;
-      case "agent.status":
-        this.updateStatus(payload, sessionId, belongsToCurrent);
+      case "orchestration.status":
+        this.updateStatus(payload, threadId, belongsToCurrent);
         break;
-      case "agent.session":
-        this.updateSession(payload);
+      case "orchestration.thread":
+        this.updateThread(payload);
         break;
-      case "agent.session_deleted":
-        this.deleteSession(sessionId);
+      case "orchestration.thread_deleted":
+        this.deleteThread(threadId);
         break;
-      case "agent.error":
+      case "orchestration.error":
         if (belongsToCurrent) this.runtime.notice(stringValue(payload.message));
         break;
-      case "agent.tool_start":
-        if (belongsToCurrent) this.startTool(payload);
+      case "orchestration.run":
+        if (belongsToCurrent) this.updateRun(payload);
         break;
-      case "agent.tool_end":
-        if (belongsToCurrent) this.endTool(payload);
-        break;
-      case "agent.plan":
-        if (belongsToCurrent) this.updatePlan(payload);
-        break;
-      case "terminal.output":
-        this.terminal.append(
-          stringValue(payload.id),
-          terminalStream(stringValue(payload.stream)),
-          stringValue(payload.text),
-        );
-        break;
-      case "terminal.exit":
-        this.terminal.exited(
-          stringValue(payload.id),
-          typeof payload.exitCode === "number" ? payload.exitCode : -1,
-        );
+      case "orchestration.attempt":
+        if (belongsToCurrent) this.updateAttempt(payload);
         break;
       case "workspace.changed":
-        void this.workspace.refreshTree();
         void this.git.refresh();
         break;
     }
@@ -94,79 +73,56 @@ export class WorkbenchEvents {
     if (message.role === "assistant") state.agentDelta.set("");
   }
 
-  private updateStatus(payload: JsonObject, sessionId: string, current: boolean): void {
+  private updateStatus(payload: JsonObject, threadId: string, current: boolean): void {
     const state = this.runtime.state;
-    const status = (stringValue(payload.status) || "idle") as AgentSessionSummary["status"];
+    const status = (stringValue(payload.status) || "idle") as AgentThreadSummary["status"];
     if (current) state.agentStatus.set(status);
-    if (!sessionId) return;
-    state.sessions.update((sessions) => sessions.map((session) =>
-      session.id === sessionId
+    if (!threadId) return;
+    state.threads.update((threads) => threads.map((thread) =>
+      thread.id === threadId
         ? {
-            ...session,
+            ...thread,
             status,
             updatedAt: new Date().toISOString(),
           }
-        : session
+        : thread
     ));
   }
 
-  private updateSession(payload: JsonObject): void {
-    const summary = payload.session as unknown as AgentSessionSummary;
+  private updateThread(payload: JsonObject): void {
+    const summary = payload.thread as unknown as AgentThreadSummary;
     if (!summary?.id) return;
-    upsertSession(this.runtime.state, summary);
+    upsertThread(this.runtime.state, summary);
   }
 
-  private deleteSession(id: string): void {
+  private updateRun(payload: JsonObject): void {
+    const run = payload.run as unknown as AgentRun;
+    if (!run?.id) return;
+    this.runtime.state.runs.update((runs) => [
+      ...runs.filter((item) => item.id !== run.id),
+      run,
+    ]);
+  }
+
+  private updateAttempt(payload: JsonObject): void {
+    const attempt = payload.attempt as unknown as AgentAttempt;
+    if (!attempt?.id) return;
+    this.runtime.state.attempts.update((attempts) => [
+      ...attempts.filter((item) => item.id !== attempt.id),
+      attempt,
+    ]);
+  }
+
+  private deleteThread(id: string): void {
     if (!id) return;
     const state = this.runtime.state;
-    state.sessions.update((sessions) => sessions.filter((session) => session.id !== id));
-    if (state.sessionId.get() === id) {
-      state.sessionId.set(null);
+    state.threads.update((threads) => threads.filter((thread) => thread.id !== id));
+    if (state.threadId.get() === id) {
+      state.threadId.set(null);
       state.messages.set([]);
+      state.runs.set([]);
+      state.attempts.set([]);
     }
   }
 
-  private startTool(payload: JsonObject): void {
-    const call = objectValue(payload.call ?? null);
-    const activity: ToolActivity = {
-      id: stringValue(call.id),
-      name: stringValue(call.name),
-      status: "running",
-      detail: JSON.stringify(call.arguments ?? {}),
-    };
-    this.runtime.state.tools.update((items) => [...items, activity]);
-    this.openTasks();
-  }
-
-  private endTool(payload: JsonObject): void {
-    const id = stringValue(payload.callId);
-    this.runtime.state.tools.update((items) =>
-      items.map((item) => item.id === id ? { ...item, status: "complete" } : item),
-    );
-  }
-
-  private updatePlan(payload: JsonObject): void {
-    const state = this.runtime.state;
-    const plan = Array.isArray(payload.plan) ? payload.plan as unknown as PlanStep[] : [];
-    state.planDescription.set(stringValue(payload.explanation));
-    state.planSteps.set(plan.filter((step) =>
-      step?.step && ["pending", "in_progress", "completed"].includes(step.status)
-    ));
-    state.planUpdatedAt.set(new Date().toISOString());
-    this.openTasks();
-  }
-
-  private openTasks(): void {
-    const state = this.runtime.state;
-    if (!state.autoOpenTasks.get()) return;
-    openPanel(state, "tasks");
-  }
-}
-
-function terminalStream(
-  value: string,
-): "command" | "stdout" | "stderr" | "prompt" | "status" {
-  return value === "command" || value === "stderr" || value === "prompt" || value === "status"
-    ? value
-    : "stdout";
 }
