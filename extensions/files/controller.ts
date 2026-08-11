@@ -7,6 +7,7 @@ import {
   type RuntimeEvent,
   type UiEvent,
   type UiSurfaceRegistry,
+  type WorkspaceDescription,
 } from "@sand/extension-api";
 
 import { commands, type FileNode, type SearchResult } from "./api.ts";
@@ -20,14 +21,13 @@ export class FilesController {
   ) {}
 
   async initialize(): Promise<void> {
-    await this.guard(async () => {
-      const [runtime, tree] = await Promise.all([
-        this.runtime.call<{ workspace: string }>("runtime.info"),
-        this.runtime.command<FileNode[]>(commands.tree, { depth: 8 }),
-      ]);
-      this.state.root.set(runtime.workspace);
-      this.state.tree.set(tree);
-    });
+    await this.guard(() => this.runtime.runWorkspace(async (workspace) => {
+      const tree = await workspace.command<FileNode[]>(commands.tree, { depth: 8 });
+      workspace.commit(() => {
+        this.state.root.set(workspace.workspace.path);
+        this.state.tree.set(tree);
+      });
+    }));
   }
 
   async show(): Promise<void> {
@@ -35,9 +35,10 @@ export class FilesController {
   }
 
   async refresh(): Promise<void> {
-    await this.guard(async () => {
-      this.state.tree.set(await this.runtime.command<FileNode[]>(commands.tree, { depth: 8 }));
-    });
+    await this.guard(() => this.runtime.runWorkspace(async (workspace) => {
+      const tree = await workspace.command<FileNode[]>(commands.tree, { depth: 8 });
+      workspace.commit(() => this.state.tree.set(tree));
+    }));
   }
 
   toggleDirectory(path: string): void {
@@ -114,10 +115,26 @@ export class FilesController {
   }
 
   onRuntimeEvent(event: RuntimeEvent): void {
-    if (event.kind !== "workspace.changed") return;
-    void this.refresh();
-    const path = stringValue(objectValue(event.payload).path);
-    if (path) void this.reloadCleanFile(path);
+    if (event.kind === "workspace.changed") {
+      void this.refresh();
+      const path = stringValue(objectValue(event.payload).path);
+      if (path) void this.reloadCleanFile(path);
+    }
+  }
+
+  onWorkspaceSelected(workspace: WorkspaceDescription): void {
+    this.reset(workspace.path);
+    void this.initialize();
+  }
+
+  private reset(root: string): void {
+    this.state.root.set(root);
+    this.state.tree.set([]);
+    this.state.expanded.set({});
+    this.state.tabs.set([]);
+    this.state.activePath.set(null);
+    this.clearSearch();
+    this.state.error.set("");
   }
 
   private async reloadCleanFile(path: string): Promise<void> {

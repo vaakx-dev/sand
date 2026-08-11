@@ -12,6 +12,7 @@ import { TitleGenerator } from "./threads/title.ts";
 
 export class AgentHarness {
   private readonly threads: ThreadStore;
+  private readonly execution: ExecutionCoordinator;
 
   constructor(
     private readonly registry: Registry,
@@ -21,9 +22,9 @@ export class AgentHarness {
     this.threads = new ThreadStore(events);
     const titles = new TitleGenerator(registry, settings, events, this.threads);
     const lifecycle = new ThreadLifecycle(this.threads, settings, events);
-    const execution = new ExecutionCoordinator(registry, settings, events, this.threads, titles);
+    this.execution = new ExecutionCoordinator(registry, settings, events, this.threads, titles);
     registerThreadCommands(registry, lifecycle, this.threads);
-    registerExecutionCommands(registry, execution);
+    registerExecutionCommands(registry, this.execution);
   }
 
   restore(snapshot: JsonValue): void {
@@ -49,5 +50,9 @@ export class AgentHarness {
     const tool = this.registry.tools.get(name);
     if (!tool) throw new Error(`unknown tool: ${name}`);
     return tool.execute(input, new AbortController().signal);
+  }
+
+  shutdown(): Promise<void> {
+    return this.execution.shutdown();
   }
 }

@@ -1,14 +1,15 @@
 import type { UiEvent } from "@sand/extension-api";
 
+import { Listeners } from "./listeners.ts";
+
 export class Events {
-  private readonly listeners = new Set<(event: UiEvent) => void>();
+  private readonly listeners = new Listeners<[UiEvent]>();
 
   emit<T>(kind: string, payload: T): void {
-    for (const listener of this.listeners) listener({ kind, payload });
+    this.listeners.notify({ kind, payload });
   }
 
   subscribe(listener: (event: UiEvent) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    return this.listeners.subscribe(listener);
   }
 }

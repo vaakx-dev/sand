@@ -4,8 +4,10 @@ import { commands } from "./api.ts";
 
 const extension: HostExtension = {
   activate(context) {
-    context.commands.register(commands.vscode, () => launch(["code", context.workspace]));
-    context.commands.register(commands.explorer, () => launch(explorerCommand(context.workspace)));
+    context.commands.register(commands.vscode, () => launch(["code", context.workspace.path]));
+    context.commands.register(commands.explorer, () =>
+      launch(explorerCommand(context.workspace.path))
+    );
   },
 };
 

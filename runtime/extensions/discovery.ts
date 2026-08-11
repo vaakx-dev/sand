@@ -6,8 +6,9 @@ import {
   errorMessage,
   type ExtensionDescription,
   type ExtensionManifest,
-  type HostExtension,
+  type HostExtensionCleanup,
 } from "@sand/extension-api";
+import { missing, readJson } from "@sand/extension-runtime";
 
 export interface Loaded {
   manifest: ExtensionManifest;
@@ -19,7 +20,7 @@ export interface Loaded {
   uiActive: boolean;
   contributions: string[];
   dependencyError?: string;
-  module?: HostExtension;
+  cleanup?: HostExtensionCleanup;
 }
 
 export interface Root {
@@ -36,7 +37,8 @@ export async function discover(
     for (const directory of await childDirectories(root.path)) {
       const manifestPath = join(directory, "sand.extension.json");
       try {
-        const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as ExtensionManifest;
+        const manifest = await readJson<ExtensionManifest>(manifestPath);
+        if (!manifest) continue;
         validateManifest(manifest, manifestPath);
         discovered.set(manifest.id, {
           manifest,
@@ -49,9 +51,7 @@ export async function discover(
           contributions: contributions(manifest),
         });
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-          console.error(`extension discovery failed in ${directory}: ${errorMessage(error)}`);
-        }
+        console.error(`extension discovery failed in ${directory}: ${errorMessage(error)}`);
       }
     }
   }
@@ -66,7 +66,7 @@ async function childDirectories(root: string): Promise<string[]> {
       .map((entry) => join(root, entry.name))
       .sort();
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+    if (missing(error)) return [];
     throw error;
   }
 }

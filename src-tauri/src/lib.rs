@@ -2,10 +2,9 @@ mod acp;
 mod journal;
 mod runtime;
 
-use std::sync::Arc;
-use std::{env, fs, process::Command};
+use std::{path::PathBuf, sync::Arc};
 
-use runtime::{Runtime, RuntimeEvent};
+use runtime::{Runtime, RuntimeEvent, WorkspaceInfo};
 use serde::Serialize;
 use serde_json::Value;
 use tauri::{Emitter, Manager, State, webview::PageLoadEvent};
@@ -21,12 +20,13 @@ struct BrowserNavigation {
 #[tauri::command]
 async fn runtime_call(
     state: State<'_, RuntimeState>,
+    workspace_id: Option<String>,
     method: String,
     params: Option<Value>,
 ) -> Result<Value, String> {
     state
         .0
-        .request(method, params.unwrap_or(Value::Null))
+        .request(workspace_id, method, params.unwrap_or(Value::Null))
         .await
         .map_err(|error| error.to_string())
 }
@@ -37,23 +37,41 @@ fn runtime_events(state: State<'_, RuntimeState>, after: u64) -> Vec<RuntimeEven
 }
 
 #[tauri::command]
-fn switch_workspace(app: tauri::AppHandle, path: String) -> Result<(), String> {
-    let workspace = fs::canonicalize(path).map_err(|error| error.to_string())?;
-    if !workspace.is_dir() {
-        return Err("workspace must be a directory".to_owned());
-    }
-    let executable = env::current_exe().map_err(|error| error.to_string())?;
-    Command::new(executable)
-        .env("SAND_WORKSPACE", workspace)
-        .spawn()
-        .map_err(|error| error.to_string())?;
-    app.exit(0);
-    Ok(())
+async fn workspace_active(state: State<'_, RuntimeState>) -> Result<WorkspaceInfo, String> {
+    state
+        .0
+        .active_workspace()
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn workspace_open(
+    state: State<'_, RuntimeState>,
+    path: String,
+) -> Result<WorkspaceInfo, String> {
+    state
+        .0
+        .open_workspace(PathBuf::from(path))
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn workspace_close(
+    state: State<'_, RuntimeState>,
+    id: String,
+) -> Result<WorkspaceInfo, String> {
+    state
+        .0
+        .close_workspace(&id)
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .on_page_load(|webview, payload| {
             if payload.event() != PageLoadEvent::Started
                 || !webview.label().starts_with("sand-browser-")
@@ -77,8 +95,16 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             runtime_call,
             runtime_events,
-            switch_workspace
+            workspace_active,
+            workspace_open,
+            workspace_close,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Sand");
+        .build(tauri::generate_context!())
+        .expect("error while building Sand");
+    app.run(|app, event| {
+        if let tauri::RunEvent::Exit = event {
+            let runtime = Arc::clone(&app.state::<RuntimeState>().0);
+            tauri::async_runtime::block_on(runtime.shutdown());
+        }
+    });
 }

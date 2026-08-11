@@ -1,7 +1,7 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { rm } from "node:fs/promises";
 
 import type { JsonValue } from "@sand/extension-api";
+import { readJson, writeJson } from "@sand/extension-runtime";
 
 import {
   browserLogin,
@@ -10,6 +10,8 @@ import {
 } from "./oauth.ts";
 
 export class ChatGptAuth {
+  private refreshing?: Promise<Credentials>;
+
   constructor(private readonly path: string) {}
 
   async status(): Promise<JsonValue> {
@@ -33,24 +35,27 @@ export class ChatGptAuth {
       throw new Error("Sign in with ChatGPT from Sand settings before starting the agent");
     }
     if (current.expires > Date.now() + 60_000) return current;
-    const refreshed = await refreshCredentials(current, signal);
-    await this.save(refreshed);
-    return refreshed;
-  }
-
-  private async load(): Promise<Credentials | null> {
+    this.refreshing ??= this.refresh(current, signal);
     try {
-      const value = JSON.parse(await readFile(this.path, "utf8")) as Credentials;
-      return value.access && value.refresh && value.accountId ? value : null;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-      throw error;
+      return await this.refreshing;
+    } finally {
+      this.refreshing = undefined;
     }
   }
 
+  private async load(): Promise<Credentials | null> {
+    const value = await readJson<Credentials>(this.path);
+    return value?.access && value.refresh && value.accountId ? value : null;
+  }
+
   private async save(credentials: Credentials): Promise<void> {
-    await mkdir(dirname(this.path), { recursive: true });
-    await writeFile(this.path, `${JSON.stringify(credentials, null, 2)}\n`, "utf8");
+    await writeJson(this.path, credentials);
+  }
+
+  private async refresh(current: Credentials, signal: AbortSignal): Promise<Credentials> {
+    const refreshed = await refreshCredentials(current, signal);
+    await this.save(refreshed);
+    return refreshed;
   }
 }
 
@@ -59,7 +64,7 @@ function authStatus(credentials: Credentials | null): JsonValue {
     available: Boolean(credentials),
     label: credentials ? "Available" : "Signed out",
     description: credentials
-      ? `Connected to ChatGPT account ${credentials.accountId.slice(0, 10)}… Tokens refresh automatically.`
+      ? `Connected to ChatGPT account ${credentials.accountId.slice(0, 10)}... Tokens refresh automatically.`
       : "Browser sign-in uses Codex access from an eligible ChatGPT subscription. No API key is used.",
   };
 }

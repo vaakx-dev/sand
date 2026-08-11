@@ -1,8 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
-
-import { errorMessage, type RuntimeClient, type UiEventRegistry } from "@sand/extension-api";
+import {
+  errorMessage,
+  type RuntimeClient,
+  type UiEventRegistry,
+  type WorkspaceDescription,
+} from "@sand/extension-api";
 
 import { commands, type PickerIntent, type Project } from "./api.ts";
+import { cleanPath, samePath } from "./path.ts";
 import type { ProjectsState } from "./state.ts";
 import { workbenchEvents } from "../workbench/api.ts";
 
@@ -15,12 +19,8 @@ export class ProjectsController {
 
   async initialize(): Promise<void> {
     await this.guard(async () => {
-      const [runtime, projects] = await Promise.all([
-        this.runtime.call<{ workspace: string }>("runtime.info"),
-        this.runtime.command<Project[]>(commands.list),
-      ]);
-      this.state.root.set(runtime.workspace);
-      this.state.items.set(projects);
+      this.state.root.set(cleanPath(this.runtime.workspace().path));
+      this.state.items.set(await this.runtime.command<Project[]>(commands.list));
     });
   }
 
@@ -47,57 +47,81 @@ export class ProjectsController {
   }
 
   async select(path: string): Promise<void> {
+    const project = cleanPath(path);
     const intent = this.state.pickerIntent.get();
     this.state.pickerOpen.set(false);
-    if (samePath(this.state.root.get(), path)) {
+    if (samePath(this.state.root.get(), project)) {
       if (intent === "newThread") {
-        this.events.emit(workbenchEvents.newThreadSelected, { project: path });
+        this.events.emit(workbenchEvents.newThreadSelected, { project });
       }
       return;
     }
-    await this.switchTo(path);
+    const selected = await this.switchTo(project);
+    if (selected && intent === "newThread") {
+      this.events.emit(workbenchEvents.newThreadSelected, { project });
+    }
   }
 
   async chooseLocal(): Promise<void> {
-    await this.guard(async () => {
+    const path = await this.guard(async () => {
       const path = await this.runtime.command<string>(commands.pick);
-      if (!path) return;
+      if (!path) return "";
       this.state.items.set(await this.runtime.command<Project[]>(commands.add, { path }));
-      await this.switchTo(path);
+      return path;
     });
+    if (path) await this.switchTo(path);
   }
 
   async clone(): Promise<void> {
     const url = this.state.cloneUrl.get().trim();
     if (!url) return;
-    await this.guard(async () => {
+    const project = await this.guard(async () => {
       const parent = await this.runtime.command<string>(commands.pick);
-      if (!parent) return;
+      if (!parent) return "";
       const result = await this.runtime.command<{ project: Project; projects: Project[] }>(
         commands.clone,
         { url, parent },
       );
       this.state.items.set(result.projects);
-      await this.switchTo(result.project.path);
+      return result.project.path;
+    });
+    if (project) await this.switchTo(project);
+  }
+
+  async switchTo(path: string): Promise<boolean> {
+    this.state.pickerOpen.set(false);
+    this.state.sourceOpen.set(false);
+    const workspace = cleanPath(path);
+    if (samePath(this.state.root.get(), workspace)) return true;
+    const opened = await this.guard(async () => {
+      await this.runtime.openWorkspace(workspace);
+      return true;
+    });
+    return opened === true;
+  }
+
+  onWorkspaceSelected(workspace: WorkspaceDescription): void {
+    this.state.root.set(cleanPath(workspace.path));
+    this.state.menuOpen.set(false);
+    this.state.pickerOpen.set(false);
+    this.state.sourceOpen.set(false);
+    void this.refresh();
+  }
+
+  private async refresh(): Promise<void> {
+    await this.guard(async () => {
+      this.state.items.set(await this.runtime.command<Project[]>(commands.list));
     });
   }
 
-  async switchTo(path: string): Promise<void> {
-    this.state.pickerOpen.set(false);
-    this.state.sourceOpen.set(false);
-    await invoke("switch_workspace", { path });
-  }
-
-  private async guard(task: () => Promise<void>): Promise<void> {
+  private async guard<Result>(task: () => Promise<Result>): Promise<Result | undefined> {
     try {
-      await task();
+      const result = await task();
       this.state.error.set("");
+      return result;
     } catch (error) {
       this.state.error.set(errorMessage(error));
+      return undefined;
     }
   }
-}
-
-export function samePath(left: string, right: string): boolean {
-  return left.localeCompare(right, undefined, { sensitivity: "accent" }) === 0;
 }

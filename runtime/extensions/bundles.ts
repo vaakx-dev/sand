@@ -1,6 +1,8 @@
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";
 
+import { missing, readJson } from "@sand/extension-runtime";
+
 import type { Loaded } from "./discovery.ts";
 
 export class Bundles {
@@ -14,7 +16,7 @@ export class Bundles {
     try {
       entries = await readdir(directory);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") return;
+      if (missing(error)) return;
       throw error;
     }
     await Promise.all(entries
@@ -48,8 +50,8 @@ export class Bundles {
     const entries = extension.manifest.styles ?? [];
     if (entries.length === 0) return [];
     const path = this.path(extension, "css.json");
-    const cached = await readCached(path);
-    if (cached !== null) return JSON.parse(cached) as string[];
+    const cached = await readJson<string[]>(path);
+    if (cached) return cached;
 
     const styles = await Promise.all(
       entries.map((entry) => readFile(resolve(extension.root, entry), "utf8")),
@@ -71,7 +73,7 @@ async function readCached(path: string): Promise<string | null> {
   try {
     return await readFile(path, "utf8");
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    if (missing(error)) return null;
     throw error;
   }
 }

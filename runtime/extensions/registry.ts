@@ -6,6 +6,7 @@ import type {
   HostExtensionContext,
   RuntimeCommand,
   SettingsApi,
+  WorkspaceDescription,
 } from "@sand/extension-api";
 
 export class Registry {
@@ -15,8 +16,8 @@ export class Registry {
   private readonly internalCommands = new Map<string, RuntimeCommand>();
 
   constructor(
-    private readonly config: string,
-    private readonly workspace: string,
+    private readonly home: string,
+    private readonly workspace: WorkspaceDescription,
     private readonly settings: SettingsApi,
     private readonly events: EventApi,
   ) {}
@@ -48,7 +49,7 @@ export class Registry {
   context(manifest: ExtensionManifest, contributions: string[]): HostExtensionContext {
     return {
       manifest,
-      config: this.config,
+      home: this.home,
       workspace: this.workspace,
       settings: this.settings,
       events: this.events,

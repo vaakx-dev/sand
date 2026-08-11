@@ -94,6 +94,23 @@ export class ExecutionCoordinator {
     return () => this.finishListeners.delete(listener);
   }
 
+  async shutdown(): Promise<void> {
+    if (this.active.size === 0) return;
+    await new Promise<void>((resolve) => {
+      let unsubscribe = () => {};
+      unsubscribe = this.onFinish(() => {
+        if (this.active.size !== 0) return;
+        unsubscribe();
+        resolve();
+      });
+      for (const session of this.active.values()) session.cancel();
+      if (this.active.size === 0) {
+        unsubscribe();
+        resolve();
+      }
+    });
+  }
+
   private begin(
     thread: AgentThread,
     turn: ResolvedTurn,

@@ -4,7 +4,7 @@ import { ArrowLeft, FolderOpen, Search } from "lucide";
 import type { UiControls } from "@sand/extension-api";
 
 import type { ProjectsController } from "../controller.ts";
-import { samePath } from "../controller.ts";
+import { samePath } from "../path.ts";
 import type { ProjectsState } from "../state.ts";
 import { modalFooter } from "./shared.ts";
 

@@ -28,7 +28,7 @@ const extension: UiExtension = {
       node: context.ui.controls.iconButton({
         label: "Toggle terminal drawer",
         tooltip: "Toggle terminal drawer (Ctrl+J)",
-        selected: state.visible,
+        selected: state.open,
         renderIcon: (size) => icon(PanelBottom, size),
         onClick: toggle,
       }),
@@ -53,6 +53,7 @@ const extension: UiExtension = {
       }
     });
     context.runtime.subscribe((event) => controller.onEvent(event));
+    context.runtime.subscribeWorkspace((workspace) => controller.onWorkspaceSelected(workspace));
     await controller.initialize();
   },
 };

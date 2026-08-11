@@ -67,6 +67,7 @@ struct State {
     agents: HashMap<String, AgentHandle>,
     connecting: HashSet<String>,
     sessions: HashMap<String, SessionRecord>,
+    shutting_down: bool,
 }
 
 pub struct Acp {
@@ -100,6 +101,21 @@ impl Acp {
             .get(id)
             .map(|agent| agent.connection.clone())
             .ok_or_else(|| Error::UnknownAgent(id.to_owned()))
+    }
+
+    pub async fn shutdown(&self) {
+        let closes = {
+            let mut state = self.state.write().await;
+            state.shutting_down = true;
+            state
+                .agents
+                .values_mut()
+                .filter_map(|agent| agent.close.take())
+                .collect::<Vec<_>>()
+        };
+        for close in closes {
+            let _ = close.send(());
+        }
     }
 
     async fn session(&self, id: &str) -> Result<SessionRecord, Error> {

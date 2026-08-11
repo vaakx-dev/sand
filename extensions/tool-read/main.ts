@@ -28,7 +28,7 @@ const extension: HostExtension = {
       },
       async execute(input) {
         const path = requiredString(input, "path");
-        const absolute = resolveWorkspacePath(context.workspace, path);
+        const absolute = resolveWorkspacePath(context.workspace.path, path);
         const content = await readFile(absolute, "utf8");
         const lines = content.split("\n");
         const offset = positiveInteger(input.offset, 1);

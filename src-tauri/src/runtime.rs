@@ -1,7 +1,8 @@
 use std::{
     collections::{HashMap, VecDeque},
+    path::PathBuf,
     process::Stdio,
-    sync::{Arc, Mutex as StdMutex, atomic::AtomicU64},
+    sync::{Arc, Mutex as StdMutex, RwLock as StdRwLock, atomic::AtomicU64},
 };
 
 use serde::Serialize;
@@ -9,25 +10,40 @@ use serde_json::Value;
 use tauri::AppHandle;
 use tokio::{
     process::{Child, ChildStdin, Command},
-    sync::Mutex,
+    sync::{Mutex, RwLock},
 };
 
 mod acp;
 mod events;
 mod paths;
 mod worker;
+mod workspace;
+mod workspaces;
 
-use crate::{
-    acp::{Acp, Error as AcpError, Events as AcpEvents},
-    journal::{Journal, JournalError},
-};
-use paths::{RuntimePaths, bun_executable};
+use crate::{acp::Error as AcpError, journal::JournalError};
+pub use paths::WorkspaceInfo;
+use paths::{RuntimePaths, WorkspacePaths, bun_executable};
 use worker::PendingSender;
+use workspace::Workspace;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeError {
     #[error("cannot locate the extension runtime at {0}")]
     MissingHost(String),
+    #[error("cannot resolve the user home directory: {0}")]
+    Home(String),
+    #[error("cannot open workspace {path}: {source}")]
+    Workspace {
+        path: String,
+        #[source]
+        source: std::io::Error,
+    },
+    #[error("workspace must be a directory: {0}")]
+    WorkspaceDirectory(String),
+    #[error("unknown workspace: {0}")]
+    UnknownWorkspace(String),
+    #[error("cannot close the only open workspace")]
+    LastWorkspace,
     #[error("failed to start Bun: {0}")]
     Start(#[source] std::io::Error),
     #[error("the extension runtime has no stdin")]
@@ -49,42 +65,39 @@ pub enum RuntimeError {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RuntimeEvent {
     pub seq: u64,
+    pub workspace_id: Option<String>,
     pub kind: String,
     pub payload: Value,
 }
 
 pub struct Runtime {
+    home: PathBuf,
     stdin: Mutex<ChildStdin>,
-    _child: Mutex<Child>,
+    child: Mutex<Child>,
+    tasks: StdMutex<Vec<tokio::task::JoinHandle<()>>>,
     pending: Mutex<HashMap<u64, PendingSender>>,
     events: StdMutex<VecDeque<RuntimeEvent>>,
     next_request: AtomicU64,
     next_event: AtomicU64,
-    journal: Arc<Journal>,
-    acp: Arc<Acp>,
+    workspaces: RwLock<HashMap<String, Arc<Workspace>>>,
+    active_workspace: StdRwLock<Option<String>>,
+    workspace_changes: Mutex<()>,
 }
 
 impl Runtime {
     pub async fn start(app: &AppHandle) -> Result<Arc<Self>, RuntimeError> {
         let paths = RuntimePaths::resolve(app)?;
-        let journal = Arc::new(Journal::open(&paths.journal)?);
-        let snapshot = journal.snapshot();
-        let (acp_events, acp_event_rx) = AcpEvents::channel(Arc::clone(&journal));
-        let acp = Acp::new(paths.workspace.clone(), &snapshot, acp_events);
-        let bun = bun_executable();
-        let mut command = Command::new(bun);
+        let mut command = Command::new(bun_executable());
         command
             .arg("run")
             .arg(&paths.host)
             .current_dir(&paths.root)
             .env("SAND_APP_ROOT", &paths.root)
             .env("SAND_BUILTIN_EXTENSIONS", &paths.extensions)
-            .env("SAND_CACHE", &paths.cache)
-            .env("SAND_CONFIG", &paths.config)
-            .env("SAND_USER_EXTENSIONS", &paths.user_extensions)
-            .env("SAND_WORKSPACE", &paths.workspace)
+            .env("SAND_HOME", &paths.home)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -94,46 +107,78 @@ impl Runtime {
         let stdin = child.stdin.take().ok_or(RuntimeError::MissingStdin)?;
         let stdout = child.stdout.take().ok_or(RuntimeError::MissingStdout)?;
         let stderr = child.stderr.take().ok_or(RuntimeError::MissingStderr)?;
-
         let runtime = Arc::new(Self {
+            home: paths.home,
             stdin: Mutex::new(stdin),
-            _child: Mutex::new(child),
+            child: Mutex::new(child),
+            tasks: StdMutex::new(Vec::new()),
             pending: Mutex::new(HashMap::new()),
             events: StdMutex::new(VecDeque::new()),
             next_request: AtomicU64::new(1),
             next_event: AtomicU64::new(1),
-            journal,
-            acp,
+            workspaces: RwLock::new(HashMap::new()),
+            active_workspace: StdRwLock::new(None),
+            workspace_changes: Mutex::new(()),
         });
 
-        tokio::spawn(Self::read_stdout(Arc::clone(&runtime), stdout));
-        tokio::spawn(Self::read_stderr(Arc::clone(&runtime), stderr));
-        tokio::spawn(Self::read_acp_events(Arc::clone(&runtime), acp_event_rx));
-
         runtime
-            .request_worker("threads.restore".to_owned(), snapshot)
-            .await?;
+            .tasks
+            .lock()
+            .expect("runtime task lock is not poisoned")
+            .extend([
+                tokio::spawn(Self::read_stdout(Arc::clone(&runtime), stdout)),
+                tokio::spawn(Self::read_stderr(Arc::clone(&runtime), stderr)),
+            ]);
 
+        if let Err(error) = runtime.open_workspace(paths.initial_workspace).await {
+            runtime.shutdown().await;
+            return Err(error);
+        }
         Ok(runtime)
     }
 
-    pub async fn request(&self, method: String, params: Value) -> Result<Value, RuntimeError> {
+    pub async fn request(
+        &self,
+        workspace_id: Option<String>,
+        method: String,
+        params: Value,
+    ) -> Result<Value, RuntimeError> {
+        let workspace = self.workspace(workspace_id.as_deref()).await?;
         if method.starts_with("acp.") {
-            return self.request_acp(&method, params).await;
+            return self.request_acp(&workspace, &method, params).await;
         }
         match method.as_str() {
-            "threads.list" => return Ok(self.journal.threads()),
+            "threads.list" => return Ok(workspace.journal.threads()),
             "threads.get" => {
                 let id = required_parameter(&params, "id")?;
-                return Ok(self.journal.thread(id)?);
+                return Ok(workspace.journal.thread(id)?);
             }
             "journal.events" => {
                 let id = required_parameter(&params, "threadId")?;
-                return Ok(self.journal.events(id)?);
+                return Ok(workspace.journal.events(id)?);
             }
             _ => {}
         }
-        self.request_worker(method, params).await
+        self.request_worker(Some(&workspace.paths.info.id), method, params)
+            .await
+    }
+
+    pub async fn shutdown(&self) {
+        self.shutdown_workspaces().await;
+        let _ = self.child.lock().await.kill().await;
+        let pending = std::mem::take(&mut *self.pending.lock().await);
+        for (_, sender) in pending {
+            let _ = sender.send(Err("extension runtime stopped".to_owned()));
+        }
+        let tasks = std::mem::take(
+            &mut *self
+                .tasks
+                .lock()
+                .expect("runtime task lock is not poisoned"),
+        );
+        for task in tasks {
+            task.abort();
+        }
     }
 }
 

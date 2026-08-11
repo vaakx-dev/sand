@@ -11,6 +11,7 @@ export class Slots {
     this.contributions.set(contribution.slot, slot);
     this.sync(contribution.slot);
     return () => {
+      if (slot.get(contribution.id) !== contribution) return;
       slot.delete(contribution.id);
       this.sync(contribution.slot);
     };

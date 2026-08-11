@@ -1,7 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { dirname } from "node:path";
 
 import { objectSchema, requiredString, type HostExtension } from "@sand/extension-api";
+import { resolveWorkspacePath } from "@sand/extension-runtime";
 
 const extension: HostExtension = {
   activate(context) {
@@ -20,7 +21,7 @@ const extension: HostExtension = {
       async execute(input) {
         const path = requiredString(input, "path");
         const content = requiredString(input, "content", true);
-        const absolute = isAbsolute(path) ? resolve(path) : resolve(context.workspace, path);
+        const absolute = resolveWorkspacePath(context.workspace.path, path);
         await mkdir(dirname(absolute), { recursive: true });
         await writeFile(absolute, content, "utf8");
         context.events.emit("workspace.changed", { path });

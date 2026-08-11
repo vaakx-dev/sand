@@ -34,7 +34,6 @@
 .model-action.active svg { fill: currentColor; }
 .model-add-row { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 10px 0 0; }
 .model-slug-input { min-width: 0; height: 32px; flex: 1; padding: 0 9px; border: 1px solid var(--border); border-radius: 6px; outline: 0; color: var(--text); background: var(--bg); }
-.model-slug-input:focus { border-color: var(--accent); }
 .model-add-button { min-width: 64px; }
 
 @media (max-width: 720px) {

@@ -4,12 +4,16 @@ import type { TerminalLine, TerminalPane } from "./models.ts";
 
 export function createTerminalState() {
   const open = sig(false);
+  const loading = sig(false);
   const opening = sig(false);
   const panes = sig<TerminalPane[]>([]);
   return {
     open,
+    loading,
     opening,
-    visible: derive(() => open.get() && (opening.get() || panes.get().length > 0)),
+    visible: derive(() =>
+      open.get() && (loading.get() || opening.get() || panes.get().length > 0)
+    ),
     height: sig(260),
     layout: sig<"columns" | "rows">("columns"),
     panes,

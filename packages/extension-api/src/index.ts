@@ -51,6 +51,7 @@ export type {
   EventApi,
   HostEvent,
   HostExtension,
+  HostExtensionCleanup,
   HostExtensionContext,
   RuntimeCommand,
   SettingsApi,
@@ -69,7 +70,14 @@ export {
   stringValue,
 } from "./json.ts";
 export type { JsonObject, JsonPrimitive, JsonValue } from "./json.ts";
-export type { RuntimeClient, RuntimeEvent } from "./runtime.ts";
+export type {
+  RuntimeClient,
+  RuntimeCalls,
+  RuntimeEvent,
+  RuntimeInfo,
+  WorkspaceDescription,
+  WorkspaceScope,
+} from "./runtime.ts";
 export { withoutKey } from "./record.ts";
 export {
   canSettleThread,

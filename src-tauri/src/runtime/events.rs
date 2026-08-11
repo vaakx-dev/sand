@@ -1,10 +1,8 @@
-use std::sync::{Arc, atomic::Ordering};
+use std::sync::atomic::Ordering;
 
 use serde_json::Value;
-use tokio::sync::mpsc;
 
 use super::{Runtime, RuntimeEvent};
-use crate::acp::Event as AcpEvent;
 
 const EVENT_LIMIT: usize = 4_000;
 
@@ -19,16 +17,7 @@ impl Runtime {
             .collect()
     }
 
-    pub(super) async fn read_acp_events(
-        runtime: Arc<Self>,
-        mut receiver: mpsc::UnboundedReceiver<AcpEvent>,
-    ) {
-        while let Some(event) = receiver.recv().await {
-            runtime.push_event(&event.kind, event.payload);
-        }
-    }
-
-    pub(super) fn push_event(&self, kind: &str, payload: Value) {
+    pub(super) fn push_event(&self, workspace_id: Option<&str>, kind: &str, payload: Value) {
         let seq = self.next_event.fetch_add(1, Ordering::Relaxed);
         let mut events = self
             .events
@@ -36,6 +25,7 @@ impl Runtime {
             .expect("runtime event queue lock is not poisoned");
         events.push_back(RuntimeEvent {
             seq,
+            workspace_id: workspace_id.map(ToOwned::to_owned),
             kind: kind.to_owned(),
             payload,
         });

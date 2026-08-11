@@ -5,7 +5,7 @@ import { createRegistry } from "./ui/registry.ts";
 import { Client } from "./runtime.ts";
 
 const desktop = "__TAURI_INTERNALS__" in window;
-const runtime = new Client(desktop);
+const runtime = new Client();
 const { registry, mounted } = createRegistry();
 
 if (desktop) void start();
@@ -13,6 +13,7 @@ else showFailure(new Error("the desktop runtime is required; start Sand through 
 
 async function start(): Promise<void> {
   try {
+    await runtime.start();
     const bundles = await runtime.call<UiBundle[]>("extensions.ui");
     const failures: string[] = [];
     for (const bundle of bundles) {

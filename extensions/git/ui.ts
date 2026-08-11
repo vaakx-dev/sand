@@ -53,6 +53,7 @@ const extension: UiExtension = {
       run: () => controller.initialize(),
     });
     context.runtime.subscribe((event) => controller.onRuntimeEvent(event));
+    context.runtime.subscribeWorkspace(() => controller.onWorkspaceSelected());
     context.ui.events.subscribe((event) => controller.onUiEvent(event));
     await controller.refresh();
   },

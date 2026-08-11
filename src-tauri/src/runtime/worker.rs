@@ -13,14 +13,18 @@ use crate::journal::Record;
 pub(super) type PendingSender = oneshot::Sender<Result<Value, String>>;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct WireEvent {
+    workspace_id: Option<String>,
     kind: String,
     #[serde(default)]
     payload: Value,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct WireRecord {
+    workspace_id: String,
     kind: String,
     #[serde(default)]
     payload: Value,
@@ -38,12 +42,14 @@ struct WireMessage {
 impl Runtime {
     pub(super) async fn request_worker(
         &self,
+        workspace_id: Option<&str>,
         method: String,
         params: Value,
     ) -> Result<Value, RuntimeError> {
         let id = self.next_request.fetch_add(1, Ordering::Relaxed);
         let body = serde_json::to_vec(&json!({
             "id": id,
+            "workspaceId": workspace_id,
             "method": method,
             "params": params,
         }))
@@ -77,6 +83,7 @@ impl Runtime {
                 Ok(Some(line)) => match serde_json::from_str::<WireMessage>(&line) {
                     Ok(message) => runtime.handle_message(message).await,
                     Err(error) => runtime.push_event(
+                        None,
                         "runtime.protocol_error",
                         json!({ "message": error.to_string(), "line": line }),
                     ),
@@ -84,6 +91,7 @@ impl Runtime {
                 Ok(None) => break,
                 Err(error) => {
                     runtime.push_event(
+                        None,
                         "runtime.read_error",
                         json!({ "message": error.to_string() }),
                     );
@@ -93,6 +101,7 @@ impl Runtime {
         }
 
         runtime.push_event(
+            None,
             "runtime.exit",
             json!({ "message": "extension runtime stopped" }),
         );
@@ -105,28 +114,24 @@ impl Runtime {
     pub(super) async fn read_stderr(runtime: Arc<Self>, stderr: tokio::process::ChildStderr) {
         let mut lines = BufReader::new(stderr).lines();
         while let Ok(Some(line)) = lines.next_line().await {
-            runtime.push_event("runtime.log", json!({ "message": line }));
+            runtime.push_event(None, "runtime.log", json!({ "message": line }));
         }
     }
 
     async fn handle_message(&self, message: WireMessage) {
         if let Some(record) = message.record {
-            match self.journal.append(Record {
-                kind: record.kind,
-                payload: record.payload,
-            }) {
-                Ok(event) => self.push_event(
-                    "journal.event",
-                    serde_json::to_value(event).expect("journal event is serializable"),
-                ),
-                Err(error) => {
-                    self.push_event("journal.error", json!({ "message": error.to_string() }))
-                }
-            }
+            self.record(
+                &record.workspace_id,
+                Record {
+                    kind: record.kind,
+                    payload: record.payload,
+                },
+            )
+            .await;
         }
 
         if let Some(event) = message.event {
-            self.push_event(&event.kind, event.payload);
+            self.push_event(event.workspace_id.as_deref(), &event.kind, event.payload);
         }
 
         let Some(id) = message.id else {

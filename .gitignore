@@ -1,6 +1,5 @@
 node_modules/
 dist/
 target/
-.sand/*
 src-tauri/gen/
 *.log

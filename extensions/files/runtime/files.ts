@@ -5,7 +5,7 @@ import { resolveWorkspacePath } from "@sand/extension-runtime";
 
 import type { FileNode } from "../api.ts";
 
-const OMIT = new Set([".git", ".sand", "dist", "node_modules", "target"]);
+const OMIT = new Set([".git", "dist", "node_modules", "target"]);
 
 export async function readText(workspace: string, path: string): Promise<string> {
   return readFile(resolveWorkspacePath(workspace, path), "utf8");

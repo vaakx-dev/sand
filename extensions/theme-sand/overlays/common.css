@@ -5,5 +5,4 @@
 .thread-dialog { width: min(390px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); box-shadow: 0 24px 80px #000b; }
 .thread-dialog-title { color: var(--text); font-size: 14px; font-weight: 650; }
 .thread-dialog-input { width: 100%; height: 34px; padding: 0 9px; border: 1px solid var(--border-strong); border-radius: 6px; outline: 0; color: var(--text); background: var(--bg); }
-.thread-dialog-input:focus { border-color: var(--accent); }
 .thread-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }

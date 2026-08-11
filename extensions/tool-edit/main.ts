@@ -1,5 +1,4 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { isAbsolute, resolve } from "node:path";
 
 import {
   objectSchema,
@@ -7,6 +6,7 @@ import {
   type HostExtension,
   type JsonValue,
 } from "@sand/extension-api";
+import { resolveWorkspacePath } from "@sand/extension-runtime";
 
 interface Edit {
   oldText: string;
@@ -42,7 +42,7 @@ const extension: HostExtension = {
       async execute(input) {
         const path = requiredString(input, "path");
         const edits = parseEdits(input.edits);
-        const absolute = isAbsolute(path) ? resolve(path) : resolve(context.workspace, path);
+        const absolute = resolveWorkspacePath(context.workspace.path, path);
         const original = await readFile(absolute, "utf8");
         const replacements = edits.map((edit) => locate(original, edit, path));
         const ordered = replacements.sort((left, right) => left.start - right.start);

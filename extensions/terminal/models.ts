@@ -12,3 +12,14 @@ export interface TerminalPane {
   cwd: string;
   status: "running" | "exited";
 }
+
+export interface TerminalOutput {
+  terminalId: string;
+  stream: TerminalStream;
+  text: string;
+}
+
+export interface TerminalSnapshot {
+  panes: TerminalPane[];
+  output: TerminalOutput[];
+}

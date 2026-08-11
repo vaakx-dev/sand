@@ -27,17 +27,25 @@ export class GitController {
 
   async refresh(): Promise<void> {
     try {
-      const [status, diff] = await Promise.all([
-        this.runtime.command<Status>(commands.status),
-        this.runtime.command<Diff>(commands.diff),
-      ]);
-      batch(() => {
-        this.state.repository.set(status.repository);
-        this.state.status.set(status.output || status.error);
-        this.state.diff.set(diff.diff || diff.error);
-        this.state.error.set("");
+      await this.runtime.runWorkspace(async (workspace) => {
+        const threadId = this.state.threadId.get();
+        const [status, diff] = await Promise.all([
+          workspace.command<Status>(commands.status),
+          workspace.command<Diff>(commands.diff),
+        ]);
+        if (threadId) {
+          await workspace.command("threads.changeRequest", {
+            threadId,
+            ...(status.changeRequestState ? { state: status.changeRequestState } : {}),
+          });
+        }
+        workspace.commit(() => batch(() => {
+          this.state.repository.set(status.repository);
+          this.state.status.set(status.output || status.error);
+          this.state.diff.set(diff.diff || diff.error);
+          this.state.error.set("");
+        }));
       });
-      await this.syncThread(status);
     } catch (error) {
       this.state.error.set(errorMessage(error));
     }
@@ -57,18 +65,14 @@ export class GitController {
     if (event.kind === "workspace.changed") void this.refresh();
   }
 
+  onWorkspaceSelected(): void {
+    this.state.threadId.set(null);
+    void this.refresh();
+  }
+
   onUiEvent(event: UiEvent): void {
     if (event.kind !== workbenchEvents.threadChanged) return;
     this.state.threadId.set(stringValue(objectValue(event.payload).threadId) || null);
     void this.refresh();
-  }
-
-  private async syncThread(status: Status): Promise<void> {
-    const threadId = this.state.threadId.get();
-    if (!threadId) return;
-    await this.runtime.command("threads.changeRequest", {
-      threadId,
-      ...(status.changeRequestState ? { state: status.changeRequestState } : {}),
-    });
   }
 }

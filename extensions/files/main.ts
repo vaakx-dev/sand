@@ -16,25 +16,25 @@ const extension: HostExtension = {
     context.commands.register(commands.tree, (params) => {
       const value = objectValue(params);
       return tree(
-        context.workspace,
+        context.workspace.path,
         optionalString(value.path) || ".",
         optionalNumber(value.depth) || 5,
       ) as unknown as Promise<JsonValue>;
     });
     context.commands.register(commands.read, (params) =>
-      readText(context.workspace, requiredString(objectValue(params), "path"))
+      readText(context.workspace.path, requiredString(objectValue(params), "path"))
     );
     context.commands.register(commands.write, async (params) => {
       const value = objectValue(params);
       const path = requiredString(value, "path");
-      await writeText(context.workspace, path, requiredString(value, "content", true));
+      await writeText(context.workspace.path, path, requiredString(value, "content", true));
       context.events.emit("workspace.changed", { path });
       return { path, written: true };
     });
     context.commands.register(commands.search, (params) => {
       const value = objectValue(params);
       return search(
-        context.workspace,
+        context.workspace.path,
         requiredString(value, "query"),
         optionalString(value.path),
         optionalString(value.glob),

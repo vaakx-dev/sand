@@ -1,4 +1,5 @@
 import {
+  errorMessage,
   objectValue,
   stringValue,
   type AgentAttempt,
@@ -11,6 +12,8 @@ import {
 } from "@sand/extension-api";
 
 import { ControllerRuntime } from "./runtime.ts";
+import { initializeWorkbench } from "./initialize.ts";
+import { workbenchEvents } from "../api.ts";
 import { clearThread } from "../threads/selection.ts";
 import { upsertThread } from "../threads/summary.ts";
 
@@ -19,6 +22,7 @@ export class WorkbenchEvents {
 
   start(): void {
     this.runtime.context.runtime.subscribe((event) => this.onEvent(event));
+    this.runtime.context.runtime.subscribeWorkspace(() => void this.selectWorkspace());
   }
 
   private onEvent(event: RuntimeEvent): void {
@@ -61,6 +65,19 @@ export class WorkbenchEvents {
       case "agent.queue":
         if (belongsToCurrent) this.updateQueue(payload);
         break;
+    }
+  }
+
+  private async selectWorkspace(): Promise<void> {
+    const state = this.runtime.state;
+    clearThread(state);
+    state.threads.items.set([]);
+    state.root.set(this.runtime.context.runtime.workspace().path);
+    try {
+      await initializeWorkbench(this.runtime);
+      this.runtime.context.ui.events.emit(workbenchEvents.threadChanged, { threadId: null });
+    } catch (error) {
+      this.runtime.notice(errorMessage(error));
     }
   }
 

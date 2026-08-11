@@ -23,7 +23,7 @@
 .model-rail-divider { margin: 1px 0 2px; border-top: 1px solid var(--border); }
 .model-picker-main { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 .model-search { height: 43px; flex: 0 0 43px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border-bottom: 1px solid var(--border); color: var(--faint); }
-.model-search:focus-within { color: var(--muted); border-bottom-color: var(--accent); }
+.model-search:focus-within { color: var(--muted); }
 .model-search-input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
 .model-list-picker { min-height: 0; flex: 1; overflow-y: auto; padding: 5px; }
 .model-picker-row { width: 100%; min-height: 51px; display: flex; align-items: center; gap: 7px; padding: 7px 7px 7px 9px; border-radius: 7px; color: var(--text); background: transparent; cursor: pointer; text-align: left; }
@@ -42,7 +42,7 @@
 .traits-row { width: 100%; height: 30px; display: flex; align-items: center; gap: 5px; padding: 0 7px; border-radius: 6px; color: var(--text); background: transparent; cursor: pointer; text-align: left; }
 .traits-row > span:first-of-type { flex: 1; }
 .traits-row:not(:disabled):hover { background: var(--row-hover); }
-.traits-row.active { background: var(--control-selected-bg); box-shadow: inset 2px 0 var(--accent); }
+.traits-row.active { background: var(--control-selected-bg); }
 .traits-divider { margin: 5px 2px; border-top: 1px solid var(--border); }
 .send-button { color: var(--bg); background: var(--text); }
 .send-button:not(:disabled):hover { background: var(--muted); }

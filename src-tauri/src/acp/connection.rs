@@ -24,6 +24,9 @@ impl Acp {
 
         {
             let mut state = self.state.write().await;
+            if state.shutting_down {
+                return Err(Error::Stopped);
+            }
             if state.agents.contains_key(&request.id)
                 || !state.connecting.insert(request.id.clone())
             {
@@ -102,6 +105,12 @@ impl Acp {
         {
             let mut state = self.state.write().await;
             state.connecting.remove(&request.id);
+            if state.shutting_down {
+                drop(state);
+                let _ = close_tx.send(());
+                let _ = inserted_tx.send(());
+                return Err(Error::Stopped);
+            }
             state.agents.insert(
                 request.id.clone(),
                 AgentHandle {

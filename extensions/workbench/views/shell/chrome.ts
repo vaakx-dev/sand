@@ -100,6 +100,7 @@ function sidebarBrand(
       label: "Toggle sidebar",
       tooltip: "Toggle sidebar (Ctrl+B)",
       selected: state.sidebarOpen,
+      className: "sidebar-toggle",
       renderIcon: (size) => icon(PanelLeft, size),
       onClick: () => controller.toggleSidebar(),
     }),

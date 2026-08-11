@@ -3,17 +3,16 @@ import {
   optionalString,
   requiredString,
   type HostExtension,
+  type JsonValue,
 } from "@sand/extension-api";
 
 import { commands } from "./api.ts";
 import { TerminalProcesses } from "./processes.ts";
 
-let active: TerminalProcesses | null = null;
-
 const extension: HostExtension = {
   activate(context) {
-    const processes = new TerminalProcesses(context.workspace, context.events);
-    active = processes;
+    const processes = new TerminalProcesses(context.workspace.path, context.events);
+    context.commands.register(commands.list, () => processes.list() as unknown as JsonValue);
     context.commands.register(commands.open, (params) =>
       processes.open(optionalString(objectValue(params).cwd))
     );
@@ -24,10 +23,7 @@ const extension: HostExtension = {
     context.commands.register(commands.close, (params) =>
       processes.close(requiredString(objectValue(params), "id"))
     );
-  },
-  async deactivate() {
-    await active?.closeAll();
-    active = null;
+    return () => processes.closeAll();
   },
 };
 

@@ -38,6 +38,7 @@ const extension: UiExtension = {
       label: "Projects: Add Project",
       run: () => controller.openSource(),
     });
+    context.runtime.subscribeWorkspace((workspace) => controller.onWorkspaceSelected(workspace));
     await controller.initialize();
   },
 };

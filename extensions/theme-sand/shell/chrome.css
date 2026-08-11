@@ -2,6 +2,7 @@
 .sidebar-brand { min-width: 0; height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 8px; overflow: hidden; background: var(--bg); }
 .app-header.sidebar-expanded .sidebar-brand { border-right: 1px solid var(--border); background: var(--sidebar); }
 .sidebar-wordmark { flex: 0 0 auto; color: var(--text); font-size: 13px; font-weight: 670; }
+.sidebar-toggle.active { background: transparent; }
 .header-grip { min-width: 0; background: var(--bg); }
 .topbar { min-width: 0; height: 40px; display: flex; align-items: center; background: var(--bg); }
 .composer button[data-tooltip]::after { top: auto; bottom: calc(100% + 7px); }

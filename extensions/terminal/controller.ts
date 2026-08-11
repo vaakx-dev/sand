@@ -9,23 +9,28 @@ import {
   type JsonValue,
   type RuntimeClient,
   type RuntimeEvent,
+  type WorkspaceDescription,
+  type WorkspaceScope,
 } from "@sand/extension-api";
 
 import { commands } from "./api.ts";
-import type { TerminalPane, TerminalStream } from "./models.ts";
+import type { TerminalPane, TerminalSnapshot, TerminalStream } from "./models.ts";
 import type { TerminalState } from "./state.ts";
 
 export class TerminalController {
   private lineId = 1;
+  private readonly openByWorkspace = new Map<string, boolean>();
+  private initialization: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly runtime: RuntimeClient,
     readonly state: TerminalState,
   ) {}
 
-  async initialize(): Promise<void> {
-    const settings = await this.runtime.call<Record<string, JsonValue>>("settings.all");
-    this.state.height.set(numberValue(settings["terminal.height"], 260));
+  initialize(): Promise<void> {
+    this.state.loading.set(true);
+    this.initialization = this.load();
+    return this.initialization;
   }
 
   async toggle(): Promise<void> {
@@ -37,29 +42,30 @@ export class TerminalController {
   }
 
   async show(): Promise<void> {
-    this.state.open.set(true);
-    if (this.state.panes.get().length === 0) await this.create();
+    this.setOpen(this.runtime.workspace(), true);
+    const initialization = this.initialization;
+    await this.runtime.runWorkspace(async (workspace) => {
+      await initialization;
+      let shouldCreate = false;
+      workspace.commit(() => {
+        shouldCreate = this.state.open.get()
+          && !this.state.opening.get()
+          && this.state.panes.get().length === 0;
+      });
+      if (shouldCreate) await this.open(workspace);
+    });
   }
 
   hide(): void {
-    this.state.open.set(false);
+    this.setOpen(this.runtime.workspace(), false);
   }
 
   async create(layout?: "columns" | "rows"): Promise<void> {
-    if (this.state.opening.get()) return;
-    if (layout) this.state.layout.set(layout);
-    this.state.open.set(true);
-    this.state.opening.set(true);
-    const opened = await this.guard(async () => {
-      const pane = await this.runtime.command<Omit<TerminalPane, "status">>(commands.open);
-      this.state.panes.update((panes) => [...panes, { ...pane, status: "running" }]);
-      this.state.commands.update((commands) => ({ ...commands, [pane.id]: "" }));
-      this.state.ready.update((ready) => ({ ...ready, [pane.id]: true }));
-      this.state.activeId.set(pane.id);
-    });
-    batch(() => {
-      this.state.opening.set(false);
-      if (!opened && this.state.panes.get().length === 0) this.state.open.set(false);
+    this.setOpen(this.runtime.workspace(), true);
+    const initialization = this.initialization;
+    await this.runtime.runWorkspace(async (workspace) => {
+      await initialization;
+      await this.open(workspace, layout);
     });
   }
 
@@ -101,19 +107,103 @@ export class TerminalController {
       );
     }
     if (event.kind === "terminal.exit") {
-      this.exited(
-        stringValue(payload.id),
-        typeof payload.exitCode === "number" ? payload.exitCode : -1,
-      );
+      this.exited(stringValue(payload.id));
     }
+  }
+
+  onWorkspaceSelected(workspace: WorkspaceDescription): void {
+    this.reset(this.openByWorkspace.get(workspace.id) ?? false);
+    void this.initialize();
+  }
+
+  private reset(open: boolean): void {
+    batch(() => {
+      this.state.open.set(open);
+      this.state.loading.set(true);
+      this.state.opening.set(false);
+      this.state.panes.set([]);
+      this.state.activeId.set(null);
+      this.state.commands.set({});
+      this.state.ready.set({});
+      this.state.lines.set([]);
+      this.state.error.set("");
+    });
+  }
+
+  private async load(): Promise<void> {
+    await this.runtime.runWorkspace(async (workspace) => {
+      try {
+        const [settings, terminal] = await Promise.all([
+          workspace.call<Record<string, JsonValue>>("settings.all"),
+          workspace.command<TerminalSnapshot>(commands.list),
+        ]);
+        const commandsById = Object.fromEntries(terminal.panes.map((pane) => [pane.id, ""]));
+        const ready = Object.fromEntries(
+          terminal.panes.map((pane) => [pane.id, pane.status === "running"]),
+        );
+        workspace.commit(() => batch(() => {
+          this.state.height.set(numberValue(settings["terminal.height"], 260));
+          this.state.panes.set(terminal.panes);
+          this.state.lines.set(terminal.output.map((output) => ({
+            id: this.lineId++,
+            ...output,
+          })));
+          this.state.commands.set(commandsById);
+          this.state.ready.set(ready);
+          this.state.activeId.set(terminal.panes.at(-1)?.id ?? null);
+          this.state.loading.set(false);
+          this.state.error.set("");
+        }));
+      } catch (error) {
+        workspace.commit(() => batch(() => {
+          this.state.loading.set(false);
+          this.state.error.set(errorMessage(error));
+        }));
+      }
+    });
+  }
+
+  private async open(
+    workspace: WorkspaceScope,
+    layout?: "columns" | "rows",
+  ): Promise<void> {
+    let opening = false;
+    workspace.commit(() => batch(() => {
+      if (this.state.opening.get()) return;
+      opening = true;
+      if (layout) this.state.layout.set(layout);
+      this.state.opening.set(true);
+    }));
+    if (!opening) return;
+    try {
+      const pane = await workspace.command<Omit<TerminalPane, "status">>(commands.open);
+      workspace.commit(() => batch(() => {
+        this.state.panes.update((panes) => [...panes, { ...pane, status: "running" }]);
+        this.state.commands.update((commands) => ({ ...commands, [pane.id]: "" }));
+        this.state.ready.update((ready) => ({ ...ready, [pane.id]: true }));
+        this.state.activeId.set(pane.id);
+        this.state.error.set("");
+      }));
+    } catch (error) {
+      workspace.commit(() => this.state.error.set(errorMessage(error)));
+    } finally {
+      workspace.commit(() => batch(() => {
+        this.state.opening.set(false);
+        if (this.state.panes.get().length === 0) this.setOpen(workspace.workspace, false);
+      }));
+    }
+  }
+
+  private setOpen(workspace: WorkspaceDescription, open: boolean): void {
+    this.openByWorkspace.set(workspace.id, open);
+    this.state.open.set(open);
   }
 
   saveHeight(): void {
     void this.runtime.call("settings.set", { key: "terminal.height", value: this.state.height.get() });
   }
 
-  private exited(id: string, exitCode: number): void {
-    this.append(id, "status", `\n[process exited with code ${exitCode}]`);
+  private exited(id: string): void {
     this.state.ready.update((ready) => ({ ...ready, [id]: false }));
     this.state.panes.update((panes) => panes.map((pane) =>
       pane.id === id ? { ...pane, status: "exited" } : pane

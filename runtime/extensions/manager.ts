@@ -41,6 +41,12 @@ export class Manager {
     return this.list();
   }
 
+  async close(): Promise<void> {
+    await this.deactivate();
+    this.registry.clear();
+    this.extensions.clear();
+  }
+
   list(): ExtensionDescription[] {
     return [...this.extensions.values()].map((extension) => ({
       ...extension.manifest,
@@ -87,8 +93,10 @@ export class Manager {
       if (typeof module.activate !== "function") {
         throw new Error(`${extension.manifest.id} does not export activate()`);
       }
-      await module.activate(this.registry.context(extension.manifest, extension.contributions));
-      extension.module = module;
+      const cleanup = await module.activate(
+        this.registry.context(extension.manifest, extension.contributions),
+      );
+      extension.cleanup = cleanup ?? undefined;
       extension.hostActive = true;
     } catch (error) {
       this.recordError(extension, errorMessage(error));
@@ -97,7 +105,16 @@ export class Manager {
 
   private async deactivate(): Promise<void> {
     for (const extension of [...this.activationOrder()].reverse()) {
-      await extension.module?.deactivate?.();
+      try {
+        await extension.cleanup?.();
+      } catch (error) {
+        const message = `cleanup failed: ${errorMessage(error)}`;
+        this.recordError(extension, message);
+        console.error(`${extension.manifest.id}: ${message}`);
+      } finally {
+        extension.cleanup = undefined;
+        extension.hostActive = false;
+      }
     }
   }
 

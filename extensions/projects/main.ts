@@ -1,5 +1,5 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { realpath, stat } from "node:fs/promises";
+import { basename, join } from "node:path";
 
 import {
   objectValue,
@@ -7,9 +7,10 @@ import {
   type HostExtension,
   type JsonValue,
 } from "@sand/extension-api";
-import { spawnText } from "@sand/extension-runtime";
+import { missing, readJson, spawnText, writeJson } from "@sand/extension-runtime";
 
 import { commands, type Project } from "./api.ts";
+import { cleanPath, pathKey } from "./path.ts";
 
 interface StoredProject extends Project {
   [key: string]: JsonValue;
@@ -17,8 +18,8 @@ interface StoredProject extends Project {
 
 const extension: HostExtension = {
   async activate(context) {
-    const registry = join(context.config, "projects.json");
-    await remember(registry, context.workspace);
+    const registry = join(context.home, "projects.json");
+    await remember(registry, context.workspace.path);
 
     context.commands.register(commands.list, () => load(registry));
     context.commands.register(commands.pick, pickDirectory);
@@ -35,7 +36,10 @@ const extension: HostExtension = {
       await requireDirectory(parent);
       const target = join(parent, repositoryName(source));
       await requireMissing(target);
-      const result = await spawnText(["git", "clone", "--", source, target], parent);
+      const result = await spawnText(
+        ["git", "clone", "--", source, target],
+        { cwd: parent },
+      );
       if (result.exitCode !== 0) throw new Error(result.stderr.trim() || "git clone failed");
       await remember(registry, target);
       return { project: description(target), projects: await load(registry) };
@@ -44,37 +48,46 @@ const extension: HostExtension = {
 };
 
 async function load(path: string): Promise<StoredProject[]> {
-  try {
-    const projects = JSON.parse(await readFile(path, "utf8")) as StoredProject[];
-    return projects
-      .filter((item) => item?.path && item?.name)
-      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
-    throw error;
-  }
+  const projects = await readJson<StoredProject[]>(path) ?? [];
+  const normalized = await Promise.all(projects
+    .filter((item) => item?.path && item?.name)
+    .map(async (item) => ({ ...item, path: await existingPath(item.path) })));
+  const seen = new Set<string>();
+  return normalized
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+    .filter((project) => {
+      const key = pathKey(project.path);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 async function remember(registry: string, workspace: string): Promise<void> {
-  await requireDirectory(workspace);
-  const current = description(workspace);
-  const key = normalized(workspace);
-  const projects = (await load(registry)).filter((item) => normalized(item.path) !== key);
-  await mkdir(dirname(registry), { recursive: true });
-  await writeFile(
-    registry,
-    `${JSON.stringify([current, ...projects].slice(0, 30), null, 2)}\n`,
-    "utf8",
-  );
+  const current = description(await requireDirectory(workspace));
+  const key = pathKey(current.path);
+  const projects = (await load(registry)).filter((item) => pathKey(item.path) !== key);
+  await writeJson(registry, [current, ...projects].slice(0, 30));
 }
 
 function description(path: string): StoredProject {
-  return { name: basename(path) || path, path, updatedAt: new Date().toISOString() };
+  const clean = cleanPath(path);
+  return { name: basename(clean) || clean, path: clean, updatedAt: new Date().toISOString() };
 }
 
-async function requireDirectory(path: string): Promise<void> {
-  const metadata = await stat(path);
-  if (!metadata.isDirectory()) throw new Error(`not a directory: ${path}`);
+async function requireDirectory(path: string): Promise<string> {
+  const clean = cleanPath(path);
+  const metadata = await stat(clean);
+  if (!metadata.isDirectory()) throw new Error(`not a directory: ${clean}`);
+  return cleanPath(await realpath(clean));
+}
+
+async function existingPath(path: string): Promise<string> {
+  try {
+    return cleanPath(await realpath(cleanPath(path)));
+  } catch {
+    return cleanPath(path);
+  }
 }
 
 async function requireMissing(path: string): Promise<void> {
@@ -82,7 +95,7 @@ async function requireMissing(path: string): Promise<void> {
     await stat(path);
     throw new Error(`destination already exists: ${path}`);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    if (!missing(error)) throw error;
   }
 }
 
@@ -100,7 +113,7 @@ async function pickDirectory(): Promise<string> {
     : process.platform === "darwin"
       ? ["osascript", "-e", "POSIX path of (choose folder with prompt \"Choose a Sand project folder\")"]
       : ["zenity", "--file-selection", "--directory", "--title=Choose a Sand project folder"];
-  const result = await spawnText(command, process.cwd());
+  const result = await spawnText(command, { cwd: process.cwd() });
   if (result.exitCode !== 0 && result.exitCode !== 1) {
     throw new Error(result.stderr.trim() || "folder picker failed");
   }
@@ -116,10 +129,6 @@ function repositoryName(url: string): string {
   const name = url.replace(/[\\/]+$/, "").split(/[\\/:]/).at(-1)?.replace(/\.git$/i, "").trim();
   if (!name || name === "." || name === "..") throw new Error("could not determine repository name");
   return name;
-}
-
-function normalized(path: string): string {
-  return process.platform === "win32" ? path.toLowerCase() : path;
 }
 
 export default extension;

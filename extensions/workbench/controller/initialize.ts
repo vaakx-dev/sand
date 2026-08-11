@@ -11,6 +11,7 @@ import {
   type ExtensionDescription,
   type JsonObject,
   type JsonValue,
+  type WorkspaceScope,
 } from "@sand/extension-api";
 
 import type { ProviderDescription } from "../models.ts";
@@ -27,8 +28,14 @@ import {
 } from "./values.ts";
 
 export async function initializeWorkbench(runtime: ControllerRuntime): Promise<void> {
-  const [workspace, providers, threads, extensions, settings] = await Promise.all([
-    runtime.call<{ workspace: string }>("runtime.info"),
+  await runtime.runWorkspace(loadWorkbench);
+}
+
+async function loadWorkbench(
+  runtime: ControllerRuntime,
+  scope: WorkspaceScope,
+): Promise<void> {
+  const [providers, threads, extensions, settings] = await Promise.all([
     runtime.call<ProviderDescription[]>("agent.providers"),
     runtime.call<AgentThreadSummary[]>("threads.list"),
     runtime.call<ExtensionDescription[]>("extensions.list"),
@@ -52,8 +59,8 @@ export async function initializeWorkbench(runtime: ControllerRuntime): Promise<v
     ?? firstModel(catalog, findProvider(providers, titleProvider));
   const state = runtime.state;
 
-  batch(() => {
-    state.root.set(workspace.workspace);
+  scope.commit(() => batch(() => {
+    state.root.set(scope.workspace.path);
     state.providers.set(providers);
     state.threads.items.set(threads);
     state.extensions.set(extensions);
@@ -91,7 +98,7 @@ export async function initializeWorkbench(runtime: ControllerRuntime): Promise<v
       state.provider.set(selected.id);
       state.model.set(selectedModel?.slug || selected.defaultModel);
     }
-  });
+  }));
 }
 
 async function connectionStates(

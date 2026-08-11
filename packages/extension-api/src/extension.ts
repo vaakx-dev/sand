@@ -29,7 +29,7 @@ export interface ExtensionManifest {
 
 export interface ExtensionDescription extends ExtensionManifest {
   root: string;
-  source: "builtin" | "user" | "workspace";
+  source: "builtin" | "user";
   enabled: boolean;
   hostActive: boolean;
   uiActive: boolean;

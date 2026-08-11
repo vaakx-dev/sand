@@ -1,6 +1,7 @@
 import type { AgentProvider, AgentTool } from "./agent.ts";
 import type { ExtensionManifest } from "./extension.ts";
 import type { JsonObject, JsonValue } from "./json.ts";
+import type { WorkspaceDescription } from "./runtime.ts";
 
 export type RuntimeCommand = (
   params: JsonValue,
@@ -26,8 +27,8 @@ export interface HostEvent {
 
 export interface HostExtensionContext {
   manifest: ExtensionManifest;
-  config: string;
-  workspace: string;
+  home: string;
+  workspace: WorkspaceDescription;
   settings: SettingsApi;
   events: EventApi;
   commands: {
@@ -43,6 +44,9 @@ export interface HostExtensionContext {
 }
 
 export interface HostExtension {
-  activate(context: HostExtensionContext): void | Promise<void>;
-  deactivate?(): void | Promise<void>;
+  activate(
+    context: HostExtensionContext,
+  ): HostExtensionCleanup | void | Promise<HostExtensionCleanup | void>;
 }
+
+export type HostExtensionCleanup = () => void | Promise<void>;
