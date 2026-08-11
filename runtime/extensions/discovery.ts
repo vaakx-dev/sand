@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import {
@@ -14,7 +13,6 @@ export interface Loaded {
   manifest: ExtensionManifest;
   root: string;
   source: ExtensionDescription["source"];
-  fingerprint: string;
   enabled: boolean;
   hostActive: boolean;
   uiActive: boolean;
@@ -48,7 +46,6 @@ export async function discover(
           manifest,
           root: directory,
           source: root.source,
-          fingerprint: await fingerprint(directory),
           enabled: !disabled.has(manifest.id),
           hostActive: false,
           uiActive: false,
@@ -74,29 +71,6 @@ async function childDirectories(root: string): Promise<string[]> {
     if (missing(error)) return [];
     throw error;
   }
-}
-
-async function fingerprint(root: string): Promise<string> {
-  const hash = createHash("sha256");
-  for (const path of await sourceFiles(root)) {
-    hash.update(relative(root, path));
-    hash.update(await readFile(path));
-  }
-  return hash.digest("hex").slice(0, 16);
-}
-
-async function sourceFiles(root: string): Promise<string[]> {
-  const files: string[] = [];
-  const visit = async (directory: string): Promise<void> => {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      if ([".git", "dist", "node_modules"].includes(entry.name)) continue;
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) await visit(path);
-      else if (entry.isFile()) files.push(path);
-    }
-  };
-  await visit(root);
-  return files.sort();
 }
 
 async function validateManifest(

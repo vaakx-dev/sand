@@ -114,6 +114,7 @@ impl Runtime {
     pub(super) async fn read_stderr(runtime: Arc<Self>, stderr: tokio::process::ChildStderr) {
         let mut lines = BufReader::new(stderr).lines();
         while let Ok(Some(line)) = lines.next_line().await {
+            eprintln!("extension runtime: {line}");
             runtime.push_event(None, "runtime.log", json!({ "message": line }));
         }
     }

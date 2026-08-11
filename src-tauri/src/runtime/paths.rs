@@ -35,6 +35,7 @@ impl RuntimePaths {
             .path()
             .resource_dir()
             .unwrap_or_else(|_| development_root.clone());
+        let resource_root = dunce::simplified(&resource_root).to_path_buf();
         let development = cfg!(debug_assertions);
         let root = if development {
             development_root

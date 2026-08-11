@@ -11,6 +11,7 @@ import { Dependencies } from "../extensions/dependencies.ts";
 import type { Root } from "../extensions/discovery.ts";
 import { Manager as ExtensionManager } from "../extensions/manager.ts";
 import { Registry } from "../extensions/registry.ts";
+import { CoreModules } from "../modules.ts";
 import { Settings } from "../settings.ts";
 
 interface ContextOptions {
@@ -20,6 +21,7 @@ interface ContextOptions {
   extensionRoots: Root[];
   settings: Settings;
   dependencies: Dependencies;
+  core: CoreModules;
   write: ProtocolWriter;
 }
 
@@ -43,8 +45,7 @@ export class WorkspaceContext {
     this.agent = new AgentHarness(this.registry, options.settings, this.events);
     this.extensions = new ExtensionManager(
       options.extensionRoots,
-      options.cache,
-      options.appRoot,
+      options.core,
       options.settings,
       this.registry,
       options.dependencies,

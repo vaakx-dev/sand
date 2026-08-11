@@ -1,6 +1,11 @@
-[
-  "@sand/extension-api",
-  "@sand/extension-runtime",
-  "@vaakx-dev/vrui",
-  "lucide"
-]
+{
+  "host": [
+    "@sand/extension-api",
+    "@sand/extension-runtime"
+  ],
+  "ui": [
+    "@sand/extension-api",
+    "@vaakx-dev/vrui",
+    "lucide"
+  ]
+}

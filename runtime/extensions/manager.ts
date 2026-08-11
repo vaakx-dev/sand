@@ -1,5 +1,3 @@
-import { pathToFileURL } from "node:url";
-
 import {
   errorMessage,
   type ExtensionDescription,
@@ -8,6 +6,7 @@ import {
   type UiBundle,
 } from "@sand/extension-api";
 
+import { CoreModules } from "../modules.ts";
 import { Settings } from "../settings.ts";
 import { Bundles } from "./bundles.ts";
 import { Dependencies } from "./dependencies.ts";
@@ -21,13 +20,12 @@ export class Manager {
 
   constructor(
     private readonly roots: Root[],
-    cache: string,
-    appRoot: string,
+    core: CoreModules,
     private readonly settings: Settings,
     private readonly registry: Registry,
     private readonly dependencies: Dependencies,
   ) {
-    this.bundles = new Bundles(cache, appRoot);
+    this.bundles = new Bundles(core);
   }
 
   async reload(): Promise<ExtensionDescription[]> {
@@ -80,12 +78,10 @@ export class Manager {
       }
       if (!this.dependenciesReady(extension)) continue;
       try {
-        await this.bundles.prune(extension);
         bundles.push({
           manifest: extension.manifest,
           source: extension.manifest.ui ? await this.bundles.ui(extension) : undefined,
           styles: await this.bundles.styles(extension),
-          fingerprint: extension.fingerprint,
         });
         extension.uiActive = true;
       } catch (error) {
@@ -97,12 +93,13 @@ export class Manager {
   }
 
   private async activate(extension: Loaded): Promise<void> {
+    let url: string | undefined;
     try {
-      await this.bundles.prune(extension);
-      const entry = await this.bundles.host(extension);
-      const imported = (await import(
-        `${pathToFileURL(entry).href}?sand=${extension.fingerprint}`
-      )) as { default?: HostExtension } & Partial<HostExtension>;
+      const source = await this.bundles.host(extension);
+      url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+      const imported = (await import(url)) as {
+        default?: HostExtension;
+      } & Partial<HostExtension>;
       const module = (imported.default ?? imported) as HostExtension;
       if (typeof module.activate !== "function") {
         throw new Error(`${extension.manifest.id} does not export activate()`);
@@ -114,6 +111,8 @@ export class Manager {
       extension.hostActive = true;
     } catch (error) {
       this.recordError(extension, errorMessage(error));
+    } finally {
+      if (url) URL.revokeObjectURL(url);
     }
   }
 

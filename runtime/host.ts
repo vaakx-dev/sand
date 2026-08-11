@@ -3,6 +3,7 @@ import { createInterface } from "node:readline";
 import { errorMessage, type JsonValue } from "@sand/extension-api";
 
 import type { ProtocolWriter } from "./events.ts";
+import { CoreModules } from "./modules.ts";
 import { WorkspaceManager } from "./workspaces/manager.ts";
 
 interface RequestMessage {
@@ -21,11 +22,13 @@ console.info = (...values: unknown[]) => console.error(...values);
 
 const appRoot = requiredEnv("SAND_APP_ROOT");
 const home = requiredEnv("SAND_HOME");
+const core = await CoreModules.load(appRoot);
+core.install();
 const workspaces = await WorkspaceManager.create({
   appRoot,
   home,
+  core,
   builtinExtensions: requiredEnv("SAND_BUILTIN_EXTENSIONS"),
-  version: requiredEnv("SAND_VERSION"),
   write,
 });
 

@@ -41,5 +41,4 @@ export interface UiBundle {
   manifest: ExtensionManifest;
   source?: string;
   styles: string[];
-  fingerprint: string;
 }

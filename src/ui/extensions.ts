@@ -1,13 +1,17 @@
 import type { RuntimeClient, UiBundle, UiExtension, UiRegistry } from "@sand/extension-api";
 
+import { CoreModules } from "./modules.ts";
+
 export async function activate(
   bundle: UiBundle,
   runtime: RuntimeClient,
   ui: UiRegistry,
+  core: CoreModules,
 ): Promise<void> {
   installStyles(bundle);
   if (!bundle.source) return;
-  const url = URL.createObjectURL(new Blob([bundle.source], { type: "text/javascript" }));
+  const source = core.link(bundle.source);
+  const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
   try {
     const imported = (await import(/* @vite-ignore */ url)) as {
       default?: UiExtension;

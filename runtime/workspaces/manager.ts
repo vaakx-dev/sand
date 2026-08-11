@@ -9,7 +9,7 @@ import {
 
 import type { ProtocolWriter } from "../events.ts";
 import { Dependencies } from "../extensions/dependencies.ts";
-import { coreModuleNames } from "../modules.ts";
+import { CoreModules } from "../modules.ts";
 import { Settings } from "../settings.ts";
 import { WorkspaceContext } from "./context.ts";
 
@@ -17,7 +17,7 @@ interface ManagerOptions {
   appRoot: string;
   home: string;
   builtinExtensions: string;
-  version: string;
+  core: CoreModules;
   write: ProtocolWriter;
 }
 
@@ -31,10 +31,10 @@ export class WorkspaceManager {
     private readonly options: ManagerOptions,
     settings: Settings,
   ) {
-    this.cache = join(options.home, "cache", "bundles", options.version);
+    this.cache = join(options.home, "cache");
     this.dependencies = new Dependencies(
-      join(options.home, "cache", "dependencies"),
-      new Set(coreModuleNames(options.appRoot)),
+      join(this.cache, "dependencies"),
+      new Set(options.core.names()),
     );
     this.settings = settings;
   }
@@ -69,6 +69,7 @@ export class WorkspaceManager {
       ],
       settings: this.settings,
       dependencies: this.dependencies,
+      core: this.options.core,
       write: this.options.write,
     });
     this.contexts.set(workspace.id, context);

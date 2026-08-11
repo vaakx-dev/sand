@@ -1,11 +1,13 @@
 import { errorMessage, type UiBundle } from "@sand/extension-api";
 
-import { activate } from "./ui/extensions.ts";
-import { createRegistry } from "./ui/registry.ts";
 import { Client } from "./runtime.ts";
+import { activate } from "./ui/extensions.ts";
+import { CoreModules } from "./ui/modules.ts";
+import { createRegistry } from "./ui/registry.ts";
 
 const desktop = "__TAURI_INTERNALS__" in window;
 const runtime = new Client();
+const core = new CoreModules();
 const { registry, mounted } = createRegistry();
 
 if (desktop) void start();
@@ -18,7 +20,7 @@ async function start(): Promise<void> {
     const failures: string[] = [];
     for (const bundle of bundles) {
       try {
-        await activate(bundle, runtime, registry);
+        await activate(bundle, runtime, registry, core);
       } catch (error) {
         const message = `${bundle.manifest.id}: ${errorMessage(error)}`;
         failures.push(message);

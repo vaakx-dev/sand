@@ -24,6 +24,9 @@ use crate::{acp::Error as AcpError, journal::JournalError};
 pub use paths::WorkspaceInfo;
 use paths::{RuntimePaths, WorkspacePaths, bun_executable};
 use worker::PendingSender;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 use workspace::Workspace;
 
 #[derive(Debug, thiserror::Error)]
@@ -99,11 +102,13 @@ impl Runtime {
             .env("SAND_APP_ROOT", &paths.root)
             .env("SAND_BUILTIN_EXTENSIONS", &paths.extensions)
             .env("SAND_HOME", &paths.home)
-            .env("SAND_VERSION", env!("CARGO_PKG_VERSION"))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .kill_on_drop(true);
+
+        #[cfg(windows)]
+        command.creation_flags(CREATE_NO_WINDOW);
 
         let mut child = command.spawn().map_err(RuntimeError::Start)?;
         let stdin = child.stdin.take().ok_or(RuntimeError::MissingStdin)?;

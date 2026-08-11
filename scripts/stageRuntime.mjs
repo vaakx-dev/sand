@@ -7,15 +7,10 @@ const sourceModules = join(projectRoot, "node_modules");
 const coreConfiguration = JSON.parse(
   await readFile(join(projectRoot, "runtime", "coreModules.json"), "utf8"),
 );
-if (
-  !Array.isArray(coreConfiguration)
-  || coreConfiguration.length === 0
-  || coreConfiguration.some((name) => typeof name !== "string" || !name)
-  || new Set(coreConfiguration).size !== coreConfiguration.length
-) {
-  throw new Error("invalid runtime/coreModules.json");
-}
-const coreModules = new Set(coreConfiguration);
+const coreModules = new Set([
+  ...coreNames(coreConfiguration, "host"),
+  ...coreNames(coreConfiguration, "ui"),
+]);
 const stagedPackages = new Map();
 
 await rm(outputRoot, { recursive: true, force: true });
@@ -24,7 +19,7 @@ await Promise.all([
   copy("extensions"),
 ]);
 
-for (const name of coreConfiguration) await copyCorePackage(name);
+for (const name of coreModules) await copyCorePackage(name);
 await stageExtensionDependencies();
 
 async function copy(path) {
@@ -155,4 +150,18 @@ function optionalPeers(manifest) {
 
 function record(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function coreNames(configuration, target) {
+  if (!record(configuration)) throw new Error("invalid runtime/coreModules.json");
+  const names = configuration[target];
+  if (
+    !Array.isArray(names)
+    || names.length === 0
+    || names.some((name) => typeof name !== "string" || !name)
+    || new Set(names).size !== names.length
+  ) {
+    throw new Error(`invalid ${target} modules in runtime/coreModules.json`);
+  }
+  return names;
 }
