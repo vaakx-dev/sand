@@ -1,4 +1,3 @@
-import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import {
@@ -11,6 +10,7 @@ import {
 
 import { Settings } from "../settings.ts";
 import { Bundles } from "./bundles.ts";
+import { Dependencies } from "./dependencies.ts";
 import { discover, type Loaded, type Root } from "./discovery.ts";
 import { order } from "./order.ts";
 import { Registry } from "./registry.ts";
@@ -22,10 +22,12 @@ export class Manager {
   constructor(
     private readonly roots: Root[],
     cache: string,
+    appRoot: string,
     private readonly settings: Settings,
     private readonly registry: Registry,
+    private readonly dependencies: Dependencies,
   ) {
-    this.bundles = new Bundles(cache);
+    this.bundles = new Bundles(cache, appRoot);
   }
 
   async reload(): Promise<ExtensionDescription[]> {
@@ -33,7 +35,17 @@ export class Manager {
     this.registry.clear();
     this.extensions = await discover(this.roots, this.disabledIds());
 
-    for (const extension of this.activationOrder()) {
+    const ordered = this.activationOrder();
+    for (const extension of ordered) {
+      if (!extension.enabled) continue;
+      try {
+        await this.dependencies.prepare(extension);
+      } catch (error) {
+        this.block(extension, errorMessage(error));
+      }
+    }
+
+    for (const extension of ordered) {
       if (!extension.enabled || !extension.manifest.main) continue;
       if (!this.dependenciesReady(extension)) continue;
       await this.activate(extension);
@@ -56,6 +68,7 @@ export class Manager {
       hostActive: extension.hostActive,
       uiActive: extension.uiActive,
       contributions: [...extension.contributions],
+      errors: [...extension.errors],
     }));
   }
 
@@ -84,8 +97,9 @@ export class Manager {
   }
 
   private async activate(extension: Loaded): Promise<void> {
-    const entry = resolve(extension.root, extension.manifest.main!);
     try {
+      await this.bundles.prune(extension);
+      const entry = await this.bundles.host(extension);
       const imported = (await import(
         `${pathToFileURL(entry).href}?sand=${extension.fingerprint}`
       )) as { default?: HostExtension } & Partial<HostExtension>;
@@ -125,7 +139,7 @@ export class Manager {
   }
 
   private dependenciesReady(extension: Loaded): boolean {
-    if (extension.dependencyError) return false;
+    if (extension.blocked) return false;
     const failed = (extension.manifest.requires ?? []).find((id) => {
       const dependency = this.extensions.get(id);
       return dependency?.manifest.main && !dependency.hostActive;
@@ -136,16 +150,13 @@ export class Manager {
   }
 
   private block(extension: Loaded, message: string): void {
-    if (extension.dependencyError === message) return;
-    extension.dependencyError = message;
+    if (extension.blocked === message) return;
+    extension.blocked = message;
     this.recordError(extension, message);
   }
 
   private recordError(extension: Loaded, message: string): void {
-    const contribution = `error:${message}`;
-    if (!extension.contributions.includes(contribution)) {
-      extension.contributions.push(contribution);
-    }
+    if (!extension.errors.includes(message)) extension.errors.push(message);
   }
 
   private disabledIds(): Set<string> {

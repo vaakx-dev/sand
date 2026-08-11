@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { readFile, readdir, stat } from "node:fs/promises";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import {
   errorMessage,
@@ -19,7 +19,8 @@ export interface Loaded {
   hostActive: boolean;
   uiActive: boolean;
   contributions: string[];
-  dependencyError?: string;
+  errors: string[];
+  blocked?: string;
   cleanup?: HostExtensionCleanup;
 }
 
@@ -39,7 +40,10 @@ export async function discover(
       try {
         const manifest = await readJson<ExtensionManifest>(manifestPath);
         if (!manifest) continue;
-        validateManifest(manifest, manifestPath);
+        await validateManifest(manifest, manifestPath, directory);
+        if (discovered.has(manifest.id)) {
+          throw new Error(`duplicate extension id: ${manifest.id}`);
+        }
         discovered.set(manifest.id, {
           manifest,
           root: directory,
@@ -49,6 +53,7 @@ export async function discover(
           hostActive: false,
           uiActive: false,
           contributions: contributions(manifest),
+          errors: [],
         });
       } catch (error) {
         console.error(`extension discovery failed in ${directory}: ${errorMessage(error)}`);
@@ -94,19 +99,74 @@ async function sourceFiles(root: string): Promise<string[]> {
   return files.sort();
 }
 
-function validateManifest(manifest: ExtensionManifest, path: string): void {
-  if (!manifest.id || !manifest.name || !manifest.version) {
+async function validateManifest(
+  manifest: ExtensionManifest,
+  path: string,
+  root: string,
+): Promise<void> {
+  if (!text(manifest.id) || !text(manifest.name) || !text(manifest.version)) {
     throw new Error(`invalid extension manifest: ${path}`);
   }
-  if (manifest.styles?.some((entry) => typeof entry !== "string" || entry.length === 0)) {
+  if (!/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(manifest.id)) {
+    throw new Error(`invalid extension id: ${manifest.id}`);
+  }
+  if (manifest.main !== undefined) await validateFile(root, manifest.main, "main", path);
+  if (manifest.ui !== undefined) await validateFile(root, manifest.ui, "ui", path);
+  if (
+    manifest.styles !== undefined
+    && (!Array.isArray(manifest.styles) || manifest.styles.some((entry) => !text(entry)))
+  ) {
     throw new Error(`invalid extension styles: ${path}`);
   }
-  if (manifest.requires?.some((id) => typeof id !== "string" || !id || id === manifest.id)) {
+  for (const style of manifest.styles ?? []) await validateFile(root, style, "style", path);
+  if (
+    manifest.requires !== undefined
+    && (
+      !Array.isArray(manifest.requires)
+      || manifest.requires.some((id) => !text(id) || id === manifest.id)
+    )
+    || new Set(manifest.requires ?? []).size !== (manifest.requires?.length ?? 0)
+  ) {
     throw new Error(`invalid extension dependencies: ${path}`);
   }
-  if (manifest.themes?.some((theme) => !theme.id || !theme.label)) {
+  if (
+    manifest.themes !== undefined
+    && (
+      !Array.isArray(manifest.themes)
+      || manifest.themes.some((theme) => !theme || !text(theme.id) || !text(theme.label))
+    )
+  ) {
     throw new Error(`invalid extension themes: ${path}`);
   }
+  const themeIds = manifest.themes?.map((theme) => theme.id) ?? [];
+  if (new Set(themeIds).size !== themeIds.length) {
+    throw new Error(`duplicate extension themes: ${path}`);
+  }
+}
+
+async function validateFile(
+  root: string,
+  entry: unknown,
+  kind: string,
+  manifest: string,
+): Promise<void> {
+  if (!text(entry) || isAbsolute(entry)) {
+    throw new Error(`invalid extension ${kind}: ${manifest}`);
+  }
+  const path = resolve(root, entry);
+  const child = relative(root, path);
+  if (!child || child === ".." || child.startsWith(`..${sep}`) || isAbsolute(child)) {
+    throw new Error(`extension ${kind} escapes its directory: ${manifest}`);
+  }
+  try {
+    if (!(await stat(path)).isFile()) throw new Error("not a file");
+  } catch {
+    throw new Error(`extension ${kind} does not exist: ${entry}`);
+  }
+}
+
+function text(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function contributions(manifest: ExtensionManifest): string[] {

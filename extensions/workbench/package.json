@@ -1,0 +1,9 @@
+{
+  "name": "@sand/workbench",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1"
+  }
+}

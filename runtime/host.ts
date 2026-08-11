@@ -25,6 +25,7 @@ const workspaces = await WorkspaceManager.create({
   appRoot,
   home,
   builtinExtensions: requiredEnv("SAND_BUILTIN_EXTENSIONS"),
+  version: requiredEnv("SAND_VERSION"),
   write,
 });
 

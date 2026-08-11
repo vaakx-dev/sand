@@ -1,0 +1,6 @@
+[
+  "@sand/extension-api",
+  "@sand/extension-runtime",
+  "@vaakx-dev/vrui",
+  "lucide"
+]

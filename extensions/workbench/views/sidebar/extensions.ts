@@ -42,7 +42,13 @@ function extensionRow(extension: ExtensionDescription): HTMLElement {
     div({ class: "extension-meta" }, `${extension.id} / ${extension.version}`),
     div(
       { class: "extension-contributions" },
-      extension.contributions.length ? extension.contributions.join(" / ") : "UI extension",
+      extensionDetail(extension),
     ),
   );
+}
+
+function extensionDetail(extension: ExtensionDescription): string {
+  if (extension.errors.length) return extension.errors.join(" / ");
+  if (extension.contributions.length) return extension.contributions.join(" / ");
+  return "UI extension";
 }

@@ -35,7 +35,7 @@ impl RuntimePaths {
             .path()
             .resource_dir()
             .unwrap_or_else(|_| development_root.clone());
-        let development = development_root.join("runtime/host.ts").is_file();
+        let development = cfg!(debug_assertions);
         let root = if development {
             development_root
         } else {
@@ -43,9 +43,8 @@ impl RuntimePaths {
         };
         let host = root.join("runtime/host.ts");
         if !host.is_file() {
-            return Err(RuntimeError::MissingHost(host.display().to_string()));
+            return Err(RuntimeError::MissingRuntimeFile(host.display().to_string()));
         }
-
         let initial_workspace = std::env::var_os("SAND_WORKSPACE")
             .map(PathBuf::from)
             .or_else(|| development.then(|| root.clone()))

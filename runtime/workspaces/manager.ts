@@ -8,6 +8,8 @@ import {
 } from "@sand/extension-api";
 
 import type { ProtocolWriter } from "../events.ts";
+import { Dependencies } from "../extensions/dependencies.ts";
+import { coreModuleNames } from "../modules.ts";
 import { Settings } from "../settings.ts";
 import { WorkspaceContext } from "./context.ts";
 
@@ -15,19 +17,25 @@ interface ManagerOptions {
   appRoot: string;
   home: string;
   builtinExtensions: string;
+  version: string;
   write: ProtocolWriter;
 }
 
 export class WorkspaceManager {
   private readonly contexts = new Map<string, WorkspaceContext>();
   private readonly cache: string;
+  private readonly dependencies: Dependencies;
   private readonly settings: Settings;
 
   private constructor(
     private readonly options: ManagerOptions,
     settings: Settings,
   ) {
-    this.cache = join(options.home, "cache");
+    this.cache = join(options.home, "cache", "bundles", options.version);
+    this.dependencies = new Dependencies(
+      join(options.home, "cache", "dependencies"),
+      new Set(coreModuleNames(options.appRoot)),
+    );
     this.settings = settings;
   }
 
@@ -60,6 +68,7 @@ export class WorkspaceManager {
         { path: join(this.options.home, "extensions"), source: "user" },
       ],
       settings: this.settings,
+      dependencies: this.dependencies,
       write: this.options.write,
     });
     this.contexts.set(workspace.id, context);

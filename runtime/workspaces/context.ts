@@ -7,6 +7,7 @@ import { objectValue, requiredString } from "@sand/extension-api";
 
 import { AgentHarness } from "../agent.ts";
 import { Events, type ProtocolWriter } from "../events.ts";
+import { Dependencies } from "../extensions/dependencies.ts";
 import type { Root } from "../extensions/discovery.ts";
 import { Manager as ExtensionManager } from "../extensions/manager.ts";
 import { Registry } from "../extensions/registry.ts";
@@ -18,6 +19,7 @@ interface ContextOptions {
   cache: string;
   extensionRoots: Root[];
   settings: Settings;
+  dependencies: Dependencies;
   write: ProtocolWriter;
 }
 
@@ -42,8 +44,10 @@ export class WorkspaceContext {
     this.extensions = new ExtensionManager(
       options.extensionRoots,
       options.cache,
+      options.appRoot,
       options.settings,
       this.registry,
+      options.dependencies,
     );
   }
 

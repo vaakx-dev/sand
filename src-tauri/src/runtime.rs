@@ -28,8 +28,8 @@ use workspace::Workspace;
 
 #[derive(Debug, thiserror::Error)]
 pub enum RuntimeError {
-    #[error("cannot locate the extension runtime at {0}")]
-    MissingHost(String),
+    #[error("cannot locate the runtime file at {0}")]
+    MissingRuntimeFile(String),
     #[error("cannot resolve the user home directory: {0}")]
     Home(String),
     #[error("cannot open workspace {path}: {source}")]
@@ -93,11 +93,13 @@ impl Runtime {
         let mut command = Command::new(bun_executable());
         command
             .arg("run")
+            .arg("--no-install")
             .arg(&paths.host)
             .current_dir(&paths.root)
             .env("SAND_APP_ROOT", &paths.root)
             .env("SAND_BUILTIN_EXTENSIONS", &paths.extensions)
             .env("SAND_HOME", &paths.home)
+            .env("SAND_VERSION", env!("CARGO_PKG_VERSION"))
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

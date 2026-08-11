@@ -34,6 +34,7 @@ export interface ExtensionDescription extends ExtensionManifest {
   hostActive: boolean;
   uiActive: boolean;
   contributions: string[];
+  errors: string[];
 }
 
 export interface UiBundle {
