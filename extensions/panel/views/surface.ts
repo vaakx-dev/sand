@@ -1,4 +1,4 @@
-import type { UiSurfaceContribution } from "@sand/extension-api";
+import type { UiSurfaceContribution } from "sand:api/workbench";
 
 export function available(surface: UiSurfaceContribution): boolean {
   return surface.available?.() !== false;

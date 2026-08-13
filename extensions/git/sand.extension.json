@@ -3,7 +3,7 @@
   "name": "Sand Git",
   "version": "0.0.1",
   "description": "Git repository lifecycle, status, diff, and source-control UI",
+  "uses": ["ui", "workbench"],
   "main": "./main.ts",
-  "ui": "./ui.ts",
-  "styles": ["./git.css"]
+  "ui": "./ui.ts"
 }

@@ -6,13 +6,11 @@ import {
   stringValue,
   type RuntimeClient,
   type RuntimeEvent,
-  type UiEvent,
-  type UiSurfaceRegistry,
 } from "@sand/extension-api";
 
 import { commands, type Diff, type Status } from "./api.ts";
 import type { GitState } from "./state.ts";
-import { workbenchEvents } from "../workbench/api.ts";
+import { workbenchEvents, type UiEvent, type UiSurfaceRegistry } from "sand:api/workbench";
 
 export class GitController {
   constructor(

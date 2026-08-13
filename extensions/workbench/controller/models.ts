@@ -6,7 +6,6 @@ import {
 import {
   findModel,
   findProvider,
-  firstModel,
   providerModel,
 } from "../modelCatalog.ts";
 import type { ProviderModel, ProviderModels } from "../models.ts";
@@ -80,19 +79,11 @@ export class ModelsController {
     await this.saveCatalog();
   }
 
-  async titleProvider(id: string): Promise<void> {
+  async titleSelection(provider: string, model: string): Promise<void> {
     const state = this.runtime.state;
-    const provider = findProvider(state.providers.get(), id);
-    const model = firstModel(state.providerModels.get(), provider);
-    state.titleProvider.set(id);
-    state.titleModel.set(model?.slug || "");
+    state.titleProvider.set(provider);
+    state.titleModel.set(model);
     syncTitleReasoning(state);
-    await this.saveTitle();
-  }
-
-  async titleModel(slug: string): Promise<void> {
-    this.runtime.state.titleModel.set(slug);
-    syncTitleReasoning(this.runtime.state);
     await this.saveTitle();
   }
 

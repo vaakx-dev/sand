@@ -46,7 +46,6 @@ function closeOverlays(state: WorkbenchState): void {
   state.modelPickerOpen.set(false);
   state.traitsOpen.set(false);
   state.threads.menu.set(null);
-  state.threads.snoozeOpen.set(false);
   state.threads.preview.set(null);
   state.threads.rename.set(null);
 }

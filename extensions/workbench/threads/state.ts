@@ -2,11 +2,19 @@ import { sig } from "@vaakx-dev/vrui";
 
 import type {
   AgentAttempt,
+  AgentContextUsage,
   AgentMessage,
   AgentQueuedTurn,
   AgentRun,
   AgentThreadSummary,
 } from "@sand/extension-api";
+
+export interface ThreadMenu {
+  kind: "thread" | "snooze";
+  thread: AgentThreadSummary;
+  x: number;
+  y: number;
+}
 
 export function createThreadsState() {
   return {
@@ -15,6 +23,8 @@ export function createThreadsState() {
     messages: sig<AgentMessage[]>([]),
     runs: sig<AgentRun[]>([]),
     attempts: sig<AgentAttempt[]>([]),
+    contextUsage: sig<AgentContextUsage | null>(null),
+    contextOpen: sig(false),
     queue: sig<AgentQueuedTurn[]>([]),
     prompt: sig(""),
     status: sig<AgentThreadSummary["status"]>("idle"),
@@ -22,8 +32,7 @@ export function createThreadsState() {
     query: sig(""),
     preview: sig<AgentThreadSummary | null>(null),
     previewTop: sig(0),
-    menu: sig<{ thread: AgentThreadSummary; x: number; y: number } | null>(null),
-    snoozeOpen: sig(false),
+    menu: sig<ThreadMenu | null>(null),
     rename: sig<{ id: string; title: string } | null>(null),
     renameInput: sig(""),
     settledOpen: sig(true),

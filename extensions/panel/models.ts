@@ -2,7 +2,7 @@ import type {
   UiSurfaceContribution,
   UiSurfaceInstance,
   UiSurfaceVisibility,
-} from "@sand/extension-api";
+} from "sand:api/workbench";
 
 export class SurfaceVisibility implements UiSurfaceVisibility {
   private value = false;

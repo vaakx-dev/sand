@@ -2,6 +2,7 @@ import type {
   AgentProvider,
   AgentTool,
   EventApi,
+  ExtensionApis,
   ExtensionManifest,
   HostExtensionContext,
   RuntimeCommand,
@@ -46,13 +47,18 @@ export class Registry {
     return await command(params, signal) as T;
   }
 
-  context(manifest: ExtensionManifest, contributions: string[]): HostExtensionContext {
+  context(
+    manifest: ExtensionManifest,
+    contributions: string[],
+    apis: ExtensionApis,
+  ): HostExtensionContext {
     return {
       manifest,
       home: this.home,
       workspace: this.workspace,
       settings: this.settings,
       events: this.events,
+      apis,
       commands: {
         register: (id, command) => {
           register(this.commands, "command", id, command);

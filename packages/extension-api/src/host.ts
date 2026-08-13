@@ -1,4 +1,5 @@
 import type { AgentProvider, AgentTool } from "./agent.ts";
+import type { ExtensionApis } from "./apis.ts";
 import type { ExtensionManifest } from "./extension.ts";
 import type { JsonObject, JsonValue } from "./json.ts";
 import type { WorkspaceDescription } from "./runtime.ts";
@@ -31,6 +32,7 @@ export interface HostExtensionContext {
   workspace: WorkspaceDescription;
   settings: SettingsApi;
   events: EventApi;
+  apis: ExtensionApis;
   commands: {
     register(id: string, command: RuntimeCommand): void;
     execute<T = JsonValue>(id: string, params?: JsonValue, signal?: AbortSignal): Promise<T>;

@@ -22,6 +22,7 @@ export async function readStream(response: Response, request: AgentProviderReque
   const decoder = new TextDecoder();
   let content = "";
   let buffer = "";
+  let usage: ResponseUsage | undefined;
 
   while (true) {
     const next = await reader.read();
@@ -30,6 +31,7 @@ export async function readStream(response: Response, request: AgentProviderReque
     const parsed = consumeEvents(buffer);
     buffer = parsed.remaining;
     for (const event of parsed.events) {
+      usage = responseUsage(event) ?? usage;
       const delta = applyEvent(event, calls);
       if (!delta) continue;
       content += delta;
@@ -41,7 +43,24 @@ export async function readStream(response: Response, request: AgentProviderReque
     toolCalls: [...calls.values()]
       .sort((left, right) => left.index - right.index)
       .map(toolCall),
+    ...(usage ? { usage } : {}),
   };
+}
+
+interface ResponseUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+function responseUsage(event: Record<string, unknown>): ResponseUsage | undefined {
+  const response = objectValue(event.response);
+  const value = objectValue(response.usage);
+  const inputTokens = numberValue(value["input_tokens"]);
+  const outputTokens = numberValue(value["output_tokens"]);
+  const totalTokens = numberValue(value["total_tokens"], inputTokens + outputTokens);
+  if (totalTokens <= 0) return undefined;
+  return { inputTokens, outputTokens, totalTokens };
 }
 
 function consumeEvents(buffer: string): {

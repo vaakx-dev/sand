@@ -87,21 +87,32 @@ async function validateManifest(
   if (manifest.main !== undefined) await validateFile(root, manifest.main, "main", path);
   if (manifest.ui !== undefined) await validateFile(root, manifest.ui, "ui", path);
   if (
-    manifest.styles !== undefined
-    && (!Array.isArray(manifest.styles) || manifest.styles.some((entry) => !text(entry)))
-  ) {
-    throw new Error(`invalid extension styles: ${path}`);
-  }
-  for (const style of manifest.styles ?? []) await validateFile(root, style, "style", path);
-  if (
-    manifest.requires !== undefined
+    manifest.uses !== undefined
     && (
-      !Array.isArray(manifest.requires)
-      || manifest.requires.some((id) => !text(id) || id === manifest.id)
+      !Array.isArray(manifest.uses)
+      || manifest.uses.some((name) => !apiName(name))
+      || new Set(manifest.uses).size !== manifest.uses.length
     )
-    || new Set(manifest.requires ?? []).size !== (manifest.requires?.length ?? 0)
-  ) {
-    throw new Error(`invalid extension dependencies: ${path}`);
+  ) throw new Error(`invalid extension API uses: ${path}`);
+  if (manifest.provides !== undefined) {
+    if (!record(manifest.provides)) throw new Error(`invalid extension API providers: ${path}`);
+    for (const [name, contribution] of Object.entries(manifest.provides)) {
+      if (
+        !apiName(name)
+        || !record(contribution)
+        || (contribution.target !== "host" && contribution.target !== "ui")
+      ) throw new Error(`invalid extension API provider ${name || "<empty>"}: ${path}`);
+      if (contribution.target === "host" && !manifest.main) {
+        throw new Error(`host API provider requires a main entry: ${name}`);
+      }
+      if (contribution.target === "ui" && !manifest.ui) {
+        throw new Error(`UI API provider requires a UI entry: ${name}`);
+      }
+      await validateFile(root, contribution.module, `API ${name}`, path);
+    }
+  }
+  if (manifest.uses?.some((name) => manifest.provides?.[name])) {
+    throw new Error(`extension cannot use an API it provides: ${path}`);
   }
   if (
     manifest.themes !== undefined
@@ -143,9 +154,17 @@ function text(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function apiName(value: unknown): value is string {
+  return text(value) && /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(value);
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function contributions(manifest: ExtensionManifest): string[] {
   return [
-    ...(manifest.styles ?? []).map((entry) => `style:${entry}`),
+    ...Object.keys(manifest.provides ?? {}).map((name) => `api:${name}`),
     ...(manifest.themes ?? []).map((theme) => `theme:${theme.id}`),
   ];
 }

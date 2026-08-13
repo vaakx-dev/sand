@@ -3,6 +3,7 @@
   "name": "Bash Tool",
   "version": "0.0.1",
   "description": "unrestricted shell execution",
+  "uses": ["workbench"],
   "main": "./main.ts",
   "ui": "./ui.ts"
 }

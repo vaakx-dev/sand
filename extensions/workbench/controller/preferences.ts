@@ -29,9 +29,16 @@ export class PreferencesController {
   }
 
   async reloadExtensions(): Promise<void> {
+    const reloading = this.runtime.state.extensionsReloading;
+    if (reloading.get()) return;
+
+    reloading.set(true);
+    let reloadStarted = false;
     await this.runtime.guard(async () => {
       await this.runtime.call("extensions.reload");
       globalThis.location.reload();
+      reloadStarted = true;
     });
+    if (!reloadStarted) reloading.set(false);
   }
 }

@@ -3,5 +3,12 @@
   "name": "Sand Workbench",
   "version": "0.0.1",
   "description": "The core Sand shell, agent conversation, threads, and settings",
+  "uses": ["ui"],
+  "provides": {
+    "workbench": {
+      "target": "ui",
+      "module": "./public.ts"
+    }
+  },
   "ui": "./ui.ts"
 }

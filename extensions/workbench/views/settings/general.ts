@@ -1,91 +1,55 @@
-import { derive, dynamicChild, h2, option, select } from "@vaakx-dev/vrui";
+import { h2 } from "@vaakx-dev/vrui";
 
+import type { SandUi } from "sand:api/ui";
 import type { WorkbenchController } from "../../controller.ts";
-import { findModel } from "../../modelCatalog.ts";
 import type { WorkbenchState } from "../../state.ts";
+import { createGenerationPickerState, generationControl } from "../generation.ts";
 import { page, settingRow } from "./shared.ts";
 
 export function generalPage(
   controller: WorkbenchController,
   state: WorkbenchState,
+  ui: SandUi,
 ): HTMLElement {
-  const titleModels = derive(() =>
-    (state.providerModels.get()[state.titleProvider.get()] ?? []).filter((model) => !model.hidden)
-  );
-  const titleModel = derive(() => findModel(
-    state.providerModels.get(),
-    state.titleProvider.get(),
-    state.titleModel.get(),
-  ));
-
+  const picker = createGenerationPickerState();
   return page(
+    ui,
     "General",
     settingRow(
+      ui,
       "Settle inactive threads",
       "Move quiet threads into the Settled shelf after the selected number of days.",
-      select(
-        {
-          class: "settings-select",
-          value: state.threads.autoSettleDays.map((days) => days === null ? "off" : String(days)),
-          onChange: (event) => {
-            const value = (event.target as HTMLSelectElement).value;
-            state.threads.autoSettleDays.set(value === "off" ? null : Number(value));
-            void controller.preferences.saveBehavior();
-          },
+      ui.selectField({
+        value: state.threads.autoSettleDays.map((days) => days === null ? "off" : String(days)),
+        options: [
+          { value: "off", label: "Off" },
+          ...[1, 3, 7, 14, 30].map((days) => ({ value: String(days), label: `After ${days} day${days === 1 ? "" : "s"}` })),
+        ],
+        onChange: (event) => {
+          const value = (event.target as HTMLSelectElement).value;
+          state.threads.autoSettleDays.set(value === "off" ? null : Number(value));
+          void controller.preferences.saveBehavior();
         },
-        option({ value: "off" }, "Off"),
-        option({ value: "1" }, "After 1 day"),
-        option({ value: "3" }, "After 3 days"),
-        option({ value: "7" }, "After 7 days"),
-        option({ value: "14" }, "After 14 days"),
-        option({ value: "30" }, "After 30 days"),
+      }),
+    ),
+    h2("Text generation"),
+    settingRow(
+      ui,
+      "Thread titles",
+      "Model and reasoning used to generate a thread name from its first message.",
+      generationControl(
+        controller,
+        state,
+        ui,
+        {
+          provider: state.titleProvider,
+          model: state.titleModel,
+          reasoning: state.titleReasoning,
+          selectModel: (provider, model) => controller.models.titleSelection(provider, model),
+          selectReasoning: (value) => controller.models.titleReasoning(value),
+        },
+        picker,
       ),
-    ),
-    h2({ class: "settings-section-heading" }, "Text generation"),
-    settingRow(
-      "Provider",
-      "Provider used for generated thread titles and other short application text.",
-      dynamicChild(state.providers, (providers) => select(
-        {
-          class: "settings-select",
-          value: state.titleProvider,
-          onChange: (event) => void controller.models.titleProvider(
-            (event.target as HTMLSelectElement).value,
-          ),
-        },
-        ...providers.map((provider) => option({ value: provider.id }, provider.name)),
-      )),
-    ),
-    settingRow(
-      "Model",
-      "Model used to generate a thread name from its first message.",
-      dynamicChild(titleModels, (models) => select(
-        {
-          class: "settings-select",
-          value: state.titleModel,
-          onChange: (event) => void controller.models.titleModel(
-            (event.target as HTMLSelectElement).value,
-          ),
-        },
-        ...models.map((model) => option({ value: model.slug }, model.name)),
-      )),
-    ),
-    settingRow(
-      "Thinking",
-      "Reasoning effort used for thread-title generation.",
-      dynamicChild(titleModel, (model) => select(
-        {
-          class: "settings-select",
-          value: state.titleReasoning,
-          disabled: !model?.reasoning.length,
-          onChange: (event) => void controller.models.titleReasoning(
-            (event.target as HTMLSelectElement).value,
-          ),
-        },
-        ...(model?.reasoning.length
-          ? model.reasoning.map((item) => option({ value: item.id }, item.label))
-          : [option({ value: "" }, "Not supported")]),
-      )),
     ),
   );
 }

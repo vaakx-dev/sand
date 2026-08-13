@@ -1,5 +1,4 @@
-import { button, div, dynamicChild, icon, span, stop } from "@vaakx-dev/vrui";
-import { ChevronRight } from "lucide";
+import { div, dynamicChild } from "@vaakx-dev/vrui";
 
 import {
   canSettleThread,
@@ -10,6 +9,7 @@ import {
   type AgentThreadSummary,
 } from "@sand/extension-api";
 
+import type { MenuEntry, SandUi } from "sand:api/ui";
 import type { WorkbenchController } from "../../../controller.ts";
 import type { WorkbenchState } from "../../../state.ts";
 import { presets } from "./snooze.ts";
@@ -17,19 +17,36 @@ import { presets } from "./snooze.ts";
 export function contextMenu(
   controller: WorkbenchController,
   state: WorkbenchState,
+  ui: SandUi,
 ): HTMLElement {
   return dynamicChild(state.threads.menu, (menu) => menu
-    ? menuView(controller, state, menu.thread, menu.x, menu.y)
+    ? ui.contextMenu({
+        x: menu.x,
+        y: menu.y,
+        ...(menu.kind === "snooze" ? { width: 192 } : {}),
+        items: menu.kind === "snooze"
+          ? snoozeEntries(controller, menu.thread)
+          : entries(controller, state, menu.thread),
+        onDismiss: () => close(state),
+      })
     : div({ hidden: true }));
 }
 
-function menuView(
+function snoozeEntries(
+  controller: WorkbenchController,
+  thread: AgentThreadSummary,
+): MenuEntry[] {
+  return presets().map((preset) => action(
+    preset.label,
+    () => controller.threads.snooze(thread.id, preset.until),
+  ));
+}
+
+function entries(
   controller: WorkbenchController,
   state: WorkbenchState,
   thread: AgentThreadSummary,
-  x: number,
-  y: number,
-): HTMLElement {
+): MenuEntry[] {
   const now = Date.now();
   const snoozed = isThreadSnoozed(thread, now);
   const settled = isThreadSettled(thread, {
@@ -38,100 +55,60 @@ function menuView(
   });
   const pins = state.threads.items.get().filter((item) => item.pinned).sort(comparePinnedThreads);
   const pinIndex = pins.findIndex((item) => item.id === thread.id);
-  return div(
-    {
-      class: "thread-menu-layer",
-      onPointerDown: () => close(state),
-      onContextMenu: (event) => event.preventDefault(),
-    },
-    div(
-      {
-        class: "thread-menu",
-        style: {
-          left: `${Math.max(6, Math.min(x, window.innerWidth - 370))}px`,
-          top: `${Math.max(6, Math.min(y, window.innerHeight - 250))}px`,
-        },
-        onPointerDown: stop,
-        onPointerLeave: () => state.threads.snoozeOpen.set(false),
-      },
-      menuButton(
-        thread.pinned ? "Unpin thread" : "Pin thread",
-        () => run(state, controller.threads.pin(thread.id, !thread.pinned)),
-      ),
-      pinIndex > 0
-        ? menuButton("Move pinned thread up", () => run(state, controller.threads.movePin(thread.id, "up")))
-        : null,
-      pinIndex >= 0 && pinIndex < pins.length - 1
-        ? menuButton("Move pinned thread down", () => run(state, controller.threads.movePin(thread.id, "down")))
-        : null,
-      canSettleThread(thread, now)
-        ? menuButton(settled ? "Un-settle thread" : "Settle thread", () =>
-            run(state, controller.threads.settle(thread.id, !settled)))
-        : null,
-      snoozed
-        ? menuButton("Wake thread", () => run(state, controller.threads.snooze(thread.id)))
-        : canSnoozeThread(thread, now)
-          ? snoozeControl(controller, state, thread)
-          : null,
-      menuButton("Rename thread", () => {
-        close(state);
-        controller.threads.beginRename(thread);
-      }),
-      menuButton(thread.unread ? "Mark read" : "Mark unread", () =>
-        run(state, controller.threads.setUnread(thread.id, !thread.unread))),
-      div({ class: "thread-menu-divider" }),
-      thread.status === "running"
-        ? null
-        : menuButton(
-            "Delete",
-            () => run(state, controller.threads.delete(thread.id)),
-            "danger",
-          ),
+  return compact([
+    action(
+      thread.pinned ? "Unpin thread" : "Pin thread",
+      () => controller.threads.pin(thread.id, !thread.pinned),
     ),
-  );
-}
-
-function snoozeControl(
-  controller: WorkbenchController,
-  state: WorkbenchState,
-  thread: AgentThreadSummary,
-): HTMLElement {
-  return div(
-    {
-      class: "thread-snooze-wrap",
-      onPointerEnter: () => state.threads.snoozeOpen.set(true),
-    },
-    button(
-      { class: "thread-menu-row", onClick: () => state.threads.snoozeOpen.toggle()() },
-      span("Snooze"),
-      icon(ChevronRight, 13),
-    ),
-    dynamicChild(state.threads.snoozeOpen, (open) => open
-      ? div(
-          { class: "thread-snooze-menu" },
-          ...presets().map((preset) => menuButton(
-            preset.label,
-            () => run(state, controller.threads.snooze(thread.id, preset.until)),
-          )),
+    pinIndex > 0
+      ? action("Move pinned thread up", () => controller.threads.movePin(thread.id, "up"))
+      : null,
+    pinIndex >= 0 && pinIndex < pins.length - 1
+      ? action("Move pinned thread down", () => controller.threads.movePin(thread.id, "down"))
+      : null,
+    canSettleThread(thread, now)
+      ? action(
+          settled ? "Un-settle thread" : "Settle thread",
+          () => controller.threads.settle(thread.id, !settled),
         )
-      : div({ hidden: true })),
-  );
+      : null,
+    snoozed
+      ? action("Wake thread", () => controller.threads.snooze(thread.id))
+      : canSnoozeThread(thread, now)
+        ? {
+            label: "Snooze",
+            children: presets().map((preset) => action(
+              preset.label,
+              () => controller.threads.snooze(thread.id, preset.until),
+            )),
+          }
+        : null,
+    {
+      label: "Rename thread",
+      run: () => controller.threads.beginRename(thread),
+    },
+    action(
+      thread.unread ? "Mark read" : "Mark unread",
+      () => controller.threads.setUnread(thread.id, !thread.unread),
+    ),
+    { separator: true },
+    thread.status === "running"
+      ? null
+      : {
+          ...action("Delete", () => controller.threads.delete(thread.id)),
+          tone: "danger",
+        },
+  ]);
 }
 
-function menuButton(
-  label: string,
-  runAction: () => void,
-  tone = "",
-): HTMLElement {
-  return button({ class: ["thread-menu-row", tone], onClick: runAction }, span(label));
+function action(label: string, run: () => Promise<void>): MenuEntry {
+  return { label, run };
 }
 
-function run(state: WorkbenchState, action: Promise<void>): void {
-  close(state);
-  void action;
+function compact(entries: (MenuEntry | null)[]): MenuEntry[] {
+  return entries.filter((entry): entry is MenuEntry => entry !== null);
 }
 
 function close(state: WorkbenchState): void {
   state.threads.menu.set(null);
-  state.threads.snoozeOpen.set(false);
 }

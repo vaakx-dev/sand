@@ -2,6 +2,7 @@ export { selectProviderOption } from "./agent.ts";
 export type {
   AgentAttempt,
   AgentAttemptReason,
+  AgentContextUsage,
   AgentMessage,
   AgentModelTraits,
   AgentProvider,
@@ -14,6 +15,7 @@ export type {
   AgentProviderPresentation,
   AgentProviderRequest,
   AgentProviderResponse,
+  AgentProviderUsage,
   AgentQueuedTurn,
   AgentRole,
   AgentRun,
@@ -26,6 +28,8 @@ export type {
   AgentToolExecution,
   JournalEvent,
 } from "./agent.ts";
+export { ExtensionApiRegistry } from "./apis.ts";
+export type { ExtensionApis } from "./apis.ts";
 export { acpRuntime } from "./acp.ts";
 export type {
   AcpAgentRecord,
@@ -41,10 +45,12 @@ export type {
 } from "./acp.ts";
 export type {
   ExtensionDescription,
+  ExtensionApiContribution,
   ExtensionManifest,
+  ExtensionTarget,
   ThemeAppearance,
   ThemeContribution,
-  ThemePreview,
+  ThemePalette,
   UiBundle,
 } from "./extension.ts";
 export type {
@@ -108,25 +114,4 @@ export type {
   ThreadSettlementOverride,
   ThreadStatus,
 } from "./thread.ts";
-export type {
-  UiControls,
-  UiCommand,
-  UiCommandRegistry,
-  UiEvent,
-  UiEventRegistry,
-  UiExtension,
-  UiExtensionContext,
-  UiIconButtonOptions,
-  UiIconButtonVariant,
-  UiRegistry,
-  UiReadable,
-  UiSlotContribution,
-  UiSlotRegistry,
-  UiSurfaceContribution,
-  UiSurfaceInstance,
-  UiSurfaceRegistry,
-  UiSurfaceVisibility,
-  UiToolPresentation,
-  UiToolRegistry,
-  UiValue,
-} from "./ui.ts";
+export type { UiExtension, UiExtensionContext } from "./ui.ts";

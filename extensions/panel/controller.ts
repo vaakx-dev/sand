@@ -4,12 +4,11 @@ import {
   numberValue,
   type JsonValue,
   type RuntimeClient,
-  type UiSurfaceContribution,
-  type UiSurfaceRegistry,
 } from "@sand/extension-api";
 
 import { SurfaceVisibility } from "./models.ts";
-import { normalizeWidth, type PanelState } from "./state.ts";
+import { normalizeWidth, PANEL_DEFAULT_WIDTH, type PanelState } from "./state.ts";
+import type { UiSurfaceContribution, UiSurfaceRegistry } from "sand:api/workbench";
 
 export class PanelController {
   constructor(
@@ -20,7 +19,7 @@ export class PanelController {
 
   async initialize(): Promise<void> {
     const settings = await this.runtime.call<Record<string, JsonValue>>("settings.all");
-    this.state.width.set(normalizeWidth(numberValue(settings["panel.width"], 430)));
+    this.state.width.set(normalizeWidth(numberValue(settings["panel.width"], PANEL_DEFAULT_WIDTH)));
     this.updateSurfaces();
   }
 
@@ -131,7 +130,7 @@ export class PanelController {
     void this.runtime.call("settings.set", { key: "panel.width", value: this.state.width.get() });
   }
 
-  private syncVisibility(): void {
+  syncVisibility(): void {
     const visible = this.state.open.get() && !this.state.addOpen.get();
     const activeId = this.state.activeId.get();
     for (const tab of this.state.tabs.get()) {

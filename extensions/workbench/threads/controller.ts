@@ -18,7 +18,7 @@ export class ThreadController {
 
   new(): void {
     clearThread(this.runtime.state);
-    this.runtime.context.ui.events.emit(workbenchEvents.threadChanged, { threadId: null });
+    this.runtime.workbench.events.emit(workbenchEvents.threadChanged, { threadId: null });
   }
 
   async open(id: string): Promise<void> {
@@ -29,7 +29,7 @@ export class ThreadController {
       this.replace(await this.runtime.command<AgentThreadSummary>("threads.visit", {
         threadId: id,
       }));
-      this.runtime.context.ui.events.emit(workbenchEvents.threadChanged, { threadId: id });
+      this.runtime.workbench.events.emit(workbenchEvents.threadChanged, { threadId: id });
     });
   }
 
@@ -115,7 +115,6 @@ export class ThreadController {
         ...(until ? { until } : {}),
       }));
       this.runtime.state.threads.menu.set(null);
-      this.runtime.state.threads.snoozeOpen.set(false);
     });
   }
 

@@ -3,30 +3,93 @@ import {
   div,
   dynamicChild,
   icon,
-  input,
-  option,
-  select,
   span,
 } from "@vaakx-dev/vrui";
 import type { IconNode } from "@vaakx-dev/vrui";
 import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Star } from "lucide";
 
-import type { UiControls } from "@sand/extension-api";
+import type { SandUi } from "sand:api/ui";
 
 import type { WorkbenchController } from "../../controller.ts";
 import type { ProviderDescription, ProviderModel } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { settingRow } from "./shared.ts";
+import { styled } from "sand:api/ui";
+import { tokens } from "sand:api/ui";
+
+const Models = styled(div, { borderTop: "1px solid var(--border)" });
+const Heading = styled(div, {
+  display: "flex",
+  alignItems: "baseline",
+  justifyContent: "space-between",
+  gap: tokens.space.section,
+  padding: `${tokens.space.section}px ${tokens.space.medium}px ${tokens.space.medium}px`,
+});
+const Count = styled(span, { color: "var(--muted)", fontSize: tokens.font.small });
+const ModelList = styled(div, { display: "flex", flexDirection: "column" });
+const ModelRow = styled(div, {
+  minHeight: tokens.size.header,
+  display: "flex",
+  alignItems: "center",
+  gap: tokens.space.medium,
+  borderTop: "1px solid var(--border)",
+  "&[data-hidden=true]": { opacity: 0.55 },
+});
+const ModelCopy = styled(div, {
+  minWidth: 0,
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+  gap: tokens.space.medium,
+  overflow: "hidden",
+});
+const ModelName = styled(button, {
+  minWidth: 0,
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  cursor: "pointer",
+});
+const ModelLabel = styled(span, { color: "var(--text)", fontSize: tokens.font.label });
+const ModelSlug = styled(span, {
+  maxWidth: "100%",
+  overflow: "hidden",
+  color: "var(--muted)",
+  font: `${tokens.font.caption}px var(--mono)`,
+  textOverflow: "ellipsis",
+});
+const HiddenLabel = styled(span, {
+  color: "var(--muted)",
+  fontSize: tokens.font.caption,
+  textTransform: "uppercase",
+  letterSpacing: "var(--tracking-wide)",
+});
+const ModelActions = styled(div, {
+  flex: "0 0 auto",
+  display: "grid",
+  gridTemplateColumns: `repeat(4, ${tokens.size.control}px)`,
+  gap: tokens.space.compact,
+});
+const AddRow = styled(div, {
+  minWidth: 0,
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: tokens.space.medium,
+  paddingTop: tokens.space.large,
+});
 
 export function providerModels(
   controller: WorkbenchController,
   state: WorkbenchState,
-  controls: UiControls,
+  controls: SandUi,
   provider: ProviderDescription,
 ): HTMLElement {
-  return div(
-    { class: "provider-models" },
+  return Models(
+    {},
     settingRow(
+      controls,
       "New thread model",
       "Model selected when this provider becomes active.",
       dynamicChild(state.providerModels, (catalog) => {
@@ -34,24 +97,21 @@ export function providerModels(
         const selected = state.provider.get() === provider.id
           ? state.model.get()
           : models[0]?.slug || provider.defaultModel;
-        return select(
-          {
-            class: "settings-select",
+        return controls.selectField({
             value: selected,
+            options: models.map((model) => ({ value: model.slug, label: model.name })),
             onChange: (event) => void controller.selection.select(
               provider.id,
               (event.target as HTMLSelectElement).value,
             ),
-          },
-          ...models.map((model) => option({ value: model.slug }, model.name)),
-        );
+          });
       }),
     ),
-    div(
-      { class: "provider-model-heading" },
-      span({ class: "setting-title" }, "Models"),
-      span(
-        { class: "setting-description" },
+    Heading(
+      {},
+      span("Models"),
+      Count(
+        {},
         state.providerModels.map((catalog) => modelCount(catalog[provider.id] ?? [])),
       ),
     ),
@@ -61,39 +121,37 @@ export function providerModels(
       provider.id,
       catalog[provider.id] ?? [],
     )),
-    modelAdd(controller, state, provider),
+    modelAdd(controller, state, controls, provider),
   );
 }
 
 function modelList(
   controller: WorkbenchController,
-  controls: UiControls,
+  controls: SandUi,
   provider: string,
   models: ProviderModel[],
 ): HTMLElement {
-  return div(
-    { class: "provider-model-list" },
-    ...models.map((model, index) => div(
-      { class: ["provider-model-row", { hidden: model.hidden }] },
-      div(
-        { class: "provider-model-copy" },
-        button(
+  return ModelList(
+    {},
+    ...models.map((model, index) => ModelRow(
+      { "data-hidden": model.hidden },
+      ModelCopy(
+        {},
+        ModelName(
           {
-            class: "provider-model-name",
             onClick: () => void controller.selection.select(provider, model.slug),
           },
-          span({ class: "provider-model-label" }, model.name),
-          span({ class: "provider-model-slug" }, model.slug),
+          ModelLabel({}, model.name),
+          ModelSlug({}, model.slug),
         ),
-        model.hidden ? span({ class: "model-hidden-label" }, "Hidden") : null,
+        model.hidden ? HiddenLabel({}, "Hidden") : null,
       ),
-      div(
-        { class: "provider-model-actions" },
+      ModelActions(
+        {},
         ...modelActions(controller, provider, model, index, models.length).map((action) =>
           controls.iconButton({
             label: action.label,
             variant: "dense",
-            className: "model-action",
             selected: action.selected,
             disabled: action.disabled,
             renderIcon: (size) => icon(action.icon, size),
@@ -150,13 +208,13 @@ function modelActions(
 function modelAdd(
   controller: WorkbenchController,
   state: WorkbenchState,
+  controls: SandUi,
   provider: ProviderDescription,
 ): HTMLElement {
   const value = state.providerModelInputs.map((inputs) => inputs[provider.id] ?? "");
-  return div(
-    { class: "model-add-row" },
-    input({
-      class: "model-slug-input",
+  return AddRow(
+    {},
+    controls.textField({
       value,
       placeholder: "Model slug",
       "aria-label": `Add a model to ${provider.name}`,
@@ -170,13 +228,12 @@ function modelAdd(
         void controller.models.add(provider.id);
       },
     }),
-    button(
+    controls.button(
       {
-        class: "secondary-button model-add-button",
         disabled: value.map((slug) => !slug.trim()),
         onClick: () => void controller.models.add(provider.id),
       },
-      icon(Plus, 13),
+      icon(Plus, controls.tokens.size.iconCompact),
       "Add",
     ),
   );

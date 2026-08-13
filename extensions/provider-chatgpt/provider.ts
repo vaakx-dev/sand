@@ -2,11 +2,13 @@ import type {
   AgentModelTraits,
   AgentProvider,
   AgentProviderRequest,
+  AgentProviderResponse,
 } from "@sand/extension-api";
 
 import type { ChatGptAuth } from "./auth.ts";
 import {
   CHATGPT_DEFAULT_MODEL,
+  CHATGPT_CONTEXT_WINDOW,
   CHATGPT_MODEL_DEFAULTS,
   CHATGPT_MODELS,
 } from "./models.ts";
@@ -26,7 +28,7 @@ export class ChatGptProvider implements AgentProvider {
 
   constructor(private readonly auth: ChatGptAuth) {}
 
-  async complete(request: AgentProviderRequest) {
+  async complete(request: AgentProviderRequest): Promise<AgentProviderResponse> {
     const credential = await this.auth.credentials(request.signal);
     const headers: Record<string, string> = {
       Authorization: `Bearer ${credential.access}`,
@@ -48,7 +50,14 @@ export class ChatGptProvider implements AgentProvider {
     if (!response.ok) {
       throw new Error(`ChatGPT returned ${response.status}: ${await response.text()}`);
     }
-    return readStream(response, request);
+    const { usage, ...result } = await readStream(response, request);
+    if (!usage) return result;
+    const maxContextTokens = this.models.find((model) => model.slug === request.model)?.contextWindow
+      ?? CHATGPT_CONTEXT_WINDOW;
+    return {
+      ...result,
+      usage: { ...usage, maxContextTokens },
+    };
   }
 
   private traits(model: string): AgentModelTraits {

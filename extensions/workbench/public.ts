@@ -1,0 +1,22 @@
+export type {
+  UiCommand,
+  UiCommandRegistry,
+  UiEvent,
+  UiEventRegistry,
+  UiSlotContribution,
+  UiSlotRegistry,
+  UiSurfaceContribution,
+  UiSurfaceInstance,
+  UiSurfaceRegistry,
+  UiSurfaceVisibility,
+  UiToolPresentation,
+  UiToolRegistry,
+  WorkbenchService,
+} from "./api.ts";
+export {
+  useWorkbench,
+  WORKBENCH_API,
+  workbenchCommands,
+  workbenchEvents,
+  workbenchSlots,
+} from "./api.ts";

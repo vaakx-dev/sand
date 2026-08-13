@@ -3,6 +3,7 @@
   "name": "Write Tool",
   "version": "0.0.1",
   "description": "file writer",
+  "uses": ["workbench"],
   "main": "./main.ts",
   "ui": "./ui.ts"
 }

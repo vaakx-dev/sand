@@ -1,4 +1,4 @@
-import type { UiEventRegistry } from "@sand/extension-api";
+import type { UiEventRegistry } from "../api.ts";
 
 import { workbenchEvents } from "../api.ts";
 import type { Activity } from "../models.ts";

@@ -1,60 +1,62 @@
-import { button, icon, show } from "@vaakx-dev/vrui";
+import { icon, show } from "@vaakx-dev/vrui";
 import { GitBranch, GitCompare, RefreshCw } from "lucide";
 
 import type { UiExtension } from "@sand/extension-api";
 
-import { workbenchSlots } from "../workbench/api.ts";
+import { useUi } from "sand:api/ui";
+import { useWorkbench, workbenchSlots } from "sand:api/workbench";
 import { GitController } from "./controller.ts";
 import { createGitState } from "./state.ts";
 import { changesView } from "./view.ts";
 
 const extension: UiExtension = {
   async activate(context) {
+    const ui = useUi(context.apis);
+    const workbench = useWorkbench(context.apis);
     const state = createGitState();
-    const controller = new GitController(context.runtime, context.ui.surfaces, state);
+    const controller = new GitController(context.runtime, workbench.surfaces, state);
 
-    context.ui.slots.register({
+    workbench.slots.register({
       id: "git.initialize",
       slot: workbenchSlots.topbarActions,
       order: 10,
-      node: show(state.repository.map((repository) => !repository), () => button(
+      node: show(state.repository.map((repository) => !repository), () => ui.button(
         {
-          class: "top-action",
-          "data-tooltip": "Initialize Git",
+          variant: "toolbar",
           onClick: () => void controller.initialize(),
         },
-        icon(GitBranch, 13),
+        icon(GitBranch, ui.tokens.size.iconCompact),
         "Initialize Git",
       )),
     });
-    context.ui.surfaces.register({
+    workbench.surfaces.register({
       id: "changes",
       label: "Diff",
       description: "Review workspace changes.",
       order: 40,
       available: () => controller.available(),
       renderIcon: (size) => icon(GitCompare, size),
-      renderActions: () => context.ui.controls.iconButton({
+      renderActions: () => ui.iconButton({
         label: "Refresh changes",
         renderIcon: (size) => icon(RefreshCw, size),
         onClick: () => void controller.refresh(),
       }),
       render: () => changesView(state),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "changes.show",
       label: "View: Changes",
       keybinding: "Ctrl+Shift+G",
-      run: () => context.ui.surfaces.open("changes"),
+      run: () => workbench.surfaces.open("changes"),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "git.initialize",
       label: "Git: Initialize Repository",
       run: () => controller.initialize(),
     });
     context.runtime.subscribe((event) => controller.onRuntimeEvent(event));
     context.runtime.subscribeWorkspace(() => controller.onWorkspaceSelected());
-    context.ui.events.subscribe((event) => controller.onUiEvent(event));
+    workbench.events.subscribe((event) => controller.onUiEvent(event));
     await controller.refresh();
   },
 };

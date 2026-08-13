@@ -7,47 +7,62 @@ import { div, effect, onRaf } from "@vaakx-dev/vrui";
 import type { FilesController } from "../controller.ts";
 import { languageFor, syntaxTheme } from "./languages.ts";
 import type { FilesState } from "../state.ts";
+import { styled } from "sand:api/ui";
+import { tokens } from "sand:api/ui";
+
+const CodeEditor = styled(div, {
+  minWidth: 0,
+  minHeight: 0,
+  flex: 1,
+  overflow: "hidden",
+  background: "var(--background)",
+  "& .cm-selectionBackground": { background: "var(--elevated) !important" },
+  "& .cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground": {
+    background: "var(--elevated) !important",
+  },
+  "& .cm-content ::selection": { color: "inherit", background: "var(--elevated)" },
+});
 
 const editorTheme = EditorView.theme({
   "&": {
     width: "100%",
     height: "100%",
     color: "var(--text)",
-    backgroundColor: "var(--bg)",
-    fontSize: "11.5px",
+    backgroundColor: "var(--background)",
+    fontSize: `${tokens.font.small}px`,
   },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
     fontFamily: "var(--mono)",
-    lineHeight: "1.6",
+    lineHeight: "var(--line-content)",
     overflow: "auto",
   },
   ".cm-content": {
     minHeight: "100%",
-    padding: "12px 0 80px",
+    padding: `${tokens.space.large}px 0 ${tokens.size.header * 2}px`,
     caretColor: "var(--text)",
   },
-  ".cm-line": { padding: "0 18px" },
+  ".cm-line": { padding: `0 ${tokens.space.section}px` },
   ".cm-gutters": {
-    color: "var(--faint)",
-    backgroundColor: "var(--bg)",
+    color: "var(--muted)",
+    backgroundColor: "var(--background)",
     borderRight: "1px solid var(--border)",
-    paddingTop: "12px",
+    paddingTop: `${tokens.space.large}px`,
   },
   ".cm-lineNumbers .cm-gutterElement": {
-    minWidth: "47px",
-    padding: "0 10px 0 6px",
+    minWidth: `${tokens.size.headerLarge}px`,
+    padding: `0 ${tokens.space.large}px 0 ${tokens.space.small}px`,
   },
   ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "var(--surface)" },
   ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-    backgroundColor: "var(--editor-selection)",
+    backgroundColor: "var(--elevated)",
   },
   ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--text)" },
-  ".cm-panels": { color: "var(--text)", backgroundColor: "var(--surface-2)" },
+  ".cm-panels": { color: "var(--text)", backgroundColor: "var(--elevated)" },
   ".cm-searchMatch": { backgroundColor: "color-mix(in srgb, var(--warning) 35%, transparent)" },
-  ".cm-searchMatch.cm-searchMatch-selected": { backgroundColor: "var(--accent-bg)" },
-  ".cm-tooltip": { border: "1px solid var(--border-strong)", backgroundColor: "var(--surface-2)" },
-  ".cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "var(--control-selected-bg)" },
+  ".cm-searchMatch.cm-searchMatch-selected": { backgroundColor: "var(--elevated)" },
+  ".cm-tooltip": { border: "1px solid var(--border)", backgroundColor: "var(--elevated)" },
+  ".cm-tooltip-autocomplete > ul > li[aria-selected]": { backgroundColor: "var(--elevated)" },
 });
 
 export function sourceEditor(
@@ -55,8 +70,7 @@ export function sourceEditor(
   state: FilesState,
   path: string,
 ): HTMLElement {
-  return div({
-    class: "file-code",
+  return CodeEditor({
     onMount: (element) => mountEditor(element, controller, state, path),
   });
 }

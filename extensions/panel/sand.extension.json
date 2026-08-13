@@ -3,6 +3,6 @@
   "name": "Sand Panel",
   "version": "0.0.1",
   "description": "Generic extension surface panel",
-  "ui": "./ui.ts",
-  "styles": ["./panel.css"]
+  "uses": ["ui", "workbench"],
+  "ui": "./ui.ts"
 }

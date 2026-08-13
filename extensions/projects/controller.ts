@@ -1,14 +1,13 @@
 import {
   errorMessage,
   type RuntimeClient,
-  type UiEventRegistry,
   type WorkspaceDescription,
 } from "@sand/extension-api";
 
 import { commands, type PickerIntent, type Project } from "./api.ts";
 import { cleanPath, samePath } from "./path.ts";
 import type { ProjectsState } from "./state.ts";
-import { workbenchEvents } from "../workbench/api.ts";
+import { workbenchEvents, type UiEventRegistry } from "sand:api/workbench";
 
 export class ProjectsController {
   constructor(

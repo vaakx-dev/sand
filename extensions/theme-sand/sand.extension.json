@@ -2,55 +2,167 @@
   "id": "sand.theme.defaults",
   "name": "Sand Themes",
   "version": "0.0.1",
-  "description": "built-in themes implemented as a CSS-only extension",
-  "styles": [
-    "./foundation/theme.css",
-    "./foundation/scrollbars.css",
-    "./foundation/controls.css",
-    "./shell/layout.css",
-    "./shell/chrome.css",
-    "./sidebar/threads.css",
-    "./sidebar/navigation.css",
-    "./sidebar/extensions.css",
-    "./agent/conversation.css",
-    "./agent/composer.css",
-    "./overlays/common.css",
-    "./settings/layout.css",
-    "./settings/providers.css",
-    "./settings/system.css",
-    "./settings/appearance.css",
-    "./shell/responsive.css"
-  ],
+  "description": "Built-in theme palettes.",
   "themes": [
     {
       "id": "sand",
       "label": "Sand",
-      "dark": { "canvas": "#0f0f10", "sidebar": "#151516", "surface": "#1d1d20", "text": "#dedee2", "accent": "#f0f0f2" },
-      "light": { "canvas": "#f7f7f8", "sidebar": "#eeeeef", "surface": "#ffffff", "text": "#202024", "accent": "#4f4f57" }
+      "dark": {
+        "background": "#050505",
+        "panel": "#121212",
+        "surface": "#1c1c1c",
+        "elevated": "#262626",
+        "border": "#1a1a1a",
+        "outline": "#2a2a2a",
+        "text": "#e6e6e6",
+        "muted": "#9a9a9a",
+        "accent": "#ffffff",
+        "danger": "#df7b82",
+        "warning": "#d9aa5f",
+        "success": "#75b587"
+      },
+      "light": {
+        "background": "#ffffff",
+        "panel": "#f7f7f7",
+        "surface": "#eeeeee",
+        "elevated": "#e4e4e4",
+        "border": "#e8e8e8",
+        "outline": "#d6d6d6",
+        "text": "#202020",
+        "muted": "#737373",
+        "accent": "#3f3f46",
+        "danger": "#b94f59",
+        "warning": "#9a6b22",
+        "success": "#397b4e"
+      }
     },
     {
       "id": "grove",
       "label": "Grove",
-      "dark": { "canvas": "#0d1210", "sidebar": "#111914", "surface": "#18221c", "text": "#dbe6de", "accent": "#75b587" },
-      "light": { "canvas": "#f4f7f3", "sidebar": "#e8eee8", "surface": "#ffffff", "text": "#243127", "accent": "#397b4e" }
+      "dark": {
+        "background": "#050505",
+        "panel": "#101a13",
+        "surface": "#17241b",
+        "elevated": "#223127",
+        "border": "#17211a",
+        "outline": "#2c3b31",
+        "text": "#dbe6de",
+        "muted": "#96a69d",
+        "accent": "#75b587",
+        "danger": "#df7b82",
+        "warning": "#d9aa5f",
+        "success": "#75b587"
+      },
+      "light": {
+        "background": "#ffffff",
+        "panel": "#f4f7f3",
+        "surface": "#e8eee8",
+        "elevated": "#dde7de",
+        "border": "#e2e8e2",
+        "outline": "#cbd6cc",
+        "text": "#243127",
+        "muted": "#607065",
+        "accent": "#397b4e",
+        "danger": "#b94f59",
+        "warning": "#9a6b22",
+        "success": "#397b4e"
+      }
     },
     {
       "id": "ocean",
       "label": "Ocean",
-      "dark": { "canvas": "#0b1016", "sidebar": "#101822", "surface": "#172333", "text": "#d8e4ef", "accent": "#5aa9ec" },
-      "light": { "canvas": "#f2f7fb", "sidebar": "#e6eff7", "surface": "#ffffff", "text": "#1f3040", "accent": "#2776b8" }
+      "dark": {
+        "background": "#050505",
+        "panel": "#0d1721",
+        "surface": "#142335",
+        "elevated": "#20334a",
+        "border": "#152535",
+        "outline": "#2d4358",
+        "text": "#d8e4ef",
+        "muted": "#95a7b8",
+        "accent": "#5aa9ec",
+        "danger": "#df7b82",
+        "warning": "#d9aa5f",
+        "success": "#75b587"
+      },
+      "light": {
+        "background": "#ffffff",
+        "panel": "#f2f7fb",
+        "surface": "#e6eff7",
+        "elevated": "#dce9f3",
+        "border": "#e1ebf3",
+        "outline": "#c6d7e5",
+        "text": "#1f3040",
+        "muted": "#607487",
+        "accent": "#2776b8",
+        "danger": "#b94f59",
+        "warning": "#9a6b22",
+        "success": "#397b4e"
+      }
     },
     {
       "id": "ember",
       "label": "Ember",
-      "dark": { "canvas": "#15100e", "sidebar": "#1c1411", "surface": "#271b17", "text": "#ecdfd7", "accent": "#e17a52" },
-      "light": { "canvas": "#faf5f1", "sidebar": "#f2e8e1", "surface": "#ffffff", "text": "#3c2921", "accent": "#bd5836" }
+      "dark": {
+        "background": "#050505",
+        "panel": "#180e0a",
+        "surface": "#24150f",
+        "elevated": "#332019",
+        "border": "#291a13",
+        "outline": "#4b3329",
+        "text": "#ecdfd7",
+        "muted": "#b09a8e",
+        "accent": "#e17a52",
+        "danger": "#df7b82",
+        "warning": "#d9aa5f",
+        "success": "#75b587"
+      },
+      "light": {
+        "background": "#ffffff",
+        "panel": "#faf5f1",
+        "surface": "#f2e8e1",
+        "elevated": "#eadbd2",
+        "border": "#efe4dd",
+        "outline": "#ddcbc1",
+        "text": "#3c2921",
+        "muted": "#79645a",
+        "accent": "#bd5836",
+        "danger": "#b94f59",
+        "warning": "#9a6b22",
+        "success": "#397b4e"
+      }
     },
     {
       "id": "iris",
       "label": "Iris",
-      "dark": { "canvas": "#110f17", "sidebar": "#181421", "surface": "#211b2d", "text": "#e5deed", "accent": "#a986d8" },
-      "light": { "canvas": "#f8f4fb", "sidebar": "#eee7f4", "surface": "#ffffff", "text": "#33283d", "accent": "#7652a4" }
+      "dark": {
+        "background": "#050505",
+        "panel": "#150f1c",
+        "surface": "#21172b",
+        "elevated": "#30223f",
+        "border": "#241b2e",
+        "outline": "#42334f",
+        "text": "#e5deed",
+        "muted": "#a899b5",
+        "accent": "#a986d8",
+        "danger": "#df7b82",
+        "warning": "#d9aa5f",
+        "success": "#75b587"
+      },
+      "light": {
+        "background": "#ffffff",
+        "panel": "#f8f4fb",
+        "surface": "#eee7f4",
+        "elevated": "#e6daee",
+        "border": "#ebe3f0",
+        "outline": "#d6c9df",
+        "text": "#33283d",
+        "muted": "#71637c",
+        "accent": "#7652a4",
+        "danger": "#b94f59",
+        "warning": "#9a6b22",
+        "success": "#397b4e"
+      }
     }
   ]
 }

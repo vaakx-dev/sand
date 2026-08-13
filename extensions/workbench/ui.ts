@@ -1,48 +1,56 @@
 import { errorMessage, type UiExtension } from "@sand/extension-api";
 
 import { WorkbenchController } from "./controller.ts";
-import { workbenchEvents } from "./api.ts";
+import {
+  WORKBENCH_API,
+  workbenchEvents,
+} from "./api.ts";
 import { createState } from "./state.ts";
+import { createWorkbenchService } from "./services/index.ts";
 import { shell } from "./views/shell.ts";
+import { useUi } from "sand:api/ui";
 
 const extension: UiExtension = {
   async activate(context) {
+    const ui = useUi(context.apis);
+    const workbench = createWorkbenchService();
+    context.apis.provide(WORKBENCH_API, workbench);
     const state = createState();
-    const controller = new WorkbenchController(context, state);
+    const controller = new WorkbenchController(context, workbench, state);
 
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "workbench.sidebar",
       label: "View: Toggle Sidebar",
       keybinding: "Ctrl+B",
       run: () => controller.toggleSidebar(),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "workbench.threads",
       label: "View: Threads",
       run: () => controller.navigation.show("threads"),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "workbench.extensions",
       label: "View: Extensions",
       run: () => controller.navigation.show("extensions"),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "workbench.settings",
       label: "View: Settings",
       run: () => controller.navigation.show("settings"),
     });
-    context.ui.commands.register({
+    workbench.commands.register({
       id: "extensions.reload",
       label: "Extensions: Reload Host and UI",
       run: () => controller.preferences.reloadExtensions(),
     });
 
-    state.commands.set(context.ui.commands.list());
-    context.ui.commands.subscribe(() => state.commands.set(context.ui.commands.list()));
-    context.ui.events.subscribe((event) => {
+    state.commands.set(workbench.commands.list());
+    workbench.commands.subscribe(() => state.commands.set(workbench.commands.list()));
+    workbench.events.subscribe((event) => {
       if (event.kind === workbenchEvents.newThreadSelected) controller.threads.new();
     });
-    context.ui.mount(shell(controller, state, context.ui));
+    context.mount(shell(controller, state, ui, workbench));
 
     try {
       await controller.initialize();

@@ -1,7 +1,0 @@
-@media (max-width: 1050px) {
-  .top-action { width: 28px; padding: 0; justify-content: center; font-size: 0; }
-  .top-action .vrui-icon { font-size: initial; }
-  .composer-chip { font-size: 0; }
-  .setting-row { grid-template-columns: 1fr; gap: 8px; }
-  .setting-control { justify-content: flex-start; }
-}

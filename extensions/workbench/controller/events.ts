@@ -75,7 +75,7 @@ export class WorkbenchEvents {
     state.root.set(this.runtime.context.runtime.workspace().path);
     try {
       await initializeWorkbench(this.runtime);
-      this.runtime.context.ui.events.emit(workbenchEvents.threadChanged, { threadId: null });
+      this.runtime.workbench.events.emit(workbenchEvents.threadChanged, { threadId: null });
     } catch (error) {
       this.runtime.notice(errorMessage(error));
     }
@@ -114,6 +114,7 @@ export class WorkbenchEvents {
     upsertThread(state.threads, summary);
     if (state.threads.current.get() === summary.id) {
       state.threads.queue.set(summary.queuedTurns ?? []);
+      state.threads.contextUsage.set(summary.contextUsage ?? null);
     }
   }
 

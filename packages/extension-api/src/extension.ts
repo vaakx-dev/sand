@@ -1,18 +1,32 @@
 export type ThemeAppearance = "light" | "dark";
 
-export interface ThemePreview {
-  canvas: string;
-  sidebar: string;
+export interface ThemePalette {
+  background: string;
+  panel: string;
   surface: string;
+  elevated: string;
+  border: string;
+  outline: string;
   text: string;
+  muted: string;
   accent: string;
+  danger: string;
+  warning: string;
+  success: string;
 }
 
 export interface ThemeContribution {
   id: string;
   label: string;
-  light?: ThemePreview;
-  dark?: ThemePreview;
+  light?: ThemePalette;
+  dark?: ThemePalette;
+}
+
+export type ExtensionTarget = "host" | "ui";
+
+export interface ExtensionApiContribution {
+  target: ExtensionTarget;
+  module: string;
 }
 
 export interface ExtensionManifest {
@@ -20,10 +34,10 @@ export interface ExtensionManifest {
   name: string;
   version: string;
   description?: string;
-  requires?: string[];
+  uses?: string[];
+  provides?: Record<string, ExtensionApiContribution>;
   main?: string;
   ui?: string;
-  styles?: string[];
   themes?: ThemeContribution[];
 }
 
@@ -39,6 +53,7 @@ export interface ExtensionDescription extends ExtensionManifest {
 
 export interface UiBundle {
   manifest: ExtensionManifest;
-  source?: string;
-  styles: string[];
+  source: string;
+  bindings: Record<string, string>;
+  provided: string[];
 }

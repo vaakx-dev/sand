@@ -8,40 +8,73 @@ import {
   snoozeWakeLabel,
   threadStatus,
   type AgentThreadSummary,
-  type UiControls,
 } from "@sand/extension-api";
-
+import type { SandUi } from "sand:api/ui";
+import { styled } from "sand:api/ui";
 import type { WorkbenchController } from "../../../controller.ts";
 import { findProvider } from "../../../modelCatalog.ts";
 import type { WorkbenchState } from "../../../state.ts";
 import { projectName, relativeTime } from "../../format.ts";
 import { providerIcon } from "../../shared/providerIcon.ts";
-import { presets } from "./snooze.ts";
-import { modelLabel, rowLabel } from "./status.ts";
+import { rowLabel } from "./status.ts";
+
+const Content = styled(div, { minWidth: 0, display: "flex", flexDirection: "column", gap: "var(--space-small)" });
+const Top = styled(div, { height: "var(--icon-tiny)", display: "flex", alignItems: "center", gap: "var(--space-small)", color: "var(--muted)" });
+const Project = styled(span, { minWidth: 0, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "var(--font-caption)" });
+const Title = styled(span, { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "var(--font-label)", fontWeight: "var(--weight-semibold)" });
+const SlimTitle = styled(Title, { flex: 1, color: "inherit", fontWeight: "var(--weight-medium)" });
+const Meta = styled(div, { minWidth: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", color: "var(--muted)" });
+const Status = styled(span, {
+  minWidth: 0,
+  marginLeft: "auto",
+  overflow: "hidden",
+  color: "var(--muted)",
+  fontSize: "var(--font-caption)",
+  fontWeight: "var(--weight-semibold)",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  "&[data-status=working]": { color: "var(--accent)" },
+  "&[data-status=approval], &[data-status=input]": { color: "var(--warning)" },
+  "&[data-status=failed]": { color: "var(--danger)" },
+  "&[data-status=monitoring]": { color: "var(--accent)" },
+});
+const RowActions = styled(span, {
+  position: "absolute",
+  top: 0,
+  right: 0,
+  height: "var(--control-height)",
+  display: "none",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "var(--space-compact)",
+  background: "var(--surface)",
+  "> button:not(:disabled):hover": { background: "transparent" },
+});
+const Slim = styled(div, { minWidth: 0, display: "flex", alignItems: "center", gap: "var(--space-small)", color: "var(--muted)" });
+const Time = styled(span, { minWidth: 0, marginLeft: "auto", overflow: "hidden", fontSize: "var(--font-caption)", textOverflow: "ellipsis", whiteSpace: "nowrap" });
 
 export function slimContent(
   controller: WorkbenchController,
-  controls: UiControls,
+  ui: SandUi,
   thread: AgentThreadSummary,
   section: "snoozed" | "settled",
   clock: Sig<number>,
 ): HTMLElement {
-  return div(
-    { class: "thread-slim-row" },
-    icon(MessageSquare, 13),
-    span({ class: "thread-title" }, thread.title),
-    span(
-      { class: "thread-row-slot" },
-      span(
-        { class: "thread-time" },
-        clock.map((now) => section === "snoozed" && thread.snoozedUntil
-          ? snoozeWakeLabel(thread.snoozedUntil, now)
-          : relativeTime(settledTimestamp(thread), now)),
-      ),
-      controls.iconButton({
+  return Slim(
+    { "data-role": "slim" },
+    icon(MessageSquare, ui.tokens.size.iconTiny),
+    SlimTitle({ "data-role": "title" }, thread.title),
+    Time(
+      { "data-role": "time" },
+      clock.map((now) => section === "snoozed" && thread.snoozedUntil
+        ? snoozeWakeLabel(thread.snoozedUntil, now)
+        : relativeTime(settledTimestamp(thread), now)),
+    ),
+    RowActions(
+      { "data-role": "actions" },
+      ui.iconButton({
         label: section === "snoozed" ? "Wake thread now" : "Un-settle thread",
-        variant: "compact",
-        className: "thread-row-action",
+        variant: "dense",
         renderIcon: (size) => icon(section === "snoozed" ? AlarmClockOff : Undo2, size),
         onClick: stopThen(() => section === "snoozed"
           ? void controller.threads.snooze(thread.id)
@@ -54,7 +87,7 @@ export function slimContent(
 export function fullContent(
   controller: WorkbenchController,
   state: WorkbenchState,
-  controls: UiControls,
+  ui: SandUi,
   thread: AgentThreadSummary,
   section: "pinned" | "active",
   clock: Sig<number>,
@@ -62,60 +95,61 @@ export function fullContent(
   const now = Date.now();
   const canSettle = canSettleThread(thread, now);
   const canSnooze = canSnoozeThread(thread, now);
-  return div(
-    { class: "thread-card-content" },
-    div(
-      { class: "thread-card-top" },
-      icon(Folder, 12),
-      span({ class: "thread-project" }, state.root.map(projectName)),
-      section === "pinned"
-        ? controls.iconButton({
-            label: "Unpin thread",
-            variant: "compact",
-            className: "thread-pin-state",
-            renderIcon: (size) => icon(Pin, size),
-            onClick: stopThen(() => void controller.threads.pin(thread.id, false)),
-          })
-        : null,
-      span(
-        { class: ["thread-row-slot", { actionable: canSettle || canSnooze }] },
-        span(
-          { class: ["thread-status-label", threadStatus(thread)] },
-          clock.map((value) => rowLabel(thread, value)),
-        ),
-        canSettle || canSnooze
-          ? span(
-              { class: "thread-row-actions" },
-              canSnooze
-                ? controls.iconButton({
-                    label: "Snooze for 1 hour",
-                    variant: "compact",
-                    className: "thread-row-action",
-                    renderIcon: (size) => icon(Clock3, size),
-                    onClick: stopThen(() => void controller.threads.snooze(
-                      thread.id,
-                      presets()[0]?.until,
-                    )),
-                  })
-                : null,
-              canSettle
-                ? controls.iconButton({
-                    label: "Settle thread",
-                    variant: "compact",
-                    className: "thread-row-action",
-                    renderIcon: (size) => icon(Check, size),
-                    onClick: stopThen(() => void controller.threads.settle(thread.id, true)),
-                  })
-                : null,
-            )
-          : null,
+  return Content(
+    {},
+    Top(
+      {},
+      icon(Folder, ui.tokens.size.iconTiny),
+      Project({}, state.root.map(projectName)),
+      Status(
+        {
+          "data-role": "status",
+          "data-status": threadStatus(thread),
+          "data-actionable": section === "pinned" || canSettle || canSnooze,
+        },
+        clock.map((value) => rowLabel(thread, value)),
       ),
     ),
-    span({ class: "thread-title" }, thread.title),
-    div(
-      { class: "thread-meta" },
-      span(modelLabel(state, thread)),
-      providerIcon(findProvider(state.providers.get(), thread.provider), 12),
-    ),
+    Title({ "data-role": "title" }, thread.title),
+    Meta({}, providerIcon(findProvider(state.providers.get(), thread.provider), ui.tokens.size.iconTiny)),
+    section === "pinned" || canSettle || canSnooze
+      ? RowActions(
+          { "data-role": "actions" },
+          section === "pinned"
+            ? ui.iconButton({
+                label: "Unpin thread",
+                variant: "dense",
+                renderIcon: (size) => icon(Pin, size),
+                onClick: stopThen(() => void controller.threads.pin(thread.id, false)),
+              })
+            : null,
+          canSnooze
+            ? ui.iconButton({
+                label: "Snooze thread",
+                variant: "dense",
+                renderIcon: (size) => icon(Clock3, size),
+                onClick: (event) => {
+                  event.stopPropagation();
+                  const bounds = (event.currentTarget as HTMLElement).getBoundingClientRect();
+                  state.threads.preview.set(null);
+                  state.threads.menu.set({
+                    kind: "snooze",
+                    thread,
+                    x: bounds.right + ui.tokens.space.compact,
+                    y: bounds.top,
+                  });
+                },
+              })
+            : null,
+          canSettle
+            ? ui.iconButton({
+                label: "Settle thread",
+                variant: "dense",
+                renderIcon: (size) => icon(Check, size),
+                onClick: stopThen(() => void controller.threads.settle(thread.id, true)),
+              })
+            : null,
+        )
+      : null,
   );
 }

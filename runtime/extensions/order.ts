@@ -3,11 +3,16 @@ import type { Loaded } from "./discovery.ts";
 interface Result {
   ordered: Loaded[];
   errors: Map<string, string>;
+  providers: Map<string, Loaded>;
 }
 
-export function order(extensions: Map<string, Loaded>): Result {
+export function order(
+  extensions: Map<string, Loaded>,
+  selections: ReadonlyMap<string, string> = new Map(),
+): Result {
   const ordered: Loaded[] = [];
   const errors = new Map<string, string>();
+  const providers = apiProviders(extensions, selections, errors);
   const states = new Map<string, "visiting" | "complete">();
   const stack: string[] = [];
 
@@ -22,15 +27,12 @@ export function order(extensions: Map<string, Loaded>): Result {
       return false;
     }
 
-    const requirements = extension.manifest.requires ?? [];
-    const missing = requirements.filter((required) => {
-      const dependency = extensions.get(required);
-      return !dependency || !dependency.enabled;
-    });
+    const requirements = extension.manifest.uses ?? [];
+    const missing = requirements.filter((required) => !providers.has(required));
     if (missing.length) {
       errors.set(
         id,
-        `missing required extension${missing.length === 1 ? "" : "s"}: ${missing.join(", ")}`,
+        `missing required API${missing.length === 1 ? "" : "s"}: ${missing.join(", ")}`,
       );
       return false;
     }
@@ -38,8 +40,8 @@ export function order(extensions: Map<string, Loaded>): Result {
     states.set(id, "visiting");
     stack.push(id);
     for (const required of requirements) {
-      if (visit(extensions.get(required)!)) continue;
-      if (!errors.has(id)) errors.set(id, `required extension unavailable: ${required}`);
+      if (visit(providers.get(required)!)) continue;
+      if (!errors.has(id)) errors.set(id, `required API unavailable: ${required}`);
       stack.pop();
       states.set(id, "complete");
       return false;
@@ -51,7 +53,55 @@ export function order(extensions: Map<string, Loaded>): Result {
   };
 
   for (const extension of extensions.values()) {
-    if (extension.enabled) visit(extension);
+    if (extension.enabled && selected(extension, providers)) visit(extension);
   }
-  return { ordered, errors };
+  return { ordered, errors, providers };
+}
+
+function selected(extension: Loaded, providers: Map<string, Loaded>): boolean {
+  const names = Object.keys(extension.manifest.provides ?? {});
+  return names.length === 0 || names.some((name) => providers.get(name) === extension);
+}
+
+function apiProviders(
+  extensions: Map<string, Loaded>,
+  selections: ReadonlyMap<string, string>,
+  errors: Map<string, string>,
+): Map<string, Loaded> {
+  const candidates = new Map<string, Loaded[]>();
+  for (const extension of extensions.values()) {
+    if (!extension.enabled) continue;
+    for (const name of Object.keys(extension.manifest.provides ?? {})) {
+      const entries = candidates.get(name) ?? [];
+      entries.push(extension);
+      candidates.set(name, entries);
+    }
+  }
+
+  const providers = new Map<string, Loaded>();
+  for (const [name, entries] of candidates) {
+    const selected = selections.get(name);
+    if (selected) {
+      const provider = entries.find((extension) => extension.manifest.id === selected);
+      if (provider) {
+        providers.set(name, provider);
+        continue;
+      }
+      const message = `selected provider for API ${name} is unavailable: ${selected}`;
+      for (const extension of entries) errors.set(extension.manifest.id, message);
+      continue;
+    }
+    const user = entries.filter((extension) => extension.source === "user");
+    const preferred = user.length > 0 ? user : entries;
+    if (preferred.length === 1) {
+      providers.set(name, preferred[0]!);
+      continue;
+    }
+    const ids = preferred.map((extension) => extension.manifest.id).join(", ");
+    for (const extension of preferred) errors.set(
+      extension.manifest.id,
+      `multiple providers for API ${name}: ${ids}`,
+    );
+  }
+  return providers;
 }

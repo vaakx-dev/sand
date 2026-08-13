@@ -13,19 +13,99 @@ import {
 import type { IconNode, MaybeReactive } from "@vaakx-dev/vrui";
 import { Plus, SquareSplitHorizontal, SquareSplitVertical, Trash2 } from "lucide";
 
-import type { UiControls } from "@sand/extension-api";
-
 import type { TerminalController } from "./controller.ts";
 import type { TerminalPane } from "./models.ts";
 import type { TerminalState } from "./state.ts";
+import type { SandUi } from "sand:api/ui";
+import { styled, tokens } from "sand:api/ui";
 
 const MIN_HEIGHT = 120;
-const MAX_HEIGHT = 620;
+const MAX_HEIGHT = 640;
+
+const Drawer = styled(div, {
+  position: "relative",
+  minHeight: MIN_HEIGHT,
+  borderTop: "1px solid var(--border)",
+  background: "var(--background)",
+  overflow: "hidden",
+});
+const Panes = styled(div, {
+  width: "100%",
+  height: "100%",
+  display: "grid",
+  "&[data-layout=columns] > div + div": { borderLeft: "1px solid var(--border)" },
+  "&[data-layout=rows] > div + div": { borderTop: "1px solid var(--border)" },
+});
+const Pane = styled(div, { minWidth: 0, minHeight: 0, overflow: "hidden", background: "var(--background)" });
+const Screen = styled(div, {
+  width: "100%",
+  height: "100%",
+  padding: "var(--space-large) var(--space-section)",
+  overflow: "auto",
+  color: "var(--text)",
+  font: "var(--font-label)/1.5 var(--mono)",
+  whiteSpace: "pre-wrap",
+  overflowWrap: "anywhere",
+});
+const Actions = styled(div, {
+  position: "absolute",
+  zIndex: "var(--z-chrome)",
+  top: "var(--space-medium)",
+  right: "var(--space-large)",
+  height: "var(--control-compact)",
+  display: "flex",
+  alignItems: "center",
+  padding: "0 var(--space-compact)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--control-radius)",
+  background: "var(--background)",
+});
+const ErrorNotice = styled(div, {
+  position: "absolute",
+  zIndex: "var(--z-chrome)",
+  left: "var(--space-large)",
+  bottom: "var(--space-medium)",
+  color: "var(--danger)",
+  fontSize: "var(--font-caption)",
+});
+const CommandRow = styled(div, { minWidth: 0, display: "flex", alignItems: "baseline", color: "var(--text)", fontWeight: "var(--weight-semibold)" });
+const Prompt = styled(span, { flex: "0 0 auto", whiteSpace: "pre" });
+const TerminalInput = styled(input, {
+  minWidth: "2ch",
+  height: "var(--control-tiny)",
+  flex: "1 1 auto",
+  padding: 0,
+  border: 0,
+  borderRadius: 0,
+  outline: 0,
+  appearance: "none",
+  color: "var(--text)",
+  background: "transparent",
+  boxShadow: "none",
+  font: "inherit",
+  fontWeight: "var(--weight-semibold)",
+  caretColor: "var(--text)",
+});
+const Line = styled(span, {
+  display: "inline",
+  whiteSpace: "pre-wrap",
+  "&[data-stream=stderr]": { color: "var(--danger)" },
+  "&[data-stream=command]": { color: "var(--text)", fontWeight: "var(--weight-semibold)" },
+  "&[data-stream=status]": { color: "var(--muted)" },
+});
+const Stream = styled(span, { display: "inline", whiteSpace: "pre-wrap" });
+const ResizeGrip = styled(div, {
+  position: "absolute",
+  zIndex: "var(--z-resizer)",
+  inset: `-${tokens.space.small}px 0 auto`,
+  height: tokens.space.medium,
+  cursor: "row-resize",
+});
 
 export function terminalView(
   controller: TerminalController,
   state: TerminalState,
-  controls: UiControls,
+  controls: SandUi,
 ): HTMLElement {
   const columns = derive(() => state.layout.get() === "columns"
     ? `repeat(${Math.max(1, state.panes.get().length)}, minmax(0, 1fr))`
@@ -35,24 +115,20 @@ export function terminalView(
     ? `repeat(${Math.max(1, state.panes.get().length)}, minmax(0, 1fr))`
     : "minmax(0, 1fr)"
   );
-  return div(
+  return Drawer(
     {
-      class: "terminal-drawer",
       hidden: state.visible.map((visible) => !visible),
       style: { height: state.height.map((height) => `${height}px`) },
     },
     resizeGrip(controller, state),
     terminalActions(controller, state, controls),
-    show(state.error.map(Boolean), () => div({ class: "terminal-error" }, state.error)),
+    show(state.error.map(Boolean), () => ErrorNotice({}, state.error)),
     list(
       state.panes,
       (pane) => pane.id,
       (pane) => terminalPane(controller, state, pane.get()),
-      div({
-        class: ["terminal-panes", {
-          columns: state.layout.map((layout) => layout === "columns"),
-          rows: state.layout.map((layout) => layout === "rows"),
-        }],
+      Panes({
+        "data-layout": state.layout,
         style: { gridTemplateColumns: columns, gridTemplateRows: rows },
       }),
     ),
@@ -62,7 +138,7 @@ export function terminalView(
 function terminalActions(
   controller: TerminalController,
   state: TerminalState,
-  controls: UiControls,
+  controls: SandUi,
 ): HTMLElement {
   const actions: Array<{
     label: string;
@@ -95,12 +171,11 @@ function terminalActions(
       disabled: state.activeId.map((id) => !id),
     },
   ];
-  return div(
-    { class: "terminal-actions" },
+  return Actions(
+    {},
     ...actions.map((action) => controls.iconButton({
       label: action.label,
       variant: "compact",
-      className: "terminal-action",
       disabled: action.disabled,
       renderIcon: (size) => icon(action.icon, size),
       onClick: action.run,
@@ -122,14 +197,12 @@ function terminalPane(
     get: () => state.commands.get()[pane.id] ?? "",
     set: (value: string) => state.commands.update((commands) => ({ ...commands, [pane.id]: value })),
   };
-  return div(
+  return Pane(
     {
-      class: ["terminal-pane", { active: state.activeId.map((id) => id === pane.id) }],
       onPointerDown: () => state.activeId.set(pane.id),
     },
-    div(
+    Screen(
       {
-        class: "terminal-screen",
         onMount: (element) => effect(() => {
           terminalLines.get();
           return onRaf(() => { element.scrollTop = element.scrollHeight; });
@@ -138,14 +211,13 @@ function terminalPane(
       list(
         lines,
         (line) => line.id,
-        (line) => span({ class: ["terminal-line", line.prop("stream")] }, line.prop("text")),
-        span({ class: "terminal-stream" }),
+        (line) => Line({ "data-stream": line.prop("stream") }, line.prop("text")),
+        Stream({}),
       ),
-      show(ready, () => div(
-        { class: "terminal-command-row" },
-        span({ class: "terminal-prompt" }, prompt),
-        input({
-          class: "terminal-input",
+      show(ready, () => CommandRow(
+        {},
+        Prompt({}, prompt),
+        TerminalInput({
           bindValue: command,
           spellcheck: false,
           autocomplete: "off",
@@ -180,8 +252,7 @@ function resizeGrip(controller: TerminalController, state: TerminalState): HTMLE
   let dragging = false;
   let startY = 0;
   let startHeight = 0;
-  return div({
-    class: "terminal-resize-grip",
+  return ResizeGrip({
     onPointerDown: (event) => {
       if (event.button !== 0) return;
       dragging = true;

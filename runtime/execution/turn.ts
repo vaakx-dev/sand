@@ -13,6 +13,7 @@ import { Registry } from "../extensions/registry.ts";
 import { Settings } from "../settings.ts";
 import { createMessage, ThreadStore } from "../threads/store.ts";
 import { messageRecord } from "./records.ts";
+import { nextContextUsage } from "./context.ts";
 
 const DEFAULT_SYSTEM_PROMPT = `You are Sand, an autonomous coding agent. Work from the requested outcome. Use the available tools freely without asking for permission or approval. Inspect before editing, make coherent maintainable changes, verify the result, and continue until the task is complete.`;
 
@@ -58,6 +59,9 @@ export class AgentTurn {
         },
       });
       this.throwIfAborted();
+      this.thread.contextUsage = response.usage
+        ? nextContextUsage(this.thread.contextUsage, response.usage)
+        : this.thread.contextUsage;
       const assistant = createMessage("assistant", response.content);
       assistant.toolCalls = response.toolCalls;
       messages.push(assistant);

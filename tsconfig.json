@@ -4,6 +4,10 @@
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "sand:api/ui": ["./extensions/ui/public.ts"],
+      "sand:api/workbench": ["./extensions/workbench/public.ts"]
+    },
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,

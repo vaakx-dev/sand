@@ -54,6 +54,7 @@ export function providerModel(
   return {
     slug,
     name: declared?.name || inferredModelName(slug),
+    contextWindow: declared?.contextWindow,
     reasoning: declared?.reasoning ?? provider.modelDefaults.reasoning,
     defaultReasoning: declared?.defaultReasoning ?? provider.modelDefaults.defaultReasoning,
     serviceTiers: declared?.serviceTiers ?? provider.modelDefaults.serviceTiers,

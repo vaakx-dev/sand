@@ -8,10 +8,12 @@ import {
 } from "@sand/extension-api";
 
 import type { WorkbenchState } from "../state.ts";
+import type { WorkbenchService } from "../api.ts";
 
 export class ControllerRuntime {
   constructor(
     readonly context: UiExtensionContext,
+    readonly workbench: WorkbenchService,
     readonly state: WorkbenchState,
     private readonly client: RuntimeCalls = context.runtime,
   ) {}
@@ -28,7 +30,7 @@ export class ControllerRuntime {
     task: (runtime: ControllerRuntime, scope: WorkspaceScope) => Promise<void>,
   ): Promise<void> {
     return this.context.runtime.runWorkspace((scope) =>
-      task(new ControllerRuntime(this.context, this.state, scope), scope)
+      task(new ControllerRuntime(this.context, this.workbench, this.state, scope), scope)
     );
   }
 

@@ -1,6 +1,0 @@
-.extension-list { min-height: 0; flex: 1; overflow: auto; }
-.extension-row { padding: 10px 11px; border-bottom: 1px solid var(--border); }
-.extension-name { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
-.extension-meta { margin-top: 4px; color: var(--faint); font-size: 10px; }
-.extension-contributions { margin-top: 6px; color: var(--muted); font: 10px/1.45 var(--mono); overflow-wrap: anywhere; }
-.badge { padding: 2px 5px; border-radius: 4px; color: var(--muted); background: var(--surface-3); font-size: 8px; text-transform: uppercase; letter-spacing: .05em; }

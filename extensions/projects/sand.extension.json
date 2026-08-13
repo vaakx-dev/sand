@@ -3,7 +3,7 @@
   "name": "Sand Projects",
   "version": "0.0.1",
   "description": "Project registry, picker, cloning, switching, and project UI",
+  "uses": ["ui", "workbench"],
   "main": "./main.ts",
-  "ui": "./ui.ts",
-  "styles": ["./projects.css"]
+  "ui": "./ui.ts"
 }

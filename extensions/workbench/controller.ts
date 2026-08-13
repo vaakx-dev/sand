@@ -1,5 +1,6 @@
 import type { UiExtensionContext } from "@sand/extension-api";
 
+import type { WorkbenchService } from "./api.ts";
 import type { WorkbenchState } from "./state.ts";
 import { WorkbenchEvents } from "./controller/events.ts";
 import { initializeWorkbench } from "./controller/initialize.ts";
@@ -23,16 +24,17 @@ export class WorkbenchController {
 
   private readonly runtime: ControllerRuntime;
   private readonly events: WorkbenchEvents;
-  private readonly commands: UiExtensionContext["ui"]["commands"];
+  private readonly commands: WorkbenchService["commands"];
 
   constructor(
     context: UiExtensionContext,
+    workbench: WorkbenchService,
     private readonly state: WorkbenchState,
   ) {
-    this.commands = context.ui.commands;
-    this.runtime = new ControllerRuntime(context, state);
+    this.commands = workbench.commands;
+    this.runtime = new ControllerRuntime(context, workbench, state);
     this.models = new ModelsController(this.runtime);
-    this.navigation = new NavigationController(context.ui.events, state);
+    this.navigation = new NavigationController(workbench.events, state);
     this.selection = new SelectionController(this.runtime);
     this.runs = new RunController(this.runtime, this.selection);
     this.threads = new ThreadController(this.runtime, this.selection);

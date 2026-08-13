@@ -3,7 +3,7 @@
   "name": "Sand Terminal",
   "version": "0.0.1",
   "description": "Extension-owned terminal runtime, drawer, panes, and shell controls",
+  "uses": ["ui", "workbench"],
   "main": "./main.ts",
-  "ui": "./ui.ts",
-  "styles": ["./terminal.css"]
+  "ui": "./ui.ts"
 }

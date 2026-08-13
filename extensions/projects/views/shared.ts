@@ -1,17 +1,13 @@
-import { div, icon, span } from "@vaakx-dev/vrui";
+import { icon } from "@vaakx-dev/vrui";
 import { ArrowDown, ArrowUp } from "lucide";
 
-export function modalFooter(): HTMLElement {
-  return div(
-    { class: "project-modal-footer" },
-    span({ class: "keybinding" }, icon(ArrowUp, 10)),
-    span({ class: "keybinding" }, icon(ArrowDown, 10)),
-    span("Navigate"),
-    span({ class: "keybinding" }, "Enter"),
-    span("Select"),
-    span({ class: "keybinding" }, "Backspace"),
-    span("Back"),
-    span({ class: "keybinding" }, "Esc"),
-    span("Close"),
-  );
+import type { SandUi } from "sand:api/ui";
+
+export function modalFooter(ui: SandUi): HTMLElement {
+  return ui.shortcutBar([
+    { keys: [icon(ArrowUp, ui.tokens.size.iconTiny), icon(ArrowDown, ui.tokens.size.iconTiny)], label: "Navigate" },
+    { keys: "Enter", label: "Select" },
+    { keys: "Backspace", label: "Back" },
+    { keys: "Esc", label: "Close" },
+  ]);
 }

@@ -1,15 +1,13 @@
 import { cp, mkdir, readFile, readdir, realpath, rm } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { coreModules } from "@sand/extension-runtime/modules";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const outputRoot = join(projectRoot, "build", "runtime");
 const sourceModules = join(projectRoot, "node_modules");
-const coreConfiguration = JSON.parse(
-  await readFile(join(projectRoot, "runtime", "coreModules.json"), "utf8"),
-);
-const coreModules = new Set([
-  ...coreNames(coreConfiguration, "host"),
-  ...coreNames(coreConfiguration, "ui"),
+const corePackages = new Set([
+  ...coreModules.host,
+  ...coreModules.ui,
 ]);
 const stagedPackages = new Map();
 
@@ -19,7 +17,7 @@ await Promise.all([
   copy("extensions"),
 ]);
 
-for (const name of coreModules) await copyCorePackage(name);
+for (const name of corePackages) await copyCorePackage(name);
 await stageExtensionDependencies();
 
 async function copy(path) {
@@ -35,7 +33,7 @@ async function stageExtensionDependencies() {
     const manifest = await packageManifest(root);
     if (!manifest) continue;
     const dependencies = dependencyNames(manifest);
-    const invalid = dependencies.filter((name) => coreModules.has(name));
+    const invalid = dependencies.filter((name) => corePackages.has(name));
     if (invalid.length > 0) {
       throw new Error(`${entry.name} declares core dependencies: ${invalid.join(", ")}`);
     }
@@ -105,11 +103,11 @@ async function copyPackageDependencies(sourceRoot, destinationModules) {
     ...optionalPeers(manifest),
   };
   for (const dependency of Object.keys(required)) {
-    if (dependency in optional || coreModules.has(dependency)) continue;
+    if (dependency in optional || corePackages.has(dependency)) continue;
     await copyPackage(dependency, destinationModules, sourceRoot);
   }
   for (const dependency of Object.keys(optional)) {
-    if (coreModules.has(dependency)) continue;
+    if (corePackages.has(dependency)) continue;
     await copyOptionalPackage(dependency, destinationModules, sourceRoot);
   }
 }
@@ -152,16 +150,3 @@ function record(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function coreNames(configuration, target) {
-  if (!record(configuration)) throw new Error("invalid runtime/coreModules.json");
-  const names = configuration[target];
-  if (
-    !Array.isArray(names)
-    || names.length === 0
-    || names.some((name) => typeof name !== "string" || !name)
-    || new Set(names).size !== names.length
-  ) {
-    throw new Error(`invalid ${target} modules in runtime/coreModules.json`);
-  }
-  return names;
-}

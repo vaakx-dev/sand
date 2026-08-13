@@ -92,7 +92,7 @@ function waitForCallback(expectedState: string): Promise<string> {
         return;
       }
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      response.end("<!doctype html><title>Sand signed in</title><style>body{font:16px system-ui;background:#111;color:#ddd;display:grid;place-items:center;height:100vh;margin:0}</style><p>Sand is signed in. You can close this window.</p>");
+      response.end("<!doctype html><title>Sand signed in</title><p>Sand is signed in. You can close this window.</p>");
       finish(undefined, code);
     });
     const timeout = setTimeout(

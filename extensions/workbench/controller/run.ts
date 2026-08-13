@@ -31,7 +31,7 @@ export class RunController {
       });
       this.load(thread);
       state.threads.prompt.set("");
-      this.runtime.context.ui.events.emit(workbenchEvents.threadChanged, { threadId: thread.id });
+      this.runtime.workbench.events.emit(workbenchEvents.threadChanged, { threadId: thread.id });
     });
   }
 

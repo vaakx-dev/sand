@@ -2,9 +2,19 @@ import { div, onWindow } from "@vaakx-dev/vrui";
 import type { Sig } from "@vaakx-dev/vrui";
 
 import type { WorkbenchController } from "../../controller.ts";
+import { styled } from "sand:api/ui";
+
+const Resizer = styled(div, {
+  position: "relative",
+  zIndex: "var(--z-resizer)",
+  width: "100%",
+  height: "100%",
+  cursor: "col-resize",
+  "&:hover": { background: "var(--accent)" },
+});
 
 export const SIDEBAR_MIN = 240;
-export const SIDEBAR_MAX = 420;
+export const SIDEBAR_MAX = 416;
 export const RIGHT_MIN = 320;
 export const RIGHT_MAX = 720;
 
@@ -19,8 +29,7 @@ export function paneResizer(
   let startX = 0;
   let startWidth = 0;
 
-  return div({
-    class: ["resizer", side],
+  return Resizer({
     onPointerDown: (event) => {
       if (event.button !== 0) return;
       dragging = true;

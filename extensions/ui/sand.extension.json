@@ -1,0 +1,13 @@
+{
+  "id": "sand.ui",
+  "name": "Sand UI",
+  "version": "0.0.1",
+  "description": "Shared VRUI components, design tokens, styling, and theme application",
+  "provides": {
+    "ui": {
+      "target": "ui",
+      "module": "./public.ts"
+    }
+  },
+  "ui": "./ui.ts"
+}

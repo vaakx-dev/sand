@@ -3,6 +3,7 @@
   "name": "Read Tool",
   "version": "0.0.1",
   "description": "file reader with offset and truncation support",
+  "uses": ["workbench"],
   "main": "./main.ts",
   "ui": "./ui.ts"
 }

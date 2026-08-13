@@ -4,8 +4,8 @@ import type {
   AgentProviderConnectionState,
   ExtensionDescription,
   JsonObject,
-  UiCommand,
 } from "@sand/extension-api";
+import type { UiCommand } from "./api.ts";
 
 import type {
   Activity,
@@ -41,6 +41,7 @@ export function createState() {
   const titleModel = sig("");
   const titleReasoning = sig("");
   const extensions = sig<ExtensionDescription[]>([]);
+  const extensionsReloading = sig(false);
   const settings = sig<JsonObject>({});
   const commands = sig<UiCommand[]>([]);
   const notice = sig("");
@@ -73,6 +74,7 @@ export function createState() {
     titleModel,
     titleReasoning,
     extensions,
+    extensionsReloading,
     settings,
     commands,
     notice,

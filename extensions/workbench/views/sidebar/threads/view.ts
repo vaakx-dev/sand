@@ -1,32 +1,48 @@
 import {
-  button,
   derive,
   div,
   icon,
-  input,
   list,
   onInterval,
   show,
   sig,
   span,
 } from "@vaakx-dev/vrui";
-import { Plus, Search, SquarePen, X } from "lucide";
+import { Plus, SquarePen } from "lucide";
 
-import type { AgentThreadSummary, UiControls, UiSlotRegistry } from "@sand/extension-api";
+import type { AgentThreadSummary } from "@sand/extension-api";
+import type { SandUi } from "sand:api/ui";
+import type { UiSlotRegistry } from "../../../api.ts";
 
 import type { WorkbenchController } from "../../../controller.ts";
 import { workbenchCommands, workbenchSlots } from "../../../api.ts";
 import type { WorkbenchState } from "../../../state.ts";
-import { uiSlot } from "../../shared/slot.ts";
 import { group } from "./groups.ts";
 import { row } from "./row.ts";
 import { shelf } from "./shelf.ts";
+import { styled } from "sand:api/ui";
+
+const View = styled(div, { minWidth: 0, minHeight: 0, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" });
+const Tools = styled(div, { position: "relative", zIndex: "var(--z-chrome)", flex: "0 0 auto", display: "grid", gridTemplateColumns: "minmax(0, 1fr) var(--control-height)", columnGap: "var(--space-compact)", rowGap: "var(--space-medium)", padding: "var(--space-medium)" });
+const ProjectSlot = styled(div, { gridColumn: "1 / 3" });
+const Scroll = styled(div, { minHeight: 0, flex: 1, padding: "0 var(--space-medium) var(--space-large)", overflow: "auto" });
+const Section = styled(div, { display: "flex", flexDirection: "column", gap: "var(--space-compact)" });
+const Divider = styled(div, { height: 1, margin: "var(--space-medium) 0", background: "var(--border)" });
+const Empty = styled(div, {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "var(--space-large)",
+  padding: "var(--space-page) var(--space-large)",
+  color: "var(--muted)",
+  textAlign: "center",
+});
 
 export function view(
   controller: WorkbenchController,
   state: WorkbenchState,
   slots: UiSlotRegistry,
-  controls: UiControls,
+  controls: SandUi,
 ): HTMLElement {
   const clock = sig(Date.now());
   const groups = derive(() => group(
@@ -59,23 +75,23 @@ export function view(
     settled.get().length - state.threads.settledLimit.get(),
   ));
 
-  return div(
-    { class: "sidebar-view", onMount: () => onInterval(() => clock.set(Date.now()), 1_000) },
+  return View(
+    { onMount: () => onInterval(() => clock.set(Date.now()), 1_000) },
     tools(controller, state, slots, controls),
-    div(
-      { class: "thread-scroll" },
+    Scroll(
+      {},
       list(
         pinned,
         (thread) => thread.id,
         (thread) => row(controller, state, controls, clock, thread.get(), "pinned"),
-        div({ class: "thread-section pinned" }),
+        Section({}),
       ),
-      show(pinned.map((threads) => threads.length > 0), () => div({ class: "thread-divider" })),
+      show(pinned.map((threads) => threads.length > 0), () => Divider({})),
       list(
         active,
         (thread) => thread.id,
         (thread) => row(controller, state, controls, clock, thread.get(), "active"),
-        div({ class: "thread-section" }),
+        Section({}),
       ),
       show(snoozed.map((threads) => threads.length > 0), () => shelf(
         controller,
@@ -84,7 +100,7 @@ export function view(
         clock,
         {
           label: "Snoozed",
-          className: "snoozed",
+          accent: true,
           section: "snoozed",
           open: state.threads.snoozedOpen,
           threads: visibleSnoozed,
@@ -98,7 +114,6 @@ export function view(
         clock,
         {
           label: "Settled",
-          className: "settled",
           section: "settled",
           open: state.threads.settledOpen,
           threads: visibleSettled,
@@ -108,15 +123,14 @@ export function view(
           showMore: () => state.threads.settledLimit.update((value) => value + 25),
         },
       )),
-      show(groups.map((value) => value.matching.length === 0), () => div(
-        { class: "sidebar-empty" },
+      show(groups.map((value) => value.matching.length === 0), () => Empty(
+        {},
         span(state.threads.query.map((query) => query ? "No threads found" : "No threads yet")),
-        button(
+        controls.button(
           {
-            class: "secondary-button",
             onClick: () => void controller.executeCommand(workbenchCommands.newThread),
           },
-          icon(Plus, 12),
+          icon(Plus, controls.tokens.size.iconTiny),
           "New thread",
         ),
       )),
@@ -128,34 +142,17 @@ function tools(
   controller: WorkbenchController,
   state: WorkbenchState,
   slots: UiSlotRegistry,
-  controls: UiControls,
+  controls: SandUi,
 ): HTMLElement {
-  return div(
-    { class: "thread-tools" },
-    div(
-      { class: "thread-search" },
-      icon(Search, 14),
-      input({
-        class: "thread-search-input",
-        type: "search",
-        bindValue: state.threads.query,
-        placeholder: "Search",
-        "aria-label": "Search threads",
-      }),
-      show(state.threads.query.map(Boolean), () => controls.iconButton({
-        label: "Clear search",
-        variant: "compact",
-        className: "thread-search-clear",
-        renderIcon: (size) => icon(X, size),
-        onClick: () => state.threads.query.set(""),
-      })),
-    ),
+  return Tools(
+    {},
+    controls.searchField({ value: state.threads.query, label: "Search threads", placeholder: "Search" }),
     controls.iconButton({
       label: "New thread",
       renderIcon: (size) => icon(SquarePen, size),
       onClick: () => void controller.executeCommand(workbenchCommands.newThread),
     }),
-    uiSlot(slots, workbenchSlots.sidebarProjects, "project-scope-slot"),
+    ProjectSlot({ onMount: (element) => slots.mount(workbenchSlots.sidebarProjects, element) }),
   );
 }
 

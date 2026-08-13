@@ -1,111 +1,129 @@
-import { button, derive, div, dynamicChild, form, icon, input, show, span } from "@vaakx-dev/vrui";
-import { ChevronDown, ChevronRight, FileCode2, FileJson2, FileText, Folder, FolderOpen, RefreshCw, Search, X } from "lucide";
+import { derive, div, dynamicChild, icon } from "@vaakx-dev/vrui";
+import { FileCode2, FileJson2, FileText, Folder, FolderOpen, RefreshCw } from "lucide";
 
-import type { UiControls } from "@sand/extension-api";
-
+import type { SandUi } from "sand:api/ui";
+import { styled } from "sand:api/ui";
 import type { FileNode } from "../api.ts";
 import type { FilesController } from "../controller.ts";
 import type { FilesState } from "../state.ts";
 
+const Explorer = styled(div, {
+  minWidth: 0,
+  minHeight: 0,
+  display: "flex",
+  flexDirection: "column",
+  borderLeft: "1px solid var(--border)",
+  background: "var(--panel)",
+  "@container (max-width: 720px)": { borderTop: "1px solid var(--border)", borderLeft: 0 },
+});
+
+const Header = styled(div, {
+  height: "var(--header-height)",
+  flex: "0 0 var(--header-height)",
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-small)",
+  padding: "var(--space-small) var(--space-medium)",
+  borderBottom: "1px solid var(--border)",
+});
+
+const Items = styled(div, {
+  minHeight: 0,
+  flex: 1,
+  overflow: "auto",
+  padding: "var(--space-small) 0 var(--space-large)",
+});
+
+const Empty = styled(div, {
+  padding: "var(--space-page) var(--space-large)",
+  color: "var(--muted)",
+  textAlign: "center",
+  fontSize: "var(--font-caption)",
+});
+
 export function explorerView(
   controller: FilesController,
   state: FilesState,
-  controls: UiControls,
+  ui: SandUi,
 ): HTMLElement {
   const visibleTree = derive(() => {
     state.expanded.get();
-    return [...filterTree(state.tree.get(), state.query.get())];
+    return filterTree(state.tree.get(), state.query.get());
   });
-  return div(
-    { class: "files-explorer", hidden: state.explorerOpen.map((open) => !open) },
-    div(
-      { class: "files-explorer-header" },
-      form(
-        { class: "files-search", onSubmit: (event) => { event.preventDefault(); void controller.search(); } },
-        icon(Search, 13),
-        input({
-          class: "files-search-input",
-          type: "search",
-          placeholder: "Search files",
-          bindValue: state.query,
-          "aria-label": "Search files",
-          onInput: () => state.searchMode.set(false),
-        }),
-        show(state.query.map(Boolean), () => controls.iconButton({
-          label: "Clear search",
-          variant: "compact",
-          className: "files-small-action",
-          tooltip: false,
-          renderIcon: (size) => icon(X, size),
-          onClick: () => controller.clearSearch(),
-        })),
-      ),
-      controls.iconButton({
+  return Explorer(
+    { hidden: state.explorerOpen.map((open) => !open) },
+    Header(
+      {},
+      ui.searchField({
+        value: state.query,
+        label: "Search files",
+        placeholder: "Search files",
+        onInput: () => state.searchMode.set(false),
+        onSubmit: () => controller.search(),
+        onClear: () => controller.clearSearch(),
+      }),
+      ui.iconButton({
         label: "Refresh files",
         variant: "compact",
-        className: "files-small-action",
         renderIcon: (size) => icon(RefreshCw, size),
         onClick: () => void controller.refresh(),
       }),
     ),
     dynamicChild(state.searchMode, (searching) => searching
-      ? searchResults(controller, state)
-      : dynamicChild(visibleTree, (nodes) => div(
-          { class: "files-tree" },
-          ...nodes.map((node) => treeNode(controller, state, node, 0, Boolean(state.query.get().trim()))),
-        ))
-    ),
+      ? searchResults(controller, state, ui)
+      : dynamicChild(visibleTree, (nodes) => Items(
+          {},
+          ...nodes.map((node) => treeNode(controller, state, ui, node, 0, Boolean(state.query.get().trim()))),
+        ))),
   );
 }
 
-function searchResults(controller: FilesController, state: FilesState): HTMLElement {
-  return dynamicChild(state.matches, (matches) => div(
-    { class: "files-results" },
+function searchResults(
+  controller: FilesController,
+  state: FilesState,
+  ui: SandUi,
+): HTMLElement {
+  return dynamicChild(state.matches, (matches) => Items(
+    {},
     ...(matches.length
-      ? matches.map((match) => button(
-          { class: "files-result", title: match.path, onClick: () => void controller.open(match.path) },
-          span({ class: "files-result-path" }, `${match.path}:${match.line}`),
-          span({ class: "files-result-text" }, match.text),
-        ))
-      : [div({ class: "files-no-results" }, "No matches found")]),
+      ? matches.map((match) => ui.listItem({
+          label: `${match.path}:${match.line}`,
+          description: match.text,
+          onClick: () => void controller.open(match.path),
+        }))
+      : [Empty({}, "No matches found")]),
   ));
 }
 
 function treeNode(
   controller: FilesController,
   state: FilesState,
+  ui: SandUi,
   node: FileNode,
   depth: number,
   reveal: boolean,
 ): HTMLElement {
   if (node.kind === "file") {
-    return button(
-      {
-        class: ["files-tree-row", { active: state.activePath.map((path) => path === node.path) }],
-        style: { paddingLeft: `${8 + depth * 14}px` },
-        title: node.path,
-        onClick: () => void controller.open(node.path),
-      },
-      icon(fileIcon(node.name), 13),
-      span({ class: "files-tree-name" }, node.name),
-    );
+    return ui.treeItem({
+      label: node.name,
+      depth,
+      selected: state.activePath.map((path) => path === node.path),
+      renderIcon: (size) => icon(fileIcon(node.name), size),
+      onClick: () => void controller.open(node.path),
+    });
   }
-
   const open = reveal || Boolean(state.expanded.get()[node.path]);
   return div(
-    button(
-      {
-        class: "files-tree-row directory",
-        style: { paddingLeft: `${8 + depth * 14}px` },
-        title: node.path,
-        onClick: () => controller.toggleDirectory(node.path),
-      },
-      icon(open ? ChevronDown : ChevronRight, 12),
-      icon(open ? FolderOpen : Folder, 13),
-      span({ class: "files-tree-name" }, node.name),
-    ),
+    {},
+    ui.treeItem({
+      label: node.name,
+      depth,
+      expanded: open,
+      renderIcon: (size) => icon(open ? FolderOpen : Folder, size),
+      onClick: () => controller.toggleDirectory(node.path),
+    }),
     ...(open
-      ? (node.children ?? []).map((child) => treeNode(controller, state, child, depth + 1, reveal))
+      ? (node.children ?? []).map((child) => treeNode(controller, state, ui, child, depth + 1, reveal))
       : []),
   );
 }

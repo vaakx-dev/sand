@@ -26,6 +26,7 @@ export const CHATGPT_MODEL_DEFAULTS: AgentModelTraits = {
 };
 
 export const CHATGPT_DEFAULT_MODEL = "gpt-5.6-sol";
+export const CHATGPT_CONTEXT_WINDOW = 258_000;
 
 export const CHATGPT_MODELS: AgentProviderModel[] = [
   model(CHATGPT_DEFAULT_MODEL, "GPT-5.6-Sol", true),
@@ -36,5 +37,11 @@ export const CHATGPT_MODELS: AgentProviderModel[] = [
 ];
 
 function model(slug: string, name: string, defaultFavorite = false): AgentProviderModel {
-  return { slug, name, defaultFavorite, ...CHATGPT_MODEL_DEFAULTS };
+  return {
+    slug,
+    name,
+    contextWindow: CHATGPT_CONTEXT_WINDOW,
+    defaultFavorite,
+    ...CHATGPT_MODEL_DEFAULTS,
+  };
 }

@@ -1,4 +1,5 @@
 import {
+  ExtensionApiRegistry,
   errorMessage,
   type ExtensionDescription,
   type HostExtension,
@@ -16,7 +17,9 @@ import { Registry } from "./registry.ts";
 
 export class Manager {
   private extensions = new Map<string, Loaded>();
+  private providers = new Map<string, Loaded>();
   private readonly bundles: Bundles;
+  private readonly apis = new ExtensionApiRegistry();
 
   constructor(
     private readonly roots: Root[],
@@ -30,6 +33,7 @@ export class Manager {
 
   async reload(): Promise<ExtensionDescription[]> {
     await this.deactivate();
+    this.apis.clear();
     this.registry.clear();
     this.extensions = await discover(this.roots, this.disabledIds());
 
@@ -73,15 +77,16 @@ export class Manager {
   async uiBundles(): Promise<UiBundle[]> {
     const bundles: UiBundle[] = [];
     for (const extension of this.activationOrder()) {
-      if (!extension.enabled || (!extension.manifest.ui && !extension.manifest.styles?.length)) {
+      if (!extension.enabled || !extension.manifest.ui) {
         continue;
       }
       if (!this.dependenciesReady(extension)) continue;
       try {
         bundles.push({
           manifest: extension.manifest,
-          source: extension.manifest.ui ? await this.bundles.ui(extension) : undefined,
-          styles: await this.bundles.styles(extension),
+          source: await this.bundles.ui(extension, this.providers),
+          bindings: this.uiBindings(extension),
+          provided: this.providedBy(extension, "ui"),
         });
         extension.uiActive = true;
       } catch (error) {
@@ -95,7 +100,7 @@ export class Manager {
   private async activate(extension: Loaded): Promise<void> {
     let url: string | undefined;
     try {
-      const source = await this.bundles.host(extension);
+      const source = await this.bundles.host(extension, this.providers);
       url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
       const imported = (await import(url)) as {
         default?: HostExtension;
@@ -105,7 +110,15 @@ export class Manager {
         throw new Error(`${extension.manifest.id} does not export activate()`);
       }
       const cleanup = await module.activate(
-        this.registry.context(extension.manifest, extension.contributions),
+        this.registry.context(
+          extension.manifest,
+          extension.contributions,
+          this.apis.context(
+            extension.manifest,
+            "host",
+            new Set(this.providedBy(extension, "host")),
+          ),
+        ),
       );
       extension.cleanup = cleanup ?? undefined;
       extension.hostActive = true;
@@ -127,25 +140,53 @@ export class Manager {
       } finally {
         extension.cleanup = undefined;
         extension.hostActive = false;
+        this.apis.remove(extension.manifest.id);
       }
     }
   }
 
   private activationOrder(): Loaded[] {
-    const { ordered, errors } = order(this.extensions);
+    const { ordered, errors, providers } = order(this.extensions, this.apiSelections());
+    this.providers = providers;
     for (const [id, message] of errors) this.block(this.extensions.get(id)!, message);
     return ordered;
   }
 
   private dependenciesReady(extension: Loaded): boolean {
     if (extension.blocked) return false;
-    const failed = (extension.manifest.requires ?? []).find((id) => {
-      const dependency = this.extensions.get(id);
-      return dependency?.manifest.main && !dependency.hostActive;
+    const failed = (extension.manifest.uses ?? []).find((name) => {
+      const provider = this.providers.get(name);
+      const contribution = provider?.manifest.provides?.[name];
+      return contribution?.target === "host" && provider?.manifest.main && !provider.hostActive;
     });
     if (!failed) return true;
-    this.block(extension, `required extension failed to activate: ${failed}`);
+    this.block(extension, `required API failed to activate: ${failed}`);
     return false;
+  }
+
+  private uiBindings(extension: Loaded): Record<string, string> {
+    return Object.fromEntries((extension.manifest.uses ?? []).flatMap((name) => {
+      const provider = this.providers.get(name);
+      return provider?.manifest.provides?.[name]?.target === "ui"
+        ? [[name, provider.manifest.id]]
+        : [];
+    }));
+  }
+
+  private providedBy(extension: Loaded, target: "host" | "ui"): string[] {
+    return [...this.providers].flatMap(([name, provider]) => (
+      provider === extension && provider.manifest.provides?.[name]?.target === target
+        ? [name]
+        : []
+    ));
+  }
+
+  private apiSelections(): Map<string, string> {
+    const value = this.settings.get<JsonValue>("extensions.apis", {});
+    if (typeof value !== "object" || value === null || Array.isArray(value)) return new Map();
+    return new Map(Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ));
   }
 
   private block(extension: Loaded, message: string): void {

@@ -15,19 +15,19 @@ import type { Extension } from "@codemirror/state";
 import { tags } from "@lezer/highlight";
 
 const highlight = HighlightStyle.define([
-  { tag: [tags.comment, tags.lineComment, tags.blockComment, tags.docComment], color: "var(--syntax-comment)", fontStyle: "italic" },
-  { tag: [tags.keyword, tags.modifier, tags.operatorKeyword, tags.controlKeyword, tags.definitionKeyword, tags.moduleKeyword], color: "var(--syntax-keyword)" },
-  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "var(--syntax-function)" },
-  { tag: [tags.typeName, tags.className, tags.namespace, tags.macroName, tags.tagName], color: "var(--syntax-type)" },
-  { tag: [tags.variableName, tags.definition(tags.variableName), tags.local(tags.variableName), tags.special(tags.variableName)], color: "var(--syntax-variable)" },
-  { tag: [tags.string, tags.docString, tags.character, tags.attributeValue, tags.special(tags.string), tags.regexp, tags.escape], color: "var(--syntax-string)" },
-  { tag: [tags.number, tags.bool, tags.null, tags.atom, tags.unit, tags.color], color: "var(--syntax-number)" },
-  { tag: [tags.propertyName, tags.attributeName, tags.labelName], color: "var(--syntax-property)" },
-  { tag: [tags.operator, tags.punctuation, tags.separator, tags.bracket], color: "var(--syntax-operator)" },
-  { tag: [tags.meta, tags.documentMeta, tags.annotation, tags.processingInstruction], color: "var(--syntax-meta)" },
-  { tag: [tags.heading, tags.strong], color: "var(--syntax-heading)", fontWeight: "650" },
+  { tag: [tags.comment, tags.lineComment, tags.blockComment, tags.docComment], color: "var(--muted)", fontStyle: "italic" },
+  { tag: [tags.keyword, tags.modifier, tags.operatorKeyword, tags.controlKeyword, tags.definitionKeyword, tags.moduleKeyword], color: "var(--accent)" },
+  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "var(--text)" },
+  { tag: [tags.typeName, tags.className, tags.namespace, tags.macroName, tags.tagName], color: "var(--warning)" },
+  { tag: [tags.variableName, tags.definition(tags.variableName), tags.local(tags.variableName), tags.special(tags.variableName)], color: "var(--text)" },
+  { tag: [tags.string, tags.docString, tags.character, tags.attributeValue, tags.special(tags.string), tags.regexp, tags.escape], color: "var(--success)" },
+  { tag: [tags.number, tags.bool, tags.null, tags.atom, tags.unit, tags.color], color: "var(--warning)" },
+  { tag: [tags.propertyName, tags.attributeName, tags.labelName], color: "var(--accent)" },
+  { tag: [tags.operator, tags.punctuation, tags.separator, tags.bracket], color: "var(--muted)" },
+  { tag: [tags.meta, tags.documentMeta, tags.annotation, tags.processingInstruction], color: "var(--muted)" },
+  { tag: [tags.heading, tags.strong], color: "var(--warning)", fontWeight: "650" },
   { tag: tags.emphasis, fontStyle: "italic" },
-  { tag: [tags.link, tags.url], color: "var(--syntax-link)", textDecoration: "underline" },
+  { tag: [tags.link, tags.url], color: "var(--accent)", textDecoration: "underline" },
   { tag: tags.invalid, color: "var(--danger)", textDecoration: "underline wavy" },
 ]);
 

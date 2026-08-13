@@ -3,6 +3,7 @@
   "name": "Sand External Open",
   "version": "0.0.1",
   "description": "Workspace actions for external editors and system file managers",
+  "uses": ["ui", "workbench"],
   "main": "./main.ts",
   "ui": "./ui.ts"
 }

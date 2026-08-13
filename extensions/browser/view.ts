@@ -2,12 +2,62 @@ import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { Webview } from "@tauri-apps/api/webview";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { button, div, effect, form, input, onRaf, onResize, resizeObserver, show, sig } from "@vaakx-dev/vrui";
+import { div, effect, form, input, onRaf, onResize, resizeObserver, show, sig } from "@vaakx-dev/vrui";
 import type { Sig } from "@vaakx-dev/vrui";
 
-import type { UiSurfaceInstance } from "@sand/extension-api";
+import type { SandUi } from "sand:api/ui";
+import type { UiSurfaceInstance } from "sand:api/workbench";
+import { styled } from "sand:api/ui";
 
 const DEFAULT_URL = "https://example.com";
+
+const Browser = styled(div, {
+  minWidth: 0,
+  minHeight: 0,
+  flex: 1,
+  display: "grid",
+  gridTemplateRows: "var(--header-height) minmax(0, 1fr)",
+});
+
+const Navigation = styled(form, {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-small)",
+  padding: "var(--space-small) var(--space-medium)",
+  borderBottom: "1px solid var(--border)",
+});
+
+const Address = styled(input, {
+  minWidth: 0,
+  height: "var(--control-height)",
+  flex: 1,
+  padding: "0 var(--space-medium)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--control-radius)",
+  outline: 0,
+  color: "var(--text)",
+  background: "var(--surface)",
+  font: "var(--font-small) var(--mono)",
+});
+
+const NativeBrowser = styled(div, {
+  position: "relative",
+  minWidth: 0,
+  minHeight: 0,
+  overflow: "hidden",
+});
+
+const BrowserStatus = styled(div, {
+  position: "absolute",
+  inset: 0,
+  display: "grid",
+  placeItems: "center",
+  padding: "var(--space-content)",
+  color: "var(--muted)",
+  background: "var(--background)",
+  textAlign: "center",
+  fontSize: "var(--font-small)",
+});
 
 interface BrowserNavigation {
   label: string;
@@ -19,16 +69,15 @@ interface BrowserTab {
   request: Sig<{ id: number; url: string }>;
 }
 
-export function browserView(instance: UiSurfaceInstance): HTMLElement {
+export function browserView(ui: SandUi, instance: UiSurfaceInstance): HTMLElement {
   const tab: BrowserTab = {
     input: sig(DEFAULT_URL),
     request: sig({ id: 0, url: DEFAULT_URL }),
   };
-  return div(
-    { class: "browser-view" },
-    form(
+  return Browser(
+    {},
+    Navigation(
       {
-        class: "browser-bar",
         onSubmit: (event) => {
           event.preventDefault();
           const url = normalizeUrl(tab.input.get());
@@ -37,8 +86,8 @@ export function browserView(instance: UiSurfaceInstance): HTMLElement {
           tab.request.update((request) => ({ id: request.id + 1, url }));
         },
       },
-      input({ class: "browser-address", bindValue: tab.input, "aria-label": "Browser address", spellcheck: false }),
-      button({ class: "secondary-button", type: "submit" }, "Go"),
+      Address({ bindValue: tab.input, "aria-label": "Browser address", spellcheck: false }),
+      ui.button({ type: "submit" }, "Go"),
     ),
     nativeBrowser(instance, tab),
   );
@@ -46,9 +95,9 @@ export function browserView(instance: UiSurfaceInstance): HTMLElement {
 
 function nativeBrowser(instance: UiSurfaceInstance, tab: BrowserTab): HTMLElement {
   const status = sig("Loading browser...");
-  return div(
-    { class: "browser-native-host", onMount: (element) => mountBrowser(element, tab, status, instance) },
-    show(status.map(Boolean), () => div({ class: "browser-status" }, status)),
+  return NativeBrowser(
+    { onMount: (element) => mountBrowser(element, tab, status, instance) },
+    show(status.map(Boolean), () => BrowserStatus({}, status)),
   );
 }
 

@@ -28,6 +28,12 @@ export interface AgentMessage {
   createdAt: string;
 }
 
+export interface AgentContextUsage {
+  usedTokens: number;
+  maxTokens: number;
+  processedTokens: number;
+}
+
 export interface AgentThreadSummary extends ThreadLifecycleSummary<AgentQueuedTurn> {
   id: string;
   title: string;
@@ -38,6 +44,7 @@ export interface AgentThreadSummary extends ThreadLifecycleSummary<AgentQueuedTu
   activeAttemptId?: string;
   recoverableRunId?: string;
   recoverableAttemptId?: string;
+  contextUsage?: AgentContextUsage;
 }
 
 export interface AgentThread extends AgentThreadSummary {
@@ -103,6 +110,14 @@ export interface AgentProviderRequest {
 export interface AgentProviderResponse {
   content: string;
   toolCalls: AgentToolCall[];
+  usage?: AgentProviderUsage;
+}
+
+export interface AgentProviderUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  maxContextTokens: number;
 }
 
 export interface AgentProviderOption {
@@ -120,6 +135,7 @@ export interface AgentModelTraits {
 export interface AgentProviderModel extends AgentModelTraits {
   slug: string;
   name: string;
+  contextWindow?: number;
   defaultFavorite?: boolean;
 }
 

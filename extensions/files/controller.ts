@@ -5,13 +5,12 @@ import {
   type JsonValue,
   type RuntimeClient,
   type RuntimeEvent,
-  type UiEvent,
-  type UiSurfaceRegistry,
   type WorkspaceDescription,
 } from "@sand/extension-api";
 
 import { commands, type FileNode, type SearchResult } from "./api.ts";
 import type { FilesState } from "./state.ts";
+import type { UiEvent, UiSurfaceRegistry } from "sand:api/workbench";
 
 export class FilesController {
   constructor(
