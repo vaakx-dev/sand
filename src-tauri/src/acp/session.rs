@@ -19,8 +19,9 @@ impl Acp {
         let request = serde_json::from_value::<NewSessionRequest>(value)?;
         let connection = self.connection(&request.agent_id).await?;
         let cwd = self.resolve_cwd(request.cwd)?;
+        let protocol_request = ProtocolNewSessionRequest::new(&cwd).meta(request.meta);
         let response = connection
-            .send_request(ProtocolNewSessionRequest::new(&cwd))
+            .send_request(protocol_request)
             .block_task()
             .await?;
         let timestamp = now();
@@ -45,11 +46,9 @@ impl Acp {
             "acp.session.created",
             session_payload(&session, Some(json!({ "response": to_value(&response) }))),
         )?;
-        self.state
-            .write()
-            .await
-            .sessions
-            .insert(session.id.clone(), session.clone());
+        let mut state = self.state.write().await;
+        state.loaded_sessions.insert(session.id.clone());
+        state.sessions.insert(session.id.clone(), session.clone());
         Ok(to_value(&session))
     }
 
@@ -75,6 +74,11 @@ impl Acp {
                 Ok(())
             })
             .await?;
+        self.state
+            .write()
+            .await
+            .loaded_sessions
+            .insert(session.id.clone());
         Ok(to_value(&session))
     }
 
@@ -189,7 +193,10 @@ impl Acp {
         let request = serde_json::from_value::<SetConfigRequest>(value)?;
         let session = self.session(&request.id).await?;
         let connection = self.connection(&session.agent_id).await?;
-        let option = serde_json::from_value::<SessionConfigOptionValue>(request.value)?;
+        let option = match request.value {
+            Value::String(value) => SessionConfigOptionValue::value_id(value),
+            value => serde_json::from_value::<SessionConfigOptionValue>(value)?,
+        };
         let response = connection
             .send_request(SetSessionConfigOptionRequest::new(
                 session.acp_session_id.clone(),

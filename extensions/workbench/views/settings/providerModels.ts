@@ -13,7 +13,6 @@ import type { SandUi } from "sand:api/ui";
 import type { WorkbenchController } from "../../controller.ts";
 import type { ProviderDescription, ProviderModel } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
-import { settingRow } from "./shared.ts";
 import { styled } from "sand:api/ui";
 import { tokens } from "sand:api/ui";
 
@@ -88,25 +87,6 @@ export function providerModels(
 ): HTMLElement {
   return Models(
     {},
-    settingRow(
-      controls,
-      "New thread model",
-      "Model selected when this provider becomes active.",
-      dynamicChild(state.providerModels, (catalog) => {
-        const models = (catalog[provider.id] ?? []).filter((model) => !model.hidden);
-        const selected = state.provider.get() === provider.id
-          ? state.model.get()
-          : models[0]?.slug || provider.defaultModel;
-        return controls.selectField({
-            value: selected,
-            options: models.map((model) => ({ value: model.slug, label: model.name })),
-            onChange: (event) => void controller.selection.select(
-              provider.id,
-              (event.target as HTMLSelectElement).value,
-            ),
-          });
-      }),
-    ),
     Heading(
       {},
       span("Models"),

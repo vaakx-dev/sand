@@ -1,8 +1,9 @@
 import {
   ExtensionApiRegistry,
   errorMessage,
+  type AppExtensionContext,
+  type ExtensionCleanup,
   type ExtensionDescription,
-  type HostExtension,
   type JsonValue,
   type UiBundle,
 } from "@sand/extension-api";
@@ -39,7 +40,7 @@ export class Manager {
 
     const ordered = this.activationOrder();
     for (const extension of ordered) {
-      if (!extension.enabled) continue;
+      if (!extension.enabled || !this.relevant(extension)) continue;
       try {
         await this.dependencies.prepare(extension);
       } catch (error) {
@@ -48,7 +49,7 @@ export class Manager {
     }
 
     for (const extension of ordered) {
-      if (!extension.enabled || !extension.manifest.main) continue;
+      if (!extension.enabled || !this.entry(extension)) continue;
       if (!this.dependenciesReady(extension)) continue;
       await this.activate(extension);
     }
@@ -67,7 +68,7 @@ export class Manager {
       root: extension.root,
       source: extension.source,
       enabled: extension.enabled,
-      hostActive: extension.hostActive,
+      appActive: extension.entryActive,
       uiActive: extension.uiActive,
       contributions: [...extension.contributions],
       errors: [...extension.errors],
@@ -100,28 +101,33 @@ export class Manager {
   private async activate(extension: Loaded): Promise<void> {
     let url: string | undefined;
     try {
-      const source = await this.bundles.host(extension, this.providers);
+      const source = await this.bundles.entry(
+        extension,
+        this.entry(extension)!,
+        this.providers,
+      );
       url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
       const imported = (await import(url)) as {
-        default?: HostExtension;
-      } & Partial<HostExtension>;
-      const module = (imported.default ?? imported) as HostExtension;
+        default?: RuntimeExtension;
+      } & Partial<RuntimeExtension>;
+      const module = (imported.default ?? imported) as RuntimeExtension;
       if (typeof module.activate !== "function") {
         throw new Error(`${extension.manifest.id} does not export activate()`);
       }
       const cleanup = await module.activate(
         this.registry.context(
           extension.manifest,
+          extension.root,
           extension.contributions,
           this.apis.context(
             extension.manifest,
-            "host",
-            new Set(this.providedBy(extension, "host")),
+            "app",
+            new Set(this.providedBy(extension, "app")),
           ),
         ),
       );
       extension.cleanup = cleanup ?? undefined;
-      extension.hostActive = true;
+      extension.entryActive = true;
     } catch (error) {
       this.recordError(extension, errorMessage(error));
     } finally {
@@ -139,7 +145,7 @@ export class Manager {
         console.error(`${extension.manifest.id}: ${message}`);
       } finally {
         extension.cleanup = undefined;
-        extension.hostActive = false;
+        extension.entryActive = false;
         this.apis.remove(extension.manifest.id);
       }
     }
@@ -157,7 +163,8 @@ export class Manager {
     const failed = (extension.manifest.uses ?? []).find((name) => {
       const provider = this.providers.get(name);
       const contribution = provider?.manifest.provides?.[name];
-      return contribution?.target === "host" && provider?.manifest.main && !provider.hostActive;
+      if (!provider || contribution?.target !== "app") return false;
+      return Boolean(this.entry(provider) && !provider.entryActive);
     });
     if (!failed) return true;
     this.block(extension, `required API failed to activate: ${failed}`);
@@ -173,7 +180,7 @@ export class Manager {
     }));
   }
 
-  private providedBy(extension: Loaded, target: "host" | "ui"): string[] {
+  private providedBy(extension: Loaded, target: "app" | "ui"): string[] {
     return [...this.providers].flatMap(([name, provider]) => (
       provider === extension && provider.manifest.provides?.[name]?.target === target
         ? [name]
@@ -206,4 +213,22 @@ export class Manager {
         .filter((value): value is string => typeof value === "string"),
     );
   }
+
+  private entry(extension: Loaded): string | undefined {
+    return extension.manifest.app;
+  }
+
+  private relevant(extension: Loaded): boolean {
+    return Boolean(
+      extension.manifest.app
+      || extension.manifest.ui
+      || extension.manifest.themes?.length,
+    );
+  }
+}
+
+interface RuntimeExtension {
+  activate(
+    context: AppExtensionContext,
+  ): ExtensionCleanup | void | Promise<ExtensionCleanup | void>;
 }

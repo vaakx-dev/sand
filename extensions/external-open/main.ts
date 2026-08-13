@@ -1,8 +1,8 @@
-import type { HostExtension, JsonValue } from "@sand/extension-api";
+import type { AppExtension, JsonValue } from "@sand/extension-api";
 
 import { commands } from "./api.ts";
 
-const extension: HostExtension = {
+const extension: AppExtension = {
   activate(context) {
     context.commands.register(commands.vscode, () => launch(["code", context.workspace.path]));
     context.commands.register(commands.explorer, () =>

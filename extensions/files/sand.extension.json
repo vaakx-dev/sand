@@ -4,6 +4,6 @@
   "version": "0.0.1",
   "description": "Extension-owned workspace explorer, search, editor tabs, and file lifecycle",
   "uses": ["ui", "workbench"],
-  "main": "./main.ts",
+  "app": "./main.ts",
   "ui": "./ui.ts"
 }

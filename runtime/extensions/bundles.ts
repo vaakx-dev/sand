@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { BunPlugin } from "bun";
+import type { ExtensionTarget } from "@sand/extension-api";
 
 import { CoreModules } from "../modules.ts";
 import type { Loaded } from "./discovery.ts";
@@ -7,18 +8,23 @@ import type { Loaded } from "./discovery.ts";
 export class Bundles {
   constructor(private readonly core: CoreModules) {}
 
-  host(extension: Loaded, providers: Map<string, Loaded>): Promise<string> {
-    return this.build(extension, extension.manifest.main!, "bun", providers);
+  entry(
+    extension: Loaded,
+    entry: string,
+    providers: Map<string, Loaded>,
+  ): Promise<string> {
+    return this.build(extension, entry, "bun", "app", providers);
   }
 
   ui(extension: Loaded, providers: Map<string, Loaded>): Promise<string> {
-    return this.build(extension, extension.manifest.ui!, "browser", providers);
+    return this.build(extension, extension.manifest.ui!, "browser", "ui", providers);
   }
 
   private async build(
     extension: Loaded,
     entry: string,
     target: "browser" | "bun",
+    extensionTarget: ExtensionTarget,
     providers: Map<string, Loaded>,
   ): Promise<string> {
     const result = await Bun.build({
@@ -30,8 +36,8 @@ export class Bundles {
       sourcemap: "inline",
       external: target === "browser" ? this.core.uiNames() : undefined,
       plugins: [
-        ...(target === "bun" ? [this.core.hostPlugin()] : []),
-        apiPlugin(extension, target === "bun" ? "host" : "ui", providers),
+        ...(target === "bun" ? [this.core.runtimePlugin()] : []),
+        apiPlugin(extension, extensionTarget, providers),
       ],
     });
     if (!result.success) {
@@ -45,7 +51,7 @@ export class Bundles {
 
 function apiPlugin(
   consumer: Loaded,
-  target: "host" | "ui",
+  target: ExtensionTarget,
   providers: Map<string, Loaded>,
 ): BunPlugin {
   return {

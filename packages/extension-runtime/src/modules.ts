@@ -1,10 +1,10 @@
 export interface CoreModuleCatalog {
-  readonly host: readonly string[];
+  readonly runtime: readonly string[];
   readonly ui: readonly string[];
 }
 
 export const coreModules = {
-  host: [
+  runtime: [
     "@sand/extension-api",
     "@sand/extension-runtime",
   ],

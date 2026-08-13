@@ -41,14 +41,19 @@ const extension: UiExtension = {
     });
     workbench.commands.register({
       id: "extensions.reload",
-      label: "Extensions: Reload Host and UI",
+      label: "Extensions: Reload",
       run: () => controller.preferences.reloadExtensions(),
     });
 
     state.commands.set(workbench.commands.list());
     workbench.commands.subscribe(() => state.commands.set(workbench.commands.list()));
+    workbench.providers.subscribe(() => void controller.refreshProviders());
     workbench.events.subscribe((event) => {
       if (event.kind === workbenchEvents.newThreadSelected) controller.threads.new();
+      if (event.kind === workbenchEvents.providersChanged) void controller.refreshProviders();
+      if (event.kind === workbenchEvents.notice && typeof event.payload === "string") {
+        controller.notice(event.payload);
+      }
     });
     context.mount(shell(controller, state, ui, workbench));
 

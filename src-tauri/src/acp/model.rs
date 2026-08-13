@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,6 +21,8 @@ pub struct NewSessionRequest {
     pub agent_id: String,
     pub cwd: Option<PathBuf>,
     pub thread_id: Option<String>,
+    #[serde(default, rename = "_meta")]
+    pub meta: Option<Map<String, Value>>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -73,6 +75,8 @@ pub struct AgentRecord {
     pub capabilities: Option<Value>,
     pub auth_methods: Option<Value>,
     pub implementation: Option<Value>,
+    #[serde(default)]
+    pub meta: Option<Value>,
     pub created_at: String,
     pub updated_at: String,
     pub error: Option<String>,

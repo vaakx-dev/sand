@@ -1,0 +1,9 @@
+{
+  "id": "sand.codex",
+  "name": "Codex CLI",
+  "version": "0.0.1",
+  "description": "Connect Codex CLI to Sand through an extension-owned ACP bridge",
+  "uses": ["workbench"],
+  "app": "./app.ts",
+  "ui": "./ui.ts"
+}

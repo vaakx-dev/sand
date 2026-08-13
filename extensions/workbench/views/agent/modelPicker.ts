@@ -15,10 +15,11 @@ interface PickerModel {
   model: ProviderModel;
 }
 
-const PICKER_SIZE = 352;
+const PICKER_WIDTH = 352;
+const MAX_VISIBLE_MODELS = 5;
 
 const Picker = styled(div, {
-  height: `min(${PICKER_SIZE}px, var(--popover-available-height))`,
+  maxHeight: "var(--popover-available-height)",
   display: "flex",
 });
 const Sources = styled(div, {
@@ -53,6 +54,11 @@ const Models = styled(div, {
   gap: "var(--space-compact)",
   overflowY: "auto",
   padding: "var(--space-small)",
+  maxHeight: `calc(
+    ${MAX_VISIBLE_MODELS} * var(--header-large)
+    + ${MAX_VISIBLE_MODELS - 1} * var(--space-compact)
+    + 2 * var(--space-small)
+  )`,
 });
 const Model = styled(div, {
   width: "100%",
@@ -80,6 +86,7 @@ export function modelPicker(
   ui: SandUi,
   selection: GenerationSelection,
   picker: GenerationPickerState,
+  anchor: HTMLElement,
 ): HTMLElement {
   const visibleModels = derive(() => {
     const source = picker.source.get();
@@ -105,7 +112,12 @@ export function modelPicker(
     picker.index.set(Math.min(last, Math.max(0, picker.index.get() + amount)));
   };
   return ui.popover(
-    { width: PICKER_SIZE, padding: 0, onDismiss: () => picker.modelOpen.set(false) },
+    {
+      anchor,
+      width: PICKER_WIDTH,
+      padding: 0,
+      onDismiss: () => picker.modelOpen.set(false),
+    },
     Picker(
       {},
       Sources(
@@ -209,11 +221,18 @@ function sourceButton(
     onClick(): void;
   },
 ): HTMLButtonElement {
+  let selected: boolean | (() => boolean);
+  if (typeof options.selected === "object") {
+    const reactive = options.selected;
+    selected = () => reactive.get();
+  } else {
+    selected = options.selected;
+  }
   return SourceButton(
     {
       type: "button",
       "aria-label": options.label,
-      "aria-pressed": options.selected,
+      "aria-pressed": selected,
       onClick: options.onClick,
     },
     options.renderIcon(ui.tokens.size.icon),

@@ -4,7 +4,7 @@ import { basename, join } from "node:path";
 import {
   objectValue,
   requiredString,
-  type HostExtension,
+  type AppExtension,
   type JsonValue,
 } from "@sand/extension-api";
 import { missing, readJson, spawnText, writeJson } from "@sand/extension-runtime";
@@ -16,7 +16,7 @@ interface StoredProject extends Project {
   [key: string]: JsonValue;
 }
 
-const extension: HostExtension = {
+const extension: AppExtension = {
   async activate(context) {
     const registry = join(context.home, "projects.json");
     await remember(registry, context.workspace.path);

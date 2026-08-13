@@ -1,7 +1,4 @@
 import {
-  objectValue,
-  stringValue,
-  type AgentProviderConnectionState,
   type JsonValue,
 } from "@sand/extension-api";
 
@@ -14,16 +11,6 @@ import { providerModel } from "../modelCatalog.ts";
 
 export function appearanceValue(value: JsonValue | undefined): AppearanceMode {
   return value === "light" || value === "dark" ? value : "system";
-}
-
-export function providerConnectionValue(value: JsonValue): AgentProviderConnectionState {
-  const state = objectValue(value);
-  const available = state.available === true;
-  return {
-    available,
-    label: stringValue(state.label, available ? "Available" : "Unavailable"),
-    description: stringValue(state.description, "No connection details are available."),
-  };
 }
 
 export function providerModelsValue(

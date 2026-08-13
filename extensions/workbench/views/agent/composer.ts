@@ -1,4 +1,4 @@
-import { div, dynamicChild, icon, show, span, textarea } from "@vaakx-dev/vrui";
+import { derive, div, dynamicChild, icon, show, span, textarea } from "@vaakx-dev/vrui";
 import { CornerUpLeft, RotateCcw, Send, Square } from "lucide";
 
 import type { SandUi } from "sand:api/ui";
@@ -186,7 +186,9 @@ function sendButton(
   return controls.iconButton({
     label,
     variant: "round",
-    disabled: state.threads.prompt.map((value) => !value.trim()),
+    disabled: derive(() => !state.threads.prompt.get().trim()
+      || !state.provider.get()
+      || !state.model.get()),
     renderIcon: (size) => icon(Send, size),
     onClick: () => void controller.runs.send(),
   });

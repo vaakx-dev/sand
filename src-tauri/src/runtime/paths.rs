@@ -7,7 +7,7 @@ use super::RuntimeError;
 
 pub(super) struct RuntimePaths {
     pub(super) root: PathBuf,
-    pub(super) host: PathBuf,
+    pub(super) app: PathBuf,
     pub(super) extensions: PathBuf,
     pub(super) home: PathBuf,
     pub(super) initial_workspace: PathBuf,
@@ -42,9 +42,11 @@ impl RuntimePaths {
         } else {
             resource_root
         };
-        let host = root.join("runtime/host.ts");
-        if !host.is_file() {
-            return Err(RuntimeError::MissingRuntimeFile(host.display().to_string()));
+        let app_entry = root.join("runtime/app.ts");
+        if !app_entry.is_file() {
+            return Err(RuntimeError::MissingRuntimeFile(
+                app_entry.display().to_string(),
+            ));
         }
         let initial_workspace = std::env::var_os("SAND_WORKSPACE")
             .map(PathBuf::from)
@@ -58,7 +60,7 @@ impl RuntimePaths {
             .join(".sand");
 
         Ok(Self {
-            host,
+            app: app_entry,
             extensions: root.join("extensions"),
             initial_workspace,
             home,

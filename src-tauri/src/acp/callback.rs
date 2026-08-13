@@ -24,18 +24,23 @@ pub(super) async fn publish_notification(
         .values()
         .find(|session| session.agent_id == agent_id && session.acp_session_id == acp_session_id)
         .cloned();
+    let update = to_value(&notification.update);
     let mut payload = json!({
         "agentId": agent_id,
         "acpSessionId": acp_session_id,
-        "update": to_value(&notification.update),
+        "update": update,
     });
-    if let Some(session) = session {
-        merge_correlations(&mut payload, &session);
+    if let Some(ref session) = session {
+        merge_correlations(&mut payload, session);
         payload["sessionId"] = json!(session.id);
     }
     events
         .record("acp.session.update", payload)
-        .map_err(protocol_error)
+        .map_err(protocol_error)?;
+    if let Some(ref session) = session {
+        super::compat::publish_update(state, events, &session, &update).await?;
+    }
+    Ok(())
 }
 
 pub(super) async fn publish_permission(
@@ -59,7 +64,7 @@ pub(super) async fn publish_permission(
         "request": to_value(request),
         "selectedOptionId": selected,
     });
-    if let Some(session) = session {
+    if let Some(ref session) = session {
         merge_correlations(&mut payload, &session);
         payload["sessionId"] = json!(session.id);
     }

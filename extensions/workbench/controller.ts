@@ -39,13 +39,25 @@ export class WorkbenchController {
     this.runs = new RunController(this.runtime, this.selection);
     this.threads = new ThreadController(this.runtime, this.selection);
     this.preferences = new PreferencesController(this.runtime);
-    this.providers = new ProvidersController(this.runtime, (id) => this.selection.selectProvider(id));
+    this.providers = new ProvidersController(
+      this.runtime,
+      () => this.refreshProviders(),
+      (id) => this.selection.selectProvider(id),
+    );
     this.events = new WorkbenchEvents(this.runtime);
   }
 
   async initialize(): Promise<void> {
     await initializeWorkbench(this.runtime);
     this.events.start();
+  }
+
+  refreshProviders(): Promise<void> {
+    return initializeWorkbench(this.runtime);
+  }
+
+  notice(message: string): void {
+    this.runtime.notice(message);
   }
 
   executeCommand(id: string): Promise<void> {

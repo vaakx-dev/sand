@@ -104,6 +104,25 @@ export function generationControl(
         : "",
     ].filter(Boolean).join(" / ");
   });
+  const modelTrigger = ModelChip(
+    {
+      "aria-expanded": picker.modelOpen,
+      onClick: () => {
+        beforeOpen?.();
+        picker.traitsOpen.set(false);
+        picker.index.set(0);
+        picker.modelOpen.toggle()();
+      },
+    },
+    dynamicChild(selection.provider, (provider) => providerIcon(
+      findProvider(state.providers.get(), provider),
+      ui.tokens.size.iconCompact,
+    )),
+    ModelLabel({}, selectedModel.map((model) => model
+      ? modelName(model, selection.model.get())
+      : "Select model")),
+    icon(ChevronDown, ui.tokens.size.iconTiny),
+  );
 
   return Controls(
     {},
@@ -113,28 +132,18 @@ export function generationControl(
           zIndex: picker.modelOpen.map((open) => open ? "var(--z-menu)" : "auto"),
         },
       },
-      ModelChip(
-        {
-          "aria-expanded": picker.modelOpen,
-          onClick: () => {
-            beforeOpen?.();
-            picker.traitsOpen.set(false);
-            picker.index.set(0);
-            picker.modelOpen.toggle()();
-          },
-        },
-        dynamicChild(selection.provider, (provider) => providerIcon(
-          findProvider(state.providers.get(), provider),
-          ui.tokens.size.iconCompact,
-        )),
-        ModelLabel({}, selectedModel.map((model) => modelName(model, selection.model.get()))),
-        icon(ChevronDown, ui.tokens.size.iconTiny),
-      ),
-      show(picker.modelOpen, () => modelPicker(controller, state, ui, selection, picker)),
+      modelTrigger,
+      show(picker.modelOpen, () => modelPicker(
+        controller,
+        state,
+        ui,
+        selection,
+        picker,
+        modelTrigger,
+      )),
     ),
-    show(traitsAvailable, () => Anchor(
-      {},
-      Chip(
+    show(traitsAvailable, () => {
+      const traitsTrigger = Chip(
         {
           "aria-expanded": picker.traitsOpen,
           onClick: () => {
@@ -145,8 +154,18 @@ export function generationControl(
         },
         traitsLabel,
         icon(ChevronDown, ui.tokens.size.iconTiny),
-      ),
-      show(picker.traitsOpen, () => traitsPicker(state, ui, selection, picker)),
-    )),
+      );
+      return Anchor(
+        {},
+        traitsTrigger,
+        show(picker.traitsOpen, () => traitsPicker(
+          state,
+          ui,
+          selection,
+          picker,
+          traitsTrigger,
+        )),
+      );
+    }),
   );
 }

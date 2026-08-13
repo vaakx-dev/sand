@@ -1,9 +1,9 @@
-import type { EventApi, HostEvent, JsonValue } from "@sand/extension-api";
+import type { EventApi, ExtensionEvent, JsonValue } from "@sand/extension-api";
 
 export type ProtocolWriter = (value: object) => void;
 
 export class Events implements EventApi {
-  private readonly listeners = new Set<(event: HostEvent) => void | Promise<void>>();
+  private readonly listeners = new Set<(event: ExtensionEvent) => void | Promise<void>>();
 
   constructor(
     private readonly write: ProtocolWriter,
@@ -23,7 +23,7 @@ export class Events implements EventApi {
     this.write({ record: { workspaceId: this.workspaceId, kind, payload } });
   }
 
-  subscribe(listener: (event: HostEvent) => void | Promise<void>): () => void {
+  subscribe(listener: (event: ExtensionEvent) => void | Promise<void>): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }

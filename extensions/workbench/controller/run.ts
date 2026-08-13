@@ -18,6 +18,10 @@ export class RunController {
     const state = this.runtime.state;
     const prompt = state.threads.prompt.get().trim();
     if (!prompt) return;
+    if (!state.provider.get() || !state.model.get()) {
+      this.runtime.notice("Select a model before sending");
+      return;
+    }
     if (state.threads.status.get() === "running") {
       await this.queue(prompt);
       return;
@@ -27,6 +31,13 @@ export class RunController {
         prompt,
         provider: state.provider.get(),
         model: state.model.get(),
+        reasoning: state.reasoning.get(),
+        serviceTier: state.serviceTier.get(),
+        titleGeneration: {
+          provider: state.titleProvider.get(),
+          model: state.titleModel.get(),
+          reasoning: state.titleReasoning.get(),
+        },
         threadId: state.threads.current.get(),
       });
       this.load(thread);

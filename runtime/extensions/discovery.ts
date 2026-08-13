@@ -5,7 +5,7 @@ import {
   errorMessage,
   type ExtensionDescription,
   type ExtensionManifest,
-  type HostExtensionCleanup,
+  type ExtensionCleanup,
 } from "@sand/extension-api";
 import { missing, readJson } from "@sand/extension-runtime";
 
@@ -14,12 +14,12 @@ export interface Loaded {
   root: string;
   source: ExtensionDescription["source"];
   enabled: boolean;
-  hostActive: boolean;
+  entryActive: boolean;
   uiActive: boolean;
   contributions: string[];
   errors: string[];
   blocked?: string;
-  cleanup?: HostExtensionCleanup;
+  cleanup?: ExtensionCleanup;
 }
 
 export interface Root {
@@ -47,7 +47,7 @@ export async function discover(
           root: directory,
           source: root.source,
           enabled: !disabled.has(manifest.id),
-          hostActive: false,
+          entryActive: false,
           uiActive: false,
           contributions: contributions(manifest),
           errors: [],
@@ -84,7 +84,7 @@ async function validateManifest(
   if (!/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(manifest.id)) {
     throw new Error(`invalid extension id: ${manifest.id}`);
   }
-  if (manifest.main !== undefined) await validateFile(root, manifest.main, "main", path);
+  if (manifest.app !== undefined) await validateFile(root, manifest.app, "app", path);
   if (manifest.ui !== undefined) await validateFile(root, manifest.ui, "ui", path);
   if (
     manifest.uses !== undefined
@@ -100,10 +100,10 @@ async function validateManifest(
       if (
         !apiName(name)
         || !record(contribution)
-        || (contribution.target !== "host" && contribution.target !== "ui")
+        || !["app", "ui"].includes(contribution.target)
       ) throw new Error(`invalid extension API provider ${name || "<empty>"}: ${path}`);
-      if (contribution.target === "host" && !manifest.main) {
-        throw new Error(`host API provider requires a main entry: ${name}`);
+      if (contribution.target === "app" && !manifest.app) {
+        throw new Error(`app API provider requires an app entry: ${name}`);
       }
       if (contribution.target === "ui" && !manifest.ui) {
         throw new Error(`UI API provider requires a UI entry: ${name}`);

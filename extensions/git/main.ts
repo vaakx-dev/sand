@@ -1,9 +1,9 @@
-import type { HostExtension, ThreadChangeRequestState } from "@sand/extension-api";
+import type { AppExtension, ThreadChangeRequestState } from "@sand/extension-api";
 
 import { commands } from "./api.ts";
 import { run } from "./runtime.ts";
 
-const extension: HostExtension = {
+const extension: AppExtension = {
   activate(context) {
     context.commands.register(commands.status, async (_params, signal) => {
       const result = await run(

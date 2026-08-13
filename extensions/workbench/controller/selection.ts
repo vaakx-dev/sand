@@ -28,10 +28,7 @@ export class SelectionController {
     this.restore(provider, model);
     state.modelPickerOpen.set(false);
     state.modelQuery.set("");
-    await this.runtime.save([
-      ["workbench.provider", provider],
-      ["workbench.model", model],
-    ]);
+    state.settings.set(await this.runtime.saveOne("workbench.selection", { provider, model }));
     await this.saveOptions();
   }
 

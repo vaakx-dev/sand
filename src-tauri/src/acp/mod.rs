@@ -1,5 +1,7 @@
 mod callback;
 mod client;
+mod compat;
+mod completion;
 mod connection;
 mod event;
 mod model;
@@ -13,8 +15,9 @@ use std::{
 
 use agent_client_protocol::{Agent, ConnectionTo};
 use serde_json::Value;
-use tokio::sync::{RwLock, oneshot};
+use tokio::sync::{Notify, RwLock, oneshot};
 
+pub(crate) use compat::GenerationSelection;
 pub use event::{Event, Events};
 use model::{AgentRecord, SessionRecord, now, session_payload};
 
@@ -59,7 +62,17 @@ impl From<crate::journal::JournalError> for Error {
 struct AgentHandle {
     connection: ConnectionTo<Agent>,
     close: Option<oneshot::Sender<()>>,
+    closed: Arc<Notify>,
     record: AgentRecord,
+}
+
+struct CompatTurn {
+    thread: Value,
+    run: Value,
+    attempt: Value,
+    message_id: String,
+    message_created_at: String,
+    content: String,
 }
 
 #[derive(Default)]
@@ -67,6 +80,9 @@ struct State {
     agents: HashMap<String, AgentHandle>,
     connecting: HashSet<String>,
     sessions: HashMap<String, SessionRecord>,
+    loaded_sessions: HashSet<String>,
+    turns: HashMap<String, CompatTurn>,
+    completions: HashMap<String, String>,
     shutting_down: bool,
 }
 

@@ -202,6 +202,7 @@ export interface ModalBodyOptions extends Omit<Props<HTMLDivElement>, "class" | 
 }
 
 export interface PopoverOptions {
+  anchor: HTMLElement;
   width?: number;
   align?: "start" | "end";
   padding?: number;

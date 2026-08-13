@@ -1,7 +1,0 @@
-{
-  "id": "sand.provider.echo",
-  "name": "Echo Provider",
-  "version": "0.0.1",
-  "description": "Offline provider for setup and extension testing",
-  "main": "./main.ts"
-}

@@ -1,7 +1,0 @@
-{
-  "id": "sand.provider.chatgpt",
-  "name": "ChatGPT Subscription Provider",
-  "version": "0.0.1",
-  "description": "ChatGPT browser OAuth and Codex Responses provider",
-  "main": "./main.ts"
-}

@@ -36,7 +36,7 @@ export function generalPage(
     settingRow(
       ui,
       "Thread titles",
-      "Model and reasoning used to generate a thread name from its first message.",
+      "Provider, model, and thinking used to name a thread from its first message.",
       generationControl(
         controller,
         state,

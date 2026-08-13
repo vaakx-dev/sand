@@ -4,7 +4,7 @@ use agent_client_protocol::{
     AcpAgent, AcpAgentConfig, schema::v1::AuthenticateRequest as ProtocolAuthenticateRequest,
 };
 use serde_json::{Value, json};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{Notify, mpsc, oneshot};
 
 use super::{
     Acp, AgentHandle, Error,
@@ -45,6 +45,7 @@ impl Acp {
             capabilities: None,
             auth_methods: None,
             implementation: None,
+            meta: None,
             created_at: created_at.clone(),
             updated_at: created_at,
             error: None,
@@ -78,9 +79,11 @@ impl Acp {
         let (ready_tx, mut ready_rx) = mpsc::channel(1);
         let (close_tx, close_rx) = oneshot::channel();
         let (inserted_tx, inserted_rx) = oneshot::channel();
+        let closed = Arc::new(Notify::new());
         let owner = Arc::clone(self);
         let agent_id = request.id.clone();
         let task_base = base.clone();
+        let task_closed = Arc::clone(&closed);
         tokio::spawn(async move {
             let result = owner
                 .run_connection(agent_id.clone(), agent, ready_tx, close_rx)
@@ -89,19 +92,39 @@ impl Acp {
             owner
                 .connection_closed(&agent_id, task_base, result.err())
                 .await;
+            task_closed.notify_one();
         });
 
-        let (connection, initialized) = ready_rx.recv().await.ok_or(Error::Stopped)??;
+        let (connection, initialized) = match ready_rx.recv().await {
+            Some(Ok(ready)) => ready,
+            Some(Err(error)) => {
+                let _ = inserted_tx.send(());
+                closed.notified().await;
+                return Err(error.into());
+            }
+            None => {
+                self.state.write().await.connecting.remove(&request.id);
+                return Err(Error::Stopped);
+            }
+        };
         let mut record = base;
         record.status = "connected".to_owned();
         record.protocol_version = Some(to_value(&initialized.protocol_version));
         record.capabilities = Some(to_value(&initialized.agent_capabilities));
         record.auth_methods = Some(to_value(&initialized.auth_methods));
         record.implementation = initialized.agent_info.as_ref().map(to_value);
+        record.meta = initialized.meta.as_ref().map(to_value);
         record.updated_at = now();
 
-        self.events
-            .record("acp.agent.connected", agent_payload(&record))?;
+        if let Err(error) = self
+            .events
+            .record("acp.agent.connected", agent_payload(&record))
+        {
+            let _ = close_tx.send(());
+            let _ = inserted_tx.send(());
+            closed.notified().await;
+            return Err(error.into());
+        }
         {
             let mut state = self.state.write().await;
             state.connecting.remove(&request.id);
@@ -116,6 +139,7 @@ impl Acp {
                 AgentHandle {
                     connection,
                     close: Some(close_tx),
+                    closed,
                     record: record.clone(),
                 },
             );
@@ -126,17 +150,17 @@ impl Acp {
 
     pub async fn disconnect(&self, value: Value) -> Result<Value, Error> {
         let request = serde_json::from_value::<IdRequest>(value)?;
-        let close = self
-            .state
-            .write()
-            .await
-            .agents
-            .get_mut(&request.id)
-            .ok_or_else(|| Error::UnknownAgent(request.id.clone()))?
-            .close
-            .take();
+        let (close, closed) = {
+            let mut state = self.state.write().await;
+            let agent = state
+                .agents
+                .get_mut(&request.id)
+                .ok_or_else(|| Error::UnknownAgent(request.id.clone()))?;
+            (agent.close.take(), Arc::clone(&agent.closed))
+        };
         if let Some(close) = close {
             let _ = close.send(());
+            closed.notified().await;
         }
         Ok(Value::Bool(true))
     }
@@ -166,6 +190,15 @@ impl Acp {
         let removed = {
             let mut state = self.state.write().await;
             state.connecting.remove(id);
+            let session_ids = state
+                .sessions
+                .values()
+                .filter(|session| session.agent_id == id)
+                .map(|session| session.id.clone())
+                .collect::<Vec<_>>();
+            for session_id in session_ids {
+                state.loaded_sessions.remove(&session_id);
+            }
             state.agents.remove(id)
         };
         if let Some(handle) = removed {

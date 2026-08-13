@@ -22,7 +22,7 @@ export interface ThemeContribution {
   dark?: ThemePalette;
 }
 
-export type ExtensionTarget = "host" | "ui";
+export type ExtensionTarget = "app" | "ui";
 
 export interface ExtensionApiContribution {
   target: ExtensionTarget;
@@ -36,7 +36,7 @@ export interface ExtensionManifest {
   description?: string;
   uses?: string[];
   provides?: Record<string, ExtensionApiContribution>;
-  main?: string;
+  app?: string;
   ui?: string;
   themes?: ThemeContribution[];
 }
@@ -45,7 +45,7 @@ export interface ExtensionDescription extends ExtensionManifest {
   root: string;
   source: "builtin" | "user";
   enabled: boolean;
-  hostActive: boolean;
+  appActive: boolean;
   uiActive: boolean;
   contributions: string[];
   errors: string[];

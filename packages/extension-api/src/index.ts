@@ -5,7 +5,6 @@ export type {
   AgentContextUsage,
   AgentMessage,
   AgentModelTraits,
-  AgentProvider,
   AgentProviderConnection,
   AgentProviderConnectionState,
   AgentProviderDescription,
@@ -13,19 +12,13 @@ export type {
   AgentProviderModel,
   AgentProviderOption,
   AgentProviderPresentation,
-  AgentProviderRequest,
-  AgentProviderResponse,
-  AgentProviderUsage,
   AgentQueuedTurn,
   AgentRole,
   AgentRun,
   AgentRunStatus,
   AgentThread,
   AgentThreadSummary,
-  AgentTool,
   AgentToolCall,
-  AgentToolDefinition,
-  AgentToolExecution,
   JournalEvent,
 } from "./agent.ts";
 export { ExtensionApiRegistry } from "./apis.ts";
@@ -54,14 +47,15 @@ export type {
   UiBundle,
 } from "./extension.ts";
 export type {
+  AppExtension,
+  AppExtensionContext,
+  ExtensionCleanup,
+  ExtensionContext,
   EventApi,
-  HostEvent,
-  HostExtension,
-  HostExtensionCleanup,
-  HostExtensionContext,
+  ExtensionEvent,
   RuntimeCommand,
   SettingsApi,
-} from "./host.ts";
+} from "./context.ts";
 export {
   booleanValue,
   errorMessage,

@@ -2,6 +2,7 @@ import type {
   AgentProviderDescription,
   AgentProviderModel,
 } from "@sand/extension-api";
+import type { ProviderConnection } from "./api.ts";
 
 export type Activity = "threads" | "extensions" | "settings";
 export type SettingsSection = "general" | "appearance" | "keybindings" | "providers" | "extensions";
@@ -13,4 +14,6 @@ export interface ProviderModel extends AgentProviderModel {
 }
 
 export type ProviderModels = Record<string, ProviderModel[]>;
-export type ProviderDescription = AgentProviderDescription;
+export interface ProviderDescription extends AgentProviderDescription {
+  connection?: ProviderConnection;
+}

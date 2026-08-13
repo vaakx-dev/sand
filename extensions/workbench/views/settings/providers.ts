@@ -2,16 +2,17 @@ import { button, div, dynamicChild, icon, span, type Sig } from "@vaakx-dev/vrui
 import { ChevronDown, ChevronRight } from "lucide";
 
 import type {
-  AgentProviderConnection,
   AgentProviderConnectionState,
 } from "@sand/extension-api";
 import type { SandUi } from "sand:api/ui";
 import { styled } from "sand:api/ui";
+import type { ProviderConnection } from "../../api.ts";
 import type { WorkbenchController } from "../../controller.ts";
 import type { ProviderDescription } from "../../models.ts";
 import type { WorkbenchState } from "../../state.ts";
 import { providerModels } from "./providerModels.ts";
 import { page } from "./shared.ts";
+import { providerIcon } from "../shared/providerIcon.ts";
 
 const AVAILABLE: AgentProviderConnectionState = {
   available: true,
@@ -89,7 +90,7 @@ function providerCard(
   provider: ProviderDescription,
 ): HTMLElement {
   const open = state.providerSections.map((sections) => sections[provider.id] ?? false);
-  const connection = provider.presentation?.connection;
+  const connection = provider.connection;
   const status = state.providerConnections.map((states) => states[provider.id] ?? AVAILABLE);
   return Provider(
     {},
@@ -99,6 +100,7 @@ function providerCard(
         onClick: () => controller.models.toggleProvider(provider.id),
       },
       Status({ "data-available": status.map((value) => value.available) }),
+      providerIcon(provider, ui.tokens.size.iconCompact),
       ProviderName({}, provider.name),
       ProviderId({}, provider.id),
       ProviderState({}, status.map((value) => value.label)),
@@ -121,7 +123,7 @@ function connectionControls(
   state: WorkbenchState,
   ui: SandUi,
   provider: string,
-  connection: AgentProviderConnection,
+  connection: ProviderConnection,
   status: Sig<AgentProviderConnectionState>,
 ): HTMLElement {
   const busy = state.providerConnectionBusy.map((states) => states[provider] ?? false);

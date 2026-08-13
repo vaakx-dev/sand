@@ -44,6 +44,10 @@ impl Events {
         }
     }
 
+    pub fn thread(&self, id: &str) -> Result<Value, JournalError> {
+        self.journal.thread(id)
+    }
+
     pub fn emit(&self, kind: impl Into<String>, payload: Value) {
         let _ = self.sender.send(Event {
             kind: kind.into(),

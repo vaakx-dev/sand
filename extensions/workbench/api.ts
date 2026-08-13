@@ -1,4 +1,9 @@
-import type { ExtensionApis, JsonObject } from "@sand/extension-api";
+import type {
+  AgentProviderConnectionState,
+  AgentProviderIcon,
+  ExtensionApis,
+  JsonObject,
+} from "@sand/extension-api";
 
 export const WORKBENCH_API = "workbench";
 
@@ -88,11 +93,36 @@ export interface UiToolRegistry {
   subscribe(listener: () => void): () => void;
 }
 
+export interface ProviderConnection {
+  connectLabel: string;
+  connectingLabel: string;
+  disconnectLabel: string;
+  status(): Promise<AgentProviderConnectionState>;
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+}
+
+export interface ProviderContribution {
+  id: string;
+  name: string;
+  description: string;
+  icon?: AgentProviderIcon;
+  connection: ProviderConnection;
+}
+
+export interface ProviderRegistry {
+  register(provider: ProviderContribution): () => void;
+  list(): ProviderContribution[];
+  refresh(): void;
+  subscribe(listener: () => void): () => void;
+}
+
 export interface WorkbenchService {
   commands: UiCommandRegistry;
   slots: UiSlotRegistry;
   surfaces: UiSurfaceRegistry;
   events: UiEventRegistry;
+  providers: ProviderRegistry;
   tools: UiToolRegistry;
 }
 
@@ -103,6 +133,8 @@ export function useWorkbench(apis: ExtensionApis): WorkbenchService {
 export const workbenchEvents = {
   activityChanged: "workbench.activity.changed",
   newThreadSelected: "agent.new.selected",
+  notice: "workbench.notice",
+  providersChanged: "workbench.providers.changed",
   threadChanged: "workbench.thread.changed",
 } as const;
 

@@ -16,6 +16,7 @@ pub(super) struct Projection {
 pub(super) fn apply(projection: &mut Projection, event: &Event) {
     match event.kind.as_str() {
         "thread.saved" => save(&mut projection.threads, &event.payload, "thread"),
+        "thread.title_updated" => update_title(projection, &event.payload),
         "thread.deleted" => delete_thread(projection, &event.payload),
         "message.appended" => {
             save(&mut projection.threads, &event.payload, "thread");
@@ -65,6 +66,29 @@ fn delete_thread(projection: &mut Projection, payload: &Value) {
     projection
         .attempts
         .retain(|_, attempt| field(attempt, "threadId") != Some(thread_id));
+}
+
+fn update_title(projection: &mut Projection, payload: &Value) {
+    let Some(thread_id) = field(payload, "threadId") else {
+        return;
+    };
+    let Some(title) = payload.get("title").and_then(Value::as_str) else {
+        return;
+    };
+    let Some(thread) = projection
+        .threads
+        .get_mut(thread_id)
+        .and_then(Value::as_object_mut)
+    else {
+        return;
+    };
+    thread.insert("title".to_owned(), Value::String(title.to_owned()));
+    if let Some(updated_at) = payload.get("updatedAt").and_then(Value::as_str) {
+        let current = thread.get("updatedAt").and_then(Value::as_str);
+        if current.is_none_or(|current| current < updated_at) {
+            thread.insert("updatedAt".to_owned(), Value::String(updated_at.to_owned()));
+        }
+    }
 }
 
 fn append_message(projection: &mut Projection, payload: &Value) {
@@ -143,4 +167,60 @@ pub(super) fn field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
 
 pub(super) fn owned_field(value: &Value, key: &str) -> Option<String> {
     field(value, key).map(ToOwned::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn title_update_preserves_thread_state() {
+        let mut projection = Projection::default();
+        apply(
+            &mut projection,
+            &event(
+                "thread.saved",
+                json!({
+                    "thread": {
+                        "id": "thread-1",
+                        "title": "Initial title",
+                        "status": "complete",
+                        "updatedAt": "2026-01-01T00:00:00.000Z",
+                        "messages": [{ "id": "message-1" }],
+                    },
+                }),
+            ),
+        );
+        apply(
+            &mut projection,
+            &event(
+                "thread.title_updated",
+                json!({
+                    "threadId": "thread-1",
+                    "title": "Agent title",
+                    "updatedAt": "2026-01-02T00:00:00.000Z",
+                }),
+            ),
+        );
+
+        let thread = projection.threads.get("thread-1").unwrap();
+        assert_eq!(thread["title"], "Agent title");
+        assert_eq!(thread["status"], "complete");
+        assert_eq!(thread["messages"][0]["id"], "message-1");
+    }
+
+    fn event(kind: &str, payload: Value) -> Event {
+        Event {
+            sequence: 1,
+            id: "event-1".to_owned(),
+            kind: kind.to_owned(),
+            thread_id: None,
+            run_id: None,
+            attempt_id: None,
+            created_at: "2026-01-01T00:00:00.000Z".to_owned(),
+            payload,
+        }
+    }
 }

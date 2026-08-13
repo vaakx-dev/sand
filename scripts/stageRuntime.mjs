@@ -6,7 +6,7 @@ const projectRoot = resolve(import.meta.dirname, "..");
 const outputRoot = join(projectRoot, "build", "runtime");
 const sourceModules = join(projectRoot, "node_modules");
 const corePackages = new Set([
-  ...coreModules.host,
+  ...coreModules.runtime,
   ...coreModules.ui,
 ]);
 const stagedPackages = new Map();
@@ -14,14 +14,14 @@ const stagedPackages = new Map();
 await rm(outputRoot, { recursive: true, force: true });
 await Promise.all([
   copy("runtime"),
-  copy("extensions"),
+  copy("extensions", { filter: (path) => !path.endsWith(".test.ts") }),
 ]);
 
 for (const name of corePackages) await copyCorePackage(name);
 await stageExtensionDependencies();
 
-async function copy(path) {
-  await cp(join(projectRoot, path), join(outputRoot, path), { recursive: true });
+async function copy(path, options = {}) {
+  await cp(join(projectRoot, path), join(outputRoot, path), { recursive: true, ...options });
 }
 
 async function stageExtensionDependencies() {

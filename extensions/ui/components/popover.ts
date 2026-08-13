@@ -41,7 +41,7 @@ export function popover(options: PopoverOptions, ...children: Child[]): HTMLElem
           "--popover-width": `${options.width ?? 256}px`,
           "--popover-padding": `${options.padding ?? tokens.space.small}px`,
         },
-        onMount: (element) => position(element, options.align ?? "start"),
+        onMount: (element) => position(element, options.anchor, options.align ?? "start"),
         onPointerDown: (event) => event.stopPropagation(),
       },
       ...children,
@@ -49,11 +49,12 @@ export function popover(options: PopoverOptions, ...children: Child[]): HTMLElem
   );
 }
 
-function position(element: HTMLElement, align: "start" | "end"): () => void {
+function position(
+  element: HTMLElement,
+  anchor: HTMLElement,
+  align: "start" | "end",
+): () => void {
   const place = () => {
-    const anchor = element.parentElement?.parentElement;
-    if (!anchor) return;
-
     const inset = tokens.space.medium;
     const gap = tokens.space.small;
     const anchorBounds = anchor.getBoundingClientRect();

@@ -5,7 +5,6 @@ import type {
 } from "@sand/extension-api";
 import { objectValue, requiredString } from "@sand/extension-api";
 
-import { AgentHarness } from "../agent.ts";
 import { Events, type ProtocolWriter } from "../events.ts";
 import { Dependencies } from "../extensions/dependencies.ts";
 import type { Root } from "../extensions/discovery.ts";
@@ -13,6 +12,9 @@ import { Manager as ExtensionManager } from "../extensions/manager.ts";
 import { Registry } from "../extensions/registry.ts";
 import { CoreModules } from "../modules.ts";
 import { Settings } from "../settings.ts";
+import { registerThreadCommands } from "../threads/commands.ts";
+import { ThreadLifecycle } from "../threads/lifecycle.ts";
+import { ThreadStore } from "../threads/store.ts";
 
 interface ContextOptions {
   appRoot: string;
@@ -28,7 +30,7 @@ interface ContextOptions {
 export class WorkspaceContext {
   private readonly events: Events;
   private readonly registry: Registry;
-  private readonly agent: AgentHarness;
+  private readonly threads: ThreadStore;
   private readonly extensions: ExtensionManager;
 
   private constructor(
@@ -42,7 +44,12 @@ export class WorkspaceContext {
       options.settings,
       this.events,
     );
-    this.agent = new AgentHarness(this.registry, options.settings, this.events);
+    this.threads = new ThreadStore(this.events);
+    registerThreadCommands(
+      this.registry,
+      new ThreadLifecycle(this.threads, options.settings, this.events),
+      this.threads,
+    );
     this.extensions = new ExtensionManager(
       options.extensionRoots,
       options.core,
@@ -58,7 +65,7 @@ export class WorkspaceContext {
     options: ContextOptions,
   ): Promise<WorkspaceContext> {
     const context = new WorkspaceContext(workspace, options);
-    context.agent.restore(snapshot);
+    context.threads.restore(snapshot);
     await context.extensions.reload();
     context.events.emit("workspace.ready", {
       workspace,
@@ -68,7 +75,6 @@ export class WorkspaceContext {
   }
 
   async close(): Promise<void> {
-    await this.agent.shutdown();
     await this.extensions.close();
   }
 
@@ -100,15 +106,6 @@ export class WorkspaceContext {
         const id = requiredString(object, "id");
         return (await this.registry.execute<JsonValue>(id, object.params ?? null)) ?? null;
       }
-      case "agent.providers":
-        return this.agent.providers();
-      case "agent.tools":
-        return this.agent.tools();
-      case "agent.tool.execute":
-        return this.agent.tool(
-          requiredString(object, "name"),
-          objectValue(object.input ?? null),
-        );
     }
     if (this.registry.command(method)) return this.registry.execute<JsonValue>(method, params);
     throw new Error(`unknown runtime method: ${method}`);

@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import type { HostExtensionContext } from "@sand/extension-api";
+import type { ExtensionContext } from "@sand/extension-api";
 
 import { readJson, writeJson } from "./json.ts";
 
@@ -19,7 +19,7 @@ export class ExtensionState<T> {
   ) {}
 
   static async open<T>(
-    context: HostExtensionContext,
+    context: ExtensionContext,
     fallback: T,
   ): Promise<ExtensionState<T>> {
     const path = join(

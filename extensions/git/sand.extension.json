@@ -4,6 +4,6 @@
   "version": "0.0.1",
   "description": "Git repository lifecycle, status, diff, and source-control UI",
   "uses": ["ui", "workbench"],
-  "main": "./main.ts",
+  "app": "./main.ts",
   "ui": "./ui.ts"
 }

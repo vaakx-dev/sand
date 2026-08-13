@@ -46,36 +46,58 @@ export function contextButton(state: WorkbenchState, ui: SandUi): HTMLElement {
     closeTimer = window.setTimeout(() => state.threads.contextOpen.set(false), 100);
   };
   return dynamicChild(currentContext(state), (usage) => usage
-    ? Anchor(
-        {
-          onMouseEnter: open,
-          onMouseLeave: close,
-          onMount: () => () => window.clearTimeout(closeTimer),
-        },
-        UsageButton(
-          {
-            type: "button",
-            "aria-label": contextLabel(usage),
-            "aria-controls": "context-usage-popover",
-            "aria-expanded": state.threads.contextOpen,
-            onPointerDown: stop,
-            onClick: () => {
-              state.modelPickerOpen.set(false);
-              state.traitsOpen.set(false);
-              open();
-            },
-          },
-          Ring({ style: { "--context-usage": `${contextPercentage(usage)}%` } }),
-        ),
-        show(state.threads.contextOpen, () => contextPopover(state, ui)),
-      )
+    ? contextControl(usage, state, ui, open, close, () => window.clearTimeout(closeTimer))
     : span({ hidden: true }));
 }
 
-export function contextPopover(state: WorkbenchState, ui: SandUi): HTMLElement {
+function contextControl(
+  usage: AgentContextUsage,
+  state: WorkbenchState,
+  ui: SandUi,
+  open: () => void,
+  close: () => void,
+  dispose: () => void,
+): HTMLElement {
+  const trigger = UsageButton(
+    {
+      type: "button",
+      "aria-label": contextLabel(usage),
+      "aria-controls": "context-usage-popover",
+      "aria-expanded": state.threads.contextOpen,
+      onPointerDown: stop,
+      onClick: () => {
+        state.modelPickerOpen.set(false);
+        state.traitsOpen.set(false);
+        open();
+      },
+    },
+    Ring({ style: { "--context-usage": `${contextPercentage(usage)}%` } }),
+  );
+  return Anchor(
+    {
+      onMouseEnter: open,
+      onMouseLeave: close,
+      onMount: () => dispose,
+    },
+    trigger,
+    show(state.threads.contextOpen, () => contextPopover(state, ui, trigger)),
+  );
+}
+
+export function contextPopover(
+  state: WorkbenchState,
+  ui: SandUi,
+  anchor: HTMLElement,
+): HTMLElement {
   return dynamicChild(currentContext(state), (usage) => usage
     ? ui.popover(
-        { width: 256, align: "end", padding: ui.tokens.space.section, onDismiss: () => state.threads.contextOpen.set(false) },
+        {
+          anchor,
+          width: 256,
+          align: "end",
+          padding: ui.tokens.space.section,
+          onDismiss: () => state.threads.contextOpen.set(false),
+        },
         div(
           { id: "context-usage-popover" },
           Heading(

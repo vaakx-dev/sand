@@ -14,6 +14,7 @@ use tokio::{
 };
 
 mod acp;
+mod agent;
 mod events;
 mod paths;
 mod worker;
@@ -93,11 +94,12 @@ pub struct Runtime {
 impl Runtime {
     pub async fn start(app: &AppHandle) -> Result<Arc<Self>, RuntimeError> {
         let paths = RuntimePaths::resolve(app)?;
-        let mut command = Command::new(bun_executable());
+        let bun = bun_executable();
+        let mut command = Command::new(&bun);
         command
             .arg("run")
             .arg("--no-install")
-            .arg(&paths.host)
+            .arg(&paths.app)
             .current_dir(&paths.root)
             .env("SAND_APP_ROOT", &paths.root)
             .env("SAND_BUILTIN_EXTENSIONS", &paths.extensions)
@@ -151,6 +153,22 @@ impl Runtime {
         params: Value,
     ) -> Result<Value, RuntimeError> {
         let workspace = self.workspace(workspace_id.as_deref()).await?;
+        if method == "commands.execute" {
+            if let Some(id) = params.get("id").and_then(Value::as_str) {
+                if id.starts_with("agent.run.") {
+                    return self
+                        .request_agent(
+                            &workspace,
+                            id,
+                            params.get("params").cloned().unwrap_or(Value::Null),
+                        )
+                        .await;
+                }
+            }
+        }
+        if method == "agent.providers" || method.starts_with("agent.run.") {
+            return self.request_agent(&workspace, &method, params).await;
+        }
         if method.starts_with("acp.") {
             return self.request_acp(&workspace, &method, params).await;
         }

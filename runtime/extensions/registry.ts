@@ -1,10 +1,8 @@
 import type {
-  AgentProvider,
-  AgentTool,
+  AppExtensionContext,
   EventApi,
   ExtensionApis,
   ExtensionManifest,
-  HostExtensionContext,
   RuntimeCommand,
   SettingsApi,
   WorkspaceDescription,
@@ -12,8 +10,6 @@ import type {
 
 export class Registry {
   readonly commands = new Map<string, RuntimeCommand>();
-  readonly providers = new Map<string, AgentProvider>();
-  readonly tools = new Map<string, AgentTool>();
   private readonly internalCommands = new Map<string, RuntimeCommand>();
 
   constructor(
@@ -25,8 +21,6 @@ export class Registry {
 
   clear(): void {
     this.commands.clear();
-    this.providers.clear();
-    this.tools.clear();
   }
 
   registerInternal(id: string, command: RuntimeCommand): void {
@@ -49,11 +43,13 @@ export class Registry {
 
   context(
     manifest: ExtensionManifest,
+    root: string,
     contributions: string[],
     apis: ExtensionApis,
-  ): HostExtensionContext {
+  ): AppExtensionContext {
     return {
       manifest,
+      root,
       home: this.home,
       workspace: this.workspace,
       settings: this.settings,
@@ -65,18 +61,6 @@ export class Registry {
           contributions.push(`command:${id}`);
         },
         execute: (id, params = null, signal) => this.execute(id, params, signal),
-      },
-      providers: {
-        register: (provider) => {
-          register(this.providers, "provider", provider.id, provider);
-          contributions.push(`provider:${provider.id}`);
-        },
-      },
-      tools: {
-        register: (tool) => {
-          register(this.tools, "tool", tool.definition.name, tool);
-          contributions.push(`tool:${tool.definition.name}`);
-        },
       },
     };
   }

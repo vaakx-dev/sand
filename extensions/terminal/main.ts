@@ -2,14 +2,14 @@ import {
   objectValue,
   optionalString,
   requiredString,
-  type HostExtension,
+  type AppExtension,
   type JsonValue,
 } from "@sand/extension-api";
 
 import { commands } from "./api.ts";
 import { TerminalProcesses } from "./processes.ts";
 
-const extension: HostExtension = {
+const extension: AppExtension = {
   activate(context) {
     const processes = new TerminalProcesses(context.workspace.path, context.events);
     context.commands.register(commands.list, () => processes.list() as unknown as JsonValue);

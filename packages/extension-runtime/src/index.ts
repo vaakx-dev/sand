@@ -1,6 +1,5 @@
 import { isAbsolute, resolve } from "node:path";
 
-export { registerThreadTools, type ThreadTool } from "./threadTools.ts";
 export { ExtensionState } from "./state.ts";
 export { missing, readJson, writeJson } from "./json.ts";
 export {

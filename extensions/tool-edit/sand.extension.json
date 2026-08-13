@@ -1,9 +1,0 @@
-{
-  "id": "sand.tool.edit",
-  "name": "Edit Tool",
-  "version": "0.0.1",
-  "description": "exact block editor",
-  "uses": ["workbench"],
-  "main": "./main.ts",
-  "ui": "./ui.ts"
-}

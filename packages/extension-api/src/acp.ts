@@ -13,6 +13,7 @@ export interface AcpAgentRecord {
   capabilities?: JsonValue;
   authMethods?: JsonValue;
   implementation?: JsonValue;
+  meta?: JsonValue;
   createdAt: string;
   updatedAt: string;
   error?: string;

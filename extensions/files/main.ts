@@ -3,7 +3,7 @@ import {
   optionalNumber,
   optionalString,
   requiredString,
-  type HostExtension,
+  type AppExtension,
   type JsonValue,
 } from "@sand/extension-api";
 
@@ -11,7 +11,7 @@ import { commands } from "./api.ts";
 import { readText, tree, writeText } from "./runtime/files.ts";
 import { search } from "./runtime/search.ts";
 
-const extension: HostExtension = {
+const extension: AppExtension = {
   activate(context) {
     context.commands.register(commands.tree, (params) => {
       const value = objectValue(params);

@@ -1,4 +1,7 @@
 export type {
+  ProviderConnection,
+  ProviderContribution,
+  ProviderRegistry,
   UiCommand,
   UiCommandRegistry,
   UiEvent,

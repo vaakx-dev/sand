@@ -55,7 +55,10 @@ export class ModelsController {
     const models = state.providerModels.get()[provider] ?? [];
     const visible = models.find((model) => !model.hidden)?.slug;
     if (visible && state.provider.get() === provider && state.model.get() === slug) {
-      const settings = await this.runtime.saveOne("workbench.model", visible);
+      const settings = await this.runtime.saveOne("workbench.selection", {
+        provider,
+        model: visible,
+      });
       state.settings.set(settings);
       state.model.set(visible);
     }
@@ -113,7 +116,7 @@ export class ModelsController {
 
   private saveTitle(): Promise<void> {
     const state = this.runtime.state;
-    return this.runtime.saveOne("agent.titleGeneration", {
+    return this.runtime.saveOne("threads.titleGeneration", {
       provider: state.titleProvider.get(),
       model: state.titleModel.get(),
       reasoning: state.titleReasoning.get(),

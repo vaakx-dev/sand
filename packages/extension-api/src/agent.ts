@@ -27,7 +27,6 @@ export interface AgentMessage {
   toolCallId?: string;
   createdAt: string;
 }
-
 export interface AgentContextUsage {
   usedTokens: number;
   maxTokens: number;
@@ -87,37 +86,6 @@ export interface JournalEvent {
   attemptId?: string;
   createdAt: string;
   payload: JsonValue;
-}
-
-export interface AgentToolDefinition {
-  name: string;
-  description: string;
-  parameters: JsonObject;
-}
-
-export interface AgentProviderRequest {
-  threadId: string;
-  runId: string;
-  attemptId: string;
-  model: string;
-  messages: AgentMessage[];
-  tools: AgentToolDefinition[];
-  settings: JsonObject;
-  signal: AbortSignal;
-  onDelta(delta: string): void;
-}
-
-export interface AgentProviderResponse {
-  content: string;
-  toolCalls: AgentToolCall[];
-  usage?: AgentProviderUsage;
-}
-
-export interface AgentProviderUsage {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  maxContextTokens: number;
 }
 
 export interface AgentProviderOption {
@@ -184,26 +152,4 @@ export function selectProviderOption(
     : options.some((option) => option.id === fallback)
       ? fallback
       : options[0]?.id ?? "";
-}
-
-export interface AgentProvider {
-  id: string;
-  name: string;
-  defaultModel?: string;
-  modelDefaults: AgentModelTraits;
-  models: AgentProviderModel[];
-  presentation?: AgentProviderPresentation;
-  complete(request: AgentProviderRequest): Promise<AgentProviderResponse>;
-}
-
-export interface AgentTool {
-  definition: AgentToolDefinition;
-  execute(input: JsonObject, signal: AbortSignal, execution?: AgentToolExecution): Promise<JsonValue>;
-}
-
-export interface AgentToolExecution {
-  threadId: string;
-  runId: string;
-  attemptId: string;
-  callId: string;
 }

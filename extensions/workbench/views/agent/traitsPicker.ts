@@ -16,6 +16,7 @@ export function traitsPicker(
   ui: SandUi,
   selection: GenerationSelection,
   picker: GenerationPickerState,
+  anchor: HTMLElement,
 ): HTMLElement {
   const model = derive(() => findModel(
     state.providerModels.get(),
@@ -23,13 +24,13 @@ export function traitsPicker(
     selection.model.get(),
   ));
   return ui.popover(
-    { width: 168, onDismiss: () => picker.traitsOpen.set(false) },
+    { anchor, width: 168, onDismiss: () => picker.traitsOpen.set(false) },
     dynamicChild(model, (selected) => selected
       ? div(
           {},
           ...optionSection(
             ui,
-            "Reasoning",
+            "Thinking",
             selected.reasoning,
             selected.defaultReasoning,
             selection.reasoning,
