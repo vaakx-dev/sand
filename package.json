@@ -11,7 +11,9 @@
     "build": "vite build && npm run runtime:stage",
     "check": "tsc --noEmit && npm run runtime:stage && cargo check --manifest-path src-tauri/Cargo.toml",
     "dev": "vite",
+    "release:version": "node scripts/releaseVersion.mjs",
     "runtime:stage": "bun run scripts/stageRuntime.mjs",
+    "test:release": "node --test scripts/releaseVersion.test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {

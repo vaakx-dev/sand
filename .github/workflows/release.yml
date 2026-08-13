@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+      - "!v*-canary.*"
 
 permissions:
   contents: write
@@ -33,6 +34,8 @@ jobs:
           node-version: 22
           cache: npm
 
+      - uses: oven-sh/setup-bun@v2
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ startsWith(matrix.platform, 'macos-') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -45,6 +48,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify release version
+        run: npm run release:version -- check "${{ github.ref_name }}"
 
       - uses: tauri-apps/tauri-action@v1
         env:
