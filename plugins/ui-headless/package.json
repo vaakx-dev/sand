@@ -1,22 +1,20 @@
 {
   "name": "@sand/ui-headless",
   "version": "0.0.0",
-  "description": "sand -p: runs one prompt or /command in the terminal and prints the reply",
+  "description": "sand -p: a minimal test runner that runs one prompt or /command without a server and prints the reply",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "sand": {
     "label": "Headless",
-    "summary": "Runs one prompt or /command and prints the reply",
+    "summary": "Test runner: one prompt or /command, printed in the terminal",
     "provides": [
       "ui"
     ],
     "uses": {
       "llm": "no plan limits in the summary",
-      "modelSettings": "ignores --model, --effort and --fast",
-      "attachments": "--attach fails",
-      "remotes": "--on fails"
+      "modelSettings": "ignores --model, --effort and --fast"
     }
   },
   "dependencies": {

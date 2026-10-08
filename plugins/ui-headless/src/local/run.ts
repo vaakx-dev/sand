@@ -1,7 +1,7 @@
 import type { Session } from '@sand/protocol'
 import type { Context } from 'drydock'
 import { createFollower } from '../follow/follower'
-import { commandOf, composePrompt } from '../run/prompt'
+import { commandOf } from '../run/prompt'
 import { commandExit, exitCode, whenAborted, type Run } from '../run/run'
 import { runCommand } from './command'
 import { followLocal } from './events'
@@ -24,15 +24,14 @@ export const runLocal = async (ctx: LocalContext, { printer, ui, prompt, signal 
     const focused = ui.service.session()
     if (focused) ctx.loop.interrupt(focused)
   })
-  const command = commandOf(ctx.cli, prompt)
+  const command = commandOf(prompt)
   if (command) {
     focus(existingSession(ctx.sessions, ctx.cli))
     signal.throwIfAborted()
     return commandExit(follower, signal, await runCommand(ui, command.name, command.args))
   }
   const session = focus(chooseSession(ctx.sessions, ctx.cli))
-  const content = await composePrompt(ctx.cli, prompt, ctx.attachments)
-  const result = await ctx.loop.run(session, content, signal)
+  const result = await ctx.loop.run(session, prompt, signal)
   await follower.finish(signal)
   return exitCode(result, signal)
 }

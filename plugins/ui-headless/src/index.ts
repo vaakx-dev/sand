@@ -1,14 +1,13 @@
 import { definePlugin } from 'drydock'
 import { runLocal } from './local/run'
 import { createPrinter } from './print/printer'
-import { runRemote } from './remote/run'
 import { createHeadlessUI } from './ui/service'
 
 export default definePlugin({
   name: 'ui-headless',
   inject: ['cli', 'loop', 'sessions'],
   apply(ctx) {
-    const { mode, prompt, cwd, exit, flags } = ctx.cli
+    const { mode, prompt, cwd, exit } = ctx.cli
     if (mode !== 'print') return
     const printer = createPrinter()
     const ui = createHeadlessUI(printer, cwd, () => ctx.modelSettings?.flags())
@@ -28,8 +27,7 @@ export default definePlugin({
 
     const start = async () => {
       await ctx.settled()
-      const run = { printer, ui, prompt, signal }
-      return flags.on ? runRemote(ctx, run) : runLocal(ctx, run)
+      return runLocal(ctx, { printer, ui, prompt, signal })
     }
     start().then(exit, error => {
       printer.error(error)

@@ -7,12 +7,13 @@
 - Everything is a plugin. drydock stays agent-agnostic.
 - `packages/protocol` holds types only.
 - Register everything through `ctx` so unloading cleans it up.
-- Keep parity across both surfaces: the web UI and headless (`sand -p`). There is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI, and when you add or change a feature, update both surfaces in the same change.
+- The web UI is the only user surface; there is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI.
+- `sand -p` is a minimal test runner: it runs one prompt or /command in its own process, without a server, and prints the reply. Use it to check the agent loop and server-side features. Don't build or adapt features for it, and don't keep it in parity with the web UI.
 - Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
 - vrui lives at `packages/dom/node_modules/@vaakx-dev/vrui` with its own `AGENTS.md` and `docs/`. Read it there; don't search the filesystem or bun's cache for it.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
-- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. For a test instance, use a temporary `HOME` with its own `.sand/sand.toml`, never `~/.sand`.
+- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand -p` instead of starting another server, with a temporary `HOME` holding a copy of `~/.sand/sand.toml` so test threads stay out of the user's `~/.sand`.
 - Never use `pkill -f`, `pgrep -f` or `killall`; they match your own shell. Kill by PID, and don't leave background processes running.
 - Ask before heavy or long commands (full builds, benchmarks, anything that loads this laptop). Give commands that might hang a `timeout_ms`.
 - Shell output over 30k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.

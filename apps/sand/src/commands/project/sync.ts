@@ -23,5 +23,5 @@ export const syncProject = async (pcs: Pcs, [value]: string[], { from, to }: Pro
   console.log(`${plural(applied.conflicts.length, 'conflict')} on ${target.name}, in ${there.project.path}:`)
   applied.conflicts.forEach(file => console.log(`  ${file}`))
   console.log(`resolve them with: sand project resolve ${group.name} --on ${target.name} --ours|--theirs`)
-  console.log(`or have sand fix them: sand -p "resolve the merge conflicts" --on ${target.name} --cwd ${there.project.path}`)
+  console.log(`or open the project on ${target.name} in sand and ask it to resolve the merge conflicts`)
 }

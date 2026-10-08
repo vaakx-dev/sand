@@ -12,7 +12,7 @@ const addUsage = (a: Usage, b: Usage): Usage => ({
   cacheWrite: a.cacheWrite + b.cacheWrite,
 })
 
-export const createFollower = (root: () => string | undefined, printer: Printer, models?: ModelLookup, remote?: string) => {
+export const createFollower = (root: () => string | undefined, printer: Printer, models?: ModelLookup) => {
   const tracker = createTracker(root)
   const compaction = createCompactionLines(tracker.has)
   const summary: Summary = { usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
@@ -31,7 +31,7 @@ export const createFollower = (root: () => string | undefined, printer: Printer,
       if (mine(session)) printer.result(result)
     },
     artifact(session: string, artifact: Artifact) {
-      if (mine(session)) printer.artifact(artifact, remote)
+      if (mine(session)) printer.artifact(artifact)
     },
     context(session: string, usage: ContextUsage) {
       if (mine(session)) summary.context = usage

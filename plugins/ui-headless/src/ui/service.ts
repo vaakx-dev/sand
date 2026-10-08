@@ -48,17 +48,9 @@ export const createHeadlessUI = (printer: Printer, cwd: string, draft: () => Ses
       await work()
       return errors > before ? 1 : 0
     },
-    refuse,
     focus(session: Session | undefined) {
       active = session
       thread = session?.id
-    },
-    track(id: string | undefined) {
-      thread = id
-    },
-    opened(id: string) {
-      if (id !== thread) announce(id)
-      thread = id
     },
     thread: () => thread,
   }

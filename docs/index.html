@@ -158,7 +158,7 @@
   .head { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: end; margin-bottom: 52px; }
   .head .lede { margin: 0 0 8px; }
 
-  .surfaces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .surfaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
   .card h3 { margin: 6px 0 0; font: 600 17px var(--display); letter-spacing: -.02em; }
   .card p { margin: 0; font-size: 14px; color: var(--dim); }
@@ -172,9 +172,6 @@
   .qr { position: absolute; left: 50%; top: 20px; margin-left: -21px; width: 42px; height: 42px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
   .qr i { background: var(--text); }
   .qr i.o { background: transparent; }
-  .term { position: absolute; inset: 22px 16px -10px; border-radius: 6px 6px 0 0; background: #0a0a0b; border: 1px solid rgba(255,255,255,.08); padding: 10px 12px; font: 10.5px/1.75 var(--mono); color: #b4b4b8; white-space: nowrap; overflow: hidden; }
-  .term .p { color: var(--sand); }
-  .term .d { color: #6b6b72; }
   .devs { position: absolute; left: 16px; right: 16px; top: 22px; display: grid; gap: 6px; }
   .devs > div { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); font: 10.5px var(--mono); color: var(--dim); white-space: nowrap; overflow: hidden; }
   .devs b { font-weight: 500; color: var(--text-2); }
@@ -253,7 +250,7 @@
   @media (max-width: 980px) {
     .hero { grid-template-columns: 1fr; gap: 24px; }
     .scene { min-height: 520px; }
-    .surfaces { grid-template-columns: repeat(2, 1fr); }
+    .surfaces { grid-template-columns: 1fr; }
     .plug { grid-template-columns: 1fr; }
     .board .groups { grid-template-columns: repeat(2, 1fr); }
     .head { grid-template-columns: 1fr; gap: 16px; }
@@ -317,7 +314,7 @@
       </div>
       <div class="meta">
         <div><b>63</b>plugins, all replaceable</div>
-        <div><b>4</b>surfaces: web, phone, terminal, paired PCs</div>
+        <div><b>3</b>surfaces: web, phone, paired PCs</div>
         <div><b>1</b>thread, wherever you open it</div>
       </div>
     </div>
@@ -398,7 +395,7 @@
         <div class="eyebrow">One agent, every surface</div>
         <h2 class="title">Start at the desk.<br><em>Pick it up anywhere.</em></h2>
       </div>
-      <p class="lede">One server on your machine. The browser, your phone, the terminal and your other PCs are views onto the same thread.</p>
+      <p class="lede">One server on your machine. The browser, your phone and your other PCs are views onto the same thread.</p>
     </div>
     <div class="surfaces">
       <div class="card">
@@ -432,14 +429,6 @@
       </div>
       <div class="card">
         <div class="pic">
-          <div class="term"><span class="p">$</span> sand -c<br><span class="d">↳ 7f3a · bump deps</span><br><span class="p">&gt;</span> also pin the lockfile<br><span class="d">queued · still running</span></div>
-        </div>
-        <h3>The terminal</h3>
-        <p>Same thread, no browser.</p>
-        <code>sand -p "prompt"</code>
-      </div>
-      <div class="card">
-        <div class="pic">
           <div class="devs">
             <div><i class="on"></i><b>laptop</b><span>here</span></div>
             <div class="run"><i class="on"></i><b>homelab</b><span>192.168.1.40</span><em>run</em></div>
@@ -464,7 +453,7 @@
         <div class="points">
           <div><b>roles, not names</b><p>Plugins depend on roles, so any one of them can be swapped.</p></div>
           <div><b>unload cleanly</b><p>Unloading a plugin removes everything it added.</p></div>
-          <div><b>two surfaces, one feature</b><p>Web and terminal get every feature together.</p></div>
+          <div><b>test without a server</b><p><code>sand -p</code> runs one prompt in its own process, so agents can check their work.</p></div>
           <div><b>reload</b><p>/reload loads new plugins mid-conversation. No restart.</p></div>
         </div>
       </div>
@@ -561,7 +550,7 @@
     });
     if (!reduced) { scene.classList.add('assembled'); setTimeout(function () { scene.classList.remove('assembled'); }, 900); }
 
-    var cmds = ['<b>composer-card</b> the box you type in', '<b>sidebar-rail</b> the left edge', '<b>tools-shell</b> runs commands', '<b>llm-anthropic</b> the model', '<b>panel-changes</b> per-file diffs', '<b>workflows</b> fan out to six agents', '<b>devices</b> your phone over Wi-Fi', '<b>remotes</b> other PCs', '<b>reload</b> swaps any of these with /reload', '<b>ui-headless</b> the terminal surface', '<b>followups</b> the queue', '<b>usage-page</b> what it cost'];
+    var cmds = ['<b>composer-card</b> the box you type in', '<b>sidebar-rail</b> the left edge', '<b>tools-shell</b> runs commands', '<b>llm-anthropic</b> the model', '<b>panel-changes</b> per-file diffs', '<b>workflows</b> fan out to six agents', '<b>devices</b> your phone over Wi-Fi', '<b>remotes</b> other PCs', '<b>reload</b> swaps any of these with /reload', '<b>ui-headless</b> the sand -p test runner', '<b>followups</b> the queue', '<b>usage-page</b> what it cost'];
     document.getElementById('ticker').innerHTML = cmds.concat(cmds).map(function (c) { return '<span>' + c + '</span>'; }).join('');
 
 

@@ -16,7 +16,6 @@ const { values, positionals } = parseArgs({
     print: { type: 'string', short: 'p' },
     continue: { type: 'boolean', short: 'c' },
     resume: { type: 'string', short: 'r' },
-    attach: { type: 'string', short: 'a', multiple: true },
     model: { type: 'string' },
     effort: { type: 'string' },
     fast: { type: 'boolean' },
@@ -35,14 +34,12 @@ const { values, positionals } = parseArgs({
   allowPositionals: true,
 })
 
-const isFile = (arg: string) => arg.startsWith('@')
-const files = positionals.filter(isFile).map(arg => arg.slice(1))
-const [command, ...args] = positionals.filter(arg => !isFile(arg))
+const [command, ...args] = positionals
 const home = sandHome()
-const { continue: latest, resume, attach, model, effort, fast, lan, on, cwd } = values
+const { continue: latest, resume, model, effort, fast, lan, on, cwd } = values
 const projectFlags = { all: values.all, from: values.from, to: values.to, on, path: values.path, setup: values.setup, ours: values.ours, theirs: values.theirs }
-const flags = { continue: latest, resume, attach, files, model, effort, fast, lan, on, cwd }
-if (cwd && !on) process.chdir(cwd)
+const flags = { continue: latest, resume, model, effort, fast, lan, cwd }
+if (cwd) process.chdir(cwd)
 
 const dispatch = async () => {
   if (values.help) return console.log(help)

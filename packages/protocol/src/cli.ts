@@ -1,13 +1,10 @@
 export interface CliFlags {
   continue?: boolean
   resume?: string
-  attach?: string[]
-  files?: string[]
   model?: string
   effort?: string
   fast?: boolean
   lan?: boolean
-  on?: string
   cwd?: string
 }
 

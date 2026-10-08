@@ -39,8 +39,8 @@ export const createPrinter = () => {
     result(result: ToolResultBlock) {
       if (result.isError) err(red(`  ✗ ${resultSummary(result)}`))
     },
-    artifact({ title, path }: Artifact, remote?: string) {
-      err(`${cyan(`◆ ${title}`)} ${dim(remote ? `${path} on ${remote}` : Bun.pathToFileURL(path).href)}`)
+    artifact({ title, path }: Artifact) {
+      err(`${cyan(`◆ ${title}`)} ${dim(Bun.pathToFileURL(path).href)}`)
     },
     progress(text: string) {
       err(dim(text))

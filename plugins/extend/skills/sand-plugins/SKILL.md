@@ -33,7 +33,7 @@ export default definePlugin({
 - A throw in `apply` or a hook fails only this plugin.
 - `ctx.hot.data` survives reloads; `ctx.busy()` returns a release function that reloads wait for.
 - `ctx.report(error)` logs an error against this plugin without failing it; `ctx.settled()` waits until every plugin has started.
-- Use the `ui` service for commands and notices so the feature works in both the web UI and headless `sand -p`.
+- Use the `ui` service for commands and notices. The web UI is the only user surface; `sand -p` is a minimal test runner, so don't build or adapt anything for it.
 - Ship skills by putting `skills/<name>/SKILL.md` in the plugin folder and calling `ctx.watch('skills', skills => skills?.register(dir))`.
 - Services and events are typed in `{{registry}}`; read it for exact signatures.
 
