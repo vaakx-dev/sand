@@ -2,7 +2,7 @@ export const help = [
   'usage: sand [-c | -r <id>] [--lan]     start sand in the background if needed and open it in the browser',
   '       sand serve [--lan]              run sand in the foreground',
   '       sand stop                       stop the background sand',
-  '       sand -p "<prompt>" [-c | -r <id>] [--cwd <folder>] [--model <name>] [--effort <level>] [--fast]',
+  '       sand -p "<prompt>" [-c | -r <id>] [--home <folder>] [--cwd <folder>] [--model <name>] [--effort <level>] [--fast]',
   '                                       test runner: run one prompt or /command without a server and print the reply',
   '       sand devices [--lan]            show a link and QR code to open sand on your phone',
   '       sand remote [add <link> | remove <pc>]   list, pair or forget other PCs running sand',
@@ -27,4 +27,6 @@ export const help = [
   '  --all                   include hidden projects in the list',
   '  --ours | --theirs       keep the receiving PC version or the incoming one when resolving',
   '  --cwd <dir> the folder to work in',
+  '  --home <dir>            keep threads and settings in this folder instead of ~/.sand, e.g. for tests (or set SAND_HOME);',
+  '                          it borrows ~/.sand/sand.toml until it has its own',
 ].join('\n')

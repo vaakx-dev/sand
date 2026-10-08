@@ -13,7 +13,7 @@
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
 - vrui lives at `packages/dom/node_modules/@vaakx-dev/vrui` with its own `AGENTS.md` and `docs/`. Read it there; don't search the filesystem or bun's cache for it.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
-- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand -p` instead of starting another server, with a temporary `HOME` holding a copy of `~/.sand/sand.toml` so test threads stay out of the user's `~/.sand`.
+- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand -p --home "$(mktemp -d)"` instead of starting another server, so test threads stay out of the user's `~/.sand`; it borrows `~/.sand/sand.toml` for the provider.
 - Never use `pkill -f`, `pgrep -f` or `killall`; they match your own shell. Kill by PID, and don't leave background processes running.
 - Ask before heavy or long commands (full builds, benchmarks, anything that loads this laptop). Give commands that might hang a `timeout_ms`.
 - Shell output over 30k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.

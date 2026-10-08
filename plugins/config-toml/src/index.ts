@@ -1,4 +1,5 @@
 import { definePlugin } from 'drydock'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { discover } from './discover'
@@ -16,7 +17,8 @@ export default definePlugin({
     plugins_dir: z.string().optional(),
   }),
   async apply(ctx, config) {
-    const global = join(ctx.cli.home, 'sand.toml')
+    const own = join(ctx.cli.home, 'sand.toml')
+    const global = (await Bun.file(own).exists()) ? own : join(homedir(), '.sand', 'sand.toml')
 
     const setup = (await loadModes(config.modes_file))[ctx.cli.mode]
     if (!setup) throw new Error(`No plugin set for mode "${ctx.cli.mode}" in ${config.modes_file}`)

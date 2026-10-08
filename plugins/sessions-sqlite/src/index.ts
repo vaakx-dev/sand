@@ -1,6 +1,7 @@
 import type { Entry, Session, SessionInfo, Sessions } from '@sand/protocol'
-import { expandHome } from '@sand/host'
+import { expandHome, sandHome } from '@sand/host'
 import { definePlugin } from 'drydock'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { open } from './db'
 import { remover, summaries } from './list'
@@ -9,9 +10,9 @@ import { createSession } from './session'
 
 export default definePlugin({
   name: 'sessions-sqlite',
-  config: z.object({ path: z.string().default('~/.sand/sand.db') }),
+  config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
-    const db = open(expandHome(config.path))
+    const db = open(config.path ? expandHome(config.path) : join(sandHome(ctx), 'sand.db'))
     ctx.effect(() => () => db.close())
     const opened = new Map<string, Session>()
     const hooks = {

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { sandHome } from '@sand/host'
 import { errorMessage } from '@sand/kit'
+import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { run } from './app/run'
 import { devices } from './commands/devices/devices'
@@ -29,12 +30,14 @@ const { values, positionals } = parseArgs({
     ours: { type: 'boolean' },
     theirs: { type: 'boolean' },
     cwd: { type: 'string' },
+    home: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
   allowPositionals: true,
 })
 
 const [command, ...args] = positionals
+if (values.home) process.env.SAND_HOME = resolve(values.home)
 const home = sandHome()
 const { continue: latest, resume, model, effort, fast, lan, on, cwd } = values
 const projectFlags = { all: values.all, from: values.from, to: values.to, on, path: values.path, setup: values.setup, ours: values.ours, theirs: values.theirs }
