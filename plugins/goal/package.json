@@ -1,0 +1,26 @@
+{
+  "name": "@sand/goal",
+  "version": "0.0.0",
+  "description": "/goal: the agent keeps working until a separate check confirms a condition holds",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Goals",
+    "summary": "/goal keeps the agent working until a separate check confirms the goal is met",
+    "uses": {
+      "ui": "there is no /goal command and goal changes are not announced",
+      "composer": "no goal row above the composer",
+      "transcript": "goal changes are not shown in the thread",
+      "commands": "the goal row has no Clear button"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

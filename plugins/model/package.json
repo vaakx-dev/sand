@@ -1,0 +1,28 @@
+{
+  "name": "@sand/model",
+  "version": "0.0.0",
+  "description": "Model, effort and fast mode per thread, with /model, /effort and /fast",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Model settings",
+    "summary": "Model, effort and fast mode for each thread",
+    "provides": [
+      "modelSettings"
+    ],
+    "uses": {
+      "llm": "no models or effort levels to choose from",
+      "server": "the page gets no model list or settings",
+      "loop": "settings change mid-turn instead of waiting for the turn to end",
+      "cli": "ignores --model, --effort and --fast"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

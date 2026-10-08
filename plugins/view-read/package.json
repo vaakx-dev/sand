@@ -1,0 +1,21 @@
+{
+  "name": "@sand/view-read",
+  "version": "0.0.0",
+  "description": "Shows read calls as highlighted code with line numbers",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Read view",
+    "summary": "Shows the files the agent read, with line numbers",
+    "uses": {
+      "transcript": "does nothing: reads use the generic view"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

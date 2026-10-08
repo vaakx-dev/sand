@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sand — made of plugins</title>
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('sand-theme'); } catch (e) {}
+    document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
+  })();
+</script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --bg-2: #0a0a0b;
+    --panel: #141416;
+    --panel-2: #19191c;
+    --text: #e8e8e6;
+    --text-2: #b4b4b8;
+    --dim: #7a7a80;
+    --dimmer: #4a4a50;
+    --line: rgba(255,255,255,.08);
+    --line-soft: rgba(255,255,255,.05);
+    --indigo: #818cf8;
+    --indigo-soft: rgba(129,140,248,.14);
+    --sand: #d6aa72;
+    --sand-deep: #c4823e;
+    --sand-soft: rgba(214,170,114,.14);
+    --green: #8fc79a;
+    --red: #e08a7a;
+    --btn-bg: #e8e8e6;
+    --btn-fg: #0e0e0f;
+    --dune-1a: #3a2a1a; --dune-1b: #0a0a0b;
+    --dune-2a: #5a3d22; --dune-2b: #0a0a0b;
+    --dune-3a: #2a1e14; --dune-3b: #0a0a0b;
+    --plate: #1c1c20;
+    --plate-edge: rgba(255,255,255,.11);
+    --wire: rgba(255,255,255,.26);
+    --wire-soft: rgba(255,255,255,.1);
+    --display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+    --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --gutter: clamp(16px, 4vw, 56px);
+    --maxw: 1240px;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f4f0;
+    --bg-2: #ecebe6;
+    --panel: #ffffff;
+    --panel-2: #f7f6f2;
+    --text: #141416;
+    --text-2: #3c3c42;
+    --dim: #6b6b72;
+    --dimmer: #a9a9b0;
+    --line: rgba(0,0,0,.09);
+    --line-soft: rgba(0,0,0,.05);
+    --indigo: #4f46e5;
+    --indigo-soft: rgba(79,70,229,.1);
+    --sand: #b8762f;
+    --sand-deep: #9a5a1e;
+    --sand-soft: rgba(196,130,62,.14);
+    --green: #2f7d47;
+    --red: #b8432f;
+    --btn-bg: #141416;
+    --btn-fg: #f5f4f0;
+    --dune-1a: #e4c69a; --dune-1b: #f5f4f0;
+    --dune-2a: #cf9a5c; --dune-2b: #f5f4f0;
+    --dune-3a: #b57a3c; --dune-3b: #f5f4f0;
+    --plate: #ffffff;
+    --plate-edge: rgba(0,0,0,.1);
+    --wire: rgba(0,0,0,.22);
+    --wire-soft: rgba(0,0,0,.07);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
+    transition: background-color .35s ease, color .35s ease;
+  }
+  a { color: inherit; text-decoration: none; cursor: pointer; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
+  .mono { font-family: var(--mono); }
+  .eyebrow { display: flex; align-items: center; gap: 12px; font: 500 11px/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
+  .eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--dim); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; border: 1px solid var(--line); font: 500 14px var(--sans); color: var(--text); background: transparent; cursor: pointer; transition: border-color .2s, background .2s; }
+  .btn:hover { border-color: var(--dim); }
+  .btn.ink { background: var(--btn-bg); color: var(--btn-fg); border-color: transparent; }
+  .btn.ink:hover { opacity: .9; }
+  h2.title { font-family: var(--display); font-weight: 600; font-size: clamp(2.2rem, 4.4vw, 3.6rem); line-height: 1.02; letter-spacing: -.035em; margin: 18px 0 0; }
+  h2.title em { font-style: normal; color: var(--sand); }
+  .lede { color: var(--text-2); font-size: 17px; max-width: 48ch; }
+
+  nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 84%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line-soft); }
+  nav .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 64px; }
+  nav .left { display: flex; gap: 22px; font-size: 14px; color: var(--dim); }
+  nav .left a:hover { color: var(--text); }
+  nav .brand { display: inline-flex; align-items: center; gap: 10px; font: 600 18px var(--display); letter-spacing: -.01em; }
+  nav .brand img { width: 26px; height: 26px; }
+  nav .right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+  nav .right .btn { padding: 9px 16px; font-size: 13px; }
+  .theme { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--text); display: inline-grid; place-items: center; cursor: pointer; transition: border-color .2s, transform .2s; }
+  .theme:hover { border-color: var(--dim); }
+  .theme svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; }
+  .theme .sun { display: none; }
+  :root[data-theme="light"] .theme .sun { display: block; }
+  :root[data-theme="light"] .theme .moon { display: none; }
+
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding: 56px 0 64px; border-bottom: 1px solid var(--line-soft); }
+  .hero h1 { margin: 26px 0 0; font-family: var(--display); font-weight: 600; font-size: clamp(2.8rem, 5.4vw, 4.9rem); line-height: .98; letter-spacing: -.045em; }
+  .hero h1 em { font-style: normal; color: var(--sand); }
+  .hero .lede { margin: 30px 0 0; }
+  .hero .lede b { color: var(--text); font-weight: 500; }
+  .hero .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
+  .hero .install { font: 13.5px var(--mono); color: var(--text-2); padding: 10px 0; border-bottom: 1px dashed var(--dimmer); }
+  .hero .install b { color: var(--sand); font-weight: 500; }
+  .hero .meta { display: flex; gap: 40px; margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--line-soft); }
+  .hero .meta div { font-size: 13px; color: var(--dim); }
+  .hero .meta b { display: block; font: 600 30px/1 var(--display); letter-spacing: -.03em; color: var(--text); margin-bottom: 8px; }
+
+  .scene { position: relative; min-height: 600px; perspective: 1500px; }
+  .float { position: absolute; inset: 0; animation: float 9s ease-in-out infinite; }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .stack { position: absolute; left: 50%; top: 50%; width: 400px; height: 270px; margin: -200px 0 0 -230px; transform-style: preserve-3d; transform: rotateX(56deg) rotateZ(-30deg); --gap: 58px; }
+  .scene.assembled .stack { --gap: 0px; }
+  .plate { position: absolute; inset: 0; border: 1px solid var(--plate-edge); border-radius: 6px; background: var(--plate); transform: translateZ(calc(var(--i) * var(--gap))); transition: transform .9s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .3s; box-shadow: 0 30px 60px -30px rgba(0,0,0,.6); }
+  .plate:hover { border-color: var(--dim); }
+  .plate.focus { border-color: var(--indigo); box-shadow: 0 0 0 1px var(--indigo), 0 30px 60px -30px rgba(0,0,0,.5); transform: translateZ(calc(var(--i) * var(--gap) + 22px)); }
+  .plate .tag { display: none; }
+  .wire { position: absolute; border: 1px solid var(--wire); border-radius: 4px; }
+  .wire.fill { background: var(--wire-soft); border-color: transparent; }
+  .wire.accent { background: var(--indigo-soft); border-color: var(--indigo); }
+  .wire.sandy { background: var(--sand-soft); border-color: var(--sand); }
+  .row { position: absolute; height: 4px; border-radius: 2px; background: var(--wire); }
+  .dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; }
+  .legend { position: absolute; right: 0; bottom: 0; display: grid; gap: 6px; }
+  .legend .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 6px 10px; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .legend .head .btn { padding: 6px 12px; font: 500 12px var(--mono); }
+  .legend button { display: flex; align-items: center; gap: 10px; background: none; border: 1px solid transparent; border-radius: 8px; padding: 6px 10px; font: 500 12px var(--mono); color: var(--dim); cursor: pointer; text-align: left; transition: color .2s, border-color .2s, background .2s; }
+  .legend button i { width: 8px; height: 8px; border-radius: 2px; background: var(--dimmer); }
+  .legend button:hover, .legend button.on { color: var(--text); border-color: var(--line); background: var(--panel); }
+  .legend button:hover i, .legend button.on i { background: var(--indigo); }
+  
+  .ticker { border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); overflow: hidden; background: var(--bg-2); }
+  .ticker .track { display: flex; width: max-content; animation: tick 60s linear infinite; }
+  .ticker span { padding: 14px 28px; font: 12.5px var(--mono); color: var(--dim); white-space: nowrap; }
+  .ticker span::before { content: "◆"; color: var(--sand); margin-right: 14px; font-size: 8px; vertical-align: 2px; }
+  .ticker span b { color: var(--text-2); font-weight: 500; }
+  @keyframes tick { to { transform: translateX(-50%); } }
+
+  section.block { padding: 100px 0; border-bottom: 1px solid var(--line-soft); }
+  .head { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: end; margin-bottom: 52px; }
+  .head .lede { margin: 0 0 8px; }
+
+  .surfaces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { margin: 6px 0 0; font: 600 17px var(--display); letter-spacing: -.02em; }
+  .card p { margin: 0; font-size: 14px; color: var(--dim); }
+  .card code { font: 12.5px var(--mono); color: var(--text-2); margin-top: auto; padding-top: 8px; }
+  .card code::before { content: "$ "; color: var(--sand); }
+  .card .pic { height: 150px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line-soft); position: relative; overflow: hidden; }
+  .browser { position: absolute; left: 16px; right: 16px; top: 22px; bottom: -10px; border: 1px solid var(--line); border-radius: 6px 6px 0 0; background: var(--panel-2); }
+  .browser::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 14px; border-bottom: 1px solid var(--line-soft); }
+  .browser i { position: absolute; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--dimmer); }
+  .phone { position: absolute; left: 50%; top: 22px; width: 68px; height: 136px; margin-left: -34px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); }
+  .qr { position: absolute; left: 50%; top: 20px; margin-left: -21px; width: 42px; height: 42px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+  .qr i { background: var(--text); }
+  .qr i.o { background: transparent; }
+  .term { position: absolute; inset: 22px 16px -10px; border-radius: 6px 6px 0 0; background: #0a0a0b; border: 1px solid rgba(255,255,255,.08); padding: 10px 12px; font: 10.5px/1.75 var(--mono); color: #b4b4b8; white-space: nowrap; overflow: hidden; }
+  .term .p { color: var(--sand); }
+  .term .d { color: #6b6b72; }
+  .devs { position: absolute; left: 16px; right: 16px; top: 22px; display: grid; gap: 6px; }
+  .devs > div { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2); font: 10.5px var(--mono); color: var(--dim); white-space: nowrap; overflow: hidden; }
+  .devs b { font-weight: 500; color: var(--text-2); }
+  .devs i { width: 6px; height: 6px; border-radius: 50%; background: var(--dimmer); }
+  .devs i.on { background: var(--green); }
+  .devs em { margin-left: auto; font-style: normal; color: var(--indigo); }
+  .devs .run { border-color: var(--indigo); }
+
+  .plug { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  .plug .points { display: grid; gap: 0; margin-top: 36px; border-top: 1px solid var(--line-soft); }
+  .plug .points div { padding: 16px 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 190px 1fr; gap: 20px; }
+  .plug .points b { font: 500 12.5px var(--mono); color: var(--sand); letter-spacing: .02em; padding-top: 3px; }
+  .plug .points p { margin: 0; font-size: 15px; color: var(--text-2); }
+  .plug .points code { font: 12.5px var(--mono); color: var(--text); background: var(--line-soft); padding: 1px 6px; border-radius: 4px; }
+
+  .demo { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); overflow: hidden; }
+  .demo .bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); font: 12px var(--mono); color: var(--dim); }
+  .demo .bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--dimmer); }
+  .demo .bar .replay { margin-left: auto; font: 500 12px var(--mono); color: var(--indigo); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+  .demo .body { display: grid; grid-template-columns: 1fr 1fr; min-height: 300px; }
+  .chat { padding: 18px; border-right: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; }
+  .chat > div { opacity: 0; transform: translateY(6px); transition: opacity .4s, transform .4s; }
+  .chat > div.in { opacity: 1; transform: none; }
+  .chat .you { align-self: flex-end; background: var(--line-soft); padding: 9px 13px; border-radius: 14px 14px 4px 14px; max-width: 86%; }
+  .chat .step { display: flex; gap: 10px; align-items: center; font: 12.5px var(--mono); color: var(--dim); }
+  .chat .step b { color: var(--text-2); font-weight: 500; }
+  .chat .step .ok { color: var(--green); }
+  .chat .msg { color: var(--text-2); line-height: 1.55; }
+  .chat .msg b { color: var(--indigo); font-weight: 500; }
+  .mini { position: relative; padding: 18px; background: var(--panel-2); }
+  .mini .win { position: absolute; inset: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); display: grid; grid-template-columns: 64px 1fr 150px; overflow: hidden; }
+  .mini .side { border-right: 1px solid var(--line-soft); padding: 12px 10px; display: grid; gap: 8px; align-content: start; }
+  .mini .side i { height: 6px; border-radius: 3px; background: var(--line); }
+  .mini .main { padding: 14px; display: grid; gap: 10px; align-content: start; }
+  .mini .main i { height: 6px; border-radius: 3px; background: var(--line-soft); }
+  .mini .main i.w { width: 70%; } .mini .main i.n { width: 40%; }
+  .mini .panel { border-left: 1px solid var(--line-soft); display: flex; flex-direction: column; }
+  .mini .tabs { display: flex; gap: 0; padding: 8px 6px 0; border-bottom: 1px solid var(--line-soft); font: 10px var(--mono); color: var(--dim); }
+  .mini .tabs span { padding: 4px 5px 6px; border-bottom: 1px solid transparent; }
+  .mini .tabs span.new { color: var(--indigo); border-bottom-color: var(--indigo); opacity: 0; transform: translateY(4px); transition: opacity .5s, transform .5s; }
+  .mini.live .tabs span.new { opacity: 1; transform: none; }
+  .mini .tests { padding: 10px 8px; display: grid; gap: 6px; font: 10px var(--mono); color: var(--dim); opacity: 0; transition: opacity .5s .2s; }
+  .mini.live .tests { opacity: 1; }
+  .mini .tests span { display: flex; gap: 6px; align-items: center; }
+  .mini .tests span::before { content: "✕"; color: var(--red); }
+  .mini .tests span.ok::before { content: "✓"; color: var(--green); }
+  .mini .flash { position: absolute; inset: 18px; border-radius: 10px; box-shadow: 0 0 0 1px var(--indigo), 0 0 40px var(--indigo-soft); opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .mini.live .flash { opacity: 1; animation: fadeout 1.6s .4s forwards; }
+  @keyframes fadeout { to { opacity: 0; } }
+
+  .board { margin-top: 64px; border-top: 1px solid var(--line-soft); padding-top: 40px; }
+  .board .groups { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 20px; margin-top: 28px; }
+  .board h4 { margin: 0 0 10px; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .board .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .board .chips span { font: 12px var(--mono); color: var(--text-2); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; background: var(--panel); }
+  .board .chips span.yours { color: var(--indigo); border-color: var(--indigo); border-style: dashed; }
+  .board .chips span.yours::before { content: "+ "; }
+
+
+  .final { position: relative; padding: 140px 0 0; text-align: center; overflow: hidden; }
+  .final h2 { margin: 0; font: 600 clamp(2.6rem, 6vw, 4.8rem)/1 var(--display); letter-spacing: -.045em; }
+  .final h2 em { font-style: normal; color: var(--sand); }
+  .final p { margin: 20px auto 0; max-width: 40ch; color: var(--dim); }
+  .final .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+  .final .install { display: inline-flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font: 13.5px var(--mono); color: var(--text-2); }
+  .final .install b { color: var(--sand); font-weight: 500; }
+  .final .install button { padding: 7px 12px; border-radius: 999px; border: 0; background: var(--line-soft); font: 500 12px var(--sans); color: var(--text-2); cursor: pointer; }
+  .final .wrap { position: relative; }
+  .final .dunes { position: relative; display: block; width: 100%; height: 300px; margin-top: 20px; }
+  footer { border-top: 1px solid var(--line-soft); color: var(--dim); padding: 34px 0 48px; font-size: 13px; color: var(--dim); }
+  footer .wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  footer .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text); font: 600 15px var(--display); }
+  footer .brand img { width: 20px; height: 20px; }
+  footer .right { margin-left: auto; display: flex; gap: 20px; }
+
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; gap: 24px; }
+    .scene { min-height: 520px; }
+    .surfaces { grid-template-columns: repeat(2, 1fr); }
+    .plug { grid-template-columns: 1fr; }
+    .board .groups { grid-template-columns: repeat(2, 1fr); }
+    .head { grid-template-columns: 1fr; gap: 16px; }
+    }
+  @media (max-width: 760px) {
+    nav .wrap { grid-template-columns: auto 1fr; height: 58px; }
+    nav .left { display: none; }
+    nav .brand { order: -1; }
+    .hero { padding: 44px 0 56px; }
+    .hero .meta { gap: 24px; }
+    .scene { min-height: 520px; margin-top: 40px; }
+    .stack { width: 300px; height: 200px; margin: -110px 0 0 -150px; --gap: 40px; }
+    .plate .tag { font-size: 10px; }
+    .legend { position: static; grid-template-columns: 1fr 1fr; margin-top: 0; }
+    .legend .head { grid-column: 1 / -1; }
+    .scene .below { position: absolute; left: 0; right: 0; bottom: 0; }
+    .surfaces { grid-template-columns: 1fr; }
+    .demo .body { grid-template-columns: 1fr; }
+    .chat { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+    .mini { min-height: 280px; }
+    .mini .win { grid-template-columns: 48px 1fr 128px; }
+    .plug .points div { grid-template-columns: 1fr; gap: 6px; }
+    .board .groups { grid-template-columns: 1fr; }
+    section.block { padding: 72px 0; }
+    .final { padding-top: 110px; }
+    .final .dunes { height: 180px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .ticker .track { animation: none; }
+    .plate, .chat > div { transition: none; }
+    .float { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="left"><a href="#surfaces">Surfaces</a><a href="#plugins">Plugins</a><a href="#">Docs</a></div>
+    <a class="brand" href="#"><img src="logo.png" alt="">sand</a>
+    <div class="right">
+      <button class="theme" id="theme" aria-label="Toggle light and dark mode" title="Toggle theme">
+        <svg class="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>
+      </button>
+      <a class="btn ink" href="#">Get sand</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">A coding agent · made of plugins</div>
+      <h1>Every part of it<br>is a <em>plugin.</em><br>Even the parts<br>it writes itself.</h1>
+      <p class="lede">sand is a coding agent that runs on your own machines. The composer, the sidebar, the tools, the model: each one is a plugin. <b>Ask sand for a new one and load it mid-conversation with /reload.</b></p>
+      <div class="actions">
+        <a class="btn ink" href="#">Get sand</a>
+        <a class="btn" href="#plugins">See the plugin system</a>
+      </div>
+      <div class="meta">
+        <div><b>63</b>plugins, all replaceable</div>
+        <div><b>4</b>surfaces: web, phone, terminal, paired PCs</div>
+        <div><b>1</b>thread, wherever you open it</div>
+      </div>
+    </div>
+
+    <div class="scene" id="scene">
+      <div class="float"><div class="stack" id="stack">
+        <div class="plate" style="--i:0" data-layer="0">
+          <span class="tag">layout-columns · header</span>
+          <div class="wire" style="left:0;right:0;top:0;height:24px;border-radius:6px 6px 0 0"></div>
+          <div class="dot" style="left:10px;top:9px;background:var(--wire)"></div><div class="dot" style="left:21px;top:9px;background:var(--wire)"></div><div class="dot" style="left:32px;top:9px;background:var(--wire)"></div>
+          <div class="row" style="left:150px;top:10px;width:100px"></div>
+          <div class="wire" style="left:0;top:24px;bottom:0;width:92px;border-radius:0 0 0 6px"></div>
+          <div class="wire" style="right:0;top:24px;bottom:0;width:112px;border-radius:0 0 6px 0"></div>
+        </div>
+        <div class="plate" style="--i:1" data-layer="1">
+          <span class="tag">sidebar · thread-list · projects</span>
+          <div class="row" style="left:12px;top:40px;width:64px"></div>
+          <div class="wire accent" style="left:8px;top:54px;width:76px;height:22px"></div>
+          <div class="row" style="left:16px;top:86px;width:56px"></div>
+          <div class="row" style="left:16px;top:102px;width:48px"></div>
+          <div class="row" style="left:16px;top:118px;width:60px"></div>
+          <div class="dot" style="left:16px;top:146px;background:var(--sand)"></div>
+          <div class="row" style="left:28px;top:147px;width:44px"></div>
+          <div class="row" style="left:12px;top:180px;width:64px"></div>
+          <div class="row" style="left:16px;top:196px;width:52px"></div>
+        </div>
+        <div class="plate" style="--i:2" data-layer="2">
+          <span class="tag">transcript-chat · tools · agents</span>
+          <div class="wire fill" style="left:110px;top:40px;width:140px;height:28px;border-radius:12px 12px 2px 12px"></div>
+          <div class="row" style="left:110px;top:84px;width:150px"></div>
+          <div class="row" style="left:110px;top:98px;width:120px"></div>
+          <div class="wire" style="left:110px;top:112px;width:170px;height:18px"></div>
+          <div class="wire" style="left:110px;top:134px;width:150px;height:18px"></div>
+          <div class="row" style="left:110px;top:168px;width:160px"></div>
+          <div class="row" style="left:110px;top:182px;width:96px"></div>
+        </div>
+        <div class="plate" style="--i:3" data-layer="3">
+          <span class="tag">composer · model · followups</span>
+          <div class="wire sandy" style="left:104px;right:124px;bottom:14px;height:40px;border-radius:8px"></div>
+          <div class="row" style="left:116px;bottom:32px;width:90px;background:var(--sand);opacity:.6"></div>
+          <div class="wire fill" style="right:134px;bottom:24px;width:40px;height:20px;border-radius:10px"></div>
+        </div>
+        <div class="plate" style="--i:4" data-layer="4">
+          <span class="tag">panel-changes · panel-tree · usage</span>
+          <div class="row" style="right:12px;top:40px;width:88px"></div>
+          <div class="wire" style="right:8px;top:56px;width:96px;height:52px"></div>
+          <div class="row" style="right:16px;top:66px;width:60px;background:var(--green);opacity:.7"></div>
+          <div class="row" style="right:16px;top:80px;width:44px;background:var(--red);opacity:.7"></div>
+          <div class="row" style="right:16px;top:94px;width:70px;background:var(--green);opacity:.7"></div>
+          <div class="row" style="right:12px;top:124px;width:70px"></div>
+          <div class="row" style="right:20px;top:140px;width:60px"></div>
+          <div class="row" style="right:28px;top:156px;width:52px"></div>
+          <div class="row" style="right:20px;top:172px;width:60px"></div>
+        </div>
+      </div></div>
+      <div class="below">
+        <div class="legend" id="legend">
+          <div class="head">five of 63 grains <button class="btn" id="assemble">assemble →</button></div>
+          <button data-layer="4"><i></i>panel-changes · panel-tree · usage</button>
+          <button data-layer="3"><i></i>composer · model · followups</button>
+          <button data-layer="2"><i></i>transcript-chat · tools · agents</button>
+          <button data-layer="1"><i></i>sidebar · thread-list · projects</button>
+          <button data-layer="0"><i></i>layout-columns · header</button>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="ticker" aria-hidden="true">
+  <div class="track" id="ticker"></div>
+</div>
+
+<section class="block" id="surfaces">
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <div class="eyebrow">One agent, every surface</div>
+        <h2 class="title">Start at the desk.<br><em>Pick it up anywhere.</em></h2>
+      </div>
+      <p class="lede">One server on your machine. The browser, your phone, the terminal and your other PCs are views onto the same thread.</p>
+    </div>
+    <div class="surfaces">
+      <div class="card">
+        <div class="pic">
+          <div class="browser"><i style="left:8px"></i><i style="left:17px"></i><i style="left:26px"></i>
+            <div class="row" style="left:12px;top:28px;width:50px"></div>
+            <div class="wire" style="left:12px;top:40px;width:40px;height:60px"></div>
+            <div class="row" style="left:64px;top:30px;width:120px"></div>
+            <div class="row" style="left:64px;top:42px;width:90px"></div>
+            <div class="wire accent" style="left:64px;top:56px;width:110px;height:18px"></div>
+            <div class="row" style="left:64px;top:84px;width:100px"></div>
+          </div>
+        </div>
+        <h3>The web UI</h3>
+        <p>Threads keep running after you close the tab.</p>
+        <code>sand</code>
+      </div>
+      <div class="card">
+        <div class="pic">
+          <div class="phone">
+            <div class="qr" id="qr"></div>
+            <div class="row" style="left:10px;top:74px;width:44px"></div>
+            <div class="row" style="left:10px;top:86px;width:30px"></div>
+            <div class="row" style="left:22px;top:98px;width:34px;background:var(--sand);opacity:.7"></div>
+            <div class="wire accent" style="left:8px;bottom:8px;right:8px;height:14px;border-radius:7px"></div>
+          </div>
+        </div>
+        <h3>Your phone</h3>
+        <p>Scan a QR code once, reply from the sofa.</p>
+        <code>sand --lan</code>
+      </div>
+      <div class="card">
+        <div class="pic">
+          <div class="term"><span class="p">$</span> sand -c<br><span class="d">↳ 7f3a · bump deps</span><br><span class="p">&gt;</span> also pin the lockfile<br><span class="d">queued · still running</span></div>
+        </div>
+        <h3>The terminal</h3>
+        <p>Same thread, no browser.</p>
+        <code>sand -p "prompt"</code>
+      </div>
+      <div class="card">
+        <div class="pic">
+          <div class="devs">
+            <div><i class="on"></i><b>laptop</b><span>here</span></div>
+            <div class="run"><i class="on"></i><b>homelab</b><span>192.168.1.40</span><em>run</em></div>
+            <div><i></i><b>studio</b><span>offline</span></div>
+          </div>
+        </div>
+        <h3>Your other PCs</h3>
+        <p>Pair once, run prompts on it from anywhere.</p>
+        <code>sand remote add &lt;link&gt;</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="plugins">
+  <div class="wrap">
+    <div class="plug">
+      <div>
+        <div class="eyebrow">The plugin system</div>
+        <h2 class="title"><em>Nothing</em> is built in.</h2>
+        <p class="lede" style="margin-top:22px">All 63 pieces of sand register the same way. That is why it can rewrite any of them while you watch.</p>
+        <div class="points">
+          <div><b>roles, not names</b><p>Plugins depend on roles, so any one of them can be swapped.</p></div>
+          <div><b>unload cleanly</b><p>Unloading a plugin removes everything it added.</p></div>
+          <div><b>two surfaces, one feature</b><p>Web and terminal get every feature together.</p></div>
+          <div><b>reload</b><p>/reload loads new plugins mid-conversation. No restart.</p></div>
+        </div>
+      </div>
+      <div class="demo" id="demo">
+        <div class="bar"><i></i><i></i><i></i> sand · ~/projects/atlas <button class="replay" id="replay">replay</button></div>
+        <div class="body">
+          <div class="chat" id="chat">
+            <div class="you">add a panel that lists the failing tests</div>
+            <div class="step"><b>write</b> plugins/panel-tests/package.json</div>
+            <div class="step"><b>write</b> plugins/panel-tests/src/index.ts</div>
+            <div class="step"><b>shell</b> bun test --reporter json</div>
+            <div class="step"><span class="ok">●</span> /reload · panel-tests <b>loaded</b></div>
+            <div class="msg">Done. A <b>Tests</b> tab is in the right panel. It re-runs on every change.</div>
+          </div>
+          <div class="mini" id="mini">
+            <div class="win">
+              <div class="side"><i></i><i style="width:70%"></i><i style="width:80%"></i><i style="width:55%"></i></div>
+              <div class="main"><i class="w"></i><i></i><i class="n"></i><i class="w"></i></div>
+              <div class="panel">
+                <div class="tabs"><span>Diff</span><span>Tree</span><span class="new">Tests</span></div>
+                <div class="tests"><span>auth.test.ts:41</span><span>store.test.ts:12</span><span class="ok">routes.test.ts</span></div>
+              </div>
+            </div>
+            <div class="flash"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board">
+      <div class="eyebrow">The plugins</div>
+      <h2 class="title" style="font-size:clamp(1.8rem,3vw,2.4rem)"><em>Grains</em> of sand.</h2>
+      <p class="lede" style="margin-top:12px">Every plugin registers the same way, so any of them can be replaced.</p>
+      <div class="groups" id="groups"></div>
+    </div>
+  </div>
+</section>
+
+
+<section class="final">
+  <div class="wrap">
+    <h2>Leave it with <em>sand.</em></h2>
+    <div class="actions">
+      <span class="install"><span><b>$</b> bun add -g sand</span><button id="copy">Copy</button></span>
+      <a class="btn" href="#">Read the docs</a>
+    </div>
+  </div>
+  <svg class="dunes" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="d1" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--dune-1a)"/><stop offset="1" style="stop-color:var(--dune-1b)"/></linearGradient>
+      <linearGradient id="d2" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--dune-2a)"/><stop offset=".7" style="stop-color:var(--dune-2b)"/></linearGradient>
+      <linearGradient id="d3" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--dune-3a)"/><stop offset=".6" style="stop-color:var(--dune-3b)"/></linearGradient>
+    </defs>
+    <path d="M0 120 C 260 60, 480 50, 720 90 S 1180 160, 1440 80 V300 H0Z" fill="url(#d1)" opacity=".85"/>
+    <path d="M0 190 C 300 140, 520 150, 760 190 S 1160 220, 1440 160 V300 H0Z" fill="url(#d2)" opacity=".75"/>
+    <path d="M0 250 C 240 220, 600 225, 860 250 S 1240 270, 1440 240 V300 H0Z" fill="url(#d3)"/>
+  </svg>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="brand"><img src="logo.png" alt="">sand</span>
+    <span>Built on Bun.</span>
+    <span class="right"><a href="#">Docs</a><a href="#">GitHub</a><a href="#">Changelog</a><a href="#">Privacy</a></span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    document.getElementById('theme').addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('sand-theme', next); } catch (e) {}
+    });
+
+    var scene = document.getElementById('scene');
+    var plates = [].slice.call(document.querySelectorAll('.plate'));
+    var legend = document.getElementById('legend');
+    var assemble = document.getElementById('assemble');
+    function focus(layer) {
+      plates.forEach(function (p) { p.classList.toggle('focus', p.dataset.layer === layer); });
+      [].forEach.call(legend.querySelectorAll('button[data-layer]'), function (b) { b.classList.toggle('on', b.dataset.layer === layer); });
+    }
+    legend.addEventListener('mouseover', function (e) { var b = e.target.closest('button[data-layer]'); if (b) focus(b.dataset.layer); });
+    plates.forEach(function (p) { p.addEventListener('mouseenter', function () { focus(p.dataset.layer); }); p.addEventListener('mouseleave', function () { focus(null); }); });
+    legend.addEventListener('mouseleave', function () { focus(null); });
+    legend.addEventListener('click', function (e) { var b = e.target.closest('button[data-layer]'); if (b) focus(b.classList.contains('on') ? null : b.dataset.layer); });
+    assemble.addEventListener('click', function () {
+      var on = scene.classList.toggle('assembled');
+      assemble.textContent = on ? 'explode →' : 'assemble →';
+    });
+    if (!reduced) { scene.classList.add('assembled'); setTimeout(function () { scene.classList.remove('assembled'); }, 900); }
+
+    var cmds = ['<b>composer-card</b> the box you type in', '<b>sidebar-rail</b> the left edge', '<b>tools-shell</b> runs commands', '<b>llm-anthropic</b> the model', '<b>panel-changes</b> per-file diffs', '<b>workflows</b> fan out to six agents', '<b>devices</b> your phone over Wi-Fi', '<b>remotes</b> other PCs', '<b>reload</b> swaps any of these with /reload', '<b>ui-headless</b> the terminal surface', '<b>followups</b> the queue', '<b>usage-page</b> what it cost'];
+    document.getElementById('ticker').innerHTML = cmds.concat(cmds).map(function (c) { return '<span>' + c + '</span>'; }).join('');
+
+
+    var qr = document.getElementById('qr'), seed = 7;
+    for (var i = 0; i < 49; i++) { seed = (seed * 48271) % 2147483647; var r = i % 7, c = (i / 7) | 0; var corner = (r < 3 && c < 3) || (r > 3 && c < 3) || (r < 3 && c > 3); var on = corner ? !(r === 1 && c === 1) && !(r === 5 && c === 1) && !(r === 1 && c === 5) : (seed % 5) < 2; var cell = document.createElement('i'); if (!on) cell.className = 'o'; qr.appendChild(cell); }
+
+    var chat = document.getElementById('chat'), mini = document.getElementById('mini'), timers = [];
+    function play() {
+      timers.forEach(clearTimeout); timers = [];
+      mini.classList.remove('live');
+      var items = [].slice.call(chat.children);
+      items.forEach(function (el) { el.classList.remove('in'); });
+      var delays = [0, 900, 1500, 2200, 3100, 3700];
+      items.forEach(function (el, i) { timers.push(setTimeout(function () { el.classList.add('in'); if (i === 4) mini.classList.add('live'); }, reduced ? 0 : delays[i])); });
+      if (reduced) mini.classList.add('live');
+    }
+    document.getElementById('replay').addEventListener('click', play);
+    var played = false;
+    new IntersectionObserver(function (entries) { if (entries[0].isIntersecting && !played) { played = true; play(); } }, { threshold: .4 }).observe(document.getElementById('demo'));
+
+    var groups = {
+      'Interface': ['composer-card', 'header', 'layout-columns', 'palette', 'picker', 'sidebar-cards', 'sidebar-rail', 'sidebar-tabs', 'thread-list', 'toasts', 'tooltips', 'transcript-chat', 'transcript-log', 'settings', 'keys'],
+      'Panels & files': ['panel-agents', 'panel-changes', 'panel-tree', 'panels-tabs', 'files', 'file-search', 'find-files', 'folders', 'view-edit', 'view-grep', 'view-read', 'view-shell', 'attachments'],
+      'Agent & tools': ['agents', 'workflows', 'loop-react', 'tools', 'tools-fs', 'tools-shell', 'commands', 'skills', 'followups', 'compaction', 'context-default', 'titles', 'llm-anthropic', 'model', 'model-panel', 'html-render', 'html-preview'],
+      'Machines & sessions': ['server', 'web', 'web-client', 'ui-headless', 'devices', 'remotes', 'projects', 'new-project', 'sessions-sqlite', 'sessions-ui', 'session-info', 'usage', 'usage-page', 'config-toml', 'extend', 'extensions-panel', 'reload']
+    };
+    var board = document.getElementById('groups');
+    Object.keys(groups).forEach(function (name, gi) {
+      var col = document.createElement('div');
+      col.innerHTML = '<h4>' + name + '</h4><div class="chips">' + groups[name].map(function (p) { return '<span>' + p + '</span>'; }).join('') + (gi === 2 ? '<span class="yours">panel-tests</span>' : '') + '</div>';
+      board.appendChild(col);
+    });
+
+    document.getElementById('copy').addEventListener('click', function () {
+      var b = this; try { navigator.clipboard.writeText('bun add -g sand'); } catch (e) {}
+      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
+    });
+  })();
+</script>
+</body>
+</html>

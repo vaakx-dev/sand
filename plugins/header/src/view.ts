@@ -1,0 +1,109 @@
+import { button, derive, div, dropdown, dynamicChild, icon, iconButton, layer, projectIcon, show, sidebarToggle, span, tildeHome, type Pulse } from '@sand/dom'
+import type { Context } from 'drydock'
+import { agentsWorking } from './activity'
+import { renameSession, sessionMenu } from './menu'
+import { parentCrumb, parentOf } from './parent'
+import { pcLabel, projectIconUrl, projectName } from './project'
+
+export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string | undefined) => string | undefined) => {
+  const cwd = changes.read(() => {
+    const threads = ctx.threads
+    return threads ? (threads.current()?.info.cwd ?? threads.cwd()) : undefined
+  })
+  const name = changes.read(() => projectName(ctx, cwd.get()))
+  const title = changes.read(() => {
+    const threads = ctx.threads
+    const thread = threads?.current()
+    return !threads ? 'sand' : thread ? (thread.info.title ?? 'Untitled thread') : 'New thread'
+  })
+  const idle = changes.read(() => Boolean(ctx.threads?.idle()))
+  const parent = changes.read(() => parentOf(ctx))
+  const working = changes.read(() => agentsWorking(ctx))
+  const branch = changes.read(() => branchOf(cwd.get()) ?? '')
+  const layout = changes.read(() => ctx.layout?.state())
+  const narrow = layout.map(state => state?.narrow ?? false)
+
+  const showSide = () => ctx.layout?.toggle('side')
+  const sideHidden = derive(() => Boolean(layout.get()?.filled.side) && (narrow.get() || !layout.get()?.open.side))
+  const menu = show(sideHidden, () =>
+    dynamicChild(narrow, value =>
+      value
+        ? iconButton({ title: 'Threads', 'aria-label': 'Threads', onClick: showSide }, icon('menu'))
+        : sidebarToggle({ title: 'Show the sidebar', 'aria-label': 'Show the sidebar', onClick: showSide }),
+    ),
+  )
+  const project = show(name.map(Boolean), () =>
+    span(
+      { class: 'hidden max-w-48 shrink-0 items-center gap-2 text-neutral-400 md:flex', title: cwd.map(path => tildeHome(path ?? '')) },
+      dynamicChild(
+        changes.read(() => projectIconUrl(ctx, cwd.get())),
+        url => (url ? projectIcon('', url) : dynamicChild(name, projectIcon)),
+      ),
+      span({ class: 'truncate' }, name),
+    ),
+  )
+  const pc = changes.read(() => pcLabel(ctx, cwd.get()))
+  const machine = show(pc.map(Boolean), () =>
+    span(
+      { class: 'flex max-w-32 shrink-0 items-center gap-1 text-xs text-neutral-500', title: pc.map(name => `Runs on ${name}`) },
+      icon('monitor', 13),
+      span({ class: 'truncate' }, pc),
+    ),
+  )
+  const slash = show(derive(() => Boolean(name.get()) && !idle.get()), () => span({ class: 'hidden text-neutral-500 md:inline' }, '/'))
+  const branchName = show(branch.map(Boolean), () =>
+    span(
+      { class: 'hidden max-w-48 shrink-0 items-center gap-1 text-xs text-neutral-500 md:inline-flex', title: branch.map(value => `Branch ${value}`) },
+      icon('branch', 13),
+      span({ class: 'truncate' }, branch),
+    ),
+  )
+  const titleDropdown = () => dropdown({
+    trigger: (toggle, open) =>
+      button(
+        {
+          type: 'button',
+          class: [
+            'flex h-8 min-w-0 items-center gap-1 rounded-lg px-2 cursor-pointer outline-none hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-accent-500',
+            () => (open.get() ? 'bg-neutral-800' : ''),
+          ],
+          title,
+          onClick: toggle,
+          onDblClick: () => void renameSession(ctx),
+        },
+        span({ class: 'min-w-0 truncate font-semibold text-neutral-100' }, title),
+        span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
+      ),
+      items: close => sessionMenu(ctx, close),
+    })
+  const titleMenu = show(idle.map(value => !value), () => titleDropdown())
+  const panel = iconButton(
+    {
+      class: 'relative',
+      hidden: layout.map(state => !state?.filled.aside),
+      active: layout.map(state => Boolean(state?.open.aside)),
+      title: () => (layout.get()?.open.aside ? 'Hide the panel' : 'Show the panel'),
+      onClick: () => ctx.layout?.toggle('aside'),
+    },
+    icon('panel'),
+    show(
+      derive(() => working.get() && !layout.get()?.open.aside),
+      () => span({ class: 'absolute right-1 top-1 h-2 w-2 rounded-full bg-accent-400', title: 'Agents running' }),
+    ),
+  )
+
+  return div(
+    { class: [layer.sticky, 'relative flex h-12 min-w-0 shrink-0 items-center gap-2 pr-3', () => (sideHidden.get() ? 'pl-2' : 'pl-4')] },
+    menu,
+    div(
+      { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm' },
+      project,
+      machine,
+      slash,
+      parentCrumb(ctx, parent),
+      titleMenu,
+    ),
+    branchName,
+    panel,
+  )
+}

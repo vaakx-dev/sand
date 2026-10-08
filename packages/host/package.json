@@ -1,0 +1,12 @@
+{
+  "name": "@sand/host",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

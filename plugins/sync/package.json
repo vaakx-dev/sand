@@ -1,0 +1,22 @@
+{
+  "name": "@sand/sync",
+  "version": "0.0.0",
+  "description": "Copies project folders to other PCs and keeps them in step: snapshots, transfers, merges and conflicts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Project sync",
+    "summary": "Copy a project to another PC and send changes between PCs",
+    "uses": {
+      "server": "the page cannot copy or sync projects"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

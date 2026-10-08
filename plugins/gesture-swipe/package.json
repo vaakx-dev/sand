@@ -1,0 +1,19 @@
+{
+  "name": "@sand/gesture-swipe",
+  "version": "0.0.0",
+  "description": "Drag across the screen on a phone to open or close the sidebar and the right panel",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Swipe",
+    "summary": "On a phone, drag anywhere sideways to pull the sidebar or the right panel open or shut",
+    "uses": {
+      "layout": "no swiping; the buttons still open the drawers"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

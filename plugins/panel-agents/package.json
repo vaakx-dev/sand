@@ -1,0 +1,22 @@
+{
+  "name": "@sand/panel-agents",
+  "version": "0.0.0",
+  "description": "Background jobs, sub-agents and workflows of the current thread, with durations and cancel",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Agents panel",
+    "summary": "Background jobs, sub-agents and workflows of this thread",
+    "uses": {
+      "panels": "draws its own plain panel",
+      "turns": "running foreground sub-agents cannot be stopped",
+      "models": "sub-agents on another model do not show it"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@sand/files",
+  "version": "0.0.0",
+  "description": "Lists and searches the files of a project folder, using git when it can",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Files",
+    "summary": "The file list and text search of a project folder",
+    "provides": [
+      "files"
+    ],
+    "uses": {
+      "server": "the page cannot list or search files"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

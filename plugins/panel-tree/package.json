@@ -1,0 +1,26 @@
+{
+  "name": "@sand/panel-tree",
+  "version": "0.0.0",
+  "description": "Thread tree: jump to any point, fork from it, and label entries",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Thread tree",
+    "summary": "Go back to any point of a thread, or fork from it",
+    "uses": {
+      "panels": "draws its own plain panel",
+      "commands": "no /tree command",
+      "composer": "prompts are not put back for editing",
+      "notify": "silent"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

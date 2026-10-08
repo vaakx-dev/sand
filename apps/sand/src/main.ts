@@ -1,0 +1,66 @@
+#!/usr/bin/env bun
+import { sandHome } from '@sand/host'
+import { errorMessage } from '@sand/kit'
+import { parseArgs } from 'node:util'
+import { run } from './app/run'
+import { devices } from './commands/devices/devices'
+import { launch } from './commands/launch/launch'
+import { projects } from './commands/project'
+import { remotes } from './commands/remotes'
+import { usageReport } from './commands/usage'
+import { stop } from './daemon/stop'
+import { help } from './help'
+
+const { values, positionals } = parseArgs({
+  options: {
+    print: { type: 'string', short: 'p' },
+    continue: { type: 'boolean', short: 'c' },
+    resume: { type: 'string', short: 'r' },
+    attach: { type: 'string', short: 'a', multiple: true },
+    model: { type: 'string' },
+    effort: { type: 'string' },
+    fast: { type: 'boolean' },
+    lan: { type: 'boolean' },
+    on: { type: 'string' },
+    from: { type: 'string' },
+    to: { type: 'string' },
+    path: { type: 'string' },
+    all: { type: 'boolean' },
+    setup: { type: 'boolean' },
+    ours: { type: 'boolean' },
+    theirs: { type: 'boolean' },
+    cwd: { type: 'string' },
+    help: { type: 'boolean', short: 'h' },
+  },
+  allowPositionals: true,
+})
+
+const isFile = (arg: string) => arg.startsWith('@')
+const files = positionals.filter(isFile).map(arg => arg.slice(1))
+const [command, ...args] = positionals.filter(arg => !isFile(arg))
+const home = sandHome()
+const { continue: latest, resume, attach, model, effort, fast, lan, on, cwd } = values
+const projectFlags = { all: values.all, from: values.from, to: values.to, on, path: values.path, setup: values.setup, ours: values.ours, theirs: values.theirs }
+const flags = { continue: latest, resume, attach, files, model, effort, fast, lan, on, cwd }
+if (cwd && !on) process.chdir(cwd)
+
+const dispatch = async () => {
+  if (values.help) return console.log(help)
+  if (values.print) return run({ mode: 'print', home, args, flags, prompt: values.print })
+  if (!command) return launch({ home, cwd: process.cwd(), latest, session: resume, lan })
+  if (command === 'serve') return run({ mode: 'serve', home, args, flags })
+  if (command === 'stop') return stop(home)
+  if (command === 'devices') return devices(home, lan)
+  if (command === 'remote') return remotes(home, args)
+  if (command === 'project') return projects(home, args, projectFlags)
+  if (command === 'usage') return usageReport(home, args)
+  console.error(`unknown command "${command}"\n${help}`)
+  process.exit(2)
+}
+
+try {
+  await dispatch()
+} catch (error) {
+  console.error(errorMessage(error))
+  process.exit(1)
+}

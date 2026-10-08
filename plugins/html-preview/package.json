@@ -1,0 +1,24 @@
+{
+  "name": "@sand/html-preview",
+  "version": "0.0.0",
+  "description": "html_preview tool: renders a page in headless Chromium so the agent can check it, and shows those checks in the thread",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "HTML preview view",
+    "summary": "Shows the screenshots the agent takes while checking a page",
+    "uses": {
+      "transcript": "previews use the generic tool view"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

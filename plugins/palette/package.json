@@ -1,0 +1,25 @@
+{
+  "name": "@sand/palette",
+  "version": "0.0.0",
+  "description": "Command palette (mod+k): threads, projects and commands, with pages you step through and go back from",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Command palette",
+    "summary": "Find threads, projects and commands in one place",
+    "provides": [
+      "palette"
+    ],
+    "uses": {
+      "commands": "commands are not listed",
+      "keys": "no mod+k shortcut; use the Search action",
+      "nav": "no Search action",
+      "notify": "errors from palette actions go to the console"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

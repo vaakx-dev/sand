@@ -1,0 +1,22 @@
+{
+  "name": "@sand/tools",
+  "version": "0.0.0",
+  "description": "Tool registry: tools register here, and the loop runs them",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Tools",
+    "summary": "The registry the agent tools register in",
+    "provides": [
+      "tools"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

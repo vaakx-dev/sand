@@ -1,0 +1,25 @@
+{
+  "name": "@sand/sessions-sqlite",
+  "version": "0.0.0",
+  "description": "Stores threads in SQLite",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Thread store",
+    "summary": "Keeps threads in a SQLite database",
+    "provides": [
+      "sessions"
+    ],
+    "uses": {
+      "server": "the page gets no thread metadata such as pins"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

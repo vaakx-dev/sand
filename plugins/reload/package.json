@@ -1,0 +1,22 @@
+{
+  "name": "@sand/reload",
+  "version": "0.0.0",
+  "description": "Reloads plugins from disk with /reload, and a sidebar button that does the same",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Reload button",
+    "summary": "A sidebar button that reloads every plugin from disk",
+    "uses": {
+      "nav": "no button; /reload still works",
+      "notify": "reload errors go to the console"
+    }
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

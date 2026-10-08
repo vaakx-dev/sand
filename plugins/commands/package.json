@@ -1,0 +1,18 @@
+{
+  "name": "@sand/commands",
+  "version": "0.0.0",
+  "description": "Command host for the page: merges local commands with the server commands relayed to it",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Commands",
+    "summary": "The list of slash commands, from the page and from the server",
+    "provides": [
+      "commands"
+    ]
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@sand/sidebar-rail",
+  "version": "0.0.0",
+  "description": "Compact icon rail: one avatar per thread with status dots and tooltips",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Rail",
+    "summary": "A narrow strip with one avatar per thread",
+    "provides": [
+      "nav"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage"
+    },
+    "enabled": false
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

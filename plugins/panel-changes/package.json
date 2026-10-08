@@ -1,0 +1,24 @@
+{
+  "name": "@sand/panel-changes",
+  "version": "0.0.0",
+  "description": "Edits: files the agent edited or wrote in the current thread, with per-file diffs and +/- counts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Edits panel",
+    "summary": "Files the agent edited, with their diffs",
+    "uses": {
+      "panels": "draws its own plain panel",
+      "commands": "no /changes command"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

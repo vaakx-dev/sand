@@ -1,0 +1,23 @@
+{
+  "name": "@sand/usage-page",
+  "version": "0.0.0",
+  "description": "Usage page in settings: plan limits, tokens and API cost by model, day and thread",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Usage",
+    "summary": "Usage page in settings: plan limits, tokens and API cost",
+    "uses": {
+      "settings": "no Usage page; /usage shows the server report",
+      "commands": "no /usage shortcut to the page",
+      "limits": "limits only update when the page reloads",
+      "threads": "thread rows do not open the thread"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

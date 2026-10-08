@@ -1,0 +1,27 @@
+{
+  "name": "@sand/thread-list",
+  "version": "0.0.0",
+  "description": "Lists threads and unsent drafts in the nav host, and adds threads, projects and thread actions to the palette",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Thread list",
+    "summary": "Your threads and unsent drafts in the sidebar, and threads and projects in the palette",
+    "uses": {
+      "nav": "shows a plain thread switcher at the top",
+      "composer": "new thread does not focus the prompt",
+      "palette": "threads and projects are not searchable, and New thread starts in the current folder",
+      "projects": "only the current folder is offered for a new thread, and projects cannot be renamed or hidden",
+      "picker": "projects cannot be renamed from the palette",
+      "machines": "threads from other PCs show no PC name",
+      "drafts": "unsent new threads are not listed",
+      "jobs": "threads whose background agents are still running look idle"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

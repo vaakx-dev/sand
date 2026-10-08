@@ -1,0 +1,24 @@
+{
+  "name": "@sand/transcript-log",
+  "version": "0.0.0",
+  "description": "Dense terminal-style log: one line per message or tool call; tool lines open to show their output",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Log",
+    "summary": "One dense line per message or tool call",
+    "provides": [
+      "transcript"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage"
+    },
+    "enabled": false
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

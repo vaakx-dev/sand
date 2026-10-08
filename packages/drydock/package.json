@@ -1,0 +1,12 @@
+{
+  "name": "drydock",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./src/browser.ts",
+      "default": "./src/index.ts"
+    },
+    "./browser": "./src/browser.ts"
+  }
+}

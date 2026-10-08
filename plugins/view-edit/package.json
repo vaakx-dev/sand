@@ -1,0 +1,22 @@
+{
+  "name": "@sand/view-edit",
+  "version": "0.0.0",
+  "description": "Shows edit and write calls as small diffs with added and removed line counts",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Edit view",
+    "summary": "Shows file edits as small diffs",
+    "uses": {
+      "transcript": "does nothing: edits use the generic view",
+      "commands": "no \"Open in changes\" button"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

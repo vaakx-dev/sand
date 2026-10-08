@@ -1,0 +1,18 @@
+{
+  "name": "@sand/titles",
+  "version": "0.0.0",
+  "description": "Names new threads from their first prompt",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Titles",
+    "summary": "Names new threads"
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

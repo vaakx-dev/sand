@@ -1,0 +1,24 @@
+{
+  "name": "@sand/devices",
+  "version": "0.0.0",
+  "description": "Links and a QR code to open this sand on a phone or another computer",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Devices",
+    "summary": "Links and a QR code to use sand on your phone",
+    "uses": {
+      "commands": "opens from a Devices button in the sidebar instead of /devices",
+      "nav": "no sidebar button when there is no /devices command",
+      "machines": "no PCs on the Devices settings page",
+      "settings": "no Devices settings page"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "uqr": "^0.1.3"
+  }
+}

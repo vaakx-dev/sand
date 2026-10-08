@@ -1,0 +1,21 @@
+{
+  "name": "@sand/find-files",
+  "version": "0.0.0",
+  "description": "Go to file and Search in project in the palette; picking a file puts @path in the prompt",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Find files",
+    "summary": "Go to a file or search the project from the palette",
+    "uses": {
+      "palette": "nothing is shown",
+      "composer": "picked files cannot be added to a prompt"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

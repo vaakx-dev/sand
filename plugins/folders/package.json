@@ -1,0 +1,21 @@
+{
+  "name": "@sand/folders",
+  "version": "0.0.0",
+  "description": "Lets the page browse folders and make new ones on this computer",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Folders",
+    "summary": "Browse folders and make new ones from the page",
+    "uses": {
+      "server": "does nothing"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

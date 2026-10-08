@@ -1,0 +1,24 @@
+{
+  "name": "@sand/projects",
+  "version": "0.0.0",
+  "description": "Every project folder opened on this PC: list, add, rename, hide and link them, clone a Git URL or start an empty project",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Projects",
+    "summary": "Project folders on this PC, with /project",
+    "uses": {
+      "server": "the page cannot list or change projects",
+      "ui": "no /project command"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

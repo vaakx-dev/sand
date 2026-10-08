@@ -1,0 +1,36 @@
+{
+  "name": "@sand/web-client",
+  "version": "0.0.0",
+  "description": "Connects the page to the sand daemon and its paired PCs",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Connection",
+    "summary": "Connects the page to sand and your other PCs",
+    "provides": [
+      "wire",
+      "threads",
+      "turns",
+      "jobs",
+      "models",
+      "limits",
+      "fileIndex",
+      "skillIndex",
+      "projects",
+      "sync",
+      "machines"
+    ],
+    "uses": {
+      "notify": "server notices go to the console",
+      "picker": "server picks and inputs use the browser prompt",
+      "commands": "server commands are not listed",
+      "composer": "drafts and attachments from the server are dropped"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

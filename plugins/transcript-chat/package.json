@@ -1,0 +1,28 @@
+{
+  "name": "@sand/transcript-chat",
+  "version": "0.0.0",
+  "description": "Chat transcript: bubbles, markdown, tool groups under each reply, agent reports, streamed in place",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Chat",
+    "summary": "Messages with markdown, and tool steps grouped under each reply",
+    "provides": [
+      "transcript"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage",
+      "composer": "the empty-state hint does not focus a composer",
+      "commands": "the empty state cannot open the extensions drawer",
+      "projects": "the empty state shows the sand logo instead of the project icon",
+      "palette": "the empty state does not offer search"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

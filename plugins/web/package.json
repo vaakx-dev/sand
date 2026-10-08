@@ -1,0 +1,21 @@
+{
+  "name": "@sand/web",
+  "version": "0.0.0",
+  "description": "Serves the browser UI: bundles the web extensions and hands them to the page",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Web",
+    "summary": "Builds the page from the web extensions"
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

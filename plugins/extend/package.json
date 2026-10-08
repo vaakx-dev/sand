@@ -1,0 +1,22 @@
+{
+  "name": "@sand/extend",
+  "version": "0.0.0",
+  "description": "The plugin tool and the sand-plugins skill, so the agent can inspect and write plugins",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Extend",
+    "summary": "Lets the agent list plugins and learn to write new ones",
+    "uses": {
+      "skills": "the agent gets no guide to writing plugins",
+      "inspector": "plugin details list no services or hooks"
+    }
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

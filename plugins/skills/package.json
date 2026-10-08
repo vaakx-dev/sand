@@ -1,0 +1,26 @@
+{
+  "name": "@sand/skills",
+  "version": "0.0.0",
+  "description": "Bundles core skills like commit, discovers skills in plugin, home and project folders and gives the agent the skill tool",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Skills",
+    "summary": "Skills the agent can load, and the skill tool",
+    "provides": [
+      "skills"
+    ],
+    "uses": {
+      "cli": "skills are only read from the folder sand started in"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

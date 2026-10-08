@@ -1,0 +1,19 @@
+{
+  "name": "@sand/picker",
+  "version": "0.0.0",
+  "description": "Pick and input sheets for server and local prompts, with fuzzy search and keys as buttons",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Pickers",
+    "summary": "Lists to choose from and boxes to type in when sand asks you something",
+    "provides": [
+      "picker"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

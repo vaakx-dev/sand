@@ -1,0 +1,22 @@
+{
+  "name": "@sand/context-default",
+  "version": "0.0.0",
+  "description": "Builds the system prompt and request for each turn from the project instructions, environment and tools",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Context",
+    "summary": "The system prompt: project instructions, environment and tools",
+    "provides": [
+      "context"
+    ]
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

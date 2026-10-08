@@ -1,0 +1,24 @@
+{
+  "name": "@sand/settings",
+  "version": "0.0.0",
+  "description": "Settings: the sidebar lists the settings pages and the main column shows the chosen one",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Settings",
+    "summary": "The settings pages",
+    "provides": [
+      "settings"
+    ],
+    "uses": {
+      "layout": "settings cover the whole window",
+      "nav": "no Settings button in the sidebar",
+      "commands": "no /settings command"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

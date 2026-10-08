@@ -1,0 +1,27 @@
+{
+  "name": "@sand/compaction",
+  "version": "0.0.0",
+  "description": "Compacts a conversation into a summary when its context fills up, and reports context usage",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Compaction",
+    "summary": "Summarizes long conversations and agents before their context fills up, and /compact",
+    "uses": {
+      "loop": "conversations are never compacted automatically",
+      "context": "the page cannot measure a thread that has not run yet",
+      "server": "the page gets no context usage",
+      "ui": "compaction runs without notices and there is no /compact command",
+      "modelSettings": "context limits use the default model",
+      "sessions": "the page cannot ask for the context usage of a thread"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

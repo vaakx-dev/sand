@@ -1,0 +1,21 @@
+{
+  "name": "@sand/view-grep",
+  "version": "0.0.0",
+  "description": "Shows grep matches grouped by file, and glob results as a file list",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Search view",
+    "summary": "Shows search matches grouped by file, and file lists",
+    "uses": {
+      "transcript": "does nothing: searches use the generic view"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@sand/loop-react",
+  "version": "0.0.0",
+  "description": "The agent loop: sends the conversation to the model, runs the tools it calls and repeats until it is done",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Agent loop",
+    "summary": "Runs turns: the model replies, tools run, and it repeats until done",
+    "provides": [
+      "loop"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

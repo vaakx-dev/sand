@@ -1,0 +1,11 @@
+{
+  "name": "@sand/kit",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*"
+  }
+}

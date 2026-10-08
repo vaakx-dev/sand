@@ -1,0 +1,18 @@
+{
+  "name": "@sand/tools-shell",
+  "version": "0.0.0",
+  "description": "The shell tool",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Shell tool",
+    "summary": "Runs shell commands for the agent"
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

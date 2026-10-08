@@ -1,0 +1,15 @@
+{
+  "name": "@sand/tooltips",
+  "version": "0.0.0",
+  "description": "Shows sand's own tooltip for every title, on hover or keyboard focus, in place of the browser's",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Tooltips",
+    "summary": "Short hints when you hover or tab to a control, in place of the browser's own"
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

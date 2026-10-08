@@ -1,0 +1,25 @@
+{
+  "name": "@sand/followups",
+  "version": "0.0.0",
+  "description": "Follow-ups queued while a turn runs; the next one starts when the turn ends",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Follow-ups",
+    "summary": "Prompts queued while a turn runs",
+    "provides": [
+      "followUps"
+    ],
+    "uses": {
+      "ui": "follow-ups that fail to start fail silently"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

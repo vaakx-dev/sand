@@ -1,0 +1,25 @@
+- Keep code clean, focused and readable: small files, clear names.
+- Don't write code comments, doc files (READMEs, design docs, notes) or tests.
+- Organise by feature, not by file type.
+- Split a feature into subfolders as it grows.
+- Keep the root small.
+- Use TypeScript on Bun; prefer Bun APIs over Node ones.
+- Everything is a plugin. drydock stays agent-agnostic.
+- `packages/protocol` holds types only.
+- Register everything through `ctx` so unloading cleans it up.
+- Keep parity across both surfaces: the web UI and headless (`sand -p`). There is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI, and when you add or change a feature, update both surfaces in the same change.
+- Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.
+- `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
+- vrui lives at `packages/dom/node_modules/@vaakx-dev/vrui` with its own `AGENTS.md` and `docs/`. Read it there; don't search the filesystem or bun's cache for it.
+- `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
+- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. For a test instance, use a temporary `HOME` with its own `.sand/sand.toml`, never `~/.sand`.
+- Never use `pkill -f`, `pgrep -f` or `killall`; they match your own shell. Kill by PID, and don't leave background processes running.
+- Ask before heavy or long commands (full builds, benchmarks, anything that loads this laptop). Give commands that might hang a `timeout_ms`.
+- Shell output over 30k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.
+- Glob before you read; don't guess paths.
+- Edit source with the edit tool, one call per file at a time, never with sed, perl or python rewrites. If an edit fails, re-read the file before retrying.
+- Other agents may be editing this tree at the same time. Only touch files your task needs, don't revert or reformat changes you didn't make, don't run repo-wide formatters, and don't touch the git index (`add`, `reset`, `stash`, `checkout --`) unless asked.
+- If a request could mean different things, ask one short question first. A mockup or plan means an HTML page, not real code.
+- Verify before you report: run `bun run check` after code changes and look at UI changes in a browser. Only call something tested if you ran it, and say what you ran. Don't state numbers you didn't measure.
+- Always finish with a short report: what changed, what you verified, what's left. Subagents included.
+- Keep replies short and plain, without jargon.

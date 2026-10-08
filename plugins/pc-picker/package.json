@@ -1,0 +1,22 @@
+{
+  "name": "@sand/pc-picker",
+  "version": "0.0.0",
+  "description": "Pick which PC a thread runs on from the composer, see whether each copy of the project is up to date, and send finished work to the other PCs",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "PC picker",
+    "summary": "Choose which PC runs a thread, with sync status for each copy of the project",
+    "uses": {
+      "sync": "no up-to-date status",
+      "syncFlows": "copy and send actions do nothing",
+      "notify": "no messages about sending newer work"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

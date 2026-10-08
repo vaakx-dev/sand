@@ -1,0 +1,24 @@
+{
+  "name": "@sand/html-render",
+  "version": "0.0.0",
+  "description": "html_render tool: the agent shows self-contained HTML pages inline in the thread, in the app theme",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "HTML renders",
+    "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the thread",
+    "uses": {
+      "transcript": "renders are not shown"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

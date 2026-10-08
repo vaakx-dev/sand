@@ -1,0 +1,27 @@
+{
+  "name": "@sand/new-project",
+  "version": "0.0.0",
+  "description": "New project in the palette: add a folder, clone a Git URL or start an empty project, on this PC or another one",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "New project",
+    "summary": "Add a folder, clone a Git URL or start an empty project",
+    "uses": {
+      "palette": "nothing is shown",
+      "notify": "no message after a project is added",
+      "composer": "the new thread does not focus the prompt",
+      "settings": "no Projects settings page",
+      "sync": "copy, send and merge flows say project sync is not available"
+    },
+    "provides": [
+      "syncFlows"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

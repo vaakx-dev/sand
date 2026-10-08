@@ -1,0 +1,20 @@
+{
+  "name": "@sand/git",
+  "version": "0.0.0",
+  "description": "Answers git questions about a project folder for the page, such as the current branch",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Git",
+    "summary": "The current git branch of a project folder",
+    "uses": {
+      "server": "does nothing"
+    }
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@sand/sidebar-cards",
+  "version": "0.0.0",
+  "description": "Card sidebar: search, project filter and actions, then Pinned, Active and Settled threads",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Cards",
+    "summary": "Threads as cards, sorted into Pinned, Active and Settled",
+    "provides": [
+      "nav"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage",
+      "projects": "the project filter lists only projects that have threads"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

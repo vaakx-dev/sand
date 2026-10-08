@@ -1,0 +1,21 @@
+{
+  "name": "@sand/attachments",
+  "version": "0.0.0",
+  "description": "Turns attached files, documents, images and clipboard content into prompt content",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Attachments",
+    "summary": "Files, documents, images and clipboard content attached to prompts",
+    "provides": [
+      "attachments"
+    ]
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

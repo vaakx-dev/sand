@@ -1,0 +1,20 @@
+{
+  "name": "@sand/extensions-panel",
+  "version": "0.0.0",
+  "description": "Interface settings page: chat style, sidebar and composer choices, parts to turn on or off, and every extension with its roles",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Interface settings",
+    "summary": "Choose the chat style, sidebar and composer, and turn parts of the interface on or off",
+    "provides": [],
+    "uses": {
+      "commands": "no /extensions command"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

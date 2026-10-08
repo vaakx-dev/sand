@@ -1,0 +1,29 @@
+{
+  "name": "@sand/server",
+  "version": "0.0.0",
+  "description": "The sand daemon: serves the page over HTTP and a websocket, relays events and answers requests",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Server",
+    "summary": "Serves the page and talks to it over a websocket",
+    "provides": [
+      "server",
+      "ui"
+    ],
+    "uses": {
+      "llm": "the page gets no models or limits",
+      "attachments": "the page gets no attachment limits",
+      "modelSettings": "threads use the default model settings",
+      "followUps": "queued follow-ups are not shown"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

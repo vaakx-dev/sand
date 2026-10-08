@@ -1,0 +1,24 @@
+{
+  "name": "@sand/model-panel",
+  "version": "0.0.0",
+  "description": "One pill for model, effort and fast mode that opens one panel, plus palette rows",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Model picker",
+    "summary": "One pill in the composer that opens model, effort and fast mode",
+    "uses": {
+      "composer": "no pill; /model and /effort open the server sheet",
+      "palette": "no model rows in the palette",
+      "commands": "/model and /effort with no argument open the server sheet",
+      "notify": "problems show inside the panel",
+      "settings": "no Models settings page"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

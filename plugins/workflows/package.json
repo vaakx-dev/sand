@@ -1,0 +1,27 @@
+{
+  "name": "@sand/workflows",
+  "version": "0.0.0",
+  "description": "The workflow tool: the agent scripts many sub-agents at once",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Workflows",
+    "summary": "Lets the agent run many sub-agents from one script",
+    "uses": {
+      "ui": "workflow progress is not shown",
+      "transcript": "workflow calls use the generic tool view",
+      "jobs": "a background workflow call shows a tick as soon as it starts"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

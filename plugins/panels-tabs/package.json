@@ -1,0 +1,22 @@
+{
+  "name": "@sand/panels-tabs",
+  "version": "0.0.0",
+  "description": "Tabbed host for the right-hand panels: edits, agents and tree",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Panel tabs",
+    "summary": "Tabs for the right-hand panels: edits, agents and tree",
+    "provides": [
+      "panels"
+    ],
+    "uses": {
+      "layout": "opens as a drawer over the page"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

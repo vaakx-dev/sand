@@ -1,0 +1,27 @@
+{
+  "name": "@sand/remotes",
+  "version": "0.0.0",
+  "description": "Other PCs running sand: pairs with them from a device link and connects to them",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Other PCs",
+    "summary": "Pair with other PCs running sand, with /remote",
+    "provides": [
+      "remotes"
+    ],
+    "uses": {
+      "server": "the page cannot list or pair PCs",
+      "ui": "no /remote command"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

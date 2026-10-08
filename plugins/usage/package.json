@@ -1,0 +1,22 @@
+{
+  "name": "@sand/usage",
+  "version": "0.0.0",
+  "description": "Plan limits in /usage, plus token and cost totals for the usage page and sand usage",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Usage",
+    "summary": "/usage, and the totals behind the usage page and sand usage",
+    "uses": {
+      "server": "the page and sand usage get no totals",
+      "llm": "no plan limits"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

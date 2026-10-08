@@ -1,0 +1,23 @@
+{
+  "name": "@sand/sidebar-tabs",
+  "version": "0.0.0",
+  "description": "Top tab strip: one tab per open thread, actions on the right",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Tabs",
+    "summary": "One tab per open thread along the top",
+    "provides": [
+      "nav"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage"
+    },
+    "enabled": false
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

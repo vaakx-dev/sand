@@ -1,0 +1,20 @@
+{
+  "name": "@sand/config-toml",
+  "version": "0.0.0",
+  "description": "Reads sand.toml and loads the plugins of the current mode, plus plugin folders; /reload picks up changes",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Config",
+    "summary": "Loads plugins and their settings from sand.toml"
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

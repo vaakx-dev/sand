@@ -1,0 +1,22 @@
+{
+  "name": "@sand/keys",
+  "version": "0.0.0",
+  "description": "Keybinding host: one window listener runs shortcuts",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Keyboard shortcuts",
+    "summary": "Lets keys run actions, such as opening the palette",
+    "provides": [
+      "keys"
+    ],
+    "uses": {
+      "notify": "shortcut errors go to the console"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

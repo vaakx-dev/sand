@@ -1,0 +1,18 @@
+{
+  "name": "@sand/tools-fs",
+  "version": "0.0.0",
+  "description": "File tools: read, write, edit, glob and grep",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "File tools",
+    "summary": "read, write, edit, glob and grep"
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

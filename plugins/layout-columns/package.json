@@ -1,0 +1,22 @@
+{
+  "name": "@sand/layout-columns",
+  "version": "0.0.0",
+  "description": "Top strip, side column, main column, aside column and bottom strip; side and aside become drawers on narrow screens",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Columns",
+    "summary": "Sidebar, conversation and panels side by side; on phones the side parts open as drawers",
+    "provides": [
+      "layout"
+    ],
+    "uses": {
+      "commands": "no /panel command"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

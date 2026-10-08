@@ -1,0 +1,22 @@
+{
+  "name": "@sand/toasts",
+  "version": "0.0.0",
+  "description": "Shows notices as toasts at the top right of the conversation, and reports in a sheet that stays until closed",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Notices",
+    "summary": "Short messages at the top right, and reports that stay until you close them",
+    "provides": [
+      "notify"
+    ],
+    "uses": {
+      "layout": "toasts sit loose on the stage instead of over the conversation"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

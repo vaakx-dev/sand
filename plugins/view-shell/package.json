@@ -1,0 +1,20 @@
+{
+  "name": "@sand/view-shell",
+  "version": "0.0.0",
+  "description": "Shows shell calls as a command with its output and exit code",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Shell view",
+    "summary": "Shows commands with their output and exit code",
+    "uses": {
+      "transcript": "does nothing: shell calls use the generic view"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

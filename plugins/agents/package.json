@@ -1,0 +1,32 @@
+{
+  "name": "@sand/agents",
+  "version": "0.0.0",
+  "description": "Sub-agents and background jobs: the agent tool, agent definitions and job tracking",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Agents",
+    "summary": "Sub-agents the agent can start, in the foreground or as background jobs",
+    "provides": [
+      "agents"
+    ],
+    "uses": {
+      "cli": "agent definitions are only read from the folder sand started in",
+      "llm": "agent definitions cannot set an effort level",
+      "ui": "background results that cannot be delivered fail silently",
+      "transcript": "agent calls use the generic tool view",
+      "jobs": "a background agent call shows a tick as soon as it starts"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

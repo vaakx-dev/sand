@@ -1,0 +1,22 @@
+{
+  "name": "@sand/sessions-ui",
+  "version": "0.0.0",
+  "description": "Thread commands: /new, /resume, /fork and /clone",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Thread commands",
+    "summary": "/new, /resume, /fork and /clone",
+    "uses": {
+      "loop": "a running thread can be forked or cloned mid-turn"
+    }
+  },
+  "dependencies": {
+    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}

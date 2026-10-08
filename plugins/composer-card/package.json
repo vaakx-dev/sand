@@ -1,0 +1,31 @@
+{
+  "name": "@sand/composer-card",
+  "version": "0.0.0",
+  "description": "Floating prompt card: send, follow-up queue, completion, attachments, context, unsent drafts, slots for other controls",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Composer",
+    "summary": "Where you write messages: attachments, follow-up queue, context, drafts and slots for other controls",
+    "provides": [
+      "composer",
+      "drafts"
+    ],
+    "uses": {
+      "layout": "lands loose on the stage",
+      "commands": "/ completion shows a hint and typed commands go straight to the server",
+      "fileIndex": "no @ file completion",
+      "skillIndex": "no $ skill completion",
+      "wire": "no offline state; sends fail when the connection drops",
+      "jobs": "no still-working agents chip",
+      "panels": "the still-working agents chip is not clickable"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}
