@@ -8,13 +8,10 @@
     "./palette": "./src/theme/palette.ts",
     "./tokens": "./src/theme/tokens.ts"
   },
-  "scripts": {
-    "postinstall": "bun build-vrui.ts"
-  },
   "dependencies": {
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui",
+    "@vaakx-dev/vrui": "workspace:*",
     "drydock": "workspace:*",
     "lucide": "^1.52.0"
   }
