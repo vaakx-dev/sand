@@ -1,11 +1,11 @@
 import { existsSync } from 'node:fs'
 import { mkdir, readdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { git } from './git'
+import { git, throttled } from './git'
 
 const isEmpty = async (path: string) => (await readdir(path).catch(() => [])).length === 0
 
-export const createProject = async (root: string, name: string) => {
+export const createFolder = async (root: string, name: string) => {
   const clean = name.trim()
   if (!clean || clean === '.' || clean === '..' || /[\\/]/.test(clean)) throw new Error('Use a plain folder name')
   const path = join(root, clean)
@@ -15,9 +15,15 @@ export const createProject = async (root: string, name: string) => {
   return path
 }
 
-export const cloneProject = async (url: string, into: string, progress: (text: string) => void) => {
+export const cloneFolder = async (url: string, into: string, progress: (text: string) => void) => {
+  if (!url.trim()) throw new Error('Give a git URL')
   if (existsSync(into) && !(await isEmpty(into))) throw new Error(`${into} already exists`)
   await mkdir(dirname(into), { recursive: true })
-  await git(['clone', '--progress', url, into], dirname(into), progress)
+  const lines = throttled(progress)
+  try {
+    await git(['clone', '--progress', url.trim(), into], dirname(into), lines.push)
+  } finally {
+    lines.done()
+  }
   return into
 }

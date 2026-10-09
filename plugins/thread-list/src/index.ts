@@ -1,6 +1,7 @@
 import { owned, place, pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { threadNavList } from './nav-list'
+import { currentPlace } from './palette/places'
 import { newThreadPage } from './palette/projects'
 import { sessionSource } from './palette/source'
 import { switcher } from './switcher'
@@ -15,13 +16,17 @@ export default definePlugin({
     palette: 'threads and projects are not searchable, and New thread starts in the current folder',
     projects: 'only the current folder is offered for a new thread, and projects cannot be renamed or hidden',
     picker: 'projects cannot be renamed from the palette',
+    syncFlows: 'a project with no copy on this PC starts on another PC instead of offering to clone or sync it',
     machines: 'threads from other PCs show no PC name',
     drafts: 'unsent new threads are not listed',
     jobs: 'threads whose background agents are still running look idle',
   },
   apply(ctx) {
     const threads = ctx.threads
-    const here = () => void threads.draft(threads.cwd(), threads.device()).then(() => ctx.composer?.focus())
+    const here = () => {
+      const place = currentPlace(ctx)
+      void threads.draft(place.path, place.device).then(() => ctx.composer?.focus())
+    }
     const create = () => (ctx.palette ? ctx.palette.open(newThreadPage(ctx)) : here())
     const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change'] as const
 

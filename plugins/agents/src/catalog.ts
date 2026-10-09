@@ -1,10 +1,7 @@
-import type { Agents, LLM } from '@sand/protocol'
+import type { AgentDefinition, LLM } from '@sand/protocol'
 
-const agentList = (agents: Agents) =>
-  agents
-    .definitions()
-    .map(definition => `- ${definition.name}: ${definition.description}`)
-    .join('\n')
+const agentList = (definitions: AgentDefinition[]) =>
+  definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')
 
 const modelList = (llm: LLM | undefined) => {
   const models = llm?.models?.() ?? []
@@ -13,5 +10,5 @@ const modelList = (llm: LLM | undefined) => {
   return `\n\nAvailable models:\n${lines.join('\n')}\nUse a smaller model for mechanical search and bulk reading; keep the default for judgement-heavy work.`
 }
 
-export const catalog = (agents: Agents, llm: LLM | undefined) =>
-  `Available agents:\n${agentList(agents)}${modelList(llm)}`
+export const catalog = (definitions: AgentDefinition[], llm: LLM | undefined) =>
+  `Available agents:\n${agentList(definitions)}${modelList(llm)}`

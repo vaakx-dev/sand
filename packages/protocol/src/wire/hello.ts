@@ -13,7 +13,7 @@ export interface Hello {
   defaults?: SessionSettings
   levels?: EffortLevel[]
   attachments?: AttachmentLimits
-  cwd: string
+  scratch?: string
   sessions: SessionSummary[]
   jobs: WireJob[]
   active: string[]

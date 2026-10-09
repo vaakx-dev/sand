@@ -1,28 +1,35 @@
 import type { Skill, Skills } from '@sand/protocol'
-import { definePlugin, type Dispose } from 'drydock'
-import { debouncedWatch, expandHome, sandHome, workingFolder } from '@sand/host'
+import { definePlugin } from 'drydock'
+import { expandHome, sandHome } from '@sand/host'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { describePerThread } from './describe'
 import { discover } from './discover'
-import { expand, mentions } from './expand'
+import { expandMentions } from './expand'
+import { merge, projectSkills } from './layers'
 import { serveSkills } from './serve'
 import { skillTool } from './tool'
+import { watchRoot } from './watch'
 
 export default definePlugin({
   name: 'skills',
   inject: ['tools'],
   config: z.object({ paths: z.array(z.string()).default([]) }),
   async apply(ctx, config) {
-    const roots = [join(import.meta.dir, '..', 'skills'), join(sandHome(ctx), 'skills'), join(workingFolder(ctx), '.sand', 'skills'), ...config.paths.map(path => expandHome(path))]
+    const home = sandHome(ctx)
+    const roots = [join(import.meta.dir, '..', 'skills'), join(home, 'skills'), ...config.paths.map(path => expandHome(path, home))]
     const contributed = new Map<string, Record<string, string>>()
-    let current: Skill[] = []
-    let unregister: Dispose | undefined
+    const changed = () => ctx.server?.broadcast('skills.change', [])
+    const project = projectSkills(ctx, roots, changed)
+    let global: Skill[] = []
     let live = true
     let generation = 0
 
+    const list = async (cwd?: string, id?: string | null) => (cwd ? merge(global, await project(cwd, id)) : global)
+
     const skills: Skills = {
-      list: () => current,
-      get: name => current.find(skill => skill.name === name),
+      list,
+      get: async (name, cwd, id) => (await list(cwd, id)).find(skill => skill.name === name),
       register(dir, values = {}) {
         contributed.set(dir, values)
         void refresh()
@@ -36,20 +43,19 @@ export default definePlugin({
       const mine = ++generation
       const found = await discover(contributed, roots, error => ctx.report(error))
       if (!live || mine !== generation) return
-      current = found
-      void unregister?.()
-      unregister = current.length ? ctx.tools.register(skillTool(skills)) : undefined
+      global = found
+      changed()
     }
 
     ctx.effect(() => () => {
       live = false
-      void unregister?.()
     })
     await refresh()
     ctx.provide('skills', skills)
+    ctx.effect(() => ctx.tools.register(skillTool(skills, global)))
     serveSkills(ctx, skills)
-    for (const root of roots) ctx.effect(() => debouncedWatch(root, { recursive: true }, () => void refresh()))
-
-    ctx.on('turn.prompt', content => expand(content, [...mentions(content)].flatMap(name => skills.get(name) ?? [])))
+    for (const root of roots) ctx.effect(() => watchRoot(root, () => void refresh()))
+    describePerThread(ctx, skills)
+    expandMentions(ctx, skills)
   },
 })

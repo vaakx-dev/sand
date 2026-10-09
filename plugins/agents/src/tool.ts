@@ -1,4 +1,4 @@
-import type { Agents, Effort, LLM, Tool, TurnResult } from '@sand/protocol'
+import type { AgentDefinition, Agents, Effort, LLM, Tool, TurnResult } from '@sand/protocol'
 import { z } from 'zod'
 import { catalog } from './catalog'
 import { agentTitle } from './title'
@@ -26,11 +26,18 @@ const report = (result: TurnResult) => {
   return result.text || 'The subagent finished without a final report.'
 }
 
-export const agentTool = (agents: Agents, llm: LLM | undefined): Tool<ReturnType<typeof inputSchema>> => ({
-  name: 'agent',
-  description: `Delegate a task to a subagent. It works independently in its own context with its own tools and returns a final report; only that report enters your context. Use it for broad searches, independent pieces of work that can run in parallel, and tasks that would flood your context. Call it several times in one response to run agents in parallel. Set background to keep working while it runs.
+export const describeAgents = (list: AgentDefinition[], llm: LLM | undefined) =>
+  `Delegate a task to a subagent. It works independently in its own context with its own tools and returns a final report; only that report enters your context. Use it for broad searches, independent pieces of work that can run in parallel, and tasks that would flood your context. Call it several times in one response to run agents in parallel. Set background to keep working while it runs.
 
-${catalog(agents, llm)}`,
+${catalog(list, llm)}`
+
+export const agentTool = (
+  agents: Agents,
+  list: AgentDefinition[],
+  llm: LLM | undefined,
+): Tool<ReturnType<typeof inputSchema>> => ({
+  name: 'agent',
+  description: describeAgents(list, llm),
   input: inputSchema(llm),
   async run({ label, task, agent, model, effort, background }, { session, signal, call }) {
     const request = { parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id }

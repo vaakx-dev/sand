@@ -1,4 +1,5 @@
-import type { Skill, TextBlock, UserContent } from '@sand/protocol'
+import type { Skill, Skills, TextBlock, UserContent } from '@sand/protocol'
+import type { Context } from 'drydock'
 
 const mention = /(?:^|[\s(])\$([a-zA-Z0-9][\w.-]*)/g
 
@@ -12,3 +13,11 @@ export const mentions = (content: UserContent[]) =>
 
 export const expand = (content: UserContent[], skills: Skill[]): UserContent[] =>
   skills.length ? [...skills.map(skillBlock), ...content] : content
+
+export const expandMentions = (ctx: Context, skills: Skills) =>
+  ctx.on('turn.prompt', async (content, session) => {
+    const names = [...mentions(content)]
+    if (!names.length) return content
+    const list = await skills.list(session.cwd, session.project)
+    return expand(content, names.flatMap(name => list.find(skill => skill.name === name) ?? []))
+  })

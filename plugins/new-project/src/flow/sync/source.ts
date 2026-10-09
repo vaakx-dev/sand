@@ -1,8 +1,9 @@
-import type { ProjectGroup, ProjectRef } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup } from '@sand/protocol'
 import type { FlowContext } from '../types'
 
-export const copySource = (ctx: FlowContext, group: ProjectGroup): ProjectRef | undefined => {
-  const online = group.locations.filter(location => ctx.machines.get(location.device)?.online)
-  const latest = online.sort((a, b) => b.updated - a.updated)[0]
-  return latest && { path: latest.path, device: latest.device }
-}
+export const copySources = (ctx: FlowContext, group: ProjectGroup, target?: string): ProjectEntry[] =>
+  group.locations
+    .filter(location => !location.missing && location.device !== target && ctx.machines.get(location.device)?.online)
+    .sort((a, b) => b.updated - a.updated)
+
+export const hasCopy = (group: ProjectGroup, device?: string) => group.locations.some(location => location.device === device && !location.missing)

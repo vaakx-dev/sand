@@ -1,19 +1,20 @@
 import type { PaletteItem, PalettePage } from '@sand/protocol'
+import { parsePairLink } from '@sand/kit'
 import type { FlowContext } from './types'
 
-const looksLikeLink = (value: string) => /^https?:\/\/\S+[?&]token=\S+/.test(value.trim())
+const looksLikeLink = (value: string) => Boolean(parsePairLink(value))
 
 const connectPage = (ctx: FlowContext): PalettePage => ({
   id: 'connect',
   title: 'Connect another PC',
   empty: value =>
     value.trim() && !looksLikeLink(value)
-      ? 'That link has no token. Copy it from Devices on the other PC.'
-      : 'On the other PC, open Devices in sand and copy one of its links.',
+      ? 'That isn’t a pairing link. On the other PC open Devices > Pair a new device and copy its link.'
+      : 'On the other PC, open Devices > Pair a new device and copy its link.',
   field: {
     kind: 'url',
     value: '',
-    placeholder: 'Link from the other PC',
+    placeholder: 'Pairing link from the other PC',
     action: value => ({ label: 'Connect', enabled: looksLikeLink(value) }),
     async submit(value) {
       const machine = await ctx.machines.add(value.trim())

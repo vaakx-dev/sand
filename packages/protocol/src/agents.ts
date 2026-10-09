@@ -44,7 +44,7 @@ export interface Job {
 
 export interface Agents {
   define(definition: AgentDefinition): Dispose
-  definitions(): AgentDefinition[]
+  definitions(cwd?: string, project?: string | null): Promise<AgentDefinition[]>
   run(request: AgentRequest): Promise<AgentResult>
   background(parent: Session, label: string, work: (signal: AbortSignal, job: Job) => Promise<string>, origin?: string): Job
   jobs(parent?: Session): Job[]

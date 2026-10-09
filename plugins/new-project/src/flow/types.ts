@@ -1,4 +1,4 @@
-import type { Machine, PalettePage } from '@sand/protocol'
+import type { CopyDone, Machine, PalettePage } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export type FlowContext = Context<'projects' | 'machines' | 'threads'>
@@ -17,6 +17,9 @@ export interface Choice {
   path: string
   name?: string
   repo?: Repo
+  project?: string
+  existing?: string
+  done?: CopyDone
 }
 
 export type Next = (choice: Choice) => PalettePage | Promise<PalettePage>

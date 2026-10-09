@@ -1,7 +1,8 @@
-import type { DeviceInfo, Remote } from '@sand/protocol'
+import type { DeviceInfo } from '@sand/protocol'
 import type { SyncCall } from '@sand/kit'
 import { ask } from '../../daemon/ask'
 import { requireRunning } from '../../daemon/info'
+import { readRemotes } from '../../daemon/remotes'
 
 const syncTimeout = 10 * 60_000
 
@@ -11,7 +12,7 @@ export interface Pc {
   device?: string
   name: string
   url: string
-  token: string
+  key: string
 }
 
 export interface Pcs {
@@ -23,9 +24,9 @@ export interface Pcs {
 
 export const connectPcs = async (home: string): Promise<Pcs> => {
   const info = await requireRunning(home)
-  const [device, remotes] = await Promise.all([ask<DeviceInfo>(info, { type: 'device.info' }), ask<Remote[]>(info, { type: 'remotes.list' })])
-  const local: Pc = { name: device.name, url: info.url, token: info.token }
-  const all = [local, ...remotes.map(({ id, name, url, token }): Pc => ({ device: id, name, url, token }))]
+  const [device, remotes] = await Promise.all([ask<DeviceInfo>(info, { type: 'device.info' }), readRemotes(home)])
+  const local: Pc = { name: device.name, url: info.url, key: info.key }
+  const all = [local, ...remotes.map(({ id, name, url, key }): Pc => ({ device: id, name, url, key }))]
 
   const call: SyncCall = (request, device) => {
     const pc = all.find(candidate => candidate.device === device)

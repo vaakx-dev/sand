@@ -1,54 +1,44 @@
-import type { Command, Project, UI } from '@sand/protocol'
-import type { ProjectLibrary } from './library'
+import type { Command, Project, SessionSummary, UI } from '@sand/protocol'
+import { localProjects } from '@sand/host'
 
-const marks = (project: Project) =>
-  [project.hidden && 'hidden', project.link && 'linked', project.missing && 'missing'].filter(Boolean).join(', ')
+const counts = (sessions: SessionSummary[]) => {
+  const threads = new Map<string, number>()
+  for (const session of sessions) {
+    if (session.kind === 'agent' || !session.project) continue
+    threads.set(session.project, (threads.get(session.project) ?? 0) + 1)
+  }
+  return threads
+}
 
-const listing = (library: ProjectLibrary) => {
-  const { projects } = library.list()
-  if (!projects.length) return 'No projects yet.'
-  return projects
-    .map(project => `${project.name} · ${project.path} · ${project.threads} threads${marks(project) ? ` · ${marks(project)}` : ''}`)
+const plural = (count: number) => `${count} ${count === 1 ? 'thread' : 'threads'}`
+
+const where = (project: Project, device?: string) => {
+  const copy = device ? project.copies[device] : undefined
+  return copy && !copy.removed ? copy.path : 'no copy here'
+}
+
+const listing = (home: string, sessions: SessionSummary[], all: boolean) => {
+  const { device, projects } = localProjects(home)
+  const shown = projects.filter(project => all || !project.hidden)
+  if (!shown.length) return 'No projects yet.'
+  const threads = counts(sessions)
+  return shown
+    .map(project =>
+      [project.name, where(project, device), plural(threads.get(project.id) ?? 0), project.hidden && 'hidden']
+        .filter(Boolean)
+        .join(' · '),
+    )
     .join('\n')
 }
 
-const lead = (library: ProjectLibrary, text: string) => {
-  const words = text.split(/\s+/).filter(Boolean)
-  for (let count = words.length; count > 0; count--) {
-    const project = library.find(words.slice(0, count).join(' '))
-    if (project) return { project, rest: words.slice(count).join(' ') }
-  }
-  return undefined
-}
-
-const usage = 'Usage: /project [add <path> | remove <name> | rename <name> <new name> | hide <name> | show <name> | root [path]]'
-
-export const projectCommand = (ui: UI, library: ProjectLibrary): Command => ({
+export const projectCommand = (ui: UI, home: string, sessions: () => SessionSummary[]): Command => ({
   name: 'project',
   title: 'Projects',
-  description: 'List projects, or add, remove, rename, hide or show one, or set the projects folder',
-  args: '[add|remove|rename|hide|show|root]',
-  async run(args) {
-    const [action, ...words] = args.trim().split(/\s+/)
-    const value = words.join(' ')
-    if (!action) return ui.notify(listing(library))
-    if (action === 'root') return ui.notify(value ? `Projects folder is ${(await library.setRoot(value)).root}` : library.list().root)
-    if (action === 'add' && value) return ui.notify(`Saved ${(await library.add(value))?.name}`)
-    const found = lead(library, value)
-    if (!found) return ui.notify(value ? `No project matches ${value}` : usage, 'error')
-    const { project, rest } = found
-    if (action === 'remove') {
-      await library.remove(project.path)
-      return ui.notify(`Removed ${project.name} from projects`)
-    }
-    if (action === 'hide' || action === 'show') {
-      await library.update(project.path, { hidden: action === 'hide' })
-      return ui.notify(`${action === 'hide' ? 'Hid' : 'Showing'} ${project.name}`)
-    }
-    if (action === 'rename' && rest) {
-      await library.update(project.path, { name: rest })
-      return ui.notify(`Renamed ${project.name} to ${rest}`)
-    }
-    ui.notify(usage, 'error')
+  description: 'List projects on this PC; change them in the web UI or with `sand project`',
+  args: '[all]',
+  run(args) {
+    const word = args.trim()
+    if (word && word !== 'all') return ui.notify('Usage: /project [all]', 'error')
+    ui.notify(listing(home, sessions(), word === 'all'))
   },
 })

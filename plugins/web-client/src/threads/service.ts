@@ -1,7 +1,8 @@
 import type { Hello, NewThread, OpenedSession, SessionInfo, Thread, Threads, Wire } from '@sand/protocol'
-import { uuid } from '@sand/kit'
+import { isInside, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
-import { requestedFolder, requestedSession, showSession } from './address'
+import { requestedSession, showSession } from './address'
+import { clearTurn } from './live'
 import { threadLoader } from './loading'
 import { trackSeen } from './seen'
 import { walk, type Store } from './store'
@@ -46,7 +47,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
     for (const info of hello.sessions) store.upsert(info)
     for (const thread of local()) {
       thread.running = hello.active.includes(thread.id)
-      if (!thread.running) thread.started = undefined
+      if (!thread.running) clearTurn(thread)
       thread.loaded = false
     }
     const asked = requestedSession()
@@ -60,8 +61,27 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
   trackSeen(ctx, wire, store)
 
   const call = (request: Parameters<Wire['call']>[0]) => wire.call(request).then(() => undefined)
-  const cwd = () =>
-    (store.current && store.threads.get(store.current)?.info.cwd) || store.draft?.cwd || requestedFolder() || wire.hello()?.cwd || ''
+  const missing = (path: string) => Boolean(ctx.projects?.list().some(project => !project.device && project.path === path && project.missing))
+  const recentFolder = () => {
+    const scratch = wire.hello()?.scratch ?? ''
+    return [...store.threads.values()]
+      .filter(
+        thread =>
+          !thread.device &&
+          thread.info.kind !== 'agent' &&
+          thread.info.cwd &&
+          !isInside(thread.info.cwd, scratch) &&
+          !missing(thread.info.cwd),
+      )
+      .sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
+  }
+
+  const cwd = () => {
+    const current = store.current ? store.threads.get(store.current) : undefined
+    if (current) return current.info.cwd
+    if (store.draft) return store.draft.cwd
+    return recentFolder() ?? ''
+  }
 
   return {
     adopt: install,
@@ -80,8 +100,12 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
     load,
     async create(options: NewThread = {}) {
       const device = options.cwd ? options.device : store.device()
+      const folder = options.cwd ?? cwd()
       const info = await wire.call<SessionInfo>(
-        { type: 'sessions.create', options: { id: uuid(), cwd: options.cwd ?? cwd(), title: options.title, settings: options.settings } },
+        {
+          type: 'sessions.create',
+          options: { id: uuid(), ...(folder && { cwd: folder }), title: options.title, settings: options.settings },
+        },
         device,
       )
       const thread = store.upsert(info, device)

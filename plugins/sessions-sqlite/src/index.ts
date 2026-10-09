@@ -1,18 +1,20 @@
 import type { Entry, Session, SessionInfo, Sessions } from '@sand/protocol'
-import { expandHome, sandHome } from '@sand/host'
+import { expandHome, projectOfFolder, sandHome, scratchFolder, scratchRoot, watchProjects } from '@sand/host'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { open } from './db'
 import { remover, summaries } from './list'
 import { serveMeta, sessionMeta } from './meta'
+import { assignProjects } from './projects'
 import { createSession } from './session'
 
 export default definePlugin({
   name: 'sessions-sqlite',
   config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
-    const db = open(config.path ? expandHome(config.path) : join(sandHome(ctx), 'sand.db'))
+    const home = sandHome(ctx)
+    const db = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
     ctx.effect(() => () => db.close())
     const opened = new Map<string, Session>()
     const hooks = {
@@ -25,7 +27,7 @@ export default definePlugin({
       return session
     }
     const insert = db.query(
-      'insert into sessions (id, created, cwd, title, head, parent, origin, kind, seen, position) values ($id, $created, $cwd, $title, $head, $parent, $origin, $kind, $created, $created)',
+      'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $created, $created)',
     )
     const find = db.query<SessionInfo, { id: string }>('select * from sessions where id = $id')
     const list = summaries(db)
@@ -33,11 +35,12 @@ export default definePlugin({
     const ofType = db.query<Entry & { data: string }, { type: string }>('select * from entries where type = $type order by at')
 
     const sessions: Sessions = {
-      create({ id, cwd, title, parent, origin, kind }) {
+      create({ id = Bun.randomUUIDv7(), cwd, project, title, parent, origin, kind }) {
         const info: SessionInfo = {
-          id: id ?? Bun.randomUUIDv7(),
+          id,
           created: Date.now(),
-          cwd,
+          cwd: cwd || scratchFolder(ctx, id),
+          project: cwd ? (project !== undefined ? project : projectOfFolder(cwd, home)) : null,
           title: title ?? null,
           head: null,
           parent: parent ?? null,
@@ -57,7 +60,7 @@ export default definePlugin({
       },
       branch(source, id, at) {
         const title = source.title ? `${source.title} (branch)` : undefined
-        const copy = sessions.create({ id, cwd: source.cwd, title, parent: source.id, kind: 'branch' })
+        const copy = sessions.create({ id, cwd: source.cwd, project: source.project, title, parent: source.id, kind: 'branch' })
         const path = source.path()
         const end = at === undefined ? path.length : path.findIndex(entry => entry.id === at) + 1
         for (const entry of path.slice(0, end)) copy.append(entry.type, entry.data)
@@ -73,7 +76,22 @@ export default definePlugin({
       },
     }
     ctx.provide('sessions', sessions)
+    ctx.on('server.hello', hello => ({ ...hello, scratch: scratchRoot(ctx) }))
+    ctx.on('runtime.release', ids => {
+      for (const id of ids) opened.delete(id)
+    })
     const meta = sessionMeta(db)
     ctx.watch('server', server => (server ? serveMeta(server, meta) : undefined))
+    assignProjects(db, home)
+    ctx.effect(() =>
+      watchProjects(home, () => {
+        for (const { id, project } of assignProjects(db, home)) {
+          const cached = opened.get(id)
+          if (cached) cached.project = project
+          const session = sessions.open(id)
+          if (session) hooks.update(session)
+        }
+      }),
+    )
   },
 })

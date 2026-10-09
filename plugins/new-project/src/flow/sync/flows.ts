@@ -1,30 +1,19 @@
-import type { ProjectGroup, ProjectRef } from '@sand/protocol'
+import type { CopyDone, ProjectGroup, ProjectRef } from '@sand/protocol'
 import { errorMessage } from '@sand/dom'
-import { deviceOf, type FlowContext } from '../types'
+import type { FlowContext } from '../types'
 import { syncOf } from './available'
-import { destinationPage } from './destination'
 import { devicesPage } from './devices'
-import { copySource } from './source'
+import { noCopyPage } from './nocopy'
 import { openResolve } from './resolve'
 import { sendPage } from './sendReview'
 
-export const startCopy = (ctx: FlowContext, group: ProjectGroup, device?: string) => {
-  const sync = syncOf(ctx)
-  if (!sync) return
-  const from = copySource(ctx, group)
+export const startCopy = (ctx: FlowContext, group: ProjectGroup, device?: string, then?: CopyDone) => {
   const machine = ctx.machines.get(device)
-  if (!from) return ctx.notify?.push(`No PC with ${group.name} is online`, { level: 'error' })
   if (!machine?.online) return ctx.notify?.push('That PC is offline', { level: 'error' })
-  ctx.palette?.open(destinationPage(ctx, sync, group.name, from, machine))
+  ctx.palette?.open(noCopyPage(ctx, group, machine, then))
 }
 
-export const startAdd = (ctx: FlowContext, group: ProjectGroup) => {
-  const sync = syncOf(ctx)
-  if (!sync) return
-  const from = copySource(ctx, group)
-  if (!from) return ctx.notify?.push(`No PC with ${group.name} is online`, { level: 'error' })
-  ctx.palette?.open(devicesPage(ctx, group, machine => destinationPage(ctx, sync, group.name, from, machine)))
-}
+export const startAdd = (ctx: FlowContext, group: ProjectGroup) => ctx.palette?.open(devicesPage(ctx, group, machine => noCopyPage(ctx, group, machine)))
 
 export const startSend = (ctx: FlowContext, from: ProjectRef, to: ProjectRef) => {
   const sync = syncOf(ctx)

@@ -11,7 +11,7 @@ export default definePlugin({
     dir: z.string().optional(),
   }),
   apply(ctx, config) {
-    const root = config.dir ? expandHome(config.dir) : join(sandHome(ctx), 'workflows')
+    const root = config.dir ? expandHome(config.dir, sandHome(ctx)) : join(sandHome(ctx), 'workflows')
     ctx.effect(() => ctx.tools.register(workflowTool(ctx, root)))
   },
 })

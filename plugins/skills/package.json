@@ -1,7 +1,7 @@
 {
   "name": "@sand/skills",
   "version": "0.0.0",
-  "description": "Bundles core skills like commit, discovers skills in plugin, home and project folders and gives the agent the skill tool",
+  "description": "Bundles core skills like commit, discovers skills in plugin, home and each thread's project folders and gives the agent the skill tool",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -13,7 +13,8 @@
       "skills"
     ],
     "uses": {
-      "cli": "skills are only read from the folder sand started in"
+      "server": "the page gets no skill list and no live skill updates",
+      "sessions": "skills.list cannot look up a thread by id, only by folder"
     }
   },
   "dependencies": {

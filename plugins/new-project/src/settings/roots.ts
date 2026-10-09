@@ -1,10 +1,10 @@
 import type { Machine } from '@sand/protocol'
 import { div, dot, dynamicChild, errorMessage, icon, keys, settingsRow, settingsSection, span, textInput, type Pulse } from '@sand/dom'
-import { expand, shorten } from './places'
+import { expand, machineKey, shorten } from './places'
 import type { ProjectsContext } from './types'
 
 const rootField = (ctx: ProjectsContext, machine: Machine) => {
-  const device = machine.local ? undefined : machine.id
+  const device = machineKey(machine)
   let saved = shorten(ctx, ctx.projects.place(device).root, device)
   const commit = () => {
     const value = field.value.trim()

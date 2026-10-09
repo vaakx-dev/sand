@@ -14,7 +14,6 @@
       "agents"
     ],
     "uses": {
-      "cli": "agent definitions are only read from the folder sand started in",
       "llm": "agent definitions cannot set an effort level",
       "ui": "background results that cannot be delivered fail silently",
       "transcript": "agent calls use the generic tool view",

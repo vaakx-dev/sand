@@ -1,9 +1,9 @@
-import { plural } from '@sand/kit'
+import { plural, remoteKey } from '@sand/kit'
 import type { ProjectGroup } from '@sand/protocol'
 import { ago, div, iconButton, icon, projectIcon, show, span, type Sig } from '@sand/dom'
-import { locationLine } from './location'
+import { locationLine, noCopyLine } from './location'
 import { rowMenu } from './menu'
-import { byRecent } from './places'
+import { byRecent, withoutCopy } from './places'
 import type { ProjectsContext } from './types'
 
 const groupIcon = (ctx: ProjectsContext, group: ProjectGroup) => {
@@ -15,6 +15,23 @@ const summary = (group: ProjectGroup) => {
   const age = ago(group.updated)
   const when = age === 'now' ? 'just now' : age && `${age} ago`
   return [plural(group.threads, 'thread'), when, group.hidden && 'hidden'].filter(Boolean).join(' · ')
+}
+
+const remoteLine = (remote?: string) =>
+  remote
+    ? div(
+        { class: 'flex min-w-0 items-center gap-2 text-xs text-neutral-500', title: remote },
+        span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)),
+        span({ class: 'min-w-0 truncate' }, remoteKey(remote) || remote),
+      )
+    : null
+
+const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
+  const flows = ctx.syncFlows
+  if (!flows) return []
+  return withoutCopy(ctx, group)
+    .filter(machine => machine.online)
+    .map(machine => noCopyLine(flows, group, machine))
 }
 
 const menuButton = (group: ProjectGroup, open: Sig<string | undefined>) =>
@@ -44,7 +61,9 @@ export const groupRow = (ctx: ProjectsContext, group: ProjectGroup, open: Sig<st
         span({ class: 'min-w-0 truncate text-sm text-neutral-100' }, group.name),
         span({ class: 'shrink-0 text-xs text-neutral-500' }, summary(group)),
       ),
+      remoteLine(group.remote),
       ...locations.map(entry => locationLine(ctx, entry, multiple ? primary : undefined)),
+      ...noCopyLines(ctx, group),
     ),
     div(
       { class: 'relative shrink-0' },

@@ -1,28 +1,31 @@
-import type { FolderListing, ProjectEntry, ProjectList, ProjectPatch, ProjectRef, Projects, Wire, WireEvent } from '@sand/protocol'
-import { serverUrl } from '@sand/dom'
-import { linkProjects, uuid } from '@sand/kit'
+import type { FolderListing, Project, ProjectEntry, ProjectFolder, ProjectGroup, ProjectList, ProjectPatch, Projects, Wire, WireEvent } from '@sand/protocol'
+import { uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
-import { entryKey, groupEntries } from './groups'
+import type { Store } from '../threads/store'
+import { buildGroups, copyEntry, groupAt, type Lists, realDevice, sameDevice } from './groups'
+import { projectIcons } from './icons'
 
-const fallback = { home: '~', sep: '/', root: '~' }
+const fallback = { device: '', home: '~', sep: '/', root: '~', scratch: '' }
 
-const anySucceeded = async (jobs: Promise<unknown>[]) => {
-  const results = await Promise.allSettled(jobs)
-  if (results.some(result => result.status === 'fulfilled')) return
-  const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected')
-  throw failed?.reason ?? new Error('Nothing to update')
-}
-
-export const createProjects = (ctx: Context, wire: Wire) => {
-  const lists = new Map<string, ProjectList>()
+export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
+  const lists: Lists = new Map()
   const progress = new Map<string, (text: string) => void>()
-  const icons = new Map<string, number | null | undefined>()
-  const call = <T>(request: Parameters<Wire['call']>[0], device?: string) => wire.call<T>(request, device ?? thisDevice)
+  const call = <T>(request: Parameters<Wire['call']>[0], device?: string) => wire.call<T>(request, device || thisDevice)
+  let view: ProjectGroup[] | undefined
+  let shown = ''
+
+  const all = () => (view ??= buildGroups(lists, store.threads.values()))
+
+  const changed = () => {
+    view = undefined
+    shown = JSON.stringify(all())
+    ctx.emit('projects.change')
+  }
 
   const set = (device: string, list: ProjectList) => {
     lists.set(device, list)
-    ctx.emit('projects.change')
+    changed()
   }
 
   const refresh = (device = thisDevice) =>
@@ -39,67 +42,81 @@ export const createProjects = (ctx: Context, wire: Wire) => {
   }
 
   const forget = (device: string) => {
-    if (lists.delete(device)) ctx.emit('projects.change')
+    if (lists.delete(device)) changed()
   }
 
   ctx.on('wire.hello', () => void refresh())
   ctx.on('wire.event', wireEvent => event(thisDevice, wireEvent))
+  ctx.on('threads.change', () => {
+    view = undefined
+    if (JSON.stringify(all()) !== shown) changed()
+  })
 
-  const icon = (path: string, device?: string) => {
-    if (device && device !== thisDevice) return undefined
-    if (!icons.has(path)) {
-      icons.set(path, undefined)
-      call<number | null>({ type: 'projects.icon', path }).then(
-        version => {
-          icons.set(path, version)
-          if (version !== null) ctx.emit('projects.change')
-        },
-        () => icons.delete(path),
-      )
-    }
-    const version = icons.get(path)
-    return version ? serverUrl('/project-icon', { path, v: version }) : undefined
+  const get = (id: string) => all().find(group => group.id === id)
+
+  const place = (device?: string) => lists.get(device || thisDevice) ?? fallback
+
+  const group = (path: string, device?: string) => groupAt(all(), path, device, place(device).home)
+
+  const icons = projectIcons(ctx, wire)
+  ctx.on('wire.hello', icons.clear)
+  ctx.effect(() => icons.clear)
+
+  const entryFor = (project: Project, device?: string): ProjectEntry => {
+    const found = get(project.id)?.locations.find(location => sameDevice(location.device, device))
+    if (found) return found
+    const id = realDevice(lists, device)
+    const copy = id ? project.copies[id] : undefined
+    if (!id || !copy) throw new Error(`${project.name} has no copy on that PC`)
+    return copyEntry(lists, project, id, copy)
   }
 
-  ctx.on('wire.hello', () => icons.clear())
-
-  const list = () => [...lists].flatMap(([device, entry]) => entry.projects.map((project): ProjectEntry => (device ? { ...project, device } : project)))
-
-  const groups = (options?: { hidden?: boolean }) => groupEntries(list()).filter(group => options?.hidden || !group.hidden)
-
-  const group = (path: string, device?: string) => {
-    const key = entryKey(path, device)
-    return groupEntries(list()).find(found => found.locations.some(location => entryKey(location.path, location.device) === key))
+  const registered = async (request: Parameters<Wire['call']>[0], device?: string) => {
+    const project = await call<Project>(request, device)
+    await refresh(device)
+    return entryFor(project, device)
   }
 
-  const update = (ref: ProjectRef, patch: ProjectPatch) => call<void>({ type: 'projects.update', path: ref.path, patch }, ref.device)
+  const update = async (target: ProjectGroup, patch: ProjectPatch) => {
+    await call<Project>({ type: 'projects.update', project: target.id, patch })
+    await refresh()
+  }
 
   const projects: Projects = {
-    icon,
-    list,
-    groups,
+    list: () => all().flatMap(found => found.locations),
+    groups: options => all().filter(found => options?.hidden || !found.hidden),
+    get,
     group,
-    update,
-    place: device => lists.get(device ?? thisDevice) ?? fallback,
+    icon(path, device) {
+      const found = group(path, device)
+      return found && icons.get(found)
+    },
+    place,
     browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),
     mkdir: (path, device) => call<void>({ type: 'fs.mkdir', path }, device),
-    add: (path, device, link) => call<ProjectEntry>({ type: 'projects.add', path, link }, device),
-    remove: (path, device) => call<void>({ type: 'projects.remove', path }, device),
-    rename: (target, name) => anySucceeded(target.locations.map(location => update(location, { name }))),
-    hide: (target, hidden) => anySucceeded(target.locations.map(location => update(location, { hidden }))),
-    async link(from, to) {
-      const link = await linkProjects((request, device) => call(request, device), from, to)
-      await Promise.all([refresh(from.device ?? thisDevice), refresh(to.device ?? thisDevice)])
-      return link
+    inspect: (path, device) => call<ProjectFolder>({ type: 'projects.inspect', path }, device),
+    add: (path, device, project) => registered({ type: 'projects.add', path, ...(project ? { project } : {}) }, device),
+    rename: (target, name) => update(target, { name }),
+    hide: (target, hidden) => update(target, { hidden }),
+    async remove(target) {
+      await call<void>({ type: 'projects.remove', project: target.id })
+      await refresh()
     },
-    unlink: ref => update(ref, { link: null }),
-    setRoot: (root, device) => call<void>({ type: 'projects.root', root }, device),
-    create: (name, device) => call<ProjectEntry>({ type: 'projects.create', name }, device),
-    async clone(url, into, device, onProgress) {
+    async removeCopy(entry) {
+      const device = realDevice(lists, entry.device)
+      if (!device) throw new Error('This PC is not connected yet')
+      await call<void>({ type: 'projects.remove', project: entry.project, device })
+      await refresh()
+    },
+    async setRoot(root, device) {
+      set(device || thisDevice, await call<ProjectList>({ type: 'projects.root', root }, device))
+    },
+    create: (name, device) => registered({ type: 'projects.create', name }, device),
+    async clone(url, into, device, onProgress, project) {
       const job = uuid()
       if (onProgress) progress.set(job, onProgress)
       try {
-        return await call<ProjectEntry>({ type: 'projects.clone', url, into, job }, device)
+        return await registered({ type: 'projects.clone', url, into, job, ...(project ? { project } : {}) }, device)
       } finally {
         progress.delete(job)
       }

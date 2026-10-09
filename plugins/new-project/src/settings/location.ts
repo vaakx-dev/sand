@@ -1,7 +1,7 @@
 import { relationLabel } from '@sand/kit'
-import type { ProjectEntry, SyncRelation } from '@sand/protocol'
-import { badge, div, dot, icon, span, type Tone } from '@sand/dom'
-import { isOnline, machineName, shorten } from './places'
+import type { Machine, ProjectEntry, ProjectGroup, SyncFlows, SyncRelation } from '@sand/protocol'
+import { badge, div, dot, icon, quietButton, span, type Tone } from '@sand/dom'
+import { isOnline, machineKey, machineName, shorten } from './places'
 import type { ProjectsContext } from './types'
 
 const tones: Record<SyncRelation, Tone> = {
@@ -33,3 +33,15 @@ export const locationLine = (ctx: ProjectsContext, entry: ProjectEntry, primary?
     primary && primary !== entry ? relationTag(ctx, entry, primary) : null,
   )
 }
+
+export const noCopyLine = (flows: SyncFlows, group: ProjectGroup, machine: Machine) =>
+  div(
+    { class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs' },
+    div(
+      { class: 'flex min-w-0 items-center gap-2' },
+      dot('neutral'),
+      span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('monitor', 13)),
+      span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`),
+    ),
+    quietButton({ size: 'sm', onClick: () => flows.copy(group, machineKey(machine)) }, icon('down', 12), 'Get a copy'),
+  )

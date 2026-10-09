@@ -20,7 +20,7 @@ const itemChoices = (lists: NavList[]) => {
     const choice = found.get(key) ?? { key, name: item.project ?? key, icon: item.icon, count: 0, folders: [] }
     choice.count += 1
     choice.icon ??= item.icon
-    if (item.path) choice.folders.push(folderName(item.path))
+    if (item.path) choice.folders.push(item.path)
     found.set(key, choice)
   }
   return found
@@ -35,7 +35,7 @@ const groupChoices = (ctx: Context) => {
       name: group.name,
       icon: group.locations.map(location => projects.icon(location.path, location.device)).find(Boolean),
       count: 0,
-      folders: group.locations.map(location => folderName(location.path)),
+      folders: group.locations.map(location => location.path),
     }),
   )
 }
@@ -63,6 +63,9 @@ export const choiceName = (choices: ProjectChoice[], key: string) => {
 
 export const migratedKey = (choices: ProjectChoice[], stored: string) => {
   if (!stored || choices.some(choice => choice.key === stored)) return stored
-  const matches = choices.filter(choice => choice.name === stored || choice.folders.includes(stored))
+  const path = stored.slice(stored.indexOf('\0') + 1)
+  const holds = (choice: ProjectChoice) =>
+    stored.includes('\0') ? choice.folders.includes(path) : choice.name === stored || choice.folders.some(folder => folderName(folder) === stored)
+  const matches = choices.filter(holds)
   return matches.sort((a, b) => b.count - a.count)[0]?.key ?? stored
 }

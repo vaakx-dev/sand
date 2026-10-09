@@ -1,6 +1,7 @@
 import type { ProjectGroup } from '@sand/protocol'
 import { div, errorMessage, icon, popover, popoverItem, span } from '@sand/dom'
-import { byRecent, isOnline } from './places'
+import { byRecent, isOnline, machineName, withoutCopy } from './places'
+import { deleteItem } from './remove'
 import type { ProjectsContext } from './types'
 
 interface Entry {
@@ -38,15 +39,22 @@ const startThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
   ctx.composer?.focus()
 }
 
-const entries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
+const actions = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
   const startable = group.locations.some(entry => !entry.missing && isOnline(ctx, entry.device))
   const syncFlows = ctx.syncFlows
   return [
     ...(ctx.picker ? [{ label: 'Rename', icon: 'pencil', run: () => rename(ctx, group) }] : []),
     { label: 'New thread', icon: 'compose', disabled: !startable, run: () => startThread(ctx, group) },
-    ...(syncFlows ? [{ label: 'Add a folder on another PC', icon: 'folder-plus', run: () => syncFlows.add(group) }] : []),
+    ...(syncFlows ? [{ label: 'Add a copy on another PC', icon: 'folder-plus', disabled: !withoutCopy(ctx, group).length, run: () => syncFlows.add(group) }] : []),
   ]
 }
+
+const forgets = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
+  group.locations.map(entry => ({
+    label: `Forget copy on ${machineName(ctx, entry.device)}`,
+    icon: 'x',
+    run: () => ctx.projects.removeCopy(entry),
+  }))
 
 export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => void) => {
   const fail = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
@@ -55,11 +63,15 @@ export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => 
     icon: 'eye',
     run: () => ctx.projects.hide(group, !group.hidden),
   }
+  const copies = forgets(ctx, group)
   return popover(
     close,
     { class: 'top-full right-0 mt-1' },
-    ...entries(ctx, group).map(entry => entryView(entry, close, fail)),
+    ...actions(ctx, group).map(entry => entryView(entry, close, fail)),
+    copies.length ? separator() : null,
+    ...copies.map(entry => entryView(entry, close, fail)),
     separator(),
     entryView(visibility, close, fail),
+    deleteItem(ctx, group, close, fail),
   )
 }

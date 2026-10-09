@@ -1,4 +1,3 @@
-import { workingFolder } from '@sand/host'
 import type { Files } from '@sand/protocol'
 import { definePlugin } from 'drydock'
 import { existsSync } from 'node:fs'
@@ -11,13 +10,13 @@ export default definePlugin({
   uses: { server: 'the page cannot list or search files' },
   apply(ctx) {
     const files: Files = { list: cachedList(), grep: grepFiles }
-    const folder = (cwd?: string) => (cwd && existsSync(cwd) ? cwd : workingFolder(ctx))
+    const usable = (cwd?: string): cwd is string => Boolean(cwd && existsSync(cwd))
     ctx.provide('files', files)
     ctx.watch('server', server => {
       if (!server) return
       const disposers = [
-        server.handle('files.list', ({ cwd }) => files.list(folder(cwd))),
-        server.handle('files.grep', ({ cwd, query }) => files.grep(folder(cwd), query)),
+        server.handle('files.list', async ({ cwd }) => (usable(cwd) ? files.list(cwd) : [])),
+        server.handle('files.grep', async ({ cwd, query }) => (usable(cwd) ? files.grep(cwd, query) : [])),
       ]
       return () => disposers.forEach(dispose => void dispose())
     })

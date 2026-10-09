@@ -13,7 +13,7 @@ export const resolveConflicts = async (pcs: Pcs, [value, ...files]: string[], { 
   const group = findGroup(groups, value)
   const location = locationOn(group, pc)
   if (!location) throw new Error(`${group.name} is not on ${pc.name}`)
-  const path = location.project.path
+  const path = location.path
   const state = await pcs.call<SyncState>({ type: 'sync.state', path }, pc.device)
   const targets = files.length ? files : state.conflicts
   if (!targets.length) return console.log(`${group.name} has no conflicts on ${pc.name}`)

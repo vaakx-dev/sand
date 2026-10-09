@@ -2,12 +2,12 @@ import type { Machine, PaletteItem, PalettePage } from '@sand/protocol'
 import { emptyPage } from './empty'
 import { folderPage } from './folder'
 import { gitPage } from './git'
-import { reviewPage } from './review'
-import type { FlowContext, Source } from './types'
+import { suggestPage } from './match'
+import type { Choice, FlowContext, Source } from './types'
 import { wherePage } from './where'
 
 const sourcePage = (ctx: FlowContext, source: Source, machine: Machine): PalettePage => {
-  const next = (choice: Parameters<typeof reviewPage>[1]) => reviewPage(ctx, choice)
+  const next = (choice: Choice) => suggestPage(ctx, choice)
   if (source === 'Git URL') return gitPage(ctx, machine, next)
   if (source === 'Empty project') return emptyPage(ctx, machine, next)
   return folderPage(ctx, machine, next, { mode: 'add' })

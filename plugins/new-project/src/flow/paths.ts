@@ -1,8 +1,10 @@
 import type { ProjectPlace } from '@sand/protocol'
 
+const root = (dir: string, sep: string) => (!dir ? sep : /^[A-Za-z]:$/.test(dir) ? `${dir}${sep}` : dir)
+
 export const split = (value: string, sep: string) => {
   const at = value.lastIndexOf(sep)
-  return at < 0 ? { dir: undefined, leaf: value } : { dir: value.slice(0, at) || sep, leaf: value.slice(at + 1) }
+  return at < 0 ? { dir: undefined, leaf: value } : { dir: root(value.slice(0, at), sep), leaf: value.slice(at + 1) }
 }
 
 export const join = (dir: string, name: string, sep: string) => (dir.endsWith(sep) ? `${dir}${name}` : `${dir}${sep}${name}`)

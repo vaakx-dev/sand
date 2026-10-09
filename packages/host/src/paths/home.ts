@@ -10,5 +10,3 @@ export const expandHome = (path: string, base?: string) => {
 }
 
 export const sandHome = (ctx?: Context) => ctx?.cli?.home ?? (process.env.SAND_HOME ? expandHome(process.env.SAND_HOME) : join(homedir(), '.sand'))
-
-export const workingFolder = (ctx?: Context) => ctx?.cli?.cwd ?? process.cwd()

@@ -10,8 +10,8 @@ export const visibleThreads = (threads: Thread[]) => threads.filter(thread => th
 
 export type MachineName = (device: string) => string | undefined
 
-const where = (cwd: string, device?: string, machine?: MachineName) => {
-  const at = place(cwd)
+const where = (cwd: string, device?: string, machine?: MachineName, quick?: boolean) => {
+  const at = quick ? 'quick thread' : place(cwd)
   const pc = device && machine?.(device)
   return pc ? `${pc} · ${at}` : at
 }
@@ -20,14 +20,15 @@ const stateOf = (thread: Thread, jobs: number): NavItem['state'] => (thread.runn
 
 const navItem = (thread: Thread, background: BackgroundOf, lookup: ProjectLookup, machine?: MachineName): NavItem => {
   const { count, since } = background(thread.id)
-  const project = lookup(thread.info.cwd, thread.device)
+  const project = lookup(thread.info.cwd, thread.device, thread.info.project)
+  const at = where(thread.info.cwd, thread.device, machine, project.quick)
   return {
     id: thread.id,
     title: thread.info.title ?? 'Untitled thread',
     project: project.name,
     projectKey: project.key,
     icon: project.icon,
-    subtitle: thread.info.kind === 'branch' ? `branch · ${where(thread.info.cwd, thread.device, machine)}` : where(thread.info.cwd, thread.device, machine),
+    subtitle: thread.info.kind === 'branch' ? `branch · ${at}` : at,
     path: thread.info.cwd,
     updated: thread.info.updated,
     started: thread.running ? thread.started : since,
@@ -56,7 +57,7 @@ export const draftItem = (draft: ThreadDraft, lookup: ProjectLookup, machine?: M
     project: project.name,
     projectKey: project.key,
     icon: project.icon,
-    subtitle: where(draft.cwd, draft.device, machine),
+    subtitle: where(draft.cwd, draft.device, machine, project.quick),
     path: draft.cwd,
     updated: draft.updated,
     state: 'draft',

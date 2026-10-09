@@ -10,7 +10,7 @@ export interface Skill {
 export type SkillSummary = Pick<Skill, 'name' | 'description'>
 
 export interface Skills {
-  list(): Skill[]
-  get(name: string): Skill | undefined
+  list(cwd?: string, project?: string | null): Promise<Skill[]>
+  get(name: string, cwd?: string, project?: string | null): Promise<Skill | undefined>
   register(dir: string, values?: Record<string, string>): Dispose
 }

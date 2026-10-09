@@ -37,7 +37,7 @@ export const createSync = (ctx: Context, wire: Wire, projects: ReturnType<typeof
     },
     inspect: ref => call<SyncInspect>({ type: 'sync.inspect', path: ref.path }, ref.device),
     async copy(from, to, options, progress) {
-      await copyProject(call, from, to, { setup: options?.setup }, progress)
+      await copyProject(call, from, to, { setup: options?.setup, project: options?.project }, progress)
       await refreshLists([from, to])
       await refreshAll([from, to])
     },

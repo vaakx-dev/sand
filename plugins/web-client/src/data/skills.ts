@@ -1,15 +1,34 @@
-import type { SkillIndex, SkillSummary, Wire } from '@sand/protocol'
+import type { SkillIndex, SkillSummary, Threads, Wire, WireRequest } from '@sand/protocol'
 import type { Context } from 'drydock'
 
-export const createSkillIndex = (ctx: Context, wire: Wire): SkillIndex => {
+const listRequest = (threads: Threads): WireRequest => {
+  const current = threads.current()
+  if (current) return { type: 'skills.list', session: current.id }
+  const cwd = threads.cwd()
+  return cwd ? { type: 'skills.list', cwd } : { type: 'skills.list' }
+}
+
+export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): SkillIndex => {
   let skills: SkillSummary[] = []
+  let sequence = 0
   const set = (next: SkillSummary[]) => {
     skills = next
     ctx.emit('skills.change')
   }
-  ctx.on('wire.hello', hello => set(hello.skills))
+  const refresh = () => {
+    const ticket = ++sequence
+    wire.call<SkillSummary[]>(listRequest(threads)).then(
+      next => ticket === sequence && set(next),
+      () => {},
+    )
+  }
+  ctx.on('wire.hello', hello => {
+    set(hello.skills)
+    refresh()
+  })
+  ctx.on('thread.select', refresh)
   ctx.on('wire.event', event => {
-    if (event.name === 'turn.end') void wire.call<SkillSummary[]>({ type: 'skills.list' }).then(set, () => {})
+    if (event.name === 'skills.change') refresh()
   })
   return { list: () => skills }
 }
