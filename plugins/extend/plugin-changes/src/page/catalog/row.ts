@@ -7,13 +7,12 @@ const tones: Record<PluginOrigin, Tone> = { builtin: 'neutral', customised: 'acc
 
 const control = (plugin: PluginEntry, actions: RowActions) => {
   if (plugin.origin === 'customised') return rowAction({ label: 'Use built-in', danger: true, run: () => actions.restore(plugin) })
-  if (plugin.origin === 'builtin' && plugin.area !== 'core')
+  if (plugin.origin === 'builtin')
     return secondaryAction({ size: 'sm', disabled: actions.busy, onClick: () => actions.customise(plugin) }, 'Customise')
   return null
 }
 
 const detail = (plugin: PluginEntry) => {
-  if (plugin.origin === 'builtin' && plugin.area === 'core') return [plugin.description, "core plugins can't be customised"].filter(Boolean).join(' · ')
   if (plugin.origin === 'customised') return `Your copy replaces the built-in${plugin.from?.version ? ` from sand ${plugin.from.version}` : ''}`
   return plugin.description ?? ''
 }

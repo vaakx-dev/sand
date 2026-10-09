@@ -1,6 +1,6 @@
 import { expandHome } from '@sand/host'
 import { definePlugin } from 'drydock'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { discover } from './extensions/discover'
 import { createSite } from './extensions/site'
@@ -20,7 +20,7 @@ export default definePlugin({
   async apply(ctx, config) {
     const { home } = ctx.cli
     const folders = [
-      { dir: resolve(import.meta.dir, '..', '..', '..'), builtin: true },
+      { dir: ctx.cli.builtins, builtin: true },
       { dir: join(home, 'plugins'), builtin: false },
     ]
     const extra = config.paths.map(path => ({ dir: expandHome(path, home), builtin: false }))

@@ -13,6 +13,7 @@ export interface Cli {
   mode: CliMode
   cwd: string
   home: string
+  builtins: string
   args: string[]
   flags: CliFlags
   prompt?: string

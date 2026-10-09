@@ -34,7 +34,6 @@ export const libraryActions = ({ paths, kept, build }: ActionOptions) => {
   return {
     async customise(name: string) {
       const builtin = await builtinOf(name)
-      if (builtin.area === 'core') throw new Error(`${name} is a core plugin, so it can't be customised`)
       const { home, appRoot } = paths()
       const copy = join(pluginsRoot(home), name)
       if (await exists(copy)) throw new Error(`${name} is already in ~/.sand/plugins`)
