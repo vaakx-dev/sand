@@ -1,9 +1,11 @@
-import type { Entry, Usage, UsageRecord } from '@sand/protocol'
+import type { Billing, Entry, Usage, UsageRecord } from '@sand/protocol'
 
 export interface Turn {
   at: number
   session: string
   model: string
+  provider?: string
+  billing?: Billing
   usage: Usage
 }
 
@@ -28,6 +30,15 @@ export const turnsOf = (entries: Entry[], isBranch: (session: string) => boolean
   return entries.flatMap(entry => {
     const record = entry.data as UsageRecord
     if (isCopy(entry, record)) return []
-    return [{ at: entry.at, session: entry.session, model: record.model ?? 'unknown', usage: record.usage }]
+    return [
+      {
+        at: entry.at,
+        session: entry.session,
+        model: record.model ?? 'unknown',
+        ...(record.provider && { provider: record.provider }),
+        ...(record.billing && { billing: record.billing }),
+        usage: record.usage,
+      },
+    ]
   })
 }

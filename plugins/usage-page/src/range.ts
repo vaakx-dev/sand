@@ -4,7 +4,7 @@ export const ranges = ['24h', '7d', '30d', '90d'] as const
 
 export type Range = (typeof ranges)[number]
 
-export const rangeLabels: Record<Range, string> = { '24h': '24h', '7d': '7d', '30d': '30d', '90d': '90d' }
+export const rangeLabels: Record<Range, string> = { '24h': 'Past 24h', '7d': '7 days', '30d': '30 days', '90d': '90 days' }
 
 const hour = 3_600_000
 

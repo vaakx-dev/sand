@@ -7,6 +7,7 @@ import {
   ChartColumn,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   CircleAlert,
   CircleDashed,
@@ -28,6 +29,7 @@ import {
   GitBranch,
   GitCompare,
   GitFork,
+  Gauge,
   Goal,
   GripVertical,
   Hourglass,
@@ -63,6 +65,8 @@ import {
   SquareSlash,
   SquareTerminal,
   Tag,
+  TrendingDown,
+  TrendingUp,
   TextSearch,
   Workflow,
   Wrench,
@@ -75,6 +79,7 @@ const nodes: Record<string, IconNode> = {
   compose: SquarePen,
   folder: Folder,
   down: ChevronDown,
+  left: ChevronLeft,
   right: ChevronRight,
   pin: Pin,
   branch: GitBranch,
@@ -139,6 +144,9 @@ const nodes: Record<string, IconNode> = {
   chart: ChartColumn,
   lock: Lock,
   goal: Goal,
+  gauge: Gauge,
+  'trend-up': TrendingUp,
+  'trend-down': TrendingDown,
 }
 
 const iconNames = () => Object.keys(nodes)

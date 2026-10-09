@@ -1,4 +1,5 @@
 import type { CompactionReason, CompactionRecord, Entry, LLMRequest, Session, UsageRecord } from '@sand/protocol'
+import { usageSource } from '@sand/kit'
 import type { Context } from 'drydock'
 import { budgetOf, usageOf, type Budget } from './budget'
 import type { CompactionConfig } from './config'
@@ -55,7 +56,7 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
       }
       after = requestTokens(rewrite([...path, draft(session, record)], request))
       session.append('compaction', { ...record, after } satisfies CompactionRecord)
-      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, usage } satisfies UsageRecord)
+      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model), usage } satisfies UsageRecord)
       tracker.reset(session.id)
       return after
     } finally {

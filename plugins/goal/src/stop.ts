@@ -1,5 +1,5 @@
 import type { Session, TurnResult, UsageRecord, UserContent } from '@sand/protocol'
-import { errorMessage, stopFeedback } from '@sand/kit'
+import { errorMessage, stopFeedback, usageSource } from '@sand/kit'
 import type { Context } from 'drydock'
 import { check } from './check'
 import { activeGoal, entryType, sameGoal, type Goal } from './goal'
@@ -12,7 +12,7 @@ const feedback = (goal: Goal, reason: string) =>
 const judge = async (ctx: GoalContext, session: Session, goal: Goal, signal: AbortSignal) => {
   const request = await ctx.waterfall('context.build', await ctx.context.build(session), session)
   const verdict = await check(ctx.llm, request, goal.objective, signal)
-  if (verdict.usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, usage: verdict.usage } satisfies UsageRecord)
+  if (verdict.usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model), usage: verdict.usage } satisfies UsageRecord)
   return verdict
 }
 

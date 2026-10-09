@@ -1,5 +1,5 @@
-import type { Session, Usage, UsageRecord } from '@sand/protocol'
-import { tokensOf } from '@sand/kit'
+import type { LLM, Session, Usage, UsageRecord } from '@sand/protocol'
+import { tokensOf, usageSource } from '@sand/kit'
 
 export const empty = (): Usage => ({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 })
 
@@ -10,8 +10,8 @@ export const add = (a: Usage, b: Usage): Usage => ({
   cacheWrite: a.cacheWrite + b.cacheWrite,
 })
 
-export const record = (session: Session, usage: Usage, model?: string) => {
+export const record = (session: Session, usage: Usage, model: string | undefined, llm: LLM | undefined) => {
   if (!tokensOf(usage)) return
-  const data: UsageRecord = { id: Bun.randomUUIDv7(), ...(model && { model }), usage }
+  const data: UsageRecord = { id: Bun.randomUUIDv7(), ...(model && { model }), ...usageSource(llm, model), usage }
   session.append('usage', data)
 }

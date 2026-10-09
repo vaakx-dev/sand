@@ -1,4 +1,4 @@
-import type { Limits, Usage } from './llm'
+import type { Limits, ProviderInfo, Usage } from './llm'
 
 export type UsageBucket = 'hour' | 'day'
 
@@ -12,16 +12,24 @@ export interface UsageTotals {
   usage: Usage
   turns: number
   cost: number
+  billed: number
   unpriced: number
 }
 
 export interface ModelUsage extends UsageTotals {
   model: string
   label: string
+  provider: string
 }
 
 export interface PeriodUsage extends UsageTotals {
   key: string
+  providers: Record<string, UsageTotals>
+}
+
+export interface ProviderUsage extends UsageTotals, ProviderInfo {
+  threads: number
+  limits?: Limits
 }
 
 export interface ThreadUsage extends UsageTotals {
@@ -34,6 +42,7 @@ export interface ThreadUsage extends UsageTotals {
 export interface UsageSummary extends UsageQuery {
   until: number
   total: UsageTotals & { threads: number }
+  providers: ProviderUsage[]
   models: ModelUsage[]
   periods: PeriodUsage[]
   threads: ThreadUsage[]

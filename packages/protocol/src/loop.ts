@@ -1,4 +1,4 @@
-import type { LLMRequest, StopReason, Usage } from './llm'
+import type { Billing, LLMRequest, StopReason, Usage } from './llm'
 import type { Prompt } from './message'
 import type { Session } from './session'
 
@@ -7,11 +7,14 @@ export interface TurnResult {
   usage: Usage
   text: string
   error?: string
+  detail?: string
 }
 
 export interface UsageRecord {
   id?: string
   model?: string
+  provider?: string
+  billing?: Billing
   usage: Usage
 }
 
