@@ -24,6 +24,7 @@ export interface ModelInfo {
   defaultEffort?: Effort
   context?: number
   fast?: boolean
+  via?: string
 }
 
 export interface LLMRequest {
@@ -58,10 +59,12 @@ export interface LimitWindow {
   label: string
   used: number
   resetsAt?: number
+  duration?: number
   status?: string
 }
 
 export interface Limits {
+  provider?: string
   windows: LimitWindow[]
   status?: string
   updated: number
@@ -69,10 +72,20 @@ export interface Limits {
 
 export type ModelPrice = Record<keyof Usage, number>
 
+export type Billing = 'plan' | 'api' | 'credits' | 'local'
+
+export interface ProviderInfo {
+  id: string
+  label: string
+  billing: Billing
+  plan?: string
+}
+
 export interface LLM {
   models?(): ModelInfo[]
   levels?(): EffortLevel[]
   stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent>
+  provider?(model?: string): ProviderInfo
   limits?(): Limits | undefined
   refreshLimits?(): Promise<Limits | undefined>
   price?(model: string): ModelPrice | undefined

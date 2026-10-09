@@ -1,16 +1,8 @@
-import type { Effort, EffortLevel, ModelInfo } from '@sand/protocol'
+import type { Effort, ModelInfo } from '@sand/protocol'
 
-export const levels: EffortLevel[] = [
-  { id: 'low', label: 'Low' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'high', label: 'High' },
-  { id: 'xhigh', label: 'Extra high' },
-  { id: 'max', label: 'Max' },
-]
+const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 
-export const efforts: Effort[] = levels.map(level => level.id)
-
-export const defaultModels = ['claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']
+export const claudeModels = ['claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5']
 
 const known: Record<string, Omit<ModelInfo, 'id'>> = {
   'claude-fable-5-1': { label: 'Fable 5.1', efforts, defaultEffort: 'high', context: 1_000_000 },
@@ -31,6 +23,4 @@ const label = (id: string) => {
 const guess = (id: string): Omit<ModelInfo, 'id'> =>
   id.includes('haiku') ? { label: label(id), efforts: [] } : { label: label(id), efforts, defaultEffort: 'high', fast: fastModels.has(id) }
 
-export const describeModel = (id: string): ModelInfo => ({ id, provider: 'anthropic', ...(known[id] ?? guess(id)) })
-
-export const modelInfo = (models: string[]): ModelInfo[] => [...new Set(models)].map(describeModel)
+export const describeClaude = (id: string): ModelInfo => ({ id, provider: 'anthropic', ...(known[id] ?? guess(id)) })

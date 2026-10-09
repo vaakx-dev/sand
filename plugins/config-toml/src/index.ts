@@ -6,7 +6,7 @@ import { discover } from './discover'
 import { loadModes } from './modes'
 import { mounter } from './mount'
 import { entries, locate } from './plugins'
-import { isTable, readConfig } from './read'
+import { readConfig } from './read'
 
 export default definePlugin({
   name: 'config-toml',
@@ -22,14 +22,12 @@ export default definePlugin({
 
     const setup = (await loadModes(config.modes_file))[ctx.cli.mode]
     if (!setup) throw new Error(`No plugin set for mode "${ctx.cli.mode}" in ${config.modes_file}`)
-    const settings = await readConfig([global, join(ctx.cli.cwd, '.sand', 'sand.toml')])
-    const folders = [join(ctx.cli.home, 'plugins'), join(ctx.cli.cwd, '.sand', 'plugins')]
+    const settings = await readConfig([global])
+    const folders = [join(ctx.cli.home, 'plugins')]
     const found = await Promise.all(folders.map(discover))
     const mount = mounter(ctx, id => locate(id, config.resolve_from, config.plugins_dir))
 
-    const { type, ...options } = isTable(settings.provider) ? settings.provider : {}
-    if (typeof type !== 'string') throw new Error(`No [provider] configured in ${global}`)
-    mount(`llm-${type}`, options)
+    mount('llm-accounts', {})
     for (const [id, options] of entries([...setup.plugins, ...found.flat()], settings.plugins)) mount(id, options)
   },
 })

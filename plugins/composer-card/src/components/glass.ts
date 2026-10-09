@@ -1,12 +1,13 @@
 import { div, read, SPACE, type Child, type MaybeReactive, type Props } from '@sand/dom'
 
-export type Tint = 'plain' | 'accent' | 'danger'
+export type Tint = 'plain' | 'accent' | 'warning' | 'danger'
 
 export type GlassProps = Props<HTMLDivElement> & { tint?: MaybeReactive<Tint> }
 
 const tints: Record<Tint, string> = {
   plain: 'cc-glass ring-neutral-700',
   accent: 'bg-accent-950 ring-accent-500',
+  warning: 'bg-warning-950 text-neutral-300 ring-warning-900',
   danger: 'bg-danger-950 text-danger-300 ring-danger-900',
 }
 

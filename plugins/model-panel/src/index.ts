@@ -3,6 +3,7 @@ import { definePlugin } from 'drydock'
 import { createActions, serverCommand } from './actions'
 import { defaultsPage } from './defaults'
 import { modelSource } from './palette'
+import { pcStatus } from './pcs'
 import { createPicker } from './pill'
 
 export default definePlugin({
@@ -15,6 +16,7 @@ export default definePlugin({
     commands: '/model and /effort with no argument open the server sheet',
     notify: 'problems show inside the panel',
     settings: 'no Models settings page',
+    wire: 'models from another PC show no online dot and stay enabled when it is offline',
   },
   apply(ctx) {
     const problem = sig('')
@@ -36,7 +38,8 @@ export default definePlugin({
     ctx.on('thread.select', () => {
       lastKey = stateKey()
     })
-    const picker = owned(ctx, () => createPicker(ctx, actions, changes, problem))
+    const pcs = owned(ctx, () => pcStatus(ctx))
+    const picker = owned(ctx, () => createPicker(ctx, actions, changes, problem, pcs))
     let slotted = false
 
     const sheet = (effort: boolean) => void serverCommand(ctx, effort ? 'effort' : 'model', '').catch(error => fail(errorMessage(error)))

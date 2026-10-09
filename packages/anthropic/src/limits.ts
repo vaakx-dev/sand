@@ -10,6 +10,13 @@ const label = (id: string) => {
   return scope ? `${base} · ${scope[0]!.toUpperCase()}${scope.slice(1)}` : base
 }
 
+const hour = 3_600_000
+
+const durationOf = (id: string) => {
+  const match = /^(\d+)([hd])/.exec(id)
+  return match ? Number(match[1]) * (match[2] === 'h' ? hour : 24 * hour) : undefined
+}
+
 const rank = (window: LimitWindow) => (window.id.startsWith('5h') ? 0 : window.id.startsWith('7d') ? 1 : 2)
 
 export const parseLimits = (headers: Headers): Limits | undefined => {
@@ -19,16 +26,18 @@ export const parseLimits = (headers: Headers): Limits | undefined => {
     if (!id) return
     const reset = Number(headers.get(`${prefix}${id}-reset`))
     const status = headers.get(`${prefix}${id}-status`)
+    const duration = durationOf(id)
     windows.push({
       id,
       label: label(id),
       used: Number(value),
       ...(reset > 0 && { resetsAt: reset * 1000 }),
+      ...(duration && { duration }),
       ...(status && { status }),
     })
   })
   if (!windows.length) return undefined
   windows.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id))
   const status = headers.get(`${prefix}status`)
-  return { windows, ...(status && { status }), updated: Date.now() }
+  return { provider: 'anthropic', windows, ...(status && { status }), updated: Date.now() }
 }

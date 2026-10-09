@@ -24,12 +24,21 @@ const keepPartial = ({ session, progress, partial }: TurnRun) => {
   progress.reply = message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n')
 }
 
-const resultOf = ({ progress }: TurnRun, failure?: Failure): TurnResult => ({
-  stopReason: progress.stopReason,
-  usage: progress.usage,
-  text: progress.reply,
-  ...(failure && { error: errorMessage(failure.error) }),
-})
+const detailOf = (error: unknown) => {
+  const detail = (error as { detail?: unknown } | undefined)?.detail
+  return typeof detail === 'string' && detail ? detail : undefined
+}
+
+const resultOf = ({ progress }: TurnRun, failure?: Failure): TurnResult => {
+  const detail = failure && detailOf(failure.error)
+  return {
+    stopReason: progress.stopReason,
+    usage: progress.usage,
+    text: progress.reply,
+    ...(failure && { error: errorMessage(failure.error) }),
+    ...(detail && { detail }),
+  }
+}
 
 const proceed = async (run: TurnRun) => {
   const { ctx, session, signal } = run
@@ -44,7 +53,7 @@ const proceed = async (run: TurnRun) => {
 
 const finish = (run: TurnRun, failure?: Failure): TurnResult => {
   const { ctx, session, progress } = run
-  record(session, progress.usage, progress.model)
+  record(session, progress.usage, progress.model, ctx.llm)
   const result = resultOf(run, failure)
   ctx.emit('turn.end', session, result)
   if (failure) throw failure.error

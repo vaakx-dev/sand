@@ -1,6 +1,7 @@
 import type { ModelInfo } from '@sand/protocol'
 import { div, icon, primaryAction, secondaryAction, span, toggleSwitch, type Sig } from '@sand/dom'
 import type { Actions, PanelContext } from '../actions'
+import type { PcStatus } from '../pcs'
 import { effortBar } from './effort'
 import { modelRows, type Choice } from './rows'
 
@@ -39,7 +40,7 @@ const footer = (choice: Choice, actions: Actions) =>
     primaryAction({ size: 'sm', onClick: () => actions.makeDefault(choice.shown) }, 'Make default'),
   )
 
-export const panelBody = (ctx: PanelContext, actions: Actions, flash: Sig<boolean>, problem: string) => {
+export const panelBody = (ctx: PanelContext, actions: Actions, flash: Sig<boolean>, problem: string, pcs: PcStatus) => {
   const state = ctx.models.state()
   if (!state) return div({ class: 'px-3 py-4 text-xs text-neutral-500' }, 'Loading the models…')
   const thread = ctx.threads.current()
@@ -49,7 +50,7 @@ export const panelBody = (ctx: PanelContext, actions: Actions, flash: Sig<boolea
     { class: 'flex flex-col pb-1' },
     thread?.running && banner('clock', 'A turn is running. Changes apply when it finishes.'),
     problem && banner('alert', problem),
-    modelRows(ctx.models.list(), choice, actions),
+    modelRows(ctx.models.list(), choice, actions, pcs.online),
     effortBar(choice, ctx.models.levels(), model, flash, actions),
     fastRow(choice, actions),
     !usesDefaults(choice, model) && footer(choice, actions),

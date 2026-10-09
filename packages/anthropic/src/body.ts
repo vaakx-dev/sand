@@ -1,9 +1,16 @@
-import type { Block, LLMRequest } from '@sand/protocol'
-import type { AnthropicConfig } from './config'
-import { describeModel } from './models'
+import type { Block, Effort, LLMRequest } from '@sand/protocol'
 import { pair } from './pair'
 
 type ApiBlock = Record<string, unknown>
+
+export interface BodyOptions {
+  model: string
+  maxTokens: number
+  efforts: Effort[]
+  fast?: boolean
+  thinking?: 'summarized' | 'omitted'
+  eagerInputStreaming?: boolean
+}
 
 const cacheable = new Set(['text', 'image', 'document', 'tool_use', 'tool_result'])
 
@@ -33,18 +40,16 @@ const block = (value: Block): ApiBlock => {
   }
 }
 
-export const body = (request: LLMRequest, config: AnthropicConfig) => {
+export const body = (request: LLMRequest, options: BodyOptions) => {
   const messages = pair(request.messages).map(message => ({ role: message.role, content: message.content.map(block) }))
   const last = messages.at(-1)?.content.at(-1)
   if (last && cacheable.has(last.type as string)) last.cache_control = { type: 'ephemeral' }
-  const model = request.model ?? config.models[0]!
-  const info = describeModel(model)
-  const thinks = info.efforts.length > 0
-  const effort = request.effort && info.efforts.includes(request.effort) ? request.effort : undefined
-  const fast = info.fast && request.speed === 'fast'
+  const thinks = options.efforts.length > 0
+  const effort = request.effort && options.efforts.includes(request.effort) ? request.effort : undefined
+  const fast = options.fast && request.speed === 'fast'
   return {
-    model,
-    max_tokens: config.max_tokens,
+    model: options.model,
+    max_tokens: options.maxTokens,
     stream: true,
     system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
     messages,
@@ -53,10 +58,10 @@ export const body = (request: LLMRequest, config: AnthropicConfig) => {
         name: tool.name,
         description: tool.description,
         input_schema: tool.inputSchema,
-        ...(config.eager_input_streaming && { eager_input_streaming: true }),
+        ...(options.eagerInputStreaming && { eager_input_streaming: true }),
       })),
     }),
-    ...(config.thinking && thinks && { thinking: { type: 'adaptive', display: config.thinking } }),
+    ...(options.thinking && thinks && { thinking: { type: 'adaptive', display: options.thinking } }),
     ...(effort && { output_config: { effort } }),
     ...(fast && { speed: 'fast' }),
   }

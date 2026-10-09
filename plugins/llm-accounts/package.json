@@ -1,0 +1,25 @@
+{
+  "name": "@sand/llm-accounts",
+  "version": "0.0.0",
+  "description": "Use Claude and ChatGPT subscriptions or Anthropic and OpenAI API keys, all at once",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Accounts",
+    "summary": "Sign in with subscriptions or API keys for Anthropic and OpenAI",
+    "provides": [
+      "llm"
+    ],
+    "web": "./src/web/index.ts"
+  },
+  "dependencies": {
+    "@sand/anthropic": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/host": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

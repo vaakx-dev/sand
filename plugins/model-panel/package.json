@@ -12,7 +12,8 @@
       "palette": "no model rows in the palette",
       "commands": "/model and /effort with no argument open the server sheet",
       "notify": "problems show inside the panel",
-      "settings": "no Models settings page"
+      "settings": "no Models settings page",
+      "wire": "models from another PC show no online dot and stay enabled when it is offline"
     }
   },
   "dependencies": {

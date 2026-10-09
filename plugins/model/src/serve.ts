@@ -17,6 +17,7 @@ export const serveSettings = (ctx: Context<'sessions'>, server: Server, choices:
     }),
     ctx.on('modelSettings.change', session => share(session.id)),
     ctx.on('modelSettings.defaults', () => server.broadcast('models.change', [update()])),
+    ctx.on('llm.models', () => server.broadcast('models.change', [update()])),
     ctx.on('session.entry', (session, entry) => {
       if (entry.type === 'settings') share(session.id)
     }),

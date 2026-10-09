@@ -17,6 +17,7 @@
       },
       "dependencies": {
         "@sand/agents": "workspace:*",
+        "@sand/ask": "workspace:*",
         "@sand/attachments": "workspace:*",
         "@sand/compaction": "workspace:*",
         "@sand/config-toml": "workspace:*",
@@ -31,7 +32,7 @@
         "@sand/html-preview": "workspace:*",
         "@sand/html-render": "workspace:*",
         "@sand/kit": "workspace:*",
-        "@sand/llm-anthropic": "workspace:*",
+        "@sand/llm-accounts": "workspace:*",
         "@sand/loop-react": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/panel-changes": "workspace:*",
@@ -39,7 +40,6 @@
         "@sand/projects": "workspace:*",
         "@sand/protocol": "workspace:*",
         "@sand/reload": "workspace:*",
-        "@sand/remotes": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/session-info": "workspace:*",
         "@sand/sessions-sqlite": "workspace:*",
@@ -59,6 +59,13 @@
         "zod": "^4.6.5",
       },
     },
+    "packages/anthropic": {
+      "name": "@sand/anthropic",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/protocol": "workspace:*",
+      },
+    },
     "packages/conversation": {
       "name": "@sand/conversation",
       "version": "0.0.0",
@@ -75,7 +82,7 @@
       "dependencies": {
         "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui",
+        "@vaakx-dev/vrui": "workspace:*",
         "drydock": "workspace:*",
         "lucide": "^1.52.0",
       },
@@ -107,6 +114,13 @@
         "zod": "^4.6.5",
       },
     },
+    "packages/vrui": {
+      "name": "@vaakx-dev/vrui",
+      "version": "0.1.0",
+      "dependencies": {
+        "lucide": "^1.52.0",
+      },
+    },
     "plugins/agents": {
       "name": "@sand/agents",
       "version": "0.0.0",
@@ -114,6 +128,17 @@
         "@sand/dom": "workspace:*",
         "@sand/host": "workspace:*",
         "@sand/kit": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "drydock": "workspace:*",
+        "zod": "^4.6.5",
+      },
+    },
+    "plugins/ask": {
+      "name": "@sand/ask",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/conversation": "workspace:*",
+        "@sand/dom": "workspace:*",
         "@sand/protocol": "workspace:*",
         "drydock": "workspace:*",
         "zod": "^4.6.5",
@@ -322,10 +347,13 @@
         "drydock": "workspace:*",
       },
     },
-    "plugins/llm-anthropic": {
-      "name": "@sand/llm-anthropic",
+    "plugins/llm-accounts": {
+      "name": "@sand/llm-accounts",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/anthropic": "workspace:*",
+        "@sand/dom": "workspace:*",
+        "@sand/host": "workspace:*",
         "@sand/protocol": "workspace:*",
         "drydock": "workspace:*",
         "zod": "^4.6.5",
@@ -437,15 +465,22 @@
         "drydock": "workspace:*",
       },
     },
+    "plugins/plugin-changes": {
+      "name": "@sand/plugin-changes",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/dom": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "drydock": "workspace:*",
+      },
+    },
     "plugins/projects": {
       "name": "@sand/projects",
       "version": "0.0.0",
       "dependencies": {
         "@sand/host": "workspace:*",
-        "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
         "drydock": "workspace:*",
-        "zod": "^4.6.5",
       },
     },
     "plugins/reload": {
@@ -456,17 +491,6 @@
         "drydock": "workspace:*",
       },
     },
-    "plugins/remotes": {
-      "name": "@sand/remotes",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/host": "workspace:*",
-        "@sand/kit": "workspace:*",
-        "@sand/protocol": "workspace:*",
-        "drydock": "workspace:*",
-        "zod": "^4.6.5",
-      },
-    },
     "plugins/server": {
       "name": "@sand/server",
       "version": "0.0.0",
@@ -474,13 +498,13 @@
         "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
         "drydock": "workspace:*",
-        "zod": "^4.6.5",
       },
     },
     "plugins/session-info": {
       "name": "@sand/session-info",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
         "drydock": "workspace:*",
       },
@@ -657,6 +681,15 @@
         "drydock": "workspace:*",
       },
     },
+    "plugins/update-banner": {
+      "name": "@sand/update-banner",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/dom": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "drydock": "workspace:*",
+      },
+    },
     "plugins/usage": {
       "name": "@sand/usage",
       "version": "0.0.0",
@@ -757,6 +790,10 @@
   "packages": {
     "@sand/agents": ["@sand/agents@workspace:plugins/agents"],
 
+    "@sand/anthropic": ["@sand/anthropic@workspace:packages/anthropic"],
+
+    "@sand/ask": ["@sand/ask@workspace:plugins/ask"],
+
     "@sand/attachments": ["@sand/attachments@workspace:plugins/attachments"],
 
     "@sand/commands": ["@sand/commands@workspace:plugins/commands"],
@@ -807,7 +844,7 @@
 
     "@sand/layout-columns": ["@sand/layout-columns@workspace:plugins/layout-columns"],
 
-    "@sand/llm-anthropic": ["@sand/llm-anthropic@workspace:plugins/llm-anthropic"],
+    "@sand/llm-accounts": ["@sand/llm-accounts@workspace:plugins/llm-accounts"],
 
     "@sand/loop-react": ["@sand/loop-react@workspace:plugins/loop-react"],
 
@@ -831,13 +868,13 @@
 
     "@sand/picker": ["@sand/picker@workspace:plugins/picker"],
 
+    "@sand/plugin-changes": ["@sand/plugin-changes@workspace:plugins/plugin-changes"],
+
     "@sand/projects": ["@sand/projects@workspace:plugins/projects"],
 
     "@sand/protocol": ["@sand/protocol@workspace:packages/protocol"],
 
     "@sand/reload": ["@sand/reload@workspace:plugins/reload"],
-
-    "@sand/remotes": ["@sand/remotes@workspace:plugins/remotes"],
 
     "@sand/server": ["@sand/server@workspace:plugins/server"],
 
@@ -878,6 +915,8 @@
     "@sand/transcript-log": ["@sand/transcript-log@workspace:plugins/transcript-log"],
 
     "@sand/ui-headless": ["@sand/ui-headless@workspace:plugins/ui-headless"],
+
+    "@sand/update-banner": ["@sand/update-banner@workspace:plugins/update-banner"],
 
     "@sand/usage": ["@sand/usage@workspace:plugins/usage"],
 
@@ -941,7 +980,7 @@
 
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
 
-    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#2b186ec", { "peerDependencies": { "lucide": "^1.16.0" } }, "vaakx-dev-vrui-2b186ec", "sha512-YFcM8baL1/d6RbuZWeoQ3gLYv7l7Jhhu8PH1ux27f8gLtb7RBNQyExIMlHHQ0pSDB36/fmbFb3ixxOD69hdcRA=="],
+    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@workspace:packages/vrui"],
 
     "bun-types": ["bun-types@1.4.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-bxV1FgK7yBIzjRe5zBozIM4Bem11ZJcCXSrjWRG3YWLt8yFDePu4cLjpebO8OvPeIE9trbyPF4fuj3Cia4Fj3w=="],
 
