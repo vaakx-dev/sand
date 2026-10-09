@@ -1,5 +1,5 @@
 import type { HostHealth, PcRepairResult } from '@sand/protocol'
-import { errorMessage, sig, untrack, type Sig } from '@sand/dom'
+import { errorMessage, onTimeout, sig, untrack, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 
 export type PcHealthStatus = 'checking' | 'healthy' | 'problem' | 'unknown' | 'repairing'
@@ -32,23 +32,23 @@ const fallback = (health: HostHealth | undefined, error: string): PcHealthState 
 
 export const pcHealthStore = (ctx: Context<'wire'>) => {
   const entries = new Map<string, Entry>()
-  const timers = new Set<ReturnType<typeof setTimeout>>()
+  const timers = new Set<() => void>()
   let alive = true
 
   const later = (run: () => void, ms: number) => {
-    const timer = setTimeout(() => {
-      timers.delete(timer)
+    const cancel = onTimeout(() => {
+      timers.delete(cancel)
       if (alive) run()
     }, ms)
-    timers.add(timer)
-    return timer
+    timers.add(cancel)
+    return cancel
   }
 
   const sleep = (ms: number) => new Promise<void>(resolve => later(resolve, ms))
 
   ctx.effect(() => () => {
     alive = false
-    for (const timer of timers) clearTimeout(timer)
+    for (const cancel of timers) cancel()
     timers.clear()
   })
 
@@ -95,11 +95,11 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     return entry.sig
   }
 
-  let settling: ReturnType<typeof setTimeout> | undefined
+  let settling: (() => void) | undefined
 
   const refreshLocal = () => {
     if (settling) {
-      clearTimeout(settling)
+      settling()
       timers.delete(settling)
     }
     settling = later(() => {

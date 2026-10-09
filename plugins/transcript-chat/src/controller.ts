@@ -1,6 +1,6 @@
 import type { Thread } from '@sand/protocol'
 import { jumpButton, nearEnd, threadItems, toEnd, type OpenStates, type RendererRegistry } from '@sand/conversation'
-import { div, sig } from '@sand/dom'
+import { div, listen, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { fill, keepAnchor, savedScroll, scrollTo } from './integrations/scroll'
@@ -24,7 +24,8 @@ export const chatController = (ctx: Context<'threads'>, registry: RendererRegist
     fill(scroller, reveal)
   }
   const scroller = div({ class: 'relative min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node)
-  scroller.addEventListener(
+  listen(
+    scroller,
     'load',
     event => {
       if (pinned && event.target instanceof HTMLImageElement) toEnd(scroller)

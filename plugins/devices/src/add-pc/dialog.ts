@@ -1,6 +1,7 @@
 import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, icon, iconButton, overlay, p, primaryAction, sheet, sheetHead, show, sig, tile, untrack } from '@sand/dom'
 import type { InstallProgress } from '@sand/protocol'
 import type { Context } from 'drydock'
+import { sheetBody } from '../components'
 import type { DeviceSource } from '../source'
 import { installStep } from './install'
 import { installedName } from './progress'
@@ -66,8 +67,7 @@ export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: (
           () => iconButton({ title: 'Back', onClick: () => mode.set('choose') }, icon('back')),
         ),
       ),
-      div(
-        { class: 'flex min-h-0 flex-col gap-4 overflow-auto px-5 pt-1 pb-5' },
+      sheetBody(
         dynamicChild(
           derive(() => (done.get() ? 'done' : mode.get())),
           body,

@@ -1,6 +1,6 @@
 import { relationLabel } from '@sand/kit'
 import type { Machine, ProjectEntry, ProjectGroup, SyncFlows, SyncRelation } from '@sand/protocol'
-import { badge, div, dot, icon, quietButton, span, type Tone } from '@sand/dom'
+import { badge, div, dot, icon, quietButton, span, type Child, type Tone } from '@sand/dom'
 import { isOnline, machineKey, machineName, shorten } from './places'
 import type { ProjectsContext } from './types'
 
@@ -17,11 +17,12 @@ const relationTag = (ctx: ProjectsContext, entry: ProjectEntry, primary: Project
   return relation ? badge(tones[relation], relationLabel(relation, machineName(ctx, primary.device))) : null
 }
 
+const lineRow = (...children: Child[]) => div({ class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs' }, ...children)
+
 export const locationLine = (ctx: ProjectsContext, entry: ProjectEntry, primary?: ProjectEntry) => {
   const online = isOnline(ctx, entry.device)
   const dimmed = !online || entry.missing
-  return div(
-    { class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs' },
+  return lineRow(
     div(
       { class: ['flex min-w-0 items-center gap-2', dimmed ? 'opacity-50' : ''] },
       dot(online ? 'success' : 'neutral'),
@@ -35,8 +36,7 @@ export const locationLine = (ctx: ProjectsContext, entry: ProjectEntry, primary?
 }
 
 export const noCopyLine = (flows: SyncFlows, group: ProjectGroup, machine: Machine) =>
-  div(
-    { class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs' },
+  lineRow(
     div(
       { class: 'flex min-w-0 items-center gap-2' },
       dot('neutral'),

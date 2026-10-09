@@ -1,6 +1,7 @@
 import { copyButton, div, dynamicChild, p, sig, stop, span, type Child } from '@sand/dom'
 import { routeKind, routeLabel } from '@sand/kit'
 import type { PairInvite } from '@sand/protocol'
+import { linkText } from '../components'
 import { listenBox } from './listen'
 import { qrCode } from './qr'
 
@@ -39,7 +40,7 @@ const linkRow = (url: string, chosen: () => boolean, choose: () => void) =>
       onClick: choose,
     },
     span({ class: 'w-16 shrink-0 truncate text-xs text-neutral-500 sm:w-24' }, routeLabel(routeKind(url), url)),
-    span({ class: 'min-w-0 flex-1 truncate font-mono text-xs text-neutral-300' }, url),
+    linkText(url),
     div({ onClick: stop }, copyButton({ text: () => url, label: 'Copy' })),
   )
 
