@@ -1,8 +1,6 @@
 import { stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-const ignored = /(^|[\\/])(node_modules|\.git)([\\/]|$)/
-
 export const locate = (cwd: string, path: string) => resolve(cwd, path)
 
 export const isDirectory = (path: string) =>
@@ -10,12 +8,6 @@ export const isDirectory = (path: string) =>
     info => info.isDirectory(),
     () => false,
   )
-
-export async function* walk(pattern: string, cwd: string) {
-  for await (const path of new Bun.Glob(pattern).scan({ cwd, onlyFiles: true, dot: true })) {
-    if (!ignored.test(path)) yield path
-  }
-}
 
 export const readText = async (path: string) => {
   const file = Bun.file(path)
