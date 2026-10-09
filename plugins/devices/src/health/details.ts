@@ -26,7 +26,7 @@ const logTail = (health: HostHealth) => [
   ),
   el(
     'pre',
-    { class: 'max-h-64 overflow-auto rounded-lg bg-neutral-950 p-3 font-mono text-[11px] leading-snug whitespace-pre-wrap wrap-anywhere text-neutral-300' },
+    { class: 'max-h-64 overflow-auto rounded-lg bg-neutral-950 p-3 font-mono text-xs whitespace-pre-wrap wrap-anywhere text-neutral-300' },
     health.log.join('\n'),
   ),
 ]

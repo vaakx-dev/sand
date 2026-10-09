@@ -27,9 +27,9 @@ const previewRenderer: ToolRenderer = {
     return div(
       { class: 'flex flex-col gap-2' },
       div(
-        { class: 'flex max-h-96 flex-col overflow-y-auto rounded-md' },
+        { class: 'flex max-h-96 flex-col overflow-auto rounded-md' },
         ...screenshots(tool).map(shot =>
-          img({ class: 'block max-w-full object-contain object-left-top', src: `data:${shot.mediaType};base64,${shot.data}`, alt: 'Preview' }),
+          img({ class: 'block max-w-full', src: `data:${shot.mediaType};base64,${shot.data}`, alt: 'Preview' }),
         ),
       ),
       el('pre', { class: 'whitespace-pre-wrap wrap-anywhere font-mono text-xs text-neutral-400' }, consoleLines(tool)),

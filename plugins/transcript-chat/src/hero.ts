@@ -24,7 +24,7 @@ const projectIconUrl = (ctx: Context) => {
 
 const mark = (url: string) =>
   url
-    ? img({ src: url, alt: '', width: size, height: size, draggable: false, class: 'shrink-0 rounded-2xl object-contain' })
+    ? img({ src: url, alt: '', width: size, height: size, draggable: false, class: 'shrink-0 rounded-2xl' })
     : appIcon(size)
 
 const below = (ctx: Context<'threads'>, state: 'off' | 'idle' | 'draft') =>

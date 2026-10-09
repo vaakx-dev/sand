@@ -28,7 +28,7 @@ export const initials = (text: string) =>
 
 export const projectIcon = (name: string, url?: string) =>
   url
-    ? img({ src: url, alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-sm object-cover' })
+    ? img({ src: url, alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-sm' })
     : span(
         { class: 'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-xs font-bold text-white', style: { background: projectColor(name) } },
         (name[0] ?? '?').toUpperCase(),

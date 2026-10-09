@@ -46,7 +46,7 @@ export const keyStep = (control: LoginControl, saved: (provider: LoginProvider) 
       bindValue: baseUrl,
       onKeyDown: keys({ Enter: () => ready() && void save() }),
     }),
-    p({ class: 'text-xs break-words text-danger-400', hidden: () => !error.get() }, () => error.get()),
+    p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !error.get() }, () => error.get()),
     div(
       { class: 'flex flex-wrap items-center justify-between gap-3' },
       label(

@@ -4,13 +4,13 @@ import type { Context } from 'drydock'
 
 const keycap = (label: string) =>
   span(
-    { class: 'inline-flex h-5 min-w-5 items-center justify-center rounded border border-b-2 border-neutral-700 bg-neutral-800 px-1 font-mono text-xs text-neutral-400' },
+    { class: 'inline-flex h-5 min-w-5 items-center justify-center rounded border border-neutral-700 bg-neutral-800 px-1 font-mono text-xs text-neutral-400' },
     label,
   )
 
 const hint = (keys: string[], label: Child, run: () => void) =>
   rowButton(
-    { class: 'pointer-events-auto gap-3 rounded-lg px-2 py-1.5 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200', onClick: run },
+    { class: 'pointer-events-auto gap-3 rounded-lg px-2 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200', onClick: run },
     span({ class: 'flex w-16 shrink-0 justify-end gap-1' }, ...keys.map(keycap)),
     span({ class: 'truncate' }, label),
   )

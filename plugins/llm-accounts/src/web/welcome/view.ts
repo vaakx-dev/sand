@@ -32,7 +32,7 @@ const joinView = (model: WelcomeModel) => {
     column(
       note('On that PC, open Settings → Your PCs → Add a PC → It already has sand, copy its link and paste it here.'),
       textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Pairing link', bindValue: link, onKeyDown: keys({ Enter: connect }), onMount: node => node.focus() }),
-      p({ class: 'text-xs break-words text-danger-400', hidden: () => !model.error.get() }, () => model.error.get()),
+      p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !model.error.get() }, () => model.error.get()),
       div(
         { class: 'flex items-center justify-between gap-2' },
         quietButton({ onClick: () => model.go('start') }, 'Back'),

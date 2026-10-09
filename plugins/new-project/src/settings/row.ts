@@ -52,9 +52,9 @@ export const groupRow = (ctx: ProjectsContext, group: ProjectGroup, open: Sig<st
   const primary = locations[0]
   const multiple = locations.length > 1
   return div(
-    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3 first:rounded-t-xl last:rounded-b-xl' },
+    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3' },
     div(
-      { class: ['flex min-w-0 flex-1 flex-col gap-1.5', group.hidden ? 'opacity-60' : ''] },
+      { class: 'flex min-w-0 flex-1 flex-col' },
       div(
         { class: 'flex min-w-0 items-center gap-2' },
         groupIcon(ctx, group),

@@ -22,7 +22,7 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
 
 const actions = (...children: Parameters<typeof div>[1][]) => div({ class: 'flex flex-wrap items-center justify-end gap-2' }, ...children)
 
-const problem = (account: () => LoginAccount | undefined) => p({ class: 'text-xs break-words text-danger-400', hidden: () => !account()?.error }, () => account()?.error ?? '')
+const problem = (account: () => LoginAccount | undefined) => p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !account()?.error }, () => account()?.error ?? '')
 
 const step = (number: string, text: string, ...extra: Parameters<typeof div>[1][]) =>
   div(
@@ -82,7 +82,7 @@ const deviceView = (pending: Device) =>
     note('Open the link on any device and enter this code.'),
     div(
       { class: 'flex items-center justify-center gap-2 py-2' },
-      span({ class: 'font-mono text-3xl font-semibold tracking-widest text-neutral-100' }, pending.code),
+      span({ class: 'font-mono text-3xl font-semibold text-neutral-100' }, pending.code),
       copyButton({ text: () => pending.code }),
     ),
     div(
@@ -95,7 +95,7 @@ const deviceView = (pending: Device) =>
 const errorView = (account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
   div(
     { class: 'flex flex-col gap-4' },
-    p({ class: 'text-sm break-words text-danger-400' }, account.error ?? 'Sign-in failed'),
+    p({ class: 'text-sm wrap-anywhere text-danger-400' }, account.error ?? 'Sign-in failed'),
     actions(primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Try again')),
   )
 

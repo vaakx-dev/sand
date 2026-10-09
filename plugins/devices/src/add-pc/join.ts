@@ -29,7 +29,7 @@ const pasteRow = (source: DeviceSource, joined: (name: string) => void) => {
       textInput({ class: 'bg-neutral-900', placeholder: 'Link from the other PC', 'aria-label': 'Link from the other PC', bindValue: link, onKeyDown: keys({ Enter: () => void connect() }) }),
       secondaryAction({ disabled: () => busy.get() || !link.get().trim(), onClick: () => void connect() }, () => (busy.get() ? 'Connecting…' : 'Connect')),
     ),
-    p({ class: 'text-xs break-words text-danger-400', hidden: () => !error.get() }, () => error.get()),
+    p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !error.get() }, () => error.get()),
   )
 }
 

@@ -14,5 +14,5 @@ const sections = (control: LoginControl, add: AddAccount) =>
 
 export const accountsPage = (control: LoginControl, add: AddAccount) => {
   void control.load()
-  return dynamicChild(control.unavailable, message => (message ? p({ class: 'text-xs break-words text-danger-400' }, message) : sections(control, add)))
+  return dynamicChild(control.unavailable, message => (message ? p({ class: 'text-xs wrap-anywhere text-danger-400' }, message) : sections(control, add)))
 }

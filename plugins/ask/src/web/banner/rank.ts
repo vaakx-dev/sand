@@ -21,7 +21,7 @@ export const rankView = (state: AskState, actions: AskActions, question: AskQues
       {
         draggable: true,
         class: [
-          'flex min-h-10 cursor-grab items-center gap-3 rounded-xl bg-neutral-900 py-1 pr-1 pl-3 text-sm text-neutral-200 ring-1 ring-neutral-700 select-none',
+          'flex min-h-10 items-center gap-3 rounded-xl bg-neutral-900 py-1 pr-1 pl-3 text-sm text-neutral-200 ring-1 ring-neutral-700 select-none',
           () => (over.get() === position.get() ? 'ask-row-over' : ''),
           () => (dragged.get() === position.get() ? 'opacity-50' : ''),
         ],

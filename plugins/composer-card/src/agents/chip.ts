@@ -9,7 +9,7 @@ export const agentsChip = (working: Working) =>
       div(
         { class: 'mb-1 flex min-w-0' },
         quietButton(
-          { size: 'sm', class: 'min-w-0 gap-1.5 px-1.5', title: 'Show agents', disabled: derive(() => !working.clickable.get()), onClick: working.open },
+          { size: 'sm', class: 'min-w-0', title: 'Show agents', disabled: derive(() => !working.clickable.get()), onClick: working.open },
           icon('bot', 13),
           () => `${plural(working.count.get(), 'agent')} still working`,
         ),
