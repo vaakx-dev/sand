@@ -1,11 +1,11 @@
 import { button, delayed, derive, div, dropdown, dynamicChild, icon, iconButton, popoverItem, show, span, spinner, type Sig } from '@sand/dom'
 import type { Model } from '../model'
 
-type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy'
+type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
 
-const icons: Record<Exclude<Look, 'busy'>, string> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
+const icons: Record<Exclude<Look, 'busy' | 'capture'>, string> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
 
-const titles: Record<Look, string> = {
+const titles: Record<Exclude<Look, 'capture'>, string> = {
   off: 'Send',
   send: 'Send',
   queue: 'Send after this turn',
@@ -25,6 +25,7 @@ const tone = (look: Look) => {
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
   if (!model.online.get() || model.blocked.get()) return 'off'
+  if (model.capture.get()) return 'capture'
   if (model.editing.get()) return model.empty.get() ? 'off' : 'save'
   if (model.running.get()) return model.empty.get() ? 'stop' : model.mode.get()
   return model.empty.get() ? 'off' : 'send'
@@ -60,22 +61,33 @@ const modeMenu = (model: Model) =>
     items: close => [option(model, close, 'queue', 'queue', 'Send after this turn'), option(model, close, 'steer', 'steer', 'Add to the running turn')],
   })
 
+const titleOf = (model: Model, look: Look) => {
+  if (look === 'capture') return model.capture.get()?.title() ?? 'Send'
+  return look === 'off' ? offTitle(model) : titles[look]
+}
+
+const glyphOf = (model: Model, look: Look) => {
+  if (look === 'busy') return 'busy'
+  return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
+}
+
 export const sendControl = (model: Model) => {
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
-  const split = derive(() => model.running.get() && !model.empty.get() && !model.editing.get())
+  const glyph = derive(() => glyphOf(model, look.get()))
+  const split = derive(() => model.running.get() && !model.empty.get() && !model.editing.get() && !model.capture.get())
   return div(
     { class: 'ml-1 flex shrink-0 items-center gap-1' },
     show(split, () => modeMenu(model)),
     button(
       {
         type: 'button',
-        title: () => (look.get() === 'off' ? offTitle(model) : titles[look.get()]),
-        'aria-label': () => titles[look.get()],
+        title: () => titleOf(model, look.get()),
+        'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         class: ['inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors', () => tone(look.get())],
         onClick: () => void model.send(),
       },
-      dynamicChild(look, value => (value === 'busy' ? spinner(16) : icon(icons[value], value === 'stop' ? 12 : 16))),
+      dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),
     ),
   )
 }

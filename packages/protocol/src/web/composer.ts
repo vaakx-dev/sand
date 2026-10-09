@@ -19,9 +19,18 @@ export interface CompletionSource {
   hint?(query: string): string | undefined
 }
 
-export type ComposerSlot = 'start' | 'end' | 'above'
+export type ComposerSlot = 'start' | 'end' | 'above' | 'banner'
 
 export type SlotView = HTMLElement | (() => HTMLElement)
+
+export interface ComposerCapture {
+  placeholder(): string
+  title(): string
+  icon(): string
+  input?(text: string): void
+  keydown?(event: KeyboardEvent): boolean
+  send(text: string): void | Promise<void>
+}
 
 export interface Composer {
   focus(): void
@@ -31,4 +40,5 @@ export interface Composer {
   attach(content: UserContent[]): void
   completer(source: CompletionSource): Dispose
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  capture(capture: ComposerCapture): Dispose
 }

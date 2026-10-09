@@ -1,0 +1,25 @@
+{
+  "name": "@sand/ask",
+  "version": "0.0.0",
+  "description": "ask tool: the agent asks the user questions above the composer and waits for the answers",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Questions",
+    "summary": "Shows the agent's questions above the composer so you can pick an answer or type your own",
+    "uses": {
+      "composer": "questions can't be answered, only skipped by stopping the turn",
+      "transcript": "asked questions and their answers are not shown in the thread"
+    }
+  },
+  "dependencies": {
+    "@sand/conversation": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

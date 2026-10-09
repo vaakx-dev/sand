@@ -16,7 +16,8 @@ export default definePlugin({
   inject: ['threads', 'turns'],
   uses: {
     layout: 'lands loose on the stage',
-    commands: '/ completion shows a hint and typed commands go straight to the server',
+    commands: '/ completion shows a hint, typed commands go straight to the server, and a failed turn offers no model picker',
+    models: 'a failed turn does not name the PC its model lives on',
     fileIndex: 'no @ file completion',
     skillIndex: 'no $ skill completion',
     wire: 'no offline state; sends fail when the connection drops',
@@ -55,6 +56,7 @@ export default definePlugin({
         return () => void extra.delete(source)
       },
       slot: (where, view, order) => slots.add(where, view, order),
+      capture: entry => model.addCapture(entry),
     }
 
     session.start()

@@ -20,6 +20,8 @@ export interface CardParts {
 }
 
 const placeholder = (model: Model) => () => {
+  const capture = model.capture.get()
+  if (capture) return capture.placeholder()
   if (model.editing.get()) return 'Edit the queued message'
   if (model.idle.get()) return 'Start a new thread'
   if (!model.running.get()) return 'Ask sand anything'
@@ -67,6 +69,7 @@ export const card = (parts: CardParts) => {
   const keydown = (event: KeyboardEvent) => {
     if (event.isComposing) return
     if (completion.keydown(event)) return event.preventDefault()
+    if (model.capture.get()?.keydown?.(event)) return event.preventDefault()
     if (event.key === 'Escape' && hasOpenLayer()) return
     if (event.key === 'Escape' && model.editing.get()) {
       event.preventDefault()

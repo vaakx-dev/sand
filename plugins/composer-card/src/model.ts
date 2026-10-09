@@ -1,6 +1,6 @@
-import type { FollowUpMode } from '@sand/protocol'
+import type { ComposerCapture, FollowUpMode } from '@sand/protocol'
 import { compose, retry, submit } from '@sand/conversation'
-import { derive, errorMessage, pulse, sig, stored } from '@sand/dom'
+import { derive, effect, errorMessage, pulse, sig, stored, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import { createWorking } from './agents/working'
 import { createFiles } from './attachments/files'
@@ -30,6 +30,18 @@ export const createModel = (ctx: Context<'threads' | 'turns'>) => {
   const empty = derive(() => !text.get().trim() && !files.items.get().length)
   const loading = derive(() => files.loading())
   const blocked = derive(() => Boolean(files.rejected()) || files.loading())
+  const captures = sig<ComposerCapture[]>([])
+  const capture = derive(() => (editing.get() || files.items.get().length ? undefined : captures.get().at(-1)))
+  effect(() => {
+    const active = capture.get()
+    const value = text.get()
+    untrack(() => active?.input?.(value))
+  })
+
+  const addCapture = (entry: ComposerCapture) => {
+    captures.update(list => [...list, entry])
+    return () => captures.update(list => list.filter(other => other !== entry))
+  }
 
   const clear = () => {
     text.set('')
@@ -42,9 +54,25 @@ export const createModel = (ctx: Context<'threads' | 'turns'>) => {
     if (editing.get() === id) edits.leave()
   }
 
+  const answer = async (active: ComposerCapture, value: string) => {
+    const before = text.get()
+    failure.set(undefined)
+    sending.set(true)
+    try {
+      await active.send(value)
+      if (text.get() === before) text.set('')
+    } catch (error) {
+      failure.set({ text: errorMessage(error), retry: false })
+    } finally {
+      sending.set(false)
+    }
+  }
+
   const send = async () => {
     if (sending.get() || blocked.get()) return
     const value = text.get().trim()
+    const active = capture.get()
+    if (active && !commandLike.test(value)) return answer(active, value)
     const items = files.contents()
     const before = { text: text.get(), items: files.items.get() }
     const id = editing.get()
@@ -71,7 +99,8 @@ export const createModel = (ctx: Context<'threads' | 'turns'>) => {
     const ended = thread && !thread.running ? thread.ended : undefined
     if (ended?.stopReason !== 'error') return undefined
     const key = `${thread!.id}:${thread!.info.head}`
-    return dismissed.get().has(key) ? undefined : { key, text: ended.error ?? 'Unknown error' }
+    const via = ctx.models?.info(ctx.models.settings(thread!.id)?.model)?.via
+    return dismissed.get().has(key) ? undefined : { key, text: ended.error ?? 'Unknown error', detail: ended.detail, via }
   })
 
   return {
@@ -93,6 +122,8 @@ export const createModel = (ctx: Context<'threads' | 'turns'>) => {
     edit: edits.begin,
     draft: edits.draft,
     loading,
+    capture,
+    addCapture,
     clear,
     setMode: (next: FollowUpMode) => mode.set(next),
     cancelEdit: edits.leave,
