@@ -19,7 +19,7 @@ const attachment = (part: UserPart) => {
 
 const label = (text: string) => div({ class: 'px-1 text-xs text-neutral-500' }, text)
 
-const bubble = (text: string) => div({ class: 'rounded-xl bg-neutral-800 px-4 py-3 text-sm text-neutral-100 whitespace-pre-wrap wrap-anywhere' }, text)
+const bubble = (text: string) => div({ class: 'transcript-chat-bubble rounded-xl bg-neutral-800 px-4 text-sm text-neutral-100 whitespace-pre-wrap wrap-anywhere' }, text)
 
 const message = (...children: (HTMLElement | false | null | '')[]) =>
   div({ class: 'my-6 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))

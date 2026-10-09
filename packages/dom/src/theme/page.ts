@@ -26,6 +26,7 @@ svg { flex: none; display: block; }
 .whitespace-pre-wrap { white-space: pre-wrap; }
 .wrap-anywhere { overflow-wrap: anywhere; }
 .tabular-nums { font-variant-numeric: tabular-nums; }
+.text-middle { text-box: trim-both ex alphabetic; }
 .resize-none { resize: none; }
 .overscroll-contain { overscroll-behavior: contain; }
 .scrollbar-none { scrollbar-width: none; }

@@ -1,6 +1,5 @@
 import type { NavAction } from '@sand/protocol'
 import {
-  button,
   clock,
   derive,
   div,
@@ -10,6 +9,7 @@ import {
   iconButton,
   list,
   navActionIcon,
+  navButton,
   popover,
   popoverItem,
   projectIcon,
@@ -25,10 +25,9 @@ import type { Row } from './rows'
 import { rowView, type RowHandlers } from './rows-view'
 
 const wideAction = (action: Sig<NavAction>, parts: SidebarParts) =>
-  button(
+  navButton(
     {
-      type: 'button',
-      class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-neutral-300',
+      class: 'flex-1',
       onClick: () => parts.run(action.get()),
     },
     navActionIcon(action, parts.busy),
@@ -120,9 +119,9 @@ export const sidebarView = (parts: SidebarParts) => {
   return div(
     { class: () => ['relative flex h-full min-h-0 flex-col bg-neutral-950', parts.narrow.get() ? 'w-full' : 'w-64'] },
     div(
-      { class: 'relative flex h-12 shrink-0 items-center gap-2 px-2 text-neutral-400' },
+      { class: 'relative flex h-12 shrink-0 items-center px-2 text-neutral-400' },
       sidebarToggle({ title: 'Hide the sidebar', 'aria-label': 'Hide the sidebar', onClick: parts.hide }),
-      el('b', { class: 'text-sm font-semibold text-neutral-300' }, 'sand'),
+      el('b', { class: 'text-middle text-sm font-semibold text-neutral-300' }, 'sand'),
     ),
     div(
       { class: 'relative flex shrink-0 items-center gap-1 px-2 pb-2' },

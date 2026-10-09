@@ -28,6 +28,7 @@ export { style } from './integrations/style'
 export {
   controlButton,
   iconButton,
+  navButton,
   primaryAction,
   quietButton,
   rowButton,

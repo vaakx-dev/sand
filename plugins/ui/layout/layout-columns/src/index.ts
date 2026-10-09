@@ -1,7 +1,8 @@
 import type { Layout, LayoutState, Region } from '@sand/protocol'
-import { batch, cssOrder, effect, media, mount, owned, setStyle, sig, stage, store, untrack } from '@sand/dom'
+import { batch, cssOrder, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'
+import { gripCss, savedWidths } from './resize'
 import { buildShell, regions, type Coverable, type Open } from './shell'
 import type { Shift } from './slide'
 import { swiper } from './swipe'
@@ -32,7 +33,9 @@ export default definePlugin({
       })
     const filled = sig(Object.fromEntries(regions.map(region => [region, false])) as Record<Region, boolean>)
     const covered = sig<Record<Coverable, boolean>>({ side: false, main: false })
-    const { root, areas, covers } = owned(ctx, () => buildShell({ narrow, open, filled, covered, shift, swiped }, () => layout.toggle('side', false)))
+    const widths = savedWidths()
+    style(ctx, gripCss)
+    const { root, areas, covers } = owned(ctx, () => buildShell({ narrow, open, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
 
     const coverCount = (region: Region) => (region === 'side' || region === 'main' ? covers[region].childElementCount : 0)
     const state = (): LayoutState => ({ narrow: narrow.get(), open: current(), filled: { ...filled.get() } })

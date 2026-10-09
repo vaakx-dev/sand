@@ -42,6 +42,21 @@ export const secondaryAction = (props: ButtonProps, ...children: Child[]) =>
 export const quietButton = ({ active = false, ...props }: ToggleProps, ...children: Child[]) =>
   controlButton(toggled(active, 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-300'), props, ...children)
 
+export const navButton = ({ active = false, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
+  button(
+    {
+      type: 'button',
+      ...props,
+      class: [
+        'flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm transition-colors',
+        focusable,
+        toggled(active, 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-300'),
+        extra,
+      ],
+    },
+    ...children,
+  )
+
 export const iconButton = ({ size = 'md', active = false, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
   button(
     {
