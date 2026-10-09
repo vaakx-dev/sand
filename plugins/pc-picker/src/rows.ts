@@ -1,7 +1,8 @@
-import { badge, div, icon, menuItem, span } from '@sand/dom'
+import { badge, div, icon, menuItem, span, type Child } from '@sand/dom'
 import type { Machine, ProjectGroup } from '@sand/protocol'
+import { copyOn } from './group'
 import { statusOf } from './status'
-import { deviceOf, locationOn, type PickerContext } from './target'
+import { deviceOf, type PickerContext } from './target'
 
 export const machineIcon = (machine?: Machine, size = 16) => icon(machine?.local === false ? 'monitor' : 'laptop', size)
 
@@ -12,11 +13,11 @@ const tag = (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
 }
 
 const where = (group: ProjectGroup, machine: Machine) => {
-  const location = locationOn(group, deviceOf(machine))
+  const location = copyOn(group, deviceOf(machine))
   return location ? location.path : `${group.name} isn't on this PC yet`
 }
 
-export const pcRow = (ctx: PickerContext, group: ProjectGroup, machine: Machine, selected: boolean, choose: () => void) =>
+const machineRow = (machine: Machine, selected: boolean, line: string, choose: () => void, end?: Child) =>
   menuItem(
     {
       role: 'menuitemradio',
@@ -34,7 +35,13 @@ export const pcRow = (ctx: PickerContext, group: ProjectGroup, machine: Machine,
         span({ class: 'truncate font-medium' }, machine.name),
         machine.local && span({ class: 'shrink-0 text-xs text-neutral-500' }, 'this PC'),
       ),
-      span({ class: 'truncate text-xs text-neutral-500', title: where(group, machine) }, where(group, machine)),
+      span({ class: 'truncate text-xs text-neutral-500', title: line }, line),
     ),
-    tag(ctx, group, machine),
+    end,
   )
+
+export const pcRow = (ctx: PickerContext, group: ProjectGroup, machine: Machine, selected: boolean, choose: () => void) =>
+  machineRow(machine, selected, where(group, machine), choose, tag(ctx, group, machine))
+
+export const quickRow = (machine: Machine, selected: boolean, choose: () => void, line = 'Quick thread') =>
+  machineRow(machine, selected, line, choose, !machine.online && span({ class: 'shrink-0 text-xs text-neutral-500' }, 'Offline'))

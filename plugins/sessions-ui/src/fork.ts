@@ -1,11 +1,11 @@
 import type { Command, Message, Session } from '@sand/protocol'
-import { oneLine, promptText } from '@sand/kit'
+import { feedbackOnly, oneLine, promptText } from '@sand/kit'
 import type { SessionsContext } from './types'
 
 const userPrompts = (session: Session) =>
   session
     .path()
-    .filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user')
+    .filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user' && !feedbackOnly(entry.data as Message))
     .map(entry => ({ entry, message: entry.data as Message, text: promptText(entry.data as Message, ' ') }))
     .filter(({ text }) => text.trim())
     .reverse()

@@ -1,5 +1,5 @@
 import type { FollowUpMode, Message, Prompt, UserContent } from '@sand/protocol'
-import { hasToolResult, parseCommand } from '@sand/kit'
+import { feedbackOnly, hasToolResult, parseCommand } from '@sand/kit'
 import type { Context } from 'drydock'
 import { compose, contentName } from './attach'
 
@@ -31,7 +31,7 @@ export const submit = async (ctx: Context<'threads' | 'turns'>, text: string, at
   await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments), mode)
 }
 
-const asked = (message: Message) => message.role === 'user' && !hasToolResult(message)
+const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
 
 export const retry = async (ctx: Context<'threads' | 'turns'>) => {
   const thread = ctx.threads.current()

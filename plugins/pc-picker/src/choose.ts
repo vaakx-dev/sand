@@ -1,12 +1,12 @@
 import { errorMessage } from '@sand/dom'
-import type { Machine, ProjectGroup } from '@sand/protocol'
+import type { Machine, ProjectEntry, ProjectGroup } from '@sand/protocol'
+import { copyOn } from './group'
 import { newerSource } from './status'
-import { deviceOf, locationOn, refOf, type PickerContext } from './target'
+import { deviceOf, refOf, type PickerContext } from './target'
 
-const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
-  const location = locationOn(group, deviceOf(machine))
-  const source = location && newerSource(ctx, group, location)
-  if (!location || !source || !ctx.sync) return true
+const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machine, location: ProjectEntry) => {
+  const source = newerSource(ctx, group, location)
+  if (!source || !ctx.sync) return true
   ctx.notify?.push(`Sending the newer work from ${source.machine.name} to ${machine.name} first`)
   try {
     const applied = await ctx.sync.send(refOf(source.entry), refOf(location))
@@ -22,9 +22,12 @@ const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machi
 export const choosePc = async (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
   if (!machine.online) return
   const device = deviceOf(machine)
-  const location = locationOn(group, device)
-  if (!location) return ctx.syncFlows?.copy(group, device)
-  if (!(await sendFirst(ctx, group, machine))) return
+  const location = copyOn(group, device)
+  if (!location) {
+    if (ctx.syncFlows) return ctx.syncFlows.copy(group, device)
+    return ctx.notify?.push(`${group.name} isn't on ${machine.name} yet`)
+  }
+  if (!(await sendFirst(ctx, group, machine, location))) return
   await ctx.threads.draft(location.path, location.device)
   ctx.composer.focus()
 }

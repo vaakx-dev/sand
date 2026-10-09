@@ -1,7 +1,8 @@
 import type { Machine, ProjectEntry, ProjectGroup, SyncRelation } from '@sand/protocol'
 import type { Tone } from '@sand/dom'
 import { relationLabel } from '@sand/kit'
-import { deviceOf, locationOn, refOf, type PickerContext } from './target'
+import { copyOn } from './group'
+import { deviceOf, refOf, type PickerContext } from './target'
 
 export interface Neighbour {
   entry: ProjectEntry
@@ -27,7 +28,7 @@ const tones: Record<SyncRelation, Tone> = {
 
 export const neighbours = (ctx: PickerContext, group: ProjectGroup, location: ProjectEntry): Neighbour[] =>
   group.locations.flatMap(entry => {
-    if (entry.device === location.device) return []
+    if (entry.device === location.device || entry.missing) return []
     const machine = ctx.machines.get(entry.device)
     const relation = machine?.online ? ctx.sync?.relation(refOf(location), refOf(entry)) : undefined
     return machine && relation ? [{ entry, machine, relation }] : []
@@ -38,7 +39,7 @@ export const newerSource = (ctx: PickerContext, group: ProjectGroup, location: P
 
 export const statusOf = (ctx: PickerContext, group: ProjectGroup, machine: Machine): RowStatus | undefined => {
   if (!machine.online) return { tone: 'neutral', text: 'Offline', muted: true }
-  const location = locationOn(group, deviceOf(machine))
+  const location = copyOn(group, deviceOf(machine))
   if (!location) return { tone: 'neutral', text: 'Copy here…' }
   const found = neighbours(ctx, group, location)
   for (const relation of priority) {

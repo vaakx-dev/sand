@@ -1,16 +1,17 @@
 {
   "name": "@sand/sessions-ui",
   "version": "0.0.0",
-  "description": "Thread commands: /new, /resume, /fork and /clone",
+  "description": "Thread commands: /new, /resume, /fork and /clone, and moving threads between PCs",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "sand": {
     "label": "Thread commands",
-    "summary": "/new, /resume, /fork and /clone",
+    "summary": "/new, /resume, /fork and /clone, and moving threads between PCs",
     "uses": {
-      "loop": "a running thread can be forked or cloned mid-turn"
+      "loop": "a running thread can be forked or cloned mid-turn",
+      "server": "threads can't be continued on another PC"
     }
   },
   "dependencies": {

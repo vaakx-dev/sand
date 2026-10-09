@@ -5,11 +5,11 @@ import { thread } from './tree'
 import type { View } from './view'
 
 export const listed = (ctx: SessionsContext, view: View) => {
-  const folders = new Set([ctx.ui.cwd(), ctx.cli.cwd, ctx.sessions.fallbackCwd])
+  const here = ctx.ui.cwd()
   return ctx.sessions
     .list()
     .filter(info => info.head && info.kind !== 'agent')
-    .filter(info => view.all || folders.has(info.cwd))
+    .filter(info => view.all || !here || info.cwd === here)
     .filter(info => !view.named || info.named)
 }
 

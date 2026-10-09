@@ -13,9 +13,9 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
   const setHead = db.query('update sessions set head = $head where id = $id')
   const setTitle = db.query('update sessions set title = $title, named = $named where id = $id')
   const load = db.query<Row, { session: string }>('select * from entries where session = $session')
-  const append = db.transaction((entry: Entry) => {
-    insert.run({ ...entry, data: JSON.stringify(entry.data) })
-    setHead.run({ head: entry.id, id: entry.session })
+  const append = db.transaction((...added: Entry[]) => {
+    for (const entry of added) insert.run({ ...entry, data: JSON.stringify(entry.data) })
+    setHead.run({ head: added.at(-1)!.id, id: info.id })
   })
   let entries: Map<string, Entry> | undefined
   const all = () =>
@@ -23,13 +23,21 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
 
   const session: Session = {
     ...info,
-    append(type, data, id) {
-      const entry = { id: id ?? Bun.randomUUIDv7(), session: info.id, parent: session.head, at: Date.now(), type, data }
+    append(type, data, id, at) {
+      const entry = { id: id ?? Bun.randomUUIDv7(), session: info.id, parent: session.head, at: at ?? Date.now(), type, data }
       append(entry)
       all().set(entry.id, entry)
       session.head = entry.id
       hooks.entry(session, entry)
       return entry
+    },
+    appendMany(items) {
+      if (!items.length) return
+      const added = items.map((item, index) => ({ ...item, session: info.id, parent: index ? items[index - 1]!.id : session.head }))
+      append(...added)
+      for (const entry of added) all().set(entry.id, entry)
+      session.head = added.at(-1)!.id
+      hooks.update(session)
     },
     path() {
       const path: Entry[] = []

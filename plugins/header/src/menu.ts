@@ -35,7 +35,13 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
   const session: Entry[] = thread
     ? [
         ...(ctx.picker ? [{ label: 'Rename…', icon: 'pencil', run: () => void renameSession(ctx) }] : []),
-        ...(thread.info.kind === 'agent' ? [] : [...command('fork', 'Fork from a message…', 'fork'), ...command('clone', 'Duplicate thread', 'duplicate')]),
+        ...(thread.info.kind === 'agent'
+          ? []
+          : [
+              ...command('fork', 'Fork from a message…', 'fork'),
+              ...command('clone', 'Duplicate thread', 'duplicate'),
+              ...command('continue', 'Continue on another PC…', 'monitor'),
+            ]),
         { label: 'Copy link', icon: 'link', run: () => void copyText(location.href) },
       ]
     : []
