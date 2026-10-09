@@ -19,6 +19,6 @@
   "dependencies": {
     "@sand/dom": "workspace:*",
     "@sand/protocol": "workspace:*",
-    "drydock": "workspace:*"
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

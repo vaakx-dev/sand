@@ -2,13 +2,68 @@
   "name": "sand-workspace",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "plugins/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "plugins/*",
+    "apps/*"
+  ],
   "scripts": {
-    "check": "tsc",
+    "check": "tsc && bun --bun vrui-check",
     "sand": "bun apps/sand/src/main.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.1",
     "typescript": "^7.0.2"
+  },
+  "vrui": {
+    "check": [
+      "apps",
+      "packages",
+      "plugins"
+    ],
+    "ui": [
+      "@vaakx-dev/vrui",
+      "@sand/dom"
+    ],
+    "roles": [
+      "orange",
+      "sky"
+    ],
+    "classes": [
+      "-rotate-90",
+      "animate-drawer",
+      "animate-fade",
+      "animate-pop",
+      "animate-rise",
+      "animate-slide",
+      "animate-spin",
+      "animate-tip",
+      "ask-own",
+      "ask-row-over",
+      "cc-dock",
+      "cc-drop",
+      "font-mono",
+      "group",
+      "group-hover:flex",
+      "group-hover:hidden",
+      "group-hover:opacity-100",
+      "left",
+      "live-shine",
+      "markdown",
+      "overscroll-contain",
+      "prose",
+      "resize-none",
+      "rotate-90",
+      "scrollbar-none",
+      "spinner",
+      "spinner-still",
+      "spinner-turn",
+      "tabular-nums",
+      "transcript-chat-streaming",
+      "whitespace-pre",
+      "whitespace-pre-wrap",
+      "wrap-anywhere"
+    ]
   }
 }
