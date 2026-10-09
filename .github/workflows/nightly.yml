@@ -1,0 +1,43 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: nightly
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Skip when main has not changed
+        id: changed
+        run: |
+          built="$(git rev-parse -q --verify 'refs/tags/nightly^{commit}' || true)"
+          if [ "$built" = "$(git rev-parse HEAD)" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.changed.outputs.skip != 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - if: steps.changed.outputs.skip != 'true'
+        run: bun install --frozen-lockfile
+      - if: steps.changed.outputs.skip != 'true'
+        run: bun run check
+      - if: steps.changed.outputs.skip != 'true'
+        name: Move the nightly release to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit="$(git rev-parse HEAD)"
+          gh release delete nightly --cleanup-tag --yes || true
+          gh release create nightly --target "$commit" --prerelease --latest=false \
+            --title "Nightly $(date -u +%Y-%m-%d)" \
+            --notes "Built from ${commit:0:7} on main, the newest commit that passed the checks. This release moves at most once a day when main changes. Install it with \`bun add github:vaakx-dev/sand#nightly\`."

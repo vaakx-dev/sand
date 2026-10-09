@@ -1,6 +1,6 @@
 {
   "name": "sand",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.1",
   "type": "module",
   "bin": {
     "sand": "./src/main.ts"
@@ -44,7 +44,7 @@
     "@sand/usage": "workspace:*",
     "@sand/web": "workspace:*",
     "@sand/workflows": "workspace:*",
-    "drydock": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "uqr": "^0.1.3",
     "zod": "^4.6.5"
   }
