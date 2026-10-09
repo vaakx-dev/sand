@@ -1,4 +1,4 @@
-import { resolve } from 'node:path'
+import { isAbsolute, resolve } from 'node:path'
 
 const imageBytes = 10 * 1024 * 1024
 const pageBytes = 25 * 1024 * 1024
@@ -13,7 +13,9 @@ const types: Record<string, string> = {
   svg: 'image/svg+xml',
 }
 
-const localImage = /(["'(])((?:\/(?!\/)|\.{1,2}\/|\w)[^"'()\s<>:]*?\.(?:png|jpe?g|gif|webp|avif|svg))(["')])/gi
+const drive = process.platform === 'win32' ? String.raw`[A-Za-z]:[\\/]|` : ''
+
+const localImage = new RegExp(String.raw`(["'(])((?:${drive}\/(?!\/)|\.{1,2}\/|\w)[^"'()\s<>:]*?\.(?:png|jpe?g|gif|webp|avif|svg))(["')])`, 'gi')
 
 interface ImageFile {
   path: string
@@ -23,8 +25,6 @@ interface ImageFile {
 }
 
 const megabytes = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`
-
-const isAbsolute = (path: string) => path.startsWith('/')
 
 const dataUrl = async (path: string) => {
   const extension = path.slice(path.lastIndexOf('.') + 1).toLowerCase()

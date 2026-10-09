@@ -11,6 +11,7 @@ export const debouncedWatch = (path: string, options: WatchOptions, onChange: ()
     clearTimeout(timer)
     timer = setTimeout(onChange, ms)
   })
+  watcher.on('error', () => {})
   return () => {
     clearTimeout(timer)
     watcher.close()

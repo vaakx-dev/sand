@@ -16,6 +16,7 @@ export type ToolOutput = string | UserContent[]
 export interface Tool<S extends ZodType = ZodType> {
   name: string
   description: string
+  environment?: string
   input: S
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
 }

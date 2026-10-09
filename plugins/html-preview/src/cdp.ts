@@ -91,7 +91,7 @@ export const launch = async (executable: string): Promise<Browser> => {
   const dir = await mkdtemp(join(tmpdir(), 'sand-preview-'))
   let child: Subprocess<'ignore', 'ignore', 'pipe'>
   try {
-    child = Bun.spawn([executable, ...flags(dir)], { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe' })
+    child = Bun.spawn([executable, ...flags(dir)], { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe', windowsHide: true })
   } catch (error) {
     await remove(dir)
     throw error

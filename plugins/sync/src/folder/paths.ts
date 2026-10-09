@@ -5,7 +5,7 @@ import { isAbsolute, parse, relative, resolve, sep } from 'node:path'
 
 export const absolutePath = (path: unknown) => {
   if (typeof path !== 'string' || !path) throw new Error('A folder path is required')
-  if (path !== '~' && !path.startsWith('~/') && !isAbsolute(path)) throw new Error(`The path must be absolute: ${path}`)
+  if (path !== '~' && !path.startsWith('~/') && !path.startsWith('~\\') && !isAbsolute(path)) throw new Error(`The path must be absolute: ${path}`)
   return expandHome(path)
 }
 

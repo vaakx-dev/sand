@@ -6,12 +6,21 @@ const inRepo = ['git', 'grep', '-n', '-I', '-F', '-i', '--untracked', '-e']
 const plain = ['grep', '-r', '-n', '-I', '-F', '-i', '--exclude-dir=node_modules', '--exclude-dir=.git', '-e']
 
 const parse = (line: string): GrepMatch | undefined => {
-  const match = /^(.+?):(\d+):(.*)$/.exec(line)
+  const match = /^(.+?):(\d+):(.*)$/.exec(line.replace(/\r$/, ''))
   return match ? { path: match[1]!.replace(/^\.\//, ''), line: Number(match[2]), text: match[3]!.trim().slice(0, 200) } : undefined
 }
 
+const start = (command: string[], cwd: string) => {
+  try {
+    return Bun.spawn(command, { cwd, stdin: 'ignore', stdout: 'pipe', stderr: 'ignore', windowsHide: true })
+  } catch {
+    return undefined
+  }
+}
+
 const run = async (command: string[], cwd: string) => {
-  const child = Bun.spawn(command, { cwd, stdin: 'ignore', stdout: 'pipe', stderr: 'ignore' })
+  const child = start(command, cwd)
+  if (!child) return { found: [], code: -1 }
   const found: GrepMatch[] = []
   const decoder = new TextDecoder()
   let rest = ''
@@ -28,6 +37,6 @@ const run = async (command: string[], cwd: string) => {
 export const grepFiles = async (cwd: string, query: string) => {
   if (!query.trim()) return []
   const repo = await run([...inRepo, query], cwd)
-  if (repo.found.length || repo.code === 1) return repo.found
+  if (repo.found.length || repo.code === 1 || !Bun.which('grep')) return repo.found
   return (await run([...plain, query, '.'], cwd)).found
 }

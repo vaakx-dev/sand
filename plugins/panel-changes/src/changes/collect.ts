@@ -25,9 +25,9 @@ const hunkOf = (call: ToolCallBlock): DiffLine[] | undefined => {
   if (call.name === 'write') return diffLines('', text(input.content), { context: 3 })
 }
 
-const absolute = (path: string) => path.startsWith('/') || path.startsWith('~')
+const absolute = (path: string) => path.startsWith('/') || path.startsWith('~') || path.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(path)
 
-const under = (path: string, cwd: string) => Boolean(cwd) && path.startsWith(`${cwd}/`)
+const under = (path: string, cwd: string) => Boolean(cwd) && path.startsWith(cwd) && (path[cwd.length] === '/' || path[cwd.length] === '\\')
 
 const inside = (path: string, cwd: string) => !absolute(path) || under(path, cwd)
 

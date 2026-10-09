@@ -1,5 +1,7 @@
 const names = (dir: string, pattern: string) =>
-  Array.fromAsync(new Bun.Glob(pattern).scan({ cwd: dir, onlyFiles: false, dot: true })).catch((): string[] => [])
+  Array.fromAsync(new Bun.Glob(pattern).scan({ cwd: dir, onlyFiles: false, dot: true }))
+    .then(list => list.map(name => name.replace(/[\\/]+$/, '')))
+    .catch((): string[] => [])
 
 export const folderEntries = async (dir: string) => {
   const [all, folders] = await Promise.all([names(dir, '*'), names(dir, '*/')])
