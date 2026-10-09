@@ -3,20 +3,19 @@ import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { writeShim } from '../../commands/install/shim'
 import { readInfo } from '../../daemon/info'
+import { buildInfo } from '../dist/build'
+import { restorePrevious, switchTo } from '../dist/layout'
+import { appRoot } from '../dist/root'
+import { downloadRelease, findRelease } from '../github'
 import { askHealth } from './health/ask'
 import { waitHealthy } from './health/wait'
-import { buildInfo } from '../dist/build'
-import { appRoot } from '../dist/root'
 import { hostCodeChanged } from './host-code'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'
 import { prepareBuild } from './install/prepare'
 import { repairRequests } from './repair/requests'
-import { restorePrevious, switchTo } from '../dist/layout'
-import { loadLater } from './later'
 import { updateRequests } from './requests'
-import { findSource, updateSources } from './sources'
-import { newestUpdate } from './sources/newest'
+import { loadStore } from './store'
 import { createUpdater } from './updater'
 
 const requireInfo = async (home: string) => {
@@ -27,7 +26,7 @@ const requireInfo = async (home: string) => {
 
 export const updatesPlugin = definePlugin({
   name: 'updates',
-  description: 'Offers newer sand builds from your other PCs and installs them',
+  description: 'Checks GitHub for newer sand releases and installs them when you ask',
   inject: ['hostOptions', 'hostApp', 'runtimes', 'hub'],
   async apply(ctx) {
     const { home, main, drainTimeout, device } = ctx.hostOptions
@@ -36,8 +35,7 @@ export const updatesPlugin = definePlugin({
       hostHealth = impl
     })
     const readHealth = async () => (hostHealth ? hostHealth.check() : askHealth(await requireInfo(home)))
-    const current = () => buildInfo(ctx.hostApp.root())
-    const later = await loadLater(home)
+    const store = await loadStore(home)
     const updater = createUpdater(
       {
         home,
@@ -45,10 +43,10 @@ export const updatesPlugin = definePlugin({
         app: ctx.hostApp,
         runtimes: ctx.runtimes,
         drainTimeout,
-        current,
-        find: async current => newestUpdate(await updateSources(home), current),
-        source: id => findSource(home, id),
-        prepare: (bytes, options) => prepareBuild(home, bytes, options),
+        current: () => buildInfo(ctx.hostApp.root()),
+        find: findRelease,
+        download: downloadRelease,
+        prepare: (bytes, force) => prepareBuild(home, bytes, force),
         checkLoads,
         hostChanged: hostCodeChanged,
         switchTo: id => switchTo(home, id),
@@ -59,10 +57,10 @@ export const updatesPlugin = definePlugin({
         restart: () => ctx.emit('host.restart'),
         changed: state => ctx.hub.broadcast({ name: 'updates.change', args: [state] }),
       },
-      later,
+      store,
     )
     for (const setup of updateRequests(ctx.hub, updater)) ctx.effect(setup)
-    for (const setup of repairRequests(ctx.hub, { home, self: device, build: current, updater })) ctx.effect(setup)
+    for (const setup of repairRequests(ctx.hub, { home, self: device })) ctx.effect(setup)
     ctx.effect(() => {
       updater.start()
       return updater.stop

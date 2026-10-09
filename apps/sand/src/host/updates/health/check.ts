@@ -3,8 +3,6 @@ import type { HealthOutcome, HealthReport } from './types'
 export const isHealthy = (report: HealthReport) =>
   report.runtime === 'ready' && report.web && !report.failedPlugins.length
 
-export const healthBuild = (report: HealthReport) => report.build?.id
-
 const withDetail = (text: string, detail?: string) => (detail ? `${text}: ${detail}` : text)
 
 const runtimeLine = (report: HealthReport) => {

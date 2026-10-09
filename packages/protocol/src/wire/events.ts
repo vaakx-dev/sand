@@ -7,6 +7,7 @@ import type { LoginState } from '../login'
 import type { TurnResult } from '../loop'
 import type { Entry, SessionInfo } from '../session'
 import type { Message, ToolCallBlock, ToolResultBlock, UserContent } from '../message'
+import type { PluginLibrary } from '../plugin-library'
 import type { PluginSyncState } from '../plugin-sync'
 import type { CloneProgress, ProjectList } from '../projects'
 import type { PcList } from '../pcs'
@@ -66,6 +67,7 @@ export interface BroadcastEvents {
   'projects.change': [list: ProjectList]
   'projects.progress': [progress: CloneProgress]
   'plugins.change': [state: PluginSyncState]
+  'plugins.library': [library: PluginLibrary]
   'updates.change': [state: UpdateState]
   'web.build': [build: string]
   'web.extensions': [enabled: Record<string, boolean>]

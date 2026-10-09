@@ -1,41 +1,43 @@
-import type { BuildInfo, UpdateOffer, UpdatePhase, UpdateState } from '@sand/protocol'
+import type { BuildInfo, UpdateChannel, UpdatePhase, UpdateState } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
-import { basename } from 'node:path'
 import { isInstalled } from '../dist/layout'
-import { healthText } from './health/check'
-import type { HealthOutcome } from './health/types'
-import type { LaterStore } from './later'
-import type { FoundUpdate, PreparedBuild, Updater, UpdaterDeps } from './types'
+import type { GithubRelease } from '../github'
+import { cancelled, createInstaller } from './install/run'
+import { buildOf, isNewer, releaseInfo } from './offer'
+import { scheduleChecks } from './schedule'
+import type { UpdateStore } from './store'
+import type { Updater, UpdaterDeps } from './types'
 
-const firstCheck = 20_000
-const checkEvery = 10 * 60_000
-const cleanupAfter = 60_000
-const staleAfter = 60_000
-const drainPoll = 2_000
-const restartDelay = 300
-
-const short = (id: string | undefined) => (id ?? 'unknown').slice(0, 6)
+const staleAfter = 10 * 60_000
 const busyPhases: UpdatePhase[] = ['downloading', 'installing', 'switching', 'waiting', 'restarting']
-const cancelled = new Error('cancelled')
+const sourceFolder = 'this PC runs sand from a source folder; it does not update itself'
 
-export const createUpdater = (deps: UpdaterDeps, store: LaterStore): Updater => {
+export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater => {
   const installed = isInstalled(deps.app.root(), deps.home)
   let current: BuildInfo | undefined
-  let offer: UpdateOffer | undefined
-  let found: FoundUpdate | undefined
+  let latest: GithubRelease | undefined
   let phase: UpdatePhase = 'idle'
   let error: string | undefined
+  let checkError: string | undefined
+  let checkedAt: number | undefined
+  let checking: Promise<void> | undefined
   let epoch = 0
-  let lastCheck = Date.now()
-  let checking: Promise<UpdateState> | undefined
+  let claiming = false
   let sent = ''
-  let timers: ReturnType<typeof setTimeout>[] = []
+  let stopSchedule: (() => void) | undefined
+
+  const available = () => !!latest && !!current && isNewer(latest.build, current)
 
   const snapshot = (): UpdateState => ({
     installed,
+    channel: store.channel(),
     current,
-    offer,
-    later: !!offer && store.hidden(offer.build.id),
+    latest: latest && releaseInfo(latest),
+    available: available(),
+    later: !!latest && store.hidden(latest.build.id),
+    checking: !!checking,
+    checkedAt,
+    checkError,
     phase,
     error,
   })
@@ -52,193 +54,127 @@ export const createUpdater = (deps: UpdaterDeps, store: LaterStore): Updater => 
 
   const busy = () => busyPhases.includes(phase)
 
-  const step = (next: UpdatePhase, ticket: number) => {
-    if (ticket !== epoch) throw cancelled
+  const settle = (next: UpdatePhase, message?: string) => {
     phase = next
-    error = undefined
-    commit()
-  }
-
-  const fail = (message: string) => {
-    phase = 'failed'
     error = message
     commit()
   }
 
-  const runCheck = async (): Promise<UpdateState> => {
-    const ticket = epoch
-    lastCheck = Date.now()
-    try {
-      const build = await deps.current()
-      const next = await deps.find(build)
-      if (ticket !== epoch) return snapshot()
+  const installer = createInstaller(deps, {
+    step(next, ticket) {
+      if (ticket !== epoch) throw cancelled
+      settle(next)
+    },
+    live: ticket => ticket === epoch,
+    fail: message => settle('failed', message),
+    done(build) {
       current = build
-      if (!busy()) {
-        if (phase === 'failed' && offer?.build.id !== next?.build.id) {
-          phase = 'idle'
-          error = undefined
-        }
-        found = next
-        offer = next && { source: next.source.id, name: next.source.name, build: next.build }
-      }
+      settle('idle')
+    },
+    currentId: () => current?.id,
+  })
+
+  const runCheck = async () => {
+    const channel = store.channel()
+    try {
+      current = await deps.current().catch(() => current)
+      const release = await deps.find(channel)
+      if (channel !== store.channel()) return
+      checkError = undefined
+      if (busy()) return
+      if (phase === 'failed' && latest?.build.id !== release.build.id) settle('idle')
+      latest = release
     } catch (failure) {
-      console.error(`sand could not check for updates: ${errorMessage(failure)}`)
+      if (channel !== store.channel()) return
+      checkError = errorMessage(failure)
+      console.error(`sand could not check for updates: ${checkError}`)
+    } finally {
+      if (channel === store.channel()) checkedAt = Date.now()
     }
+  }
+
+  const check = (): Promise<UpdateState> => {
+    if (!checking) {
+      checking = runCheck().finally(() => {
+        checking = undefined
+      })
+      commit()
+    }
+    return checking.then(commit)
+  }
+
+  const setChannel = async (channel: UpdateChannel) => {
+    if (channel === store.channel()) return check()
+    if (busy() || claiming) throw new Error('sand is updating; change the channel when it is done')
+    await store.setChannel(channel)
+    latest = undefined
+    checkError = undefined
+    checkedAt = undefined
+    if (phase === 'failed') settle('idle')
+    commit()
+    await checking
+    return check()
+  }
+
+  const begin = (release: GithubRelease, force: boolean) => {
+    const ticket = ++epoch
+    settle('downloading')
+    void installer.install(release, ticket, force)
+  }
+
+  const claim = async <T>(run: () => Promise<T>) => {
+    claiming = true
+    try {
+      return await run()
+    } finally {
+      claiming = false
+    }
+  }
+
+  const stale = () => !checkedAt || Date.now() - checkedAt > staleAfter
+
+  const apply = async (build: string) => {
+    if (!installed) throw new Error(sourceFolder)
+    if (busy() || claiming) return snapshot()
+    return claim(async () => {
+      if (latest?.build.id !== build || stale()) await check()
+      const release = latest
+      if (!release || release.build.id !== build) throw new Error('that build is no longer the newest on GitHub; check again')
+      if (release.build.id === current?.id) throw new Error('this PC already runs that build')
+      if (busy()) return snapshot()
+      begin(release, false)
+      return snapshot()
+    })
+  }
+
+  const repair = async () => {
+    if (!installed) throw new Error('this PC runs sand from a source folder; it cannot repair itself')
+    if (busy() || claiming) throw new Error('sand is already updating')
+    return claim(async () => {
+      const release = await deps.find(store.channel())
+      if (busy()) throw new Error('sand is already updating')
+      latest = release
+      checkedAt = Date.now()
+      begin(release, true)
+      return { ...snapshot(), target: buildOf(release.build) }
+    })
+  }
+
+  const later = async () => {
+    if (latest) await store.hide(latest.build.id)
+    if (phase === 'failed') settle('idle')
     return commit()
   }
 
-  const check = () => {
-    if (!installed) return Promise.resolve(snapshot())
-    checking ??= runCheck().finally(() => {
-      checking = undefined
-    })
-    return checking
-  }
-
-  const idle = () =>
-    deps.runtimes.live().every(runtime => !runtime.activity.sessions.length && !runtime.activity.jobs.length)
-
-  const drain = async (ticket: number) => {
-    const until = Date.now() + deps.drainTimeout
-    while (!idle() && Date.now() < until) {
-      await Bun.sleep(Math.max(0, Math.min(drainPoll, until - Date.now())))
-      if (ticket !== epoch) throw cancelled
-    }
-  }
-
-  const cleanup = (keep: string[]) =>
-    deps.cleanup(keep).catch(failure => console.error(`sand could not remove old builds: ${errorMessage(failure)}`))
-
-  const goBack = async (before: string) => {
-    deps.app.use(before)
-    await deps.restorePrevious()
-  }
-
-  const unhealthy = async (prepared: PreparedBuild, before: string, previous: string, outcome: HealthOutcome) => {
-    const text = healthText(outcome)
-    console.error(`build ${short(prepared.build.id)} was not healthy:\n${text}`)
-    await goBack(before)
-    const back = await deps.runtimes.swap('update')
-    if (!back) console.error('the previous sand runtime did not start again either')
-    const reason = text.split('\n')[0] || 'no details'
-    fail(`build ${short(prepared.build.id)} was not healthy, so this PC went back to build ${short(previous)}: ${reason}`)
-  }
-
-  const swapRuntime = async (prepared: PreparedBuild, ticket: number) => {
-    const before = deps.app.root()
-    const previous = current?.id ?? basename(before)
-    deps.app.use(prepared.root)
-    const ok = await deps.runtimes.swap('update')
-    if (ticket !== epoch) throw cancelled
-    if (!ok) {
-      await goBack(before)
-      fail(`the new sand runtime did not start; this PC stays on build ${short(previous)}`)
-      return
-    }
-    const outcome = await deps.health()
-    if (ticket !== epoch) throw cancelled
-    if (!outcome.ok) return await unhealthy(prepared, before, previous, outcome)
-    current = await deps.current().catch(() => prepared.build)
-    if (ticket !== epoch) throw cancelled
-    phase = 'idle'
-    error = undefined
-    offer = undefined
-    found = undefined
-    commit()
-    void cleanup([prepared.root, deps.hostRoot])
-  }
-
-  const needsRestart = async (prepared: PreparedBuild, force: boolean) =>
-    force || prepared.bun !== Bun.version || (await deps.hostChanged(deps.hostRoot, prepared.root))
-
-  const refreshShim = () =>
-    deps.refreshShim().catch(failure => console.error(`sand could not update the sand command: ${errorMessage(failure)}`))
-
-  const install = async (update: FoundUpdate, ticket: number, force: boolean) => {
-    try {
-      const bytes = await update.source.download()
-      step('installing', ticket)
-      const prepared = await deps.prepare(bytes, { source: update.source, force })
-      await deps.checkLoads(prepared.root, prepared.bunPath)
-      step('switching', ticket)
-      const changed = await needsRestart(prepared, force)
-      if (ticket !== epoch) throw cancelled
-      await deps.switchTo(basename(prepared.root))
-      await refreshShim()
-      if (!changed) return await swapRuntime(prepared, ticket)
-      step('waiting', ticket)
-      await drain(ticket)
-      step('restarting', ticket)
-      await Bun.sleep(restartDelay)
-      if (ticket !== epoch) throw cancelled
-      deps.restart()
-    } catch (failure) {
-      if (failure === cancelled) return
-      fail(errorMessage(failure))
-    }
-  }
-
-  const matches = (source: string, build: string) =>
-    found && found.source.id === source && found.build.id === build ? found : undefined
-
-  let claiming = false
-
-  const apply = async (source: string, build: string) => {
-    if (!installed) throw new Error('this PC runs sand from a source folder; it does not update itself')
-    if (busy() || claiming) return snapshot()
-    claiming = true
-    try {
-      const update = matches(source, build) ?? (await check().then(() => matches(source, build)))
-      if (!update) throw new Error('that update is no longer offered')
-      if (busy()) return snapshot()
-      const ticket = ++epoch
-      step('downloading', ticket)
-      void install(update, ticket, false)
-      return snapshot()
-    } finally {
-      claiming = false
-    }
-  }
-
-  const repairFrom = async (sourceId: string): Promise<FoundUpdate> => {
-    const source = await deps.source(sourceId)
-    if (!source) throw new Error('that PC is not paired with this one')
-    const build = await source.latest()
-    if (!build) throw new Error(`${source.name} did not say which sand build it runs`)
-    return { source, build }
-  }
-
-  const repair = async (sourceId: string) => {
-    if (!installed) throw new Error('this PC runs sand from a source folder; it cannot be repaired from another PC')
-    if (busy() || claiming) throw new Error('sand is already updating')
-    claiming = true
-    try {
-      const update = await repairFrom(sourceId)
-      if (busy()) throw new Error('sand is already updating')
-      const ticket = ++epoch
-      step('downloading', ticket)
-      void install(update, ticket, true)
-      return { ...snapshot(), target: update.build }
-    } finally {
-      claiming = false
-    }
-  }
-
   return {
-    state() {
-      if (installed && !checking && Date.now() - lastCheck > staleAfter) void check()
-      return snapshot()
-    },
+    state: snapshot,
     check,
-    async later() {
-      if (!installed || !offer) return snapshot()
-      await store.set(offer.build.id)
-      return commit()
-    },
+    later,
+    setChannel,
     apply,
     repair,
     start() {
-      if (!installed || timers.length) return
+      if (stopSchedule) return
       void deps
         .current()
         .then(build => {
@@ -246,18 +182,13 @@ export const createUpdater = (deps: UpdaterDeps, store: LaterStore): Updater => 
           commit()
         })
         .catch(() => {})
-      timers = [
-        setTimeout(() => {
-          void check()
-          timers.push(setInterval(() => void check(), checkEvery))
-        }, firstCheck),
-        setTimeout(() => void cleanup([deps.app.root(), deps.hostRoot]), cleanupAfter),
-      ]
+      const cleanup = installed ? () => void installer.cleanup([deps.app.root(), deps.hostRoot]) : undefined
+      stopSchedule = scheduleChecks(() => void check(), cleanup)
     },
     stop() {
       epoch++
-      for (const timer of timers) clearTimeout(timer)
-      timers = []
+      stopSchedule?.()
+      stopSchedule = undefined
     },
   }
 }

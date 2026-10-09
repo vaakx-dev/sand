@@ -19,7 +19,7 @@ export { promptText, userParts, type Notification, type UserPart } from './promp
 export { feedbackLine, feedbackOnly, noteBlock, readFeedback, stopFeedback, type Feedback } from './prompt/feedback'
 export { parseCommand } from './prompt/command'
 export { uuid } from './ids/uuid'
-export { hostPaths, pairLink, pairSecret, parsePairLink, ticketSocketUrl } from './wire/pairing'
+export { hostPaths, installLink, pairLink, pairSecret, parsePairLink, ticketSocketUrl } from './wire/pairing'
 export { bearer, createInvite, fetchHostIdentity, redeemPairing, requestTicket } from './wire/auth'
 export { isLoopbackHost, isTailscaleHost, routeKind, routeLabel, routeRank, routeUsable } from './wire/routes'
 export { applyLiveEvent } from './live/apply'

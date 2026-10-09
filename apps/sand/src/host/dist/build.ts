@@ -16,6 +16,7 @@ export interface BuildStamp extends BuildInfo {
 
 export interface Bundle extends HostBundle {
   hash: string
+  stamp: BuildStamp
 }
 
 export interface AppBuild {
@@ -27,7 +28,7 @@ export interface AppBuild {
 const cacheTime = 5000
 const buildId = /^[0-9a-f]{6,64}$/
 
-const isStamp = (value: unknown): value is BuildStamp => {
+export const isStamp = (value: unknown): value is BuildStamp => {
   const stamp = value as Partial<BuildStamp> | null
   return (
     typeof stamp?.id === 'string' &&

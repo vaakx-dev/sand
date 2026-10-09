@@ -1,5 +1,9 @@
 # Working on sand
 
+## Run from a clone
+
+You need Bun and git. Clone this repository, run `bun install` in it, and then run `bun run sand`. sand starts in the background and opens in your browser.
+
 ## Run the checks
 
 Run `bun run check` before you push. It type-checks every package and plugin, then runs `vrui-check` on the web UI code. CI runs the same check on every push.

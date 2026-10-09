@@ -1,0 +1,21 @@
+{
+  "name": "@sand/update-banner",
+  "version": "0.0.0",
+  "description": "Tells you when a newer sand is on GitHub and installs it when you click Update",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Sand updates",
+    "summary": "Shows when a newer sand is on GitHub, with an Updates page in Settings",
+    "uses": {
+      "layout": "the update notice sits loose above the app",
+      "notify": "no message when an update request fails",
+      "settings": "no Updates settings page"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

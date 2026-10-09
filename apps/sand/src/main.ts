@@ -55,6 +55,7 @@ const dispatch = async () => {
   if (command === 'project') return projects(home, args, projectFlags)
   if (command === 'usage') return usageReport(home, args)
   if (command === 'install') return (await import('./commands/install')).installCommand(home, args)
+  if (command === 'release-assets') return (await import('./commands/release-assets')).releaseAssets(args)
   console.error(`unknown command "${command}"\n${help}`)
   process.exit(2)
 }

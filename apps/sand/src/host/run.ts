@@ -8,6 +8,7 @@ import { gatewayPlugin } from './gateway'
 import { healthPlugin } from './health'
 import { hubPlugin } from './hub'
 import { loadIdentity } from './identity'
+import { pluginLibraryPlugin } from './plugin-library'
 import { pluginSyncPlugin } from './plugin-sync'
 import { hostProjectsPlugin } from './projects'
 import { projectSyncPlugin } from './projects/sync'
@@ -39,6 +40,7 @@ export const runHost = async ({ home }: { home: string }) => {
   ctx.plugin(hostProjectsPlugin)
   ctx.plugin(projectSyncPlugin)
   ctx.plugin(pluginSyncPlugin)
+  ctx.plugin(pluginLibraryPlugin)
   ctx.plugin(watchPlugin)
 
   const stop = () => void ctx.dispose().finally(() => process.exit(0))

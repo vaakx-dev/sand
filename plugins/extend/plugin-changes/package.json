@@ -1,0 +1,24 @@
+{
+  "name": "@sand/plugin-changes",
+  "version": "0.0.0",
+  "description": "Lists built-in and user plugins, lets you customise built-ins, and shows plugin changes from your other PCs",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Plugins page",
+    "summary": "Browse and customise plugins, and review plugin changes from your other PCs",
+    "uses": {
+      "settings": "no Plugins settings page",
+      "notify": "no message when another PC changes a plugin",
+      "threads": "Ask sand cannot start a thread",
+      "composer": "Ask sand sends its question straight away",
+      "turns": "Ask sand cannot send its question",
+      "models": "Ask sand uses the default model"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

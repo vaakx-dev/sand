@@ -8,15 +8,31 @@ sand has 68 plugins and no built-in features. Unloading a plugin removes everyth
 
 sand runs as a server on your PC, and the browser is only a window onto it. A thread keeps running when you close the tab. You can open the same thread on your phone at home, or anywhere through Tailscale.
 
-You can pair several PCs. A thread runs on the PC that has the project folder, and you can move a thread to another PC to continue it there. Paired PCs can share accounts and update each other.
+You can pair several PCs. A thread runs on the PC that has the project folder, and you can move a thread to another PC to continue it there. Paired PCs can share accounts and plugins.
 
 You can sign in with a Claude or ChatGPT subscription, or add API keys. The usage page splits usage by provider.
 
 ## Get started
 
-You need Bun and git. Clone this repository, run `bun install` in it, and then run `bun run sand`. sand starts in the background and opens in your browser. To sign in, open **Settings** and then **Accounts**.
+On Linux or macOS, run this in a terminal:
 
-To add a phone, open **Your PCs** and scan the QR code. To add a PC, open **Your PCs**, choose **Add a PC**, and run the command it shows on the new PC.
+```sh
+curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh
+```
+
+On Windows, run this in PowerShell:
+
+```powershell
+irm https://vaakx-dev.github.io/sand/install.ps1 | iex
+```
+
+The installer downloads Bun and the newest sand release from GitHub into `~/.sand`, adds `sand` to your PATH, and opens sand in your browser. To sign in, open **Settings** and then **Accounts**. sand checks GitHub for updates and installs one when you click **Update** in **Settings**.
+
+To install the nightly build instead, run `curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --nightly`, or on Windows run `$env:SAND_CHANNEL='nightly'` before the command. You can switch later with **Nightly builds** in **Settings**.
+
+To add a phone, open **Your PCs** and scan the QR code. To add a PC, open **Your PCs**, choose **Add a PC**, and run the command it shows on the new PC. It runs the same installer and pairs the new PC with this one.
+
+To work on sand itself, run it from a clone instead: see [Working on sand](docs/development.md).
 
 ## Versions
 

@@ -4,7 +4,12 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "plugins/*",
+    "plugins/core/*",
+    "plugins/agent/*",
+    "plugins/ui/*/*",
+    "plugins/projects/*",
+    "plugins/pcs/*",
+    "plugins/extend/*",
     "apps/*"
   ],
   "scripts": {

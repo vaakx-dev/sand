@@ -29,12 +29,19 @@ export const doneRoute = (installs: FinishKeys): HttpRoute => ({
   },
 })
 
+const reportable = ['connected', 'sand', 'sharing'] as const
+
+type Reportable = (typeof reportable)[number]
+
+const isReportable = (step: string | null): step is Reportable => reportable.includes(step as Reportable)
+
 export const stepRoute = (installs: Pick<InstallKeys, 'step'>): HttpRoute => ({
   method: 'POST',
   handle(call) {
     const secret = installSecret(call)
-    if (call.url.searchParams.get('step') !== 'sharing') return new Response('unknown step', { status: 400 })
-    if (!secret || !installs.step(secret, 'sharing')) return expired()
+    const step = call.url.searchParams.get('step')
+    if (!isReportable(step)) return new Response('unknown step', { status: 400 })
+    if (!secret || !installs.step(secret, step)) return expired()
     return done()
   },
 })

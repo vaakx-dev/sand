@@ -8,10 +8,6 @@ export const hostPaths = {
   health: '/health',
   stop: '/stop',
   socket: '/ws',
-  bundle: '/bundle',
-  bun: '/bun',
-  installSh: '/install/sh',
-  installPs: '/install/ps',
   installPlugins: '/install/plugins',
   installPair: '/install/pair',
   installStep: '/install/step',
@@ -22,6 +18,8 @@ export const hostPaths = {
 const trimSlash = (base: string) => base.replace(/\/+$/, '')
 
 export const pairLink = (base: string, secret: string) => `${trimSlash(base)}/#pair=${encodeURIComponent(secret)}`
+
+export const installLink = (base: string, secret: string) => `${trimSlash(base)}/#install=${encodeURIComponent(secret)}`
 
 export const pairSecret = (hash: string): string | undefined => {
   const secret = new URLSearchParams(hash.replace(/^#/, '')).get('pair')

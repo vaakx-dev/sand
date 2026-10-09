@@ -5,10 +5,10 @@ import { type AppFile, hashFiles } from '../build'
 export const modulesFolder = 'node_modules'
 
 export const releaseDamaged = 'the sand download is damaged; run the command again'
-export const releaseTooOld = 'this sand download is from an older sand; update the other PC first'
+export const releaseTooOld = 'this sand download is too old to install; use a newer release'
 
 const linkName = /^node_modules\/(@[A-Za-z0-9._-]+\/)?[A-Za-z0-9._-]+$/
-const linkTarget = /^(apps|packages|plugins)\/[A-Za-z0-9._-]+$/
+const linkTarget = /^(apps|packages|plugins)(\/[A-Za-z0-9._-]+){1,3}$/
 
 const badSegment = (segment: string) => !segment || segment.startsWith('.')
 

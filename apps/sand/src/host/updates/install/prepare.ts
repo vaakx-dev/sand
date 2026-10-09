@@ -3,11 +3,12 @@ import type { BuildInfo } from '@sand/protocol'
 import { mkdir, rm } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { readStamp } from '../../dist/build'
+import { fetchOfficialBun } from '../../dist/bun/github'
 import { defaultTarget, readBuildBun, readTarget } from '../../dist/bun/home'
 import { extractBundle } from '../../dist/extract'
 import { appsFolder, buildFolder, inAppsFolder, readPointer } from '../../dist/layout'
 import { readyRelease } from '../../dist/release/ready'
-import type { PreparedBuild, PrepareOptions, UpdateSource } from '../types'
+import type { PreparedBuild } from '../types'
 import { ensureBun } from './bun'
 
 export const readyFile = '.sand-ready'
@@ -31,16 +32,12 @@ const chooseFolder = async (home: string, build: BuildInfo, force: boolean) => {
   return { root }
 }
 
-const sandBun = async (home: string, version: string, source: UpdateSource) => {
+const sandBun = async (home: string, version: string) => {
   const target = (await readTarget(home)) ?? defaultTarget()
-  return ensureBun(home, version, () => source.bun(target))
+  return ensureBun(home, version, () => fetchOfficialBun(version, target))
 }
 
-export const prepareBuild = async (
-  home: string,
-  bytes: Uint8Array,
-  { source, force }: PrepareOptions,
-): Promise<PreparedBuild> => {
+export const prepareBuild = async (home: string, bytes: Uint8Array, force: boolean): Promise<PreparedBuild> => {
   const folder = appsFolder(home)
   await mkdir(folder, { recursive: true })
   const temp = join(folder, `.incoming-${crypto.randomUUID()}`)
@@ -52,13 +49,13 @@ export const prepareBuild = async (
     if (!inAppsFolder(home, root)) throw new Error(`build ${build.id} is not a valid sand build`)
     if (chosen.bun) {
       await rm(temp, { recursive: true, force: true })
-      return { root, build, bun: chosen.bun, bunPath: await sandBun(home, chosen.bun, source) }
+      return { root, build, bun: chosen.bun, bunPath: await sandBun(home, chosen.bun) }
     }
     await rm(root, { recursive: true, force: true })
     await replaceFile(temp, root)
     placed = root
     const { bun } = await readyRelease(root)
-    const bunPath = await sandBun(home, bun, source)
+    const bunPath = await sandBun(home, bun)
     await Bun.write(join(root, readyFile), `${build.id}\n`)
     return { root, build, bun, bunPath }
   } catch (error) {

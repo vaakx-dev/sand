@@ -101,7 +101,6 @@ export interface HostBundle {
 
 export interface HostBuild {
   info(): Promise<BuildInfo>
-  bundle(): Promise<HostBundle>
 }
 
 export interface HostApp {

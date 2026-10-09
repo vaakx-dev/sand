@@ -20,6 +20,7 @@ export const help = [
   '       sand project status <name>      compare the copies of a project across PCs',
   '       sand project resolve <name> --on <pc> (--ours | --theirs) [file…]   settle merge conflicts',
   '       sand usage [24h | 7d | 30d | 90d]       tokens, API cost and plan limits (default 30d)',
+  '       sand release-assets <folder>    write sand.tar.gz and sand-build.json for a GitHub release into a folder',
   '',
   '  -c          open the most recent thread',
   '  -r <id>     open the thread with this id',

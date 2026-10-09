@@ -239,6 +239,11 @@
   .final .install { display: inline-flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font: 13.5px var(--mono); color: var(--text-2); }
   .final .install b { color: var(--sand); font-weight: 500; }
   .final .install button { padding: 7px 12px; border-radius: 999px; border: 0; background: var(--line-soft); font: 500 12px var(--sans); color: var(--text-2); cursor: pointer; }
+  .final .get { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 100%; }
+  .final .get .install { max-width: 100%; text-align: left; }
+  .final .get .install > span { overflow-x: auto; white-space: nowrap; }
+  .final p.note { margin-top: 18px; max-width: 60ch; font-size: 13px; }
+  .final p.note code { font: 12px var(--mono); color: var(--text-2); background: var(--line-soft); padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
   .final .wrap { position: relative; }
   .final .dunes { position: relative; display: block; width: 100%; height: 300px; margin-top: 20px; }
   footer { border-top: 1px solid var(--line-soft); color: var(--dim); padding: 34px 0 48px; font-size: 13px; color: var(--dim); }
@@ -497,7 +502,13 @@
   <div class="wrap">
     <h2>Leave it with <em>sand.</em></h2>
     <div class="actions">
-      <span class="install"><span><b>$</b> git clone https://github.com/vaakx-dev/sand</span><button id="copy">Copy</button></span>
+      <div class="get">
+        <span class="install"><span><b>$</b> curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh</span><button data-copy="curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh">Copy</button></span>
+        <span class="install"><span><b>PS&gt;</b> irm https://vaakx-dev.github.io/sand/install.ps1 | iex</span><button data-copy="irm https://vaakx-dev.github.io/sand/install.ps1 | iex">Copy</button></span>
+      </div>
+    </div>
+    <p class="note">Linux and macOS, then Windows. For nightly builds, add <code>-s -- --nightly</code> after <code>sh</code>, or run <code>$env:SAND_CHANNEL='nightly'</code> first in PowerShell.</p>
+    <div class="actions">
       <a class="btn" href="https://github.com/vaakx-dev/sand#readme">Read the docs</a>
     </div>
   </div>
@@ -584,9 +595,11 @@
       board.appendChild(col);
     });
 
-    document.getElementById('copy').addEventListener('click', function () {
-      var b = this; try { navigator.clipboard.writeText('git clone https://github.com/vaakx-dev/sand'); } catch (e) {}
-      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
+    document.querySelectorAll('[data-copy]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        try { navigator.clipboard.writeText(b.getAttribute('data-copy')); } catch (e) {}
+        b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1400);
+      });
     });
   })();
 </script>

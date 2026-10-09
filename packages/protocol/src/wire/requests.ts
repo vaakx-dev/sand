@@ -4,6 +4,7 @@ import type { CreateSession, Entry, ThreadLink } from '../session'
 import type { Prompt } from '../message'
 import type { PluginManifest } from '../plugin-sync'
 import type { Project, ProjectPatch } from '../projects'
+import type { UpdateChannel } from '../releases'
 import type { SessionSettings } from '../settings'
 import type { SyncKind, SyncMode, SyncPick } from '../sync'
 import type { UsageQuery } from '../usage'
@@ -58,11 +59,16 @@ export type WireRequest =
   | { type: 'plugins.local'; plugin: string; local: boolean }
   | { type: 'plugins.exchange'; manifest: PluginManifest }
   | { type: 'plugins.files'; plugin: string }
+  | { type: 'plugins.library' }
+  | { type: 'plugins.customise'; plugin: string }
+  | { type: 'plugins.keep'; plugin: string }
+  | { type: 'plugins.restore'; plugin: string }
   | { type: 'updates.state' }
   | { type: 'updates.check' }
   | { type: 'updates.later' }
-  | { type: 'updates.apply'; source: string; build: string }
-  | { type: 'updates.repair'; source: string }
+  | { type: 'updates.apply'; build: string }
+  | { type: 'updates.channel'; channel: UpdateChannel }
+  | { type: 'updates.repair' }
   | { type: 'sync.state'; path: string }
   | { type: 'sync.inspect'; path: string }
   | { type: 'sync.export'; path: string; kind: SyncKind; have?: string[] }

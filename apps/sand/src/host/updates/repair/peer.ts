@@ -1,5 +1,5 @@
 import { errorMessage } from '@sand/kit'
-import type { BuildInfo, DeviceInfo, HostHealth, PcRepairResult, RemoteRecord, WireRequest } from '@sand/protocol'
+import type { DeviceInfo, HostHealth, PcRepairResult, RemoteRecord, WireRequest } from '@sand/protocol'
 import { parseHealth } from '../../health/peer'
 import { callPeer } from '../../plugin-sync/link/call'
 import { remoteStore } from '../../remotes/store'
@@ -12,7 +12,6 @@ export type PeerCall = (record: RemoteRecord, request: WireRequest, sockets: Set
 export interface RepairDeps {
   home: string
   self: DeviceInfo
-  build(): Promise<BuildInfo>
   call?: PeerCall
 }
 
@@ -81,18 +80,18 @@ export const repairPeer = async (deps: RepairDeps, device: string): Promise<PcRe
   if (device === deps.self.id) throw new Error('This PC cannot repair itself; use Repair on another PC')
   const record = (await remoteStore(deps.home)).get(device)
   if (!record) throw new Error('Unknown PC')
-  const own = (await deps.build()).id
   const call = deps.call ?? callPeer
   const sockets = new Set<WebSocket>()
   const ask: Ask = (request, timeout) => call(record, request, sockets, timeout)
   try {
     let started: unknown
     try {
-      started = await ask({ type: 'updates.repair', source: `pc:${deps.self.id}` }, 30_000)
+      started = await ask({ type: 'updates.repair' }, 60_000)
     } catch (error) {
-      return { device, build: own, ok: false, error: errorMessage(error) }
+      return { device, build: '', ok: false, error: errorMessage(error) }
     }
-    const expected = targetOf(started) ?? own
+    const expected = targetOf(started)
+    if (!expected) return { device, build: '', ok: false, error: `${record.name} did not say which sand build it reinstalls` }
     const state = await waitFinished(ask, parseState(started))
     const outcome = state?.phase === 'idle' ? await waitHealthy(() => readHealth(ask, record.name), { timeout: healthTimeout }) : undefined
     const build = runningBuild(state, outcome) ?? expected
