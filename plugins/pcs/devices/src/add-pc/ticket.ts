@@ -38,8 +38,10 @@ export const installTicket = (ctx: Context<'wire'>) => {
       ticket.set(undefined)
       ctx.wire.call<InstallTicket>({ type: 'install.create' }).then(
         next => {
-          if (current && !closed) ticket.set(next)
-          else ctx.wire.call({ type: 'install.cancel', install: next.id }).catch(() => undefined)
+          if (current && !closed) {
+            error.set(undefined)
+            ticket.set(next)
+          } else ctx.wire.call({ type: 'install.cancel', install: next.id }).catch(() => undefined)
         },
         failure => {
           if (current) error.set(failure)

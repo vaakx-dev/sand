@@ -18,5 +18,5 @@ export const effortBar = (choice: Choice, levels: EffortLevel[], model: ModelInf
     }),
     choice.shown.effort,
     effort => actions.set({ effort }),
-    { label: 'Effort', inset: true, fill: true, class: ['mx-2 mt-2', () => flash.get() && 'ring-2 ring-accent-500'] },
+    { label: 'Effort', inset: true, fill: true, class: ['mx-1 mt-2', () => flash.get() && 'ring-2 ring-accent-500'] },
   )

@@ -1,5 +1,5 @@
 import type { UsageSummary, UsageTotals } from '@sand/protocol'
-import { div, dynamicChild, providerColor, providerIcon, section, segmented, span, table, tbody, td, th, thead, tildeHome, tr, type Child, type Sig } from '@sand/dom'
+import { button, div, dynamicChild, focusable, providerColor, providerIcon, section, segmented, span, table, tbody, td, th, thead, tildeHome, tr, type Child, type Sig } from '@sand/dom'
 import { periodTitle, plural, tokens, tokensOf } from '@sand/kit'
 import { costText, shareText, valueOf, type Metric } from '../../format'
 import { heading } from '../parts'
@@ -38,7 +38,9 @@ const nameCell = (row: Row, fraction: number) =>
     div(
       { class: 'flex min-w-0 items-center gap-2 text-neutral-100', title: row.hint },
       row.mark ?? null,
-      span({ class: 'truncate' }, row.name),
+      row.open
+        ? button({ type: 'button', class: ['truncate rounded-sm text-left hover:underline', focusable] }, row.name)
+        : span({ class: 'truncate' }, row.name),
       row.meta ? span({ class: 'shrink-0 text-xs text-neutral-500' }, row.meta) : null,
     ),
     div({ class: 'mt-2 max-w-48' }, div({ class: 'rounded-full', style: { height: '2px', width: cssPercent(Math.max(fraction, 0.02)), background: row.color } })),

@@ -19,7 +19,7 @@ export const moveOf = (entry: Entry): Move =>
 
 export const movedNote = (move: Move) => (move.draft === undefined ? 'Moved to the selected point' : 'Moved to before this prompt')
 
-export const forkedNote = 'Forked into a new thread.'
+export const forkedNote = 'Forked into a new thread'
 
 export const busyNote = 'Wait for the current turn to finish'
 

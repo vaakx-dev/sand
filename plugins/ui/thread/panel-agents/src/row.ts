@@ -94,6 +94,6 @@ export const agentRow = (row: Sig<AgentRow>, now: Sig<number>, actions: RowActio
           ),
       ),
     ),
-    show(running, () => stopButton(row, actions.cancel)),
+    show(running, () => div({ class: 'flex h-5 shrink-0 items-center' }, stopButton(row, actions.cancel))),
   )
 }

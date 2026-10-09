@@ -1,4 +1,4 @@
-import { copyButton, derive, div, dynamicChild, effect, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
+import { copyButton, derive, div, dynamicChild, effect, errorMessage, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
 import type { HostRoute, InstallProgress, UpdateChannel, UpdateState } from '@sand/protocol'
 import type { Context } from 'drydock'
 import { healthDetails } from '../health/details'
@@ -100,13 +100,19 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
     return field('Reach this PC via', segmented(choices, chosenVia, value => via.set(value), { label: 'Reach via' }))
   }
 
+  const failure = () => {
+    const cause = ticket.error.get()
+    if (cause === undefined) return 'Creating a one-time command…'
+    return `Couldn't create a command: ${errorMessage(cause)}`
+  }
+
   const commandBox = () =>
     div(
       { class: 'flex flex-col gap-2' },
       note(() => (os.get() === 'win' ? 'Open PowerShell on it and paste:' : 'Open a terminal on it and paste:')),
       div(
         { class: 'flex items-start gap-2 rounded-lg bg-neutral-950 py-2 pr-2 pl-3' },
-        span({ class: 'min-w-0 flex-1 py-1 font-mono text-xs text-neutral-200 wrap-anywhere' }, () => command.get() ?? 'Creating a one-time command…'),
+        span({ class: 'min-w-0 flex-1 py-1 font-mono text-xs text-neutral-200 wrap-anywhere' }, () => command.get() ?? failure()),
         copyButton({ text: () => command.get() ?? '', label: 'Copy', disabled: () => !command.get() }),
       ),
     )

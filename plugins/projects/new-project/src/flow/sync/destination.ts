@@ -38,7 +38,7 @@ export const destinationPage = (ctx: FlowContext, sync: Sync, target: CopyTarget
       detail: exists ? `A ${name} folder is already here. Link it instead of copying` : `New folder on ${machine.name}`,
       page: () => copyReviewPage(ctx, sync, plan),
     }
-    return [first, { id: 'destination:elsewhere', icon: 'folder-plus', label: 'Somewhere else...', page: elsewhere }]
+    return [first, { id: 'destination:elsewhere', icon: 'folder-plus', label: 'Somewhere else…', page: elsewhere }]
   }
 
   return {

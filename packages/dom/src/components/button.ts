@@ -16,7 +16,7 @@ const squares: Record<Size, string> = {
   md: 'h-8 w-8 rounded-lg',
 }
 
-const focusable = 'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent-500 disabled:pointer-events-none disabled:opacity-50'
+export const focusable = 'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent-500 disabled:pointer-events-none disabled:opacity-50'
 
 const toggled = (active: MaybeReactive<boolean>, rest: string) => () => (read(active) ? 'bg-neutral-700 text-neutral-100' : rest)
 

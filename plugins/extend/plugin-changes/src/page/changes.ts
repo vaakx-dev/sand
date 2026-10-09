@@ -11,6 +11,8 @@ interface OfferGroup {
 
 const tags: Record<PluginChangeKind, Tone> = { changed: 'warning', new: 'accent', removed: 'neutral' }
 
+const labels: Record<PluginChangeKind, string> = { changed: 'Changed', new: 'New', removed: 'Removed' }
+
 const groupOffers = (offers: PluginOffer[]) => {
   const groups = new Map<string, OfferGroup>()
   for (const offer of offers) {
@@ -37,7 +39,7 @@ const offerRow = (source: PluginSource, offer: Sig<PluginOffer>, busy: () => boo
     span(
       { class: 'flex min-w-0 items-center gap-2' },
       span({ class: 'truncate' }, () => offer.get().plugin),
-      badge(tags[offer.get().kind], offer.get().kind),
+      badge(tags[offer.get().kind], labels[offer.get().kind]),
     ),
     secondaryAction(
       {

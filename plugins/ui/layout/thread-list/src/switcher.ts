@@ -28,7 +28,7 @@ export const switcher = (nav: NavList, changes: Pulse, create: () => void) => {
   }
 
   const field = select(
-    { class: 'max-w-sm rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-100', bindValue: choice, onChange: pick },
+    { class: 'max-w-sm rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-100', 'aria-label': 'Thread', bindValue: choice, onChange: pick },
     list(items, item => item.id, (item: Sig<NavItem | typeof fresh>) => option({ value: item.get().id }, item.map(label))),
   )
 

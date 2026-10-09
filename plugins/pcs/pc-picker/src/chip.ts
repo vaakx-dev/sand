@@ -1,4 +1,4 @@
-import { button, derive, div, dot, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, derive, div, dot, dynamicChild, focusable, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
@@ -6,7 +6,7 @@ import { refreshGroup } from './refresh'
 import { currentTarget, hasMessages, type PickerContext } from './target'
 
 const look =
-  'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200'
+  'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm transition-colors hover:bg-neutral-700 hover:text-neutral-200 ' + focusable
 
 const above = {
   left: '0',

@@ -39,7 +39,7 @@ export const pageHead = (model: PageModel) => {
   return div(
     { class: 'flex h-12 shrink-0 items-center gap-3 pr-3 pl-5 text-neutral-400' },
     lead(model),
-    titled ? span({ class: 'shrink-0 rounded-md bg-neutral-700 px-2 text-xs text-neutral-300' }, page.title) : null,
+    titled ? span({ class: 'truncate rounded-md bg-neutral-700 px-2 text-xs text-neutral-300', style: { maxWidth: '40%' }, title: page.title }, page.title) : null,
     entry(model),
     page.field ? submitButton(model) : null,
   )

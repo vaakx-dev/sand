@@ -33,7 +33,7 @@ const brokenRow = (account: LoginAccount, signIn: (provider: LoginProvider) => v
   accountRow(
     accountLogo(account.provider),
     account.subscription,
-    span({ class: 'text-warning-400' }, account.error ?? ''),
+    span({ class: 'text-danger-400' }, account.error ?? ''),
     secondaryAction({ size: 'sm', onClick: () => signIn(account.provider) }, 'Sign in again'),
   )
 

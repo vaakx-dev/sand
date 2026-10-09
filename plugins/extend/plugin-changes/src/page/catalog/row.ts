@@ -6,7 +6,7 @@ import { changedNote, type RowActions } from './warning'
 const tones: Record<PluginOrigin, Tone> = { builtin: 'neutral', customised: 'accent', yours: 'success' }
 
 const control = (plugin: PluginEntry, actions: RowActions) => {
-  if (plugin.origin === 'customised') return rowAction({ label: 'Use built-in', danger: true, run: () => actions.restore(plugin) })
+  if (plugin.origin === 'customised') return rowAction({ label: 'Use built-in', danger: true, disabled: actions.busy, run: () => actions.restore(plugin) })
   if (plugin.origin === 'builtin')
     return secondaryAction({ size: 'sm', disabled: actions.busy, onClick: () => actions.customise(plugin) }, 'Customise')
   return null

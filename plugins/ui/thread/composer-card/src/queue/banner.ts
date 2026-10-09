@@ -79,7 +79,7 @@ export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => 
       ),
       show(hasImage, () => img({ class: 'h-4 w-4 shrink-0 rounded-sm', style: { objectFit: 'cover' }, src: () => preview(imageOf(item().prompt)!) ?? '', alt: '' })),
       span({ class: 'min-w-0 flex-1 truncate' }, () => item().label),
-      show(steer, () => badge('neutral', 'next step')),
+      show(steer, () => badge('neutral', 'Next step')),
       show(queued, () => iconButton({ size: 'sm', title: 'Edit', onClick: () => model.edit(item()) }, icon('pencil', 13))),
       show(queued, () =>
         quietButton({ size: 'sm', onClick: () => act(thread => ctx.turns.promote(thread, item().id)) }, icon('promote', 13), () => (model.running.get() ? 'Steer' : 'Send now')),

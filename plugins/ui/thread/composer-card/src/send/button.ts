@@ -1,4 +1,4 @@
-import { button, delayed, derive, div, dropdown, dynamicChild, icon, iconButton, popoverItem, show, span, spinner, type Sig } from '@sand/dom'
+import { button, delayed, derive, div, dropdown, dynamicChild, focusable, icon, iconButton, popoverItem, show, span, spinner, type Sig } from '@sand/dom'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
@@ -84,7 +84,7 @@ export const sendControl = (model: Model) => {
         type: 'button',
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
-        class: ['inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors', () => tone(look.get())],
+        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', focusable, () => tone(look.get())],
         onClick: () => void model.send(),
       },
       dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),

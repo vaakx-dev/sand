@@ -1,4 +1,4 @@
-import { copyButton, div, dynamicChild, p, sig, stop, span, type Child } from '@sand/dom'
+import { copyButton, div, dynamicChild, p, rowButton, sig, span, type Child } from '@sand/dom'
 import { routeKind, routeLabel } from '@sand/kit'
 import type { PairInvite } from '@sand/protocol'
 import { linkText } from '../components'
@@ -34,14 +34,13 @@ const qrText: Record<InviteFor, string> = {
 
 const linkRow = (url: string, chosen: () => boolean, choose: () => void) =>
   div(
-    {
-      title: 'Show QR code',
-      class: ['flex cursor-pointer items-center gap-3 rounded-lg py-2 pr-2 pl-3', () => (chosen() ? 'bg-neutral-700' : 'hover:bg-neutral-700')],
-      onClick: choose,
-    },
-    span({ class: 'w-16 shrink-0 truncate text-xs text-neutral-500 sm:w-24' }, routeLabel(routeKind(url), url)),
-    linkText(url),
-    div({ onClick: stop }, copyButton({ text: () => url, label: 'Copy' })),
+    { class: ['flex items-center gap-3 rounded-lg py-2 pr-2 pl-3', () => (chosen() ? 'bg-neutral-700' : 'hover:bg-neutral-700')] },
+    rowButton(
+      { title: 'Show QR code', class: 'gap-3 rounded-md', 'aria-pressed': () => String(chosen()), onClick: choose },
+      span({ class: 'w-16 shrink-0 truncate text-xs text-neutral-500 sm:w-24' }, routeLabel(routeKind(url), url)),
+      linkText(url),
+    ),
+    copyButton({ text: () => url, label: 'Copy' }),
   )
 
 const qrPanel = (link: string, kind: InviteFor) =>

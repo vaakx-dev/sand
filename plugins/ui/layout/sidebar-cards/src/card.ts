@@ -1,5 +1,5 @@
 import type { NavAction, NavItem, NavList } from '@sand/protocol'
-import { ago, color, derive, div, dot, dynamicChild, elapsed, exactTime, icon, iconButton, intent, keys, navStatus, projectIcon, show, span, stopThen, tildeHome, working, type Reorder, type Sig } from '@sand/dom'
+import { ago, color, derive, div, dot, dynamicChild, elapsed, exactTime, focusable, icon, iconButton, intent, keys, navStatus, projectIcon, show, span, stopThen, tildeHome, working, type Reorder, type Sig } from '@sand/dom'
 
 export type CardRow = { group: string; list: NavList; item: NavItem; selected: boolean }
 
@@ -29,7 +29,7 @@ const status = (item: Sig<NavItem>, minute: Sig<number>) =>
         span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
       )
     }
-    if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, dot('warning'), span({ class: 'text-warning-400' }, 'needs you'))
+    if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, dot('warning'), span({ class: 'font-medium text-warning-400' }, 'Needs you'))
     if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, icon('pencil', 11), 'Draft')
     if (kind === 'unread') return span({ class: 'text-orange-400', title: navStatus(item.get()) }, '✦ new')
     const age = derive(() => {
@@ -63,7 +63,8 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       tabIndex: 0,
       'aria-current': selected,
       class: [
-        'group relative mb-1 block w-full cursor-pointer rounded-lg px-3 py-2 transition',
+        focusable,
+        'group relative mb-1 block w-full rounded-lg px-3 py-2 transition',
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
       ],
       onClick: () => pick(row.get()),

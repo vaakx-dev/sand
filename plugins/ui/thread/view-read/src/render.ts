@@ -15,6 +15,13 @@ const parse = (tool: ToolView) => {
   return { lines, tail: rows.at(-1)?.startsWith('…') ? rows.at(-1) : undefined }
 }
 
+const hiddenNote = (capped: number, tail: string | undefined) => {
+  const cut = Number(/\d+/.exec(tail ?? '')?.[0])
+  if (tail && Number.isNaN(cut)) return div({ class: 'mt-1 text-neutral-500' }, tail)
+  const total = Math.max(capped, 0) + (tail ? cut : 0)
+  return total > 0 && truncatedNote(total, 'after')
+}
+
 const language = (path: string) => /\.([\w]+)$/.exec(path)?.[1] ?? ''
 
 const media = (tool: ToolView) => tool.result?.content.find(block => block.type !== 'text')
@@ -55,7 +62,7 @@ export const readRenderer: ToolRenderer = {
           el('pre', { class: 'text-neutral-300' }, code),
         ),
       ),
-      lines.length > shownLines ? truncatedNote(lines.length - shownLines, 'after') : tail && div({ class: 'mt-1 text-neutral-500' }, tail),
+      hiddenNote(lines.length - shownLines, tail),
     )
   },
 }

@@ -7,7 +7,8 @@ import { paceOf, paces } from './pace'
 export const statusBadge = (status?: string) => {
   if (!status || status === 'allowed') return null
   if (status === 'rejected') return badge('danger', 'Limit reached')
-  return badge('warning', status === 'allowed_warning' ? 'Near limit' : status.replaceAll('_', ' '))
+  const text = status.replaceAll('_', ' ')
+  return badge('warning', status === 'allowed_warning' ? 'Near limit' : text.charAt(0).toUpperCase() + text.slice(1))
 }
 
 const paceMark = (window: LimitWindow, now: Sig<number>) =>

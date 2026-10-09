@@ -43,7 +43,7 @@ export const lineView = (line: Sig<Line>, options: StepOptions) => {
   return div(
     { class: 'flex gap-3' },
     span({ class: ['hidden w-12 shrink-0 text-neutral-500 md:block', aligned] }, () => time(line.get().at)),
-    span({ class: () => ['w-16 shrink-0 truncate', aligned, tones[line.get().tone] ?? 'text-neutral-400'] }, () => line.get().tag),
+    span({ class: () => ['w-16 shrink-0 truncate', aligned, tones[line.get().tone] ?? 'text-neutral-400'], title: () => line.get().tag }, () => line.get().tag),
     tool ? toolCell(line, options) : textCell(line),
   )
 }

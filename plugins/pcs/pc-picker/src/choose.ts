@@ -7,7 +7,7 @@ import { deviceOf, refOf, type PickerContext } from './target'
 const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machine, location: ProjectEntry) => {
   const source = newerSource(ctx, group, location)
   if (!source || !ctx.sync) return true
-  ctx.notify?.push(`Sending the newer work from ${source.machine.name} to ${machine.name} first`)
+  ctx.notify?.push(`Sending the changes from ${source.machine.name} to ${machine.name}…`)
   try {
     const applied = await ctx.sync.send(refOf(source.entry), refOf(location))
     if (applied.result !== 'conflicts') return true

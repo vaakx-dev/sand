@@ -16,7 +16,7 @@ const fastRow = (choice: Choice, actions: Actions) => {
   const { shown } = choice
   const on = shown.speed === 'fast'
   return div(
-    { class: 'mt-1 flex items-center gap-3 rounded-lg px-3 py-2' },
+    { class: 'mx-1 mt-1 flex items-center gap-3 rounded-lg px-3 py-2' },
     span({ class: ['min-w-0 flex-1 text-sm font-medium', shown.supportsFast ? 'text-neutral-300' : 'text-neutral-500'] }, 'Fast mode'),
     toggleSwitch({ on, disabled: !shown.supportsFast, 'aria-label': 'Fast mode', onClick: () => actions.set({ speed: on ? 'normal' : 'fast' }) }),
   )

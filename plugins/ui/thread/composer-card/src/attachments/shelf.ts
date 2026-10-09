@@ -31,7 +31,7 @@ const fileRow = (files: Files, item: Sig<Attached>) => {
       dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(value === 'pdf' ? 'file-text' : 'file', 15)))),
     ),
     span({ class: ['min-w-0 flex-1 truncate', () => (failed() ? 'text-danger-300' : '')] }, () => item.get().name),
-    span({ class: ['shrink-0 text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] }, () => item.get().error ?? (item.get().loading ? 'Reading…' : size(item.get().bytes))),
+    span({ class: ['shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')], style: { maxWidth: '50%' } }, () => item.get().error ?? (item.get().loading ? 'Reading…' : size(item.get().bytes))),
     iconButton({ size: 'sm', title: 'Remove', onClick: () => files.remove(item.get().id) }, icon('x', 13)),
   )
 }

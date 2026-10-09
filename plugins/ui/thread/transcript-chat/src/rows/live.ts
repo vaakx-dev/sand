@@ -14,7 +14,7 @@ export const toolLine = (step: Sig<ToolStep>, context: RowContext) => {
   return div(
     { class: line },
     span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon(renderer().icon, 14)),
-    span({ class: 'shrink-0' }, () => renderer().activeVerb),
+    span({ class: 'shrink-0 text-xs' }, () => renderer().activeVerb),
     span({ class: 'min-w-0 truncate font-mono text-xs text-neutral-200', title: label }, shine(label)),
   )
 }

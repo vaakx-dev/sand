@@ -1,5 +1,5 @@
 import type { PairedDevice } from '@sand/protocol'
-import { ago, clock, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, type Sig } from '@sand/dom'
+import { ago, clock, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 
@@ -17,7 +17,7 @@ const phoneRow = (ctx: Context, source: DeviceSource, device: Sig<PairedDevice>,
   const { id, kind } = device.get()
   const label = span(
     { class: 'flex min-w-0 items-center gap-2' },
-    span({ class: 'shrink-0 text-neutral-400' }, icon(kind === 'phone' ? 'smartphone' : 'monitor', 15)),
+    tile(icon(kind === 'phone' ? 'smartphone' : 'monitor', 16)),
     span({ class: 'truncate' }, () => device.get().name),
   )
   const detail = () => {

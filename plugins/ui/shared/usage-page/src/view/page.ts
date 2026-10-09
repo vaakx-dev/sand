@@ -14,9 +14,13 @@ const body = (model: UsageModel, openThread?: (id: string) => void) =>
     derive(() => ({ view: model.view.get(), summary: model.loader.summary.get(), failure: model.loader.failure.get() })),
     ({ view, summary, failure }) => {
       if (!summary) return pending(failure)
-      if (view === 'limits') return dynamicChild(model.providers, providers => limitsView(providers, model.now))
-      if (!summary.total.turns) return note('No usage in this range')
-      return spendView(summary, view, model.breakdown, openThread)
+      const content =
+        view === 'limits'
+          ? dynamicChild(model.providers, providers => limitsView(providers, model.now))
+          : !summary.total.turns
+            ? note('No usage in this range')
+            : spendView(summary, view, model.breakdown, openThread)
+      return failure ? div({ class: 'flex flex-col gap-4' }, note(failure), content) : content
     },
   )
 

@@ -14,8 +14,8 @@ export const row = <T>(item: PickItem<T>, position: Sig<number>, { box, tree, ro
     position,
     {},
     item.prefix && span({ class: 'shrink-0 whitespace-pre font-mono text-xs text-neutral-500', hidden: tree.map(open => !open) }, item.prefix),
-    span({ class: ['min-w-0 flex-1 truncate', item.tone && tones[item.tone]] }, item.label),
-    item.detail && span({ class: 'max-w-48 shrink-0 truncate text-xs text-neutral-500 tabular-nums' }, item.detail),
+    span({ class: ['min-w-0 flex-1 truncate', item.tone && tones[item.tone]], title: item.label }, item.label),
+    item.detail && span({ class: 'max-w-48 shrink-0 truncate text-xs text-neutral-500 tabular-nums', title: item.detail }, item.detail),
     rowActions.length > 0 &&
       show(
         derive(() => !fine.get() || box.isSelected(position.get())),

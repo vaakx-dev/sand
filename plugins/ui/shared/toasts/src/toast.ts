@@ -41,7 +41,7 @@ export const toastView = (entry: Sig<Toast>, close: (toast: Toast) => void) => {
       onMouseEnter: () => cancel?.(),
       onMouseLeave: wait,
     },
-    error && span({ class: 'mt-1 inline-flex shrink-0 text-danger-400' }, icon('alert', 15)),
+    error && span({ class: 'mt-1 flex h-5 shrink-0 items-center text-danger-400' }, icon('alert', 15)),
     div(
       { class: 'min-w-0 flex-1 py-1' },
       span({ class: 'block max-h-48 overflow-auto whitespace-pre-wrap wrap-anywhere' }, toast.text),

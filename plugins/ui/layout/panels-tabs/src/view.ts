@@ -52,13 +52,15 @@ export const panelsView = (parts: PanelsParts) => {
       style: () => (surface.floating() ? { top: '0', right: '0', bottom: '0' } : null),
     },
     div(
-      { class: 'flex h-12 shrink-0 items-center gap-1 overflow-auto pl-4 pr-3 scrollbar-none' },
+      { class: 'flex h-12 shrink-0 items-center gap-1 pl-4 pr-3' },
       show(
         derive(() => surface.narrow()),
-        () => quietButton({ onClick: parts.hide, class: 'mr-1 text-neutral-300' }, icon('back', 15), 'Chat'),
+        () => quietButton({ onClick: parts.hide, class: 'mr-1 shrink-0 text-neutral-300' }, icon('back', 15), 'Chat'),
       ),
-      list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),
-      div({ class: 'min-w-2 flex-1' }),
+      div(
+        { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
+        list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),
+      ),
       show(
         derive(() => surface.floating()),
         () => iconButton({ title: 'Close panel', onClick: parts.hide }, icon('x', 15)),

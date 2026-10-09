@@ -27,6 +27,7 @@ export { copyText } from './integrations/clipboard'
 export { style } from './integrations/style'
 export {
   controlButton,
+  focusable,
   iconButton,
   navButton,
   primaryAction,

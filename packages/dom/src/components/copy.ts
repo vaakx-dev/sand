@@ -1,11 +1,11 @@
-import { dynamicChild, onTimeout, sig, type Props } from '@vaakx-dev/vrui'
+import { dynamicChild, onTimeout, sig } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { copyText } from '../integrations/clipboard'
-import { iconButton, quietButton } from './button'
+import { iconButton, quietButton, type ButtonProps } from './button'
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-export type CopyProps = Props<HTMLButtonElement> & { text: () => string; label?: string }
+export type CopyProps = ButtonProps & { text: () => string; label?: string }
 
 const resetAfter = 1500
 
@@ -22,6 +22,6 @@ export const copyButton = ({ text, label, ...props }: CopyProps) => {
   }
   const glyph = (size: number) => dynamicChild(state, value => icon(value === 'copied' ? 'check' : 'copy', size))
   if (!label)
-    return iconButton({ size: 'sm', title: () => words[state.get()] || 'Copy', 'aria-label': 'Copy', ...props, onClick: () => void copy() }, glyph(13))
+    return iconButton({ size: 'sm', title: () => words[state.get()] || 'Copy', 'aria-label': () => words[state.get()] || 'Copy', ...props, onClick: () => void copy() }, glyph(13))
   return quietButton({ size: 'sm', ...props, onClick: () => void copy() }, glyph(12), () => words[state.get()] || label)
 }

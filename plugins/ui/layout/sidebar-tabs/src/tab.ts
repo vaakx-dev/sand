@@ -1,5 +1,5 @@
 import type { NavAction, NavItem } from '@sand/protocol'
-import { button, dot, dynamicChild, effect, icon, iconButton, intent, navActionIcon, navSlot, navTip, projectIcon, span, working, type NavEntry, type Reorder, type Sig } from '@sand/dom'
+import { button, dot, dynamicChild, effect, focusable, icon, iconButton, intent, navActionIcon, navSlot, navTip, projectIcon, span, working, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const mark = (item: NavItem) => {
   if (item.state === 'running') return working()
@@ -16,6 +16,7 @@ export const tabButton = (entry: Sig<NavEntry>, drag: Reorder) => {
     {
       type: 'button',
       class: () => [
+        focusable,
         'inline-flex h-8 max-w-40 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-xs md:max-w-48',
         entry.get().selected ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-300',
       ],

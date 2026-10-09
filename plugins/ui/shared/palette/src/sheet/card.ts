@@ -1,5 +1,5 @@
 import type { PaletteCard, PaletteReview } from '@sand/protocol'
-import { button, delayed, div, icon, show, span, spinner, type Sig } from '@sand/dom'
+import { button, delayed, div, focusable, icon, show, span, spinner, type Sig } from '@sand/dom'
 
 export const cardView = (card: PaletteCard) =>
   div(
@@ -34,7 +34,7 @@ export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: 
       {
         type: 'button',
         disabled: busy,
-        class: 'flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent-500 text-sm font-medium text-white hover:bg-accent-600 disabled:opacity-50',
+        class: ['flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent-500 text-sm font-medium text-white hover:bg-accent-600', focusable],
         onClick: confirm,
       },
       show(waiting, () => spinner()),

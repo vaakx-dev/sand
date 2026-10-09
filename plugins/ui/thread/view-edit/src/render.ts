@@ -7,7 +7,7 @@ const shownLines = 160
 
 const lines = (tool: ToolView): DiffLine[] => {
   const input = tool.call.input
-  if (tool.call.name === 'write') return field(input, 'content').split('\n').map(text => ({ kind: 'add', text }))
+  if (tool.call.name === 'write') return field(input, 'content').replace(/\n$/, '').split('\n').map(text => ({ kind: 'add', text }))
   return diffLines(field(input, 'old_string'), field(input, 'new_string'), { context: 2 })
 }
 

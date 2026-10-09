@@ -2,7 +2,7 @@ import { preview, type UserPart } from '@sand/conversation'
 import { div, el, icon, span } from '@sand/dom'
 import { row, type RowMaker } from './row'
 
-const chip = 'inline-flex h-8 items-center gap-2 rounded-lg px-3 text-xs'
+const chip = 'inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs'
 
 const attachment = (part: UserPart) => {
   if (part.kind === 'image')
@@ -12,8 +12,16 @@ const attachment = (part: UserPart) => {
       alt: part.block.name ?? 'image',
       title: part.block.name ?? '',
     })
-  if (part.kind === 'document') return span({ class: [chip, 'bg-neutral-800 text-neutral-300'] }, span({ class: 'text-neutral-500' }, icon('file', 13)), part.block.name ?? 'document')
-  if (part.kind === 'skill') return span({ class: [chip, 'bg-accent-950 text-accent-400'] }, icon('sparkles', 13), part.name)
+  if (part.kind === 'document') {
+    const name = part.block.name ?? 'document'
+    return span(
+      { class: [chip, 'bg-neutral-800 text-neutral-300'], title: name },
+      span({ class: 'shrink-0 text-neutral-500' }, icon('file', 13)),
+      span({ class: 'min-w-0 truncate' }, name),
+    )
+  }
+  if (part.kind === 'skill')
+    return span({ class: [chip, 'bg-accent-950 text-accent-400'], title: part.name }, span({ class: 'shrink-0' }, icon('sparkles', 13)), span({ class: 'min-w-0 truncate' }, part.name))
   return null
 }
 

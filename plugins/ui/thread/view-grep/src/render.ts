@@ -6,7 +6,11 @@ import { plural } from '@sand/kit'
 const shownRows = 200
 const match = /^(.*?):(\d+): (.*)$/
 
-const rows = (tool: ToolView) => resultText(tool.result).split('\n').filter(Boolean)
+const allRows = (tool: ToolView) => resultText(tool.result).split('\n').filter(Boolean)
+
+const rows = (tool: ToolView) => allRows(tool).filter(row => !row.startsWith('…'))
+
+const stopRow = (tool: ToolView) => allRows(tool).find(row => row.startsWith('…'))
 
 const marked = (text: string, pattern: RegExp | undefined): Child[] => {
   if (!pattern) return [text]
@@ -35,14 +39,14 @@ const grouped = (tool: ToolView) => {
   for (const row of rows(tool).slice(0, shownRows)) {
     const found = match.exec(row)
     if (!found) {
-      loose.push(div({ class: 'mt-2 text-neutral-500' }, row))
+      loose.push(div({ class: 'mt-2 text-neutral-500 wrap-anywhere' }, row))
       continue
     }
     const list = files.get(found[1]!) ?? []
     list.push(div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, found[2]!), span({ class: 'wrap-anywhere' }, marked(found[3]!, pattern))))
     files.set(found[1]!, list)
   }
-  return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-300' }, file), hits)), ...loose]
+  return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-300 wrap-anywhere' }, file), hits)), ...loose]
 }
 
 const empty = (tool: ToolView) => /^No (matches|files found)$/.test(resultText(tool.result))
@@ -50,9 +54,11 @@ const empty = (tool: ToolView) => /^No (matches|files found)$/.test(resultText(t
 const box = (tool: ToolView, content: Child) => {
   const text = resultText(tool.result)
   const hidden = rows(tool).length - shownRows
+  const stop = stopRow(tool)
   return div(
     fold({ lines: Math.min(rows(tool).length, shownRows), copy: () => text }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
     hidden > 0 && truncatedNote(hidden, 'after'),
+    stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
   )
 }
 
@@ -93,5 +99,5 @@ export const globRenderer: ToolRenderer = {
     return plural(count, 'file')
   },
   copy: tool => field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap' }, rows(tool).slice(0, shownRows).join('\n'))),
+  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, rows(tool).slice(0, shownRows).join('\n'))),
 }

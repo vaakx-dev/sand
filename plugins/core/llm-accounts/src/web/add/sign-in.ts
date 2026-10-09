@@ -63,7 +63,7 @@ const pasteView = (account: () => LoginAccount | undefined, pending: Paste, cont
       onKeyDown: keys({ Enter: () => ready() && void finish() }),
     }),
     problem(account),
-    actions(copyButton({ text: () => pending.url, label: 'Copy link' }), primaryAction({ disabled: () => !ready(), onClick: () => void finish() }, 'Sign in')),
+    actions(copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }), primaryAction({ disabled: () => !ready(), onClick: () => void finish() }, 'Sign in')),
   )
 }
 

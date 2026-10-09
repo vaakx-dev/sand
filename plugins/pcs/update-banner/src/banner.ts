@@ -13,7 +13,7 @@ const text = (title: string, subtitle?: string) =>
   div(
     { class: 'flex min-w-0 flex-1 items-baseline gap-2' },
     span({ class: 'truncate text-neutral-100' }, title),
-    subtitle ? span({ class: 'truncate text-xs text-neutral-400' }, subtitle) : null,
+    subtitle ? span({ class: 'truncate text-xs text-neutral-400', title: subtitle }, subtitle) : null,
   )
 
 const later = (source: UpdateSource) =>

@@ -82,7 +82,7 @@ export const chartView = (summary: UsageSummary, metric: Metric) => {
       ),
     ),
     div(
-      { class: 'flex justify-between gap-2 pl-12 text-xs text-neutral-500 uppercase' },
+      { class: 'flex justify-between gap-2 pl-12 text-xs text-neutral-500' },
       span({ class: 'pl-2' }, periodLabel(keys[0]!, summary.bucket)),
       keys.length > 2 ? span(periodLabel(keys[middle]!, summary.bucket)) : null,
       keys.length > 1 ? span(periodLabel(keys.at(-1)!, summary.bucket)) : null,

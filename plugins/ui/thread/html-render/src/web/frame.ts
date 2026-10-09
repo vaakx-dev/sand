@@ -50,6 +50,9 @@ export const htmlFrame = (wire: Wire, thread: string, data: HtmlRenderEntry) => 
       onMount: () => listenToFrame(frame, { resize, open: openTab }),
     },
     show(failed.map(failing => !failing), () => frame),
+    show(failed.map(failing => !failing), () =>
+      show(page.data.map(html => html === undefined), () => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-neutral-500' }, 'loading…')),
+    ),
     show(failed, () => failure(data.title)),
   )
 }

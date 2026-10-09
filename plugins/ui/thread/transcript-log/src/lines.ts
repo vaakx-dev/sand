@@ -62,7 +62,7 @@ export const itemLines = (item: Item, registry: RendererRegistry, thread: string
     case 'notice':
       return [{ key: item.key, tag: '·', tone: item.tone === 'error' ? 'bad' : 'dim', text: item.text }]
     case 'live':
-      return [{ key: item.key, tag: '·', tone: 'dim', text: 'Thinking' }]
+      return [{ key: item.key, tag: '·', tone: 'dim', text: 'thinking…' }]
     case 'custom': {
       const node = registry.entryRenderer(item.entry.type)?.(item.entry, thread)
       return node ? [{ key: item.key, at: item.entry.at, tag: item.entry.type, tone: 'dim', text: '', node }] : []

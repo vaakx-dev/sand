@@ -4,7 +4,7 @@ import type { Context } from 'drydock'
 interface Entry {
   label: string
   icon: string
-  run(): void
+  run(): void | Promise<void>
 }
 
 const separator = () => div({ class: 'mx-2 my-1 border-t border-neutral-700' })
@@ -38,11 +38,18 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
         ...(thread.info.kind === 'agent'
           ? []
           : [
-              ...command('fork', 'Fork from a message…', 'fork'),
+              ...command('fork', 'Fork from an earlier message', 'fork'),
               ...command('clone', 'Duplicate thread', 'duplicate'),
               ...command('continue', 'Continue on another PC…', 'monitor'),
             ]),
-        { label: 'Copy link', icon: 'link', run: () => void copyText(location.href) },
+        {
+          label: 'Copy link',
+          icon: 'link',
+          run: async () => {
+            const copied = await copyText(location.href)
+            ctx.notify?.push(copied ? 'Copied link' : 'Could not copy the link', { level: copied ? 'info' : 'error' })
+          },
+        },
       ]
     : []
   const app = [...command('devices', 'Connect a device', 'smartphone'), ...command('extensions', 'Interface', 'gear')]
