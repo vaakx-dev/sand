@@ -1,0 +1,20 @@
+{
+  "name": "@sand/plugin-changes",
+  "version": "0.0.0",
+  "description": "Shows plugin changes from your other PCs and which plugins stay on this PC",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Plugin sync",
+    "summary": "Review plugin changes from your other PCs and keep some plugins on this PC only",
+    "uses": {
+      "settings": "no Plugins settings page",
+      "notify": "no message when another PC changes a plugin"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "workspace:*"
+  }
+}
