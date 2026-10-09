@@ -17,14 +17,13 @@ const core = [
   'workflows',
   'extend',
   'reload',
-  'remotes',
   'html-render',
   'html-preview',
 ]
 
 const commands = ['sessions-ui', 'session-info', 'usage', 'panel-tree', 'panel-changes']
 
-const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups']
+const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups', 'ask']
 
 export interface ModeSetup {
   plugins: string[]
