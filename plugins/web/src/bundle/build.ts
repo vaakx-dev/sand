@@ -34,17 +34,23 @@ const compile = async (id: string, extensions: Extension[], bundled: Extension[]
   return { script: await output.outputs[0]!.text(), bundled: bundled.map(extension => extension.id) }
 }
 
+const placeholder = 'sand-build-id-placeholder'
+
+const stamp = (script: string) => {
+  const id = Bun.hash(script).toString(36)
+  return { id, script: script.replaceAll(placeholder, id) }
+}
+
 export const bundle = async (extensions: Extension[]): Promise<Bundle> => {
-  const id = Bun.randomUUIDv7()
   const wanted = extensions.filter(extension => extension.builtin || extension.enabled)
-  const full = await compile(id, extensions, wanted, [])
-  if (full.script) return { id, script: full.script, tried: full.bundled, bundled: full.bundled, problems: [] }
-  const alone = await Promise.all(wanted.map(extension => compile(id, extensions, [extension], [])))
+  const full = await compile(placeholder, extensions, wanted, [])
+  if (full.script) return { ...stamp(full.script), tried: full.bundled, bundled: full.bundled, problems: [] }
+  const alone = await Promise.all(wanted.map(extension => compile(placeholder, extensions, [extension], [])))
   const broken = new Set(wanted.filter((_, index) => !alone[index]!.script))
   const problems = broken.size
     ? wanted.flatMap((extension, index) => (broken.has(extension) ? [`Could not build the web extension ${extension.id}:\n${alone[index]!.error}`] : []))
     : [`Could not build the web extensions:\n${full.error}`]
-  const safe = await compile(id, extensions, wanted.filter(extension => !broken.has(extension) && (broken.size > 0 || extension.builtin)), problems)
-  if (safe.script) return { id, script: safe.script, tried: wanted.map(extension => extension.id), bundled: safe.bundled, problems }
+  const safe = await compile(placeholder, extensions, wanted.filter(extension => !broken.has(extension) && (broken.size > 0 || extension.builtin)), problems)
+  if (safe.script) return { ...stamp(safe.script), tried: wanted.map(extension => extension.id), bundled: safe.bundled, problems }
   throw new Error(`${problems.join('\n\n')}\n\nThe remaining extensions also failed:\n${safe.error}`)
 }

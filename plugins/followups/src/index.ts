@@ -12,6 +12,7 @@ export default definePlugin({
   async apply(ctx) {
     const store = await createStore(sandHome(ctx))
     let live = true
+    let draining = false
     ctx.effect(() => () => {
       live = false
     })
@@ -36,7 +37,7 @@ export default definePlugin({
       add(session, prompt, label) {
         const item: Pending = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt, at: Date.now() }
         change(session, [...store.get(session.id), item])
-        if (!ctx.loop.active(session)) queueMicrotask(() => next(session))
+        if (!draining && !ctx.loop.active(session)) queueMicrotask(() => next(session))
         return item
       },
       remove: (session, id) => Boolean(take(session, id)),
@@ -56,15 +57,20 @@ export default definePlugin({
         return true
       },
       send(session, id) {
-        const item = take(session, id)
+        const item = store.get(session.id).find(item => item.id === id)
         if (!item) return false
+        if (draining) {
+          if (ctx.loop.steer(session, item.prompt, item.label)) take(session, id)
+          return true
+        }
+        take(session, id)
         if (!ctx.loop.steer(session, item.prompt, item.label)) start(session, item)
         return true
       },
     }
 
     const next = (session: Session) => {
-      if (!live || ctx.loop.active(session)) return
+      if (!live || draining || ctx.loop.active(session)) return
       const [first] = store.get(session.id)
       if (first && take(session, first.id)) start(session, first)
     }
@@ -74,6 +80,18 @@ export default definePlugin({
       queueMicrotask(() => next(session))
     })
     ctx.on('session.remove', session => store.set(session.id, []))
+    ctx.on('runtime.drain', () => {
+      draining = true
+    })
+    ctx.on('runtime.release', async ids => {
+      for (const id of ids) {
+        await store.refresh(id)
+        const session = ctx.sessions.open(id)
+        if (!session || !live) continue
+        ctx.emit('turn.queue', session)
+        next(session)
+      }
+    })
     ctx.provide('followUps', followUps)
     serveQueue(ctx, followUps)
   },

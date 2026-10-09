@@ -1,9 +1,15 @@
 import type { ServerInfo, ServerMessage, WireRequest } from '@sand/protocol'
-import { socketUrl } from '@sand/kit'
+import { requestTicket, ticketSocketUrl } from '@sand/kit'
 
-export const ask = <T>({ url, token }: Pick<ServerInfo, 'url' | 'token'>, request: WireRequest, timeout = 15_000) =>
-  new Promise<T>((resolve, reject) => {
-    const socket = new WebSocket(socketUrl(url, token))
+const openSocket = async (url: string, key: string) => {
+  const ticket = await requestTicket(url, key)
+  if (!ticket) throw new Error('sand refused this key')
+  return new WebSocket(ticketSocketUrl(url, ticket.ticket))
+}
+
+export const ask = async <T>({ url, key }: Pick<ServerInfo, 'url' | 'key'>, request: WireRequest, timeout = 15_000) => {
+  const socket = await openSocket(url, key)
+  return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => finish(new Error('sand did not answer')), timeout)
     const finish = (error?: Error, result?: T) => {
       clearTimeout(timer)
@@ -20,3 +26,4 @@ export const ask = <T>({ url, token }: Pick<ServerInfo, 'url' | 'token'>, reques
       else finish(undefined, message.result as T)
     }
   })
+}

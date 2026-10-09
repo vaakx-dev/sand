@@ -1,3 +1,20 @@
+import type { RouteKind } from '../devices'
+import type { BuildInfo } from '../remotes'
+
+export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'unpaired'
+
+export interface ConnectionInfo {
+  status: ConnectionStatus
+  url?: string
+  kind?: RouteKind
+  since?: number
+  retryAt?: number
+  latency?: number
+  error?: string
+  failedAt?: number
+  build?: BuildInfo
+}
+
 export interface Machine {
   id: string
   name: string
@@ -5,6 +22,8 @@ export interface Machine {
   online: boolean
   platform?: string
   address?: string
+  build?: BuildInfo
+  connection: ConnectionInfo
 }
 
 export interface Machines {
@@ -12,4 +31,5 @@ export interface Machines {
   get(id?: string): Machine | undefined
   add(link: string): Promise<Machine>
   remove(id: string): Promise<void>
+  retry(id?: string): void
 }

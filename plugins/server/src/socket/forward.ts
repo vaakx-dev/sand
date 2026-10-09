@@ -20,7 +20,6 @@ const forwarded: EventName[] = [
   'session.update',
   'session.remove',
   'artifact.saved',
-  'plugins.reloaded',
 ]
 
 export const forwardEvents = (ctx: ServerContext, broadcast: (name: string, args: unknown[]) => void) => {

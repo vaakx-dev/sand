@@ -2,6 +2,7 @@ import type { CliFlags, CliMode } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
 import { createApp, inspector, share } from 'drydock'
 import { dirname, join } from 'node:path'
+import { runtimeLink } from '../runtime/link'
 import { problems } from './diagnose'
 
 export interface RunOptions {
@@ -28,6 +29,7 @@ export const run = async ({ mode, home, args, flags, prompt }: RunOptions) => {
   if (mode === 'serve') process.on('SIGINT', () => exit(0))
   ctx.plugin(inspector)
   ctx.provide('cli', { mode, cwd: process.cwd(), home, args, flags, prompt, exit })
+  if (mode === 'serve') ctx.plugin(runtimeLink)
   ctx.load(dirname(Bun.resolveSync('@sand/config-toml/package.json', import.meta.dir)), {
     modes_file: join(import.meta.dir, 'modes.ts'),
     resolve_from: import.meta.dir,

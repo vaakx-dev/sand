@@ -9,6 +9,7 @@ export const info = (session: Session): SessionInfo => ({
   id: session.id,
   created: session.created,
   cwd: session.cwd,
+  project: session.project,
   title: session.title,
   head: session.head,
   parent: session.parent,

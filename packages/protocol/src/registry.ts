@@ -6,14 +6,14 @@ import type { Artifact, HtmlPages } from './html'
 import type { Limits, LLM, LLMEvent, LLMRequest } from './llm'
 import type { ContextBuilder, ContextUsage, FollowUps, Loop, TurnResult } from './loop'
 import type { Message, ToolCallBlock, ToolResultBlock, UserContent } from './message'
-import type { Remotes } from './remotes'
+import type { Runtime } from './runtime'
 import type { Server } from './server'
 import type { Skills } from './skills'
 import type { Entry, Session, Sessions } from './session'
 import type { ModelSettings } from './settings'
 import type { Tools } from './tools'
 import type { UI } from './ui'
-import type { Hello, JobNote, PluginsReloaded } from './wire'
+import type { Hello, JobNote } from './wire'
 
 declare module 'drydock' {
   interface Services {
@@ -26,13 +26,13 @@ declare module 'drydock' {
     ui: UI
     agents: Agents
     server: Server
-    remotes: Remotes
     attachments: Attachments
     skills: Skills
     modelSettings: ModelSettings
     files: Files
     followUps: FollowUps
     htmlPages: HtmlPages
+    runtime: Runtime
   }
 
   interface Events {
@@ -50,6 +50,7 @@ declare module 'drydock' {
     'context.overflow': (session: Session, error: unknown, signal: AbortSignal) => boolean | undefined
     'llm.event': (event: LLMEvent, session: Session) => void
     'llm.limits': (limits: Limits) => void
+    'llm.models': () => void
     'llm.response': (message: Message, session: Session) => Message
     'tool.start': (call: ToolCallBlock, session: Session) => void
     'tool.result': (result: ToolResultBlock, call: ToolCallBlock, session: Session) => ToolResultBlock
@@ -58,11 +59,12 @@ declare module 'drydock' {
     'job.start': (job: Job) => void
     'job.end': (job: Job, output: string) => void
     'job.note': (note: JobNote) => void
-    'plugins.reloaded': (result: PluginsReloaded) => void
     'server.hello': (hello: Hello) => Hello
     'session.entry': (session: Session, entry: Entry) => void
     'session.update': (session: Session) => void
     'session.remove': (session: Session) => void
     'artifact.saved': (session: Session, artifact: Artifact) => void
+    'runtime.drain': () => void
+    'runtime.release': (sessions: string[]) => void
   }
 }

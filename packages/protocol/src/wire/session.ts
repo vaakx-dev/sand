@@ -2,6 +2,7 @@ import type { EffortLevel, ModelInfo } from '../llm'
 import type { ContextUsage, QueueState } from '../loop'
 import type { Entry, SessionInfo, SessionMeta } from '../session'
 import type { SessionSettings, SettingsState } from '../settings'
+import type { LiveBlock } from '../web/threads'
 
 export type SessionMetaUpdate = SessionMeta & { id: string }
 
@@ -24,4 +25,6 @@ export interface OpenedSession {
   entries: Entry[]
   queue?: QueueState
   settings?: SettingsState
+  live?: LiveBlock[]
+  tools?: string[]
 }

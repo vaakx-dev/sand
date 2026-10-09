@@ -3,7 +3,7 @@ name: sand-plugins
 description: How to write sand plugins. Load before creating or editing a plugin that extends sand.
 ---
 
-A plugin is a folder whose index.ts default-exports `definePlugin(...)` from `drydock`. Put it in `~/.sand/plugins/<name>/` (every project) or `<project>/.sand/plugins/<name>/` (this project); new folders load on the next `/reload` or restart.
+A plugin is a folder whose index.ts default-exports `definePlugin(...)` from `drydock`. Put it in `~/.sand/plugins/<name>/`; new folders load on the next `/reload` or restart.
 
 ```ts
 import { definePlugin } from 'drydock'
@@ -37,4 +37,4 @@ export default definePlugin({
 - Ship skills by putting `skills/<name>/SKILL.md` in the plugin folder and calling `ctx.watch('skills', skills => skills?.register(dir))`.
 - Services and events are typed in `{{registry}}`; read it for exact signatures.
 
-Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding a plugin, ask the user to run `/reload`; after editing a loaded one, `/reload <name>`. Nothing reloads on its own.
+Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to run `/reload`. It starts a fresh sand runtime with every plugin; the page stays connected and running turns finish on the old runtime. Nothing reloads on its own.

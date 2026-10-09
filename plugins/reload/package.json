@@ -1,7 +1,7 @@
 {
   "name": "@sand/reload",
   "version": "0.0.0",
-  "description": "Reloads plugins from disk with /reload, and a sidebar button that does the same",
+  "description": "Restarts the sand plugins with /reload or a sidebar button",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/web/index.ts",
     "label": "Reload button",
-    "summary": "A sidebar button that reloads every plugin from disk",
+    "summary": "Restarts the sand plugins with /reload or a sidebar button",
     "uses": {
       "nav": "no button; /reload still works",
       "notify": "reload errors go to the console"

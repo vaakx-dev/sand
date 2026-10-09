@@ -4,7 +4,7 @@ export const reloadFinished = (ctx: Context) =>
   new Promise<void>(resolve => {
     const stops = [
       ctx.on('wire.event', event => {
-        if (event.name === 'plugins.reloaded') done()
+        if (event.name === 'runtime.failed') done()
       }),
       ctx.on('wire.hello', () => done()),
     ]

@@ -1,14 +1,14 @@
 {
   "name": "@sand/server",
   "version": "0.0.0",
-  "description": "The sand daemon: serves the page over HTTP and a websocket, relays events and answers requests",
+  "description": "Answers the sand host over a private socket: requests, events and page routes",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },
   "sand": {
     "label": "Server",
-    "summary": "Serves the page and talks to it over a websocket",
+    "summary": "Answers the sand host over a private socket: requests, events and page routes",
     "provides": [
       "server",
       "ui"
@@ -23,7 +23,6 @@
   "dependencies": {
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
-    "drydock": "workspace:*",
-    "zod": "^4.6.5"
+    "drydock": "workspace:*"
   }
 }

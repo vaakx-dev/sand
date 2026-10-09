@@ -1,3 +1,4 @@
+import type { RemoteInvite } from '@sand/protocol'
 import { definePlugin } from 'drydock'
 import { createFileIndex } from './data/files'
 import { createJobs } from './data/jobs'
@@ -9,7 +10,7 @@ import { createSync } from './data/sync'
 import { bridgeRelay } from './relay/events'
 import { bridgeRemotes } from './remotes/bridge'
 import { createLinks } from './remotes/links'
-import { createMachines } from './remotes/machines'
+import { createMachines, machineChanges } from './remotes/machines'
 import { routeWire } from './remotes/route'
 import { applyEvent } from './threads/events'
 import { createThreads } from './threads/service'
@@ -19,7 +20,8 @@ import { startWire } from './wire/wire'
 
 export default definePlugin({
   name: 'web-client',
-  description: 'Connects to the sand daemon and its paired PCs and provides threads, turns, jobs, models, limits, files, skills, projects and machines',
+  description:
+    "Connects to sand and its paired PCs with this browser's own keys (pairing from #pair links, websocket tickets) and provides threads, turns, jobs, models, limits, files, skills, projects and machines",
   uses: {
     notify: 'server notices go to the console',
     picker: 'server picks and inputs use the browser prompt',
@@ -29,11 +31,12 @@ export default definePlugin({
   apply(ctx) {
     const store = new Store(ctx)
     ctx.effect(() => () => store.dispose())
-    const links = createLinks()
+    const local = startWire(ctx, machineChanges(ctx))
+    const links = createLinks(id => local.call<RemoteInvite>({ type: 'remotes.invite', remote: id }))
     ctx.effect(() => () => links.close())
-    const wire = routeWire(startWire(ctx), links, store)
+    const wire = routeWire(local, links, store)
     const threads = createThreads(ctx, wire, store)
-    const projects = createProjects(ctx, wire)
+    const projects = createProjects(ctx, wire, store)
     links.listen(bridgeRemotes(ctx, store, wire, threads, projects))
     ctx.on('wire.event', event => applyEvent(store, event, id => void threads.load(id)))
     bridgeRelay(ctx, wire, threads, threads.adopt)
@@ -44,8 +47,8 @@ export default definePlugin({
     ctx.provide('models', createModels(ctx, wire, threads, store))
     ctx.provide('limits', createLimits(ctx, wire))
     ctx.provide('fileIndex', createFileIndex(wire, threads.cwd))
-    ctx.provide('skillIndex', createSkillIndex(ctx, wire))
+    ctx.provide('skillIndex', createSkillIndex(ctx, wire, threads))
     ctx.provide('projects', projects.projects)
-    ctx.provide('machines', createMachines(ctx, wire, links))
+    ctx.provide('machines', createMachines(ctx, wire, local, links))
   },
 })

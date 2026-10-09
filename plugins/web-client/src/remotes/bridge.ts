@@ -29,7 +29,8 @@ export const bridgeRemotes = (
       greetRemote(store, device, hello)
       void projects.refresh(device)
       const current = threads.current()
-      if (current?.device === device) void threads.load(current.id)
+      const reload = threads.list().filter(thread => thread.device === device && (thread.running || thread.id === current?.id))
+      for (const thread of reload) void threads.load(thread.id)
     },
     event(device, event) {
       applyEvent(store, event, id => void threads.load(id), device)

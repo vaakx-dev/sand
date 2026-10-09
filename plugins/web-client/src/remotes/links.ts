@@ -1,11 +1,15 @@
-import type { Hello, Remote, WireEvent, WireRequest, WireState } from '@sand/protocol'
-import { socketUrl } from '@sand/kit'
-import { backoff, reconnecting } from '../wire/reconnecting'
+import type { ConnectionInfo, Hello, Remote, RemoteInvite, WireEvent, WireRequest, WireState } from '@sand/protocol'
+import { createHostAuth } from '../auth/host'
+import { learn } from '../connection/book'
+import { createPcConnection } from '../connection/pc'
 
 export interface Link {
   remote: Remote
   state(): WireState
+  info(): ConnectionInfo
   call<T = unknown>(request: WireRequest): Promise<T>
+  fetch(path: string, init?: RequestInit): Promise<Response>
+  nudge(): void
   close(): void
 }
 
@@ -16,23 +20,42 @@ export interface LinkHandlers {
   state(): void
 }
 
-const openLink = (remote: Remote, handlers: () => LinkHandlers): Link => {
-  const connection = reconnecting({
-    url: socketUrl(remote.url, remote.token),
-    offline: `${remote.name} is offline`,
-    backoff: backoff(5000, 60_000),
-    event: event => handlers().event(remote.id, event),
-    hello: hello => handlers().hello(remote.id, hello),
-    state: () => handlers().state(),
+export type Invite = (id: string) => Promise<RemoteInvite>
+
+const urlsOf = (remote: Remote) => [remote.url, ...remote.urls]
+
+const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers): Link => {
+  const auth = createHostAuth({
+    base: () => connection.base() ?? link.remote.url,
+    offer: () => invite(link.remote.id),
   })
-  return { remote, state: connection.state, call: connection.call, close: connection.close }
+  learn(remote.id, urlsOf(remote))
+  const connection = createPcConnection({
+    seeds: () => urlsOf(link.remote),
+    expected: () => link.remote.id,
+    ticket: auth.socketUrl,
+    offline: `${remote.name} is offline`,
+    event: event => handlers().event(link.remote.id, event),
+    hello: hello => handlers().hello(link.remote.id, hello),
+    changed: () => handlers().state(),
+  })
+  const link: Link = {
+    remote,
+    state: connection.state,
+    info: connection.info,
+    call: request => connection.call(request),
+    fetch: auth.fetch,
+    nudge: connection.nudge,
+    close: connection.close,
+  }
+  return link
 }
 
-const same = (a: Remote, b: Remote) => a.url === b.url && a.token === b.token && a.name === b.name
+const sameRoutes = (a: Remote, b: Remote) => urlsOf(a).join('\n') === urlsOf(b).join('\n')
 
 const idle: LinkHandlers = { hello() {}, event() {}, drop() {}, state() {} }
 
-export const createLinks = () => {
+export const createLinks = (invite: Invite) => {
   const links = new Map<string, Link>()
   let handlers = idle
 
@@ -42,6 +65,14 @@ export const createLinks = () => {
     handlers.drop(id)
   }
 
+  const refresh = (link: Link, remote: Remote) => {
+    const moved = !sameRoutes(link.remote, remote)
+    link.remote = remote
+    if (!moved) return
+    learn(remote.id, urlsOf(remote))
+    if (link.state() !== 'open') link.nudge()
+  }
+
   return {
     listen(next: LinkHandlers) {
       handlers = next
@@ -49,12 +80,13 @@ export const createLinks = () => {
     get: (id: string) => links.get(id),
     list: () => [...links.values()],
     sync(remotes: Remote[]) {
-      const wanted = new Map(remotes.map(remote => [remote.id, remote]))
-      for (const [id, link] of [...links]) {
-        const next = wanted.get(id)
-        if (!next || !same(next, link.remote)) drop(id)
+      const wanted = new Set(remotes.map(remote => remote.id))
+      for (const id of [...links.keys()]) if (!wanted.has(id)) drop(id)
+      for (const remote of remotes) {
+        const link = links.get(remote.id)
+        if (link) refresh(link, remote)
+        else links.set(remote.id, openLink(remote, invite, () => handlers))
       }
-      for (const remote of remotes) if (!links.has(remote.id)) links.set(remote.id, openLink(remote, () => handlers))
       handlers.state()
     },
     close() {

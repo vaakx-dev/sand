@@ -20,7 +20,6 @@ const { values, positionals } = parseArgs({
     model: { type: 'string' },
     effort: { type: 'string' },
     fast: { type: 'boolean' },
-    lan: { type: 'boolean' },
     on: { type: 'string' },
     from: { type: 'string' },
     to: { type: 'string' },
@@ -39,21 +38,23 @@ const { values, positionals } = parseArgs({
 const [command, ...args] = positionals
 if (values.home) process.env.SAND_HOME = resolve(values.home)
 const home = sandHome()
-const { continue: latest, resume, model, effort, fast, lan, on, cwd } = values
+const { continue: latest, resume, model, effort, fast, on, cwd } = values
 const projectFlags = { all: values.all, from: values.from, to: values.to, on, path: values.path, setup: values.setup, ours: values.ours, theirs: values.theirs }
-const flags = { continue: latest, resume, model, effort, fast, lan, cwd }
+const flags = { continue: latest, resume, model, effort, fast, cwd }
 if (cwd) process.chdir(cwd)
 
 const dispatch = async () => {
   if (values.help) return console.log(help)
   if (values.print) return run({ mode: 'print', home, args, flags, prompt: values.print })
-  if (!command) return launch({ home, cwd: process.cwd(), latest, session: resume, lan })
-  if (command === 'serve') return run({ mode: 'serve', home, args, flags })
+  if (!command) return launch({ home, latest, session: resume })
+  if (command === 'serve') return (await import('./host/run')).runHost({ home })
+  if (command === 'runtime') return run({ mode: 'serve', home, args, flags })
   if (command === 'stop') return stop(home)
-  if (command === 'devices') return devices(home, lan)
+  if (command === 'devices') return devices(home, args)
   if (command === 'remote') return remotes(home, args)
   if (command === 'project') return projects(home, args, projectFlags)
   if (command === 'usage') return usageReport(home, args)
+  if (command === 'install') return (await import('./commands/install')).installCommand(home, args)
   console.error(`unknown command "${command}"\n${help}`)
   process.exit(2)
 }

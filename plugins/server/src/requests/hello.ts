@@ -12,7 +12,6 @@ export const helloRequest = (ctx: ServerContext) => {
     limits: ctx.llm?.limits?.(),
     defaults: ctx.modelSettings?.defaults(),
     attachments: ctx.attachments?.limits,
-    cwd: ctx.cli.cwd,
     sessions: ctx.sessions.list(),
     active: [...active],
     jobs: [],

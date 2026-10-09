@@ -1,30 +1,74 @@
-import type { Hello, Wire } from '@sand/protocol'
-import { socketUrl } from '@sand/kit'
+import type { ConnectionInfo, Hello, Wire, WireState } from '@sand/protocol'
 import type { Context } from 'drydock'
-import { backoff, reconnecting } from './reconnecting'
+import { pairFragment } from '../auth/fragment'
+import { createHostAuth } from '../auth/host'
+import { hostKeys } from '../auth/keys'
+import { homeHost, setHomeHost } from '../connection/book'
+import { createPcConnection, type PcConnection } from '../connection/pc'
 
-export const startWire = (ctx: Context): Wire => {
-  const token = new URLSearchParams(location.search).get('token') ?? ''
+export interface HomeWire extends Wire {
+  info(): ConnectionInfo
+  nudge(): void
+}
+
+export const startWire = (ctx: Context, changed: () => void): HomeWire => {
+  const fragment = pairFragment()
+  let pc: PcConnection | undefined
   let hello: Hello | undefined
-  const link = reconnecting({
-    url: socketUrl(location.origin, token),
+  let state: WireState = 'connecting'
+  const auth = createHostAuth({
+    base: () => pc?.base() ?? location.origin,
+    offer() {
+      const secret = fragment.take()
+      return secret ? { secret } : undefined
+    },
+    paired: () => fragment.clear(),
+  })
+  const home = createPcConnection({
+    seeds: () => [location.origin],
+    expected: homeHost,
+    trusted: () => location.origin,
+    ticket: auth.socketUrl,
     offline: 'Not connected to the sand server',
-    backoff: backoff(1000, 8000),
     event: event => ctx.emit('wire.event', event),
     hello(next) {
       hello = next
       ctx.emit('wire.hello', next)
     },
-    state: next => ctx.emit('wire.state', next),
+    changed() {
+      if (!pc) return
+      const next = pc.state()
+      if (next !== state) {
+        state = next
+        ctx.emit('wire.state', next)
+      }
+      changed()
+    },
+    identified: setHomeHost,
   })
-  ctx.effect(() => () => link.close())
+  pc = home
+  ctx.effect(() => () => home.close())
+  ctx.effect(() =>
+    fragment.watch(() => {
+      if (home.state() === 'open') fragment.clear()
+      else home.nudge()
+    }),
+  )
+  ctx.effect(() =>
+    hostKeys.watch(() => {
+      if (home.state() === 'unpaired') home.nudge()
+    }),
+  )
 
   return {
-    token,
-    state: link.state,
-    retryAt: link.retryAt,
-    reconnect: link.reconnect,
+    state: home.state,
+    retryAt: () => home.info().retryAt,
+    reconnect: home.nudge,
     hello: () => hello,
-    call: request => link.call(request),
+    pairing: auth.pairing,
+    call: request => home.call(request),
+    fetch: (path, init) => auth.fetch(path, init),
+    info: home.info,
+    nudge: home.nudge,
   }
 }

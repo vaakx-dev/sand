@@ -1,11 +1,18 @@
 import type { AgentRequest, AgentResult } from '../agents'
+import type { HostRoute, NetworkState, PairedDevice, TailscaleState } from '../devices'
 import type { Artifact } from '../html'
+import type { InstallProgress } from '../install'
 import type { LLMEvent, Limits } from '../llm'
+import type { LoginState } from '../login'
 import type { TurnResult } from '../loop'
 import type { Entry, SessionInfo } from '../session'
 import type { Message, ToolCallBlock, ToolResultBlock, UserContent } from '../message'
+import type { PluginSyncState } from '../plugin-sync'
 import type { CloneProgress, ProjectList } from '../projects'
+import type { PcList } from '../pcs'
 import type { Remote } from '../remotes'
+import type { RuntimeChange } from '../runtime'
+import type { UpdateState } from '../updates'
 import type { WireJob } from './hello'
 import type { RelayEvents } from './relay'
 import type { SessionEvents } from './session'
@@ -21,11 +28,6 @@ export interface WireJobRef {
 export type WireAgentRequest = Omit<AgentRequest, 'parent' | 'signal'> & { parent: WireSession }
 
 export type WireAgentResult = Omit<AgentResult, 'session'> & { session: WireSession }
-
-export interface PluginsReloaded {
-  ok: boolean
-  names: string[]
-}
 
 export interface JobNote {
   id: string
@@ -53,14 +55,25 @@ export interface ForwardedEvents {
 }
 
 export interface BroadcastEvents {
-  'pair.used': [code: string]
+  'pair.used': [device: PairedDevice, inviteExpires: number]
+  'devices.change': [devices: PairedDevice[]]
+  'network.change': [network: NetworkState]
+  'routes.change': [routes: HostRoute[]]
+  'tailscale.change': [state: TailscaleState]
   'remotes.change': [remotes: Remote[]]
+  'pcs.change': [list: PcList]
+  'install.progress': [progress: InstallProgress]
   'projects.change': [list: ProjectList]
   'projects.progress': [progress: CloneProgress]
+  'plugins.change': [state: PluginSyncState]
+  'updates.change': [state: UpdateState]
   'web.build': [build: string]
   'web.extensions': [enabled: Record<string, boolean>]
-  'plugins.reloaded': [result: PluginsReloaded]
   'job.note': [note: JobNote]
+  'skills.change': []
+  'runtime.changed': [change: RuntimeChange]
+  'runtime.failed': [error: string]
+  'login.change': [state: LoginState]
 }
 
 export interface WireEvents extends ForwardedEvents, SessionEvents, BroadcastEvents, RelayEvents {}

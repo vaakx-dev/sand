@@ -1,6 +1,6 @@
 import type { PickItem, PickOptions, UI } from '@sand/protocol'
 import { reportText } from '@sand/kit'
-import { folder } from '../context'
+import { existsSync } from 'node:fs'
 import { info } from '../socket/serialize'
 import { invocation } from './invocation'
 import { tell } from './peer'
@@ -45,7 +45,11 @@ export const relayUI = (state: RelayState): UI => {
       return current ? picks.input(current.peer, title, value) : Promise.resolve(undefined)
     },
     session: () => invocation.getStore()?.session,
-    cwd: () => folder(state.ctx, invocation.getStore()?.cwd ?? state.ctx.cli.cwd),
+    cwd: () => {
+      const current = invocation.getStore()
+      const cwd = current?.cwd || current?.session?.cwd || ''
+      return cwd && existsSync(cwd) ? cwd : ''
+    },
     open(session, draft, cwd) {
       const current = target()
       if (!current) return

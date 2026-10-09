@@ -1,24 +1,33 @@
 import type { OpenedSession } from '@sand/protocol'
-import { folder, type ServerContext } from '../context'
+import { existsSync } from 'node:fs'
+import type { ServerContext } from '../context'
+import type { LiveTracker } from '../live/track'
 import { info } from '../socket/serialize'
 import { queueState } from './queue'
 import type { CoreHandlers } from './registry'
 import { openSession } from './open'
 
-export const sessionRequests = (ctx: ServerContext): CoreHandlers => {
+export const sessionRequests = (ctx: ServerContext, live: LiveTracker): CoreHandlers => {
   const session = (id: string) => openSession(ctx, id)
   return {
     'sessions.list': () => ctx.sessions.list(),
     'sessions.create': request => {
-      const { settings, ...options } = request.options
-      const created = ctx.sessions.create({ ...options, cwd: folder(ctx, options.cwd) })
+      const { settings, cwd, ...options } = request.options
+      if (cwd && !existsSync(cwd)) throw new Error(`${cwd} is not a folder on this PC`)
+      const created = ctx.sessions.create({ ...options, ...(cwd && { cwd }) })
       if (settings && Object.keys(settings).length) ctx.modelSettings?.update(created, settings)
       return info(created)
     },
     'sessions.branch': request => info(ctx.sessions.branch(session(request.session), request.into, request.at)),
     'session.open': request => {
       const opened = session(request.session)
-      return { info: info(opened), entries: opened.entries(), queue: queueState(ctx, opened), settings: ctx.modelSettings?.state(opened) } satisfies OpenedSession
+      return {
+        info: info(opened),
+        entries: opened.entries(),
+        queue: queueState(ctx, opened),
+        settings: ctx.modelSettings?.state(opened),
+        ...live.snapshot(opened.id),
+      } satisfies OpenedSession
     },
     'session.append': request => {
       session(request.session).append(request.entry.type, request.entry.data, request.entry.id)

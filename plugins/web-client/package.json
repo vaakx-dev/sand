@@ -1,7 +1,7 @@
 {
   "name": "@sand/web-client",
   "version": "0.0.0",
-  "description": "Connects the page to the sand daemon and its paired PCs",
+  "description": "Connects the page to sand and its paired PCs with this browser's own keys",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",

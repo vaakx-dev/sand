@@ -4,7 +4,6 @@ export interface CliFlags {
   model?: string
   effort?: string
   fast?: boolean
-  lan?: boolean
   cwd?: string
 }
 

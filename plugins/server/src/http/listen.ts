@@ -1,27 +1,26 @@
-import type { WebSocketHandler } from 'bun'
-import type { createPairing } from './pairing'
+import type { RouteCaller, RuntimeAccess } from '@sand/protocol'
 import type { Routes } from './routes'
 
-export interface ListenOptions {
-  token: string
+export interface RespondOptions {
+  access(request: Request): RuntimeAccess
+  caller(request: Request): RouteCaller | undefined
   routes: Routes
-  pairing: ReturnType<typeof createPairing>
-  websocket: WebSocketHandler<unknown>
 }
 
-export const listener = ({ token, routes, pairing, websocket }: ListenOptions) => (hostname: string, port: number) =>
-  Bun.serve({
-    port,
-    hostname,
-    websocket,
-    fetch(request, server) {
-      const url = new URL(request.url)
-      const paired = pairing.redeem(url)
-      if (paired) return paired
-      const route = routes.find(url.pathname)
-      if (route && routes.isPublic(route)) return route(request)
-      if (url.searchParams.get('token') !== token) return new Response('unauthorized', { status: 401 })
-      if (url.pathname === '/ws') return server.upgrade(request, { data: undefined }) ? undefined : new Response('expected a websocket', { status: 400 })
-      return route ? route(request) : new Response('not found', { status: 404 })
-    },
-  })
+export interface Upgrader {
+  upgrade(request: Request, options: { data: undefined }): boolean
+}
+
+export const respond = ({ access, caller, routes }: RespondOptions) => (request: Request, server: Upgrader) => {
+  const allowed = access(request)
+  if (allowed === 'denied') return new Response('forbidden', { status: 403 })
+  const url = new URL(request.url)
+  if (url.pathname === '/ws') {
+    if (allowed !== 'client') return new Response('unauthorized', { status: 401 })
+    return server.upgrade(request, { data: undefined }) ? undefined : new Response('expected a websocket', { status: 400 })
+  }
+  const route = routes.find(url.pathname)
+  if (!route) return new Response('not found', { status: 404 })
+  if (!routes.isPublic(route) && allowed !== 'client') return new Response('unauthorized', { status: 401 })
+  return route(request, caller(request))
+}

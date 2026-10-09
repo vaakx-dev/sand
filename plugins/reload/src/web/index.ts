@@ -3,7 +3,7 @@ import { reloadFinished } from './finished'
 
 export default definePlugin({
   name: 'reload-button',
-  description: 'Sidebar footer button that reloads every plugin from disk and spins until the reload finishes',
+  description: 'Sidebar footer button that runs /reload and spins until it finishes',
   inject: ['commands'],
   uses: { nav: 'no button; /reload still works', notify: 'reload errors go to the console' },
   apply(ctx) {

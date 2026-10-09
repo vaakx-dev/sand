@@ -18,6 +18,13 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store) => {
     thread.info = { ...thread.info, head: opened.info.head }
     thread.loaded = true
     thread.failed = undefined
+    if (opened.live) {
+      thread.live = opened.live
+      thread.tools = { running: new Set(opened.tools ?? []), results: thread.tools.results }
+    } else if (!thread.running) {
+      thread.live = []
+      thread.tools = { running: new Set(), results: thread.tools.results }
+    }
     if (thread.running) thread.started ??= turnStart(thread)
     if (opened.queue) store.queue(thread.id, opened.queue)
     if (opened.settings) store.settings.set(thread.id, opened.settings)

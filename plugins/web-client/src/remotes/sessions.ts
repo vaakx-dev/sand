@@ -1,4 +1,5 @@
 import type { Hello } from '@sand/protocol'
+import { clearTurn } from '../threads/live'
 import type { Store } from '../threads/store'
 
 export const greetRemote = (store: Store, device: string, hello: Hello) => {
@@ -7,7 +8,7 @@ export const greetRemote = (store: Store, device: string, hello: Hello) => {
   for (const info of hello.sessions) {
     const thread = store.upsert(info, device)
     thread.running = hello.active.includes(info.id)
-    if (!thread.running) thread.started = undefined
+    if (!thread.running) clearTurn(thread)
     thread.loaded = false
   }
 }

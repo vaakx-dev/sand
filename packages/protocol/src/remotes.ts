@@ -1,28 +1,20 @@
-import type { Dispose } from 'drydock'
-import type { WireRequest } from './wire'
+export interface BuildInfo {
+  id: string
+  time: number
+}
 
 export interface DeviceInfo {
   id: string
   name: string
   platform: string
+  build?: BuildInfo
 }
 
 export interface Remote extends DeviceInfo {
   url: string
-  token: string
+  urls: string[]
 }
 
-export interface RemoteClient {
-  call<T = unknown>(request: WireRequest): Promise<T>
-  listen(handler: (name: string, args: unknown[]) => void): Dispose
-  close(): void
-}
-
-export interface Remotes {
-  device(): DeviceInfo
-  list(): Remote[]
-  find(name: string): Remote | undefined
-  connect(remote: Remote): Promise<RemoteClient>
-  add(link: string): Promise<Remote>
-  remove(id: string): Promise<void>
+export interface RemoteRecord extends Remote {
+  key: string
 }
