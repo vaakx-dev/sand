@@ -1,4 +1,5 @@
-import type { Thread, ToolCallBlock } from '@sand/protocol'
+import type { ToolCallBlock } from '@sand/messages'
+import type { Thread } from '@sand/web-client/contract'
 
 export type Calls = Map<string, ToolCallBlock>
 

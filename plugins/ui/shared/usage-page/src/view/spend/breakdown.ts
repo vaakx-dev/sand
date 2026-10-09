@@ -1,4 +1,4 @@
-import type { UsageSummary, UsageTotals } from '@sand/protocol'
+import type { UsageSummary, UsageTotals } from '@sand/usage/contract'
 import { button, div, dynamicChild, focusable, providerColor, providerIcon, section, segmented, span, table, tbody, td, th, thead, tildeHome, tr, type Child, type Sig } from '@sand/dom'
 import { periodTitle, plural, tokens, tokensOf } from '@sand/kit'
 import { costText, shareText, valueOf, type Metric } from '../../format'

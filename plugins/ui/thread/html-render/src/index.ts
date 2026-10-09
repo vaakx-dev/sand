@@ -1,4 +1,4 @@
-import type { HtmlPages, HtmlRenderEntry } from '@sand/protocol'
+import type { HtmlPages, HtmlRenderEntry } from './contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { hostRoute } from './page/host'

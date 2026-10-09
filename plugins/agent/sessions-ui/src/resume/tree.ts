@@ -1,4 +1,4 @@
-import type { SessionSummary } from '@sand/protocol'
+import type { SessionSummary } from '@sand/sessions-sqlite/contract'
 
 export interface Threaded {
   session: SessionSummary

@@ -1,4 +1,6 @@
-import type { HtmlPages, Tool, UserContent } from '@sand/protocol'
+import type { HtmlPages } from '@sand/html-render/contract'
+import type { UserContent } from '@sand/messages'
+import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { capture, type Capture } from './capture'
 import type { ConsoleMessage } from './console'

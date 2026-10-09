@@ -1,4 +1,4 @@
-import type { NavList } from '@sand/protocol'
+import type { NavList } from '@sand/dom'
 import { folderName } from '@sand/kit'
 import type { Context } from 'drydock'
 

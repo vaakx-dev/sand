@@ -1,4 +1,5 @@
-import type { ModelsUpdate, Server, SessionSettings, SettingsState } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { ModelsUpdate, SessionSettings, SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Choices } from './choices'
 import type { Defaults } from './defaults'

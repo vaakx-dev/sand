@@ -1,5 +1,5 @@
 import { div, groupLabel, menuItem, span } from '@sand/dom'
-import type { Machine, ProjectGroup, Thread } from '@sand/protocol'
+import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
 import { copyOn, groupOf } from '../group'
 import { machineIcon } from '../rows'
 import { deviceOf, type PickerContext } from '../target'

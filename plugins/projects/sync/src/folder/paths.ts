@@ -1,4 +1,4 @@
-import { expandHome } from '@sand/host'
+import { expandHome } from '@sand/kit/fs'
 import { realpath } from 'node:fs/promises'
 import { homedir, tmpdir } from 'node:os'
 import { isAbsolute, parse, relative, resolve, sep } from 'node:path'

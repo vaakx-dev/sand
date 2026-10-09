@@ -23,13 +23,14 @@ export default definePlugin({
 
     const setup = (await loadModes(config.modes_file))[ctx.cli.mode]
     if (!setup) throw new Error(`No plugin set for mode "${ctx.cli.mode}" in ${config.modes_file}`)
-    const settings = await readConfig([global])
-    const folders = [join(ctx.cli.home, 'plugins')]
+    const safe = ctx.cli.safe
+    const user = setup.user ?? true
+    const settings = safe ? undefined : await readConfig([global])
+    const folders = safe || !user ? [] : [join(ctx.cli.home, 'plugins')]
     const found = await Promise.all(folders.map(discover))
     const { overrides, others } = splitOverrides(found.flat(), config.resolve_from)
     const mount = mounter(ctx, id => overrides.get(id) ?? locate(id, config.resolve_from, config.plugins_dir))
 
-    mount('llm-accounts', {})
-    for (const [id, options] of entries([...setup.plugins, ...others], settings.plugins)) mount(id, options)
+    for (const [id, options] of entries([...setup.plugins, ...others], settings?.plugins, user)) mount(id, options)
   },
 })

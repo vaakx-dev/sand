@@ -1,4 +1,5 @@
-import type { RelayEvent, Wire } from '@sand/protocol'
+import type { RelayEvent } from '@sand/server/contract'
+import type { Wire } from '../contract'
 import type { Context } from 'drydock'
 import type { createProjects } from '../data/projects'
 import { isRelayEvent, relayEvents } from '../relay/events'

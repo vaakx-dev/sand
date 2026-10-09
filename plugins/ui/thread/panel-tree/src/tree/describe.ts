@@ -1,4 +1,4 @@
-import type { Entry, Message, ToolCallBlock } from '@sand/protocol'
+import type { Entry, Message, ToolCallBlock } from '@sand/messages'
 import { feedbackLine, promptText, userParts } from '@sand/kit'
 import { actionsText, type ToolAction } from './action'
 

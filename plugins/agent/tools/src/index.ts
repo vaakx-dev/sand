@@ -1,4 +1,4 @@
-import type { Tool } from '@sand/protocol'
+import type { Tool } from './contract'
 import { definePlugin } from 'drydock'
 import { run } from './run'
 import { spec } from './spec'
@@ -16,6 +16,7 @@ export default definePlugin({
       },
       list: () => [...tools.values()],
       specs: () => [...tools.values()].sort((a, b) => a.name.localeCompare(b.name)).map(spec),
+      notes: () => [...tools.values()].flatMap(tool => (tool.environment ? [tool.environment] : [])),
       run: (call, context) => run(tools.get(call.name), call, context),
     })
   },

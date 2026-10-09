@@ -1,4 +1,4 @@
-import type { LLMEvent, LLMRequest, Limits, LoginProvider } from '@sand/protocol'
+import type { Limits, LLMEvent, LLMRequest, LoginProvider } from '../contract'
 import { accountName } from '../auth/accounts'
 import { rawMessage } from '../errors'
 import type { ShareInfo } from '../share/info'

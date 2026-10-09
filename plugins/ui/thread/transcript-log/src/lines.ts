@@ -1,5 +1,5 @@
-import type { ToolView } from '@sand/protocol'
-import { resultSections, type Item, type RendererRegistry, type Step } from '@sand/conversation'
+import type { ToolView } from '@sand/transcript-chat/contract'
+import type { Item, RendererRegistry, Step } from '@sand/transcript-parts/contract'
 import { button, oneLine, span } from '@sand/dom'
 
 export interface Line {
@@ -35,9 +35,10 @@ export const failedLine = (message: string, retry: () => void): Line => ({
   node: span(`couldn't load this thread: ${message} · `, button({ type: 'button', class: 'cursor-pointer underline hover:text-neutral-200', onClick: retry }, 'retry')),
 })
 
-const results = (text: string) => resultSections(text).join('\n\n')
+type Sections = (text: string) => string[]
 
-export const itemLines = (item: Item, registry: RendererRegistry, thread: string): Line[] => {
+export const itemLines = (item: Item, registry: RendererRegistry, thread: string, sections: Sections): Line[] => {
+  const results = (text: string) => sections(text).join('\n\n')
   switch (item.kind) {
     case 'user': {
       const text = item.parts.map(part => {

@@ -1,4 +1,4 @@
-import type { NavAction, NavItem } from '@sand/protocol'
+import type { NavAction, NavItem } from '@sand/dom'
 import { button, dot, dynamicChild, effect, focusable, icon, iconButton, intent, navActionIcon, navSlot, navTip, projectIcon, span, working, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const mark = (item: NavItem) => {

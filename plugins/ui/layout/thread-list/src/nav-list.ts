@@ -1,4 +1,5 @@
-import type { NavList, ThreadDraft } from '@sand/protocol'
+import type { ThreadDraft } from '@sand/composer-card/contract'
+import type { NavList } from '@sand/dom'
 import type { Context } from 'drydock'
 import { backgroundOf } from './background'
 import { draftItem, draftNavId, navItems } from './items'

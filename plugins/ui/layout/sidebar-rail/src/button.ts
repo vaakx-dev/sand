@@ -1,4 +1,4 @@
-import type { NavAction, NavItem } from '@sand/protocol'
+import type { NavAction, NavItem } from '@sand/dom'
 import { button, div, dynamicChild, focusable, icon, initials, intent, navActionIcon, navSlot, navTip, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [

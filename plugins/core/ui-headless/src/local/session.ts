@@ -1,4 +1,5 @@
-import type { Cli, Sessions } from '@sand/protocol'
+import type { Cli } from '@sand/protocol'
+import type { Sessions } from '@sand/sessions-sqlite/contract'
 
 export const existingSession = (sessions: Sessions, cli: Cli) => {
   const { resume, continue: latest } = cli.flags

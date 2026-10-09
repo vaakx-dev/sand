@@ -1,4 +1,4 @@
-import type { SyncRelation, SyncState } from '@sand/protocol'
+import type { SyncRelation, SyncState } from '@sand/sync/contract'
 
 export const relationOf = (state: SyncState, against: SyncState): SyncRelation => {
   if (state.tree && state.tree === against.tree) return 'current'

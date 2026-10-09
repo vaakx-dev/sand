@@ -13,10 +13,11 @@
     }
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
+    "@sand/commands": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

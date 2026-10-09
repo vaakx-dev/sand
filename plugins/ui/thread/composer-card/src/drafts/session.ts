@@ -1,4 +1,5 @@
-import type { DraftTarget, Drafts } from '@sand/protocol'
+import type { DraftTarget } from '@sand/web-client/contract'
+import type { Drafts } from '../contract'
 import { effect, onTimeout, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { Model } from '../model'

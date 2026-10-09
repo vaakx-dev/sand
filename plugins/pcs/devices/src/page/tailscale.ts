@@ -1,4 +1,4 @@
-import type { TailscaleState } from '@sand/protocol'
+import type { TailscaleState } from '@sand/host-tailscale/contract'
 import { copyButton, div, dot, dynamicChild, p, settingsRow, settingsSection, show, sig, span, toggleSwitch } from '@sand/dom'
 import { linkText } from '../components'
 import type { DeviceSource } from '../source'

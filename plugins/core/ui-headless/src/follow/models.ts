@@ -1,4 +1,4 @@
-import type { SessionInfo } from '@sand/protocol'
+import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 
 export interface ModelLookup {
   model(session: string): string | undefined

@@ -1,4 +1,4 @@
-import type { LLM, LoginProvider, ModelInfo, ProviderInfo } from '@sand/protocol'
+import type { LLM, LoginProvider, ModelInfo, ProviderInfo } from './contract'
 import { providers, subscriptions, type Accounts } from './auth/accounts'
 import type { LocalLLM } from './local'
 import type { Peers } from './peers/peers'

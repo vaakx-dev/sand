@@ -1,0 +1,22 @@
+{
+  "name": "@sand/project-files",
+  "version": "0.0.0",
+  "description": "Reads projects.json and finds which project a folder on this PC belongs to",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Project files",
+    "summary": "The project list and the local copies of each project",
+    "provides": [
+      "projectFiles"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-projects": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

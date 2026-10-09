@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 
 const expiry = 15 * 60 * 1000
 

@@ -1,4 +1,4 @@
-import type { WireState } from '@sand/protocol'
+import type { WireState } from '@sand/web-client/contract'
 import { div, el, keys, overlay, p, place, secondaryAction, sheet, show, sig, textInput } from '@sand/dom'
 import { parsePairLink } from '@sand/kit'
 import type { Context, Dispose } from 'drydock'

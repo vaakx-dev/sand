@@ -1,0 +1,22 @@
+{
+  "name": "@sand/loop-plan",
+  "version": "0.0.0",
+  "description": "An agent loop that investigates read-only and writes a plan first, then carries it out",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Plan, then do",
+    "summary": "The agent looks around read-only, writes a numbered plan, then carries it out",
+    "loops": [
+      "plan-execute"
+    ]
+  },
+  "dependencies": {
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

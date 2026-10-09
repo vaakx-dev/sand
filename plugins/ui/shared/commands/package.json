@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Command host for the page: merges local commands with the server commands relayed to it",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Commands",
@@ -12,7 +15,6 @@
     ]
   },
   "dependencies": {
-    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

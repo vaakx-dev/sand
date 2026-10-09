@@ -1,4 +1,6 @@
-import type { NavItem, Thread, ThreadDraft } from '@sand/protocol'
+import type { ThreadDraft } from '@sand/composer-card/contract'
+import type { NavItem } from '@sand/dom'
+import type { Thread } from '@sand/web-client/contract'
 import { plural } from '@sand/kit'
 import { noBackground, type BackgroundOf } from './background'
 import { byPosition } from './order'

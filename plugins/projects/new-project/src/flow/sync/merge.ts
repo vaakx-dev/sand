@@ -1,4 +1,5 @@
-import type { PalettePage, ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { PalettePage } from '@sand/palette/contract'
 import type { FlowContext } from '../types'
 
 export const mergePrompt = (files: string[]) =>

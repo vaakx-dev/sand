@@ -1,4 +1,4 @@
-import type { ProjectEntry } from '@sand/protocol'
+import type { ProjectEntry } from '@sand/web-client/contract'
 import { copyOn } from '../group'
 import { refOf, currentTarget, isOnline, type PickerContext } from '../target'
 

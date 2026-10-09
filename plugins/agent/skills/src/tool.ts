@@ -1,4 +1,5 @@
-import type { Skill, Skills, Tool } from '@sand/protocol'
+import type { Tool } from '@sand/tools/contract'
+import type { Skill, Skills } from './contract'
 import { z } from 'zod'
 import { skillBlock } from './expand'
 

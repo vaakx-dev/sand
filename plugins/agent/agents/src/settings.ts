@@ -1,4 +1,6 @@
-import type { AgentDefinition, AgentRequest, Effort, LLM, ModelInfo, SessionSettings } from '@sand/protocol'
+import type { Effort, LLM, ModelInfo } from '@sand/llm-accounts/contract'
+import type { SessionSettings } from '@sand/model/contract'
+import type { AgentDefinition, AgentRequest } from './contract'
 import { matchModel } from '@sand/kit'
 
 export const parseEffort = (value: unknown, efforts: Effort[]) => {

@@ -1,4 +1,4 @@
-import type { PalettePage } from '@sand/protocol'
+import type { PalettePage } from '../contract'
 import type { Sig } from '@sand/dom'
 
 export interface PageMemory {

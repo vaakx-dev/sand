@@ -1,4 +1,4 @@
-import type { Thread } from '@sand/protocol'
+import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import type { Source } from '../changes/tree'
 

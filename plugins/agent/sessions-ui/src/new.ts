@@ -1,6 +1,6 @@
-import type { Command } from '@sand/protocol'
-import { expandHome, scratchRoot } from '@sand/host'
+import type { Command } from '@sand/server/contract'
 import { isInside } from '@sand/kit'
+import { expandHome } from '@sand/kit/fs'
 import { homedir } from 'node:os'
 import type { SessionsContext } from './types'
 
@@ -21,7 +21,7 @@ export const newCommand = (ctx: SessionsContext): Command => ({
     const typed = args.trim()
     if (!typed) {
       const here = ctx.ui.cwd()
-      return ctx.ui.open(undefined, undefined, here && !isInside(here, scratchRoot(ctx)) ? here : undefined)
+      return ctx.ui.open(undefined, undefined, here && !isInside(here, ctx.paths.scratchRoot()) ? here : undefined)
     }
     const folder = expandHome(typed, ctx.ui.cwd() || homedir())
     if (!(await isFolder(folder))) return ctx.ui.notify(`${folder} is not a folder`, 'error')

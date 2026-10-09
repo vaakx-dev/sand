@@ -1,4 +1,4 @@
-import type { ReportRow } from '@sand/protocol'
+import type { ReportRow } from '@sand/server/contract'
 import { div, overlay, p, sheet, sheetHead, span } from '@sand/dom'
 
 export interface Report {

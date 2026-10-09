@@ -1,4 +1,5 @@
-import type { Attachments, Tool } from '@sand/protocol'
+import type { Attachments } from '@sand/attachments/contract'
+import type { Tool } from '@sand/tools/contract'
 import { extname } from 'node:path'
 import { z } from 'zod'
 import { isDirectory, locate, readText } from './files'

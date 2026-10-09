@@ -1,0 +1,23 @@
+{
+  "name": "@sand/host-projects",
+  "version": "0.0.0",
+  "description": "The project registry: projects and their copies on each PC",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Projects registry",
+    "summary": "Projects and their copies on each PC",
+    "provides": [
+      "hostProjects"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-hub": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

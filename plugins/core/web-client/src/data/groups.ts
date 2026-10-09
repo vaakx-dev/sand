@@ -1,4 +1,5 @@
-import type { Project, ProjectCopy, ProjectEntry, ProjectGroup, ProjectList, Thread } from '@sand/protocol'
+import type { Project, ProjectCopy, ProjectList } from '@sand/host-projects/contract'
+import type { ProjectEntry, ProjectGroup, Thread } from '../contract'
 import { isInside, mergeProjects } from '@sand/kit'
 import { thisDevice } from '../remotes/route'
 

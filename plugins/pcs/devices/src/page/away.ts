@@ -1,4 +1,4 @@
-import type { TailscaleState } from '@sand/protocol'
+import type { TailscaleState } from '@sand/host-tailscale/contract'
 import { overlay, p, place, secondaryAction, settingsRow, settingsSection, sheet, sheetHead } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
 import { sheetBody } from '../components'

@@ -1,4 +1,6 @@
-import type { LLMRequest, RouteCaller, Server } from '@sand/protocol'
+import type { RouteCaller } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { LLMRequest } from '../contract'
 import { accountName, type Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 import { shareInfo, sharePaths } from './info'

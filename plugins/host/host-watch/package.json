@@ -1,0 +1,16 @@
+{
+  "name": "@sand/host-watch",
+  "version": "0.0.0",
+  "description": "Starts a fresh runtime when plugin files change, when [host] watch is on",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Watch",
+    "summary": "Reloads the runtime when plugin files change"
+  },
+  "dependencies": {
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

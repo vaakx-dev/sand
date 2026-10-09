@@ -1,4 +1,5 @@
-import type { Session, SettingsPatch, SettingsState } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { SettingsPatch, SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Defaults } from './defaults'
 import { resolve } from './effective'

@@ -1,4 +1,4 @@
-import type { SessionInfo, SessionSummary } from '@sand/protocol'
+import type { SessionInfo, SessionSummary } from './contract'
 import type { Database } from 'bun:sqlite'
 
 type Row = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; seen: number; position: number }

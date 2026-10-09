@@ -1,4 +1,4 @@
-import type { Keys, Shortcut } from '@sand/protocol'
+import type { Keys, Shortcut } from './contract'
 import { chorded, errorMessage, keyName, listen, normalKey } from '@sand/dom'
 import { definePlugin } from 'drydock'
 

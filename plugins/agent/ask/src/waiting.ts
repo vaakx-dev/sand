@@ -1,4 +1,4 @@
-import type { AskAnswer } from '@sand/protocol'
+import type { AskAnswer } from './contract'
 
 interface Wait {
   session: string
@@ -9,18 +9,19 @@ interface Wait {
 export const createWaiting = () => {
   const waits = new Map<string, Wait>()
 
-  const wait = (call: string, session: string, signal: AbortSignal) =>
+  const wait = (id: string, session: string, signal?: AbortSignal) =>
     new Promise<AskAnswer[] | null>((resolve, reject) => {
+      if (signal?.aborted) return reject(signal.reason)
       const done = () => {
-        waits.delete(call)
-        signal.removeEventListener('abort', abort)
+        waits.delete(id)
+        signal?.removeEventListener('abort', abort)
       }
       const abort = () => {
         done()
-        reject(signal.reason)
+        reject(signal?.reason)
       }
-      signal.addEventListener('abort', abort, { once: true })
-      waits.set(call, {
+      signal?.addEventListener('abort', abort, { once: true })
+      waits.set(id, {
         session,
         settle(answers) {
           done()
@@ -33,14 +34,17 @@ export const createWaiting = () => {
       })
     })
 
-  const answer = (session: string, call: string, answers: AskAnswer[] | null) => {
-    const found = waits.get(call)
+  const answer = (session: string, id: string, answers: AskAnswer[] | null) => {
+    const found = waits.get(id)
     if (!found || found.session !== session) throw new Error('This question was already answered or the turn has ended')
     found.settle(answers)
     return true
   }
 
-  const close = () => [...waits.values()].forEach(entry => entry.fail(new Error('The questions were closed before the user answered')))
+  const close = (ids: Iterable<string> = waits.keys()) => {
+    const error = new Error('The questions were closed before the user answered')
+    for (const id of [...ids]) waits.get(id)?.fail(error)
+  }
 
   return { wait, answer, close }
 }

@@ -1,4 +1,4 @@
-import type { ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
 import { leafName } from '../paths'
 import type { FlowContext } from '../types'
 

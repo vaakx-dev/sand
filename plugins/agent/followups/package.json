@@ -4,7 +4,8 @@
   "description": "Follow-ups queued while a turn runs; the next one starts when the turn ends",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Follow-ups",
@@ -13,13 +14,16 @@
       "followUps"
     ],
     "uses": {
-      "ui": "follow-ups that fail to start fail silently"
+      "ui": "follow-ups that fail to start fail silently",
+      "steering": "a follow-up sent during a turn cannot join it"
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/steering": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

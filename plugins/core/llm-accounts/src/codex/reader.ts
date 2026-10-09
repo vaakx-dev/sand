@@ -1,4 +1,5 @@
-import type { Block, LLMEvent, StopReason, ToolCallBlock, Usage } from '@sand/protocol'
+import type { Block, StopReason, ToolCallBlock, Usage } from '@sand/messages'
+import type { LLMEvent } from '../contract'
 import { encodeReasoning } from '../reasoning'
 
 interface Slot {

@@ -1,4 +1,4 @@
-import type { LoadedPage } from '@sand/protocol'
+import type { LoadedPage } from '../contract'
 import { dirname, resolve } from 'node:path'
 import { bootstrap } from './bootstrap'
 import { inlineImages } from './images'

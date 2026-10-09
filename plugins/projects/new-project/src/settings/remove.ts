@@ -1,4 +1,5 @@
-import type { Picker, ProjectGroup } from '@sand/protocol'
+import type { Picker } from '@sand/picker/contract'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { icon, popoverItem, sig, span } from '@sand/dom'
 import type { ProjectsContext } from './types'
 

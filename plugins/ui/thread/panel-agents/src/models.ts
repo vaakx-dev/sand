@@ -1,4 +1,4 @@
-import type { Models } from '@sand/protocol'
+import type { Models } from '@sand/web-client/contract'
 import type { ModelOf } from './rows'
 
 export const modelsUnlike = (models: Models | undefined, parent: string): ModelOf => {

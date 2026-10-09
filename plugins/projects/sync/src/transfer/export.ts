@@ -1,4 +1,4 @@
-import type { SyncExport } from '@sand/protocol'
+import type { SyncExport } from '../contract'
 import { rm } from 'node:fs/promises'
 import { hiddenGit, hiddenOut, type Hidden } from '../folder/hidden'
 import { isGitFolder } from '../folder/stat'

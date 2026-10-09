@@ -1,4 +1,4 @@
-import type { ReportRow } from '@sand/protocol'
+import type { ReportRow } from '@sand/server/contract'
 
 const bar = (fraction: number, width = 24) => {
   const filled = Math.round(Math.min(1, Math.max(0, fraction)) * width)

@@ -1,4 +1,4 @@
-import type { EffortLevel, LLMEvent, Limits, LoginMethod, LoginProvider, ModelInfo, ModelPrice } from '@sand/protocol'
+import type { EffortLevel, Limits, LLMEvent, LoginMethod, LoginProvider, ModelInfo, ModelPrice } from '../contract'
 import { providers, type Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 

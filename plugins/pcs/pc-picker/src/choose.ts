@@ -1,5 +1,5 @@
 import { errorMessage } from '@sand/dom'
-import type { Machine, ProjectEntry, ProjectGroup } from '@sand/protocol'
+import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
 import { newerSource } from './status'
 import { deviceOf, refOf, type PickerContext } from './target'

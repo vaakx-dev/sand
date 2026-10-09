@@ -1,4 +1,4 @@
-import type { SyncFlows } from '@sand/protocol'
+import type { SyncFlows } from '../../contract'
 import type { FlowContext } from '../types'
 import { startAdd, startCopy, startResolve, startSend } from './flows'
 

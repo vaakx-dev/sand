@@ -1,4 +1,4 @@
-import { toolStep, type Step, type ToolGroup } from '@sand/conversation'
+import type { Step, ToolGroup } from '@sand/transcript-parts/contract'
 import { derive, div, duration, dynamicChild, elapsed, icon, list, shine, show, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { thinkingLine, toolLine, type ToolStep } from './live'
@@ -12,7 +12,7 @@ const activeKey = (group: ToolGroup) => group.steps.findLast(isActive)?.key ?? '
 
 const toolView = (step: Sig<ToolStep>, context: RowContext) => {
   const { open, toggle } = context.states.get(untrack(() => step.get().key))
-  return toolStep(
+  return context.parts.toolStep(
     step.map(value => value.tool),
     { renderer: context.registry.toolRenderer, version: context.registry.version, open, toggle },
   )

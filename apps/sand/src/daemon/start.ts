@@ -1,8 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, renameSync, statSync, writeSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
-import { bunBinary, readBuildBun } from '../host/dist/bun/home'
-import { appMain, installedRoot } from '../host/dist/layout'
+import { appMain, bunBinary, installedRoot, readBuildBun, withSafe } from '@sand/kit/host'
 import { running } from './info'
 
 const ownMain = join(import.meta.dir, '..', 'main.ts')
@@ -30,15 +29,17 @@ const openLog = (log: string) => {
 export interface StartOptions {
   wait?: number
   stopOnFail?: boolean
+  safe?: boolean
 }
 
-export const start = async (home: string, { wait = 30_000, stopOnFail = false }: StartOptions = {}) => {
+export const start = async (home: string, { wait = 30_000, stopOnFail = false, safe = false }: StartOptions = {}) => {
   const log = join(home, 'server.log')
   mkdirSync(home, { recursive: true })
   const [bun, main] = await hostCommand(home)
   const output = openLog(log)
   const child = Bun.spawn([bun, main, 'serve'], {
     cwd: homedir(),
+    env: withSafe({ ...process.env }, safe),
     detached: true,
     windowsHide: true,
     stdin: 'ignore',

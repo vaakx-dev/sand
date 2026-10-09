@@ -1,21 +1,8 @@
-import type { Block, DocumentBlock, ImageBlock, Message } from '@sand/protocol'
-import { readFeedback, type Feedback } from './feedback'
+import type { Block, Message, Notification, UserPart } from '@sand/messages'
+import { readFeedback } from './feedback'
 import { isImageLabel } from './image'
 
-export interface Notification {
-  job: string
-  label: string
-  status: string
-  result: string
-}
-
-export type UserPart =
-  | { kind: 'text'; text: string }
-  | { kind: 'image'; block: ImageBlock }
-  | { kind: 'document'; block: DocumentBlock }
-  | { kind: 'skill'; name: string }
-  | { kind: 'notification'; notification: Notification }
-  | { kind: 'feedback'; feedback: Feedback }
+export type { Notification, UserPart }
 
 const tag = (source: string, name: string) => new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(source)?.[1]?.trim() ?? ''
 

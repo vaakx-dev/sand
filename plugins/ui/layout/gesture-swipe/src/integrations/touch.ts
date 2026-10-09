@@ -1,4 +1,4 @@
-import type { Swipe } from '@sand/protocol'
+import type { Swipe } from '@sand/layout-columns/contract'
 import { hasOpenLayer, listen } from '@sand/dom'
 
 const lockDistance = 10

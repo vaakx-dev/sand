@@ -1,4 +1,4 @@
-import type { AgentDefinition, Agents } from '@sand/protocol'
+import type { AgentDefinition, Agents } from './contract'
 import { definePlugin, type Dispose } from 'drydock'
 import { z } from 'zod'
 import { agentsUI } from './command'
@@ -12,7 +12,7 @@ import { agentTool } from './tool'
 
 export default definePlugin({
   name: 'agents',
-  inject: ['loop', 'sessions', 'tools'],
+  inject: ['loop', 'paths', 'sessions', 'tools', 'watcher'],
   config: z.object({
     max_depth: z.number().int().min(0).default(6),
     max_agents: z.number().int().positive().default(32),

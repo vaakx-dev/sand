@@ -1,7 +1,7 @@
-import type { Pending } from '@sand/protocol'
-import { split } from '@sand/conversation'
+import type { Pending } from '@sand/steering/contract'
 import { effect, sig, untrack, type Pulse, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
+import { split } from '../attachments/content'
 import { contentsOf, type Attached, type Files } from '../attachments/files'
 import type { Saved } from '../drafts/store'
 

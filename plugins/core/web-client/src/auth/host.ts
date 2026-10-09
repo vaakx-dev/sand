@@ -1,4 +1,4 @@
-import type { WirePairing } from '@sand/protocol'
+import type { WirePairing } from '../contract'
 import { bearer, redeemPairing, requestTicket, ticketSocketUrl } from '@sand/kit'
 import { learn } from '../connection/book'
 import { clientKind, clientName } from './client'

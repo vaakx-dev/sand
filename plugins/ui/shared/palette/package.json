@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Command palette (mod+k): threads, projects and commands, with pages you step through and go back from",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Command palette",
@@ -18,8 +21,8 @@
     }
   },
   "dependencies": {
+    "@sand/commands": "workspace:*",
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

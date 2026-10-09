@@ -1,4 +1,4 @@
-import type { Tool } from '@sand/protocol'
+import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { locate } from './files'
 import { walk } from './search/walk'

@@ -1,4 +1,6 @@
-import type { FolderListing, Project, ProjectEntry, ProjectFolder, ProjectGroup, ProjectList, ProjectPatch, Projects, Wire, WireEvent } from '@sand/protocol'
+import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
+import type { WireEvent } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
 import { uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'

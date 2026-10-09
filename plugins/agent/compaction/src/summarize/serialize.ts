@@ -1,4 +1,4 @@
-import type { Block, Message, UserContent } from '@sand/protocol'
+import type { Block, Message, UserContent } from '@sand/messages'
 
 const textLimit = 16_000
 const resultLimit = 2_000

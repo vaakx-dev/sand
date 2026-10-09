@@ -1,4 +1,6 @@
-import type { CompactionReason, LLMRequest, Session } from '@sand/protocol'
+import type { LLMRequest } from '@sand/llm-accounts/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { CompactionReason } from './contract'
 import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { Compactor } from './compact'

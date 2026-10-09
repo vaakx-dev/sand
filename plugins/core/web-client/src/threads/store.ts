@@ -1,4 +1,9 @@
-import type { ContextUsage, DraftTarget, Entry, QueueState, SessionInfo, SessionMetaUpdate, SessionSummary, SettingsState, Thread } from '@sand/protocol'
+import type { ContextUsage } from '@sand/compaction/contract'
+import type { Entry } from '@sand/messages'
+import type { SettingsState } from '@sand/model/contract'
+import type { SessionInfo, SessionMetaUpdate, SessionSummary } from '@sand/sessions-sqlite/contract'
+import type { QueueState } from '@sand/steering/contract'
+import type { DraftTarget, Thread } from '../contract'
 import type { Context } from 'drydock'
 import { nextFrame } from './frame'
 

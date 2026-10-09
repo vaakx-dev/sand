@@ -1,4 +1,4 @@
-import type { Prompt } from '@sand/protocol'
+import type { Prompt } from '@sand/messages'
 
 export const promptLabel = (prompt: Prompt) => {
   const text = typeof prompt === 'string' ? prompt : prompt.map(block => (block.type === 'text' ? block.text : (block.name ?? block.type))).join(' ')

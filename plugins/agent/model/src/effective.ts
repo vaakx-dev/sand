@@ -1,4 +1,5 @@
-import type { EffectiveSettings, LLM, SessionSettings } from '@sand/protocol'
+import type { LLM } from '@sand/llm-accounts/contract'
+import type { EffectiveSettings, SessionSettings } from './contract'
 
 export const modelOf = (llm: LLM | undefined, id?: string) => llm?.models?.().find(info => info.id === id)
 

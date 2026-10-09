@@ -1,4 +1,4 @@
-import type { ProjectPlace } from '@sand/protocol'
+import type { ProjectPlace } from '@sand/host-projects/contract'
 
 const root = (dir: string, sep: string) => (!dir ? sep : /^[A-Za-z]:$/.test(dir) ? `${dir}${sep}` : dir)
 

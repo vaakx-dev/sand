@@ -1,4 +1,5 @@
-import type { LoginSharePc, RouteCaller } from '@sand/protocol'
+import type { RouteCaller } from '@sand/protocol'
+import type { LoginSharePc } from '../contract'
 
 const quiet = 30_000
 const stale = 90_000

@@ -1,4 +1,4 @@
-import type { LoginProvider } from '@sand/protocol'
+import type { LoginProvider } from '../contract'
 import type { Accounts } from './accounts'
 import { authorizeClaude, exchangeClaude, type ClaudeFlow } from './anthropic'
 import { deviceTimeout, deviceUrl, pollDevice, startDevice } from './openai'

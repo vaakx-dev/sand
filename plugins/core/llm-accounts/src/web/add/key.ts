@@ -1,5 +1,5 @@
 import { div, keys, label, p, primaryAction, segmented, sig, textInput, toggleSwitch } from '@sand/dom'
-import type { LoginProvider } from '@sand/protocol'
+import type { LoginProvider } from '../../contract'
 import { busyAction } from '../parts'
 import type { LoginControl } from '../state'
 

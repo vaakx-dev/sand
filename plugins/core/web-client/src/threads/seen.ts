@@ -1,4 +1,4 @@
-import type { Thread, Wire } from '@sand/protocol'
+import type { Thread, Wire } from '../contract'
 import { listen } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { Store } from './store'

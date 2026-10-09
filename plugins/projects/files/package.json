@@ -4,7 +4,8 @@
   "description": "Lists and searches the files of a project folder, using git when it can",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Files",
@@ -17,7 +18,7 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

@@ -1,4 +1,4 @@
-import type { PaletteItem, PaletteSource } from '@sand/protocol'
+import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import { connectItem } from './flow/connect'
 import { sourcesPage } from './flow/sources'
 import type { FlowContext } from './flow/types'

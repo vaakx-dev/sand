@@ -1,4 +1,4 @@
-import type { PanelSpec } from '@sand/protocol'
+import type { PanelSpec } from '@sand/dom'
 import { badge, derive, div, dynamicChild, icon, iconButton, keep, layer, list, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
 import type { Surface } from './surface'
 

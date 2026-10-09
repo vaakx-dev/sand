@@ -1,0 +1,23 @@
+{
+  "name": "@sand/host-updates",
+  "version": "0.0.0",
+  "description": "Checks GitHub for newer sand releases and installs them when you ask",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Updates",
+    "summary": "Installs newer sand releases"
+  },
+  "dependencies": {
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

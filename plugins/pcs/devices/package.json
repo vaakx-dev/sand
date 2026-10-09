@@ -17,8 +17,16 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-tailscale": "workspace:*",
+    "@sand/host-updates": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "uqr": "^0.1.3"
   }

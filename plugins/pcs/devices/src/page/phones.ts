@@ -1,4 +1,4 @@
-import type { PairedDevice } from '@sand/protocol'
+import type { PairedDevice } from '@sand/host-devices/contract'
 import { ago, clock, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'

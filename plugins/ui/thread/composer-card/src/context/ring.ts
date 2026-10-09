@@ -1,8 +1,8 @@
-import type { ContextUsage } from '@sand/protocol'
-import { runCommand } from '@sand/conversation'
+import type { ContextUsage } from '@sand/compaction/contract'
 import { circle, div, dropdown, errorMessage, icon, iconButton, secondaryAction, show, svg, type Derive } from '@sand/dom'
 import { percent, tokens } from '@sand/kit'
 import type { Context } from 'drydock'
+import { runCommand } from '../send/submit'
 
 const radius = 8
 const around = 2 * Math.PI * radius

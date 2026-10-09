@@ -1,4 +1,4 @@
-import type { UpdatePhase, UpdateState } from '@sand/protocol'
+import type { UpdatePhase, UpdateState } from '@sand/host-updates/contract'
 
 export const short = (id: string | undefined) => id?.slice(0, 6) ?? ''
 

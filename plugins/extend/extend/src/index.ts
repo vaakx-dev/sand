@@ -1,4 +1,4 @@
-import type { Tool } from '@sand/protocol'
+import type { Tool } from '@sand/tools/contract'
 import { definePlugin, type Context } from 'drydock'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'

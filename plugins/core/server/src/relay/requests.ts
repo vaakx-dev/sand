@@ -1,4 +1,5 @@
-import type { Hello, SessionSettings, WireRequest } from '@sand/protocol'
+import type { Hello, WireRequest } from '@sand/protocol'
+import type { SessionSettings } from '@sand/model/contract'
 import { invocation } from './invocation'
 import type { Peer } from './peer'
 import type { RelayState } from './state'

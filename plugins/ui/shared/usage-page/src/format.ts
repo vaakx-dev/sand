@@ -1,4 +1,4 @@
-import type { ProviderUsage, UsageTotals } from '@sand/protocol'
+import type { ProviderUsage, UsageTotals } from '@sand/usage/contract'
 import { dollars, percent, tokens, tokensOf, usageCost } from '@sand/kit'
 
 export type Metric = 'cost' | 'tokens'

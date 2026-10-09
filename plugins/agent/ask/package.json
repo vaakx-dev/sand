@@ -4,21 +4,34 @@
   "description": "ask tool: the agent asks the user questions above the composer and waits for the answers",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/web/index.ts",
     "label": "Questions",
     "summary": "Shows the agent's questions above the composer so you can pick an answer or type your own",
+    "provides": [
+      "asks"
+    ],
     "uses": {
       "composer": "questions can't be answered, only skipped by stopping the turn",
-      "transcript": "asked questions and their answers are not shown in the thread"
+      "transcript": "asked questions and their answers are not shown in the thread",
+      "toolViews": "asked questions and their answers are not shown in the thread"
     }
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
+    "@sand/composer-card": "workspace:*",
     "@sand/dom": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

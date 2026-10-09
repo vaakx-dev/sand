@@ -1,4 +1,3 @@
-import { markdownNodes, resultSections } from '@sand/conversation'
 import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span } from '@sand/dom'
 import { row, type RowContext } from './row'
 
@@ -14,10 +13,10 @@ export interface Card {
 
 const summary = (text: string) => oneLine(text.split('\n').find(line => line.trim())?.replace(/^[#>*\-\s`]+|[*`]+/g, '') ?? '', 140)
 
-const whole = (text: string) =>
+const whole = (text: string, context: RowContext) =>
   fold(
     { lines: text.split('\n').length, chars: text.length, copy: () => text, copyLabel: 'Copy' },
-    div({ class: 'markdown' }, markdownNodes(text)),
+    div({ class: 'markdown' }, context.markdown.nodes(text)),
   )
 
 const section = (text: string, key: string, context: RowContext) => {
@@ -29,7 +28,7 @@ const section = (text: string, key: string, context: RowContext) => {
       chevron(() => open.get()),
       span({ class: 'min-w-0 flex-1 truncate' }, summary(text)),
     ),
-    show(open, () => div({ class: 'px-3 pt-1 pb-3' }, div({ class: 'markdown' }, markdownNodes(text)), div({ class: 'mt-2' }, copyButton({ text: () => text, label: 'Copy' })))),
+    show(open, () => div({ class: 'px-3 pt-1 pb-3' }, div({ class: 'markdown' }, context.markdown.nodes(text)), div({ class: 'mt-2' }, copyButton({ text: () => text, label: 'Copy' })))),
   )
 }
 
@@ -39,7 +38,7 @@ const statusBadge = (status: string) => badge(tones[status as keyof typeof tones
 
 export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {
-    const sections = resultSections(card.text)
+    const sections = context.parts.sections(card.text)
     return div(
       { class: ['mt-2 mb-4 flex gap-3 rounded-xl p-3 text-sm text-neutral-300', card.failed ? 'bg-danger-950' : 'bg-accent-950'] },
       span({ class: 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent-900 text-accent-400' }, icon(card.icon, 15)),
@@ -57,7 +56,7 @@ export const cardRow = (card: Card, context: RowContext) =>
               { class: 'flex flex-col gap-1' },
               sections.map((text, index) => section(text, `${card.key}:${index}`, context)),
             )
-          : card.text && whole(sections[0] ?? ''),
+          : card.text && whole(sections[0] ?? '', context),
       ),
     )
   })

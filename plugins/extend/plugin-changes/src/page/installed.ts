@@ -1,4 +1,4 @@
-import type { InstalledPlugin } from '@sand/protocol'
+import type { InstalledPlugin } from '@sand/host-plugin-sync/contract'
 import { derive, div, hint, list, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
 import type { PluginSource } from '../source'
 

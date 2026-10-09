@@ -1,7 +1,7 @@
-import type { Nav, NavAction, NavList } from '@sand/protocol'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { pulse } from '../../reactive/owned'
+import type { Nav, NavAction, NavList } from './types'
 
 const byOrder = <T extends { order?: number }>(items: T[]) => [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 

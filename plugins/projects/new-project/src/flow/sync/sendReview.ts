@@ -1,4 +1,6 @@
-import type { PalettePage, ProjectRef, Sync } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { PalettePage } from '@sand/palette/contract'
+import type { Sync } from '../../contract'
 import { relationLabel } from '@sand/kit'
 import type { FlowContext } from '../types'
 import { pcName, placed, projectName } from './names'

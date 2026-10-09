@@ -1,4 +1,5 @@
-import type { LLM, Message, Usage } from '@sand/protocol'
+import type { LLM } from '@sand/llm-accounts/contract'
+import type { Message, Usage } from '@sand/messages'
 import { promptText, system } from './prompt'
 import { serialize } from './serialize'
 

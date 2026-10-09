@@ -1,4 +1,5 @@
-import type { JobState, JobStatus, Thread } from '@sand/protocol'
+import type { JobStatus } from '@sand/agents/contract'
+import type { JobState, Thread } from '@sand/web-client/contract'
 import { startedBy, type Calls } from './origin'
 
 export type ModelOf = (thread: Thread) => string | undefined

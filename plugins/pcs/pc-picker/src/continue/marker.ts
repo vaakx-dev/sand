@@ -1,4 +1,5 @@
-import type { RenderEntry, ThreadLink, ThreadLinkEntries } from '@sand/protocol'
+import type { ThreadLink, ThreadLinkEntries } from '@sand/sessions-sqlite/contract'
+import type { RenderEntry } from '@sand/transcript-chat/contract'
 import { button, div, span } from '@sand/dom'
 import type { ContinueContext } from './flow'
 

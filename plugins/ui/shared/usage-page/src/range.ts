@@ -1,4 +1,4 @@
-import type { UsageBucket, UsageQuery } from '@sand/protocol'
+import type { UsageBucket, UsageQuery } from '@sand/usage/contract'
 
 export const ranges = ['24h', '7d', '30d', '90d'] as const
 

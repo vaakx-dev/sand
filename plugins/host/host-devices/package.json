@@ -1,0 +1,24 @@
+{
+  "name": "@sand/host-devices",
+  "version": "0.0.0",
+  "description": "Paired devices: their keys, one-time pairing secrets and the device list",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Devices",
+    "summary": "Paired phones, browsers and PCs",
+    "provides": [
+      "hostDevices"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

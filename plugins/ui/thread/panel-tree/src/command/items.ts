@@ -1,4 +1,4 @@
-import type { PickItem } from '@sand/protocol'
+import type { PickItem } from '@sand/server/contract'
 import { ago } from '@sand/kit'
 import { ancestors, type TreeNode } from '../tree/forest'
 import type { TreeFrame } from '../tree/frame'

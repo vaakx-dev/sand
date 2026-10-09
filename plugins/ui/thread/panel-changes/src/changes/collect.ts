@@ -1,4 +1,4 @@
-import type { Entry, Message, ToolCallBlock } from '@sand/protocol'
+import type { Entry, Message, ToolCallBlock } from '@sand/messages'
 import { diffCounts, type DiffLine, diffLines, hasToolResult, tildeHome, userParts } from '@sand/kit'
 
 export interface FileChange {

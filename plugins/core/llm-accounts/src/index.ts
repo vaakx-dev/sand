@@ -1,5 +1,5 @@
-import { sandHome } from '@sand/host'
-import type { LLM, Limits, LoginProvider, LoginSharePc, Server } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { Limits, LLM, LoginProvider, LoginSharePc } from './contract'
 import { definePlugin } from 'drydock'
 import { createAccounts } from './auth/accounts'
 import { authPath } from './auth/path'
@@ -22,6 +22,7 @@ const refreshEvery = 60_000
 
 export default definePlugin({
   name: 'llm-accounts',
+  inject: ['cli'],
   async apply(ctx) {
     let limits = ctx.hot.data.limits as Limits | undefined
     let server: Server | undefined
@@ -39,7 +40,7 @@ export default definePlugin({
       server?.broadcast('login.change', [state()])
     }
 
-    const home = sandHome(ctx)
+    const { home } = ctx.cli
     const accounts = createAccounts(await authPath(home), changed)
     const login = createLogin(accounts)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)

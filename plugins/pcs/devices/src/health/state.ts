@@ -1,4 +1,5 @@
-import type { HostHealth, PcRepairResult } from '@sand/protocol'
+import type { HostHealth } from '@sand/host-health/contract'
+import type { PcRepairResult } from '@sand/host-updates/contract'
 import { errorMessage, onTimeout, sig, untrack, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

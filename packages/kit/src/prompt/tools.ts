@@ -1,4 +1,4 @@
-import type { Entry, Message, ToolCallBlock } from '@sand/protocol'
+import type { Entry, Message, ToolCallBlock } from '@sand/messages'
 
 export const hasToolResult = (message: Message) => message.content.some(block => block.type === 'tool_result')
 

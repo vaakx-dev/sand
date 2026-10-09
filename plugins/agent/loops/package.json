@@ -1,0 +1,36 @@
+{
+  "name": "@sand/loops",
+  "version": "0.0.0",
+  "description": "Runs each turn in a shared frame and hands it to the agent loop chosen for the thread",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Agent loops",
+    "summary": "Runs turns with the loop chosen for each thread",
+    "provides": [
+      "loop",
+      "loops"
+    ],
+    "uses": {
+      "ui": "there is no /loop command and loop fallbacks are not announced",
+      "server": "the page cannot list or choose loops",
+      "transcript": "loop changes are not shown in the thread"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

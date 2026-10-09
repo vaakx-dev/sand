@@ -1,9 +1,8 @@
-import type { OpenedSession } from '@sand/protocol'
+import type { OpenedSession } from '../contract'
 import { existsSync } from 'node:fs'
 import type { ServerContext } from '../context'
 import type { LiveTracker } from '../live/track'
 import { info } from '../socket/serialize'
-import { queueState } from './queue'
 import type { CoreHandlers } from './registry'
 import { openSession } from './open'
 
@@ -21,13 +20,13 @@ export const sessionRequests = (ctx: ServerContext, live: LiveTracker): CoreHand
     'sessions.branch': request => info(ctx.sessions.branch(session(request.session), request.into, request.at)),
     'session.open': request => {
       const opened = session(request.session)
-      return {
+      const base: OpenedSession = {
         info: info(opened),
         entries: opened.entries(),
-        queue: queueState(ctx, opened),
         settings: ctx.modelSettings?.state(opened),
         ...live.snapshot(opened.id),
-      } satisfies OpenedSession
+      }
+      return ctx.waterfall('session.opened', base, opened)
     },
     'session.append': request => {
       session(request.session).append(request.entry.type, request.entry.data, request.entry.id)

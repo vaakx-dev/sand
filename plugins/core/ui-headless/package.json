@@ -18,8 +18,17 @@
     }
   },
   "dependencies": {
+    "@sand/agents": "workspace:*",
+    "@sand/compaction": "workspace:*",
+    "@sand/html-render": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

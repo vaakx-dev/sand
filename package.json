@@ -10,6 +10,8 @@
     "plugins/projects/*",
     "plugins/pcs/*",
     "plugins/extend/*",
+    "plugins/cli/*",
+    "plugins/host/*",
     "apps/*"
   ],
   "scripts": {

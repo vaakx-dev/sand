@@ -1,4 +1,5 @@
-import type { ThreadLinkEntries, WireRequestOf } from '@sand/protocol'
+import type { WireRequestOf } from '@sand/protocol'
+import type { ThreadLinkEntries } from '@sand/sessions-sqlite/contract'
 import type { SessionsContext } from '../types'
 
 export const linkThread = (ctx: SessionsContext) => (request: WireRequestOf<'thread.link'>) => {

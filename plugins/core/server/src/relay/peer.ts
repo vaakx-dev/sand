@@ -1,4 +1,6 @@
-import type { RelayEvents, ServerMessage, Session } from '@sand/protocol'
+import type { ServerMessage } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { RelayEvents } from '../contract'
 import type { ServerWebSocket } from 'bun'
 
 export type Socket = ServerWebSocket<unknown>

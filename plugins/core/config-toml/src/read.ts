@@ -1,4 +1,4 @@
-import { expandHome } from '@sand/host'
+import { expandHome } from '@sand/kit/fs'
 import { errorMessage } from '@sand/kit'
 import { dirname, isAbsolute } from 'node:path'
 

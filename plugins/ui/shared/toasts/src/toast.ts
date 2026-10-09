@@ -1,4 +1,4 @@
-import type { NotifyAction } from '@sand/protocol'
+import type { NotifyAction } from './contract'
 import { copyButton, div, icon, iconButton, onTimeout, primaryAction, span, untrack, type Sig } from '@sand/dom'
 
 export interface Toast {

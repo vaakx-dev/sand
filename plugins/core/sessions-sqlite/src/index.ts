@@ -1,9 +1,14 @@
-import type { Entry, Session, SessionInfo, Sessions } from '@sand/protocol'
-import { expandHome, projectOfFolder, sandHome, scratchFolder, scratchRoot, watchProjects } from '@sand/host'
+import type { Entry } from '@sand/messages'
+import type { Session, SessionInfo, Sessions } from './contract'
+import { expandHome } from '@sand/kit/fs'
+import type {} from '@sand/paths/contract'
+import type {} from '@sand/project-files/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { open } from './db'
+import { rewriter } from './format/rewrite'
+import { current, upgrade } from './format/upgrade'
 import { remover, summaries } from './list'
 import { serveMeta, sessionMeta } from './meta'
 import { assignProjects } from './projects'
@@ -11,9 +16,11 @@ import { createSession } from './session'
 
 export default definePlugin({
   name: 'sessions-sqlite',
+  inject: ['paths', 'projectFiles'],
   config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
-    const home = sandHome(ctx)
+    const { paths, projectFiles } = ctx
+    const { home } = paths
     const db = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
     ctx.effect(() => () => db.close())
     const opened = new Map<string, Session>()
@@ -27,8 +34,9 @@ export default definePlugin({
       return session
     }
     const insert = db.query(
-      'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $created, $created)',
+      'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, format, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $format, $created, $created)',
     )
+    const rewrite = rewriter(db)
     const find = db.query<SessionInfo, { id: string }>('select * from sessions where id = $id')
     const list = summaries(db)
     const removeAll = remover(db)
@@ -39,13 +47,14 @@ export default definePlugin({
         const info: SessionInfo = {
           id,
           created: Date.now(),
-          cwd: cwd || scratchFolder(ctx, id),
-          project: cwd ? (project !== undefined ? project : projectOfFolder(cwd, home)) : null,
+          cwd: cwd || paths.scratchFolder(id),
+          project: cwd ? (project !== undefined ? project : projectFiles.ofFolder(cwd)) : null,
           title: title ?? null,
           head: null,
           parent: parent ?? null,
           origin: origin ?? null,
           kind: kind ?? 'main',
+          format: current,
         }
         insert.run({ ...info })
         const session = remember(info)
@@ -56,7 +65,8 @@ export default definePlugin({
         const cached = opened.get(id)
         if (cached) return cached
         const info = find.get({ id })
-        return info ? remember(info) : undefined
+        if (!info) return undefined
+        return remember((info.format ?? 1) < current ? rewrite(info) : info)
       },
       branch(source, id, at) {
         const title = source.title ? `${source.title} (branch)` : undefined
@@ -74,18 +84,20 @@ export default definePlugin({
         for (const removed of removeAll(id)) opened.delete(removed)
         ctx.emit('session.remove', session)
       },
+      format: current,
+      upgrade,
     }
     ctx.provide('sessions', sessions)
-    ctx.on('server.hello', hello => ({ ...hello, scratch: scratchRoot(ctx) }))
+    ctx.on('server.hello', hello => ({ ...hello, scratch: paths.scratchRoot() }))
     ctx.on('runtime.release', ids => {
       for (const id of ids) opened.delete(id)
     })
     const meta = sessionMeta(db)
     ctx.watch('server', server => (server ? serveMeta(server, meta) : undefined))
-    assignProjects(db, home)
+    assignProjects(db, projectFiles)
     ctx.effect(() =>
-      watchProjects(home, () => {
-        for (const { id, project } of assignProjects(db, home)) {
+      projectFiles.onChange(() => {
+        for (const { id, project } of assignProjects(db, projectFiles)) {
           const cached = opened.get(id)
           if (cached) cached.project = project
           const session = sessions.open(id)

@@ -1,0 +1,28 @@
+{
+  "name": "@sand/host-gateway",
+  "version": "0.0.0",
+  "description": "The HTTP and WebSocket front door of the host: pairing, tickets, network settings and the proxy to the runtime",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Gateway",
+    "summary": "Serves sand to your devices",
+    "provides": [
+      "hostHttp"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/host-tailscale": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

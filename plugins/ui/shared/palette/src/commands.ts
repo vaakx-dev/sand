@@ -1,4 +1,5 @@
-import type { PaletteItem, PalettePage, PaletteSource, WebCommand } from '@sand/protocol'
+import type { WebCommand } from '@sand/commands/contract'
+import type { PaletteItem, PalettePage, PaletteSource } from './contract'
 import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
 

@@ -37,4 +37,19 @@ export default definePlugin({
 - Ship skills by putting `skills/<name>/SKILL.md` in the plugin folder and calling `ctx.watch('skills', skills => skills?.register(dir))`.
 - Services and events are typed in `{{registry}}`; read it for exact signatures.
 
+## Agent loops
+
+A loop plugin decides how a turn runs. Inject `loops` and call `ctx.effect(() => ctx.loops.register({ name, label, description, plugin, run }))`; types come from `@sand/loops/contract`. `run(turn)` gets `turn.hooks` (`send`, `build`, `stream`, `respond`, `tools`, `inbox`, `stop`, `append`) and returns `{ stopReason, text }`. Use the hooks instead of calling the model or tools yourself, so every loop fires the same events. List the loop names in `package.json` under `"sand": { "loops": ["<name>"] }`. Users pick a loop with `/loop`; a loop that fails twice in a thread is switched off and the thread goes back to the previous one.
+
+Installed loop plugins can't be edited in place. To change one:
+
+1. Copy the plugin folder (from `~/.sand/plugins/<p>` or a built-in) to `~/.sand/drafts/<p>`.
+2. Edit the draft.
+3. Call `loop_trial` with `{ plugin: "<p>" }` (or the user runs `/loop-trial <p>`). It runs each loop on a scripted model that asks for one `trial_ping` call and then says "done". If every check passes, the draft replaces `~/.sand/plugins/<p>`; otherwise the installed plugin stays as it was and the failed trial thread is kept.
+4. Ask the user to run `/reload`.
+
+## Hooks
+
+For small changes to a turn, write a hook file instead of a plugin: a `.ts` file in `~/.sand/hooks/` (or `.sand/hooks/` in a project, which the user must trust) that default-exports `(hook) => { hook('tool.before', (call, session) => …) }`. Hook moments: `turn.prompt`, `turn.start`, `model.choose`, `context.build`, `llm.response`, `tool.before`, `tool.result`, `turn.stop`, `context.overflow`, `turn.end`. `tool.before` may return `{ action: 'allow' | 'deny' | 'ask' | 'rewrite', … }`. `/hooks` lists the files and their status.
+
 Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to run `/reload`. It starts a fresh sand runtime with every plugin; the page stays connected and running turns finish on the old runtime. Nothing reloads on its own.

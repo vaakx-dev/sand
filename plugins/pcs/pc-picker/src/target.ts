@@ -1,4 +1,5 @@
-import type { Machine, ProjectGroup, ProjectRef, Thread } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { groupOf } from './group'
 

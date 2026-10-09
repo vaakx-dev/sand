@@ -1,4 +1,5 @@
-import type { Wire, WireRequest } from '@sand/protocol'
+import type { WireRequest } from '@sand/protocol'
+import type { Wire } from '../contract'
 import type { Store } from '../threads/store'
 import type { Links } from './links'
 

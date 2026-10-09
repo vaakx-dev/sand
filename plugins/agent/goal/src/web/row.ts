@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 import { div, icon, span } from '@sand/dom'
 import type { Goal } from '../goal'
 

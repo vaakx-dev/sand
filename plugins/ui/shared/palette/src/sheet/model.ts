@@ -1,4 +1,4 @@
-import type { PaletteItem, PaletteItemAction, PalettePage } from '@sand/protocol'
+import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
 import { batch, derive, effect, errorMessage, listbox, onTimeout, sig, untrack } from '@sand/dom'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'

@@ -1,4 +1,5 @@
-import type { RequestHandler, Server } from '@sand/protocol'
+import type { RequestHandler } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
 import type { SyncHandlers } from './service'
 
 export const serveSync = (server: Server, handlers: SyncHandlers) => {

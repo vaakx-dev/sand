@@ -1,5 +1,5 @@
 import { copyButton, div, el, p, span, type Child } from '@sand/dom'
-import type { HostHealth } from '@sand/protocol'
+import type { HostHealth } from '@sand/host-health/contract'
 
 export const healthSummary = (health: HostHealth): string => {
   if (health.healthy) return 'sand runs normally'

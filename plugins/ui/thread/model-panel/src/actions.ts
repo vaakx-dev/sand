@@ -1,4 +1,4 @@
-import type { EffectiveSettings, SettingsPatch } from '@sand/protocol'
+import type { EffectiveSettings, SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
 

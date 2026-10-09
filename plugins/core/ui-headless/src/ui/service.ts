@@ -1,4 +1,6 @@
-import type { Command, NoticeLevel, Session, SessionSettings, UI } from '@sand/protocol'
+import type { SessionSettings } from '@sand/model/contract'
+import type { Command, NoticeLevel, UI } from '@sand/server/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Printer } from '../print/printer'
 
 export const createHeadlessUI = (printer: Printer, cwd: string, draft: () => SessionSettings | undefined) => {

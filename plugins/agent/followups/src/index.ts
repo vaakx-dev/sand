@@ -1,5 +1,6 @@
-import type { FollowUps, Pending, Session } from '@sand/protocol'
-import { sandHome } from '@sand/host'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Pending } from '@sand/steering/contract'
+import type { FollowUps } from './contract'
 import { errorMessage, promptLabel } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { serveQueue } from './serve'
@@ -8,9 +9,9 @@ import { createStore } from './store'
 export default definePlugin({
   name: 'followups',
   description: 'Follow-ups queued while a turn runs; the next one starts when the turn ends',
-  inject: ['loop', 'sessions'],
+  inject: ['cli', 'loop', 'sessions'],
   async apply(ctx) {
-    const store = await createStore(sandHome(ctx))
+    const store = await createStore(ctx.cli.home)
     let live = true
     let draining = false
     ctx.effect(() => () => {
@@ -60,11 +61,11 @@ export default definePlugin({
         const item = store.get(session.id).find(item => item.id === id)
         if (!item) return false
         if (draining) {
-          if (ctx.loop.steer(session, item.prompt, item.label)) take(session, id)
+          if (ctx.steering?.steer(session, item.prompt, item.label)) take(session, id)
           return true
         }
         take(session, id)
-        if (!ctx.loop.steer(session, item.prompt, item.label)) start(session, item)
+        if (!ctx.steering?.steer(session, item.prompt, item.label)) start(session, item)
         return true
       },
     }

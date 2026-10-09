@@ -1,4 +1,4 @@
-import type { TurnResult } from '@sand/protocol'
+import type { TurnResult } from '@sand/loops/contract'
 import type { Follower } from '../follow/follower'
 import type { Printer } from '../print/printer'
 import type { HeadlessUI } from '../ui/service'

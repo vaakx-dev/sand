@@ -1,4 +1,4 @@
-import type { PaletteItem, PaletteItemAction } from '@sand/protocol'
+import type { PaletteItem, PaletteItemAction } from '../contract'
 import { div, icon, menuItem, optionProps, projectIcon, read, rowAction, span, working, type Listbox, type MaybeReactive } from '@sand/dom'
 
 const lead = (item: PaletteItem) => {

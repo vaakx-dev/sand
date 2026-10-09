@@ -1,4 +1,4 @@
-import type { Skills } from '@sand/protocol'
+import type { Skills } from './contract'
 import type { Context } from 'drydock'
 import { describeSkills } from './tool'
 

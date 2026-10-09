@@ -1,4 +1,5 @@
-import type { ProjectRef, SyncChunk, SyncExport, SyncProgress } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { SyncChunk, SyncExport, SyncProgress } from '@sand/sync/contract'
 import type { SyncCall } from './call'
 
 export type Report = (progress: SyncProgress) => void

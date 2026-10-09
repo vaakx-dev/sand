@@ -1,4 +1,5 @@
-import type { Limits, LimitsFeed, Wire } from '@sand/protocol'
+import type { Limits } from '@sand/llm-accounts/contract'
+import type { LimitsFeed, Wire } from '../contract'
 import type { Context } from 'drydock'
 
 export const createLimits = (ctx: Context, wire: Wire): LimitsFeed => {

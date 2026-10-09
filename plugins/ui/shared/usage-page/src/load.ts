@@ -1,4 +1,5 @@
-import type { UsageSummary, Wire } from '@sand/protocol'
+import type { UsageSummary } from '@sand/usage/contract'
+import type { Wire } from '@sand/web-client/contract'
 import { errorMessage, sig } from '@sand/dom'
 import { queryFor, type Range } from './range'
 

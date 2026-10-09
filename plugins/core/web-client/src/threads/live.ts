@@ -1,4 +1,5 @@
-import type { LLMEvent, Thread } from '@sand/protocol'
+import type { LLMEvent } from '@sand/llm-accounts/contract'
+import type { Thread } from '../contract'
 import { applyLiveEvent } from '@sand/kit'
 
 export const applyLive = (thread: Thread, event: LLMEvent) => {

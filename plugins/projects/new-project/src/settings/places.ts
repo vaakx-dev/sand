@@ -1,5 +1,5 @@
 import { tildeHome } from '@sand/dom'
-import type { Machine, ProjectEntry, ProjectGroup } from '@sand/protocol'
+import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from './types'
 
 export const shorten = (ctx: ProjectsContext, path: string, device?: string) => {

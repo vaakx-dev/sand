@@ -1,4 +1,4 @@
-import { folderEntries } from '@sand/host'
+import { folderEntries } from '@sand/kit/fs'
 import { join } from 'node:path'
 
 export const skipped = new Set(['node_modules', '.git'])

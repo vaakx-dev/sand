@@ -1,4 +1,4 @@
-import type { Picked, PickItem, PickOptions } from '@sand/protocol'
+import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
 import { derive, effect, listbox, matching, sig, untrack } from '@sand/dom'
 
 const searchText = (item: PickItem<unknown>) => [item.label, item.detail, item.search].filter(Boolean).join(' ')

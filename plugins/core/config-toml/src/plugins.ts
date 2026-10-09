@@ -2,10 +2,11 @@ import { existsSync } from 'node:fs'
 import { dirname, isAbsolute, join } from 'node:path'
 import { isTable, type Table } from './read'
 
-export const entries = (defaults: string[], table: unknown) => {
+export const entries = (defaults: string[], table: unknown, extra = true) => {
   const plugins = new Map<string, Table>(defaults.map(id => [id, {}]))
   for (const [id, config] of Object.entries(isTable(table) ? table : {})) {
     const { enabled = true, ...rest } = isTable(config) ? config : {}
+    if (!extra && !plugins.has(id)) continue
     if (enabled === false) plugins.delete(id)
     else plugins.set(id, { ...plugins.get(id), ...rest })
   }

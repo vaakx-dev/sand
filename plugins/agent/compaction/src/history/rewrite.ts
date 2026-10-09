@@ -1,4 +1,6 @@
-import type { Block, CompactionRecord, Entry, LLMRequest, Message } from '@sand/protocol'
+import type { LLMRequest } from '@sand/llm-accounts/contract'
+import type { Block, Entry, Message } from '@sand/messages'
+import type { CompactionRecord } from '../contract'
 import { filesText } from '../summarize/files'
 import { messageOf, view } from './view'
 

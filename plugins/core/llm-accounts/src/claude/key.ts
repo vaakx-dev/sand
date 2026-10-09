@@ -1,4 +1,4 @@
-import type { LLMRequest } from '@sand/protocol'
+import type { LLMRequest } from '../contract'
 import type { ApiKey } from '../auth/store'
 import { claudeBody, fastBeta, type ClaudeCall, type ClaudeSettings } from './request'
 

@@ -1,4 +1,4 @@
-import type { LoginPc, LoginRemoteAccount, LoginState } from '@sand/protocol'
+import type { LoginPc, LoginRemoteAccount, LoginState } from './contract'
 import { accountName, type Accounts } from './auth/accounts'
 import { lacking } from './llm'
 import type { Peers, PeerState } from './peers/peers'

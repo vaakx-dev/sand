@@ -1,5 +1,5 @@
-import type { NavItem } from '@sand/protocol'
 import { tildeHome } from '@sand/kit'
+import type { NavItem } from './types'
 
 const marks: Partial<Record<NavItem['state'], string>> = { running: 'Working', background: 'Background agents running', waiting: 'Needs you', draft: 'Draft' }
 

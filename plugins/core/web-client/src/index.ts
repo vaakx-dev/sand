@@ -1,4 +1,4 @@
-import type { RemoteInvite } from '@sand/protocol'
+import type { RemoteInvite } from '@sand/host-remotes/contract'
 import { definePlugin } from 'drydock'
 import { createFileIndex } from './data/files'
 import { createJobs } from './data/jobs'

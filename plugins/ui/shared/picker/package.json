@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Pick and input sheets for server and local prompts, with fuzzy search and keys as buttons",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Pickers",
@@ -13,7 +16,7 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

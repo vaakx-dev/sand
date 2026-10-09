@@ -1,4 +1,5 @@
-import type { CopyDone, ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { CopyDone } from '../../contract'
 import { errorMessage } from '@sand/dom'
 import type { FlowContext } from '../types'
 import { pcName } from './names'

@@ -1,4 +1,6 @@
-import type { SkillIndex, SkillSummary, Threads, Wire, WireRequest } from '@sand/protocol'
+import type { WireRequest } from '@sand/protocol'
+import type { SkillSummary } from '@sand/skills/contract'
+import type { SkillIndex, Threads, Wire } from '../contract'
 import type { Context } from 'drydock'
 
 const listRequest = (threads: Threads): WireRequest => {

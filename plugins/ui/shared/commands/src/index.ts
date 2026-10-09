@@ -1,4 +1,4 @@
-import type { Commands, WebCommand } from '@sand/protocol'
+import type { Commands, WebCommand } from './contract'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({

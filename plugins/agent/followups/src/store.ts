@@ -1,5 +1,5 @@
-import { replaceFile } from '@sand/host'
-import type { Pending } from '@sand/protocol'
+import { replaceFile } from '@sand/kit/fs'
+import type { Pending } from '@sand/steering/contract'
 import { join } from 'node:path'
 
 type Queues = Record<string, Pending[]>

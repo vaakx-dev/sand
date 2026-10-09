@@ -1,4 +1,4 @@
-import type { ExtensionInfo, Extensions } from '@sand/protocol'
+import type { ExtensionInfo, Extensions } from '@sand/web/contract'
 import { segmented, settingsRow } from '@sand/dom'
 import type { Roles } from './roles'
 

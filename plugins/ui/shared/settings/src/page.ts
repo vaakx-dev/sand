@@ -1,5 +1,5 @@
 import { derive, div, dismissible, dynamicChild, el, icon, iconButton, show, type Sig } from '@sand/dom'
-import type { SettingsPage } from '@sand/protocol'
+import type { SettingsPage } from './contract'
 import type { PageStore } from './pages'
 
 export interface PageParts {

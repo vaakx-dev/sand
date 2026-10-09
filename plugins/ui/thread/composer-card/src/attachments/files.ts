@@ -1,6 +1,7 @@
-import type { AttachmentLimits, UserContent } from '@sand/protocol'
-import { contentName, fromFile } from '@sand/conversation'
+import type { AttachmentLimits } from '@sand/attachments/contract'
+import type { UserContent } from '@sand/messages'
 import { errorMessage, sig } from '@sand/dom'
+import { contentName, fromFile } from './content'
 
 export interface Attached {
   id: string

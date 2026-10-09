@@ -1,5 +1,5 @@
 import { plural, remoteKey } from '@sand/kit'
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { ago, div, iconButton, icon, projectIcon, show, span, type Sig } from '@sand/dom'
 import { locationLine, noCopyLine } from './location'
 import { rowMenu } from './menu'

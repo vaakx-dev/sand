@@ -1,4 +1,5 @@
-import type { Machine, WebCommand } from '@sand/protocol'
+import type { WebCommand } from '@sand/commands/contract'
+import type { Machine } from '@sand/web-client/contract'
 import { blockedReason, type ContinueContext, continueOn, continueTargets } from './flow'
 
 const pickTarget = async (ctx: ContinueContext, candidates: Machine[], args: string) => {

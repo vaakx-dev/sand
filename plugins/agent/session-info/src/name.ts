@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import { commandThread } from '@sand/kit'
 import type { InfoContext } from './types'
 

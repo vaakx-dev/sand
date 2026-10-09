@@ -1,4 +1,4 @@
-import type { Threads } from '@sand/protocol'
+import type { Threads } from '@sand/web-client/contract'
 
 const limit = 2
 

@@ -1,4 +1,5 @@
-import type { Command, Effort } from '@sand/protocol'
+import type { Effort } from '@sand/llm-accounts/contract'
+import type { Command } from '@sand/server/contract'
 import { modelOf } from '../effective'
 import { applyChoice } from './apply'
 import { parseArgs } from './args'

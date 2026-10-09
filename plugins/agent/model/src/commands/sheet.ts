@@ -1,4 +1,5 @@
-import type { EffortLevel, ModelInfo, PickItem } from '@sand/protocol'
+import type { EffortLevel, ModelInfo } from '@sand/llm-accounts/contract'
+import type { PickItem } from '@sand/server/contract'
 import { tokens } from '@sand/kit'
 import { describe, levelLabel, modelOf } from '../effective'
 import { applyChoice } from './apply'

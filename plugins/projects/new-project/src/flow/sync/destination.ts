@@ -1,4 +1,7 @@
-import type { CopyDone, Machine, PaletteItem, PalettePage, ProjectRef, Sync } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { Machine } from '@sand/web-client/contract'
+import type { CopyDone, Sync } from '../../contract'
 import { folderPage } from '../folder'
 import { absolute, join, short } from '../paths'
 import { deviceOf, type FlowContext } from '../types'

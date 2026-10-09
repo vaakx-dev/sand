@@ -1,5 +1,5 @@
 import { plural } from '@sand/kit'
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, sig, type Pulse, type Sig } from '@sand/dom'
 import { sourcesPage } from '../flow/sources'
 import { projectList } from './list'

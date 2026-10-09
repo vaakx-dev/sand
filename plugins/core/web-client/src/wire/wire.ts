@@ -1,4 +1,5 @@
-import type { ConnectionInfo, Hello, Wire, WireState } from '@sand/protocol'
+import type { Hello } from '@sand/protocol'
+import type { ConnectionInfo, Wire, WireState } from '../contract'
 import type { Context } from 'drydock'
 import { pairFragment } from '../auth/fragment'
 import { createHostAuth } from '../auth/host'

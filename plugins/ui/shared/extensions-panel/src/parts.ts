@@ -1,4 +1,4 @@
-import type { ExtensionInfo } from '@sand/protocol'
+import type { ExtensionInfo } from '@sand/web/contract'
 import { settingsRow, span, toggleSwitch } from '@sand/dom'
 
 export const partRow = (extension: ExtensionInfo, toggle: () => void) =>

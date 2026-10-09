@@ -1,4 +1,5 @@
-import type { EffectiveSettings, Models, ModelsUpdate, SessionSettings, SettingsState, Threads, Wire } from '@sand/protocol'
+import type { EffectiveSettings, ModelsUpdate, SessionSettings, SettingsState } from '@sand/model/contract'
+import type { Models, Threads, Wire } from '../contract'
 import type { Context } from 'drydock'
 import type { Store } from '../threads/store'
 

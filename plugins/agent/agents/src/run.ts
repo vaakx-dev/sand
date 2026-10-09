@@ -1,5 +1,4 @@
-import type { AgentDefinition, AgentRequest, AgentResult } from '@sand/protocol'
-import { toolNotes } from '@sand/host'
+import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
 import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { AgentMeta, Meta } from './meta'
@@ -27,7 +26,7 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
 
   const open = async (request: AgentRequest, definition: AgentDefinition, depth: number) => {
     const { parent, task, label, origin } = request
-    const system = await compose(definition, parent, toolNotes(ctx.tools))
+    const system = await compose(definition, parent, ctx.instructions)
     const session = ctx.sessions.create({
       cwd: parent.cwd,
       project: parent.project,

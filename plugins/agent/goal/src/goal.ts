@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 
 export const entryType = 'goal'
 

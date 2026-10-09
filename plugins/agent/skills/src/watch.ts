@@ -1,22 +1,23 @@
-import { debouncedWatch } from '@sand/host'
+import type { Watcher } from '@sand/watch/contract'
+import type { Dispose } from 'drydock'
 import { existsSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-export const watchRoot = (root: string, onChange: () => void) => {
-  let stop = () => {}
+export const watchRoot = (watcher: Watcher, root: string, onChange: () => void) => {
+  let stop: Dispose = () => {}
   const start = () => {
-    stop()
+    void stop()
     stop = existsSync(root)
-      ? debouncedWatch(root, { recursive: true }, () => {
+      ? watcher.debounced(root, { recursive: true }, () => {
           if (!existsSync(root)) start()
           onChange()
         })
-      : debouncedWatch(dirname(root), {}, () => {
+      : watcher.debounced(dirname(root), {}, () => {
           if (!existsSync(root)) return
           start()
           onChange()
         })
   }
   start()
-  return () => stop()
+  return () => void stop()
 }

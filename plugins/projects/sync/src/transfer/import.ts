@@ -1,4 +1,4 @@
-import type { SyncImported } from '@sand/protocol'
+import type { SyncImported } from '../contract'
 import { mkdir, readdir } from 'node:fs/promises'
 import { hiddenLine, hiddenOut, type Hidden } from '../folder/hidden'
 import { exists, isDirectory } from '../folder/stat'

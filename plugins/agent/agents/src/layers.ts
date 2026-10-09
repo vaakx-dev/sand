@@ -1,6 +1,8 @@
-import type { AgentDefinition, Effort } from '@sand/protocol'
+import type { Effort } from '@sand/llm-accounts/contract'
+import type { AgentDefinition } from './contract'
+import type {} from '@sand/paths/contract'
+import type {} from '@sand/watch/contract'
 import type { Context } from 'drydock'
-import { projectFolder, sandHome, watchedFolders } from '@sand/host'
 import { join } from 'node:path'
 import { builtins, loadDefinitions } from './definitions'
 
@@ -8,16 +10,23 @@ export type Resolve = (cwd?: string, project?: string | null) => Promise<Map<str
 
 const none: AgentDefinition[] = []
 
-export const agentLayers = (ctx: Context, defined: Map<string, AgentDefinition>, efforts: Effort[], changed: () => void) => {
+export const agentLayers = (
+  ctx: Context<'paths' | 'watcher'>,
+  defined: Map<string, AgentDefinition>,
+  efforts: Effort[],
+  changed: () => void,
+) => {
   const report = (error: unknown) => ctx.report(error)
   const load = (dir: string) => loadDefinitions([dir], efforts, report)
-  const homeDir = join(sandHome(ctx), 'agents')
-  const home = watchedFolders(ctx, load, none, changed)
-  const projects = watchedFolders(ctx, load, none)
+  const homeDir = join(ctx.paths.home, 'agents')
+  const home = ctx.watcher.folders(load, none, changed)
+  const projects = ctx.watcher.folders(load, none)
+  ctx.effect(() => home.close)
+  ctx.effect(() => projects.close)
 
   const projectLayer = (cwd?: string, id?: string | null) => {
     if (!cwd) return Promise.resolve(none)
-    const dir = join(projectFolder(cwd, id), '.sand', 'agents')
+    const dir = join(ctx.paths.projectFolder(cwd, id), '.sand', 'agents')
     return dir === homeDir ? Promise.resolve(none) : projects.get(dir)
   }
 

@@ -4,7 +4,8 @@
   "description": "Turns attached files, documents, images and clipboard content into prompt content",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Attachments",
@@ -14,6 +15,7 @@
     ]
   },
   "dependencies": {
+    "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"

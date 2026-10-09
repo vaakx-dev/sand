@@ -1,4 +1,4 @@
-import type { LoginAccount, LoginConflict, LoginPending, LoginProvider } from '@sand/protocol'
+import type { LoginAccount, LoginConflict, LoginPending, LoginProvider } from '../contract'
 import { refreshClaude } from './anthropic'
 import { envKey, envNames } from './env'
 import { refreshOpenAI } from './openai'

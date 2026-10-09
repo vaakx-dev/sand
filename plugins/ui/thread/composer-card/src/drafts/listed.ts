@@ -1,4 +1,5 @@
-import type { DraftTarget, ThreadDraft } from '@sand/protocol'
+import type { DraftTarget } from '@sand/web-client/contract'
+import type { ThreadDraft } from '../contract'
 import type { Context } from 'drydock'
 import type { Saved } from './store'
 

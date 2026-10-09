@@ -1,4 +1,4 @@
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { currentTarget, isOnline, refOf, type PickerContext } from './target'
 
 export const refreshGroup = (ctx: PickerContext, group?: ProjectGroup) => {

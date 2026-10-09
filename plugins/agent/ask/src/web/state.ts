@@ -1,4 +1,4 @@
-import type { AskAnswer, AskQuestion } from '@sand/protocol'
+import type { AskAnswer, AskQuestion } from '../contract'
 import { derive, sig } from '@sand/dom'
 
 export interface Draft {

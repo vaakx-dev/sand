@@ -1,4 +1,4 @@
-import type { PluginEntry, PluginOrigin } from '@sand/protocol'
+import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
 import { badge, div, rowAction, secondaryAction, settingsRow, span, type Tone } from '@sand/dom'
 import { originLabels } from './filter'
 import { changedNote, type RowActions } from './warning'
@@ -30,4 +30,5 @@ export const pluginRow = (plugin: PluginEntry, actions: RowActions) =>
       detail(plugin),
     ),
     plugin.changed ? changedNote(plugin, actions) : null,
+    plugin.origin === 'builtin' ? null : actions.history(`plugins/${plugin.name}`),
   )

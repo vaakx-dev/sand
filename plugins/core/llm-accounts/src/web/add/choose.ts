@@ -1,5 +1,5 @@
 import { badge, choiceButton, choiceList, icon, tile } from '@sand/dom'
-import type { LoginProvider, LoginState } from '@sand/protocol'
+import type { LoginProvider, LoginState } from '../../contract'
 import { accountLogo } from '../names'
 
 const subscriptions: { provider: LoginProvider; title: string; detail: string }[] = [

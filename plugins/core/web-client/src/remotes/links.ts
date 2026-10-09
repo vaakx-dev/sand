@@ -1,4 +1,6 @@
-import type { ConnectionInfo, Hello, Remote, RemoteInvite, WireEvent, WireRequest, WireState } from '@sand/protocol'
+import type { Remote, RemoteInvite } from '@sand/host-remotes/contract'
+import type { Hello, WireEvent, WireRequest } from '@sand/protocol'
+import type { ConnectionInfo, WireState } from '../contract'
 import { createHostAuth } from '../auth/host'
 import { learn } from '../connection/book'
 import { createPcConnection } from '../connection/pc'

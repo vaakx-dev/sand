@@ -1,5 +1,5 @@
-import { pair } from '@sand/anthropic'
-import type { Block, Message, ToolResultBlock, UserContent } from '@sand/protocol'
+import type { Block, Message, ToolResultBlock, UserContent } from '@sand/messages'
+import { pair } from '../http/pair'
 import { decodeReasoning } from '../reasoning'
 
 export type Item = Record<string, unknown>

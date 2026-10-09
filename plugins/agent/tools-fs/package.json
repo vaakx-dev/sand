@@ -11,7 +11,8 @@
     "summary": "read, write, edit, glob and grep"
   },
   "dependencies": {
-    "@sand/protocol": "workspace:*",
+    "@sand/attachments": "workspace:*",
+    "@sand/tools": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

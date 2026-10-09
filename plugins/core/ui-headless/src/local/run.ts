@@ -1,4 +1,4 @@
-import type { Session } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
 import { createFollower } from '../follow/follower'
 import { commandOf } from '../run/prompt'

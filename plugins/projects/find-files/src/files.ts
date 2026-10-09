@@ -1,4 +1,4 @@
-import type { PalettePage } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
 import { matching } from '@sand/dom'
 import { folderName } from '@sand/kit'
 import type { Context } from 'drydock'

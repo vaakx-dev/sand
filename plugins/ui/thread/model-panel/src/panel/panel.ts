@@ -1,4 +1,4 @@
-import type { ModelInfo } from '@sand/protocol'
+import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { div, icon, primaryAction, secondaryAction, span, toggleSwitch, type Sig } from '@sand/dom'
 import type { Actions, PanelContext } from '../actions'
 import type { PcStatus } from '../pcs'

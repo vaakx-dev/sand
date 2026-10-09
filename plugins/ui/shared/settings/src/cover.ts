@@ -1,4 +1,4 @@
-import type { Layout } from '@sand/protocol'
+import type { Layout } from '@sand/layout-columns/contract'
 import { collectScope, disposeAll, div, float, layer } from '@sand/dom'
 import type { Dispose } from 'drydock'
 

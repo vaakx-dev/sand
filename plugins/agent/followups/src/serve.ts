@@ -1,4 +1,4 @@
-import type { FollowUps } from '@sand/protocol'
+import type { FollowUps } from './contract'
 import type { Context } from 'drydock'
 
 export const serveQueue = (ctx: Context<'sessions'>, followUps: FollowUps) => {

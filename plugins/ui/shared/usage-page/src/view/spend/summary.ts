@@ -1,4 +1,4 @@
-import type { ProviderUsage, UsageSummary } from '@sand/protocol'
+import type { ProviderUsage, UsageSummary } from '@sand/usage/contract'
 import { div, icon, span } from '@sand/dom'
 import { dollars, plural, tokens, tokensOf, usageCost } from '@sand/kit'
 import { billingText, shareText, valueOf, valueText, type Metric } from '../../format'

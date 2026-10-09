@@ -1,4 +1,4 @@
-import type { ToolCallBlock } from '@sand/protocol'
+import type { ToolCallBlock } from '@sand/messages'
 import { oneLine, tildeHome } from '@sand/kit'
 
 export interface ToolAction {

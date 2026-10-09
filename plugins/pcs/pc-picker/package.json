@@ -17,9 +17,15 @@
     }
   },
   "dependencies": {
+    "@sand/host-projects": "workspace:*",
+    "@sand/commands": "workspace:*",
+    "@sand/composer-card": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/sync": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

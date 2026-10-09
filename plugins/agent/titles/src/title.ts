@@ -1,4 +1,4 @@
-import type { Message } from '@sand/protocol'
+import type { Message } from '@sand/messages'
 import { promptText, userParts } from '@sand/kit'
 
 const maxLength = 50

@@ -1,4 +1,4 @@
-import type { PickItem, PickOptions, UI } from '@sand/protocol'
+import type { PickItem, PickOptions, UI } from '../contract'
 import { reportText } from '@sand/kit'
 import { existsSync } from 'node:fs'
 import { info } from '../socket/serialize'

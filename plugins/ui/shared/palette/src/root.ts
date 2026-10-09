@@ -1,4 +1,4 @@
-import type { PaletteItem, PalettePage, PaletteSource } from '@sand/protocol'
+import type { PaletteItem, PalettePage, PaletteSource } from './contract'
 
 const gather = (source: PaletteSource, query: string) => {
   try {

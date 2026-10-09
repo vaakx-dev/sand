@@ -1,4 +1,4 @@
-import type { RouteKind } from '@sand/protocol'
+import type { RouteKind } from '@sand/host-gateway/contract'
 
 const ranks: Record<RouteKind, number> = { local: 0, lan: 1, tailscale: 2 }
 

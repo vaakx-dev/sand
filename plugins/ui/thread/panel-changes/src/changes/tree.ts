@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 import { collectChanges, type Changes } from './collect'
 
 export interface Source {

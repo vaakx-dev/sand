@@ -1,4 +1,5 @@
-import type { UpdateChannel, UpdateState, WireRequest } from '@sand/protocol'
+import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
+import type { WireRequest } from '@sand/protocol'
 import { errorMessage, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

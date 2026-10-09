@@ -1,7 +1,7 @@
-import type { NavItem, NavList } from '@sand/protocol'
 import { derive } from '@vaakx-dev/vrui'
 import type { NavHost } from './host'
 import { reorder } from './reorder'
+import type { NavItem, NavList } from './types'
 
 export interface NavEntry {
   key: string

@@ -1,4 +1,5 @@
-import type { CompactedFiles, Message } from '@sand/protocol'
+import type { Message } from '@sand/messages'
+import type { CompactedFiles } from '../contract'
 
 const readers = new Set(['read'])
 const writers = new Set(['write', 'edit'])

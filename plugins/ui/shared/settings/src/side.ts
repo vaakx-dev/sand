@@ -1,4 +1,4 @@
-import type { SettingsPage } from '@sand/protocol'
+import type { SettingsPage } from './contract'
 import { appIcon, div, dynamicChild, el, icon, list, navButton, span, type Child, type Sig } from '@sand/dom'
 import type { PageStore } from './pages'
 

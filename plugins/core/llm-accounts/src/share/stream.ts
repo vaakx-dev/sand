@@ -1,4 +1,4 @@
-import type { LLMEvent } from '@sand/protocol'
+import type { LLMEvent } from '../contract'
 import { detailOf } from '../errors'
 import type { ShareLine } from './info'
 

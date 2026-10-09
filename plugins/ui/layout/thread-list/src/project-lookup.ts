@@ -1,4 +1,4 @@
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { folderName, isInside } from '@sand/kit'
 import type { Context } from 'drydock'
 

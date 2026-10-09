@@ -1,4 +1,4 @@
-import type { Effort, ModelInfo } from '@sand/protocol'
+import type { Effort, ModelInfo } from '../contract'
 
 const upToMax: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 const upToXhigh: Effort[] = ['low', 'medium', 'high', 'xhigh']

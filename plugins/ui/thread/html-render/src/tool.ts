@@ -1,4 +1,6 @@
-import type { Artifact, HtmlPages, HtmlRenderEntry, Session, Tool } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Tool } from '@sand/tools/contract'
+import type { Artifact, HtmlPages, HtmlRenderEntry } from './contract'
 import { z } from 'zod'
 import { maxHeight, minHeight } from './page/limits'
 import type { RenderStore } from './store'

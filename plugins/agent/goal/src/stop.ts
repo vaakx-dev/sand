@@ -1,4 +1,6 @@
-import type { Session, TurnResult, UsageRecord, UserContent } from '@sand/protocol'
+import type { TurnResult, UsageRecord } from '@sand/loops/contract'
+import type { UserContent } from '@sand/messages'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { errorMessage, stopFeedback, usageSource } from '@sand/kit'
 import type { Context } from 'drydock'
 import { check } from './check'

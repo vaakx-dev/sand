@@ -1,9 +1,6 @@
-import type { Message, TextBlock } from '@sand/protocol'
+import type { Feedback, Message, TextBlock } from '@sand/messages'
 
-export interface Feedback {
-  source: string
-  text: string
-}
+export type { Feedback }
 
 const pattern = /^<(stop-feedback|note) source="([^"]+)">([\s\S]*)<\/\1>$/
 

@@ -15,8 +15,10 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/host-projects": "workspace:*",
+    "@sand/project-files": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

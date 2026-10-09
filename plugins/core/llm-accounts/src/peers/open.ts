@@ -1,4 +1,4 @@
-import type { LLMRequest } from '@sand/protocol'
+import type { LLMRequest } from '../contract'
 import { rawMessage } from '../errors'
 import { sharePaths } from '../share/info'
 import { authHeaders, Offline, Refused, refusal } from './http'

@@ -1,4 +1,6 @@
-import type { CopyDone, ProjectRef, SyncInspect } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { SyncInspect } from '@sand/sync/contract'
+import type { CopyDone } from '../../contract'
 
 export interface CopyTarget {
   id: string

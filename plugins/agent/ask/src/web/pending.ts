@@ -1,7 +1,10 @@
-import type { AskKind, AskOption, AskQuestion, Message, ToolCallBlock } from '@sand/protocol'
+import type { Message, ToolCallBlock } from '@sand/messages'
+import type { Thread } from '@sand/web-client/contract'
+import type { AskKind, AskOption, AskQuestion } from '../contract'
 import { derive, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { toolName } from '../choices'
+import type { ServerAsks } from './asks'
 
 export interface PendingAsk {
   thread: string
@@ -38,9 +41,8 @@ export const questionsOf = (input: unknown) => {
 const waitingCall = (message: Message, answered: Map<string, unknown>) =>
   message.content.find((block): block is ToolCallBlock => block.type === 'tool_call' && block.name === toolName && !answered.has(block.id))
 
-const pendingOf = (ctx: Context<'threads'>): PendingAsk | undefined => {
-  const thread = ctx.threads.current()
-  if (!thread?.running) return undefined
+const toolAsk = (ctx: Context<'threads'>, thread: Thread): PendingAsk | undefined => {
+  if (!thread.running) return undefined
   const last = ctx.threads.path(thread.id).findLast(entry => entry.type === 'message')?.data as Message | undefined
   if (last?.role !== 'assistant') return undefined
   const call = waitingCall(last, thread.tools.results)
@@ -48,7 +50,17 @@ const pendingOf = (ctx: Context<'threads'>): PendingAsk | undefined => {
   return call && questions.length ? { thread: thread.id, call: call.id, questions } : undefined
 }
 
-export const pendingAsk = (ctx: Context<'threads'>, changes: Pulse) => {
-  const key = changes.read(() => JSON.stringify(pendingOf(ctx) ?? null))
+const serverAsk = (asks: ServerAsks, thread: Thread): PendingAsk | undefined => {
+  const pending = asks.forThread(thread.id)
+  return pending && { thread: thread.id, call: pending.id, questions: pending.questions }
+}
+
+const pendingOf = (ctx: Context<'threads'>, asks: ServerAsks): PendingAsk | undefined => {
+  const thread = ctx.threads.current()
+  return thread && (toolAsk(ctx, thread) ?? serverAsk(asks, thread))
+}
+
+export const pendingAsk = (ctx: Context<'threads'>, changes: Pulse, asks: ServerAsks) => {
+  const key = changes.read(() => JSON.stringify(pendingOf(ctx, asks) ?? null))
   return derive(() => (JSON.parse(key.get()) as PendingAsk | null) ?? undefined)
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@sand/host-hub",
+  "version": "0.0.0",
+  "description": "Connects devices to the current runtime and routes host requests and events",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Hub",
+    "summary": "Routes requests between devices, the host and the runtime",
+    "provides": [
+      "hub"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

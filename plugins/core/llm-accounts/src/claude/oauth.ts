@@ -1,4 +1,4 @@
-import type { LLMRequest } from '@sand/protocol'
+import type { LLMRequest } from '../contract'
 import { claudeBody, fastBeta, type ClaudeCall, type ClaudeSettings } from './request'
 import { claudeCodeVersion, claudeSystem } from './system'
 import { prefixTools } from './tools'

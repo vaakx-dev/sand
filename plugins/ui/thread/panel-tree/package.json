@@ -20,7 +20,10 @@
   "dependencies": {
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

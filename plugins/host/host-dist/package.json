@@ -1,0 +1,27 @@
+{
+  "name": "@sand/host-dist",
+  "version": "0.0.0",
+  "description": "The build id of this sand, and the Add a PC links that pair a new PC and copy its plugins",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Builds and installs",
+    "summary": "This build and the Add a PC links",
+    "provides": [
+      "hostBuild"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-plugin-sync": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

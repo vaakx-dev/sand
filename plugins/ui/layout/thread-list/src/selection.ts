@@ -1,4 +1,4 @@
-import type { Thread, Threads } from '@sand/protocol'
+import type { Thread, Threads } from '@sand/web-client/contract'
 
 export const visibleAncestor = (threads: Threads, thread: Thread | undefined) => {
   const seen = new Set<string>()

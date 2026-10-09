@@ -1,4 +1,4 @@
-import type { PaletteItem, PaletteSource } from '@sand/protocol'
+import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { Context } from 'drydock'
 import { currentPlace } from './places'
 import { newThreadPage, projectItems } from './projects'

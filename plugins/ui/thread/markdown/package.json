@@ -1,0 +1,21 @@
+{
+  "name": "@sand/markdown",
+  "version": "0.0.0",
+  "description": "Turns markdown and code into styled elements for the thread",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Markdown",
+    "summary": "Formats replies with headings, lists, tables, links and highlighted code",
+    "provides": [
+      "markdown"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

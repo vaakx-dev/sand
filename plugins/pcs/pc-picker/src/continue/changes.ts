@@ -1,4 +1,5 @@
-import type { Machine, ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { Machine } from '@sand/web-client/contract'
 import { errorMessage } from '@sand/dom'
 import { refOf } from '../target'
 import type { ContinueContext } from './flow'

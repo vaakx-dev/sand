@@ -3,9 +3,27 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fs": "./src/fs/index.ts",
+    "./host": "./src/host/index.ts"
   },
   "dependencies": {
-    "@sand/protocol": "workspace:*"
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-plugin-sync": "workspace:*",
+    "@sand/host-projects": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-updates": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/sync": "workspace:*",
+    "@sand/usage": "workspace:*"
   }
 }

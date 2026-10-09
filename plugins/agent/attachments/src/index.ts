@@ -1,4 +1,5 @@
-import type { Attachments, UserContent } from '@sand/protocol'
+import type { UserContent } from '@sand/messages'
+import type { Attachments } from './contract'
 import { definePlugin } from 'drydock'
 import { basename, extname } from 'node:path'
 import { z } from 'zod'

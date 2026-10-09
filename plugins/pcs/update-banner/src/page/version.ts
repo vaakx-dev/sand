@@ -1,4 +1,4 @@
-import type { UpdateState } from '@sand/protocol'
+import type { UpdateState } from '@sand/host-updates/contract'
 import { exactTime, settingsRow, settingsSection, toggleSwitch } from '@sand/dom'
 import type { UpdateSource } from '../source'
 import { isBusy, short } from '../text'

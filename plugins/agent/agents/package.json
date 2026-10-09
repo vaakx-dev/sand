@@ -4,7 +4,8 @@
   "description": "Sub-agents and background jobs: the agent tool, agent definitions and job tracking",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/web/index.ts",
@@ -15,16 +16,27 @@
     ],
     "uses": {
       "llm": "agent definitions cannot set an effort level",
+      "instructions": "sub-agents get no environment or project instructions in their prompt",
       "ui": "background results that cannot be delivered fail silently",
       "transcript": "agent calls use the generic tool view",
-      "jobs": "a background agent call shows a tick as soon as it starts"
+      "jobs": "a background agent call shows a tick as soon as it starts",
+      "steering": "background results start a new turn instead of joining the running one"
     }
   },
   "dependencies": {
+    "@sand/context-default": "workspace:*",
     "@sand/dom": "workspace:*",
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/paths": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/watch": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

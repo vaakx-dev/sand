@@ -1,4 +1,4 @@
-import type { Project, ProjectCopy } from '@sand/protocol'
+import type { Project, ProjectCopy } from '@sand/host-projects/contract'
 
 const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 

@@ -1,4 +1,5 @@
-import type { Message, Thread } from '@sand/protocol'
+import type { Message } from '@sand/messages'
+import type { Thread } from '../contract'
 import { walk } from './store'
 
 export const turnStart = (thread: Thread) =>

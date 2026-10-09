@@ -1,4 +1,4 @@
-import type { PaletteSource } from '@sand/protocol'
+import type { PaletteSource } from '@sand/palette/contract'
 import { definePlugin, type Context } from 'drydock'
 import { filesPage } from './files'
 import { grepPage } from './grep'

@@ -1,4 +1,4 @@
-import { projectOfFolder } from '@sand/host'
+import type { ProjectFiles } from '@sand/project-files/contract'
 import type { Database } from 'bun:sqlite'
 
 export interface Assigned {
@@ -9,10 +9,10 @@ export interface Assigned {
 const unassignedSql = "select id, cwd from sessions where project is null and cwd is not null and cwd != ''"
 const assignSql = 'update sessions set project = $project where id = $id'
 
-export const assignProjects = (db: Database, home: string): Assigned[] => {
+export const assignProjects = (db: Database, files: ProjectFiles): Assigned[] => {
   const found = new Map<string, string | null>()
   const projectOf = (cwd: string) => {
-    if (!found.has(cwd)) found.set(cwd, projectOfFolder(cwd, home))
+    if (!found.has(cwd)) found.set(cwd, files.ofFolder(cwd))
     return found.get(cwd)
   }
   const assigned = db

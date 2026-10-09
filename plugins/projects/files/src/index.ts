@@ -1,4 +1,4 @@
-import type { Files } from '@sand/protocol'
+import type { Files } from './contract'
 import { definePlugin } from 'drydock'
 import { existsSync } from 'node:fs'
 import { cachedList } from './list/list'

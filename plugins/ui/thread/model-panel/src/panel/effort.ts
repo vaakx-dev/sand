@@ -1,4 +1,4 @@
-import type { EffortLevel, ModelInfo } from '@sand/protocol'
+import type { EffortLevel, ModelInfo } from '@sand/llm-accounts/contract'
 import { segmented, span, type Sig } from '@sand/dom'
 import type { Actions } from '../actions'
 import type { Choice } from './rows'

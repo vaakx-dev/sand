@@ -1,4 +1,5 @@
-import type { RequestHandler, UsageQuery } from '@sand/protocol'
+import type { RequestHandler } from '@sand/protocol'
+import type { UsageQuery } from '../contract'
 import type { Context } from 'drydock'
 import { summarize } from './summarize'
 

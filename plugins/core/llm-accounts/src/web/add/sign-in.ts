@@ -1,5 +1,5 @@
 import { copyButton, div, dot, keys, onInterval, p, primaryAction, secondaryAction, sig, span, textInput } from '@sand/dom'
-import type { LoginAccount, LoginPending } from '@sand/protocol'
+import type { LoginAccount, LoginPending } from '../../contract'
 import { busyAction, hostOf, note, openLink, type Busy } from '../parts'
 import type { LoginControl } from '../state'
 

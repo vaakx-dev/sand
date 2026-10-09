@@ -1,4 +1,3 @@
-import { sandHome } from '@sand/host'
 import { definePlugin } from 'drydock'
 import { serveSync } from './serve'
 import { createSync } from './service'
@@ -9,7 +8,7 @@ export default definePlugin({
   inject: ['cli'],
   uses: { server: 'the page cannot copy or sync projects' },
   apply(ctx) {
-    const sync = createSync(sandHome(ctx))
+    const sync = createSync(ctx.cli.home)
     ctx.effect(() => () => void sync.dispose())
     ctx.watch('server', server => (server ? serveSync(server, sync.handlers) : undefined))
   },

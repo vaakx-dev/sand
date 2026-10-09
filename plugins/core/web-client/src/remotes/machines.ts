@@ -1,4 +1,6 @@
-import type { ConnectionInfo, DeviceInfo, Machine, Machines, Remote, Wire } from '@sand/protocol'
+import type { Remote } from '@sand/host-remotes/contract'
+import type { DeviceInfo } from '@sand/protocol'
+import type { ConnectionInfo, Machine, Machines, Wire } from '../contract'
 import type { Context } from 'drydock'
 import type { Links } from './links'
 import { thisDevice } from './route'

@@ -1,5 +1,3 @@
 export type * from './events'
-export type * from './hello'
-export type * from './relay'
+export type * from './registry'
 export type * from './requests'
-export type * from './session'

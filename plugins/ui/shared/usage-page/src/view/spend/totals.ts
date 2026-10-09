@@ -1,4 +1,4 @@
-import type { UsageSummary } from '@sand/protocol'
+import type { UsageSummary } from '@sand/usage/contract'
 import { div, section } from '@sand/dom'
 import { dollars, tokens, tokensOf } from '@sand/kit'
 import type { Metric } from '../../format'

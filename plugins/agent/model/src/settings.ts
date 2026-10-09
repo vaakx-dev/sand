@@ -1,4 +1,5 @@
-import type { Session, SessionSettings, SettingsPatch } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { SessionSettings, SettingsPatch } from './contract'
 
 const keys = ['model', 'effort', 'speed'] as const
 

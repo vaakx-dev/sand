@@ -1,0 +1,19 @@
+{
+  "name": "@sand/cli-launch",
+  "version": "0.0.0",
+  "description": "The sand command: starts sand in the background if needed and opens it in the browser",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Launch command",
+    "summary": "Starts sand and opens it in the browser"
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

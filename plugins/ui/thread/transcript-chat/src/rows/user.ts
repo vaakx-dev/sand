@@ -1,8 +1,10 @@
-import { preview, type UserPart } from '@sand/conversation'
+import type { ImageBlock, UserPart } from '@sand/messages'
 import { div, el, icon, span } from '@sand/dom'
 import { row, type RowMaker } from './row'
 
 const chip = 'inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs'
+
+const preview = (block: ImageBlock) => `data:${block.mediaType};base64,${block.data}`
 
 const attachment = (part: UserPart) => {
   if (part.kind === 'image')

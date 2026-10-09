@@ -4,7 +4,8 @@
   "description": "Bundles core skills like commit, discovers skills in plugin, home and each thread's project folders and gives the agent the skill tool",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Skills",
@@ -18,9 +19,12 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/paths": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/watch": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

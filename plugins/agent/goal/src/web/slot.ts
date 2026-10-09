@@ -1,5 +1,5 @@
 import { derive, effect, untrack, type Pulse } from '@sand/dom'
-import type { Composer } from '@sand/protocol'
+import type { Composer } from '@sand/composer-card/contract'
 import type { Context } from 'drydock'
 import { activeGoal, type Goal } from '../goal'
 import { goalBanner } from './banner'

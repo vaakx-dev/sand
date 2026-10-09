@@ -1,4 +1,4 @@
-import type { SyncSetup } from '@sand/protocol'
+import type { SyncSetup } from '../contract'
 import { isDirectory } from '../folder/stat'
 
 const timeout = 10 * 60 * 1000

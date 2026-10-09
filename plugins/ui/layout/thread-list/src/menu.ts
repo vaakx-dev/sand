@@ -1,4 +1,6 @@
-import type { Drafts, NavAction, Threads } from '@sand/protocol'
+import type { Drafts } from '@sand/composer-card/contract'
+import type { NavAction } from '@sand/dom'
+import type { Threads } from '@sand/web-client/contract'
 
 export const threadMenu = (threads: Threads, id: string): NavAction[] => {
   const thread = threads.get(id)

@@ -1,4 +1,4 @@
-import type { UpdateState } from '@sand/protocol'
+import type { UpdateState } from '@sand/host-updates/contract'
 import { ago, clock, div, exactTime, p, primaryAction, secondaryAction, settingsRow, settingsSection, show, spinner } from '@sand/dom'
 import type { UpdateSource } from '../source'
 import { isBusy, progressText, short } from '../text'

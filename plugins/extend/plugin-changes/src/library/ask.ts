@@ -1,4 +1,4 @@
-import type { PluginEntry } from '@sand/protocol'
+import type { PluginEntry } from '@sand/host-plugin-library/contract'
 import type { Context } from 'drydock'
 
 const snapshotLine = (plugin: PluginEntry) =>

@@ -1,4 +1,4 @@
-import type { Entry, Message } from '@sand/protocol'
+import type { Entry, Message } from '@sand/messages'
 import { promptText } from '@sand/kit'
 import { isPrompt, type LabelData } from './describe'
 

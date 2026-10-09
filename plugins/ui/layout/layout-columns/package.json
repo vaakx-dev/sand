@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Top strip, side column, main column, aside column and bottom strip; side and aside become drawers on narrow screens",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Columns",
@@ -16,7 +19,6 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

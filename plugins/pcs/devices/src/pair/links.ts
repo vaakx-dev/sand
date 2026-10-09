@@ -1,6 +1,6 @@
 import { copyButton, div, dynamicChild, p, rowButton, sig, span, type Child } from '@sand/dom'
 import { routeKind, routeLabel } from '@sand/kit'
-import type { PairInvite } from '@sand/protocol'
+import type { PairInvite } from '@sand/host-devices/contract'
 import { linkText } from '../components'
 import { listenBox } from './listen'
 import { qrCode } from './qr'

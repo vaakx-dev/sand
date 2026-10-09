@@ -1,4 +1,5 @@
-import type { PaletteItem, PaletteItemAction, PalettePage, ProjectEntry, ProjectGroup } from '@sand/protocol'
+import type { PaletteItem, PaletteItemAction, PalettePage } from '@sand/palette/contract'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { groupIcon } from '../project-lookup'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'

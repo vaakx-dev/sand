@@ -1,5 +1,7 @@
 import { copyButton, derive, div, dynamicChild, effect, errorMessage, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
-import type { HostRoute, InstallProgress, UpdateChannel, UpdateState } from '@sand/protocol'
+import type { InstallProgress } from '@sand/host-dist/contract'
+import type { HostRoute } from '@sand/host-gateway/contract'
+import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
 import type { Context } from 'drydock'
 import { healthDetails } from '../health/details'
 import { listenBox } from '../pair/listen'

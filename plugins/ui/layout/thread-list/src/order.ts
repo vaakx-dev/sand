@@ -1,4 +1,4 @@
-import type { Thread, Threads } from '@sand/protocol'
+import type { Thread, Threads } from '@sand/web-client/contract'
 
 const positionOf = (thread: Thread) => thread.info.position ?? thread.info.created
 

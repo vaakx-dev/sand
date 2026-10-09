@@ -1,4 +1,5 @@
-import type { PaletteItem, PalettePage, Thread } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { Thread } from '@sand/web-client/contract'
 import { copyText } from '@sand/dom'
 import type { Context } from 'drydock'
 

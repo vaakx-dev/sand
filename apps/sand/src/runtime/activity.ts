@@ -1,4 +1,5 @@
-import type { Job, RuntimeActivity, WireJob } from '@sand/protocol'
+import type { RuntimeActivity } from '@sand/protocol'
+import type { Job, WireJob } from '@sand/agents/contract'
 import type { Context } from 'drydock'
 
 const wireJob = ({ cancel: _, ...job }: Job): WireJob => job

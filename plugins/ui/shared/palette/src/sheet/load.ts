@@ -1,4 +1,4 @@
-import type { PaletteItem, PalettePage } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '../contract'
 
 const limit = 100
 const perGroup = 30

@@ -4,7 +4,8 @@
   "description": "Plan limits in /usage, plus token and cost totals for the usage page and sand usage",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Usage",
@@ -16,7 +17,12 @@
   },
   "dependencies": {
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

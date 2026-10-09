@@ -1,4 +1,6 @@
-import type { Command, Message, Session } from '@sand/protocol'
+import type { Message } from '@sand/messages'
+import type { Command } from '@sand/server/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { feedbackOnly, oneLine, promptText } from '@sand/kit'
 import type { SessionsContext } from './types'
 

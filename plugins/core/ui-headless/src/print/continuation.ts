@@ -1,4 +1,4 @@
-import type { UserContent } from '@sand/protocol'
+import type { UserContent } from '@sand/messages'
 import { feedbackLine, oneLine, userParts } from '@sand/kit'
 
 export const continuation = (content: UserContent[]) =>

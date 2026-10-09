@@ -16,6 +16,7 @@ export const helloRequest = (ctx: ServerContext) => {
     active: [...active],
     jobs: [],
     skills: [],
+    safe: ctx.cli.safe,
   })
 
   return () => ctx.waterfall('server.hello', base())

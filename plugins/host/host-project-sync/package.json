@@ -1,0 +1,21 @@
+{
+  "name": "@sand/host-project-sync",
+  "version": "0.0.0",
+  "description": "Keeps the project registry in step with paired PCs",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Project sync",
+    "summary": "Shares the project registry with paired PCs"
+  },
+  "dependencies": {
+    "@sand/host-projects": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

@@ -1,4 +1,4 @@
-import type { ComposerSlot, SlotView } from '@sand/protocol'
+import type { ComposerSlot, SlotView } from './contract'
 import { div, list, sig } from '@sand/dom'
 
 interface Entry {

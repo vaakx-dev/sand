@@ -1,4 +1,4 @@
-import type { Tool } from '@sand/protocol'
+import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import type { Shell } from './detect'
 import { run } from './run'

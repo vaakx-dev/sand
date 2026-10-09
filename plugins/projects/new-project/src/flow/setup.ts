@@ -1,4 +1,5 @@
-import type { ProjectRef, Sync } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { Sync } from '../contract'
 import type { FlowContext } from './types'
 
 const runSetup = async (ctx: FlowContext, sync: Sync, ref: ProjectRef, command: string) => {

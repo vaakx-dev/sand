@@ -1,4 +1,5 @@
-import type { Machine, ProjectGroup, ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { deviceOf } from '../target'
 import type { ContinueContext } from './flow'
 

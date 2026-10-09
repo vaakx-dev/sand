@@ -1,4 +1,4 @@
-import type { SessionSettings, SettingsPatch } from '@sand/protocol'
+import type { SessionSettings, SettingsPatch } from './contract'
 import { join } from 'node:path'
 import { clean } from './settings'
 

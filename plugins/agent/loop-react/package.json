@@ -9,13 +9,13 @@
   "sand": {
     "label": "Agent loop",
     "summary": "Runs turns: the model replies, tools run, and it repeats until done",
-    "provides": [
-      "loop"
+    "loops": [
+      "react"
     ]
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

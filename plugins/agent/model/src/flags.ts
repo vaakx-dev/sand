@@ -1,4 +1,6 @@
-import type { CliFlags, Effort, LLM, SessionSettings } from '@sand/protocol'
+import type { CliFlags } from '@sand/protocol'
+import type { Effort, LLM } from '@sand/llm-accounts/contract'
+import type { SessionSettings } from './contract'
 import { matchModel } from '@sand/kit'
 
 export const flagSettings = (flags: CliFlags = {}, llm?: LLM): SessionSettings | undefined => {

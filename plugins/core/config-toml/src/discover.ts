@@ -1,4 +1,4 @@
-import { folderEntries } from '@sand/host'
+import { folderEntries } from '@sand/kit/fs'
 import { join, resolve } from 'node:path'
 
 const webOnly = async (dir: string) => {
@@ -6,7 +6,8 @@ const webOnly = async (dir: string) => {
   if (!(await manifest.exists())) return false
   try {
     const { exports, main, sand } = await manifest.json()
-    return Boolean(sand?.web) && !exports && !main
+    const runs = Boolean(main) || typeof exports === 'string' || (typeof exports === 'object' && exports !== null && '.' in exports)
+    return Boolean(sand?.web) && !runs
   } catch {
     return false
   }

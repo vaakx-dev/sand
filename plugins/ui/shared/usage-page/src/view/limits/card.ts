@@ -1,4 +1,4 @@
-import type { LimitWindow } from '@sand/protocol'
+import type { LimitWindow } from '@sand/llm-accounts/contract'
 import { badge, derive, div, dynamicChild, exactTime, icon, span, type Sig } from '@sand/dom'
 import { coarseDuration, leftOf, percent } from '@sand/kit'
 import { cssPercent } from '../spend/chart/scale'

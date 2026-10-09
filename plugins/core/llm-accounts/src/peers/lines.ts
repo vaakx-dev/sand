@@ -1,4 +1,4 @@
-import type { LLMEvent } from '@sand/protocol'
+import type { LLMEvent } from '../contract'
 import { AccountError, rawMessage } from '../errors'
 import type { ShareLine } from '../share/info'
 

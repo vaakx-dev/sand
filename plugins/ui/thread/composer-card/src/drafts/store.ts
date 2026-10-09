@@ -1,4 +1,5 @@
-import type { DraftTarget, UserContent } from '@sand/protocol'
+import type { UserContent } from '@sand/messages'
+import type { DraftTarget } from '@sand/web-client/contract'
 
 export interface Saved {
   text: string

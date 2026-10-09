@@ -1,5 +1,6 @@
 export interface ModeSetup {
   plugins: string[]
+  user?: boolean
 }
 
 const same = (a: string, b: string) => (process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b)

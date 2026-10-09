@@ -1,4 +1,5 @@
-import type { LimitWindow, Limits, ReportRow } from '@sand/protocol'
+import type { Limits, LimitWindow } from '@sand/llm-accounts/contract'
+import type { ReportRow } from '@sand/server/contract'
 import { coarseDuration, windowText } from '@sand/kit'
 
 const statusText = (status?: string) => {

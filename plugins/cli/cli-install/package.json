@@ -1,0 +1,22 @@
+{
+  "name": "@sand/cli-install",
+  "version": "0.0.0",
+  "description": "The sand install command: sets up a downloaded sand, optionally paired with another PC",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Install command",
+    "summary": "Sets up a downloaded sand"
+  },
+  "dependencies": {
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/llm-accounts": "workspace:*"
+  }
+}

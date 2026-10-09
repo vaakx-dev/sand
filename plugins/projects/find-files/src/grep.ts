@@ -1,4 +1,4 @@
-import type { PalettePage } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
 import type { Context } from 'drydock'
 import { insertFile } from './insert'
 

@@ -1,0 +1,29 @@
+{
+  "name": "@sand/steering",
+  "version": "0.0.0",
+  "description": "Steers sent while a turn runs; the loop picks them up at its next step",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Steering",
+    "summary": "Messages sent while a turn runs",
+    "provides": [
+      "steering"
+    ],
+    "uses": {
+      "server": "the page cannot steer a running turn",
+      "followUps": "queued follow-ups are not shown with steers"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

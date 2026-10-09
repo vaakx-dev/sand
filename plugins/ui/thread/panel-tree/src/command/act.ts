@@ -1,4 +1,5 @@
-import type { Entry, Session } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
 import { forkAt, forkedNote, labelData, moveOf, movedNote } from '../tree/moves'
 

@@ -1,4 +1,4 @@
-import type { PaletteCard, PaletteReview } from '@sand/protocol'
+import type { PaletteCard, PaletteReview } from '../contract'
 import { button, delayed, div, focusable, icon, show, span, spinner, type Sig } from '@sand/dom'
 
 export const cardView = (card: PaletteCard) =>

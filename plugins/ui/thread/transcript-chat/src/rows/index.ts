@@ -1,4 +1,4 @@
-import type { Item } from '@sand/conversation'
+import type { Item } from '@sand/transcript-parts/contract'
 import { div } from '@sand/dom'
 import { liveRow } from './live'
 import { noticeRow, notificationRow, reportRow } from './notes'

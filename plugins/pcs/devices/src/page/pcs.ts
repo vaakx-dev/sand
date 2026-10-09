@@ -1,4 +1,5 @@
-import type { LoginState, PcList } from '@sand/protocol'
+import type { PcList } from '@sand/host-remotes/contract'
+import type { LoginState } from '@sand/llm-accounts/contract'
 import { clock, derive, div, hint, list, settingsSection, show, sig, type Sig } from '@sand/dom'
 import type { PcHealthStore } from '../health/state'
 import type { DeviceSource } from '../source'

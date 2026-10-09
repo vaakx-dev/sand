@@ -1,4 +1,5 @@
-import type { PickItem, PickTone, SessionSummary } from '@sand/protocol'
+import type { PickItem, PickTone } from '@sand/server/contract'
+import type { SessionSummary } from '@sand/sessions-sqlite/contract'
 import { ago, tildeHome } from '@sand/kit'
 import type { SessionsContext } from '../types'
 import { thread } from './tree'

@@ -1,4 +1,5 @@
-import type { EffectiveSettings, ModelInfo, SessionSettings } from '@sand/protocol'
+import type { ModelInfo } from '@sand/llm-accounts/contract'
+import type { EffectiveSettings, SessionSettings } from '@sand/model/contract'
 import { badge, div, groupLabel, menuItem, span } from '@sand/dom'
 import { tokens } from '@sand/kit'
 import type { Actions } from '../actions'

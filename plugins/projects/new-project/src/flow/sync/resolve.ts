@@ -1,4 +1,7 @@
-import type { PaletteItem, PalettePage, ProjectRef, Sync, SyncPick } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { SyncPick } from '@sand/sync/contract'
+import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { mergePage } from './merge'
 import { otherPcName, pcName, projectName } from './names'

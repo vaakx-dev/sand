@@ -1,4 +1,5 @@
-import type { AgentDefinition, LLM } from '@sand/protocol'
+import type { LLM } from '@sand/llm-accounts/contract'
+import type { AgentDefinition } from './contract'
 
 const agentList = (definitions: AgentDefinition[]) =>
   definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')

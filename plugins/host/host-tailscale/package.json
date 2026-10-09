@@ -1,0 +1,22 @@
+{
+  "name": "@sand/host-tailscale",
+  "version": "0.0.0",
+  "description": "Detects Tailscale and optionally serves sand over HTTPS on the tailnet with tailscale serve",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Tailscale",
+    "summary": "Serves sand on your tailnet",
+    "provides": [
+      "tailscale"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

@@ -1,4 +1,5 @@
-import type { PcList, TurnResult } from '@sand/protocol'
+import type { PcList } from '@sand/host-remotes/contract'
+import type { TurnResult } from '@sand/loops/contract'
 import { effect, onTimeout, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

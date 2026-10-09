@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Shows notices as toasts at the top right of the conversation, and reports in a sheet that stays until closed",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Notices",
@@ -16,7 +19,7 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

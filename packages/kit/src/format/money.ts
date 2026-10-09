@@ -1,4 +1,6 @@
-import type { ModelPrice, Usage, UsageTotals } from '@sand/protocol'
+import type { ModelPrice } from '@sand/llm-accounts/contract'
+import type { Usage } from '@sand/messages'
+import type { UsageTotals } from '@sand/usage/contract'
 
 const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' })
 

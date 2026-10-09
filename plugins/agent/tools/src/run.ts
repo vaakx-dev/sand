@@ -1,4 +1,5 @@
-import type { Tool, ToolCallBlock, ToolContext, ToolResultBlock } from '@sand/protocol'
+import type { ToolCallBlock, ToolResultBlock } from '@sand/messages'
+import type { Tool, ToolContext } from './contract'
 import { errorMessage } from '@sand/kit'
 import { z } from 'zod'
 

@@ -1,4 +1,4 @@
-import type { SyncInspect } from '@sand/protocol'
+import type { SyncInspect } from '../contract'
 import { join } from 'node:path'
 import { hiddenOut, type Hidden } from '../folder/hidden'
 import { blockedReason } from '../folder/paths'

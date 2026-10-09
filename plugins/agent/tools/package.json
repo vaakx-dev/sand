@@ -4,7 +4,8 @@
   "description": "Tool registry: tools register here, and the loop runs them",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Tools",
@@ -15,7 +16,9 @@
   },
   "dependencies": {
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

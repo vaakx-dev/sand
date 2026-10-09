@@ -1,4 +1,4 @@
-import type { Billing, Limits, ProviderInfo } from '@sand/protocol'
+import type { Billing, Limits, ProviderInfo } from '@sand/llm-accounts/contract'
 import { ago, div, exactTime, providerColor, providerIcon, section, span, type Sig } from '@sand/dom'
 import { heading, muted } from '../parts'
 import { statusBadge, windowCard } from './card'

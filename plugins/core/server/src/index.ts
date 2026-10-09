@@ -1,4 +1,4 @@
-import type { Server } from '@sand/protocol'
+import type { Server } from './contract'
 import { definePlugin } from 'drydock'
 import { respond } from './http/listen'
 import { createRoutes } from './http/routes'

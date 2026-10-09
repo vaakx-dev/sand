@@ -1,4 +1,4 @@
-import type { SettingsPage } from '@sand/protocol'
+import type { SettingsPage } from './contract'
 import type { Context } from 'drydock'
 import { requestedPage } from './address'
 

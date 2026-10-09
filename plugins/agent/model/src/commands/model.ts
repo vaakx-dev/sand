@@ -1,4 +1,6 @@
-import type { Command, Effort, SettingsPatch } from '@sand/protocol'
+import type { Effort } from '@sand/llm-accounts/contract'
+import type { Command } from '@sand/server/contract'
+import type { SettingsPatch } from '../contract'
 import { matchModel } from '@sand/kit'
 import { applyChoice, saveChoices } from './apply'
 import { parseArgs } from './args'

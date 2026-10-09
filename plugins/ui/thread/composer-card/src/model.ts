@@ -1,10 +1,12 @@
-import type { ComposerCapture, FollowUpMode } from '@sand/protocol'
-import { compose, retry, submit } from '@sand/conversation'
+import type { FollowUpMode } from '@sand/web-client/contract'
+import type { ComposerCapture } from './contract'
 import { derive, effect, errorMessage, pulse, sig, stored, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import { createWorking } from './agents/working'
+import { compose } from './attachments/content'
 import { createFiles } from './attachments/files'
 import { createEditing } from './queue/editing'
+import { retry, submit } from './send/submit'
 
 const isMode = (value: unknown) => value === 'queue' || value === 'steer'
 

@@ -4,7 +4,8 @@
   "description": "Copies project folders to other PCs and keeps them in step: snapshots, transfers, merges and conflicts",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Project sync",
@@ -14,9 +15,9 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

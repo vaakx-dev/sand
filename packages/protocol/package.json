@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./wire": "./src/wire/registry.ts"
   },
   "dependencies": {
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

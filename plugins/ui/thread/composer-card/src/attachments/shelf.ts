@@ -1,5 +1,5 @@
-import { preview } from '@sand/conversation'
 import { derive, div, dynamicChild, icon, iconButton, img, list, span, spinner, SPACE, type Sig } from '@sand/dom'
+import { preview } from './content'
 import type { Attached, Files } from './files'
 
 const size = (bytes: number) => (bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1000))} KB`)

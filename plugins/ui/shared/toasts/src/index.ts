@@ -1,4 +1,4 @@
-import type { Notify } from '@sand/protocol'
+import type { Notify } from './contract'
 import { div, dynamicChild, floating, layer, list, place, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { reportView, type Report } from './report'

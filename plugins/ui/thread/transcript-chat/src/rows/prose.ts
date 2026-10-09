@@ -1,9 +1,8 @@
-import { markdownNodes } from '@sand/conversation'
 import { copyButton, div, dynamicChild, effect, fold, shine, show, span } from '@sand/dom'
 import { morph } from '../integrations/morph'
 import { row, worked, type RowMaker } from './row'
 
-export const textRow: RowMaker<'text'> = item =>
+export const textRow: RowMaker<'text'> = (item, context) =>
   row(`text:${item.key}`, item, data => {
     const text = data.map(value => value.text)
     const node = div({
@@ -12,7 +11,7 @@ export const textRow: RowMaker<'text'> = item =>
         () => (data.get().streaming ? 'transcript-chat-streaming' : ''),
       ],
     })
-    effect(() => morph(node, markdownNodes(text.get())))
+    effect(() => morph(node, context.markdown.nodes(text.get())))
     return div(
       { class: 'group mb-3 text-sm' },
       node,

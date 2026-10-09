@@ -1,4 +1,6 @@
-import type { ModelSettings, Sessions, UI } from '@sand/protocol'
+import type { ModelSettings } from '@sand/model/contract'
+import type { UI } from '@sand/server/contract'
+import type { Sessions } from '@sand/sessions-sqlite/contract'
 
 export const commandThread = (ui: UI, sessions: Sessions, modelSettings?: ModelSettings) => {
   const current = ui.session()

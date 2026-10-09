@@ -1,10 +1,11 @@
-import type { Server } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
 import { bundle, type Bundle } from '../bundle/build'
 import { readChoices, writeChoices, type Choices } from './choices'
 import type { Extension } from './discover'
 
 export interface SiteOptions {
   home: string
+  safe: boolean
   find(enabled: Choices): Promise<Extension[]>
   configured: Choices
   report(problem: string): void
@@ -13,8 +14,8 @@ export interface SiteOptions {
 
 const enabledOf = (extensions: Extension[]): Choices => Object.fromEntries(extensions.map(extension => [extension.id, extension.enabled]))
 
-export const createSite = async ({ home, find, configured, report, broadcast }: SiteOptions) => {
-  let choices = await readChoices(home)
+export const createSite = async ({ home, safe, find, configured, report, broadcast }: SiteOptions) => {
+  let choices = safe ? {} : await readChoices(home)
   let extensions = await find({ ...configured, ...choices })
 
   const build = async () => {
@@ -39,7 +40,7 @@ export const createSite = async ({ home, find, configured, report, broadcast }: 
 
   const save = async (next: Choices) => {
     choices = next
-    await writeChoices(home, choices)
+    if (!safe) await writeChoices(home, choices)
     return publish()
   }
 

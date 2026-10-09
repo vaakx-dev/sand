@@ -1,4 +1,6 @@
-import type { ContextUsage, OpenedSession, Thread, Wire } from '@sand/protocol'
+import type { ContextUsage } from '@sand/compaction/contract'
+import type { OpenedSession } from '@sand/server/contract'
+import type { Thread, Wire } from '../contract'
 import { onTimeout } from '@sand/dom'
 import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'

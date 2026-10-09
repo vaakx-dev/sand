@@ -1,4 +1,6 @@
-import type { ModelPrice, Usage, UsageTotals } from '@sand/protocol'
+import type { ModelPrice } from '@sand/llm-accounts/contract'
+import type { Usage } from '@sand/messages'
+import type { UsageTotals } from '../contract'
 import { costOf, tokensOf } from '@sand/kit'
 
 export const emptyTotals = (): UsageTotals => ({ usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, turns: 0, cost: 0, billed: 0, unpriced: 0 })

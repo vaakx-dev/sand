@@ -1,4 +1,6 @@
-import type { ProjectRef, Sync, SyncApplied } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { SyncApplied } from '@sand/sync/contract'
+import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { pcName } from './names'
 import { openResolve } from './resolve'

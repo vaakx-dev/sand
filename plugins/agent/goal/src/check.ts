@@ -1,4 +1,5 @@
-import type { LLM, LLMRequest, Message, Usage } from '@sand/protocol'
+import type { LLM, LLMRequest } from '@sand/llm-accounts/contract'
+import type { Message, Usage } from '@sand/messages'
 
 export interface Verdict {
   met: boolean

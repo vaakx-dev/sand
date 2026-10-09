@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Card sidebar: search, project filter and actions, then Pinned, Active and Settled threads",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Cards",
@@ -18,7 +21,6 @@
   "dependencies": {
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

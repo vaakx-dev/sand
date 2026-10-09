@@ -1,4 +1,5 @@
-import type { CompactionRecord, Entry, Message } from '@sand/protocol'
+import type { Entry, Message } from '@sand/messages'
+import type { CompactionRecord } from '../contract'
 
 export interface View {
   record?: CompactionRecord

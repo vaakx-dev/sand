@@ -1,4 +1,5 @@
-import type { Block, LLMRequest, Message } from '@sand/protocol'
+import type { LLMRequest } from '@sand/llm-accounts/contract'
+import type { Block, Message } from '@sand/messages'
 
 const imageChars = 1600 * 4
 

@@ -1,7 +1,9 @@
-import type { AgentDefinition, Effort } from '@sand/protocol'
+import type { Effort } from '@sand/llm-accounts/contract'
+import type { AgentDefinition } from './contract'
 import { errorMessage } from '@sand/kit'
-import { parseFrontmatter, scanFolder } from '@sand/host'
+import { scanFolder } from '@sand/kit/fs'
 import { basename, join } from 'node:path'
+import { parseFrontmatter } from './frontmatter'
 import { parseEffort } from './settings'
 
 export const builtins: AgentDefinition[] = [

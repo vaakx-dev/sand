@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 import { errorMessage, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { busyNote, forkAt, forkedNote, labelData, moveOf, movedNote } from '../tree/moves'

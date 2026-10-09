@@ -1,4 +1,4 @@
-import type { CompletionSource, Composer } from '@sand/protocol'
+import type { CompletionSource, Composer } from './contract'
 import { listen, owned, place, style } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'

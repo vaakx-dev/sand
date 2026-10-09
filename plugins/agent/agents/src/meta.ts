@@ -1,4 +1,4 @@
-import type { Session } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
 
 export interface AgentMeta {
   name: string

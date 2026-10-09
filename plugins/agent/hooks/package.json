@@ -1,0 +1,34 @@
+{
+  "name": "@sand/hooks",
+  "version": "0.0.0",
+  "description": "Hook files: small TypeScript files in ~/.sand/hooks or <project>/.sand/hooks that change prompts, decide on tool calls, pick models and more",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Hooks",
+    "summary": "Runs your hook files at each turn, step and tool call, and shows what they did in the thread",
+    "provides": [
+      "hooks"
+    ],
+    "uses": {
+      "ui": "no trust prompt for project hooks, no notices and no /hooks command",
+      "inspector": "/hooks trace has no timings",
+      "transcript": "what hooks did is not shown in the thread"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/watch": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

@@ -1,4 +1,4 @@
-import type { ProjectEntry, ProjectGroup, Wire } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup, Wire } from '../contract'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
 

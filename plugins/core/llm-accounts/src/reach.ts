@@ -1,5 +1,5 @@
-import { ApiError } from '@sand/anthropic'
 import { AccountError, rawMessage } from './errors'
+import { ApiError } from './http/error'
 
 const origin = (url: string) => {
   try {

@@ -1,4 +1,4 @@
-import type { DocumentBlock } from '@sand/protocol'
+import type { DocumentBlock } from '@sand/messages'
 
 export const maxPdfBytes = 20_000_000
 export const maxTextLength = 400_000

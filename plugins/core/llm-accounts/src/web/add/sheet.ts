@@ -1,5 +1,5 @@
 import { derive, div, dynamicChild, effect, icon, iconButton, overlay, place, sheet, sheetHead, show, sig, untrack } from '@sand/dom'
-import type { LoginProvider } from '@sand/protocol'
+import type { LoginProvider } from '../../contract'
 import type { Context, Dispose } from 'drydock'
 import type { LoginControl } from '../state'
 import { chooseStep } from './choose'

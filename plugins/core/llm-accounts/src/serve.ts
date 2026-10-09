@@ -1,4 +1,5 @@
-import type { LoginConflict, LoginProvider, LoginState, Server } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { LoginConflict, LoginProvider, LoginState } from './contract'
 import { providers, type Accounts } from './auth/accounts'
 import type { Login } from './auth/login'
 

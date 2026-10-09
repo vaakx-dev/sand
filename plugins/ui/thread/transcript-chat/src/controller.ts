@@ -1,6 +1,6 @@
-import type { Thread } from '@sand/protocol'
-import { jumpButton, nearEnd, threadItems, toEnd, type OpenStates, type RendererRegistry } from '@sand/conversation'
-import { div, listen, sig } from '@sand/dom'
+import type { OpenStates, RendererRegistry } from '@sand/transcript-parts/contract'
+import type { Thread } from '@sand/web-client/contract'
+import { div, jumpButton, listen, nearEnd, sig, toEnd } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { fill, keepAnchor, savedScroll, scrollTo } from './integrations/scroll'
@@ -9,7 +9,8 @@ import { slotHost } from './slot'
 import { Views, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
 
-export const chatController = (ctx: Context<'threads'>, registry: RendererRegistry, states: OpenStates) => {
+export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
+  const parts = ctx.transcriptParts
   const jumpShown = sig(false)
   const slot = slotHost()
   const empty = hero(ctx)
@@ -42,7 +43,7 @@ export const chatController = (ctx: Context<'threads'>, registry: RendererRegist
 
   const stash = () => {
     if (!shown) return
-    shown.view.scroll = savedScroll(scroller)
+    shown.view.scroll = savedScroll(scroller, nearEnd(scroller))
     shown.view.visible.set(false)
     shown = undefined
   }
@@ -64,8 +65,8 @@ export const chatController = (ctx: Context<'threads'>, registry: RendererRegist
   }
 
   const paint = (thread: Thread, current: ThreadView, grow = 0) => {
-    const context: RowContext = { registry, states, thread: thread.id }
-    const items = threadItems(thread, ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
+    const context: RowContext = { registry, states, thread: thread.id, parts, markdown: ctx.markdown }
+    const items = parts.items(thread, ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
     current.rows.set(windowed(current, items, grow).flatMap(item => itemRows(item, context)))
   }
 

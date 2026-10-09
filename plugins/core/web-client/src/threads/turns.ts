@@ -1,4 +1,6 @@
-import type { Prompt, Turns, Wire, WireRequest } from '@sand/protocol'
+import type { WireRequest } from '@sand/protocol'
+import type { Prompt } from '@sand/messages'
+import type { Turns, Wire } from '../contract'
 import { promptLabel } from '@sand/kit'
 import type { Store } from './store'
 

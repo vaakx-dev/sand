@@ -1,5 +1,5 @@
 import { derive, errorMessage, pulse, sig } from '@sand/dom'
-import type { Remote } from '@sand/protocol'
+import type { Remote } from '@sand/host-remotes/contract'
 import type { Context } from 'drydock'
 import type { LoginControl } from '../state'
 

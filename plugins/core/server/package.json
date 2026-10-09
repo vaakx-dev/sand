@@ -4,7 +4,8 @@
   "description": "Answers the sand host over a private socket: requests, events and page routes",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "label": "Server",
@@ -16,13 +17,18 @@
     "uses": {
       "llm": "the page gets no models or limits",
       "attachments": "the page gets no attachment limits",
-      "modelSettings": "threads use the default model settings",
-      "followUps": "queued follow-ups are not shown"
+      "modelSettings": "threads use the default model settings"
     }
   },
   "dependencies": {
+    "@sand/agents": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/steering": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

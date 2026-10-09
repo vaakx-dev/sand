@@ -1,5 +1,7 @@
-import type { Command, Project, SessionSummary, UI } from '@sand/protocol'
-import { localProjects } from '@sand/host'
+import type { Project } from '@sand/host-projects/contract'
+import type { Command, UI } from '@sand/server/contract'
+import type { SessionSummary } from '@sand/sessions-sqlite/contract'
+import type { ProjectFiles } from '@sand/project-files/contract'
 
 const counts = (sessions: SessionSummary[]) => {
   const threads = new Map<string, number>()
@@ -17,8 +19,8 @@ const where = (project: Project, device?: string) => {
   return copy && !copy.removed ? copy.path : 'no copy here'
 }
 
-const listing = (home: string, sessions: SessionSummary[], all: boolean) => {
-  const { device, projects } = localProjects(home)
+const listing = (files: ProjectFiles, sessions: SessionSummary[], all: boolean) => {
+  const { device, projects } = files.local()
   const shown = projects.filter(project => all || !project.hidden)
   if (!shown.length) return 'No projects yet.'
   const threads = counts(sessions)
@@ -31,7 +33,7 @@ const listing = (home: string, sessions: SessionSummary[], all: boolean) => {
     .join('\n')
 }
 
-export const projectCommand = (ui: UI, home: string, sessions: () => SessionSummary[]): Command => ({
+export const projectCommand = (ui: UI, files: ProjectFiles, sessions: () => SessionSummary[]): Command => ({
   name: 'project',
   title: 'Projects',
   description: 'List projects on this PC; change them in the web UI or with `sand project`',
@@ -39,6 +41,6 @@ export const projectCommand = (ui: UI, home: string, sessions: () => SessionSumm
   run(args) {
     const word = args.trim()
     if (word && word !== 'all') return ui.notify('Usage: /project [all]', 'error')
-    ui.notify(listing(home, sessions(), word === 'all'))
+    ui.notify(listing(files, sessions(), word === 'all'))
   },
 })

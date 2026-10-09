@@ -1,0 +1,21 @@
+{
+  "name": "@sand/cli-project",
+  "version": "0.0.0",
+  "description": "The sand project command: lists, copies and syncs projects across PCs",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Project command",
+    "summary": "Manages projects across PCs from the terminal"
+  },
+  "dependencies": {
+    "@sand/host-projects": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/sync": "workspace:*"
+  }
+}

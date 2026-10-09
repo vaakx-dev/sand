@@ -1,4 +1,4 @@
-import type { HostRoute, RouteKind } from '@sand/protocol'
+import type { HostRoute, RouteKind } from '@sand/host-gateway/contract'
 import { routeKind } from '@sand/kit'
 
 export interface StoredRoute {

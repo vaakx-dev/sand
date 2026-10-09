@@ -1,4 +1,4 @@
-import type { ImageBlock } from '@sand/protocol'
+import type { ImageBlock } from '@sand/messages'
 
 export interface ImageLimits {
   edge: number

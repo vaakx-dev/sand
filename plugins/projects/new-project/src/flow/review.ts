@@ -1,4 +1,4 @@
-import type { PalettePage, PaletteReviewRow } from '@sand/protocol'
+import type { PalettePage, PaletteReviewRow } from '@sand/palette/contract'
 import { finish } from './finish'
 import type { Choice, FlowContext } from './types'
 

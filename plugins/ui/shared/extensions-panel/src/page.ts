@@ -1,4 +1,4 @@
-import type { ExtensionInfo } from '@sand/protocol'
+import type { ExtensionInfo } from '@sand/web/contract'
 import { chevron, div, dynamicChild, el, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'

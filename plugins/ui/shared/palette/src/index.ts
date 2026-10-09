@@ -1,4 +1,4 @@
-import type { Palette, PalettePage, PaletteSource } from '@sand/protocol'
+import type { Palette, PalettePage, PaletteSource } from './contract'
 import { floating, show, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { commandSource } from './commands'

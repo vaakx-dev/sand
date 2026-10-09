@@ -1,4 +1,5 @@
-import type { Session, SettingsPatch } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { SettingsPatch } from '../contract'
 import { describe, modelOf, resolve } from '../effective'
 import type { Tools } from './context'
 

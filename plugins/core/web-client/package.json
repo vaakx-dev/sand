@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Connects the page to sand and its paired PCs with this browser's own keys",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract/index.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Connection",
@@ -28,9 +31,26 @@
     }
   },
   "dependencies": {
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-projects": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/agents": "workspace:*",
+    "@sand/compaction": "workspace:*",
     "@sand/dom": "workspace:*",
+    "@sand/files": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/new-project": "workspace:*",
+    "@sand/picker": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/skills": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/sync": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

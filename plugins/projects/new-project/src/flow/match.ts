@@ -1,4 +1,5 @@
-import type { PaletteItem, PalettePage, ProjectGroup } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { remoteKey } from '@sand/kit'
 import { reviewPage } from './review'
 import { deviceOf, type Choice, type FlowContext } from './types'

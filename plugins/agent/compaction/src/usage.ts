@@ -1,4 +1,6 @@
-import type { ContextUsage, Server, Session } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { ContextUsage } from './contract'
 import type { Context } from 'drydock'
 
 export const serveUsage = (ctx: Context, server: Server, read: (session: Session) => Promise<ContextUsage | undefined>) => {

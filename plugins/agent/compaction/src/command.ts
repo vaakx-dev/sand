@@ -1,4 +1,4 @@
-import type { Session } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { errorMessage, tokens } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import type { Compactor } from './compact'

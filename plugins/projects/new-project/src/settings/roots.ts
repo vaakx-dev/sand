@@ -1,4 +1,4 @@
-import type { Machine } from '@sand/protocol'
+import type { Machine } from '@sand/web-client/contract'
 import { div, dot, dynamicChild, errorMessage, icon, keys, settingsRow, settingsSection, span, textInput, type Pulse } from '@sand/dom'
 import { expand, machineKey, shorten } from './places'
 import type { ProjectsContext } from './types'

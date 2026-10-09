@@ -1,4 +1,5 @@
-import type { Command, Session } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { toolAction } from '../tree/action'
 import { nodesOf } from '../tree/forest'
 import { treeFrame } from '../tree/frame'

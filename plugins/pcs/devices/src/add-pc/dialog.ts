@@ -1,5 +1,5 @@
 import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, icon, iconButton, overlay, p, primaryAction, sheet, sheetHead, show, sig, tile, untrack } from '@sand/dom'
-import type { InstallProgress } from '@sand/protocol'
+import type { InstallProgress } from '@sand/host-dist/contract'
 import type { Context } from 'drydock'
 import { sheetBody } from '../components'
 import type { DeviceSource } from '../source'

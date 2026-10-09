@@ -1,0 +1,25 @@
+{
+  "name": "@sand/host-remotes",
+  "version": "0.0.0",
+  "description": "Other PCs running sand: pairs with them both ways, keeps the pairs linked and lists them as Your PCs",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Your PCs",
+    "summary": "Other PCs running sand",
+    "provides": [
+      "hostRemotes"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

@@ -20,9 +20,11 @@
     }
   },
   "dependencies": {
+    "@sand/composer-card": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

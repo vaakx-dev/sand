@@ -1,4 +1,5 @@
-import type { ContextUsage, SessionInfo } from '@sand/protocol'
+import type { ContextUsage } from '@sand/compaction/contract'
+import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 import { tokens } from '@sand/kit'
 
 export const createCompactionLines = (inFamily: (session: string) => boolean) => {

@@ -1,4 +1,4 @@
-import type { PluginOffer } from '@sand/protocol'
+import type { PluginOffer } from '@sand/host-plugin-sync/contract'
 import { effect, owned, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { PluginSource } from './source'

@@ -11,9 +11,7 @@
     "summary": "Loads plugins and their settings from sand.toml"
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

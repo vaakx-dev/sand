@@ -1,8 +1,9 @@
-import type { Composer } from '@sand/protocol'
+import type { Composer } from '@sand/composer-card/contract'
 import { effect, pulse, style, untrack, type Derive } from '@sand/dom'
 import { definePlugin, type Context } from 'drydock'
 import { toolName } from '../choices'
 import { openAsk } from './answering'
+import { serverAsks } from './asks'
 import { pendingAsk, type PendingAsk } from './pending'
 import { askRenderer } from './row'
 import { css } from './style'
@@ -21,12 +22,13 @@ export default definePlugin({
   uses: {
     composer: "questions can't be answered, only skipped by stopping the turn",
     transcript: 'asked questions and their answers are not shown in the thread',
+    toolViews: 'asked questions and their answers are not shown in the thread',
   },
   apply(ctx) {
     style(ctx, css)
     const changes = pulse(ctx, ['thread.select', 'thread.change', 'threads.change'])
-    const pending = pendingAsk(ctx, changes)
+    const pending = pendingAsk(ctx, changes, serverAsks(ctx, changes.bump))
     ctx.watch('composer', composer => (composer ? mountAsk(ctx, composer, pending) : undefined))
-    ctx.watch('transcript', transcript => transcript?.tool(toolName, askRenderer))
+    ctx.watch('toolViews', views => views && ctx.watch('transcript', transcript => transcript?.tool(toolName, askRenderer(views))))
   },
 })

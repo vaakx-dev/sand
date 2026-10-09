@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "New project in the palette: add a folder, clone a Git URL or start an empty project, on this PC or another one",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "New project",
@@ -19,9 +22,13 @@
     ]
   },
   "dependencies": {
+    "@sand/host-projects": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/sync": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

@@ -1,4 +1,4 @@
-import type { NavItem, NavList } from '@sand/protocol'
+import type { NavItem, NavList } from '@sand/dom'
 import { inProject } from './project-choices'
 
 export type Row =

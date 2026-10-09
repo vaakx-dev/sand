@@ -1,5 +1,5 @@
-import type { RouteHandler } from '@sand/protocol'
-import { copyPath } from '@sand/host'
+import type { ProjectFiles } from '@sand/project-files/contract'
+import type { RouteHandler } from '@sand/server/contract'
 import { stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -12,8 +12,8 @@ const types: Record<string, string> = {
   ico: 'image/x-icon',
 }
 
-const find = async (home: string, project: string) => {
-  const copy = project ? copyPath(project, home) : undefined
+const find = async (files: ProjectFiles, project: string) => {
+  const copy = project ? files.copies().find(copy => copy.project === project)?.path : undefined
   if (!copy) return undefined
   for (const extension of Object.keys(types)) {
     const path = join(copy, '.sand', `icon.${extension}`)
@@ -23,12 +23,12 @@ const find = async (home: string, project: string) => {
   return undefined
 }
 
-export const iconVersion = async (home: string, project: string) => (await find(home, project))?.version ?? null
+export const iconVersion = async (files: ProjectFiles, project: string) => (await find(files, project))?.version ?? null
 
 export const iconRoute =
-  (home: string): RouteHandler =>
+  (files: ProjectFiles): RouteHandler =>
   async request => {
-    const icon = await find(home, new URL(request.url).searchParams.get('project') ?? '')
+    const icon = await find(files, new URL(request.url).searchParams.get('project') ?? '')
     if (!icon) return new Response('not found', { status: 404 })
     return new Response(Bun.file(icon.path), {
       headers: {

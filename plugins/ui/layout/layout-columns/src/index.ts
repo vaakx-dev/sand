@@ -1,4 +1,5 @@
-import type { Layout, LayoutState, Region } from '@sand/protocol'
+import type { Region } from '@sand/dom'
+import type { Layout, LayoutState } from './contract'
 import { batch, cssOrder, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'

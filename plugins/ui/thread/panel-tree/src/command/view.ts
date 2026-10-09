@@ -1,4 +1,4 @@
-import type { PickAction, PickOptions } from '@sand/protocol'
+import type { PickAction, PickOptions } from '@sand/server/contract'
 import { filterNames, filters, type Filter } from '../tree/filter'
 
 export interface TreeView {

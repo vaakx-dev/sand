@@ -1,4 +1,4 @@
-import type { UsageSummary } from '@sand/protocol'
+import type { UsageSummary } from '@sand/usage/contract'
 import { color, div, dynamicChild, line, path, providerColor, sig, span, svg } from '@sand/dom'
 import { periodLabel } from '@sand/kit'
 import { tickText, type Metric } from '../../../format'

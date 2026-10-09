@@ -1,4 +1,5 @@
-import type { Block, LLMEvent } from '@sand/protocol'
+import type { Block } from '@sand/messages'
+import type { LLMEvent } from '../contract'
 
 const prefix = 'mcp_'
 

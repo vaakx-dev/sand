@@ -1,4 +1,5 @@
-import type { Machine, PaletteItem, PalettePage } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { Machine } from '@sand/web-client/contract'
 import { listings } from './listings'
 import { absolute, join, leafName, short, split } from './paths'
 import { deviceOf, type FlowContext, type Next, type Repo } from './types'

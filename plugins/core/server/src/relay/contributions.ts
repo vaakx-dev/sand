@@ -1,4 +1,4 @@
-import type { Command, RelayContributions } from '@sand/protocol'
+import type { Command, RelayContributions } from '../contract'
 
 class Slots<T> {
   private entries: { key: string; value: T }[] = []

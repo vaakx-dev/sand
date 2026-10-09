@@ -1,4 +1,4 @@
-import type { ModelInfo } from '@sand/protocol'
+import type { ModelInfo } from '@sand/llm-accounts/contract'
 
 const names = (models: ModelInfo[]) => models.map(model => model.label).join(', ')
 

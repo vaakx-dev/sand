@@ -1,4 +1,6 @@
-import type { BuildInfo, ConnectionInfo, ConnectionStatus, DeviceInfo, Hello, HostRoute, WireEvent, WireState } from '@sand/protocol'
+import type { HostRoute } from '@sand/host-gateway/contract'
+import type { BuildInfo, DeviceInfo, Hello, WireEvent } from '@sand/protocol'
+import type { ConnectionInfo, ConnectionStatus, WireState } from '../contract'
 import { errorMessage } from '@sand/kit'
 import { Unpaired } from '../auth/unpaired'
 import type { Call } from '../wire/connection'

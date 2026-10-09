@@ -1,4 +1,8 @@
-import type { HostRoute, LoginState, NetworkState, PairInvite, PcList, Remote, TailscaleState } from '@sand/protocol'
+import type { PairInvite } from '@sand/host-devices/contract'
+import type { HostRoute, NetworkState } from '@sand/host-gateway/contract'
+import type { PcList, Remote } from '@sand/host-remotes/contract'
+import type { TailscaleState } from '@sand/host-tailscale/contract'
+import type { LoginState } from '@sand/llm-accounts/contract'
 import { effect, errorMessage, onTimeout, sig, untrack, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

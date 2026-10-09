@@ -1,4 +1,4 @@
-import type { Session } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { untilAborted } from '@sand/kit'
 import type { Context } from 'drydock'
 import { join } from 'node:path'

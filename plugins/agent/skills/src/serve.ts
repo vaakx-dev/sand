@@ -1,4 +1,4 @@
-import type { Skill, Skills, SkillSummary } from '@sand/protocol'
+import type { Skill, Skills, SkillSummary } from './contract'
 import type { Context } from 'drydock'
 
 const summaries = (list: Skill[]): SkillSummary[] => list.map(({ name, description }) => ({ name, description }))

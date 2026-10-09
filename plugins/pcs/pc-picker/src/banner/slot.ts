@@ -1,5 +1,5 @@
 import { effect, untrack, type Pulse, type Sig } from '@sand/dom'
-import type { Composer } from '@sand/protocol'
+import type { Composer } from '@sand/composer-card/contract'
 import type { PickerContext } from '../target'
 import { sendBackFor, sendBackKey } from './target'
 import { sendBackView } from './view'

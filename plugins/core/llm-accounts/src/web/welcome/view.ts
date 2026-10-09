@@ -1,5 +1,6 @@
 import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, el, icon, keys, layer, p, primaryAction, quietButton, show, sig, SPACE, span, textInput, tile } from '@sand/dom'
-import type { LoginState, Remote } from '@sand/protocol'
+import type { Remote } from '@sand/host-remotes/contract'
+import type { LoginState } from '../../contract'
 import { accountLogo } from '../names'
 import { note } from '../parts'
 import { remoteRow } from '../remote'

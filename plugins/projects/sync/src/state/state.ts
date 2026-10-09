@@ -1,4 +1,4 @@
-import type { SyncState } from '@sand/protocol'
+import type { SyncState } from '../contract'
 import { settle } from '../conflicts/settle'
 import { hiddenLine, hiddenOut, type Hidden } from '../folder/hidden'
 import { isDirectory, isGitFolder } from '../folder/stat'

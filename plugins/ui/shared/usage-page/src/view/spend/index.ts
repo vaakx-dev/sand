@@ -1,4 +1,4 @@
-import type { UsageSummary } from '@sand/protocol'
+import type { UsageSummary } from '@sand/usage/contract'
 import { div, section, type Sig } from '@sand/dom'
 import type { Metric } from '../../format'
 import { heading } from '../parts'

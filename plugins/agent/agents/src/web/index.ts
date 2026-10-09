@@ -1,4 +1,4 @@
-import type { ToolRenderer } from '@sand/protocol'
+import type { ToolRenderer } from '@sand/transcript-chat/contract'
 import { definePlugin } from 'drydock'
 import { trackJobs } from './background'
 

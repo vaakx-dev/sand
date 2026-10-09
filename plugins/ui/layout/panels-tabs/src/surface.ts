@@ -1,4 +1,4 @@
-import type { Layout } from '@sand/protocol'
+import type { Layout } from '@sand/layout-columns/contract'
 import { place, sig } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
 

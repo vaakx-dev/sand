@@ -1,4 +1,5 @@
-import type { Entry, Thread } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
+import type { Thread } from '@sand/web-client/contract'
 import { batch, derive, effect, listbox, sig, untrack } from '@sand/dom'
 import { toolAction } from '../tree/action'
 import type { Filter } from '../tree/filter'

@@ -1,4 +1,5 @@
-import type { ContextUsage, LLM } from '@sand/protocol'
+import type { LLM } from '@sand/llm-accounts/contract'
+import type { ContextUsage } from './contract'
 import type { CompactionConfig } from './config'
 
 const fallbackWindow = 200_000

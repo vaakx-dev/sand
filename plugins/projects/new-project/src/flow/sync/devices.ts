@@ -1,4 +1,5 @@
-import type { Machine, PalettePage, ProjectGroup } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
+import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { machineItem } from '../where'
 import { deviceOf, type FlowContext } from '../types'
 import { hasCopy } from './source'

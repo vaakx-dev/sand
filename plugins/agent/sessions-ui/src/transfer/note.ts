@@ -1,4 +1,4 @@
-import type { TextBlock } from '@sand/protocol'
+import type { TextBlock } from '@sand/messages'
 import { noteBlock } from '@sand/kit'
 
 export const moveNote = (from: string, pc: string, cwd: string, notes: string[]): TextBlock =>

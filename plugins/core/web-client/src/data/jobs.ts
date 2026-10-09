@@ -1,4 +1,5 @@
-import type { JobNote, JobState, Jobs, Wire, WireJob } from '@sand/protocol'
+import type { JobNote, WireJob } from '@sand/agents/contract'
+import type { Jobs, JobState, Wire } from '../contract'
 import type { Context } from 'drydock'
 
 const seed = (job: WireJob, known?: JobState): JobState => ({

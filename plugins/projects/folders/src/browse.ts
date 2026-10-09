@@ -1,4 +1,4 @@
-import type { FolderListing } from '@sand/protocol'
+import type { FolderListing } from '@sand/host-projects/contract'
 import type { Dirent } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'

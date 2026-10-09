@@ -1,4 +1,4 @@
-import type { Region } from '@sand/protocol'
+import type { Region } from '@sand/dom'
 import { div, layer, type Sig, type Store } from '@sand/dom'
 import { grip, sizedStyle, type Edge, type Widths } from './resize'
 import { backdropOpacity, slideAside, slideSide, type Shift } from './slide'

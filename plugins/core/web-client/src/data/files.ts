@@ -1,4 +1,5 @@
-import type { FileIndex, GrepMatch, Wire } from '@sand/protocol'
+import type { GrepMatch } from '@sand/files/contract'
+import type { FileIndex, Wire } from '../contract'
 
 const freshMs = 15_000
 

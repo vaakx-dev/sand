@@ -1,4 +1,5 @@
-import type { JobState, Jobs, ToolBadge, ToolRenderer, ToolView, Transcript } from '@sand/protocol'
+import type { ToolBadge, ToolRenderer, ToolView, Transcript } from '@sand/transcript-chat/contract'
+import type { Jobs, JobState } from '@sand/web-client/contract'
 import { onInterval } from '@sand/dom'
 import { duration } from '@sand/kit'
 import type { Context, Dispose } from 'drydock'

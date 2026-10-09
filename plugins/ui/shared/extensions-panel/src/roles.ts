@@ -1,4 +1,4 @@
-import type { ExtensionInfo } from '@sand/protocol'
+import type { ExtensionInfo } from '@sand/web/contract'
 import type { Context } from 'drydock'
 
 export interface Roles {

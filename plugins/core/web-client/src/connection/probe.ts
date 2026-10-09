@@ -1,4 +1,4 @@
-import type { HostIdentity } from '@sand/protocol'
+import type { HostIdentity } from '@sand/host-gateway/contract'
 import { fetchHostIdentity } from '@sand/kit'
 
 export interface Probe {

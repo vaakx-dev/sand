@@ -1,4 +1,4 @@
-import type { ProjectEntry, ProjectGroup } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { FlowContext } from '../types'
 
 export const copySources = (ctx: FlowContext, group: ProjectGroup, target?: string): ProjectEntry[] =>

@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/protocol'
+import type { NavAction } from '@sand/dom'
 import { closeDrawer, derive, div, icon, list, navEntries, navHost, owned, place, pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { actionButton, itemButton, separator } from './button'

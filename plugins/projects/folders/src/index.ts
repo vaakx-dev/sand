@@ -1,4 +1,4 @@
-import { expandHome } from '@sand/host'
+import { expandHome } from '@sand/kit/fs'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { browse } from './browse'

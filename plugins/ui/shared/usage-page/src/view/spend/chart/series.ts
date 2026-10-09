@@ -1,4 +1,4 @@
-import type { ProviderUsage, UsageSummary } from '@sand/protocol'
+import type { ProviderUsage, UsageSummary } from '@sand/usage/contract'
 import { valueOf, type Metric } from '../../../format'
 import { periodKeys } from '../../../range'
 

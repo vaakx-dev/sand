@@ -1,6 +1,7 @@
-import { body } from '@sand/anthropic'
-import type { LLMRequest, Message } from '@sand/protocol'
+import type { Message } from '@sand/messages'
+import type { LLMRequest } from '../contract'
 import { isReasoning } from '../reasoning'
+import { body } from './body'
 import { describeClaude } from './models'
 
 export const fastBeta = 'fast-mode-2026-02-01'

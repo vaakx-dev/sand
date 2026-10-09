@@ -1,16 +1,10 @@
-import type { ToolRenderer, ToolView } from '@sand/protocol'
-import { errorBody, field, resultText, truncatedNote } from '@sand/conversation'
+import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
+import type { ToolViews } from '@sand/transcript-parts/contract'
 import { div, el, fold, span, type Child } from '@sand/dom'
 import { plural } from '@sand/kit'
 
 const shownRows = 200
 const match = /^(.*?):(\d+): (.*)$/
-
-const allRows = (tool: ToolView) => resultText(tool.result).split('\n').filter(Boolean)
-
-const rows = (tool: ToolView) => allRows(tool).filter(row => !row.startsWith('…'))
-
-const stopRow = (tool: ToolView) => allRows(tool).find(row => row.startsWith('…'))
 
 const marked = (text: string, pattern: RegExp | undefined): Child[] => {
   if (!pattern) return [text]
@@ -24,7 +18,7 @@ const marked = (text: string, pattern: RegExp | undefined): Child[] => {
   return [...parts, text.slice(last)]
 }
 
-const regex = (tool: ToolView) => {
+const regex = (tool: ToolView, { field }: ToolViews) => {
   try {
     return new RegExp(field(tool.call.input, 'pattern'), (tool.call.input as { ignore_case?: boolean })?.ignore_case ? 'gi' : 'g')
   } catch {
@@ -32,11 +26,17 @@ const regex = (tool: ToolView) => {
   }
 }
 
-const grouped = (tool: ToolView) => {
-  const pattern = regex(tool)
+const allRows = (tool: ToolView, { resultText }: ToolViews) => resultText(tool.result).split('\n').filter(Boolean)
+
+const rows = (tool: ToolView, views: ToolViews) => allRows(tool, views).filter(row => !row.startsWith('…'))
+
+const stopRow = (tool: ToolView, views: ToolViews) => allRows(tool, views).find(row => row.startsWith('…'))
+
+const grouped = (tool: ToolView, views: ToolViews) => {
+  const pattern = regex(tool, views)
   const files = new Map<string, HTMLElement[]>()
   const loose: HTMLElement[] = []
-  for (const row of rows(tool).slice(0, shownRows)) {
+  for (const row of rows(tool, views).slice(0, shownRows)) {
     const found = match.exec(row)
     if (!found) {
       loose.push(div({ class: 'mt-2 text-neutral-500 wrap-anywhere' }, row))
@@ -49,55 +49,55 @@ const grouped = (tool: ToolView) => {
   return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-300 wrap-anywhere' }, file), hits)), ...loose]
 }
 
-const empty = (tool: ToolView) => /^No (matches|files found)$/.test(resultText(tool.result))
+const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
 
-const box = (tool: ToolView, content: Child) => {
-  const text = resultText(tool.result)
-  const hidden = rows(tool).length - shownRows
-  const stop = stopRow(tool)
+const box = (tool: ToolView, content: Child, views: ToolViews) => {
+  const text = views.resultText(tool.result)
+  const hidden = rows(tool, views).length - shownRows
+  const stop = stopRow(tool, views)
   return div(
-    fold({ lines: Math.min(rows(tool).length, shownRows), copy: () => text }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
-    hidden > 0 && truncatedNote(hidden, 'after'),
+    fold({ lines: Math.min(rows(tool, views).length, shownRows), copy: () => text }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
+    hidden > 0 && views.truncatedNote(hidden, 'after'),
     stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
   )
 }
 
-const body = (tool: ToolView, content: () => Child) => {
+const body = (tool: ToolView, content: () => Child, views: ToolViews) => {
   if (!tool.result) return undefined
-  if (tool.result.isError) return errorBody(tool)
-  return box(tool, empty(tool) ? resultText(tool.result) : content())
+  if (tool.result.isError) return views.errorBody(tool)
+  return box(tool, empty(tool, views) ? views.resultText(tool.result) : content(), views)
 }
 
-export const grepRenderer: ToolRenderer = {
+export const grepRenderer = (views: ToolViews): ToolRenderer => ({
   icon: 'grep',
   verb: 'Searched',
   activeVerb: 'Searching',
   label(tool) {
     const { input } = tool.call
-    const where = [field(input, 'path'), field(input, 'glob')].filter(Boolean).join(' ')
-    return `${field(input, 'pattern')}${where ? `  in ${where}` : ''}`
+    const where = [views.field(input, 'path'), views.field(input, 'glob')].filter(Boolean).join(' ')
+    return `${views.field(input, 'pattern')}${where ? `  in ${where}` : ''}`
   },
   meta(tool) {
     if (!tool.result || tool.result.isError) return ''
-    if (empty(tool)) return 'no matches'
-    const count = rows(tool).filter(row => match.test(row)).length
+    if (empty(tool, views)) return 'no matches'
+    const count = rows(tool, views).filter(row => match.test(row)).length
     return count === 1 ? '1 match' : `${count} matches`
   },
-  copy: tool => field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => grouped(tool)),
-}
+  copy: tool => views.field(tool.call.input, 'pattern'),
+  body: tool => body(tool, () => grouped(tool, views), views),
+})
 
-export const globRenderer: ToolRenderer = {
+export const globRenderer = (views: ToolViews): ToolRenderer => ({
   icon: 'search',
   verb: 'Listed',
   activeVerb: 'Listing',
-  label: tool => [field(tool.call.input, 'pattern'), field(tool.call.input, 'path')].filter(Boolean).join('  in '),
+  label: tool => [views.field(tool.call.input, 'pattern'), views.field(tool.call.input, 'path')].filter(Boolean).join('  in '),
   meta(tool) {
     if (!tool.result || tool.result.isError) return ''
-    if (empty(tool)) return 'no files'
-    const count = rows(tool).filter(row => !row.startsWith('…')).length
+    if (empty(tool, views)) return 'no files'
+    const count = rows(tool, views).filter(row => !row.startsWith('…')).length
     return plural(count, 'file')
   },
-  copy: tool => field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, rows(tool).slice(0, shownRows).join('\n'))),
-}
+  copy: tool => views.field(tool.call.input, 'pattern'),
+  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, rows(tool, views).slice(0, shownRows).join('\n')), views),
+})

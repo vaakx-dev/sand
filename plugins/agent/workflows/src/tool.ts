@@ -1,4 +1,5 @@
-import type { Job, Tool } from '@sand/protocol'
+import type { Job } from '@sand/agents/contract'
+import type { Tool } from '@sand/tools/contract'
 import type { Context } from 'drydock'
 import { z } from 'zod'
 import { execute } from './execute'

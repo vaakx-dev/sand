@@ -1,4 +1,4 @@
-import type { UsageBucket } from '@sand/protocol'
+import type { UsageBucket } from '@sand/usage/contract'
 import { div, providerIcon, span } from '@sand/dom'
 import { periodTitle } from '@sand/kit'
 import { metricText, type Metric } from '../../../format'

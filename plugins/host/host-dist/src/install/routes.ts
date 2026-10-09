@@ -1,0 +1,24 @@
+import type { HttpRoute } from '@sand/host-gateway/contract'
+import type { HostRemotes } from '@sand/host-remotes/contract'
+import { hostPaths } from '@sand/kit'
+import type { InstallKeys } from '../installs'
+import { doneRoute, failRoute, stepRoute } from './finish'
+import { pairRoute } from './pair'
+import { pluginsRoute } from './plugins'
+
+export interface InstallRouteDeps {
+  home: string
+  id: string
+  name: string
+  installs: InstallKeys
+  remotes: Pick<HostRemotes, 'add'>
+  shared: () => Promise<string[]>
+}
+
+export const installRoutes = ({ home, id, name, installs, remotes, shared }: InstallRouteDeps): [string, HttpRoute][] => [
+  [hostPaths.installPlugins, pluginsRoute({ home, installs, shared })],
+  [hostPaths.installPair, pairRoute({ installs, remotes, id, name })],
+  [hostPaths.installStep, stepRoute(installs)],
+  [hostPaths.installDone, doneRoute(installs)],
+  [hostPaths.installFail, failRoute(installs)],
+]

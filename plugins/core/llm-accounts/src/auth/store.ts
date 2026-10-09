@@ -1,4 +1,4 @@
-import { replaceFile } from '@sand/host'
+import { replaceFile } from '@sand/kit/fs'
 import { chmod, writeFile } from 'node:fs/promises'
 
 export interface Tokens {

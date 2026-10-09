@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 import type { LabelData } from './describe'
 
 export interface Label {

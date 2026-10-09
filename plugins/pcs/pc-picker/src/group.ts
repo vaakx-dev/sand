@@ -1,4 +1,4 @@
-import type { ProjectEntry, ProjectGroup, Projects } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup, Projects } from '@sand/web-client/contract'
 
 export function groupOf(projects: Projects, cwd: string, device?: string, project?: string | null): ProjectGroup | undefined {
   return (project ? projects.get(project) : undefined) ?? projects.group(cwd, device)

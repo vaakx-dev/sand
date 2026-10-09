@@ -1,4 +1,4 @@
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { isOnline } from './places'
 import type { ProjectsContext } from './types'
 

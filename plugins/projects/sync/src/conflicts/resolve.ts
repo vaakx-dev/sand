@@ -1,4 +1,4 @@
-import type { SyncPick, SyncResolved } from '@sand/protocol'
+import type { SyncPick, SyncResolved } from '../contract'
 import { checkoutPaths, removeFiles } from '../apply/files'
 import { hiddenGit, type Hidden } from '../folder/hidden'
 import { readState, writeState } from '../folder/store'

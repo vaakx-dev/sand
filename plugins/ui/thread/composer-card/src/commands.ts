@@ -1,6 +1,6 @@
-import { interrupt } from '@sand/conversation'
 import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
+import { interrupt } from './send/submit'
 
 export const bindLocalCommands = (ctx: Context<'threads' | 'turns'>, choose: () => void) =>
   ctx.watch('commands', commands => {

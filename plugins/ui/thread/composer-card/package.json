@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Floating prompt card: send, follow-up queue, completion, attachments, context, unsent drafts, slots for other controls",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Composer",
@@ -23,10 +26,13 @@
     }
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
+    "@sand/attachments": "workspace:*",
+    "@sand/compaction": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

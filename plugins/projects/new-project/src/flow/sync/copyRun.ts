@@ -1,4 +1,4 @@
-import type { Sync } from '@sand/protocol'
+import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { completed } from './completed'
 import { pcName } from './names'

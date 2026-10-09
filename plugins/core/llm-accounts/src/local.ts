@@ -1,4 +1,4 @@
-import type { EffortLevel, LLM, LLMEvent, LLMRequest, Limits, LoginProvider, ModelInfo } from '@sand/protocol'
+import type { EffortLevel, Limits, LLM, LLMEvent, LLMRequest, LoginProvider, ModelInfo } from './contract'
 import { providers, signInError, subscriptions, type Accounts } from './auth/accounts'
 import { describeClaude } from './claude/models'
 import { describeCodex } from './codex/models'

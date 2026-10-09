@@ -1,0 +1,25 @@
+{
+  "name": "@sand/host-health",
+  "version": "0.0.0",
+  "description": "Checks that this PC runs sand properly and asks paired PCs how they are doing",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Health",
+    "summary": "Health checks for this PC and paired PCs",
+    "provides": [
+      "hostHealth"
+    ]
+  },
+  "dependencies": {
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

@@ -1,4 +1,6 @@
-import type { BuildInfo, HostIdentity, PairInvite, PairRequest, PairResult, Ticket } from '@sand/protocol'
+import type { PairInvite, PairRequest, PairResult } from '@sand/host-devices/contract'
+import type { HostIdentity, Ticket } from '@sand/host-gateway/contract'
+import type { BuildInfo } from '@sand/protocol'
 import { hostPaths } from './pairing'
 
 const timeout = 5000

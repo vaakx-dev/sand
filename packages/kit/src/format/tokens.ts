@@ -1,4 +1,4 @@
-import type { Usage } from '@sand/protocol'
+import type { Usage } from '@sand/messages'
 
 const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumSignificantDigits: 3 })
 

@@ -1,4 +1,7 @@
-import type { Hello, NewThread, OpenedSession, SessionInfo, Thread, Threads, Wire } from '@sand/protocol'
+import type { Hello } from '@sand/protocol'
+import type { OpenedSession } from '@sand/server/contract'
+import type { SessionInfo } from '@sand/sessions-sqlite/contract'
+import type { NewThread, Thread, Threads, Wire } from '../contract'
 import { isInside, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { requestedSession, showSession } from './address'

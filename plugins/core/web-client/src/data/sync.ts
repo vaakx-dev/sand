@@ -1,4 +1,7 @@
-import type { ProjectRef, Sync, SyncApplied, SyncInspect, SyncPick, SyncResolved, SyncSetup, SyncState, Wire } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { Sync } from '@sand/new-project/contract'
+import type { SyncApplied, SyncInspect, SyncPick, SyncResolved, SyncSetup, SyncState } from '@sand/sync/contract'
+import type { Wire } from '../contract'
 import { copyProject, relationOf, sendProject, type SyncCall } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'

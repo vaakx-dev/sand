@@ -1,4 +1,5 @@
-import type { PalettePage, Sync } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
+import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { copyRows, totalBytes } from './copyRows'
 import { runCopy } from './copyRun'

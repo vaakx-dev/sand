@@ -1,7 +1,7 @@
-import type { NavAction } from '@sand/protocol'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import { spinner } from '../../components/marks'
 import { icon } from '../../icons/lucide'
+import type { NavAction } from './types'
 
 export const navActionIcon = (action: Sig<NavAction>, busy: (id: string) => boolean, size?: number) =>
   span(

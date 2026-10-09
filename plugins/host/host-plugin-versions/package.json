@@ -1,0 +1,22 @@
+{
+  "name": "@sand/host-plugin-versions",
+  "version": "0.0.0",
+  "description": "Keeps past versions of your plugins, hook files and default loop, and brings back the last one that started",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Plugin versions",
+    "summary": "Past versions of your plugins and settings",
+    "provides": [
+      "hostVersions"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

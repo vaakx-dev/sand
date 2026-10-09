@@ -1,4 +1,4 @@
-import type { ToolResultBlock } from '@sand/protocol'
+import type { ToolResultBlock } from '@sand/messages'
 import { oneLine } from '@sand/kit'
 
 const short = (value: unknown) => typeof value !== 'string' || (value.length <= 200 && !value.includes('\n'))

@@ -1,4 +1,4 @@
-import type { LLMRequest } from '@sand/protocol'
+import type { LLMRequest } from '@sand/llm-accounts/contract'
 import { messagesTokens, requestTokens } from './estimate'
 
 interface Known {

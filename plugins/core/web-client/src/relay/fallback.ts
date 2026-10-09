@@ -1,4 +1,4 @@
-import type { Picker } from '@sand/protocol'
+import type { Picker } from '@sand/picker/contract'
 
 export const promptPicker: Picker = {
   async choose(title, items, options) {

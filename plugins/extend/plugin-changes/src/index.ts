@@ -1,4 +1,6 @@
 import { definePlugin } from 'drydock'
+import { versionsSource } from './history/source'
+import { historyToggle } from './history/versions'
 import { askSand } from './library/ask'
 import { librarySource } from './library/source'
 import { offerNotice } from './notice'
@@ -21,9 +23,11 @@ export default definePlugin({
   apply(ctx) {
     const source = pluginSource(ctx)
     const library = librarySource(ctx)
+    const versions = versionsSource(ctx)
     offerNotice(ctx, source)
     const actions: RowActions = {
       busy: () => library.busy.get() !== undefined,
+      history: key => historyToggle(versions, key),
       customise: plugin => void library.customise(plugin.name),
       restore: plugin => void library.restore(plugin.name),
       keep: plugin => library.keep(plugin.name),
@@ -33,7 +37,7 @@ export default definePlugin({
       },
     }
     ctx.watch('settings', settings =>
-      settings?.page({ id: 'plugins', label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(source, library, actions) }),
+      settings?.page({ id: 'plugins', label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(source, library, versions, actions) }),
     )
   },
 })

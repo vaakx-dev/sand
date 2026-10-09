@@ -1,4 +1,5 @@
-import type { Job, JobStatus, Session } from '@sand/protocol'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Job, JobStatus } from './contract'
 import { errorMessage, untilAborted } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -49,7 +50,7 @@ export const createJobs = (ctx: Context<'loop'>) => {
   })
 
   const deliver = (session: Session, text: string) => {
-    if (ctx.loop.steer(session, text)) return
+    if (ctx.steering?.steer(session, text)) return
     ctx.loop.run(session, text).catch(error => ctx.ui?.notify(`Could not deliver a background result: ${errorMessage(error)}`, 'error'))
   }
 

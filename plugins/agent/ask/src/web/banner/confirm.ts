@@ -1,4 +1,4 @@
-import type { AskQuestion } from '@sand/protocol'
+import type { AskQuestion } from '../../contract'
 import { button, div } from '@sand/dom'
 import { choicesOf } from '../../choices'
 import type { AskActions } from '../answering'

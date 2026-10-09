@@ -1,4 +1,4 @@
-import type { PluginChangeKind, PluginOffer } from '@sand/protocol'
+import type { PluginChangeKind, PluginOffer } from '@sand/host-plugin-sync/contract'
 import { badge, derive, div, hint, icon, list, p, primaryAction, quietButton, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
 import type { PluginSource } from '../source'
 import { fileCount } from './installed'

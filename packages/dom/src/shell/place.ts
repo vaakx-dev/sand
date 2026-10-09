@@ -1,6 +1,6 @@
-import type { Region } from '@sand/protocol'
 import { byId, collectScope, disposeAll, div, mount } from '@vaakx-dev/vrui'
 import type { Context, Dispose } from 'drydock'
+import type { Region } from './types'
 
 export const stage = () => byId('stage')
 

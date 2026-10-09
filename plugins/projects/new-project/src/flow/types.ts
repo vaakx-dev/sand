@@ -1,4 +1,6 @@
-import type { CopyDone, Machine, PalettePage } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
+import type { Machine } from '@sand/web-client/contract'
+import type { CopyDone } from '../contract'
 import type { Context } from 'drydock'
 
 export type FlowContext = Context<'projects' | 'machines' | 'threads'>

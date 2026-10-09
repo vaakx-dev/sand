@@ -1,0 +1,29 @@
+{
+  "name": "@sand/transcript-parts",
+  "version": "0.0.0",
+  "description": "Shared pieces for transcripts and tool views: thread items, tool cards, renderer registry",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Transcript parts",
+    "summary": "Shared pieces the transcripts and tool views are built from",
+    "provides": [
+      "transcriptParts",
+      "toolViews"
+    ]
+  },
+  "dependencies": {
+    "@sand/compaction": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

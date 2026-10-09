@@ -4,7 +4,8 @@
   "description": "Thread commands: /new, /resume, /fork and /clone, and moving threads between PCs",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Thread commands",
@@ -15,9 +16,12 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/paths": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

@@ -1,5 +1,5 @@
 import { div, dynamicChild, icon, span, spinner, type Child, type Sig } from '@sand/dom'
-import type { InstallProgress, InstallStage } from '@sand/protocol'
+import type { InstallProgress, InstallStage } from '@sand/host-dist/contract'
 
 type Mark = 'done' | 'now' | 'failed' | 'waiting'
 

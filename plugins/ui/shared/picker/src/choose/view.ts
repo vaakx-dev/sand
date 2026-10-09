@@ -1,4 +1,4 @@
-import type { Picked, PickItem, PickOptions } from '@sand/protocol'
+import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
 import { div, keys, list, quietButton, searchInput, searchRow, show, span, untrack, type Sig } from '@sand/dom'
 import { openSheet } from '../overlay'
 import { pickModel, type PickModel } from './model'

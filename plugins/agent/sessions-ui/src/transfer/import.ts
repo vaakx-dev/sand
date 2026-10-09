@@ -1,5 +1,7 @@
-import type { Entry, ThreadImportResult, ThreadLinkEntries, WireRequestOf } from '@sand/protocol'
-import { expandHome, toolNotes } from '@sand/host'
+import type { WireRequestOf } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
+import type { ThreadImportResult, ThreadLinkEntries } from '@sand/sessions-sqlite/contract'
+import { expandHome } from '@sand/kit/fs'
 import { isAbsolute } from 'node:path'
 import type { SessionsContext } from '../types'
 import { moveNote } from './note'
@@ -41,6 +43,6 @@ export const importThread =
     if (request.title && request.named) session.rename(request.title, true)
     session.appendMany(copies(entries))
     session.append('continued-from', request.from satisfies ThreadLinkEntries['continued-from'])
-    session.append('message', { role: 'user', content: [moveNote(request.from.name, request.pc, session.cwd, toolNotes(ctx.tools))] })
+    session.append('message', { role: 'user', content: [moveNote(request.from.name, request.pc, session.cwd, ctx.tools?.notes() ?? [])] })
     return { session: session.id }
   }

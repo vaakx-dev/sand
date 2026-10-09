@@ -8,14 +8,16 @@
     "label": "Read view",
     "summary": "Shows the files the agent read, with line numbers",
     "uses": {
-      "transcript": "does nothing: reads use the generic view"
+      "transcript": "does nothing: reads use the generic view",
+      "markdown": "code is shown without highlighting"
     }
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

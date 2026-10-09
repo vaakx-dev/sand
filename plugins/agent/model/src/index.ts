@@ -1,4 +1,3 @@
-import { sandHome } from '@sand/host'
 import { definePlugin } from 'drydock'
 import { createChoices } from './choices'
 import { createDefaults } from './defaults'
@@ -10,9 +9,9 @@ import { modelUI } from './ui'
 
 export default definePlugin({
   name: 'model',
-  inject: ['sessions'],
+  inject: ['cli', 'sessions'],
   async apply(ctx) {
-    const defaults = await createDefaults(sandHome(ctx), () => ({ model: ctx.llm?.models?.()[0]?.id }))
+    const defaults = await createDefaults(ctx.cli.home, () => ({ model: ctx.llm?.models?.()[0]?.id }))
     const choices = createChoices(ctx, defaults)
     ctx.provide('modelSettings', {
       of: settingsOf,

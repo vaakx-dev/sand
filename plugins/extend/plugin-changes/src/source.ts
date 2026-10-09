@@ -1,4 +1,4 @@
-import type { PluginSyncState } from '@sand/protocol'
+import type { PluginSyncState } from '@sand/host-plugin-sync/contract'
 import { errorMessage, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

@@ -1,0 +1,19 @@
+{
+  "name": "@sand/cli-usage",
+  "version": "0.0.0",
+  "description": "The sand usage command: tokens, API cost and plan limits",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Usage command",
+    "summary": "Shows usage from the terminal"
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

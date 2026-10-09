@@ -7,7 +7,7 @@ import { serveTransfer } from './transfer/serve'
 
 export default definePlugin({
   name: 'sessions-ui',
-  inject: ['ui', 'sessions'],
+  inject: ['ui', 'sessions', 'paths'],
   apply(ctx) {
     const commands = [newCommand(ctx), resumeCommand(ctx), forkCommand(ctx), cloneCommand(ctx)]
     for (const command of commands) ctx.effect(() => ctx.ui.command(command))

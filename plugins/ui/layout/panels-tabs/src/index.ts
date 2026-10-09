@@ -1,4 +1,4 @@
-import type { Panels } from '@sand/protocol'
+import type { Panels } from './contract'
 import { sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { createSurface } from './surface'

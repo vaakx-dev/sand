@@ -1,5 +1,6 @@
 import { errorMessage, sig } from '@sand/dom'
-import type { LoginState, WireRequestOf } from '@sand/protocol'
+import type { WireRequestOf } from '@sand/protocol'
+import type { LoginState } from '../contract'
 import type { Context } from 'drydock'
 
 export type LoginRequest = WireRequestOf<'login.start' | 'login.finish' | 'login.key' | 'login.cancel' | 'login.logout' | 'login.shared'>

@@ -1,5 +1,5 @@
 import { badge, div, icon, menuItem, span, type Child } from '@sand/dom'
-import type { Machine, ProjectGroup } from '@sand/protocol'
+import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
 import { statusOf } from './status'
 import { deviceOf, type PickerContext } from './target'

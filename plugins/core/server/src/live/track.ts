@@ -1,4 +1,4 @@
-import type { LiveBlock } from '@sand/protocol'
+import type { LiveBlock } from '@sand/llm-accounts/contract'
 import { applyLiveEvent } from '@sand/kit'
 import type { ServerContext } from '../context'
 

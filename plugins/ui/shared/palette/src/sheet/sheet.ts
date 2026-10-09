@@ -1,4 +1,4 @@
-import type { PalettePage } from '@sand/protocol'
+import type { PalettePage } from '../contract'
 import { div, dynamicChild, errorMessage, overlay, sheet, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { PageMemory, PageNav } from './nav'

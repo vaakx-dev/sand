@@ -1,7 +1,9 @@
-import type { Pending, Prompt, Thread } from '@sand/protocol'
-import { preview } from '@sand/conversation'
+import type { Prompt } from '@sand/messages'
+import type { Pending } from '@sand/steering/contract'
+import type { Thread } from '@sand/web-client/contract'
 import { badge, color, derive, div, dynamicChild, errorMessage, icon, iconButton, img, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
+import { preview } from '../attachments/content'
 import { bannerPanel } from '../components/glass'
 import type { Model } from '../model'
 

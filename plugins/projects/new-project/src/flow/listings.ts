@@ -1,4 +1,4 @@
-import type { FolderListing } from '@sand/protocol'
+import type { FolderListing } from '@sand/host-projects/contract'
 import type { FlowContext } from './types'
 
 export const listings = (ctx: FlowContext, device?: string) => {

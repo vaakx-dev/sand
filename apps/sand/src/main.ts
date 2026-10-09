@@ -1,18 +1,15 @@
 #!/usr/bin/env bun
-import { sandHome } from '@sand/host'
+import type { CliValues } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
-import { resolve } from 'node:path'
+import { expandHome } from '@sand/kit/fs'
+import { safeEnv, safeFromEnv } from '@sand/kit/host'
+import { homedir } from 'node:os'
+import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { run } from './app/run'
-import { devices } from './commands/devices/devices'
-import { launch } from './commands/launch/launch'
-import { projects } from './commands/project'
-import { remotes } from './commands/remotes'
-import { usageReport } from './commands/usage'
 import { stop } from './daemon/stop'
-import { help } from './help'
 
-const { values, positionals } = parseArgs({
+const parsed = parseArgs({
   options: {
     print: { type: 'string', short: 'p' },
     continue: { type: 'boolean', short: 'c' },
@@ -30,34 +27,34 @@ const { values, positionals } = parseArgs({
     theirs: { type: 'boolean' },
     cwd: { type: 'string' },
     home: { type: 'string' },
+    safe: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
   allowPositionals: true,
+  strict: false,
 })
 
-const [command, ...args] = positionals
-if (values.home) process.env.SAND_HOME = resolve(values.home)
-const home = sandHome()
-const { continue: latest, resume, model, effort, fast, on, cwd } = values
-const projectFlags = { all: values.all, from: values.from, to: values.to, on, path: values.path, setup: values.setup, ours: values.ours, theirs: values.theirs }
-const flags = { continue: latest, resume, model, effort, fast, cwd }
+const values = parsed.values as CliValues
+const text = (value: string | boolean | undefined) => (typeof value === 'string' ? value : undefined)
+const on = (value: string | boolean | undefined) => (value === true ? true : undefined)
+const [command, ...args] = parsed.positionals
+if (typeof values.home === 'string') process.env.SAND_HOME = resolve(values.home)
+const home = process.env.SAND_HOME ? expandHome(process.env.SAND_HOME) : join(homedir(), '.sand')
+const cwd = text(values.cwd)
+const flags = { continue: on(values.continue), resume: text(values.resume), model: text(values.model), effort: text(values.effort), fast: on(values.fast), cwd }
 if (cwd) process.chdir(cwd)
+const safe = values.safe === true || safeFromEnv()
 
 const dispatch = async () => {
-  if (values.help) return console.log(help)
-  if (values.print) return run({ mode: 'print', home, args, flags, prompt: values.print })
-  if (!command) return launch({ home, latest, session: resume })
-  if (command === 'serve') return (await import('./host/run')).runHost({ home })
-  if (command === 'runtime') return run({ mode: 'serve', home, args, flags })
+  if (values.help || command === 'help') return run({ mode: 'command', home, args: ['help'], flags, values, safe })
+  if (typeof values.print === 'string') return run({ mode: 'print', home, args, flags, prompt: values.print, safe })
+  if (command === 'serve') {
+    if (safe) process.env[safeEnv] = '1'
+    return (await import('./host/run')).runHost({ home })
+  }
+  if (command === 'runtime') return run({ mode: 'serve', home, args, flags, safe })
   if (command === 'stop') return stop(home)
-  if (command === 'devices') return devices(home, args)
-  if (command === 'remote') return remotes(home, args)
-  if (command === 'project') return projects(home, args, projectFlags)
-  if (command === 'usage') return usageReport(home, args)
-  if (command === 'install') return (await import('./commands/install')).installCommand(home, args)
-  if (command === 'release-assets') return (await import('./commands/release-assets')).releaseAssets(args)
-  console.error(`unknown command "${command}"\n${help}`)
-  process.exit(2)
+  return run({ mode: 'command', home, args: [command ?? 'launch', ...args], flags, values, safe })
 }
 
 try {

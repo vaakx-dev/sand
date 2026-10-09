@@ -1,4 +1,5 @@
-import type { Server, SessionMeta, SessionMetaUpdate } from '@sand/protocol'
+import type { Server } from '@sand/server/contract'
+import type { SessionMeta, SessionMetaUpdate } from './contract'
 import type { Database } from 'bun:sqlite'
 
 type Row = Omit<SessionMeta, 'pinned'> & { pinned: number }

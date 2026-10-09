@@ -1,4 +1,5 @@
-import type { Machine, PalettePage } from '@sand/protocol'
+import type { PalettePage } from '@sand/palette/contract'
+import type { Machine } from '@sand/web-client/contract'
 import { folderPage } from './folder'
 import type { FlowContext, Next, Repo } from './types'
 

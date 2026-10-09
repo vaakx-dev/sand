@@ -1,4 +1,4 @@
-import type { PalettePage } from '@sand/protocol'
+import type { PalettePage } from '../contract'
 import { derive, div, dynamicChild, groupLabel, keys, list, show, untrack } from '@sand/dom'
 import { cardView, reviewView } from './card'
 import { crumbs } from './crumbs'

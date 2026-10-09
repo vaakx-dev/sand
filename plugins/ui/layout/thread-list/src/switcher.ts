@@ -1,4 +1,4 @@
-import type { NavItem, NavList } from '@sand/protocol'
+import type { NavItem, NavList } from '@sand/dom'
 import { div, effect, list, navItems, option, select, sig, type Pulse, type Sig } from '@sand/dom'
 
 const fresh = { id: '', title: 'New thread' } as const

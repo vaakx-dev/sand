@@ -1,4 +1,4 @@
-import type { Commands } from '@sand/protocol'
+import type { Commands } from '@sand/commands/contract'
 import { derive, div, errorMessage, icon, iconButton, show, span } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { GoalView } from './slot'

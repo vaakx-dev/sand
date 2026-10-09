@@ -1,4 +1,4 @@
-import type { PickAction, PickOptions } from '@sand/protocol'
+import type { PickAction, PickOptions } from '@sand/server/contract'
 
 export type Sort = 'threaded' | 'recent' | 'relevance'
 

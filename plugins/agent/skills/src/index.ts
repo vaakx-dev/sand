@@ -1,6 +1,6 @@
-import type { Skill, Skills } from '@sand/protocol'
+import type { Skill, Skills } from './contract'
 import { definePlugin } from 'drydock'
-import { expandHome, sandHome } from '@sand/host'
+import { expandHome } from '@sand/kit/fs'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { describePerThread } from './describe'
@@ -13,10 +13,10 @@ import { watchRoot } from './watch'
 
 export default definePlugin({
   name: 'skills',
-  inject: ['tools'],
+  inject: ['paths', 'tools', 'watcher'],
   config: z.object({ paths: z.array(z.string()).default([]) }),
   async apply(ctx, config) {
-    const home = sandHome(ctx)
+    const { home } = ctx.paths
     const roots = [join(import.meta.dir, '..', 'skills'), join(home, 'skills'), ...config.paths.map(path => expandHome(path, home))]
     const contributed = new Map<string, Record<string, string>>()
     const changed = () => ctx.server?.broadcast('skills.change', [])
@@ -54,7 +54,7 @@ export default definePlugin({
     ctx.provide('skills', skills)
     ctx.effect(() => ctx.tools.register(skillTool(skills, global)))
     serveSkills(ctx, skills)
-    for (const root of roots) ctx.effect(() => watchRoot(root, () => void refresh()))
+    for (const root of roots) ctx.effect(() => watchRoot(ctx.watcher, root, () => void refresh()))
     describePerThread(ctx, skills)
     expandMentions(ctx, skills)
   },

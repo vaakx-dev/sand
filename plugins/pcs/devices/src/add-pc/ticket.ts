@@ -1,5 +1,5 @@
 import { effect, onTimeout, sig, untrack } from '@sand/dom'
-import type { InstallProgress, InstallTicket } from '@sand/protocol'
+import type { InstallProgress, InstallTicket } from '@sand/host-dist/contract'
 import type { Context } from 'drydock'
 
 const renewMargin = 30_000

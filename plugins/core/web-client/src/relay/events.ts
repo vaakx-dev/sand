@@ -1,4 +1,7 @@
-import type { OpenedSession, RelayEvent, RelayInput, RelayPick, Threads, UserContent, Wire, WireEvent, WireRequest } from '@sand/protocol'
+import type { WireEvent, WireRequest } from '@sand/protocol'
+import type { UserContent } from '@sand/messages'
+import type { OpenedSession, RelayEvent, RelayInput, RelayPick } from '@sand/server/contract'
+import type { Threads, Wire } from '../contract'
 import type { Context } from 'drydock'
 import { promptPicker } from './fallback'
 import { relayContributions } from './contributions'

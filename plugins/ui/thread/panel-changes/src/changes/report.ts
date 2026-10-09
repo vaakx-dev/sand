@@ -1,4 +1,4 @@
-import type { ReportRow } from '@sand/protocol'
+import type { ReportRow } from '@sand/server/contract'
 import { plural, type DiffLine } from '@sand/kit'
 import type { Changes, FileChange } from './collect'
 import { shownLines, totals } from './lines'

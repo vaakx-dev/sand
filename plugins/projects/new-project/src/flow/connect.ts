@@ -1,4 +1,4 @@
-import type { PaletteItem, PalettePage } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import { parsePairLink } from '@sand/kit'
 import type { FlowContext } from './types'
 

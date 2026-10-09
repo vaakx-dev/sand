@@ -1,4 +1,5 @@
-import type { WireEvent, WireSession } from '@sand/protocol'
+import type { WireEvent } from '@sand/protocol'
+import type { WireSession } from '@sand/sessions-sqlite/contract'
 import { applyLive } from './live'
 import type { Store } from './store'
 

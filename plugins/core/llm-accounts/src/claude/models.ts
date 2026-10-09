@@ -1,4 +1,4 @@
-import type { Effort, ModelInfo } from '@sand/protocol'
+import type { Effort, ModelInfo } from '../contract'
 
 const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 

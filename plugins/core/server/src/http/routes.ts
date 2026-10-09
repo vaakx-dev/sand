@@ -1,4 +1,4 @@
-import type { RouteHandler, RouteOptions } from '@sand/protocol'
+import type { RouteHandler, RouteOptions } from '../contract'
 
 export const createRoutes = () => {
   const routes = new Map<string, RouteHandler>()

@@ -1,4 +1,5 @@
-import type { ProjectRef, SyncApplied, SyncExport, SyncMode, SyncState } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { SyncApplied, SyncExport, SyncMode, SyncState } from '@sand/sync/contract'
 import type { SyncCall } from './call'
 import { move, type Report } from './move'
 

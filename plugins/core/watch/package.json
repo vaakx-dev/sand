@@ -1,0 +1,21 @@
+{
+  "name": "@sand/watch",
+  "version": "0.0.0",
+  "description": "Debounced folder watchers that plugins share and that close when they unload",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Folder watching",
+    "summary": "Watches folders for changes on behalf of other plugins",
+    "provides": [
+      "watcher"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

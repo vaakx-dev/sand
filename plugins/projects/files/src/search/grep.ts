@@ -1,4 +1,4 @@
-import type { GrepMatch } from '@sand/protocol'
+import type { GrepMatch } from '../contract'
 
 const limit = 100
 

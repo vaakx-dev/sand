@@ -1,0 +1,22 @@
+{
+  "name": "@sand/paths",
+  "version": "0.0.0",
+  "description": "Where sand keeps its files: the home folder, thread scratch folders and project folders",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Paths",
+    "summary": "The home, scratch and project folders",
+    "provides": [
+      "paths"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/project-files": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

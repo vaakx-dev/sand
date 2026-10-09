@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/protocol'
+import type { NavAction } from '@sand/dom'
 import {
   clock,
   derive,

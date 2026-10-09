@@ -1,4 +1,4 @@
-import type { PickItem, PickTone } from '@sand/protocol'
+import type { PickItem, PickTone } from '@sand/server/contract'
 import { derive, div, listboxRow, rowAction, show, span, type Sig } from '@sand/dom'
 import type { PickModel } from './model'
 

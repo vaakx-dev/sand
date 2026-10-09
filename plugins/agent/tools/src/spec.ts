@@ -1,4 +1,5 @@
-import type { Tool, ToolSpec } from '@sand/protocol'
+import type { ToolSpec } from '@sand/llm-accounts/contract'
+import type { Tool } from './contract'
 import { z } from 'zod'
 
 const specs = new WeakMap<Tool<any>, ToolSpec>()

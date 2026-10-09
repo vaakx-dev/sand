@@ -1,4 +1,4 @@
-import type { PaletteItem, PaletteSource } from '@sand/protocol'
+import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import { matching } from '@sand/dom'
 import { tokens } from '@sand/kit'
 import type { Actions, PanelContext } from './actions'

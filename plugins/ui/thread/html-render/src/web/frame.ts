@@ -1,4 +1,5 @@
-import type { HtmlRenderEntry, Wire } from '@sand/protocol'
+import type { Wire } from '@sand/web-client/contract'
+import type { HtmlRenderEntry } from '../contract'
 import { div, effect, resource, show, sig } from '@sand/dom'
 import { maxHeight, minHeight } from '../page/limits'
 import { hostPath } from '../page/protocol'

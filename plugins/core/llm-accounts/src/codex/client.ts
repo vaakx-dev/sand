@@ -1,6 +1,6 @@
-import { send } from '@sand/anthropic'
-import type { LLMEvent, LLMRequest } from '@sand/protocol'
+import type { LLMEvent, LLMRequest } from '../contract'
 import { labels, subscriptions, type Accounts } from '../auth/accounts'
+import { send } from '../http/send'
 import { reaching } from '../reach'
 import { codexBody } from './body'
 import { readCodex } from './reader'

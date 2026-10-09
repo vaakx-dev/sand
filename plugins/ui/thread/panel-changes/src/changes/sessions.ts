@@ -1,4 +1,4 @@
-import type { Session, Sessions } from '@sand/protocol'
+import type { Session, Sessions } from '@sand/sessions-sqlite/contract'
 import type { Source } from './tree'
 
 export const sessionSource = (sessions: Sessions | undefined, session: Session, root = true, seen = new Set<string>()): Source => {

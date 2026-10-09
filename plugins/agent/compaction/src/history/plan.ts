@@ -1,4 +1,5 @@
-import type { CompactionRecord, Entry, Message } from '@sand/protocol'
+import type { Entry, Message } from '@sand/messages'
+import type { CompactionRecord } from '../contract'
 import { messageTokens } from '../measure/estimate'
 import { pinnedMessage } from './rewrite'
 import { isPrompt, messageOf, view } from './view'

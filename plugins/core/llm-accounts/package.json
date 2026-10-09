@@ -4,7 +4,8 @@
   "description": "Use Claude and ChatGPT subscriptions or Anthropic and OpenAI API keys, all at once",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "label": "Accounts",
@@ -15,10 +16,13 @@
     "web": "./src/web/index.ts"
   },
   "dependencies": {
-    "@sand/anthropic": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
     "@sand/dom": "workspace:*",
-    "@sand/host": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

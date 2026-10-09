@@ -1,4 +1,4 @@
-import type { ExtensionInfo } from '@sand/protocol'
+import type { ExtensionInfo } from '@sand/web/contract'
 import { div, dot, span, toggleSwitch, type Tone } from '@sand/dom'
 import type { Roles } from './roles'
 

@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.1",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "lucide": "^1.52.0"

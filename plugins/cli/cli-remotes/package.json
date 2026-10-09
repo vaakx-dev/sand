@@ -1,0 +1,19 @@
+{
+  "name": "@sand/cli-remotes",
+  "version": "0.0.0",
+  "description": "The sand remote command: lists, pairs and forgets other PCs running sand",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Remote command",
+    "summary": "Pairs other PCs from the terminal"
+  },
+  "dependencies": {
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

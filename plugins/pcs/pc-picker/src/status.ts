@@ -1,4 +1,5 @@
-import type { Machine, ProjectEntry, ProjectGroup, SyncRelation } from '@sand/protocol'
+import type { SyncRelation } from '@sand/sync/contract'
+import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Tone } from '@sand/dom'
 import { relationLabel } from '@sand/kit'
 import { copyOn } from './group'

@@ -1,4 +1,5 @@
-import type { RelayContributions, Threads, Wire } from '@sand/protocol'
+import type { RelayContributions } from '@sand/server/contract'
+import type { Threads, Wire } from '../contract'
 import type { Context, Dispose, ServiceKey, Services } from 'drydock'
 
 const empty: RelayContributions = { commands: [] }

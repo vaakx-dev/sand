@@ -1,4 +1,5 @@
-import type { Machine, Thread, ThreadExportPage, ThreadImportResult, Wire } from '@sand/protocol'
+import type { ThreadExportPage, ThreadImportResult } from '@sand/sessions-sqlite/contract'
+import type { Machine, Thread, Wire } from '@sand/web-client/contract'
 import { uuid } from '@sand/kit'
 
 export type AskFolder = (missing: string) => Promise<string | undefined>
@@ -11,7 +12,7 @@ const copyEntries = async (wire: Wire, thread: Thread, source: Machine, target: 
   while (offset !== null) {
     const page: ThreadExportPage = await wire.call<ThreadExportPage>({ type: 'thread.export', session: thread.id, offset }, deviceOf(source))
     first ??= page
-    await wire.call({ type: 'thread.stage', transfer, entries: page.entries }, deviceOf(target))
+    await wire.call({ type: 'thread.stage', transfer, entries: page.entries, format: page.format }, deviceOf(target))
     offset = page.next
   }
   return first!

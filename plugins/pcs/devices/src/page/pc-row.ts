@@ -1,4 +1,4 @@
-import type { PcInfo } from '@sand/protocol'
+import type { PcInfo } from '@sand/host-remotes/contract'
 import { ago, badge, div, dot, dynamicChild, icon, quietButton, rowAction, secondaryAction, show, span, tile, type Sig, type Tone } from '@sand/dom'
 import { routeKind } from '@sand/kit'
 

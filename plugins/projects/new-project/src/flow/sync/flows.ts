@@ -1,4 +1,6 @@
-import type { CopyDone, ProjectGroup, ProjectRef } from '@sand/protocol'
+import type { ProjectRef } from '@sand/host-projects/contract'
+import type { ProjectGroup } from '@sand/web-client/contract'
+import type { CopyDone } from '../../contract'
 import { errorMessage } from '@sand/dom'
 import type { FlowContext } from '../types'
 import { syncOf } from './available'

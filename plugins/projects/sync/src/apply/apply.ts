@@ -1,4 +1,4 @@
-import type { SyncApplied, SyncMode } from '@sand/protocol'
+import type { SyncApplied, SyncMode } from '../contract'
 import { mkdir } from 'node:fs/promises'
 import { stamps } from '../conflicts/remaining'
 import { settle } from '../conflicts/settle'

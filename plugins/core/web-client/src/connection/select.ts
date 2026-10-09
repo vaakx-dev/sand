@@ -1,4 +1,4 @@
-import type { RouteKind } from '@sand/protocol'
+import type { RouteKind } from '@sand/host-gateway/contract'
 import { errorMessage, routeKind, routeRank } from '@sand/kit'
 import { failed, succeeded } from './book'
 import { probe, type Probe } from './probe'

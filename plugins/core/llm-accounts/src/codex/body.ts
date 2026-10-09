@@ -1,4 +1,5 @@
-import type { Effort, LLMRequest, Message } from '@sand/protocol'
+import type { Message } from '@sand/messages'
+import type { Effort, LLMRequest } from '../contract'
 import { createHash } from 'node:crypto'
 import { codexInput } from './input'
 import { describeCodex, takesImages } from './models'

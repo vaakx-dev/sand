@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Chat transcript: bubbles, markdown, tool groups under each reply, agent reports, streamed in place",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Chat",
@@ -19,10 +22,12 @@
     }
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

@@ -1,4 +1,4 @@
-import type { Settings } from '@sand/protocol'
+import type { Settings } from './contract'
 import { closeDrawer, float, icon, layer, pulse, secondaryAction } from '@sand/dom'
 import { definePlugin, type Dispose } from 'drydock'
 import { showPage } from './address'

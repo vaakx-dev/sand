@@ -1,5 +1,7 @@
 import { relationLabel } from '@sand/kit'
-import type { Machine, ProjectEntry, ProjectGroup, SyncFlows, SyncRelation } from '@sand/protocol'
+import type { SyncRelation } from '@sand/sync/contract'
+import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
+import type { SyncFlows } from '../contract'
 import { badge, div, dot, icon, quietButton, span, type Child, type Tone } from '@sand/dom'
 import { isOnline, machineKey, machineName, shorten } from './places'
 import type { ProjectsContext } from './types'

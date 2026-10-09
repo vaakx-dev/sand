@@ -1,0 +1,21 @@
+{
+  "name": "@sand/cli-devices",
+  "version": "0.0.0",
+  "description": "The sand devices command: lists paired devices, unpairs them and shows a pairing QR code",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Devices command",
+    "summary": "Lists and pairs devices from the terminal"
+  },
+  "dependencies": {
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "uqr": "^0.1.3",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

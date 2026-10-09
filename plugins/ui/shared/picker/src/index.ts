@@ -1,4 +1,4 @@
-import type { Picker } from '@sand/protocol'
+import type { Picker } from './contract'
 import { finePointer, owned } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { choose } from './choose/view'

@@ -1,4 +1,4 @@
-import type { PluginEntry } from '@sand/protocol'
+import type { PluginEntry } from '@sand/host-plugin-library/contract'
 import { derive, div, dynamicChild, hint, list, p, segmented, settingsSection, show, textInput, type Sig } from '@sand/dom'
 import type { LibrarySource } from '../../library/source'
 import { type AreaGroup, pluginFilter, type PluginFilter } from './filter'

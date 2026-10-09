@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import type { Context, ScopeNode } from 'drydock'
 
 const tree = (node: ScopeNode, depth = 0): string[] => [

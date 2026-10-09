@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
 import { toolCalls } from '@sand/kit'
 import { describe, type DescribeTool, type Described } from './describe'
 import { passes, type Filter } from './filter'

@@ -1,4 +1,4 @@
-import type { AskAnswer, AskOption, AskQuestion } from '@sand/protocol'
+import type { AskAnswer, AskOption, AskQuestion } from './contract'
 
 export const toolName = 'ask'
 

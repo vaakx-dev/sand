@@ -1,4 +1,6 @@
-import type { Limits, UsageSummary, Wire } from '@sand/protocol'
+import type { Limits } from '@sand/llm-accounts/contract'
+import type { UsageSummary } from '@sand/usage/contract'
+import type { Wire } from '@sand/web-client/contract'
 import { clock, derive, effect, sig, untrack } from '@sand/dom'
 import { periodLabel } from '@sand/kit'
 import { summaryLoader } from './load'

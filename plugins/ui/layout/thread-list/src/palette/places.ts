@@ -1,4 +1,4 @@
-import type { ProjectEntry, ProjectGroup } from '@sand/protocol'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { folderName } from '@sand/kit'
 import { findGroup, isQuick, sameDevice } from '../project-lookup'

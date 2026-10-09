@@ -1,4 +1,5 @@
-import type { Effort, Session } from '@sand/protocol'
+import type { Effort } from '@sand/llm-accounts/contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
 import { jsonSchema, parseOutput, type Schema } from './schema'
 import type { Run } from './store'

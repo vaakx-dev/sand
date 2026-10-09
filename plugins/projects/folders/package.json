@@ -4,7 +4,8 @@
   "description": "Lets the page browse folders and make new ones on this computer",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Folders",
@@ -14,7 +15,8 @@
     }
   },
   "dependencies": {
-    "@sand/host": "workspace:*",
+    "@sand/host-projects": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

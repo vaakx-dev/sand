@@ -1,14 +1,22 @@
-import type { FailedPlugin } from './health'
 import type { RouteCaller } from './server'
-import type { WireJob } from './wire'
 
 export type RuntimeAccess = 'denied' | 'public' | 'client'
 
-export type RuntimeReason = 'start' | 'reload' | 'watch' | 'crash' | 'plugins' | 'update'
+export type RuntimeReason = 'start' | 'reload' | 'watch' | 'crash' | 'plugins' | 'update' | 'safe'
+
+declare module './wire/registry' {
+  interface WireRequests {
+    'runtimes.safe': { on: boolean }
+  }
+}
+
+export interface FailedPlugin {
+  id: string
+  error: string
+}
 
 export interface RuntimeActivity {
   sessions: string[]
-  jobs: WireJob[]
 }
 
 export interface RuntimeChange {

@@ -1,4 +1,4 @@
-import type { PickItem, PickOptions, Picked } from '@sand/protocol'
+import type { Picked, PickItem, PickOptions } from '../contract'
 import { tell, type Peer } from './peer'
 
 export interface PickAnswer {

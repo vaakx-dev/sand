@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import type { SessionsContext } from '../types'
 import { listed, pickItems } from './items'
 import { fresh, nextSort, options, title, type View } from './view'

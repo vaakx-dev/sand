@@ -1,0 +1,19 @@
+{
+  "name": "@sand/safe-banner",
+  "version": "0.0.0",
+  "description": "Shows when sand runs in safe mode and lets you leave it",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Safe mode",
+    "summary": "A banner while sand runs only its built-in plugins, with a button to leave safe mode",
+    "uses": {
+      "layout": "the safe mode notice sits loose above the app",
+      "notify": "no message when leaving safe mode fails"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

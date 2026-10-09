@@ -1,6 +1,6 @@
 import { div, groupLabel } from '@sand/dom'
 import { isInside } from '@sand/kit'
-import type { Machine } from '@sand/protocol'
+import type { Machine } from '@sand/web-client/contract'
 import { choosePc } from './choose'
 import { pcRow, quickRow } from './rows'
 import { currentTarget, deviceOf, type PickerContext } from './target'

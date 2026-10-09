@@ -1,4 +1,4 @@
-import type { ExtensionInfo, Extensions } from '@sand/protocol'
+import type { ExtensionInfo, Extensions } from '../contract'
 import { errorMessage } from '@sand/kit'
 import type { Context, Scope } from 'drydock'
 import type { BundledExtension } from 'sand:extensions'

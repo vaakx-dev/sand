@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import { applyChoice } from './apply'
 import { parseArgs } from './args'
 import type { Tools } from './context'

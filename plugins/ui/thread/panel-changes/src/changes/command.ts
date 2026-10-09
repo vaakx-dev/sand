@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import type { Context } from 'drydock'
 import { sessionSource } from './sessions'
 import { collectTree } from './tree'

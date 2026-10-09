@@ -1,4 +1,4 @@
-import type { Billing, LLM, ProviderInfo } from '@sand/protocol'
+import type { Billing, LLM, ProviderInfo } from '@sand/llm-accounts/contract'
 import type { Turn } from './turns'
 
 const unknown = 'unknown'

@@ -1,4 +1,4 @@
-import type { Swipe } from '@sand/protocol'
+import type { Swipe } from './contract'
 import { batch, onTimeout, type Sig, type Store } from '@sand/dom'
 import type { Open } from './shell'
 import { drawerWidth, settleMs, type Shift } from './slide'

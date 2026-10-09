@@ -1,4 +1,4 @@
-import type { Block } from '@sand/protocol'
+import type { Block } from '@sand/messages'
 
 export const imageLabel = (image: { name?: string }) => `${image.name ?? 'image'}:`
 

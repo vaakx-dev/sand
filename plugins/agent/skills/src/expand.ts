@@ -1,4 +1,5 @@
-import type { Skill, Skills, TextBlock, UserContent } from '@sand/protocol'
+import type { TextBlock, UserContent } from '@sand/messages'
+import type { Skill, Skills } from './contract'
 import type { Context } from 'drydock'
 
 const mention = /(?:^|[\s(])\$([a-zA-Z0-9][\w.-]*)/g

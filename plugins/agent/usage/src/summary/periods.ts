@@ -1,4 +1,4 @@
-import type { UsageBucket } from '@sand/protocol'
+import type { UsageBucket } from '../contract'
 
 const formatter = (zone: string) => {
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }

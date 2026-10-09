@@ -1,4 +1,5 @@
-import type { Entry, Message, Session, SessionInfo } from '@sand/protocol'
+import type { Entry, Message } from '@sand/messages'
+import type { Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 
 type Row = Omit<Entry, 'data'> & { data: string }

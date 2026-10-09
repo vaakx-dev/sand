@@ -16,9 +16,10 @@
     "enabled": false
   },
   "dependencies": {
-    "@sand/conversation": "workspace:*",
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

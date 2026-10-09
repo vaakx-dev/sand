@@ -1,4 +1,4 @@
-import type { Agents, Job, WireJob } from '@sand/protocol'
+import type { Agents, Job, WireJob } from './contract'
 import type { Context } from 'drydock'
 
 const wireJob = ({ cancel: _, ...job }: Job): WireJob => job

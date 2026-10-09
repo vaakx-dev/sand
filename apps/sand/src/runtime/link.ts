@@ -1,7 +1,7 @@
+import { accessOf, callerOf, runtimeEnv } from '@sand/kit/host'
 import type { HostMessage, Runtime, RuntimeMessage } from '@sand/protocol'
 import { definePlugin } from 'drydock'
 import { createActivity } from './activity'
-import { accessOf, callerOf, runtimeEnv } from './channel'
 import { createDrain } from './drain'
 import { createFailures } from './failures'
 

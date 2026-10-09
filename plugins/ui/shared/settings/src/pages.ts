@@ -1,4 +1,4 @@
-import type { SettingsPage } from '@sand/protocol'
+import type { SettingsPage } from './contract'
 import { sig } from '@sand/dom'
 
 const byOrder = (a: SettingsPage, b: SettingsPage) => (a.order ?? 0) - (b.order ?? 0)

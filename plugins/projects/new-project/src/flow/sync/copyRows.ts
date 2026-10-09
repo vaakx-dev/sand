@@ -1,4 +1,4 @@
-import type { PaletteReviewRow } from '@sand/protocol'
+import type { PaletteReviewRow } from '@sand/palette/contract'
 import type { FlowContext } from '../types'
 import { placed } from './names'
 import type { CopyPlan } from './plan'

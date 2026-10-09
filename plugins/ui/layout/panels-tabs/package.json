@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Tabbed host for the right-hand panels: edits, agents and tree",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Panel tabs",
@@ -16,7 +19,7 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/layout-columns": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

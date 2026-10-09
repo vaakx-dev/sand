@@ -1,4 +1,7 @@
-import type { AgentDefinition, Agents, Effort, LLM, Tool, TurnResult } from '@sand/protocol'
+import type { Effort, LLM } from '@sand/llm-accounts/contract'
+import type { TurnResult } from '@sand/loops/contract'
+import type { Tool } from '@sand/tools/contract'
+import type { AgentDefinition, Agents } from './contract'
 import { z } from 'zod'
 import { catalog } from './catalog'
 import { agentTitle } from './title'

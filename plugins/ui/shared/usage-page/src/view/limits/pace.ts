@@ -1,4 +1,4 @@
-import type { LimitWindow } from '@sand/protocol'
+import type { LimitWindow } from '@sand/llm-accounts/contract'
 
 export type Pace = 'ahead' | 'on' | 'under'
 

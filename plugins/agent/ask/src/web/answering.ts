@@ -1,4 +1,5 @@
-import type { AskAnswer, Composer, ComposerCapture } from '@sand/protocol'
+import type { Composer, ComposerCapture } from '@sand/composer-card/contract'
+import type { AskAnswer } from '../contract'
 import type { Context } from 'drydock'
 import { choicesOf } from '../choices'
 import { askBanner } from './banner/panel'

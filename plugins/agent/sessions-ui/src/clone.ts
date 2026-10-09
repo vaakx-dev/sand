@@ -1,4 +1,4 @@
-import type { Command } from '@sand/protocol'
+import type { Command } from '@sand/server/contract'
 import type { SessionsContext } from './types'
 
 export const cloneCommand = (ctx: SessionsContext): Command => ({

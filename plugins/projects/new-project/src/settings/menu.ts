@@ -1,4 +1,4 @@
-import type { ProjectGroup } from '@sand/protocol'
+import type { ProjectGroup } from '@sand/web-client/contract'
 import { div, errorMessage, icon, popover, popoverItem, span } from '@sand/dom'
 import { byRecent, isOnline, machineName, withoutCopy } from './places'
 import { deleteItem } from './remove'

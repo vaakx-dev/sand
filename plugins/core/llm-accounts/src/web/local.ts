@@ -1,5 +1,5 @@
 import { derive, div, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
-import type { LoginAccount, LoginProvider, LoginState } from '@sand/protocol'
+import type { LoginAccount, LoginProvider, LoginState } from '../contract'
 import { accountLogo, accountTitle, howText } from './names'
 import { accountRow, busyAction } from './parts'
 import type { LoginControl } from './state'

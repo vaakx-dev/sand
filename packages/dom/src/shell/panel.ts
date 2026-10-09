@@ -1,8 +1,8 @@
-import type { Handle, PanelPatch, PanelSpec } from '@sand/protocol'
 import { div } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { icon } from '../icons/lucide'
 import { place } from './place'
+import type { Handle, PanelPatch, PanelSpec } from './types'
 
 export interface PanelControl {
   update(patch: PanelPatch): void

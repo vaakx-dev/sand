@@ -1,4 +1,5 @@
-import type { Machine, PaletteItem, PalettePage } from '@sand/protocol'
+import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { Machine } from '@sand/web-client/contract'
 import { emptyPage } from './empty'
 import { folderPage } from './folder'
 import { gitPage } from './git'

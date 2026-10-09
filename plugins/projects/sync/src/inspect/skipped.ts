@@ -1,4 +1,4 @@
-import type { SyncSkipped } from '@sand/protocol'
+import type { SyncSkipped } from '../contract'
 import { join } from 'node:path'
 import { isSecret } from '../folder/exclude'
 import { hiddenOut, type Hidden } from '../folder/hidden'

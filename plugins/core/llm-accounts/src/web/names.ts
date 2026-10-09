@@ -1,5 +1,5 @@
 import { badge, dot, icon, providerIcon, tile } from '@sand/dom'
-import type { LoginMethod } from '@sand/protocol'
+import type { LoginMethod } from '../contract'
 
 interface Named {
   provider: string

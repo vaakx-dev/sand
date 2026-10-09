@@ -1,4 +1,4 @@
-import type { PluginLibrary } from '@sand/protocol'
+import type { PluginLibrary } from '@sand/host-plugin-library/contract'
 import { errorMessage, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 

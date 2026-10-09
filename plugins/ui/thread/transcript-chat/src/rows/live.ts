@@ -1,4 +1,4 @@
-import type { Step } from '@sand/conversation'
+import type { Step } from '@sand/transcript-parts/contract'
 import { div, icon, shine, span, type Sig } from '@sand/dom'
 import { row, type RowContext, type RowMaker } from './row'
 

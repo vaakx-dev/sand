@@ -1,4 +1,4 @@
-import type { NavAction, NavItem, NavList } from '@sand/protocol'
+import type { NavAction, NavItem, NavList } from '@sand/dom'
 import { ago, color, derive, div, dot, dynamicChild, elapsed, exactTime, focusable, icon, iconButton, intent, keys, navStatus, projectIcon, show, span, stopThen, tildeHome, working, type Reorder, type Sig } from '@sand/dom'
 
 export type CardRow = { group: string; list: NavList; item: NavItem; selected: boolean }

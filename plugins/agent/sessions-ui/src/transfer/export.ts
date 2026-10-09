@@ -1,5 +1,6 @@
-import type { Entry, ThreadExportPage, WireRequestOf } from '@sand/protocol'
-import { scratchRoot } from '@sand/host'
+import type { WireRequestOf } from '@sand/protocol'
+import type { Entry } from '@sand/messages'
+import type { ThreadExportPage } from '@sand/sessions-sqlite/contract'
 import { isInside } from '@sand/kit'
 import type { SessionsContext } from '../types'
 
@@ -28,7 +29,8 @@ export const exportThread =
     return {
       title: session.title,
       cwd: session.cwd,
-      scratch: isInside(session.cwd, scratchRoot(ctx)),
+      scratch: isInside(session.cwd, ctx.paths.scratchRoot()),
       ...page(entries, Math.max(0, request.offset), limit),
+      format: ctx.sessions.format,
     }
   }

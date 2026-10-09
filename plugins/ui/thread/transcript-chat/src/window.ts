@@ -1,4 +1,4 @@
-import type { Item } from '@sand/conversation'
+import type { Item } from '@sand/transcript-parts/contract'
 import type { ThreadView } from './view'
 
 export const pageSize = 40
