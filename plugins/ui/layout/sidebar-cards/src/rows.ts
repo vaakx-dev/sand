@@ -24,7 +24,7 @@ export const cardsIn = (rows: Row[], group: string) =>
 export const buildRows = (lists: NavList[], options: RowOptions): Row[] =>
   lists.flatMap(list => {
     const selected = list.selected?.()
-    const items = list.items().filter(item => !options.project || item.project === options.project)
+    const items = list.items().filter(item => !options.project || inProject(item, options.project))
     return sections(items)
       .filter(([, items]) => items.length)
       .flatMap(([name, items]): Row[] => {
