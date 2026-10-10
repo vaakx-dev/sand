@@ -11,7 +11,8 @@
     "summary": "Lets the agent list plugins and learn to write new ones",
     "uses": {
       "skills": "the agent gets no guide to writing plugins",
-      "inspector": "plugin details list no services or hooks"
+      "inspector": "plugin details list no services or hooks",
+      "webExtensions": "the plugin tool shows no web extensions"
     }
   },
   "dependencies": {

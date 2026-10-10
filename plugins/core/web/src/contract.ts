@@ -28,9 +28,35 @@ export interface Extensions {
   build(): string
 }
 
+export interface BrowserState {
+  id: string
+  status: ExtensionStatus
+  error?: string
+  missing?: string[]
+  inject: string[]
+}
+
+export interface WebExtensionState {
+  id: string
+  dir: string
+  label?: string
+  summary?: string
+  builtin: boolean
+  enabled: boolean
+  bundled: boolean
+  provides: string[]
+  problem?: string
+  browser?: BrowserState & { at: number }
+}
+
+export interface WebExtensions {
+  list(): WebExtensionState[]
+}
+
 declare module 'drydock' {
   interface Services {
     extensions: Extensions
+    webExtensions: WebExtensions
   }
 
   interface Events {
@@ -43,6 +69,7 @@ declare module '@sand/protocol/wire' {
     'web.extensions': {}
     'web.extensions.set': { extension: string; enabled: boolean | null }
     'web.extensions.reset': {}
+    'web.extensions.report': { states: BrowserState[] }
   }
 
   interface WireEvents {

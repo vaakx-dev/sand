@@ -46,6 +46,7 @@ export const createSite = async ({ home, safe, find, configured, report, broadca
 
   return {
     current: () => built,
+    list: () => extensions,
     enabled: () => enabledOf(extensions),
     set(id: string, value: boolean | null) {
       const { [id]: _, ...rest } = choices

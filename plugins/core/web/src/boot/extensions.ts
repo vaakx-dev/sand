@@ -2,6 +2,7 @@ import type { ExtensionInfo, Extensions } from '../contract'
 import { errorMessage } from '@sand/kit'
 import type { Context, Scope } from 'drydock'
 import type { BundledExtension } from 'sand:extensions'
+import { reportStates } from './report'
 import { initialWanted, type Wanted } from './wanted'
 
 export const provideExtensions = (ctx: Context, build: string, bundled: BundledExtension[]) => {
@@ -81,6 +82,7 @@ export const provideExtensions = (ctx: Context, build: string, bundled: BundledE
   }
 
   ctx.provide('extensions', service)
+  reportStates(ctx, service, mounted)
   ctx.on('wire.state', state => {
     if (state === 'open') sync()
   })
