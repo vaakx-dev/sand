@@ -4,7 +4,8 @@
   "description": "The workflow tool: the agent scripts many sub-agents at once",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/web/index.ts",

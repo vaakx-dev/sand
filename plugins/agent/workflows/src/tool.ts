@@ -45,7 +45,7 @@ export const workflowTool = (ctx: Context<'agents'>, root: string): Tool<typeof 
   async run({ script, resume, args, label, background }, { session, call, signal }) {
     if (!script && !resume) throw new Error('Provide a script, or a run id to resume')
     const run = resume ? await resumeRun(root, resume) : await createRun(root, script!, args)
-    const execution = { run, label: label ?? run.id, parent: session, origin: call.id, args: args ?? run.args }
+    const execution = { run, label: label ?? run.id, parent: session, origin: call.id, args: args ?? run.args, resumed: Boolean(resume) }
     if (background === false) return execute(ctx, execution, signal)
     const work = (jobSignal: AbortSignal, job: Job) => execute(ctx, { ...execution, job: job.id }, jobSignal)
     const job = ctx.agents.background(session, `workflow ${execution.label}`, work, call.id)
