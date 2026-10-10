@@ -1,6 +1,4 @@
-export type { SyncCall } from './call'
-export { copyProject, type CopyRun } from './copy'
-export type { Report } from './move'
+export { copyProject } from './copy'
+export type { Report, SyncCall } from './move'
 export { relationLabel, relationOf } from './relation'
 export { sendProject } from './send'
-export { sendSnapshot } from './snapshot'

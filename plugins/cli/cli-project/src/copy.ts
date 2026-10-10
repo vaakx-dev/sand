@@ -3,8 +3,8 @@ import { copyProject } from '@sand/sync/flows'
 import type { SyncInspect } from '@sand/sync/contract'
 import { usage } from './usage'
 import type { ProjectFlags } from './flags'
-import { findGroup } from './find'
-import { loadGroups, locationOn, type Group, type Loaded } from './groups'
+import { loadGroup } from './find'
+import { locationOn, type Group, type Loaded } from './groups'
 import type { Pc, Pcs } from './pcs'
 import { progressPrinter } from './progress'
 
@@ -22,9 +22,9 @@ const sourceOf = (pcs: Pcs, group: Group, from: string | undefined) => {
   return found
 }
 
-const destinationOf = (loaded: Loaded, pc: Pc, folder: string, path: string | undefined) => {
+const destinationOf = (lists: Loaded['lists'], pc: Pc, folder: string, path: string | undefined) => {
   if (path) return path
-  const list = loaded.lists.get(pc)
+  const list = lists.get(pc)
   if (!list) throw new Error(`${pc.name} is offline`)
   const { root, sep } = list
   return `${root.endsWith(sep) ? root.slice(0, -sep.length) : root}${sep}${folder}`
@@ -41,14 +41,13 @@ const describe = (inspected: SyncInspect) => {
 
 export const copyToPc = async (pcs: Pcs, [value]: string[], flags: ProjectFlags) => {
   if (!value || !flags.to) throw new Error(usage)
-  const loaded = await loadGroups(pcs)
-  const group = findGroup(loaded.groups, value)
+  const { group, lists } = await loadGroup(pcs, value)
   const target = pcs.named(flags.to)
   if (locationOn(group, target)) throw new Error(`${group.name} is already on ${target.name}; sand project sync updates it`)
   const source = sourceOf(pcs, group, flags.from)
   const inspected = await pcs.call<SyncInspect>({ type: 'sync.inspect', path: source.path }, source.pc.device)
   if (inspected.blocked) throw new Error(inspected.blocked)
-  const path = destinationOf(loaded, target, folderName(source.path), flags.path)
+  const path = destinationOf(lists, target, folderName(source.path), flags.path)
   console.log(`copying ${group.name} from ${source.pc.name} to ${target.name}  ${path}`)
   describe(inspected).forEach(line => console.log(line))
   if (flags.setup && !inspected.setup) console.log('  no setup command found')

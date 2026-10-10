@@ -7,6 +7,10 @@ import { workflowTool } from './tool'
 export default definePlugin({
   name: 'workflows',
   inject: ['agents', 'cli', 'tools'],
+  uses: {
+    ui: 'workflow progress is not shown',
+    loop: 'agent output that does not match its schema is not retried',
+  },
   config: z.object({
     dir: z.string().optional(),
   }),

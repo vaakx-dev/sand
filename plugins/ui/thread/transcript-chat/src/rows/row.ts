@@ -2,10 +2,10 @@ import type { Markdown } from '@sand/markdown/contract'
 import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '@sand/transcript-parts/contract'
 import { chevron, plainButton, type Child, type ContextMenu, type NavAction, type Sig } from '@sand/dom'
 
-export interface Row {
+export interface Row<T = unknown> {
   key: string
-  data: unknown
-  view(data: Sig<unknown>): HTMLElement
+  data: T
+  view(data: Sig<T>): HTMLElement
 }
 
 export interface RowContext {
@@ -21,7 +21,7 @@ export interface RowContext {
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row
 
-export const row = <T>(key: string, data: T, view: (data: Sig<T>) => HTMLElement): Row => ({ key, data, view: view as Row['view'] })
+export const row = <T>(key: string, data: T, view: (data: Sig<T>) => HTMLElement): Row<T> => ({ key, data, view })
 
 export const worked = (toggle: () => void, open: Sig<boolean>, ...children: Child[]) =>
   plainButton(

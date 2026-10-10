@@ -17,6 +17,8 @@ export default definePlugin({
   uses: {
     ui: 'there is no /loop command and loop fallbacks are not announced',
     server: 'the page cannot list or choose loops',
+    sessions: 'the page cannot choose loops and /loop needs an open thread',
+    modelSettings: 'a thread that /loop starts ignores the model picked in the composer',
   },
   config: z.object({ default: z.string().optional() }),
   async apply(ctx, config) {
@@ -36,15 +38,10 @@ export default definePlugin({
         if (!registry.get(name)) throw new Error(`No agent loop named ${name}`)
         await defaults.set(name)
       },
-      runWith: (impl, session, prompt, overrides) => frame.run(session, prompt, { impl, ...(overrides && { overrides }) }),
       react: runReact,
     }
     ctx.provide('loops', loops)
-    ctx.provide('loop', {
-      run: (session, prompt, signal) => frame.run(session, prompt, signal ? { signal } : {}),
-      interrupt: frame.interrupt,
-      active: frame.active,
-    })
+    ctx.provide('loop', frame)
     serveLoops(ctx, loops, choice)
     ctx.watch('ui', ui => ui?.command(loopCommand(ctx, ui, loops, frame.active)))
   },

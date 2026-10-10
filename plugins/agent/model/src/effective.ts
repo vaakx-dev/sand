@@ -36,6 +36,10 @@ export const resolve = (chosen: SessionSettings, defaults: SessionSettings, llm?
   }
 }
 
+export const effortIds = (llm?: LLM) => llm?.levels?.().map(level => level.id) ?? []
+
+export const asEffort = (llm: LLM | undefined, word: string) => effortIds(llm).find(id => id === word)
+
 export const levelLabel = (llm: LLM | undefined, effort?: string) => llm?.levels?.().find(level => level.id === effort)?.label ?? effort
 
 export const describe = (settings: EffectiveSettings, llm?: LLM) =>

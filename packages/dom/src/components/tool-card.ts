@@ -1,4 +1,4 @@
-import { derive, div, read, show, sig, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { derive, div, read, show, sig, span, type Child, type ClassValue, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { quietButton, rowButton } from './button'
 import { copyButton } from './copy'
 
@@ -12,6 +12,7 @@ export interface ToolCardProps {
   actions?: Child
   failed?: MaybeReactive<boolean>
   onToggle?: () => void
+  headProps?: Props<HTMLDivElement>
 }
 
 export interface FoldProps {
@@ -21,11 +22,11 @@ export interface FoldProps {
   copyLabel?: string
 }
 
-export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', meta, actions, failed = false, onToggle }: ToolCardProps, ...body: Child[]) =>
+export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', meta, actions, failed = false, onToggle, headProps }: ToolCardProps, ...body: Child[]) =>
   div(
     { class: 'group' },
     div(
-      { class: 'flex min-h-8 items-center gap-1 rounded-lg pr-1 transition-colors hover:bg-neutral-800' },
+      { ...headProps, class: 'flex min-h-8 items-center gap-1 rounded-lg pr-1 transition-colors hover:bg-neutral-800' },
       rowButton(
         { class: 'min-h-8 flex-1 gap-2 rounded-lg px-2', onClick: () => onToggle?.() },
         span({ class: ['inline-flex shrink-0', () => (read(failed) ? 'text-danger-400' : 'text-neutral-500')] }, icon),

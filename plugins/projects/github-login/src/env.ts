@@ -10,7 +10,7 @@ const configCount = () => {
   return Number.isInteger(count) && count > 0 ? count : 0
 }
 
-export const tokenEnv = (token: string): Record<string, string> => {
+const tokenEnv = (token: string): Record<string, string> => {
   const first = configCount()
   return {
     GH_TOKEN: token,

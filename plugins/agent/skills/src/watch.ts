@@ -5,18 +5,20 @@ import { dirname } from 'node:path'
 
 export const watchRoot = (watcher: Watcher, root: string, onChange: () => void) => {
   let stop: Dispose = () => {}
+  const watchRootFolder = () =>
+    watcher.debounced(root, { recursive: true }, () => {
+      if (!existsSync(root)) start()
+      onChange()
+    })
+  const waitForRoot = () =>
+    watcher.debounced(dirname(root), {}, () => {
+      if (!existsSync(root)) return
+      start()
+      onChange()
+    })
   const start = () => {
     void stop()
-    stop = existsSync(root)
-      ? watcher.debounced(root, { recursive: true }, () => {
-          if (!existsSync(root)) start()
-          onChange()
-        })
-      : watcher.debounced(dirname(root), {}, () => {
-          if (!existsSync(root)) return
-          start()
-          onChange()
-        })
+    stop = existsSync(root) ? watchRootFolder() : waitForRoot()
   }
   start()
   return () => void stop()

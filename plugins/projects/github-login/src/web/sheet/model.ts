@@ -1,13 +1,15 @@
-import { derive, effect, sig, untrack } from '@sand/dom'
+import { derive, effect, onTimeout, registerInScope, sig } from '@sand/dom'
 import type { GithubFound } from '../../contract'
 import type { GithubControl } from '../state'
 
-export type Phase = 'finding' | 'found' | 'starting' | 'device' | 'error'
+type Phase = 'finding' | 'found' | 'starting' | 'device' | 'error'
 
 export const signInModel = (control: GithubControl, done: (text?: string) => void) => {
   const found = sig<GithubFound | undefined>(undefined)
   const started = sig(false)
   const busy = sig(false)
+  let closed = false
+  registerInScope(() => (closed = true))
 
   const start = async () => {
     started.set(true)
@@ -27,11 +29,17 @@ export const signInModel = (control: GithubControl, done: (text?: string) => voi
     if (started.get() && !control.state.get()?.login) void control.run({ type: 'github.cancel' })
   }
 
-  const phase = derive((): Phase => {
+  const startedPhase = (): Phase => {
     const state = control.state.get()
-    if (started.get()) return state?.pending ? 'device' : state?.error && !busy.get() ? 'error' : 'starting'
+    if (state?.pending) return 'device'
+    return state?.error && !busy.get() ? 'error' : 'starting'
+  }
+
+  const phase = derive((): Phase => {
+    if (started.get()) return startedPhase()
     const local = found.get()
-    return !local ? 'finding' : local.login ? 'found' : 'starting'
+    if (!local) return 'finding'
+    return local.login ? 'found' : 'starting'
   })
 
   const key = derive(() => {
@@ -41,10 +49,12 @@ export const signInModel = (control: GithubControl, done: (text?: string) => voi
 
   effect(() => {
     const login = control.state.get()?.login
-    if (started.get() && login) untrack(() => queueMicrotask(() => done(`Signed in to GitHub as ${login}`)))
+    if (started.get() && login) onTimeout(() => done(`Signed in to GitHub as ${login}`), 0)
   })
 
   void control.find().then(local => {
+    if (closed) return
+    if (!local) return done()
     found.set(local)
     if (!local.login) void start()
   })

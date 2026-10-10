@@ -17,9 +17,8 @@ export const findSecrets = async (folder: string) => {
       for (const entry of entries) {
         if (++seen > maxEntries) return found
         const path = join(relative, entry.name)
-        if (entry.isDirectory()) {
-          if (!pruned.has(entry.name)) next.push(path)
-        } else if (isSecret(entry.name)) found.push(path)
+        if (entry.isDirectory() && !pruned.has(entry.name)) next.push(path)
+        if (!entry.isDirectory() && isSecret(entry.name)) found.push(path)
       }
     }
     level = next

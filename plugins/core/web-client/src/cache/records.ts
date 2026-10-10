@@ -31,7 +31,7 @@ export const summaryOf = (thread: Thread): SummaryRecord => ({ device: thread.de
 
 export const summaryKey = (thread: Thread) => JSON.stringify(summaryOf(thread))
 
-export const cursorOf = (thread: Thread) =>
+const cursorOf = (thread: Thread) =>
   thread.info.head && thread.entries.has(thread.info.head) ? thread.info.head : thread.cursor
 
 export const tailOf = (thread: Thread): TailRecord => ({

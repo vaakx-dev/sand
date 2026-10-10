@@ -6,8 +6,6 @@ import { row, type Row, type RowContext } from './row'
 import { toolsRow } from './tools'
 import { userRow } from './user'
 
-export type { Row, RowContext } from './row'
-
 const customRow = (item: Extract<Item, { kind: 'custom' }>, context: RowContext): Row[] => {
   const render = context.registry.entryRenderer(item.entry.type)
   if (!render) return []

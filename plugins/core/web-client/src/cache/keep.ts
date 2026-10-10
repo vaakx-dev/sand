@@ -1,4 +1,10 @@
-import { writeSaved } from './saved'
+import { transact } from '../integrations/indexed-db'
+
+const writeSaved = (scope: string, values: [string, unknown][]) =>
+  transact('readwrite', pick => {
+    for (const [name, value] of values) pick('meta').put(value, [scope, name])
+    return () => undefined
+  })
 
 export const createKeep = (scope: () => string | undefined) => {
   let restored: Record<string, unknown> = {}

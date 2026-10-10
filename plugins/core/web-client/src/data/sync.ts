@@ -6,9 +6,9 @@ import { copyProject, relationOf, sendProject, type SyncCall } from '@sand/sync/
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
 import { entryKey } from './groups'
-import type { createProjects } from './projects'
+import type { ProjectService } from './projects'
 
-export const createSync = (ctx: Context, wire: Wire, projects: ReturnType<typeof createProjects>): Sync => {
+export const createSync = (ctx: Context, wire: Wire, projects: ProjectService): Sync => {
   const states = new Map<string, SyncState>()
   const call: SyncCall = (request, device) => wire.call(request, device ?? thisDevice)
   const keyOf = (ref: ProjectRef) => entryKey(ref.path, ref.device)

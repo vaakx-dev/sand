@@ -19,7 +19,7 @@ export default definePlugin({
   name: 'find-files',
   description: 'Go to file and Search in project in the palette; picking a file puts @path in the prompt',
   inject: ['threads', 'fileIndex'],
-  uses: { palette: 'nothing is shown', composer: 'picked files cannot be added to a prompt' },
+  uses: { palette: 'nothing is shown', composer: 'picked files cannot be added to a prompt', notify: 'no message when no composer is loaded' },
   apply(ctx) {
     ctx.watch('palette', palette => palette?.source(source(ctx)))
   },

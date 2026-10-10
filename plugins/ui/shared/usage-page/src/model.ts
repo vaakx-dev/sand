@@ -14,7 +14,7 @@ export interface UsageDeps {
   wire: Wire
   pcs(): Pc[]
   limits(): Limits[]
-  refreshLimits?(): Promise<void>
+  refreshLimits(): Promise<void>
   openThread?(id: string): void
   copy(text: string, what: string): void
 }
@@ -28,7 +28,10 @@ export interface Notice {
 export const usageModel = (deps: UsageDeps) => {
   const { range, pc } = usagePrefs()
   const signature = derive(() => JSON.stringify(deps.pcs()))
-  const pcs = derive(() => JSON.parse(signature.get()) as Pc[])
+  const pcs = derive(() => {
+    signature.get()
+    return untrack(deps.pcs)
+  })
   const fleet = fleetLoader(deps.wire, () => pcs.get(), range)
   const metric = sig<Metric>('cost')
   const breakdown = sig<Breakdown>('projects')
@@ -80,7 +83,7 @@ export const usageModel = (deps: UsageDeps) => {
   })
 
   const checkLimits = () => {
-    if (!deps.refreshLimits || checking.get()) return
+    if (checking.get()) return
     checking.set(true)
     void deps
       .refreshLimits()
@@ -101,7 +104,7 @@ export const usageModel = (deps: UsageDeps) => {
     pcs,
     nameOf: (id: string) => nameOf(id) ?? id,
     refresh: fleet.refresh,
-    checkLimits: deps.refreshLimits ? checkLimits : undefined,
+    checkLimits,
     openThread: deps.openThread,
     copy: deps.copy,
     showOnly: (id: string) => pc.set(id),

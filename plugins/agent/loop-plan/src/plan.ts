@@ -9,19 +9,12 @@ export interface PlanOptions {
 
 const suffix = '\n\nPlan mode. Read only. Reply with a numbered plan and make no edits.'
 
-const request = async (turn: Turn, options: PlanOptions) => {
-  const built = await turn.hooks.build()
-  return { ...built, system: `${built.system}${suffix}`, tools: built.tools.filter(tool => options.tools.includes(tool.name)) }
-}
-
-const send = async (turn: Turn, options: PlanOptions) => {
-  try {
-    return await turn.hooks.stream(await request(turn, options))
-  } catch (error) {
-    if (!(await turn.hooks.overflow(error))) throw error
-    return turn.hooks.stream(await request(turn, options))
-  }
-}
+const send = (turn: Turn, options: PlanOptions) =>
+  turn.hooks.send(request => ({
+    ...request,
+    system: `${request.system}${suffix}`,
+    tools: request.tools.filter(tool => options.tools.includes(tool.name)),
+  }))
 
 const readOnly = async (turn: Turn, calls: ToolCallBlock[], options: PlanOptions) => {
   const allowed = calls.filter(call => options.tools.includes(call.name))

@@ -11,14 +11,9 @@ import { exportHistory, exportSnapshot } from './transfer/export'
 import { importHistory, importSnapshot } from './transfer/import'
 import { createTransfers } from './transfer/transfers'
 
-export type SyncType = Extract<WireRequestType, `sync.${string}`>
+type SyncHandlers = { [K in Extract<WireRequestType, `sync.${string}`>]: WireHandler<K> }
 
-export type SyncHandlers = { [K in SyncType]: WireHandler<K> }
-
-const commitId = (value: unknown) => {
-  if (typeof value !== 'string' || !/^[0-9a-f]{40,64}$/.test(value)) throw new Error('Invalid snapshot id')
-  return value
-}
+const isCommitId = (value: unknown) => typeof value === 'string' && /^[0-9a-f]{40,64}$/.test(value)
 
 export const createSync = (home: string) => {
   const transfers = createTransfers()
@@ -42,7 +37,7 @@ export const createSync = (home: string) => {
     'sync.export': async ({ path, kind, have = [] }) => {
       const hidden = await open(path)
       if (kind === 'history') return exportHistory(hidden.folder, transfers)
-      return locked(hidden.dir, () => exportSnapshot(hidden, have.filter(id => /^[0-9a-f]{40,64}$/.test(id)), transfers))
+      return locked(hidden.dir, () => exportSnapshot(hidden, have.filter(isCommitId), transfers))
     },
     'sync.pull': ({ transfer, index }) => transfers.chunk(transfer, index),
     'sync.push': async ({ transfer, index, data }) => {
@@ -60,8 +55,8 @@ export const createSync = (home: string) => {
     },
     'sync.apply': async ({ path, commit, mode }) => {
       const hidden = await open(path)
-      const id = commitId(commit)
-      return locked(hidden.dir, () => applySnapshot(hidden, id, mode))
+      if (!isCommitId(commit)) throw new Error('Invalid snapshot id')
+      return locked(hidden.dir, () => applySnapshot(hidden, commit, mode))
     },
     'sync.resolve': async ({ path, picks }) => {
       const hidden = await open(path)

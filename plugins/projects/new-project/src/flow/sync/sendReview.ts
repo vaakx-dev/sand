@@ -1,13 +1,12 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
 import type { PalettePage } from '@sand/palette/contract'
-import type { Sync } from '../../contract'
 import { relationLabel } from '@sand/sync/flows'
-import type { FlowContext } from '../types'
+import type { Sync } from '../../contract'
+import type { ProjectsContext } from '../../context'
 import { placed, projectName } from './names'
-import { progressText } from './progress'
-import { reportSend } from './result'
+import { progressText, reportSend } from './report'
 
-export const sendPage = (ctx: FlowContext, sync: Sync, from: ProjectRef, to: ProjectRef): PalettePage => {
+export const sendPage = (ctx: ProjectsContext, sync: Sync, from: ProjectRef, to: ProjectRef): PalettePage => {
   const relation = sync.relation(from, to)
   return {
     id: 'send-review',

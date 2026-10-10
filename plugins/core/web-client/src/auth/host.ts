@@ -5,30 +5,32 @@ import { clientKind, clientName } from './client'
 import { hostKeys } from './keys'
 import { Unpaired } from './unpaired'
 
-export interface PairOffer {
+interface PairOffer {
   secret: string
   url?: string
 }
 
-export interface HostAuthOptions {
+interface HostAuthOptions {
   base(): string | undefined
-  offer?(): Promise<PairOffer | undefined> | PairOffer | undefined
+  offer(): Promise<PairOffer | undefined> | PairOffer | undefined
   paired?(): void
 }
 
-export interface HostAuth {
+interface HostAuth {
   socketUrl(base: string, host: string): Promise<string>
   pairing(): WirePairing | undefined
   fetch(path: string, init?: RequestInit): Promise<Response>
 }
 
+const ticketWith = async (base: string, key: string) => {
+  const ticket = await requestTicket(base, key)
+  return ticket && ticketSocketUrl(base, ticket.ticket)
+}
+
 export const createHostAuth = (options: HostAuthOptions): HostAuth => {
   let host: string | undefined
 
-  const ticketWith = async (base: string, key: string) => {
-    const ticket = await requestTicket(base, key)
-    return ticket && ticketSocketUrl(base, ticket.ticket)
-  }
+  const storedKey = () => (host ? hostKeys.get(host) : undefined)
 
   const storedTicket = async (base: string, id: string) => {
     const stored = hostKeys.get(id)
@@ -40,7 +42,7 @@ export const createHostAuth = (options: HostAuthOptions): HostAuth => {
   }
 
   const pairedTicket = async (base: string, id: string) => {
-    const offer = await options.offer?.()
+    const offer = await options.offer()
     if (!offer) throw new Unpaired()
     const request = { secret: offer.secret, name: clientName(), kind: clientKind() }
     const result = await redeemPairing(base, request).catch(error => {
@@ -61,11 +63,11 @@ export const createHostAuth = (options: HostAuthOptions): HostAuth => {
       return (await storedTicket(base, id)) ?? (await pairedTicket(base, id))
     },
     pairing() {
-      const stored = host ? hostKeys.get(host) : undefined
+      const stored = storedKey()
       return host && stored ? { host, device: stored.device } : undefined
     },
     fetch(path, init = {}) {
-      const stored = host ? hostKeys.get(host) : undefined
+      const stored = storedKey()
       if (!stored) return Promise.reject(new Unpaired())
       const base = options.base()
       if (!base) return Promise.reject(new Error('Not connected to the sand server'))

@@ -4,9 +4,9 @@ import { isInside } from '@sand/kit'
 import type { Context } from 'drydock'
 import { copyOn, groupOf } from '../group'
 
-export type Destination =
+type Destination =
   | { kind: 'scratch' }
-  | { kind: 'copy'; group: ProjectGroup; from?: ProjectEntry; to: ProjectEntry; folders: string[]; project: string }
+  | { kind: 'copy'; from?: ProjectEntry; to: ProjectEntry; folders: string[]; project: string }
   | { kind: 'nocopy'; group: ProjectGroup }
   | { kind: 'folder'; folders: string[] }
 
@@ -31,5 +31,5 @@ export const planDestination = (ctx: PlaceContext, thread: Thread, target: Machi
   const to = copyOn(group, target.device)
   if (!to) return { kind: 'nocopy', group }
   const from = copyOn(group, thread.device)
-  return { kind: 'copy', group, from, to, folders: foldersFor(ctx, cwd, to, from), project: group.id }
+  return { kind: 'copy', from, to, folders: foldersFor(ctx, cwd, to, from), project: group.id }
 }

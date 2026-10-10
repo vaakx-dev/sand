@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, isRecord } from '@sand/kit'
 import type { NoticeLevel } from '@sand/server/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { HookName } from '../contract'
@@ -32,8 +32,9 @@ const withTimeout = (work: Promise<unknown>, ms: number) => {
   return Promise.race([work, limit]).finally(() => clearTimeout(timer))
 }
 
-const invalid = (name: HookName, result: unknown) =>
-  name === 'tool.before' && result !== undefined && !toolActions.has((result as { action?: string } | null)?.action ?? '')
+const validDecision = (result: unknown) => isRecord(result) && typeof result.action === 'string' && toolActions.has(result.action)
+
+const invalid = (name: HookName, result: unknown) => name === 'tool.before' && result !== undefined && !validDecision(result)
 
 export const wrapHandler = (env: WrapEnv, slot: HookSlot, handler: AnyHandler, timeout?: number) => {
   const { name } = slot

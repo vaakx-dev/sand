@@ -1,26 +1,27 @@
-import { derive, div, dynamicChild, hint, overlay, quietButton, sheet, sheetHead, show } from '@sand/dom'
+import { derive, dynamicChild, hint, openTab, overlay, quietButton, sheet, sheetHead, show } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Fleet } from '../fleet/model'
-import { runStatus } from '../fleet/run'
 import { chooseBody } from './choose'
 import { progressBody } from './progress'
 
 type Mode = 'run' | 'choose' | 'none'
 
-const openTab = (url: string) => void window.open(url, '_blank', 'noopener,noreferrer')
+const modeOf = (fleet: Fleet): Mode => {
+  if (fleet.run.get()) return 'run'
+  return fleet.target.get() ? 'choose' : 'none'
+}
 
 const runTitle = (fleet: Fleet) => {
   const run = fleet.run.get()
   if (!run) return ''
   if (!fleet.runFinished.get()) return `Updating to ${run.name}`
-  const pcs = fleet.pcs.get()
-  const done = run.keys.filter(key => runStatus(pcs.find(pc => pc.key === key), run.build).kind === 'done').length
+  const done = fleet.runRows.get().filter(row => row.status.kind === 'done').length
   if (done === run.keys.length) return run.keys.length === 1 ? `Updated to ${run.name}` : `${plural(done, 'PC')} updated`
   return `${done} of ${plural(run.keys.length, 'PC')} updated`
 }
 
 export const updateSheet = (fleet: Fleet, close: () => void) => {
-  const mode = derive<Mode>(() => (fleet.run.get() ? 'run' : fleet.target.get() ? 'choose' : 'none'))
+  const mode = derive(() => modeOf(fleet))
   const title = () => (mode.get() === 'run' ? runTitle(fleet) : (fleet.target.get()?.name ?? 'Updates'))
   const notes = () => fleet.target.get()?.notesUrl
   return overlay(
@@ -30,12 +31,15 @@ export const updateSheet = (fleet: Fleet, close: () => void) => {
       sheetHead(
         title,
         close,
-        show(derive(() => mode.get() === 'choose' && !!notes()), () => quietButton({ onClick: () => openTab(notes() ?? '') }, 'Release notes')),
+        show(
+          () => mode.get() === 'choose' && !!notes(),
+          () => quietButton({ onClick: () => openTab(notes() ?? '') }, 'Release notes'),
+        ),
       ),
       dynamicChild(mode, current => {
         if (current === 'run') return progressBody(fleet, close)
         if (current === 'choose') return chooseBody(fleet, close)
-        return div(hint('Looking for a newer sand…'))
+        return hint('Looking for a newer sand…')
       }),
     ),
   )

@@ -7,7 +7,9 @@ const plain = ['grep', '-r', '-n', '-I', '-F', '-i', '--exclude-dir=node_modules
 
 const parse = (line: string): GrepMatch | undefined => {
   const match = /^(.+?):(\d+):(.*)$/.exec(line.replace(/\r$/, ''))
-  return match ? { path: match[1]!.replace(/^\.\//, ''), line: Number(match[2]), text: match[3]!.trim().slice(0, 200) } : undefined
+  if (!match) return undefined
+  const [, path = '', number, text = ''] = match
+  return { path: path.replace(/^\.\//, ''), line: Number(number), text: text.trim().slice(0, 200) }
 }
 
 const start = (command: string[], cwd: string) => {

@@ -1,4 +1,4 @@
-import type { EffortLevel, ModelInfo } from '@sand/llm-accounts/contract'
+import type { Effort, ModelInfo } from '@sand/llm-accounts/contract'
 import type { PickItem } from '@sand/server/contract'
 import { tokens } from '@sand/kit'
 import { describe, levelLabel, modelOf } from '../effective'
@@ -15,18 +15,17 @@ const status = ({ ctx, choices }: Tools) => {
 }
 
 export const effortSheet = async (tools: Tools, model: ModelInfo) => {
-  const { ctx, choices, defaults: saved } = tools
-  const shown = (({ current, next }) => next ?? current)(choices.state(ctx.ui.session()))
-  const defaults = saved.get()
+  const { ctx, choices, defaults } = tools
+  const shown = choices.shown(ctx.ui.session())
   const levels = (ctx.llm?.levels?.() ?? []).filter(level => model.efforts.includes(level.id))
-  const items: PickItem<EffortLevel['id'] | null>[] = [
+  const items: PickItem<Effort | null>[] = [
     ...levels.map(level => ({
       label: level.label,
       detail: detail(level.id === shown.effort && 'current', level.id === model.defaultEffort && 'model default'),
       search: level.id,
       value: level.id,
     })),
-    { label: 'Use default', detail: levelLabel(ctx.llm, defaults.effort ?? model.defaultEffort), value: null },
+    { label: 'Use default', detail: levelLabel(ctx.llm, defaults.get().effort ?? model.defaultEffort), value: null },
   ]
   const picked = await ctx.ui.choose(`Effort · ${model.label}`, items, {
     status: status(tools),
@@ -38,10 +37,10 @@ export const effortSheet = async (tools: Tools, model: ModelInfo) => {
 }
 
 export const modelSheet = async (tools: Tools) => {
-  const { ctx, choices, defaults: saved } = tools
+  const { ctx, choices } = tools
   const models = ctx.llm?.models?.() ?? []
-  const shown = (({ current, next }) => next ?? current)(choices.state(ctx.ui.session()))
-  const defaults = saved.get()
+  const shown = choices.shown(ctx.ui.session())
+  const defaults = tools.defaults.get()
   const items: PickItem<string | null>[] = [
     ...models.map(model => ({
       label: model.label,
@@ -60,7 +59,7 @@ export const modelSheet = async (tools: Tools) => {
   const asDefault = picked.action === 'default'
   if (asDefault && picked.value === null) return
   const chosen = modelOf(ctx.llm, picked.value ?? defaults.model)
-  const more = Boolean(chosen?.efforts.length) && !asDefault
-  await applyChoice(tools, { model: picked.value }, { asDefault, quiet: more })
-  if (more) await effortSheet(tools, chosen!)
+  if (asDefault || !chosen?.efforts.length) return applyChoice(tools, { model: picked.value }, { asDefault })
+  await applyChoice(tools, { model: picked.value }, { quiet: true })
+  await effortSheet(tools, chosen)
 }

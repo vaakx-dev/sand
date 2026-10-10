@@ -1,8 +1,8 @@
-import { copyButton, div, el, p, span, type Child } from '@sand/dom'
+import { copyButton, div, el, p, span } from '@sand/dom'
 import type { HostHealth } from '@sand/host-health/contract'
 import { plural } from '@sand/kit'
 
-export const healthSummary = (health: HostHealth): string => {
+const healthSummary = (health: HostHealth) => {
   if (health.healthy) return 'sand runs normally'
   const parts: string[] = []
   if (health.runtime !== 'ready') parts.push(`the runtime is ${health.runtime}`)
@@ -32,10 +32,10 @@ const logTail = (health: HostHealth) => [
   ),
 ]
 
-export const healthDetails = (health: HostHealth): Child =>
+export const healthDetails = (health: HostHealth) =>
   div(
     { class: 'flex flex-col gap-3 text-xs' },
-    p({ class: `text-sm ${health.healthy ? 'text-neutral-300' : 'text-danger-400'}` }, healthSummary(health)),
+    p({ class: ['text-sm', health.healthy ? 'text-neutral-300' : 'text-danger-400'] }, healthSummary(health)),
     health.error ? div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, health.error) : null,
     health.webError ? div({ class: 'text-neutral-400' }, `Web page: ${health.webError}`) : null,
     ...health.failedPlugins.map(plugin => failedPlugin(plugin.id, plugin.error)),

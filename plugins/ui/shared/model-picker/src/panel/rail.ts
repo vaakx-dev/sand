@@ -50,9 +50,10 @@ const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
 
 const divider = () => div({ 'aria-hidden': 'true', class: 'my-1 h-px w-6 shrink-0 bg-neutral-700' })
 
-const step = (event: KeyboardEvent, to: (index: number, count: number) => number) => {
-  const tabs = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')]
-  const next = tabs[to(tabs.indexOf(event.target as HTMLElement), tabs.length)]
+const step = ({ currentTarget, target }: KeyboardEvent, to: (index: number, count: number) => number) => {
+  if (!(currentTarget instanceof HTMLElement)) return
+  const tabs = [...currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')]
+  const next = tabs[to(tabs.findIndex(tab => tab === target), tabs.length)]
   next?.focus()
   next?.click()
 }

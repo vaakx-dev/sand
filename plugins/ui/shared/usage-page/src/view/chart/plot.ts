@@ -12,16 +12,17 @@ const width = 960
 const height = 260
 const top = 8
 
-const hoverAt = (event: PointerEvent, count: number): Hover => {
-  const box = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  const x = Math.min(box.width, Math.max(0, event.clientX - box.left))
-  const y = Math.min(box.height, Math.max(0, event.clientY - box.top))
+const hoverAt = ({ currentTarget, clientX, clientY }: PointerEvent, count: number): Hover | undefined => {
+  if (!(currentTarget instanceof Element)) return undefined
+  const box = currentTarget.getBoundingClientRect()
+  const x = Math.min(box.width, Math.max(0, clientX - box.left))
+  const y = Math.min(box.height, Math.max(0, clientY - box.top))
   const index = count > 1 ? Math.round((x / box.width) * (count - 1)) : 0
   return { index, x: count > 1 ? (index / (count - 1)) * box.width : x, y, width: box.width, height: box.height }
 }
 
-const axisLabel = (text: string, style: Record<string, string>) =>
-  span({ class: 'absolute text-xs text-neutral-500 tabular-nums whitespace-nowrap', style }, text)
+const axisLabel = (text: string, top: string) =>
+  span({ class: 'absolute right-0 text-xs text-neutral-500 tabular-nums whitespace-nowrap', style: { top, transform: 'translateY(-50%)' } }, text)
 
 const strokes = (drawn: Series[], toY: (value: number) => number, step: number) =>
   drawn.map(series => {
@@ -55,7 +56,7 @@ export const plot = (usage: Merged, keys: string[], series: Series[], metric: Me
       { class: 'flex gap-2' },
       div(
         { class: 'relative h-48 w-12 shrink-0' },
-        ticks.map(tick => axisLabel(tickText(tick, metric), { right: '0', top: cssPercent(toY(tick) / height), transform: 'translateY(-50%)' })),
+        ticks.map(tick => axisLabel(tickText(tick, metric), cssPercent(toY(tick) / height))),
       ),
       div(
         {
@@ -85,7 +86,7 @@ export const plot = (usage: Merged, keys: string[], series: Series[], metric: Me
             visibility: () => (hover.get() ? 'visible' : 'hidden'),
           }),
         ),
-        dynamicChild(hover, current => (current ? tooltip(current, keys[current.index]!, usage.bucket, series, metric) : span())),
+        dynamicChild(hover, current => (current ? tooltip(current, keys[current.index]!, usage.bucket, series, metric) : null)),
       ),
     ),
     div(

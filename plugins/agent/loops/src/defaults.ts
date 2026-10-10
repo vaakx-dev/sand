@@ -1,4 +1,4 @@
-import { serial } from '@sand/kit'
+import { isRecord, serial } from '@sand/kit'
 import { join } from 'node:path'
 
 export const fallbackLoop = 'react'
@@ -6,7 +6,7 @@ export const fallbackLoop = 'react'
 const readSaved = async (file: string) => {
   try {
     const data: unknown = await Bun.file(file).json()
-    const saved = (data as { default?: unknown } | null)?.default
+    const saved = isRecord(data) ? data.default : undefined
     return typeof saved === 'string' && saved ? saved : undefined
   } catch {
     return undefined

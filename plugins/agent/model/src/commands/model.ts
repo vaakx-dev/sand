@@ -1,19 +1,19 @@
-import type { Effort } from '@sand/llm-accounts/contract'
 import type { Command } from '@sand/server/contract'
 import type { SettingsPatch } from '../contract'
 import { matchModel } from '@sand/kit'
+import { asEffort, effortIds } from '../effective'
 import { applyChoice, saveChoices } from './apply'
 import { parseArgs } from './args'
 import type { Tools } from './context'
 import { modelSheet } from './sheet'
 
-const extras = (tools: Tools, words: string[]): SettingsPatch => {
-  const efforts = (tools.ctx.llm?.levels?.() ?? []).map(level => level.id as string)
+const extras = ({ ctx }: Tools, words: string[]): SettingsPatch => {
   const patch: SettingsPatch = {}
   for (const word of words) {
-    if (efforts.includes(word)) patch.effort = word as Effort
+    const effort = asEffort(ctx.llm, word)
+    if (effort) patch.effort = effort
     else if (word === 'fast' || word === 'normal') patch.speed = word
-    else throw new Error(`"${word}" is not an effort level or a speed. Use ${efforts.join(', ')}, fast or normal.`)
+    else throw new Error(`"${word}" is not an effort level or a speed. Use ${effortIds(ctx.llm).join(', ')}, fast or normal.`)
   }
   return patch
 }

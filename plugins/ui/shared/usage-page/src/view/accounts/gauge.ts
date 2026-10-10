@@ -1,11 +1,11 @@
 import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { badge, circle, colorVar, derive, div, dynamicChild, exactTime, span, svg, type Sig } from '@sand/dom'
+import { badge, circle, colorVar, div, exactTime, show, span, svg, type Sig } from '@sand/dom'
 import { coarseDuration, leftOf, percent } from '@sand/kit'
-import { paceOf } from './pace'
 
 const size = 48
 const radius = 20
 const length = 2 * Math.PI * radius
+const paceMargin = 0.05
 
 const statusBadge = (status?: string) => {
   if (!status || status === 'allowed') return null
@@ -30,19 +30,25 @@ const ring = (left: number, stroke: string, label: string) =>
     }),
   )
 
-const resetText = (window: LimitWindow, now: number) => (window.resetsAt ? `resets in ${coarseDuration(Math.max(0, window.resetsAt - now))}` : '')
+const aheadOfPace = (window: LimitWindow, now: number) => {
+  if (!window.duration || !window.resetsAt) return false
+  const elapsed = 1 - (window.resetsAt - now) / window.duration
+  if (elapsed <= paceMargin || elapsed > 1) return false
+  return window.used - elapsed > paceMargin
+}
 
-const resetLine = (window: LimitWindow, now: Sig<number>) =>
-  dynamicChild(
-    derive(() => [resetText(window, now.get()), paceOf(window, now.get()) === 'ahead'] as const),
-    ([reset, ahead]) =>
-      span(
-        { class: 'text-neutral-500 tabular-nums' },
-        reset,
-        reset && ahead ? ' · ' : '',
-        ahead ? span({ class: 'text-warning-400' }, 'ahead of pace') : null,
-      ),
+const resetText = (resetsAt: number, now: number) => `resets in ${coarseDuration(Math.max(0, resetsAt - now))}`
+
+const resetLine = (window: LimitWindow, now: Sig<number>) => {
+  const { resetsAt } = window
+  if (!resetsAt) return null
+  const ahead = () => aheadOfPace(window, now.get())
+  return span(
+    { class: 'text-neutral-500 tabular-nums' },
+    () => resetText(resetsAt, now.get()),
+    show(ahead, () => span(' · ', span({ class: 'text-warning-400' }, 'ahead of pace'))),
   )
+}
 
 export const gauge = (window: LimitWindow, stroke: string, now: Sig<number>) => {
   const left = leftOf(window)

@@ -10,8 +10,8 @@ const parseChange = (line: string): BuildChange | undefined => {
   if (!commit || !subject) return
   const match = conventional.exec(subject.trim())
   if (!match) return { commit, type: 'other', summary: subject.trim() }
-  const [, type, scope, summary] = match
-  return { commit, type: type!.toLowerCase(), ...(scope && { scope }), summary: summary!.trim() }
+  const [, type = '', scope, summary = ''] = match
+  return { commit, type: type.toLowerCase(), ...(scope && { scope }), summary: summary.trim() }
 }
 
 export const buildHistory = async (root: string) => {

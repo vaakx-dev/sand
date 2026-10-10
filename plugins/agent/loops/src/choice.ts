@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import type { Entry } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { LoopsContext } from './context'
@@ -6,7 +7,8 @@ import { fallbackLoop, type Defaults } from './defaults'
 import type { Registry } from './registry'
 
 const nameOf = (entry: Entry | undefined) => {
-  const name = (entry?.data as LoopChoice | undefined)?.name
+  const data = entry?.data
+  const name = isRecord(data) ? data.name : undefined
   return typeof name === 'string' && name ? name : null
 }
 

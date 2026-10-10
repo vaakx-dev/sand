@@ -22,19 +22,19 @@ export const renamePage = (ctx: Context<'threads'>, thread: Thread): PalettePage
 
 const command = (ctx: Context, name: string) => () => void ctx.commands?.run(name)
 
-export const sessionActions = (ctx: Context<'threads'>, thread: Thread): PaletteItem[] => [
-  { id: 'command:name', group: 'This thread', icon: 'pencil', label: 'Rename thread', detail: thread.info.title ?? 'Untitled thread', page: () => renamePage(ctx, thread) },
-  ...(ctx.commands?.get('fork') ? [{ id: 'command:fork', group: 'This thread', icon: 'fork', label: 'Fork from an earlier message', run: command(ctx, 'fork') } satisfies PaletteItem] : []),
-  ...(ctx.commands?.get('model')
-    ? [{ id: 'command:model', group: 'This thread', icon: 'bot', label: 'Switch model', detail: ctx.models?.describe(thread.id), run: command(ctx, 'model') } satisfies PaletteItem]
-    : []),
-  {
+export const sessionActions = (ctx: Context<'threads'>, thread: Thread) => {
+  const group = 'This thread'
+  const items: PaletteItem[] = [{ id: 'command:name', group, icon: 'pencil', label: 'Rename thread', detail: thread.info.title ?? 'Untitled thread', page: () => renamePage(ctx, thread) }]
+  if (ctx.commands?.get('fork')) items.push({ id: 'command:fork', group, icon: 'fork', label: 'Fork from an earlier message', run: command(ctx, 'fork') })
+  if (ctx.commands?.get('model')) items.push({ id: 'command:model', group, icon: 'bot', label: 'Switch model', detail: ctx.models?.describe(thread.id), run: command(ctx, 'model') })
+  items.push({
     id: 'session:copy-id',
-    group: 'This thread',
+    group,
     icon: 'copy',
     label: 'Copy thread ID',
     detail: thread.id,
     search: 'copy thread id reference',
     run: () => copyWithNotice(ctx.notify, thread.id, 'thread ID'),
-  },
-]
+  })
+  return items
+}

@@ -15,7 +15,8 @@
     ],
     "uses": {
       "ui": "follow-ups that fail to start or save fail silently",
-      "steering": "a follow-up sent during a turn cannot join it"
+      "steering": "a follow-up sent during a turn cannot join it",
+      "server": "the page cannot queue follow-ups"
     }
   },
   "dependencies": {

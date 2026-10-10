@@ -1,28 +1,16 @@
 import { derive, div, dynamicChild, icon, list, p, primaryAction, secondaryAction, settingsSection, show, span, spinner, type Sig } from '@sand/dom'
-import type { Fleet, PcView } from '../fleet/model'
-import { runStatus, type RunStatus } from '../fleet/run'
+import { actionButton, fleetAction, runActionKind } from '../actions'
+import type { Fleet, RunRow } from '../fleet/model'
+import type { RunStatus } from '../fleet/run'
 import { runText } from '../fleet/text'
+import { statusMark } from '../mark'
 import { sheetFoot } from './foot'
 
-interface RunRow {
-  key: string
-  pc?: PcView
-  status: RunStatus
-}
-
 const statusIcon = (status: RunStatus) => {
-  if (status.kind === 'done') return span({ class: 'inline-flex shrink-0 text-success-400' }, icon('check', 16))
-  if (status.kind === 'failed') return span({ class: 'inline-flex shrink-0 text-danger-400' }, icon('x', 16))
-  if (status.kind === 'working' && status.phase === 'waiting') return span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('clock', 16))
-  return span({ class: 'inline-flex shrink-0 text-accent-400' }, spinner(16))
-}
-
-const rowAction = (row: Sig<RunRow>, fleet: Fleet) => {
-  const { key, status } = row.get()
-  if (status.kind === 'failed') return secondaryAction({ size: 'sm', onClick: () => fleet.retry(key) }, 'Try again')
-  if (status.kind === 'working' && status.phase === 'waiting' && status.running)
-    return secondaryAction({ size: 'sm', onClick: () => void fleet.restartNow(key) }, 'Restart now')
-  return span()
+  if (status.kind === 'done') return statusMark('text-success-400', icon('check', 16))
+  if (status.kind === 'failed') return statusMark('text-danger-400', icon('x', 16))
+  if (status.kind === 'working' && status.phase === 'waiting') return statusMark('text-warning-400', icon('clock', 16))
+  return statusMark('text-accent-400', spinner(16))
 }
 
 const runRow = (row: Sig<RunRow>, fleet: Fleet) =>
@@ -38,25 +26,13 @@ const runRow = (row: Sig<RunRow>, fleet: Fleet) =>
       ),
     ),
     dynamicChild(
-      row.map(current => `${current.status.kind}:${current.status.kind === 'working' ? `${current.status.phase}:${current.status.running}` : ''}`),
-      () => rowAction(row, fleet),
+      row.map(current => runActionKind(current.status)),
+      kind => (kind ? actionButton(fleetAction(fleet, row.get().key, kind)) : null),
     ),
   )
 
 export const progressBody = (fleet: Fleet, close: () => void) => {
-  const rows = derive<RunRow[]>(() => {
-    const run = fleet.run.get()
-    if (!run) return []
-    const pcs = fleet.pcs.get()
-    return run.keys.map(key => {
-      const pc = pcs.find(item => item.key === key)
-      return { key, pc, status: runStatus(pc, run.build) }
-    })
-  })
-  const localName = derive(() => {
-    const local = rows.get().find(row => row.pc?.local)
-    return local && !fleet.runFinished.get() ? local.pc!.name : ''
-  })
+  const localName = derive(() => (fleet.runFinished.get() ? '' : (fleet.runRows.get().find(row => row.pc?.local)?.pc?.name ?? '')))
   const done = () => {
     fleet.finish()
     close()
@@ -65,15 +41,11 @@ export const progressBody = (fleet: Fleet, close: () => void) => {
     { class: 'flex min-h-0 flex-1 flex-col' },
     div(
       { class: 'flex min-h-0 flex-col gap-3 overflow-auto px-5 pt-1 pb-5' },
-      settingsSection({}, list(rows, row => row.key, row => runRow(row, fleet), div({ class: 'contents' }))),
-      show(localName.map(Boolean), () =>
-        p({ class: 'px-1 text-xs text-neutral-500' }, () => `This page reconnects by itself when ${localName.get()} is back.`),
-      ),
+      settingsSection({}, list(fleet.runRows, row => row.key, row => runRow(row, fleet), div({ class: 'contents' }))),
+      show(localName.map(Boolean), () => p({ class: 'px-1 text-xs text-neutral-500' }, () => `This page reconnects by itself when ${localName.get()} is back.`)),
     ),
     sheetFoot(
-      dynamicChild(fleet.runFinished, finished =>
-        finished ? primaryAction({ onClick: done }, 'Done') : secondaryAction({ onClick: close }, 'Hide'),
-      ),
+      dynamicChild(fleet.runFinished, finished => (finished ? primaryAction({ onClick: done }, 'Done') : secondaryAction({ onClick: close }, 'Hide'))),
     ),
   )
 }

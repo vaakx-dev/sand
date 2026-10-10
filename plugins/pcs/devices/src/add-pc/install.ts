@@ -1,8 +1,9 @@
-import { copyButton, derive, div, dynamicChild, effect, errorMessage, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
+import { copyButton, derive, div, dynamicChild, effect, errorMessage, onTimeout, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { HostRoute } from '@sand/host-gateway/contract'
 import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
 import type { Context } from 'drydock'
+import { note } from '../components'
 import { healthDetails } from '../health/details'
 import { listenBox } from '../pair/listen'
 import type { DeviceSource } from '../source'
@@ -24,31 +25,25 @@ const allVias: InstallVia[] = ['lan', 'tailscale']
 
 const viasFor = (routes: HostRoute[]) => allVias.filter(via => routeFor(routes, via))
 
-const note = (...children: Child[]) => p({ class: 'text-xs text-neutral-400' }, ...children)
-
 const field = (name: string, control: Child) => div({ class: 'flex flex-wrap items-center gap-3' }, span({ class: 'text-sm text-neutral-400' }, name), control)
 
-const guess = (source: DeviceSource): InstallSystem => {
-  const platform = untrack(() => source.pcs.get()?.self.platform)
-  if (platform && platforms[platform]) return platforms[platform]
-  const agent = navigator.userAgent
-  return /Windows/.test(agent) ? 'win' : /Mac/.test(agent) ? 'mac' : 'linux'
+const agentSystem = (): InstallSystem => {
+  if (/Windows/.test(navigator.userAgent)) return 'win'
+  if (/Mac/.test(navigator.userAgent)) return 'mac'
+  return 'linux'
 }
 
-const listen = (source: DeviceSource) => async () => {
-  try {
-    await source.setLan(true)
-  } catch (failure) {
-    source.fail(failure)
-  }
+const guess = (source: DeviceSource) => {
+  const platform = untrack(() => source.pcs.get()?.self.platform)
+  return (platform && platforms[platform]) || agentSystem()
 }
 
 const failedBlock = (list: InstallProgress[]) => {
-  const health = list.at(-1)?.health
+  const last = list.at(-1)
   return div(
     { class: 'flex flex-col gap-3 rounded-xl bg-neutral-900 p-3' },
-    p({ class: 'text-sm text-neutral-100' }, list.at(-1)?.error ? `Install failed: ${list.at(-1)!.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
-    health ? healthDetails(health) : null,
+    p({ class: 'text-sm text-neutral-100' }, last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
+    last?.health ? healthDetails(last.health) : null,
     note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Your devices.'),
   )
 }
@@ -60,7 +55,7 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
   const channel = sig<UpdateChannel>('release')
   ctx.wire.call<UpdateState>({ type: 'updates.state' }).then(
     state => channel.set(state.channel),
-    () => undefined,
+    () => {},
   )
   const started = derive(() => ticket.progress.get().length > 0)
   const failed = derive(() => ticket.progress.get().at(-1)?.step === 'failed')
@@ -73,7 +68,7 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
 
   effect(() => {
     const list = ticket.progress.get()
-    if (list.at(-1)?.step === 'ready') untrack(() => queueMicrotask(() => ready(list)))
+    if (list.at(-1)?.step === 'ready') onTimeout(() => ready(list))
   })
 
   const vias = derive(() => {
@@ -96,13 +91,13 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
 
   const reach = (key: string | undefined) => {
     if (key === undefined) return note('Looking up the addresses of this PC…')
-    if (!key) return listenBox('sand only listens on this computer, so the new PC can’t reach it. Turn on network listening to install over your home wifi.', listen(source))
-    if (!key.includes(' ')) return span({ class: 'hidden' })
-    const choices = key.split(' ').map(value => ({ value: value as InstallVia, label: viaLabels[value as InstallVia] }))
+    if (!key) return listenBox('sand only listens on this computer, so the new PC can’t reach it. Turn on network listening to install over your home wifi.', source.listenOnLan)
+    if (!key.includes(' ')) return null
+    const choices = allVias.filter(value => key.includes(value)).map(value => ({ value, label: viaLabels[value] }))
     return field('Reach this PC via', segmented(choices, chosenVia, value => via.set(value), { label: 'Reach via' }))
   }
 
-  const failure = () => {
+  const pending = () => {
     const cause = ticket.error.get()
     if (cause === undefined) return 'Creating a one-time command…'
     return `Couldn't create a command: ${errorMessage(cause)}`
@@ -114,7 +109,7 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
       note(() => (os.get() === 'win' ? 'Open PowerShell on it and paste:' : 'Open a terminal on it and paste:')),
       div(
         { class: 'flex items-start gap-2 rounded-lg bg-neutral-950 py-2 pr-2 pl-3' },
-        span({ class: 'min-w-0 flex-1 py-1 font-mono text-xs text-neutral-200 wrap-anywhere' }, () => command.get() ?? failure()),
+        span({ class: 'min-w-0 flex-1 py-1 font-mono text-xs text-neutral-200 wrap-anywhere' }, () => command.get() ?? pending()),
         copyButton({ text: () => command.get() ?? '', label: 'Copy', disabled: () => !command.get() }),
       ),
     )
@@ -122,25 +117,22 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
   return div(
     { class: 'flex flex-col gap-4' },
     show(
-      derive(() => !started.get()),
+      () => !started.get(),
       () =>
         div(
           { class: 'flex flex-col gap-4' },
           field('The new PC runs', segmented(systems, os, value => os.set(value), { label: 'System', inset: true })),
           dynamicChild(vias, reach),
-          show(
-            derive(() => Boolean(route.get())),
-            commandBox,
-          ),
+          show(() => Boolean(route.get()), commandBox),
         ),
     ),
     show(
-      derive(() => Boolean(route.get()) || started.get()),
+      () => Boolean(route.get()) || started.get(),
       () => progressList(ticket.progress),
     ),
     show(failed, () => dynamicChild(ticket.progress, failedBlock)),
     show(
-      derive(() => !started.get() && Boolean(route.get())),
+      () => !started.get() && Boolean(route.get()),
       () => note('The new PC downloads sand from GitHub, then pairs with this one. The command works for 10 minutes.'),
     ),
   )

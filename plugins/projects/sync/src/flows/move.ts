@@ -1,6 +1,7 @@
-import type { ProjectRef } from '@sand/protocol'
+import type { ProjectRef, WireRequest } from '@sand/protocol'
 import type { SyncChunk, SyncExport, SyncProgress } from '../contract'
-import type { SyncCall } from './call'
+
+export type SyncCall = <T = unknown>(request: WireRequest, device?: string) => Promise<T>
 
 export type Report = (progress: SyncProgress) => void
 

@@ -2,24 +2,31 @@ import type { ThreadExportPage, ThreadImportResult } from '@sand/sessions-sqlite
 import type { Machine, Thread, Wire } from '@sand/web-client/contract'
 import { uuid } from '@sand/kit'
 
-export type AskFolder = (missing: string) => Promise<string | undefined>
-
-const copyEntries = async (wire: Wire, thread: Thread, source: Machine, target: Machine, transfer: string) => {
-  let offset: number | null = 0
-  let first: ThreadExportPage | undefined
-  while (offset !== null) {
-    const page: ThreadExportPage = await wire.call<ThreadExportPage>({ type: 'thread.export', session: thread.id, offset }, source.device ?? '')
-    first ??= page
-    await wire.call({ type: 'thread.stage', transfer, entries: page.entries, format: page.format }, target.device ?? '')
-    offset = page.next
-  }
-  return first!
-}
-
 export interface MoveOptions {
   project?: string
-  ask?: AskFolder
+  ask?: (missing: string) => Promise<string | undefined>
 }
+
+const copyEntries = async (wire: Wire, thread: Thread, source: Machine, target: Machine, transfer: string) => {
+  const exported = (offset: number) => wire.call<ThreadExportPage>({ type: 'thread.export', session: thread.id, offset }, source.device ?? '')
+  const stage = (page: ThreadExportPage) => wire.call({ type: 'thread.stage', transfer, entries: page.entries, format: page.format }, target.device ?? '')
+  const first = await exported(0)
+  await stage(first)
+  let page = first
+  while (page.next !== null) {
+    page = await exported(page.next)
+    await stage(page)
+  }
+  return first
+}
+
+const link = (wire: Wire, thread: Thread, source: Machine, target: Machine, session: string) =>
+  wire
+    .call({ type: 'thread.link', session: thread.id, to: { device: target.id, name: target.name, session } }, source.device ?? '')
+    .then(
+      () => true,
+      () => false,
+    )
 
 export const moveThread = async (wire: Wire, thread: Thread, source: Machine, target: Machine, folders: string[], options: MoveOptions = {}) => {
   const transfer = uuid()
@@ -41,11 +48,3 @@ export const moveThread = async (wire: Wire, thread: Thread, source: Machine, ta
     if (!folder) return undefined
   }
 }
-
-const link = (wire: Wire, thread: Thread, source: Machine, target: Machine, session: string) =>
-  wire
-    .call({ type: 'thread.link', session: thread.id, to: { device: target.id, name: target.name, session } }, source.device ?? '')
-    .then(
-      () => true,
-      () => false,
-    )

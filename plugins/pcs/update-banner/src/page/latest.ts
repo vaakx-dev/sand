@@ -1,10 +1,8 @@
-import { ago, clock, derive, div, dynamicChild, exactTime, p, primaryAction, secondaryAction, settingsRow, settingsSection, show } from '@sand/dom'
+import { ago, clock, derive, div, dynamicChild, exactTime, openTab, p, primaryAction, secondaryAction, settingsRow, settingsSection, show } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet } from '../fleet/model'
 import { changesFor } from '../fleet/status'
-
-const openTab = (url: string) => void window.open(url, '_blank', 'noopener,noreferrer')
 
 const listedWhenCurrent = 10
 
@@ -36,30 +34,31 @@ export const latestSection = (fleet: Fleet, open: () => void) => {
     return (target?.changes ?? []).slice(0, listedWhenCurrent)
   })
   const checkError = () => localState(fleet)?.checkError ?? ''
+  const published = () => {
+    now.get()
+    const target = fleet.target.get()
+    return [target ? `Published ${exactTime(target.publishedAt)}` : '', checkedText(fleet)].filter(Boolean).join(' · ')
+  }
   return settingsSection(
     { title: 'Latest' },
     settingsRow(
       () => latestLabel(fleet),
       [
         show(
-          fleet.target.map(target => !!target),
+          () => !!fleet.target.get(),
           () => secondaryAction({ size: 'sm', onClick: () => openTab(fleet.target.get()?.notesUrl ?? '') }, 'Release notes'),
         ),
         show(
-          pending.map(list => list.length > 0),
+          () => pending.get().length > 0,
           () => primaryAction({ size: 'sm', onClick: open }, () => `Update ${plural(pending.get().length, 'PC')}`),
         ),
       ],
-      () => {
-        now.get()
-        const target = fleet.target.get()
-        return [target ? `Published ${exactTime(target.publishedAt)}` : '', checkedText(fleet)].filter(Boolean).join(' · ')
-      },
+      published,
     ),
     dynamicChild(
       changes.map(list => list.map(change => change.commit).join()),
-      () => (changes.get().length ? div({ class: 'bg-neutral-900 px-4 py-3' }, changeList(changes.get())) : div()),
+      () => (changes.get().length ? div({ class: 'bg-neutral-900 px-4 py-3' }, changeList(changes.get())) : null),
     ),
-    show(derive(() => !!checkError()), () => errorText(checkError)),
+    show(() => !!checkError(), () => errorText(checkError)),
   )
 }

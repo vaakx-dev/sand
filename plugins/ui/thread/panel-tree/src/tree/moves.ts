@@ -1,6 +1,6 @@
 import type { Entry, Message } from '@sand/messages'
 import { promptText } from '@sand/kit'
-import { isPrompt, type LabelData } from './describe'
+import { isPrompt } from './describe'
 
 export interface Move {
   at: string | null
@@ -34,5 +34,3 @@ export const forkAt = async <T>(source: Branching<T>, at: string | null) => {
     await source.checkout(head)
   }
 }
-
-export const labelData = (target: string, text: string): LabelData => ({ target, label: text.trim() || null })

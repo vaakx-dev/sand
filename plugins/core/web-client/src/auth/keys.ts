@@ -1,37 +1,35 @@
 import { listen } from '@sand/dom'
+import { isRecord } from '@sand/kit'
 import { loadRecord, saveJson } from '../integrations/storage'
 
-export interface HostKey {
+interface HostKey {
   device: string
   key: string
 }
 
-const storageKey = 'sand.keys'
+const keysKey = 'sand.keys'
 
-const valid = (value: unknown): value is HostKey =>
-  typeof value === 'object' &&
-  value !== null &&
-  typeof (value as HostKey).device === 'string' &&
-  typeof (value as HostKey).key === 'string'
+const isHostKey = (value: unknown): value is HostKey => isRecord(value) && typeof value.device === 'string' && typeof value.key === 'string'
 
-const read = (): Record<string, HostKey> => Object.fromEntries(Object.entries(loadRecord(storageKey)).filter(([, value]) => valid(value)))
+const read = (): Record<string, HostKey> =>
+  Object.fromEntries(Object.entries(loadRecord(keysKey)).filter((entry): entry is [string, HostKey] => isHostKey(entry[1])))
 
-const write = (keys: Record<string, HostKey>) => saveJson(storageKey, keys)
+const write = (keys: Record<string, HostKey>) => saveJson(keysKey, keys)
 
 export const hostKeys = {
   get: (host: string): HostKey | undefined => read()[host],
   set(host: string, value: HostKey) {
     write({ ...read(), [host]: value })
   },
-  forget(host: string, key?: string) {
+  forget(host: string, key: string) {
     const keys = read()
-    if (!keys[host] || (key !== undefined && keys[host].key !== key)) return
+    if (keys[host]?.key !== key) return
     delete keys[host]
     write(keys)
   },
   watch(changed: () => void) {
-    return listen(window, 'storage', event => {
-      if (event instanceof StorageEvent && (event.key === storageKey || event.key === null)) changed()
+    return listen<StorageEvent>(window, 'storage', event => {
+      if (event.key === keysKey || event.key === null) changed()
     })
   },
 }

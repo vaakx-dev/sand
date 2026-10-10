@@ -2,7 +2,7 @@ import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contra
 import { derive, score, sig, type Choice } from '@sand/dom'
 import type { LibrarySource } from '../../library/source'
 
-export type OriginFilter = 'all' | PluginOrigin
+type OriginFilter = 'all' | PluginOrigin
 
 export interface AreaGroup {
   area: string

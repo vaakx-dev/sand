@@ -1,6 +1,6 @@
 import type { ModelPicker, PickerTarget } from '@sand/model-picker/contract'
 import type { TitlePatch, TitleSettings } from '../contract'
-import { div, dynamicChild, settingsRow, settingsSection, toggleSwitch, type Sig } from '@sand/dom'
+import { dynamicChild, settingsRow, settingsSection, show, toggleSwitch, type Sig } from '@sand/dom'
 
 const textGenTarget = (state: Sig<TitleSettings | undefined>, picker: ModelPicker, save: (patch: TitlePatch) => void): PickerTarget => ({
   shown: () => {
@@ -23,8 +23,8 @@ const section = (state: Sig<TitleSettings | undefined>, picker: ModelPicker | un
 
 export const titlesSection = (state: Sig<TitleSettings | undefined>, picker: Sig<ModelPicker | undefined>, save: (patch: TitlePatch) => void) =>
   dynamicChild(picker, current =>
-    dynamicChild(
-      state.map(settings => Boolean(settings)),
-      loaded => (loaded ? section(state, current, save) : div({ class: 'hidden' })),
+    show(
+      () => state.get() !== undefined,
+      () => section(state, current, save),
     ),
   )

@@ -13,7 +13,7 @@ const answer = async ({ hooks }: Turn, results: ToolResultBlock[]) => {
   hooks.append({ role: 'user', content: [...results, ...(await hooks.inbox())] })
 }
 
-const respond = async (turn: Turn, message: Message, stopReason: StopReason) => {
+const answerCalls = async (turn: Turn, message: Message, stopReason: StopReason) => {
   const pending = callsOf(message)
   if (!pending.length) return stopReason === 'pause_turn' || appendInbox(turn)
   if (stopReason === 'refusal') {
@@ -30,7 +30,7 @@ const step = async (turn: Turn, outcome: TurnOutcome) => {
   const message = await turn.hooks.respond(done.message)
   outcome.stopReason = done.stopReason
   outcome.text = textOf(message.content)
-  return respond(turn, message, done.stopReason)
+  return answerCalls(turn, message, done.stopReason)
 }
 
 const proceed = async (turn: Turn, outcome: TurnOutcome) => {

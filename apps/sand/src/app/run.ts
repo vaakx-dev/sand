@@ -1,16 +1,15 @@
-import type { CliCommands, CliFlags, CliMode, CliValues } from '@sand/protocol'
+import type { CliFlags, CliMode, CliValues } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
-import { inspector, type Context } from 'drydock'
-import { join } from 'node:path'
+import { inspector } from 'drydock'
 import { daemonService } from '../daemon/service'
 import { runtimeLink } from '../runtime/link'
 import { commandRegistry } from './commands/registry'
 import { runCommand } from './commands/run'
 import { problems } from './diagnose'
-import { builtins, loaderFolder } from './loader'
+import { builtins, loaderFolder, loadPlugins } from './loader'
 import { startApp } from './start'
 
-export interface RunOptions {
+interface RunOptions {
   mode: CliMode
   home: string
   args: string[]
@@ -20,16 +19,7 @@ export interface RunOptions {
   safe: boolean
 }
 
-const finish = async (ctx: Context, { args, values = {} }: RunOptions, commands: CliCommands | undefined, exit: (code?: number) => void) => {
-  if (commands) return exit(await runCommand(commands, args, values))
-  const found = problems(ctx)
-  if (!found.length) return
-  console.error(found.join('\n'))
-  exit(1)
-}
-
-export const run = async (options: RunOptions) => {
-  const { mode, home, args, flags, prompt, safe } = options
+export const run = async ({ mode, home, args, flags, values = {}, prompt, safe }: RunOptions) => {
   const { ctx, exit } = startApp()
 
   ctx.on('drydock.error', (scope, error) => {
@@ -46,11 +36,12 @@ export const run = async (options: RunOptions) => {
     ctx.provide('cliCommands', commands)
     ctx.provide('daemon', daemonService(home))
   }
-  ctx.load(await loaderFolder(home, safe), {
-    modes_file: join(import.meta.dir, 'modes.ts'),
-    resolve_from: import.meta.dir,
-  })
+  loadPlugins(ctx, await loaderFolder(home, safe))
 
   await ctx.settled()
-  await finish(ctx, options, commands, exit)
+  if (commands) return exit(await runCommand(commands, args, values))
+  const found = problems(ctx)
+  if (!found.length) return
+  console.error(found.join('\n'))
+  exit(1)
 }

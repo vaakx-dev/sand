@@ -1,62 +1,32 @@
 import type { WirePairing } from '../contract'
-import { listen, owned } from '@sand/dom'
 import type { Context } from 'drydock'
 import { after } from '../detached'
-import { onIdle } from '../integrations/idle'
-import { askPersistence } from '../integrations/storage'
 import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
+import { autosave } from './autosave'
 import { createKeep } from './keep'
-import { trimMemory } from './memory'
-import { otherScopes, readScope, readThread, wipeScope } from './reads'
+import { readScope, readThread } from './reads'
 import { fillThread, restoreScope } from './restore'
-import { savedScope, scopeOf } from './scope'
+import { savedScope, scopeOf, wipeScope } from './scope'
 import { createWriter } from './writer'
 
 const restoreWait = 1500
-const writeDelay = 1000
 
 export const createCache = (ctx: Context, store: Store, pairing: () => WirePairing | undefined) => {
   const writer = createWriter(store)
   const kept = createKeep(writer.scope)
+  const schedule = autosave(ctx, store, writer)
   let restoredHost: string | undefined
   let settled = false
-  let pending: (() => void) | undefined
-  let writing = false
-  let tidied = false
-
-  const tidy = (scope: string) => {
-    if (tidied) return
-    tidied = true
-    askPersistence()
-    void otherScopes(scope).then(keys => Promise.all(keys.map(wipeScope)), () => {})
-  }
-
-  const write = async () => {
-    pending = undefined
-    if (writing) return schedule()
-    writing = true
-    const scope = writer.scope()
-    const wrote = await writer.flush()
-    writing = false
-    if (wrote && scope) tidy(scope)
-    if (wrote || !writer.usable()) trimMemory(store, writer.opened)
-    if (writer.busy()) schedule()
-  }
-
-  const schedule = () => {
-    if (pending || !writer.scope()) return
-    pending = after(writeDelay, () => onIdle(() => void write()))
-  }
 
   const restore = async () => {
     const scope = savedScope()
     if (!scope) return
-    const cached = await readScope(scope.key, requestedSession())
+    const asked = requestedSession()
+    const cached = await readScope(scope.key, asked)
     if (settled) return
     restoreScope(store, cached)
     kept.restore(cached.saved)
-    const asked = requestedSession()
     const thread = asked ? store.threads.get(asked) : undefined
     if (thread && cached.asked) fillThread(thread, cached.asked)
     writer.adopt(scope.key, cached.meta)
@@ -68,17 +38,13 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     settled = true
   })
 
-  const reset = () => {
-    for (const id of [...store.threads.keys()]) store.remove(id)
-    store.synced.clear()
-  }
-
   const forget = () => {
     const scope = writer.scope()
     writer.use(undefined)
     kept.forget()
     restoredHost = undefined
-    reset()
+    for (const id of [...store.threads.keys()]) store.remove(id)
+    store.synced.clear()
     if (scope) void wipeScope(scope).catch(() => {})
   }
 
@@ -95,37 +61,6 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     writer.hydrated(now, cached)
     store.changed(id, true)
   }
-
-  const unwatch = store.watch({
-    changed(id) {
-      writer.changed(id)
-      schedule()
-    },
-    removed(id) {
-      writer.removed(id)
-      schedule()
-    },
-  })
-
-  const flushNow = () => {
-    if (!writer.busy()) return
-    pending?.()
-    pending = undefined
-    void write()
-  }
-
-  const hidden = () => {
-    if (document.visibilityState === 'hidden') flushNow()
-  }
-
-  owned(ctx, () => {
-    listen(window, 'visibilitychange', hidden)
-    listen(window, 'pagehide', flushNow)
-  })
-  ctx.effect(() => () => {
-    pending?.()
-    unwatch()
-  })
 
   ctx.on('thread.select', id => {
     if (id) writer.touch(id)
@@ -153,3 +88,5 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     },
   }
 }
+
+export type Cache = ReturnType<typeof createCache>

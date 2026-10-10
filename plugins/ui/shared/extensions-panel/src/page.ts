@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { chevron, copyWithNotice, div, dynamicChild, el, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
+import { chevron, copyWithNotice, div, dynamicChild, el, h3, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'
 import { choiceRow } from './choices'
@@ -10,7 +10,7 @@ const self = 'extensions-panel'
 
 const lockedIds = (roles: Roles) => new Set([self, roles.provider('settings')])
 
-const heading = (text: Child) => el('h3', { class: 'mt-6 mb-2 text-xs font-medium text-neutral-500' }, text)
+const heading = (text: Child) => h3({ class: 'mt-6 mb-2 text-xs font-medium text-neutral-500' }, text)
 
 const roleMap = (roles: Roles) =>
   div(
@@ -84,7 +84,7 @@ export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
     ),
     div(
       quietButton(
-        { size: 'sm', 'aria-expanded': open, onClick: () => open.set(!open.get()) },
+        { size: 'sm', 'aria-expanded': open, onClick: open.toggle() },
         chevron(() => open.get(), 12),
         'Details for plugin authors',
       ),

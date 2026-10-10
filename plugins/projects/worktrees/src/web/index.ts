@@ -1,17 +1,18 @@
 import { removedType, type Worktrees } from '../contract'
+import type {} from '@sand/commands/contract'
 import { owned, pulse } from '@sand/dom'
+import { joinDisposers } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { createChoices } from './chip/choices'
 import { createChip } from './chip/view'
 import { worktreeClient } from './client'
-import { moveCommand } from './command'
 import { onWorktreeEvent } from './events'
 import { createMarks } from './marks'
 import { moveOpener } from './move/open'
 import { mountProgress } from './progress/slot'
 import { createProgress } from './progress/store'
-import { autoSettle } from './settle/auto'
 import { renamer } from './rename'
+import { autoSettle } from './settle/auto'
 import { removedNote } from './settle/note'
 import { createStates } from './states'
 
@@ -34,6 +35,7 @@ export default definePlugin({
     const choices = owned(ctx, () => createChoices(ctx, client))
     const changes = pulse(ctx, ['thread.select', 'threads.change', 'drafts.change', 'worktrees.change'])
     const openMove = moveOpener(ctx, client, states)
+    const rename = renamer(ctx, client)
     const chip = owned(ctx, () => createChip(ctx, client, states, choices, changes))
 
     onWorktreeEvent(ctx, 'worktrees.change', () => {
@@ -41,16 +43,19 @@ export default definePlugin({
       marks.forget()
     })
 
-    const rename = renamer(ctx, client)
     const worktrees: Worktrees = { openMove: () => void openMove(), rename: () => void rename(), of: marks.of }
     ctx.provide('worktrees', worktrees)
 
-    ctx.watch('composer', composer => {
-      if (!composer) return
-      const disposers = [composer.slot('tray-end', chip.pill, -1), mountProgress(ctx, composer, progress, changes)]
-      return () => disposers.forEach(dispose => void dispose())
-    })
-    ctx.watch('commands', commands => commands?.add(moveCommand(worktrees.openMove)))
+    ctx.watch('composer', composer => composer && joinDisposers(composer.slot('tray-end', chip.pill, -1), mountProgress(ctx, composer, progress, changes)))
+    ctx.watch('commands', commands =>
+      commands?.add({
+        name: 'worktree',
+        title: 'Move to worktree',
+        description: 'Move this thread into its own git worktree and branch, taking its changes with it',
+        source: 'local',
+        run: worktrees.openMove,
+      }),
+    )
     ctx.watch('transcript', transcript => transcript?.entry(removedType, removedNote(ctx, client, changes)))
     autoSettle(ctx, client, marks)
   },

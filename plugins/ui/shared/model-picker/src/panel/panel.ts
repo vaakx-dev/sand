@@ -30,8 +30,8 @@ const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => voi
   return div(
     {
       class: 'flex min-h-0 flex-col pb-1',
-      onFocusIn: event => {
-        view.focus = (event.target as HTMLElement).dataset.focus ?? ''
+      onFocusIn: ({ target: focused }) => {
+        if (focused instanceof HTMLElement) view.focus = focused.dataset.focus ?? ''
       },
       onMount: node => refocus(view, node),
     },

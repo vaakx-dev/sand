@@ -19,11 +19,11 @@ export default definePlugin({
   apply(ctx) {
     const store = pageStore()
     const narrow = pulse(ctx, ['layout.change'], ['layout']).read(() => ctx.layout?.state().narrow ?? false)
-    let hide: Dispose | undefined
+    let uncover: Dispose | undefined
 
-    const unshow = () => {
-      void hide?.()
-      hide = undefined
+    const hide = () => {
+      void uncover?.()
+      uncover = undefined
     }
 
     const choose = (id: string) => {
@@ -34,9 +34,9 @@ export default definePlugin({
     const showPages = () => ctx.layout?.toggle('side', true)
 
     const render = () => {
-      unshow()
+      hide()
       if (!store.current.get()) return
-      hide = cover(
+      uncover = cover(
         ctx.layout,
         () => sideView({ store, narrow, choose, back: close }),
         () => pageView({ store, narrow, showPages, close }),
@@ -83,7 +83,7 @@ export default definePlugin({
     ctx.provide('settings', settings)
     ctx.watch('layout', () => {
       render()
-      return unshow
+      return hide
     })
     ctx.watch('nav', nav =>
       nav

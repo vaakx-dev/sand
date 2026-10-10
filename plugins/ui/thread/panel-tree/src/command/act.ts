@@ -1,7 +1,8 @@
 import type { Entry } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
-import { forkAt, forkedNote, labelData, moveOf, movedNote } from '../tree/moves'
+import { labelData } from '../tree/labels'
+import { forkAt, forkedNote, moveOf, movedNote } from '../tree/moves'
 
 export type TreeContext = Context<'ui' | 'sessions'>
 

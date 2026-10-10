@@ -1,14 +1,14 @@
-import { badge, button, diffRow, div, dynamicChild, effect, icon, layer, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
+import { badge, chevron, diffRow, div, dynamicChild, effect, layer, rowButton, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
 import type { FileChange } from '../changes/collect'
 import { shownLines } from '../changes/lines'
 import { counts } from './counts'
 import { fileMenu } from './menu'
 import type { ChangesState } from './view'
 
-const revealWhenAsked = (file: Sig<FileChange>, revealed: ChangesState['revealed']) => (node: Node) =>
+const revealWhenAsked = (file: Sig<FileChange>, revealed: ChangesState['revealed']) => (node: Element) =>
   effect(() => {
     const key = revealed.get()?.key
-    if (key && key === untrack(() => file.get().key)) (node as HTMLElement).scrollIntoView({ block: 'start' })
+    if (key && key === untrack(() => file.get().key)) node.scrollIntoView({ block: 'start' })
   })
 
 export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: ChangesState, toggle: (key: string) => void, menu: ContextMenu) => {
@@ -19,18 +19,16 @@ export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: Chan
   }
   return div(
     { onMount: revealWhenAsked(file, revealed) },
-    button(
+    rowButton(
       {
-        type: 'button',
-        class: [layer.sticky, 'sticky flex h-10 w-full items-center gap-2 bg-neutral-950 px-4 text-xs text-neutral-300 cursor-pointer hover:bg-neutral-900'],
-        style: { top: '0' },
+        class: [layer.sticky, 'sticky top-0 h-10 gap-2 bg-neutral-950 px-4 text-xs text-neutral-300 hover:bg-neutral-900'],
         title: file.map(value => value.path),
         ...menu.target(
           () => fileMenu(file.get(), isClosed(), toggle, copy),
           () => toggle(file.get().key),
         ),
       },
-      span({ class: ['inline-flex text-neutral-400 transition', () => (isClosed() ? '-rotate-90' : '')] }, icon('down', 13)),
+      chevron(() => !isClosed()),
       span({ class: 'min-w-0 flex-1 truncate font-mono' }, file.map(value => value.path)),
       show(
         file.map(value => Boolean(value.agent)),
@@ -45,6 +43,6 @@ export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: Chan
         () => file.get().del,
       ),
     ),
-    dynamicChild(shape, () => (isClosed() ? div({ class: 'hidden' }) : div(shownLines(file.get()).map(diffRow)))),
+    dynamicChild(shape, () => (isClosed() ? null : div(shownLines(file.get()).map(diffRow)))),
   )
 }

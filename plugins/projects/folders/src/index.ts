@@ -3,10 +3,6 @@ import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { browse } from './browse'
 
-const makeFolder = async (path: string) => {
-  await mkdir(expandHome(path), { recursive: true })
-}
-
 export default definePlugin({
   name: 'folders',
   description: 'Lets the page browse folders and make new ones on this computer',
@@ -15,7 +11,9 @@ export default definePlugin({
     ctx.watch('server', server =>
       server?.handle({
         'fs.browse': ({ path }) => browse(expandHome(path)),
-        'fs.mkdir': ({ path }) => makeFolder(path),
+        'fs.mkdir': async ({ path }) => {
+          await mkdir(expandHome(path), { recursive: true })
+        },
       }),
     )
   },

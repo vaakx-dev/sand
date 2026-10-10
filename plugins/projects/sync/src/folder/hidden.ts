@@ -1,7 +1,6 @@
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { isFolder } from '@sand/kit/fs'
-import type { GitResult } from '@sand/kit/git'
 import { git, gitOut, type GitOptions } from '../git/run'
 
 export interface Hidden {
@@ -31,7 +30,7 @@ const options = async (hidden: Hidden, extra: Extra = {}): Promise<GitOptions> =
   env: { ...hidden.env, ...extra.env },
 })
 
-export const hiddenGit = async (hidden: Hidden, args: string[], extra?: Extra): Promise<GitResult> => git(args, await options(hidden, extra))
+export const hiddenGit = async (hidden: Hidden, args: string[], extra?: Extra) => git(args, await options(hidden, extra))
 
 export const hiddenOut = async (hidden: Hidden, args: string[], extra?: Extra) => gitOut(args, await options(hidden, extra))
 

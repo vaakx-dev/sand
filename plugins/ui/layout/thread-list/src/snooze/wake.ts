@@ -1,5 +1,6 @@
 import { onTimeout } from '@sand/dom'
 import type { Context } from 'drydock'
+import { isBack } from './actions'
 
 const longestTimer = 2 ** 31 - 1
 const grace = 500
@@ -21,7 +22,7 @@ export const wakeTimer = (ctx: Context<'threads'>, update: () => void) => {
 
   const seeBack = (id: string | undefined) => {
     const thread = id ? ctx.threads.get(id) : undefined
-    if (thread?.info.snoozed && thread.info.snoozed <= Date.now()) void ctx.threads.snooze(thread.id, null).catch(() => {})
+    if (thread && isBack(thread)) void ctx.threads.snooze(thread.id, null).catch(() => {})
   }
 
   schedule()

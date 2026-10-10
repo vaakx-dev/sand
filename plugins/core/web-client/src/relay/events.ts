@@ -1,18 +1,16 @@
-import type { WireEvent, WireRequest } from '@sand/protocol'
 import type { UserContent } from '@sand/messages'
+import type { WireEvent, WireRequest } from '@sand/protocol'
 import type { OpenedSession, RelayEvent, RelayInput, RelayPick } from '@sand/server/contract'
-import type { Threads, Wire } from '../contract'
+import type { Models, Wire } from '../contract'
 import type { Context } from 'drydock'
-import { promptPicker } from './fallback'
+import type { ThreadService } from '../threads/service'
 import { relayContributions } from './contributions'
-
-type Adopt = (opened: OpenedSession) => { id: string }
-
-type Call = (request: WireRequest) => Promise<unknown>
+import { promptPicker } from './fallback'
 
 export const isRelayEvent = (event: WireEvent): event is RelayEvent => event.name.startsWith('ui.')
 
-export const relayEvents = (ctx: Context, call: Call, threads: Threads, adopt: Adopt, device?: string) => {
+export const relayEvents = (ctx: Context, wire: Wire, threads: ThreadService, models: Models, device?: string) => {
+  const call = (request: WireRequest) => wire.call(request, device)
   const picker = () => ctx.picker ?? promptPicker
 
   const pick = async ({ id, title, items, options }: RelayPick) => {
@@ -26,7 +24,7 @@ export const relayEvents = (ctx: Context, call: Call, threads: Threads, adopt: A
   }
 
   const open = async (opened: OpenedSession | null, draft?: string, cwd?: string) => {
-    if (opened) await threads.select(adopt(opened).id)
+    if (opened) await threads.select(threads.adopt(opened, device).id)
     else if (cwd) await threads.draft(cwd, device)
     else await threads.select(undefined)
     if (draft !== undefined) ctx.composer?.set(draft)
@@ -57,22 +55,18 @@ export const relayEvents = (ctx: Context, call: Call, threads: Threads, adopt: A
       case 'ui.attach':
         return attach(event.args[0])
       case 'ui.prepare':
-        return ctx.models?.prepare(event.args[0])
+        return models.prepare(event.args[0])
     }
   }
 }
 
-export const bridgeRelay = (ctx: Context, wire: Wire, threads: Threads, adopt: Adopt) => {
-  const contributions = relayContributions(ctx, wire, threads)
-  const other = relayEvents(ctx, request => wire.call(request), threads, adopt)
-
-  const handle = (event: RelayEvent) => {
-    if (event.name === 'ui.relay') return contributions.advertise(event.args[0])
-    other(event)
-  }
-
-  ctx.on('wire.hello', hello => contributions.reset(hello.relay))
+export const bridgeRelay = (ctx: Context, wire: Wire, threads: ThreadService, models: Models) => {
+  const advertise = relayContributions(ctx, wire, threads, models)
+  const relay = relayEvents(ctx, wire, threads, models)
+  ctx.on('wire.hello', hello => advertise(hello.relay))
   ctx.on('wire.event', event => {
-    if (isRelayEvent(event)) handle(event)
+    if (!isRelayEvent(event)) return
+    if (event.name === 'ui.relay') advertise(event.args[0])
+    else relay(event)
   })
 }

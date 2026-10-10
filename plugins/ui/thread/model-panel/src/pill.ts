@@ -1,15 +1,9 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { button, div, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, div, dynamicChild, event, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { PanelContext } from './actions'
 import { logo, sourceName } from './source'
-import { toggles } from './toggle'
 
-const pillLook =
-  'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200'
-
-const above = {
-  right: '0',
-  bottom: '100%',
+const panelSize = {
   width: `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
 }
@@ -30,13 +24,19 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
   const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
   const modelLabel = () => model.get()?.label ?? current.get()?.model ?? ''
   const effortLabel = () => ctx.models.levels().find(level => level.id === current.get()?.effort)?.label ?? ''
+  const nextLabel = () => {
+    const value = next.get()
+    return value ? ctx.models.label(value) : ''
+  }
   const sourceTip = () => {
     const known = source.get()
     if (!known) return ''
     return known.via && ctx.modelPicker.online(known.via) === false ? `${sourceName(known)} · offline` : sourceName(known)
   }
-  const pillTip = () =>
-    current.get() ? [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ') : ''
+  const pillTip = () => {
+    if (!current.get()) return ''
+    return [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
+  }
 
   const pill = () =>
     div(
@@ -45,8 +45,14 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
         {
           type: 'button',
           title: pillTip,
-          class: [pillLook, () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400')],
-          ...toggles(toggle),
+          class: [
+            'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
+            () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'),
+          ],
+          onMouseDown: event(toggle, { stop: true, prevent: true }),
+          onClick: press => {
+            if (press.detail === 0) toggle()
+          },
         },
         dynamicChild(
           model.map(value => value?.provider),
@@ -64,21 +70,21 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
         ),
         span({ class: 'hidden shrink-0 sm:inline-flex' }, icon('down', 12)),
       ),
-      show(
-        next.map(Boolean),
-        () =>
-          span(
-            { class: 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md bg-warning-950 px-2 text-xs text-warning-400', title: () => (next.get() ? `Switches to ${ctx.models.label(next.get()!)} when this turn finishes` : '') },
-            icon('clock', 12),
-            span({ class: 'shrink-0' }, 'Next'),
-            span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${ctx.models.label(next.get()!)}` : '')),
-          ),
+      show(next.map(Boolean), () =>
+        span(
+          {
+            class: 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md bg-warning-950 px-2 text-xs text-warning-400',
+            title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : ''),
+          },
+          icon('clock', 12),
+          span({ class: 'shrink-0' }, 'Next'),
+          span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${nextLabel()}` : '')),
+        ),
       ),
-      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, ctx.modelPicker.panel(target, close, { flash }))),
+      show(open, () =>
+        popover(close, { class: 'right-0 bottom-full mb-3 overflow-auto', style: panelSize }, ctx.modelPicker.panel(target, close, { flash })),
+      ),
     )
 
-  return {
-    pill,
-    open: (effort = false) => reveal(effort),
-  }
+  return { pill, open: reveal }
 }

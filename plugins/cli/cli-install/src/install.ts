@@ -1,7 +1,7 @@
 import { trimSlash } from '@sand/kit'
 import { installFresh } from './fresh'
-import type { Installer } from './installer'
 import { installPaired } from './paired'
+import type { Installer } from './steps'
 
 const usage = 'usage: sand install, or SAND_INSTALL_KEY=<secret> sand install <url> to pair with another PC; run the installer from https://vaakx-dev.github.io/sand'
 

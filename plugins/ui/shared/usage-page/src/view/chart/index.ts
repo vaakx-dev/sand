@@ -11,7 +11,7 @@ const metrics: { value: Metric; label: string }[] = [
   { value: 'tokens', label: 'Tokens' },
 ]
 
-const titleOf = (usage: Merged, metric: Metric) => `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric === 'cost' ? 'cost' : 'tokens'}`
+const titleOf = (usage: Merged, metric: Metric) => `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric}`
 
 export const chartView = (usage: Merged, metric: Sig<Metric>) =>
   block(

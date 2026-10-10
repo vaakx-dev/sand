@@ -12,18 +12,18 @@ import { conversation } from './prompt'
 const modelWait = 15_000
 
 export const createNamer = (ctx: Context<'sessions'>, prefs: Prefs) => {
-  const modelsReady = (llm: LLM) =>
-    llm.models?.().length
-      ? Promise.resolve()
-      : new Promise<void>(resolve => {
-          const done = () => {
-            clearTimeout(timer)
-            void off()
-            resolve()
-          }
-          const timer = setTimeout(done, modelWait)
-          const off = ctx.on('llm.models', done)
-        })
+  const modelsReady = async (llm: LLM) => {
+    if (llm.models?.().length) return
+    await new Promise<void>(resolve => {
+      const done = () => {
+        clearTimeout(timer)
+        void off()
+        resolve()
+      }
+      const timer = setTimeout(done, modelWait)
+      const off = ctx.on('llm.models', done)
+    })
+  }
 
   const name = async (session: Session, messages: Message[]) => {
     const llm = ctx.llm

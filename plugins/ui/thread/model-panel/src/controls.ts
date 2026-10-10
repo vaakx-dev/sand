@@ -1,5 +1,5 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
-import type { EffectiveSettings, SessionSettings } from '@sand/model/contract'
+import type { EffectiveSettings } from '@sand/model/contract'
+import type { Picked } from '@sand/model-picker/contract'
 import { div, icon, primaryAction, secondaryAction, span, type IconName } from '@sand/dom'
 import type { Actions } from './actions'
 
@@ -10,16 +10,8 @@ export const banner = (glyph: IconName, text: string) =>
     span(text),
   )
 
-const defaultEffort = (defaults: SessionSettings, model?: ModelInfo) => {
-  const wanted = defaults.effort
-  if (!model?.efforts.length) return undefined
-  return wanted && model.efforts.includes(wanted) ? wanted : model.defaultEffort
-}
-
-export const usesDefaults = (shown: EffectiveSettings, defaults: SessionSettings, model?: ModelInfo) =>
-  shown.model === defaults.model &&
-  shown.effort === defaultEffort(defaults, model) &&
-  shown.speed === (model?.fast && defaults.speed === 'fast' ? 'fast' : 'normal')
+export const usesDefaults = (shown: EffectiveSettings, defaults: Picked) =>
+  shown.model === defaults.model && shown.effort === defaults.effort && shown.speed === defaults.speed
 
 export const footer = (shown: EffectiveSettings, actions: Actions) =>
   div(

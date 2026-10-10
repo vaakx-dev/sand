@@ -1,11 +1,9 @@
 import type { Entry } from '@sand/messages'
 import type { Thread } from '@sand/web-client/contract'
 import { batch, derive, effect, listbox, sig, untrack } from '@sand/dom'
-import { toolAction } from '../tree/action'
 import type { Filter } from '../tree/filter'
-import { ancestors, nodesOf, type TreeNode } from '../tree/forest'
+import { nodesOf, type TreeNode } from '../tree/forest'
 import { treeFrame, type TreeState } from '../tree/frame'
-import { toggleFold } from '../tree/navigate'
 import type { TreeItem } from './row'
 
 export interface TreeSource {
@@ -28,24 +26,23 @@ export const treeModel = (source: TreeSource) => {
 
   const frame = derive(() => treeFrame(nodes.get(), head.get(), state.get()))
   const items = derive((): TreeItem[] => {
-    const { rows, forest, index } = frame.get()
-    const current = ancestors(nodes.get(), head.get()).find(id => forest.parent.has(id))
+    const { rows, forest, index, here } = frame.get()
     return rows.flatMap((row, position) => {
-      const tree = nodes.get().get(row.id)
-      return tree ? [{ row, tree, active: forest.active.has(row.id), head: row.id === current, selected: position === index }] : []
+      const tree = forest.nodes.get(row.id)
+      return tree ? [{ row, tree, active: forest.active.has(row.id), head: row.id === here, selected: position === index }] : []
     })
   })
 
   const update = (patch: Partial<TreeState>) => state.set({ ...state.get(), ...patch })
-  const entry = (id: string | null | undefined) => (id ? nodes.get().get(id)?.entry : undefined)
+  const entry = (id: string | undefined) => (id ? nodes.get().get(id)?.entry : undefined)
   const rowId = (index: number) => frame.get().rows[index]?.id
 
-  const jump = (id: string) => {
+  const jump = (id: string | undefined) => {
     const found = entry(id)
     if (found) source.jump(found)
   }
 
-  const box = listbox({ count: () => frame.get().rows.length, choose: index => jump(rowId(index) ?? ''), wrap: true })
+  const box = listbox({ count: () => frame.get().rows.length, choose: index => jump(rowId(index)), wrap: true })
 
   effect(() => {
     const index = frame.get().index
@@ -70,7 +67,7 @@ export const treeModel = (source: TreeSource) => {
     if (next === key) return
     key = next
     const moved = head.get() !== (current?.info.head ?? null)
-    const found = current ? nodesOf([...current.entries.values()], toolAction) : new Map<string, TreeNode>()
+    const found = current ? nodesOf([...current.entries.values()]) : new Map<string, TreeNode>()
     batch(() => {
       head.set(current?.info.head ?? null)
       nodes.set(found)
@@ -88,12 +85,16 @@ export const treeModel = (source: TreeSource) => {
     sync,
     jump,
     select: (id: string) => update({ selected: id }),
-    fold: (id: string) => update(toggleFold(state.get(), id)),
+    fold(id: string) {
+      const folded = new Set(state.get().folded)
+      if (!folded.delete(id)) folded.add(id)
+      update({ folded, selected: id })
+    },
     fork(id: string) {
       const found = entry(id)
       if (found) source.fork(found)
     },
-    edit(id: string) {
+    label(id: string) {
       update({ selected: id })
       editor = thread.get()
       editing.set(id)
@@ -102,7 +103,7 @@ export const treeModel = (source: TreeSource) => {
       const current = thread.get()
       if (current) await source.label(current, id, text)
     },
-    labelOf: (id: string) => untrack(() => nodes.get().get(id)?.label?.text ?? ''),
+    labelOf: (id: string) => untrack(() => nodes.get().get(id)?.label ?? ''),
     async finish(id: string, value: string | undefined) {
       editing.set(null)
       if (value !== undefined && editor) await source.label(editor, id, value)
@@ -117,5 +118,3 @@ export const treeModel = (source: TreeSource) => {
     page: (rows: number, direction: 1 | -1) => box.select(box.selected.get() + direction * rows),
   }
 }
-
-export type TreeModel = ReturnType<typeof treeModel>

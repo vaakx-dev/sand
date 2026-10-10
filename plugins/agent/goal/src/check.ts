@@ -1,4 +1,4 @@
-import { textOf } from '@sand/kit'
+import { isRecord, textOf } from '@sand/kit'
 import type { LLM, LLMRequest, SourceRef } from '@sand/llm-accounts/contract'
 import type { Message, Usage } from '@sand/messages'
 
@@ -23,8 +23,8 @@ const parse = (text: string) => {
   const json = /\{[\s\S]*\}/.exec(text)?.[0]
   if (!json) return undefined
   try {
-    const value = JSON.parse(json) as { met?: unknown; reason?: unknown }
-    return typeof value.met === 'boolean' ? { met: value.met, reason: String(value.reason ?? '').trim() } : undefined
+    const value: unknown = JSON.parse(json)
+    return isRecord(value) && typeof value.met === 'boolean' ? { met: value.met, reason: String(value.reason ?? '').trim() } : undefined
   } catch {
     return undefined
   }

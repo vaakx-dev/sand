@@ -8,8 +8,10 @@ const agentName = (thread: Thread) => {
   return 'agent'
 }
 
+const workflowPrefix = 'workflow '
+
 const splitLabel = (label: string) => {
-  if (label.startsWith('workflow ')) return { name: 'workflow', task: label.slice(9), workflow: true }
+  if (label.startsWith(workflowPrefix)) return { name: 'workflow', task: label.slice(workflowPrefix.length), workflow: true }
   const at = label.indexOf(': ')
   return at > 0 ? { name: label.slice(0, at), task: label.slice(at + 2), workflow: false } : { name: 'job', task: label, workflow: false }
 }

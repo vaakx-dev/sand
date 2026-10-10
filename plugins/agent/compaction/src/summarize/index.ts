@@ -16,17 +16,21 @@ export interface SummaryInput {
   signal?: AbortSignal
 }
 
-const chunks = (parts: string[], max: number) =>
-  parts.reduce<string[][]>(
-    (groups, part) => {
-      const current = groups.at(-1)!
-      const size = current.reduce((sum, item) => sum + item.length, 0)
-      if (current.length && size + part.length > max) groups.push([part])
-      else current.push(part)
-      return groups
-    },
-    [[]],
-  )
+const chunks = (parts: string[], max: number) => {
+  const groups: string[][] = []
+  let current: string[] = []
+  let size = 0
+  for (const part of parts) {
+    if (current.length && size + part.length > max) {
+      groups.push(current)
+      current = []
+      size = 0
+    }
+    current.push(part)
+    size += part.length
+  }
+  return [...groups, current]
+}
 
 const ask = async (llm: LLM, text: string, model?: string, signal?: AbortSignal) => {
   const request = { system, messages: [{ role: 'user', content: [{ type: 'text', text }] } satisfies Message], tools: [], model }

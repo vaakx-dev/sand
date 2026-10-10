@@ -13,7 +13,7 @@ export const versionText = (build: BuildInfo | undefined, target: ReleaseInfo | 
   return build.commit ? build.commit.slice(0, 7) : `build ${build.id.slice(0, 6)}`
 }
 
-export const phaseText = (phase: UpdatePhase, running = 0) => {
+const phaseText = (phase: UpdatePhase, running = 0) => {
   switch (phase) {
     case 'downloading':
       return 'Downloading from GitHub…'

@@ -2,7 +2,7 @@ import type { UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/web-client/contract'
 import { derive, errorMessage, sig, type Sig } from '@sand/dom'
 import { usageQuery, type UsageRange } from '@sand/kit'
-import { readCache, writeCache, type Cached } from './cache'
+import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
 import { isSummary } from './valid'
 
@@ -42,9 +42,10 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>)
       .then(result => {
         if (!isSummary(result)) throw new Error('it needs a newer sand to report usage')
         if (run !== generation) return
+        const id = idOf(pc)
         const cached = { at: Date.now(), summary: result }
-        writeCache(idOf(pc), current, cached)
-        put(idOf(pc), { ...cached, failure: '', busy: false })
+        writeCache(id, current, cached)
+        put(id, { ...cached, failure: '', busy: false })
       })
       .catch(error => {
         if (run === generation) put(idOf(pc), { failure: errorMessage(error), busy: false })

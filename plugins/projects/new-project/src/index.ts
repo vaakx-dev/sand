@@ -2,7 +2,7 @@ import { pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { sourcesPage } from './flow/sources'
 import { createSyncFlows } from './flow/sync/service'
-import { projectsPage } from './settings'
+import { projectsPage } from './settings/page'
 import { newThreadSource, projectSource } from './source'
 
 export default definePlugin({

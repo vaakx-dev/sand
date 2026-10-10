@@ -14,7 +14,11 @@ export interface AccountId {
   pcName?: string
 }
 
-const familyOf = (model: string) => (/claude/.test(model) ? 'anthropic' : /^(gpt-|codex|o\d)/.test(model) ? 'openai' : undefined)
+const familyOf = (model: string) => {
+  if (/claude/.test(model)) return 'anthropic'
+  if (/^(gpt-|codex|o\d)/.test(model)) return 'openai'
+  return undefined
+}
 
 const prefixOf = (model: string) => {
   const at = model.indexOf('/')

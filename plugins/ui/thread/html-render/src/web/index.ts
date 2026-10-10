@@ -1,4 +1,5 @@
 import type { ToolRenderer, ToolViews } from '@sand/transcript-parts/contract'
+import { joinDisposers } from '@sand/kit'
 import type { HtmlRenderEntry } from '../contract'
 import { definePlugin } from 'drydock'
 import { htmlFrame } from './frame'
@@ -18,13 +19,14 @@ export default definePlugin({
   inject: ['wire', 'toolViews'],
   uses: { transcript: 'renders are not shown' },
   apply(ctx) {
-    ctx.watch('transcript', transcript => {
-      if (!transcript) return
-      const disposers = [
-        transcript.tool('html_render', renderTool(ctx.toolViews)),
-        transcript.entry('html-render', (entry, thread) => htmlFrame(ctx.wire, thread, entry.data as HtmlRenderEntry)),
-      ]
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch(
+      'transcript',
+      transcript =>
+        transcript &&
+        joinDisposers(
+          transcript.tool('html_render', renderTool(ctx.toolViews)),
+          transcript.entry('html-render', (entry, thread) => htmlFrame(ctx.wire, thread, entry.data as HtmlRenderEntry)),
+        ),
+    )
   },
 })

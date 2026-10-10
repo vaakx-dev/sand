@@ -10,17 +10,15 @@ const tone = (agent: Thread) => {
   return 'bg-success-400'
 }
 
-const segments = (tones: string[]) =>
-  span(
-    { class: ['shrink-0 gap-px', tones.length ? 'flex' : 'hidden'] },
-    tones.map(value => span({ class: ['h-1 w-2 rounded-full', value] })),
-  )
+const segments = (tones: string[]) => span({ class: 'flex shrink-0 gap-px' }, tones.map(value => span({ class: ['h-1 w-2 rounded-full', value] })))
+
+const count = (run: Sig<AgentRun>) => span({ class: 'shrink-0 tabular-nums' }, run.map(value => `${value.finished}/${value.agents.length}`))
 
 export const progress = (run: Sig<AgentRun>) =>
   dynamicChild(
     run.map(({ agents }) => (agents.length > segmentLimit ? 'count' : agents.map(tone).join(' '))),
-    key =>
-      key === 'count'
-        ? span({ class: 'shrink-0 tabular-nums' }, run.map(value => `${value.finished}/${value.agents.length}`))
-        : segments(key ? key.split(' ') : []),
+    key => {
+      if (key === 'count') return count(run)
+      return key ? segments(key.split(' ')) : null
+    },
   )

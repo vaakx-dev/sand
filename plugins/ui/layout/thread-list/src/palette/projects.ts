@@ -3,14 +3,14 @@ import type { PaletteItem, PaletteItemAction, PalettePage } from '@sand/palette/
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { quickThreadIcon } from '@sand/dom'
+import { openDraft } from '../draft'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
 
-const draft = (ctx: Context<'threads'>, path: string, device?: string) => ctx.threads.draft(path, device).then(() => ctx.composer?.focus())
-
 const awayDetail = (ctx: Context<'threads'>, place: Place) => {
-  const device = ctx.threads.device()
-  const others = [...new Set((place.group?.locations ?? []).map(location => pcName(ctx, location.device)))].filter(name => name !== pcName(ctx, device))
-  return [`No copy on ${pcName(ctx, device)}`, ...(others.length ? [`on ${others.join(', ')}`] : [])].join(' · ')
+  const here = pcName(ctx, ctx.threads.device())
+  const others = pcNames(ctx, place).filter(name => name !== here)
+  if (!others.length) return `No copy on ${here}`
+  return `No copy on ${here} · on ${others.join(', ')}`
 }
 
 const placeDetail = (ctx: Context<'threads'>, place: Place) =>
@@ -37,19 +37,20 @@ const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => (
 const startAction = (ctx: Context<'threads'>, location: ProjectEntry): PaletteItemAction => ({
   label: `Start on ${pcName(ctx, location.device)}`,
   icon: ctx.machines?.get(location.device)?.local === false ? 'monitor' : 'laptop',
-  run: () => draft(ctx, location.path, location.device),
+  run: () => openDraft(ctx, location.path, location.device),
 })
 
 const actionsOf = (ctx: Context<'threads'>, place: Place) => {
   const group = place.group
   if (!group || !ctx.projects) return undefined
   const starts = otherLocations(ctx, group, ctx.threads.device()).map(location => startAction(ctx, location))
-  return [...starts, ...(ctx.picker ? [renameAction(ctx, group)] : []), hideAction(ctx, group)]
+  const rename = ctx.picker ? [renameAction(ctx, group)] : []
+  return [...starts, ...rename, hideAction(ctx, group)]
 }
 
 const runPlace = (ctx: Context<'threads'>, place: Place) => {
   if (place.away && place.group && ctx.syncFlows) return ctx.syncFlows.copy(place.group, ctx.threads.device())
-  if (place.path) return draft(ctx, place.path, place.device)
+  if (place.path) return openDraft(ctx, place.path, place.device)
 }
 
 const projectItem = (ctx: Context<'threads'>, place: Place): PaletteItem => ({
@@ -73,7 +74,7 @@ const quickThreadItem = (ctx: Context<'threads'>): PaletteItem => ({
   avatarIcon: quickThreadIcon,
   detail: 'No project, in its own scratch folder',
   search: 'quick thread scratch no project',
-  run: () => draft(ctx, '', ctx.threads.device()),
+  run: () => openDraft(ctx, '', ctx.threads.device()),
 })
 
 export const newThreadPage = (ctx: Context<'threads'>): PalettePage => ({

@@ -8,13 +8,15 @@ export default definePlugin({
     let entries: WebCommand[] = []
     let queued = false
 
+    const emitChange = () => {
+      queued = false
+      ctx.emit('commands.change')
+    }
+
     const changed = () => {
       if (queued) return
       queued = true
-      queueMicrotask(() => {
-        queued = false
-        ctx.emit('commands.change')
-      })
+      void Promise.resolve().then(emitChange)
     }
 
     const get = (name: string) => {
@@ -34,7 +36,7 @@ export default definePlugin({
       list: () =>
         [...new Set(entries.map(command => command.name))]
           .sort((a, b) => a.localeCompare(b))
-          .map(name => get(name)!),
+          .flatMap(name => get(name) ?? []),
       get,
       async run(name, args = '') {
         const command = get(name)

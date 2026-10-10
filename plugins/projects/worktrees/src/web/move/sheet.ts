@@ -5,7 +5,7 @@ import type { Thread } from '@sand/web-client/contract'
 import type { WebContext, WorktreeClient } from '../client'
 import { branchInput, checkRow, field, setupLine } from './parts'
 
-export interface MoveForm {
+interface MoveForm {
   thread: Thread
   state: WorktreeState
   branch: string

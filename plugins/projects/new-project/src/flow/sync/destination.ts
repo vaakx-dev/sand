@@ -2,13 +2,13 @@ import type { ProjectRef } from '@sand/host-projects/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
 import type { CopyDone, Sync } from '../../contract'
+import type { ProjectsContext } from '../../context'
 import { folderPage } from '../folder'
 import { absolute, join, short } from '../paths'
-import type { FlowContext } from '../types'
 import { copyReviewPage } from './copyReview'
 import type { CopyPlan, CopyTarget } from './plan'
 
-export const destinationPage = (ctx: FlowContext, sync: Sync, target: CopyTarget, from: ProjectRef, machine: Machine, then?: CopyDone): PalettePage => {
+export const destinationPage = (ctx: ProjectsContext, sync: Sync, target: CopyTarget, from: ProjectRef, machine: Machine, then?: CopyDone): PalettePage => {
   const { name } = target
   const { device } = machine
   const place = ctx.projects.place(device)
@@ -22,8 +22,7 @@ export const destinationPage = (ctx: FlowContext, sync: Sync, target: CopyTarget
     return { project: target.id, name, from, to, inspect: await inspected, create: !exists, existing, done: then }
   }
 
-  const elsewhere = (): PalettePage =>
-    folderPage(ctx, machine, async choice => copyReviewPage(ctx, sync, await planFor(choice.path, choice.how === 'add')), { mode: 'add' })
+  const elsewhere = (): PalettePage => folderPage(ctx, machine, async choice => copyReviewPage(ctx, sync, await planFor(choice.path, choice.how === 'add')))
 
   const items = async (): Promise<PaletteItem[]> => {
     const inspect = await inspected

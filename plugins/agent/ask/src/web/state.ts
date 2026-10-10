@@ -1,7 +1,7 @@
 import type { AskAnswer, AskQuestion } from '../contract'
 import { derive, sig } from '@sand/dom'
 
-export interface Draft {
+interface Draft {
   picked: number[]
   text: string
 }
@@ -22,6 +22,7 @@ export const createState = (questions: AskQuestion[]) => {
   const sending = sig(false)
   const question = derive(() => questions[current.get()]!)
   const draft = derive(() => drafts.get()[current.get()]!)
+  const typed = derive(() => draft.get().text.trim())
   const answered = (index: number) => isAnswered(questions[index]!, drafts.get()[index]!, seen.get().has(index))
   const complete = derive(() => questions.every((_, index) => answered(index)))
   const last = derive(() => current.get() === questions.length - 1)
@@ -53,7 +54,7 @@ export const createState = (questions: AskQuestion[]) => {
 
   const answers = (): AskAnswer[] => drafts.get().map(draft => (draft.text.trim() ? { text: draft.text.trim() } : { picked: draft.picked }))
 
-  return { questions, drafts, current, open, sending, question, draft, answered, complete, finishing, go, pick, move, write, answers }
+  return { questions, current, open, sending, question, draft, typed, answered, finishing, go, pick, move, write, answers }
 }
 
 export type AskState = ReturnType<typeof createState>

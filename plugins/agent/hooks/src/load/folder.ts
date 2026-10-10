@@ -78,6 +78,15 @@ export const hookFolders = (ctx: Context<'watcher'>, shared: SharedEnv, setup: F
     unmount(dir)
   }
 
+  const fileState = (folder: HookFolder, file: HookSource): HookFileState =>
+    mounts.get(folder.dir)?.get(file.path)?.file.state ?? {
+      path: file.path,
+      scope: setup.scope,
+      folder: folder.root,
+      status: folder.trusted ? 'failed' : 'untrusted',
+      hooks: [],
+    }
+
   const watched = ctx.watcher.folders(load, empty, changed)
   ctx.effect(() => watched.close)
 
@@ -90,21 +99,7 @@ export const hookFolders = (ctx: Context<'watcher'>, shared: SharedEnv, setup: F
         folder.trusted = true
         await sync(folder)
       }),
-    states(): HookFileState[] {
-      return [...folders.values()].flatMap(folder =>
-        folder.files.map(
-          file =>
-            mounts.get(folder.dir)?.get(file.path)?.file.state ?? {
-              path: file.path,
-              scope: setup.scope,
-              folder: folder.root,
-              status: folder.trusted ? 'failed' : 'untrusted',
-              hooks: [],
-            },
-        ),
-      )
-    },
-    trusted: (root: string) => [...folders.values()].some(folder => folder.root === root && folder.trusted),
+    states: () => [...folders.values()].flatMap(folder => folder.files.map(file => fileState(folder, file))),
   }
 }
 

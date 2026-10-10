@@ -1,11 +1,9 @@
-import type { Context, ScopeView } from 'drydock'
-import { describe } from './describe'
+import type { Context } from 'drydock'
+import { describe, statusLine } from './describe'
 import { webOf, webOnly, webStates } from './web/match'
 import { noBrowser, webDetail, webLine } from './web/text'
 
 const plugins = (ctx: Context) => ctx.scopes().filter(scope => scope.kind === 'plugin')
-
-const heading = (ctx: Context, scope: ScopeView) => describe(ctx, scope).split('\n')[0]
 
 export const listPlugins = (ctx: Context) => {
   const scopes = plugins(ctx)
@@ -13,7 +11,7 @@ export const listPlugins = (ctx: Context) => {
   return [
     ...scopes.map(scope => {
       const web = webOf(scope, states)
-      return web ? `${heading(ctx, scope)} | ${webLine(web)}` : heading(ctx, scope)
+      return web ? `${statusLine(scope)} | ${webLine(web)}` : statusLine(scope)
     }),
     ...webOnly(scopes, states).map(webLine),
     noBrowser(states),

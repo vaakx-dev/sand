@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, el, exactTime, icon, list, primaryAction, quietButton, rowButton, settingsSection, sig, span, untrack, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, exactTime, h3, icon, list, primaryAction, quietButton, rowButton, settingsSection, sig, span, untrack, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'
@@ -6,15 +6,14 @@ import { canUpdate, changesFor } from '../fleet/status'
 import { pcStatusLine } from '../pc-line'
 import { sheetFoot } from './foot'
 
+const markLook = (checked: boolean, pickable: boolean) => {
+  if (!pickable) return 'opacity-0'
+  return checked ? 'bg-accent-500 text-white' : 'ring-1 ring-neutral-600'
+}
+
 const checkMark = (checked: () => boolean, pickable: () => boolean) =>
   span(
-    {
-      class: () =>
-        [
-          'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors',
-          !pickable() ? 'opacity-0' : checked() ? 'bg-accent-500 text-white' : 'ring-1 ring-neutral-600',
-        ].join(' '),
-    },
+    { class: ['inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors', () => markLook(checked(), pickable())] },
     icon('check', 12),
   )
 
@@ -41,19 +40,18 @@ const pcChoice = (row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<string>>) =>
   )
 }
 
-const heading = (text: string) => el('h3', { class: 'px-1 text-xs font-medium text-neutral-500' }, text)
-
 export const chooseBody = (fleet: Fleet, close: () => void) => {
   const selected = sig(new Set(untrack(() => fleet.pending.get().map(pc => pc.key))))
   const chosen = derive(() => fleet.pcs.get().filter(pc => canUpdate(pc.status) && selected.get().has(pc.key)))
   const changes = derive(() => changesFor(fleet.target.get(), (chosen.get().length ? chosen.get() : fleet.pending.get()).map(pc => pc.status)))
-  const update = () => {
-    void fleet.update(chosen.get().map(pc => pc.key))
-  }
   const later = () => {
     void fleet.later()
     close()
   }
+  const whatsNew = () =>
+    changes.get().length
+      ? div({ class: 'flex flex-col gap-3' }, h3({ class: 'px-1 text-xs font-medium text-neutral-500' }, "What's new"), div({ class: 'px-1' }, changeList(changes.get())))
+      : null
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
     div(
@@ -64,19 +62,13 @@ export const chooseBody = (fleet: Fleet, close: () => void) => {
       }),
       dynamicChild(
         changes.map(list => list.map(change => change.commit).join()),
-        () =>
-          changes.get().length
-            ? div({ class: 'flex flex-col gap-3' }, heading("What's new"), div({ class: 'px-1' }, changeList(changes.get())))
-            : div(),
+        whatsNew,
       ),
-      settingsSection(
-        { title: 'PCs' },
-        list(fleet.pcs, pc => pc.key, row => pcChoice(row, fleet, selected), div({ class: 'contents' })),
-      ),
+      settingsSection({ title: 'PCs' }, list(fleet.pcs, pc => pc.key, row => pcChoice(row, fleet, selected), div({ class: 'contents' }))),
     ),
     sheetFoot(
       quietButton({ onClick: later }, 'Later'),
-      primaryAction({ disabled: () => !chosen.get().length, onClick: update }, () =>
+      primaryAction({ disabled: () => !chosen.get().length, onClick: () => void fleet.update(chosen.get().map(pc => pc.key)) }, () =>
         chosen.get().length ? `Update ${plural(chosen.get().length, 'PC')}` : 'Choose a PC',
       ),
     ),

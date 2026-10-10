@@ -3,9 +3,9 @@ import type { UserContent } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import { samePath } from '@sand/kit/fs'
 import { repoOf, within } from '../git/repo'
+import { openSession, type Ops } from './context'
 import { forgetMarks } from './marks'
 import { startInWorktree } from './start'
-import { openSession, type Ops } from './types'
 
 const useExisting = async (session: Session, path: string) => {
   const repo = await repoOf(session.cwd)

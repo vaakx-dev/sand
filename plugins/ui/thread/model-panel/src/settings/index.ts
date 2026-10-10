@@ -9,7 +9,7 @@ import { sourcesKey, sourcesSection } from './sources'
 const topPage = (kit: Kit) =>
   div(
     { class: 'flex flex-col gap-6' },
-    dynamicChild(kit.changes.read(() => kit.ctx.models.list().length > 0), listed => (listed ? defaultsSection(kit) : div({ class: 'hidden' }))),
+    dynamicChild(kit.changes.read(() => kit.ctx.models.list().length > 0), listed => (listed ? defaultsSection(kit) : null)),
     dynamicChild(kit.changes.read(() => sourcesKey(kit)), () => sourcesSection(kit)),
   )
 

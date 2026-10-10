@@ -26,24 +26,19 @@ export interface Loaded {
   lists: Map<Pc, ProjectList>
 }
 
-const fetchLists = async (pcs: Pcs) => {
-  const lists = new Map<Pc, ProjectList>()
-  const offline: Pc[] = []
-  await Promise.all(
-    pcs.all.map(async pc => {
-      try {
-        lists.set(pc, await pcs.call<ProjectList>({ type: 'projects.list' }, pc.device))
-      } catch (error) {
-        if (pc === pcs.local) throw error
-        offline.push(pc)
-      }
-    }),
-  )
-  return { lists, offline }
+const fetchLists = async ({ all, local, call }: Pcs) => {
+  const fetchList = (pc: Pc) => call<ProjectList>({ type: 'projects.list' }, pc.device)
+  const others = all.filter(pc => pc !== local)
+  const [home, ...found] = await Promise.all([fetchList(local), ...others.map(pc => fetchList(pc).catch(() => undefined))])
+  const lists = new Map<Pc, ProjectList>([[local, home]])
+  others.forEach((pc, index) => {
+    const list = found[index]
+    if (list) lists.set(pc, list)
+  })
+  return { device: home.device, lists, offline: others.filter(pc => !lists.has(pc)) }
 }
 
-const groupProjects = (pcs: Pcs, lists: Map<Pc, ProjectList>): Group[] => {
-  const device = lists.get(pcs.local)?.device ?? ''
+const groupProjects = (pcs: Pcs, lists: Map<Pc, ProjectList>, device: string): Group[] => {
   const pcOf = (id: string): Pc => (id === device ? pcs.local : pcs.all.find(pc => pc.device === id) ?? { device: id, name: id, url: '', key: '' })
   const order = (pc: Pc) => {
     const index = pcs.all.indexOf(pc)
@@ -66,8 +61,8 @@ const groupProjects = (pcs: Pcs, lists: Map<Pc, ProjectList>): Group[] => {
 }
 
 export const loadGroups = async (pcs: Pcs): Promise<Loaded> => {
-  const { lists, offline } = await fetchLists(pcs)
-  return { groups: groupProjects(pcs, lists), offline, device: lists.get(pcs.local)!.device, lists }
+  const { device, lists, offline } = await fetchLists(pcs)
+  return { groups: groupProjects(pcs, lists, device), offline, device, lists }
 }
 
 export const locationOn = (group: Group, pc: Pc) => group.locations.find(location => location.pc === pc)

@@ -1,4 +1,5 @@
 import type { Thread } from '@sand/web-client/contract'
+import { collectScope, onTimeout } from '@sand/dom'
 import type { Context } from 'drydock'
 import type {} from '../contract'
 
@@ -9,9 +10,9 @@ export const remoteFiles = (ctx: Context<'threads'>, changed: () => void) => {
   let seen: string | undefined
   let files: Set<string> | undefined
   let asked = 0
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let timer: (() => void) | undefined
 
-  const fetch = async (id: string, device: string | undefined) => {
+  const request = async (id: string, device: string | undefined) => {
     if (!ctx.wire) return
     const ask = ++asked
     const keys = await ctx.wire.call<string[]>({ type: 'changes.files', session: id }, device).catch(() => undefined)
@@ -20,11 +21,13 @@ export const remoteFiles = (ctx: Context<'threads'>, changed: () => void) => {
     changed()
   }
 
+  const fire = (current: Thread) => {
+    timer = undefined
+    if (thread === current.id) void request(current.id, current.device)
+  }
+
   const schedule = (current: Thread) => {
-    timer ??= setTimeout(() => {
-      timer = undefined
-      if (thread === current.id) void fetch(current.id, current.device)
-    }, throttleMs)
+    timer ??= collectScope(() => onTimeout(() => fire(current), throttleMs)).value
   }
 
   return {
@@ -35,8 +38,8 @@ export const remoteFiles = (ctx: Context<'threads'>, changed: () => void) => {
       if (current.id === thread) return schedule(current)
       thread = current.id
       files = undefined
-      void fetch(current.id, current.device)
+      void request(current.id, current.device)
     },
-    stop: () => clearTimeout(timer),
+    stop: () => timer?.(),
   }
 }

@@ -2,8 +2,9 @@ import type { WorktreeEntry, WorktreeState } from '../../contract'
 import { div, groupLabel, icon, menuItem, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
 import { uuid } from '@sand/kit'
 import type { WebContext } from '../client'
+import { okMark } from '../ok-mark'
 import type { Choice, Choices } from './choices'
-import { mainBranch, type ChipTarget } from './target'
+import type { ChipTarget } from './target'
 
 interface Row {
   glyph: IconName
@@ -13,6 +14,11 @@ interface Row {
   choose(): void
   end?: Child
   menu?: () => MenuSpec
+}
+
+export interface EntryMenus {
+  context: ContextMenu
+  spec(entry: WorktreeEntry, use: () => void): MenuSpec
 }
 
 const row = ({ glyph, title, line, selected, choose, end, menu }: Row, context?: ContextMenu) =>
@@ -30,20 +36,20 @@ const row = ({ glyph, title, line, selected, choose, end, menu }: Row, context?:
       span({ class: 'truncate font-medium' }, title),
       line ? span({ class: 'truncate text-xs text-neutral-500', title: line }, line) : null,
     ),
-    end ?? (selected ? span({ class: 'inline-flex shrink-0 text-success-400' }, icon('check', 14)) : null),
+    end ?? (selected ? okMark() : null),
   )
 
 const changes = (entry: WorktreeEntry) => (entry.changed ? span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, `●${entry.changed}`) : undefined)
 
-export interface EntryMenus {
-  context: ContextMenu
-  spec(entry: WorktreeEntry, use: () => void): MenuSpec
+const currentPath = (state: WorktreeState, choice: Choice) => {
+  if (state.worktree) return state.root
+  return choice.mode === 'existing' ? choice.path : ''
 }
 
 const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choice) => void, menus: EntryMenus) => {
   const others = state.worktrees.filter(entry => !entry.main)
   if (!others.length) return []
-  const current = state.worktree ? state.root : choice.mode === 'existing' ? choice.path : ''
+  const current = currentPath(state, choice)
   return [
     div({ class: 'mx-2 my-1 border-t border-neutral-700' }),
     groupLabel('Existing worktrees'),
@@ -77,22 +83,22 @@ const choose = async (ctx: WebContext, choices: Choices, { state, draft }: ChipT
 
 export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget, close: () => void, menus: EntryMenus) => {
   const { state, choice } = target
-  if (!state) return div()
+  if (!state) return null
   const pick = (next: Choice) => {
     close()
     void choose(ctx, choices, target, next)
   }
-  const base = mainBranch(state)
+  const base = state.worktrees.find(entry => entry.main)?.branch ?? state.branch
   const from = (state.worktree ? base : (state.branch ?? base)) ?? undefined
-  const local = !state.worktree && choice.mode
+  const mode = state.worktree ? undefined : choice.mode
   return div(
     { class: 'flex flex-col gap-1 p-1' },
-    row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${base ? ` on ${base}` : ''}`, selected: local === 'local', choose: () => pick({ mode: 'local' }) }),
+    row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${base ? ` on ${base}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
     row({
       glyph: 'folder-git',
       title: 'New worktree',
       line: `its own folder and branch, from ${from ?? 'HEAD'}`,
-      selected: local === 'new',
+      selected: mode === 'new',
       choose: () => pick({ mode: 'new', base: from }),
     }),
     ...existingRows(state, choice, pick, menus),

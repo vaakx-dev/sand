@@ -38,7 +38,7 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
   const direction = edge === 'side' ? 1 : -1
   const dragging = sig<Drag | undefined>(undefined)
   const end = () => dragging.set(undefined)
-  return div({
+  const handle: HTMLElement = div({
     'data-grip': edge,
     'data-dragging': () => (dragging.get() ? '' : null),
     title: 'Drag to resize, double-click to reset',
@@ -46,7 +46,7 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
     onPointerDown: event => {
       if (event.button !== 0) return
       event.preventDefault()
-      ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
+      handle.setPointerCapture(event.pointerId)
       dragging.set({ start: column().getBoundingClientRect().width, from: event.clientX, others: other().getBoundingClientRect().width })
     },
     onPointerMove: event => {
@@ -57,6 +57,7 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
     onPointerCancel: end,
     onDblClick: () => forget(widths, edge),
   })
+  return handle
 }
 
 export const sizedStyle = (widths: Widths, edge: Edge) => {

@@ -5,8 +5,8 @@ import type { Context } from 'drydock'
 import { compose, contentName } from '../attachments/content'
 
 const runCommand = async (ctx: Context<'threads'>, name: string, args: string) => {
-  if (ctx.commands?.get(name)) return void (await ctx.commands.run(name, args))
-  await ctx.threads.command(name, args)
+  if (!ctx.commands?.get(name)) return ctx.threads.command(name, args)
+  await ctx.commands.run(name, args)
 }
 
 const prompt = (text: string, attachments: UserContent[]): Prompt => (attachments.length ? compose(text, attachments) : text)

@@ -1,14 +1,20 @@
 import type { ReleaseInfo, UpdateChannel, UpdateState } from '@sand/host-updates/contract'
 import type { WireEvent, WireRequest } from '@sand/protocol'
-import { derive, errorMessage, pulse, sig } from '@sand/dom'
+import { derive, errorMessage, onTimeout, pulse, sig } from '@sand/dom'
 import type { Context } from 'drydock'
-import { isSettled, runStatus, type Run } from './run'
+import { isSettled, runStatus, type Run, type RunStatus } from './run'
 import { canUpdate, pcStatus, pickTarget, type Pc, type PcStatus } from './status'
 
 const local = ''
 
 export interface PcView extends Pc {
   status: PcStatus
+}
+
+export interface RunRow {
+  key: string
+  pc?: PcView
+  status: RunStatus
 }
 
 const without = <T>(map: Map<string, T>, key: string) => {
@@ -18,6 +24,8 @@ const without = <T>(map: Map<string, T>, key: string) => {
 }
 
 const withEntry = <T>(map: Map<string, T>, key: string, value: T) => new Map(map).set(key, value)
+
+const isState = (value: unknown): value is UpdateState => typeof value === 'object' && value !== null && 'phase' in value
 
 export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const machines = pulse(ctx, ['machines.change', 'wire.hello', 'wire.state'])
@@ -30,8 +38,8 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const keyOf = (machine: { local: boolean; id: string }) => (machine.local ? local : machine.id)
   const notify = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
-  const store = (key: string, state: UpdateState | undefined) => {
-    if (state && typeof state === 'object' && 'phase' in state) states.set(withEntry(states.get(), key, state))
+  const store = (key: string, state: unknown) => {
+    if (isState(state)) states.set(withEntry(states.get(), key, state))
   }
 
   const load = (key: string) => call<UpdateState>(key, { type: 'updates.state' }).then(state => store(key, state), () => {})
@@ -59,23 +67,23 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
 
   const pending = derive(() => views.get().filter(pc => canUpdate(pc.status) && pc.status.kind !== 'failed'))
 
-  const runFinished = derive(() => {
+  const runRows = derive<RunRow[]>(() => {
     const current = run.get()
-    if (!current) return false
-    const byKey = new Map(pcs.get().map(pc => [pc.key, pc]))
-    return current.keys.every(key => isSettled(runStatus(byKey.get(key), current.build)))
+    if (!current) return []
+    const byKey = new Map(views.get().map(pc => [pc.key, pc]))
+    return current.keys.map(key => ({ key, pc: byKey.get(key), status: runStatus(byKey.get(key), current.build) }))
   })
+
+  const runFinished = derive(() => Boolean(run.get()) && runRows.get().every(row => isSettled(row.status)))
 
   const seen = new Set<string>()
   const refresh = () => {
     for (const pc of pcs.get()) {
-      if (!pc.online) {
-        seen.delete(pc.key)
-        continue
+      if (!pc.online) seen.delete(pc.key)
+      else if (!seen.has(pc.key)) {
+        seen.add(pc.key)
+        void load(pc.key)
       }
-      if (seen.has(pc.key)) continue
-      seen.add(pc.key)
-      void load(pc.key)
     }
   }
 
@@ -89,17 +97,17 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   })
   ctx.on('wire.event', event => onEvent(local, event))
   ctx.on('machines.event', onEvent)
-  ctx.on('machines.change', () => queueMicrotask(refresh))
-  queueMicrotask(refresh)
+  ctx.on('machines.change', refresh)
+  onTimeout(refresh)
 
-  const everyOnline = <T>(request: WireRequest) =>
+  const everyOnline = (request: WireRequest) =>
     Promise.all(
       pcs
         .get()
         .filter(pc => pc.online && pc.state)
         .map(pc =>
-          call<T>(pc.key, request).then(
-            state => store(pc.key, state as UpdateState),
+          call<unknown>(pc.key, request).then(
+            state => store(pc.key, state),
             error => notify(`${pc.name}: ${errorMessage(error)}`),
           ),
         ),
@@ -121,8 +129,7 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
     failures.set(without(failures.get(), key))
     try {
       const wanted = channel.get()
-      if (wanted && states.get().get(key)?.channel !== wanted)
-        store(key, await call<UpdateState>(key, { type: 'updates.channel', channel: wanted }))
+      if (wanted && states.get().get(key)?.channel !== wanted) store(key, await call<UpdateState>(key, { type: 'updates.channel', channel: wanted }))
       store(key, await call<UpdateState>(key, { type: 'updates.apply', build }))
     } catch (error) {
       failures.set(withEntry(failures.get(), key, errorMessage(error)))
@@ -132,10 +139,11 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const update = async (keys: string[]) => {
     const release = target.get()
     if (!release || !keys.length) return
-    const ordered = [...keys.filter(key => key !== local), ...keys.filter(key => key === local)]
+    const remote = keys.filter(key => key !== local)
+    const ordered = keys.includes(local) ? [...remote, local] : remote
     run.set({ build: release.build.id, name: release.name, keys: ordered })
-    await Promise.all(ordered.filter(key => key !== local).map(key => applyOn(key, release.build.id)))
-    if (ordered.includes(local)) await applyOn(local, release.build.id)
+    await Promise.all(remote.map(key => applyOn(key, release.build.id)))
+    if (keys.includes(local)) await applyOn(local, release.build.id)
   }
 
   const retry = (key: string) => {
@@ -164,6 +172,7 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
     target,
     channel,
     run,
+    runRows,
     runFinished,
     busy,
     update,

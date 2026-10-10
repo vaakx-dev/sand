@@ -1,15 +1,14 @@
 import type { ProjectRef } from '@sand/protocol'
 import type { SyncExport, SyncInspect } from '../contract'
-import type { SyncCall } from './call'
-import { move, type Report } from './move'
-import { sendSnapshot } from './snapshot'
+import { move, type Report, type SyncCall } from './move'
+import { sendSnapshot } from './send'
 
-export interface CopyRun {
+interface CopyRun {
   setup?: string
   project?: string
 }
 
-export const copyProject = async (call: SyncCall, from: ProjectRef, to: ProjectRef, run: CopyRun = {}, report?: Report) => {
+export const copyProject = async (call: SyncCall, from: ProjectRef, to: ProjectRef, run: CopyRun, report?: Report) => {
   const inspected = await call<SyncInspect>({ type: 'sync.inspect', path: from.path }, from.device)
   if (inspected.blocked) throw new Error(inspected.blocked)
   if (inspected.git) {

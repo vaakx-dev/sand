@@ -12,7 +12,7 @@ export default definePlugin({
   name: 'github',
   description: 'GitHub pull request tools and skills: a short PR status in one call, waiting for checks and feedback, filing and babysitting PRs',
   inject: ['tools'],
-  uses: { skills: 'the agent gets no PR skills', server: 'the page cannot read a branch\'s PR' },
+  uses: { skills: 'the agent gets no PR skills', server: "the page cannot read a branch's PR" },
   apply(ctx) {
     ctx.effect(() => ctx.tools.register(statusTool))
     ctx.effect(() => ctx.tools.register(waitTool))

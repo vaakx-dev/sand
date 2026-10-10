@@ -1,4 +1,4 @@
-import { emphasis, text, type Emphasis } from '../nodes'
+import { emphasis, type Emphasis, type Inline } from '../nodes'
 
 export interface Delimiter {
   char: string
@@ -6,12 +6,16 @@ export interface Delimiter {
   count: number
   open: boolean
   close: boolean
-  node: Text
 }
 
-export type Item = Node | Delimiter
+export type Item = Inline | Delimiter
 
-const isDelimiter = (item: Item): item is Delimiter => !(item instanceof Node)
+interface Placed {
+  delimiter: Delimiter
+  index: number
+}
+
+const isDelimiter = (item: Item): item is Delimiter => typeof item !== 'string' && !(item instanceof Node)
 
 const isSpace = (char: string) => !char || /\s/.test(char)
 
@@ -27,7 +31,6 @@ export const delimiter = (char: string, length: number, before: string, after: s
     count: length,
     open: underscore ? left && (!right || isPunctuation(before)) : left,
     close: underscore ? right && (!left || isPunctuation(after)) : right,
-    node: text(char.repeat(length)),
   }
 }
 
@@ -38,41 +41,43 @@ const matches = (opener: Delimiter, closer: Delimiter) => {
   return !(ambiguous && (opener.length + closer.length) % 3 === 0 && (opener.length % 3 || closer.length % 3))
 }
 
-const toNodes = (items: Item[]) =>
-  items.flatMap(item => (isDelimiter(item) ? (item.node.data ? [item.node] : []) : [item]))
+const toInline = (items: Item[]) =>
+  items.flatMap(item => {
+    if (!isDelimiter(item)) return [item]
+    return item.count ? [item.char.repeat(item.count)] : []
+  })
 
 const kindOf = (char: string, use: number): Emphasis => {
   if (char === '~') return 'del'
   return use === 2 ? 'strong' : 'em'
 }
 
-const wrap = (items: Item[], openerIndex: number, closerIndex: number) => {
-  const opener = items[openerIndex] as Delimiter
-  const closer = items[closerIndex] as Delimiter
-  const use = closer.char === '~' ? closer.count : Math.min(2, opener.count, closer.count)
-  const node = emphasis(kindOf(closer.char, use), toNodes(items.slice(openerIndex + 1, closerIndex)))
-  opener.count -= use
-  closer.count -= use
-  opener.node.data = opener.char.repeat(opener.count)
-  closer.node.data = closer.char.repeat(closer.count)
-  items.splice(openerIndex + 1, closerIndex - openerIndex - 1, node)
-  return openerIndex + 2
+const findOpener = (items: Item[], closer: Placed): Placed | undefined => {
+  for (let index = closer.index - 1; index >= 0; index--) {
+    const item = items[index]!
+    if (isDelimiter(item) && matches(item, closer.delimiter)) return { delimiter: item, index }
+  }
+  return undefined
+}
+
+const wrap = (items: Item[], opener: Placed, closer: Placed) => {
+  const use = closer.delimiter.char === '~' ? closer.delimiter.count : Math.min(2, opener.delimiter.count, closer.delimiter.count)
+  const node = emphasis(kindOf(closer.delimiter.char, use), toInline(items.slice(opener.index + 1, closer.index)))
+  opener.delimiter.count -= use
+  closer.delimiter.count -= use
+  items.splice(opener.index + 1, closer.index - opener.index - 1, node)
+  return opener.index + 2
 }
 
 export const resolveEmphasis = (items: Item[]) => {
-  for (let closerIndex = 0; closerIndex < items.length; closerIndex++) {
-    const closer = items[closerIndex]!
-    if (!isDelimiter(closer) || !closer.close) continue
-    while (closer.count > 0) {
-      let openerIndex = closerIndex - 1
-      while (openerIndex >= 0) {
-        const candidate = items[openerIndex]!
-        if (isDelimiter(candidate) && matches(candidate, closer)) break
-        openerIndex--
-      }
-      if (openerIndex < 0) break
-      closerIndex = wrap(items, openerIndex, closerIndex)
+  for (let index = 0; index < items.length; index++) {
+    const delimiter = items[index]!
+    if (!isDelimiter(delimiter) || !delimiter.close) continue
+    while (delimiter.count > 0) {
+      const opener = findOpener(items, { delimiter, index })
+      if (!opener) break
+      index = wrap(items, opener, { delimiter, index })
     }
   }
-  return toNodes(items)
+  return toInline(items)
 }

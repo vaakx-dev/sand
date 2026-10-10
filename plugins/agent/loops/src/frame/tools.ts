@@ -1,6 +1,5 @@
 import type { ToolCallBlock, ToolResultBlock } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
-import type { Tools } from '@sand/tools/contract'
 import { errorResult, untilAborted } from '@sand/kit'
 import type { LoopsContext } from '../context'
 import { markExternal } from './fault'
@@ -26,22 +25,22 @@ const decide = async (ctx: LoopsContext, call: ToolCallBlock, session: Session, 
   }
 }
 
-const runCall = async (tools: Tools, call: ToolCallBlock, session: Session, signal: AbortSignal) => {
+const runCall = async (ctx: LoopsContext, call: ToolCallBlock, session: Session, signal: AbortSignal) => {
   try {
-    return await untilAborted(tools.run(call, { cwd: session.cwd, signal, session }), signal)
+    return await untilAborted(ctx.tools.run(call, { cwd: session.cwd, signal, session }), signal)
   } catch (error) {
     if (signal.aborted) return errorResult(call, 'Interrupted: the user stopped the turn before this call finished.')
     throw markExternal(error)
   }
 }
 
-export const runTools = (ctx: LoopsContext, tools: Tools, calls: ToolCallBlock[], session: Session, signal: AbortSignal) =>
+export const runTools = (ctx: LoopsContext, calls: ToolCallBlock[], session: Session, signal: AbortSignal) =>
   Promise.all(
     calls.map(async call => {
       const gate = await decide(ctx, call, session, signal)
       if ('result' in gate) return gate.result
       ctx.emit('tool.start', gate.run, session)
-      const result = await runCall(tools, gate.run, session, signal)
+      const result = await runCall(ctx, gate.run, session, signal)
       return ctx.waterfall('tool.result', result, gate.run, session)
     }),
   )

@@ -9,7 +9,7 @@ export interface FolderState {
   unmarked: Record<string, string>
 }
 
-export const emptyState = (): FolderState => ({ head: null, pending: null, ours: null, conflicts: [], unmarked: {} })
+const emptyState = (): FolderState => ({ head: null, pending: null, ours: null, conflicts: [], unmarked: {} })
 
 const file = (hidden: Hidden) => Bun.file(join(hidden.dir, 'state.json'))
 
@@ -21,3 +21,5 @@ export const readState = async (hidden: Hidden): Promise<FolderState> => {
 export const writeState = async (hidden: Hidden, state: FolderState) => {
   await Bun.write(file(hidden), JSON.stringify(state))
 }
+
+export const writeHead = (hidden: Hidden, head: string | null) => writeState(hidden, { ...emptyState(), head })

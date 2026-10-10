@@ -19,7 +19,7 @@ export default definePlugin({
       state: choices.state,
       defaults: () => canonical(ctx.llm, defaults.get()),
       update: updateSettings,
-      flags: () => flagSettings(ctx.cli?.flags, ctx.llm),
+      flags: () => flagSettings(ctx.cli.flags, ctx.llm),
     })
     ctx.on(
       'context.build',

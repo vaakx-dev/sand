@@ -1,6 +1,6 @@
 import { tildeHome } from '@sand/dom'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import type { ProjectsContext } from './types'
+import type { ProjectsContext } from '../context'
 
 export const shorten = (ctx: ProjectsContext, path: string, device?: string) => {
   const { home, sep } = ctx.projects.place(device)

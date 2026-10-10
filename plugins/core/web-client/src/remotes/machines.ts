@@ -2,36 +2,16 @@ import type { Remote } from '@sand/host-remotes/contract'
 import type { DeviceInfo } from '@sand/protocol'
 import type { ConnectionInfo, Machine, Machines, Wire } from '../contract'
 import type { Context } from 'drydock'
+import { hostOf } from '../connection/url'
+import type { HomeWire } from '../wire/wire'
 import type { Links } from './links'
 import { thisDevice } from './route'
 
-interface Home {
-  info(): ConnectionInfo
-  nudge(): void
-}
+const addressOf = (url: string | undefined) => (url ? hostOf(url) : undefined)
 
-const hostOf = (url: string | undefined) => {
-  if (!url) return undefined
-  try {
-    return new URL(url).host
-  } catch {
-    return url
-  }
-}
+const online = (connection: ConnectionInfo) => connection.status === 'connected'
 
-export const machineChanges = (ctx: Context) => {
-  let queued = false
-  return () => {
-    if (queued) return
-    queued = true
-    queueMicrotask(() => {
-      queued = false
-      ctx.emit('machines.change')
-    })
-  }
-}
-
-export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Links): Machines => {
+export const createMachines = (ctx: Context, wire: Wire, home: HomeWire, links: Links): Machines => {
   let self: DeviceInfo | undefined
 
   const refresh = async () => {
@@ -51,31 +31,27 @@ export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Link
       id: self?.id ?? 'local',
       name: self?.name ?? 'This PC',
       local: true,
-      online: connection.status === 'connected',
+      online: online(connection),
       platform: self?.platform,
-      address: hostOf(connection.url),
+      address: addressOf(connection.url),
       build: self?.build ?? connection.build,
       connection,
     }
   }
 
-  const list = (): Machine[] => [
-    localMachine(),
-    ...links.list().map(({ remote, info }) => {
-      const connection = info()
-      return {
-        id: remote.id,
-        device: remote.id,
-        name: remote.name,
-        local: false,
-        online: connection.status === 'connected',
-        platform: remote.platform,
-        address: hostOf(connection.url ?? remote.url),
-        build: connection.build ?? remote.build,
-        connection,
-      }
-    }),
-  ]
+  const remoteMachine = (remote: Remote, connection: ConnectionInfo): Machine => ({
+    id: remote.id,
+    device: remote.id,
+    name: remote.name,
+    local: false,
+    online: online(connection),
+    platform: remote.platform,
+    address: addressOf(connection.url ?? remote.url),
+    build: connection.build ?? remote.build,
+    connection,
+  })
+
+  const list = () => [localMachine(), ...links.list().map(link => remoteMachine(link.remote, link.info()))]
 
   const get = (id?: string) => list().find(machine => (id ? machine.id === id : machine.local))
 
@@ -87,7 +63,7 @@ export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Link
     async add(link) {
       const remote = await wire.call<Remote>({ type: 'remotes.add', link }, thisDevice)
       await refresh()
-      return list().find(machine => machine.id === remote.id)!
+      return get(remote.id)!
     },
     remove: id => wire.call({ type: 'remotes.remove', remote: id }, thisDevice).then(() => undefined),
     retry(id) {

@@ -1,7 +1,7 @@
 import type { Composer } from '@sand/composer-card/contract'
 import { effect, pulse, style, untrack, type Derive } from '@sand/dom'
 import { definePlugin, type Context } from 'drydock'
-import { toolName } from '../choices'
+import { toolName } from '../reply'
 import { openAsk } from './answering'
 import { serverAsks } from './asks'
 import { pendingAsk, type PendingAsk } from './pending'

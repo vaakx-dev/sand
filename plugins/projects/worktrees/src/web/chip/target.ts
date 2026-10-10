@@ -21,11 +21,9 @@ export const chipTarget = (ctx: WebContext, states: States, choices: Choices): C
   const thread = current && started(current) ? current : undefined
   const draft = current ? undefined : ctx.threads.drafting()
   const cwd = current?.info.cwd ?? draft?.cwd ?? ''
-  const device = current ? current.device : draft?.device
+  const device = current?.device ?? draft?.device
   return { thread, draft, cwd, device, state: current && !thread ? null : states.of(cwd, device), choice: choices.of(draft?.id) }
 }
-
-export const mainBranch = (state: WorktreeState) => state.worktrees.find(entry => entry.main)?.branch ?? state.branch
 
 export const chipLabel = ({ state, choice, thread }: ChipTarget): { text: string; glyph: IconName } => {
   if (!state) return { text: '', glyph: 'folder' }

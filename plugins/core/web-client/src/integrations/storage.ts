@@ -1,9 +1,11 @@
+import { isRecord } from '@sand/kit'
+
 const persistAsked = 'sand.persist'
 
-export const loadRecord = (key: string): object => {
+export const loadRecord = (key: string): Record<string, unknown> => {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? '{}')
-    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : {}
+    return isRecord(parsed) ? parsed : {}
   } catch {
     return {}
   }

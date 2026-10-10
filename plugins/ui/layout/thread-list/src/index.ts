@@ -1,12 +1,37 @@
-import { owned, place, pulse } from '@sand/dom'
-import { definePlugin } from 'drydock'
-import { lookupEpoch } from './epoch'
-import { threadNavList } from './nav-list'
+import { owned, place, pulse, type Nav } from '@sand/dom'
+import { definePlugin, type Context } from 'drydock'
+import { openDraft } from './draft'
+import { lookupEpoch } from './nav/epoch'
+import { threadNavList } from './nav/list'
 import { currentPlace } from './palette/places'
 import { newThreadPage } from './palette/projects'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 import { switcher } from './switcher'
+
+type Ctx = Context<'threads'>
+
+const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change', 'worktrees.change'] as const
+const roles = ['drafts', 'jobs', 'branches', 'worktrees'] as const
+
+const switcherBar = (ctx: Ctx, epoch: () => number, create: () => void) => {
+  const layer = ctx.layer()
+  const changes = pulse(layer, [...events], [...roles])
+  place(layer, 'top', owned(layer, () => switcher(threadNavList(ctx, epoch), changes, create)), 1)
+  return () => void layer.dispose()
+}
+
+const navThreads = (ctx: Ctx, nav: Nav, epoch: () => number, create: () => void) => {
+  const list = nav.list(threadNavList(ctx, epoch))
+  const action = nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create })
+  const update = () => list.update()
+  const disposers = [...events.map(name => ctx.on(name, update)), ...roles.map(role => ctx.watch(role, update)), wakeTimer(ctx, update)]
+  return () => {
+    disposers.forEach(dispose => void dispose?.())
+    action()
+    list.dispose()
+  }
+}
 
 export default definePlugin({
   name: 'thread-list',
@@ -30,32 +55,13 @@ export default definePlugin({
     notify: 'failed thread actions and copies are not reported',
   },
   apply(ctx) {
-    const threads = ctx.threads
-    const here = () => {
-      const place = currentPlace(ctx)
-      void threads.draft(place.path, place.device).then(() => ctx.composer?.focus())
+    const draftHere = () => {
+      const here = currentPlace(ctx)
+      void openDraft(ctx, here.path, here.device)
     }
-    const create = () => (ctx.palette ? ctx.palette.open(newThreadPage(ctx)) : here())
-    const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change', 'worktrees.change'] as const
+    const create = () => (ctx.palette ? ctx.palette.open(newThreadPage(ctx)) : draftHere())
     const epoch = lookupEpoch(ctx)
-
-    ctx.watch('nav', nav => {
-      if (!nav) {
-        const layer = ctx.layer()
-        const changes = pulse(layer, [...events], ['drafts', 'jobs', 'branches', 'worktrees'])
-        place(layer, 'top', owned(layer, () => switcher(threadNavList(ctx, epoch), changes, create)), 1)
-        return () => void layer.dispose()
-      }
-      const list = nav.list(threadNavList(ctx, epoch))
-      const action = nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create })
-      const update = () => list.update()
-      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update), ctx.watch('worktrees', update), wakeTimer(ctx, update)]
-      return () => {
-        disposers.forEach(dispose => void dispose?.())
-        action()
-        list.dispose()
-      }
-    })
+    ctx.watch('nav', nav => (nav ? navThreads(ctx, nav, epoch, create) : switcherBar(ctx, epoch, create)))
     ctx.watch('palette', palette => palette?.source(sessionSource(ctx)))
   },
 })

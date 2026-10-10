@@ -22,28 +22,27 @@ const row = (title: Child, detail: Child, ...controls: Child[]) =>
 const signedInRow = (state: GithubState, control: GithubControl) =>
   row(state.login, usedBy(state), rowAction({ label: 'Sign out', danger: true, run: () => void control.run({ type: 'github.logout' }) }))
 
-const signedOutRow = (state: GithubState, signIn: () => void) =>
-  row(
-    'GitHub',
-    state.gh.installed ? 'Sign in so agents on every PC can use gh and git push' : 'Install gh on this PC to sign in here, or sign in on another PC',
-    state.gh.installed ? secondaryAction({ size: 'sm', onClick: signIn }, 'Sign in') : null,
-  )
+const signedOutRow = ({ gh }: GithubState, signIn: () => void) =>
+  gh.installed
+    ? row('GitHub', 'Sign in so agents on every PC can use gh and git push', secondaryAction({ size: 'sm', onClick: signIn }, 'Sign in'))
+    : row('GitHub', 'Install gh on this PC to sign in here, or sign in on another PC')
 
 const warningText = (gh: GithubCli) =>
   gh.installed
     ? `gh ${gh.version} on this PC can't attach screenshots to PRs. Update to 2.99 or newer.`
     : "gh isn't installed on this PC, so agents here can't run gh."
 
-const warning = (gh: GithubCli) =>
-  gh.command
-    ? div(
-        { class: 'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-warning-950 px-4 py-2 text-xs text-warning-400' },
-        icon('alert', 14),
-        span({ class: 'min-w-48 flex-1' }, warningText(gh)),
-        span({ class: 'font-mono text-neutral-300' }, gh.command),
-        copyButton({ text: () => gh.command ?? '', label: gh.installed ? 'Copy update command' : 'Copy install command' }),
-      )
-    : null
+const warning = (gh: GithubCli) => {
+  const { command } = gh
+  if (!command) return null
+  return div(
+    { class: 'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-warning-950 px-4 py-2 text-xs text-warning-400' },
+    icon('alert', 14),
+    span({ class: 'min-w-48 flex-1' }, warningText(gh)),
+    span({ class: 'font-mono text-neutral-300' }, command),
+    copyButton({ text: () => command, label: gh.installed ? 'Copy update command' : 'Copy install command' }),
+  )
+}
 
 const view = (state: GithubState, control: GithubControl, signIn: () => void) =>
   div(
@@ -59,9 +58,9 @@ export const githubSection = (control: GithubControl, signIn: () => void) => {
       const state = control.state.get()
       return state ? JSON.stringify([state.login, state.from, state.pcs, state.gh]) : ''
     }),
-    key => {
+    () => {
       const state = control.state.get()
-      return key && state ? view(state, control, signIn) : div({ class: 'hidden' })
+      return state ? view(state, control, signIn) : null
     },
   )
 }

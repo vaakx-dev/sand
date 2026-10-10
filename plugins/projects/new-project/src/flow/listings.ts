@@ -1,7 +1,7 @@
 import type { FolderListing } from '@sand/host-projects/contract'
-import type { FlowContext } from './types'
+import type { ProjectsContext } from '../context'
 
-export const listings = (ctx: FlowContext, device?: string) => {
+export const listings = (ctx: ProjectsContext, device?: string) => {
   const loaded = new Map<string, FolderListing>()
   const pending = new Map<string, Promise<FolderListing>>()
   return {

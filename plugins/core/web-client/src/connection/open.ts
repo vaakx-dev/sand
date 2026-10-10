@@ -3,20 +3,16 @@ import { connect, type Connection } from '../integrations/socket'
 import type { Route } from './select'
 import { within } from './timeout'
 
-export interface Slot {
-  connection: Connection
-}
-
 export interface Opened {
-  slot: Slot
+  connection: Connection
   hello: Hello
   route: Route
   id: string
 }
 
-export interface SlotHandlers {
-  event(slot: Slot, event: WireEvent): void
-  close(slot: Slot): void
+export interface ConnectionHandlers {
+  event(connection: Connection, event: WireEvent): void
+  close(connection: Connection): void
   greeting(): WireRequestOf<'hello'>
 }
 
@@ -26,24 +22,23 @@ export const openRoute = async (
   route: Route,
   id: string,
   ticket: (base: string, host: string) => Promise<string>,
-  handlers: SlotHandlers,
+  handlers: ConnectionHandlers,
 ): Promise<Opened> => {
   const url = await ticket(route.url, id)
-  let slot: Slot | undefined
+  let opened: Connection | undefined
   const connection = await within(
     connect(url, {
-      event: event => slot && handlers.event(slot, event),
-      close: () => slot && handlers.close(slot),
+      event: event => opened && handlers.event(opened, event),
+      close: () => opened && handlers.close(opened),
     }),
     openWait,
     `${route.url} did not open a connection`,
     late => late.close(),
   )
-  const opened: Slot = { connection }
-  slot = opened
+  opened = connection
   try {
     const hello = await within(connection.call<Hello>(handlers.greeting()), openWait, `${route.url} did not say hello`)
-    return { slot: opened, hello, route, id }
+    return { connection, hello, route, id }
   } catch (error) {
     connection.close()
     throw error

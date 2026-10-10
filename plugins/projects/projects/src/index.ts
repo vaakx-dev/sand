@@ -1,6 +1,6 @@
 import { definePlugin } from 'drydock'
 import { projectCommand } from './command'
-import { serveIcons } from './serve'
+import { serveIcons } from './icon'
 
 export default definePlugin({
   name: 'projects',

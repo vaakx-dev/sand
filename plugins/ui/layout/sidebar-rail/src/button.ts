@@ -1,5 +1,5 @@
-import type { NavAction, NavItem } from '@sand/dom'
-import { div, dynamicChild, icon, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
+import type { NavAction, NavItem, Tone } from '@sand/dom'
+import { div, dot, dynamicChild, icon, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [
   'relative flex h-10 shrink-0 items-center gap-3 rounded-lg transition-colors',
@@ -10,14 +10,29 @@ const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [
 const label = (narrow: Sig<boolean>, strong: () => boolean, text: () => string) =>
   span({ class: () => (narrow.get() ? ['min-w-0 flex-1 truncate text-left text-sm', strong() ? 'font-semibold text-neutral-100' : ''] : 'hidden') }, text)
 
-const corner = { top: 0, right: 0, transform: 'translate(50%, -50%)' }
+const corner = { transform: 'translate(50%, -50%)' }
+
+const toneOf = (item: NavItem): Tone | undefined => {
+  if (item.state === 'running') return 'accent'
+  if (item.state === 'background') return 'sky'
+  if (item.state === 'waiting') return 'warning'
+  if (item.unread) return 'orange'
+  return undefined
+}
 
 const badge = (item: NavItem) => {
   if (item.state === 'draft')
-    return span({ class: 'absolute flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white ring-2 ring-neutral-950', style: corner }, icon('pencil', 8))
-  const tone = item.state === 'running' ? 'bg-accent-400' : item.state === 'background' ? 'bg-sky-400' : item.state === 'waiting' ? 'bg-warning-400' : item.unread ? 'bg-orange-400' : ''
-  return tone ? span({ class: ['absolute h-2 w-2 rounded-full ring-2 ring-neutral-950', tone], style: corner }) : span({ class: 'hidden' })
+    return span({ class: 'absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white ring-2 ring-neutral-950', style: corner }, icon('pencil', 8))
+  const tone = toneOf(item)
+  if (!tone) return null
+  return span({ class: 'absolute top-0 right-0 flex rounded-full ring-2 ring-neutral-950', style: corner }, dot(tone))
 }
+
+const avatar = (item: NavItem) =>
+  span(
+    { class: 'flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold text-white', style: { background: projectColor(item.project ?? item.title) } },
+    initials(item.title),
+  )
 
 export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: (action: NavAction) => void, busy: (id: string) => boolean) =>
   plainButton(
@@ -39,11 +54,7 @@ export const itemButton = (entry: Sig<NavEntry>, narrow: Sig<boolean>, drag: Reo
       { class: 'relative flex shrink-0' },
       dynamicChild(
         item.map(value => `${value.project ?? value.title}|${value.title}`),
-        () =>
-          span(
-            { class: 'flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold text-white', style: { background: projectColor(item.get().project ?? item.get().title) } },
-            initials(item.get().title),
-          ),
+        () => avatar(item.get()),
       ),
       dynamicChild(
         item.map(value => `${value.state}|${value.unread}`),

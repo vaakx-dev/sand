@@ -1,11 +1,10 @@
-import type { Hello } from '@sand/protocol'
+import type { WireRequest } from '@sand/protocol'
 import type { OpenedSession } from '@sand/server/contract'
 import type { SessionInfo } from '@sand/sessions-sqlite/contract'
-import type { NewThread, Thread, Threads, Wire } from '../contract'
+import type { NewThread, Projects, Thread, Threads, Wire } from '../contract'
 import { isInside, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { requestedSession, sessionLink, showSession } from './address'
-import { followHeads } from './heads'
 import { applyHello } from './hello'
 import { threadLoader } from './loading'
 import { threadPages } from './pages'
@@ -13,13 +12,32 @@ import { hasOlder, pathOf } from './path'
 import { trackSeen } from './seen'
 import type { Store } from './store'
 
-type Extra = { adopt(opened: OpenedSession, device?: string): Thread; restored(): void }
+export interface ThreadService extends Threads {
+  adopt(opened: OpenedSession, device?: string): Thread
+  restored(): void
+}
 
-export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>): Threads & Extra => {
+export const createThreads = (
+  ctx: Context,
+  wire: Wire,
+  store: Store,
+  projects: Projects,
+  hydrate: (id: string) => Promise<void>,
+): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
+  let greeted = false
 
-  const focus = (id: string | undefined) => void wire.call({ type: 'ui.focus', ...(id && { session: id }) }).catch(() => {})
+  const missing = (path: string) => projects.list().some(project => !project.device && project.path === path && project.missing)
+
+  const recentFolder = () => {
+    const scratch = wire.hello()?.scratch ?? ''
+    const usable = ({ device, info }: Thread) =>
+      !device && info.kind !== 'agent' && info.cwd && !isInside(info.cwd, scratch) && !missing(info.cwd)
+    return [...store.threads.values()].filter(usable).sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
+  }
+
+  const cwd = () => store.currentThread()?.info.cwd ?? store.draft?.cwd ?? recentFolder() ?? ''
 
   const show = (id: string | undefined, idle = false) => {
     store.idle = !id && idle
@@ -36,59 +54,33 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
 
   const open = async (id: string | undefined, idle = false) => {
     const thread = show(id, idle)
-    focus(id)
+    void wire.call({ type: 'ui.focus', ...(id && { session: id }) }).catch(() => {})
     if (id && !thread?.loaded) await load(id)
   }
 
   const select = (id: string | undefined) => open(id)
-
-  let greeted = false
-
-  const restored = () => {
-    const asked = requestedSession()
-    if (!greeted && asked && store.threads.has(asked)) show(asked)
-  }
 
   const openAsked = async (asked: string | undefined) => {
     if (asked && !store.threads.has(asked)) await load(asked)
     await open(asked && store.threads.has(asked) ? asked : undefined, true)
   }
 
-  const greet = (hello: Hello) => {
+  ctx.on('wire.hello', hello => {
     applyHello(store, hello)
-    const first = !greeted
+    if (greeted) return void open(store.current, store.idle)
     greeted = true
-    if (first) void openAsked(requestedSession())
-    else void open(store.current, store.idle)
-  }
-
-  ctx.on('wire.hello', greet)
+    void openAsked(requestedSession())
+  })
   trackSeen(ctx, wire, store)
-  followHeads(ctx, store, load)
 
-  const call = (request: Parameters<Wire['call']>[0]) => wire.call(request).then(() => undefined)
-  const missing = (path: string) => Boolean(ctx.projects?.list().some(project => !project.device && project.path === path && project.missing))
-  const recentFolder = () => {
-    const scratch = wire.hello()?.scratch ?? ''
-    return [...store.threads.values()]
-      .filter(
-        thread =>
-          !thread.device &&
-          thread.info.kind !== 'agent' &&
-          thread.info.cwd &&
-          !isInside(thread.info.cwd, scratch) &&
-          !missing(thread.info.cwd),
-      )
-      .sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
-  }
-
-  const current = () => (store.current ? store.threads.get(store.current) : undefined)
-
-  const cwd = () => current()?.info.cwd ?? store.draft?.cwd ?? recentFolder() ?? ''
+  const call = (request: WireRequest) => wire.call(request).then(() => undefined)
 
   return {
     adopt: install,
-    restored,
+    restored() {
+      const asked = requestedSession()
+      if (!greeted && asked && store.threads.has(asked)) show(asked)
+    },
     cwd,
     device: () => store.device(),
     async draft(folder, device, id = uuid()) {
@@ -99,7 +91,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
     idle: () => store.idle,
     list: () => [...store.threads.values()],
     get: id => store.threads.get(id),
-    current,
+    current: () => store.currentThread(),
     select,
     load,
     async create(options: NewThread = {}) {
@@ -156,6 +148,6 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
       }
       return call({ type: 'session.move', session: id, position })
     },
-    command: (name, args = '') => call({ type: 'ui.command', name, args, session: current()?.id, cwd: cwd() }),
+    command: (name, args = '') => call({ type: 'ui.command', name, args, session: store.currentThread()?.id, cwd: cwd() }),
   }
 }

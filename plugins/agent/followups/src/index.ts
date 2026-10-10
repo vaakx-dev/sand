@@ -10,6 +10,11 @@ export default definePlugin({
   name: 'followups',
   description: 'Follow-ups queued while a turn runs; the next one starts when the turn ends',
   inject: ['cli', 'loop', 'sessions'],
+  uses: {
+    ui: 'follow-ups that fail to start or save fail silently',
+    steering: 'a follow-up sent during a turn cannot join it',
+    server: 'the page cannot queue follow-ups',
+  },
   async apply(ctx) {
     const store = await createStore(ctx.cli.home)
     let live = true
@@ -35,6 +40,12 @@ export default definePlugin({
 
     const start = (session: Session, item: Pending) =>
       void ctx.loop.run(session, item.prompt).catch(error => ctx.ui?.notify(errorMessage(error), 'error'))
+
+    const next = (session: Session) => {
+      if (!live || draining || ctx.loop.active(session)) return
+      const [first] = store.get(session.id)
+      if (first && take(session, first.id)) start(session, first)
+    }
 
     const followUps: FollowUps = {
       list: session => store.get(session.id),
@@ -71,12 +82,6 @@ export default definePlugin({
         if (!ctx.steering?.steer(session, item.prompt, item.label)) start(session, item)
         return true
       },
-    }
-
-    const next = (session: Session) => {
-      if (!live || draining || ctx.loop.active(session)) return
-      const [first] = store.get(session.id)
-      if (first && take(session, first.id)) start(session, first)
     }
 
     ctx.on('turn.end', (session, result) => {

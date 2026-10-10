@@ -3,13 +3,12 @@ import { dim, done, notice } from '@sand/kit/host'
 import type { Daemon } from '@sand/protocol'
 import { waitForAccounts } from './accounts'
 import { UnhealthyError, waitForHealth } from './health'
-import type { Installer } from './installer'
 import { joinPcs } from './pair'
 import { copyPlugins } from './plugins'
 import { reportDone, reportFail, reportSharing } from './remote'
-import { checkInstalled, installedRoot, openSand, placeApp, printFailure, skipStart, startHost } from './steps'
+import { checkInstalled, installedRoot, openSand, placeApp, printFailure, skipStart, startHost, type Installer } from './steps'
 
-export interface Pairing {
+interface Pairing {
   base: string
   secret: string
 }
@@ -32,7 +31,7 @@ const shareAccounts = async (daemon: Daemon, { base, secret }: Pairing, from: { 
   return accounts
 }
 
-const join = async (pairing: Pairing, { home, daemon }: Installer) => {
+const joinOtherPc = async (pairing: Pairing, { home, daemon }: Installer) => {
   const root = installedRoot()
   await checkInstalled(root, home)
   await sendPlugins(pairing, home)
@@ -48,7 +47,7 @@ const join = async (pairing: Pairing, { home, daemon }: Installer) => {
 
 export const installPaired = async (pairing: Pairing, installer: Installer) => {
   try {
-    if (!(await join(pairing, installer))) return
+    if (!(await joinOtherPc(pairing, installer))) return
   } catch (error) {
     const message = errorMessage(error)
     await reportFail(pairing.base, pairing.secret, message, error instanceof UnhealthyError ? error : undefined)

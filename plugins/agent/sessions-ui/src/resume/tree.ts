@@ -1,6 +1,6 @@
 import type { SessionSummary } from '@sand/sessions-sqlite/contract'
 
-export interface Threaded {
+interface Threaded {
   session: SessionSummary
   prefix: string
 }
@@ -11,22 +11,27 @@ interface Node {
   latest: number
 }
 
-const latest = (node: Node): number => (node.latest = Math.max(node.session.updated, ...node.children.map(latest)))
+const settleLatest = (node: Node): number => {
+  node.latest = Math.max(node.session.updated, ...node.children.map(settleLatest))
+  return node.latest
+}
 
 const order = (nodes: Node[]) => {
   nodes.sort((a, b) => b.latest - a.latest)
   for (const node of nodes) order(node.children)
 }
 
+const nodeOf = (session: SessionSummary): Node => ({ session, children: [], latest: session.updated })
+
 export const thread = (sessions: SessionSummary[]) => {
-  const nodes = new Map(sessions.map(session => [session.id, { session, children: [], latest: session.updated } as Node]))
+  const nodes = new Map(sessions.map(session => [session.id, nodeOf(session)]))
   const roots: Node[] = []
   for (const node of nodes.values()) {
     const parent = node.session.parent ? nodes.get(node.session.parent) : undefined
     if (parent) parent.children.push(node)
     else roots.push(node)
   }
-  roots.forEach(latest)
+  roots.forEach(settleLatest)
   order(roots)
   const rows: Threaded[] = []
   const walk = (node: Node, lines: string, depth: number, last: boolean) => {

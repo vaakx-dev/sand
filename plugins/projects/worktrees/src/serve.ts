@@ -1,17 +1,17 @@
 import type { Server } from '@sand/server/contract'
+import type { Ops } from './ops/context'
+import type { Intents } from './ops/intents'
 import { listState } from './ops/list'
 import { marksOf } from './ops/marks'
 import { moveSession } from './ops/move'
+import type { Naming } from './ops/naming'
 import { removeSessionWorktree, removeWorktreeAt } from './ops/remove'
 import { restoreSession } from './ops/restore'
-import type { Intents } from './ops/intents'
-import type { Naming } from './ops/naming'
-import type { Ops } from './ops/types'
 
 const prOf = (value: unknown) => (typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : undefined)
 
-export const serveWorktrees = (server: Server, ops: Ops, intents: Intents, naming: Naming) => {
-  return server.handle({
+export const serveWorktrees = (server: Server, ops: Ops, intents: Intents, naming: Naming) =>
+  server.handle({
     'worktrees.list': ({ cwd }) => listState(ops, String(cwd ?? '')),
     'worktrees.of': ({ cwds }) => marksOf(cwds),
     'worktrees.intend': ({ session, intent }) => intents.intend(session, intent),
@@ -24,4 +24,3 @@ export const serveWorktrees = (server: Server, ops: Ops, intents: Intents, namin
     'worktrees.name': ({ path, name }) => naming.nameAt(path, name),
     'worktrees.drop': ({ path }) => removeWorktreeAt(ops, path),
   })
-}

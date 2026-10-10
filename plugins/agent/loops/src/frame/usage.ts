@@ -12,10 +12,10 @@ export const track = (state: TurnState, usage: Usage, model?: string, source?: S
   state.sources.set(key, { ...(model && { model }), ...(source && { source }), usage: sumUsage(group?.usage ?? emptyUsage(), usage) })
 }
 
-export const record = (session: Session, state: TurnState, llm: LLM | undefined) => {
+export const record = (session: Session, state: TurnState, llm: LLM) => {
   for (const { model, source, usage } of state.sources.values()) {
     if (!tokensOf(usage)) continue
-    const data: UsageRecord = { id: Bun.randomUUIDv7(), ...(model && { model }), ...usageSource(llm?.provider?.(model), source), usage }
+    const data: UsageRecord = { id: Bun.randomUUIDv7(), ...(model && { model }), ...usageSource(llm.provider?.(model), source), usage }
     session.append('usage', data)
   }
 }

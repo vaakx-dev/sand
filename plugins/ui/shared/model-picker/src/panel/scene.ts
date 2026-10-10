@@ -27,6 +27,7 @@ export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: V
   const sources = ctx.models.sources()
   const settings = ctx.settings
   const pick = (model: ModelInfo) => target.set({ model: model.id })
+  const sourceOf = (model: ModelInfo) => sources.find(source => source.id === model.source)
   return {
     shown,
     defaults: ctx.models.defaults(),
@@ -34,14 +35,14 @@ export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: V
     models: ctx.models.list(),
     sources,
     fresh: model => Boolean(model.fresh) || view.fresh.has(model.id),
-    source: model => sources.find(source => source.id === model.source),
+    source: sourceOf,
     offline: source => (source?.via ? (pcs.online(source.via) ?? source.online) === false : false),
     pick,
     menu: view.menu,
     menuOf: model =>
       modelMenu({
         model,
-        subtitle: sources.find(source => source.id === model.source)?.label,
+        subtitle: sourceOf(model)?.label,
         notify: ctx.notify,
         use: () => pick(model),
         ...(ctx.wire && {

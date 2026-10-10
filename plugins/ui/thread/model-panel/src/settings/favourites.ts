@@ -1,9 +1,9 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { contextMenu, derive, div, hint, list, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
+import { favouritesOf } from '@sand/kit'
 import type { Kit } from './kit'
 import { settingsMenu } from './menu'
 import { crumb, logo } from './parts'
-import { favouritesOf } from './sources'
 import { starButton, starIcon } from './star'
 
 const sourceText = (kit: Kit, model: ModelInfo) => {

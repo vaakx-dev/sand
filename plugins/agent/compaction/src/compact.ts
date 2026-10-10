@@ -60,7 +60,10 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
       }
       after = requestTokens(rewrite([...path, draft(session, record)], request))
       session.append('compaction', { ...record, after } satisfies CompactionRecord)
-      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm.provider?.(request.model), source), usage } satisfies UsageRecord)
+      if (usage) {
+        const tags = usageSource(ctx.llm.provider?.(request.model), source)
+        session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...tags, usage } satisfies UsageRecord)
+      }
       tracker.reset(session.id)
       return after
     } finally {

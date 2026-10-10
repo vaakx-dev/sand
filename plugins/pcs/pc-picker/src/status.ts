@@ -5,13 +5,13 @@ import { relationLabel } from '@sand/sync/flows'
 import { copyOn } from './group'
 import { refOf, type PickerContext } from './target'
 
-export interface Neighbour {
+interface Neighbour {
   entry: ProjectEntry
   machine: Machine
   relation: SyncRelation
 }
 
-export interface RowStatus {
+interface RowStatus {
   tone: Tone
   text: string
   muted?: boolean
@@ -27,7 +27,7 @@ const tones: Record<SyncRelation, Tone> = {
   unlinked: 'neutral',
 }
 
-export const neighbours = (ctx: PickerContext, group: ProjectGroup, location: ProjectEntry): Neighbour[] =>
+const neighbours = (ctx: PickerContext, group: ProjectGroup, location: ProjectEntry): Neighbour[] =>
   group.locations.flatMap(entry => {
     if (entry.device === location.device || entry.missing) return []
     const machine = ctx.machines.get(entry.device)

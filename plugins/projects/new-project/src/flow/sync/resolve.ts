@@ -2,7 +2,7 @@ import type { ProjectRef } from '@sand/host-projects/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { SyncPick } from '@sand/sync/contract'
 import type { Sync } from '../../contract'
-import type { FlowContext } from '../types'
+import type { ProjectsContext } from '../../context'
 import { mergePage } from './merge'
 import { otherPcName, projectName } from './names'
 
@@ -18,7 +18,7 @@ const conflictItem = (file: string, other: string, pick: (file: string, side: Sy
   ],
 })
 
-export const resolvePage = (ctx: FlowContext, sync: Sync, ref: ProjectRef): PalettePage => {
+const resolvePage = (ctx: ProjectsContext, sync: Sync, ref: ProjectRef): PalettePage => {
   const name = projectName(ctx, ref)
   const here = ctx.machines.name(ref.device)
   const other = otherPcName(ctx, ref)
@@ -45,4 +45,4 @@ export const resolvePage = (ctx: FlowContext, sync: Sync, ref: ProjectRef): Pale
   }
 }
 
-export const openResolve = (ctx: FlowContext, sync: Sync, ref: ProjectRef) => ctx.palette?.open(resolvePage(ctx, sync, ref))
+export const openResolve = (ctx: ProjectsContext, sync: Sync, ref: ProjectRef) => ctx.palette?.open(resolvePage(ctx, sync, ref))

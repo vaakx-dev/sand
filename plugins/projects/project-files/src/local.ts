@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { isQuietFolder, nearestRoot, parseProjectsFile, projectsPath, samePath } from '@sand/kit/fs'
 import { readFileSync, statSync } from 'node:fs'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
@@ -28,8 +29,8 @@ const readText = (path: string) => {
 
 const readDevice = (home: string) => {
   try {
-    const { id } = JSON.parse(readText(join(home, 'device.json')) ?? '{}')
-    return typeof id === 'string' && id ? id : undefined
+    const saved: unknown = JSON.parse(readText(join(home, 'device.json')) ?? '{}')
+    return isRecord(saved) && typeof saved.id === 'string' && saved.id ? saved.id : undefined
   } catch {
     return undefined
   }

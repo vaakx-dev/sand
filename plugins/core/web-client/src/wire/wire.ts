@@ -4,28 +4,23 @@ import type { Context } from 'drydock'
 import { pairFragment } from '../auth/fragment'
 import { createHostAuth } from '../auth/host'
 import { hostKeys } from '../auth/keys'
+import type { Cache } from '../cache/service'
 import { homeHost, setHomeHost } from '../connection/book'
-import type { HelloKeep } from '../connection/hello'
-import { createPcConnection, type PcConnection } from '../connection/pc'
+import { createPcConnection } from '../connection/pc'
+import { coalesced } from '../detached'
 
 export interface HomeWire extends Wire {
   info(): ConnectionInfo
   nudge(): void
 }
 
-export const startWire = (
-  ctx: Context,
-  changed: () => void,
-  since: () => string | undefined,
-  gate: (host: string) => Promise<void>,
-  kept: HelloKeep,
-): HomeWire => {
+export const startWire = (ctx: Context, cache: Cache, since: () => string | undefined): HomeWire => {
   const fragment = pairFragment()
-  let pc: PcConnection | undefined
+  const machinesChanged = coalesced(ctx, () => ctx.emit('machines.change'))
   let hello: Hello | undefined
   let state: WireState = 'connecting'
   const auth = createHostAuth({
-    base: () => pc?.base() ?? location.origin,
+    base: () => home.base() ?? location.origin,
     offer() {
       const secret = fragment.take()
       return secret ? { secret } : undefined
@@ -36,7 +31,7 @@ export const startWire = (
     seeds: () => [location.origin],
     expected: homeHost,
     trusted: () => location.origin,
-    ticket: (base, host) => gate(host).then(() => auth.socketUrl(base, host)),
+    ticket: (base, host) => cache.gate(host).then(() => auth.socketUrl(base, host)),
     offline: 'Not connected to the sand server',
     event: event => ctx.emit('wire.event', event),
     since,
@@ -45,18 +40,16 @@ export const startWire = (
       ctx.emit('wire.hello', next)
     },
     changed() {
-      if (!pc) return
-      const next = pc.state()
+      const next = home.state()
       if (next !== state) {
         state = next
         ctx.emit('wire.state', next)
       }
-      changed()
+      machinesChanged()
     },
     identified: setHomeHost,
-    kept,
+    kept: { load: () => cache.saved('hello'), save: saved => cache.keep('hello', saved) },
   })
-  pc = home
   ctx.effect(() => () => home.close())
   ctx.effect(() =>
     fragment.watch(() => {
@@ -74,8 +67,8 @@ export const startWire = (
     state: home.state,
     hello: () => hello,
     pairing: auth.pairing,
-    call: request => home.call(request),
-    fetch: (path, init) => auth.fetch(path, init),
+    call: home.call,
+    fetch: auth.fetch,
     info: home.info,
     nudge: home.nudge,
   }

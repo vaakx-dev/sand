@@ -37,7 +37,6 @@ export type RenderEntry = (entry: Entry, thread: string) => HTMLElement | undefi
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
-  scrollToEnd(): void
 }
 
 export type Step = { kind: 'tool'; key: string; tool: ToolView } | { kind: 'thinking'; key: string; text: string; streaming: boolean }
@@ -79,7 +78,7 @@ export interface OpenState {
 }
 
 export interface OpenStates {
-  get(key: string, fallback?: () => boolean): OpenState
+  get(key: string): OpenState
 }
 
 export interface RendererRegistry {
@@ -104,20 +103,20 @@ export interface TextMenu {
 }
 
 export interface MenuKit {
-  text(menu: ContextMenu, spec: () => MenuSpec | undefined, within?: (node: HTMLElement) => Element | null): TextMenu
+  text(menu: ContextMenu, spec: () => MenuSpec | undefined): TextMenu
   copy(id: string, label: string, text: () => string, what: string): NavAction
 }
 
 export interface ItemCache {
-  items(thread: Thread, path: () => Entry[], custom: (type: string) => boolean, describe?: DescribeSettings): Item[]
+  items(thread: Thread, path: () => Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Item[]
   reset(): void
 }
 
 export interface TranscriptParts {
-  items(thread: Thread, path: Entry[], custom: (type: string) => boolean, describe?: DescribeSettings): Item[]
+  items(thread: Thread, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Item[]
   itemCache(): ItemCache
   sections(text: string): string[]
-  registry(changed?: () => void): RendererRegistry
+  registry(changed: () => void): RendererRegistry
   openStates(): OpenStates
   menus: MenuKit
   toolStep(tool: Sig<ToolView>, options: ToolStepOptions): HTMLElement

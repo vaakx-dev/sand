@@ -1,45 +1,23 @@
 import type { PluginLibrary } from '@sand/host-plugin-library/contract'
-import { errorMessage, sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { whenShown } from '../shown'
-
-type Action = 'plugins.customise' | 'plugins.keep' | 'plugins.restore'
+import { wireState } from '../wire-state'
 
 export const librarySource = (ctx: Context<'wire'>) => {
-  const library = sig<PluginLibrary | undefined>(undefined)
-  const busy = sig<string | undefined>(undefined)
-
-  const fail = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
-
-  const load = () => {
-    ctx.wire.call<PluginLibrary>({ type: 'plugins.library' }).then(next => library.set(next), fail)
-  }
-
-  const run = async (type: Action, plugin: string) => {
-    busy.set(plugin)
-    try {
-      library.set(await ctx.wire.call<PluginLibrary>({ type, plugin }))
-      return true
-    } catch (error) {
-      fail(error)
-      return false
-    } finally {
-      busy.set(undefined)
-    }
-  }
+  const { value: library, busy, fail, load, run } = wireState<PluginLibrary>(ctx)
 
   const customise = async (plugin: string) => {
-    if (await run('plugins.customise', plugin))
+    if (await run(plugin, { type: 'plugins.customise', plugin }))
       ctx.notify?.push(`${plugin} is now your copy in ~/.sand/plugins/${plugin}. Run /reload to use it.`)
   }
 
   const restore = async (plugin: string) => {
-    if (await run('plugins.restore', plugin)) ctx.notify?.push(`Removed your copy of ${plugin}. Run /reload to use the built-in.`)
+    if (await run(plugin, { type: 'plugins.restore', plugin })) ctx.notify?.push(`Removed your copy of ${plugin}. Run /reload to use the built-in.`)
   }
 
-  const keep = (plugin: string) => void run('plugins.keep', plugin)
+  const keep = (plugin: string) => void run(plugin, { type: 'plugins.keep', plugin })
 
-  const refresh = whenShown(ctx, load)
+  const refresh = whenShown(ctx, () => load({ type: 'plugins.library' }))
   ctx.on('wire.event', event => {
     if (event.name === 'plugins.library') library.set(event.args[0])
     if (event.name === 'plugins.change') refresh()

@@ -6,13 +6,13 @@ import { summaryHandler } from './summary/serve'
 
 const stale = 60_000
 
+const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
+
 export default definePlugin({
   name: 'usage',
   description: 'Plan limits in /usage, plus token and cost totals for the usage page and sand usage',
   inject: ['ui'],
   apply(ctx) {
-    const current = () => limitsOf(ctx.llm)
-
     const nameOf = (limits: Limits) => {
       const source = ctx.llm?.sources?.().find(found => found.id === limits.source)
       const label = source?.label ?? limits.source ?? 'Claude Code'
@@ -30,11 +30,11 @@ export default definePlugin({
         name: 'usage',
         description: 'Show how much of your plan limits is left',
         async run() {
-          let limits = current()
-          if ((!limits.length || limits.some(found => Date.now() - found.updated > stale)) && ctx.llm?.refreshLimits) {
+          let limits = limitsOf(ctx.llm)
+          if (outdated(limits) && ctx.llm?.refreshLimits) {
             ctx.ui.notify('Checking usage…')
             await ctx.llm.refreshLimits()
-            limits = current()
+            limits = limitsOf(ctx.llm)
           }
           if (!limits.length) return ctx.ui.notify('None of your accounts report plan limits')
           ctx.ui.report('Usage', report(limits, nameOf))

@@ -12,7 +12,8 @@
     "summary": "/new, /resume, /fork and /clone, and moving threads between PCs",
     "uses": {
       "loop": "a running thread can be forked or cloned mid-turn",
-      "server": "threads can't be continued on another PC"
+      "server": "threads can't be continued on another PC",
+      "tools": "a moved thread's note leaves out this PC's tool notes"
     }
   },
   "dependencies": {

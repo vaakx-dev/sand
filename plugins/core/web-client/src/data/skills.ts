@@ -2,6 +2,7 @@ import type { WireRequest } from '@sand/protocol'
 import type { SkillSummary } from '@sand/skills/contract'
 import type { SkillIndex, Threads, Wire } from '../contract'
 import type { Context } from 'drydock'
+import { coalesced } from '../detached'
 
 const listRequest = (threads: Threads): WireRequest => {
   const current = threads.current()
@@ -12,25 +13,18 @@ const listRequest = (threads: Threads): WireRequest => {
 
 export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): SkillIndex => {
   let skills: SkillSummary[] = []
-  let sequence = 0
-  let queued = false
+  let asked = 0
   const set = (next: SkillSummary[]) => {
     skills = next
     ctx.emit('skills.change')
   }
-  const ask = () => {
-    queued = false
-    const ticket = ++sequence
+  const refresh = coalesced(ctx, () => {
+    const ticket = ++asked
     wire.call<SkillSummary[]>(listRequest(threads)).then(
-      next => ticket === sequence && set(next),
+      next => ticket === asked && set(next),
       () => {},
     )
-  }
-  const refresh = () => {
-    if (queued) return
-    queued = true
-    queueMicrotask(ask)
-  }
+  })
   ctx.on('wire.hello', hello => {
     set(hello.skills)
     refresh()

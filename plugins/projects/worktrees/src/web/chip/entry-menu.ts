@@ -11,24 +11,27 @@ const lost = (entry: WorktreeEntry) => {
 export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: WorktreeEntry, device: string | undefined, use: () => void): MenuSpec => {
   const fail = (what: string) => (error: unknown) => ctx.notify?.push(`Could not ${what}: ${errorMessage(error)}`, { level: 'error' })
   const copy = (text: string, what: string) => () => copyWithNotice(ctx.notify, text, what)
-  const branch = entry.branch
+  const branch = entry.branch ?? ''
   const actions: (NavAction | false)[] = [
     { id: 'use', label: 'Start a thread here', icon: 'branch', group: 'use', run: use },
-    Boolean(branch) && {
+    !!branch && {
       id: 'rename',
       label: 'Rename branch…',
       icon: 'pencil',
       group: 'name',
       ask: {
-        placeholder: branch ?? '',
+        placeholder: branch,
         tip: 'New branch name',
         submit: 'Rename',
-        preview: text => (text.trim() && text.trim() !== branch ? `Rename to ${text.trim()}` : undefined),
+        preview: text => {
+          const name = text.trim()
+          return name && name !== branch ? `Rename to ${name}` : undefined
+        },
         run: text => client.nameAt(entry.path, text.trim(), device).catch(fail('rename the branch')),
       },
       run: () => {},
     },
-    Boolean(branch?.startsWith('sand/')) && {
+    branch.startsWith('sand/') && {
       id: 'regenerate',
       label: 'Regenerate name',
       icon: 'sparkles',
@@ -36,7 +39,7 @@ export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: Worktr
       run: () => client.nameAt(entry.path, undefined, device).catch(fail('rename the worktree')),
     },
     { id: 'copy-path', label: 'Copy path', icon: 'folder', group: 'copy', run: copy(entry.path, 'path') },
-    Boolean(branch) && { id: 'copy-branch', label: 'Copy branch name', icon: 'copy', group: 'copy', run: copy(branch ?? '', 'branch name') },
+    !!branch && { id: 'copy-branch', label: 'Copy branch name', icon: 'copy', group: 'copy', run: copy(branch, 'branch name') },
     {
       id: 'delete',
       label: 'Delete worktree',
@@ -47,5 +50,5 @@ export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: Worktr
       run: () => client.drop(entry.path, device).catch(fail('delete the worktree')),
     },
   ]
-  return { title: branch ?? tildeHome(entry.path), subtitle: tildeHome(entry.path), actions: actions.filter(action => action !== false) }
+  return { title: branch || tildeHome(entry.path), subtitle: tildeHome(entry.path), actions: actions.filter(action => action !== false) }
 }

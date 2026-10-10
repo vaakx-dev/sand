@@ -7,6 +7,10 @@ export default definePlugin({
   name: 'steering',
   description: 'Steers sent while a turn runs; the loop picks them up at its next step',
   inject: ['loop', 'sessions'],
+  uses: {
+    server: 'the page cannot steer a running turn',
+    followUps: 'queued follow-ups are not shown with steers',
+  },
   apply(ctx) {
     const queues = createQueues(session => ctx.emit('turn.queue', session))
 

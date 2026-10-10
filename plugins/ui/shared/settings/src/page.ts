@@ -1,4 +1,4 @@
-import { appIcon, derive, div, dismissible, dynamicChild, el, icon, iconButton, show, type Sig } from '@sand/dom'
+import { appIcon, derive, div, dismissible, dynamicChild, h1, icon, iconButton, show, type Sig } from '@sand/dom'
 import type { SettingsPage } from './contract'
 import type { PageStore } from './pages'
 
@@ -11,25 +11,24 @@ export interface PageParts {
 
 export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
   const page = derive(() => store.pages.get().find(candidate => candidate.id === store.current.get()))
-  const extras = (above: boolean) =>
+  const sections = (above: boolean) =>
     dynamicChild(
       derive(() => store.sections.get().filter(section => section.page === page.get()?.id && (section.order ?? 0) < 0 === above)),
-      sections => div({ class: 'contents' }, ...sections.map(section => section.render())),
+      shown => div({ class: 'contents' }, ...shown.map(section => section.render())),
     )
-  const scroller: HTMLElement = div({ class: 'min-h-0 flex-1 overflow-auto overscroll-contain' })
-  const render = (shown: SettingsPage | undefined) => {
-    scroller.scrollTop = 0
-    return div({ class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' }, extras(true), shown?.render() ?? null, extras(false))
-  }
-  scroller.append(dynamicChild(page, render))
+  const body = (shown: SettingsPage | undefined) =>
+    div(
+      { class: 'min-h-0 flex-1 overflow-auto overscroll-contain' },
+      div({ class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' }, sections(true), shown?.render() ?? null, sections(false)),
+    )
   return div(
     { class: 'flex h-full min-h-0 flex-1 flex-col bg-neutral-900', onMount: node => dismissible(node, close, { overlay: false }) },
     div(
       { class: 'flex h-12 shrink-0 items-center gap-2 pl-4 pr-3' },
       show(narrow, () => iconButton({ title: 'Settings', 'aria-label': 'Settings', onClick: showPages }, appIcon(20))),
-      el('h1', { class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, () => page.get()?.label ?? ''),
+      h1({ class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, () => page.get()?.label ?? ''),
       show(narrow, () => iconButton({ title: 'Close settings', 'aria-label': 'Close settings', onClick: close }, icon('x'))),
     ),
-    scroller,
+    dynamicChild(page, body),
   )
 }

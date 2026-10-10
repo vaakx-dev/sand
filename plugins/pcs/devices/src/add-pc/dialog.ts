@@ -63,16 +63,11 @@ export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: (
         () => (done.get() ? '' : titles[mode.get()]),
         close,
         show(
-          derive(() => mode.get() !== 'choose' && !done.get() && !running.get()),
+          () => mode.get() !== 'choose' && !done.get() && !running.get(),
           () => iconButton({ title: 'Back', onClick: () => mode.set('choose') }, icon('back')),
         ),
       ),
-      sheetBody(
-        dynamicChild(
-          derive(() => (done.get() ? 'done' : mode.get())),
-          body,
-        ),
-      ),
+      sheetBody(dynamicChild(derive(() => (done.get() ? 'done' : mode.get())), body)),
     ),
   )
 }

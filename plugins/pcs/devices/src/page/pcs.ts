@@ -1,6 +1,6 @@
 import type { PcList } from '@sand/host-remotes/contract'
 import type { LoginState } from '@sand/llm-accounts/contract'
-import { clock, derive, div, hint, list, settingsSection, show, sig, type Sig } from '@sand/dom'
+import { clock, derive, div, hint, list, settingsSection, show } from '@sand/dom'
 import type { PcHealthStore } from '../health/state'
 import type { DeviceSource } from '../source'
 import { healthPanel } from './health'
@@ -18,8 +18,6 @@ const rows = (list: PcList, login: LoginState | undefined): PcRow[] => [
 
 export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgain: () => void) => {
   const now = clock(60_000)
-  const opened = new Map<string, Sig<boolean>>()
-  const openFlag = (id: string) => opened.get(id) ?? opened.set(id, sig(false)).get(id)!
   const all = derive(() => {
     const current = source.pcs.get()
     return current ? rows(current, source.login.get()) : []
@@ -27,7 +25,7 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
   return settingsSection(
     {},
     show(
-      source.pcs.map(current => !current),
+      () => !source.pcs.get(),
       () => div({ class: 'bg-neutral-900' }, hint('Loading…')),
     ),
     list(
@@ -36,7 +34,7 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
       row => {
         const { id, name } = row.get().pc
         const self = row.get().self
-        return pcRow(row, now, openFlag(id), {
+        return pcRow(row, now, {
           health: () => healthPanel({ id, name, local: self, online: row.get().pc.online }, health),
           remove: () => void source.removePc(id).catch(source.fail),
           pairAgain,

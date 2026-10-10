@@ -1,5 +1,5 @@
 import type { Entry } from '@sand/messages'
-import { button, div, errorMessage, span } from '@sand/dom'
+import { div, errorMessage, plainButton, span } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { LoopChoice } from '../contract'
 
@@ -30,6 +30,6 @@ export const loopRow = (ctx: ViewContext) => (entry: Entry, thread: string) => {
     span({ class: 'min-w-0 truncate', title: text }, text),
     previous === choice.name
       ? ''
-      : button({ type: 'button', class: 'shrink-0 cursor-pointer underline hover:text-neutral-200', onClick: () => switchTo(ctx, thread, previous) }, 'Switch back'),
+      : plainButton({ class: 'shrink-0 underline hover:text-neutral-200', onClick: () => switchTo(ctx, thread, previous) }, 'Switch back'),
   )
 }

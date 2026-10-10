@@ -41,7 +41,9 @@ export default definePlugin({
       const local = changes.get()?.files ?? []
       const stored = thread && !control.shown() && turn.get() === undefined ? remote.of(thread.id) : undefined
       const count = stored ? new Set([...stored, ...local.map(file => file.key)]).size : local.length
-      if (count !== badge) control.update({ badge: (badge = count) || undefined })
+      if (count === badge) return
+      badge = count
+      control.update({ badge: count || undefined })
     }
 
     const remote = remoteFiles(ctx, showBadge)

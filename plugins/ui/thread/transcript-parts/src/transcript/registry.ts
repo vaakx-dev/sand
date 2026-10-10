@@ -3,7 +3,7 @@ import { sig } from '@sand/dom'
 import type { Dispose } from 'drydock'
 import { resolveRenderer } from '../tools/resolve'
 
-export const rendererRegistry = (changed: () => void = () => {}): RendererRegistry => {
+export const rendererRegistry = (changed: () => void): RendererRegistry => {
   const tools = new Map<string, RenderTool | ToolRenderer>()
   const entries = new Map<string, RenderEntry>()
   const resolved = new Map<string, Required<ToolRenderer>>()

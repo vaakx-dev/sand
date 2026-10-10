@@ -1,8 +1,18 @@
 import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
-import { badge, contextMenu, div, rowAction, secondaryAction, settingsRow, sig, span, type Tone } from '@sand/dom'
+import { badge, contextMenu, div, quietButton, rowAction, secondaryAction, settingsRow, sig, span, type Child, type Sig, type Tone } from '@sand/dom'
 import { originLabels } from './filter'
 import { pluginMenu } from './menu'
-import { changedNote, type RowActions } from './warning'
+
+export interface RowActions {
+  busy: () => boolean
+  history(key: string, open: Sig<boolean>): Child
+  hasHistory(key: string): boolean
+  copy(text: string, what: string): () => Promise<void>
+  customise(plugin: PluginEntry): void
+  restore(plugin: PluginEntry): void
+  keep(plugin: PluginEntry): void
+  ask(plugin: PluginEntry): void
+}
 
 const tones: Record<PluginOrigin, Tone> = { builtin: 'neutral', customised: 'accent', yours: 'success' }
 
@@ -17,6 +27,14 @@ const detail = (plugin: PluginEntry) => {
   if (plugin.origin === 'customised') return `Your copy replaces the built-in${plugin.from?.version ? ` from sand ${plugin.from.version}` : ''}`
   return plugin.description ?? ''
 }
+
+const changedNote = (plugin: PluginEntry, actions: RowActions) =>
+  div(
+    { class: 'mx-4 mb-3 flex flex-wrap items-center gap-3 rounded-lg bg-warning-950 px-3 py-2' },
+    span({ class: 'min-w-0 flex-1 text-xs text-warning-400' }, 'The built-in changed since you customised it.'),
+    quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.keep(plugin) }, 'Keep mine'),
+    secondaryAction({ size: 'sm', disabled: actions.busy, onClick: () => actions.ask(plugin) }, 'Ask sand'),
+  )
 
 export const pluginRow = (plugin: PluginEntry, actions: RowActions) => {
   const menu = contextMenu()

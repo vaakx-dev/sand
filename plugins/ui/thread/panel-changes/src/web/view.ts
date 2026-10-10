@@ -39,7 +39,6 @@ const turnPicker = (state: ChangesState) =>
       ),
   })
 
-
 export const changesView = (state: ChangesState, toggle: (key: string) => void) => {
   const files = derive(() => state.changes.get()?.files ?? [])
   const sum = derive(() => totals(files.get()))
@@ -48,10 +47,10 @@ export const changesView = (state: ChangesState, toggle: (key: string) => void) 
     { class: 'min-h-full pb-4' },
     menu.view(),
     div(
-      { class: 'flex h-10 items-center gap-3 pl-4 pr-4 text-xs text-neutral-400', hidden: state.changes.map(changes => !changes?.turns.length) },
+      { class: 'flex h-10 items-center gap-3 px-4 text-xs text-neutral-400', hidden: state.changes.map(changes => !changes?.turns.length) },
       turnPicker(state),
       span({ class: 'flex-1' }),
-      span({ class: 'text-neutral-500' }, () => plural(state.changes.get()?.files.length ?? 0, 'file')),
+      span({ class: 'text-neutral-500' }, () => plural(files.get().length, 'file')),
       counts(
         () => sum.get().add,
         () => sum.get().del,

@@ -1,12 +1,13 @@
 import type { PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
+import type { ProjectsContext } from '../context'
 import { listings } from './listings'
 import { join, short } from './paths'
-import type { FlowContext, Next } from './types'
+import type { Next } from './types'
 
 const plain = (name: string) => Boolean(name) && name !== '.' && name !== '..' && !/[\\/]/.test(name)
 
-export const emptyPage = (ctx: FlowContext, machine: Machine, next: Next): PalettePage => {
+export const emptyPage = (ctx: ProjectsContext, machine: Machine, next: Next): PalettePage => {
   const { device } = machine
   const place = ctx.projects.place(device)
   const root = short(place.root, place)
@@ -30,7 +31,10 @@ export const emptyPage = (ctx: FlowContext, machine: Machine, next: Next): Palet
       value: '',
       placeholder: 'Project name',
       action: value => ({ label: 'Create', enabled: plain(value.trim()) && !taken(value.trim()) }),
-      submit: value => next({ machine, source: 'Empty project', how: 'create', path: target(value.trim()), name: value.trim() }),
+      submit(value) {
+        const name = value.trim()
+        return next({ machine, source: 'Empty project', how: 'create', path: target(name), name })
+      },
     },
   }
 }

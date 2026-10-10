@@ -3,7 +3,7 @@ import type { LLMRequest } from '@sand/llm-accounts/contract'
 import type { Message } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { LoopsContext } from '../context'
-import type { ModelChoice, RunOverrides, TurnHooks, TurnOutcome } from '../contract'
+import type { ModelChoice, TurnHooks, TurnOutcome } from '../contract'
 import { outside } from './fault'
 import type { TurnState } from './state'
 import { streamReply } from './stream'
@@ -19,29 +19,25 @@ const applyChoice = (request: LLMRequest, choice: ModelChoice | undefined): LLMR
       }
     : request
 
-export const createHooks = (
-  ctx: LoopsContext,
-  session: Session,
-  signal: AbortSignal,
-  overrides: RunOverrides,
-  state: TurnState,
-): TurnHooks => {
-  const llm = overrides.llm ?? ctx.llm
-  const tools = overrides.tools ?? ctx.tools
+const unchanged = (request: LLMRequest) => request
+
+export const createHooks = (ctx: LoopsContext, session: Session, signal: AbortSignal, state: TurnState): TurnHooks => {
+  const build = outside(async () => {
+    const request = await ctx.waterfall('context.build', await ctx.context.build(session), session, signal)
+    return applyChoice(request, state.choice)
+  })
+
+  const overflow = outside(async (error: unknown) => !signal.aborted && Boolean(await ctx.bail('context.overflow', session, error, signal)))
+
+  const stream = async (shape: (request: LLMRequest) => LLMRequest) => streamReply(ctx, shape(await build()), session, signal, state)
 
   const hooks: TurnHooks = {
-    build: outside(async () => {
-      const built = await ctx.context.build(session)
-      const base = overrides.tools ? { ...built, tools: overrides.tools.specs() } : built
-      return applyChoice(await ctx.waterfall('context.build', base, session, signal), state.choice)
-    }),
-    stream: request => streamReply(ctx, llm, request, session, signal, state),
-    async send() {
+    async send(shape = unchanged) {
       try {
-        return await hooks.stream(await hooks.build())
+        return await stream(shape)
       } catch (error) {
-        if (!(await hooks.overflow(error))) throw error
-        return hooks.stream(await hooks.build())
+        if (!(await overflow(error))) throw error
+        return stream(shape)
       }
     },
     respond: outside(async (message: Message) => {
@@ -51,7 +47,7 @@ export const createHooks = (
       state.reply = textOf(final.content)
       return final
     }),
-    tools: calls => runTools(ctx, tools, calls, session, signal),
+    tools: calls => runTools(ctx, calls, session, signal),
     inbox: outside(() => ctx.waterfall('turn.inbox', [], session)),
     stop: outside(async (outcome: TurnOutcome) => {
       const next = await ctx.bail('turn.stop', session, { ...outcome, usage: state.usage }, signal)
@@ -60,10 +56,6 @@ export const createHooks = (
       hooks.append({ role: 'user', content: [...next, ...(await hooks.inbox())] })
       ctx.emit('turn.continue', session, next)
       return next
-    }),
-    overflow: outside(async (error: unknown) => {
-      if (signal.aborted) return false
-      return Boolean(await ctx.bail('context.overflow', session, error, signal))
     }),
     append: message => session.append('message', message),
   }

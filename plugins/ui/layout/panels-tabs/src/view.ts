@@ -21,8 +21,8 @@ const tabView = (page: Sig<Page>, parts: PanelsParts) =>
   quietButton(
     { active: () => parts.selected.get() === page.get().spec.id, onClick: () => parts.show(page.get().spec.id) },
     dynamicChild(
-      page.map(value => value.spec.icon ?? ''),
-      name => (name ? icon(name, 14) : div({ class: 'hidden' })),
+      page.map(value => value.spec.icon),
+      name => (name ? icon(name, 14) : null),
     ),
     page.map(value => value.spec.title),
     show(
@@ -41,31 +41,30 @@ const pageView = (page: Sig<Page>, parts: PanelsParts) => {
   })
 }
 
-export const panelsView = (parts: PanelsParts) => {
-  const { surface } = parts
-  return div(
-    {
-      class: () => {
-        if (!surface.floating()) return 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-neutral-950'
-        return surface.drawerOpen() ? [layer.drawer, 'fixed flex w-full max-w-lg flex-col bg-neutral-950 shadow-xl animate-slide'] : 'hidden'
-      },
-      style: () => (surface.floating() ? { top: '0', right: '0', bottom: '0' } : null),
-    },
+const hostClass = (surface: Surface) => {
+  if (!surface.floating()) return 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-neutral-950'
+  if (!surface.drawerOpen()) return 'hidden'
+  return [layer.drawer, 'fixed inset-y-0 right-0 flex w-full max-w-lg flex-col bg-neutral-950 shadow-xl animate-slide']
+}
+
+const hideButton = (floating: boolean, hide: () => void) =>
+  floating
+    ? iconButton({ title: 'Close panel', 'aria-label': 'Close panel', onClick: hide }, icon('x', 15))
+    : iconButton({ title: 'Hide the panel', 'aria-label': 'Hide the panel', active: true, onClick: hide }, icon('panel'))
+
+export const panelsView = (parts: PanelsParts) =>
+  div(
+    { class: () => hostClass(parts.surface) },
     div(
       { class: 'flex h-12 shrink-0 items-center gap-2 pl-4 pr-3' },
       div(
         { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
         list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),
       ),
-      dynamicChild(derive(() => surface.floating()), floating =>
-        floating
-          ? iconButton({ title: 'Close panel', 'aria-label': 'Close panel', onClick: parts.hide }, icon('x', 15))
-          : iconButton({ title: 'Hide the panel', 'aria-label': 'Hide the panel', active: true, onClick: parts.hide }, icon('panel')),
-      ),
+      dynamicChild(parts.surface.floating, floating => hideButton(floating, parts.hide)),
     ),
     list(parts.pages, page => page.key, page => pageView(page, parts), div({ class: 'relative min-h-0 flex-1' })),
   )
-}
 
 export const selectedPage = (pages: Sig<Page[]>, wanted: Sig<string | undefined>) =>
   derive(() => {

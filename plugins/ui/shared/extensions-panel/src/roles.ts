@@ -1,4 +1,5 @@
 import type { ExtensionInfo } from '@sand/web/contract'
+import { grouped } from '@sand/kit'
 import type { Context } from 'drydock'
 
 export interface Roles {
@@ -15,10 +16,9 @@ export const readRoles = (ctx: Context, seen: Map<string, Set<string>>): Roles =
   const services = (ctx.inspector?.services() ?? []).filter(service => service.key !== 'inspector')
   const stacks = new Map<string, string[]>()
   for (const service of services) {
-    stacks.set(service.key, [...(stacks.get(service.key) ?? []), idOf(service.provider)])
-    if (!service.active) continue
     const id = idOf(service.provider)
-    seen.set(id, new Set([...(seen.get(id) ?? []), service.key]))
+    grouped(stacks, service.key, (): string[] => []).push(id)
+    if (service.active) grouped(seen, id, () => new Set<string>()).add(service.key)
   }
   const active = new Map(services.filter(service => service.active).map(service => [service.key, idOf(service.provider)]))
   const provides = (extension: ExtensionInfo) => [...new Set([...extension.provides, ...(seen.get(extension.id) ?? [])])].sort()

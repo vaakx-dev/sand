@@ -2,7 +2,7 @@ import { duration } from '@sand/kit'
 import { clock, div, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 
-export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange'
+export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange' | 'sky'
 
 const badgeTones: Record<Tone, string> = {
   neutral: 'bg-neutral-800 text-neutral-400',
@@ -11,6 +11,7 @@ const badgeTones: Record<Tone, string> = {
   warning: 'bg-warning-950 text-warning-400',
   danger: 'bg-danger-950 text-danger-400',
   orange: 'bg-neutral-800 text-orange-400',
+  sky: 'bg-neutral-800 text-sky-400',
 }
 
 const dotTones: Record<Tone, string> = {
@@ -20,6 +21,7 @@ const dotTones: Record<Tone, string> = {
   warning: 'bg-warning-400',
   danger: 'bg-danger-400',
   orange: 'bg-orange-400',
+  sky: 'bg-sky-400',
 }
 
 export const badge = (tone: Tone, ...children: Child[]) =>

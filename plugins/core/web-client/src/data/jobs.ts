@@ -6,20 +6,21 @@ import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
 import { createRuns } from './runs'
 
-const seed = (job: WireJob, known?: JobState): JobState => ({
-  ...job,
-  notes: known?.notes.length ? known.notes : job.note ? [job.note] : [],
-})
+const notesOf = (job: WireJob, known?: JobState) => {
+  if (known?.notes.length) return known.notes
+  return job.note ? [job.note] : []
+}
+
+const seed = (job: WireJob, known?: JobState): JobState => ({ ...job, notes: notesOf(job, known) })
 
 export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
   const devices = new Map<string, Map<string, JobState>>()
   const changed = () => ctx.emit('jobs.change')
-  const on = (device: string) => devices.get(device) ?? devices.set(device, new Map()).get(device)!
   const deviceOf = (id: string) => [...devices].find(([, jobs]) => jobs.has(id))?.[0]
 
   const keep = (device: string, job: WireJob) => {
-    const jobs = on(device)
-    jobs.set(job.id, seed(job, jobs.get(job.id)))
+    const jobs = devices.get(device) ?? new Map<string, JobState>()
+    devices.set(device, jobs.set(job.id, seed(job, jobs.get(job.id))))
     changed()
   }
 
@@ -58,3 +59,5 @@ export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
   }
   return { jobs, hello, event, forget }
 }
+
+export type JobService = ReturnType<typeof createJobs>

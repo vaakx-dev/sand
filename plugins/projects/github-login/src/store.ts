@@ -3,14 +3,14 @@ import { writePrivateJson } from '@sand/kit/fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-export interface SignedIn {
+interface SignedIn {
   login: string
   token: string
   at: number
   from?: { id: string; name: string }
 }
 
-export interface SignedOut {
+interface SignedOut {
   out: number
 }
 
@@ -22,18 +22,22 @@ const text = (value: unknown): value is string => typeof value === 'string' && v
 
 const time = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 
-const placeOf = (value: any) => (text(value?.id) && text(value?.name) ? { id: value.id, name: value.name } : undefined)
+const placeOf = (value: unknown) => (isRecord(value) && text(value.id) && text(value.name) ? { id: value.id, name: value.name } : undefined)
 
-export const recordOf = (value: any): GithubRecord | undefined => {
-  if (time(value?.out)) return { out: value.out }
-  if (!text(value?.login) || !text(value.token) || !time(value.at)) return undefined
+export const recordOf = (value: unknown): GithubRecord | undefined => {
+  if (!isRecord(value)) return undefined
+  if (time(value.out)) return { out: value.out }
+  if (!text(value.login) || !text(value.token) || !time(value.at)) return undefined
   const from = placeOf(value.from)
   return { login: value.login, token: value.token, at: value.at, ...(from && { from }) }
 }
 
 export const isSignedIn = (record: GithubRecord | undefined): record is SignedIn => !!record && 'login' in record
 
-export const timeOf = (record: GithubRecord | undefined) => (!record ? 0 : isSignedIn(record) ? record.at : record.out)
+export const timeOf = (record: GithubRecord | undefined) => {
+  if (!record) return 0
+  return isSignedIn(record) ? record.at : record.out
+}
 
 export const authFile = async (home: string) => {
   const own = join(home, 'auth.json')
@@ -55,5 +59,3 @@ export const githubStore = (path: string) => {
     write: (record: GithubRecord) => queue(async () => writePrivateJson(path, { ...(await readAll(path)), [key]: record })),
   }
 }
-
-export type GithubStore = ReturnType<typeof githubStore>

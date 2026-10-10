@@ -2,6 +2,7 @@ import { gitMaybe } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 
 const freshMs = 5000
+const most = 500
 
 const cache = new Map<string, { at: number; branch?: string }>()
 
@@ -16,10 +17,8 @@ export const branch = async (cwd: string) => {
   return found
 }
 
-const most = 500
-
 export const branches = async (cwds: unknown) => {
   const wanted = Array.isArray(cwds) ? [...new Set(cwds.filter((cwd): cwd is string => typeof cwd === 'string'))].slice(0, most) : []
-  const found = await Promise.all(wanted.map(cwd => branch(cwd).catch(() => undefined)))
-  return Object.fromEntries(wanted.map((cwd, i) => [cwd, found[i] ?? null]))
+  const found = await Promise.all(wanted.map(branch))
+  return Object.fromEntries(wanted.map((cwd, index) => [cwd, found[index] ?? null]))
 }

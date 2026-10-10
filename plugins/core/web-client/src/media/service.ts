@@ -1,22 +1,28 @@
 import type { ImageBlock, MediaRef, UserContent } from '@sand/messages'
 import type { Media, Wire } from '../contract'
-import { listen } from '@sand/dom'
+import { intersectionObserver, listen } from '@sand/dom'
+import { base64Of } from '../integrations/base64'
 import type { Store } from '../threads/store'
-import { whenNearView } from './visible'
 
 type Stored = Partial<MediaRef> & { data?: string }
+
+const nearView = '800px'
 
 const blobPath = (hash: string, session?: string) => `/blob?${new URLSearchParams(session ? { hash, session } : { hash })}`
 
 const dataUrl = (block: ImageBlock) => `data:${block.mediaType};base64,${block.data}`
 
-const base64 = (blob: Blob) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result).slice(String(reader.result).indexOf(',') + 1))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(blob)
-  })
+const whenNearView = (element: Element, run: () => void) => {
+  const observer = intersectionObserver(
+    element,
+    entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return
+      observer.disconnect()
+      run()
+    },
+    { rootMargin: nearView, scrollMargin: nearView },
+  )
+}
 
 export const createMedia = (wire: Wire, store: Store): Media => {
   const fetchBlob = async (hash: string, thread?: string) => {
@@ -38,7 +44,7 @@ export const createMedia = (wire: Wire, store: Store): Media => {
     const { blob: hash, size, width, height, ...rest } = block as UserContent & Stored
     if (block.type === 'text' || typeof rest.data === 'string' || !hash) return block
     const blob = await fetchBlob(hash, thread)
-    const data = block.mediaType.startsWith('text/') ? await blob.text() : await base64(blob)
+    const data = block.mediaType.startsWith('text/') ? await blob.text() : await base64Of(blob)
     return { ...rest, data } as UserContent
   }
 

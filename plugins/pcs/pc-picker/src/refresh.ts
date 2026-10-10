@@ -3,9 +3,7 @@ import { currentTarget, refOf, type PickerContext } from './target'
 
 export const refreshGroup = (ctx: PickerContext, group?: ProjectGroup) => {
   if (!group || !ctx.sync) return
-  for (const entry of group.locations) {
-    if (ctx.machines.online(entry.device)) void ctx.sync.refresh(refOf(entry)).catch(() => undefined)
-  }
+  for (const entry of group.locations) if (ctx.machines.online(entry.device)) void ctx.sync.refresh(refOf(entry))
 }
 
 const groupKey = (ctx: PickerContext) => {

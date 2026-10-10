@@ -1,4 +1,4 @@
-import { div, hint, p, secondaryAction, span, type Child, type Sig } from '@sand/dom'
+import { div, hint, openTab, p, secondaryAction, span, type Child, type Sig } from '@sand/dom'
 
 export const note = (text: string | (() => string)) => p({ class: 'text-xs text-neutral-400' }, text)
 
@@ -17,7 +17,7 @@ export const hostOf = (url: string) => {
 }
 
 export const openLink = (url: string, label = `Open ${hostOf(url)}`) =>
-  secondaryAction({ size: 'sm', onClick: () => void window.open(url, '_blank', 'noopener') }, label)
+  secondaryAction({ size: 'sm', onClick: () => openTab(url) }, label)
 
 export const accountRowWith = (props: object, logo: Child, title: Child, detail: Child, ...controls: Child[]) =>
   div(

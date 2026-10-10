@@ -16,11 +16,10 @@ export const composerTarget = (ctx: PanelContext, actions: Actions, changes: Pul
     },
     extra: () => {
       const settings = shown()
-      const model = ctx.models.info(settings?.model)
       return [
         ctx.threads.current()?.running && banner('clock', 'A turn is running. Changes apply when it finishes.'),
         problem.get() && banner('alert', problem.get()),
-        settings && !usesDefaults(settings, ctx.models.defaults(), model) && footer(settings, actions),
+        settings && !usesDefaults(settings, ctx.modelPicker.resolve(ctx.models.defaults())) && footer(settings, actions),
       ]
     },
   }

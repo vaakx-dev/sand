@@ -1,12 +1,12 @@
 import { copyWithNotice, shownPanel, sig } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
 import { definePlugin } from 'drydock'
-import { runningAgents } from './counts'
-import { modelsUnlike } from './models'
-import type { Actions } from './parts'
-import { toRuns, type Run } from './runs'
+import { runningAgents } from './runs/counts'
+import { modelsUnlike } from './runs/models'
+import { toRuns, type Run } from './runs/runs'
 import { ticker } from './ticker'
-import { agentsView, type ParentLink } from './view'
+import type { Actions } from './view/parts'
+import { agentsView, type ParentLink } from './view/view'
 
 export default definePlugin({
   name: 'panel-agents',
@@ -51,7 +51,9 @@ export default definePlugin({
       compute()
       clock.set(runs.get().some(run => run.status === 'running'))
       const count = runningAgents(runs.get())
-      if (count !== badge) control.update({ badge: (badge = count) || undefined })
+      if (count === badge) return
+      badge = count
+      control.update({ badge: count || undefined })
     }
 
     const interrupt = async (id: string) => {
@@ -68,21 +70,19 @@ export default definePlugin({
       }
     }
 
+    const cancel = async (run: Run) => {
+      if (!run.job) return run.session ? await interrupt(run.session) : false
+      await ctx.jobs.cancel(run.job)
+      return true
+    }
+
     const actions: Actions = {
       open: id => void ctx.threads.select(id),
       copy: (text, what) => copyWithNotice(ctx.notify, text, what),
       interrupt: id => guarded(() => interrupt(id)),
-      cancel: run =>
-        guarded(async () => {
-          if (run.job) {
-            await ctx.jobs.cancel(run.job)
-            return true
-          }
-          return run.session ? await interrupt(run.session) : false
-        }),
+      cancel: run => guarded(() => cancel(run)),
     }
 
-    compute()
     const control = shownPanel(
       ctx,
       { id: 'agents', title: 'Agents', icon: 'bot', order: 20 },

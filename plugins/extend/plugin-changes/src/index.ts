@@ -1,4 +1,3 @@
-import { copyWithNotice } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { versionsSource } from './history/source'
 import { historyToggle } from './history/versions'
@@ -6,8 +5,8 @@ import { askSand } from './library/ask'
 import { librarySource } from './library/source'
 import { offerNotice } from './notice'
 import { pluginsPage } from './page'
+import type { RowActions } from './page/catalog/row'
 import { page } from './shown'
-import type { RowActions } from './page/catalog/warning'
 import { pluginSource } from './source'
 
 export default definePlugin({
@@ -31,7 +30,7 @@ export default definePlugin({
       busy: () => library.busy.get() !== undefined,
       history: (key, open) => historyToggle(versions, key, open),
       hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),
-      copy: (text, what) => () => copyWithNotice(ctx.notify, text, what),
+      copy: versions.copy,
       customise: plugin => void library.customise(plugin.name),
       restore: plugin => void library.restore(plugin.name),
       keep: plugin => library.keep(plugin.name),

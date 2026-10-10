@@ -30,7 +30,7 @@ const foldActions = ({ row }: TreeItem, actions: RowActions): NavAction[] =>
   row.fold ? [{ id: 'fold', group: 'branch', label: row.fold === 'closed' ? 'Expand branch' : 'Collapse branch', icon: row.fold === 'closed' ? 'down' : 'up', run: () => actions.fold(row.id) }] : []
 
 export const rowMenu = (item: TreeItem, actions: RowActions): MenuSpec => ({
-  title: item.tree.label?.text ?? item.tree.described.who,
+  title: item.tree.label ?? item.tree.described.who,
   subtitle: item.tree.described.text || undefined,
   actions: [...goActions(item, actions), ...labelActions(item, actions), ...foldActions(item, actions)],
 })

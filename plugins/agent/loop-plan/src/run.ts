@@ -2,7 +2,7 @@ import type { Loops, Turn, TurnOutcome } from '@sand/loops/contract'
 import type { ToolResultBlock } from '@sand/messages'
 import { plan, type PlanOptions } from './plan'
 
-const handover = [
+const carryOut = [
   '<task-notification>',
   '<job>plan</job>',
   '<label>Plan</label>',
@@ -15,7 +15,7 @@ const handover = [
 
 const handOver = async (turn: Turn, pending: ToolResultBlock[]) => {
   const steers = await turn.hooks.inbox()
-  turn.hooks.append({ role: 'user', content: [...pending, ...steers, { type: 'text', text: handover }] })
+  turn.hooks.append({ role: 'user', content: [...pending, ...steers, { type: 'text', text: carryOut }] })
 }
 
 export const runPlan = (loops: Loops, options: PlanOptions) => async (turn: Turn): Promise<TurnOutcome> => {

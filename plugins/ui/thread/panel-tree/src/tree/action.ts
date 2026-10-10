@@ -1,5 +1,5 @@
 import type { ToolCallBlock } from '@sand/messages'
-import { capital, oneLine, tildeHome } from '@sand/kit'
+import { capital, isRecord, oneLine, tildeHome } from '@sand/kit'
 
 export interface ToolAction {
   verb: string
@@ -25,7 +25,7 @@ const summary = (input: Record<string, unknown>) =>
 
 export const toolAction = (call: ToolCallBlock): ToolAction => {
   const [verb, fields] = verbs[call.name] ?? [capital(call.name), []]
-  const input = typeof call.input === 'object' && call.input ? (call.input as Record<string, unknown>) : {}
+  const input = isRecord(call.input) ? call.input : {}
   const named = fields.map(field => input[field]).find((value): value is string => typeof value === 'string' && value.trim() !== '')
   return { verb, target: oneLine(tildeHome(named ?? summary(input)), 160) }
 }

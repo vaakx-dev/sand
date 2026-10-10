@@ -1,5 +1,5 @@
 import type {} from '@sand/model-picker/contract'
-import { errorMessage, owned, pulse, sig } from '@sand/dom'
+import { owned, pulse, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { createActions } from './actions'
 import { modelSource } from './palette'
@@ -26,6 +26,11 @@ export default definePlugin({
     const changes = pulse(ctx, ['models.change', 'thread.select'], ['models'])
     const stateKey = () => JSON.stringify([ctx.models.state(), ctx.threads.current()?.running ?? false])
     let lastKey = stateKey()
+    const remember = () => {
+      lastKey = stateKey()
+    }
+    ctx.on('models.change', remember)
+    ctx.on('thread.select', remember)
     ctx.on('thread.change', id => {
       if (id !== ctx.threads.current()?.id) return
       const key = stateKey()
@@ -33,17 +38,10 @@ export default definePlugin({
       lastKey = key
       changes.bump()
     })
-    ctx.on('models.change', () => {
-      lastKey = stateKey()
-    })
-    ctx.on('thread.select', () => {
-      lastKey = stateKey()
-    })
+
     const picker = owned(ctx, () => createPicker(ctx, composerTarget(ctx, actions, changes, problem), changes))
     let slotted = false
-
-    const sheet = (effort: boolean) => void ctx.threads.command(effort ? 'effort' : 'model').catch(error => fail(errorMessage(error)))
-    const open = (effort = false) => (slotted ? picker.open(effort) : sheet(effort))
+    const open = (effort: boolean) => (slotted ? picker.open(effort) : actions.run(effort ? 'effort' : 'model'))
 
     ctx.watch('composer', composer => {
       if (!composer) return

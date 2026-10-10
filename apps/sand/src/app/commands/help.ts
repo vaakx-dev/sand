@@ -1,6 +1,6 @@
 import type { CliCommand } from '@sand/protocol'
 
-export const defaultCommand = 'launch'
+const defaultCommand = 'launch'
 
 const column = 32
 

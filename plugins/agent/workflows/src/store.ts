@@ -14,10 +14,9 @@ const open = async (dir: string, id: string, script: string, args: unknown): Pro
   const cacheFile = Bun.file(join(dir, 'cache.json'))
   const results: Record<string, unknown> = (await cacheFile.exists()) ? await cacheFile.json() : {}
   const queue = serial()
-  const write = async () => {
-    await Bun.write(cacheFile, JSON.stringify(results, null, 2))
+  const save = async () => {
+    await queue(() => Bun.write(cacheFile, JSON.stringify(results, null, 2)))
   }
-  const save = () => queue(write)
   return { id, dir, script, args, results, save }
 }
 

@@ -3,7 +3,7 @@ import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Pending } from './contract'
 import { promptLabel } from '@sand/kit'
 
-export type Steer = Pending & { prompt: UserContent[] }
+type Steer = Pending & { prompt: UserContent[] }
 
 const content = (prompt: Prompt): UserContent[] => (typeof prompt === 'string' ? [{ type: 'text', text: prompt }] : prompt)
 
