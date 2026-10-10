@@ -14,7 +14,7 @@ const input = z.object({
 const pluginTool = (ctx: Context<'tools'>): Tool<typeof input> => ({
   name: 'plugin',
   description:
-    "List sand's plugins and their status, including each web extension (enabled or not, browser status), or pass a plugin or web extension name for its errors, services, hooks, roles and browser errors. To write a plugin, load the sand-plugins skill first.",
+    "List sand's plugins and web extensions with their status. Pass a name for its errors, services, hooks and roles. Load the sand-plugins skill before writing a plugin.",
   input,
   run: ({ name }) => (name ? showPlugin(ctx, name) : listPlugins(ctx)),
 })

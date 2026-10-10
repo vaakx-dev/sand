@@ -1,6 +1,6 @@
 ---
 name: postplan
-description: 'Use when sharing an HTML page through a link, or reading a postplan.dev URL. Explicit trigger: “postplan.”'
+description: 'Share an HTML page by link, or read a postplan.dev URL. Trigger: "postplan".'
 ---
 
 # Postplan

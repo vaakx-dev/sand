@@ -10,7 +10,7 @@ const input = z.object({ pr: prInput })
 export const statusTool: Tool<typeof input> = {
   name: 'pr_status',
   description:
-    'Summarize a GitHub pull request in one call: state, merge state against the base, checks with the log tail of failed jobs, unresolved review threads and comments since the head commit.',
+    'Summarize a GitHub PR: state, mergeability, checks with failed log tails, unresolved threads and new comments.',
   input,
   run: async ({ pr }, { cwd, signal }) => formatPr(await fetchPr(pr, cwd, signal)),
 }

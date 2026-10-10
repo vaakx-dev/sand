@@ -13,9 +13,9 @@ export const builtins: AgentDefinition[] = [
   },
   {
     name: 'explore',
-    description: 'Read-only: finding code, answering questions about a codebase, broad searches.',
+    description: 'Read-only search and questions about code.',
     tools: ['read', 'glob', 'grep', 'shell'],
-    prompt: 'You are read-only: never create, modify or delete files. Use shell only for read-only commands such as git log, ls or cat.',
+    prompt: "Read-only. Don't create, change or delete files. Use shell only for commands that read, like git log, ls or cat.",
   },
 ]
 

@@ -1,6 +1,6 @@
 ---
 name: sand-plugins
-description: How to write sand plugins. Load before creating or editing a plugin that extends sand.
+description: Write or edit a sand plugin, loop or hook.
 ---
 
 A plugin is a folder whose index.ts default-exports `definePlugin(...)` from `drydock`. Put it in `~/.sand/plugins/<name>/`; new folders load on the next `/reload` or restart.

@@ -30,7 +30,7 @@ const settled = (pr: PrView, started: number) => {
 export const waitTool: Tool<typeof input> = {
   name: 'pr_wait',
   description:
-    'Wait until a GitHub pull request has no pending checks, gets new comments or reviews, or changes state, then return the same summary as pr_status.',
+    "Wait until a PR's checks finish, new feedback arrives or its state changes. Returns the pr_status summary.",
   input,
   async run({ pr, timeout_minutes }, { cwd, signal }) {
     const started = Date.now()

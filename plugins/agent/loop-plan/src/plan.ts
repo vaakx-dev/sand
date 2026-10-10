@@ -7,7 +7,7 @@ export interface PlanOptions {
   steps: number
 }
 
-const suffix = '\n\nPlan first: investigate read-only, then reply with a numbered plan and no edits.'
+const suffix = '\n\nPlan mode. Read only. Reply with a numbered plan and make no edits.'
 
 const request = async (turn: Turn, options: PlanOptions) => {
   const built = await turn.hooks.build()

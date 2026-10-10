@@ -8,15 +8,15 @@ export interface Verdict {
   source?: SourceRef
 }
 
-const instruction = (objective: string) => `Pause the work. You are now a separate reviewer deciding whether this goal is met:
+const instruction = (objective: string) => `Pause. You are now a reviewer deciding whether this goal is met:
 
 <goal>
 ${objective}
 </goal>
 
-Judge the current state from the conversation above. The goal is met only when its end state fully holds now; progress, or following its process correctly so far, is not enough. The agent saying it is done is not proof: look for evidence such as command output, test results or file contents. If it is not met, say concretely what is still missing or unverified so the agent knows what to do next.
+It is met only if its end state holds now. Progress doesn't count, and neither does the agent saying it's done. Look for evidence such as command output, test results or file contents. If it isn't met, say what is missing or unchecked.
 
-Do not call any tools. Reply with only a JSON object: {"met": true or false, "reason": "one or two sentences"}`
+Don't call tools. Reply with only JSON: {"met": true or false, "reason": "one or two sentences"}`
 
 const textOf = (message?: Message) => message?.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n') ?? ''
 

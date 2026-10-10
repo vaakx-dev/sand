@@ -1,45 +1,40 @@
 ---
 name: file-pr
-description: 'Use when opening or updating a GitHub pull request. Explicit trigger: “pr.”'
+description: 'Open or update a GitHub pull request. Trigger: "pr".'
 ---
 
 # File PR
 
-Rebase onto the base branch, read the full diff and run the project's checks.
-If the branch already has an open PR, update it instead of opening another.
+Rebase onto the base branch and read the full diff. If the branch has an open PR, update it.
 
-Title it like a commit, saying what is now true:
-
-```text
-fix(auth): repeated failed logins pause sign-in for a minute
-```
+Title it like a commit: one change, what is now true, under 60 characters.
 
 Use the repository's PR template if it has one. Otherwise:
 
 ```markdown
-<What was wrong, as a user sees it, and why.>
+<One sentence on what this PR does.>
 
-<What happens now.>
+## What
 
-## Change
-
-- **<Layer>:** <what changed>
-
-## Verification
-
-- `<command>` passes (<n>/<n>).
+- <One change per line.>
 
 | Before | After |
 |---|---|
 | ![<alt>](./before.png) | ![<alt>](./after.png) |
 
-**Not checked:** <what wasn't tested>
+## Why
+
+- <One reason per line.>
+
+## Verification
+
+- <What you ran and what you saw.>
 
 Made by <model> in sand.
 ```
 
-Drop any part with nothing to say. Only list checks you ran.
+Leave out the table when nothing is visual. Use Desktop and Phone columns when that shows the change better. For a big PR, add a Review section saying where to start reading.
 
-Create it with `gh pr create --title "<title>" --body-file <file>`, adding `--attach <file>` for each screenshot or video, then reply with the URL. Never commit PR screenshots. For an interactive page, upload it with the postplan skill and link it.
+Create it with `gh pr create --title "<title>" --body-file <file>`, adding `--attach <file>` for each screenshot. Never commit them. Link interactive pages with the postplan skill.
 
-This skill does not authorize merging.
+Reply with the URL. This skill doesn't authorize merging.

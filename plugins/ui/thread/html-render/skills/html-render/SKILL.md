@@ -1,6 +1,6 @@
 ---
 name: html-render
-description: Theme variables and layout rules for html_render and html_preview pages. Load before your first page in a thread.
+description: Theme and layout rules for html_render pages. Load before the first page in a thread.
 ---
 
 The page sits inside your reply on the thread's background: build it as part of the reply, not a website.
