@@ -1,4 +1,4 @@
-import { errorMessage, onTimeout } from '@sand/dom'
+import { collectScope, errorMessage, onTimeout } from '@sand/dom'
 import type { Context, ScopeView } from 'drydock'
 import type { BrowserState, Extensions } from '../contract'
 
@@ -7,7 +7,7 @@ const reportDelay = 500
 export const reportStates = (ctx: Context, extensions: Extensions, mounted: ReadonlyMap<string, ScopeView>) => {
   const errors = new Map<string, string>()
   let sent = ''
-  let scheduled = false
+  let cancel: (() => void) | undefined
 
   const owner = (scope: ScopeView) => {
     for (let at: ScopeView | undefined = scope; at; at = at.parent) {
@@ -25,7 +25,7 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
   }
 
   const send = async () => {
-    scheduled = false
+    cancel = undefined
     const wire = ctx.wire
     if (!wire || wire.state() !== 'open') return
     const states = extensions.list().map(info => state(info.id, info.status, info.error, info.inject))
@@ -36,10 +36,10 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
   }
 
   const schedule = () => {
-    if (scheduled) return
-    scheduled = true
-    onTimeout(() => void send().catch(() => undefined), reportDelay)
+    cancel ??= collectScope(() => onTimeout(() => void send().catch(() => undefined), reportDelay)).value
   }
+
+  ctx.effect(() => () => cancel?.())
 
   ctx.on('drydock.error', (scope, error) => {
     const id = owner(scope)

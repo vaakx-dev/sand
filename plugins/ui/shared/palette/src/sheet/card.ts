@@ -30,7 +30,7 @@ export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: 
       ),
     ),
     primaryAction(
-      { disabled: busy, class: 'w-full', onClick: confirm },
+      { size: 'lg', disabled: busy, class: 'w-full', onClick: confirm },
       dynamicChild(delayed(busy), waiting => (waiting ? spinner() : icon('check', 14))),
       review.action,
     ),

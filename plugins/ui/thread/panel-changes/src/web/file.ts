@@ -43,6 +43,6 @@ export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: Chan
         () => file.get().del,
       ),
     ),
-    dynamicChild(shape, () => (isClosed() ? null : div(shownLines(file.get()).map(diffRow)))),
+    dynamicChild(shape, () => (isClosed() ? null : div(shownLines(file.get()).map(line => diffRow(line))))),
   )
 }

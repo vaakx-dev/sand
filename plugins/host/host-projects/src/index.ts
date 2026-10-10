@@ -14,7 +14,7 @@ export default definePlugin({
   inject: ['hostOptions', 'hub'],
   async apply(ctx) {
     const { home, device } = ctx.hostOptions
-    const store = await projectStore(home, device.id)
+    const store = await projectStore(home, device.id, error => ctx.report(error))
     await seedSandHome(store, home, device.id).catch(error => ctx.report(error))
     const root = await projectRoot(home)
     const place = () => ({ device: device.id, home: homedir(), sep, root: root.get(), scratch: join(home, 'scratch') })

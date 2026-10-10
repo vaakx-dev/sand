@@ -1,5 +1,5 @@
-import { collectScope, onTimeout, scoped } from '@vaakx-dev/vrui'
-import type { PlaceLoad } from './cache'
+import { collectScope, onTimeout } from '@vaakx-dev/vrui'
+import type { PlaceLoad, PlaceOwner } from './cache'
 
 const gatherMs = 30
 const chunk = 200
@@ -22,10 +22,14 @@ const send = <T>(loadMany: LoadMany<T>, device: string, waiting: Map<string, Wai
   }
 }
 
-export const gathered = <T>(loadMany: LoadMany<T>): PlaceLoad<T> => {
+export const gathered = <T>(owner: PlaceOwner, loadMany: LoadMany<T>): PlaceLoad<T> => {
   const queued = new Map<string, Map<string, Waiting<T>>>()
   let stop: (() => void) | undefined
-  scoped(() => stop?.())
+  let live = true
+  owner.effect(() => () => {
+    live = false
+    stop?.()
+  })
 
   const flush = () => {
     stop = undefined
@@ -37,6 +41,6 @@ export const gathered = <T>(loadMany: LoadMany<T>): PlaceLoad<T> => {
     new Promise((resolve, reject) => {
       const waiting = queued.get(device) ?? new Map<string, Waiting<T>>()
       queued.set(device, waiting.set(cwd, { resolve, reject }))
-      stop ??= collectScope(() => onTimeout(flush, gatherMs)).value
+      if (live) stop ??= collectScope(() => onTimeout(flush, gatherMs)).value
     })
 }

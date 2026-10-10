@@ -39,6 +39,9 @@ svg { flex: none; display: block; }
 .group:is(:focus-visible, :has(:focus-visible)) .group-hover\\:hidden { display: none; }
 .group:is(:focus-visible, :has(:focus-visible)) .group-hover\\:opacity-100 { opacity: 1; }
 @media (hover: none) {
+  .group:hover:not([aria-current="true"], :focus-visible, :has(:focus-visible)) .group-hover\\:flex,
+  .group:hover:not(:focus-visible, :has(:focus-visible)) .group-hover\\:flex:not(.touch-current\\:flex) { display: none; }
+  .group:hover:not(:focus-visible, :has(:focus-visible)) .group-hover\\:hidden { display: flex; }
   .group[aria-current="true"] .touch-current\\:flex { display: flex; }
   .group .group-hover\\:opacity-100 { opacity: 1; }
 }

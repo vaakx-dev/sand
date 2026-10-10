@@ -22,16 +22,15 @@ export const githubControl = (ctx: Context<'wire'>, fail: (error: unknown) => vo
     }
   }
 
-  const find = async () => {
-    try {
-      return await ctx.wire.call<GithubFound>({ type: 'github.find' })
-    } catch (error) {
-      fail(error)
-      return undefined
-    }
-  }
+  const load = () =>
+    ctx.wire.call<GithubState>({ type: 'github.status' }).then(
+      value => state.set(value),
+      () => {},
+    )
 
-  return { state, run, find, load: () => run({ type: 'github.status' }) }
+  const find = () => ctx.wire.call<GithubFound>({ type: 'github.find' }).catch((): GithubFound => ({}))
+
+  return { state, run, find, load }
 }
 
 export type GithubControl = ReturnType<typeof githubControl>

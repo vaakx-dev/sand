@@ -54,7 +54,6 @@ export const signInModel = (control: GithubControl, done: (text?: string) => voi
 
   void control.find().then(local => {
     if (closed) return
-    if (!local) return done()
     found.set(local)
     if (!local.login) void start()
   })

@@ -15,6 +15,14 @@ export class PeerError extends Error {
   }
 }
 
+const socketMessages = { timeout: 'no answer in time', closed: 'the connection closed', failed: 'the connection failed' }
+
+export class SocketError extends Error {
+  constructor(readonly kind: keyof typeof socketMessages) {
+    super(socketMessages[kind])
+  }
+}
+
 export const askHost = (url: string, ticket: string, request: WireRequest, timeout = 15_000, sockets = new Set<WebSocket>()) =>
   new Promise<unknown>((resolve, reject) => {
     const socket = new WebSocket(ticketSocketUrl(url, ticket))
@@ -29,10 +37,10 @@ export const askHost = (url: string, ticket: string, request: WireRequest, timeo
       if (error) reject(error)
       else resolve(result)
     }
-    const timer = setTimeout(() => finish(new Error('no answer in time')), timeout)
+    const timer = setTimeout(() => finish(new SocketError('timeout')), timeout)
     socket.onopen = () => socket.send(JSON.stringify({ ...request, id: 1 }))
-    socket.onerror = () => finish(new Error('the connection failed'))
-    socket.onclose = () => finish(new Error('the connection closed'))
+    socket.onerror = () => finish(new SocketError('failed'))
+    socket.onclose = () => finish(new SocketError('closed'))
     socket.onmessage = event => {
       let message: ServerMessage
       try {

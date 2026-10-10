@@ -18,8 +18,8 @@ const askAll = async (wire: Wire, device: string, cwds: string[]): Promise<Found
 }
 
 export const createBranches = (ctx: Context<'wire'>): Branches => {
-  const ask = gathered((device, cwds) => askAll(ctx.wire, device, cwds))
-  const cache = placeCache<string>({
+  const ask = gathered(ctx, (device, cwds) => askAll(ctx.wire, device, cwds))
+  const cache = placeCache<string>(ctx, {
     load: async (cwd, device) => (await ask(cwd, device)) ?? undefined,
     changed: () => ctx.emit('branches.change'),
     freshMs: 15_000,

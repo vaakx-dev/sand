@@ -2,6 +2,7 @@ import { icon as lucideIcon, type IconNode } from '@vaakx-dev/vrui'
 import {
   AlarmClock,
   AlarmClockOff,
+  ArrowDown,
   ArrowLeft,
   ArrowUp,
   Bot,
@@ -28,6 +29,7 @@ import {
   Folder,
   FolderGit2,
   FolderPlus,
+  Gauge,
   GitBranch,
   GitCompare,
   GitFork,
@@ -70,6 +72,8 @@ import {
   Tag,
   TextSearch,
   Trash2,
+  TrendingDown,
+  TrendingUp,
   Workflow,
   Wrench,
   X,
@@ -108,6 +112,7 @@ const nodes = {
   gear: Settings,
   loader: LoaderCircle,
   working: CircleDashed,
+  arrowDown: ArrowDown,
   copy: Copy,
   alert: CircleAlert,
   back: ArrowLeft,
@@ -151,8 +156,24 @@ const nodes = {
   chart: ChartColumn,
   lock: Lock,
   goal: Goal,
+  gauge: Gauge,
+  'trend-up': TrendingUp,
+  'trend-down': TrendingDown,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes
 
-export const icon = (name: IconName, size = 16) => lucideIcon(nodes[name], size, 1.8)
+const lookup: Record<string, IconNode | undefined> = nodes
+
+const missing = new Set<string>()
+
+const known = (name: string) => {
+  const node = lookup[name]
+  if (!node && !missing.has(name)) {
+    missing.add(name)
+    console.warn(`Unknown icon "${name}"; known icons: ${Object.keys(nodes).join(', ')}`)
+  }
+  return node ?? CircleHelp
+}
+
+export const icon = (name: IconName, size = 16) => lucideIcon(known(name), size, 1.8)

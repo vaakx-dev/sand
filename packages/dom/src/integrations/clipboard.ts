@@ -20,7 +20,7 @@ export const copyText = async (text: string) => {
   }
 }
 
-export const copyWithNotice = async (notify: Notice | undefined, text: string, what: string) => {
+export const copyWithNotice = async (notify: Notice | undefined, text: string, what: string, done = `Copied ${what}`) => {
   const copied = await copyText(text)
-  notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
+  notify?.push(copied ? done : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
 }

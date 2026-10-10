@@ -29,8 +29,8 @@ export default definePlugin({
   },
   apply(ctx) {
     const client = worktreeClient(ctx)
-    const marks = owned(ctx, () => createMarks(ctx, client))
-    const states = owned(ctx, () => createStates(client))
+    const marks = createMarks(ctx, client)
+    const states = createStates(ctx, client)
     const progress = owned(ctx, () => createProgress(ctx))
     const choices = owned(ctx, () => createChoices(ctx, client))
     const changes = pulse(ctx, ['thread.select', 'threads.change', 'drafts.change', 'worktrees.change'])

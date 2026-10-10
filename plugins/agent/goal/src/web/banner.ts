@@ -11,7 +11,7 @@ const bannerMenu = (ctx: Context, objective: string): MenuSpec => ({
   title: 'Goal',
   subtitle: objective,
   actions: [
-    { id: 'copy', label: 'Copy objective', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, objective, 'goal') },
+    { id: 'copy', label: 'Copy objective', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, objective, 'goal', 'Copied the goal') },
     ...(ctx.commands ? [{ id: 'clear', label: 'Clear goal', icon: 'x', group: 'goal', danger: true, run: () => clear(ctx) } satisfies NavAction] : []),
   ],
 })

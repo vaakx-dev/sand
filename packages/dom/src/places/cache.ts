@@ -1,4 +1,7 @@
 import { collectScope, onTimeout } from '@vaakx-dev/vrui'
+import type { Context } from 'drydock'
+
+export type PlaceOwner = Pick<Context, 'effect'>
 
 export type PlaceLoad<T> = (cwd: string, device: string) => Promise<T | undefined>
 
@@ -22,11 +25,16 @@ interface Known<T> {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
-export const placeCache = <T>({ load, changed, freshMs = Infinity, ready = () => true }: PlaceCacheOptions<T>): PlaceCache<T> => {
+export const placeCache = <T>(owner: PlaceOwner, { load, changed, freshMs = Infinity, ready = () => true }: PlaceCacheOptions<T>): PlaceCache<T> => {
   const known = new Map<string, Known<T>>()
   const loading = new Map<string, Promise<T | undefined>>()
   const again = new Set<string>()
   let pending: (() => void) | undefined
+  let live = true
+  owner.effect(() => () => {
+    live = false
+    pending?.()
+  })
 
   const keyOf = (cwd: string, device: string) => `${device}\0${cwd}`
 
@@ -36,7 +44,7 @@ export const placeCache = <T>({ load, changed, freshMs = Infinity, ready = () =>
   }
 
   const announce = () => {
-    pending ??= collectScope(() => onTimeout(flush)).value
+    if (live) pending ??= collectScope(() => onTimeout(flush)).value
   }
 
   const settle = (cwd: string, device: string, value: T | undefined) => {

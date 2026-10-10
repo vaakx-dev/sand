@@ -1,6 +1,12 @@
 import { button, read, type Child, type ClassValue, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 
-type Size = 'sm' | 'md'
+type Size = 'sm' | 'md' | 'lg'
+
+const controlSizes: Record<Size, string> = {
+  sm: 'h-6 rounded-md px-2 text-xs',
+  md: 'h-8 rounded-lg px-3 text-sm',
+  lg: 'h-10 rounded-xl px-3 text-sm',
+}
 
 export type ButtonProps = Props<HTMLButtonElement> & { size?: Size }
 export type ToggleProps = ButtonProps & { active?: MaybeReactive<boolean> }
@@ -23,7 +29,7 @@ export const controlButton = (tone: ClassValue, { size = 'md', class: extra, ...
       ...props,
       class: [
         'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap transition-colors',
-        size === 'sm' ? 'h-6 rounded-md px-2 text-xs' : 'h-8 rounded-lg px-3 text-sm',
+        controlSizes[size],
         tone,
         extra,
       ],

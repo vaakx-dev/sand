@@ -15,7 +15,7 @@ const parseChange = (line: string): BuildChange | undefined => {
 }
 
 export const buildHistory = async (root: string) => {
-  const log = await gitMaybe(root, ['log', `-n${depth}`, `--format=%H${separator}%s`])
+  const log = await gitMaybe(root, ['log', `-n${depth}`, `--format=%H${separator}%s`]).catch(() => undefined)
   if (!log) {
     console.error('git history is not available, so this build lists no changes')
     return undefined
