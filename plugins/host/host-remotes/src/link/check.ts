@@ -6,7 +6,7 @@ import type { RemoteRecord } from '../contract'
 import { callLink, type LinkReply } from './call'
 import type { Status } from './status'
 
-export interface CheckOptions {
+interface CheckOptions {
   self: DeviceInfo
   urls(): string[]
   store: RemoteStore

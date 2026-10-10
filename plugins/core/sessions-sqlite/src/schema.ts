@@ -34,14 +34,12 @@ const additive: Step = db => {
   if (existing.has('unsettled')) db.run('alter table sessions drop column unsettled')
 }
 
-const addSnoozed: Step = additive
-
 const coveringIndex: Step = db => {
   db.run('create index if not exists entries_session_type_at on entries (session, type, at)')
   db.run('drop index if exists entries_session')
 }
 
-const steps: Step[] = [additive, addSnoozed, coveringIndex, syncLog]
+const steps: Step[] = [additive, additive, coveringIndex, syncLog]
 
 export const migrate = (db: Database) => {
   const { user_version } = db.query<{ user_version: number }, []>('pragma user_version').get()!

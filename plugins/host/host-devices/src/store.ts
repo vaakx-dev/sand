@@ -8,13 +8,15 @@ export interface DeviceRecord extends PairedDevice {
   keyHash: string
 }
 
-export const deviceKinds: DeviceKind[] = ['pc', 'phone', 'browser']
+const deviceKinds = new Set<unknown>(['pc', 'phone', 'browser'] satisfies DeviceKind[])
+
+export const isDeviceKind = (value: unknown): value is DeviceKind => deviceKinds.has(value)
 
 const isDevice = (value: unknown): value is DeviceRecord =>
   isRecord(value) &&
   typeof value.id === 'string' &&
   typeof value.name === 'string' &&
-  deviceKinds.includes(value.kind as DeviceKind) &&
+  isDeviceKind(value.kind) &&
   typeof value.keyHash === 'string' &&
   typeof value.added === 'number' &&
   typeof value.lastSeen === 'number'

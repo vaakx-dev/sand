@@ -1,7 +1,8 @@
-import { effect, onTimeout, sig, untrack, type MaybeReactive } from '@vaakx-dev/vrui'
-import { read } from './read'
+import { effect, onTimeout, read, sig, untrack, type MaybeReactive } from '@vaakx-dev/vrui'
 
-export const delayed = (active: MaybeReactive<boolean>, ms = 400) => {
+const delayMs = 400
+
+export const delayed = (active: MaybeReactive<boolean>) => {
   const shown = sig(false)
   let since = 0
   effect(() => {
@@ -12,7 +13,7 @@ export const delayed = (active: MaybeReactive<boolean>, ms = 400) => {
         since = Date.now()
         shown.set(on)
       },
-      on ? ms : Math.max(0, since + ms - Date.now()),
+      on ? delayMs : Math.max(0, since + delayMs - Date.now()),
     )
   })
   return shown

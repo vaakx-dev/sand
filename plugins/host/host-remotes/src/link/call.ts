@@ -5,9 +5,7 @@ import type { RemoteRecord } from '../contract'
 
 const timeout = 5000
 
-export type LinkReply = { kind: 'linked'; url: string; result: PairLinkResult } | { kind: 'refused'; url: string; reason: string } | { kind: 'old'; url: string }
-
-export class Unreachable extends Error {}
+export type LinkReply = { kind: 'linked'; url: string; result: PairLinkResult } | { kind: 'refused' | 'old'; url: string }
 
 const linkAt = async (url: string, record: RemoteRecord, body: PairLinkRequest): Promise<LinkReply | undefined> => {
   const response = await fetch(`${trimSlash(url)}${hostPaths.pairLink}`, {
@@ -16,10 +14,7 @@ const linkAt = async (url: string, record: RemoteRecord, body: PairLinkRequest):
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeout),
   })
-  if (response.status === 401 || response.status === 403) {
-    const reason = (await response.text().catch(() => '')).trim()
-    return { kind: 'refused', url, reason: reason || `HTTP ${response.status}` }
-  }
+  if (response.status === 401 || response.status === 403) return { kind: 'refused', url }
   if (response.status === 404 || response.status === 405) return { kind: 'old', url }
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
   const result = (await response.json()) as PairLinkResult
@@ -37,5 +32,5 @@ export const callLink = async (record: RemoteRecord, body: PairLinkRequest): Pro
       failures.push(`${url}: ${errorMessage(error)}`)
     }
   }
-  throw new Unreachable(failures.join('\n') || 'no address to try')
+  throw new Error(failures.join('\n') || 'no address to try')
 }

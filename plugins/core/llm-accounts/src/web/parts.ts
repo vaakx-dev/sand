@@ -1,10 +1,10 @@
-import { div, p, secondaryAction, sig, span, type Child } from '@sand/dom'
-
-export type Busy = ReturnType<typeof sig<boolean>>
+import { div, hint, p, secondaryAction, span, type Child, type Sig } from '@sand/dom'
 
 export const note = (text: string | (() => string)) => p({ class: 'text-xs text-neutral-400' }, text)
 
 export const problem = (text: () => string) => p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !text() }, text)
+
+export const hintRow = (text: string) => div({ class: 'bg-neutral-900' }, hint(text))
 
 export const actions = (...children: Child[]) => div({ class: 'flex flex-wrap items-center justify-end gap-2' }, ...children)
 
@@ -33,10 +33,10 @@ export const accountRowWith = (props: object, logo: Child, title: Child, detail:
 
 export const accountRow = (logo: Child, title: Child, detail: Child, ...controls: Child[]) => accountRowWith({}, logo, title, detail, ...controls)
 
-export const busyAction = (busy: Busy, run: () => Promise<void>) => async () => {
+export const whileBusy = async (busy: Sig<boolean>, work: () => Promise<void>) => {
   busy.set(true)
   try {
-    await run()
+    await work()
   } finally {
     busy.set(false)
   }

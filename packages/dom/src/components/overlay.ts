@@ -1,18 +1,7 @@
 import { div, event, h2, type Child, type Props } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { dismissible, layer, returnFocus } from '../shell/layers'
+import { layer, modal } from '../shell/layers'
 import { iconButton } from './button'
-
-const safeArea = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0'
-
-const remembering = (previous: Element | null, node: Node, close: () => void) => {
-  const stop = dismissible(node, close)
-  const refocus = returnFocus(node, previous)
-  return () => {
-    stop()
-    refocus()
-  }
-}
 
 export const overlay = (close: () => void, ...children: Child[]) => {
   const previous = document.activeElement
@@ -20,7 +9,7 @@ export const overlay = (close: () => void, ...children: Child[]) => {
     {
       class: [layer.dialog, 'fixed inset-0 flex items-start justify-center bg-black/50 px-3 pt-10 pb-3 animate-fade md:pt-20'],
       onMouseDown: event(close, { self: true }),
-      onMount: node => remembering(previous, node, close),
+      onMount: node => modal(node, close, previous),
     },
     ...children,
   )
@@ -50,14 +39,14 @@ export const drawer = (close: () => void, { class: extra, ...props }: Props<HTML
     {
       class: [layer.drawer, 'fixed inset-0 flex justify-end bg-black/50 animate-fade'],
       onMouseDown: event(close, { self: true }),
-      onMount: node => remembering(previous, node, close),
+      onMount: node => modal(node, close, previous),
     },
     div(
       {
         role: 'dialog',
         ...props,
         class: ['flex h-full w-full max-w-lg flex-col bg-neutral-900 shadow-xl animate-slide', extra],
-        style: { padding: safeArea },
+        style: { padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0' },
       },
       ...children,
     ),

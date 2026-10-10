@@ -6,26 +6,32 @@ import { added, favourite, hidden, newModels, removed, seen } from '../catalog/p
 import type { Prefs } from '../catalog/types'
 import type { View } from '../catalog/view'
 
-export interface ModelsOptions {
+interface ModelsOptions {
   view: View
   catalog: Catalog
   refreshPeers(): Promise<void>
 }
 
+const mode = (value: unknown): NewModels => {
+  if (value !== 'show' && value !== 'hide') throw new Error('New models must be "show" or "hide"')
+  return value
+}
+
 export const serveModels = (server: Server, { view, catalog, refreshPeers }: ModelsOptions) => {
-  const ready = () => catalog.ready
   const source = async (value: unknown) => {
-    await ready()
+    await catalog.ready
     if (typeof value !== 'string' || !view.entry(value)) throw new Error(`Unknown model source "${String(value)}"`)
     return value
   }
+
   const model = async (value: unknown) => {
-    await ready()
+    await catalog.ready
     const id = typeof value === 'string' ? (view.find(value)?.id ?? value) : ''
     const parts = split(id)
     if (!parts?.name || !view.entry(parts.source)) throw new Error(`Unknown model "${String(value)}"`)
     return { id, ...parts }
   }
+
   const update = (edit: (prefs: Prefs) => Prefs) => catalog.setPrefs(edit(catalog.prefs()))
 
   const add = async (from: string, name: string): Promise<ModelInfo> => {
@@ -36,17 +42,12 @@ export const serveModels = (server: Server, { view, catalog, refreshPeers }: Mod
     return found
   }
 
-  const mode = (value: unknown): NewModels => {
-    if (value !== 'show' && value !== 'hide') throw new Error('New models must be "show" or "hide"')
-    return value
-  }
-
   return server.handle({
     'models.catalog': async request => view.list(await source(request.source)),
-    'models.pref': async request => {
-      const { id } = await model(request.model)
-      if (typeof request.hidden === 'boolean') update(prefs => hidden(prefs, id, request.hidden!))
-      if (typeof request.favourite === 'boolean') update(prefs => favourite(prefs, id, request.favourite!))
+    'models.pref': async ({ model: wanted, hidden: hide, favourite: star }) => {
+      const { id } = await model(wanted)
+      if (typeof hide === 'boolean') update(prefs => hidden(prefs, id, hide))
+      if (typeof star === 'boolean') update(prefs => favourite(prefs, id, star))
     },
     'models.add': async request => {
       const name = String(request.name ?? '').trim()

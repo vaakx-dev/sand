@@ -5,15 +5,15 @@ import { saveLan } from './settings'
 
 const settleDelay = 200
 
-export interface ToggleOptions {
+interface ToggleOptions {
   home: string
   listener: Listener
   changed(): Promise<void>
 }
 
 export const createToggle = ({ home, listener, changed }: ToggleOptions) => {
-  let queue = Promise.resolve()
   const saving = serial()
+  const switching = serial()
   let timer: Timer | undefined
   let stopped = false
 
@@ -33,7 +33,7 @@ export const createToggle = ({ home, listener, changed }: ToggleOptions) => {
     await save(lan)
     clearTimeout(timer)
     timer = setTimeout(() => {
-      queue = queue.then(() => apply(lan)).catch(error => console.error(`sand could not switch networks: ${errorMessage(error)}`))
+      switching(() => apply(lan)).catch(error => console.error(`sand could not switch networks: ${errorMessage(error)}`))
     }, settleDelay)
     return { lan, urls: listener.urlsFor(lan) }
   }

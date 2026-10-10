@@ -2,7 +2,10 @@ import type { Remote, RemoteRecord } from '@sand/protocol'
 import { join } from 'node:path'
 import { serial } from '../../async/serial'
 import { writePrivateJson } from '../../fs/private'
+import { debouncedWatch } from '../../fs/watch'
 import { isRecord } from '../../json/record'
+
+const fileName = 'remotes.json'
 
 const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0
 
@@ -32,8 +35,10 @@ const read = async (file: string): Promise<RemoteRecord[]> => {
 
 export const toRemote = ({ key: _, ...remote }: RemoteRecord): Remote => remote
 
+export const remoteUrls = ({ url, urls }: Pick<RemoteRecord, 'url' | 'urls'>) => [...new Set([url, ...urls])]
+
 export const remoteStore = async (home: string) => {
-  const file = join(home, 'remotes.json')
+  const file = join(home, fileName)
   let records = await read(file)
   const queue = serial()
   const save = (next: RemoteRecord[]) => {
@@ -49,3 +54,8 @@ export const remoteStore = async (home: string) => {
 }
 
 export type RemoteStore = Awaited<ReturnType<typeof remoteStore>>
+
+const isStoreFile = (filename: string | null) =>
+  process.platform === 'win32' ? filename?.toLowerCase() === fileName : filename === fileName
+
+export const watchRemotes = (home: string, onChange: () => void) => debouncedWatch(home, { only: isStoreFile }, onChange, 500)

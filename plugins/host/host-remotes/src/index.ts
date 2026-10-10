@@ -5,11 +5,13 @@ import { definePlugin } from 'drydock'
 import { createChecks } from './link/check'
 import { linkRoute } from './link/route'
 import { createStatus } from './link/status'
-import { pcList } from './pcs/list'
+import { pcList } from './pcs'
 import { remoteRequests } from './requests'
 import { createRemotes } from './service'
 
 const every = 60_000
+const firstCheck = 2000
+const checkAfterPairing = 500
 
 export default definePlugin({
   name: 'host-remotes',
@@ -43,16 +45,17 @@ export default definePlugin({
       },
     })
     const checks = createChecks({ self, urls, store, devices, status, renamed: () => ctx.hub.broadcast({ name: 'remotes.change', args: [remotes.list()] }) })
+    const checkSoon = (id: string) => setTimeout(() => void checks.one(id), checkAfterPairing)
     const accept = async (back: PairBack, address?: string) => {
       const stored = await remotes.accept(back, address)
-      if (stored) setTimeout(() => void checks.one(back.device.id), 500)
+      if (stored) checkSoon(back.device.id)
       return stored
     }
     ctx.provide('hostRemotes', {
       list: remotes.list,
       add: async link => {
         const added = await remotes.add(link)
-        setTimeout(() => void checks.one(added.id), 500)
+        checkSoon(added.id)
         return added
       },
       accept,
@@ -67,7 +70,7 @@ export default definePlugin({
     )
     ctx.effect(() => {
       const timer = setInterval(() => void checks.round(), every)
-      const first = setTimeout(() => void checks.round(), 2000)
+      const first = setTimeout(() => void checks.round(), firstCheck)
       return () => {
         clearInterval(timer)
         clearTimeout(first)

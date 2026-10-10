@@ -1,7 +1,8 @@
 import type { BuildInfo } from '@sand/protocol'
 import { mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { hashApp, readStamp, type BuildStamp } from './build'
+import { isRecord } from '../../json/record'
+import { hashApp, readStamp } from './build'
 import { validVersion } from './bun/home'
 import { buildStamp, isAppPath } from './files'
 import { hashModules, isLinkEntry, isModulePath, modulesFolder, releaseDamaged, releaseTooOld } from './release/manifest'
@@ -22,17 +23,17 @@ const readEntries = async (bytes: Uint8Array) => {
   return entries
 }
 
-const parseStamp = async (entries: Entries): Promise<Partial<BuildStamp>> => {
-  const stamp = await entries
+const parseStamp = async (entries: Entries) => {
+  const stamp: unknown = await entries
     .get(buildStamp)!
     .json()
     .catch(() => undefined)
-  if (!stamp || typeof stamp !== 'object') throw new Error(releaseDamaged)
+  if (!isRecord(stamp)) throw new Error(releaseDamaged)
   return stamp
 }
 
 const isLinkMap = (links: unknown): links is Record<string, string> =>
-  !!links && typeof links === 'object' && !Array.isArray(links) && Object.values(links).every(target => typeof target === 'string')
+  isRecord(links) && Object.values(links).every(target => typeof target === 'string')
 
 const readRelease = async (entries: Entries): Promise<Release> => {
   const { modules, links, bun } = await parseStamp(entries)

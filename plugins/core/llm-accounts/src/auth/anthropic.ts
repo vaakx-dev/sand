@@ -1,3 +1,4 @@
+import { fieldsOf, isText, type Json } from './json'
 import { pkce } from './pkce'
 import { expiresAt, postToken, required } from './request'
 import type { Tokens } from './store'
@@ -54,24 +55,35 @@ const parsePasted = (input: string) => {
 
 const plans: Record<string, string> = { claude_max: 'Max', claude_pro: 'Pro', claude_team: 'Team', claude_enterprise: 'Enterprise' }
 
+const planOf = (account: Json, organization: Json) => {
+  const type = organization.organization_type
+  if (isText(type) && plans[type]) return plans[type]
+  if (account.has_claude_max) return 'Max'
+  if (account.has_claude_pro) return 'Pro'
+}
+
 const profile = async (access: string): Promise<Pick<Tokens, 'email' | 'plan'>> => {
   try {
     const response = await fetch(profileUrl, { headers: { Authorization: `Bearer ${access}`, 'Content-Type': 'application/json' } })
     if (!response.ok) return {}
-    const { account, organization } = (await response.json()) as any
-    const plan = plans[organization?.organization_type] ?? (account?.has_claude_max ? 'Max' : account?.has_claude_pro ? 'Pro' : undefined)
-    return { ...(account?.email && { email: account.email }), ...(plan && { plan }) }
+    const json = fieldsOf(await response.json())
+    const account = fieldsOf(json.account)
+    const plan = planOf(account, fieldsOf(json.organization))
+    return { ...(isText(account.email) && { email: account.email }), ...(plan && { plan }) }
   } catch {
     return {}
   }
 }
 
-const tokensOf = (json: any): Tokens => ({
-  access: required(json?.access_token, 'access_token'),
-  refresh: required(json?.refresh_token, 'refresh_token'),
-  expires: expiresAt(json?.expires_in),
-  ...(json?.account?.email_address && { email: json.account.email_address }),
-})
+const tokensOf = (json: Json): Tokens => {
+  const email = fieldsOf(json.account).email_address
+  return {
+    access: required(json.access_token, 'access_token'),
+    refresh: required(json.refresh_token, 'refresh_token'),
+    expires: expiresAt(json.expires_in),
+    ...(isText(email) && { email }),
+  }
+}
 
 export const exchangeClaude = async (pasted: string, flow: ClaudeFlow): Promise<Tokens> => {
   const callback = parsePasted(pasted)

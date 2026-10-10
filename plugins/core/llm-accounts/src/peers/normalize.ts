@@ -1,12 +1,13 @@
 import type { ModelInfo, ModelPrice } from '../contract'
 import { fixedLabels, legacyId } from '../auth/kinds'
+import { qualify } from '../catalog/build'
 import type { SharedAccount } from '../share/info'
 import type { CachedInfo } from './cache'
 
 type RawAccount = Omit<SharedAccount, 'id' | 'kind'> & Partial<Pick<SharedAccount, 'id' | 'kind'>>
 
 const account = (raw: RawAccount): SharedAccount => {
-  if (raw.id && raw.kind) return raw as SharedAccount
+  if (raw.id && raw.kind) return { ...raw, id: raw.id, kind: raw.kind }
   const id = legacyId(raw.provider, raw.method)
   return { ...raw, id, kind: id, label: fixedLabels[id] }
 }
@@ -15,12 +16,11 @@ const qualified = (accounts: SharedAccount[], prices: Record<string, ModelPrice>
   if (model.source) return [{ model, price: prices[model.id] }]
   const owner = accounts.find(found => found.provider === model.provider)
   if (!owner) return []
-  const id = `${owner.id}/${model.id}`
-  return [{ model: { ...model, id, source: owner.id, name: model.id }, price: prices[model.id] }]
+  return [{ model: { ...model, id: qualify(owner.id, model.id), source: owner.id, name: model.id }, price: prices[model.id] }]
 }
 
 export const normalize = (info: CachedInfo): CachedInfo => {
-  const raw = info.accounts as RawAccount[]
+  const raw: RawAccount[] = info.accounts
   if (raw.every(found => found.id && found.kind) && info.models.every(model => model.source)) return info
   const accounts = raw.map(account)
   const models = info.models.flatMap(qualified(accounts, info.prices ?? {}))

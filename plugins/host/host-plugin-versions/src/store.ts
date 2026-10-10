@@ -10,7 +10,7 @@ import { discoverTargets, present, type TargetInfo, targetInfo } from './targets
 
 const keep = 30
 
-export const createVersionStore = async (home: string, changed: () => void = () => {}) => {
+export const createVersionStore = async (home: string, changed: () => void) => {
   const root = join(home, 'versions')
   const staging = join(root, '.staging')
   await mkdir(root, { recursive: true })
@@ -32,10 +32,10 @@ export const createVersionStore = async (home: string, changed: () => void = () 
   const prune = async (key: string) => {
     const list = versionsOf(key)
     while (list.length > keep) {
-      const at = list.findIndex(version => version.id !== index.good[key])
-      if (at < 0) return
-      const [old] = list.splice(at, 1)
-      await rm(folderOf(key, old!.id), { recursive: true, force: true })
+      const old = list.find(version => version.id !== index.good[key])
+      if (!old) return
+      list.splice(list.indexOf(old), 1)
+      await rm(folderOf(key, old.id), { recursive: true, force: true })
     }
   }
 
@@ -147,5 +147,3 @@ export const createVersionStore = async (home: string, changed: () => void = () 
 
   return { list, snapshot, restore, markGood, autoRestore }
 }
-
-export type VersionStore = Awaited<ReturnType<typeof createVersionStore>>

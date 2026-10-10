@@ -9,7 +9,7 @@ export const shine = (...children: Child[]) => {
       class: 'live-shine',
       'data-seen': running,
       onMount: node => {
-        intersectionObserver(node as Element, entries => inView.set(entries.at(-1)?.isIntersecting ?? false))
+        intersectionObserver(node, entries => inView.set(entries.at(-1)?.isIntersecting ?? false))
         onDocument(node, 'visibilitychange', () => pageShown.set(!document.hidden))
       },
     },

@@ -5,7 +5,7 @@ import { accountLogo } from '../names'
 import { accountRow, actions, note } from '../parts'
 import type { LoginControl } from '../state'
 
-const hostOf = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/v1\/?$/, '')
+const shortUrl = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/v1\/?$/, '')
 
 const isAdded = (control: LoginControl, server: DetectedServer) => !!control.state.get()?.accounts.some(account => account.kind === 'server' && account.url === server.url)
 
@@ -13,7 +13,7 @@ const foundRow = (control: LoginControl, server: DetectedServer, add: (server: D
   accountRow(
     accountLogo(server.provider),
     server.name,
-    `${hostOf(server.url)} · ${plural(server.models, 'model')}`,
+    `${shortUrl(server.url)} · ${plural(server.models, 'model')}`,
     isAdded(control, server) ? badge('success', 'Added') : primaryAction({ size: 'sm', onClick: () => add(server) }, 'Add'),
   )
 

@@ -5,12 +5,10 @@ const marks: Partial<Record<NavItem['state'], string>> = { running: 'Working', b
 
 const agents = (count: number) => `${count} agent${count === 1 ? '' : 's'}`
 
-const backgroundStatus = ({ jobs = 1, workflow }: NavItem) =>
-  workflow?.total
-    ? `Workflow running, ${workflow.done} of ${workflow.total} agents finished`
-    : workflow
-      ? 'Workflow running'
-      : `${agents(jobs)} running in the background`
+const backgroundStatus = ({ jobs = 1, workflow }: NavItem) => {
+  if (!workflow) return `${agents(jobs)} running in the background`
+  return workflow.total ? `Workflow running, ${workflow.done} of ${workflow.total} agents finished` : 'Workflow running'
+}
 
 const runningStatus = ({ jobs }: NavItem) => (jobs ? `Working, with ${agents(jobs)} running` : 'Working')
 

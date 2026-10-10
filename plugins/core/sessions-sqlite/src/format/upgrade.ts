@@ -1,12 +1,13 @@
 import type { Entry } from '@sand/messages'
-import { type FormatStep, steps } from './steps'
+
+interface FormatStep {
+  to: number
+  entry(entry: Entry): Entry | null
+}
+
+const steps: FormatStep[] = []
 
 export const current = 1 + steps.length
-
-export interface Upgraded {
-  entries: Entry[]
-  resolve(id: string | null): string | null
-}
 
 const applyStep = (entries: Entry[], step: FormatStep, dropped: Map<string, string | null>) =>
   entries.flatMap(entry => {
@@ -15,10 +16,10 @@ const applyStep = (entries: Entry[], step: FormatStep, dropped: Map<string, stri
     return next ? [next] : []
   })
 
-export const upgradeAll = (entries: Entry[], from: number): Upgraded => {
+export const upgradeAll = (entries: Entry[], from: number) => {
   const dropped = new Map<string, string | null>()
   const resolve = (id: string | null) => {
-    while (id && dropped.has(id)) id = dropped.get(id)!
+    while (id && dropped.has(id)) id = dropped.get(id) ?? null
     return id
   }
   const kept = steps.filter(step => step.to > from).reduce((list, step) => applyStep(list, step, dropped), entries)

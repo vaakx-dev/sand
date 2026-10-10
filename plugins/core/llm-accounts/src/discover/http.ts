@@ -1,12 +1,16 @@
 const timeout = 10_000
 
-export const getJson = async (source: string, url: string, headers: Record<string, string> = {}, limit = timeout): Promise<any> => {
+const reasonOf = (error: unknown) => {
+  if (!(error instanceof Error)) return 'request failed'
+  return error.name === 'TimeoutError' ? 'timed out' : error.message
+}
+
+export const getJson = async (source: string, url: string, headers: Record<string, string> = {}, limit = timeout): Promise<unknown> => {
   let response: Response
   try {
     response = await fetch(url, { headers: { accept: 'application/json', ...headers }, signal: AbortSignal.timeout(limit) })
   } catch (error) {
-    const reason = error instanceof Error && error.name === 'TimeoutError' ? 'timed out' : error instanceof Error ? error.message : 'request failed'
-    throw new Error(`${source} model list failed: ${reason}`)
+    throw new Error(`${source} model list failed: ${reasonOf(error)}`)
   }
   if (!response.ok) throw new Error(`${source} model list failed: HTTP ${response.status} ${response.statusText}`.trim())
   try {
@@ -15,5 +19,3 @@ export const getJson = async (source: string, url: string, headers: Record<strin
     throw new Error(`${source} model list failed: the answer was not JSON`)
   }
 }
-
-export const bearer = (key?: string): Record<string, string> => (key ? { authorization: `Bearer ${key}` } : {})

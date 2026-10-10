@@ -4,7 +4,7 @@ import type { Accounts } from '../auth/accounts'
 import { isKeyKind, isSignInKind } from '../auth/kinds'
 import type { Login } from '../auth/login'
 
-export interface LoginExtras {
+interface LoginExtras {
   state(): LoginState
   load(): Promise<void>
   conflict(account: SignInKind): LoginConflict | undefined
@@ -12,51 +12,56 @@ export interface LoginExtras {
 
 const unknown = (account: unknown) => new Error(`Unknown account "${String(account)}"`)
 
+const signInKind = (account: unknown): SignInKind => {
+  if (!isSignInKind(account)) throw unknown(account)
+  return account
+}
+
+const keyKind = (account: unknown): KeyKind => {
+  if (!isKeyKind(account)) throw unknown(account)
+  return account
+}
+
+const draftOf = ({ id, name, url, key, provider }: ServerDraft): ServerDraft => ({
+  ...(typeof id === 'string' && id && { id }),
+  name: String(name ?? ''),
+  url: String(url ?? ''),
+  ...(typeof key === 'string' && { key }),
+  ...(provider && { provider }),
+})
+
 export const serveLogin = (server: Server, accounts: Accounts, login: Login, extras: LoginExtras) => {
-  const signIn = (account: unknown): SignInKind => {
-    if (!isSignInKind(account)) throw unknown(account)
-    return account
-  }
-  const keyed = (account: unknown): KeyKind => {
-    if (!isKeyKind(account)) throw unknown(account)
-    return account
-  }
   const known = async (account: unknown) => {
     await accounts.ready
     if (typeof account !== 'string' || !accounts.known(account)) throw unknown(account)
     return account
   }
-  const then =
+
+  const withState =
     <T>(run: (request: T) => Promise<unknown>) =>
     async (request: T) => {
       await run(request)
       return extras.state()
     }
+
   const start = async (account: SignInKind, anyway: boolean) => {
     const conflict = anyway ? undefined : extras.conflict(account)
     if (conflict) return accounts.conflict(account, conflict)
     await login.start(account)
   }
-  const draft = ({ id, name, url, key, provider }: ServerDraft): ServerDraft => ({
-    ...(typeof id === 'string' && id && { id }),
-    name: String(name ?? ''),
-    url: String(url ?? ''),
-    ...(typeof key === 'string' && { key }),
-    ...(provider && { provider }),
-  })
 
   return server.handle({
-    'login.status': then(async () => {
+    'login.status': withState(async () => {
       await accounts.ready
       await extras.load()
     }),
-    'login.start': then(({ account, anyway }) => start(signIn(account), anyway === true)),
-    'login.finish': then(({ account, code }) => login.finish(signIn(account), String(code ?? ''))),
-    'login.key': then(({ account, key, baseUrl }) => login.key(keyed(account), String(key ?? '').trim(), String(baseUrl ?? '').trim())),
-    'login.server': then(request => login.server(draft(request))),
+    'login.start': withState(({ account, anyway }) => start(signInKind(account), anyway === true)),
+    'login.finish': withState(({ account, code }) => login.finish(signInKind(account), String(code ?? ''))),
+    'login.key': withState(({ account, key, baseUrl }) => login.key(keyKind(account), String(key ?? '').trim(), String(baseUrl ?? '').trim())),
+    'login.server': withState(request => login.server(draftOf(request))),
     'login.detect': () => login.detect(),
-    'login.cancel': then(async ({ account }) => login.cancel(await known(account))),
-    'login.logout': then(async ({ account }) => login.logout(await known(account))),
-    'login.shared': then(async ({ account, shared }) => accounts.setShared(await known(account), shared === true)),
+    'login.cancel': withState(async ({ account }) => login.cancel(await known(account))),
+    'login.logout': withState(async ({ account }) => login.logout(await known(account))),
+    'login.shared': withState(async ({ account, shared }) => accounts.setShared(await known(account), shared === true)),
   })
 }

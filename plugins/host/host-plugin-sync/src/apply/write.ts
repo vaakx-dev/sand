@@ -81,6 +81,10 @@ export const writePlugin = async (root: string, work: string, incoming: PluginFi
   }
   const moved: string[] = []
   let trash: string | undefined
+  const clear = async () => {
+    await removeQuietly(staging)
+    if (trash) await removeQuietly(trash)
+  }
   const restore = async (): Promise<boolean> => {
     if (trash && !(await exists(target))) {
       const back = await rename(join(trash, incoming.plugin), target).then(() => true, () => false)
@@ -102,16 +106,11 @@ export const writePlugin = async (root: string, work: string, incoming: PluginFi
     await rename(staging, target)
   } catch (error) {
     if (!(await restore())) throw error
-    if (!renameBlocked(error)) {
-      await removeQuietly(staging)
-      if (trash) await removeQuietly(trash)
-      throw error
-    }
     try {
+      if (!renameBlocked(error)) throw error
       await writeInPlace(target, files)
     } finally {
-      await removeQuietly(staging)
-      if (trash) await removeQuietly(trash)
+      await clear()
     }
     return
   }

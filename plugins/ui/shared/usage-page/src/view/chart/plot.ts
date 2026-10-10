@@ -1,4 +1,4 @@
-import { color, div, dynamicChild, line, path, sig, span, svg } from '@sand/dom'
+import { colorVar, div, dynamicChild, line, path, sig, span, svg } from '@sand/dom'
 import { periodLabel } from '@sand/kit'
 import type { Merged } from '../../data/types'
 import { tickText, type Metric } from '../../format'
@@ -72,7 +72,7 @@ export const plot = (usage: Merged, keys: string[], series: Series[], metric: Me
             role: 'img',
             'aria-label': `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric} by account`,
           },
-          ticks.map(tick => line({ x1: 0, x2: width, y1: toY(tick), y2: toY(tick), stroke: color('neutral', 800), vectorEffect: 'non-scaling-stroke' })),
+          ticks.map(tick => line({ x1: 0, x2: width, y1: toY(tick), y2: toY(tick), stroke: colorVar('neutral', 800), vectorEffect: 'non-scaling-stroke' })),
           drawn.map(stroke => stroke.area),
           drawn.map(stroke => stroke.line),
           line({
@@ -80,7 +80,7 @@ export const plot = (usage: Merged, keys: string[], series: Series[], metric: Me
             x2: guideX,
             y1: top,
             y2: height,
-            stroke: color('neutral', 500),
+            stroke: colorVar('neutral', 500),
             vectorEffect: 'non-scaling-stroke',
             visibility: () => (hover.get() ? 'visible' : 'hidden'),
           }),

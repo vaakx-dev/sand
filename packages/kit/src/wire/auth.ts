@@ -1,5 +1,6 @@
-import type { BuildInfo, HostIdentity, PairInvite, PairRequest, PairResult, Ticket } from '@sand/protocol'
+import type { HostIdentity, PairInvite, PairRequest, PairResult, Ticket } from '@sand/protocol'
 import { trimSlash } from '../text/url'
+import { parseBuildInfo } from './build'
 import { hostPaths } from './pairing'
 
 const timeout = 5000
@@ -20,20 +21,14 @@ interface IdentityAnswer {
   id?: string
   name?: string
   version?: string
-  build?: { id?: unknown; time?: unknown }
-}
-
-const readBuild = (build: IdentityAnswer['build']): BuildInfo | undefined => {
-  if (typeof build?.id !== 'string' || !build.id) return
-  if (typeof build.time !== 'number' || !Number.isFinite(build.time)) return
-  return { id: build.id, time: build.time }
+  build?: unknown
 }
 
 export const fetchHostIdentity = async (base: string, wait = timeout): Promise<HostIdentity> => {
   const body = await json<IdentityAnswer>(await fetch(endpoint(base, hostPaths.identity), { signal: AbortSignal.timeout(wait) }))
   const deviceId = body?.deviceId ?? body?.id
   if (!deviceId) throw new Error(`${base} did not say which PC it is`)
-  const build = readBuild(body.build)
+  const build = parseBuildInfo(body.build)
   return { deviceId, name: body.name ?? '', version: body.version ?? '', ...(build && { build }) }
 }
 

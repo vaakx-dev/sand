@@ -1,9 +1,10 @@
-import type { Block, StopReason, ToolCallBlock, Usage } from '@sand/messages'
+import type { Block, StopReason, Usage } from '@sand/messages'
 import type { LLMEvent } from '../contract'
-import { isRecord } from '@sand/kit'
 import { ApiError } from '../http/error'
+import { parseToolInput } from '../http/tool-input'
+import type { ClaudeEvent, RawBlock, RawUsage } from './events'
 
-const toBlock = (block: any): Block | undefined => {
+const toBlock = (block: RawBlock): Block | undefined => {
   switch (block.type) {
     case 'text':
       return { type: 'text', text: block.text ?? '' }
@@ -16,38 +17,26 @@ const toBlock = (block: any): Block | undefined => {
   }
 }
 
-const parseInput = (block: ToolCallBlock, json: string) => {
-  if (!json.trim()) return
-  try {
-    const input = JSON.parse(json)
-    if (isRecord(input)) block.input = input
-    else block.malformed = json
-  } catch {
-    block.malformed = json
-  }
-}
-
-const merge = (usage: Usage, raw: any) => {
+const merge = (usage: Usage, raw: RawUsage | undefined) => {
   if (raw?.input_tokens != null) usage.input = raw.input_tokens
   if (raw?.output_tokens != null) usage.output = raw.output_tokens
   if (raw?.cache_read_input_tokens != null) usage.cacheRead = raw.cache_read_input_tokens
   if (raw?.cache_creation_input_tokens != null) usage.cacheWrite = raw.cache_creation_input_tokens
 }
 
-export async function* read(stream: AsyncIterable<any>): AsyncIterable<LLMEvent> {
+export async function* read(stream: AsyncIterable<ClaudeEvent>): AsyncIterable<LLMEvent> {
   const blocks: Block[] = []
   const json: string[] = []
   const usage: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
   let stopReason: StopReason = 'end_turn'
   for await (const event of stream) {
-    const index: number = event.index
-    const block = blocks[index]
     switch (event.type) {
       case 'message_start':
         merge(usage, event.message.usage)
         yield { type: 'start', model: event.message.model }
         break
       case 'content_block_start': {
+        const { index } = event
         const started = toBlock(event.content_block)
         if (!started) break
         blocks[index] = started
@@ -58,7 +47,8 @@ export async function* read(stream: AsyncIterable<any>): AsyncIterable<LLMEvent>
         break
       }
       case 'content_block_delta': {
-        const delta = event.delta
+        const { index, delta } = event
+        const block = blocks[index]
         if (delta.type === 'text_delta' && block?.type === 'text') {
           block.text += delta.text
           yield { type: 'text', index, text: delta.text }
@@ -73,10 +63,13 @@ export async function* read(stream: AsyncIterable<any>): AsyncIterable<LLMEvent>
         }
         break
       }
-      case 'content_block_stop':
-        if (block?.type === 'tool_call') parseInput(block, json[index] ?? '')
+      case 'content_block_stop': {
+        const { index } = event
+        const block = blocks[index]
+        if (block?.type === 'tool_call') parseToolInput(block, json[index] ?? '')
         if (block) yield { type: 'block', index, block }
         break
+      }
       case 'message_delta':
         stopReason = event.delta?.stop_reason ?? stopReason
         merge(usage, event.usage)

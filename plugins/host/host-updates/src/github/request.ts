@@ -19,14 +19,12 @@ const limitError = (headers: Headers) => {
 }
 
 const statusError = (status: number, url: string) =>
-  status >= 500
-    ? new GithubError(`GitHub is having trouble (HTTP ${status}); try again later`)
-    : new GithubError(`GitHub answered HTTP ${status} for ${url}`)
+  new GithubError(status >= 500 ? `GitHub is having trouble (HTTP ${status}); try again later` : `GitHub answered HTTP ${status} for ${url}`)
 
 const failure = (error: unknown, timeout: number) => {
   if (error instanceof GithubError) return error
   if (error instanceof SyntaxError) return new GithubError('GitHub sent an answer sand could not read')
-  if ((error as Error | undefined)?.name === 'TimeoutError') return new GithubError(`GitHub did not answer within ${Math.round(timeout / 1000)} seconds`)
+  if (error instanceof Error && error.name === 'TimeoutError') return new GithubError(`GitHub did not answer within ${Math.round(timeout / 1000)} seconds`)
   return new GithubError(`could not reach GitHub: ${errorMessage(error)}`)
 }
 

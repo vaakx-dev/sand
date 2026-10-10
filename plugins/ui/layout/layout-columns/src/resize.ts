@@ -1,4 +1,4 @@
-import { color, div, sig, stored, type Sig } from '@sand/dom'
+import { colorVar, div, sig, stored, type Sig } from '@sand/dom'
 
 export type Edge = 'side' | 'aside'
 
@@ -14,7 +14,7 @@ export const gripCss = `
 [data-grip="side"] { right: -5px; }
 [data-grip="aside"] { left: -5px; }
 [data-grip]::after { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; transition: background-color .15s; }
-[data-grip]:hover::after, [data-grip][data-dragging]::after { background: ${color('accent', 500)}; }
+[data-grip]:hover::after, [data-grip][data-dragging]::after { background: ${colorVar('accent', 500)}; }
 [data-sized] > [data-fill] > * { width: 100%; }
 `
 

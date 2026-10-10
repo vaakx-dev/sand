@@ -1,12 +1,18 @@
+import type { ToolSpec } from '@sand/llm-accounts/contract'
 import type { Tool } from './contract'
 import { definePlugin } from 'drydock'
+import { z } from 'zod'
 import { run } from './run'
-import { spec } from './spec'
+
+const spec = (tool: Tool): ToolSpec => {
+  const { $schema, ...inputSchema } = z.toJSONSchema(tool.input, { io: 'input' })
+  return { name: tool.name, description: tool.description, inputSchema }
+}
 
 export default definePlugin({
   name: 'tools',
   apply(ctx) {
-    const tools = new Map<string, Tool<any>>()
+    const tools = new Map<string, Tool>()
     ctx.provide('tools', {
       register(tool) {
         tools.set(tool.name, tool)

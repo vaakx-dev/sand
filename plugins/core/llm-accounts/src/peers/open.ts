@@ -2,12 +2,12 @@ import type { LLMRequest } from '../contract'
 import { bearer } from '@sand/kit'
 import { rawMessage } from '../errors'
 import { sharePaths } from '../share/info'
-import { Offline, Refused, refusal } from './http'
+import { Refused, refusal } from './http'
 import type { RemotePc } from './remotes'
 
 const answerTimeout = 10_000
 
-export interface OpenOptions {
+interface OpenOptions {
   connect(pc: RemotePc): Promise<string>
   forget(): void
 }
@@ -39,7 +39,7 @@ export const openStream = async (pc: RemotePc, request: LLMRequest, signal: Abor
     } catch (error) {
       if (signal?.aborted || error instanceof Refused) throw error
       options.forget()
-      if (attempt) throw new Offline(`${url} · ${rawMessage(error)}`)
+      if (attempt) throw new Error(`${url} · ${rawMessage(error)}`)
     }
   }
 }

@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { button, div, dot, focusable, icon, keys, span, type Child } from '@sand/dom'
+import { div, dot, icon, keys, plainButton, span, type Child } from '@sand/dom'
 import type { Scene } from './scene'
 import { logo, sourceTitle } from './source'
 import { FAVOURITES, goTo, type View } from './view'
@@ -15,9 +15,8 @@ interface Entry {
 
 const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
   const selected = () => !view.query.get() && view.at.get() === entry.id
-  return button(
+  return plainButton(
     {
-      type: 'button',
       role: 'tab',
       'data-focus': `tab:${entry.id}`,
       title: entry.title,
@@ -26,7 +25,6 @@ const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
       tabIndex: () => (selected() || unselected?.() ? 0 : -1),
       class: [
         'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-        focusable,
         () => (selected() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100'),
       ],
       onClick: () => goTo(view, entry.id),

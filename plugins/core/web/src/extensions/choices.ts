@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { join } from 'node:path'
 
 export type Choices = Record<string, boolean>
@@ -5,9 +6,7 @@ export type Choices = Record<string, boolean>
 const file = (home: string) => join(home, 'web.json')
 
 const booleans = (value: unknown): Choices =>
-  typeof value === 'object' && value !== null
-    ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, boolean] => typeof entry[1] === 'boolean'))
-    : {}
+  isRecord(value) ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, boolean] => typeof entry[1] === 'boolean')) : {}
 
 export const readChoices = async (home: string): Promise<Choices> => {
   try {

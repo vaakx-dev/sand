@@ -1,19 +1,21 @@
+import type { ClaudeEvent } from './events'
+
 const boundary = /\r?\n\r?\n/
 
-const parse = (raw: string) =>
-  raw
+const dataOf = (frame: string) =>
+  frame
     .split(/\r?\n/)
     .filter(line => line.startsWith('data:'))
     .map(line => line.slice(5).trimStart())
     .join('\n')
 
-export async function* events(body: ReadableStream<Uint8Array>): AsyncIterable<any> {
+export async function* events(body: ReadableStream<Uint8Array>): AsyncIterable<ClaudeEvent> {
   const decoder = new TextDecoder()
   let buffer = ''
   for await (const chunk of body) {
     buffer += decoder.decode(chunk, { stream: true })
     for (let match = boundary.exec(buffer); match; match = boundary.exec(buffer)) {
-      const data = parse(buffer.slice(0, match.index))
+      const data = dataOf(buffer.slice(0, match.index))
       buffer = buffer.slice(match.index + match[0].length)
       if (data) yield JSON.parse(data)
     }

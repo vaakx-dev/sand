@@ -21,10 +21,17 @@ const removable = async (folder: string, name: string) => {
   return (await exists(join(folder, readyFile))) || isOld(folder)
 }
 
+const moveAside = async (path: string) => {
+  const doomed = join(dirname(path), `${oldPrefix}${crypto.randomUUID()}`)
+  return rename(path, doomed).then(
+    () => doomed,
+    () => undefined,
+  )
+}
+
 const remove = async (path: string, name: string) => {
-  const doomed = name.startsWith(oldPrefix) ? path : join(dirname(path), `${oldPrefix}${crypto.randomUUID()}`)
-  if (doomed !== path && !(await rename(path, doomed).then(() => true, () => false))) return
-  await rm(doomed, { recursive: true, force: true }).catch(() => {})
+  const doomed = name.startsWith(oldPrefix) ? path : await moveAside(path)
+  if (doomed) await rm(doomed, { recursive: true, force: true }).catch(() => {})
 }
 
 const folders = async (folder: string) =>

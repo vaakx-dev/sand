@@ -1,4 +1,5 @@
 import { validPluginName } from '@sand/kit/host'
+import type { Dirent } from 'node:fs'
 import { lstat, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { VersionKind } from './contract'
@@ -30,7 +31,7 @@ export const present = (info: TargetInfo) =>
     () => false,
   )
 
-const names = async (folder: string, wanted: (entry: { name: string; isFile(): boolean; isDirectory(): boolean }) => boolean) => {
+const names = async (folder: string, wanted: (entry: Dirent) => boolean) => {
   const entries = await readdir(folder, { withFileTypes: true }).catch(() => [])
   return entries.filter(wanted).map(entry => entry.name)
 }

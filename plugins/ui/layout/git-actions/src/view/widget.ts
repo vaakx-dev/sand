@@ -1,10 +1,10 @@
 import { isUnnamed } from '@sand/worktrees/contract'
-import { button, derive, div, dynamicChild, focusable, icon, popover, shine, show, sig, SPACE, span } from '@sand/dom'
+import { derive, div, dynamicChild, icon, plainButton, popover, shine, show, sig, SPACE, span } from '@sand/dom'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
 import { gitMenu } from './menu'
 
-const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200 ' + focusable
+const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200'
 
 const tones: Record<PillTone, string> = {
   running: 'text-warning-400',
@@ -43,9 +43,8 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
   }
   const key = derive(() => `${model.status.get()?.branch}:${model.status.get()?.worktree}:${model.pr.get()?.number}:${model.pr.get() ? pillState(model.pr.get()!).tone : ''}`)
   const trigger = () =>
-    button(
+    plainButton(
       {
-        type: 'button',
         title: () => model.status.get()?.branch ?? '',
         'aria-expanded': open,
         class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500')],

@@ -2,11 +2,10 @@ import type { Entry, Prompt } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Hello } from '@sand/protocol'
 import type { CreateSession, SessionSummary } from '@sand/sessions-sqlite/contract'
-import type { RelayContributions, RelayEvents } from './relay'
+import type { LiveSnapshot, RelayContributions, RelayEvents } from './relay'
 import type { Server } from './server'
 import type { UI } from './ui'
 
-export type * from './live'
 export type * from './relay'
 export type * from './server'
 export type * from './ui'
@@ -45,7 +44,9 @@ declare module '@sand/protocol/wire' {
     'ui.focus': { session?: string }
   }
 
-  interface WireEvents extends RelayEvents {}
+  interface WireEvents extends RelayEvents {
+    'live.snapshot': [session: string, snapshot: LiveSnapshot]
+  }
 
   interface HelloFields {
     sessions: SessionSummary[]

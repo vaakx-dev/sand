@@ -1,5 +1,3 @@
-import './registry'
-
 export type * from './cli'
 export type * from './host'
 export type * from './llm'

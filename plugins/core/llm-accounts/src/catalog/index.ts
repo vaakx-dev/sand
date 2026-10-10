@@ -11,7 +11,7 @@ import type { PriceList } from './prices'
 import { localMetas } from './sources'
 import type { Entry, ModelCache, Prefs, SourceMeta } from './types'
 
-export interface CatalogOptions {
+interface CatalogOptions {
   home: string
   accounts: Accounts
   prices: PriceList
@@ -125,11 +125,12 @@ export const createCatalog = ({ home, accounts, prices, changed }: CatalogOption
     sync,
     price(id: string): ModelPrice | undefined {
       const parts = split(id)
-      const name = parts?.name ?? id
-      const kind = parts && accounts.kind(parts.source)
-      const found = parts && kind === 'openrouter' ? cache[parts.source]?.models?.find(model => model.name === name)?.price : undefined
-      const listed = !parts || (!!kind && kind !== 'server')
-      return prices.custom(id, name) ?? found ?? (listed ? prices.known(name) : undefined)
+      if (!parts) return prices.custom(id, id) ?? prices.known(id)
+      const { source, name } = parts
+      const kind = accounts.kind(source)
+      const discovered = kind === 'openrouter' ? cache[source]?.models?.find(model => model.name === name)?.price : undefined
+      const listed = kind && kind !== 'server' ? prices.known(name) : undefined
+      return prices.custom(id, name) ?? discovered ?? listed
     },
   }
 }

@@ -6,7 +6,7 @@ import type { SourceMeta } from '../catalog/types'
 import type { SharedAccount } from '../share/info'
 import type { Peers, PeerState } from './peers'
 
-export interface RemoteSource {
+interface RemoteSource {
   meta: SourceMeta
   models: ModelInfo[]
   prices: Record<string, ModelPrice>

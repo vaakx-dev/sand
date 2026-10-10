@@ -1,4 +1,3 @@
-import type { HostHealthCheck } from '@sand/host-health/contract'
 import { appRoot, buildInfo, loadUpdateStore, restorePrevious, switchTo, waitHealthy, writeShim } from '@sand/kit/host'
 import { definePlugin } from 'drydock'
 import { announcer } from './announce'
@@ -16,15 +15,12 @@ export default definePlugin({
   name: 'host-updates',
   description: 'Checks GitHub for newer sand releases and installs them when you ask',
   inject: ['hostOptions', 'hostApp', 'runtimes', 'hub'],
+  uses: { hostHealth: 'a new build is never confirmed healthy, so updates roll back' },
   async apply(ctx) {
     const { home, main, drainTimeout, device } = ctx.hostOptions
-    let hostHealth: HostHealthCheck | undefined
-    ctx.watch('hostHealth', impl => {
-      hostHealth = impl
-    })
     const readHealth = async () => {
-      if (!hostHealth) throw new Error('the host health check is not loaded')
-      return hostHealth.check()
+      if (!ctx.hostHealth) throw new Error('the host health check is not loaded')
+      return ctx.hostHealth.check()
     }
     const store = await loadUpdateStore(home)
     const updater = createUpdater(

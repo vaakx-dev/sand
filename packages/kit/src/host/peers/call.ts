@@ -2,7 +2,7 @@ import type { RemoteRecord, ServerMessage, WireRequest } from '@sand/protocol'
 import { errorMessage } from '../../text/error'
 import { fetchHostIdentity, requestTicket } from '../../wire/auth'
 import { ticketSocketUrl } from '../../wire/pairing'
-import { remoteUrls } from './urls'
+import { remoteUrls } from './store'
 
 const identityTimeout = 3000
 

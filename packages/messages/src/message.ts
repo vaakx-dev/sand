@@ -60,3 +60,5 @@ export interface Message {
   role: 'user' | 'assistant'
   content: Block[]
 }
+
+export type StopReason = 'end_turn' | 'max_tokens' | 'stop_sequence' | 'tool_use' | 'pause_turn' | 'refusal' | (string & {})

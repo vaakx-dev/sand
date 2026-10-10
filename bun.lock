@@ -6,7 +6,7 @@
       "name": "sand-workspace",
       "devDependencies": {
         "@types/bun": "^1.4.2",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.1",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.2",
         "typescript": "^7.0.2",
       },
     },
@@ -96,7 +96,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/kit": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.1",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.2",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
         "lucide": "^1.52.0",
       },
@@ -1655,7 +1655,7 @@
 
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
 
-    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#5558da4", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-5558da4", "sha512-ZI7CCCd8tSVBZ6w5QKSI+8i98Lk5ap2X7w4CauE6tPv+XO9m7dOeTZA82+dNCZMNNnZSWnX2pnU8NoT8RTk3XQ=="],
+    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#79e74da", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-79e74da", "sha512-Cyjjn73mcvLLgWruuPq4OAm23NTueCJiJYg9OuFTmL5Y+NTeBGYAqahY/lS7h2Q7eacptxpJpWlJ0OD00ZoPWg=="],
 
     "bun-types": ["bun-types@1.4.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-bxV1FgK7yBIzjRe5zBozIM4Bem11ZJcCXSrjWRG3YWLt8yFDePu4cLjpebO8OvPeIE9trbyPF4fuj3Cia4Fj3w=="],
 
@@ -1699,7 +1699,7 @@
 
     "@sand/devices/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/dom/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#5558da4", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-5558da4", "sha512-ZI7CCCd8tSVBZ6w5QKSI+8i98Lk5ap2X7w4CauE6tPv+XO9m7dOeTZA82+dNCZMNNnZSWnX2pnU8NoT8RTk3XQ=="],
+    "@sand/dom/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#79e74da", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-79e74da", "sha512-Cyjjn73mcvLLgWruuPq4OAm23NTueCJiJYg9OuFTmL5Y+NTeBGYAqahY/lS7h2Q7eacptxpJpWlJ0OD00ZoPWg=="],
 
     "@sand/extend/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 

@@ -19,7 +19,8 @@ export const createLogin = (accounts: Accounts) => {
 
   const startCodex = async () => {
     stopDevice()
-    const controller = (device = new AbortController())
+    const controller = new AbortController()
+    device = controller
     const started = await startDevice(controller.signal)
     const expires = Date.now() + deviceTimeout
     accounts.pend('codex', { kind: 'device', url: deviceUrl, code: started.code, expires })
@@ -35,13 +36,14 @@ export const createLogin = (accounts: Accounts) => {
       })
   }
 
+  const startClaude = async () => {
+    claude = await authorizeClaude()
+    accounts.pend('claude', { kind: 'paste', url: claude.url })
+  }
+
   const start = async (account: SignInKind) => {
     try {
-      if (account === 'codex') await startCodex()
-      else {
-        claude = await authorizeClaude()
-        accounts.pend('claude', { kind: 'paste', url: claude.url })
-      }
+      await (account === 'codex' ? startCodex() : startClaude())
     } catch (error) {
       accounts.fail(account, error)
     }

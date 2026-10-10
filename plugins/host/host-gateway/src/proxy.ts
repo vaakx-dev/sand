@@ -7,8 +7,6 @@ const credentials = new Set(['authorization', 'cookie'])
 const bodiless = new Set(['GET', 'HEAD'])
 const waitForRuntime = 30_000
 
-export type Fetch = (url: URL, init: RequestInit & { decompress?: boolean }) => Promise<Response>
-
 const requestHeaders = (headers: Headers) => {
   const copy = new Headers()
   headers.forEach((value, key) => {
@@ -20,17 +18,16 @@ const requestHeaders = (headers: Headers) => {
 const responseHeaders = (headers: Headers, secret: string) => {
   const copy = new Headers()
   headers.forEach((value, key) => {
-    if (hopByHop.has(key) || value.includes(secret)) return
-    copy.append(key, value)
+    if (!hopByHop.has(key) && !value.includes(secret)) copy.append(key, value)
   })
   return copy
 }
 
-export const createProxy = (runtimes: Runtimes, send: Fetch = fetch) => async (request: Request, caller: RouteCaller | undefined) => {
+export const createProxy = (runtimes: Runtimes) => async (request: Request, caller: RouteCaller | undefined) => {
   const runtime = runtimes.current() ?? (await runtimes.wait(waitForRuntime))
   if (!runtime) return textReply('sand is starting, try again in a moment', 503, { 'retry-after': '2' })
   try {
-    const upstream = await send(upstreamUrl(runtime.url, new URL(request.url), runtime.secret, Boolean(caller), caller), {
+    const upstream = await fetch(upstreamUrl(runtime.url, new URL(request.url), runtime.secret, Boolean(caller), caller), {
       method: request.method,
       headers: requestHeaders(request.headers),
       body: bodiless.has(request.method) ? undefined : request.body,

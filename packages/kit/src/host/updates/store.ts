@@ -1,9 +1,8 @@
 import type { UpdateChannel } from '@sand/protocol'
-import { serial } from '../../async/serial'
-import { replaceFile } from '../../fs/replace'
-import { isRecord } from '../../json/record'
-import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { serial } from '../../async/serial'
+import { writeAtomic } from '../../fs/replace'
+import { isRecord } from '../../json/record'
 
 interface LaterEntry {
   build: string
@@ -43,16 +42,11 @@ const read = (file: string) =>
     .json()
     .then(parse, () => parse(undefined))
 
-export const loadStore = async (home: string): Promise<UpdateStore> => {
+export const loadUpdateStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')
   const saved = await read(file)
   const queue = serial()
-  const write = async () => {
-    await mkdir(home, { recursive: true })
-    await Bun.write(`${file}.tmp`, `${JSON.stringify(saved, null, 2)}\n`)
-    await replaceFile(`${file}.tmp`, file)
-  }
-  const save = () => queue(write)
+  const save = () => queue(() => writeAtomic(file, `${JSON.stringify(saved, null, 2)}\n`))
   return {
     channel: () => saved.channel,
     setChannel(channel) {

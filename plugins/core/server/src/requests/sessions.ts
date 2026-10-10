@@ -31,5 +31,7 @@ export const sessionRequests = (ctx: ServerContext): WireHandlers => {
       session(request.session).rename(request.title, request.named)
       return true
     },
+    'loop.run': request => ctx.loop.run(session(request.session), request.prompt),
+    'loop.interrupt': request => ctx.loop.interrupt(session(request.session)),
   }
 }

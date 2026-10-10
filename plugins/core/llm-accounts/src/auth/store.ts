@@ -1,6 +1,8 @@
 import type { ServerProvider } from '../contract'
-import { isRecord, serial } from '@sand/kit'
+import { serial } from '@sand/kit'
 import { writePrivateJson } from '@sand/kit/fs'
+import { fieldsOf, isText } from './json'
+import { isServerProvider } from './kinds'
 
 export interface Tokens {
   access: string
@@ -33,27 +35,26 @@ export interface ServerEntry {
   shared?: boolean
 }
 
-const serverProviders: ServerProvider[] = ['ollama', 'lmstudio', 'server']
-
-const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0
-
-const serverOf = (value: any): ServerEntry | undefined => {
-  if (!text(value?.id) || !text(value.url)) return undefined
+const serverOf = (value: unknown): ServerEntry | undefined => {
+  const { id, name, url, provider, key, shared } = fieldsOf(value)
+  if (!isText(id) || !isText(url)) return undefined
   return {
-    id: value.id,
-    name: text(value.name) ? value.name : value.id,
-    url: value.url,
-    provider: serverProviders.includes(value.provider) ? value.provider : 'server',
-    ...(text(value.key) && { key: value.key }),
-    ...(typeof value.shared === 'boolean' && { shared: value.shared }),
+    id,
+    name: isText(name) ? name : id,
+    url,
+    provider: isServerProvider(provider) ? provider : 'server',
+    ...(isText(key) && { key }),
+    ...(typeof shared === 'boolean' && { shared }),
   }
 }
 
 export const serversOf = (saved: Saved): ServerEntry[] => (Array.isArray(saved.servers) ? saved.servers.flatMap(value => serverOf(value) ?? []) : [])
 
-const isCredential = (value: any): value is Credential =>
-  (value?.type === 'oauth' && typeof value.access === 'string' && typeof value.refresh === 'string' && typeof value.expires === 'number') ||
-  (value?.type === 'api_key' && typeof value.key === 'string' && !!value.key)
+const isCredential = (value: unknown): value is Credential => {
+  const fields = fieldsOf(value)
+  if (fields.type === 'api_key') return isText(fields.key)
+  return fields.type === 'oauth' && typeof fields.access === 'string' && typeof fields.refresh === 'string' && typeof fields.expires === 'number'
+}
 
 export const credentialOf = (saved: Saved, provider: string) => {
   const value = saved[provider]
@@ -67,8 +68,7 @@ export const authStore = (path: string) => {
       const file = Bun.file(path)
       if (!(await file.exists())) return {}
       try {
-        const json: unknown = await file.json()
-        return isRecord(json) ? json : {}
+        return fieldsOf(await file.json())
       } catch {
         return {}
       }

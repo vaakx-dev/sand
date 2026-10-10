@@ -1,9 +1,7 @@
 import type { ServerDraft, ServerProvider } from '../contract'
 import { bearer, errorMessage, trimSlash } from '@sand/kit'
-import { isFixed } from './kinds'
+import { isFixed, isServerProvider } from './kinds'
 import type { ServerEntry } from './store'
-
-const providers: ServerProvider[] = ['ollama', 'lmstudio', 'server']
 
 const ports: Record<string, ServerProvider> = { '11434': 'ollama', '1234': 'lmstudio' }
 
@@ -19,8 +17,9 @@ const baseId = (name: string, provider: ServerProvider) => {
 }
 
 const uniqueId = (wanted: string, taken: (id: string) => boolean) => {
-  if (!taken(wanted)) return wanted
-  for (let count = 2; ; count++) if (!taken(`${wanted}-${count}`)) return `${wanted}-${count}`
+  let id = wanted
+  for (let count = 2; taken(id); count++) id = `${wanted}-${count}`
+  return id
 }
 
 const urlOf = (value: string) => {
@@ -33,14 +32,14 @@ const urlOf = (value: string) => {
 }
 
 export const serverEntry = (draft: ServerDraft, servers: ServerEntry[]): ServerEntry => {
-  const name = String(draft.name ?? '').trim()
+  const name = draft.name.trim()
   if (!name) throw new Error('Give the server a name')
-  const { url, port } = urlOf(String(draft.url ?? ''))
+  const { url, port } = urlOf(draft.url)
   const before = draft.id ? servers.find(server => server.id === draft.id) : undefined
   if (draft.id && !before) throw new Error(`Unknown server "${draft.id}"`)
-  const provider = providers.includes(draft.provider as ServerProvider) ? draft.provider! : (before?.provider ?? ports[port] ?? 'server')
+  const provider = isServerProvider(draft.provider) ? draft.provider : (before?.provider ?? ports[port] ?? 'server')
   const id = before?.id ?? uniqueId(baseId(name, provider), id => isFixed(id) || servers.some(server => server.id === id))
-  const key = draft.key === undefined ? before?.key : String(draft.key).trim()
+  const key = draft.key === undefined ? before?.key : draft.key.trim()
   return { id, name, url, provider, ...(key && { key }), ...(before?.shared !== undefined && { shared: before.shared }) }
 }
 

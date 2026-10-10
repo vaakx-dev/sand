@@ -2,30 +2,30 @@ import type { RequestHandler, WireHandler, WireHandlers, WireRequest, WireReques
 import { joinDisposers } from '@sand/kit'
 import type { Dispose } from 'drydock'
 
-export const createRequests = () => {
-  const handlers = new Map<string, RequestHandler>()
+type Handler = (request: never) => unknown
 
-  const handleOne = (type: string, handler: RequestHandler) => {
+export const createRequests = () => {
+  const handlers = new Map<string, Handler>()
+
+  const handleOne = (type: string, handler: Handler) => {
     handlers.set(type, handler)
     return () => {
       if (handlers.get(type) === handler) handlers.delete(type)
     }
   }
 
-  const handleAll = (all: WireHandlers) => joinDisposers(...Object.entries(all).map(([type, handler]) => handleOne(type, handler as RequestHandler)))
-
   function handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
   function handle(type: string, handler: RequestHandler): Dispose
   function handle(handlers: WireHandlers): Dispose
-  function handle(type: string | WireHandlers, handler?: (request: never) => unknown) {
-    if (typeof type !== 'string') return handleAll(type)
-    return handleOne(type, handler as RequestHandler)
+  function handle(type: string | WireHandlers, handler?: Handler) {
+    if (typeof type === 'string') return handler ? handleOne(type, handler) : () => {}
+    return joinDisposers(...Object.entries(type).map(([name, each]) => handleOne(name, each)))
   }
 
   const answer = async (request: WireRequest) => {
     const handler = handlers.get(request.type)
     if (!handler) throw new Error(`The server has no handler for ${request.type}`)
-    return handler(request as Parameters<RequestHandler>[0])
+    return handler(request as never)
   }
 
   return { handle, answer }

@@ -2,7 +2,7 @@ import type { AccountKind, KeyKind, LoginAccount, LoginConflict, LoginPending, S
 import { errorMessage } from '@sand/kit'
 import { refreshClaude } from './anthropic'
 import { envKey, envNames } from './env'
-import { fixedIds, fixedLabels, isFixed, logos, signInError, type FixedId } from './kinds'
+import { fixedIds, fixedLabels, isFixed, isSignInKind, logos, signInError, type FixedId } from './kinds'
 import { fixedAccount, serverAccount, type Status } from './listing'
 import { refreshOpenAI } from './openai'
 import { TokenError } from './request'
@@ -36,15 +36,7 @@ export const createAccounts = (path: string, changed: () => void) => {
     if (fixedIds.some(credential) || servers().length) changed()
   })
 
-  const signedIn = (id: string) => !!credential(id) || !!server(id)
-  const known = (id: string) => isFixed(id) || !!server(id)
-  const kind = (id: string): AccountKind | undefined => (isFixed(id) ? id : server(id) ? 'server' : undefined)
   const label = (id: string) => (isFixed(id) ? fixedLabels[id] : (server(id)?.name ?? id))
-  const provider = (id: string) => (isFixed(id) ? logos[id] : (server(id)?.provider ?? 'server'))
-  const plan = (id: string) => {
-    const found = credential(id)
-    return found?.type === 'oauth' ? found.plan : undefined
-  }
 
   const shared = (id: string) => {
     const found = stored(id) ?? server(id)
@@ -58,11 +50,6 @@ export const createAccounts = (path: string, changed: () => void) => {
     return { ...(waiting && { pending: waiting }), ...(conflict && { conflict }), ...(error && { error }) }
   }
 
-  const list = (): LoginAccount[] => [
-    ...fixedIds.map(id => fixedAccount(id, { credential: credential(id), fromEnv: !stored(id), shared: shared(id), status: status(id) })),
-    ...servers().map(entry => serverAccount(entry, status(entry.id))),
-  ]
-
   const save = async (patch: Saved) => {
     const next: Saved = { ...saved, ...(await store.read()) }
     for (const [key, value] of Object.entries(patch)) {
@@ -74,18 +61,24 @@ export const createAccounts = (path: string, changed: () => void) => {
     changed()
   }
 
+  const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
+
+  const forget = async (id: FixedId, fromDisk: Saved) => {
+    const keys = holders({ ...saved, ...fromDisk }, id)
+    if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
+    else changed()
+  }
+
   const settle = (id: string) => {
     pending.delete(id)
     errors.delete(id)
     conflicts.delete(id)
   }
 
-  const keep = (id: string) => {
+  const keptShare = (id: string) => {
     const before = stored(id)?.shared
     return before === undefined ? {} : { shared: before }
   }
-
-  const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
 
   const rejected = async (id: SignInKind, current: OAuth, error: unknown): Promise<Credential> => {
     const fromDisk = await store.read()
@@ -95,9 +88,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       return latest.credential
     }
     errors.set(id, `Signed out: ${errorMessage(error)}`)
-    const keys = holders({ ...saved, ...fromDisk }, id)
-    if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
-    else changed()
+    await forget(id, fromDisk)
     throw new Error(`${fixedLabels[id]} sign-in expired. ${signInError(fixedLabels[id]).message}`)
   }
 
@@ -109,7 +100,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       saved = { ...saved, [latest.key]: current }
       return current
     }
-    if (id !== 'claude' && id !== 'codex') throw signInError(fixedLabels[id])
+    if (!isSignInKind(id)) throw signInError(fixedLabels[id])
     try {
       const next: OAuth = { ...(await refreshers[id](current)), type: 'oauth', ...(current.shared !== undefined && { shared: current.shared }) }
       errors.delete(id)
@@ -123,29 +114,36 @@ export const createAccounts = (path: string, changed: () => void) => {
 
   return {
     ready,
-    list,
-    ids: () => [...fixedIds.filter(id => !!credential(id)), ...servers().map(found => found.id)],
-    signedIn,
-    known,
-    kind,
-    label,
-    provider,
-    plan,
-    shared,
-    credential,
-    server,
     servers,
-    fingerprint(id: string) {
+    server,
+    label,
+    shared,
+    list: (): LoginAccount[] => [
+      ...fixedIds.map(id => fixedAccount(id, { credential: credential(id), fromEnv: !stored(id), shared: shared(id), status: status(id) })),
+      ...servers().map(entry => serverAccount(entry, status(entry.id))),
+    ],
+    ids: () => [...fixedIds.filter(id => !!credential(id)), ...servers().map(found => found.id)],
+    signedIn: (id: string) => !!credential(id) || !!server(id),
+    known: (id: string) => isFixed(id) || !!server(id),
+    kind(id: string): AccountKind | undefined {
+      if (isFixed(id)) return id
+      return server(id) ? 'server' : undefined
+    },
+    provider: (id: string) => (isFixed(id) ? logos[id] : (server(id)?.provider ?? 'server')),
+    plan(id: string) {
       const found = credential(id)
+      return found?.type === 'oauth' ? found.plan : undefined
+    },
+    fingerprint(id: string) {
       const entry = server(id)
       if (entry) return `server:${entry.url}:${entry.key ?? ''}`
+      const found = credential(id)
       if (found?.type === 'oauth') return `oauth:${found.accountId ?? found.email ?? ''}`
       return found ? `key:${found.key}:${found.base_url ?? ''}` : ''
     },
     async setShared(id: string, value: boolean) {
       await ready
-      const entry = server(id)
-      if (entry) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
+      if (server(id)) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
       const found = located(id)
       if (!found) throw new Error(credential(id) ? `This key comes from ${envNames[id]}, so it stays on this PC` : signInError(label(id)).message)
       await save({ [found.key]: { ...found.credential, shared: value } })
@@ -179,12 +177,12 @@ export const createAccounts = (path: string, changed: () => void) => {
     async signIn(id: SignInKind, tokens: Tokens) {
       await ready
       settle(id)
-      await save({ [id]: { ...tokens, type: 'oauth', ...keep(id) } })
+      await save({ [id]: { ...tokens, type: 'oauth', ...keptShare(id) } })
     },
     async saveKey(id: KeyKind, key: string, baseUrl = '') {
       await ready
       settle(id)
-      await save({ ...displaced(saved, id), [id]: { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keep(id) } })
+      await save({ ...displaced(saved, id), [id]: { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keptShare(id) } })
     },
     async saveServer(entry: ServerEntry, error?: string) {
       await ready
@@ -197,10 +195,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       await ready
       settle(id)
       if (server(id)) return saveServers(servers().filter(found => found.id !== id))
-      if (!isFixed(id)) return
-      const keys = holders({ ...saved, ...(await store.read()) }, id)
-      if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
-      else changed()
+      if (isFixed(id)) await forget(id, await store.read())
     },
   }
 }

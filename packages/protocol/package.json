@@ -4,7 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./wire": "./src/wire/registry.ts"
+    "./wire": "./src/wire.ts"
   },
   "dependencies": {
     "@sand/messages": "workspace:*",

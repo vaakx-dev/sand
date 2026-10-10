@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { button, derive, div, dynamicChild, effect, focusable, groupLabel, hint, span } from '@sand/dom'
+import { derive, div, dynamicChild, effect, groupLabel, hint, plainButton, span } from '@sand/dom'
 import { modelRow } from './rows'
 import type { Scene } from './scene'
 import { findModels } from './search'
@@ -9,7 +9,7 @@ import { FAVOURITES, type View } from './view'
 const heading = (label: string, detail?: string) => groupLabel(span({ class: 'text-neutral-200' }, label), detail ? ` · ${detail}` : '')
 
 const settingsLink = (scene: Scene, text: string) =>
-  scene.openSettings ? button({ type: 'button', class: ['text-neutral-300 hover:text-neutral-100', focusable], onClick: scene.openSettings }, text) : null
+  scene.openSettings ? plainButton({ class: 'text-neutral-300 hover:text-neutral-100', onClick: scene.openSettings }, text) : null
 
 const sourceList = (scene: Scene, source: SourceInfo) => {
   const models = scene.models.filter(model => model.source === source.id)

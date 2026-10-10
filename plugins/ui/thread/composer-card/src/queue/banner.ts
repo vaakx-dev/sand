@@ -1,7 +1,7 @@
 import type { Prompt } from '@sand/messages'
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { badge, color, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
+import { badge, colorVar, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../components/glass'
 import type { Model } from '../model'
@@ -51,7 +51,7 @@ export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => 
           'flex min-h-8 items-center gap-1 rounded-lg pr-1 text-sm text-neutral-200 hover:bg-neutral-700',
           () => (model.editing.get() === id ? 'bg-neutral-700' : ''),
         ],
-        style: { boxShadow: () => (over.get() === id ? `inset 0 2px 0 ${color('accent', 400)}` : '') },
+        style: { boxShadow: () => (over.get() === id ? `inset 0 2px 0 ${colorVar('accent', 400)}` : '') },
         draggable: queued,
         ...menu.target(() => queueMenu(ctx, model, act, item(), entry.get().steer)),
         onDragStart: event => {

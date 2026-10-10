@@ -2,7 +2,7 @@ import { textOf } from '@sand/kit'
 import type { Block, DocumentBlock, Message, ToolResultBlock, UserContent } from '@sand/messages'
 import { pair } from '../http/pair'
 
-export type ChatMessage = Record<string, unknown>
+type ChatMessage = Record<string, unknown>
 
 type Part = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
 
@@ -29,11 +29,13 @@ const part = (block: UserContent, images: boolean): Part => {
 const contentOf = (parts: Part[]) =>
   parts.every(part => part.type === 'text') ? parts.map(part => (part.type === 'text' ? part.text : '')).join('\n\n') : parts
 
-const resultText = (result: ToolResultBlock) =>
-  result.content
-    .map(block => (block.type === 'text' ? block.text : block.type === 'image' ? toolImageNote : documentText(block)))
-    .join('\n')
-    .trim() || '(no output)'
+const resultPart = (block: UserContent) => {
+  if (block.type === 'text') return block.text
+  if (block.type === 'image') return toolImageNote
+  return documentText(block)
+}
+
+const resultText = (result: ToolResultBlock) => result.content.map(resultPart).join('\n').trim() || '(no output)'
 
 const userMessages = (content: Block[], images: boolean): ChatMessage[] => {
   const results = content.flatMap(block => (block.type === 'tool_result' ? [{ role: 'tool', tool_call_id: block.callId, content: resultText(block) }] : []))

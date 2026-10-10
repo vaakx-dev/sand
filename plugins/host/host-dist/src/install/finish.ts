@@ -1,24 +1,39 @@
 import type { HttpRoute } from '@sand/host-gateway/contract'
+import { isRecord } from '@sand/kit'
 import { parseHealth, readText } from '@sand/kit/host'
 import type { InstallKeys } from '../installs'
 import { expired, installSecret } from './base'
 
 const errorLimit = 16 * 1024
-
-type FinishKeys = Pick<InstallKeys, 'step' | 'finish'>
+const unknownFailure = 'the new PC stopped without saying why'
+const reportable = ['connected', 'sand', 'sharing'] as const
 
 const done = () => new Response(null, { status: 204 })
 
-const accountsOf = (body: string | undefined) => {
+const parseJson = (body: string): unknown => {
   try {
-    const { accounts } = JSON.parse(body ?? '') as Record<string, unknown>
-    return Array.isArray(accounts) ? accounts.filter((name): name is string => typeof name === 'string' && !!name).slice(0, 8) : []
+    return JSON.parse(body)
   } catch {
-    return []
+    return undefined
   }
 }
 
-export const doneRoute = (installs: FinishKeys): HttpRoute => ({
+const accountsOf = (body: string | undefined) => {
+  const data = parseJson(body ?? '')
+  const accounts = isRecord(data) ? data.accounts : undefined
+  return Array.isArray(accounts) ? accounts.filter((name): name is string => typeof name === 'string' && !!name).slice(0, 8) : []
+}
+
+const failure = (body: string, json: boolean) => {
+  const data = json ? parseJson(body) : undefined
+  if (data === undefined || data === null) return { error: body || unknownFailure }
+  const fields = isRecord(data) ? data : {}
+  const report = parseHealth(fields.health)
+  const error = typeof fields.error === 'string' ? fields.error.trim() : ''
+  return { error: error || unknownFailure, ...(report ? { health: report } : {}) }
+}
+
+export const doneRoute = (installs: Pick<InstallKeys, 'step' | 'finish'>): HttpRoute => ({
   method: 'POST',
   async handle(call) {
     const secret = installSecret(call)
@@ -29,35 +44,16 @@ export const doneRoute = (installs: FinishKeys): HttpRoute => ({
   },
 })
 
-const reportable = ['connected', 'sand', 'sharing'] as const
-
-type Reportable = (typeof reportable)[number]
-
-const isReportable = (step: string | null): step is Reportable => reportable.includes(step as Reportable)
-
 export const stepRoute = (installs: Pick<InstallKeys, 'step'>): HttpRoute => ({
   method: 'POST',
   handle(call) {
     const secret = installSecret(call)
-    const step = call.url.searchParams.get('step')
-    if (!isReportable(step)) return new Response('unknown step', { status: 400 })
+    const step = reportable.find(item => item === call.url.searchParams.get('step'))
+    if (!step) return new Response('unknown step', { status: 400 })
     if (!secret || !installs.step(secret, step)) return expired()
     return done()
   },
 })
-
-const unknownFailure = 'the new PC stopped without saying why'
-
-const failure = (body: string, json: boolean) => {
-  if (!json) return { error: body || unknownFailure }
-  try {
-    const { error, health } = JSON.parse(body) as Record<string, unknown>
-    const report = parseHealth(health)
-    return { error: (typeof error === 'string' && error.trim()) || unknownFailure, ...(report ? { health: report } : {}) }
-  } catch {
-    return { error: body || unknownFailure }
-  }
-}
 
 export const failRoute = (installs: Pick<InstallKeys, 'check' | 'step'>): HttpRoute => ({
   method: 'POST',

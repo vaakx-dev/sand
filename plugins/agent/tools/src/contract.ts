@@ -22,7 +22,7 @@ export interface Tool<S extends ZodType = ZodType> {
 }
 
 export interface Tools {
-  register(tool: Tool<any>): Dispose
+  register(tool: Tool): Dispose
   specs(): ToolSpec[]
   notes(): string[]
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>

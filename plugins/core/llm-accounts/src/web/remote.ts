@@ -1,7 +1,7 @@
-import { derive, div, dynamicChild, hint, settingsSection, span } from '@sand/dom'
+import { derive, dynamicChild, settingsSection } from '@sand/dom'
 import type { LoginRemoteAccount, LoginState } from '../contract'
 import { accountLogo, howText, readyChip } from './names'
-import { accountRow } from './parts'
+import { accountRow, hintRow } from './parts'
 import type { LoginControl } from './state'
 
 const ownHere = (state: LoginState, account: LoginRemoteAccount) =>
@@ -24,11 +24,11 @@ export const remoteSection = (control: LoginControl) =>
     }),
     key => {
       const state = control.state.get()
-      if (!key || !state) return div({ class: 'hidden' })
+      if (!key || !state) return null
       return settingsSection(
         { title: 'From your PCs' },
-        span({ class: 'contents' }, state.remote.map(account => remoteRow(state, account))),
-        span({ class: 'contents' }, problems(state).map(text => div({ class: 'bg-neutral-900' }, hint(text)))),
+        state.remote.map(account => remoteRow(state, account)),
+        problems(state).map(hintRow),
       )
     },
   )

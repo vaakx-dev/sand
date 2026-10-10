@@ -1,5 +1,5 @@
 import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { badge, circle, color, derive, div, dynamicChild, exactTime, span, svg, type Sig } from '@sand/dom'
+import { badge, circle, colorVar, derive, div, dynamicChild, exactTime, span, svg, type Sig } from '@sand/dom'
 import { coarseDuration, leftOf, percent } from '@sand/kit'
 import { paceOf } from './pace'
 
@@ -16,7 +16,7 @@ const statusBadge = (status?: string) => {
 const ring = (left: number, stroke: string, label: string) =>
   svg(
     { viewBox: `0 0 ${size} ${size}`, width: size, height: size, class: 'shrink-0', role: 'img', 'aria-label': `${label}: ${percent(left)} left` },
-    circle({ cx: size / 2, cy: size / 2, r: radius, fill: 'none', stroke: color('neutral', 800), strokeWidth: 5 }),
+    circle({ cx: size / 2, cy: size / 2, r: radius, fill: 'none', stroke: colorVar('neutral', 800), strokeWidth: 5 }),
     circle({
       cx: size / 2,
       cy: size / 2,

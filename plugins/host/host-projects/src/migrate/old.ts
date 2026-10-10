@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { rename } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 
@@ -9,19 +10,22 @@ export interface OldRecord {
   hidden?: boolean
 }
 
-type Fields = Record<string, unknown>
-
 const text = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : undefined)
 
 const parseRecord = (value: unknown): OldRecord[] => {
-  if (!value || typeof value !== 'object') return []
-  const { path, added, name, link, hidden } = value as Fields
-  if (typeof path !== 'string' || !path) return []
-  const record: OldRecord = { path: resolve(path), added: typeof added === 'number' && Number.isFinite(added) ? added : 0 }
-  if (text(name)) record.name = text(name)
-  if (text(link)) record.link = text(link)
-  if (typeof hidden === 'boolean') record.hidden = hidden
-  return [record]
+  if (!isRecord(value) || typeof value.path !== 'string' || !value.path) return []
+  const { added, hidden } = value
+  const name = text(value.name)
+  const link = text(value.link)
+  return [
+    {
+      path: resolve(value.path),
+      added: typeof added === 'number' && Number.isFinite(added) ? added : 0,
+      ...(name ? { name } : {}),
+      ...(link ? { link } : {}),
+      ...(typeof hidden === 'boolean' ? { hidden } : {}),
+    },
+  ]
 }
 
 const parseList = (content: string) => {
@@ -34,22 +38,18 @@ const parseList = (content: string) => {
 }
 
 export const readOldRecords = async (home: string): Promise<OldRecord[]> => {
-  try {
-    const path = join(home, 'projects.json')
-    const file = Bun.file(path)
-    if (!(await file.exists())) return []
-    const content = await file.text()
-    const list = parseList(content)
-    if (!list) {
-      await rename(path, join(home, 'projects.bad.json'))
-      return []
-    }
-    const backup = Bun.file(join(home, 'projects.v1.json'))
-    if (!(await backup.exists())) await Bun.write(backup, content)
-    return list.flatMap(parseRecord)
-  } catch {
+  const path = join(home, 'projects.json')
+  const file = Bun.file(path)
+  if (!(await file.exists())) return []
+  const content = await file.text()
+  const list = parseList(content)
+  if (!list) {
+    await rename(path, join(home, 'projects.bad.json'))
     return []
   }
+  const backup = Bun.file(join(home, 'projects.v1.json'))
+  if (!(await backup.exists())) await Bun.write(backup, content)
+  return list.flatMap(parseRecord)
 }
 
 export const linkOwners = (records: OldRecord[]) => {

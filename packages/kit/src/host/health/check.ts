@@ -1,16 +1,21 @@
-import type { HealthOutcome, HealthReport } from './types'
+import type { HostHealth } from '@sand/protocol'
 
-export const isHealthy = (report: HealthReport) =>
-  report.runtime === 'ready' && report.web && !report.failedPlugins.length
+export interface HealthOutcome {
+  ok: boolean
+  report?: HostHealth
+  error?: string
+}
+
+export const isHealthy = (report: HostHealth) => report.runtime === 'ready' && report.web && !report.failedPlugins.length
 
 const withDetail = (text: string, detail?: string) => (detail ? `${text}: ${detail}` : text)
 
-const runtimeLine = (report: HealthReport) => {
+const runtimeLine = (report: HostHealth) => {
   if (report.runtime === 'failed') return withDetail('The sand runtime failed', report.error)
   if (report.runtime !== 'ready') return `The sand runtime is not ready (${report.runtime})`
 }
 
-const reportLines = (report: HealthReport) => [
+const reportLines = (report: HostHealth) => [
   runtimeLine(report),
   ...report.failedPlugins.map(plugin => `The plugin ${plugin.id} failed: ${plugin.error}`),
   report.runtime === 'ready' && !report.web ? withDetail('The web page is not served', report.webError) : undefined,

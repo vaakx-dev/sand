@@ -1,20 +1,17 @@
-import type { Block } from '@sand/messages'
-import type { Effort, LLMRequest } from '../contract'
+import type { Block, Message } from '@sand/messages'
+import type { LLMRequest } from '../contract'
 import { pair } from '../http/pair'
+import { isReasoning } from '../reasoning'
+import { describeClaude } from './models'
 
-type ApiBlock = Record<string, unknown>
-
-export interface BodyOptions {
+export interface ClaudeSettings {
   model: string
   maxTokens: number
-  efforts: Effort[]
-  fast?: boolean
-  thinking?: 'summarized' | 'omitted'
 }
 
-const cacheable = new Set(['text', 'image', 'document', 'tool_use', 'tool_result'])
+const cacheable = new Set<unknown>(['text', 'image', 'document', 'tool_use', 'tool_result'])
 
-const block = (value: Block): ApiBlock => {
+const block = (value: Block): Record<string, unknown> => {
   switch (value.type) {
     case 'text':
       return { type: 'text', text: value.text }
@@ -40,24 +37,28 @@ const block = (value: Block): ApiBlock => {
   }
 }
 
-export const body = (request: LLMRequest, options: BodyOptions) => {
-  const messages = pair(request.messages).map(message => ({ role: message.role, content: message.content.map(block) }))
+const withoutOpenAIReasoning = (messages: Message[]): Message[] =>
+  messages.map(message => ({
+    ...message,
+    content: message.content.filter(block => !(block.type === 'thinking' && isReasoning(block.signature))),
+  }))
+
+export const claudeBody = (request: LLMRequest, settings: ClaudeSettings) => {
+  const { efforts, fast } = describeClaude(settings.model)
+  const messages = pair(withoutOpenAIReasoning(request.messages)).map(message => ({ role: message.role, content: message.content.map(block) }))
   const last = messages.at(-1)?.content.at(-1)
-  if (last && cacheable.has(last.type as string)) last.cache_control = { type: 'ephemeral' }
-  const thinks = options.efforts.length > 0
-  const effort = request.effort && options.efforts.includes(request.effort) ? request.effort : undefined
-  const fast = options.fast && request.speed === 'fast'
+  if (last && cacheable.has(last.type)) last.cache_control = { type: 'ephemeral' }
+  const effort = request.effort && efforts.includes(request.effort) ? request.effort : undefined
   return {
-    model: options.model,
-    max_tokens: options.maxTokens,
+    model: settings.model,
+    max_tokens: settings.maxTokens,
     stream: true,
     system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
     messages,
     ...(request.tools.length && {
       tools: request.tools.map(tool => ({ name: tool.name, description: tool.description, input_schema: tool.inputSchema })),
     }),
-    ...(options.thinking && thinks && { thinking: { type: 'adaptive', display: options.thinking } }),
     ...(effort && { output_config: { effort } }),
-    ...(fast && { speed: 'fast' }),
+    ...(fast && request.speed === 'fast' && { speed: 'fast' }),
   }
 }

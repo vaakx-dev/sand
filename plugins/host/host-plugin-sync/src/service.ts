@@ -1,9 +1,9 @@
 import { serial } from '@sand/kit'
 import { type PluginScan, scanPlugins } from '@sand/kit/host'
 import { join } from 'node:path'
-import { createApplier } from './apply'
+import { createApplier } from './apply/applier'
 import type { PluginManifest, PluginOffer } from './contract'
-import { createPeerRounds } from './peers'
+import { createPeerRounds } from './peers/rounds'
 import { readPlugin } from './scan/read'
 import { diffManifests } from './state/offers'
 import { parseManifest } from './state/parse'
@@ -37,8 +37,15 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
     const local = localSet()
     const next: PluginOffer[] = []
     for (const [id, peer] of peers.known) {
-      const file = store.get()
-      const result = diffManifests({ peer: { id, name: peer.name }, mine: ours, theirs: peer.manifest, bases: file.bases[id] ?? {}, skipped: file.skipped[id] ?? {}, local })
+      const { bases, skipped } = store.get()
+      const result = diffManifests({
+        peer: { id, name: peer.name },
+        mine: ours,
+        theirs: peer.manifest,
+        bases: bases[id] ?? {},
+        skipped: skipped[id] ?? {},
+        local,
+      })
       await store.settle(id, result.bases, result.skipped)
       next.push(...result.offers)
     }

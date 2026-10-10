@@ -1,5 +1,5 @@
 import { definePlugin } from 'drydock'
-import { existsSync, watch, type FSWatcher } from 'node:fs'
+import { existsSync, watch } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 const debounce = 1000
@@ -24,7 +24,7 @@ export default definePlugin({
       }, debounce)
     }
     ctx.effect(() => {
-      const watchers: FSWatcher[] = folders.map(folder => watch(folder, { recursive: true }, (_, filename) => changed(filename)))
+      const watchers = folders.map(folder => watch(folder, { recursive: true }, (_, filename) => changed(filename)))
       for (const watcher of watchers) watcher.on('error', () => {})
       return () => {
         clearTimeout(timer)

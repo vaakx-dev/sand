@@ -1,6 +1,8 @@
+import { plural } from '@sand/kit'
 import type { Tool } from '@sand/tools/contract'
+import { resolve } from 'node:path'
 import { z } from 'zod'
-import { exclusive, locate, readText } from './files'
+import { exclusive, readText } from './files'
 
 const input = z.object({
   path: z.string().describe('File path, absolute or relative to the working directory'),
@@ -20,7 +22,7 @@ const replace = async (full: string, { path, old_string, new_string, replace_all
   if (count > 1 && !replace_all) throw new Error(`old_string matches ${count} times in ${path}; add context or set replace_all`)
   const replacement = matchEndings(new_string, content)
   await Bun.write(full, replace_all ? content.replaceAll(target, replacement) : content.replace(target, () => replacement))
-  return `Replaced ${replace_all ? count : 1} occurrence${count > 1 && replace_all ? 's' : ''} in ${path}`
+  return `Replaced ${plural(replace_all ? count : 1, 'occurrence')} in ${path}`
 }
 
 export const edit: Tool<typeof input> = {
@@ -29,7 +31,7 @@ export const edit: Tool<typeof input> = {
     'Replace exact text in a file. old_string must match exactly once unless replace_all is set. Read the file first.',
   input,
   run(args, { cwd }) {
-    const full = locate(cwd, args.path)
+    const full = resolve(cwd, args.path)
     return exclusive(full, () => replace(full, args))
   },
 }

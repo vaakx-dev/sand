@@ -1,5 +1,6 @@
 import type { BuildChange, BuildInfo, HostBundle } from '@sand/protocol'
 import { join } from 'node:path'
+import { isRecord } from '../../json/record'
 import { buildStamp, scanApp } from './files'
 
 export interface AppFile {
@@ -20,29 +21,19 @@ export interface Bundle extends HostBundle {
   stamp: BuildStamp
 }
 
-export interface AppBuild {
-  build: BuildInfo
-  hash: string
-  files: AppFile[]
-  stamp?: BuildStamp
-}
-
 const cacheTime = 5000
 const buildId = /^[0-9a-f]{6,64}$/
 
-export const isStamp = (value: unknown): value is BuildStamp => {
-  const stamp = value as Partial<BuildStamp> | null
-  return (
-    typeof stamp?.id === 'string' &&
-    buildId.test(stamp.id) &&
-    typeof stamp.hash === 'string' &&
-    typeof stamp.time === 'number' &&
-    Number.isFinite(stamp.time)
-  )
-}
+export const isStamp = (value: unknown): value is BuildStamp =>
+  isRecord(value) &&
+  typeof value.id === 'string' &&
+  buildId.test(value.id) &&
+  typeof value.hash === 'string' &&
+  typeof value.time === 'number' &&
+  Number.isFinite(value.time)
 
 export const readStamp = async (root: string): Promise<BuildStamp | undefined> => {
-  const stamp = await Bun.file(join(root, buildStamp))
+  const stamp: unknown = await Bun.file(join(root, buildStamp))
     .json()
     .catch(() => undefined)
   return isStamp(stamp) ? stamp : undefined
@@ -68,26 +59,21 @@ export const hashApp = async (root: string) => {
   return { hash: hashFiles(files), files, latest: scan.latest }
 }
 
-export const readBuild = async (root: string): Promise<AppBuild> => {
+export const readBuild = async (root: string) => {
   const [{ hash, files, latest }, stamp] = await Promise.all([hashApp(root), readStamp(root)])
-  const build = stamp ? stampBuild(stamp) : { id: hash, time: latest }
+  const build: BuildInfo = stamp ? stampBuild(stamp) : { id: hash, time: latest }
   return { build, hash, files, stamp }
 }
 
-type BuildCheck = Omit<AppBuild, 'files'>
+const cache = new Map<string, { at: number; build: Promise<BuildInfo> }>()
 
-const cache = new Map<string, { at: number; promise: Promise<BuildCheck> }>()
-
-export const currentBuild = (root: string): Promise<BuildCheck> => {
+export const buildInfo = (root: string): Promise<BuildInfo> => {
   const cached = cache.get(root)
-  if (cached && Date.now() - cached.at < cacheTime) return cached.promise
-  const promise = readBuild(root).then(({ build, hash }) => ({ build, hash }))
-  const entry = { at: Date.now(), promise }
+  if (cached && Date.now() - cached.at < cacheTime) return cached.build
+  const entry = { at: Date.now(), build: readBuild(root).then(found => found.build) }
   cache.set(root, entry)
-  promise.catch(() => {
+  entry.build.catch(() => {
     if (cache.get(root) === entry) cache.delete(root)
   })
-  return promise
+  return entry.build
 }
-
-export const buildInfo = async (root: string): Promise<BuildInfo> => (await currentBuild(root)).build

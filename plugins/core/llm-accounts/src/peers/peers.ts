@@ -4,7 +4,7 @@ import { rawMessage } from '../errors'
 import { sharedRef, type ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
-import { fetchInfo, findUrl, Offline, Refused } from './http'
+import { fetchInfo, findUrl, Refused } from './http'
 import { readEvents } from './lines'
 import { bareName, normalize } from './normalize'
 import { openStream } from './open'
@@ -21,7 +21,7 @@ export interface PeerState {
   error?: string
 }
 
-export interface PeersOptions {
+interface PeersOptions {
   home: string
   changed(): void
   limitsChanged(limits: Limits): void
@@ -83,7 +83,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     bases.delete(pc.id)
     if (error instanceof Refused && error.status === 401) Object.assign(current, { online: true, refused: true, error: `${pc.name} no longer accepts this PC — pair it again` })
     else if (error instanceof Refused) Object.assign(current, { online: true, refused: false, info: undefined, error: `${pc.name} runs an older sand without account sharing` })
-    else Object.assign(current, { online: false, error: `${pc.name} is offline: ${error instanceof Offline ? error.message : rawMessage(error)}` })
+    else Object.assign(current, { online: false, error: `${pc.name} is offline: ${rawMessage(error)}` })
   }
 
   const connect = async (pc: RemotePc) => {

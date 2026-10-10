@@ -51,6 +51,12 @@ export const createRoutes = ({ identity, devices, caller, tickets, version, buil
     return new Response(null, { status: 204 })
   }
 
+  const stopHost = (device: string) => {
+    if (device !== adminDevice) return textReply('only the sand command can stop sand', 403)
+    stop()
+    return new Response(null, { status: 202 })
+  }
+
   const socket = (request: Request, peer: Peer) => {
     const ticket = new URL(request.url).searchParams.get('ticket')
     const device = ticket ? tickets.redeem(ticket) : undefined
@@ -65,15 +71,7 @@ export const createRoutes = ({ identity, devices, caller, tickets, version, buil
     [hostPaths.ticket, { method: 'POST', handle: authed(device => json(tickets.issue(device))) }],
     [hostPaths.unpair, { method: 'POST', handle: authed(unpair) }],
     [hostPaths.health, { method: 'GET', handle: authed(() => json(status())) }],
-    [
-      hostPaths.stop,
-      {
-        method: 'POST',
-        handle: authed(device =>
-          device === adminDevice ? (stop(), new Response(null, { status: 202 })) : textReply('only the sand command can stop sand', 403),
-        ),
-      },
-    ],
+    [hostPaths.stop, { method: 'POST', handle: authed(stopHost) }],
     [hostPaths.socket, { method: 'GET', handle: socket }],
   ])
 }

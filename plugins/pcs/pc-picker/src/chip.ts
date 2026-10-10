@@ -1,4 +1,4 @@
-import { button, contextMenu, derive, div, dynamicChild, focusable, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { contextMenu, derive, div, dynamicChild, plainButton, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
@@ -6,7 +6,7 @@ import { refreshGroup } from './refresh'
 import { machineIcon } from './rows'
 import { currentTarget, hasMessages, type PickerContext } from './target'
 
-const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200 ' + focusable
+const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200'
 
 const above = {
   left: '0',
@@ -50,8 +50,8 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const title = () => (started.get() ? `This thread runs on ${name()}. Continue it on another PC` : 'Choose which PC runs this')
 
   const chip = () =>
-    button(
-      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500')], ...press(toggle) },
+    plainButton(
+      { title, class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500')], ...press(toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,

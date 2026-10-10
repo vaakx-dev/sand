@@ -1,9 +1,7 @@
-import { bundleAsset, stampAsset, type BuildStamp } from '@sand/kit/host'
+import { bundleAsset, isStamp, stampAsset, type BuildStamp } from '@sand/kit/host'
 import type { ReleaseInfo, UpdateChannel } from '../contract'
-import { repoApi, type ApiRelease } from './api'
-import { releasePrefix, repo } from './repo'
-import { GithubError } from './request'
-import { fetchStamp } from './stamp'
+import { repo, repoApi, type ApiRelease } from './api'
+import { GithubError, githubGet } from './request'
 
 export interface GithubRelease extends ReleaseInfo {
   build: BuildStamp
@@ -11,6 +9,9 @@ export interface GithubRelease extends ReleaseInfo {
   bundleSize: number
   bundleSha256?: string
 }
+
+const releasePrefix = 'v'
+const stampTimeout = 30_000
 
 const published = (release: ApiRelease) => Date.parse(release.published_at ?? '') || 0
 
@@ -30,6 +31,13 @@ const pick = async (channel: UpdateChannel) => {
   const release = newestTagged(releases)
   if (!release) throw new GithubError(`there is no sand release on GitHub yet`)
   return release
+}
+
+const fetchStamp = async (url: string, tag: string): Promise<BuildStamp> => {
+  const stamp = await githubGet(url, stampTimeout, response => response.json())
+  if (stamp === undefined) throw new GithubError(`${stampAsset} of ${tag} is gone from GitHub`)
+  if (!isStamp(stamp)) throw new GithubError(`${stampAsset} of ${tag} is not a sand build stamp`)
+  return stamp
 }
 
 const sha256 = (digest?: string | null) => (digest?.startsWith('sha256:') ? digest.slice(7).toLowerCase() : undefined)

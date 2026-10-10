@@ -41,7 +41,7 @@ const isIpv4 = (ip: string) => /^\d{1,3}(\.\d{1,3}){3}$/.test(ip)
 
 export const sandTarget = (port: number) => `http://127.0.0.1:${port}`
 
-export const normaliseTarget = (target: string) => trimSlash(target.trim()).replace('://localhost:', '://127.0.0.1:')
+const normaliseTarget = (target: string) => trimSlash(target.trim()).replace('://localhost:', '://127.0.0.1:')
 
 const describeHandler = (handler: Handler) => {
   if (handler.Proxy) return normaliseTarget(handler.Proxy)

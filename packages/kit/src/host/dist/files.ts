@@ -2,8 +2,8 @@ import { lstat, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { compare } from '../../text/compare'
 
-export const appFolders = ['apps', 'packages', 'plugins']
-export const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
+const appFolders = ['apps', 'packages', 'plugins']
+const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
 export const buildStamp = 'sand-build.json'
 export const bundleAsset = 'sand.tar.gz'
 export const stampAsset = 'sand-build.json'

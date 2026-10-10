@@ -1,5 +1,5 @@
 import { isRecord } from '@sand/kit'
-import { copyPlugin, exists, validPluginName } from '@sand/kit/host'
+import { copyPlugin, exists } from '@sand/kit/host'
 import type { BuildInfo } from '@sand/protocol'
 import { lstat, rename, rm, rmdir, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -13,6 +13,7 @@ export interface ActionOptions {
   paths: () => LibraryPaths
   kept: KeptStore
   build: () => Promise<BuildInfo>
+  report: (error: unknown) => void
 }
 
 const appVersion = async (appRoot: string) => {
@@ -21,9 +22,8 @@ const appVersion = async (appRoot: string) => {
   return typeof version === 'string' ? version : ''
 }
 
-export const libraryActions = ({ paths, kept, build }: ActionOptions) => {
+export const libraryActions = ({ paths, kept, build, report }: ActionOptions) => {
   const builtinOf = async (name: string) => {
-    if (!validPluginName(name)) throw new Error('plugin must be a plugin folder name')
     const found = (await builtinPlugins(paths().appRoot)).get(name)
     if (!found) throw new Error(`${name} is not a built-in plugin`)
     return found
@@ -70,7 +70,8 @@ export const libraryActions = ({ paths, kept, build }: ActionOptions) => {
       const { home, appRoot } = paths()
       for (const builtin of (await builtinPlugins(appRoot)).values()) {
         const copy = join(pluginsRoot(home), builtin.name)
-        if ((await lstat(copy).catch(() => undefined))?.isDirectory()) await linkDependencies(appRoot, builtin.folder, copy).catch(() => {})
+        const info = await lstat(copy).catch(() => undefined)
+        if (info?.isDirectory()) await linkDependencies(appRoot, builtin.folder, copy).catch(report)
       }
     },
   }

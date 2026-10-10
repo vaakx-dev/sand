@@ -1,8 +1,7 @@
 import type { NavAction, NavItem } from '@sand/dom'
-import { button, div, dynamicChild, focusable, icon, initials, intent, navActionIcon, navSlot, navTip, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
+import { div, dynamicChild, icon, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [
-  focusable,
   'relative flex h-10 shrink-0 items-center gap-3 rounded-lg transition-colors',
   narrow.get() ? 'w-full justify-start px-2' : 'w-10 justify-center',
   selected() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100',
@@ -21,9 +20,8 @@ const badge = (item: NavItem) => {
 }
 
 export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: (action: NavAction) => void, busy: (id: string) => boolean) =>
-  button(
+  plainButton(
     {
-      type: 'button',
       class: shape(narrow, () => false),
       title: action.map(value => value.label),
       onClick: () => run(action.get()),
@@ -35,8 +33,8 @@ export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: 
 export const itemButton = (entry: Sig<NavEntry>, narrow: Sig<boolean>, drag: Reorder) => {
   const item = entry.map(value => value.item)
   const selected = () => entry.get().selected
-  return button(
-    { type: 'button', class: shape(narrow, selected), title: item.map(navTip), onClick: () => entry.get().pick(), ...intent(() => entry.get().list.prefetch?.(entry.get().item.id)), ...drag(() => navSlot(entry.get())) },
+  return plainButton(
+    { class: shape(narrow, selected), title: item.map(navTip), onClick: () => entry.get().pick(), ...intent(() => entry.get().list.prefetch?.(entry.get().item.id)), ...drag(() => navSlot(entry.get())) },
     span(
       { class: 'relative flex shrink-0' },
       dynamicChild(

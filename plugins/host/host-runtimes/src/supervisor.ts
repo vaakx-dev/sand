@@ -4,19 +4,19 @@ import { createBackoff } from './backoff'
 import type { Runtimes } from './contract'
 import { stopAll, terminate } from './kill'
 import { createLauncher, type Launched } from './launch'
-import { changed, failed, notice, restoredText } from './notices'
+import { listFailed, notice, restoredText, runtimeChanged, runtimeFailed } from './notices'
 import { createSafeMode } from './safe'
 import { sendTo, type Child } from './spawn'
 import { createWaiters } from './waiters'
 
-export interface SupervisorEvents {
+interface SupervisorEvents {
   runtimes(): void
   event(event: WireEvent): void
-  good?(): void
-  restore?(): Promise<string[]>
+  good(): void
+  restore(): Promise<string[]>
 }
 
-export const createSupervisor = (options: HostOptions, main: () => string, events: SupervisorEvents, startSafe = false) => {
+export const createSupervisor = (options: HostOptions, main: () => string, events: SupervisorEvents, startSafe: boolean) => {
   const safeMode = createSafeMode(startSafe)
   let current: Child | undefined
   let lastError: string | undefined
@@ -77,7 +77,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     events.runtimes()
     if (code === 0 && child.drained) return
     events.event(notice('An older sand runtime stopped before its turns finished'))
-    if (current) events.event(changed(current.id, 'crash'))
+    if (current) events.event(runtimeChanged(current.id, 'crash'))
   }
 
   const exited = (child: Child, code: number) => {
@@ -108,7 +108,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     handover.clear()
     events.runtimes()
     waiters.resolve(child)
-    if (announce) events.event(changed(child.id, reason))
+    if (announce) events.event(runtimeChanged(child.id, reason))
     announce = true
     const safeText = safeMode.ready(child.safe)
     if (safeText) {
@@ -116,9 +116,9 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
       events.event(notice(safeText))
     }
     if (!child.safe) restoreTried = false
-    if (!child.safe && !child.failed.length) events.good?.()
+    if (!child.safe && !child.failed.length) events.good()
     if (!child.failed.length) return
-    const text = `Some plugins did not load: ${child.failed.map(plugin => `${plugin.id}: ${plugin.error}`).join('; ')}`
+    const text = `Some plugins did not load: ${listFailed(child.failed)}`
     console.error(text)
     events.event(notice(text))
   }
@@ -128,25 +128,25 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     lastFailed = plugins
     if (current) {
       events.event(notice(`Could not start a fresh runtime: ${error}. The old one keeps running.`))
-      events.event(failed(error))
+      events.event(runtimeFailed(error))
       return false
     }
     lastError = error
     if (safeMode.failed(error)) {
-      events.event(failed(error))
+      events.event(runtimeFailed(error))
       void swap('safe')
       return false
     }
-    if (!restoreTried && events.restore && !safeMode.on()) {
+    if (!restoreTried && !safeMode.on()) {
       restoreTried = true
-      void tryRestore(error, events.restore)
+      void tryRestore(error)
       return false
     }
     return retryLater(error)
   }
 
-  const tryRestore = async (error: string, restore: () => Promise<string[]>) => {
-    const names = await restore().catch((problem: unknown) => {
+  const tryRestore = async (error: string) => {
+    const names = await events.restore().catch((problem: unknown) => {
       console.error(`could not bring back the last working plugins: ${errorMessage(problem)}`)
       return []
     })
@@ -155,7 +155,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     const text = restoredText(names)
     console.error(text)
     events.event(notice(text))
-    events.event(failed(error))
+    events.event(runtimeFailed(error))
     void swap('plugins')
   }
 
@@ -163,7 +163,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     const delay = backoff.schedule()
     const retry = delay ? `in ${delay / 1000} s` : 'soon'
     events.event(notice(`Could not start the sand runtime: ${error}. Trying again ${retry}.`))
-    events.event(failed(error))
+    events.event(runtimeFailed(error))
     return false
   }
 

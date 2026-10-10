@@ -1,3 +1,5 @@
+import { collectScope, onTimeout } from '@vaakx-dev/vrui'
+
 export type PlaceLoad<T> = (cwd: string, device: string) => Promise<T | undefined>
 
 export interface PlaceCacheOptions<T> {
@@ -5,7 +7,6 @@ export interface PlaceCacheOptions<T> {
   changed(): void
   freshMs?: number
   ready?(): boolean
-  same?(a: T | undefined, b: T | undefined): boolean
 }
 
 export interface PlaceCache<T> {
@@ -19,23 +20,23 @@ interface Known<T> {
   value: T | undefined
 }
 
-const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
-export const placeCache = <T>({ load, changed, freshMs = Infinity, ready = () => true, same = sameJson }: PlaceCacheOptions<T>): PlaceCache<T> => {
+export const placeCache = <T>({ load, changed, freshMs = Infinity, ready = () => true }: PlaceCacheOptions<T>): PlaceCache<T> => {
   const known = new Map<string, Known<T>>()
   const loading = new Map<string, Promise<T | undefined>>()
   const again = new Set<string>()
-  let pending = false
+  let pending: (() => void) | undefined
 
   const keyOf = (cwd: string, device: string) => `${device}\0${cwd}`
 
+  const flush = () => {
+    pending = undefined
+    changed()
+  }
+
   const announce = () => {
-    if (pending) return
-    pending = true
-    queueMicrotask(() => {
-      pending = false
-      changed()
-    })
+    pending ??= collectScope(() => onTimeout(flush)).value
   }
 
   const settle = (cwd: string, device: string, value: T | undefined) => {

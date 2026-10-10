@@ -2,7 +2,7 @@ import type { Block, Message, ToolResultBlock, UserContent } from '@sand/message
 import { pair } from '../http/pair'
 import { decodeReasoning } from '../reasoning'
 
-export type Item = Record<string, unknown>
+type Item = Record<string, unknown>
 
 const part = (block: UserContent, images: boolean): Item => {
   switch (block.type) {
@@ -48,10 +48,5 @@ const assistantItem = (block: Block): Item | undefined => {
 
 export const codexInput = (messages: Message[], images: boolean): Item[] =>
   pair(messages).flatMap(message =>
-    message.role === 'user'
-      ? userItems(message.content, images)
-      : message.content.flatMap(block => {
-          const item = assistantItem(block)
-          return item ? [item] : []
-        }),
+    message.role === 'user' ? userItems(message.content, images) : message.content.flatMap<Item>(block => assistantItem(block) ?? []),
   )

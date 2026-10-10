@@ -1,8 +1,6 @@
 import { duration } from '@sand/kit'
-import { div, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { clock, div, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { clock } from '../reactive/owned'
-import { read } from '../reactive/read'
 
 export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange'
 

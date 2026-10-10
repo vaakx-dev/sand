@@ -3,15 +3,15 @@ import type { Limits, LoginSharePc, SignInKind } from './contract'
 import { joinDisposers } from '@sand/kit'
 import { watchRemotes } from '@sand/kit/host'
 import { definePlugin } from 'drydock'
+import { z } from 'zod'
 import { createAccounts } from './auth/accounts'
 import { createLogin } from './auth/login'
 import { authPath } from './auth/path'
 import { createCatalog } from './catalog'
-import { priceList } from './catalog/prices'
+import { priceList, priceSchema } from './catalog/prices'
 import { createClaude } from './claude/client'
 import { createCodex } from './codex/client'
 import { createCompat } from './compat/client'
-import { config, configSchema } from './config'
 import { mergeLLM } from './llm'
 import { createLocal } from './local'
 import { createPeers } from './peers/peers'
@@ -22,33 +22,21 @@ import { createUsers } from './share/users'
 import { loginState } from './state'
 
 const refreshEvery = 60_000
+const discoverEvery = 6 * 3_600_000
+const maxTokens = 64_000
+const retries = 4
 
 export default definePlugin({
   name: 'llm-accounts',
   inject: ['cli'],
-  config: configSchema,
+  config: z.object({ prices: z.record(z.string(), priceSchema).default({}) }).default({ prices: {} }),
   async apply(ctx, options) {
     let limits = (ctx.hot.data.sourceLimits ?? {}) as Record<string, Limits>
     let server: Server | undefined
-    let merged: ReturnType<typeof mergeLLM> | undefined
-    let state: (() => ReturnType<typeof loginState>) | undefined
-    let syncing = false
     let live = true
-    let offered = ''
-    let resetViews = () => {}
-
-    const signature = () => (merged ? JSON.stringify([merged.llm.models(), merged.llm.sources()]) : '')
-
+    let onChange = () => {}
     const changed = () => {
-      if (!live) return
-      resetViews()
-      if (syncing) catalog.sync()
-      const now = signature()
-      if (merged && now !== offered) {
-        offered = now
-        ctx.emit('llm.models')
-      }
-      if (state) server?.broadcast('login.change', [state()])
+      if (live) onChange()
     }
 
     const { home } = ctx.cli
@@ -62,22 +50,29 @@ export default definePlugin({
       limits = ctx.hot.data.sourceLimits = { ...limits, [parsed.source ?? 'claude']: parsed }
       ctx.emit('llm.limits', parsed)
     }
-    const claude = createClaude({ accounts, maxTokens: config.max_tokens, thinking: config.thinking, retries: config.max_retries, notify, onLimits })
-    const codex = createCodex({ accounts, retries: config.max_retries, onLimits })
-    const compat = createCompat({ retries: config.max_retries })
+    const claude = createClaude({ accounts, maxTokens, retries, notify, onLimits })
+    const codex = createCodex({ accounts, retries, onLimits })
+    const compat = createCompat({ retries })
 
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, catalog, claude, codex, compat, limits: () => limits })
     const peers = createPeers({ home, changed, limitsChanged: parsed => ctx.emit('llm.limits', parsed) })
-    const llm = mergeLLM(local, peers, accounts, catalog)
-    merged = llm
-    resetViews = () => {
+    const merged = mergeLLM(local, peers, accounts, catalog)
+    const state = () => loginState(accounts, peers, users)
+    const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
+    let offered = signature()
+
+    onChange = () => {
       local.view.reset()
-      llm.reset()
+      merged.reset()
+      catalog.sync()
+      const now = signature()
+      if (now !== offered) {
+        offered = now
+        ctx.emit('llm.models')
+      }
+      server?.broadcast('login.change', [state()])
     }
-    offered = signature()
-    state = () => loginState(accounts, peers, users)
-    syncing = true
     catalog.sync()
 
     const conflict = (account: SignInKind) => {
@@ -89,7 +84,7 @@ export default definePlugin({
     ctx.effect(() => watchRemotes(home, () => void peers.refresh()))
     ctx.effect(() => {
       const peerTimer = setInterval(() => void peers.refresh(), refreshEvery)
-      const discoverTimer = setInterval(() => void catalog.refresh(), config.discover_every)
+      const discoverTimer = setInterval(() => void catalog.refresh(), discoverEvery)
       peerTimer.unref?.()
       discoverTimer.unref?.()
       return () => {
@@ -101,7 +96,7 @@ export default definePlugin({
     })
     ctx.watch('server', found => {
       server = found
-      if (!found || !merged || !state) return
+      if (!found) return
       const forget = () => {
         server = undefined
       }

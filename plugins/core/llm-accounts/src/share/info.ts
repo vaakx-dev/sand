@@ -1,4 +1,4 @@
-import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginMethod, ModelInfo, ModelPrice, SourceRef } from '../contract'
+import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice, SourceRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { billings } from '../auth/kinds'
 import type { LocalLLM } from '../local'
@@ -35,7 +35,7 @@ export const sharedRef = ({ id, kind, provider, label, plan }: SharedAccount): S
   ...(plan && { plan }),
 })
 
-const shareable = ({ id, kind, provider, label, method, plan }: ReturnType<Accounts['list']>[number]): SharedAccount[] =>
+const shareable = ({ id, kind, provider, label, method, plan }: LoginAccount): SharedAccount[] =>
   method ? [{ id, kind, provider, label, subscription: label, method, ...(plan && { plan }) }] : []
 
 export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {

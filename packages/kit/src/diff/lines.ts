@@ -12,7 +12,7 @@ const replaced = (before: string[], after: string[]) => [
   ...after.map((text): DiffLine => ({ kind: 'add', text })),
 ]
 
-const compare = (before: string[], after: string[]) => {
+const lineDiff = (before: string[], after: string[]) => {
   let head = 0
   while (head < before.length && head < after.length && before[head] === after[head]) head++
   let tail = 0
@@ -41,7 +41,10 @@ const trim = (lines: DiffLine[], context: number) => {
     skipped = 0
   }
   lines.forEach((line, index) => {
-    if (!near[index]) return void skipped++
+    if (!near[index]) {
+      skipped++
+      return
+    }
     flush()
     out.push(line)
   })
@@ -50,7 +53,7 @@ const trim = (lines: DiffLine[], context: number) => {
 }
 
 export const diffLines = (before: string, after: string, { context = Infinity }: { context?: number } = {}) => {
-  const lines = compare(split(before), split(after))
+  const lines = lineDiff(split(before), split(after))
   return Number.isFinite(context) ? trim(lines, context) : lines
 }
 

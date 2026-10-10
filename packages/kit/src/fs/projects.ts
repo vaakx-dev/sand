@@ -1,7 +1,7 @@
 import type { Project, ProjectCopy } from '@sand/protocol'
 import { join } from 'node:path'
 import { isRecord } from '../json/record'
-import { replaceFile } from './replace'
+import { writeAtomic } from './replace'
 
 const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 
@@ -52,8 +52,5 @@ export const readProjectsFile = async (home: string): Promise<Project[] | undefi
   return parseProjectsFile(await file.text())
 }
 
-export const writeProjectsFile = async (home: string, projects: Project[]) => {
-  const path = projectsPath(home)
-  await Bun.write(`${path}.tmp`, `${JSON.stringify({ version: 2, projects }, null, 2)}\n`)
-  await replaceFile(`${path}.tmp`, path)
-}
+export const writeProjectsFile = (home: string, projects: Project[]) =>
+  writeAtomic(projectsPath(home), `${JSON.stringify({ version: 2, projects }, null, 2)}\n`)

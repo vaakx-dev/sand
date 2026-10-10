@@ -5,11 +5,6 @@ import { linkOwners, readOldRecords } from './old'
 import { type Seed, seedProject, within } from './seed'
 import { threadFolders } from './threads'
 
-export interface MigrateOptions {
-  home: string
-  device: string
-}
-
 interface Root {
   path: string
   repo: boolean
@@ -30,28 +25,27 @@ const threadRoots = (home: string) => {
   return [...roots.values()].sort((a, b) => a.path.length - b.path.length)
 }
 
-export const migrateProjects = async ({ home, device }: MigrateOptions): Promise<Project[]> => {
+export const migrateProjects = async (home: string, device: string): Promise<Project[]> => {
   const projects: Project[] = []
-  try {
-    const now = Date.now()
-    const scratch = resolve(join(home, 'scratch'))
-    const usable = (path: string) => !within(path, scratch) && !isQuietFolder(path)
-    const paths = new Set<string>()
-    const add = async (seed: Seed) => {
-      projects.push(await seedProject(device, seed, now))
-      paths.add(seed.path)
-    }
-    const records = (await readOldRecords(home)).filter(record => usable(record.path))
-    const owners = linkOwners(records)
-    for (const record of records) {
-      if (paths.has(record.path)) continue
-      await add({ ...record, id: record.link && owners.has(record) ? record.link : Bun.randomUUIDv7() })
-    }
-    const covered = (path: string) => [...paths].some(copy => within(path, copy))
-    for (const root of threadRoots(home)) {
-      if (!usable(root.path) || paths.has(root.path) || (!root.repo && covered(root.path))) continue
-      await add({ id: Bun.randomUUIDv7(), path: root.path, added: root.added })
-    }
-  } catch {}
+  const paths = new Set<string>()
+  const now = Date.now()
+  const scratch = resolve(join(home, 'scratch'))
+  const usable = (path: string) => !within(path, scratch) && !isQuietFolder(path)
+  const covered = (path: string) => [...paths].some(copy => within(path, copy))
+  const add = async (seed: Seed) => {
+    projects.push(await seedProject(device, seed, now))
+    paths.add(seed.path)
+  }
+
+  const records = (await readOldRecords(home)).filter(record => usable(record.path))
+  const owners = linkOwners(records)
+  for (const record of records) {
+    if (paths.has(record.path)) continue
+    await add({ ...record, id: record.link && owners.has(record) ? record.link : Bun.randomUUIDv7() })
+  }
+  for (const root of threadRoots(home)) {
+    if (!usable(root.path) || paths.has(root.path) || (!root.repo && covered(root.path))) continue
+    await add({ id: Bun.randomUUIDv7(), path: root.path, added: root.added })
+  }
   return projects
 }

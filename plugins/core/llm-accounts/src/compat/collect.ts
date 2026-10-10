@@ -1,77 +1,81 @@
-import type { Block, ToolCallBlock } from '@sand/messages'
+import type { Block, TextBlock, ThinkingBlock, ToolCallBlock } from '@sand/messages'
 import type { LLMEvent } from '../contract'
-import { isRecord } from '@sand/kit'
+import { parseToolInput } from '../http/tool-input'
+import type { ToolCallDelta } from './chunks'
 
-interface Slot {
+interface Slot<T extends Block> {
   index: number
-  block: Block
+  block: T
+}
+
+interface CallSlot extends Slot<ToolCallBlock> {
   json: string
   announced: boolean
 }
 
-const parseInput = (block: ToolCallBlock, json: string) => {
-  if (!json.trim()) return
-  try {
-    const input = JSON.parse(json)
-    if (isRecord(input)) block.input = input
-    else block.malformed = json
-  } catch {
-    block.malformed = json
-  }
+const keyOf = (delta: ToolCallDelta | null, position: number) => {
+  if (typeof delta?.index === 'number') return `#${delta.index}`
+  if (typeof delta?.id === 'string' && delta.id) return `id:${delta.id}`
+  return `@${position}`
 }
-
-const keyOf = (delta: any, position: number) =>
-  typeof delta?.index === 'number' ? `#${delta.index}` : typeof delta?.id === 'string' && delta.id ? `id:${delta.id}` : `@${position}`
 
 const piece = (value: unknown) => (typeof value === 'string' ? value : value && typeof value === 'object' ? JSON.stringify(value) : '')
 
+const blockEvent = ({ index, block }: Slot<Block>): LLMEvent => ({ type: 'block', index, block })
+
 export class Collector {
   readonly blocks: Block[] = []
-  private current: Slot | undefined
-  private calls = new Map<string, Slot>()
+  private current: Slot<TextBlock | ThinkingBlock> | undefined
+  private calls = new Map<string, CallSlot>()
 
-  private add(block: Block): Slot {
-    const slot = { index: this.blocks.length, block, json: '', announced: false }
+  private add<T extends Block>(block: T): Slot<T> {
     this.blocks.push(block)
-    return slot
+    return { index: this.blocks.length - 1, block }
   }
 
   private close(): LLMEvent[] {
     const slot = this.current
     this.current = undefined
-    return slot ? [{ type: 'block', index: slot.index, block: slot.block }] : []
+    return slot ? [blockEvent(slot)] : []
   }
 
-  private announce(slot: Slot): LLMEvent[] {
-    const block = slot.block as ToolCallBlock
+  private announce(slot: CallSlot): LLMEvent[] {
+    const { block, index, json } = slot
     slot.announced = true
     if (!block.id) block.id = `call_${crypto.randomUUID().replaceAll('-', '').slice(0, 24)}`
-    return [{ type: 'tool_call', index: slot.index, id: block.id, name: block.name }, ...(slot.json ? [{ type: 'tool_input' as const, index: slot.index, json: slot.json }] : [])]
+    return [{ type: 'tool_call', index, id: block.id, name: block.name }, ...(json ? [{ type: 'tool_input' as const, index, json }] : [])]
+  }
+
+  private finishCall(slot: CallSlot): LLMEvent[] {
+    const events = slot.announced ? [] : this.announce(slot)
+    parseToolInput(slot.block, slot.json)
+    return [...events, blockEvent(slot)]
   }
 
   text(kind: 'text' | 'thinking', text: string): LLMEvent[] {
     const events: LLMEvent[] = []
     if (this.current?.block.type !== kind) {
       events.push(...this.close())
-      this.current = this.add(kind === 'text' ? { type: 'text', text: '' } : { type: 'thinking', thinking: '' })
+      const block: TextBlock | ThinkingBlock = kind === 'text' ? { type: 'text', text: '' } : { type: 'thinking', thinking: '' }
+      this.current = this.add(block)
     }
     const { block, index } = this.current
     if (block.type === 'text') block.text += text
-    else if (block.type === 'thinking') block.thinking += text
+    else block.thinking += text
     events.push({ type: kind, index, text })
     return events
   }
 
-  tool(delta: any, position: number): LLMEvent[] {
+  tool(delta: ToolCallDelta | null, position: number): LLMEvent[] {
     const key = keyOf(delta, position)
     const events: LLMEvent[] = []
     let slot = this.calls.get(key)
     if (!slot) {
       events.push(...this.close())
-      slot = this.add({ type: 'tool_call', id: '', name: '', input: {} })
+      slot = { ...this.add<ToolCallBlock>({ type: 'tool_call', id: '', name: '', input: {} }), json: '', announced: false }
       this.calls.set(key, slot)
     }
-    const block = slot.block as ToolCallBlock
+    const { block } = slot
     if (!slot.announced && !block.id && typeof delta?.id === 'string') block.id = delta.id
     if (!block.name && typeof delta?.function?.name === 'string') block.name = delta.function.name
     const json = piece(delta?.function?.arguments)
@@ -85,12 +89,7 @@ export class Collector {
     const slots = [...(this.current ? [this.current] : []), ...this.calls.values()].sort((a, b) => a.index - b.index)
     this.current = undefined
     this.calls.clear()
-    return slots.flatMap(slot => {
-      if (slot.block.type !== 'tool_call') return [{ type: 'block', index: slot.index, block: slot.block }]
-      const events = slot.announced ? [] : this.announce(slot)
-      parseInput(slot.block, slot.json)
-      return [...events, { type: 'block', index: slot.index, block: slot.block }]
-    })
+    return slots.flatMap(slot => ('json' in slot ? this.finishCall(slot) : [blockEvent(slot)]))
   }
 
   get hasCalls() {

@@ -5,13 +5,8 @@ export const validTarget = /^(linux|darwin|windows)-(x64|aarch64)(-musl)?(-basel
 
 export const buildBunFile = 'sand-bun'
 
-export const bunExe = () => (process.platform === 'win32' ? 'bun.exe' : 'bun')
-
-export const bunFolder = (home: string) => join(home, 'bun')
-
-export const bunBinary = (home: string, version: string) => join(bunFolder(home), version, bunExe())
-
-export const targetFile = (home: string) => join(bunFolder(home), 'target')
+const platforms: Partial<Record<NodeJS.Platform, string>> = { win32: 'windows', linux: 'linux', darwin: 'darwin' }
+const arches: Partial<Record<NodeJS.Architecture, string>> = { x64: 'x64', arm64: 'aarch64' }
 
 const readTrimmed = async (file: string) =>
   (
@@ -20,13 +15,15 @@ const readTrimmed = async (file: string) =>
       .catch(() => '')
   ).trim()
 
+export const bunFolder = (home: string) => join(home, 'bun')
+
+export const bunBinary = (home: string, version: string) =>
+  join(bunFolder(home), version, process.platform === 'win32' ? 'bun.exe' : 'bun')
+
 export const readTarget = async (home: string) => {
-  const target = await readTrimmed(targetFile(home))
+  const target = await readTrimmed(join(bunFolder(home), 'target'))
   return validTarget.test(target) ? target : undefined
 }
-
-const platforms: Partial<Record<NodeJS.Platform, string>> = { win32: 'windows', linux: 'linux', darwin: 'darwin' }
-const arches: Partial<Record<NodeJS.Architecture, string>> = { x64: 'x64', arm64: 'aarch64' }
 
 export const defaultTarget = () => `${platforms[process.platform] ?? process.platform}-${arches[process.arch] ?? process.arch}`
 

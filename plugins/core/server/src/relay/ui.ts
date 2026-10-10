@@ -1,36 +1,43 @@
 import type { PickItem, PickOptions, UI } from '../contract'
 import { reportText } from '@sand/kit'
 import { existsSync } from 'node:fs'
-import { tailOf } from '../requests/tail'
+import { tailOf } from '../requests/paging'
 import { info } from '../socket/serialize'
-import { invocation } from './invocation'
-import { tell } from './peer'
-import type { RelayState } from './state'
+import { invocation, tell, type Peer } from './peer'
+import type { RelayState } from './relay'
 
-export const relayUI = (state: RelayState): UI => {
-  const { contributions, peers, picks } = state
+export const relayUI = ({ ctx, peers, picks, commands }: RelayState): UI => {
   const target = () => {
     const current = invocation.getStore()
     return current && peers.has(current.peer.socket) ? current : undefined
   }
 
+  const toTarget = (send: (peer: Peer) => void) => {
+    const current = target()
+    if (current) send(current.peer)
+  }
+
+  const toTargetOrAll = (send: (peer: Peer) => void, unseen: () => void) => {
+    const current = target()
+    if (current) return send(current.peer)
+    if (!peers.size) return unseen()
+    for (const peer of peers.values()) send(peer)
+  }
+
   return {
-    command: command => contributions.commands.add(command.name, command),
+    command: command => commands.add(command),
     notify(text, level) {
-      const current = target()
-      if (current) return tell(current.peer, 'ui.notify', text, level)
-      if (!peers.size) {
-        if (level === 'error') console.error(text)
-        else console.log(text)
-        return
-      }
-      for (const peer of peers.values()) tell(peer, 'ui.notify', text, level)
+      const print = level === 'error' ? console.error : console.log
+      toTargetOrAll(
+        peer => tell(peer, 'ui.notify', text, level),
+        () => print(text),
+      )
     },
     report(title, rows) {
-      const current = target()
-      if (current) return tell(current.peer, 'ui.report', title, rows)
-      if (!peers.size) return void console.log(reportText(title, rows))
-      for (const peer of peers.values()) tell(peer, 'ui.report', title, rows)
+      toTargetOrAll(
+        peer => tell(peer, 'ui.report', title, rows),
+        () => console.log(reportText(title, rows)),
+      )
     },
     async pick<T>(title: string, items: PickItem<T>[], options?: PickOptions) {
       const current = target()
@@ -57,20 +64,14 @@ export const relayUI = (state: RelayState): UI => {
       current.session = session
       current.peer.focus = session
       if (!session) return tell(current.peer, 'ui.open', null, draft, cwd)
-      tailOf(state.ctx, session)
+      tailOf(ctx, session)
         .then(tail => {
           if (current.peer.focus?.id === session.id) tell(current.peer, 'ui.open', { info: info(session), ...tail }, draft, cwd)
         })
-        .catch(error => state.ctx.report(error))
+        .catch(error => ctx.report(error))
     },
-    attach(content) {
-      const current = target()
-      if (current) tell(current.peer, 'ui.attach', content)
-    },
-    prepare(patch) {
-      const current = target()
-      if (current) tell(current.peer, 'ui.prepare', patch)
-    },
+    attach: content => toTarget(peer => tell(peer, 'ui.attach', content)),
+    prepare: patch => toTarget(peer => tell(peer, 'ui.prepare', patch)),
     draft: () => invocation.getStore()?.settings,
   }
 }

@@ -9,7 +9,8 @@ import { headers } from './page/headers'
 import { iconRoutes } from './page/icons'
 import { page } from './page/page'
 import { scriptResponse } from './page/script'
-import { pwaRoutes } from './pwa/routes'
+import { manifestRoute } from './pwa/manifest'
+import { workerRoute } from './pwa/worker'
 
 export default definePlugin({
   name: 'web',
@@ -38,14 +39,19 @@ export default definePlugin({
       '/': () => new Response(page(site.current().id, site.enabled()), { headers: headers('text/html') }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
+      '/manifest.webmanifest': manifestRoute,
+      '/sw.js': workerRoute,
       ...iconRoutes,
-      ...pwaRoutes,
     }
     for (const [path, handler] of Object.entries(routes)) ctx.effect(() => ctx.server.route(path, handler, { public: true }))
-    ctx.effect(() => ctx.server.handle('web.extensions', () => site.enabled()))
-    ctx.effect(() => ctx.server.handle('web.extensions.set', ({ extension, enabled }) => site.set(extension, enabled)))
-    ctx.effect(() => ctx.server.handle('web.extensions.reset', () => site.reset()))
-    ctx.effect(() => ctx.server.handle('web.extensions.report', ({ states: reported }) => states.report(reported)))
+    ctx.effect(() =>
+      ctx.server.handle({
+        'web.extensions': () => site.enabled(),
+        'web.extensions.set': ({ extension, enabled }) => site.set(extension, enabled),
+        'web.extensions.reset': () => site.reset(),
+        'web.extensions.report': request => states.report(request.states),
+      }),
+    )
     ctx.server.broadcast('web.build', [site.current().id])
   },
 })

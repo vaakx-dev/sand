@@ -1,4 +1,4 @@
-import { button, contextMenu, div, focusable, providerIcon, span, type ContextMenu } from '@sand/dom'
+import { contextMenu, div, plainButton, providerIcon, span, type ContextMenu } from '@sand/dom'
 import { tokens, tokensOf } from '@sand/kit'
 import { colorsOf } from '../../data/providers'
 import type { Account } from '../../data/types'
@@ -18,7 +18,7 @@ const nameLine = (row: Row) =>
   div(
     { class: 'flex min-w-0 items-baseline gap-3 text-sm text-neutral-100' },
     row.open
-      ? button({ type: 'button', class: ['min-w-0 flex-1 truncate rounded-sm text-left hover:underline', focusable], title: row.hint }, row.name)
+      ? plainButton({ class: 'min-w-0 flex-1 truncate rounded-sm text-left hover:underline', title: row.hint }, row.name)
       : span({ class: 'min-w-0 flex-1 truncate', title: row.hint }, row.name),
     span({ class: 'shrink-0 tabular-nums' }, billedText(row.totals)),
   )

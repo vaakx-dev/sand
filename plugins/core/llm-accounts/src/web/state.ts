@@ -10,7 +10,7 @@ export const loginState = (ctx: Context<'wire'>, fail: (error: unknown) => void)
   const unavailable = sig('')
 
   ctx.on('wire.event', event => {
-    if (event.name === 'login.change') state.set(event.args[0] as LoginState)
+    if (event.name === 'login.change') state.set(event.args[0])
   })
 
   const apply = (next: LoginState) => {

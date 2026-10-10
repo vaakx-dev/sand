@@ -3,16 +3,8 @@ import { join } from 'node:path'
 import { compare } from '../../text/compare'
 import { unsharedName } from './names'
 
-const entries = async (folder: string) => {
-  try {
-    return await readdir(folder, { withFileTypes: true })
-  } catch {
-    return []
-  }
-}
-
 const collect = async (folder: string, prefix: string, out: string[]): Promise<void> => {
-  for (const entry of await entries(folder)) {
+  for (const entry of await readdir(folder, { withFileTypes: true }).catch(() => [])) {
     if (unsharedName(entry.name) || entry.isSymbolicLink()) continue
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name
     if (entry.isDirectory()) await collect(join(folder, entry.name), relative, out)

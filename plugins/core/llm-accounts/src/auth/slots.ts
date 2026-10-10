@@ -1,12 +1,12 @@
-import type { FixedId } from './kinds'
+import { fixedIds, type FixedId } from './kinds'
 import { credentialOf, type Credential, type Saved } from './store'
 
-export interface Located {
+interface Located {
   key: string
   credential: Credential
 }
 
-const legacy: Partial<Record<FixedId, string>> = { claude: 'anthropic', codex: 'openai' }
+const legacy: Partial<Record<FixedId, FixedId>> = { claude: 'anthropic', codex: 'openai' }
 
 const wanted: Record<FixedId, Credential['type']> = {
   claude: 'oauth',
@@ -35,7 +35,7 @@ export const holders = (saved: Saved, id: FixedId) => {
 }
 
 export const displaced = (saved: Saved, id: FixedId): Saved => {
-  const owner = Object.entries(legacy).find(([, key]) => key === id)?.[0] as FixedId | undefined
+  const owner = fixedIds.find(fixed => legacy[fixed] === id)
   const old = owner && at(saved, id, 'oauth')
   return owner && old && !at(saved, owner, 'oauth') ? { [owner]: old.credential } : {}
 }

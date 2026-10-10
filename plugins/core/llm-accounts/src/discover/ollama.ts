@@ -1,3 +1,5 @@
+import { isRecord } from '@sand/kit'
+import { positive } from './fields'
 import { getJson } from './http'
 
 const concurrency = 10
@@ -7,7 +9,7 @@ export const isOllama = async (root: string) => {
   if (new URL(root).port === '11434') return true
   try {
     const body = await getJson('Ollama', `${root}/api/version`, {}, probe)
-    return typeof body?.version === 'string'
+    return isRecord(body) && typeof body.version === 'string'
   } catch {
     return false
   }
@@ -22,10 +24,10 @@ const contextOf = async (root: string, model: string) => {
       signal: AbortSignal.timeout(probe * 2),
     })
     if (!response.ok) return undefined
-    const info = ((await response.json()) as any)?.model_info ?? {}
+    const body: unknown = await response.json()
+    const info: Record<string, unknown> = isRecord(body) && isRecord(body.model_info) ? body.model_info : {}
     const key = Object.keys(info).find(name => name.endsWith('.context_length'))
-    const value = key ? info[key] : undefined
-    return typeof value === 'number' && value > 0 ? value : undefined
+    return positive(key ? info[key] : undefined)
   } catch {
     return undefined
   }

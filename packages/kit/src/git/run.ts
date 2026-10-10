@@ -18,7 +18,8 @@ const quiet = {
 
 const reason = ({ err, out }: GitResult) => {
   const lines = `${err}\n${out}`.split('\n').map(line => line.trim())
-  const found = lines.find(line => /^(fatal|error):/.test(line))?.replace(/^\w+:\s*/, '') ?? lines.find(line => line.startsWith('CONFLICT'))
+  const error = lines.find(line => /^(fatal|error):/.test(line))
+  const found = error ? error.replace(/^\w+:\s*/, '') : lines.find(line => line.startsWith('CONFLICT'))
   return found || lines.find(Boolean)
 }
 

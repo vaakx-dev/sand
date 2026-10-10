@@ -1,4 +1,4 @@
-import type { AccountKind, Billing, KeyKind, NewModels, SignInKind } from '../contract'
+import type { AccountKind, Billing, KeyKind, NewModels, ServerProvider, SignInKind } from '../contract'
 
 export type FixedId = Exclude<AccountKind, 'server'>
 
@@ -44,15 +44,20 @@ export const newModelsDefaults: Record<AccountKind, NewModels> = {
   server: 'show',
 }
 
-export const isFixed = (id: string): id is FixedId => (fixedIds as string[]).includes(id)
+const serverProviders: ServerProvider[] = ['ollama', 'lmstudio', 'server']
 
-export const isSignInKind = (id: unknown): id is SignInKind => (signInKinds as unknown[]).includes(id)
+export const isFixed = (id: string): id is FixedId => fixedIds.some(fixed => fixed === id)
 
-export const isKeyKind = (id: unknown): id is KeyKind => (keyKinds as unknown[]).includes(id)
+export const isSignInKind = (id: unknown): id is SignInKind => signInKinds.some(kind => kind === id)
 
-export const legacyId = (provider: string, method: string): FixedId =>
-  provider === 'openai' ? (method === 'oauth' ? 'codex' : 'openai') : method === 'oauth' ? 'claude' : 'anthropic'
+export const isKeyKind = (id: unknown): id is KeyKind => keyKinds.some(kind => kind === id)
 
-const settingsPath = 'Settings → Accounts'
+export const isServerProvider = (value: unknown): value is ServerProvider => serverProviders.some(provider => provider === value)
 
-export const signInError = (label?: string) => new Error(`Sign in${label ? ` to ${label}` : ''} under ${settingsPath}`)
+export const legacyId = (provider: string, method: string): FixedId => {
+  const oauth = method === 'oauth'
+  if (provider === 'openai') return oauth ? 'codex' : 'openai'
+  return oauth ? 'claude' : 'anthropic'
+}
+
+export const signInError = (label?: string) => new Error(`Sign in${label ? ` to ${label}` : ''} under Settings → Accounts`)

@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { button, div, focusable, icon, rowButton, span, tile, type Child } from '@sand/dom'
+import { div, icon, plainButton, rowButton, span, tile, type Child } from '@sand/dom'
 import { logo as sourceLogo } from '../source'
 import type { Kit } from './kit'
 
@@ -31,8 +31,8 @@ export const linkRow = ({ mark, title, detail, end = [], onClick }: LinkRow) =>
 export const crumb = (kit: Kit, mark: Child, title: Child) =>
   div(
     { class: 'flex min-w-0 items-center gap-2 px-1' },
-    button(
-      { type: 'button', class: ['shrink-0 rounded-md text-sm text-neutral-400 hover:text-neutral-100', focusable], onClick: () => kit.go({ kind: 'top' }) },
+    plainButton(
+      { class: 'shrink-0 rounded-md text-sm text-neutral-400 hover:text-neutral-100', onClick: () => kit.go({ kind: 'top' }) },
       'Models',
     ),
     span({ class: 'inline-flex shrink-0 text-neutral-600' }, icon('right', 14)),

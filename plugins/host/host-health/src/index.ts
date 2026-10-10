@@ -1,27 +1,21 @@
 import type { HostBuild } from '@sand/host-dist/contract'
 import { definePlugin } from 'drydock'
 import { createHealthCheck } from './check'
-import { logTail, serverLog } from './log'
 import { createPeerHealth } from './peer'
 import { healthRequests } from './requests'
-import { probeWeb } from './web'
 
 export default definePlugin({
   name: 'host-health',
   description: 'Checks that this PC runs sand properly and asks paired PCs how they are doing',
   inject: ['hostOptions', 'runtimes', 'hub'],
+  uses: { hostBuild: 'health reports have no build info' },
   apply(ctx) {
     const { home, device } = ctx.hostOptions
     let hostBuild: HostBuild | undefined
     ctx.watch('hostBuild', impl => {
       hostBuild = impl
     })
-    const check = createHealthCheck({
-      runtimes: ctx.runtimes,
-      probe: runtime => probeWeb(runtime),
-      log: () => logTail(serverLog(home)),
-      build: async () => hostBuild?.info(),
-    })
+    const check = createHealthCheck(ctx.runtimes, home, async () => hostBuild?.info())
     ctx.provide('hostHealth', check)
     const peers = createPeerHealth(home)
     ctx.effect(() => () => peers.stop())

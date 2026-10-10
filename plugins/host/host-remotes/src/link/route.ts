@@ -6,7 +6,7 @@ import type { Status } from './status'
 
 const limit = 8192
 
-export interface LinkRouteOptions {
+interface LinkRouteOptions {
   self: DeviceInfo
   store: RemoteStore
   devices: Pick<HostDevices, 'get' | 'link'>

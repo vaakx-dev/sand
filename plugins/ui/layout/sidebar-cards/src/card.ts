@@ -1,12 +1,12 @@
 import type { NavAction, NavItem, NavList } from '@sand/dom'
-import { color, div, dynamicChild, focusable, icon, intent, keys, pressMenu, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
+import { colorVar, div, dynamicChild, icon, intent, keys, pressMenu, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
 import type { MenuRequest } from './menu/view'
 import { status } from './status'
 import { actionStrip, type StripParts } from './strip'
 
 export type CardRow = { group: string; list: NavList; item: NavItem; selected: boolean }
 
-const draftEdge = () => span({ class: 'pointer-events-none absolute inset-0 rounded-lg', style: { boxShadow: `inset 2px 0 0 ${color('sky', 400)}` } })
+const draftEdge = () => span({ class: 'pointer-events-none absolute inset-0 rounded-lg', style: { boxShadow: `inset 2px 0 0 ${colorVar('sky', 400)}` } })
 
 const slotOf = ({ group, list, item }: CardRow) => ({ id: item.id, group, movable: Boolean(list.move && item.movable) })
 
@@ -115,8 +115,7 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       'aria-current': selected,
       'aria-haspopup': menu.map(actions => (actions.length ? 'menu' : undefined)),
       class: [
-        focusable,
-        'group relative block w-full select-none rounded-lg px-3 transition',
+        'group relative block w-full cursor-pointer select-none rounded-lg px-3 outline-none transition focus-visible:ring-2 focus-visible:ring-accent-500',
         () => (compact.get() ? 'mb-px py-1' : 'mb-1 py-2'),
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
         () => (compact.get() && !selected.get() ? 'opacity-50 hover:opacity-100 focus-visible:opacity-100' : ''),

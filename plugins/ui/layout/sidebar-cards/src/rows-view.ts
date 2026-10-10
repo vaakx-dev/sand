@@ -1,4 +1,4 @@
-import { button, chevron, focusable, untrack, type Reorder, type Sig } from '@sand/dom'
+import { chevron, plainButton, untrack, type Reorder, type Sig } from '@sand/dom'
 import { card, type CardRow } from './card'
 import type { MenuRequest } from './menu/view'
 import type { Row } from './rows'
@@ -13,10 +13,9 @@ export interface RowHandlers {
 }
 
 const head = (row: Sig<Extract<Row, { kind: 'head' }>>, handlers: RowHandlers) =>
-  button(
+  plainButton(
     {
-      type: 'button',
-      class: [focusable, 'mt-2 flex h-6 w-full items-center gap-2 rounded-lg px-3 text-xs font-medium text-neutral-500 hover:text-neutral-400'],
+      class: 'mt-2 flex h-6 w-full items-center gap-2 rounded-lg px-3 text-xs font-medium text-neutral-500 hover:text-neutral-400',
       onClick: () => handlers.toggle(row.get()),
     },
     chevron(() => row.get().open, 12),
@@ -24,10 +23,9 @@ const head = (row: Sig<Extract<Row, { kind: 'head' }>>, handlers: RowHandlers) =
   )
 
 const more = (row: Sig<Extract<Row, { kind: 'more' }>>, handlers: RowHandlers) =>
-  button(
+  plainButton(
     {
-      type: 'button',
-      class: [focusable, 'block w-full rounded-lg px-3 py-2 text-left text-xs text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300'],
+      class: 'block w-full rounded-lg px-3 py-2 text-left text-xs text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300',
       onClick: () => handlers.more(row.get()),
     },
     () => `Show more (${row.get().hidden})`,

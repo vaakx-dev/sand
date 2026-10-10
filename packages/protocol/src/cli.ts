@@ -66,6 +66,7 @@ export interface Daemon {
 
 declare module 'drydock' {
   interface Services {
+    cli: Cli
     cliCommands: CliCommands
     daemon: Daemon
   }

@@ -1,6 +1,6 @@
-import { color } from '@sand/dom'
+import { colorVar } from '@sand/dom'
 
-const fade = (role: string, shade: number, percent: number) => `color-mix(in srgb, ${color(role, shade)} ${percent}%, transparent)`
+const fade = (role: string, shade: number, percent: number) => `color-mix(in srgb, ${colorVar(role, shade)} ${percent}%, transparent)`
 
 export const css = `
 .cc-dock { margin-top: calc(-1 * var(--dock-h, 0px)); }

@@ -1,36 +1,40 @@
 import type { WireRequest } from '@sand/protocol'
 import type { ServerContext } from '../context'
-import { Contributions } from './contributions'
-import { tell, type Peer, type Socket } from './peer'
-import { Picks } from './picks'
+import type { Socket } from '../socket/sockets'
+import { createCommands, type Commands } from './commands'
+import { tell, type Peer } from './peer'
+import { createPicks, type Picks } from './picks'
 import { answerRelay } from './requests'
-import type { RelayState } from './state'
 import { relayUI } from './ui'
 
-const later = (run: () => void, ms: number) => {
-  let timer: Timer | undefined
-  return {
-    schedule: () => {
-      clearTimeout(timer)
-      timer = setTimeout(run, ms)
-    },
-    cancel: () => clearTimeout(timer),
-  }
+const advertiseDelay = 20
+
+export interface RelayState {
+  ctx: ServerContext
+  peers: Map<Socket, Peer>
+  picks: Picks
+  commands: Commands
 }
 
 export const createRelay = (ctx: ServerContext) => {
   const peers = new Map<Socket, Peer>()
-  const picks = new Picks()
+  const picks = createPicks()
+  let advertising: Timer | undefined
 
-  const advertise = later(() => {
-    const described = contributions.describe()
-    for (const peer of peers.values()) tell(peer, 'ui.relay', described)
-  }, 20)
-  const contributions = new Contributions(advertise.schedule)
-  const state: RelayState = { ctx, peers, picks, contributions }
+  const advertise = () => {
+    clearTimeout(advertising)
+    advertising = setTimeout(() => {
+      const contributions = commands.contributions()
+      for (const peer of peers.values()) tell(peer, 'ui.relay', contributions)
+    }, advertiseDelay)
+  }
 
+  const commands = createCommands(advertise)
+  const state: RelayState = { ctx, peers, picks, commands }
+
+  ctx.on('server.hello', hello => ({ ...hello, relay: commands.contributions() }))
   ctx.effect(() => () => {
-    advertise.cancel()
+    clearTimeout(advertising)
     picks.drop()
   })
 

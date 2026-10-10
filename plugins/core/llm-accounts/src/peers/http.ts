@@ -1,4 +1,4 @@
-import { bearer, trimSlash } from '@sand/kit'
+import { bearer, isRecord, trimSlash } from '@sand/kit'
 import { rawMessage } from '../errors'
 import { sharePaths, type ShareInfo } from '../share/info'
 import type { RemotePc } from './remotes'
@@ -15,14 +15,13 @@ export class Refused extends Error {
   }
 }
 
-export class Offline extends Error {}
-
 const answersAs = async (url: string, id: string): Promise<string | undefined> => {
   try {
     const response = await fetch(`${trimSlash(url)}/identity`, { signal: AbortSignal.timeout(identityTimeout) })
     if (!response.ok) return `${url} · HTTP ${response.status}`
-    const body = (await response.json()) as { deviceId?: string; id?: string }
-    return (body.deviceId ?? body.id) === id ? undefined : `${url} · a different PC answered`
+    const body: unknown = await response.json()
+    const answered = isRecord(body) ? (body.deviceId ?? body.id) : undefined
+    return answered === id ? undefined : `${url} · a different PC answered`
   } catch (error) {
     return `${url} · ${rawMessage(error)}`
   }
@@ -31,7 +30,7 @@ const answersAs = async (url: string, id: string): Promise<string | undefined> =
 export const findUrl = async (pc: RemotePc) => {
   const found = await Promise.all(pc.urls.map(url => answersAs(url, pc.id)))
   const index = found.indexOf(undefined)
-  if (index < 0) throw new Offline(found.join('\n') || 'no address to try')
+  if (index < 0) throw new Error(found.join('\n') || 'no address to try')
   return trimSlash(pc.urls[index]!)
 }
 
@@ -40,12 +39,14 @@ export const refusal = async (response: Response) => {
   return text || `HTTP ${response.status}`
 }
 
+const sharesAccounts = (value: unknown): value is ShareInfo => isRecord(value) && Array.isArray(value.accounts) && Array.isArray(value.models)
+
 export const fetchInfo = async (base: string, pc: RemotePc, refresh: boolean): Promise<ShareInfo> => {
   const url = `${base}${sharePaths.info}${refresh ? '?refresh=1' : ''}`
   const response = await fetch(url, { headers: bearer(pc.key), signal: AbortSignal.timeout(infoTimeout) })
   if (response.status === 401 || response.status === 403 || response.status === 404) throw new Refused(response.status, await refusal(response))
   if (!response.ok) throw new Error(await refusal(response))
-  const info = (await response.json()) as Partial<ShareInfo>
-  if (!Array.isArray(info.accounts) || !Array.isArray(info.models)) throw new Refused(404, 'it runs an older sand')
-  return info as ShareInfo
+  const info: unknown = await response.json()
+  if (!sharesAccounts(info)) throw new Refused(404, 'it runs an older sand')
+  return info
 }

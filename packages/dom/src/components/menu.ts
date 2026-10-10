@@ -1,5 +1,4 @@
-import { div, onDocument, type Child, type Props } from '@vaakx-dev/vrui'
-import { read } from '../reactive/read'
+import { disposeAll, div, onDocument, read, type Child, type Props } from '@vaakx-dev/vrui'
 import { dismissible, layer } from '../shell/layers'
 import { rowButton, type ToggleProps } from './button'
 
@@ -20,10 +19,10 @@ export const menuItem = ({ size = 'md', active = false, class: extra, ...props }
 export const groupLabel = (...children: Child[]) => div({ class: 'px-3 pt-3 pb-1 text-xs font-medium text-neutral-500' }, ...children)
 
 const closeOnOutsidePress = (node: HTMLElement, close: () => void) =>
-  onDocument(node, 'mousedown', event => {
+  onDocument(node, 'mousedown', ({ target }) => {
     const anchor = node.offsetParent ?? node
-    const target = event.target as Element
-    if (!anchor.contains(target) && !target.closest?.('[data-menu-layer]')) close()
+    if (target instanceof Element && (anchor.contains(target) || target.closest('[data-menu-layer]'))) return
+    close()
   })
 
 export const popover = (close: () => void, { class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
@@ -33,12 +32,8 @@ export const popover = (close: () => void, { class: extra, ...props }: Props<HTM
       ...props,
       class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-xl bg-neutral-800 p-1 shadow-xl ring-1 ring-neutral-700 animate-pop', extra],
       onMount: node => {
-        const stopEscape = dismissible(node, close)
-        const stopOutside = closeOnOutsidePress(node as HTMLElement, close)
-        return () => {
-          stopEscape()
-          stopOutside()
-        }
+        const stops = [dismissible(node, close), closeOnOutsidePress(node, close)]
+        return () => disposeAll(stops)
       },
     },
     ...children,

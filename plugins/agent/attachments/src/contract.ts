@@ -9,8 +9,7 @@ export interface AttachmentLimits {
 
 export interface Attachments {
   limits: AttachmentLimits
-  fromFile(path: string, name?: string): Promise<UserContent>
-  fromBytes(name: string, data: Uint8Array, mediaType?: string): Promise<UserContent>
+  fromFile(path: string): Promise<UserContent>
 }
 
 declare module 'drydock' {

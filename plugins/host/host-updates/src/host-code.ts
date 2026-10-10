@@ -10,12 +10,18 @@ const loaders: Record<string, 'ts' | 'tsx' | 'js' | 'jsx'> = {
 
 const transpilers = new Map<string, Bun.Transpiler>()
 
+const transpiler = (loader: Bun.JavaScriptLoader) => {
+  const known = transpilers.get(loader)
+  if (known) return known
+  const made = new Bun.Transpiler({ loader })
+  transpilers.set(loader, made)
+  return made
+}
+
 const scan = (file: string, code: string) => {
   const loader = loaders[extname(file)]
   if (!loader) return []
-  let transpiler = transpilers.get(loader)
-  if (!transpiler) transpilers.set(loader, transpiler = new Bun.Transpiler({ loader }))
-  return transpiler.scanImports(code.replace(/^#!.*/, '')).map(item => item.path)
+  return transpiler(loader).scanImports(code.replace(/^#!.*/, '')).map(item => item.path)
 }
 
 const inside = (root: string, path: string) => {
@@ -34,7 +40,19 @@ const resolve = async (spec: string, from: string) => {
 
 const readBytes = async (path: string) => {
   const file = Bun.file(path)
-  return (await file.exists()) ? new Uint8Array(await file.arrayBuffer()) : new Uint8Array()
+  return (await file.exists()) ? file.bytes() : new Uint8Array()
+}
+
+const localImports = async (root: string, file: string, code: string, external: Set<string>) => {
+  const paths = await Promise.all(
+    scan(file, code).map(async spec => {
+      const path = await resolve(spec, file)
+      if (path && inside(root, path)) return path
+      external.add(spec)
+      return undefined
+    }),
+  )
+  return paths.filter(path => path !== undefined)
 }
 
 const walk = async (root: string) => {
@@ -43,22 +61,15 @@ const walk = async (root: string) => {
   let queue = await Promise.all(entries(root).map(file => realpath(file)))
   for (const file of queue) files.set(file, new Uint8Array())
   while (queue.length) {
-    const found = await Promise.all(queue.map(async file => {
-      const bytes = new Uint8Array(await Bun.file(file).arrayBuffer())
-      files.set(file, bytes)
-      return Promise.all(scan(file, new TextDecoder().decode(bytes)).map(async spec => {
-        const path = await resolve(spec, file)
-        if (path && inside(root, path)) return path
-        external.add(spec)
-        return undefined
-      }))
-    }))
-    queue = []
-    for (const path of found.flat()) {
-      if (!path || files.has(path)) continue
-      files.set(path, new Uint8Array())
-      queue.push(path)
-    }
+    const found = await Promise.all(
+      queue.map(async file => {
+        const bytes = await Bun.file(file).bytes()
+        files.set(file, bytes)
+        return localImports(root, file, new TextDecoder().decode(bytes), external)
+      }),
+    )
+    queue = [...new Set(found.flat())].filter(path => !files.has(path))
+    for (const path of queue) files.set(path, new Uint8Array())
   }
   return { files, external }
 }

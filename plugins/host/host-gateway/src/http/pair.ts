@@ -1,10 +1,13 @@
 import type { HostDevices, PairBack, PairRequest, PairResult } from '@sand/host-devices/contract'
+import { isRecord } from '@sand/kit'
 import { parsePeerLink, readJson, textReply } from '@sand/kit/host'
 import type { DeviceInfo, DeviceKind } from '@sand/protocol'
 import { json } from './reply'
 
 const limit = 8192
-const kinds = new Set<string>(['pc', 'phone', 'browser'])
+const kinds = new Set<unknown>(['pc', 'phone', 'browser'] satisfies DeviceKind[])
+
+const isKind = (value: unknown): value is DeviceKind => kinds.has(value)
 
 const pairBack = (value: unknown): PairBack | undefined => {
   const link = parsePeerLink(value)
@@ -12,17 +15,16 @@ const pairBack = (value: unknown): PairBack | undefined => {
 }
 
 const pairRequest = (body: unknown): PairRequest | undefined => {
-  if (!body || typeof body !== 'object') return undefined
-  const { secret, name, kind, back } = body as Record<string, unknown>
-  if (typeof secret !== 'string' || !secret || typeof name !== 'string' || typeof kind !== 'string') return undefined
-  if (!kinds.has(kind)) return undefined
+  if (!isRecord(body)) return undefined
+  const { secret, name, kind, back } = body
+  if (typeof secret !== 'string' || !secret || typeof name !== 'string' || !isKind(kind)) return undefined
   const peer = kind === 'pc' ? pairBack(back) : undefined
-  return { secret, name, kind: kind as DeviceKind, ...(peer && { back: peer }) }
+  return { secret, name, kind, ...(peer && { back: peer }) }
 }
 
 const reachable = (urls: string[], request: Request) => (urls.length ? urls : [new URL(request.url).origin])
 
-export interface PairOptions {
+interface PairOptions {
   identity: DeviceInfo
   devices: Pick<HostDevices, 'redeem'>
   routeUrls(): string[]

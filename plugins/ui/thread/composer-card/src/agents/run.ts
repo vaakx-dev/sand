@@ -1,17 +1,16 @@
-import { button, derive, elapsed, focusable, icon, span, working, type Child, type ContextMenu, type MaybeReactive, type Props, type Sig } from '@sand/dom'
+import { derive, elapsed, icon, plainButton, span, working, type Child, type ContextMenu, type MaybeReactive, type Props, type Sig } from '@sand/dom'
 import type { AgentRun } from '@sand/web-client/contract'
 import { progress } from './progress'
 import type { Working } from './working'
 
 export const chipButton = (state: Working, tone: string, title: MaybeReactive<string>, extra: Props<HTMLButtonElement>, ...children: Child[]) =>
-  button(
+  plainButton(
     {
-      type: 'button',
       title,
       disabled: derive(() => !state.clickable.get()),
       onClick: state.open,
       ...extra,
-      class: [focusable, 'inline-flex h-6 min-w-0 max-w-full items-center gap-2 whitespace-nowrap rounded-md bg-neutral-800 px-2 text-xs transition-colors hover:bg-neutral-700', tone],
+      class: ['inline-flex h-6 min-w-0 max-w-full items-center gap-2 whitespace-nowrap rounded-md bg-neutral-800 px-2 text-xs transition-colors hover:bg-neutral-700', tone],
     },
     ...children,
   )

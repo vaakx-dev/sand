@@ -11,11 +11,12 @@ const tones = {
 
 const separator = (text: string) => div({ class: 'flex h-6 items-center justify-center bg-neutral-900 text-xs text-neutral-500' }, text)
 
-export const diffRow = (line: DiffLine) =>
-  line.kind === 'gap'
-    ? separator(line.text)
-    : div(
-        { class: ['flex font-mono text-xs text-neutral-300', tones[line.kind].row] },
-        span({ class: ['w-8 shrink-0 select-none text-center', tones[line.kind].mark] }, marks[line.kind]),
-        span({ class: 'min-w-0 flex-1 whitespace-pre-wrap wrap-anywhere pl-1 pr-3' }, line.text || ' '),
-      )
+export const diffRow = (line: DiffLine) => {
+  if (line.kind === 'gap') return separator(line.text)
+  const tone = tones[line.kind]
+  return div(
+    { class: ['flex font-mono text-xs text-neutral-300', tone.row] },
+    span({ class: ['w-8 shrink-0 select-none text-center', tone.mark] }, marks[line.kind]),
+    span({ class: 'min-w-0 flex-1 whitespace-pre-wrap wrap-anywhere pl-1 pr-3' }, line.text || ' '),
+  )
+}

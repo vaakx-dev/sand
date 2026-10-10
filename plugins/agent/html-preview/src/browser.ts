@@ -13,7 +13,7 @@ const commands = [
   'chrome',
 ]
 
-const programFiles = [process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)'], process.env.LOCALAPPDATA].filter(Boolean) as string[]
+const programFiles = [process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)'], process.env.LOCALAPPDATA].flatMap(root => (root ? [root] : []))
 
 const installed = [
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -36,10 +36,14 @@ const playwrightBuilds = [
   'chromium-*/chrome-win*/chrome.exe',
 ].map(pattern => new Bun.Glob(pattern))
 
-const fromPlaywright = () =>
-  playwrightCaches
-    .filter(root => existsSync(root))
-    .flatMap(root => playwrightBuilds.flatMap(glob => [...glob.scanSync({ cwd: root, onlyFiles: true })]).sort().reverse().map(path => join(root, path)))
+const newestBuilds = (cache: string) =>
+  playwrightBuilds
+    .flatMap(glob => [...glob.scanSync({ cwd: cache, onlyFiles: true })])
+    .sort()
+    .reverse()
+    .map(path => join(cache, path))
+
+const fromPlaywright = () => playwrightCaches.filter(cache => existsSync(cache)).flatMap(newestBuilds)
 
 export const findBrowser = (configured?: string) => {
   if (configured) return existsSync(configured) ? configured : Bun.which(configured) ?? undefined

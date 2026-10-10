@@ -1,6 +1,6 @@
-import { replaceFile } from '../../fs/replace'
-import { mkdir, rm } from 'node:fs/promises'
+import { rm } from 'node:fs/promises'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { writeAtomic } from '../../fs/replace'
 
 type Pointer = 'current' | 'previous'
 
@@ -24,6 +24,8 @@ export const buildFolder = (home: string, name: string) => {
 
 export const appMain = (root: string) => join(root, 'apps', 'sand', 'src', 'main.ts')
 
+export const appRoot = (main: string) => resolve(dirname(main), '..', '..', '..')
+
 export const isInstalled = (root: string, home: string) => {
   const path = relative(appsFolder(home), root)
   return !path.startsWith('..') && !isAbsolute(path)
@@ -39,13 +41,7 @@ export const readPointer = async (home: string, name: Pointer): Promise<string |
   return value && isBuildName(value) ? value : undefined
 }
 
-const writePointer = async (home: string, name: Pointer, value: string) => {
-  const folder = appsFolder(home)
-  await mkdir(folder, { recursive: true })
-  const file = join(folder, name)
-  await Bun.write(`${file}.tmp`, value)
-  await replaceFile(`${file}.tmp`, file)
-}
+const writePointer = (home: string, name: Pointer, value: string) => writeAtomic(join(appsFolder(home), name), value)
 
 export const installedRoot = async (home: string): Promise<string | undefined> => {
   const current = await readPointer(home, 'current')

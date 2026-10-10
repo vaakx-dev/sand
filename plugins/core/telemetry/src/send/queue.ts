@@ -6,10 +6,7 @@ const maxAttempts = 5
 const baseDelay = 2_000
 const maxDelay = 300_000
 
-const retryDelay = (failures: number) => {
-  const ceiling = Math.min(maxDelay, baseDelay * 2 ** (failures - 1))
-  return ceiling / 2 + (ceiling / 2) * Math.random()
-}
+const retryDelay = (failures: number) => Math.min(maxDelay, baseDelay * 2 ** (failures - 1)) * (0.5 + Math.random() / 2)
 
 export const createQueue = (send: (events: Captured[]) => Promise<void>) => {
   let buffer: Captured[] = []
