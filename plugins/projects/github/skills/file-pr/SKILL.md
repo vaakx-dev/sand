@@ -5,29 +5,35 @@ description: 'Open or update a GitHub pull request. Trigger: "pr".'
 
 # File PR
 
-Rebase onto the base branch, read the full diff and run the project's checks. If the branch has an open PR, update it.
+Rebase onto the base branch and read the full diff. Run the project's checks and try the changed behavior until you've seen it work. Fix what fails before opening the PR. If the branch has an open PR, update it.
 
 Title it like a commit: one change, what is now true, under 60 characters.
 
 Use the repository's PR template if it has one. Otherwise:
 
 ```markdown
-<What was broken for the user, and the cause.>
+<One sentence on what this PR does.>
 
-<What a reviewer needs that the diff doesn't show.>
+## What
+
+- <One change per line.>
 
 | Before | After |
 |---|---|
 | ![<alt>](./before.png) | ![<alt>](./after.png) |
 
-Tested: <what you ran and what you saw>
+## Why
 
-Not tested: <gaps in this change>
+- <One reason per line.>
+
+## Verification
+
+- <What you ran and what you saw.>
 
 Made by <model> in sand.
 ```
 
-Leave out any line with nothing to say. Keep the screenshots for UI changes.
+Leave out the table when nothing is visual. Use Desktop and Phone columns when that shows the change better. For a big PR, add a Review section saying where to start reading.
 
 Create it with `gh pr create --title "<title>" --body-file <file>`, adding `--attach <file>` for each screenshot. Never commit them. Link interactive pages with the postplan skill.
 
