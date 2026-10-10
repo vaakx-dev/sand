@@ -1,4 +1,4 @@
-import type { Limits, ProviderInfo } from '@sand/llm-accounts/contract'
+import type { Billing, Limits } from '@sand/llm-accounts/contract'
 import type { Usage } from '@sand/messages'
 
 export type UsageBucket = 'hour' | 'day'
@@ -17,20 +17,30 @@ export interface UsageTotals {
   unpriced: number
 }
 
-export interface ModelUsage extends UsageTotals {
-  model: string
+export interface AccountUsage extends UsageTotals {
+  key: string
+  source: string
   label: string
   provider: string
+  billing: Billing
+  plan?: string
+  pc?: string
+  pcName?: string
+  threads: number
+  limits?: Limits
+}
+
+export interface ModelUsage extends UsageTotals {
+  model: string
+  name: string
+  label: string
+  provider: string
+  account: string
 }
 
 export interface PeriodUsage extends UsageTotals {
   key: string
-  providers: Record<string, UsageTotals>
-}
-
-export interface ProviderUsage extends UsageTotals, ProviderInfo {
-  threads: number
-  limits?: Limits
+  accounts: Record<string, UsageTotals>
 }
 
 export interface ThreadUsage extends UsageTotals {
@@ -38,15 +48,30 @@ export interface ThreadUsage extends UsageTotals {
   title: string | null
   cwd: string
   agents: number
+  accounts: string[]
+}
+
+export interface ProjectUsage extends UsageTotals {
+  cwd: string
+  threads: number
+  accounts: string[]
+}
+
+export interface UnpricedModel {
+  model: string
+  turns: number
+  tokens: number
 }
 
 export interface UsageSummary extends UsageQuery {
   until: number
   total: UsageTotals & { threads: number }
-  providers: ProviderUsage[]
+  accounts: AccountUsage[]
   models: ModelUsage[]
   periods: PeriodUsage[]
   threads: ThreadUsage[]
+  projects: ProjectUsage[]
+  unpriced: UnpricedModel[]
   limits?: Limits
 }
 

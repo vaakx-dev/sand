@@ -16,7 +16,12 @@ const windowRow = (window: LimitWindow): ReportRow => ({
   value: [windowText(window), statusText(window.status)].filter(Boolean).join(' · '),
 })
 
-export const report = (limits: Limits): ReportRow[] => [
-  ...limits.windows.map(windowRow),
-  { kind: 'text', text: Date.now() - limits.updated < 60_000 ? 'Updated just now' : `Updated ${coarseDuration(Date.now() - limits.updated)} ago` },
-]
+const updatedText = (limits: Limits) =>
+  Date.now() - limits.updated < 60_000 ? 'Updated just now' : `Updated ${coarseDuration(Date.now() - limits.updated)} ago`
+
+export const report = (all: Limits[], nameOf: (limits: Limits) => string): ReportRow[] =>
+  all.flatMap(limits => [
+    ...(all.length > 1 ? [{ kind: 'text', text: nameOf(limits) } satisfies ReportRow] : []),
+    ...limits.windows.map(windowRow),
+    { kind: 'text', text: updatedText(limits) } satisfies ReportRow,
+  ])

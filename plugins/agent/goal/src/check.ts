@@ -1,10 +1,11 @@
-import type { LLM, LLMRequest } from '@sand/llm-accounts/contract'
+import type { LLM, LLMRequest, SourceRef } from '@sand/llm-accounts/contract'
 import type { Message, Usage } from '@sand/messages'
 
 export interface Verdict {
   met: boolean
   reason: string
   usage?: Usage
+  source?: SourceRef
 }
 
 const instruction = (objective: string) => `Pause the work. You are now a separate reviewer deciding whether this goal is met:
@@ -34,9 +35,10 @@ export const check = async (llm: LLM, request: LLMRequest, objective: string, si
   const ask: Message = { role: 'user', content: [{ type: 'text', text: instruction(objective) }] }
   let reply: Message | undefined
   let usage: Usage | undefined
+  let source: SourceRef | undefined
   for await (const event of llm.stream({ ...request, messages: [...request.messages, ask] }, signal)) {
-    if (event.type === 'done') ({ message: reply, usage } = event)
+    if (event.type === 'done') ({ message: reply, usage, source } = event)
   }
   const verdict = parse(textOf(reply)) ?? { met: false, reason: 'The check gave no clear verdict; show evidence that the goal holds.' }
-  return { ...verdict, reason: verdict.reason || (verdict.met ? 'The goal holds.' : 'The goal does not hold yet.'), usage }
+  return { ...verdict, reason: verdict.reason || (verdict.met ? 'The goal holds.' : 'The goal does not hold yet.'), usage, source }
 }

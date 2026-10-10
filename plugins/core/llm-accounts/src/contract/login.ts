@@ -1,6 +1,10 @@
-export type LoginProvider = 'anthropic' | 'openai'
+export type AccountKind = 'claude' | 'codex' | 'anthropic' | 'openai' | 'openrouter' | 'server'
 
-export type LoginMethod = 'oauth' | 'api_key'
+export type SignInKind = 'claude' | 'codex'
+
+export type KeyKind = 'anthropic' | 'openai' | 'openrouter'
+
+export type LoginMethod = 'oauth' | 'api_key' | 'server'
 
 export type LoginPending =
   | { kind: 'paste'; url: string }
@@ -12,24 +16,27 @@ export interface LoginConflict {
 }
 
 export interface LoginAccount {
-  provider: LoginProvider
+  id: string
+  kind: AccountKind
+  provider: string
   label: string
-  subscription: string
   signedIn: boolean
   shared: boolean
   method?: LoginMethod
   env?: string
   email?: string
   plan?: string
+  url?: string
   pending?: LoginPending
   conflict?: LoginConflict
   error?: string
 }
 
 export interface LoginRemoteAccount {
-  provider: LoginProvider
+  id: string
+  kind: AccountKind
+  provider: string
   label: string
-  subscription: string
   method: LoginMethod
   plan?: string
   device: string
@@ -59,4 +66,21 @@ export interface LoginState {
   remote: LoginRemoteAccount[]
   pcs: LoginPc[]
   usedBy: LoginSharePc[]
+}
+
+export type ServerProvider = 'ollama' | 'lmstudio' | 'server'
+
+export interface ServerDraft {
+  id?: string
+  name: string
+  url: string
+  key?: string
+  provider?: ServerProvider
+}
+
+export interface DetectedServer {
+  name: string
+  url: string
+  provider: ServerProvider
+  models: number
 }

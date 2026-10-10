@@ -1,8 +1,11 @@
-import { asPanel, attach, onInterval, sig, watchShown, type Shown } from '@sand/dom'
+import { asPanel, attach, sig, watchShown, type Shown } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
 import { definePlugin } from 'drydock'
+import { runningAgents } from './counts'
 import { modelsUnlike } from './models'
-import { agentRows, type AgentRow } from './rows'
+import type { Actions } from './parts'
+import { toRuns, type Run } from './runs'
+import { ticker } from './ticker'
 import { agentsView, type ParentLink } from './view'
 
 export default definePlugin({
@@ -15,38 +18,25 @@ export default definePlugin({
     models: 'sub-agents on another model do not show it',
   },
   apply(ctx) {
-    const rows = sig<AgentRow[]>([])
+    const runs = sig<Run[]>([])
     const parent = sig<ParentLink | undefined>(undefined)
     const empty = sig('')
-    const now = sig(Date.now())
+    const clock = ticker()
     let badge = 0
-    let stopTicking: (() => void) | undefined
     let asked: string | undefined
     const shown = new Set<Shown>()
-
-    const running = () => rows.get().filter(row => row.status === 'running').length
 
     const compute = () => {
       const current = ctx.threads.current()
       empty.set(current ? 'No agents yet.' : 'No thread selected.')
       if (!current) {
-        rows.set([])
+        runs.set([])
         parent.set(undefined)
         return
       }
-      const children = ctx.threads.list().filter(thread => thread.info.kind === 'agent' && thread.info.parent === current.id)
-      rows.set(agentRows(ctx.jobs.list(current.id), children, toolCalls(current.entries.values()), modelsUnlike(ctx.models, current.id)))
+      runs.set(toRuns(ctx.jobs.runs(current.id), toolCalls(current.entries.values()), modelsUnlike(ctx.models, current.id)))
       const above = current.info.kind === 'agent' && current.info.parent ? ctx.threads.get(current.info.parent) : undefined
       parent.set(above && { id: above.id, title: above.info.title ?? 'thread' })
-    }
-
-    const tick = () => {
-      const active = running() > 0
-      if (active && !stopTicking) stopTicking = onInterval(() => now.set(Date.now()), 1000)
-      if (!active && stopTicking) {
-        stopTicking()
-        stopTicking = undefined
-      }
     }
 
     const fetchChildren = () => {
@@ -59,28 +49,36 @@ export default definePlugin({
     const paint = () => {
       fetchChildren()
       compute()
-      now.set(Date.now())
-      tick()
-      const count = running()
+      clock.set(runs.get().some(run => run.status === 'running'))
+      const count = runningAgents(runs.get())
       if (count !== badge) control.update({ badge: (badge = count) || undefined })
     }
 
-    const actions = {
-      open: (id: string) => void ctx.threads.select(id),
-      async cancel(row: AgentRow) {
-        try {
-          if (row.job) {
-            await ctx.jobs.cancel(row.job)
+    const interrupt = async (id: string) => {
+      if (!ctx.turns) throw new Error('Cannot stop this sub-agent: no turns service')
+      return await ctx.turns.interrupt(id)
+    }
+
+    const guarded = async (work: () => Promise<boolean>) => {
+      try {
+        return await work()
+      } catch (error) {
+        ctx.notify?.push(errorMessage(error), { level: 'error' })
+        return false
+      }
+    }
+
+    const actions: Actions = {
+      open: id => void ctx.threads.select(id),
+      interrupt: id => guarded(() => interrupt(id)),
+      cancel: run =>
+        guarded(async () => {
+          if (run.job) {
+            await ctx.jobs.cancel(run.job)
             return true
           }
-          if (!row.session) return false
-          if (!ctx.turns) throw new Error('Cannot stop this sub-agent: no turns service')
-          return await ctx.turns.interrupt(row.session)
-        } catch (error) {
-          ctx.notify?.push(errorMessage(error), { level: 'error' })
-          return false
-        }
-      },
+          return run.session ? await interrupt(run.session) : false
+        }),
     }
 
     compute()
@@ -90,7 +88,7 @@ export default definePlugin({
       icon: 'bot',
       order: 20,
       render(body) {
-        const detach = attach(body, () => agentsView({ rows, parent, empty, now }, actions))
+        const detach = attach(body, () => agentsView({ runs, parent, empty, now: clock.now }, actions))
         const watch = watchShown(body, paint)
         shown.add(watch)
         return () => {
@@ -102,7 +100,7 @@ export default definePlugin({
     })
     paint()
 
-    ctx.effect(() => () => stopTicking?.())
+    ctx.effect(() => clock.dispose)
     ctx.on('jobs.change', paint)
     ctx.on('threads.change', paint)
     ctx.on('thread.select', paint)

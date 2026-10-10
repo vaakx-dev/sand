@@ -32,7 +32,7 @@ export default async function ({ agent, parallel, pipeline, phase, log, args }) 
 }
 \`\`\`
 
-- agent(task, { agent?, label?, schema?, model?, effort? }) runs a subagent and resolves to its final report, or to a validated object when a zod schema is given. label is 3 to 6 words naming it in the UI. model picks a model by short name such as "haiku" or "opus"; it defaults to the agent definition's model, else the parent's. effort sets the reasoning effort ("low", "medium", "high", "xhigh" or "max"). Subagents cannot see this conversation, so tasks must be self-contained.
+- agent(task, { agent?, label?, schema?, model?, effort? }) runs a subagent and resolves to its final report, or to a validated object when a zod schema is given. It resolves to null if the user stops that one agent, so handle null results. label is 3 to 6 words naming it in the UI. model picks a model by short name such as "haiku" or "opus"; it defaults to the agent definition's model, else the parent's. effort sets the reasoning effort ("low", "medium", "high", "xhigh" or "max"). Subagents cannot see this conversation, so tasks must be self-contained.
 - parallel(thunks) runs functions concurrently. pipeline(items, ...stages) sends each item through the stages independently; each stage receives (value, item).
 - phase(title) and log(text) report progress. args is the args input.
 - Finished agent calls are cached, so resume reruns the script and only repeats unfinished work.

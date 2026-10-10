@@ -2,6 +2,7 @@ import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import { matching } from '@sand/dom'
 import { tokens } from '@sand/kit'
 import type { Actions, PanelContext } from './actions'
+import { sourceName } from './panel/source'
 
 interface Row {
   item: PaletteItem
@@ -13,17 +14,22 @@ const rows = (ctx: PanelContext, actions: Actions): Row[] => {
   const shown = state?.next ?? state?.current
   const defaults = ctx.models.defaults()
   const info = ctx.models.info(shown?.model)
-  const models = ctx.models.list().map(model => ({
-    item: {
-      id: `model:${model.id}`,
-      group: 'Model',
-      icon: 'sparkles',
-      label: `Use ${model.label}`,
-      detail: [model.id === shown?.model && 'current', model.id === defaults.model && 'default', model.context ? tokens(model.context) : undefined].filter(Boolean).join(' · '),
-      run: () => actions.set({ model: model.id }),
-    },
-    words: `model ${model.id} ${model.label}`,
-  }))
+  const sources = ctx.models.sources()
+  const models = ctx.models.list().map(model => {
+    const source = sources.find(known => known.id === model.source)
+    const from = source ? sourceName(source) : undefined
+    return {
+      item: {
+        id: `model:${model.id}`,
+        group: 'Model',
+        icon: 'sparkles',
+        label: `Use ${model.label}`,
+        detail: [from, model.id === shown?.model && 'current', model.id === defaults.model && 'default', model.context ? tokens(model.context) : undefined].filter(Boolean).join(' · '),
+        run: () => actions.set({ model: model.id }),
+      },
+      words: `model ${model.id} ${model.label} ${from ?? ''}`,
+    }
+  })
   const efforts = info?.efforts.length
     ? ctx.models
         .levels()

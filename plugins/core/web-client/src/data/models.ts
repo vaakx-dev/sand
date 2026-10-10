@@ -7,7 +7,7 @@ const clean = (settings: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(settings).filter(([, value]) => value !== undefined && value !== null)) as SessionSettings
 
 export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: Store): Models => {
-  let catalog: ModelsUpdate = { models: [], levels: [], defaults: {} }
+  let catalog: ModelsUpdate = { models: [], sources: [], levels: [], defaults: {} }
   let draft: SessionSettings = {}
   let draftState: SettingsState | undefined
   const asking = new Set<string>()
@@ -32,14 +32,14 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
   }
 
   ctx.on('wire.hello', hello => {
-    catalog = { models: hello.models ?? [], levels: hello.levels ?? [], defaults: hello.defaults ?? {} }
+    catalog = { models: hello.models ?? [], sources: hello.sources ?? [], levels: hello.levels ?? [], defaults: hello.defaults ?? {} }
     store.settings.clear()
     refreshDraft()
     changed()
   })
   ctx.on('wire.event', event => {
     if (event.name === 'models.change') {
-      catalog = event.args[0]
+      catalog = { ...event.args[0], sources: event.args[0].sources ?? [] }
       store.settings.clear()
       refreshDraft()
       changed()
@@ -79,6 +79,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
 
   return {
     list: () => catalog.models,
+    sources: () => catalog.sources,
     levels: () => catalog.levels,
     info,
     defaults: () => catalog.defaults,

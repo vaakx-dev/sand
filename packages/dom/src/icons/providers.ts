@@ -1,5 +1,6 @@
-import { path, span, svg } from '@vaakx-dev/vrui'
-import { color } from '../theme/tokens'
+import { icon, path, rect, span, svg, textEl, type Child } from '@vaakx-dev/vrui'
+import { Server } from 'lucide'
+import { color, sans } from '../theme/tokens'
 
 interface Mark {
   d: string
@@ -23,14 +24,42 @@ const marks: Record<string, Mark> = {
   },
 }
 
-export const providerIcon = (provider: string | undefined, size = 16) => {
-  const mark = provider ? marks[provider] : undefined
-  return mark
-    ? span(
-        { class: 'inline-flex shrink-0', 'aria-hidden': 'true' },
-        svg({ viewBox: mark.viewBox ?? '0 0 24 24', width: size, height: size }, path({ d: mark.d, fill: mark.color, ...(mark.fillRule && { fillRule: mark.fillRule }) })),
-      )
-    : null
+const monograms: Record<string, { text: string; color: string }> = {
+  openrouter: { text: 'OR', color: color('accent', 400) },
+  ollama: { text: 'Ol', color: color('neutral', 200) },
+  lmstudio: { text: 'LM', color: color('sky', 400) },
 }
 
-export const providerColor = (provider: string, order = 0) => marks[provider]?.color ?? series[order % series.length]!
+const serverColor = color('neutral', 400)
+
+const frame = (child: Child) => span({ class: 'inline-flex shrink-0', 'aria-hidden': 'true' }, child)
+
+const markIcon = (mark: Mark, size: number) =>
+  frame(svg({ viewBox: mark.viewBox ?? '0 0 24 24', width: size, height: size }, path({ d: mark.d, fill: mark.color, ...(mark.fillRule && { fillRule: mark.fillRule }) })))
+
+const monogramIcon = ({ text, color: fill }: { text: string; color: string }, size: number) =>
+  frame(
+    svg(
+      { viewBox: '0 0 24 24', width: size, height: size },
+      rect({ x: 1, y: 1, width: 22, height: 22, rx: 6, fill }),
+      textEl({ x: 12, y: 12.5, textAnchor: 'middle', dominantBaseline: 'central', fontFamily: sans, fontSize: 10, fontWeight: 700, fill: color('neutral', 950) }, text),
+    ),
+  )
+
+const serverIcon = (size: number) => span({ class: 'inline-flex shrink-0', style: { color: serverColor }, 'aria-hidden': 'true' }, icon(Server, size, 1.8))
+
+const aliases: Record<string, string> = { claude: 'anthropic', codex: 'openai' }
+
+export const providerIcon = (name: string | undefined, size = 16) => {
+  if (!name) return null
+  const provider = aliases[name] ?? name
+  const mark = marks[provider]
+  if (mark) return markIcon(mark, size)
+  const monogram = monograms[provider]
+  if (monogram) return monogramIcon(monogram, size)
+  return provider === 'server' ? serverIcon(size) : null
+}
+
+const known = (name: string, provider = aliases[name] ?? name) => marks[provider]?.color ?? monograms[provider]?.color ?? (provider === 'server' ? serverColor : undefined)
+
+export const providerColor = (provider: string, order = 0) => known(provider) ?? series[order % series.length]!

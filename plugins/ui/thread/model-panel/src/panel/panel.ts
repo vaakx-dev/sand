@@ -1,58 +1,72 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { div, icon, primaryAction, secondaryAction, span, toggleSwitch, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, effect, type Pulse, type Sig } from '@sand/dom'
 import type { Actions, PanelContext } from '../actions'
 import type { PcStatus } from '../pcs'
+import { banner, fastRow, footer, usesDefaults } from './controls'
 import { effortBar } from './effort'
-import { modelRows, type Choice } from './rows'
+import { modelList } from './list'
+import { rail } from './rail'
+import { readScene } from './scene'
+import { findModels, searchField } from './search'
+import { openView, type View } from './view'
 
-const banner = (glyph: string, text: string) =>
-  div(
-    { class: 'mx-1 mt-1 flex items-start gap-2 rounded-lg bg-warning-950 px-3 py-2 text-xs text-warning-400' },
-    span({ class: 'inline-flex shrink-0 pt-px' }, icon(glyph, 14)),
-    span(text),
-  )
-
-const fastRow = (choice: Choice, actions: Actions) => {
-  const { shown } = choice
-  const on = shown.speed === 'fast'
-  return div(
-    { class: 'mx-1 mt-1 flex items-center gap-3 rounded-lg px-3 py-2' },
-    span({ class: ['min-w-0 flex-1 text-sm font-medium', shown.supportsFast ? 'text-neutral-300' : 'text-neutral-500'] }, 'Fast mode'),
-    toggleSwitch({ on, disabled: !shown.supportsFast, 'aria-label': 'Fast mode', onClick: () => actions.set({ speed: on ? 'normal' : 'fast' }) }),
-  )
+export interface PanelDeps {
+  changes: Pulse
+  flash: Sig<boolean>
+  problem: Sig<string>
+  pcs: PcStatus
+  close: () => void
 }
 
-const defaultEffort = (choice: Choice, model?: ModelInfo) => {
-  const wanted = choice.defaults.effort
-  if (!model?.efforts.length) return undefined
-  return wanted && model.efforts.includes(wanted) ? wanted : model.defaultEffort
+const markSeen = (ctx: PanelContext, view: View) =>
+  effect(() => {
+    const at = view.at.get()
+    if (view.query.get() || view.seen.has(at)) return
+    if (!ctx.models.sources().find(source => source.id === at)?.fresh) return
+    view.seen.add(at)
+    void ctx.wire?.call({ type: 'models.seen', source: at }).catch(() => undefined)
+  })
+
+const refocus = (view: View, node: HTMLElement) => {
+  if (!view.focus || (document.activeElement && document.activeElement !== document.body)) return
+  node.querySelector<HTMLElement>(`[data-focus="${CSS.escape(view.focus)}"]`)?.focus()
 }
 
-const usesDefaults = (choice: Choice, model?: ModelInfo) =>
-  choice.shown.model === choice.defaults.model &&
-  choice.shown.effort === defaultEffort(choice, model) &&
-  choice.shown.speed === (model?.fast && choice.defaults.speed === 'fast' ? 'fast' : 'normal')
-
-const footer = (choice: Choice, actions: Actions) =>
-  div(
-    { class: 'mx-1 mt-2 flex items-center justify-end gap-2 border-t border-solid border-neutral-700 px-2 pt-2 pb-1' },
-    secondaryAction({ size: 'sm', onClick: actions.reset }, 'Reset'),
-    primaryAction({ size: 'sm', onClick: () => actions.makeDefault(choice.shown) }, 'Make default'),
-  )
-
-export const panelBody = (ctx: PanelContext, actions: Actions, flash: Sig<boolean>, problem: string, pcs: PcStatus) => {
-  const state = ctx.models.state()
-  if (!state) return div({ class: 'px-3 py-4 text-xs text-neutral-500' }, 'Loading the models…')
-  const thread = ctx.threads.current()
-  const choice: Choice = { shown: state.next ?? state.current, current: state.current, pending: Boolean(state.next), defaults: ctx.models.defaults() }
+const body = (ctx: PanelContext, actions: Actions, view: View, deps: PanelDeps) => {
+  const scene = readScene(ctx, actions, view, deps.pcs, deps.close)
+  if (!scene) return div({ class: 'px-3 py-4 text-xs text-neutral-500' }, 'Loading the models…')
+  const { choice } = scene
   const model = ctx.models.info(choice.shown.model)
+  const problem = deps.problem.get()
   return div(
-    { class: 'flex flex-col pb-1' },
-    thread?.running && banner('clock', 'A turn is running. Changes apply when it finishes.'),
+    {
+      class: 'flex min-h-0 flex-col pb-1',
+      onFocusIn: event => {
+        view.focus = (event.target as HTMLElement).dataset.focus ?? ''
+      },
+      onMount: node => refocus(view, node),
+    },
+    div({ class: 'flex h-80 min-h-0 border-b border-solid border-neutral-700' }, rail(scene, view), modelList(scene, view)),
+    ctx.threads.current()?.running && banner('clock', 'A turn is running. Changes apply when it finishes.'),
     problem && banner('alert', problem),
-    modelRows(ctx.models.list(), choice, actions, pcs.online),
-    effortBar(choice, ctx.models.levels(), model, flash, actions),
+    effortBar(choice, ctx.models.levels(), model, deps.flash, actions),
     fastRow(choice, actions),
     !usesDefaults(choice, model) && footer(choice, actions),
   )
+}
+
+export const modelPanel = (ctx: PanelContext, actions: Actions, deps: PanelDeps) => {
+  const view = openView(ctx)
+  markSeen(ctx, view)
+  const pickFirst = () => {
+    const scene = readScene(ctx, actions, view, deps.pcs, deps.close)
+    const first = scene && findModels(scene, view.query.get()).find(model => !scene.offline(scene.source(model)))
+    if (first) scene.pick(first)
+  }
+  return [
+    searchField(ctx, view, pickFirst),
+    dynamicChild(
+      derive(() => `${deps.changes.version.get()}:${deps.problem.get()}:${deps.pcs.key()}`),
+      () => body(ctx, actions, view, deps),
+    ),
+  ]
 }

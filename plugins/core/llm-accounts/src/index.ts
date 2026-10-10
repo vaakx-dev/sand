@@ -1,19 +1,21 @@
 import type { Server } from '@sand/server/contract'
-import type { Limits, LLM, LoginProvider, LoginSharePc } from './contract'
+import type { Limits, LoginSharePc, SignInKind } from './contract'
 import { definePlugin } from 'drydock'
 import { createAccounts } from './auth/accounts'
-import { authPath } from './auth/path'
 import { createLogin } from './auth/login'
+import { authPath } from './auth/path'
+import { createCatalog } from './catalog'
+import { priceList } from './catalog/prices'
 import { createClaude } from './claude/client'
-import { claudeModels } from './claude/models'
 import { createCodex } from './codex/client'
-import { codexModels } from './codex/models'
-import { config } from './config'
+import { createCompat } from './compat/client'
+import { config, configSchema } from './config'
 import { mergeLLM } from './llm'
 import { createLocal } from './local'
 import { createPeers } from './peers/peers'
 import { watchRemotes } from './peers/watch'
-import { serveLogin } from './serve'
+import { serveLogin } from './serve/login'
+import { serveModels } from './serve/models'
 import { serveShare } from './share/routes'
 import { createUsers } from './share/users'
 import { loginState } from './state'
@@ -23,71 +25,85 @@ const refreshEvery = 60_000
 export default definePlugin({
   name: 'llm-accounts',
   inject: ['cli'],
-  async apply(ctx) {
-    let limits = ctx.hot.data.limits as Limits | undefined
+  config: configSchema,
+  async apply(ctx, options) {
+    let limits = (ctx.hot.data.sourceLimits ?? {}) as Record<string, Limits>
     let server: Server | undefined
-    let llm: LLM | undefined
+    let merged: ReturnType<typeof mergeLLM> | undefined
+    let state: (() => ReturnType<typeof loginState>) | undefined
+    let syncing = false
     let live = true
     let offered = ''
+    let resetViews = () => {}
+
+    const signature = () => (merged ? JSON.stringify([merged.llm.models(), merged.llm.sources()]) : '')
 
     const changed = () => {
       if (!live) return
-      const now = (llm?.models?.() ?? []).map(model => `${model.id}@${model.via ?? ''}`).join()
-      if (llm && now !== offered) {
+      resetViews()
+      if (syncing) catalog.sync()
+      const now = signature()
+      if (merged && now !== offered) {
         offered = now
         ctx.emit('llm.models')
       }
-      server?.broadcast('login.change', [state()])
+      if (state) server?.broadcast('login.change', [state()])
     }
 
     const { home } = ctx.cli
     const accounts = createAccounts(await authPath(home), changed)
     const login = createLogin(accounts)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
+    const catalog = createCatalog({ home, accounts, prices: priceList(options.prices), changed })
 
     const notify = (text: string) => (ctx.ui ? ctx.ui.notify(text) : console.error(text))
     const onLimits = (parsed: Limits) => {
-      limits = ctx.hot.data.limits = parsed
+      limits = ctx.hot.data.sourceLimits = { ...limits, [parsed.source ?? 'claude']: parsed }
       ctx.emit('llm.limits', parsed)
     }
-    const claude = createClaude({
-      accounts,
-      retries: config.max_retries,
-      notify,
-      settings: model => ({ model: model ?? config.claude_models[0] ?? claudeModels[0]!, maxTokens: config.max_tokens, thinking: config.thinking }),
-      onLimits,
-    })
-    const codex = createCodex({ accounts, retries: config.max_retries, model: model => model ?? config.codex_models[0] ?? codexModels[0]! })
+    const claude = createClaude({ accounts, maxTokens: config.max_tokens, thinking: config.thinking, retries: config.max_retries, notify, onLimits })
+    const codex = createCodex({ accounts, retries: config.max_retries, onLimits })
+    const compat = createCompat({ retries: config.max_retries })
 
-    await accounts.ready
-    const local = createLocal({ accounts, config, claude, codex, limits: () => limits })
+    await Promise.all([accounts.ready, catalog.ready])
+    const local = createLocal({ accounts, catalog, claude, codex, compat, limits: () => limits })
     const peers = createPeers({ home, changed, limitsChanged: parsed => ctx.emit('llm.limits', parsed) })
-    llm = mergeLLM(local, peers, accounts)
-    offered = (llm.models?.() ?? []).map(model => `${model.id}@${model.via ?? ''}`).join()
+    const llm = mergeLLM(local, peers, accounts, catalog)
+    merged = llm
+    resetViews = () => {
+      local.view.reset()
+      llm.reset()
+    }
+    offered = signature()
+    state = () => loginState(accounts, peers, users)
+    syncing = true
+    catalog.sync()
 
-    const state = () => loginState(accounts, peers, users)
-
-    const conflict = (provider: LoginProvider) => {
-      const peer = peers.list().find(found => !found.refused && found.info?.accounts.some(account => account.provider === provider && account.method === 'oauth'))
+    const conflict = (account: SignInKind) => {
+      const peer = peers.list().find(found => !found.refused && found.info?.accounts.some(shared => shared.id === account))
       return peer && { device: peer.pc.id, pc: peer.pc.name }
     }
 
-    ctx.provide('llm', llm)
+    ctx.provide('llm', merged.llm)
     ctx.effect(() => watchRemotes(home, () => void peers.refresh()))
     ctx.effect(() => {
-      const timer = setInterval(() => void peers.refresh(), refreshEvery)
-      timer.unref?.()
+      const peerTimer = setInterval(() => void peers.refresh(), refreshEvery)
+      const discoverTimer = setInterval(() => void catalog.refresh(), config.discover_every)
+      peerTimer.unref?.()
+      discoverTimer.unref?.()
       return () => {
         live = false
-        clearInterval(timer)
+        clearInterval(peerTimer)
+        clearInterval(discoverTimer)
         login.dispose()
       }
     })
     ctx.watch('server', found => {
       server = found
-      if (!found) return
+      if (!found || !merged || !state) return
       const disposers = [
         serveLogin(found, accounts, login, { state, load: () => peers.refresh(), conflict }),
+        serveModels(found, { view: merged.view, catalog, refreshPeers: () => peers.refresh() }),
         serveShare(found, { local, accounts, users }),
       ]
       return () => {

@@ -5,7 +5,8 @@ const agentList = (definitions: AgentDefinition[]) =>
   definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')
 
 const modelList = (llm: LLM | undefined) => {
-  const models = llm?.models?.() ?? []
+  const seen = new Set<string>()
+  const models = (llm?.models?.() ?? []).filter(model => !seen.has(model.label) && !!seen.add(model.label))
   if (!models.length) return ''
   const lines = models.map(model => `- ${model.label}${model.summary ? `: ${model.summary}` : ''}`)
   return `\n\nAvailable models:\n${lines.join('\n')}\nUse a smaller model for mechanical search and bulk reading; keep the default for judgement-heavy work.`

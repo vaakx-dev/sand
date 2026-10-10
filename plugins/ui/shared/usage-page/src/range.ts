@@ -1,10 +1,13 @@
 import type { UsageBucket, UsageQuery } from '@sand/usage/contract'
 
-export const ranges = ['24h', '7d', '30d', '90d'] as const
+export const ranges = ['24h', '7d', '30d', 'month', '90d'] as const
 
 export type Range = (typeof ranges)[number]
 
-export const rangeLabels: Record<Range, string> = { '24h': 'Past 24h', '7d': '7 days', '30d': '30 days', '90d': '90 days' }
+const monthName = () => new Date().toLocaleDateString('en', { month: 'long' })
+
+export const rangeLabel = (range: Range) =>
+  range === 'month' ? monthName() : ({ '24h': '24h', '7d': '7 days', '30d': '30 days', '90d': '90 days' } as const)[range]
 
 const hour = 3_600_000
 
@@ -12,6 +15,13 @@ const startOfDay = (daysAgo: number) => {
   const date = new Date()
   date.setHours(0, 0, 0, 0)
   date.setDate(date.getDate() - daysAgo)
+  return date.getTime()
+}
+
+const startOfMonth = () => {
+  const date = new Date()
+  date.setHours(0, 0, 0, 0)
+  date.setDate(1)
   return date.getTime()
 }
 
@@ -24,6 +34,7 @@ const startOfHour = () => {
 export const queryFor = (range: Range): UsageQuery => {
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
   if (range === '24h') return { since: startOfHour() - 23 * hour, bucket: 'hour', zone }
+  if (range === 'month') return { since: startOfMonth(), bucket: 'day', zone }
   return { since: startOfDay(Number(range.slice(0, -1)) - 1), bucket: 'day', zone }
 }
 

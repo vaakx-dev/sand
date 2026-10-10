@@ -45,6 +45,7 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       found.queued = []
       found.live = []
       found.tools = { running: new Set(), results: new Map() }
+      found.step = undefined
       found.ended = event.args[1]
       return changed(found.id)
     }
@@ -69,6 +70,7 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       const found = known(event.args[1].$session.id)
       if (!found) return
       found.tools.running.add(event.args[0].id)
+      found.step = event.args[0]
       return changed(found.id)
     }
     case 'tool.result': {

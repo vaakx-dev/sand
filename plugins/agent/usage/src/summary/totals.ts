@@ -1,4 +1,4 @@
-import type { ModelPrice } from '@sand/llm-accounts/contract'
+import type { Billing, ModelPrice } from '@sand/llm-accounts/contract'
 import type { Usage } from '@sand/messages'
 import type { UsageTotals } from '../contract'
 import { costOf, tokensOf } from '@sand/kit'
@@ -20,5 +20,7 @@ export const addUsage = <T extends UsageTotals>(totals: T, usage: Usage, price: 
   if (billed) totals.billed += cost
   return totals
 }
+
+export const isBilled = (billing: Billing) => billing === 'api' || billing === 'credits'
 
 export const byCost = (a: UsageTotals, b: UsageTotals) => b.cost - a.cost || tokensOf(b.usage) - tokensOf(a.usage)

@@ -16,6 +16,8 @@ const keyOf = (thread: Thread, background: Background, epoch: number) => [
   isBack(thread),
   background.count,
   background.since,
+  background.workflow?.done,
+  background.workflow?.total,
   epoch,
 ]
 

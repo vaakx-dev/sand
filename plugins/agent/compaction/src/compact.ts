@@ -41,7 +41,7 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
     let after = before
     try {
       const instructions = [config.instructions, extra].filter(Boolean).join('\n\n') || undefined
-      const { summary, usage } = await summarize(ctx.llm, {
+      const { summary, usage, source } = await summarize(ctx.llm, {
         model: request.model,
         messages: cut.dropped,
         previous: cut.previous?.summary,
@@ -60,7 +60,7 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
       }
       after = requestTokens(rewrite([...path, draft(session, record)], request))
       session.append('compaction', { ...record, after } satisfies CompactionRecord)
-      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model), usage } satisfies UsageRecord)
+      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model, source), usage } satisfies UsageRecord)
       tracker.reset(session.id)
       return after
     } finally {

@@ -1,47 +1,64 @@
-import { derive, div, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
-import type { LoginAccount, LoginProvider, LoginState } from '../contract'
-import { accountLogo, accountTitle, howText } from './names'
+import { derive, div, dot, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
+import type { LoginAccount, LoginState } from '../contract'
+import { accountLogo, howText } from './names'
 import { accountRow, busyAction } from './parts'
 import type { LoginControl } from './state'
 
+type Fix = (account: LoginAccount) => void
+
 const shareSwitch = (account: LoginAccount, control: LoginControl) => {
   const busy = sig(false)
-  const toggle = busyAction(busy, () => control.run({ type: 'login.shared', provider: account.provider, shared: !account.shared }))
+  const toggle = busyAction(busy, () => control.run({ type: 'login.shared', account: account.id, shared: !account.shared }))
   return label(
     { class: 'flex items-center gap-2 text-xs text-neutral-400' },
     'Share with my PCs',
-    toggleSwitch({ on: account.shared, 'aria-label': `Share ${accountTitle(account)} with my PCs`, disabled: busy, onClick: () => void toggle() }),
+    toggleSwitch({ on: account.shared, 'aria-label': `Share ${account.label} with my PCs`, disabled: busy, onClick: () => void toggle() }),
   )
 }
+
+const serverDetail = (account: LoginAccount) =>
+  span(
+    { class: 'flex min-w-0 items-center gap-2' },
+    dot(account.error ? 'danger' : 'success'),
+    span({ class: 'truncate' }, account.url ?? ''),
+    account.error ? span({ class: 'truncate text-danger-400' }, account.error) : null,
+  )
 
 const detail = (account: LoginAccount) => {
   if (account.env) return `API key from ${account.env} · stays on this PC`
+  if (account.kind === 'server') return serverDetail(account)
   return [howText(account), account.email].filter(Boolean).join(' · ')
 }
 
-const signedInRow = (account: LoginAccount, control: LoginControl) =>
+const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
+
+const signedInRow = (account: LoginAccount, control: LoginControl, fix: Fix) =>
   accountRow(
     accountLogo(account.provider),
-    accountTitle(account),
+    account.label,
     detail(account),
     ...(account.env
       ? []
-      : [shareSwitch(account, control), rowAction({ label: 'Sign out', danger: true, run: () => void control.run({ type: 'login.logout', provider: account.provider }) })]),
+      : [
+          account.kind === 'server' && account.error ? secondaryAction({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
+          shareSwitch(account, control),
+          rowAction({ label: account.kind === 'server' ? 'Remove' : 'Sign out', danger: true, run: () => void control.run({ type: 'login.logout', account: account.id }) }),
+        ]),
   )
 
-const brokenRow = (account: LoginAccount, signIn: (provider: LoginProvider) => void) =>
+const brokenRow = (account: LoginAccount, fix: Fix) =>
   accountRow(
     accountLogo(account.provider),
-    account.subscription,
+    account.label,
     span({ class: 'text-danger-400' }, account.error ?? ''),
-    secondaryAction({ size: 'sm', onClick: () => signIn(account.provider) }, 'Sign in again'),
+    secondaryAction({ size: 'sm', onClick: () => fix(account) }, fixLabel(account)),
   )
 
 const shown = (state: LoginState) => state.accounts.filter(account => account.signedIn || (account.error && !account.pending))
 
 const emptyText = (state: LoginState) => (state.remote.length ? 'None yet. Add one, or use the ones below.' : 'None yet. Add one to start using sand.')
 
-export const localSection = (control: LoginControl, signIn: (provider: LoginProvider) => void) =>
+export const localSection = (control: LoginControl, fix: Fix) =>
   settingsSection(
     { title: 'On this PC' },
     dynamicChild(
@@ -56,7 +73,7 @@ export const localSection = (control: LoginControl, signIn: (provider: LoginProv
         if (!list.length) return div({ class: 'bg-neutral-900' }, hint(emptyText(state)))
         return span(
           { class: 'contents' },
-          list.map(account => (account.signedIn ? signedInRow(account, control) : brokenRow(account, signIn))),
+          list.map(account => (account.signedIn ? signedInRow(account, control, fix) : brokenRow(account, fix))),
         )
       },
     ),

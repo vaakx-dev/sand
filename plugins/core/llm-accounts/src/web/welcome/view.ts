@@ -18,7 +18,7 @@ const startView = (model: WelcomeModel, signIn: () => void) =>
     column(
       choiceList(
         choiceButton({ mark: tile(icon('link', 16)), title: 'I use sand on another PC', detail: 'Connect to it and use its accounts', onClick: () => model.go('join') }),
-        choiceButton({ mark: accountLogo('anthropic'), title: 'Sign in to an AI account', detail: 'Claude, ChatGPT or an API key', onClick: signIn }),
+        choiceButton({ mark: accountLogo('anthropic'), title: 'Sign in to an AI account', detail: 'Claude, ChatGPT, an API key or a local server', onClick: signIn }),
       ),
     ),
     quietButton({ size: 'sm', onClick: model.finish }, 'Skip for now'),

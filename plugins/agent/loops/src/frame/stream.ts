@@ -5,9 +5,10 @@ import type { LoopsContext } from '../context'
 import type { StreamDone } from '../contract'
 import { markExternal } from './fault'
 import type { TurnState } from './state'
-import { add } from './usage'
+import { track } from './usage'
 
 const read = async (ctx: LoopsContext, llm: LLM, request: LLMRequest, session: Session, signal: AbortSignal, state: TurnState) => {
+  signal.throwIfAborted()
   const events = llm.stream(request, signal)[Symbol.asyncIterator]()
   try {
     for (let next = await untilAborted(events.next(), signal); !next.done; next = await untilAborted(events.next(), signal)) {
@@ -34,7 +35,7 @@ export const streamReply = async (
   const done = await read(ctx, llm, request, session, signal, state).catch(error => {
     throw markExternal(error)
   })
-  state.usage = add(state.usage, done.usage)
+  track(state, done.usage, request.model, done.source)
   state.stopReason = done.stopReason
   return { message: done.message, usage: done.usage, stopReason: done.stopReason }
 }

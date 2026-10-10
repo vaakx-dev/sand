@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { writePrivateJson } from '../auth/store'
 import type { ShareInfo } from '../share/info'
 
-export type CachedInfo = Omit<ShareInfo, 'limits'>
+export type CachedInfo = Omit<ShareInfo, 'limits'> & { legacy?: boolean }
 
 export type PeerCache = Record<string, CachedInfo>
 

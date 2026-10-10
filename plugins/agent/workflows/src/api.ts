@@ -25,16 +25,27 @@ interface Options {
 const withSchema = (task: string, schema: Schema) =>
   `${task}\n\nEnd your final reply with a JSON value in a \`\`\`json code block that matches this JSON Schema:\n\`\`\`json\n${JSON.stringify(jsonSchema(schema), null, 2)}\n\`\`\``
 
+const stopped = Symbol('stopped')
+
+const handled = <T>(promise: Promise<T>) => {
+  promise.catch(() => {})
+  return promise
+}
+
 export const createApi = (ctx: Context<'agents'>, options: Options) => {
   const { run, parent, origin, signal } = options
   const seen = new Map<string, number>()
 
   const spawn = async (task: string, agentOptions: AgentOptions) => {
-    signal.throwIfAborted()
+    if (signal.aborted) throw new Error('Workflow interrupted')
     const prompt = agentOptions.schema ? withSchema(task, agentOptions.schema) : task
     const { label, agent, model, effort } = agentOptions
     const result = await ctx.agents.run({ parent, task: prompt, label, agent, model, effort, origin, signal, wait: true })
-    if (result.stopReason === 'interrupted') throw new Error('Workflow interrupted')
+    if (result.stopReason === 'interrupted') {
+      if (signal.aborted) throw new Error('Workflow interrupted')
+      ctx.ui?.notify(`⚙ ${options.label}: ${label ?? 'an agent'} was stopped`)
+      return stopped
+    }
     if (!agentOptions.schema) return result.text
     let parsed = parseOutput(agentOptions.schema, result.text)
     if (!parsed.ok && ctx.loop) {
@@ -54,6 +65,7 @@ export const createApi = (ctx: Context<'agents'>, options: Options) => {
     const key = `${base}#${occurrence}`
     if (key in run.results) return run.results[key]
     const value = await spawn(task, agentOptions)
+    if (value === stopped) return null
     run.results[key] = value
     await run.save()
     return value
@@ -67,11 +79,13 @@ export const createApi = (ctx: Context<'agents'>, options: Options) => {
   return {
     args: options.args,
     signal,
-    agent,
-    parallel: <T>(tasks: (() => Promise<T>)[]) => Promise.all(tasks.map(task => task())),
+    agent: (task: string, agentOptions?: AgentOptions) => handled(agent(task, agentOptions)),
+    parallel: <T>(tasks: (() => Promise<T>)[]) => handled(Promise.all(tasks.map(task => handled(Promise.resolve().then(task))))),
     pipeline: <T>(items: T[], ...stages: ((value: any, item: T) => unknown)[]) =>
-      Promise.all(
-        items.map(item => stages.reduce<Promise<unknown>>((value, stage) => value.then(current => stage(current, item)), Promise.resolve(item))),
+      handled(
+        Promise.all(
+          items.map(item => handled(stages.reduce<Promise<unknown>>((value, stage) => value.then(current => stage(current, item)), Promise.resolve(item)))),
+        ),
       ),
     phase: (title: string) => report(title),
     log: report,

@@ -1,5 +1,6 @@
 import type { Hello, WireRequestOf } from '@sand/protocol'
 import type { ServerContext } from '../context'
+import { withBusyFamilies } from './families'
 
 export const helloRequest = (ctx: ServerContext) => {
   const active = new Map<string, number>()
@@ -13,6 +14,7 @@ export const helloRequest = (ctx: ServerContext) => {
 
   const base = (request: WireRequestOf<'hello'>): Hello => ({
     models: ctx.llm?.models?.(),
+    sources: ctx.llm?.sources?.(),
     levels: ctx.llm?.levels?.(),
     limits: ctx.llm?.limits?.(),
     defaults: ctx.modelSettings?.defaults(),
@@ -25,5 +27,8 @@ export const helloRequest = (ctx: ServerContext) => {
     safe: ctx.cli.safe,
   })
 
-  return (request: WireRequestOf<'hello'>) => ctx.waterfall('server.hello', base(request))
+  return async (request: WireRequestOf<'hello'>) => {
+    const hello = await ctx.waterfall('server.hello', base(request))
+    return 'since' in request ? withBusyFamilies(ctx, hello, [...active.keys()]) : hello
+  }
 }

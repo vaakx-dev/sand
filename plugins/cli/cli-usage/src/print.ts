@@ -1,4 +1,4 @@
-import type { UsageSummary, UsageTotals } from '@sand/usage/contract'
+import type { AccountUsage, UsageSummary, UsageTotals } from '@sand/usage/contract'
 import { periodLabel, plural, tokens, tokensOf, usageCost, windowText } from '@sand/kit'
 import { rangeTitle, type Range } from './range'
 
@@ -23,10 +23,21 @@ const clip = (text: string, width = 48) => (text.length > width ? `${text.slice(
 const threadName = (thread: UsageSummary['threads'][number]) =>
   `${clip(thread.title ?? 'Untitled')}${thread.agents ? ` (+${plural(thread.agents, 'agent')})` : ''}`
 
+const accountName = (account: AccountUsage) => `${account.label}${account.pcName ? ` on ${account.pcName}` : ''}`
+
+const limitLines = (accounts: AccountUsage[]) => {
+  const limited = accounts.flatMap(account => (account.limits?.windows.length ? [{ name: accountName(account), windows: account.limits.windows }] : []))
+  if (!limited.length) return ['Limits  not reported']
+  return limited.flatMap(({ name, windows }) => [
+    ...(limited.length > 1 ? [name] : []),
+    ...pairs(windows.map(window => [window.label, windowText(window)])),
+  ])
+}
+
 export const printSummary = (summary: UsageSummary, range: Range) => {
-  const { total, limits } = summary
+  const { total } = summary
+  const labels = new Map(summary.accounts.map(account => [account.key, accountName(account)]))
   const { input, cacheRead, cacheWrite, output } = total.usage
-  const windows = limits?.windows ?? []
   return [
     rangeTitle[range],
     ...pairs([
@@ -35,8 +46,9 @@ export const printSummary = (summary: UsageSummary, range: Range) => {
       ['Turns', `${total.turns} · ${plural(total.threads, 'thread')}`],
     ]),
     '',
-    ...(windows.length ? pairs(windows.map(window => [window.label, windowText(window)])) : ['Limits  not reported']),
-    ...breakdown('Model', summary.models.map(model => [model.label, model])),
+    ...limitLines(summary.accounts),
+    ...breakdown('Account', summary.accounts.filter(account => account.turns).map(account => [accountName(account), account])),
+    ...breakdown('Model', summary.models.map(model => [`${model.label} · ${labels.get(model.account) ?? model.account}`, model])),
     ...breakdown(summary.bucket === 'hour' ? 'Hour' : 'Day', summary.periods.map(row => [periodLabel(row.key, summary.bucket), row])),
     ...breakdown('Thread', summary.threads.map(thread => [threadName(thread), thread])),
   ].join('\n')

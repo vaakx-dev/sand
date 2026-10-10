@@ -3,10 +3,15 @@ import type { ModelsUpdate, SessionSettings, SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Choices } from './choices'
 import type { Defaults } from './defaults'
-import { resolve } from './effective'
+import { canonical, resolve } from './effective'
 
 export const serveSettings = (ctx: Context<'sessions'>, server: Server, choices: Choices, defaults: Defaults) => {
-  const update = (): ModelsUpdate => ({ models: ctx.llm?.models?.() ?? [], levels: ctx.llm?.levels?.() ?? [], defaults: defaults.get() })
+  const update = (): ModelsUpdate => ({
+    models: ctx.llm?.models?.() ?? [],
+    sources: ctx.llm?.sources?.() ?? [],
+    levels: ctx.llm?.levels?.() ?? [],
+    defaults: canonical(ctx.llm, defaults.get()),
+  })
   const share = (id: string) => {
     const session = ctx.sessions.open(id)
     if (session) server.broadcast('settings.change', [id, choices.state(session)])

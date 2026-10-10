@@ -1,5 +1,5 @@
-import type { ProviderUsage, UsageTotals } from '@sand/usage/contract'
-import { dollars, percent, tokens, tokensOf, usageCost } from '@sand/kit'
+import type { UsageTotals } from '@sand/usage/contract'
+import { ago, dollars, tokens, tokensOf } from '@sand/kit'
 
 export type Metric = 'cost' | 'tokens'
 
@@ -10,20 +10,15 @@ export const metricText = (value: number, metric: Metric) => (metric === 'cost' 
 export const tickText = (value: number, metric: Metric) =>
   metric === 'cost' && Number.isInteger(value) ? `$${value}` : metricText(value, metric)
 
-const onPlan = (totals: UsageTotals) => totals.cost - totals.billed > 0.005
+export const onPlanOf = (totals: UsageTotals) => Math.max(0, totals.cost - totals.billed)
 
-export const costText = (totals: UsageTotals) => `${onPlan(totals) ? '≈' : ''}${usageCost(totals)}`
+const some = (value: number) => value > 0.005
 
-export const valueText = (totals: UsageTotals, metric: Metric) => (metric === 'cost' ? costText(totals) : tokens(tokensOf(totals.usage)))
+export const billedText = (totals: UsageTotals) => (some(totals.billed) ? dollars(totals.billed) : '–')
 
-export const shareText = (value: number, total: number) => (value > 0 && value < total / 100 ? '<1%' : percent(total ? value / total : 0))
+export const planText = (totals: UsageTotals) => (some(onPlanOf(totals)) ? `≈${dollars(onPlanOf(totals))}` : '–')
 
-export const billingText = (provider: ProviderUsage) => {
-  if (provider.billing === 'local') return 'Runs locally'
-  const planned = provider.cost - provider.billed
-  const parts = [
-    provider.billed > 0 && `${dollars(provider.billed)} ${provider.billing === 'credits' ? 'in credits' : 'billed'}`,
-    planned > 0.005 && `≈${dollars(planned)} on plan`,
-  ].filter(Boolean)
-  return parts.length ? parts.join(', ') : provider.billing === 'plan' ? 'On plan' : 'Billed per token'
+export const agoText = (at: number) => {
+  const since = ago(at)
+  return since === 'now' ? 'just now' : `${since} ago`
 }

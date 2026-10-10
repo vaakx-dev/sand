@@ -1,17 +1,25 @@
-import { derive, div, icon, quietButton, show } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { derive, div, list, show } from '@sand/dom'
+import { chipButton, runChip } from './run'
 import type { Working } from './working'
+
+const moreChip = (working: Working) =>
+  chipButton(
+    working,
+    'shrink-0 text-neutral-400',
+    derive(() => `${working.more.get()} more running`),
+    derive(() => `+${working.more.get()} more`),
+  )
 
 export const agentsChip = (working: Working) =>
   show(
-    derive(() => working.count.get() > 0),
+    derive(() => working.runs.get().length > 0),
     () =>
       div(
-        { class: 'mb-1 flex min-w-0' },
-        quietButton(
-          { size: 'sm', class: 'min-w-0', title: 'Show agents', disabled: derive(() => !working.clickable.get()), onClick: working.open },
-          icon('bot', 13),
-          () => `${plural(working.count.get(), 'agent')} still working`,
+        { class: 'mb-1 flex min-w-0 flex-wrap gap-1' },
+        list(working.shown, run => run.id, run => runChip(run, working), div({ class: 'contents' })),
+        show(
+          derive(() => working.more.get() > 0),
+          () => moreChip(working),
         ),
       ),
   )

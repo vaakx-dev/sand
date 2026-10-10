@@ -49,7 +49,7 @@ export default definePlugin({
       threads.restored()
     })
     ctx.on('projects.change', () => cache.keep('projects', projects.kept()))
-    const jobs = createJobs(ctx, wire)
+    const jobs = createJobs(ctx, wire, store)
     links.listen(bridgeRemotes(ctx, store, wire, threads, projects, jobs))
     ctx.on('wire.event', event => applyEvent(store, event, id => void threads.load(id)))
     bridgeRelay(ctx, wire, threads, threads.adopt)

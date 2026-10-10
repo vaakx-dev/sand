@@ -31,7 +31,7 @@ const where = (cwd: string, device: string | undefined, places: Places, quick?: 
 
 const stateOf = (thread: Thread, jobs: number): NavItem['state'] => (thread.running ? 'running' : jobs > 0 ? 'background' : 'idle')
 
-const navItem = (thread: Thread, { count, since }: Background, lookup: ProjectLookup, places: Places): NavItem => {
+const navItem = (thread: Thread, { count, since, workflow }: Background, lookup: ProjectLookup, places: Places): NavItem => {
   const project = lookup(thread.info.cwd, thread.device, thread.info.project)
   const at = where(thread.info.cwd, thread.device, places, project.quick)
   return {
@@ -47,6 +47,7 @@ const navItem = (thread: Thread, { count, since }: Background, lookup: ProjectLo
     started: thread.running ? thread.started : since,
     state: stateOf(thread, count),
     jobs: count || undefined,
+    workflow,
     unread: thread.unread,
     pinned: Boolean(thread.info.pinned),
     settled: Boolean(thread.info.settled),
