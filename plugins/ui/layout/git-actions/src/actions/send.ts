@@ -1,7 +1,7 @@
 import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
 
-export type ActionContext = Context<'header' | 'threads' | 'turns' | 'gitStatus'>
+export type ActionContext = Context<'composer' | 'threads' | 'turns' | 'gitStatus'>
 
 const open = async (ctx: ActionContext) => {
   const current = ctx.threads.current()

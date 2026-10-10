@@ -1045,10 +1045,10 @@
       "name": "@sand/git-actions",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/composer-card": "workspace:*",
         "@sand/dom": "workspace:*",
         "@sand/git": "workspace:*",
         "@sand/github": "workspace:*",
-        "@sand/header": "workspace:*",
         "@sand/kit": "workspace:*",
         "@sand/worktrees": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",

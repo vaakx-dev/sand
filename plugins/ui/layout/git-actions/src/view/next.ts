@@ -25,7 +25,7 @@ const glyphs: Record<Step, string> = {
   none: 'check',
 }
 
-const segment = 'inline-flex h-6 shrink-0 items-center text-xs font-medium whitespace-nowrap transition-colors'
+const segment = 'inline-flex h-6 shrink-0 items-center rounded-md text-xs whitespace-nowrap transition-colors hover:bg-neutral-800'
 
 const textOf = (step: Step, model: Model) => {
   const base = baseOf(model.status.get(), model.pr.get())
@@ -44,41 +44,39 @@ const textOf = (step: Step, model: Model) => {
 export const nextButton = (ctx: ActionContext, model: Model) => {
   const { step } = model
   const idle = step.map(value => value === 'none')
-  const tone = () => (idle.get() ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700' : 'bg-accent-500 text-white hover:bg-accent-600')
-  const edge = () => (idle.get() ? 'border-neutral-700' : 'border-accent-600')
   const run = () => {
     const text = textOf(step.get(), model)
     if (text) void sendMessage(ctx, text)
   }
   return dropdown({
-    placement: 'below-right',
+    placement: 'above-right',
     class: 'shrink-0',
     menuClass: 'w-64',
     trigger: (toggle, open) =>
       div(
-        { class: 'flex overflow-hidden rounded-md' },
+        { class: 'flex items-center' },
         button(
           {
             type: 'button',
-            class: [focusable, segment, 'gap-1 px-2', tone],
-            disabled: idle,
+            class: [focusable, segment, 'gap-1 px-2 font-medium text-neutral-200'],
+            hidden: idle,
             title: step.map(value => (value === 'none' ? 'Nothing to do' : `Send "${textOf(value, model)}"`)),
             'aria-label': step.map(value => labels[value]),
             onClick: run,
           },
-          span({ class: 'inline-flex md:hidden' }, dynamicChild(step, value => icon(glyphs[value], 14))),
-          span({ class: 'hidden md:inline' }, step.map(value => labels[value])),
+          dynamicChild(step, value => icon(glyphs[value], 12)),
+          span({ class: 'text-middle' }, step.map(value => labels[value])),
         ),
         button(
           {
             type: 'button',
-            class: [focusable, segment, 'border-l px-1', tone, edge],
+            class: [focusable, segment, 'px-1', () => (open.get() ? 'bg-neutral-800 text-neutral-200' : 'text-neutral-500')],
             title: 'More git actions',
             'aria-label': 'More git actions',
             'aria-expanded': open,
             onClick: toggle,
           },
-          icon('down', 14),
+          icon('down', 12),
         ),
       ),
     items: close => gitMenu(ctx, model, close),

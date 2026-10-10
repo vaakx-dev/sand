@@ -16,14 +16,6 @@ export const projectName = (ctx: Context, cwd: string | undefined) => {
   return ctx.projects?.group(cwd, ctx.threads?.device())?.name || folderName(cwd)
 }
 
-export const pcLabel = (ctx: Context, cwd: string | undefined) => {
-  const device = ctx.threads?.device()
-  const machine = ctx.machines?.get(device)
-  if (device && !machine?.local) return machine?.name ?? 'Other PC'
-  const shared = cwd && (ctx.projects?.group(cwd, device)?.locations.length ?? 0) > 1
-  return shared ? (machine?.name ?? '') : ''
-}
-
 export const projectIconUrl = (ctx: Context, cwd: string | undefined) => {
   if (isQuick(ctx, cwd)) return quickThreadIcon
   if (!cwd || !ctx.projects) return ''

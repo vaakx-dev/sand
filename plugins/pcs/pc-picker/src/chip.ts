@@ -1,12 +1,12 @@
-import { button, derive, div, dot, dynamicChild, focusable, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, derive, div, dynamicChild, focusable, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
 import { refreshGroup } from './refresh'
+import { machineIcon } from './rows'
 import { currentTarget, hasMessages, type PickerContext } from './target'
 
-const look =
-  'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm transition-colors hover:bg-neutral-700 hover:text-neutral-200 ' + focusable
+const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200 ' + focusable
 
 const above = {
   left: '0',
@@ -49,10 +49,10 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
 
   const chip = () =>
     button(
-      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400')], ...press(toggle) },
-      dot(machine.get()?.online === false ? 'neutral' : 'success'),
-      span({ class: 'min-w-0 truncate' }, name),
-      span({ class: 'inline-flex shrink-0' }, icon('down', 12)),
+      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500')], ...press(toggle) },
+      span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
+      span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
+      machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,
     )
 
   const pill = () =>

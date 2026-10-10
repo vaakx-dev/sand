@@ -1,7 +1,7 @@
 {
   "name": "@sand/header",
   "version": "0.0.0",
-  "description": "Breadcrumb bar: project and thread title with a thread menu, git branch, slots for other controls, and buttons for the side drawer and the right panel",
+  "description": "Breadcrumb bar: project and thread title with a thread menu, slots for other controls, and buttons for the side drawer and the right panel",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,17 +9,15 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Header",
-    "summary": "Thread title and menu, git branch and the panel button",
+    "summary": "Thread title and menu and the panel button",
     "provides": [
       "header"
     ],
     "uses": {
       "threads": "shows just \"sand\"",
       "layout": "no drawer or panel buttons",
-      "branches": "no branch name unless another extension fills the header",
       "commands": "the thread menu only renames and copies the link",
       "picker": "no rename",
-      "machines": "a thread on another PC says \"Other PC\" instead of its name",
       "projects": "the project name and icon come from the folder alone"
     }
   },

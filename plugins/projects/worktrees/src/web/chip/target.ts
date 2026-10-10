@@ -27,9 +27,9 @@ export const chipTarget = (ctx: WebContext, states: States, choices: Choices): C
 export const mainBranch = (state: WorktreeState) => state.worktrees.find(entry => entry.main)?.branch ?? state.branch
 
 export const chipLabel = ({ state, choice, thread }: ChipTarget) => {
-  if (!state) return { text: '', glyph: 'folder', branch: null }
-  if (state.worktree) return { text: state.branch ?? 'Worktree', glyph: 'folder-git', branch: null }
-  if (thread || choice.mode === 'local') return { text: 'Local', glyph: 'folder', branch: state.branch }
-  if (choice.mode === 'new') return { text: 'New worktree', glyph: 'folder-git', branch: choice.base ?? state.branch }
-  return { text: choice.branch ?? 'Worktree', glyph: 'folder-git', branch: null }
+  if (!state) return { text: '', glyph: 'folder' }
+  if (state.worktree) return { text: state.branch ?? 'Worktree', glyph: 'folder-git' }
+  if (thread || choice.mode === 'local') return { text: state.branch ?? 'Local', glyph: 'folder' }
+  if (choice.mode === 'new') return { text: 'New worktree', glyph: 'folder-git' }
+  return { text: choice.branch ?? 'Worktree', glyph: 'folder-git' }
 }

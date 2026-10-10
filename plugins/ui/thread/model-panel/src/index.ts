@@ -48,7 +48,7 @@ export default definePlugin({
     ctx.watch('composer', composer => {
       if (!composer) return
       slotted = true
-      const remove = composer.slot('start', picker.pill, 0)
+      const remove = composer.slot('end', picker.pill, 0)
       return () => {
         slotted = false
         void remove()

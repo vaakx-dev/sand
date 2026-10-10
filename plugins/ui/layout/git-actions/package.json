@@ -1,24 +1,24 @@
 {
   "name": "@sand/git-actions",
   "version": "0.0.0",
-  "description": "Git state in the header: branch, changed files, unpushed commits, the PR pill and a button for the next step",
+  "description": "Git state under the composer: branch, changed files, unpushed commits, the PR pill and a button for the next step",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
     "label": "Git actions",
-    "summary": "Branch, PR status and the next-step git button in the header",
+    "summary": "Branch, PR status and the next-step git button under the composer",
     "uses": {
       "pulls": "no PR pill, and the button never suggests babysitting or merging",
-      "worktrees": "no Move to worktree item",
+      "worktrees": "no Move to worktree item, and the branch shows here instead of in the worktree chip",
       "picker": "no Switch branch item",
       "models": "a new thread started from the button uses the default model"
     }
   },
   "dependencies": {
+    "@sand/composer-card": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/github": "workspace:*",
-    "@sand/header": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/worktrees": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"

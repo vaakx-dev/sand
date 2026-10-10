@@ -29,7 +29,7 @@ export default definePlugin({
     watchTurnEnds(ctx, armed)
 
     ctx.effect(() => {
-      const remove = ctx.composer.slot('start', chip.pill, 1)
+      const remove = ctx.composer.slot('tray-start', chip.pill)
       return () => void remove()
     })
     ctx.effect(() => mountSendBack(ctx, ctx.composer, changes, armed))

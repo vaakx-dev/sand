@@ -1,6 +1,6 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { CompletionSource } from './contract'
-import { derive, div, dropdown, errorMessage, hasOpenLayer, icon, iconButton, input, media, show, span, textarea, type Derive, type Sig } from '@sand/dom'
+import { derive, div, dropdown, errorMessage, hasOpenLayer, icon, iconButton, input, media, show, SPACE, span, textarea, type Derive, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { agentsChip } from './agents/chip'
 import { fromPaste, pasteLimit } from './attachments/content'
@@ -52,11 +52,11 @@ export const card = (parts: CardParts) => {
   const usage = model.changes.read(() => usageOf(ctx))
 
   const field = textarea({
-    rows: 2,
+    rows: 1,
     enterKeyHint: 'enter',
     bindValue: model.text,
     placeholder: placeholder(model),
-    class: 'block max-h-48 min-h-16 w-full resize-none bg-transparent px-1 text-base text-neutral-100 outline-none md:text-sm',
+    class: 'block max-h-48 min-h-8 w-full resize-none bg-transparent px-1 text-base text-neutral-100 outline-none md:text-sm',
     style: { lineHeight: '1.65' },
     onKeyDown: event => keydown(event),
     onPaste: event => {
@@ -107,11 +107,11 @@ export const card = (parts: CardParts) => {
     agentsChip(model.working),
     field,
     div(
-      { class: 'flex h-12 min-w-0 items-center gap-1' },
+      { class: 'flex h-10 min-w-0 items-center gap-1' },
+      span({ class: 'inline-flex', style: { marginLeft: `calc(-1 * ${SPACE['2']})` } }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 18))),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
-      slots.host('end', 'flex shrink-0 items-center gap-1'),
-      iconButton({ title: 'Attach files', onClick: choose }, icon('paperclip', 16)),
+      slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
       show(derive(() => !phone.get()), () => contextRing(ctx, usage, model.fail)),
       show(phone, () => moreMenu(parts, usage)),
       sendControl(model),

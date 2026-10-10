@@ -30,7 +30,7 @@ export const createSlots = () => {
       div({ class: 'flex min-w-0 shrink-0 items-center gap-2', hidden: filled.map(value => !value) }),
     )
 
-  return { add, host, filled }
+  return { add, host }
 }
 
 export type Slots = ReturnType<typeof createSlots>

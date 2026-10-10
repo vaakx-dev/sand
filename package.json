@@ -50,6 +50,7 @@
       "ask-row-over",
       "cc-dock",
       "cc-drop",
+    "cc-tray",
       "font-mono",
       "group",
       "group-hover:flex",

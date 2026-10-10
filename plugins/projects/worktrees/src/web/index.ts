@@ -45,7 +45,7 @@ export default definePlugin({
 
     ctx.watch('composer', composer => {
       if (!composer) return
-      const disposers = [composer.slot('start', chip.pill, -1), mountProgress(ctx, composer, progress, changes)]
+      const disposers = [composer.slot('tray-end', chip.pill, -1), mountProgress(ctx, composer, progress, changes)]
       return () => disposers.forEach(dispose => void dispose())
     })
     ctx.watch('commands', commands => commands?.add(moveCommand(worktrees.openMove)))

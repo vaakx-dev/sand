@@ -20,7 +20,7 @@ export interface CompletionSource {
   hint?(query: string): string | undefined
 }
 
-export type ComposerSlot = 'start' | 'end' | 'above' | 'banner'
+export type ComposerSlot = 'start' | 'end' | 'above' | 'banner' | 'tray-start' | 'tray-end'
 
 export type SlotView = HTMLElement | (() => HTMLElement)
 

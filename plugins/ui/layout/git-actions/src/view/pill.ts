@@ -18,7 +18,7 @@ export const prPill = (ctx: ActionContext, model: Model) => {
   const tone = state.map(value => tones[value?.tone ?? 'quiet'])
   return show(pr.map(Boolean), () =>
     dropdown({
-      placement: 'below-right',
+      placement: 'above-right',
       menuClass: 'w-80',
       trigger: (toggle, open) =>
         button(
@@ -33,7 +33,7 @@ export const prPill = (ctx: ActionContext, model: Model) => {
             },
           },
           icon('compare', 13),
-          span(() => `#${pr.get()?.number ?? ''} · ${state.get()?.label ?? ''}`),
+          span({ class: 'text-middle' }, () => `#${pr.get()?.number ?? ''} · ${state.get()?.label ?? ''}`),
         ),
       items: close => [dynamicChild(pr, value => prDetails(ctx, value, close))],
     }),

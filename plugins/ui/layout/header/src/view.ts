@@ -3,10 +3,10 @@ import type { Context } from 'drydock'
 import { agentsWorking } from './activity'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
-import { isQuick, pcLabel, projectIconUrl, projectName, quickName } from './project'
+import { isQuick, projectIconUrl, projectName, quickName } from './project'
 import type { Slots } from './slots'
 
-export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string | undefined) => string | undefined, slots: Slots) => {
+export const headerView = (ctx: Context, changes: Pulse, slots: Slots) => {
   const cwd = changes.read(() => {
     const threads = ctx.threads
     return threads ? (threads.current()?.info.cwd ?? threads.cwd()) : undefined
@@ -27,7 +27,6 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
   })
   const parent = changes.read(() => parentOf(ctx))
   const working = changes.read(() => agentsWorking(ctx))
-  const branch = changes.read(() => (slots.filled.get() ? '' : (branchOf(cwd.get()) ?? '')))
   const layout = changes.read(() => ctx.layout?.state())
   const narrow = layout.map(state => state?.narrow ?? false)
 
@@ -50,22 +49,7 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
       span({ class: 'truncate' }, name),
     ),
   )
-  const pc = changes.read(() => pcLabel(ctx, cwd.get()))
-  const machine = show(pc.map(Boolean), () =>
-    span(
-      { class: 'flex max-w-32 shrink-0 items-center gap-1 text-xs text-neutral-500', title: pc.map(name => `Runs on ${name}`) },
-      icon('monitor', 13),
-      span({ class: 'truncate' }, pc),
-    ),
-  )
   const slash = show(derive(() => Boolean(name.get()) && !idle.get()), () => span({ class: 'hidden text-neutral-500 md:inline' }, '/'))
-  const branchName = show(branch.map(Boolean), () =>
-    span(
-      { class: 'hidden max-w-48 shrink-0 items-center gap-1 text-xs text-neutral-500 md:inline-flex', title: branch.map(value => `Branch ${value}`) },
-      icon('branch', 13),
-      span({ class: 'truncate' }, branch),
-    ),
-  )
   const titleDropdown = () => dropdown({
     trigger: (toggle, open) =>
       button(
@@ -103,12 +87,10 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
     div(
       { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm' },
       project,
-      machine,
       slash,
       parentCrumb(ctx, parent),
       titleMenu,
     ),
-    branchName,
     slots.host(),
     panel,
   )

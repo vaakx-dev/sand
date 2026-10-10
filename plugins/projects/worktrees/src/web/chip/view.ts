@@ -5,10 +5,10 @@ import type { Choices } from './choices'
 import { draftMenu, threadMenu } from './menu'
 import { chipLabel, chipTarget } from './target'
 
-const look = 'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm transition-colors ' + focusable
+const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors ' + focusable
 
 const above = {
-  left: '0',
+  right: '0',
   bottom: '100%',
   width: `min(${SPACE['80']}, calc(100vw - ${SPACE['12']}))`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
@@ -54,16 +54,10 @@ export const createChip = (ctx: WebContext, states: States, choices: Choices, ch
 
   const chip = () =>
     button(
-      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'), () => (menu.get() ? 'hover:bg-neutral-700 hover:text-neutral-200' : 'cursor-default')], ...press(toggle) },
-      span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 15)),
-      span({ class: 'min-w-0 truncate' }, () => label.get().text),
+      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'), () => (menu.get() ? 'hover:bg-neutral-800 hover:text-neutral-200' : 'cursor-default')], ...press(toggle) },
+      span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 12)),
+      span({ class: 'min-w-0 truncate py-1 text-middle' }, () => label.get().text),
       show(menu, () => span({ class: 'inline-flex shrink-0' }, icon('down', 12))),
-    )
-
-  const branch = () =>
-    show(
-      derive(() => Boolean(label.get().branch)),
-      () => span({ class: 'hidden min-w-0 items-center gap-1 px-1 text-sm text-neutral-500 sm:inline-flex' }, icon('branch', 14), span({ class: 'truncate' }, () => label.get().branch ?? '')),
     )
 
   const items = () => (target.get().draft ? draftMenu(ctx, choices, target.get(), close) : threadMenu(openMove, close))
@@ -72,7 +66,6 @@ export const createChip = (ctx: WebContext, states: States, choices: Choices, ch
     div(
       { class: 'relative flex min-w-0 items-center', hidden },
       dynamicChild(derive(() => label.get().glyph), chip),
-      branch(),
       show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, dynamicChild(derive(() => changes.version.get() + states.version.get()), items))),
     )
 

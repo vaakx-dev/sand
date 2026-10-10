@@ -9,7 +9,7 @@ const pillLook =
   'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200'
 
 const above = {
-  left: '0',
+  right: '0',
   bottom: '100%',
   width: `min(calc(${SPACE['96']} + ${SPACE['12']}), calc(100vw - ${SPACE['12']}))`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
