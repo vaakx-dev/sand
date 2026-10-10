@@ -1,6 +1,5 @@
 import type { Item } from '@sand/transcript-parts/contract'
 import { div } from '@sand/dom'
-import { liveRow } from './live'
 import { noticeRow, notificationRow, reportRow } from './notes'
 import { textRow, thinkingRow } from './prose'
 import { row, type Row, type RowContext } from './row'
@@ -34,6 +33,6 @@ export const itemRows = (item: Item, context: RowContext): Row[] => {
     case 'custom':
       return customRow(item, context)
     case 'live':
-      return [liveRow(item, context)]
+      return []
   }
 }
