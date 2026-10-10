@@ -14,7 +14,7 @@
 - vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `packages/dom/node_modules/@vaakx-dev/vrui` and `packages/protocol/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
 - `bun run check` also runs `vrui-check`; fix everything it reports. List classes sand defines in its own CSS, and extra theme color roles, under `vrui` in the root `package.json`.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
-- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand -p --home "$(mktemp -d)"` instead of starting another server, so test threads stay out of the user's `~/.sand`; it borrows `~/.sand/auth.json` for the model sign-ins.
+- Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand --home "$(mktemp -d)" -p "<prompt>"` (flags before `-p`, which takes the next word as the prompt) instead of starting another server, so test threads stay out of the user's `~/.sand`; it borrows `~/.sand/auth.json` for the model sign-ins.
 - Never use `pkill -f`, `pgrep -f` or `killall`; they match your own shell. Kill by PID, and don't leave background processes running.
 - Ask before heavy or long commands (full builds, benchmarks, anything that loads this laptop). Give commands that might hang a `timeout_ms`.
 - Shell output over 30k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.

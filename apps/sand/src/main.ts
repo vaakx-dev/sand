@@ -47,6 +47,7 @@ const safe = values.safe === true || safeFromEnv()
 
 const dispatch = async () => {
   if (values.help || command === 'help') return run({ mode: 'command', home, args: ['help'], flags, values, safe })
+  if (typeof values.print === 'string' && values.print.startsWith('--')) throw new Error(`-p takes the prompt right after it, so "${values.print}" was read as the prompt. Put other flags first: sand --home <folder> -p "<prompt>"`)
   if (typeof values.print === 'string') return run({ mode: 'print', home, args, flags, prompt: values.print, safe })
   if (command === 'serve') {
     if (safe) process.env[safeEnv] = '1'
