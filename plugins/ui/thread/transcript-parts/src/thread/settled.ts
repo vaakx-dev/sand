@@ -45,10 +45,11 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
     const shown = parts.filter(part => part.kind !== 'notification' && part.kind !== 'feedback')
     const notes = parts.flatMap(part => (part.kind === 'notification' ? [part.notification] : []))
     const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))
-    const asked: Item[] = shown.length ? [{ kind: 'user', key: entry.id, parts: shown, steer: hasToolResult(message), at: entry.at }] : []
+    const steer = hasToolResult(message)
+    const asked: Item[] = shown.length ? [{ kind: 'user', key: entry.id, parts: shown, steer, at: entry.at }] : []
     emit(
       ...asked,
-      ...notes.map((notification, index): Item => ({ kind: 'notification', key: `${entry.id}:n${index}`, notification, at: entry.at })),
+      ...notes.map((notification, index): Item => ({ kind: 'notification', key: `${entry.id}:n${index}`, notification, steer, at: entry.at })),
       ...feedback.map((note, index): Item => ({ kind: 'notice', key: `${entry.id}:f${index}`, text: feedbackLine(note), tone: 'dim' })),
     )
   }
