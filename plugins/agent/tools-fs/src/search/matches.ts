@@ -1,4 +1,4 @@
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { isDirectory } from '../files'
 import { lines, ripgrep, scope } from './ripgrep'
 import { walk } from './walk'
@@ -30,9 +30,9 @@ async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, i
   }
 }
 
-async function* files(root: string, glob: string, includeIgnored?: boolean) {
+async function* files(root: string, glob: string, includeIgnored?: boolean, signal?: AbortSignal) {
   if (await isDirectory(root)) {
-    for await (const file of walk(glob, root, includeIgnored)) yield { full: join(root, file), shown: file }
+    for await (const file of walk(glob, root, includeIgnored, signal)) yield { full: resolve(root, file), shown: file }
   } else {
     yield { full: root, shown: basename(root) }
   }
@@ -40,7 +40,7 @@ async function* files(root: string, glob: string, includeIgnored?: boolean) {
 
 async function* withScan({ pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
   const regex = new RegExp(pattern, ignoreCase ? 'i' : '')
-  for await (const { full, shown } of files(root, glob, includeIgnored)) {
+  for await (const { full, shown } of files(root, glob, includeIgnored, signal)) {
     signal.throwIfAborted()
     const file = Bun.file(full)
     if (file.size > maxSize) continue
