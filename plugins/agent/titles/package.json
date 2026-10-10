@@ -1,18 +1,36 @@
 {
   "name": "@sand/titles",
   "version": "0.0.0",
-  "description": "Names new threads from their first prompt",
+  "description": "Names new threads from their first prompt, then gives them a short name with a small model",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
+    "web": "./src/web/index.ts",
     "label": "Titles",
-    "summary": "Names new threads"
+    "summary": "Names new threads with a small model, and /retitle",
+    "uses": {
+      "llm": "threads keep the cut first prompt as their name",
+      "server": "the settings section cannot read or save the naming settings",
+      "ui": "no /retitle command",
+      "modelSettings": "without a small model, naming uses the default model"
+    }
   },
   "dependencies": {
+    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
     "@sand/messages": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

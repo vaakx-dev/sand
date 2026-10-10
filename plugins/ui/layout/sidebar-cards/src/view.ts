@@ -20,6 +20,7 @@ import {
   type Sig,
 } from '@sand/dom'
 import type { CardRow } from './card'
+import { actionMenu, type MenuRequest } from './menu/view'
 import type { ProjectChoice } from './project-choices'
 import type { Row } from './rows'
 import { rowView, type RowHandlers } from './rows-view'
@@ -60,6 +61,7 @@ export interface SidebarParts {
   toggle: RowHandlers['toggle']
   more: RowHandlers['more']
   drag: RowHandlers['drag']
+  menu: Sig<MenuRequest | undefined>
 }
 
 const filterButton = (parts: SidebarParts, open: Sig<boolean>) =>
@@ -109,7 +111,7 @@ const filterChip = (parts: SidebarParts) =>
   )
 
 export const sidebarView = (parts: SidebarParts) => {
-  const handlers: RowHandlers = { minute: clock(60_000), pick: parts.pick, toggle: parts.toggle, more: parts.more, drag: parts.drag }
+  const handlers: RowHandlers = { minute: clock(60_000), pick: parts.pick, toggle: parts.toggle, more: parts.more, drag: parts.drag, menu: request => parts.menu.set(request) }
   const top = derive(() => parts.actions.get().filter(action => action.place !== 'footer'))
   const wide = derive(() => top.get().filter(action => action.wide))
   const compact = derive(() => top.get().filter(action => !action.wide))
@@ -144,5 +146,6 @@ export const sidebarView = (parts: SidebarParts) => {
       list(footer, action => action.id, action => iconAction(action, parts), div({ class: 'flex flex-1 items-center gap-1' })),
       list(footerEnd, action => action.id, action => iconAction(action, parts), div({ class: 'flex items-center gap-1' })),
     ),
+    actionMenu(parts.menu, () => parts.menu.set(undefined)),
   )
 }

@@ -9,6 +9,7 @@ const sessionColumns: [string, string][] = [
   ['named', 'integer not null default 0'],
   ['pinned', 'integer not null default 0'],
   ['settled', 'integer'],
+  ['snoozed', 'integer'],
   ['seen', 'integer not null default 0'],
   ['position', 'real'],
   ['project', 'text'],
@@ -32,7 +33,9 @@ const additive: Step = db => {
   if (existing.has('unsettled')) db.run('alter table sessions drop column unsettled')
 }
 
-const steps: Step[] = [additive]
+const addSnoozed: Step = additive
+
+const steps: Step[] = [additive, addSnoozed]
 
 export const migrate = (db: Database) => {
   const { user_version } = db.query<{ user_version: number }, []>('pragma user_version').get()!

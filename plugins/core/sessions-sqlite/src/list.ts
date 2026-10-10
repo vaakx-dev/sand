@@ -1,7 +1,7 @@
 import type { SessionInfo, SessionSummary } from './contract'
 import type { Database } from 'bun:sqlite'
 
-type Row = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; seen: number; position: number }
+type Row = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; snoozed: number | null; seen: number; position: number }
 
 export const summaries = (db: Database) => {
   const query = db.query<Row, []>(

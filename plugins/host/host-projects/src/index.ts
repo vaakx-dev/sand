@@ -1,6 +1,7 @@
 import { definePlugin } from 'drydock'
 import { homedir } from 'node:os'
 import { join, sep } from 'node:path'
+import { seedSandHome } from './home'
 import { projectList } from './list'
 import { createRegistry } from './registry'
 import { projectRequests } from './requests'
@@ -14,6 +15,7 @@ export default definePlugin({
   async apply(ctx) {
     const { home, device } = ctx.hostOptions
     const store = await projectStore(home, device.id)
+    await seedSandHome(store, home, device.id).catch(() => {})
     const root = await projectRoot(home)
     const place = () => ({ device: device.id, home: homedir(), sep, root: root.get(), scratch: join(home, 'scratch') })
     const list = () => projectList(store.all(), place())

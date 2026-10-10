@@ -35,6 +35,7 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
   const session: Entry[] = thread
     ? [
         ...(ctx.picker ? [{ label: 'Rename…', icon: 'pencil', run: () => void renameSession(ctx) }] : []),
+        ...command('retitle', 'Regenerate name', 'sparkles'),
         ...(thread.info.kind === 'agent'
           ? []
           : [

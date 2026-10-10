@@ -3,7 +3,7 @@ import type { Thread } from '@sand/web-client/contract'
 import { copyText } from '@sand/dom'
 import type { Context } from 'drydock'
 
-const renamePage = (ctx: Context<'threads'>, thread: Thread): PalettePage => ({
+export const renamePage = (ctx: Context<'threads'>, thread: Thread): PalettePage => ({
   id: 'rename',
   title: 'Rename thread',
   field: {

@@ -61,6 +61,7 @@ export default definePlugin({
           if (store.current.get() === page.id) go(store.pick()?.id)
         }
       },
+      section: section => store.addSection(section),
       pages: () => store.pages.get(),
       open: id => go(store.pick(id)?.id),
       close: () => go(undefined),

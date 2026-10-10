@@ -7,6 +7,7 @@ export interface NavItem {
   id: string
   title: string
   subtitle?: string
+  subtitleIcon?: string
   path?: string
   project?: string
   projectKey?: string
@@ -20,6 +21,8 @@ export interface NavItem {
   unread?: boolean
   pinned?: boolean
   settled?: boolean
+  snoozed?: number
+  back?: boolean
   movable?: boolean
   meta?: string
 }
@@ -44,7 +47,30 @@ export interface NavAction {
   wide?: boolean
   place?: 'footer'
   end?: boolean
+  group?: string
+  quick?: boolean
+  tile?: boolean
+  active?: boolean
+  danger?: boolean
+  confirm?: string
+  choices?: NavChoice[]
+  ask?: NavAsk
   run(): void | Promise<unknown>
+}
+
+export interface NavChoice {
+  id: string
+  label: string
+  tip?(): string
+  run(): void | Promise<unknown>
+}
+
+export interface NavAsk {
+  placeholder: string
+  tip: string
+  submit: string
+  preview(text: string): string | undefined
+  run(text: string): void | Promise<unknown>
 }
 
 export interface Nav {

@@ -11,10 +11,15 @@ export interface PageParts {
 
 export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
   const page = derive(() => store.pages.get().find(candidate => candidate.id === store.current.get()))
+  const extras = derive(() => store.sections.get().filter(section => section.page === page.get()?.id))
   const scroller: HTMLElement = div({ class: 'min-h-0 flex-1 overflow-auto overscroll-contain' })
   const render = (shown: SettingsPage | undefined) => {
     scroller.scrollTop = 0
-    return div({ class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' }, shown?.render() ?? null)
+    return div(
+      { class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' },
+      shown?.render() ?? null,
+      dynamicChild(extras, sections => div({ class: 'contents' }, ...sections.map(section => section.render()))),
+    )
   }
   scroller.append(dynamicChild(page, render))
   return div(

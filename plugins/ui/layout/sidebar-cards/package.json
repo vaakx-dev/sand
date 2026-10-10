@@ -1,7 +1,7 @@
 {
   "name": "@sand/sidebar-cards",
   "version": "0.0.0",
-  "description": "Card sidebar: search, project filter and actions, then Pinned, Active and Settled threads",
+  "description": "Card sidebar: search, project filter and actions, then Pinned, Active, Snoozed and Settled threads",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Cards",
-    "summary": "Threads as cards, sorted into Pinned, Active and Settled",
+    "summary": "Threads as cards, sorted into Pinned, Active, Snoozed and Settled",
     "provides": [
       "nav"
     ],

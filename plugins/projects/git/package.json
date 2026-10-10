@@ -4,10 +4,15 @@
   "description": "Answers git questions about a project folder for the page, such as the current branch",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
+    "web": "./src/web/index.ts",
     "label": "Git",
+    "provides": [
+      "branches"
+    ],
     "summary": "The current git branch of a project folder",
     "uses": {
       "server": "does nothing"

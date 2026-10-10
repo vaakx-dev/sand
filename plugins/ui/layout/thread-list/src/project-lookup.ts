@@ -1,4 +1,5 @@
 import type { ProjectGroup } from '@sand/web-client/contract'
+import { quickThreadIcon } from '@sand/dom'
 import { folderName, isInside } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -23,7 +24,7 @@ export const groupIcon = (ctx: Context, group: ProjectGroup, device?: string) =>
   return [...(here ? [here] : []), ...group.locations].map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean)
 }
 
-const quick = (device?: string): ProjectInfo => ({ name: 'Quick threads', key: `${device ?? ''}\0quick`, quick: true })
+const quick = (device?: string): ProjectInfo => ({ name: 'Quick thread', key: `${device ?? ''}\0quick`, icon: quickThreadIcon, quick: true })
 
 export const projectLookup =
   (ctx: Context): ProjectLookup =>

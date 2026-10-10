@@ -68,6 +68,7 @@
       "spinner-turn",
       "tabular-nums",
       "text-middle",
+      "touch-current:flex",
       "transcript-chat-bubble",
       "transcript-chat-streaming",
       "whitespace-pre",

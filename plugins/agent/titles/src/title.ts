@@ -9,7 +9,7 @@ const fileNames = (message: Message) =>
 const promptWords = (message: Message) =>
   [promptText(message, ' '), ...fileNames(message)].join(' ').replace(/\s+/g, ' ').trim()
 
-const shorten = (text: string, max = maxLength) => {
+export const shorten = (text: string, max = maxLength) => {
   if (text.length <= max) return text
   const cut = text.slice(0, max + 1)
   const space = cut.lastIndexOf(' ')
