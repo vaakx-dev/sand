@@ -49,13 +49,75 @@ const draftEdge = () => span({ class: 'pointer-events-none absolute inset-0 roun
 
 const slotOf = ({ group, list, item }: CardRow) => ({ id: item.id, group, movable: Boolean(list.move && item.movable) })
 
+interface CardParts {
+  item: Sig<NavItem>
+  selected: Sig<boolean>
+  project: Sig<string>
+  menu: Sig<NavAction[]>
+  menuKey: Sig<string>
+  minute: Sig<number>
+}
+
+const strong = ({ item, selected }: CardParts) => selected.get() || item.get().unread || item.get().state === 'waiting'
+
+const avatar = ({ item, project }: CardParts) =>
+  dynamicChild(
+    item.map(value => value.icon ?? ''),
+    url => (url ? projectIcon('', url) : dynamicChild(project, projectIcon)),
+  )
+
+const fullBody = (parts: CardParts) => {
+  const { item, project, menu, menuKey, minute } = parts
+  return div(
+    div(
+      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-400' },
+      avatar(parts),
+      span({ class: 'min-w-0 flex-1 truncate', title: project }, project),
+      show(
+        item.map(value => Boolean(value.pinned)),
+        () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
+      ),
+      span({ class: 'flex shrink-0 items-center group-hover:hidden' }, status(item, minute)),
+      dynamicChild(menuKey, () => actionStrip(menu.get(), 'group-hover:flex')),
+    ),
+    div(
+      { class: ['truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-400')], title: item.map(value => value.title) },
+      item.map(value => value.title),
+    ),
+    div(
+      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-500' },
+      span({ class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) }, icon('folder', 11), span({ class: 'truncate' }, item.map(value => value.subtitle ?? ''))),
+      dynamicChild(menuKey, () => actionStrip(menu.get(), 'touch-current:flex')),
+    ),
+  )
+}
+
+const settledTitle = (value: NavItem) => [value.title, [value.project, tildeHome(value.path ?? '')].filter(Boolean).join(' · ')].filter(Boolean).join('\n')
+
+const compactBody = (parts: CardParts) => {
+  const { item, selected, menu, menuKey, minute } = parts
+  return div(
+    { class: 'flex h-5 items-center gap-2', title: item.map(settledTitle) },
+    span({ class: ['inline-flex shrink-0 transition group-hover:opacity-100', () => (selected.get() ? 'opacity-100' : 'opacity-50')] }, avatar(parts)),
+    span({ class: ['min-w-0 flex-1 truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-500')] }, item.map(value => value.title)),
+    span({ class: 'flex shrink-0 items-center text-xs group-hover:hidden' }, status(item, minute)),
+    dynamicChild(menuKey, () => actionStrip(menu.get(), 'group-hover:flex touch-current:flex')),
+  )
+}
+
 export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow) => void, drag: Reorder) => {
   const item = row.map(value => value.item)
   const selected = row.map(value => value.selected)
-  const project = item.map(value => value.project ?? value.subtitle ?? '')
+  const settled = item.map(value => Boolean(value.settled))
   const menu = row.map(value => value.list.menu?.(value.item.id) ?? [])
-  const menuKey = menu.map(actions => actions.map(action => `${action.id}:${action.label}:${action.icon}`).join('|'))
-  const strong = () => selected.get() || item.get().unread || item.get().state === 'waiting'
+  const parts: CardParts = {
+    item,
+    selected,
+    project: item.map(value => value.project ?? value.subtitle ?? ''),
+    menu,
+    menuKey: menu.map(actions => actions.map(action => `${action.id}:${action.label}:${action.icon}`).join('|')),
+    minute,
+  }
 
   return div(
     {
@@ -64,7 +126,8 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       'aria-current': selected,
       class: [
         focusable,
-        'group relative mb-1 block w-full rounded-lg px-3 py-2 transition',
+        'group relative block w-full rounded-lg px-3 transition',
+        () => (settled.get() ? 'mb-px py-1' : 'mb-1 py-2'),
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
       ],
       onClick: () => pick(row.get()),
@@ -76,34 +139,6 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       item.map(value => value.state === 'draft'),
       draftEdge,
     ),
-    div(
-      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-400' },
-      dynamicChild(
-        item.map(value => value.icon ?? ''),
-        url => (url ? projectIcon('', url) : dynamicChild(project, projectIcon)),
-      ),
-      span({ class: 'min-w-0 flex-1 truncate', title: project }, project),
-      show(
-        item.map(value => Boolean(value.pinned)),
-        () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
-      ),
-      span({ class: 'flex shrink-0 items-center group-hover:hidden' }, status(item, minute)),
-      dynamicChild(menuKey, () => actionStrip(menu.get(), 'group-hover:flex')),
-    ),
-    div(
-      {
-        class: [
-          'truncate text-sm',
-          () => (strong() ? 'font-semibold text-neutral-100' : item.get().settled ? 'text-neutral-500' : 'text-neutral-400'),
-        ],
-        title: item.map(value => value.title),
-      },
-      item.map(value => value.title),
-    ),
-    div(
-      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-500' },
-      span({ class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) }, icon('folder', 11), span({ class: 'truncate' }, item.map(value => value.subtitle ?? ''))),
-      dynamicChild(menuKey, () => actionStrip(menu.get(), 'touch-current:flex')),
-    ),
+    dynamicChild(settled, compact => (compact ? compactBody(parts) : fullBody(parts))),
   )
 }
