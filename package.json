@@ -71,6 +71,8 @@
       "text-middle",
       "touch-current:flex",
       "transcript-chat-bubble",
+      "transcript-chat-copy",
+      "transcript-chat-rail",
       "transcript-chat-streaming",
       "whitespace-pre",
       "whitespace-pre-wrap",

@@ -20,7 +20,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
       { class: 'group mb-3 text-sm', ...press.props },
       node,
       div(
-        { class: 'mt-1 flex h-6 items-center opacity-0 group-hover:opacity-100' },
+        { class: 'transcript-chat-copy mt-1 flex h-6 items-center opacity-0 group-hover:opacity-100' },
         show(
           data.map(value => !value.streaming),
           () => copyButton({ text: () => text.get(), label: 'Copy' }),

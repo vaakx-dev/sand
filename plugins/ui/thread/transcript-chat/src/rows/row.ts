@@ -16,6 +16,7 @@ export interface RowContext {
   markdown: Markdown
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
+  repaint(): void
 }
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row

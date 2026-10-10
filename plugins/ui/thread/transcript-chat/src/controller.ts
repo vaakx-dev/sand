@@ -1,12 +1,14 @@
 import type { OpenStates, RendererRegistry } from '@sand/transcript-parts/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd } from '@sand/dom'
+import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { fill, keepAnchor, savedScroll, scrollTo } from './integrations/scroll'
-import { itemRows, type RowContext } from './rows'
+import type { RowContext } from './rows'
 import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
+import { foldTurns } from './turns/fold'
+import { shownRows } from './turns/rows'
 import { Views, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
 
@@ -67,6 +69,11 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     return next
   }
 
+  const repaint = () => {
+    const thread = ctx.threads.current()
+    if (thread && shown?.id === thread.id) paint(thread, shown.view)
+  }
+
   const paint = (thread: Thread, current: ThreadView, grow = 0) => {
     const context: RowContext = {
       registry,
@@ -76,9 +83,16 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
       markdown: ctx.markdown,
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
+      repaint,
     }
     const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
-    current.rows.set(windowed(current, items, grow).flatMap(item => itemRows(item, context)))
+    const folded = foldTurns(items, {
+      running: thread.running,
+      streaming: thread.live.length > 0,
+      started: thread.started,
+      open: key => untrack(() => states.get(key).open.get()),
+    })
+    current.rows.set(windowed(current, folded, grow).flatMap(entry => shownRows(entry, context)))
   }
 
   const reveal = () => {

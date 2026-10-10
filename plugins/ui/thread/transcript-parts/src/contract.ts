@@ -27,7 +27,7 @@ export type NoticeTone = 'dim' | 'error' | 'rule'
 
 export type Item =
   | { kind: 'user'; key: string; parts: UserPart[]; steer: boolean; at: number }
-  | { kind: 'notification'; key: string; notification: Notification; at: number }
+  | { kind: 'notification'; key: string; notification: Notification; steer: boolean; at: number }
   | { kind: 'text'; key: string; text: string; streaming: boolean; at: number }
   | { kind: 'thinking'; key: string; text: string; streaming: boolean; at: number }
   | ToolGroup

@@ -1,9 +1,8 @@
-import type { Item } from '@sand/transcript-parts/contract'
 import type { ThreadView } from './view'
 
 export const pageSize = 40
 
-export const windowed = (view: ThreadView, items: Item[], grow = 0) => {
+export const windowed = <T extends { key: string }>(view: ThreadView, items: T[], grow = 0) => {
   const anchored = view.first ? items.findIndex(item => item.key === view.first) : -1
   const fallback = items.length - (view.first && view.size ? view.size : pageSize)
   const start = Math.max(0, (anchored >= 0 ? anchored : fallback) - grow)
