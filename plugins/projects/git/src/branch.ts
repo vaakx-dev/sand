@@ -1,14 +1,11 @@
+import { gitMaybe } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 
 const freshMs = 5000
 
 const cache = new Map<string, { at: number; branch?: string }>()
 
-const read = async (cwd: string) => {
-  const git = Bun.spawn(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], { cwd, stdin: 'ignore', stdout: 'pipe', stderr: 'ignore', windowsHide: true })
-  const [output, code] = await Promise.all([new Response(git.stdout).text(), git.exited])
-  return code === 0 && output.trim() ? output.trim() : undefined
-}
+const read = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])) || undefined
 
 export const branch = async (cwd: string) => {
   if (!cwd || !existsSync(cwd)) return undefined

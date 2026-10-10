@@ -1,9 +1,10 @@
-import { copyText, div, icon, popoverItem, span, type Child } from '@sand/dom'
+import { copyWithNotice, div, icon, popoverItem, span, type Child, type IconName } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 
 interface Entry {
   label: string
-  icon: string
+  icon: IconName
   run(): void | Promise<void>
 }
 
@@ -24,17 +25,17 @@ const entryView = (entry: Entry, close: () => void) =>
 export const renameSession = async (ctx: Context) => {
   const thread = ctx.threads?.current()
   if (!thread || !ctx.picker) return
-  const title = (await ctx.picker.input('Rename thread', thread.info.title ?? ''))?.replace(/\s+/g, ' ').trim()
+  const title = oneLine((await ctx.picker.input('Rename thread', thread.info.title ?? '')) ?? '')
   if (title) await ctx.threads?.rename(thread.id, title)
 }
 
 export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
-  const command = (name: string, label: string, glyph: string): Entry[] =>
+  const command = (name: string, label: string, glyph: IconName): Entry[] =>
     ctx.commands?.get(name) ? [{ label, icon: glyph, run: () => void ctx.commands?.run(name) }] : []
   const thread = ctx.threads?.current()
   const session: Entry[] = thread
     ? [
-        ...(ctx.picker ? [{ label: 'Rename…', icon: 'pencil', run: () => void renameSession(ctx) }] : []),
+        ...(ctx.picker ? [{ label: 'Rename…', icon: 'pencil', run: () => void renameSession(ctx) } satisfies Entry] : []),
         ...command('retitle', 'Regenerate name', 'sparkles'),
         ...(thread.info.kind === 'agent'
           ? []
@@ -47,10 +48,7 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
         {
           label: 'Copy link',
           icon: 'link',
-          run: async () => {
-            const copied = await copyText(location.href)
-            ctx.notify?.push(copied ? 'Copied link' : 'Could not copy the link', { level: copied ? 'info' : 'error' })
-          },
+          run: () => copyWithNotice(ctx.notify, location.href, 'link'),
         },
       ]
     : []

@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, serial } from '@sand/kit'
 import type { NetworkState } from '../contract'
 import type { Listener } from './listener'
 import { saveLan } from './settings'
@@ -13,15 +13,11 @@ export interface ToggleOptions {
 
 export const createToggle = ({ home, listener, changed }: ToggleOptions) => {
   let queue = Promise.resolve()
-  let saving = Promise.resolve()
+  const saving = serial()
   let timer: Timer | undefined
   let stopped = false
 
-  const save = (lan: boolean) => {
-    const saved = saving.then(() => saveLan(home, lan))
-    saving = saved.catch(() => {})
-    return saved
-  }
+  const save = (lan: boolean) => saving(() => saveLan(home, lan))
 
   const apply = async (lan: boolean) => {
     if (stopped) return

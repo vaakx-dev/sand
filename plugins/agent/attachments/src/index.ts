@@ -3,13 +3,10 @@ import type { Attachments } from './contract'
 import { definePlugin } from 'drydock'
 import { basename, extname } from 'node:path'
 import { z } from 'zod'
-import { clipboardImage } from './clipboard'
 import { maxPdfBytes, maxTextLength, pdf, text } from './document'
 import { imageExtensions, normalizeImage } from './image'
 
 const extension = (name: string) => extname(name).slice(1).toLowerCase()
-
-const stamp = () => new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
 
 export default definePlugin({
   name: 'attachments',
@@ -42,16 +39,6 @@ export default definePlugin({
         const file = Bun.file(path)
         if (!(await file.exists())) throw new Error(`File not found: ${path}`)
         return fromBytes(name, new Uint8Array(await file.arrayBuffer()), file.type.split(';')[0])
-      },
-      async fromClipboard() {
-        const bytes = await clipboardImage()
-        return bytes && normalizeImage(bytes, `clipboard-${stamp()}.png`, limits)
-      },
-      compose(prompt, items) {
-        const parts = items.flatMap((item): UserContent[] =>
-          item.type === 'image' ? [{ type: 'text', text: `${item.name ?? 'image'}:` }, item] : [item],
-        )
-        return prompt.trim() ? [...parts, { type: 'text', text: prompt }] : parts
       },
     }
     ctx.provide('attachments', attachments)

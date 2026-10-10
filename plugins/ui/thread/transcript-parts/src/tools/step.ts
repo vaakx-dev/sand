@@ -1,5 +1,4 @@
-import type { ToolBadge, ToolView } from '@sand/transcript-chat/contract'
-import type { MenuKit, ToolStepOptions } from '../contract'
+import type { MenuKit, ToolBadge, ToolStepOptions, ToolView } from '../contract'
 import { badge, contextMenu, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
 
 const counts = (text: string) =>
@@ -18,11 +17,9 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle,
   })
   const shown = derive(() => {
     signature.get()
-    return untrack(() => {
-      const current = tool.get()
-      const found = renderer(current.call.name)
-      return { icon: found.icon, verb: found.verb, activeVerb: found.activeVerb, label: found.label(current), meta: found.meta(current), badge: found.badge(current) }
-    })
+    const current = untrack(() => tool.get())
+    const found = renderer(current.call.name)
+    return { icon: found.icon, verb: found.verb, activeVerb: found.activeVerb, label: found.label(current), meta: found.meta(current), badge: found.badge(current) }
   })
   const running = derive(() => ['running', 'pending'].includes(tool.get().status))
   const label = shown.map(value => value.label)

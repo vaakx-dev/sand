@@ -1,5 +1,5 @@
 import type { Settings } from './contract'
-import { closeDrawer, float, icon, layer, pulse, secondaryAction } from '@sand/dom'
+import { closeDrawer, icon, layer, mount, pulse, secondaryAction } from '@sand/dom'
 import { definePlugin, type Dispose } from 'drydock'
 import { showPage } from './address'
 import { cover } from './cover'
@@ -71,9 +71,10 @@ export default definePlugin({
     const restore = followThreads(ctx, settings.pages, settings.open, close)
     const toggle = () => (store.current.get() ? settings.close() : settings.open())
     const floatingButton = () =>
-      float(
+      mount(
+        document.body,
         secondaryAction(
-          { size: 'sm', class: [layer.drawer, 'fixed opacity-75'], style: { left: '0.75rem', bottom: '0.75rem' }, onClick: toggle },
+          { size: 'sm', class: [layer.drawer, 'fixed bottom-3 left-3 opacity-75'], onClick: toggle },
           icon('gear', 12),
           'Settings',
         ),

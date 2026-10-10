@@ -1,16 +1,16 @@
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { currentTarget, isOnline, refOf, type PickerContext } from './target'
+import { currentTarget, refOf, type PickerContext } from './target'
 
 export const refreshGroup = (ctx: PickerContext, group?: ProjectGroup) => {
   if (!group || !ctx.sync) return
   for (const entry of group.locations) {
-    if (isOnline(ctx, entry.device)) void ctx.sync.refresh(refOf(entry)).catch(() => undefined)
+    if (ctx.machines.online(entry.device)) void ctx.sync.refresh(refOf(entry)).catch(() => undefined)
   }
 }
 
 const groupKey = (ctx: PickerContext) => {
   const { cwd, device, group } = currentTarget(ctx)
-  const places = group?.locations.map(entry => `${entry.device ?? ''}:${entry.path}:${isOnline(ctx, entry.device)}`) ?? []
+  const places = group?.locations.map(entry => `${entry.device ?? ''}:${entry.path}:${ctx.machines.online(entry.device)}`) ?? []
   return [cwd, device ?? '', ...places].join('|')
 }
 

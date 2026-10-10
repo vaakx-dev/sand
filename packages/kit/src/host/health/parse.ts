@@ -1,19 +1,17 @@
-import type { HostHealth } from '@sand/host-health/contract'
-import type { BuildInfo, FailedPlugin, RuntimeHealth } from '@sand/protocol'
+import type { BuildInfo, FailedPlugin, HostHealth, RuntimeHealth } from '@sand/protocol'
+import { isRecord } from '../../json/record'
 
 const runtimes: readonly RuntimeHealth[] = ['starting', 'ready', 'failed', 'restarting']
 const logLines = 40
 
-const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object'
-
 const parseFailed = (value: unknown): FailedPlugin[] =>
-  isObject(value) && typeof value.id === 'string' && typeof value.error === 'string' ? [{ id: value.id, error: value.error }] : []
+  isRecord(value) && typeof value.id === 'string' && typeof value.error === 'string' ? [{ id: value.id, error: value.error }] : []
 
 const parseBuild = (value: unknown): BuildInfo | undefined =>
-  isObject(value) && typeof value.id === 'string' && typeof value.time === 'number' ? { id: value.id, time: value.time } : undefined
+  isRecord(value) && typeof value.id === 'string' && typeof value.time === 'number' ? { id: value.id, time: value.time } : undefined
 
 export const parseHealth = (value: unknown): HostHealth | undefined => {
-  if (!isObject(value)) return
+  if (!isRecord(value)) return
   const { healthy, runtime, web, failedPlugins, log, error, webError, build } = value
   if (typeof healthy !== 'boolean' || typeof web !== 'boolean') return
   if (!runtimes.includes(runtime as RuntimeHealth)) return

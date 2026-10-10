@@ -1,4 +1,5 @@
 export { folderEntries } from './entries'
+export { isFolder } from './folder'
 export { expandHome } from './home'
 export { parseProject, parseProjectsFile, projectsPath, readProjectsFile, writeProjectsFile } from './projects'
 export { writePrivateJson } from './private'

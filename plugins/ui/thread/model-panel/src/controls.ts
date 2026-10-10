@@ -1,9 +1,9 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SessionSettings } from '@sand/model/contract'
-import { div, icon, primaryAction, secondaryAction, span } from '@sand/dom'
+import { div, icon, primaryAction, secondaryAction, span, type IconName } from '@sand/dom'
 import type { Actions } from './actions'
 
-export const banner = (glyph: string, text: string) =>
+export const banner = (glyph: IconName, text: string) =>
   div(
     { class: 'mx-1 mt-2 flex items-start gap-2 rounded-lg bg-warning-950 px-3 py-2 text-xs text-warning-400' },
     span({ class: 'inline-flex shrink-0 pt-px' }, icon(glyph, 14)),

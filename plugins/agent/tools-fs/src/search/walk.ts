@@ -1,5 +1,5 @@
+import { isFolder } from '@sand/kit/fs'
 import { resolve } from 'node:path'
-import { isDirectory } from '../files'
 import { lines, ripgrep, scope } from './ripgrep'
 
 const git = /(^|[\\/])\.git([\\/]|$)/
@@ -27,7 +27,7 @@ export async function* walk(pattern: string, cwd: string, includeIgnored?: boole
   const skip = includeIgnored ? git : ignored
   if (skip.test(base)) return
   const root = resolve(cwd, base)
-  if (!(await isDirectory(root))) return
+  if (!(await isFolder(root))) return
   const glob = new Bun.Glob(rest)
   let count = 0
   for await (const listedPath of listed(root, includeIgnored, signal)) {

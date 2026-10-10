@@ -1,12 +1,14 @@
-import type { Remote, RemoteRecord } from '@sand/host-remotes/contract'
+import type { Remote, RemoteRecord } from '@sand/protocol'
 import { join } from 'node:path'
+import { serial } from '../../async/serial'
 import { writePrivateJson } from '../../fs/private'
+import { isRecord } from '../../json/record'
 
 const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0
 
 const parse = (value: unknown): RemoteRecord | undefined => {
-  if (!value || typeof value !== 'object') return
-  const { id, name, platform, url, urls, key } = value as Record<string, unknown>
+  if (!isRecord(value)) return
+  const { id, name, platform, url, urls, key } = value
   if (!text(id) || !text(url) || !text(key)) return
   const routes = Array.isArray(urls) ? urls.filter(text) : []
   return {
@@ -33,11 +35,10 @@ export const toRemote = ({ key: _, ...remote }: RemoteRecord): Remote => remote
 export const remoteStore = async (home: string) => {
   const file = join(home, 'remotes.json')
   let records = await read(file)
-  let saving: Promise<void> = Promise.resolve()
+  const queue = serial()
   const save = (next: RemoteRecord[]) => {
     records = next
-    saving = saving.catch(() => {}).then(() => writePrivateJson(file, records))
-    return saving
+    return queue(() => writePrivateJson(file, records))
   }
   return {
     list: () => records,

@@ -14,7 +14,6 @@ export default definePlugin({
           if (tools.get(tool.name) === tool) tools.delete(tool.name)
         }
       },
-      list: () => [...tools.values()],
       specs: () => [...tools.values()].sort((a, b) => a.name.localeCompare(b.name)).map(spec),
       notes: () => [...tools.values()].flatMap(tool => (tool.environment ? [tool.environment] : [])),
       run: (call, context) => run(tools.get(call.name), call, context),

@@ -16,6 +16,4 @@ export const getJson = async (source: string, url: string, headers: Record<strin
   }
 }
 
-export const trimmed = (url: string) => url.replace(/\/+$/, '')
-
 export const bearer = (key?: string): Record<string, string> => (key ? { authorization: `Bearer ${key}` } : {})

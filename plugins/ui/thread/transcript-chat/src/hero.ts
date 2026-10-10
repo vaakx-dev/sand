@@ -16,10 +16,7 @@ const projectIconUrl = (ctx: Context) => {
   const threads = ctx.threads
   if (!threads) return ''
   const cwd = threads.current()?.info.cwd ?? threads.cwd()
-  if (!cwd || !ctx.projects) return ''
-  const device = threads.device()
-  const locations = ctx.projects.group(cwd, device)?.locations ?? []
-  return ctx.projects.icon(cwd, device) ?? locations.map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean) ?? ''
+  return (cwd && ctx.projects?.icon(cwd, threads.device())) || ''
 }
 
 const mark = (url: string) =>

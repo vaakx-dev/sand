@@ -1,5 +1,4 @@
-import type { ToolBadge, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, span } from '@sand/dom'
 import { ownPrefix, skippedAnswer, skippedReply } from '../choices'
 import { questionsOf } from './pending'

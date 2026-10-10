@@ -1,3 +1,4 @@
+import { trimSlash } from '@sand/kit'
 import { installFresh } from './fresh'
 import type { Installer } from './installer'
 import { installPaired } from './paired'
@@ -12,7 +13,7 @@ const takeSecret = () => {
 
 export const installCommand = async (installer: Installer, args: string[]) => {
   const secret = takeSecret()
-  const base = args[0]?.replace(/\/+$/, '')
+  const base = args[0] && trimSlash(args[0])
   if (!base && !secret) return installFresh(installer)
   if (!base || !secret) throw new Error(usage)
   return installPaired({ base, secret }, installer)

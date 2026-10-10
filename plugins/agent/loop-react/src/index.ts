@@ -1,5 +1,4 @@
 import { definePlugin } from 'drydock'
-import { runReact } from './run'
 
 export default definePlugin({
   name: 'loop-react',
@@ -12,7 +11,7 @@ export default definePlugin({
         label: 'Act as you go',
         description: 'The model replies, the tools it calls run, and it repeats until it is done',
         plugin: 'loop-react',
-        run: runReact,
+        run: turn => ctx.loops.react(turn),
       }),
     )
   },

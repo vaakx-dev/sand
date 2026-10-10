@@ -1,13 +1,12 @@
-import type { PairInvite, PairRequest, PairResult } from '@sand/host-devices/contract'
-import type { HostIdentity, Ticket } from '@sand/host-gateway/contract'
-import type { BuildInfo } from '@sand/protocol'
+import type { BuildInfo, HostIdentity, PairInvite, PairRequest, PairResult, Ticket } from '@sand/protocol'
+import { trimSlash } from '../text/url'
 import { hostPaths } from './pairing'
 
 const timeout = 5000
 
 export const bearer = (key: string) => ({ authorization: `Bearer ${key}` })
 
-const endpoint = (base: string, path: string) => `${base.replace(/\/+$/, '')}${path}`
+const endpoint = (base: string, path: string) => `${trimSlash(base)}${path}`
 
 const failure = async (response: Response) => new Error((await response.text()) || `HTTP ${response.status}`)
 

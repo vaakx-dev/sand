@@ -1,8 +1,8 @@
 import { ago, clock, derive, div, dynamicChild, exactTime, p, primaryAction, secondaryAction, settingsRow, settingsSection, show } from '@sand/dom'
+import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet } from '../fleet/model'
 import { changesFor } from '../fleet/status'
-import { plural } from '../fleet/text'
 
 const openTab = (url: string) => void window.open(url, '_blank', 'noopener,noreferrer')
 

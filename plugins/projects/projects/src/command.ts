@@ -1,4 +1,5 @@
 import type { Project } from '@sand/host-projects/contract'
+import { plural } from '@sand/kit'
 import type { Command, UI } from '@sand/server/contract'
 import type { SessionSummary } from '@sand/sessions-sqlite/contract'
 import type { ProjectFiles } from '@sand/project-files/contract'
@@ -12,8 +13,6 @@ const counts = (sessions: SessionSummary[]) => {
   return threads
 }
 
-const plural = (count: number) => `${count} ${count === 1 ? 'thread' : 'threads'}`
-
 const where = (project: Project, device?: string) => {
   const copy = device ? project.copies[device] : undefined
   return copy && !copy.removed ? copy.path : 'no copy here'
@@ -26,7 +25,7 @@ const listing = (files: ProjectFiles, sessions: SessionSummary[], all: boolean) 
   const threads = counts(sessions)
   return shown
     .map(project =>
-      [project.name, where(project, device), plural(threads.get(project.id) ?? 0), project.hidden && 'hidden']
+      [project.name, where(project, device), plural(threads.get(project.id) ?? 0, 'thread'), project.hidden && 'hidden']
         .filter(Boolean)
         .join(' · '),
     )

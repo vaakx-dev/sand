@@ -36,7 +36,8 @@ export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Link
 
   const refresh = async () => {
     self = await wire.call<DeviceInfo>({ type: 'device.info' }, thisDevice).catch(() => undefined)
-    links.sync(await wire.call<Remote[]>({ type: 'remotes.list' }, thisDevice).catch(() => []))
+    const remotes = await wire.call<Remote[]>({ type: 'remotes.list' }, thisDevice).catch(() => undefined)
+    if (remotes) links.sync(remotes)
   }
 
   ctx.on('wire.hello', () => void refresh())
@@ -64,6 +65,7 @@ export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Link
       const connection = info()
       return {
         id: remote.id,
+        device: remote.id,
         name: remote.name,
         local: false,
         online: connection.status === 'connected',
@@ -75,9 +77,13 @@ export const createMachines = (ctx: Context, wire: Wire, home: Home, links: Link
     }),
   ]
 
+  const get = (id?: string) => list().find(machine => (id ? machine.id === id : machine.local))
+
   return {
     list,
-    get: id => list().find(machine => (id ? machine.id === id : machine.local)),
+    get,
+    name: device => get(device)?.name ?? 'Unknown PC',
+    online: device => get(device)?.online ?? false,
     async add(link) {
       const remote = await wire.call<Remote>({ type: 'remotes.add', link }, thisDevice)
       await refresh()

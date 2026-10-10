@@ -3,9 +3,8 @@ import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import type { CopyDone } from '../../contract'
 import { folderPage } from '../folder'
 import { reviewPage } from '../review'
-import { deviceOf, type Choice, type FlowContext } from '../types'
+import type { Choice, FlowContext } from '../types'
 import { destinationPage } from './destination'
-import { pcName } from './names'
 import { copySources } from './source'
 
 const asCopy = (ctx: FlowContext, group: ProjectGroup, then?: CopyDone) => (choice: Choice) => reviewPage(ctx, { ...choice, project: group.id, done: then })
@@ -27,10 +26,10 @@ const cloneItem = (ctx: FlowContext, group: ProjectGroup, machine: Machine, then
 const syncItems = (ctx: FlowContext, group: ProjectGroup, machine: Machine, then?: CopyDone): PaletteItem[] => {
   const sync = ctx.sync
   if (!sync) return []
-  return copySources(ctx, group, deviceOf(machine)).map(location => ({
+  return copySources(ctx, group, machine.device).map(location => ({
     id: `no-copy:sync:${location.device ?? ''}`,
     icon: 'copy',
-    label: `Sync from ${pcName(ctx, location.device)}`,
+    label: `Sync from ${ctx.machines.name(location.device)}`,
     detail: location.path,
     page: () => destinationPage(ctx, sync, group, { path: location.path, device: location.device }, machine, then),
   }))

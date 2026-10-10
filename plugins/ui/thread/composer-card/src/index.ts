@@ -24,6 +24,7 @@ export default definePlugin({
     jobs: 'no still-working agents chip',
     panels: 'the still-working agents chip is not clickable',
     media: 'queued images stored on the server show no thumbnail',
+    notify: 'failed stops and copies are not reported',
   },
   apply(ctx) {
     style(ctx, css)

@@ -1,15 +1,6 @@
-import type { BuildInfo, FailedPlugin, RuntimeHealth } from '@sand/protocol'
+import type { HostHealth } from '@sand/protocol'
 
-export interface HostHealth {
-  healthy: boolean
-  runtime: RuntimeHealth
-  error?: string
-  failedPlugins: FailedPlugin[]
-  web: boolean
-  webError?: string
-  build?: BuildInfo
-  log: string[]
-}
+export type { HostHealth } from '@sand/protocol'
 
 export interface HostHealthCheck {
   check(): Promise<HostHealth>

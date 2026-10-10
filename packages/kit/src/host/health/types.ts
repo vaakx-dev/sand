@@ -1,4 +1,4 @@
-import type { HostHealth } from '@sand/host-health/contract'
+import type { HostHealth } from '@sand/protocol'
 
 export type HealthReport = HostHealth
 

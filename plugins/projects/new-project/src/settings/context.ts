@@ -1,7 +1,7 @@
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import { copyText, errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice, errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
 import { actions, forgets, startAt, type Entry } from './menu'
-import { isOnline, machineName, shorten } from './places'
+import { shorten } from './places'
 import type { ProjectsContext } from './types'
 
 const attempt = (ctx: ProjectsContext, work: () => void | Promise<unknown>) => async () => {
@@ -20,10 +20,7 @@ const copyPath = (ctx: ProjectsContext, path: string): NavAction => ({
   group: 'copy',
   label: 'Copy path',
   icon: 'copy',
-  run: async () => {
-    const copied = await copyText(path)
-    ctx.notify?.push(copied ? 'Copied path' : 'Could not copy the path', { level: copied ? 'info' : 'error' })
-  },
+  run: () => copyWithNotice(ctx.notify, path, 'path'),
 })
 
 export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup): MenuSpec => ({
@@ -52,12 +49,12 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup): MenuSpec =
 })
 
 export const copySpec = (ctx: ProjectsContext, entry: ProjectEntry): MenuSpec => ({
-  title: machineName(ctx, entry.device),
+  title: ctx.machines.name(entry.device),
   subtitle: shorten(ctx, entry.path, entry.device),
   actions: [
-    ...(entry.missing || !isOnline(ctx, entry.device)
+    ...(entry.missing || !ctx.machines.online(entry.device)
       ? []
-      : [{ id: 'new-thread', group: 'use', label: 'New thread here', icon: 'compose', run: attempt(ctx, () => startAt(ctx, entry)) }]),
+      : [{ id: 'new-thread', group: 'use', label: 'New thread here', icon: 'compose', run: attempt(ctx, () => startAt(ctx, entry)) } satisfies NavAction]),
     { id: 'forget', group: 'manage', label: 'Forget this copy', icon: 'x', run: attempt(ctx, () => ctx.projects.removeCopy(entry)) },
     copyPath(ctx, entry.path),
   ],

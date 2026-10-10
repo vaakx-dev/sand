@@ -1,5 +1,7 @@
-import type { UpdateChannel } from '@sand/host-updates/contract'
+import type { UpdateChannel } from '@sand/protocol'
+import { serial } from '../../async/serial'
 import { replaceFile } from '../../fs/replace'
+import { isRecord } from '../../json/record'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -25,14 +27,14 @@ const day = 24 * 60 * 60 * 1000
 export const isChannel = (value: unknown): value is UpdateChannel => value === 'release' || value === 'nightly' || value === 'dev'
 
 const parseLater = (later: unknown): LaterEntry | undefined => {
-  if (!later || typeof later !== 'object') return
-  const { build, until } = later as Record<string, unknown>
+  if (!isRecord(later)) return
+  const { build, until } = later
   if (typeof build !== 'string' || !build || typeof until !== 'number') return
   return { build, until }
 }
 
 const parse = (data: unknown): Saved => {
-  const saved = data && typeof data === 'object' ? (data as Record<string, unknown>) : {}
+  const saved = isRecord(data) ? data : {}
   return { channel: isChannel(saved.channel) ? saved.channel : 'release', later: parseLater(saved.later) }
 }
 
@@ -44,16 +46,13 @@ const read = (file: string) =>
 export const loadStore = async (home: string): Promise<UpdateStore> => {
   const file = join(home, 'updates.json')
   const saved = await read(file)
-  let saving: Promise<void> = Promise.resolve()
+  const queue = serial()
   const write = async () => {
     await mkdir(home, { recursive: true })
     await Bun.write(`${file}.tmp`, `${JSON.stringify(saved, null, 2)}\n`)
     await replaceFile(`${file}.tmp`, file)
   }
-  const save = () => {
-    saving = saving.catch(() => {}).then(write)
-    return saving
-  }
+  const save = () => queue(write)
   return {
     channel: () => saved.channel,
     setChannel(channel) {

@@ -1,7 +1,6 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { locate, readText } from './files'
-import { exclusive } from './lock'
+import { exclusive, locate, readText } from './files'
 
 const input = z.object({
   path: z.string().describe('File path, absolute or relative to the working directory'),

@@ -1,7 +1,7 @@
 {
   "name": "@sand/git",
   "version": "0.0.0",
-  "description": "Answers git questions about a project folder for the page: the current branch, changed files, unpushed commits and local branches",
+  "description": "Answers git questions about a project folder for the page: the current branch, changed files and unpushed commits",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -20,6 +20,8 @@
     }
   },
   "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

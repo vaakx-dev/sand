@@ -1,6 +1,7 @@
+import { serial } from '@sand/kit'
+import { writePrivateJson } from '@sand/kit/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { writePrivateJson } from '../auth/store'
 import type { ShareInfo } from '../share/info'
 
 export type CachedInfo = Omit<ShareInfo, 'limits'> & { legacy?: boolean }
@@ -14,7 +15,7 @@ const valid = (value: unknown): value is CachedInfo => {
 
 export const peerCache = (home: string) => {
   const file = join(home, 'cache', 'shared-accounts.json')
-  let writing = Promise.resolve()
+  const queue = serial()
   return {
     async read(): Promise<PeerCache> {
       try {
@@ -25,13 +26,10 @@ export const peerCache = (home: string) => {
       }
     },
     write(cache: PeerCache) {
-      writing = writing
-        .catch(() => {})
-        .then(async () => {
-          await mkdir(dirname(file), { recursive: true })
-          await writePrivateJson(file, cache)
-        })
-      return writing
+      return queue(async () => {
+        await mkdir(dirname(file), { recursive: true })
+        await writePrivateJson(file, cache)
+      })
     },
   }
 }

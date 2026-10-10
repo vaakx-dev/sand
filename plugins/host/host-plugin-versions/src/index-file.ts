@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { writePrivateJson } from '@sand/kit/fs'
 import { join } from 'node:path'
 import type { Version, VersionSource } from './contract'
@@ -8,8 +9,6 @@ export interface VersionIndex {
 }
 
 const sources = new Set<VersionSource>(['start', 'edit', 'customise', 'restore', 'sync', 'auto-restore'])
-
-const isRecord = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
 
 const parseVersion = (value: unknown): Version | undefined => {
   if (!isRecord(value)) return undefined

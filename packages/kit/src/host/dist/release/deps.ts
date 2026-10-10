@@ -1,5 +1,6 @@
 import { realpath } from 'node:fs/promises'
 import { dirname, join, sep } from 'node:path'
+import { compare } from '../../../text/compare'
 
 export interface WorkspacePackage {
   name: string
@@ -47,7 +48,7 @@ export const workspacePackages = async (root: string): Promise<WorkspacePackage[
       if (typeof name === 'string' && name) found.set(path, { name, dir, path })
     }
   }
-  return [...found.values()].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+  return [...found.values()].sort((a, b) => compare(a.path, b.path))
 }
 
 const dependencyNames = (deps: Record<string, string> | undefined) => (deps && typeof deps === 'object' ? Object.keys(deps) : [])
@@ -97,5 +98,5 @@ export const runtimeDeps = async (root: string): Promise<RuntimeDep[]> => {
       await visit({ name: dep, from, by: workspace.name, optional: false })
     }
   }
-  return [...found.values()].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+  return [...found.values()].sort((a, b) => compare(a.name, b.name))
 }

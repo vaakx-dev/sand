@@ -1,6 +1,6 @@
-import type { BuildChange, BuildInfo } from '@sand/protocol'
+import type { BuildChange, BuildInfo, UpdateChannel } from '@sand/protocol'
 
-export type UpdateChannel = 'release' | 'nightly' | 'dev'
+export type { UpdateChannel } from '@sand/protocol'
 
 export interface ReleaseInfo {
   channel: UpdateChannel

@@ -15,7 +15,10 @@
       "notify": "no message after a project is added",
       "composer": "the new thread does not focus the prompt",
       "settings": "no Projects settings page",
-      "sync": "copy, send and merge flows say project sync is not available"
+      "sync": "copy, send and merge flows say project sync is not available",
+      "nav": "no New project button",
+      "picker": "projects cannot be renamed, and deleting asks with a second click instead of a prompt",
+      "turns": "Let sand merge them fails"
     },
     "provides": [
       "syncFlows"

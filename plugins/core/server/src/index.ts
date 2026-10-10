@@ -57,7 +57,7 @@ export default definePlugin({
 
     forwardEvents(ctx, broadcast)
     ctx.effect(() =>
-      requests.register({
+      requests.handle({
         hello: helloRequest(ctx),
         ...sessionRequests(ctx),
         ...pagingRequests(ctx, live),

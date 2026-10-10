@@ -1,9 +1,9 @@
-import { div, icon, popoverItem, span, type Child } from '@sand/dom'
+import { div, icon, popoverItem, span, type Child, type IconName } from '@sand/dom'
 import type { GitContext, Model } from '../model'
 
 interface Entry {
   label: string
-  glyph: string
+  glyph: IconName
   run(): void
   note?: string
   blocked?: string
@@ -29,8 +29,8 @@ export const gitMenu = (ctx: GitContext, model: Model, close: () => void): Child
   const pr = model.pr.get()
   const worktrees = model.worktrees.get()
   const view: Entry[] = [
-    ...(ctx.panels ? [{ label: 'View edits', glyph: 'file', run: () => ctx.panels?.show('changes') }] : []),
-    ...(pr ? [{ label: `Open PR #${pr.number}`, glyph: 'external', run: () => void window.open(pr.url, '_blank', 'noopener') }] : []),
+    ...(ctx.panels ? [{ label: 'View edits', glyph: 'file', run: () => ctx.panels?.show('changes') } satisfies Entry] : []),
+    ...(pr ? [{ label: `Open PR #${pr.number}`, glyph: 'external', run: () => void window.open(pr.url, '_blank', 'noopener') } satisfies Entry] : []),
   ]
   const place: Entry[] = !worktrees || !git
     ? []

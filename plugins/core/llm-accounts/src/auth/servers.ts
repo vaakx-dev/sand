@@ -1,4 +1,5 @@
 import type { ServerDraft, ServerProvider } from '../contract'
+import { bearer, errorMessage, trimSlash } from '@sand/kit'
 import { isFixed } from './kinds'
 import type { ServerEntry } from './store'
 
@@ -23,7 +24,7 @@ const uniqueId = (wanted: string, taken: (id: string) => boolean) => {
 }
 
 const urlOf = (value: string) => {
-  const trimmed = value.trim().replace(/\/+$/, '')
+  const trimmed = trimSlash(value.trim())
   try {
     const url = new URL(trimmed)
     if (url.protocol === 'http:' || url.protocol === 'https:') return { url: trimmed, port: url.port }
@@ -46,12 +47,12 @@ export const serverEntry = (draft: ServerDraft, servers: ServerEntry[]): ServerE
 export const checkServer = async (server: ServerEntry) => {
   try {
     const response = await fetch(`${server.url}/models`, {
-      headers: { accept: 'application/json', ...(server.key && { authorization: `Bearer ${server.key}` }) },
+      headers: { accept: 'application/json', ...(server.key && bearer(server.key)) },
       signal: AbortSignal.timeout(5_000),
     })
     await response.body?.cancel()
     return response.ok ? undefined : `${server.name} answered HTTP ${response.status} at ${server.url}/models`
   } catch (error) {
-    return `Couldn't reach ${server.name} at ${server.url}: ${error instanceof Error ? error.message : String(error)}`
+    return `Couldn't reach ${server.name} at ${server.url}: ${errorMessage(error)}`
   }
 }

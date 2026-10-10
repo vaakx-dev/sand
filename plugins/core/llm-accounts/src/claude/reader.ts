@@ -1,5 +1,6 @@
 import type { Block, StopReason, ToolCallBlock, Usage } from '@sand/messages'
 import type { LLMEvent } from '../contract'
+import { isRecord } from '@sand/kit'
 import { ApiError } from '../http/error'
 
 const toBlock = (block: any): Block | undefined => {
@@ -19,7 +20,7 @@ const parseInput = (block: ToolCallBlock, json: string) => {
   if (!json.trim()) return
   try {
     const input = JSON.parse(json)
-    if (input && typeof input === 'object' && !Array.isArray(input)) block.input = input
+    if (isRecord(input)) block.input = input
     else block.malformed = json
   } catch {
     block.malformed = json

@@ -1,7 +1,7 @@
 import { derive, div, dynamicChild, hint, overlay, quietButton, sheet, sheetHead, show } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { Fleet } from '../fleet/model'
 import { runStatus } from '../fleet/run'
-import { plural } from '../fleet/text'
 import { chooseBody } from './choose'
 import { progressBody } from './progress'
 

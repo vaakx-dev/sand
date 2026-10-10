@@ -13,19 +13,16 @@
     "summary": "Lets the agent run many sub-agents from one script",
     "uses": {
       "ui": "workflow progress is not shown",
-      "transcript": "workflow calls use the generic tool view",
-      "jobs": "a background workflow call shows a tick as soon as it starts"
+      "transcript": "workflow calls use the generic tool view"
     }
   },
   "dependencies": {
     "@sand/agents": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/transcript-chat": "workspace:*",
-    "@sand/web-client": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

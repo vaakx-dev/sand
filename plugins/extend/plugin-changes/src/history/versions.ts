@@ -1,5 +1,5 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type Sig } from '@sand/dom'
+import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type NavAction, type Sig } from '@sand/dom'
 import type { VersionsSource } from './source'
 
 const sources: Record<VersionSource, string> = {
@@ -23,7 +23,7 @@ const versionRow = (source: VersionsSource, target: () => VersionTarget, version
       subtitle: sources[from],
       actions: [
         ...(restorable
-          ? [{ id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: () => void source.restore(target(), version.get()) }]
+          ? [{ id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: () => void source.restore(target(), version.get()) } satisfies NavAction]
           : []),
         { id: 'copy-hash', label: 'Copy hash', icon: 'copy', group: 'copy', run: source.copy(hash, 'hash') },
       ],

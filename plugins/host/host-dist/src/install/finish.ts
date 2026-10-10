@@ -1,7 +1,7 @@
 import type { HttpRoute } from '@sand/host-gateway/contract'
-import { parseHealth } from '@sand/kit/host'
+import { parseHealth, readText } from '@sand/kit/host'
 import type { InstallKeys } from '../installs'
-import { expired, installSecret, readText } from './base'
+import { expired, installSecret } from './base'
 
 const errorLimit = 16 * 1024
 

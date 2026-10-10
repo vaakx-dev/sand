@@ -15,7 +15,7 @@ const rows = (ctx: PanelContext, actions: Actions): Row[] => {
   const defaults = ctx.models.defaults()
   const info = ctx.models.info(shown?.model)
   const sources = ctx.models.sources()
-  const models = ctx.models.list().map(model => {
+  const models = ctx.models.list().map((model): Row => {
     const source = sources.find(known => known.id === model.source)
     const from = source ? sourceName(source) : undefined
     return {
@@ -34,7 +34,7 @@ const rows = (ctx: PanelContext, actions: Actions): Row[] => {
     ? ctx.models
         .levels()
         .filter(level => info.efforts.includes(level.id))
-        .map(level => ({
+        .map((level): Row => ({
           item: {
             id: `effort:${level.id}`,
             group: 'Model',
@@ -46,7 +46,7 @@ const rows = (ctx: PanelContext, actions: Actions): Row[] => {
           words: `effort thinking ${level.id} ${level.label}`,
         }))
     : []
-  const fast = info?.fast
+  const fast: Row[] = info?.fast
     ? [
         {
           item: {

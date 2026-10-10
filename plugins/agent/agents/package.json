@@ -19,13 +19,11 @@
       "instructions": "sub-agents get no environment or project instructions in their prompt",
       "ui": "background results that cannot be delivered fail silently",
       "transcript": "agent calls use the generic tool view",
-      "jobs": "a background agent call shows a tick as soon as it starts",
       "steering": "background results start a new turn instead of joining the running one"
     }
   },
   "dependencies": {
     "@sand/context-default": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/loops": "workspace:*",
@@ -34,9 +32,8 @@
     "@sand/protocol": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "@sand/watch": "workspace:*",
-    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

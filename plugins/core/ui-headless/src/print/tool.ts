@@ -1,5 +1,5 @@
 import type { ToolResultBlock } from '@sand/messages'
-import { oneLine } from '@sand/kit'
+import { oneLine, textOf } from '@sand/kit'
 
 const short = (value: unknown) => typeof value !== 'string' || (value.length <= 200 && !value.includes('\n'))
 
@@ -11,4 +11,4 @@ export const inputSummary = (input: unknown) => {
 }
 
 export const resultSummary = (result: ToolResultBlock) =>
-  oneLine(result.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join(' '), 120)
+  oneLine(textOf(result.content, ' '), 120)

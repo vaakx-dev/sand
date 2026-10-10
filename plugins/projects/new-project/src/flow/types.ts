@@ -25,5 +25,3 @@ export interface Choice {
 }
 
 export type Next = (choice: Choice) => PalettePage | Promise<PalettePage>
-
-export const deviceOf = (machine: Machine) => (machine.local ? undefined : machine.id)

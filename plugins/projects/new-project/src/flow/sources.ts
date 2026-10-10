@@ -1,5 +1,6 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
+import type { IconName } from '@sand/dom'
 import { emptyPage } from './empty'
 import { folderPage } from './folder'
 import { gitPage } from './git'
@@ -14,7 +15,7 @@ const sourcePage = (ctx: FlowContext, source: Source, machine: Machine): Palette
   return folderPage(ctx, machine, next, { mode: 'add' })
 }
 
-const sourceItem = (ctx: FlowContext, source: Source, icon: string, search: string): PaletteItem => ({
+const sourceItem = (ctx: FlowContext, source: Source, icon: IconName, search: string): PaletteItem => ({
   id: `source:${source}`,
   icon,
   label: source,

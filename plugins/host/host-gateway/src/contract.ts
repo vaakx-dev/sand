@@ -1,28 +1,16 @@
-import type { BuildInfo } from '@sand/protocol'
+import type { RouteKind } from '@sand/protocol'
 import type { Dispose } from 'drydock'
 
-export interface Ticket {
-  ticket: string
-  expires: number
-}
+export type { HostIdentity, RouteKind, Ticket } from '@sand/protocol'
 
 export interface NetworkState {
   lan: boolean
   urls: string[]
 }
 
-export type RouteKind = 'local' | 'lan' | 'tailscale'
-
 export interface HostRoute {
   url: string
   kind: RouteKind
-}
-
-export interface HostIdentity {
-  deviceId: string
-  name: string
-  version: string
-  build?: BuildInfo
 }
 
 export interface HttpCall {

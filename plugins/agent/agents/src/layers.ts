@@ -17,7 +17,7 @@ export const agentLayers = (
   changed: () => void,
 ) => {
   const report = (error: unknown) => ctx.report(error)
-  const load = (dir: string) => loadDefinitions([dir], efforts, report)
+  const load = (dir: string) => loadDefinitions(dir, efforts, report)
   const homeDir = join(ctx.paths.home, 'agents')
   const home = ctx.watcher.folders(load, none, changed)
   const projects = ctx.watcher.folders(load, none)

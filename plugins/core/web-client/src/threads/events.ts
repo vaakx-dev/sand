@@ -1,6 +1,6 @@
 import type { WireEvent } from '@sand/protocol'
 import type { WireSession } from '@sand/sessions-sqlite/contract'
-import { applyLive, catchUp } from './live'
+import { applyLive, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
 export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device?: string) => {
@@ -41,10 +41,7 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
     case 'turn.end': {
       const found = thread(event.args[0])
       found.running = false
-      found.started = undefined
-      found.queued = []
-      found.live = []
-      found.tools = { running: new Set(), results: new Map() }
+      clearTurn(found)
       found.step = undefined
       found.ended = event.args[1]
       return changed(found.id)

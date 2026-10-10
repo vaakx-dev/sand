@@ -1,25 +1,15 @@
+import { intersectionObserver } from '@sand/dom'
+
 const margin = '800px'
 
-export const createVisibility = () => {
-  const waiting = new WeakMap<Element, () => void>()
-  const observer = new IntersectionObserver(
+export const whenNearView = (element: Element, run: () => void) => {
+  const observer = intersectionObserver(
+    element,
     entries => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue
-        observer.unobserve(entry.target)
-        const run = waiting.get(entry.target)
-        waiting.delete(entry.target)
-        run?.()
-      }
+      if (!entries.some(entry => entry.isIntersecting)) return
+      observer.disconnect()
+      run()
     },
-    { rootMargin: margin, scrollMargin: margin } as IntersectionObserverInit,
+    { rootMargin: margin, scrollMargin: margin },
   )
-
-  return {
-    when(element: Element, run: () => void) {
-      waiting.set(element, run)
-      observer.observe(element)
-    },
-    dispose: () => observer.disconnect(),
-  }
 }

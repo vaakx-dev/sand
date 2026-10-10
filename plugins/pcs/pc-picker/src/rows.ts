@@ -1,8 +1,8 @@
-import { badge, div, icon, menuItem, span, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
+import { badge, icon, menuItem, span, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { rowMenu } from './row-menu'
 import { statusOf } from './status'
-import { deviceOf, type PickerContext } from './target'
+import type { PickerContext } from './target'
 
 interface RowMenu {
   menu: ContextMenu

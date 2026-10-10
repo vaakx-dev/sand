@@ -1,14 +1,12 @@
 import { badge, div, p, quietButton, show, sig, span, type Tone } from '@sand/dom'
+import { capital, plural } from '@sand/kit'
 import type { BuildChange } from '@sand/protocol'
-import { plural } from './fleet/text'
 
 const kinds: Record<string, { label: string; tone: Tone }> = {
   feat: { label: 'New', tone: 'accent' },
   fix: { label: 'Fixed', tone: 'success' },
   perf: { label: 'Faster', tone: 'success' },
 }
-
-const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 const scopeName = (scope: string) => capital(scope.replace(/[-_]/g, ' '))
 

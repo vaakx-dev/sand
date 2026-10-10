@@ -1,4 +1,4 @@
-import type { RenderTool, ToolRenderer } from '@sand/transcript-chat/contract'
+import type { RenderTool, ToolRenderer } from '../contract'
 import { genericRenderer } from './generic'
 
 export const resolveRenderer = (name: string, found?: RenderTool | ToolRenderer): Required<ToolRenderer> => {

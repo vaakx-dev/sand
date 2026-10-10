@@ -1,20 +1,18 @@
-import type { Project, ProjectCopy } from '@sand/host-projects/contract'
+import type { Project, ProjectCopy } from '@sand/protocol'
 import { join } from 'node:path'
+import { isRecord } from '../json/record'
 import { replaceFile } from './replace'
 
-type Fields = Record<string, unknown>
-
-const isFields = (value: unknown): value is Fields => !!value && typeof value === 'object' && !Array.isArray(value)
 const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 
 export const projectsPath = (home: string) => join(home, 'projects.json')
 
 const parseCopy = (value: unknown): ProjectCopy | undefined => {
-  if (!isFields(value) || typeof value.path !== 'string' || !value.path || !isTime(value.added) || !isTime(value.updated)) return undefined
+  if (!isRecord(value) || typeof value.path !== 'string' || !value.path || !isTime(value.added) || !isTime(value.updated)) return undefined
   return { path: value.path, added: value.added, updated: value.updated, ...(value.removed === true ? { removed: true } : {}) }
 }
 
-const parseCopies = (value: Fields) => {
+const parseCopies = (value: Record<string, unknown>) => {
   const copies: Record<string, ProjectCopy> = {}
   for (const [device, raw] of Object.entries(value)) {
     const copy = parseCopy(raw)
@@ -24,8 +22,8 @@ const parseCopies = (value: Fields) => {
 }
 
 export const parseProject = (value: unknown): Project | undefined => {
-  if (!isFields(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
-  if (!isTime(value.updated) || !isFields(value.copies)) return undefined
+  if (!isRecord(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
+  if (!isTime(value.updated) || !isRecord(value.copies)) return undefined
   if (value.remote !== undefined && typeof value.remote !== 'string') return undefined
   return {
     id: value.id,
@@ -41,7 +39,7 @@ export const parseProject = (value: unknown): Project | undefined => {
 export const parseProjectsFile = (text: string): Project[] | undefined => {
   try {
     const value: unknown = JSON.parse(text)
-    if (!isFields(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
+    if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
     return value.projects.flatMap(entry => parseProject(entry) ?? [])
   } catch {
     return undefined

@@ -20,6 +20,8 @@
     }
   },
   "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/tools": "workspace:*",

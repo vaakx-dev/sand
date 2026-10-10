@@ -1,4 +1,4 @@
-import type { Report } from '@sand/kit'
+import type { Report } from '@sand/sync/flows'
 
 export const progressPrinter = (): Report => {
   let last = ''

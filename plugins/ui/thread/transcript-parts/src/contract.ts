@@ -1,9 +1,44 @@
-import type { ContextMenu, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
-import type { Entry, ImageBlock, Notification, ToolResultBlock, UserPart } from '@sand/messages'
+import type { ContextMenu, IconName, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
+import type { Entry, ImageBlock, Notification, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
-import type { RenderEntry, RenderTool, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
 import type { Thread } from '@sand/web-client/contract'
 import type { Dispose } from 'drydock'
+
+export type ToolStatus = 'pending' | 'running' | 'done' | 'failed'
+
+export interface ToolView {
+  call: ToolCallBlock
+  result?: ToolResultBlock
+  status: ToolStatus
+  thread: string
+}
+
+export type RenderTool = (tool: ToolView) => HTMLElement
+
+export interface ToolBadge {
+  text: string
+  tone: 'success' | 'danger' | 'neutral'
+}
+
+export interface ToolRenderer {
+  icon?: IconName
+  verb?: string
+  activeVerb?: string
+  label?(tool: ToolView): string
+  meta?(tool: ToolView): string
+  badge?(tool: ToolView): ToolBadge | undefined
+  copy?(tool: ToolView): string
+  body?(tool: ToolView): HTMLElement | undefined
+  actions?(tool: ToolView): NavAction[]
+}
+
+export type RenderEntry = (entry: Entry, thread: string) => HTMLElement | undefined
+
+export interface Transcript {
+  tool(name: string, render: RenderTool | ToolRenderer): Dispose
+  entry(type: string, render: RenderEntry): Dispose
+  scrollToEnd(): void
+}
 
 export type Step = { kind: 'tool'; key: string; tool: ToolView } | { kind: 'thinking'; key: string; text: string; streaming: boolean }
 
@@ -106,10 +141,12 @@ export interface ToolViews {
   errorBody(tool: ToolView): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
   image: MediaImage
+  backgroundJobs(transcript: Transcript, name: string, base: ToolRenderer): Dispose
 }
 
 declare module 'drydock' {
   interface Services {
+    transcript: Transcript
     transcriptParts: TranscriptParts
     toolViews: ToolViews
   }

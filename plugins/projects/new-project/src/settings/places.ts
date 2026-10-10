@@ -1,5 +1,5 @@
 import { tildeHome } from '@sand/dom'
-import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from './types'
 
 export const shorten = (ctx: ProjectsContext, path: string, device?: string) => {
@@ -16,13 +16,7 @@ export const expand = (ctx: ProjectsContext, path: string, device?: string) => {
   return home && text.startsWith(`~${sep}`) ? home + text.slice(1) : text
 }
 
-export const isOnline = (ctx: ProjectsContext, device?: string) => Boolean(ctx.machines.get(device)?.online)
-
-export const machineName = (ctx: ProjectsContext, device?: string) => ctx.machines.get(device)?.name ?? 'Unknown PC'
-
-export const machineKey = (machine: Machine) => (machine.local ? undefined : machine.id)
-
 export const withoutCopy = (ctx: ProjectsContext, group: ProjectGroup) =>
-  ctx.machines.list().filter(machine => !group.locations.some(entry => (entry.device ?? '') === (machineKey(machine) ?? '')))
+  ctx.machines.list().filter(machine => !group.locations.some(entry => (entry.device ?? '') === (machine.device ?? '')))
 
 export const byRecent = (locations: ProjectEntry[]) => [...locations].sort((a, b) => b.updated - a.updated)

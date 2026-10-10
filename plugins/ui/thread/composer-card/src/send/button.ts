@@ -1,9 +1,9 @@
-import { button, delayed, derive, div, dropdown, dynamicChild, focusable, icon, iconButton, popoverItem, show, span, spinner, type Sig } from '@sand/dom'
+import { button, delayed, derive, div, dropdown, dynamicChild, focusable, icon, iconButton, popoverItem, show, span, spinner, type IconName, type Sig } from '@sand/dom'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
 
-const icons: Record<Exclude<Look, 'busy' | 'capture'>, string> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
+const icons: Record<Exclude<Look, 'busy' | 'capture'>, IconName> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
 
 const titles: Record<Exclude<Look, 'capture'>, string> = {
   off: 'Send',
@@ -37,7 +37,7 @@ const offTitle = (model: Model) => {
   return model.blocked.get() ? "Remove the files that can't be attached" : 'Send'
 }
 
-const option = (model: Model, close: () => void, value: 'queue' | 'steer', glyph: string, title: string) =>
+const option = (model: Model, close: () => void, value: 'queue' | 'steer', glyph: IconName, title: string) =>
   popoverItem(
     {
       active: () => model.mode.get() === value,
@@ -66,7 +66,7 @@ const titleOf = (model: Model, look: Look) => {
   return look === 'off' ? offTitle(model) : titles[look]
 }
 
-const glyphOf = (model: Model, look: Look) => {
+const glyphOf = (model: Model, look: Look): IconName | 'busy' => {
   if (look === 'busy') return 'busy'
   return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
 }

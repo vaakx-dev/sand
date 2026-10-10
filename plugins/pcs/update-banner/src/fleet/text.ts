@@ -1,10 +1,9 @@
 import type { ReleaseInfo, UpdateChannel, UpdatePhase } from '@sand/host-updates/contract'
 import type { Tone } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { BuildInfo } from '@sand/protocol'
 import type { RunStatus } from './run'
 import { isFar, type PcStatus } from './status'
-
-export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export const channelNames: Record<UpdateChannel, string> = { release: 'Releases', nightly: 'Nightly', dev: 'Dev' }
 

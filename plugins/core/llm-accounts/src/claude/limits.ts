@@ -1,4 +1,5 @@
 import type { Limits, LimitWindow } from '../contract'
+import { capital } from '@sand/kit'
 
 const prefix = 'anthropic-ratelimit-unified-'
 const utilization = /^anthropic-ratelimit-unified-(.+)-utilization$/
@@ -7,7 +8,7 @@ const label = (id: string) => {
   const [window = id, ...rest] = id.split(/[_-]/)
   const base = window === '5h' ? '5-hour' : window === '7d' ? 'Weekly' : window
   const scope = rest.join(' ')
-  return scope ? `${base} · ${scope[0]!.toUpperCase()}${scope.slice(1)}` : base
+  return scope ? `${base} · ${capital(scope)}` : base
 }
 
 const hour = 3_600_000

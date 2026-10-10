@@ -1,4 +1,5 @@
-import { plural, sendProject } from '@sand/kit'
+import { plural } from '@sand/kit'
+import { sendProject } from '@sand/sync/flows'
 import { usage } from './usage'
 import type { ProjectFlags } from './flags'
 import { findGroup } from './find'

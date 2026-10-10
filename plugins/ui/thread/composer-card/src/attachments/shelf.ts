@@ -1,4 +1,5 @@
 import { contextMenu, derive, div, dynamicChild, icon, iconButton, img, list, span, spinner, SPACE, type ContextMenu, type Sig } from '@sand/dom'
+import { bytes } from '@sand/kit'
 import type { Context } from 'drydock'
 import { preview } from './content'
 import type { Attached, Files } from './files'
@@ -6,18 +7,16 @@ import { attachmentMenu } from './menu'
 
 type Ctx = Context<'threads'>
 
-const size = (bytes: number) => (bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1000))} KB`)
-
 const isImage = (item: Attached) => item.content?.type === 'image'
 
 const menuOf = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =>
-  menu.target(() => attachmentMenu(ctx, files, item.get(), size(item.get().bytes)))
+  menu.target(() => attachmentMenu(ctx, files, item.get(), bytes(item.get().bytes)))
 
 const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =>
   span(
     {
       class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-neutral-600 animate-rise',
-      title: () => `${item.get().name} · ${size(item.get().bytes)}`,
+      title: () => `${item.get().name} · ${bytes(item.get().bytes)}`,
       ...menuOf(ctx, files, menu, item),
     },
     img({ class: 'h-full w-full', style: { objectFit: 'cover' }, src: preview(item.get().content!) ?? '', alt: item.get().name }),
@@ -42,7 +41,7 @@ const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>)
       dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(value === 'pdf' ? 'file-text' : 'file', 15)))),
     ),
     span({ class: ['min-w-0 flex-1 truncate', () => (failed() ? 'text-danger-300' : '')] }, () => item.get().name),
-    span({ class: ['shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')], style: { maxWidth: '50%' } }, () => item.get().error ?? (item.get().loading ? 'Reading…' : size(item.get().bytes))),
+    span({ class: ['shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')], style: { maxWidth: '50%' } }, () => item.get().error ?? (item.get().loading ? 'Reading…' : bytes(item.get().bytes))),
     iconButton({ size: 'sm', title: 'Remove', onClick: () => files.remove(item.get().id) }, icon('x', 13)),
   )
 }

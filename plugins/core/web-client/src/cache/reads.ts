@@ -1,5 +1,5 @@
 import type { Entry } from '@sand/messages'
-import { transact, under } from './db'
+import { transact, under } from '../integrations/indexed-db'
 import { savedIn } from './saved'
 import { emptyMeta, type CachedThread, type Meta, type SummaryRecord, type TailRecord } from './records'
 

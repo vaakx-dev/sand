@@ -2,7 +2,7 @@ import type { WorktreeMark } from '../contract'
 import { samePath } from '@sand/kit/fs'
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { gitMaybe } from '../git/run'
+import { gitMaybe } from '@sand/kit/git'
 
 const freshMs = 10_000
 const most = 500

@@ -1,24 +1,25 @@
-import type { RequestHandler, WireHandler, WireRequest, WireRequestType } from '@sand/protocol'
+import type { RequestHandler, WireHandler, WireHandlers, WireRequest, WireRequestType } from '@sand/protocol'
+import { joinDisposers } from '@sand/kit'
 import type { Dispose } from 'drydock'
-
-export type CoreHandlers = { [K in WireRequestType]?: WireHandler<K> }
 
 export const createRequests = () => {
   const handlers = new Map<string, RequestHandler>()
 
-  function handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
-  function handle(type: string, handler: RequestHandler): Dispose
-  function handle(type: string, handler: (request: never) => unknown) {
-    const entry = handler as RequestHandler
-    handlers.set(type, entry)
+  const handleOne = (type: string, handler: RequestHandler) => {
+    handlers.set(type, handler)
     return () => {
-      if (handlers.get(type) === entry) handlers.delete(type)
+      if (handlers.get(type) === handler) handlers.delete(type)
     }
   }
 
-  const register = (core: CoreHandlers) => {
-    const disposers = Object.entries(core).map(([type, handler]) => handle(type, handler as RequestHandler))
-    return () => disposers.forEach(dispose => dispose())
+  const handleAll = (all: WireHandlers) => joinDisposers(...Object.entries(all).map(([type, handler]) => handleOne(type, handler as RequestHandler)))
+
+  function handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
+  function handle(type: string, handler: RequestHandler): Dispose
+  function handle(handlers: WireHandlers): Dispose
+  function handle(type: string | WireHandlers, handler?: (request: never) => unknown) {
+    if (typeof type !== 'string') return handleAll(type)
+    return handleOne(type, handler as RequestHandler)
   }
 
   const answer = async (request: WireRequest) => {
@@ -27,5 +28,5 @@ export const createRequests = () => {
     return handler(request as Parameters<RequestHandler>[0])
   }
 
-  return { handle, register, answer }
+  return { handle, answer }
 }

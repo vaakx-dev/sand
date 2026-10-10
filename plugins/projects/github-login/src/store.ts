@@ -1,3 +1,4 @@
+import { isRecord, serial } from '@sand/kit'
 import { writePrivateJson } from '@sand/kit/fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -43,18 +44,15 @@ const readAll = async (path: string): Promise<Record<string, unknown>> => {
   const file = Bun.file(path)
   if (!(await file.exists())) return {}
   const json = await file.json()
-  if (!json || typeof json !== 'object' || Array.isArray(json)) throw new Error(`${path} is not a JSON object`)
+  if (!isRecord(json)) throw new Error(`${path} is not a JSON object`)
   return json
 }
 
 export const githubStore = (path: string) => {
-  let writing = Promise.resolve()
+  const queue = serial()
   return {
     read: async () => recordOf((await readAll(path).catch((): Record<string, unknown> => ({})))[key]),
-    write(record: GithubRecord) {
-      writing = writing.catch(() => {}).then(async () => writePrivateJson(path, { ...(await readAll(path)), [key]: record }))
-      return writing
-    },
+    write: (record: GithubRecord) => queue(async () => writePrivateJson(path, { ...(await readAll(path)), [key]: record })),
   }
 }
 

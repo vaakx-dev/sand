@@ -1,10 +1,11 @@
-import { div } from '@vaakx-dev/vrui'
+import { div, intersectionObserver } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { icon } from '../icons/lucide'
+import { attach } from '../reactive/owned'
 import { place } from './place'
 import type { Handle, PanelPatch, PanelSpec } from './types'
 
-export interface PanelControl {
+interface PanelControl {
   update(patch: PanelPatch): void
 }
 
@@ -19,7 +20,7 @@ const plainPanel = (spec: PanelSpec, body: HTMLElement) =>
     body,
   )
 
-export const asPanel = (ctx: Context, spec: PanelSpec): PanelControl => {
+const asPanel = (ctx: Context, spec: PanelSpec): PanelControl => {
   let handle: Handle<PanelPatch> | undefined
   ctx.watch('panels', panels => {
     if (panels) {
@@ -43,4 +44,33 @@ export const asPanel = (ctx: Context, spec: PanelSpec): PanelControl => {
       handle?.update(patch)
     },
   }
+}
+
+export interface ShownPanel extends PanelControl {
+  shown(): boolean
+}
+
+export const shownPanel = (ctx: Context, spec: Omit<PanelSpec, 'render'>, view: () => HTMLElement, changed: () => void): ShownPanel => {
+  const visible = new Set<HTMLElement>()
+  const seen = (body: HTMLElement, records: IntersectionObserverEntry[]) => {
+    const next = records.at(-1)?.isIntersecting ?? visible.has(body)
+    if (next === visible.has(body)) return
+    if (next) visible.add(body)
+    else visible.delete(body)
+    changed()
+  }
+  const control = asPanel(ctx, {
+    ...spec,
+    render(body) {
+      const detach = attach(body, () => {
+        intersectionObserver(body, records => seen(body, records))
+        return view()
+      })
+      return () => {
+        visible.delete(body)
+        detach()
+      }
+    },
+  })
+  return { update: control.update, shown: () => visible.size > 0 }
 }

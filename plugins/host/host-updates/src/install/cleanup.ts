@@ -1,14 +1,12 @@
 import { readdir, rename, rm, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { samePath } from '@sand/kit/fs'
-import { appsFolder, buildStamp, bunFolder, readBuildBun, readPointer, validVersion } from '@sand/kit/host'
+import { appsFolder, buildStamp, bunFolder, exists, readBuildBun, readPointer, validVersion } from '@sand/kit/host'
 import { readyFile } from './prepare'
 
 const flatFolders = new Set(['apps', 'packages', 'plugins', 'node_modules'])
 const unfinishedAge = 20 * 60 * 1000
 const oldPrefix = '.old-'
-
-const exists = (file: string) => stat(file).then(() => true, () => false)
 
 const isOld = async (folder: string) => {
   const info = await stat(folder).catch(() => undefined)

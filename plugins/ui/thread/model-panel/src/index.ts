@@ -1,7 +1,7 @@
 import type {} from '@sand/model-picker/contract'
 import { errorMessage, owned, pulse, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
-import { createActions, serverCommand } from './actions'
+import { createActions } from './actions'
 import { modelSource } from './palette'
 import { createPicker } from './pill'
 import { modelsPage } from './settings'
@@ -42,7 +42,7 @@ export default definePlugin({
     const picker = owned(ctx, () => createPicker(ctx, composerTarget(ctx, actions, changes, problem), changes))
     let slotted = false
 
-    const sheet = (effort: boolean) => void serverCommand(ctx, effort ? 'effort' : 'model', '').catch(error => fail(errorMessage(error)))
+    const sheet = (effort: boolean) => void ctx.threads.command(effort ? 'effort' : 'model').catch(error => fail(errorMessage(error)))
     const open = (effort = false) => (slotted ? picker.open(effort) : sheet(effort))
 
     ctx.watch('composer', composer => {
@@ -67,7 +67,7 @@ export default definePlugin({
           name,
           description,
           source: 'local',
-          run: args => (args.trim() ? serverCommand(ctx, name, args) : open(name === 'effort')),
+          run: args => (args.trim() ? ctx.threads.command(name, args) : open(name === 'effort')),
         })
       const added = [local('model', 'Choose the model, effort and fast mode'), local('effort', 'Choose how hard the model thinks')]
       return () => added.forEach(dispose => void dispose())

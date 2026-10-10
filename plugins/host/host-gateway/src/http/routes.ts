@@ -1,11 +1,12 @@
 import type { HostDevices, PairBack, PairInvite } from '@sand/host-devices/contract'
 import { hostPaths } from '@sand/kit'
+import { textReply } from '@sand/kit/host'
 import type { BuildInfo, DeviceInfo, HostStatus } from '@sand/protocol'
 import { adminDevice, type Caller } from '../auth/caller'
 import type { Tickets } from '../auth/tickets'
 import type { HostIdentity } from '../contract'
 import { createPairHandler } from './pair'
-import { json, text, unauthorized } from './reply'
+import { json, unauthorized } from './reply'
 
 export interface Peer {
   address?: string
@@ -45,7 +46,7 @@ export const createRoutes = ({ identity, devices, caller, tickets, version, buil
     }
 
   const unpair = async (device: string) => {
-    if (device === adminDevice) return text('the admin key is not a paired device', 403)
+    if (device === adminDevice) return textReply('the admin key is not a paired device', 403)
     await devices.remove(device, { told: true })
     return new Response(null, { status: 204 })
   }
@@ -54,7 +55,7 @@ export const createRoutes = ({ identity, devices, caller, tickets, version, buil
     const ticket = new URL(request.url).searchParams.get('ticket')
     const device = ticket ? tickets.redeem(ticket) : undefined
     if (!device || (device !== adminDevice && !devices.get(device))) return unauthorized()
-    return peer.upgrade(device) ? undefined : text('expected a websocket', 400)
+    return peer.upgrade(device) ? undefined : textReply('expected a websocket', 400)
   }
 
   return new Map<string, Route>([
@@ -69,7 +70,7 @@ export const createRoutes = ({ identity, devices, caller, tickets, version, buil
       {
         method: 'POST',
         handle: authed(device =>
-          device === adminDevice ? (stop(), new Response(null, { status: 202 })) : text('only the sand command can stop sand', 403),
+          device === adminDevice ? (stop(), new Response(null, { status: 202 })) : textReply('only the sand command can stop sand', 403),
         ),
       },
     ],

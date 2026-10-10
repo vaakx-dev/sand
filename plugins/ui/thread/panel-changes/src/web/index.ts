@@ -1,4 +1,4 @@
-import { asPanel, attach, copyText, effect, sig, untrack, watchShown, type Shown } from '@sand/dom'
+import { copyWithNotice, effect, shownPanel, sig, untrack } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import type { Changes } from '../changes/collect'
 import { collectTree } from '../changes/tree'
@@ -26,8 +26,6 @@ export default definePlugin({
     const revealed = sig<Reveal | undefined>(undefined)
     let key: string | undefined
     let badge = 0
-    const shown = new Set<Shown>()
-    const visible = () => [...shown].some(watch => watch.get())
     const completeFamily = familyLoader(ctx)
 
     const toggle = (id: string) => {
@@ -36,15 +34,12 @@ export default definePlugin({
       closed.set(next)
     }
 
-    const copy = async (text: string, what: string) => {
-      const copied = await copyText(text)
-      ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
-    }
+    const copy = (text: string, what: string) => copyWithNotice(ctx.notify, text, what)
 
     const showBadge = () => {
       const thread = ctx.threads.current()
       const local = changes.get()?.files ?? []
-      const stored = thread && !visible() && turn.get() === undefined ? remote.of(thread.id) : undefined
+      const stored = thread && !control.shown() && turn.get() === undefined ? remote.of(thread.id) : undefined
       const count = stored ? new Set([...stored, ...local.map(file => file.key)]).size : local.length
       if (count !== badge) control.update({ badge: (badge = count) || undefined })
     }
@@ -57,7 +52,7 @@ export default definePlugin({
       empty.set(thread ? 'No edits yet.' : 'No thread selected.')
       const family = thread ? familyOf(ctx, thread) : []
       const members = familyKey(family)
-      if (thread && visible()) completeFamily(thread, family)
+      if (thread && control.shown()) completeFamily(thread, family)
       else if (thread) remote.want(thread, members)
       const next = thread ? `${members}|${turn.get()}` : ''
       if (next !== key) {
@@ -74,22 +69,12 @@ export default definePlugin({
       revealed.set({ key: file.key })
     }
 
-    const control = asPanel(ctx, {
-      id: 'changes',
-      title: 'Edits',
-      icon: 'compare',
-      order: 10,
-      render(body) {
-        const detach = attach(body, () => changesView({ changes, empty, turn, closed, revealed, copy }, toggle))
-        const watch = watchShown(body, paint)
-        shown.add(watch)
-        return () => {
-          watch.stop()
-          shown.delete(watch)
-          detach()
-        }
-      },
-    })
+    const control = shownPanel(
+      ctx,
+      { id: 'changes', title: 'Edits', icon: 'compare', order: 10 },
+      () => changesView({ changes, empty, turn, closed, revealed, copy }, toggle),
+      paint,
+    )
 
     ctx.on('thread.change', id => {
       const current = ctx.threads.current()

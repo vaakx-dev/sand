@@ -33,7 +33,7 @@ const groupChoices = (ctx: Context) => {
     (group): ProjectChoice => ({
       key: group.id,
       name: group.name,
-      icon: group.locations.map(location => projects.icon(location.path, location.device)).find(Boolean),
+      icon: projects.groupIcon(group),
       count: 0,
       folders: group.locations.map(location => location.path),
     }),

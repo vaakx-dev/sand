@@ -1,12 +1,13 @@
 import { copyButton, div, el, p, span, type Child } from '@sand/dom'
 import type { HostHealth } from '@sand/host-health/contract'
+import { plural } from '@sand/kit'
 
 export const healthSummary = (health: HostHealth): string => {
   if (health.healthy) return 'sand runs normally'
   const parts: string[] = []
   if (health.runtime !== 'ready') parts.push(`the runtime is ${health.runtime}`)
   const failed = health.failedPlugins.length
-  if (failed) parts.push(failed === 1 ? '1 plugin failed to load' : `${failed} plugins failed to load`)
+  if (failed) parts.push(`${plural(failed, 'plugin')} failed to load`)
   if (!health.web) parts.push('the web page is not served')
   return parts.join(' · ')
 }

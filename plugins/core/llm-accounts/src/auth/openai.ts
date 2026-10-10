@@ -1,3 +1,4 @@
+import { capital } from '@sand/kit'
 import { jwtClaims } from './jwt'
 import { expiresAt, postToken, required } from './request'
 import type { Tokens } from './store'
@@ -18,8 +19,6 @@ export interface Device {
   code: string
   interval: number
 }
-
-const capital = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
 
 const tokensOf = (json: any): Tokens => {
   const access = required(json?.access_token, 'access_token')

@@ -1,8 +1,8 @@
 import type { InstallDoneRequest, InstallPairRequest, InstallPairResult } from '@sand/host-dist/contract'
 import type { HostHealth } from '@sand/host-health/contract'
-import { hostPaths } from '@sand/kit'
+import { hostPaths, trimSlash } from '@sand/kit'
 
-const endpoint = (base: string, path: string, secret: string) => `${base.replace(/\/+$/, '')}${path}?k=${encodeURIComponent(secret)}`
+const endpoint = (base: string, path: string, secret: string) => `${trimSlash(base)}${path}?k=${encodeURIComponent(secret)}`
 
 const failure = async (response: Response) => new Error((await response.text().catch(() => '')) || `the old PC answered ${response.status}`)
 

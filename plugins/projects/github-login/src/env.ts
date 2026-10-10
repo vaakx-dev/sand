@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import type { ShellEnv } from '@sand/tools-shell/contract'
 import type { Dispose } from 'drydock'
 
@@ -21,7 +22,5 @@ export const tokenEnv = (token: string): Record<string, string> => {
   }
 }
 
-export const applyEnv = (env: ShellEnv, token: string): Dispose => {
-  const disposers = Object.entries(tokenEnv(token)).map(([name, value]) => env.set(name, value))
-  return () => disposers.forEach(dispose => void dispose())
-}
+export const applyEnv = (env: ShellEnv, token: string): Dispose =>
+  joinDisposers(...Object.entries(tokenEnv(token)).map(([name, value]) => env.set(name, value)))

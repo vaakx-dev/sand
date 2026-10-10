@@ -1,8 +1,8 @@
+import { oneLine } from '@sand/kit'
 import type { PaletteItem, PaletteItemAction, PalettePage } from '@sand/palette/contract'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { quickThreadIcon } from '@sand/dom'
-import { groupIcon } from '../project-lookup'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
 
 const draft = (ctx: Context<'threads'>, path: string, device?: string) => ctx.threads.draft(path, device).then(() => ctx.composer?.focus())
@@ -29,7 +29,7 @@ const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => (
   icon: 'pencil',
   returnAfter: true,
   async run() {
-    const name = (await ctx.picker?.input('Rename project', group.name))?.replace(/\s+/g, ' ').trim()
+    const name = oneLine((await ctx.picker?.input('Rename project', group.name)) ?? '')
     if (name && name !== group.name) await ctx.projects?.rename(group, name)
   },
 })
@@ -56,7 +56,7 @@ const projectItem = (ctx: Context<'threads'>, place: Place): PaletteItem => ({
   id: `project:${place.id}`,
   group: 'Projects',
   avatar: place.name,
-  avatarIcon: place.group ? groupIcon(ctx, place.group, place.device) : ctx.projects?.icon(place.path, place.device),
+  avatarIcon: place.group ? ctx.projects?.groupIcon(place.group) : ctx.projects?.icon(place.path, place.device),
   label: place.name,
   detail: placeDetail(ctx, place),
   search: `${place.name} ${(place.group?.locations ?? [place]).map(location => location.path).join(' ')} ${pcNames(ctx, place).join(' ')}`,

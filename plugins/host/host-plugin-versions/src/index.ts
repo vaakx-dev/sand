@@ -27,15 +27,12 @@ export default definePlugin({
       ctx.hub.broadcast({ name: 'versions.change', args: [targets] })
     }
     const versions: HostVersions = {
-      list: store.list,
-      snapshot: store.snapshot,
+      ...store,
       async restore(target, version) {
         const next = await store.restore(target, version)
         void ctx.runtimes.swap('plugins')
         return next
       },
-      markGood: store.markGood,
-      autoRestore: store.autoRestore,
     }
     ctx.provide('hostVersions', versions)
     ctx.effect(() => ctx.hub.handle('versions.list', () => versions.list()))

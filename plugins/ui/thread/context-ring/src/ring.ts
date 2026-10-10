@@ -35,16 +35,10 @@ const usageLine = (usage: Derive<ContextUsage | undefined>) => () => {
   return value.compacting ? `Compacting · ${line}` : line
 }
 
-const compact = async (ctx: Context<'threads'>) => {
-  if (ctx.commands?.get('compact')) return void (await ctx.commands.run('compact', ''))
-  if (!ctx.wire) throw new Error('No command host is loaded to run /compact')
-  await ctx.wire.call({ type: 'ui.command', name: 'compact', args: '', session: ctx.threads.current()?.id, cwd: ctx.threads.cwd() })
-}
-
 const details = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>, done: () => void) => {
   const run = () => {
     done()
-    compact(ctx).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+    ctx.threads.command('compact').catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
   }
   return div(
     { class: 'flex flex-col gap-2 p-2' },

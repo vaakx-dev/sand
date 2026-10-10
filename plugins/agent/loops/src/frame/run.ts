@@ -1,13 +1,14 @@
+import { emptyUsage, textOf } from '@sand/kit'
 import type { Entry, Message, Prompt, UserContent } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { LoopsContext } from '../context'
 import type { LoopImpl, RunOverrides, TurnHooks, TurnResult } from '../contract'
 import { isFault } from './fault'
-import { createHooks, textOf } from './hooks'
+import { createHooks } from './hooks'
 import { createPartial } from './partial'
 import { resultOf } from './result'
 import type { TurnState } from './state'
-import { empty, record } from './usage'
+import { record } from './usage'
 
 export interface FrameOptions {
   impl?: LoopImpl
@@ -21,7 +22,7 @@ const keepPartial = (session: Session, state: TurnState) => {
   const message = state.partial.message()
   if (!message) return
   session.append('message', message)
-  state.reply = textOf(message)
+  state.reply = textOf(message.content)
 }
 
 const appendLeftovers = async (session: Session, hooks: TurnHooks) => {
@@ -46,7 +47,7 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
     const controller = new AbortController()
     const external = options.signal ?? options.overrides?.signal
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
-    const state: TurnState = { usage: empty(), sources: new Map(), stopReason: 'end_turn', reply: '', partial: createPartial() }
+    const state: TurnState = { usage: emptyUsage(), sources: new Map(), stopReason: 'end_turn', reply: '', partial: createPartial() }
     const hooks = createHooks(ctx, session, signal, options.overrides ?? {}, state)
     active.set(session.id, controller)
     const release = ctx.busy()

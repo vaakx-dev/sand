@@ -1,6 +1,5 @@
-import type { ProjectGroup } from '@sand/web-client/contract'
 import { quickThreadIcon } from '@sand/dom'
-import { folderName, isInside } from '@sand/kit'
+import { folderName } from '@sand/kit'
 import type { Context } from 'drydock'
 
 export interface ProjectInfo {
@@ -14,15 +13,10 @@ export type ProjectLookup = (cwd: string, device?: string, project?: string | nu
 
 export const sameDevice = (a?: string, b?: string) => (a || undefined) === (b || undefined)
 
-export const isQuick = (ctx: Context, cwd: string, device?: string) => !cwd || isInside(cwd, ctx.projects?.place(device).scratch ?? '')
+export const isQuick = (ctx: Context, cwd: string, device?: string) => ctx.projects?.quick(cwd, device) ?? !cwd
 
 export const findGroup = (ctx: Context, cwd: string, device?: string, project?: string | null) =>
   (project && ctx.projects?.get(project)) || ctx.projects?.group(cwd, device)
-
-export const groupIcon = (ctx: Context, group: ProjectGroup, device?: string) => {
-  const here = group.locations.find(location => sameDevice(location.device, device))
-  return [...(here ? [here] : []), ...group.locations].map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean)
-}
 
 const quick = (device?: string): ProjectInfo => ({ name: 'Quick thread', key: `${device ?? ''}\0quick`, icon: quickThreadIcon, quick: true })
 
@@ -31,7 +25,7 @@ export const projectLookup =
   (cwd, device, project) => {
     if (!project && isQuick(ctx, cwd, device)) return quick(device)
     const group = findGroup(ctx, cwd, device, project)
-    if (group) return { name: group.name || folderName(cwd), key: group.id, icon: groupIcon(ctx, group, device) }
+    if (group) return { name: group.name || folderName(cwd), key: group.id, icon: ctx.projects?.groupIcon(group) }
     if (isQuick(ctx, cwd, device)) return quick(device)
     return { name: folderName(cwd), key: `${device ?? ''}\0${cwd}`, icon: ctx.projects?.icon(cwd, device) }
   }

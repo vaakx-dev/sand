@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import type { Server } from '@sand/server/contract'
 import type { ModelsUpdate, SessionSettings, SettingsState } from './contract'
 import type { Context } from 'drydock'
@@ -16,7 +17,7 @@ export const serveSettings = (ctx: Context<'sessions'>, server: Server, choices:
     const session = ctx.sessions.open(id)
     if (session) server.broadcast('settings.change', [id, choices.state(session)])
   }
-  const disposers = [
+  return joinDisposers(
     server.handle('settings.get', ({ session, settings }): SettingsState => {
       const opened = typeof session === 'string' ? ctx.sessions.open(session) : undefined
       return opened ? choices.state(opened) : { current: resolve((settings ?? {}) as SessionSettings, defaults.get(), ctx.llm) }
@@ -28,6 +29,5 @@ export const serveSettings = (ctx: Context<'sessions'>, server: Server, choices:
       if (entry.type === 'settings') share(session.id)
     }),
     ctx.watch('llm', () => server.broadcast('models.change', [update()])),
-  ]
-  return () => disposers.forEach(dispose => void dispose())
+  )
 }

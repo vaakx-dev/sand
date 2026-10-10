@@ -1,9 +1,10 @@
-import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span } from '@sand/dom'
+import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span, type IconName } from '@sand/dom'
+import { capital } from '@sand/kit'
 import { row, type RowContext } from './row'
 
 export interface Card {
   key: string
-  icon: string
+  icon: IconName
   kind: string
   name: string
   text: string
@@ -39,7 +40,7 @@ const section = (text: string, key: string, context: RowContext, held: () => boo
 
 const tones = { done: 'success', completed: 'success', failed: 'danger', cancelled: 'neutral' } as const
 
-const statusBadge = (status: string) => badge(tones[status as keyof typeof tones] ?? 'neutral', status.charAt(0).toUpperCase() + status.slice(1))
+const statusBadge = (status: string) => badge(tones[status as keyof typeof tones] ?? 'neutral', capital(status))
 
 export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {

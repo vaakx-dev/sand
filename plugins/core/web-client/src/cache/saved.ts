@@ -1,4 +1,4 @@
-import { transact, under } from './db'
+import { transact, under } from '../integrations/indexed-db'
 
 export const savedIn = (meta: IDBObjectStore, scope: string) => {
   const keys = meta.getAllKeys(under(scope))

@@ -1,3 +1,4 @@
+import { errorMessage } from '../../text/error'
 import { isHealthy } from './check'
 import type { HealthOutcome, HealthReport } from './types'
 
@@ -9,8 +10,6 @@ export interface WaitOptions {
 
 const isBad = (report: HealthReport) =>
   report.runtime === 'failed' || (report.runtime === 'ready' && (!report.web || report.failedPlugins.length > 0))
-
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 export const waitHealthy = async (
   read: () => Promise<HealthReport>,
@@ -26,7 +25,7 @@ export const waitHealthy = async (
       last = { ok: false, report }
       badSince = isBad(report) ? (badSince ?? Date.now()) : undefined
     } catch (error) {
-      last = { ok: false, report: last.report, error: message(error) }
+      last = { ok: false, report: last.report, error: errorMessage(error) }
     }
     if (badSince !== undefined && Date.now() - badSince >= settle) return last
     if (Date.now() >= deadline) return last

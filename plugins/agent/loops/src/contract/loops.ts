@@ -74,6 +74,7 @@ export interface Loops {
   defaultName(): string
   setDefault(name: string): Promise<void>
   runWith(loop: LoopImpl, session: Session, prompt: Prompt, overrides?: RunOverrides): Promise<TurnResult>
+  react(turn: Turn): Promise<TurnOutcome>
 }
 
 export interface ModelChoice {

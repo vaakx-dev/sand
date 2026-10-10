@@ -1,5 +1,5 @@
 import type { Entry, Message, ToolCallBlock } from '@sand/messages'
-import { diffCounts, type DiffLine, diffLines, hasToolResult, tildeHome, userParts } from '@sand/kit'
+import { diffCounts, type DiffLine, diffLines, hasToolResult, isInside, tildeHome, userParts } from '@sand/kit'
 
 export interface FileChange {
   key: string
@@ -27,11 +27,9 @@ const hunkOf = (call: ToolCallBlock): DiffLine[] | undefined => {
 
 const absolute = (path: string) => path.startsWith('/') || path.startsWith('~') || path.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(path)
 
-const under = (path: string, cwd: string) => Boolean(cwd) && path.startsWith(cwd) && (path[cwd.length] === '/' || path[cwd.length] === '\\')
+const inside = (path: string, cwd: string) => !absolute(path) || isInside(path, cwd)
 
-const inside = (path: string, cwd: string) => !absolute(path) || under(path, cwd)
-
-const shown = (path: string, cwd: string) => (under(path, cwd) ? path.slice(cwd.length + 1) : absolute(path) ? tildeHome(path) : path)
+const shown = (path: string, cwd: string) => (isInside(path, cwd) ? path.slice(cwd.length).replace(/^[\\/]+/, '') : absolute(path) ? tildeHome(path) : path)
 
 const failedCalls = (entries: Entry[], failing: Iterable<string>) => {
   const failed = new Set(failing)

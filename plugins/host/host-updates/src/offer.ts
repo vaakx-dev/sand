@@ -1,4 +1,5 @@
-import { stampBuild, type GithubRelease } from '@sand/kit/host'
+import { stampBuild } from '@sand/kit/host'
+import type { GithubRelease } from './github/release'
 import type { BuildInfo } from '@sand/protocol'
 import type { ReleaseInfo } from './contract'
 

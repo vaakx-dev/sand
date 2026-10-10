@@ -1,6 +1,6 @@
 import type { CliCommands, CliFlags, CliMode, CliValues } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
-import { createApp, inspector, share, type Context } from 'drydock'
+import { inspector, type Context } from 'drydock'
 import { join } from 'node:path'
 import { daemonService } from '../daemon/service'
 import { runtimeLink } from '../runtime/link'
@@ -8,6 +8,7 @@ import { commandRegistry } from './commands/registry'
 import { runCommand } from './commands/run'
 import { problems } from './diagnose'
 import { builtins, loaderFolder } from './loader'
+import { startApp } from './start'
 
 export interface RunOptions {
   mode: CliMode
@@ -19,8 +20,6 @@ export interface RunOptions {
   safe: boolean
 }
 
-const shared = ['drydock', '@sand/protocol', '@sand/kit', '@sand/kit/fs', '@sand/kit/host', 'zod']
-
 const finish = async (ctx: Context, { args, values = {} }: RunOptions, commands: CliCommands | undefined, exit: (code?: number) => void) => {
   if (commands) return exit(await runCommand(commands, args, values))
   const found = problems(ctx)
@@ -31,10 +30,7 @@ const finish = async (ctx: Context, { args, values = {} }: RunOptions, commands:
 
 export const run = async (options: RunOptions) => {
   const { mode, home, args, flags, prompt, safe } = options
-  share(Object.fromEntries(shared.map(name => [name, Bun.resolveSync(name, import.meta.dir)])))
-
-  const ctx = createApp()
-  const exit = (code = 0) => void ctx.dispose().finally(() => process.exit(code))
+  const { ctx, exit } = startApp()
 
   ctx.on('drydock.error', (scope, error) => {
     const text = `[${scope.name}] ${errorMessage(error)}`

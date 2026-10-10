@@ -1,6 +1,6 @@
 import type { Context } from 'drydock'
 
-export type Names = Record<string, string | null | undefined>
+type Names = Record<string, string | null | undefined>
 
 type Wire = Context<'wire'>['wire']
 

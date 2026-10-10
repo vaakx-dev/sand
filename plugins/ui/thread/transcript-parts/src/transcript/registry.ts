@@ -1,5 +1,4 @@
-import type { RenderEntry, RenderTool, ToolRenderer } from '@sand/transcript-chat/contract'
-import type { RendererRegistry } from '../contract'
+import type { RenderEntry, RendererRegistry, RenderTool, ToolRenderer } from '../contract'
 import { sig } from '@sand/dom'
 import type { Dispose } from 'drydock'
 import { resolveRenderer } from '../tools/resolve'

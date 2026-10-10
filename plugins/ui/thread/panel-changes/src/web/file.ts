@@ -1,7 +1,7 @@
-import { badge, button, div, dynamicChild, effect, icon, layer, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
+import { badge, button, diffRow, div, dynamicChild, effect, icon, layer, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
 import type { FileChange } from '../changes/collect'
+import { shownLines } from '../changes/lines'
 import { counts } from './counts'
-import { diffNodes } from './diff'
 import { fileMenu } from './menu'
 import type { ChangesState } from './view'
 
@@ -45,6 +45,6 @@ export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: Chan
         () => file.get().del,
       ),
     ),
-    dynamicChild(shape, () => (isClosed() ? div({ class: 'hidden' }) : div(diffNodes(file.get())))),
+    dynamicChild(shape, () => (isClosed() ? div({ class: 'hidden' }) : div(shownLines(file.get()).map(diffRow)))),
   )
 }

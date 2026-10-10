@@ -28,6 +28,7 @@ export interface Run {
   job?: string
   session?: string
   members: Member[]
+  finished: number
 }
 
 const member = (thread: Thread, modelOf: ModelOf): Member => ({

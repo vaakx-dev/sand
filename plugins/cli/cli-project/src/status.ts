@@ -1,4 +1,4 @@
-import { relationLabel, relationOf } from '@sand/kit'
+import { relationLabel, relationOf } from '@sand/sync/flows'
 import type { SyncState } from '@sand/sync/contract'
 import { usage } from './usage'
 import { findGroup } from './find'

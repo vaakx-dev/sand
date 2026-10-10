@@ -1,7 +1,8 @@
 import type { Credential } from '../auth/store'
+import { trimSlash } from '@sand/kit'
 import { claudeModels, describeClaude } from '../claude/models'
 import { claudeCodeVersion } from '../claude/system'
-import { getJson, trimmed } from './http'
+import { getJson } from './http'
 import type { Discovered } from './types'
 
 const defaultBase = 'https://api.anthropic.com'
@@ -34,7 +35,7 @@ const describe = (entry: any): Discovered | undefined => {
 }
 
 export const discoverAnthropic = async (credential: Credential): Promise<Discovered[]> => {
-  const base = trimmed((credential.type === 'api_key' && credential.base_url) || defaultBase)
+  const base = trimSlash((credential.type === 'api_key' && credential.base_url) || defaultBase)
   const found: Discovered[] = []
   let after: string | undefined
   for (let page = 0; page < pages; page++) {

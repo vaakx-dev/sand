@@ -1,8 +1,9 @@
+import { isRecord, serial } from '@sand/kit'
+import { writePrivateJson } from '@sand/kit/fs'
 import { join } from 'node:path'
-import { writePrivateJson } from '../auth/store'
 import type { Checked, ModelCache, Prefs } from './types'
 
-const record = (value: unknown): Record<string, unknown> => (value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {})
+const record = (value: unknown): Record<string, unknown> => (isRecord(value) ? value : {})
 
 const names = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.length > 0) : [])
 
@@ -37,7 +38,7 @@ const cacheOf = (value: unknown): ModelCache =>
   }))
 
 const jsonFile = <T>(path: string, parse: (value: unknown) => T) => {
-  let writing = Promise.resolve()
+  const queue = serial()
   return {
     async read(): Promise<T> {
       try {
@@ -47,8 +48,7 @@ const jsonFile = <T>(path: string, parse: (value: unknown) => T) => {
       }
     },
     write(value: T) {
-      writing = writing.catch(() => {}).then(() => writePrivateJson(path, value))
-      return writing.catch(() => {})
+      return queue(() => writePrivateJson(path, value)).catch(() => {})
     },
   }
 }

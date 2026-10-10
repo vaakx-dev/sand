@@ -1,8 +1,8 @@
 import { div, span } from '@sand/dom'
-import { cardRow } from './card'
+import { cardRow, type Card } from './card'
 import { row, type RowMaker } from './row'
 
-const source = (label: string) => {
+const source = (label: string): Pick<Card, 'icon' | 'kind' | 'name'> => {
   if (label.startsWith('workflow ')) return { icon: 'workflow', kind: 'Workflow', name: label.slice(9) }
   const at = label.indexOf(': ')
   return { icon: 'bot', kind: 'Agent', name: at > 0 ? label.slice(at + 2) : label }

@@ -1,5 +1,5 @@
 import { offerSetup } from './setup'
-import { deviceOf, type Choice, type FlowContext } from './types'
+import type { Choice, FlowContext } from './types'
 
 interface Made {
   name: string
@@ -25,7 +25,7 @@ const addFolder = async (ctx: FlowContext, choice: Choice, device?: string): Pro
 }
 
 const make = async (ctx: FlowContext, choice: Choice, progress: (text: string) => void): Promise<Made> => {
-  const device = deviceOf(choice.machine)
+  const { device } = choice.machine
   const { projects } = ctx
   if (choice.how === 'create') return added(choice, await projects.create(choice.name!, device))
   if (choice.how === 'clone') return added(choice, await projects.clone(choice.repo!.url, choice.path, device, progress, choice.project))
@@ -36,7 +36,7 @@ const make = async (ctx: FlowContext, choice: Choice, progress: (text: string) =
 export const finish = async (ctx: FlowContext, choice: Choice, progress: (text: string) => void) => {
   progress(choice.how === 'clone' ? `Cloning ${choice.repo!.name}…` : 'Working…')
   const made = await make(ctx, choice, progress)
-  const device = deviceOf(choice.machine)
+  const { device } = choice.machine
   if (choice.done) void choice.done({ path: made.path, device })
   else {
     await ctx.threads.draft(made.path, device)

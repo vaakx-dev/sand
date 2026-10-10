@@ -1,24 +1,20 @@
 import type { Commands } from '@sand/commands/contract'
-import { contextMenu, copyText, derive, div, errorMessage, icon, iconButton, show, span, type MenuSpec } from '@sand/dom'
+import { contextMenu, copyWithNotice, derive, div, errorMessage, icon, iconButton, show, span, type MenuSpec, type NavAction } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { GoalView } from './slot'
 
-const checks = (count = 0) => (count ? `${count} ${count === 1 ? 'check' : 'checks'}` : '')
+const checks = (count = 0) => (count ? plural(count, 'check') : '')
 
 const clear = (ctx: Context, commands: Commands) =>
   void commands.run('goal', 'clear').catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
-
-const copyObjective = async (ctx: Context, objective: string) => {
-  const copied = await copyText(objective)
-  ctx.notify?.push(copied ? 'Copied the goal' : 'Could not copy the goal', { level: copied ? 'info' : 'error' })
-}
 
 const bannerMenu = (ctx: Context, objective: string): MenuSpec => ({
   title: 'Goal',
   subtitle: objective,
   actions: [
-    { id: 'copy', label: 'Copy objective', icon: 'copy', group: 'copy', run: () => copyObjective(ctx, objective) },
-    ...(ctx.commands ? [{ id: 'clear', label: 'Clear goal', icon: 'x', group: 'goal', danger: true, run: () => ctx.commands && clear(ctx, ctx.commands) }] : []),
+    { id: 'copy', label: 'Copy objective', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, objective, 'goal') },
+    ...(ctx.commands ? [{ id: 'clear', label: 'Clear goal', icon: 'x', group: 'goal', danger: true, run: () => ctx.commands && clear(ctx, ctx.commands) } satisfies NavAction] : []),
   ],
 })
 

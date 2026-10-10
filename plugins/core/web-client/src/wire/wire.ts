@@ -72,8 +72,6 @@ export const startWire = (
 
   return {
     state: home.state,
-    retryAt: () => home.info().retryAt,
-    reconnect: home.nudge,
     hello: () => hello,
     pairing: auth.pairing,
     call: request => home.call(request),

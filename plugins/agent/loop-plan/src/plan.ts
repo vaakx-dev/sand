@@ -1,6 +1,6 @@
+import { callsOf, refused, skip, textOf, truncated } from '@sand/kit'
 import type { Turn, TurnOutcome } from '@sand/loops/contract'
 import type { ToolCallBlock, ToolResultBlock } from '@sand/messages'
-import { callsOf, refused, skip, textOf, truncated } from './calls'
 
 export interface PlanOptions {
   tools: string[]
@@ -40,7 +40,7 @@ export const plan = async (turn: Turn, outcome: TurnOutcome, options: PlanOption
     const done = await send(turn, options)
     const message = await turn.hooks.respond(done.message)
     outcome.stopReason = done.stopReason
-    outcome.text = textOf(message)
+    outcome.text = textOf(message.content)
     const calls = callsOf(message)
     if (done.stopReason === 'refusal') {
       if (calls.length) turn.hooks.append({ role: 'user', content: skip(calls, refused) })

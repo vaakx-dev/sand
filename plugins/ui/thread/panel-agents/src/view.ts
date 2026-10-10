@@ -1,4 +1,5 @@
 import { contextMenu, derive, div, groupLabel, hint, icon, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import { agentRow } from './agent-row'
 import { collapseRepeats, runningAgents } from './counts'
 import { finishedRow } from './finished'
@@ -41,10 +42,7 @@ const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) =>
     runs.map(items => items.length > 0),
     () =>
       div(
-        groupLabel(() => {
-          const count = runningAgents(runs.get())
-          return `Running · ${count} ${count === 1 ? 'agent' : 'agents'}`
-        }),
+        groupLabel(() => `Running · ${plural(runningAgents(runs.get()), 'agent')}`),
         list(
           runs,
           run => run.id,

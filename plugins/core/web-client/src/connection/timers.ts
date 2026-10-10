@@ -1,26 +1,26 @@
-type Timer = ReturnType<typeof setInterval>
+import { every } from '../detached'
 
 const heartbeatEvery = 30_000
 const reprobeEvery = 60_000
 
 export const createTimers = (beat: () => void, reprobe: () => void) => {
-  let heartbeat: Timer | undefined
-  let slow: Timer | undefined
+  let stopHeartbeat: (() => void) | undefined
+  let stopReprobe: (() => void) | undefined
 
   const stopSlow = () => {
-    clearInterval(slow)
-    slow = undefined
+    stopReprobe?.()
+    stopReprobe = undefined
   }
 
   return {
     update(connected: boolean, slower: boolean) {
       if (!connected) {
-        clearInterval(heartbeat)
-        heartbeat = undefined
+        stopHeartbeat?.()
+        stopHeartbeat = undefined
         return stopSlow()
       }
-      heartbeat ??= setInterval(beat, heartbeatEvery)
-      if (slower) slow ??= setInterval(reprobe, reprobeEvery)
+      stopHeartbeat ??= every(heartbeatEvery, beat)
+      if (slower) stopReprobe ??= every(reprobeEvery, reprobe)
       else stopSlow()
     },
   }

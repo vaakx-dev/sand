@@ -1,12 +1,12 @@
 import type { WorktreeEntry, WorktreeState } from '../../contract'
-import { div, groupLabel, icon, menuItem, span, tildeHome, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
+import { div, groupLabel, icon, menuItem, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
 import { uuid } from '@sand/kit'
 import type { WebContext } from '../client'
 import type { Choice, Choices } from './choices'
 import { mainBranch, type ChipTarget } from './target'
 
 interface Row {
-  glyph: string
+  glyph: IconName
   title: string
   line?: string
   selected: boolean

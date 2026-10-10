@@ -6,6 +6,7 @@ import type { Loops } from './contract'
 import { createDefaults } from './defaults'
 import { createFaults } from './faults'
 import { createFrame } from './frame/run'
+import { runReact } from './react'
 import { createRegistry } from './registry'
 import { serveLoops } from './serve'
 
@@ -36,6 +37,7 @@ export default definePlugin({
         await defaults.set(name)
       },
       runWith: (impl, session, prompt, overrides) => frame.run(session, prompt, { impl, ...(overrides && { overrides }) }),
+      react: runReact,
     }
     ctx.provide('loops', loops)
     ctx.provide('loop', {

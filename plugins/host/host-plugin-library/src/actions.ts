@@ -1,4 +1,5 @@
-import { copyPlugin, validPluginName } from '@sand/kit/host'
+import { isRecord } from '@sand/kit'
+import { copyPlugin, exists, validPluginName } from '@sand/kit/host'
 import type { BuildInfo } from '@sand/protocol'
 import { lstat, rename, rm, rmdir, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -16,11 +17,9 @@ export interface ActionOptions {
 
 const appVersion = async (appRoot: string) => {
   const data: unknown = await Bun.file(join(appRoot, 'apps', 'sand', 'package.json')).json().catch(() => undefined)
-  const version = data && typeof data === 'object' ? (data as { version?: unknown }).version : undefined
+  const version = isRecord(data) ? data.version : undefined
   return typeof version === 'string' ? version : ''
 }
-
-const exists = (path: string) => lstat(path).then(() => true, () => false)
 
 export const libraryActions = ({ paths, kept, build }: ActionOptions) => {
   const builtinOf = async (name: string) => {

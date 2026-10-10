@@ -1,7 +1,8 @@
 import type { ImageBlock, MediaRef, UserContent } from '@sand/messages'
 import type { Media, Wire } from '../contract'
+import { listen } from '@sand/dom'
 import type { Store } from '../threads/store'
-import { createVisibility } from './visible'
+import { whenNearView } from './visible'
 
 type Stored = Partial<MediaRef> & { data?: string }
 
@@ -17,9 +18,7 @@ const base64 = (blob: Blob) =>
     reader.readAsDataURL(blob)
   })
 
-export const createMedia = (wire: Wire, store: Store) => {
-  const visibility = createVisibility()
-
+export const createMedia = (wire: Wire, store: Store): Media => {
   const fetchBlob = async (hash: string, thread?: string) => {
     const device = thread ? store.threads.get(thread)?.device : undefined
     const response = await wire.fetch(blobPath(hash, thread), undefined, device)
@@ -30,8 +29,8 @@ export const createMedia = (wire: Wire, store: Store) => {
   const load = async (image: HTMLImageElement, hash: string, thread?: string) => {
     const url = URL.createObjectURL(await fetchBlob(hash, thread))
     const release = () => URL.revokeObjectURL(url)
-    image.addEventListener('load', release, { once: true })
-    image.addEventListener('error', release, { once: true })
+    listen(image, 'load', release, { once: true })
+    listen(image, 'error', release, { once: true })
     image.src = url
   }
 
@@ -43,17 +42,15 @@ export const createMedia = (wire: Wire, store: Store) => {
     return { ...rest, data } as UserContent
   }
 
-  const media: Media = {
+  return {
     show(image, block, thread) {
       image.decoding = 'async'
       image.loading = 'lazy'
       const hash = (block as ImageBlock & Stored).blob
       if (typeof block.data === 'string') image.src = dataUrl(block)
-      else if (hash) visibility.when(image, () => void load(image, hash, thread).catch(() => void (image.title ||= 'This image could not be loaded')))
+      else if (hash) whenNearView(image, () => void load(image, hash, thread).catch(() => void (image.title ||= 'This image could not be loaded')))
       return image
     },
     inline: (content, thread) => Promise.all(content.map(block => restore(block, thread))),
   }
-
-  return { media, dispose: visibility.dispose }
 }

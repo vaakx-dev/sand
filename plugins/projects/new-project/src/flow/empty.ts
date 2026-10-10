@@ -2,12 +2,12 @@ import type { PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
 import { listings } from './listings'
 import { join, short } from './paths'
-import { deviceOf, type FlowContext, type Next } from './types'
+import type { FlowContext, Next } from './types'
 
 const plain = (name: string) => Boolean(name) && name !== '.' && name !== '..' && !/[\\/]/.test(name)
 
 export const emptyPage = (ctx: FlowContext, machine: Machine, next: Next): PalettePage => {
-  const device = deviceOf(machine)
+  const { device } = machine
   const place = ctx.projects.place(device)
   const root = short(place.root, place)
   const folders = listings(ctx, device)

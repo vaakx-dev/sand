@@ -1,3 +1,4 @@
+import { fileHash } from '../../plugins/hash'
 import { validTarget, validVersion } from './home'
 import { readZipEntry } from './zip'
 
@@ -19,8 +20,6 @@ const expectedSha = async (version: string, zip: string) => {
   }
 }
 
-const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
-
 export const fetchOfficialBun = async (version: string, target: string): Promise<Uint8Array<ArrayBuffer>> => {
   if (!validVersion.test(version)) throw new Error(`${version} is not a Bun release version`)
   if (!validTarget.test(target)) throw new Error(`${target} is not a Bun build target`)
@@ -29,6 +28,6 @@ export const fetchOfficialBun = async (version: string, target: string): Promise
   const sha = await expectedSha(version, zip)
   if (!sha) throw new UnknownBunTarget(`Bun ${version} has no build for ${target}`)
   const bytes = new Uint8Array(await (await download(`${releases}/bun-v${version}/${zip}`, 10 * 60_000)).arrayBuffer())
-  if (sha256(bytes) !== sha) throw new Error(`the Bun ${version} download for ${target} failed its checksum`)
+  if (fileHash(bytes) !== sha) throw new Error(`the Bun ${version} download for ${target} failed its checksum`)
   return readZipEntry(bytes, `${folder}/${target.startsWith('windows-') ? 'bun.exe' : 'bun'}`)
 }

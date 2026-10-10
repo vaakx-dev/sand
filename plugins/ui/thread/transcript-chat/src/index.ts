@@ -1,4 +1,4 @@
-import type { Transcript } from './contract'
+import type { Transcript } from '@sand/transcript-parts/contract'
 import { owned, place, style } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { chatController } from './controller'
@@ -8,7 +8,7 @@ export default definePlugin({
   name: 'transcript-chat',
   description: 'Chat transcript: bubbles, markdown, "Worked for" tool groups, agent reports, streamed in place',
   inject: ['threads', 'transcriptParts', 'markdown'],
-  uses: { layout: 'lands loose on the stage', composer: 'the empty-state hint does not focus a composer', commands: 'the empty state cannot open the extensions drawer', projects: 'the empty state shows the sand logo instead of the project icon', palette: 'the empty state does not offer search', notify: 'editing and forking messages is not confirmed' },
+  uses: { layout: 'lands loose on the stage', composer: 'the empty-state hint does not focus a composer', commands: 'the empty state cannot open the extensions drawer', projects: 'the empty state shows the sand logo instead of the project icon', palette: 'the empty state does not offer search', notify: 'editing and forking messages is not confirmed', models: 'model switches show the raw model id' },
   apply(ctx) {
     style(ctx, css)
     const registry = ctx.transcriptParts.registry(() => chat.refresh())

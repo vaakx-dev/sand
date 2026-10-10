@@ -12,6 +12,7 @@ export default definePlugin({
     composer: 'no goal row above the composer',
     transcript: 'goal changes are not shown in the thread',
     commands: 'the goal row has no Clear button',
+    notify: 'copying the goal and failed clears are not reported',
   },
   apply(ctx) {
     const changes = pulse(ctx, ['thread.select', 'thread.change', 'threads.change'])

@@ -1,16 +1,12 @@
-import { copyText, type NavAction } from '@sand/dom'
-
-export type Say = (text: string, failed: boolean) => void
+import { copyWithNotice, type NavAction } from '@sand/dom'
+import type { Context } from 'drydock'
 
 export const copyAction =
-  (say: Say) =>
+  (ctx: Context) =>
   (id: string, label: string, text: () => string, what: string): NavAction => ({
     id,
     label,
     icon: 'copy',
     tile: true,
-    run: async () => {
-      const copied = await copyText(text())
-      say(copied ? `Copied ${what}` : `Could not copy the ${what}`, !copied)
-    },
+    run: () => copyWithNotice(ctx.notify, text(), what),
   })

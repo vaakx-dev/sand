@@ -1,7 +1,8 @@
 import { div, dot, dynamicChild, span, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { Fleet, PcView } from './fleet/model'
 import { canUpdate } from './fleet/status'
-import { plural, statusText, statusTone } from './fleet/text'
+import { statusText, statusTone } from './fleet/text'
 
 const runningNote = (pc: PcView) => {
   const running = pc.state?.running ?? 0

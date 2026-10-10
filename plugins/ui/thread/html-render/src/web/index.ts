@@ -1,5 +1,4 @@
-import type { ToolRenderer } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolRenderer, ToolViews } from '@sand/transcript-parts/contract'
 import type { HtmlRenderEntry } from '../contract'
 import { definePlugin } from 'drydock'
 import { htmlFrame } from './frame'

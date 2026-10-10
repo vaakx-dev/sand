@@ -2,7 +2,6 @@ import { icon as lucideIcon, type IconNode } from '@vaakx-dev/vrui'
 import {
   AlarmClock,
   AlarmClockOff,
-  ArrowDown,
   ArrowLeft,
   ArrowUp,
   Bot,
@@ -32,7 +31,6 @@ import {
   GitBranch,
   GitCompare,
   GitFork,
-  Gauge,
   Goal,
   GripVertical,
   Hourglass,
@@ -70,8 +68,6 @@ import {
   SquareTerminal,
   Star,
   Tag,
-  TrendingDown,
-  TrendingUp,
   TextSearch,
   Trash2,
   Workflow,
@@ -80,7 +76,7 @@ import {
   Zap,
 } from 'lucide'
 
-const nodes: Record<string, IconNode> = {
+const nodes = {
   search: Search,
   compose: SquarePen,
   folder: Folder,
@@ -112,7 +108,6 @@ const nodes: Record<string, IconNode> = {
   gear: Settings,
   loader: LoaderCircle,
   working: CircleDashed,
-  arrowDown: ArrowDown,
   copy: Copy,
   alert: CircleAlert,
   back: ArrowLeft,
@@ -156,22 +151,8 @@ const nodes: Record<string, IconNode> = {
   chart: ChartColumn,
   lock: Lock,
   goal: Goal,
-  gauge: Gauge,
-  'trend-up': TrendingUp,
-  'trend-down': TrendingDown,
-}
+} satisfies Record<string, IconNode>
 
-const iconNames = () => Object.keys(nodes)
+export type IconName = keyof typeof nodes
 
-const missing = new Set<string>()
-
-const known = (name: string) => {
-  const node = nodes[name]
-  if (!node && !missing.has(name)) {
-    missing.add(name)
-    console.warn(`Unknown icon "${name}"; known icons: ${iconNames().join(', ')}`)
-  }
-  return node ?? CircleHelp
-}
-
-export const icon = (name: string, size = 16) => lucideIcon(known(name), size, 1.8)
+export const icon = (name: IconName, size = 16) => lucideIcon(nodes[name], size, 1.8)

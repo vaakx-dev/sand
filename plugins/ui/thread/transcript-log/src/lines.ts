@@ -1,5 +1,4 @@
-import type { ToolView } from '@sand/transcript-chat/contract'
-import type { Item, RendererRegistry, Step } from '@sand/transcript-parts/contract'
+import type { Item, RendererRegistry, Step, ToolView } from '@sand/transcript-parts/contract'
 import { button, oneLine, span } from '@sand/dom'
 
 export interface Line {

@@ -1,4 +1,5 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
+import { errorMessage } from '@sand/kit'
 import type { Sync } from '../contract'
 import type { FlowContext } from './types'
 
@@ -9,7 +10,7 @@ const runSetup = async (ctx: FlowContext, sync: Sync, ref: ProjectRef, command: 
     if (code === 0) ctx.notify?.push(`${command} finished`)
     else ctx.notify?.report(`${command} failed (exit ${code})`, [{ kind: 'text', text: output.trim() || 'No output', mono: true }])
   } catch (error) {
-    ctx.notify?.push(error instanceof Error ? error.message : String(error), { level: 'error' })
+    ctx.notify?.push(errorMessage(error), { level: 'error' })
   }
 }
 

@@ -82,12 +82,9 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
       .sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
   }
 
-  const cwd = () => {
-    const current = store.current ? store.threads.get(store.current) : undefined
-    if (current) return current.info.cwd
-    if (store.draft) return store.draft.cwd
-    return recentFolder() ?? ''
-  }
+  const current = () => (store.current ? store.threads.get(store.current) : undefined)
+
+  const cwd = () => current()?.info.cwd ?? store.draft?.cwd ?? recentFolder() ?? ''
 
   return {
     adopt: install,
@@ -102,7 +99,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
     idle: () => store.idle,
     list: () => [...store.threads.values()],
     get: id => store.threads.get(id),
-    current: () => (store.current ? store.threads.get(store.current) : undefined),
+    current,
     select,
     load,
     async create(options: NewThread = {}) {
@@ -159,5 +156,6 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
       }
       return call({ type: 'session.move', session: id, position })
     },
+    command: (name, args = '') => call({ type: 'ui.command', name, args, session: current()?.id, cwd: cwd() }),
   }
 }

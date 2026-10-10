@@ -3,8 +3,7 @@ import type { EntryCache } from './cache'
 import type { Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 import type { Paging } from './paging'
-
-type Row = Omit<Entry, 'data'> & { data: string }
+import { parseRow, type Row } from './paging/rows'
 
 export interface SessionHooks {
   entry(session: Session, entry: Entry): void
@@ -26,7 +25,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     entries = undefined
   }
   const all = () => {
-    const map = (entries ??= new Map(load.all({ session: info.id }).map(row => [row.id, { ...row, data: JSON.parse(row.data) }])))
+    const map = (entries ??= new Map(load.all({ session: info.id }).map(row => [row.id, parseRow(row)])))
     cache.touch(info.id, unload)
     return map
   }

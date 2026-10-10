@@ -13,9 +13,10 @@ export const fastCommand = (tools: Tools): Command => ({
     const { ctx, choices } = tools
     const { words, asDefault, quiet } = parseArgs(text)
     const [word] = words
-    if (word && !(word in values)) throw new Error('Use /fast on, /fast off or /fast default.')
+    if (word && !Object.hasOwn(values, word)) throw new Error('Use /fast on, /fast off or /fast default.')
     const { current, next } = choices.state(ctx.ui.session())
-    const speed = word ? values[word]! : (next ?? current).speed === 'fast' ? 'normal' : 'fast'
+    const toggled = (next ?? current).speed === 'fast' ? 'normal' : 'fast'
+    const speed = word ? values[word] : toggled
     await applyChoice(tools, { speed }, { asDefault, quiet })
   },
 })

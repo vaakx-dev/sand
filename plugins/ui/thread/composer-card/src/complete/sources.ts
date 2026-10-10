@@ -21,7 +21,7 @@ export const commandSource = (ctx: Context): CompletionSource => ({
     ...(ctx.commands?.list() ?? [])
       .filter(command => command.name.startsWith(query.toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map(command => ({ value: command.name, description: command.description, submit: !command.args?.startsWith('<'), group: 'Commands', icon: 'slash' })),
+      .map((command): Suggestion => ({ value: command.name, description: command.description, submit: !command.args?.startsWith('<'), group: 'Commands', icon: 'slash' })),
   ],
   hint: () => (ctx.commands ? 'No commands match' : undefined),
 })

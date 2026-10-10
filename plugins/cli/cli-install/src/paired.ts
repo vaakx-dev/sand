@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, plural } from '@sand/kit'
 import { dim, done, notice } from '@sand/kit/host'
 import type { Daemon } from '@sand/protocol'
 import { waitForAccounts } from './accounts'
@@ -17,8 +17,6 @@ export interface Pairing {
 const alreadyReported = 3
 
 const noAccounts = (from: string) => `${from} shares no accounts yet: sign in under Settings → Accounts on either PC`
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 const sendPlugins = async ({ base, secret }: Pairing, home: string) => {
   const { copied, kept, folder } = await copyPlugins({ base, secret, home })

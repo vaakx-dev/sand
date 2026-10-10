@@ -1,4 +1,5 @@
 import type { AccountKind, KeyKind, LoginAccount, LoginConflict, LoginPending, SignInKind } from '../contract'
+import { errorMessage } from '@sand/kit'
 import { refreshClaude } from './anthropic'
 import { envKey, envNames } from './env'
 import { fixedIds, fixedLabels, isFixed, logos, signInError, type FixedId } from './kinds'
@@ -13,8 +14,6 @@ const refreshers: Record<SignInKind, (tokens: Tokens) => Promise<Tokens>> = { cl
 const margin = 5 * 60_000
 
 const fresh = (tokens: OAuth) => tokens.expires - Date.now() > margin
-
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 export type Accounts = ReturnType<typeof createAccounts>
 
@@ -95,7 +94,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       saved = { ...saved, [latest.key]: latest.credential }
       return latest.credential
     }
-    errors.set(id, `Signed out: ${message(error)}`)
+    errors.set(id, `Signed out: ${errorMessage(error)}`)
     const keys = holders({ ...saved, ...fromDisk }, id)
     if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
     else changed()
@@ -174,7 +173,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       changed()
     },
     fail(id: string, error: unknown) {
-      errors.set(id, message(error))
+      errors.set(id, errorMessage(error))
       changed()
     },
     async signIn(id: SignInKind, tokens: Tokens) {

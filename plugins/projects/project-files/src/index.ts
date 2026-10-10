@@ -1,4 +1,3 @@
-import { readProjectsFile, writeProjectsFile } from '@sand/kit/fs'
 import { definePlugin } from 'drydock'
 import type { ProjectFiles } from './contract'
 import { localFiles } from './local'
@@ -15,8 +14,6 @@ export default definePlugin({
     ctx.effect(() => watchProjects(home, () => listeners.forEach(listener => listener())))
 
     const projectFiles: ProjectFiles = {
-      read: () => readProjectsFile(home),
-      write: projects => writeProjectsFile(home, projects),
       local: local.local,
       copies: local.copies,
       ofFolder: local.ofFolder,

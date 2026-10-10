@@ -28,7 +28,7 @@ export default definePlugin({
   },
   apply(ctx) {
     const client = worktreeClient(ctx)
-    const marks = createMarks(ctx, client)
+    const marks = owned(ctx, () => createMarks(ctx, client))
     const states = owned(ctx, () => createStates(client))
     const progress = owned(ctx, () => createProgress(ctx))
     const choices = owned(ctx, () => createChoices(ctx, client))

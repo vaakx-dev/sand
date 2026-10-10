@@ -1,7 +1,6 @@
 import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { completed } from './completed'
-import { pcName } from './names'
 import type { CopyPlan } from './plan'
 import { progressText } from './progress'
 import { reportSend } from './result'
@@ -12,7 +11,7 @@ const linkAndSend = async (ctx: FlowContext, sync: Sync, plan: CopyPlan, progres
   await ctx.projects.add(to.path, to.device, plan.project)
   const applied = await sync.send(from, to, update => progress(progressText(update)))
   if (applied.result === 'conflicts') {
-    if (plan.done) ctx.notify?.push(`Finish the merge on ${pcName(ctx, to.device)}, then continue the thread again`)
+    if (plan.done) ctx.notify?.push(`Finish the merge on ${ctx.machines.name(to.device)}, then continue the thread again`)
     return reportSend(ctx, sync, from, to, applied)
   }
   await completed(ctx, plan.name, to, plan.done)

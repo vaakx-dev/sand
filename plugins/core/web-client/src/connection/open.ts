@@ -1,5 +1,5 @@
 import type { Hello, WireEvent, WireRequestOf } from '@sand/protocol'
-import { connect, type Connection } from '../wire/connection'
+import { connect, type Connection } from '../integrations/socket'
 import type { Route } from './select'
 import { within } from './timeout'
 

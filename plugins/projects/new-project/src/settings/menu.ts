@@ -1,12 +1,13 @@
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import { div, errorMessage, icon, popover, popoverItem, span } from '@sand/dom'
-import { byRecent, isOnline, machineName, withoutCopy } from './places'
+import { div, errorMessage, icon, popover, popoverItem, span, type IconName } from '@sand/dom'
+import { oneLine } from '@sand/kit'
+import { byRecent, withoutCopy } from './places'
 import { deleteItem } from './remove'
 import type { ProjectsContext } from './types'
 
 export interface Entry {
   label: string
-  icon: string
+  icon: IconName
   disabled?: boolean
   run(): void | Promise<void>
 }
@@ -27,7 +28,7 @@ const entryView = (entry: Entry, close: () => void, fail: (error: unknown) => vo
   )
 
 const rename = async (ctx: ProjectsContext, group: ProjectGroup) => {
-  const name = (await ctx.picker?.input('Rename project', group.name))?.replace(/\s+/g, ' ').trim()
+  const name = oneLine((await ctx.picker?.input('Rename project', group.name)) ?? '')
   if (name && name !== group.name) await ctx.projects.rename(group, name)
 }
 
@@ -38,23 +39,23 @@ export const startAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
 }
 
 const startThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
-  const target = byRecent(group.locations).find(entry => !entry.missing && isOnline(ctx, entry.device))
+  const target = byRecent(group.locations).find(entry => !entry.missing && ctx.machines.online(entry.device))
   if (target) await startAt(ctx, target)
 }
 
 export const actions = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
-  const startable = group.locations.some(entry => !entry.missing && isOnline(ctx, entry.device))
+  const startable = group.locations.some(entry => !entry.missing && ctx.machines.online(entry.device))
   const syncFlows = ctx.syncFlows
   return [
-    ...(ctx.picker ? [{ label: 'Rename', icon: 'pencil', run: () => rename(ctx, group) }] : []),
+    ...(ctx.picker ? [{ label: 'Rename', icon: 'pencil', run: () => rename(ctx, group) } satisfies Entry] : []),
     { label: 'New thread', icon: 'compose', disabled: !startable, run: () => startThread(ctx, group) },
-    ...(syncFlows ? [{ label: 'Add a copy on another PC', icon: 'folder-plus', disabled: !withoutCopy(ctx, group).length, run: () => syncFlows.add(group) }] : []),
+    ...(syncFlows ? [{ label: 'Add a copy on another PC', icon: 'folder-plus', disabled: !withoutCopy(ctx, group).length, run: () => syncFlows.add(group) } satisfies Entry] : []),
   ]
 }
 
 export const forgets = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
   group.locations.map(entry => ({
-    label: `Forget copy on ${machineName(ctx, entry.device)}`,
+    label: `Forget copy on ${ctx.machines.name(entry.device)}`,
     icon: 'x',
     run: () => ctx.projects.removeCopy(entry),
   }))

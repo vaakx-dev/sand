@@ -1,3 +1,4 @@
+import { textOf } from '@sand/kit'
 import type { Block, DocumentBlock, Message, ToolResultBlock, UserContent } from '@sand/messages'
 import { pair } from '../http/pair'
 
@@ -41,7 +42,7 @@ const userMessages = (content: Block[], images: boolean): ChatMessage[] => {
 }
 
 const assistantMessages = (content: Block[], safe: (name: string) => string): ChatMessage[] => {
-  const text = content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('')
+  const text = textOf(content, '')
   const calls = content.flatMap(block =>
     block.type === 'tool_call'
       ? [{ id: block.id, type: 'function', function: { name: safe(block.name), arguments: JSON.stringify(block.input ?? {}) } }]

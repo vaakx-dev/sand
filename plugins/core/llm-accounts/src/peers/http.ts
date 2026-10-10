@@ -1,3 +1,4 @@
+import { bearer, trimSlash } from '@sand/kit'
 import { rawMessage } from '../errors'
 import { sharePaths, type ShareInfo } from '../share/info'
 import type { RemotePc } from './remotes'
@@ -16,13 +17,9 @@ export class Refused extends Error {
 
 export class Offline extends Error {}
 
-const trim = (url: string) => url.replace(/\/+$/, '')
-
-export const authHeaders = (pc: RemotePc) => ({ authorization: `Bearer ${pc.key}` })
-
 const answersAs = async (url: string, id: string): Promise<string | undefined> => {
   try {
-    const response = await fetch(`${trim(url)}/identity`, { signal: AbortSignal.timeout(identityTimeout) })
+    const response = await fetch(`${trimSlash(url)}/identity`, { signal: AbortSignal.timeout(identityTimeout) })
     if (!response.ok) return `${url} · HTTP ${response.status}`
     const body = (await response.json()) as { deviceId?: string; id?: string }
     return (body.deviceId ?? body.id) === id ? undefined : `${url} · a different PC answered`
@@ -35,7 +32,7 @@ export const findUrl = async (pc: RemotePc) => {
   const found = await Promise.all(pc.urls.map(url => answersAs(url, pc.id)))
   const index = found.indexOf(undefined)
   if (index < 0) throw new Offline(found.join('\n') || 'no address to try')
-  return trim(pc.urls[index]!)
+  return trimSlash(pc.urls[index]!)
 }
 
 export const refusal = async (response: Response) => {
@@ -45,7 +42,7 @@ export const refusal = async (response: Response) => {
 
 export const fetchInfo = async (base: string, pc: RemotePc, refresh: boolean): Promise<ShareInfo> => {
   const url = `${base}${sharePaths.info}${refresh ? '?refresh=1' : ''}`
-  const response = await fetch(url, { headers: authHeaders(pc), signal: AbortSignal.timeout(infoTimeout) })
+  const response = await fetch(url, { headers: bearer(pc.key), signal: AbortSignal.timeout(infoTimeout) })
   if (response.status === 401 || response.status === 403 || response.status === 404) throw new Refused(response.status, await refusal(response))
   if (!response.ok) throw new Error(await refusal(response))
   const info = (await response.json()) as Partial<ShareInfo>

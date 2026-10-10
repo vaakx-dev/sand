@@ -1,10 +1,10 @@
-import { copyProject, folderName, plural } from '@sand/kit'
+import { bytes, folderName, plural } from '@sand/kit'
+import { copyProject } from '@sand/sync/flows'
 import type { SyncInspect } from '@sand/sync/contract'
 import { usage } from './usage'
 import type { ProjectFlags } from './flags'
 import { findGroup } from './find'
 import { loadGroups, locationOn, type Group, type Loaded } from './groups'
-import { sizeText } from './format'
 import type { Pc, Pcs } from './pcs'
 import { progressPrinter } from './progress'
 
@@ -31,9 +31,9 @@ const destinationOf = (loaded: Loaded, pc: Pc, folder: string, path: string | un
 }
 
 const describe = (inspected: SyncInspect) => {
-  const lines = [`  ${plural(inspected.files, 'file')}, ${sizeText(inspected.bytes)}${inspected.git ? `, history ${sizeText(inspected.historyBytes)}` : ''}`]
+  const lines = [`  ${plural(inspected.files, 'file')}, ${bytes(inspected.bytes)}${inspected.git ? `, history ${bytes(inspected.historyBytes)}` : ''}`]
   if (inspected.dirty) lines.push(`  ${plural(inspected.dirty, 'uncommitted change')} included`)
-  if (inspected.skipped.length) lines.push(`  skipped: ${inspected.skipped.map(item => `${item.name} (${sizeText(item.bytes)})`).join(', ')}`)
+  if (inspected.skipped.length) lines.push(`  skipped: ${inspected.skipped.map(item => `${item.name} (${bytes(item.bytes)})`).join(', ')}`)
   if (inspected.secrets.length) lines.push(`  left out (secrets): ${inspected.secrets.join(', ')}`)
   if (inspected.setup) lines.push(`  setup: ${inspected.setup}`)
   return lines

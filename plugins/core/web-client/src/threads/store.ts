@@ -5,7 +5,7 @@ import type { SessionInfo, SessionMetaUpdate, SessionSummary } from '@sand/sessi
 import type { QueueState } from '@sand/steering/contract'
 import type { DraftTarget, Thread } from '../contract'
 import type { Context } from 'drydock'
-import { nextFrame } from './frame'
+import { nextFrame } from '../detached'
 import { listKey } from './listed'
 
 const blank = (info: SessionSummary): Thread => ({

@@ -1,5 +1,4 @@
-import type { ToolView } from '@sand/transcript-chat/contract'
-import type { TruncatedAt } from '../contract'
+import type { ToolView, TruncatedAt } from '../contract'
 import { div, el } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { resultText } from '../thread/results'

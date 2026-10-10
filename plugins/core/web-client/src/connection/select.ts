@@ -1,5 +1,6 @@
 import type { RouteKind } from '@sand/host-gateway/contract'
 import { errorMessage, routeKind, routeRank } from '@sand/kit'
+import { after } from '../detached'
 import { failed, succeeded } from './book'
 import { probe, type Probe } from './probe'
 
@@ -37,13 +38,13 @@ export const selectRoute = (urls: string[], expected: string | undefined, truste
     const results: Route[] = []
     let lastError: Error | undefined
     let waiting = list.length
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let settling: (() => void) | undefined
     let done = false
 
     const finish = () => {
       if (done) return
       done = true
-      clearTimeout(timer)
+      settling?.()
       const best = pick(results, list, expected, trusted ?? (expected === undefined ? first : undefined))
       if (best) resolve(best)
       else reject(lastError ?? new Error('No known way to reach this PC'))
@@ -63,7 +64,7 @@ export const selectRoute = (urls: string[], expected: string | undefined, truste
             succeeded(route.identity.deviceId, url, route.latency)
             if (done) return
             results.push(route)
-            timer ??= setTimeout(finish, settle)
+            settling ??= after(settle, finish)
           },
           error => miss(url, new Error(`Could not reach ${hostOf(url)}: ${errorMessage(error)}`)),
         )

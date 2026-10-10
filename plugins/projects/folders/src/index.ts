@@ -12,13 +12,11 @@ export default definePlugin({
   description: 'Lets the page browse folders and make new ones on this computer',
   uses: { server: 'does nothing: the page cannot browse folders' },
   apply(ctx) {
-    ctx.watch('server', server => {
-      if (!server) return
-      const disposers = [
-        server.handle('fs.browse', ({ path }) => browse(expandHome(path))),
-        server.handle('fs.mkdir', ({ path }) => makeFolder(path)),
-      ]
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch('server', server =>
+      server?.handle({
+        'fs.browse': ({ path }) => browse(expandHome(path)),
+        'fs.mkdir': ({ path }) => makeFolder(path),
+      }),
+    )
   },
 })

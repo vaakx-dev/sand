@@ -1,5 +1,9 @@
 import type { WirePairing } from '../contract'
+import { listen, owned } from '@sand/dom'
 import type { Context } from 'drydock'
+import { after } from '../detached'
+import { onIdle } from '../integrations/idle'
+import { askPersistence } from '../integrations/storage'
 import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
 import { createKeep } from './keep'
@@ -7,7 +11,6 @@ import { trimMemory } from './memory'
 import { otherScopes, readScope, readThread, wipeScope } from './reads'
 import { fillThread, restoreScope } from './restore'
 import { savedScope, scopeOf } from './scope'
-import { askPersistence, onIdle } from './timing'
 import { createWriter } from './writer'
 
 const restoreWait = 1500
@@ -18,7 +21,7 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
   const kept = createKeep(writer.scope)
   let restoredHost: string | undefined
   let settled = false
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let pending: (() => void) | undefined
   let writing = false
   let tidied = false
 
@@ -30,7 +33,7 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
   }
 
   const write = async () => {
-    timer = undefined
+    pending = undefined
     if (writing) return schedule()
     writing = true
     const scope = writer.scope()
@@ -42,8 +45,8 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
   }
 
   const schedule = () => {
-    if (timer || !writer.scope()) return
-    timer = setTimeout(() => onIdle(() => void write()), writeDelay)
+    if (pending || !writer.scope()) return
+    pending = after(writeDelay, () => onIdle(() => void write()))
   }
 
   const restore = async () => {
@@ -61,7 +64,7 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     restoredHost = scope.host
   }
 
-  const ready = Promise.race([restore().catch(() => {}), new Promise<void>(resolve => setTimeout(resolve, restoreWait))]).then(() => {
+  const ready = Promise.race([restore().catch(() => {}), new Promise<void>(resolve => after(restoreWait, resolve))]).then(() => {
     settled = true
   })
 
@@ -106,8 +109,8 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
 
   const flushNow = () => {
     if (!writer.busy()) return
-    clearTimeout(timer)
-    timer = undefined
+    pending?.()
+    pending = undefined
     void write()
   }
 
@@ -115,15 +118,13 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     if (document.visibilityState === 'hidden') flushNow()
   }
 
-  ctx.effect(() => {
-    addEventListener('visibilitychange', hidden)
-    addEventListener('pagehide', flushNow)
-    return () => {
-      removeEventListener('visibilitychange', hidden)
-      removeEventListener('pagehide', flushNow)
-      clearTimeout(timer)
-      unwatch()
-    }
+  owned(ctx, () => {
+    listen(window, 'visibilitychange', hidden)
+    listen(window, 'pagehide', flushNow)
+  })
+  ctx.effect(() => () => {
+    pending?.()
+    unwatch()
   })
 
   ctx.on('thread.select', id => {

@@ -83,6 +83,11 @@ export default definePlugin({
         if (!info) return undefined
         return remember((info.format ?? 1) < current ? rewrite(info) : info)
       },
+      require(id) {
+        const session = sessions.open(id)
+        if (!session) throw new Error(`No thread ${id}`)
+        return session
+      },
       branch(source, id, at) {
         const title = source.title ? `${source.title} (branch)` : undefined
         const copy = sessions.create({ id, cwd: source.cwd, project: source.project, title, parent: source.id, kind: 'branch' })

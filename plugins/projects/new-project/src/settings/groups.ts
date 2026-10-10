@@ -1,8 +1,7 @@
 import { plural } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, settingsSection, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
 import { sourcesPage } from '../flow/sources'
-import { projectList } from './list'
 import { refreshStates } from './refresh'
 import { groupRow } from './row'
 import type { ProjectsContext } from './types'
@@ -34,7 +33,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
   return dynamicChild(source, ({ hidden }) => {
     const groups = ctx.projects.groups({ hidden })
     refreshStates(ctx, groups, refreshed)
-    return projectList(
+    return settingsSection(
       { title: heading(groups), action: div({ class: 'flex items-center gap-2' }, hiddenToggle(ctx, showHidden), addButton(ctx)) },
       ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open)) : [settingsRow('No saved projects')]),
     )

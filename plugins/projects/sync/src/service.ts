@@ -1,8 +1,8 @@
+import { keyedSerial } from '@sand/kit'
 import type { WireHandler, WireRequestType } from '@sand/protocol'
 import { applySnapshot } from './apply/apply'
 import { resolveConflicts } from './conflicts/resolve'
 import { hiddenFor } from './folder/hidden'
-import { locked } from './folder/lock'
 import { absolutePath, refuseBlocked } from './folder/paths'
 import { inspectFolder } from './inspect/inspect'
 import { runSetup } from './setup/run'
@@ -22,6 +22,7 @@ const commitId = (value: unknown) => {
 
 export const createSync = (home: string) => {
   const transfers = createTransfers()
+  const locked = keyedSerial()
 
   const open = async (path: unknown) => {
     const hidden = hiddenFor(home, absolutePath(path))

@@ -1,5 +1,4 @@
-import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, el, fold, span, type Child } from '@sand/dom'
 import { plural } from '@sand/kit'
 

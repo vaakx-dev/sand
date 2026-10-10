@@ -1,17 +1,9 @@
 import type { HostHealthCheck } from '@sand/host-health/contract'
-import {
-  appRoot,
-  buildInfo,
-  downloadRelease,
-  findRelease,
-  loadUpdateStore,
-  restorePrevious,
-  switchTo,
-  waitHealthy,
-  writeShim,
-} from '@sand/kit/host'
+import { appRoot, buildInfo, loadUpdateStore, restorePrevious, switchTo, waitHealthy, writeShim } from '@sand/kit/host'
 import { definePlugin } from 'drydock'
 import { announcer } from './announce'
+import { downloadRelease } from './github/download'
+import { findRelease } from './github/release'
 import { hostCodeChanged } from './host-code'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'

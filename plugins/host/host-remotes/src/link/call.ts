@@ -1,5 +1,5 @@
 import type { PairLinkRequest, PairLinkResult } from '@sand/host-devices/contract'
-import { bearer, errorMessage, hostPaths } from '@sand/kit'
+import { bearer, errorMessage, hostPaths, trimSlash } from '@sand/kit'
 import { remoteUrls } from '@sand/kit/host'
 import type { RemoteRecord } from '../contract'
 
@@ -10,7 +10,7 @@ export type LinkReply = { kind: 'linked'; url: string; result: PairLinkResult } 
 export class Unreachable extends Error {}
 
 const linkAt = async (url: string, record: RemoteRecord, body: PairLinkRequest): Promise<LinkReply | undefined> => {
-  const response = await fetch(`${url.replace(/\/+$/, '')}${hostPaths.pairLink}`, {
+  const response = await fetch(`${trimSlash(url)}${hostPaths.pairLink}`, {
     method: 'POST',
     headers: { ...bearer(record.key), 'content-type': 'application/json' },
     body: JSON.stringify(body),

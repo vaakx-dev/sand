@@ -1,9 +1,10 @@
 import { derive, div, dynamicChild, icon, primaryAction, quietButton, span, spinner, type Child } from '@sand/dom'
+import { plural } from '@sand/kit'
 import { changeLine, isNotable } from './changes'
 import type { Fleet } from './fleet/model'
 import { runStatus } from './fleet/run'
 import { changesFor, isFar } from './fleet/status'
-import { behindText, plural } from './fleet/text'
+import { behindText } from './fleet/text'
 
 export type BannerKind = 'running' | 'done' | 'failed' | 'ready'
 

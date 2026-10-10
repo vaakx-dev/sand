@@ -18,8 +18,11 @@ export default definePlugin({
       live = false
     })
 
+    const save = (id: string, items: Pending[]) =>
+      void store.set(id, items).catch(error => ctx.ui?.notify(`Follow-ups not saved: ${errorMessage(error)}`, 'error'))
+
     const change = (session: Session, items: Pending[]) => {
-      store.set(session.id, items)
+      save(session.id, items)
       ctx.emit('turn.queue', session)
     }
 
@@ -80,7 +83,7 @@ export default definePlugin({
       if (result.stopReason === 'interrupted' || result.stopReason === 'error') return
       queueMicrotask(() => next(session))
     })
-    ctx.on('session.remove', session => store.set(session.id, []))
+    ctx.on('session.remove', session => save(session.id, []))
     ctx.on('runtime.drain', () => {
       draining = true
     })

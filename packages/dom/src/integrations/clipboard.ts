@@ -18,3 +18,12 @@ export const copyText = async (text: string) => {
     return fallback(text)
   }
 }
+
+interface Notice {
+  push(text: string, options: { level: 'info' | 'error' }): void
+}
+
+export const copyWithNotice = async (notify: Notice | undefined, text: string, what: string) => {
+  const copied = await copyText(text)
+  notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
+}

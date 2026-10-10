@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import type {} from '@sand/skills/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
@@ -15,11 +16,7 @@ export default definePlugin({
   apply(ctx) {
     ctx.effect(() => ctx.tools.register(statusTool))
     ctx.effect(() => ctx.tools.register(waitTool))
-    ctx.watch('skills', service => {
-      if (!service) return
-      const disposers = skills.map(dir => service.register(dir))
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch('skills', service => (service ? joinDisposers(...skills.map(dir => service.register(dir))) : undefined))
     ctx.watch('server', server => server?.handle('github.pr', ({ cwd }) => prSummary(cwd)))
   },
 })

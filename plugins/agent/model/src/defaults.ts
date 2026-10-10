@@ -1,5 +1,6 @@
-import type { SessionSettings, SettingsPatch } from './contract'
+import { serial } from '@sand/kit'
 import { join } from 'node:path'
+import type { SessionSettings, SettingsPatch } from './contract'
 import { clean } from './settings'
 
 export interface Defaults {
@@ -19,7 +20,7 @@ const readSaved = async (file: string): Promise<SessionSettings> => {
 export const createDefaults = async (home: string, fallback: () => SessionSettings): Promise<Defaults> => {
   const file = join(home, 'model.json')
   let saved = await readSaved(file)
-  let writing = Promise.resolve()
+  const queue = serial()
   const write = async () => {
     await Bun.write(file, `${JSON.stringify(saved, null, 2)}\n`)
   }
@@ -27,8 +28,7 @@ export const createDefaults = async (home: string, fallback: () => SessionSettin
     get: () => ({ ...fallback(), ...saved }),
     async save(patch) {
       saved = clean({ ...saved, ...patch })
-      writing = writing.then(write)
-      await writing
+      await queue(write)
     },
   }
 }

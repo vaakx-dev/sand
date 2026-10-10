@@ -1,7 +1,6 @@
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import { upstreamUrl } from '@sand/kit/host'
+import { textReply, upstreamUrl } from '@sand/kit/host'
 import type { RouteCaller } from '@sand/protocol'
-import { text } from './http/reply'
 
 const hopByHop = new Set(['connection', 'keep-alive', 'upgrade', 'transfer-encoding', 'host'])
 const credentials = new Set(['authorization', 'cookie'])
@@ -29,7 +28,7 @@ const responseHeaders = (headers: Headers, secret: string) => {
 
 export const createProxy = (runtimes: Runtimes, send: Fetch = fetch) => async (request: Request, caller: RouteCaller | undefined) => {
   const runtime = runtimes.current() ?? (await runtimes.wait(waitForRuntime))
-  if (!runtime) return text('sand is starting, try again in a moment', 503, { 'retry-after': '2' })
+  if (!runtime) return textReply('sand is starting, try again in a moment', 503, { 'retry-after': '2' })
   try {
     const upstream = await send(upstreamUrl(runtime.url, new URL(request.url), runtime.secret, Boolean(caller), caller), {
       method: request.method,
@@ -45,7 +44,7 @@ export const createProxy = (runtimes: Runtimes, send: Fetch = fetch) => async (r
       headers: responseHeaders(upstream.headers, runtime.secret),
     })
   } catch {
-    return text('the sand runtime is not answering', 502)
+    return textReply('the sand runtime is not answering', 502)
   }
 }
 

@@ -24,6 +24,10 @@ export default definePlugin({
     jobs: 'threads whose background agents are still running look idle',
     branches: 'threads show their folder instead of their git branch',
     worktrees: 'threads in a git worktree show no worktree icon',
+    commands: 'the palette offers no fork or model rows for the thread',
+    models: 'the palette model row shows no current model',
+    wire: 'thread menus offer no Regenerate name',
+    notify: 'failed thread actions and copies are not reported',
   },
   apply(ctx) {
     const threads = ctx.threads

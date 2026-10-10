@@ -1,8 +1,8 @@
 import { derive, div, dynamicChild, el, exactTime, icon, list, primaryAction, quietButton, rowButton, settingsSection, sig, span, untrack, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'
 import { canUpdate, changesFor } from '../fleet/status'
-import { plural } from '../fleet/text'
 import { pcStatusLine } from '../pc-line'
 import { sheetFoot } from './foot'
 

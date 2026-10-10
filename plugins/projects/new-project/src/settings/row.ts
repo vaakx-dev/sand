@@ -7,10 +7,7 @@ import { rowMenu } from './menu'
 import { byRecent, withoutCopy } from './places'
 import type { ProjectsContext } from './types'
 
-const groupIcon = (ctx: ProjectsContext, group: ProjectGroup) => {
-  const url = group.locations.map(entry => ctx.projects.icon(entry.path, entry.device)).find(Boolean)
-  return projectIcon(group.name, url)
-}
+const groupIcon = (ctx: ProjectsContext, group: ProjectGroup) => projectIcon(group.name, ctx.projects.groupIcon(group))
 
 const summary = (group: ProjectGroup) => {
   const age = ago(group.updated)

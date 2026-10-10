@@ -27,7 +27,6 @@ export interface SettingsState {
 }
 
 export interface ModelSettings {
-  of(session?: Session): SessionSettings
   effective(session?: Session): EffectiveSettings
   resolve(settings: SessionSettings): EffectiveSettings
   state(session?: Session): SettingsState

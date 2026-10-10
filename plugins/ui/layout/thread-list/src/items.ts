@@ -22,7 +22,7 @@ export interface Places {
   worktree?: (cwd: string, device?: string) => boolean
 }
 
-const where = (cwd: string, device: string | undefined, places: Places, quick?: boolean) => {
+const where = (cwd: string, device: string | undefined, places: Places, quick?: boolean): Pick<NavItem, 'subtitle' | 'subtitleIcon'> => {
   const branch = quick ? undefined : places.branch?.(cwd, device)
   const at = quick ? '' : (branch ?? place(cwd))
   const pc = device && places.machine?.(device)

@@ -1,6 +1,6 @@
 import { samePath } from '@sand/kit/fs'
 import { basename, join, relative, resolve } from 'node:path'
-import { gitMaybe, gitOk } from './run'
+import { gitMaybe, gitOk } from '@sand/kit/git'
 
 export interface Checkout {
   path: string

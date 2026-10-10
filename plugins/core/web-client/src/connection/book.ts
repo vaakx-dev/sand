@@ -1,5 +1,6 @@
 import type { HostRoute, RouteKind } from '@sand/host-gateway/contract'
 import { routeKind } from '@sand/kit'
+import { loadRecord, loadText, saveJson, saveText } from '../integrations/storage'
 
 export interface StoredRoute {
   url: string
@@ -28,28 +29,13 @@ export const originOf = (url: string) => {
 const valid = (value: unknown): value is StoredRoute =>
   typeof value === 'object' && value !== null && typeof (value as StoredRoute).url === 'string' && typeof (value as StoredRoute).kind === 'string'
 
-const read = (): Book => {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
-    return Object.fromEntries(
-      Object.entries(parsed).map(([host, list]) => [host, Array.isArray(list) ? list.filter(valid) : []]),
-    )
-  } catch {
-    return {}
-  }
-}
-
-const write = (book: Book) => {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(book))
-  } catch {}
-}
+const read = (): Book =>
+  Object.fromEntries(Object.entries(loadRecord(storageKey)).map(([host, list]) => [host, Array.isArray(list) ? list.filter(valid) : []]))
 
 const update = (host: string, change: (list: StoredRoute[]) => StoredRoute[]) => {
   const book = read()
   book[host] = change(book[host] ?? [])
-  write(book)
+  saveJson(storageKey, book)
 }
 
 const entry = (list: StoredRoute[], url: string) => list.find(route => route.url === url)
@@ -92,16 +78,6 @@ export const failed = (host: string, url: string) => {
   update(host, list => list.map(route => (route.url === origin ? { ...route, failed: Date.now() } : route)))
 }
 
-export const homeHost = (): string | undefined => {
-  try {
-    return localStorage.getItem(homeKey) ?? undefined
-  } catch {
-    return undefined
-  }
-}
+export const homeHost = () => loadText(homeKey)
 
-export const setHomeHost = (id: string) => {
-  try {
-    localStorage.setItem(homeKey, id)
-  } catch {}
-}
+export const setHomeHost = (id: string) => saveText(homeKey, id)

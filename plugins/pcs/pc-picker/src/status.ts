@@ -1,9 +1,9 @@
 import type { SyncRelation } from '@sand/sync/contract'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Tone } from '@sand/dom'
-import { relationLabel } from '@sand/kit'
+import { relationLabel } from '@sand/sync/flows'
 import { copyOn } from './group'
-import { deviceOf, refOf, type PickerContext } from './target'
+import { refOf, type PickerContext } from './target'
 
 export interface Neighbour {
   entry: ProjectEntry
@@ -40,7 +40,7 @@ export const newerSource = (ctx: PickerContext, group: ProjectGroup, location: P
 
 export const statusOf = (ctx: PickerContext, group: ProjectGroup, machine: Machine): RowStatus | undefined => {
   if (!machine.online) return { tone: 'neutral', text: 'Offline', muted: true }
-  const location = copyOn(group, deviceOf(machine))
+  const location = copyOn(group, machine.device)
   if (!location) return { tone: 'neutral', text: 'Copy here…' }
   const found = neighbours(ctx, group, location)
   for (const relation of priority) {

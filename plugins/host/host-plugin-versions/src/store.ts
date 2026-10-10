@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, serial } from '@sand/kit'
 import { removeQuietly } from '@sand/kit/host'
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -9,15 +9,6 @@ import { replaceTarget } from './replace'
 import { discoverTargets, present, type TargetInfo, targetInfo } from './targets'
 
 const keep = 30
-
-const serial = () => {
-  let tail: Promise<unknown> = Promise.resolve()
-  return <T>(task: () => Promise<T>): Promise<T> => {
-    const next = tail.then(task)
-    tail = next.catch(() => {})
-    return next
-  }
-}
 
 export const createVersionStore = async (home: string, changed: () => void = () => {}) => {
   const root = join(home, 'versions')

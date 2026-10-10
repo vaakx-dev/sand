@@ -1,5 +1,4 @@
-import type { RemoteRecord } from '@sand/host-remotes/contract'
-import type { ServerMessage, WireRequest } from '@sand/protocol'
+import type { RemoteRecord, ServerMessage, WireRequest } from '@sand/protocol'
 import { errorMessage } from '../../text/error'
 import { fetchHostIdentity, requestTicket } from '../../wire/auth'
 import { ticketSocketUrl } from '../../wire/pairing'
@@ -16,7 +15,7 @@ export class PeerError extends Error {
   }
 }
 
-const ask = (url: string, ticket: string, request: WireRequest, sockets: Set<WebSocket>, timeout: number) =>
+export const askHost = (url: string, ticket: string, request: WireRequest, timeout = 15_000, sockets = new Set<WebSocket>()) =>
   new Promise<unknown>((resolve, reject) => {
     const socket = new WebSocket(ticketSocketUrl(url, ticket))
     sockets.add(socket)
@@ -58,7 +57,7 @@ export const callPeer = async (record: RemoteRecord, request: WireRequest, socke
       }
       const ticket = await requestTicket(url, record.key)
       if (!ticket) throw new PeerError('refused', `${record.name} no longer accepts this PC; pair it again`)
-      return await ask(url, ticket.ticket, request, sockets, timeout)
+      return await askHost(url, ticket.ticket, request, timeout, sockets)
     } catch (error) {
       if (error instanceof PeerError) throw error
       last = errorMessage(error)

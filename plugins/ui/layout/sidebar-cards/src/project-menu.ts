@@ -1,4 +1,5 @@
 import { errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { ProjectChoice } from './project-choices'
 
@@ -9,8 +10,6 @@ export interface ProjectMenuHooks {
   done(): void
   leave(): void
 }
-
-const tidy = (text: string) => text.replace(/\s+/g, ' ').trim()
 
 const attempt = (ctx: Context, failed: string, work: () => Promise<unknown>) => () =>
   work().catch(error => ctx.notify?.push(`${failed}: ${errorMessage(error)}`, { level: 'error' }))
@@ -68,8 +67,8 @@ const rename = (ctx: Context, group: ProjectGroup): NavAction => ({
     placeholder: group.name,
     tip: 'New project name',
     submit: 'Rename',
-    preview: text => (tidy(text) && tidy(text) !== group.name ? `Rename to ${tidy(text)}` : undefined),
-    run: text => attempt(ctx, 'Could not rename', () => ctx.projects?.rename(group, tidy(text)) ?? Promise.resolve())(),
+    preview: text => (oneLine(text) && oneLine(text) !== group.name ? `Rename to ${oneLine(text)}` : undefined),
+    run: text => attempt(ctx, 'Could not rename', () => ctx.projects?.rename(group, oneLine(text)) ?? Promise.resolve())(),
   },
   run: () => {},
 })

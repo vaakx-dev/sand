@@ -1,4 +1,4 @@
-import { div, el, option, select, SPACE, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { div, h2, option, section, select, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { read } from '../reactive/read'
 import { quietButton } from './button'
@@ -17,13 +17,12 @@ export interface Choice<T> {
 }
 
 export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[]) =>
-  el(
-    'section',
+  section(
     { class: 'flex flex-col gap-2' },
     title || action
-      ? div({ class: 'flex min-h-8 items-center gap-3 px-1' }, el('h2', { class: 'min-w-0 flex-1 text-xs font-medium text-neutral-500' }, title ?? ''), action ?? null)
+      ? div({ class: 'flex min-h-8 items-center gap-3 px-1' }, h2({ class: 'min-w-0 flex-1 text-xs font-medium text-neutral-500' }, title ?? ''), action ?? null)
       : null,
-    div({ class: 'flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-800', style: { rowGap: SPACE.px } }, ...rows),
+    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-xl border border-neutral-800 bg-neutral-800' }, ...rows),
   )
 
 export const settingsRow = (label: Child, control?: Child, detail?: Child) =>

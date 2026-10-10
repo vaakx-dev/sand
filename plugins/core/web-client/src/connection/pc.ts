@@ -3,7 +3,7 @@ import type { BuildInfo, DeviceInfo, Hello, WireEvent } from '@sand/protocol'
 import type { ConnectionInfo, ConnectionStatus, WireState } from '../contract'
 import { errorMessage } from '@sand/kit'
 import { Unpaired } from '../auth/unpaired'
-import type { Call } from '../wire/connection'
+import type { Call } from '../integrations/socket'
 import { learn } from './book'
 import { candidates } from './candidates'
 import { helloMemory, type HelloKeep } from './hello'
@@ -32,7 +32,6 @@ export interface PcOptions {
 export interface PcConnection {
   state(): WireState
   info(): ConnectionInfo
-  retryAt(): number | undefined
   call: Call
   base(): string | undefined
   host(): string | undefined
@@ -266,7 +265,6 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
       failedAt,
       build: build ?? route?.identity.build,
     }),
-    retryAt: retry.at,
     call: request => (current ? current.connection.call(request) : Promise.reject(new Error(options.offline))),
     base: () => (current ? route?.url : undefined),
     host: () => hostId,

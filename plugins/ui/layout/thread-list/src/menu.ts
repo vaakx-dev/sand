@@ -1,5 +1,6 @@
 import type { Drafts } from '@sand/composer-card/contract'
-import { copyText, errorMessage, type NavAction } from '@sand/dom'
+import { copyWithNotice, errorMessage, type NavAction } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { renamePage } from './palette/session'
@@ -10,14 +11,9 @@ type Ctx = Context<'threads'>
 const attempt = (ctx: Ctx, failed: string, work: () => Promise<unknown>) => () =>
   work().catch(error => ctx.notify?.push(`${failed}: ${errorMessage(error)}`, { level: 'error' }))
 
-const copy = (ctx: Ctx, text: string, what: string) => async () => {
-  const copied = await copyText(text)
-  ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
-}
-
 const rename = async (ctx: Ctx, thread: Thread) => {
   if (ctx.palette) return ctx.palette.open(renamePage(ctx, thread))
-  const name = (await ctx.picker?.input('Rename thread', thread.info.title ?? ''))?.replace(/\s+/g, ' ').trim()
+  const name = oneLine((await ctx.picker?.input('Rename thread', thread.info.title ?? '')) ?? '')
   if (name && name !== thread.info.title) await ctx.threads.rename(thread.id, name)
 }
 
@@ -38,12 +34,12 @@ const remove = async (ctx: Ctx, thread: Thread) => {
 
 const openActions = (ctx: Ctx, thread: Thread): NavAction[] => [
   { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => void window.open(ctx.threads.link(thread.id), '_blank', 'noopener') },
-  ...(ctx.palette || ctx.picker ? [{ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: attempt(ctx, 'Could not rename', () => rename(ctx, thread)) }] : []),
+  ...(ctx.palette || ctx.picker ? [{ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: attempt(ctx, 'Could not rename', () => rename(ctx, thread)) } satisfies NavAction] : []),
   ...(ctx.wire && thread.info.messages
-    ? [{ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: attempt(ctx, 'Could not rename', () => retitle(ctx, thread)) }]
+    ? [{ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: attempt(ctx, 'Could not rename', () => retitle(ctx, thread)) } satisfies NavAction]
     : []),
   ...(!thread.device && thread.info.messages
-    ? [{ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: attempt(ctx, 'Could not branch', () => branch(ctx, thread)) }]
+    ? [{ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: attempt(ctx, 'Could not branch', () => branch(ctx, thread)) } satisfies NavAction]
     : []),
 ]
 
@@ -58,8 +54,8 @@ const organiseActions = (ctx: Ctx, thread: Thread): NavAction[] => {
 }
 
 const copyActions = (ctx: Ctx, thread: Thread): NavAction[] => [
-  { id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: copy(ctx, ctx.threads.link(thread.id), 'link') },
-  ...(thread.info.cwd ? [{ id: 'copy-path', group: 'copy', label: 'Copy folder path', icon: 'folder', run: copy(ctx, thread.info.cwd, 'folder path') }] : []),
+  { id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: () => copyWithNotice(ctx.notify, ctx.threads.link(thread.id), 'link') },
+  ...(thread.info.cwd ? [{ id: 'copy-path', group: 'copy', label: 'Copy folder path', icon: 'folder', run: () => copyWithNotice(ctx.notify, thread.info.cwd, 'folder path') } satisfies NavAction] : []),
 ]
 
 const deleteAction = (ctx: Ctx, thread: Thread): NavAction[] =>

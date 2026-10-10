@@ -1,4 +1,4 @@
-import { div, el, span, type Child } from '@vaakx-dev/vrui'
+import { div, p, span, type Child } from '@vaakx-dev/vrui'
 import { icon } from '../../icons/lucide'
 import type { NavAction } from '../../shell/nav/types'
 import { controlButton, rowButton, secondaryAction } from '../button'
@@ -69,7 +69,7 @@ export const menuItems = (actions: NavAction[], control: MenuControl, size: Item
 export const confirmView = (action: NavAction, control: MenuControl, back: () => void, size: ItemSize) =>
   div(
     { class: 'flex flex-col gap-3 p-2' },
-    el('p', { class: 'text-sm text-neutral-300' }, action.confirm),
+    p({ class: 'text-sm text-neutral-300' }, action.confirm),
     div(
       { class: 'flex justify-end gap-2' },
       secondaryAction({ size, onClick: back, onMount: node => node.focus() }, 'Cancel'),
@@ -99,12 +99,6 @@ export const arrowKeys = (event: KeyboardEvent) => {
 }
 
 export const focusFirst = (node: HTMLElement) => node.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
-
-export const returnFocus = (node: HTMLElement, from: HTMLElement) => () => {
-  const active = document.activeElement
-  const lost = !active || active === document.body || node.contains(active)
-  if (from.isConnected && lost) from.focus()
-}
 
 export const firstStep = (actions: NavAction[], ask?: string): MenuStep | undefined => {
   const action = ask ? actions.find(candidate => candidate.id === ask && candidate.ask) : undefined

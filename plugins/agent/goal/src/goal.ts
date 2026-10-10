@@ -1,3 +1,4 @@
+import { plural } from '@sand/kit'
 import type { Entry } from '@sand/messages'
 
 export const entryType = 'goal'
@@ -21,6 +22,6 @@ export const activeGoal = (path: Entry[]) => {
 export const sameGoal = (a: Goal | undefined, b: Goal) => a?.objective === b.objective && a.checks === b.checks
 
 export const describeGoal = (goal: Goal) => {
-  const checks = goal.checks ? `${goal.checks} ${goal.checks === 1 ? 'check' : 'checks'}` : 'not checked yet'
+  const checks = goal.checks ? plural(goal.checks, 'check') : 'not checked yet'
   return [`Goal active: ${goal.objective} (${checks})`, goal.reason && `Last check: ${goal.reason}`].filter(Boolean).join('\n')
 }

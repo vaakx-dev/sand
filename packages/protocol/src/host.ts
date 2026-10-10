@@ -45,6 +45,29 @@ export interface HostStatus {
   draining: number
 }
 
+export interface HostHealth {
+  healthy: boolean
+  runtime: RuntimeHealth
+  error?: string
+  failedPlugins: FailedPlugin[]
+  web: boolean
+  webError?: string
+  build?: BuildInfo
+  log: string[]
+}
+
+export interface HostBundle {
+  build: BuildInfo
+  bytes: Uint8Array<ArrayBuffer>
+}
+
+export interface PluginTree {
+  hash: string
+  files: Record<string, string>
+}
+
+export type UpdateChannel = 'release' | 'nightly' | 'dev'
+
 declare module 'drydock' {
   interface Services {
     hostOptions: HostOptions

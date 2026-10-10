@@ -1,4 +1,4 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
+import type { LimitWindow } from '@sand/protocol'
 import { coarseDuration } from '../time/duration'
 
 export const percent = (fraction: number) => `${Math.round(fraction * 100)}%`

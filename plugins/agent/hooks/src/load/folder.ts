@@ -1,3 +1,4 @@
+import { keyedSerial } from '@sand/kit'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type {} from '@sand/watch/contract'
 import { evict, type Context } from 'drydock'
@@ -32,13 +33,7 @@ const empty: HookFolder = { dir: '', root: '', hash: '', files: [], trusted: tru
 export const hookFolders = (ctx: Context<'watcher'>, shared: SharedEnv, setup: FolderSetup) => {
   const folders = new Map<string, HookFolder>()
   const mounts = new Map<string, Map<string, Mounted>>()
-  const queues = new Map<string, Promise<unknown>>()
-
-  const queued = <T>(dir: string, work: () => Promise<T>) => {
-    const next = (queues.get(dir) ?? Promise.resolve()).then(work, work)
-    queues.set(dir, next.catch(() => undefined))
-    return next
-  }
+  const queued = keyedSerial()
 
   const unmount = (dir: string, keep: (path: string, mounted: Mounted) => boolean = () => false) => {
     const own = mounts.get(dir)

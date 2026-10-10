@@ -1,11 +1,10 @@
+import type { WireHandlers } from '@sand/protocol'
 import { existsSync } from 'node:fs'
 import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
-import type { CoreHandlers } from './registry'
-import { openSession } from './open'
 
-export const sessionRequests = (ctx: ServerContext): CoreHandlers => {
-  const session = (id: string) => openSession(ctx, id)
+export const sessionRequests = (ctx: ServerContext): WireHandlers => {
+  const session = (id: string) => ctx.sessions.require(id)
   return {
     'sessions.list': () => ctx.sessions.list(),
     'sessions.create': request => {

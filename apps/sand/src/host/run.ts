@@ -1,14 +1,13 @@
 import type { HostApp } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
 import { appMain, appRoot } from '@sand/kit/host'
-import { createApp, share, type Context } from 'drydock'
+import type { Context } from 'drydock'
 import { dirname, join } from 'node:path'
 import { builtins } from '../app/loader'
+import { startApp } from '../app/start'
 import { restartHost } from '../daemon/restart'
 import { readHostConfig } from './config'
 import { loadIdentity } from './identity'
-
-const shared = ['drydock', '@sand/protocol', '@sand/kit', '@sand/kit/fs', '@sand/kit/host', 'zod']
 
 const hostApp = (main: string): HostApp => {
   let root = appRoot(main)
@@ -30,13 +29,11 @@ const stuck = (ctx: Context) => {
 }
 
 export const runHost = async ({ home }: { home: string }) => {
-  share(Object.fromEntries(shared.map(name => [name, Bun.resolveSync(name, import.meta.dir)])))
-  const ctx = createApp()
+  const { ctx, exit } = startApp()
   ctx.on('drydock.error', (scope, error) => console.error(`[${scope.name}] ${errorMessage(error)}`))
   const { port, name, watch, drainTimeout } = await readHostConfig(home)
   const device = await loadIdentity(home, name)
   const main = join(import.meta.dir, '..', 'main.ts')
-  const exit = (code = 0) => void ctx.dispose().finally(() => process.exit(code))
 
   ctx.provide('hostOptions', { home, main, port, watch, drainTimeout, device })
   ctx.provide('hostApp', hostApp(main))

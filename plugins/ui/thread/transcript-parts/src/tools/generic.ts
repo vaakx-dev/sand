@@ -1,4 +1,4 @@
-import type { ToolBadge, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
+import type { ToolBadge, ToolRenderer, ToolView } from '../contract'
 import { div, el, fold } from '@sand/dom'
 import { resultText } from '../thread/results'
 import { toolLabel } from './label'

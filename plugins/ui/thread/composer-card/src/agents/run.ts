@@ -26,7 +26,7 @@ const workflowChip = (run: Sig<AgentRun>, state: Working, extra: Props<HTMLButto
     extra,
     span({ class: 'inline-flex shrink-0' }, icon('workflow', 13)),
     label(run),
-    progress(run.map(value => value.agents)),
+    progress(run),
   )
 
 const agentChip = (run: Sig<AgentRun>, state: Working, extra: Props<HTMLButtonElement>) =>

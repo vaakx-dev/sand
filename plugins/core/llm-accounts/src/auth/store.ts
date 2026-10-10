@@ -1,6 +1,6 @@
 import type { ServerProvider } from '../contract'
-import { replaceFile } from '@sand/kit/fs'
-import { chmod, writeFile } from 'node:fs/promises'
+import { isRecord, serial } from '@sand/kit'
+import { writePrivateJson } from '@sand/kit/fs'
 
 export interface Tokens {
   access: string
@@ -51,13 +51,6 @@ const serverOf = (value: any): ServerEntry | undefined => {
 
 export const serversOf = (saved: Saved): ServerEntry[] => (Array.isArray(saved.servers) ? saved.servers.flatMap(value => serverOf(value) ?? []) : [])
 
-export const writePrivateJson = async (path: string, value: unknown) => {
-  const temporary = `${path}.tmp`
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 })
-  if (process.platform !== 'win32') await chmod(temporary, 0o600)
-  await replaceFile(temporary, path)
-}
-
 const isCredential = (value: any): value is Credential =>
   (value?.type === 'oauth' && typeof value.access === 'string' && typeof value.refresh === 'string' && typeof value.expires === 'number') ||
   (value?.type === 'api_key' && typeof value.key === 'string' && !!value.key)
@@ -68,21 +61,20 @@ export const credentialOf = (saved: Saved, provider: string) => {
 }
 
 export const authStore = (path: string) => {
-  let writing = Promise.resolve()
+  const queue = serial()
   return {
     async read(): Promise<Saved> {
       const file = Bun.file(path)
       if (!(await file.exists())) return {}
       try {
-        const json = await file.json()
-        return json && typeof json === 'object' && !Array.isArray(json) ? json : {}
+        const json: unknown = await file.json()
+        return isRecord(json) ? json : {}
       } catch {
         return {}
       }
     },
     write(saved: Saved) {
-      writing = writing.catch(() => {}).then(() => writePrivateJson(path, saved))
-      return writing
+      return queue(() => writePrivateJson(path, saved))
     },
   }
 }

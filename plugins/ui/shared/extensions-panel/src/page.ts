@@ -1,9 +1,8 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { chevron, div, dynamicChild, el, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
+import { chevron, copyWithNotice, div, dynamicChild, el, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'
 import { choiceRow } from './choices'
-import { copyId } from './menu'
 import { partRow } from './parts'
 import { readRoles, type Roles } from './roles'
 
@@ -38,7 +37,7 @@ const details = (ctx: Context<'extensions'>, state: ReturnType<typeof readState>
     list(cards, card => card.extension.id, card =>
       dynamicChild(
         card.map(value => JSON.stringify(value)),
-        () => extensionCard(card.get(), () => toggle(card.get().extension), () => void copyId(ctx, card.get().extension.id)),
+        () => extensionCard(card.get(), () => toggle(card.get().extension), () => void copyWithNotice(ctx.notify, card.get().extension.id, 'id')),
       ),
     ),
     div(

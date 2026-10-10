@@ -1,8 +1,7 @@
 import type { Pending } from '@sand/steering/contract'
-import type { MenuSpec, NavAction } from '@sand/dom'
+import { copyWithNotice, type MenuSpec, type NavAction } from '@sand/dom'
 import type { Context } from 'drydock'
 import { split } from '../attachments/content'
-import { copier } from '../menu/copy'
 import type { Model } from '../model'
 
 export type Act = (run: (thread: string) => Promise<unknown>) => void
@@ -14,7 +13,7 @@ export const queueMenu = (ctx: Context<'threads' | 'turns'>, model: Model, act: 
   const actions: NavAction[] = [
     ...(steer
       ? []
-      : [
+      : ([
           { id: 'edit', label: 'Edit', icon: 'pencil', group: 'send', tile: true, run: () => model.edit(item) },
           {
             id: 'promote',
@@ -24,8 +23,8 @@ export const queueMenu = (ctx: Context<'threads' | 'turns'>, model: Model, act: 
             tile: true,
             run: () => act(thread => ctx.turns.promote(thread, item.id)),
           },
-        ]),
-    { id: 'copy', label: 'Copy text', icon: 'copy', group: 'copy', run: copier(ctx, text, 'message') },
+        ] satisfies NavAction[])),
+    { id: 'copy', label: 'Copy text', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, text, 'message') },
     { id: 'remove', label: 'Remove', icon: 'x', group: 'remove', danger: true, run: () => act(thread => ctx.turns.withdraw(thread, item.id)) },
   ]
   return { title: steer ? 'Next step' : 'Queued follow-up', subtitle: preview(item.label), actions }

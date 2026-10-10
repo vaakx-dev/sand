@@ -1,5 +1,6 @@
 import type { Block, ToolCallBlock } from '@sand/messages'
 import type { LLMEvent } from '../contract'
+import { isRecord } from '@sand/kit'
 
 interface Slot {
   index: number
@@ -12,7 +13,7 @@ const parseInput = (block: ToolCallBlock, json: string) => {
   if (!json.trim()) return
   try {
     const input = JSON.parse(json)
-    if (input && typeof input === 'object' && !Array.isArray(input)) block.input = input
+    if (isRecord(input)) block.input = input
     else block.malformed = json
   } catch {
     block.malformed = json

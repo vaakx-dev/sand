@@ -1,20 +1,12 @@
 import type { WireRequestOf } from '@sand/protocol'
 import type { Entry } from '@sand/messages'
 import type { ThreadImportResult, ThreadLinkEntries } from '@sand/sessions-sqlite/contract'
-import { expandHome } from '@sand/kit/fs'
+import { expandHome, isFolder } from '@sand/kit/fs'
 import { isAbsolute } from 'node:path'
 import type { SessionsContext } from '../types'
 import { moveNote } from './note'
 import { remapIds } from './remap'
 import type { Staging } from './stage'
-
-const isFolder = (path: string) =>
-  Bun.file(path)
-    .stat()
-    .then(
-      stats => stats.isDirectory(),
-      () => false,
-    )
 
 const resolveFolder = async (typed: string) => {
   const path = typed.trim()

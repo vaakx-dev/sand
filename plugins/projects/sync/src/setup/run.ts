@@ -1,5 +1,5 @@
+import { isFolder } from '@sand/kit/fs'
 import type { SyncSetup } from '../contract'
-import { isDirectory } from '../folder/stat'
 
 const timeout = 10 * 60 * 1000
 const tail = 4096
@@ -24,7 +24,7 @@ const runWindows = async (folder: string, command: string): Promise<SyncSetup> =
 
 export const runSetup = async (folder: string, command: string): Promise<SyncSetup> => {
   if (!command.trim()) throw new Error('A command is required')
-  if (!(await isDirectory(folder))) throw new Error(`${folder} is not a folder`)
+  if (!(await isFolder(folder))) throw new Error(`${folder} is not a folder`)
   if (process.platform === 'win32') return runWindows(folder, command)
   const child = Bun.spawn(['sh', '-c', `exec 2>&1\n${command}`], { cwd: folder, stdin: 'ignore', stdout: 'pipe', stderr: 'ignore', timeout, windowsHide: true })
   const [bytes, code] = await Promise.all([new Response(child.stdout).bytes(), child.exited])

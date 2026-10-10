@@ -1,3 +1,4 @@
+import { serial } from '@sand/kit'
 import { join } from 'node:path'
 
 export const fallbackLoop = 'react'
@@ -15,13 +16,12 @@ const readSaved = async (file: string) => {
 export const createDefaults = async (home: string, configured?: string) => {
   const file = join(home, 'loops.json')
   let saved = await readSaved(file)
-  let writing = Promise.resolve()
+  const queue = serial()
   return {
     get: () => configured ?? saved ?? fallbackLoop,
     async set(name: string) {
       saved = name
-      writing = writing.then(() => Bun.write(file, `${JSON.stringify({ default: name }, null, 2)}\n`).then(() => undefined))
-      await writing
+      await queue(() => Bun.write(file, `${JSON.stringify({ default: name }, null, 2)}\n`))
     },
   }
 }

@@ -2,10 +2,10 @@ import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import { remoteKey } from '@sand/kit'
 import { reviewPage } from './review'
-import { deviceOf, type Choice, type FlowContext } from './types'
+import type { Choice, FlowContext } from './types'
 
 const copyItem = (ctx: FlowContext, choice: Choice, group: ProjectGroup): PaletteItem => {
-  const here = group.locations.find(location => location.device === deviceOf(choice.machine))
+  const here = group.locations.find(location => location.device === choice.machine.device)
   return {
     id: `match:${group.id}`,
     icon: 'link',
@@ -33,7 +33,7 @@ const sameRemote = (ctx: FlowContext, url: string) => {
 }
 
 const inspected = async (ctx: FlowContext, choice: Choice): Promise<{ choice: Choice; groups: ProjectGroup[] }> => {
-  const folder = await ctx.projects.inspect(choice.path, deviceOf(choice.machine)).catch(() => undefined)
+  const folder = await ctx.projects.inspect(choice.path, choice.machine.device).catch(() => undefined)
   if (!folder) return { choice, groups: [] }
   if (folder.project) return { choice: { ...choice, existing: folder.project }, groups: [] }
   const groups = folder.matches.map(id => ctx.projects.get(id)).filter((group): group is ProjectGroup => Boolean(group))

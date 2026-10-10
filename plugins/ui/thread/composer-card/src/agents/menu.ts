@@ -1,7 +1,6 @@
-import { errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice, errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
 import type { AgentRun } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { copier } from '../menu/copy'
 
 type Ctx = Context<'threads' | 'turns'>
 
@@ -18,7 +17,7 @@ const stopper = (ctx: Ctx, run: AgentRun) => {
 export const runMenu = (ctx: Ctx, open: () => void, run: AgentRun): MenuSpec => {
   const stop = stopper(ctx, run)
   const actions: NavAction[] = [
-    ...(ctx.panels ? [{ id: 'open', label: 'Open agents panel', icon: 'bot', group: 'open', tile: true, run: open }] : []),
+    ...(ctx.panels ? [{ id: 'open', label: 'Open agents panel', icon: 'bot', group: 'open', tile: true, run: open } satisfies NavAction] : []),
     ...(stop
       ? [
           {
@@ -29,10 +28,10 @@ export const runMenu = (ctx: Ctx, open: () => void, run: AgentRun): MenuSpec => 
             danger: true,
             tile: true,
             run: () => void stop().catch(error => ctx.notify?.push(`Could not stop: ${errorMessage(error)}`, { level: 'error' })),
-          },
+          } satisfies NavAction,
         ]
       : []),
-    { id: 'copy-title', label: 'Copy title', icon: 'copy', group: 'copy', run: copier(ctx, run.title, 'title') },
+    { id: 'copy-title', label: 'Copy title', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, run.title, 'title') },
   ]
   return { title: run.title, subtitle: run.kind === 'workflow' ? 'Workflow' : 'Agent', actions }
 }

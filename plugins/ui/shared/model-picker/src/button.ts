@@ -1,4 +1,4 @@
-import { button, derive, div, dynamicChild, float, icon, onDocument, popover, show, sig, span, type StyleMap } from '@sand/dom'
+import { button, derive, div, dynamicChild, icon, mount, onDocument, popover, show, sig, span, type StyleMap } from '@sand/dom'
 import type { PickerTarget } from './contract'
 import type { PickerKit } from './kit'
 import { modelPanel } from './panel/panel'
@@ -63,7 +63,7 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
       ...toggles(toggle),
       onMount: node => {
         anchor = node
-        return float(show(open, panel))
+        return mount(document.body, show(open, panel))
       },
     },
     dynamicChild(

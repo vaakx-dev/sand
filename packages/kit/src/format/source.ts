@@ -1,5 +1,4 @@
-import type { LLM, SourceRef } from '@sand/llm-accounts/contract'
-import type { UsageRecord } from '@sand/loops/contract'
+import type { ProviderInfo, SourceRef, UsageRecord } from '@sand/protocol'
 
 type Tags = Omit<UsageRecord, 'id' | 'model' | 'usage'>
 
@@ -13,9 +12,8 @@ const fromRef = ({ source, label, provider, billing, plan, pc, pcName }: SourceR
   ...(pcName && { pcName }),
 })
 
-export const usageSource = (llm: LLM | undefined, model?: string, source?: SourceRef): Tags => {
+export const usageSource = (provider: ProviderInfo | undefined, source?: SourceRef): Tags => {
   if (source) return fromRef(source)
-  const provider = llm?.provider?.(model)
   return provider ? { provider: provider.id, billing: provider.billing } : {}
 }
 

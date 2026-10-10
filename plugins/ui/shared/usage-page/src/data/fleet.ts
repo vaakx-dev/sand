@@ -1,7 +1,7 @@
 import type { UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/web-client/contract'
 import { derive, errorMessage, sig, type Sig } from '@sand/dom'
-import { queryFor, type Range } from '../range'
+import { usageQuery, type UsageRange } from '@sand/kit'
 import { readCache, writeCache, type Cached } from './cache'
 import type { Pc } from './types'
 import { isSummary } from './valid'
@@ -17,7 +17,7 @@ const placeholderId = 'local'
 
 const idle = (cached?: Cached): PcState => ({ at: cached?.at ?? 0, summary: cached?.summary, failure: '', busy: false })
 
-export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<Range>) => {
+export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>) => {
   const states = sig(new Map<string, PcState>())
   const asked = new Set<string>()
   let generation = 0
@@ -38,7 +38,7 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<Range>) => {
     asked.add(pc.id)
     put(pc.id, { busy: true })
     wire
-      .call<unknown>({ type: 'usage.summary', ...queryFor(current) }, pc.local ? undefined : pc.id)
+      .call<unknown>({ type: 'usage.summary', ...usageQuery(current) }, pc.local ? undefined : pc.id)
       .then(result => {
         if (!isSummary(result)) throw new Error('it needs a newer sand to report usage')
         if (run !== generation) return

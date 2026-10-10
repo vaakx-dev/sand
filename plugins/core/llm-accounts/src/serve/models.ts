@@ -41,36 +41,35 @@ export const serveModels = (server: Server, { view, catalog, refreshPeers }: Mod
     return value
   }
 
-  const disposers = [
-    server.handle('models.catalog', async request => view.list(await source(request.source))),
-    server.handle('models.pref', async request => {
+  return server.handle({
+    'models.catalog': async request => view.list(await source(request.source)),
+    'models.pref': async request => {
       const { id } = await model(request.model)
       if (typeof request.hidden === 'boolean') update(prefs => hidden(prefs, id, request.hidden!))
       if (typeof request.favourite === 'boolean') update(prefs => favourite(prefs, id, request.favourite!))
-    }),
-    server.handle('models.add', async request => {
+    },
+    'models.add': async request => {
       const name = String(request.name ?? '').trim()
       if (!name) throw new Error('Enter a model name')
       return add(await source(request.source), name)
-    }),
-    server.handle('models.remove', async request => {
+    },
+    'models.remove': async request => {
       const { source: from, name } = await model(request.model)
       update(prefs => removed(prefs, from, name))
-    }),
-    server.handle('models.newModels', async request => {
+    },
+    'models.newModels': async request => {
       const from = await source(request.source)
       const chosen = mode(request.mode)
       update(prefs => newModels(prefs, from, chosen))
-    }),
-    server.handle('models.seen', async request => {
+    },
+    'models.seen': async request => {
       const from = await source(request.source)
       update(prefs => seen(prefs, from))
-    }),
-    server.handle('models.refresh', async request => {
+    },
+    'models.refresh': async request => {
       const from = request.source === undefined ? undefined : await source(request.source)
       const remote = !from || !!view.entry(from)?.meta.via
       await Promise.all([catalog.refresh(from), ...(remote ? [refreshPeers()] : [])])
-    }),
-  ]
-  return () => disposers.forEach(dispose => void dispose())
+    },
+  })
 }

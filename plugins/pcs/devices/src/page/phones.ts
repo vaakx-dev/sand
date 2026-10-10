@@ -1,5 +1,6 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
 import { ago, clock, contextMenu, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 import { phoneMenu } from './phone-menu'
@@ -10,7 +11,7 @@ const used = (at: number) => {
 }
 
 const rename = async (ctx: Context, source: DeviceSource, device: PairedDevice) => {
-  const name = (await ctx.picker?.input('Rename device', device.name))?.replace(/\s+/g, ' ').trim()
+  const name = oneLine((await ctx.picker?.input('Rename device', device.name)) ?? '')
   if (name && name !== device.name) await source.rename(device.id, name).catch(source.fail)
 }
 

@@ -6,8 +6,8 @@ const specOf = (title: string, subtitle: string | undefined, actions: NavAction[
 
 export const threadMenu = (thread: Thread, source: RowSource) =>
   specOf(thread.title ?? 'Untitled', thread.cwd && tildeHome(thread.cwd), [
-    ...(source.openThread ? [{ id: 'open', label: 'Open thread', icon: 'message', group: 'open', run: () => source.openThread?.(thread.id) }] : []),
-    ...(thread.cwd ? [{ id: 'copy-path', label: 'Copy folder path', icon: 'folder', group: 'copy', run: () => source.copy(thread.cwd ?? '', 'folder path') }] : []),
+    ...(source.openThread ? [{ id: 'open', label: 'Open thread', icon: 'message', group: 'open', run: () => source.openThread?.(thread.id) } satisfies NavAction] : []),
+    ...(thread.cwd ? [{ id: 'copy-path', label: 'Copy folder path', icon: 'folder', group: 'copy', run: () => source.copy(thread.cwd ?? '', 'folder path') } satisfies NavAction] : []),
   ])
 
 export const pcMenu = (pc: PcUsage, source: RowSource) =>

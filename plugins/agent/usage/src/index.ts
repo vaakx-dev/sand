@@ -19,14 +19,12 @@ export default definePlugin({
       return limits.pcName ? `${label} on ${limits.pcName}` : label
     }
 
-    ctx.watch('server', server => {
-      if (!server) return
-      const disposers = [
-        server.handle('usage.summary', summaryHandler(ctx)),
-        server.handle('limits.refresh', () => ctx.llm?.refreshLimits?.() ?? ctx.llm?.limits?.()),
-      ]
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch('server', server =>
+      server?.handle({
+        'usage.summary': summaryHandler(ctx),
+        'limits.refresh': () => ctx.llm?.refreshLimits?.() ?? ctx.llm?.limits?.(),
+      }),
+    )
     ctx.effect(() =>
       ctx.ui.command({
         name: 'usage',

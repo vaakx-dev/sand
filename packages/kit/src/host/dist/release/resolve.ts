@@ -1,5 +1,6 @@
 import { realpath } from 'node:fs/promises'
 import { isAbsolute, join, relative } from 'node:path'
+import { errorMessage } from '../../../text/error'
 import { modulesFolder } from './manifest'
 
 interface PackageJson {
@@ -54,7 +55,7 @@ const isInside = (root: string, path: string) => {
   return !rel.startsWith('..') && !isAbsolute(rel)
 }
 
-const reason = (error: unknown) => (error instanceof Error ? error.message : String(error)).split('\n')[0]
+const reason = (error: unknown) => errorMessage(error).split('\n')[0]
 
 const locate = async (dir: string, workspace: Workspace, name: string) => {
   const manifest = join(dir, modulesFolder, name, 'package.json')

@@ -1,6 +1,6 @@
 import type { ProjectEntry } from '@sand/web-client/contract'
 import { copyOn } from '../group'
-import { refOf, currentTarget, isOnline, type PickerContext } from '../target'
+import { refOf, currentTarget, type PickerContext } from '../target'
 
 export interface SendBack {
   from: ProjectEntry
@@ -16,7 +16,7 @@ export const sendBackFor = (ctx: PickerContext, armed: string | undefined): Send
     entry =>
       !entry.missing &&
       entry.device !== from.device &&
-      isOnline(ctx, entry.device) &&
+      ctx.machines.online(entry.device) &&
       ctx.sync?.relation(refOf(from), refOf(entry)) === 'ahead',
   )
   return to && { from, to }

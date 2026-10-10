@@ -1,6 +1,5 @@
-import type { Project, ProjectCopy } from '@sand/host-projects/contract'
-
-const byKey = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+import type { Project, ProjectCopy } from '@sand/protocol'
+import { compare } from '../text/compare'
 
 const normalCopy = (copy: ProjectCopy): ProjectCopy => ({
   path: copy.path,
@@ -26,9 +25,9 @@ const newer = <T>(a: T, b: T, updatedA: number, updatedB: number, key: (value: T
 const fieldsKey = (project: Project) => JSON.stringify(normalFields(project))
 const copyKey = (copy: ProjectCopy) => JSON.stringify(normalCopy(copy))
 
-export const mergeProject = (a: Project, b: Project): Project => {
+const mergeProject = (a: Project, b: Project): Project => {
   const head = newer(a, b, a.updated, b.updated, fieldsKey)
-  const devices = [...new Set([...Object.keys(a.copies), ...Object.keys(b.copies)])].sort(byKey)
+  const devices = [...new Set([...Object.keys(a.copies), ...Object.keys(b.copies)])].sort(compare)
   const copies: Record<string, ProjectCopy> = {}
   for (const device of devices) {
     const x = a.copies[device]
@@ -45,5 +44,5 @@ export const mergeProjects = (local: Project[], incoming: Project[]): Project[] 
     const known = merged.get(project.id)
     merged.set(project.id, mergeProject(known ?? project, project))
   }
-  return [...merged.values()].sort((a, b) => byKey(a.id, b.id))
+  return [...merged.values()].sort((a, b) => compare(a.id, b.id))
 }

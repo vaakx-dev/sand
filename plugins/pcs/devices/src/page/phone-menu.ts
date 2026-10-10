@@ -1,8 +1,7 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
 import type { MenuSpec } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { DeviceSource } from '../source'
-
-const cleaned = (text: string) => text.replace(/\s+/g, ' ').trim()
 
 export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: boolean): MenuSpec => ({
   title: device.name,
@@ -17,8 +16,8 @@ export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: bool
         placeholder: device.name,
         tip: 'New device name',
         submit: 'Rename',
-        preview: text => (cleaned(text) && cleaned(text) !== device.name ? `Rename to ${cleaned(text)}` : undefined),
-        run: text => source.rename(device.id, cleaned(text)).catch(source.fail),
+        preview: text => (oneLine(text) && oneLine(text) !== device.name ? `Rename to ${oneLine(text)}` : undefined),
+        run: text => source.rename(device.id, oneLine(text)).catch(source.fail),
       },
       run: () => {},
     },

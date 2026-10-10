@@ -1,8 +1,9 @@
+import { isFolder } from '@sand/kit/fs'
 import type { SyncInspect } from '../contract'
 import { join } from 'node:path'
 import { hiddenOut, type Hidden } from '../folder/hidden'
 import { blockedReason } from '../folder/paths'
-import { isDirectory, isGitFolder } from '../folder/stat'
+import { isGitFolder } from '../folder/stat'
 import { git } from '../git/run'
 import { folderTree } from '../snapshot/tree'
 import { treeSizes } from '../state/sizes'
@@ -21,7 +22,7 @@ const empty = (path: string, blocked?: string): SyncInspect => ({ path, git: fal
 
 export const inspectFolder = async (hidden: Hidden, sandHome: string): Promise<SyncInspect> => {
   const folder = hidden.folder
-  if (!(await isDirectory(folder))) throw new Error(`${folder} is not a folder`)
+  if (!(await isFolder(folder))) throw new Error(`${folder} is not a folder`)
   const blocked = await blockedReason(folder, sandHome)
   if (blocked) return empty(folder, blocked)
   const isGit = await isGitFolder(folder)

@@ -1,17 +1,16 @@
-import { div, el, event, type Child, type Props } from '@vaakx-dev/vrui'
+import { div, event, h2, type Child, type Props } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { dismissible, layer } from '../shell/layers'
+import { dismissible, layer, returnFocus } from '../shell/layers'
 import { iconButton } from './button'
 
 const safeArea = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0'
 
 const remembering = (previous: Element | null, node: Node, close: () => void) => {
   const stop = dismissible(node, close)
+  const refocus = returnFocus(node, previous)
   return () => {
     stop()
-    const active = document.activeElement
-    const lost = !active || active === document.body || node.contains(active)
-    if (previous instanceof HTMLElement && previous.isConnected && lost) previous.focus()
+    refocus()
   }
 }
 
@@ -40,7 +39,7 @@ export const sheet = ({ class: extra, ...props }: Props<HTMLDivElement>, ...chil
 export const sheetHead = (title: Child, close: () => void, ...extra: Child[]) =>
   div(
     { class: 'flex shrink-0 items-center gap-3 pt-3 pr-3 pb-1 pl-5' },
-    el('h2', { class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, title),
+    h2({ class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, title),
     ...extra,
     iconButton({ title: 'Close', onClick: close }, icon('x')),
   )

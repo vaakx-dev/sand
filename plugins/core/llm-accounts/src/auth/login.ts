@@ -1,4 +1,5 @@
 import type { DetectedServer, KeyKind, ServerDraft, SignInKind } from '../contract'
+import { trimSlash } from '@sand/kit'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
 import { authorizeClaude, exchangeClaude, type ClaudeFlow } from './anthropic'
@@ -79,7 +80,7 @@ export const createLogin = (accounts: Accounts) => {
   const detect = async (): Promise<DetectedServer[]> => {
     await accounts.ready
     const added = new Set(accounts.servers().map(found => found.url))
-    return (await detectServers()).filter(found => !added.has(found.url.replace(/\/+$/, '')))
+    return (await detectServers()).filter(found => !added.has(trimSlash(found.url)))
   }
 
   const logout = async (account: string) => {

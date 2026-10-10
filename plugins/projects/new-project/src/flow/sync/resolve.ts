@@ -4,7 +4,7 @@ import type { SyncPick } from '@sand/sync/contract'
 import type { Sync } from '../../contract'
 import type { FlowContext } from '../types'
 import { mergePage } from './merge'
-import { otherPcName, pcName, projectName } from './names'
+import { otherPcName, projectName } from './names'
 
 const conflictItem = (file: string, other: string, pick: (file: string, side: SyncPick) => Promise<void>): PaletteItem => ({
   id: `file:${file}`,
@@ -20,7 +20,7 @@ const conflictItem = (file: string, other: string, pick: (file: string, side: Sy
 
 export const resolvePage = (ctx: FlowContext, sync: Sync, ref: ProjectRef): PalettePage => {
   const name = projectName(ctx, ref)
-  const here = pcName(ctx, ref.device)
+  const here = ctx.machines.name(ref.device)
   const other = otherPcName(ctx, ref)
 
   const pick = async (file: string, side: SyncPick) => {

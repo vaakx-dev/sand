@@ -1,5 +1,6 @@
 import { errorMessage } from '@sand/kit'
-import { isInstalled, type GithubRelease, type UpdateStore } from '@sand/kit/host'
+import { isInstalled, type UpdateStore } from '@sand/kit/host'
+import type { GithubRelease } from './github/release'
 import type { BuildInfo } from '@sand/protocol'
 import type { UpdateChannel, UpdatePhase, UpdateState } from './contract'
 import { cancelled, createInstaller, runningWork } from './install/run'

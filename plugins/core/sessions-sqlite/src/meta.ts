@@ -51,12 +51,11 @@ export const serveMeta = (server: Server, meta: ReturnType<typeof sessionMeta>) 
     server.broadcast('session.meta', [update])
     return update
   }
-  const handlers = [
-    server.handle('session.pin', request => publish(meta.pin(String(request.session), Boolean(request.pinned)))),
-    server.handle('session.settle', request => publish(meta.settle(String(request.session), Boolean(request.settled)))),
-    server.handle('session.snooze', request => publish(meta.snooze(String(request.session), untilOf(request.until)))),
-    server.handle('session.seen', request => publish(meta.see(String(request.session), Number(request.at)))),
-    server.handle('session.move', request => publish(meta.move(String(request.session), Number(request.position)))),
-  ]
-  return () => handlers.forEach(dispose => void dispose())
+  return server.handle({
+    'session.pin': request => publish(meta.pin(String(request.session), Boolean(request.pinned))),
+    'session.settle': request => publish(meta.settle(String(request.session), Boolean(request.settled))),
+    'session.snooze': request => publish(meta.snooze(String(request.session), untilOf(request.until))),
+    'session.seen': request => publish(meta.see(String(request.session), Number(request.at))),
+    'session.move': request => publish(meta.move(String(request.session), Number(request.position))),
+  })
 }

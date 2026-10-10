@@ -1,6 +1,7 @@
 import type { ApiKey } from '../auth/store'
+import { trimSlash } from '@sand/kit'
 import { describeCodex, takesImages } from '../codex/models'
-import { bearer, getJson, trimmed } from './http'
+import { bearer, getJson } from './http'
 import type { Discovered } from './types'
 
 const defaultBase = 'https://api.openai.com/v1'
@@ -14,7 +15,7 @@ const describe = (id: string): Discovered => {
 }
 
 export const discoverOpenAI = async (credential: ApiKey): Promise<Discovered[]> => {
-  const body = await getJson(source, `${trimmed(credential.base_url ?? defaultBase)}/models`, bearer(credential.key))
+  const body = await getJson(source, `${trimSlash(credential.base_url ?? defaultBase)}/models`, bearer(credential.key))
   if (!Array.isArray(body?.data)) throw new Error(`${source} model list failed: unexpected answer`)
   return body.data
     .map((entry: any) => entry?.id)

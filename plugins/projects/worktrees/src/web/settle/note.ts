@@ -1,5 +1,5 @@
 import type { RemovedEntry } from '../../contract'
-import type { RenderEntry } from '@sand/transcript-chat/contract'
+import type { RenderEntry } from '@sand/transcript-parts/contract'
 import { derive, div, errorMessage, icon, secondaryAction, show, sig, span, type Pulse, type Sig } from '@sand/dom'
 import type { WebContext, WorktreeClient } from '../client'
 

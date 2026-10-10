@@ -1,5 +1,6 @@
 import type { NavItem } from '@sand/dom'
 import { ago, derive, dot, dynamicChild, elapsed, exactTime, icon, navStatus, show, span, working, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 
 const busy = new Set(['running', 'background', 'waiting', 'draft'])
 
@@ -10,12 +11,10 @@ const kindOf = (value: NavItem) => {
   return value.unread ? 'unread' : ''
 }
 
-const agents = (count: number) => `${count} agent${count === 1 ? '' : 's'}`
-
 const startedTitle = (at?: number) => (at ? `Started ${exactTime(at)}` : 'Working')
 
 const backgroundLabel = ({ jobs, workflow }: NavItem) => {
-  if (!workflow) return agents(jobs ?? 1)
+  if (!workflow) return plural(jobs ?? 1, 'agent')
   return workflow.total ? `Workflow ${workflow.done}/${workflow.total}` : 'Workflow'
 }
 

@@ -1,7 +1,8 @@
 import { delayed, div, dot, dynamicChild, icon, iconButton, segmented, show, span, spinner, type Child } from '@sand/dom'
+import { usageRanges } from '@sand/kit'
 import type { UsageModel } from '../model'
 import { allPcs } from '../prefs'
-import { rangeLabel, ranges } from '../range'
+import { rangeLabel } from '../range'
 import { spacer } from './parts'
 
 const pcFilter = (model: UsageModel) =>
@@ -34,7 +35,7 @@ export const toolbar = (model: UsageModel) =>
     pcFilter(model),
     spacer(),
     segmented(
-      ranges.map(value => ({ value, label: rangeLabel(value) })),
+      usageRanges.map(value => ({ value, label: rangeLabel(value) })),
       model.range,
       value => model.range.set(value),
       { label: 'Period' },

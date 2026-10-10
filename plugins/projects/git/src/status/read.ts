@@ -1,17 +1,17 @@
 import type { GitStatus } from '../contract'
 import { existsSync } from 'node:fs'
-import { git } from '../run'
+import { gitMaybe } from '@sand/kit/git'
 import { isLinkedWorktree, parsePorcelain } from './parse'
 
-const remoteHead = async (cwd: string) => (await git(['rev-parse', '--abbrev-ref', 'origin/HEAD'], cwd))?.trim() || undefined
+const remoteHead = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'origin/HEAD'])) || undefined
 
-const unpushed = async (cwd: string, base: string) => Number((await git(['rev-list', '--count', `${base}..HEAD`], cwd))?.trim() ?? 0) || 0
+const unpushed = async (cwd: string, base: string) => Number((await gitMaybe(cwd, ['rev-list', '--count', `${base}..HEAD`])) ?? 0) || 0
 
 export const readStatus = async (cwd: string): Promise<GitStatus | null> => {
   if (!cwd || !existsSync(cwd)) return null
   const [porcelain, dirs, head] = await Promise.all([
-    git(['status', '--porcelain=v2', '--branch'], cwd),
-    git(['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir'], cwd),
+    gitMaybe(cwd, ['status', '--porcelain=v2', '--branch']),
+    gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir']),
     remoteHead(cwd),
   ])
   if (porcelain === undefined) return null

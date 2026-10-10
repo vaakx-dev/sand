@@ -1,7 +1,7 @@
 import type { PalettePage } from '@sand/palette/contract'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { machineItem } from '../where'
-import { deviceOf, type FlowContext } from '../types'
+import type { FlowContext } from '../types'
 import { hasCopy } from './source'
 
 export const devicesPage = (ctx: FlowContext, group: ProjectGroup, next: (machine: Machine) => PalettePage): PalettePage => ({
@@ -12,6 +12,6 @@ export const devicesPage = (ctx: FlowContext, group: ProjectGroup, next: (machin
   items: () =>
     ctx.machines
       .list()
-      .filter(machine => machine.online && !hasCopy(group, deviceOf(machine)))
+      .filter(machine => machine.online && !hasCopy(group, machine.device))
       .map(machine => machineItem(machine, next)),
 })

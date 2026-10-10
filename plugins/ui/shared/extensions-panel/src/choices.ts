@@ -1,5 +1,6 @@
 import type { ExtensionInfo, Extensions } from '@sand/web/contract'
 import { segmented, settingsRow } from '@sand/dom'
+import { capital } from '@sand/kit'
 import type { Roles } from './roles'
 
 const roleTitles: Record<string, string> = {
@@ -7,8 +8,6 @@ const roleTitles: Record<string, string> = {
   nav: 'Sidebar',
   composer: 'Composer',
 }
-
-const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 const sharedPrefix = (ids: string[]) => {
   const first = ids[0] ?? ''
@@ -18,7 +17,7 @@ const sharedPrefix = (ids: string[]) => {
   return length
 }
 
-const optionName = (id: string, prefix: number) => capitalized(id.split('-').slice(prefix).join(' '))
+const optionName = (id: string, prefix: number) => capital(id.split('-').slice(prefix).join(' '))
 
 export const choiceRow = (extensions: Extensions, role: string, candidates: ExtensionInfo[], roles: Roles) => {
   const active = roles.provider(role)
@@ -28,5 +27,5 @@ export const choiceRow = (extensions: Extensions, role: string, candidates: Exte
     extensions.enable(keep)
   }
   const choices = candidates.map(candidate => ({ value: candidate.id, label: optionName(candidate.id, prefix), title: candidate.summary ?? candidate.description ?? candidate.id }))
-  return settingsRow(roleTitles[role] ?? capitalized(role), segmented(choices, active, only))
+  return settingsRow(roleTitles[role] ?? capital(role), segmented(choices, active, only))
 }

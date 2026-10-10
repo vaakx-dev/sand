@@ -1,14 +1,11 @@
-import { copyText, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice, type MenuSpec, type NavAction } from '@sand/dom'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
-import { deviceOf, refOf, type PickerContext } from './target'
+import { refOf, type PickerContext } from './target'
 
 export const rowMenu = (ctx: PickerContext, group: ProjectGroup, machine: Machine, choose: () => void): MenuSpec => {
-  const location = copyOn(group, deviceOf(machine))
-  const copyPath = async () => {
-    const copied = await copyText(location?.path ?? '')
-    ctx.notify?.push(copied ? 'Copied path' : 'Could not copy the path', { level: copied ? 'info' : 'error' })
-  }
+  const location = copyOn(group, machine.device)
+  const copyPath = () => copyWithNotice(ctx.notify, location?.path ?? '', 'path')
   const list: (NavAction | false)[] = [
     machine.online && { id: 'run', label: 'Run here', icon: 'laptop', group: 'run', run: choose },
     Boolean(location && ctx.sync && machine.online) && {

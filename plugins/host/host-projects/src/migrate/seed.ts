@@ -1,5 +1,5 @@
 import { folderName, isInside } from '@sand/kit'
-import { stat } from 'node:fs/promises'
+import { isFolder } from '@sand/kit/fs'
 import type { Project } from '../contract'
 import { type FolderFacts, inspectFolder } from '../folder/inspect'
 
@@ -12,12 +12,6 @@ export interface Seed {
 }
 
 export const within = (path: string, folder: string) => path === folder || isInside(path, folder)
-
-const isFolder = (path: string) =>
-  stat(path).then(
-    info => info.isDirectory(),
-    () => false,
-  )
 
 export const seedProject = async (device: string, seed: Seed, now: number): Promise<Project> => {
   const facts: FolderFacts = (await isFolder(seed.path)) ? await inspectFolder(seed.path) : { name: folderName(seed.path) }

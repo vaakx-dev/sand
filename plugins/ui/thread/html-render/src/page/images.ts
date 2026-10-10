@@ -1,3 +1,4 @@
+import { bytes } from '@sand/kit'
 import { isAbsolute, resolve } from 'node:path'
 
 const imageBytes = 10 * 1024 * 1024
@@ -24,8 +25,6 @@ interface ImageFile {
   size: number
 }
 
-const megabytes = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`
-
 const dataUrl = async (path: string) => {
   const extension = path.slice(path.lastIndexOf('.') + 1).toLowerCase()
   const data = Buffer.from(await Bun.file(path).arrayBuffer()).toString('base64')
@@ -46,9 +45,9 @@ export const inlineImages = async (html: string, base?: string) => {
   const found = files.filter(file => file.exists)
   if (!found.length) return { html, missing }
   const large = found.find(file => file.size > imageBytes)
-  if (large) throw new Error(`${large.full} is larger than ${megabytes(imageBytes)}. Use a smaller image.`)
+  if (large) throw new Error(`${large.full} is larger than ${bytes(imageBytes)}. Use a smaller image.`)
   if (found.reduce((sum, file) => sum + file.size, 0) > pageBytes) {
-    throw new Error(`The page's images add up to more than ${megabytes(pageBytes)}. Use fewer or smaller images.`)
+    throw new Error(`The page's images add up to more than ${bytes(pageBytes)}. Use fewer or smaller images.`)
   }
   const urls = new Map(await Promise.all(found.map(async file => [file.path, await dataUrl(file.full)] as const)))
   return { html: html.replace(localImage, (_, open: string, path: string, close: string) => `${open}${urls.get(path) ?? path}${close}`), missing }

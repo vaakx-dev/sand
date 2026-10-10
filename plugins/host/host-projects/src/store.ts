@@ -1,4 +1,4 @@
-import { mergeProjects } from '@sand/kit'
+import { mergeProjects, serial } from '@sand/kit'
 import { readProjectsFile, writeProjectsFile } from '@sand/kit/fs'
 import type { Project } from './contract'
 import { migrateProjects } from './migrate'
@@ -12,11 +12,10 @@ const load = async (home: string, device: string) => {
 export const projectStore = async (home: string, device: string) => {
   const { projects: loaded, migrated } = await load(home, device)
   let projects = mergeProjects(loaded, [])
-  let saving: Promise<void> = Promise.resolve()
+  const queue = serial()
   const save = (next: Project[]) => {
     projects = next
-    saving = saving.catch(() => {}).then(() => writeProjectsFile(home, projects))
-    return saving
+    return queue(() => writeProjectsFile(home, projects))
   }
   if (migrated) await save(projects)
   return {

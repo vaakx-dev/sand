@@ -1,18 +1,16 @@
 import type { WorktreeEntry } from '../../contract'
-import { copyText, errorMessage, tildeHome, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice, errorMessage, tildeHome, type MenuSpec, type NavAction } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { WebContext, WorktreeClient } from '../client'
 
 const lost = (entry: WorktreeEntry) => {
-  const changes = entry.changed ? `its ${entry.changed} uncommitted change${entry.changed === 1 ? '' : 's'}` : 'uncommitted changes'
+  const changes = entry.changed ? `its ${plural(entry.changed, 'uncommitted change')}` : 'uncommitted changes'
   return `Deletes ${tildeHome(entry.path)}${entry.branch ? ` and the branch ${entry.branch}` : ''}. Threads there move back to the project folder, and ${changes} and unpushed commits are lost.`
 }
 
 export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: WorktreeEntry, device: string | undefined, use: () => void): MenuSpec => {
   const fail = (what: string) => (error: unknown) => ctx.notify?.push(`Could not ${what}: ${errorMessage(error)}`, { level: 'error' })
-  const copy = (text: string, what: string) => async () => {
-    const copied = await copyText(text)
-    ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
-  }
+  const copy = (text: string, what: string) => () => copyWithNotice(ctx.notify, text, what)
   const branch = entry.branch
   const actions: (NavAction | false)[] = [
     { id: 'use', label: 'Start a thread here', icon: 'branch', group: 'use', run: use },

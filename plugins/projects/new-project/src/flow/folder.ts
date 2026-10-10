@@ -2,7 +2,7 @@ import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
 import { listings } from './listings'
 import { absolute, join, leafName, short, split } from './paths'
-import { deviceOf, type FlowContext, type Next, type Repo } from './types'
+import type { FlowContext, Next, Repo } from './types'
 
 interface Options {
   mode: 'add' | 'clone'
@@ -10,7 +10,7 @@ interface Options {
 }
 
 export const folderPage = (ctx: FlowContext, machine: Machine, next: Next, { mode, repo }: Options): PalettePage => {
-  const device = deviceOf(machine)
+  const { device } = machine
   const place = ctx.projects.place(device)
   const { sep } = place
   const root = short(place.root, place)

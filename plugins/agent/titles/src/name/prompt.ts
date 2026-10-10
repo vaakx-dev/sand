@@ -1,5 +1,5 @@
 import type { Message } from '@sand/messages'
-import { promptText } from '@sand/kit'
+import { oneLine, promptText, textOf } from '@sand/kit'
 
 const half = 3000
 
@@ -9,11 +9,10 @@ export const system = [
   'Say what the user wants done, like "Fix login redirect loop" or "Add dark mode to settings".',
 ].join(' ')
 
-const textOf = (message: Message) =>
-  message.role === 'user' ? promptText(message, ' ') : message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join(' ')
+const messageText = (message: Message) => (message.role === 'user' ? promptText(message, ' ') : textOf(message.content, ' '))
 
 const line = (message: Message) => {
-  const text = textOf(message).replace(/\s+/g, ' ').trim()
+  const text = oneLine(messageText(message))
   return text ? [`${message.role === 'user' ? 'User' : 'Assistant'}: ${text}`] : []
 }
 

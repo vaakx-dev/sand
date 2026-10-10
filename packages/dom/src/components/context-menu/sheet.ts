@@ -1,11 +1,11 @@
 import { button, div, dynamicChild, event, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { icon } from '../../icons/lucide'
-import { dismissible, layer } from '../../shell/layers'
+import { dismissible, layer, returnFocus } from '../../shell/layers'
 import type { NavAction } from '../../shell/nav/types'
 import { focusable } from '../button'
 import { askView } from './ask'
 import { choiceChips, choiceCount } from './chips'
-import { arrowKeys, chipHandlers, choose, confirmView, firstStep, menuItems, returnFocus, type MenuControl, type MenuStep } from './items'
+import { arrowKeys, chipHandlers, choose, confirmView, firstStep, menuItems, type MenuControl, type MenuStep } from './items'
 import type { MenuRequest } from './request'
 
 const head = ({ title, subtitle }: MenuRequest) =>

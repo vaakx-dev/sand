@@ -1,5 +1,5 @@
+import { isFolder } from '@sand/kit/fs'
 import { basename, dirname, resolve } from 'node:path'
-import { isDirectory } from '../files'
 import { lines, ripgrep, scope } from './ripgrep'
 import { walk } from './walk'
 
@@ -17,7 +17,7 @@ export interface Query {
 const format = (file: string, line: number | string, text: string) => `${file}:${line}: ${text.trim().slice(0, 300)}`
 
 async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
-  const directory = await isDirectory(root)
+  const directory = await isFolder(root)
   const args = ['--line-number', '--no-heading', '--with-filename', '--null', '--color', 'never', '--max-filesize', '1M', '--engine', 'auto']
   if (ignoreCase) args.push('--ignore-case')
   if (directory && glob !== '**/*') args.push('--glob', glob)
@@ -31,7 +31,7 @@ async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, i
 }
 
 async function* files(root: string, glob: string, includeIgnored?: boolean, signal?: AbortSignal) {
-  if (await isDirectory(root)) {
+  if (await isFolder(root)) {
     for await (const file of walk(glob, root, includeIgnored, signal)) yield { full: resolve(root, file), shown: file }
   } else {
     yield { full: root, shown: basename(root) }

@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import type { RouteCaller } from '@sand/protocol'
 import type { Server } from '@sand/server/contract'
 import type { LLMRequest } from '../contract'
@@ -58,6 +59,5 @@ export const serveShare = (server: Server, { local, accounts, users }: ShareOpti
     return streamLines(signal => local.stream({ ...body, model: model.id }, signal), request.signal)
   }
 
-  const disposers = [server.route(sharePaths.info, info), server.route(sharePaths.stream, stream)]
-  return () => disposers.forEach(dispose => void dispose())
+  return joinDisposers(server.route(sharePaths.info, info), server.route(sharePaths.stream, stream))
 }

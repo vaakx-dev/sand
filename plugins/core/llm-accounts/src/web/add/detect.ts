@@ -1,10 +1,9 @@
 import { badge, div, dynamicChild, primaryAction, secondaryAction, settingsSection, sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { DetectedServer } from '../../contract'
 import { accountLogo } from '../names'
 import { accountRow, actions, note } from '../parts'
 import type { LoginControl } from '../state'
-
-const modelCount = (count: number) => (count === 1 ? '1 model' : `${count} models`)
 
 const hostOf = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/v1\/?$/, '')
 
@@ -14,7 +13,7 @@ const foundRow = (control: LoginControl, server: DetectedServer, add: (server: D
   accountRow(
     accountLogo(server.provider),
     server.name,
-    `${hostOf(server.url)} · ${modelCount(server.models)}`,
+    `${hostOf(server.url)} · ${plural(server.models, 'model')}`,
     isAdded(control, server) ? badge('success', 'Added') : primaryAction({ size: 'sm', onClick: () => add(server) }, 'Add'),
   )
 

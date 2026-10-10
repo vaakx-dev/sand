@@ -10,7 +10,6 @@ export interface BodyOptions {
   efforts: Effort[]
   fast?: boolean
   thinking?: 'summarized' | 'omitted'
-  eagerInputStreaming?: boolean
 }
 
 const cacheable = new Set(['text', 'image', 'document', 'tool_use', 'tool_result'])
@@ -55,12 +54,7 @@ export const body = (request: LLMRequest, options: BodyOptions) => {
     system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
     messages,
     ...(request.tools.length && {
-      tools: request.tools.map(tool => ({
-        name: tool.name,
-        description: tool.description,
-        input_schema: tool.inputSchema,
-        ...(options.eagerInputStreaming && { eager_input_streaming: true }),
-      })),
+      tools: request.tools.map(tool => ({ name: tool.name, description: tool.description, input_schema: tool.inputSchema })),
     }),
     ...(options.thinking && thinks && { thinking: { type: 'adaptive', display: options.thinking } }),
     ...(effort && { output_config: { effort } }),

@@ -2,7 +2,6 @@ import { onWindow } from '@vaakx-dev/vrui'
 
 export const layer = {
   sticky: 'z-10',
-  dock: 'z-20',
   menu: 'z-20',
   drawer: 'z-30',
   dialog: 'z-40',
@@ -32,4 +31,10 @@ export const dismissible = (owner: Node, close: () => void, { overlay = true } =
     const index = stack.lastIndexOf(entry)
     if (index >= 0) stack.splice(index, 1)
   }
+}
+
+export const returnFocus = (node: Node, to: Element | null) => () => {
+  const active = document.activeElement
+  const lost = !active || active === document.body || node.contains(active)
+  if (to instanceof HTMLElement && to.isConnected && lost) to.focus()
 }

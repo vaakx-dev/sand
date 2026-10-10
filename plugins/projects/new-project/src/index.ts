@@ -9,7 +9,16 @@ export default definePlugin({
   name: 'new-project',
   description: 'New project in the palette: add a folder, clone a Git URL or start an empty project, on this PC or another one',
   inject: ['projects', 'machines', 'threads'],
-  uses: { palette: 'nothing is shown', notify: 'no message after a project is added', composer: 'the new thread does not focus the prompt', sync: 'copy, send and merge flows say project sync is not available', settings: 'no Projects settings page' },
+  uses: {
+    palette: 'nothing is shown',
+    notify: 'no message after a project is added',
+    composer: 'the new thread does not focus the prompt',
+    sync: 'copy, send and merge flows say project sync is not available',
+    settings: 'no Projects settings page',
+    nav: 'no New project button',
+    picker: 'projects cannot be renamed, and deleting asks with a second click instead of a prompt',
+    turns: 'Let sand merge them fails',
+  },
   apply(ctx) {
     ctx.provide('syncFlows', createSyncFlows(ctx))
     const changes = pulse(ctx, ['projects.change', 'machines.change'], ['palette'])

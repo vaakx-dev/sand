@@ -2,14 +2,14 @@ import { div, groupLabel, menuItem, span } from '@sand/dom'
 import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
 import { copyOn, groupOf } from '../group'
 import { machineIcon } from '../rows'
-import { deviceOf, type PickerContext } from '../target'
+import type { PickerContext } from '../target'
 import { blockedReason, continueOn, type ContinueContext } from './flow'
 
 const note = (text: string) => span({ class: 'shrink-0 text-xs text-neutral-500' }, text)
 
 const destination = (group: ProjectGroup | undefined, machine: Machine) => {
   if (!group) return undefined
-  return copyOn(group, deviceOf(machine))?.path ?? 'No copy yet, clone or sync first'
+  return copyOn(group, machine.device)?.path ?? 'No copy yet, clone or sync first'
 }
 
 const continueRow = (machine: Machine, home: boolean, blocked: boolean, line: string | undefined, choose: () => void) =>

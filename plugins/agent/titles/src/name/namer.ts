@@ -34,7 +34,7 @@ export const createNamer = (ctx: Context<'sessions'>, prefs: Prefs) => {
     const model = namingModel(llm, saved.model, ctx.modelSettings?.effective(session).model)
     const reply = await askName(llm, text, { model, ...modelOptions(llm, model, saved) })
     if (!reply) return undefined
-    const record: UsageRecord = { id: Bun.randomUUIDv7(), model, ...usageSource(llm, model), usage: reply.usage }
+    const record: UsageRecord = { id: Bun.randomUUIDv7(), model, ...usageSource(llm.provider?.(model)), usage: reply.usage }
     ctx.sessions.open(session.id)?.append('usage', record)
     return reply.name || undefined
   }

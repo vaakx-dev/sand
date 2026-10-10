@@ -1,3 +1,4 @@
+import { textOf } from '@sand/kit'
 import type { LLMRequest } from '@sand/llm-accounts/contract'
 import type { Message } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
@@ -7,9 +8,6 @@ import { outside } from './fault'
 import type { TurnState } from './state'
 import { streamReply } from './stream'
 import { runTools } from './tools'
-
-export const textOf = (message: Message) =>
-  message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n')
 
 const applyChoice = (request: LLMRequest, choice: ModelChoice | undefined): LLMRequest =>
   choice
@@ -50,7 +48,7 @@ export const createHooks = (
       const final = await ctx.waterfall('llm.response', message, session)
       hooks.append(final)
       state.partial.clear()
-      state.reply = textOf(final)
+      state.reply = textOf(final.content)
       return final
     }),
     tools: calls => runTools(ctx, tools, calls, session, signal),

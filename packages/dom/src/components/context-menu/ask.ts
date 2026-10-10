@@ -26,7 +26,7 @@ export const askView = (ask: NavAsk, done: () => void, size: AskSize) => {
       placeholder: ask.placeholder,
       'aria-label': ask.tip,
       class: ['w-full min-w-0 rounded-lg bg-neutral-900 text-neutral-100 outline-none ring-1 ring-neutral-700 focus:ring-accent-500', fields[size]],
-      onInput: event => text.set((event.currentTarget as HTMLInputElement).value),
+      bindValue: text,
       onKeyDown: keys({ Enter: submit }),
       onMount: node => node.focus(),
     }),

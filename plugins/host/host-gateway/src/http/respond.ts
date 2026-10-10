@@ -1,11 +1,11 @@
 import type { HostDevices } from '@sand/host-devices/contract'
 import { errorMessage } from '@sand/kit'
+import { textReply } from '@sand/kit/host'
 import type { RouteCaller } from '@sand/protocol'
 import { adminDevice, createCaller } from '../auth/caller'
 import type { Proxy } from '../proxy'
 import { preflight, withCors } from './cors'
 import type { HttpRegistry } from './extra'
-import { text } from './reply'
 import { createRoutes, type Peer, type Reply, type Route, type RoutesOptions } from './routes'
 
 export interface ResponderOptions extends Omit<RoutesOptions, 'caller' | 'devices'> {
@@ -19,11 +19,11 @@ type Allowed = Pick<Route, 'method'>
 
 const allows = (route: Allowed, method: string) => method === route.method || (route.method === 'GET' && method === 'HEAD')
 
-const notAllowed = (route: Allowed) => text('method not allowed', 405, { allow: `${route.method}, OPTIONS` })
+const notAllowed = (route: Allowed) => textReply('method not allowed', 405, { allow: `${route.method}, OPTIONS` })
 
 const failed = (error: unknown) => {
   console.error(`gateway request failed: ${errorMessage(error)}`)
-  return text('sand could not answer this request', 500)
+  return textReply('sand could not answer this request', 500)
 }
 
 export const createResponder = (options: ResponderOptions) => {

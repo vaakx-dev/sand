@@ -1,7 +1,8 @@
 import type { LLMRequest } from '../contract'
+import { bearer } from '@sand/kit'
 import { rawMessage } from '../errors'
 import { sharePaths } from '../share/info'
-import { authHeaders, Offline, Refused, refusal } from './http'
+import { Offline, Refused, refusal } from './http'
 import type { RemotePc } from './remotes'
 
 const answerTimeout = 10_000
@@ -19,7 +20,7 @@ const post = async (url: string, pc: RemotePc, request: LLMRequest, signal?: Abo
   try {
     const response = await fetch(`${url}${sharePaths.stream}`, {
       method: 'POST',
-      headers: { ...authHeaders(pc), 'content-type': 'application/json' },
+      headers: { ...bearer(pc.key), 'content-type': 'application/json' },
       body: JSON.stringify(request),
       signal: controller.signal,
     })

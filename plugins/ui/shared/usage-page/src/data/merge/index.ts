@@ -1,4 +1,5 @@
-import { addTotals, emptyTotals } from '../totals'
+import { emptyTotals } from '@sand/kit'
+import { addTotals } from '../totals'
 import type { Merged, PcSummary } from '../types'
 import { mergeAccounts } from './accounts'
 import { mergeModels, mergePeriods, mergeUnpriced } from './groups'

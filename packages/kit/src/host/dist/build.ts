@@ -1,5 +1,4 @@
-import type { HostBundle } from '@sand/host-dist/contract'
-import type { BuildChange, BuildInfo } from '@sand/protocol'
+import type { BuildChange, BuildInfo, HostBundle } from '@sand/protocol'
 import { join } from 'node:path'
 import { buildStamp, scanApp } from './files'
 

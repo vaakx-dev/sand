@@ -1,9 +1,10 @@
 import type { Block } from '@sand/messages'
 import type { LLMEvent } from '../contract'
+import { capital } from '@sand/kit'
 
 const prefix = 'mcp_'
 
-export const prefixName = (name: string) => `${prefix}${name.charAt(0).toUpperCase()}${name.slice(1)}`
+export const prefixName = (name: string) => `${prefix}${capital(name)}`
 
 const guess = (name: string) => {
   const bare = name.startsWith(prefix) ? name.slice(prefix.length) : name

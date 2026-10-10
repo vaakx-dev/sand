@@ -34,17 +34,13 @@ const answers = async (info: ServerInfo) => {
   }
 }
 
-export const health = async (info: ServerInfo): Promise<HostStatus | undefined> => {
+const health = async (info: ServerInfo): Promise<HostStatus> => {
   const response = await fetchHealth(info)
   if (!response.ok) throw new Error(`sand answered ${response.status}`)
-  try {
-    return (await response.json()) as HostStatus
-  } catch {
-    return undefined
-  }
+  return (await response.json()) as HostStatus
 }
 
-const reachable = async (info: ServerInfo): Promise<HostStatus | undefined> => {
+const reachable = async (info: ServerInfo): Promise<HostStatus> => {
   try {
     return await health(info)
   } catch {
@@ -57,7 +53,7 @@ export const waitForRuntime = async (info: ServerInfo, home: string, timeout = 6
   const deadline = Date.now() + timeout
   while (true) {
     const status = await reachable(info)
-    if (!status || status.runtime === 'ready') return
+    if (status.runtime === 'ready') return
     if (status.runtime === 'failed') throw new Error(`sand started, but its runtime failed: ${status.error}; see ${log}`)
     if (!isAlive(info.pid)) throw new Error(`sand stopped before its runtime was ready; see ${log}`)
     if (Date.now() >= deadline) throw new Error(`sand started, but its runtime is still not ready; see ${log}`)

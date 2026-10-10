@@ -1,5 +1,6 @@
 import type { BuildInfo } from '@sand/protocol'
 import { resolve } from 'node:path'
+import { errorMessage } from '../../../text/error'
 import { type BuildStamp, hashApp, readStamp } from '../build'
 import { validVersion, writeBuildBun } from '../bun/home'
 import { createLinks } from './link'
@@ -41,7 +42,7 @@ if (import.meta.main) {
     if (!dir) throw new Error('usage: bun ready.ts <sand folder>')
     await readyRelease(dir)
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error))
+    console.error(errorMessage(error))
     process.exit(1)
   }
 }

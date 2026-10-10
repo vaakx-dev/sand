@@ -1,3 +1,6 @@
+import { listen } from '@sand/dom'
+import { loadRecord, saveJson } from '../integrations/storage'
+
 export interface HostKey {
   device: string
   key: string
@@ -11,21 +14,9 @@ const valid = (value: unknown): value is HostKey =>
   typeof (value as HostKey).device === 'string' &&
   typeof (value as HostKey).key === 'string'
 
-const read = (): Record<string, HostKey> => {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
-    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => valid(value)))
-  } catch {
-    return {}
-  }
-}
+const read = (): Record<string, HostKey> => Object.fromEntries(Object.entries(loadRecord(storageKey)).filter(([, value]) => valid(value)))
 
-const write = (keys: Record<string, HostKey>) => {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(keys))
-  } catch {}
-}
+const write = (keys: Record<string, HostKey>) => saveJson(storageKey, keys)
 
 export const hostKeys = {
   get: (host: string): HostKey | undefined => read()[host],
@@ -39,10 +30,8 @@ export const hostKeys = {
     write(keys)
   },
   watch(changed: () => void) {
-    const listener = (event: StorageEvent) => {
-      if (event.key === storageKey || event.key === null) changed()
-    }
-    addEventListener('storage', listener)
-    return () => removeEventListener('storage', listener)
+    return listen(window, 'storage', event => {
+      if (event instanceof StorageEvent && (event.key === storageKey || event.key === null)) changed()
+    })
   },
 }

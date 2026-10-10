@@ -1,8 +1,7 @@
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { compare } from '../../text/compare'
 import { unsharedName } from './names'
-
-const byPath = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const entries = async (folder: string) => {
   try {
@@ -24,5 +23,5 @@ const collect = async (folder: string, prefix: string, out: string[]): Promise<v
 export const pluginFiles = async (folder: string): Promise<string[]> => {
   const out: string[] = []
   await collect(folder, '', out)
-  return out.sort(byPath)
+  return out.sort(compare)
 }

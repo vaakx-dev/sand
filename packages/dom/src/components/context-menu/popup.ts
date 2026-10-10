@@ -1,8 +1,8 @@
 import { div, dynamicChild, onWindow, sig } from '@vaakx-dev/vrui'
-import { layer } from '../../shell/layers'
+import { layer, returnFocus } from '../../shell/layers'
 import { popover } from '../menu'
 import { askView } from './ask'
-import { arrowKeys, confirmView, firstStep, focusFirst, menuItems, returnFocus, type MenuControl, type MenuStep } from './items'
+import { arrowKeys, confirmView, firstStep, focusFirst, menuItems, type MenuControl, type MenuStep } from './items'
 import type { MenuRequest } from './request'
 
 const margin = 8
@@ -52,7 +52,7 @@ export const menuPopup = (request: MenuRequest, close: () => void) => {
     },
     popover(
       close,
-      { style: { left: '0', top: '0' }, onKeyDown: arrowKeys },
+      { class: 'top-0 left-0', onKeyDown: arrowKeys },
       dynamicChild(current, step => (step ? stepView(step, control, back) : div({ class: 'flex flex-col' }, ...menuItems(actions, control, 'sm')))),
     ),
   )

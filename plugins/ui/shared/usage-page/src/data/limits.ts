@@ -1,8 +1,7 @@
 import type { Limits } from '@sand/llm-accounts/contract'
 import type { AccountUsage } from '@sand/usage/contract'
-import { accountKey } from '@sand/kit'
+import { accountKey, emptyTotals } from '@sand/kit'
 import { providerOf, sourceName } from '../names'
-import { emptyTotals } from './totals'
 import type { Account, Pc } from './types'
 
 const sourceOf = (limits: Limits) => limits.source ?? 'claude'

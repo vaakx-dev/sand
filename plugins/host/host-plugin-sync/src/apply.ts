@@ -1,5 +1,6 @@
 import type { VersionSource } from '@sand/host-plugin-versions/contract'
 import type { RemoteRecord } from '@sand/host-remotes/contract'
+import { serial } from '@sand/kit'
 import { installDependencies } from '@sand/kit/host'
 import { join } from 'node:path'
 import { removePlugin } from './apply/remove'
@@ -29,7 +30,7 @@ const fetchPlugin = async (link: PeerLink, record: RemoteRecord | undefined, off
 }
 
 export const createApplier = ({ root, work, link, offers, refresh, swap, state, snapshot }: Applier) => {
-  let queue: Promise<unknown> = Promise.resolve()
+  const queue = serial()
   const versionsOf = (source: VersionSource, plugins: string[]) => snapshot?.(source, plugins).catch(() => {})
 
   const run = async (peer: string, plugins: string[]) => {
@@ -65,9 +66,5 @@ export const createApplier = ({ root, work, link, offers, refresh, swap, state, 
     return state()
   }
 
-  return (peer: string, plugins: string[]): Promise<PluginSyncState> => {
-    const next = queue.then(() => run(peer, plugins))
-    queue = next.catch(() => {})
-    return next
-  }
+  return (peer: string, plugins: string[]): Promise<PluginSyncState> => queue(() => run(peer, plugins))
 }

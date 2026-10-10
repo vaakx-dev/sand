@@ -1,5 +1,6 @@
 import type { Step } from '@sand/transcript-parts/contract'
 import { div, dynamicChild, icon, list, shine, show, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import { row, type RowContext, type RowMaker } from './row'
 
 type ToolStep = Extract<Step, { kind: 'tool' }>
@@ -16,7 +17,7 @@ const toolView = (step: Sig<ToolStep>, context: RowContext) => {
 const thinkingView = (step: Sig<ThinkingStep>, context: RowContext) => {
   const { open, toggle } = context.states.get(untrack(() => step.get().key))
   const streaming = step.map(value => value.streaming)
-  const text = step.map(value => value.text.replace(/\s+/g, ' ').trim())
+  const text = step.map(value => oneLine(value.text))
   return toolCard(
     {
       icon: icon('message', 14),

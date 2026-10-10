@@ -1,5 +1,5 @@
 import type { Entry, Message, ToolCallBlock } from '@sand/messages'
-import { feedbackLine, promptText, userParts } from '@sand/kit'
+import { capital, feedbackLine, oneLine, promptText, textOf, userParts } from '@sand/kit'
 import { actionsText, type ToolAction } from './action'
 
 export type NodeKind = 'prompt' | 'reply' | 'step' | 'tools' | 'notification' | 'compaction' | 'setting'
@@ -22,14 +22,10 @@ const maxDetail = 4000
 
 const recordNames: Record<string, string> = { usage: 'Token usage', goal: 'Goal' }
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
-
-const flat = (text: string) => text.replace(/\s+/g, ' ').trim().slice(0, 200)
-
 const described = (kind: NodeKind, who: string, text: string, detail = text): Described => ({
   kind,
   who,
-  text: flat(text),
+  text: oneLine(text).slice(0, 200),
   detail: detail.trim().slice(0, maxDetail),
 })
 
@@ -52,13 +48,13 @@ const user = (message: Message, calls: Map<string, ToolCallBlock>, tool: Describ
   const task = userParts(message).flatMap(part => (part.kind === 'notification' ? [part.notification] : []))[0]
   if (task && !text.trim()) return described('notification', 'Agent', `${task.label} — ${task.status}`)
   const feedback = userParts(message).flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))[0]
-  if (feedback && !text.trim()) return described('notification', capitalize(feedback.source), feedbackLine(feedback), feedback.text)
+  if (feedback && !text.trim()) return described('notification', capital(feedback.source), feedbackLine(feedback), feedback.text)
   const shown = [text, ...attachments(message)].join(' ')
   return described('prompt', 'You', shown, [text, ...attachments(message)].join('\n'))
 }
 
 const assistant = (message: Message, tool: DescribeTool): Described => {
-  const text = message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n\n')
+  const text = textOf(message.content, '\n\n')
   if (text.trim()) return described('reply', 'sand', text)
   const calls = message.content.flatMap(block => (block.type === 'tool_call' ? [tool(block)] : []))
   return calls.length ? toolsNode('step', calls) : described('step', 'sand', '(no content)')

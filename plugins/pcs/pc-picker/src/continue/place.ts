@@ -3,7 +3,6 @@ import type { Machine, ProjectEntry, ProjectGroup, Thread } from '@sand/web-clie
 import { isInside } from '@sand/kit'
 import type { Context } from 'drydock'
 import { copyOn, groupOf } from '../group'
-import { deviceOf } from '../target'
 
 export type Destination =
   | { kind: 'scratch' }
@@ -29,7 +28,7 @@ export const planDestination = (ctx: PlaceContext, thread: Thread, target: Machi
   if (isInside(cwd, ctx.projects.place(thread.device).scratch)) return { kind: 'scratch' }
   const group = groupOf(ctx.projects, cwd, thread.device, thread.info.project)
   if (!group) return { kind: 'folder', folders: [cwd] }
-  const to = copyOn(group, deviceOf(target))
+  const to = copyOn(group, target.device)
   if (!to) return { kind: 'nocopy', group }
   const from = copyOn(group, thread.device)
   return { kind: 'copy', group, from, to, folders: foldersFor(ctx, cwd, to, from), project: group.id }

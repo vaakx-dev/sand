@@ -1,3 +1,4 @@
+import { compare } from '@sand/kit'
 import { realpath } from 'node:fs/promises'
 import { dirname, extname, isAbsolute, join, relative, sep } from 'node:path'
 
@@ -67,7 +68,7 @@ const hostCodeHash = async (root: string): Promise<string> => {
   const { files, external } = await walk(real)
   const hasher = new Bun.CryptoHasher('sha256')
   const rows = [...files].map(([path, bytes]) => ({ name: relative(real, path).split(sep).join('/'), bytes }))
-  rows.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
+  rows.sort((a, b) => compare(a.name, b.name))
   for (const { name, bytes } of rows) hasher.update(`file\0${name}\0${bytes.length}\0`).update(bytes)
   for (const spec of [...external].sort()) hasher.update(`external\0${spec}\0`)
   for (const name of ['bun.lock', 'package.json']) {

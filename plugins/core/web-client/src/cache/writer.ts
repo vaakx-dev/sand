@@ -1,7 +1,7 @@
 import type { Entry } from '@sand/messages'
 import type { Thread } from '../contract'
 import type { Store } from '../threads/store'
-import { transact, under, type StoreName } from './db'
+import { transact, under, type StoreName } from '../integrations/indexed-db'
 import { entrySize, summaryKey, summaryOf, tailKey, tailOf, type CachedThread, type Meta } from './records'
 
 const budget = { threads: 40, bytes: 30_000_000 }

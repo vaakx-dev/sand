@@ -1,4 +1,6 @@
+import { oneLine } from './line'
+
 export const agentTitle = (title?: string | null) => {
-  const flat = (title ?? '').replace(/\s+/g, ' ').trim()
+  const flat = oneLine(title ?? '')
   return /^.*?[.!?](?=\s|$)/.exec(flat)?.[0] ?? (flat || 'Sub-agent')
 }

@@ -1,4 +1,4 @@
-import { bearer, fetchHostIdentity } from '@sand/kit'
+import { bearer, fetchHostIdentity, trimSlash } from '@sand/kit'
 import { remoteStore, remoteUrls, type RemoteStore } from '@sand/kit/host'
 import { recordOf, timeOf } from '../store'
 import { sharePath, type ShareSide } from './route'
@@ -11,7 +11,7 @@ const requestWait = 8_000
 const reach = async (remote: RemoteRecord) => {
   for (const url of remoteUrls(remote)) {
     const identity = await fetchHostIdentity(url, identityWait).catch(() => undefined)
-    if (identity?.deviceId === remote.id) return url.replace(/\/+$/, '')
+    if (identity?.deviceId === remote.id) return trimSlash(url)
   }
   return undefined
 }

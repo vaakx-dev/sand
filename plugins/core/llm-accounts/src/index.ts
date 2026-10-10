@@ -1,5 +1,7 @@
 import type { Server } from '@sand/server/contract'
 import type { Limits, LoginSharePc, SignInKind } from './contract'
+import { joinDisposers } from '@sand/kit'
+import { watchRemotes } from '@sand/kit/host'
 import { definePlugin } from 'drydock'
 import { createAccounts } from './auth/accounts'
 import { createLogin } from './auth/login'
@@ -13,7 +15,6 @@ import { config, configSchema } from './config'
 import { mergeLLM } from './llm'
 import { createLocal } from './local'
 import { createPeers } from './peers/peers'
-import { watchRemotes } from './peers/watch'
 import { serveLogin } from './serve/login'
 import { serveModels } from './serve/models'
 import { serveShare } from './share/routes'
@@ -101,15 +102,15 @@ export default definePlugin({
     ctx.watch('server', found => {
       server = found
       if (!found || !merged || !state) return
-      const disposers = [
+      const forget = () => {
+        server = undefined
+      }
+      return joinDisposers(
+        forget,
         serveLogin(found, accounts, login, { state, load: () => peers.refresh(), conflict }),
         serveModels(found, { view: merged.view, catalog, refreshPeers: () => peers.refresh() }),
         serveShare(found, { local, accounts, users }),
-      ]
-      return () => {
-        server = undefined
-        disposers.forEach(dispose => dispose())
-      }
+      )
     })
   },
 })

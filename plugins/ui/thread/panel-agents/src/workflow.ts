@@ -7,8 +7,7 @@ import { stopButton } from './stop'
 
 const progress = (run: Run, now: number) => {
   const total = run.members.length
-  const finished = run.members.filter(member => !member.running).length
-  return ['workflow', total ? `${finished} of ${total} finished` : '', since(run.started, run.ended, now)].filter(Boolean).join(' · ')
+  return ['workflow', total ? `${run.finished} of ${total} finished` : '', since(run.started, run.ended, now)].filter(Boolean).join(' · ')
 }
 
 export const workflowBlock = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>

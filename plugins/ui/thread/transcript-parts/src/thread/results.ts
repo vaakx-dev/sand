@@ -1,5 +1,5 @@
 import type { Entry, Message, ToolCallBlock, ToolResultBlock } from '@sand/messages'
-import type { ToolStatus } from '@sand/transcript-chat/contract'
+import type { ToolStatus } from '../contract'
 import type { Thread } from '@sand/web-client/contract'
 
 export type Results = Map<string, ToolResultBlock>

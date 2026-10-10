@@ -16,6 +16,9 @@ export default definePlugin({
   uses: {
     layout: 'lands loose on the stage',
     projects: 'the project filter lists only projects that have threads',
+    threads: 'project menus offer no New thread here',
+    composer: 'New thread here does not focus the prompt',
+    notify: 'failed project actions are not reported',
   },
   apply(ctx) {
     const host = navHost(ctx)

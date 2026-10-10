@@ -1,10 +1,9 @@
 import type { LLMEvent } from '../contract'
+import { errorMessage } from '@sand/kit'
 import { detailOf } from '../errors'
 import type { ShareLine } from './info'
 
 const heartbeat = 5_000
-
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEvent>, signal: AbortSignal) => {
   const upstream = new AbortController()
@@ -38,7 +37,7 @@ export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEv
         }
       } catch (error) {
         const detail = detailOf(error)
-        if (!upstream.signal.aborted) line({ type: 'error', message: message(error), ...(detail && { detail }) })
+        if (!upstream.signal.aborted) line({ type: 'error', message: errorMessage(error), ...(detail && { detail }) })
       }
       const open = !closed
       finish()

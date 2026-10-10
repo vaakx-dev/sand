@@ -1,4 +1,4 @@
-import type { Transcript } from '@sand/transcript-chat/contract'
+import type { Transcript } from '@sand/transcript-parts/contract'
 import { div, dockFade, jumpButton, list, nearEnd, owned, place, sig, toEnd } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { lineView, type LineContext, type StepOptions } from './line'
@@ -10,7 +10,7 @@ export default definePlugin({
   name: 'transcript-log',
   description: 'Dense terminal-style log: one line per message or tool call; tool lines open to show their output',
   inject: ['threads', 'transcriptParts', 'markdown'],
-  uses: { layout: 'lands loose on the stage' },
+  uses: { layout: 'lands loose on the stage', models: 'model switches show the raw model id' },
   apply(ctx) {
     const parts = ctx.transcriptParts
     const registry = parts.registry(() => render())
@@ -68,6 +68,7 @@ export default definePlugin({
       if (id === ctx.threads.current()?.id) render()
     })
     ctx.on('thread.select', render)
+    ctx.on('models.change', render)
     ctx.provide('transcript', transcript)
   },
 })

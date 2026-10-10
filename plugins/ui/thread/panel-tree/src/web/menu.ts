@@ -1,10 +1,9 @@
 import type { MenuSpec, NavAction } from '@sand/dom'
+import { oneLine } from '@sand/kit'
 import type { RowActions, TreeItem } from './row'
 
-const labelText = (text: string) => text.replace(/\s+/g, ' ').trim()
-
 const goActions = ({ row, head }: TreeItem, actions: RowActions): NavAction[] => [
-  ...(head ? [] : [{ id: 'go', group: 'go', label: 'Go here', icon: 'pin', quick: true, run: () => actions.jump(row.id) }]),
+  ...(head ? [] : [{ id: 'go', group: 'go', label: 'Go here', icon: 'pin', quick: true, run: () => actions.jump(row.id) } satisfies NavAction]),
   { id: 'fork', group: 'go', label: 'Fork from here', icon: 'fork', quick: true, run: () => actions.fork(row.id) },
 ]
 
@@ -19,12 +18,12 @@ const labelActions = ({ row, tree }: TreeItem, actions: RowActions): NavAction[]
       placeholder: 'Label',
       tip: 'Label',
       submit: 'Save',
-      preview: text => (labelText(text) ? `Label this point “${labelText(text)}”` : undefined),
+      preview: text => (oneLine(text) ? `Label this point “${oneLine(text)}”` : undefined),
       run: text => actions.setLabel(row.id, text),
     },
     run: () => {},
   },
-  ...(tree.label ? [{ id: 'unlabel', group: 'label', label: 'Remove label', icon: 'x', run: () => actions.setLabel(row.id, '') }] : []),
+  ...(tree.label ? [{ id: 'unlabel', group: 'label', label: 'Remove label', icon: 'x', run: () => actions.setLabel(row.id, '') } satisfies NavAction] : []),
 ]
 
 const foldActions = ({ row }: TreeItem, actions: RowActions): NavAction[] =>
