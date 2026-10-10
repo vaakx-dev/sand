@@ -16,7 +16,7 @@ export const pulse = (ctx: Context, events: EventName[] = [], services: ServiceK
     bump()
   }
   const schedule = () => {
-    if (!pending) pending = onRaf(flush)
+    if (!pending) pending = collectScope(() => onRaf(flush)).value
   }
   for (const name of events) ctx.on(name, bump)
   for (const key of services) ctx.watch(key, () => bump())

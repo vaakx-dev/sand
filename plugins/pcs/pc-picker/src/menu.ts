@@ -7,7 +7,7 @@ import { currentTarget, deviceOf, type PickerContext } from './target'
 
 const startQuick = async (ctx: PickerContext, machine: Machine) => {
   if (!machine.online) return
-  await ctx.threads.draft('', deviceOf(machine))
+  await ctx.threads.draft('', deviceOf(machine), ctx.threads.drafting()?.id)
   ctx.composer.focus()
 }
 

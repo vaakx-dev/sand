@@ -28,6 +28,6 @@ export const choosePc = async (ctx: PickerContext, group: ProjectGroup, machine:
     return ctx.notify?.push(`${group.name} isn't on ${machine.name} yet`)
   }
   if (!(await sendFirst(ctx, group, machine, location))) return
-  await ctx.threads.draft(location.path, location.device)
+  await ctx.threads.draft(location.path, location.device, ctx.threads.drafting()?.id)
   ctx.composer.focus()
 }
