@@ -1,9 +1,9 @@
 import { errorMessage, sig } from '@sand/dom'
 import type { WireRequestOf } from '@sand/protocol'
-import type { LoginState } from '../contract'
+import type { DetectedServer, LoginState } from '../contract'
 import type { Context } from 'drydock'
 
-export type LoginRequest = WireRequestOf<'login.start' | 'login.finish' | 'login.key' | 'login.cancel' | 'login.logout' | 'login.shared'>
+export type LoginRequest = WireRequestOf<'login.start' | 'login.finish' | 'login.key' | 'login.server' | 'login.cancel' | 'login.logout' | 'login.shared'>
 
 export const loginState = (ctx: Context<'wire'>, fail: (error: unknown) => void) => {
   const state = sig<LoginState | undefined>(undefined)
@@ -34,7 +34,18 @@ export const loginState = (ctx: Context<'wire'>, fail: (error: unknown) => void)
     }
   }
 
-  return { state, unavailable, load, run }
+  const detect = async () => {
+    try {
+      return await ctx.wire.call<DetectedServer[]>({ type: 'login.detect' })
+    } catch (error) {
+      fail(error)
+      return []
+    }
+  }
+
+  const account = (id: string) => state.get()?.accounts.find(found => found.id === id)
+
+  return { state, unavailable, load, run, detect, account }
 }
 
 export type LoginControl = ReturnType<typeof loginState>

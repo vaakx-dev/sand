@@ -1,6 +1,7 @@
-import { copyButton, div, dot, keys, onInterval, p, primaryAction, secondaryAction, sig, span, textInput } from '@sand/dom'
-import type { LoginAccount, LoginPending } from '../../contract'
-import { busyAction, hostOf, note, openLink, type Busy } from '../parts'
+import { copyButton, div, dot, keys, onInterval, p, primaryAction, secondaryAction, sig, span, textInput, untrack } from '@sand/dom'
+import type { LoginAccount, LoginPending, SignInKind } from '../../contract'
+import { planNames } from '../names'
+import { actions, busyAction, hostOf, note, openLink, problem, type Busy } from '../parts'
 import type { LoginControl } from '../state'
 
 type Paste = Extract<LoginPending, { kind: 'paste' }>
@@ -20,10 +21,6 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
   return account?.error ? 'error' : 'starting'
 }
 
-const actions = (...children: Parameters<typeof div>[1][]) => div({ class: 'flex flex-wrap items-center justify-end gap-2' }, ...children)
-
-const problem = (account: () => LoginAccount | undefined) => p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !account()?.error }, () => account()?.error ?? '')
-
 const step = (number: string, text: string, ...extra: Parameters<typeof div>[1][]) =>
   div(
     { class: 'flex items-center gap-3 text-sm text-neutral-200' },
@@ -32,13 +29,13 @@ const step = (number: string, text: string, ...extra: Parameters<typeof div>[1][
     ...extra,
   )
 
-const conflictView = (account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
+const conflictView = (kind: SignInKind, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
   const pc = account.conflict?.pc ?? 'Another PC'
   return div(
     { class: 'flex flex-col gap-4' },
     div(
       { class: 'rounded-xl bg-warning-950 px-4 py-3 text-sm text-neutral-200' },
-      `${pc} already shares a ${account.subscription} account with this PC. A second sign-in to the same account would keep logging the other one out.`,
+      `${pc} already shares a ${planNames[kind]} account with this PC. A second sign-in to the same account would keep logging the other one out.`,
     ),
     actions(
       secondaryAction({ disabled: busy, onClick: actionsFor.anyway }, 'Sign in here anyway'),
@@ -47,10 +44,10 @@ const conflictView = (account: LoginAccount, actionsFor: SignInActions, busy: Bu
   )
 }
 
-const pasteView = (account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
+const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
   const code = sig('')
   const ready = () => !busy.get() && !!code.get().trim()
-  const finish = busyAction(busy, () => control.run({ type: 'login.finish', provider: 'anthropic', code: code.get().trim() }))
+  const finish = busyAction(busy, () => control.run({ type: 'login.finish', account: kind, code: code.get().trim() }))
   return div(
     { class: 'flex flex-col gap-4' },
     step('1', 'Approve sand in your browser', openLink(pending.url)),
@@ -62,7 +59,7 @@ const pasteView = (account: () => LoginAccount | undefined, pending: Paste, cont
       bindValue: code,
       onKeyDown: keys({ Enter: () => ready() && void finish() }),
     }),
-    problem(account),
+    problem(() => account()?.error ?? ''),
     actions(copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }), primaryAction({ disabled: () => !ready(), onClick: () => void finish() }, 'Sign in')),
   )
 }
@@ -99,10 +96,11 @@ const errorView = (account: LoginAccount, actionsFor: SignInActions, busy: Busy)
     actions(primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Try again')),
   )
 
-export const signInView = (phase: Phase, account: () => LoginAccount | undefined, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
-  const current = account()
-  if (phase === 'conflict' && current) return conflictView(current, actionsFor, busy)
-  if (current?.pending?.kind === 'paste') return pasteView(account, current.pending, control, busy)
+export const signInView = (kind: SignInKind, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
+  const account = () => control.account(kind)
+  const current = untrack(account)
+  if (phase === 'conflict' && current) return conflictView(kind, current, actionsFor, busy)
+  if (current?.pending?.kind === 'paste') return pasteView(kind, account, current.pending, control, busy)
   if (current?.pending?.kind === 'device') return deviceView(current.pending)
   if (phase === 'error' && current) return errorView(current, actionsFor, busy)
   return note('Starting…')

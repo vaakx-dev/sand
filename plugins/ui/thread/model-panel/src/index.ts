@@ -1,10 +1,10 @@
 import { errorMessage, owned, pulse, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { createActions, serverCommand } from './actions'
-import { defaultsPage } from './defaults'
 import { modelSource } from './palette'
 import { pcStatus } from './pcs'
 import { createPicker } from './pill'
+import { modelsPage } from './settings'
 
 export default definePlugin({
   name: 'model-panel',
@@ -57,7 +57,7 @@ export default definePlugin({
 
     ctx.watch('palette', palette => palette?.source(modelSource(ctx, actions)))
     ctx.watch('settings', settings =>
-      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => defaultsPage(ctx, changes, fail) }),
+      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes) }),
     )
 
     ctx.watch('commands', commands => {

@@ -1,4 +1,4 @@
-import type { Effort, EffortLevel, ModelInfo, Speed } from '@sand/llm-accounts/contract'
+import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/llm-accounts/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 
 export interface SessionSettings {
@@ -38,6 +38,7 @@ export interface ModelSettings {
 
 export interface ModelsUpdate {
   models: ModelInfo[]
+  sources: SourceInfo[]
   levels: EffortLevel[]
   defaults: SessionSettings
 }
@@ -65,6 +66,7 @@ declare module '@sand/protocol/wire' {
 
   interface HelloFields {
     models?: ModelInfo[]
+    sources?: SourceInfo[]
     defaults?: SessionSettings
     levels?: EffortLevel[]
   }

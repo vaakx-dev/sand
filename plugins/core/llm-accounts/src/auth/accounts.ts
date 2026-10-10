@@ -1,27 +1,18 @@
-import type { LoginAccount, LoginConflict, LoginPending, LoginProvider } from '../contract'
+import type { AccountKind, KeyKind, LoginAccount, LoginConflict, LoginPending, SignInKind } from '../contract'
 import { refreshClaude } from './anthropic'
 import { envKey, envNames } from './env'
+import { fixedIds, fixedLabels, isFixed, logos, signInError, type FixedId } from './kinds'
+import { fixedAccount, serverAccount, type Status } from './listing'
 import { refreshOpenAI } from './openai'
 import { TokenError } from './request'
-import { authStore, credentialOf, type Credential, type OAuth, type Saved, type Tokens } from './store'
+import { displaced, holders, locate } from './slots'
+import { authStore, serversOf, type Credential, type OAuth, type Saved, type ServerEntry, type Tokens } from './store'
 
-export const providers: LoginProvider[] = ['anthropic', 'openai']
-
-export const labels: Record<LoginProvider, string> = { anthropic: 'Anthropic', openai: 'OpenAI' }
-
-export const subscriptions: Record<LoginProvider, string> = { anthropic: 'Claude', openai: 'ChatGPT' }
-
-const refreshers: Record<LoginProvider, (tokens: Tokens) => Promise<Tokens>> = { anthropic: refreshClaude, openai: refreshOpenAI }
+const refreshers: Record<SignInKind, (tokens: Tokens) => Promise<Tokens>> = { claude: refreshClaude, codex: refreshOpenAI }
 
 const margin = 5 * 60_000
 
 const fresh = (tokens: OAuth) => tokens.expires - Date.now() > margin
-
-export const accountName = (provider: LoginProvider, method?: string) => (method === 'oauth' ? subscriptions[provider] : labels[provider])
-
-export const settingsPath = 'Settings → Accounts'
-
-export const signInError = (provider?: LoginProvider) => new Error(`Sign in${provider ? ` to ${labels[provider]}` : ''} under ${settingsPath}`)
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
@@ -30,137 +21,185 @@ export type Accounts = ReturnType<typeof createAccounts>
 export const createAccounts = (path: string, changed: () => void) => {
   const store = authStore(path)
   let saved: Saved = {}
-  const pending = new Map<LoginProvider, LoginPending>()
-  const errors = new Map<LoginProvider, string>()
-  const conflicts = new Map<LoginProvider, LoginConflict>()
-  const refreshing = new Map<LoginProvider, Promise<Credential>>()
+  const pending = new Map<string, LoginPending>()
+  const errors = new Map<string, string>()
+  const conflicts = new Map<string, LoginConflict>()
+  const refreshing = new Map<string, Promise<Credential>>()
 
-  const stored = (provider: LoginProvider) => credentialOf(saved, provider)
-  const credential = (provider: LoginProvider): Credential | undefined => stored(provider) ?? envKey(provider)
+  const located = (id: string) => (isFixed(id) ? locate(saved, id) : undefined)
+  const stored = (id: string) => located(id)?.credential
+  const credential = (id: string): Credential | undefined => stored(id) ?? envKey(id)
+  const servers = () => serversOf(saved)
+  const server = (id: string) => servers().find(found => found.id === id)
 
   const ready = store.read().then(value => {
-      saved = value
-      if (providers.some(credential)) changed()
-    })
+    saved = value
+    if (fixedIds.some(credential) || servers().length) changed()
+  })
 
-  const shared = (provider: LoginProvider) => {
-    const found = stored(provider)
+  const signedIn = (id: string) => !!credential(id) || !!server(id)
+  const known = (id: string) => isFixed(id) || !!server(id)
+  const kind = (id: string): AccountKind | undefined => (isFixed(id) ? id : server(id) ? 'server' : undefined)
+  const label = (id: string) => (isFixed(id) ? fixedLabels[id] : (server(id)?.name ?? id))
+  const provider = (id: string) => (isFixed(id) ? logos[id] : (server(id)?.provider ?? 'server'))
+  const plan = (id: string) => {
+    const found = credential(id)
+    return found?.type === 'oauth' ? found.plan : undefined
+  }
+
+  const shared = (id: string) => {
+    const found = stored(id) ?? server(id)
     return !!found && found.shared !== false
   }
-  const keep = (provider: LoginProvider) => {
-    const before = stored(provider)?.shared
-    return before === undefined ? {} : { shared: before }
+
+  const status = (id: string): Status => {
+    const waiting = pending.get(id)
+    const error = errors.get(id)
+    const conflict = conflicts.get(id)
+    return { ...(waiting && { pending: waiting }), ...(conflict && { conflict }), ...(error && { error }) }
   }
 
-  const account = (provider: LoginProvider): LoginAccount => {
-    const found = credential(provider)
-    const oauth = found?.type === 'oauth' ? found : undefined
-    const waiting = pending.get(provider)
-    const error = errors.get(provider)
-    const conflict = conflicts.get(provider)
-    return {
-      provider,
-      label: labels[provider],
-      subscription: subscriptions[provider],
-      signedIn: !!found,
-      shared: shared(provider),
-      ...(found && { method: found.type }),
-      ...(found && !stored(provider) && { env: envNames[provider] }),
-      ...(oauth?.email && { email: oauth.email }),
-      ...(oauth?.plan && { plan: oauth.plan }),
-      ...(waiting && { pending: waiting }),
-      ...(conflict && { conflict }),
-      ...(error && { error }),
+  const list = (): LoginAccount[] => [
+    ...fixedIds.map(id => fixedAccount(id, { credential: credential(id), fromEnv: !stored(id), shared: shared(id), status: status(id) })),
+    ...servers().map(entry => serverAccount(entry, status(entry.id))),
+  ]
+
+  const save = async (patch: Saved) => {
+    const next: Saved = { ...saved, ...(await store.read()) }
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === undefined) delete next[key]
+      else next[key] = value
     }
-  }
-
-  const save = async (name: string, next: unknown) => {
-    const { [name]: _, ...rest } = { ...saved, ...(await store.read()) }
-    saved = next === undefined ? rest : { ...rest, [name]: next }
+    saved = next
     await store.write(saved)
     changed()
   }
 
-  const renew = async (provider: LoginProvider): Promise<Credential> => {
-    const current = credentialOf(await store.read(), provider) ?? stored(provider)
-    if (!current) throw signInError(provider)
+  const settle = (id: string) => {
+    pending.delete(id)
+    errors.delete(id)
+    conflicts.delete(id)
+  }
+
+  const keep = (id: string) => {
+    const before = stored(id)?.shared
+    return before === undefined ? {} : { shared: before }
+  }
+
+  const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
+
+  const rejected = async (id: SignInKind, key: string, current: OAuth, error: unknown): Promise<Credential> => {
+    const latest = locate(await store.read(), id)
+    if (latest?.credential.type === 'oauth' && latest.credential.refresh !== current.refresh) {
+      saved = { ...saved, [latest.key]: latest.credential }
+      return latest.credential
+    }
+    errors.set(id, `Signed out: ${message(error)}`)
+    if (key === id) await save({ [key]: undefined })
+    else changed()
+    throw new Error(`${fixedLabels[id]} sign-in expired. ${signInError(fixedLabels[id]).message}`)
+  }
+
+  const renew = async (id: FixedId): Promise<Credential> => {
+    const latest = locate(await store.read(), id) ?? located(id)
+    if (!latest) throw signInError(fixedLabels[id])
+    const current = latest.credential
     if (current.type === 'api_key' || fresh(current)) {
-      saved = { ...saved, [provider]: current }
+      saved = { ...saved, [latest.key]: current }
       return current
     }
+    if (id !== 'claude' && id !== 'codex') throw signInError(fixedLabels[id])
     try {
-      const next: OAuth = { ...(await refreshers[provider](current)), type: 'oauth', ...(current.shared !== undefined && { shared: current.shared }) }
-      errors.delete(provider)
-      await save(provider, next)
+      const next: OAuth = { ...(await refreshers[id](current)), type: 'oauth', ...(current.shared !== undefined && { shared: current.shared }) }
+      errors.delete(id)
+      await save({ [latest.key]: next })
       return next
     } catch (error) {
       if (!(error instanceof TokenError && error.rejected)) throw error
-      errors.set(provider, `Signed out: ${message(error)}`)
-      await save(provider, undefined)
-      throw new Error(`${subscriptions[provider]} sign-in expired. ${signInError(provider).message}`)
+      return rejected(id, latest.key, current, error)
     }
   }
 
   return {
     ready,
-    list: () => providers.map(account),
-    signedIn: (provider: LoginProvider) => !!credential(provider),
+    list,
+    ids: () => [...fixedIds.filter(id => !!credential(id)), ...servers().map(found => found.id)],
+    signedIn,
+    known,
+    kind,
+    label,
+    provider,
+    plan,
     shared,
     credential,
-    async setShared(provider: LoginProvider, value: boolean) {
-      await ready
-      const found = stored(provider)
-      if (!found) throw new Error(credential(provider) ? `This key comes from ${envNames[provider]}, so it stays on this PC` : signInError(provider).message)
-      await save(provider, { ...found, shared: value })
+    server,
+    servers,
+    fingerprint(id: string) {
+      const found = credential(id)
+      const entry = server(id)
+      if (entry) return `server:${entry.url}:${entry.key ?? ''}`
+      if (found?.type === 'oauth') return `oauth:${found.accountId ?? found.email ?? ''}`
+      return found ? `key:${found.key}:${found.base_url ?? ''}` : ''
     },
-    conflict(provider: LoginProvider, value: LoginConflict | undefined) {
-      if (value) conflicts.set(provider, value)
-      else conflicts.delete(provider)
+    async setShared(id: string, value: boolean) {
+      await ready
+      const entry = server(id)
+      if (entry) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
+      const found = located(id)
+      if (!found) throw new Error(credential(id) ? `This key comes from ${envNames[id]}, so it stays on this PC` : signInError(label(id)).message)
+      await save({ [found.key]: { ...found.credential, shared: value } })
+    },
+    conflict(id: string, value: LoginConflict | undefined) {
+      if (value) conflicts.set(id, value)
+      else conflicts.delete(id)
       changed()
     },
-    async auth(provider: LoginProvider): Promise<Credential> {
+    async auth(id: string): Promise<Credential> {
       await ready
-      const found = credential(provider)
-      if (!found) throw signInError(provider)
+      const found = credential(id)
+      if (!found || !isFixed(id)) throw signInError(label(id))
       if (found.type === 'api_key' || fresh(found)) return found
-      let running = refreshing.get(provider)
+      let running = refreshing.get(id)
       if (!running) {
-        running = renew(provider).finally(() => refreshing.delete(provider))
-        refreshing.set(provider, running)
+        running = renew(id).finally(() => refreshing.delete(id))
+        refreshing.set(id, running)
       }
       return running
     },
-    pend(provider: LoginProvider, waiting: LoginPending | undefined) {
-      if (waiting) pending.set(provider, waiting)
-      else pending.delete(provider)
-      errors.delete(provider)
-      conflicts.delete(provider)
+    pend(id: string, waiting: LoginPending | undefined) {
+      settle(id)
+      if (waiting) pending.set(id, waiting)
       changed()
     },
-    fail(provider: LoginProvider, error: unknown) {
-      errors.set(provider, message(error))
+    fail(id: string, error: unknown) {
+      errors.set(id, message(error))
       changed()
     },
-    async signIn(provider: LoginProvider, tokens: Tokens) {
+    async signIn(id: SignInKind, tokens: Tokens) {
       await ready
-      pending.delete(provider)
-      errors.delete(provider)
-      conflicts.delete(provider)
-      await save(provider, { ...tokens, type: 'oauth', ...keep(provider) })
+      settle(id)
+      await save({ [id]: { ...tokens, type: 'oauth', ...keep(id) } })
     },
-    async saveKey(provider: LoginProvider, key: string, baseUrl = '') {
+    async saveKey(id: KeyKind, key: string, baseUrl = '') {
       await ready
-      pending.delete(provider)
-      errors.delete(provider)
-      conflicts.delete(provider)
-      await save(provider, { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keep(provider) })
+      settle(id)
+      await save({ ...displaced(saved, id), [id]: { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keep(id) } })
     },
-    async signOut(provider: LoginProvider) {
+    async saveServer(entry: ServerEntry, error?: string) {
       await ready
-      pending.delete(provider)
-      errors.delete(provider)
-      conflicts.delete(provider)
-      await save(provider, undefined)
+      settle(entry.id)
+      if (error) errors.set(entry.id, error)
+      const list = servers()
+      await saveServers(list.some(found => found.id === entry.id) ? list.map(found => (found.id === entry.id ? entry : found)) : [...list, entry])
+    },
+    async signOut(id: string) {
+      await ready
+      settle(id)
+      if (server(id)) return saveServers(servers().filter(found => found.id !== id))
+      if (!isFixed(id)) return
+      const keys = holders({ ...saved, ...(await store.read()) }, id)
+      if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
+      else changed()
     },
   }
 }

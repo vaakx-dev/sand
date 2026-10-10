@@ -1,6 +1,6 @@
 import type { WireJob } from '@sand/agents/contract'
 import type { GrepMatch } from '@sand/files/contract'
-import type { EffortLevel, Limits, ModelInfo } from '@sand/llm-accounts/contract'
+import type { EffortLevel, Limits, ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SessionSettings, SettingsPatch, SettingsState } from '@sand/model/contract'
 import type { SkillSummary } from '@sand/skills/contract'
 
@@ -15,6 +15,7 @@ export interface Jobs {
 
 export interface Models {
   list(): ModelInfo[]
+  sources(): SourceInfo[]
   levels(): EffortLevel[]
   info(id?: string): ModelInfo | undefined
   defaults(): SessionSettings

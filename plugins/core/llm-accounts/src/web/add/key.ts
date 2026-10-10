@@ -1,52 +1,47 @@
-import { div, keys, label, p, primaryAction, segmented, sig, textInput, toggleSwitch } from '@sand/dom'
-import type { LoginProvider } from '../../contract'
-import { busyAction } from '../parts'
+import { div, keys, label, primaryAction, sig, textInput, toggleSwitch } from '@sand/dom'
+import type { KeyKind } from '../../contract'
+import { busyAction, problem } from '../parts'
 import type { LoginControl } from '../state'
 
-const providers: { value: LoginProvider; label: string; placeholder: string }[] = [
-  { value: 'anthropic', label: 'Anthropic', placeholder: 'sk-ant-…' },
-  { value: 'openai', label: 'OpenAI', placeholder: 'sk-…' },
-]
+export const keyNames: Record<KeyKind, string> = { anthropic: 'Anthropic', openai: 'OpenAI', openrouter: 'OpenRouter' }
 
-export const keyStep = (control: LoginControl, saved: (provider: LoginProvider) => void) => {
-  const provider = sig<LoginProvider>('anthropic')
+const placeholders: Record<KeyKind, string> = { anthropic: 'sk-ant-…', openai: 'sk-…', openrouter: 'sk-or-…' }
+
+const takesBaseUrl = (kind: KeyKind) => kind !== 'openrouter'
+
+export const keyStep = (control: LoginControl, kind: KeyKind, saved: () => void) => {
   const key = sig('')
   const baseUrl = sig('')
   const share = sig(true)
   const busy = sig(false)
   const error = sig('')
   const ready = () => !busy.get() && !!key.get().trim()
-  const account = () => control.state.get()?.accounts.find(found => found.provider === provider.get())
+  const onEnter = keys({ Enter: () => ready() && void save() })
 
   const save = busyAction(busy, async () => {
     error.set('')
-    await control.run({ type: 'login.key', provider: provider.get(), key: key.get().trim(), baseUrl: baseUrl.get().trim() })
-    const after = account()
+    await control.run({ type: 'login.key', account: kind, key: key.get().trim(), ...(takesBaseUrl(kind) && { baseUrl: baseUrl.get().trim() }) })
+    const after = control.account(kind)
     if (!after?.signedIn || after.method !== 'api_key') return error.set(after?.error ?? 'The key was not saved')
-    if (after.shared !== share.get()) await control.run({ type: 'login.shared', provider: provider.get(), shared: share.get() })
-    saved(provider.get())
+    if (after.shared !== share.get()) await control.run({ type: 'login.shared', account: kind, shared: share.get() })
+    saved()
   })
 
   return div(
     { class: 'flex flex-col gap-4' },
-    segmented(providers, provider, value => provider.set(value), { label: 'Provider', inset: true }),
     textInput({
       class: 'bg-neutral-900',
       type: 'password',
-      placeholder: () => providers.find(entry => entry.value === provider.get())?.placeholder ?? 'API key',
-      'aria-label': 'API key',
+      placeholder: placeholders[kind],
+      'aria-label': `${keyNames[kind]} API key`,
       bindValue: key,
-      onKeyDown: keys({ Enter: () => ready() && void save() }),
+      onKeyDown: onEnter,
+      onMount: node => node.focus(),
     }),
-    textInput({
-      class: 'bg-neutral-900',
-      type: 'url',
-      placeholder: 'Base URL (optional)',
-      'aria-label': 'Base URL',
-      bindValue: baseUrl,
-      onKeyDown: keys({ Enter: () => ready() && void save() }),
-    }),
-    p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !error.get() }, () => error.get()),
+    takesBaseUrl(kind)
+      ? textInput({ class: 'bg-neutral-900', type: 'url', placeholder: 'Base URL (optional)', 'aria-label': 'Base URL', bindValue: baseUrl, onKeyDown: onEnter })
+      : null,
+    problem(() => error.get()),
     div(
       { class: 'flex flex-wrap items-center justify-between gap-3' },
       label(

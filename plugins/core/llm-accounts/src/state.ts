@@ -1,6 +1,5 @@
 import type { LoginPc, LoginRemoteAccount, LoginState } from './contract'
-import { accountName, type Accounts } from './auth/accounts'
-import { lacking } from './llm'
+import type { Accounts } from './auth/accounts'
 import type { Peers, PeerState } from './peers/peers'
 import type { ShareUsers } from './share/users'
 
@@ -9,26 +8,25 @@ const pcOf = (peer: PeerState): LoginPc => ({
   name: peer.pc.name,
   online: peer.online,
   checked: peer.checked,
-  shares: (peer.info?.accounts ?? []).map(account => accountName(account.provider, account.method)),
+  shares: (peer.info?.accounts ?? []).map(account => account.label),
   ...(peer.error && { error: peer.error }),
 })
 
-const remoteAccounts = (peers: Peers, accounts: Accounts): LoginRemoteAccount[] => {
-  const used = new Set(lacking(accounts).map(provider => peers.source(provider)?.pc.id && `${provider}:${peers.source(provider)!.pc.id}`))
-  return peers.list().flatMap(peer =>
-    (peer.info?.accounts ?? []).map(({ provider, label, subscription, method, plan }) => ({
+const remoteAccounts = (peers: Peers, accounts: Accounts): LoginRemoteAccount[] =>
+  peers.list().flatMap(peer =>
+    (peer.info?.accounts ?? []).map(({ id, kind, provider, label, method, plan }) => ({
+      id,
+      kind,
       provider,
       label,
-      subscription,
       method,
       ...(plan && { plan }),
       device: peer.pc.id,
       pc: peer.pc.name,
       online: peer.online && !peer.refused,
-      inUse: used.has(`${provider}:${peer.pc.id}`),
+      inUse: !accounts.signedIn(id) && peers.source(id)?.pc.id === peer.pc.id,
     })),
   )
-}
 
 export const loginState = (accounts: Accounts, peers: Peers, users: ShareUsers): LoginState => ({
   accounts: accounts.list(),

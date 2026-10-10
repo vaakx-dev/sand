@@ -4,6 +4,10 @@ export type Busy = ReturnType<typeof sig<boolean>>
 
 export const note = (text: string | (() => string)) => p({ class: 'text-xs text-neutral-400' }, text)
 
+export const problem = (text: () => string) => p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !text() }, text)
+
+export const actions = (...children: Child[]) => div({ class: 'flex flex-wrap items-center justify-end gap-2' }, ...children)
+
 export const hostOf = (url: string) => {
   try {
     return new URL(url).host

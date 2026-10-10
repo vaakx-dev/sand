@@ -8,6 +8,7 @@ export const helloRequest = (ctx: ServerContext) => {
 
   const base = (): Hello => ({
     models: ctx.llm?.models?.(),
+    sources: ctx.llm?.sources?.(),
     levels: ctx.llm?.levels?.(),
     limits: ctx.llm?.limits?.(),
     defaults: ctx.modelSettings?.defaults(),

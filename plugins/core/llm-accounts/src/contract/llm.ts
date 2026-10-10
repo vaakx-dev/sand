@@ -1,4 +1,5 @@
 import type { Block, Message, StopReason, Usage } from '@sand/messages'
+import type { AccountKind } from './login'
 
 export interface ToolSpec {
   name: string
@@ -18,13 +19,41 @@ export interface EffortLevel {
 export interface ModelInfo {
   id: string
   label: string
+  source?: string
+  name?: string
   provider?: string
   summary?: string
   efforts: Effort[]
   defaultEffort?: Effort
   context?: number
   fast?: boolean
+  images?: boolean
   via?: string
+  hidden?: boolean
+  favourite?: number
+  fresh?: boolean
+  added?: boolean
+}
+
+export type NewModels = 'show' | 'hide'
+
+export interface SourceInfo {
+  id: string
+  kind: AccountKind
+  label: string
+  provider: string
+  billing: Billing
+  plan?: string
+  via?: string
+  online?: boolean
+  shown: number
+  total: number
+  fresh: number
+  newModels: NewModels
+  search: boolean
+  slugs: boolean
+  checked?: number
+  error?: string
 }
 
 export interface LLMRequest {
@@ -78,6 +107,8 @@ export type LiveBlock =
 
 export interface LLM {
   models?(): ModelInfo[]
+  find?(id: string): ModelInfo | undefined
+  sources?(): SourceInfo[]
   levels?(): EffortLevel[]
   stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent>
   provider?(model?: string): ProviderInfo

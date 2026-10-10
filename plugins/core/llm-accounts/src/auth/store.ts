@@ -1,3 +1,4 @@
+import type { ServerProvider } from '../contract'
 import { replaceFile } from '@sand/kit/fs'
 import { chmod, writeFile } from 'node:fs/promises'
 
@@ -22,6 +23,33 @@ export interface ApiKey {
 export type Credential = OAuth | ApiKey
 
 export type Saved = Record<string, unknown>
+
+export interface ServerEntry {
+  id: string
+  name: string
+  url: string
+  key?: string
+  provider: ServerProvider
+  shared?: boolean
+}
+
+const serverProviders: ServerProvider[] = ['ollama', 'lmstudio', 'server']
+
+const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0
+
+const serverOf = (value: any): ServerEntry | undefined => {
+  if (!text(value?.id) || !text(value.url)) return undefined
+  return {
+    id: value.id,
+    name: text(value.name) ? value.name : value.id,
+    url: value.url,
+    provider: serverProviders.includes(value.provider) ? value.provider : 'server',
+    ...(text(value.key) && { key: value.key }),
+    ...(typeof value.shared === 'boolean' && { shared: value.shared }),
+  }
+}
+
+export const serversOf = (saved: Saved): ServerEntry[] => (Array.isArray(saved.servers) ? saved.servers.flatMap(value => serverOf(value) ?? []) : [])
 
 export const writePrivateJson = async (path: string, value: unknown) => {
   const temporary = `${path}.tmp`
