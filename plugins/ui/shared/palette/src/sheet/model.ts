@@ -1,5 +1,6 @@
-import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
+import type { PaletteItem, PalettePage } from '../contract'
 import { batch, derive, effect, errorMessage, listbox, onTimeout, sig, untrack } from '@sand/dom'
+import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'
 
@@ -28,10 +29,18 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     nav.push(next)
   }
 
+  const runThenBack = (item: PaletteItem) => {
+    const to = nav.trail().indexOf(page) - 1
+    void Promise.resolve()
+      .then(() => item.run?.())
+      .then(() => (to >= 0 ? nav.back(to) : reloads.update(count => count + 1)), nav.fail)
+  }
+
   const choose = (item: PaletteItem | undefined) => {
     if (!item || item.disabled) return
     if (item.page) return advance(item.page())
     if (item.fill !== undefined) return fill(item.fill)
+    if (item.keepOpen) return runThenBack(item)
     nav.close(page)
     void Promise.resolve()
       .then(() => item.run?.())
@@ -70,10 +79,7 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     fills.update(count => count + 1)
   }
 
-  const act = (action: PaletteItemAction) =>
-    void Promise.resolve()
-      .then(() => action.run())
-      .then(() => reloads.update(count => count + 1), nav.fail)
+  const more = (item: PaletteItem) => advance(actionsPage(item))
 
   const attempt = async (work: () => Promise<void>) => {
     if (busy.get()) return
@@ -141,7 +147,7 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     action,
     card,
     nested: nav.trail().length > 1,
-    act,
+    more,
     submit,
     confirm,
     enter,

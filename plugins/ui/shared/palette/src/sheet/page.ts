@@ -34,7 +34,7 @@ const results = (model: PageModel) =>
       const first = untrack(() => entry.get())
       if ('group' in first) return groupLabel(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
-      return rowView(first.item, position, model.box, model.act)
+      return rowView(first.item, position, model.box, model.more)
     },
     div({ class: 'max-h-96 overflow-auto overscroll-contain px-2 pb-2' }),
   )
