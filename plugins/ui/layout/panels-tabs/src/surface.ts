@@ -4,7 +4,6 @@ import type { Context, Dispose } from 'drydock'
 
 export interface Surface {
   floating: () => boolean
-  narrow: () => boolean
   drawerOpen: () => boolean
   sync(filled: boolean): void
   open(): boolean
@@ -15,7 +14,6 @@ export const createSurface = (ctx: Context, build: () => HTMLElement, changed: (
   let layout: Layout | undefined
   let unplace: Dispose | undefined
   const floating = sig(true)
-  const narrow = sig(false)
   const drawerOpen = sig(false)
 
   const sync = (filled: boolean) => {
@@ -28,19 +26,14 @@ export const createSurface = (ctx: Context, build: () => HTMLElement, changed: (
   ctx.watch('layout', next => {
     layout = next
     floating.set(!next)
-    narrow.set(next?.state().narrow ?? false)
     return () => {
       layout = undefined
     }
   })
-  ctx.on('layout.change', state => {
-    narrow.set(state.narrow)
-    changed()
-  })
+  ctx.on('layout.change', () => changed())
 
   return {
     floating: () => floating.get(),
-    narrow: () => narrow.get(),
     drawerOpen: () => drawerOpen.get(),
     sync,
     open: () => (layout ? layout.state().open.aside : drawerOpen.get()),

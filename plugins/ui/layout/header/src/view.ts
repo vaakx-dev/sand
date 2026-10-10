@@ -87,16 +87,13 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
   const panel = iconButton(
     {
       class: 'relative',
-      hidden: layout.map(state => !state?.filled.aside),
-      active: layout.map(state => Boolean(state?.open.aside)),
-      title: () => (layout.get()?.open.aside ? 'Hide the panel' : 'Show the panel'),
-      onClick: () => ctx.layout?.toggle('aside'),
+      hidden: layout.map(state => !state?.filled.aside || state.open.aside),
+      title: 'Show the panel',
+      'aria-label': 'Show the panel',
+      onClick: () => ctx.layout?.toggle('aside', true),
     },
     icon('panel'),
-    show(
-      derive(() => working.get() && !layout.get()?.open.aside),
-      () => span({ class: 'absolute right-1 top-1 h-2 w-2 rounded-full bg-accent-400', title: 'Agents running' }),
-    ),
+    show(working, () => span({ class: 'absolute right-1 top-1 h-2 w-2 rounded-full bg-accent-400', title: 'Agents running' })),
   )
 
   return div(
