@@ -62,6 +62,7 @@ export default definePlugin({
     ctx.provide('fileIndex', createFileIndex(wire, threads.cwd))
     ctx.provide('skillIndex', createSkillIndex(ctx, wire, threads))
     ctx.provide('projects', projects.projects)
+    ctx.provide('sync', createSync(ctx, wire, projects))
     ctx.provide('machines', createMachines(ctx, wire, local, links))
     const media = createMedia(wire, store)
     ctx.effect(() => media.dispose)

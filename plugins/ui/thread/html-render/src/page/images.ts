@@ -51,5 +51,5 @@ export const inlineImages = async (html: string, base?: string) => {
     throw new Error(`The page's images add up to more than ${megabytes(pageBytes)}. Use fewer or smaller images.`)
   }
   const urls = new Map(await Promise.all(found.map(async file => [file.path, await dataUrl(file.full)] as const)))
-  return { html: html.replace(localImage, (match, open: string, path: string, close: string) => `${open}${urls.get(path) ?? path}${close}`), missing }
+  return { html: html.replace(localImage, (_, open: string, path: string, close: string) => `${open}${urls.get(path) ?? path}${close}`), missing }
 }

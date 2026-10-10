@@ -6,7 +6,7 @@ import type { FlowContext } from '../types'
 import { mergePage } from './merge'
 import { otherPcName, pcName, projectName } from './names'
 
-const conflictItem = (file: string, here: string, other: string, pick: (file: string, side: SyncPick) => Promise<void>): PaletteItem => ({
+const conflictItem = (file: string, other: string, pick: (file: string, side: SyncPick) => Promise<void>): PaletteItem => ({
   id: `file:${file}`,
   icon: 'file',
   label: file,
@@ -39,7 +39,7 @@ export const resolvePage = (ctx: FlowContext, sync: Sync, ref: ProjectRef): Pale
       if (!files.length) return [{ id: 'resolved', icon: 'check', label: 'Everything is resolved', detail: `${name} has no conflicts on ${here}` }]
       return [
         { id: 'merge', icon: 'sparkles', label: 'Let sand merge them', detail: `Start a thread on ${here} that combines both versions`, page: () => mergePage(ctx, ref, files, here, other) },
-        ...files.map(file => conflictItem(file, here, other, pick)),
+        ...files.map(file => conflictItem(file, other, pick)),
       ]
     },
   }

@@ -304,7 +304,7 @@ unpack() {
   mkdir "$dir" </dev/null || fail "Could not create $dir"
   made=1
   SAND_BUNDLE="$work/sand.tar.gz" SAND_DIR="$dir" "$bun" -e 'await new Bun.Archive(await Bun.file(process.env.SAND_BUNDLE).bytes()).extract(process.env.SAND_DIR)' </dev/null || fail 'Could not unpack the sand download'
-  if ! problem=$("$bun" "$dir/apps/sand/src/host/dist/release/ready.ts" "$dir" </dev/null 2>&1); then
+  if ! problem=$("$bun" "$dir/packages/kit/src/host/dist/release/ready.ts" "$dir" </dev/null 2>&1); then
     fail "${problem:-The sand download could not be checked; run the command again}"
   fi
   ok 'Sand downloaded' "$dir"
