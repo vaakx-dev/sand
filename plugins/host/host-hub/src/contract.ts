@@ -20,4 +20,8 @@ declare module 'drydock' {
   interface Services {
     hub: Hub
   }
+
+  interface Events {
+    'hub.open': (device: string) => void
+  }
 }

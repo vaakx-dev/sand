@@ -52,6 +52,7 @@ const host = [
   'host-plugin-library',
   'host-plugin-versions',
   'host-watch',
+  'telemetry',
 ]
 
 export interface ModeSetup {
@@ -61,7 +62,7 @@ export interface ModeSetup {
 
 export const modes: Record<CliMode, ModeSetup> = {
   print: { plugins: [...core, ...commands, 'ui-headless'] },
-  serve: { plugins: [...core, ...commands, ...interactive, 'server', 'web'] },
+  serve: { plugins: [...core, ...commands, ...interactive, 'server', 'web', 'telemetry'] },
   command: { plugins: cli, user: false },
   host: { plugins: host, user: false },
 }

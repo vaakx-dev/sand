@@ -1,0 +1,29 @@
+{
+  "name": "@sand/telemetry",
+  "version": "0.0.0",
+  "description": "Sends anonymous usage events to PostHog; turn it off with enabled = false under [plugins.telemetry]",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Telemetry",
+    "summary": "Anonymous usage events, sent to PostHog",
+    "uses": {
+      "hostDevices": "connected clients are counted without their kind",
+      "modelSettings": "events carry no model or effort",
+      "loops": "events carry no loop name"
+    }
+  },
+  "dependencies": {
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

@@ -65,6 +65,7 @@
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",
     "@sand/sync": "workspace:*",
+    "@sand/telemetry": "workspace:*",
     "@sand/titles": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/tools-fs": "workspace:*",

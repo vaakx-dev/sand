@@ -6,7 +6,7 @@ import { createDownstream } from './downstream'
 import { createLinks } from './links'
 import { createReceiver } from './receive'
 
-export const createHub = (runtimes: Runtimes) => {
+export const createHub = (runtimes: Runtimes, opened: (device: string) => void) => {
   const clients = new Map<HubSocket, Client>()
   const handlers = new Map<string, RequestHandler>()
   const links = createLinks(runtimes, createDownstream(runtimes))
@@ -22,6 +22,7 @@ export const createHub = (runtimes: Runtimes) => {
       const client = createClient(socket, device)
       clients.set(socket, client)
       links.sync(client)
+      opened(device)
     },
     message(socket, raw) {
       const client = clients.get(socket)
