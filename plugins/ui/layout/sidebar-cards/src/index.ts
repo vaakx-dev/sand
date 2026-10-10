@@ -1,8 +1,9 @@
 import { closeDrawer, derive, effect, navHost, owned, place, pulse, reorder, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
+import type { MenuRequest } from './menu/view'
 import { choiceName, projectChoices } from './project-choices'
 import { projectFilter } from './project-filter'
-import { buildRows, cardsIn, type RowOptions } from './rows'
+import { buildRows, cardsIn, openByDefault, type RowOptions } from './rows'
 import { sectionState } from './sections'
 import { sidebarView } from './view'
 
@@ -10,7 +11,7 @@ const pageSize = 25
 
 export default definePlugin({
   name: 'sidebar-cards',
-  description: 't3-style card sidebar: search, project filter and actions, then Pinned, Active and Settled threads',
+  description: 't3-style card sidebar: search, project filter and actions, then Pinned, Active, Snoozed and Settled threads',
   uses: {
     layout: 'lands loose on the stage',
     projects: 'the project filter lists only projects that have threads',
@@ -19,6 +20,7 @@ export default definePlugin({
     const host = navHost(ctx)
     const layout = pulse(ctx, ['layout.change'], ['layout'])
     const registry = pulse(ctx, ['projects.change'], ['projects'])
+    const menu = sig<MenuRequest | undefined>(undefined)
     const { sections, limits, filter, rows, choices, label } = owned(ctx, () => {
       const sections = sectionState()
       const limits = sig<Record<string, number>>({})
@@ -48,6 +50,7 @@ export default definePlugin({
     const view = () =>
       sidebarView({
         drag,
+        menu,
         narrow: layout.read(() => ctx.layout?.state().narrow ?? false),
         actions: host.actions,
         rows,
@@ -65,7 +68,7 @@ export default definePlugin({
           row.list.select(row.item.id)
           closeDrawer(ctx)
         },
-        toggle: row => sections.toggle(row.key, row.name !== 'Settled'),
+        toggle: row => sections.toggle(row.key, openByDefault(row.name)),
         more: row => limits.update(current => ({ ...current, [row.section]: (current[row.section] ?? pageSize) + pageSize * 2 })),
       })
     ctx.provide('nav', host.nav)

@@ -39,7 +39,7 @@ export const threadNavList = (ctx: Context<'threads'>): NavList => {
     prefetch,
     menu(id) {
       const draft = draftOf(ctx, id)
-      return draft && ctx.drafts ? draftMenu(ctx.drafts, draft.id) : threadMenu(ctx.threads, id)
+      return draft && ctx.drafts ? draftMenu(ctx.drafts, draft.id) : threadMenu(ctx, id)
     },
     move: (id, above, below) => moveThread(ctx.threads, id, above, below),
   }

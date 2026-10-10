@@ -1,49 +1,11 @@
 import type { NavAction, NavItem, NavList } from '@sand/dom'
-import { ago, color, derive, div, dot, dynamicChild, elapsed, exactTime, focusable, icon, iconButton, intent, keys, navStatus, projectIcon, show, span, stopThen, tildeHome, working, type Reorder, type Sig } from '@sand/dom'
+import { color, div, dynamicChild, focusable, icon, intent, keys, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
+import { pressMenu } from './menu/press'
+import type { MenuRequest } from './menu/view'
+import { status } from './status'
+import { actionStrip, type StripParts } from './strip'
 
 export type CardRow = { group: string; list: NavList; item: NavItem; selected: boolean }
-
-const kindOf = (value: NavItem) => (value.state === 'running' || value.state === 'background' || value.state === 'waiting' || value.state === 'draft' ? value.state : value.unread ? 'unread' : '')
-
-const agents = (count: number) => `${count} agent${count === 1 ? '' : 's'}`
-
-const startedTitle = (at?: number) => (at ? `Started ${exactTime(at)}` : 'Working')
-
-const status = (item: Sig<NavItem>, minute: Sig<number>) =>
-  dynamicChild(item.map(kindOf), kind => {
-    if (kind === 'running') {
-      const title = item.map(value => startedTitle(value.started))
-      return span(
-        { class: 'inline-flex items-center gap-1 font-medium text-accent-400', title },
-        working(14, title),
-        'Working',
-        span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
-      )
-    }
-    if (kind === 'background') {
-      const title = item.map(value => navStatus(value))
-      return span(
-        { class: 'inline-flex items-center gap-1 font-medium text-sky-400', title },
-        icon('bot', 14),
-        item.map(value => agents(value.jobs ?? 1)),
-        span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
-      )
-    }
-    if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, dot('warning'), span({ class: 'font-medium text-warning-400' }, 'Needs you'))
-    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, icon('pencil', 11), 'Draft')
-    if (kind === 'unread') return span({ class: 'text-orange-400', title: navStatus(item.get()) }, '✦ new')
-    const age = derive(() => {
-      minute.get()
-      return ago(item.get().updated)
-    })
-    return span({ class: 'tabular-nums text-neutral-500', title: () => exactTime(item.get().updated) }, age)
-  })
-
-const actionStrip = (actions: NavAction[], reveal: string) =>
-  span(
-    { class: ['hidden items-center gap-1', reveal] },
-    actions.map(action => iconButton({ size: 'sm', title: action.label, 'aria-label': action.label, onClick: stopThen(() => action.run()) }, icon(action.icon ?? 'right', 13))),
-  )
 
 const draftEdge = () => span({ class: 'pointer-events-none absolute inset-0 rounded-lg', style: { boxShadow: `inset 2px 0 0 ${color('sky', 400)}` } })
 
@@ -53,9 +15,8 @@ interface CardParts {
   item: Sig<NavItem>
   selected: Sig<boolean>
   project: Sig<string>
-  menu: Sig<NavAction[]>
-  menuKey: Sig<string>
   minute: Sig<number>
+  strip: StripParts
 }
 
 const strong = ({ item, selected }: CardParts) => selected.get() || item.get().unread || item.get().state === 'waiting'
@@ -66,8 +27,11 @@ const avatar = ({ item, project }: CardParts) =>
     url => (url ? projectIcon('', url) : dynamicChild(project, projectIcon)),
   )
 
+const statusSlot = (parts: CardParts, extra = '') =>
+  span({ class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden', extra]) }, status(parts.item, parts.minute))
+
 const fullBody = (parts: CardParts) => {
-  const { item, project, menu, menuKey, minute } = parts
+  const { item, project } = parts
   return div(
     div(
       { class: 'flex h-5 items-center gap-2 text-xs text-neutral-400' },
@@ -77,8 +41,8 @@ const fullBody = (parts: CardParts) => {
         item.map(value => Boolean(value.pinned)),
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
       ),
-      span({ class: 'flex shrink-0 items-center group-hover:hidden' }, status(item, minute)),
-      dynamicChild(menuKey, () => actionStrip(menu.get(), 'group-hover:flex')),
+      statusSlot(parts),
+      actionStrip(parts.strip, 'group-hover:flex', true),
     ),
     div(
       { class: ['truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-400')], title: item.map(value => value.title) },
@@ -94,58 +58,84 @@ const fullBody = (parts: CardParts) => {
         ),
         span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
       ),
-      dynamicChild(menuKey, () => actionStrip(menu.get(), 'touch-current:flex')),
+      actionStrip(parts.strip, 'touch-current:flex', false),
     ),
   )
 }
 
-const settledTitle = (value: NavItem) => [value.title, [value.project, tildeHome(value.path ?? '')].filter(Boolean).join(' · ')].filter(Boolean).join('\n')
+const compactTitle = (value: NavItem) => [value.title, [value.project, tildeHome(value.path ?? '')].filter(Boolean).join(' · ')].filter(Boolean).join('\n')
 
 const compactBody = (parts: CardParts) => {
-  const { item, selected, menu, menuKey, minute } = parts
+  const { item, selected } = parts
   return div(
-    { class: 'flex h-5 items-center gap-2', title: item.map(settledTitle) },
+    { class: 'flex h-5 items-center gap-2', title: item.map(compactTitle) },
     span({ class: ['inline-flex shrink-0 transition group-hover:opacity-100', () => (selected.get() ? 'opacity-100' : 'opacity-50')] }, avatar(parts)),
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-500')] }, item.map(value => value.title)),
-    span({ class: 'flex shrink-0 items-center text-xs group-hover:hidden' }, status(item, minute)),
-    dynamicChild(menuKey, () => actionStrip(menu.get(), 'group-hover:flex touch-current:flex')),
+    statusSlot(parts, 'text-xs'),
+    actionStrip(parts.strip, 'group-hover:flex touch-current:flex', true),
   )
 }
 
-export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow) => void, drag: Reorder) => {
+const pointBelow = (event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement
+  const box = target.getBoundingClientRect()
+  return { x: box.left, y: box.bottom + 4, from: (target.closest('[role="button"]') as HTMLElement | null) ?? target }
+}
+
+const touched = (event: MouseEvent) => (event as PointerEvent).pointerType === 'touch'
+
+export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow) => void, drag: Reorder, openMenu: (request: MenuRequest) => void) => {
   const item = row.map(value => value.item)
   const selected = row.map(value => value.selected)
-  const settled = item.map(value => Boolean(value.settled))
+  const compact = item.map(value => Boolean(value.settled || value.snoozed))
   const menu = row.map(value => value.list.menu?.(value.item.id) ?? [])
-  const parts: CardParts = {
-    item,
-    selected,
-    project: item.map(value => value.project ?? value.subtitle ?? ''),
+  const choosing = sig<string | undefined>(undefined)
+  const strip: StripParts = {
     menu,
     menuKey: menu.map(actions => actions.map(action => `${action.id}:${action.label}:${action.icon}`).join('|')),
-    minute,
+    choosing,
+    expand(action: NavAction, event: MouseEvent, inline: boolean) {
+      if (inline && !touched(event)) return choosing.set(action.id)
+      openMenu({ ...pointBelow(event), touch: true, row: row.get(), expand: action.id })
+    },
+    ask(action: NavAction, event: MouseEvent) {
+      openMenu({ ...pointBelow(event), touch: touched(event), row: row.get(), ask: action.id })
+    },
   }
+  const parts: CardParts = { item, selected, project: item.map(value => value.project ?? value.subtitle ?? ''), minute, strip }
+  const press = pressMenu(at => {
+    if (menu.get().length) openMenu({ ...at, row: row.get() })
+  })
+  const dragging = drag(() => slotOf(row.get()))
+  const hover = intent(() => row.get().list.prefetch?.(row.get().item.id))
 
   return div(
     {
       role: 'button',
       tabIndex: 0,
       'aria-current': selected,
+      'aria-haspopup': menu.map(actions => (actions.length ? 'menu' : undefined)),
       class: [
         focusable,
-        'group relative block w-full rounded-lg px-3 transition',
-        () => (settled.get() ? 'mb-px py-1' : 'mb-1 py-2'),
+        'group relative block w-full select-none rounded-lg px-3 transition',
+        () => (compact.get() ? 'mb-px py-1' : 'mb-1 py-2'),
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
       ],
-      onClick: () => pick(row.get()),
+      onClick: () => press.held() || pick(row.get()),
       onKeyDown: keys({ Enter: () => pick(row.get()), ' ': () => pick(row.get()) }, { self: true, repeat: false }),
-      ...intent(() => row.get().list.prefetch?.(row.get().item.id)),
-      ...drag(() => slotOf(row.get())),
+      ...hover,
+      onPointerLeave: () => {
+        hover.onPointerLeave()
+        choosing.set(undefined)
+      },
+      ...dragging,
+      ...press.props,
+      style: { ...dragging.style, '-webkit-touch-callout': 'none' },
     },
     show(
       item.map(value => value.state === 'draft'),
       draftEdge,
     ),
-    dynamicChild(settled, compact => (compact ? compactBody(parts) : fullBody(parts))),
+    dynamicChild(compact, small => (small ? compactBody(parts) : fullBody(parts))),
   )
 }

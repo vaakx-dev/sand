@@ -1,5 +1,6 @@
 import { button, chevron, focusable, untrack, type Reorder, type Sig } from '@sand/dom'
 import { card, type CardRow } from './card'
+import type { MenuRequest } from './menu/view'
 import type { Row } from './rows'
 
 export interface RowHandlers {
@@ -8,6 +9,7 @@ export interface RowHandlers {
   pick(row: CardRow): void
   toggle(row: Extract<Row, { kind: 'head' }>): void
   more(row: Extract<Row, { kind: 'more' }>): void
+  menu(request: MenuRequest): void
 }
 
 const head = (row: Sig<Extract<Row, { kind: 'head' }>>, handlers: RowHandlers) =>
@@ -35,5 +37,5 @@ export const rowView = (row: Sig<Row>, handlers: RowHandlers) => {
   const kind = untrack(() => row.get().kind)
   if (kind === 'head') return head(row as Sig<Extract<Row, { kind: 'head' }>>, handlers)
   if (kind === 'more') return more(row as Sig<Extract<Row, { kind: 'more' }>>, handlers)
-  return card(row as Sig<CardRow & Row>, handlers.minute, handlers.pick, handlers.drag)
+  return card(row as Sig<CardRow & Row>, handlers.minute, handlers.pick, handlers.drag, handlers.menu)
 }

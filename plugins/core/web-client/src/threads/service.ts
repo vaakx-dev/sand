@@ -4,7 +4,7 @@ import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 import type { NewThread, Thread, Threads, Wire } from '../contract'
 import { isInside, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
-import { requestedSession, showSession } from './address'
+import { requestedSession, sessionLink, showSession } from './address'
 import { clearTurn } from './live'
 import { threadLoader } from './loading'
 import { trackSeen } from './seen'
@@ -119,6 +119,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
       const thread = store.threads.get(id)
       return thread ? walk(thread.entries, thread.info.head) : []
     },
+    link: sessionLink,
     rename: (id, title) => call({ type: 'session.rename', session: id, title, named: true }),
     remove: id => call({ type: 'sessions.remove', session: id }),
     async checkout(id, entry) {
@@ -136,6 +137,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
     },
     pin: (id, pinned) => call({ type: 'session.pin', session: id, pinned }),
     settle: (id, settled) => call({ type: 'session.settle', session: id, settled }),
+    snooze: (id, until) => call({ type: 'session.snooze', session: id, until }),
     move(id, position) {
       const thread = store.threads.get(id)
       if (thread) {

@@ -4,6 +4,7 @@ import { threadNavList } from './nav-list'
 import { currentPlace } from './palette/places'
 import { newThreadPage } from './palette/projects'
 import { sessionSource } from './palette/source'
+import { wakeTimer } from './snooze/wake'
 import { switcher } from './switcher'
 
 export default definePlugin({
@@ -15,7 +16,7 @@ export default definePlugin({
     composer: 'new thread does not focus the prompt',
     palette: 'threads and projects are not searchable, and New thread starts in the current folder',
     projects: 'only the current folder is offered for a new thread, and projects cannot be renamed or hidden',
-    picker: 'projects cannot be renamed from the palette',
+    picker: 'projects cannot be renamed from the palette, and threads cannot be renamed from their menu without the palette',
     syncFlows: 'a project with no copy on this PC starts on another PC instead of offering to clone or sync it',
     machines: 'threads from other PCs show no PC name',
     drafts: 'unsent new threads are not listed',
@@ -41,7 +42,7 @@ export default definePlugin({
       const list = nav.list(threadNavList(ctx))
       const action = nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create })
       const update = () => list.update()
-      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update)]
+      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update), wakeTimer(ctx, update)]
       return () => {
         disposers.forEach(dispose => void dispose?.())
         action()

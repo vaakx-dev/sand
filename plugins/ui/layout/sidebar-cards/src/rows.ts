@@ -12,11 +12,23 @@ export interface RowOptions {
   limit(key: string): number
 }
 
-const sections = (items: NavItem[]): [string, NavItem[]][] => [
-  ['Pinned', items.filter(item => item.pinned && !item.settled)],
-  ['Active', items.filter(item => !item.pinned && !item.settled)],
-  ['Settled', items.filter(item => item.settled)],
-]
+const backFirst = (items: NavItem[]) => [...items.filter(item => item.back), ...items.filter(item => !item.back)]
+
+const bySnooze = (a: NavItem, b: NavItem) => (a.snoozed ?? 0) - (b.snoozed ?? 0)
+
+const folded = new Set(['Snoozed', 'Settled'])
+
+export const openByDefault = (name: string) => !folded.has(name)
+
+const sections = (items: NavItem[]): [string, NavItem[]][] => {
+  const awake = items.filter(item => !item.snoozed)
+  return [
+    ['Pinned', backFirst(awake.filter(item => item.pinned && !item.settled))],
+    ['Active', backFirst(awake.filter(item => !item.pinned && !item.settled))],
+    ['Snoozed', items.filter(item => item.snoozed).sort(bySnooze)],
+    ['Settled', awake.filter(item => item.settled)],
+  ]
+}
 
 export const cardsIn = (rows: Row[], group: string) =>
   rows.filter((row): row is Extract<Row, { kind: 'card' }> => row.kind === 'card' && row.group === group)
@@ -29,7 +41,7 @@ export const buildRows = (lists: NavList[], options: RowOptions): Row[] =>
       .filter(([, items]) => items.length)
       .flatMap(([name, items]): Row[] => {
         const key = `${list.id}:${name}`
-        const open = options.isOpen(key, name !== 'Settled')
+        const open = options.isOpen(key, openByDefault(name))
         const head: Row = { kind: 'head', key, list, name, count: items.length, open }
         if (!open) return [head]
         const limit = options.limit(key)

@@ -5,6 +5,7 @@ import { plural } from '@sand/kit'
 import { noBackground, type BackgroundOf } from './background'
 import { byPosition } from './order'
 import type { ProjectLookup } from './project-lookup'
+import { isBack, snoozedUntil } from './snooze/actions'
 
 const place = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).slice(-3).join('/') || cwd
 
@@ -49,6 +50,8 @@ const navItem = (thread: Thread, background: BackgroundOf, lookup: ProjectLookup
     unread: thread.unread,
     pinned: Boolean(thread.info.pinned),
     settled: Boolean(thread.info.settled),
+    snoozed: snoozedUntil(thread),
+    back: isBack(thread) || undefined,
     movable: true,
   }
 }

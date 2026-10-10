@@ -56,11 +56,13 @@ export interface Threads {
   load(id: string): Promise<Thread | undefined>
   create(options?: NewThread): Promise<Thread>
   path(id: string): Entry[]
+  link(id: string): string
   rename(id: string, title: string): Promise<void>
   remove(id: string): Promise<void>
   checkout(id: string, entry: string | null): Promise<void>
   branch(id: string, at?: string | null): Promise<Thread>
   pin(id: string, pinned: boolean): Promise<void>
   settle(id: string, settled: boolean): Promise<void>
+  snooze(id: string, until: number | null): Promise<void>
   move(id: string, position: number): Promise<void>
 }

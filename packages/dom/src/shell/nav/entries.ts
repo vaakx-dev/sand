@@ -20,7 +20,7 @@ export interface NavEntriesOptions {
 
 export const navItems = (list: NavList) => {
   const selected = list.selected?.()
-  const shown = list.items().filter(item => !item.settled || item.id === selected)
+  const shown = list.items().filter(item => !(item.settled || item.snoozed) || item.id === selected)
   return [...shown.filter(item => item.pinned), ...shown.filter(item => !item.pinned)]
 }
 

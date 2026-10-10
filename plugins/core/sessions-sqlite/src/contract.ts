@@ -19,6 +19,7 @@ export interface SessionInfo {
 export interface SessionMeta {
   pinned: boolean
   settled: number | null
+  snoozed: number | null
   seen: number
   position: number
 }
@@ -105,6 +106,7 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'session.pin': { session: string; pinned: boolean }
     'session.settle': { session: string; settled: boolean }
+    'session.snooze': { session: string; until: number | null }
     'session.seen': { session: string; at: number }
     'session.move': { session: string; position: number }
   }
