@@ -1,5 +1,5 @@
 import type { Models } from '@sand/web-client/contract'
-import type { ModelOf } from './rows'
+import type { ModelOf } from './runs'
 
 export const modelsUnlike = (models: Models | undefined, parent: string): ModelOf => {
   const base = models?.settings(parent)?.model

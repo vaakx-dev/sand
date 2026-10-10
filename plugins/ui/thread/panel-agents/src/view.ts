@@ -1,6 +1,10 @@
 import { derive, div, groupLabel, hint, icon, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
-import { agentRow, type RowActions } from './row'
-import type { AgentRow } from './rows'
+import { agentRow } from './agent-row'
+import { collapseRepeats, runningAgents } from './counts'
+import { finishedRow } from './finished'
+import type { Actions } from './parts'
+import type { Run } from './runs'
+import { workflowBlock } from './workflow'
 
 export interface ParentLink {
   id: string
@@ -8,7 +12,7 @@ export interface ParentLink {
 }
 
 export interface AgentsState {
-  rows: Sig<AgentRow[]>
+  runs: Sig<Run[]>
   parent: Sig<ParentLink | undefined>
   empty: Sig<string>
   now: Sig<number>
@@ -16,54 +20,74 @@ export interface AgentsState {
 
 const folded = 5
 
-const moreButton = (hidden: Sig<number>, expand: () => void) =>
-  show(
-    hidden.map(count => count > 0),
-    () =>
-      quietButton({ size: 'sm', class: 'mt-1 ml-3', onClick: expand }, () => `Show ${hidden.get()} more`),
+const parentLink = (parent: Sig<ParentLink | undefined>, open: (id: string) => void) =>
+  show(parent.map(Boolean), () =>
+    quietButton(
+      {
+        size: 'sm',
+        class: 'mt-2 w-full',
+        onClick: () => {
+          const above = parent.get()
+          if (above) open(above.id)
+        },
+      },
+      icon('up', 13),
+      span({ class: 'min-w-0 flex-1 truncate text-left' }, () => `Sub-agent of ${parent.get()?.title ?? ''}`),
+    ),
   )
 
-const section = (title: string, rows: Sig<AgentRow[]>, state: AgentsState, actions: RowActions, fold = false) => {
-  const expanded = sig(!fold)
-  const shown = derive(() => (expanded.get() ? rows.get() : rows.get().slice(0, folded)))
-  const hidden = derive(() => rows.get().length - shown.get().length)
-  return show(
-    rows.map(items => items.length > 0),
+const runningSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) =>
+  show(
+    runs.map(items => items.length > 0),
     () =>
       div(
-        groupLabel(() => `${title} · ${rows.get().length}`),
-        list(shown, row => row.id, row => agentRow(row, state.now, actions)),
-        moreButton(hidden, () => expanded.set(true)),
+        groupLabel(() => {
+          const count = runningAgents(runs.get())
+          return `Running · ${count} ${count === 1 ? 'agent' : 'agents'}`
+        }),
+        list(
+          runs,
+          run => run.id,
+          run => (run.get().kind === 'workflow' ? workflowBlock(run, now, actions) : agentRow(run, now, actions)),
+        ),
+      ),
+  )
+
+const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) => {
+  const expanded = sig(false)
+  const groups = runs.map(collapseRepeats)
+  const shown = derive(() => (expanded.get() ? groups.get() : groups.get().slice(0, folded)))
+  const hidden = derive(() => groups.get().length - shown.get().length)
+  return show(
+    runs.map(items => items.length > 0),
+    () =>
+      div(
+        groupLabel(() => `Finished · ${runs.get().length}`),
+        list(shown, item => item.run.id, item => finishedRow(item, now, actions)),
+        show(
+          hidden.map(count => count > 0),
+          () => quietButton({ size: 'sm', class: 'mt-1 ml-3', onClick: () => expanded.set(true) }, () => `Show ${hidden.get()} more`),
+        ),
       ),
   )
 }
 
-export const agentsView = (state: AgentsState, actions: RowActions) => {
-  const running = state.rows.map(rows => rows.filter(row => row.status === 'running'))
-  const finished = state.rows.map(rows => rows.filter(row => row.status !== 'running'))
-  return div(
+export const agentsView = (state: AgentsState, actions: Actions) =>
+  div(
     { class: 'px-2 pb-4' },
-    show(
-      state.parent.map(Boolean),
-      () =>
-        quietButton(
-          {
-            size: 'sm',
-            class: 'mt-2 w-full',
-            onClick: () => {
-              const parent = state.parent.get()
-              if (parent) actions.open(parent.id)
-            },
-          },
-          icon('up', 13),
-          span({ class: 'min-w-0 flex-1 truncate text-left' }, () => `Sub-agent of ${state.parent.get()?.title ?? ''}`),
-        ),
+    parentLink(state.parent, actions.open),
+    runningSection(
+      state.runs.map(runs => runs.filter(run => run.status === 'running')),
+      state.now,
+      actions,
     ),
-    section('Running', running, state, actions),
-    section('Finished', finished, state, actions, true),
+    finishedSection(
+      state.runs.map(runs => runs.filter(run => run.status !== 'running')),
+      state.now,
+      actions,
+    ),
     show(
-      state.rows.map(rows => !rows.length),
+      state.runs.map(runs => !runs.length),
       () => hint(state.empty),
     ),
   )
-}

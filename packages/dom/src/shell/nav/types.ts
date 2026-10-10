@@ -16,6 +16,7 @@ export interface NavItem {
   started?: number
   state: NavItemState
   jobs?: number
+  workflow?: { done: number; total: number }
   unread?: boolean
   pinned?: boolean
   settled?: boolean

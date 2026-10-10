@@ -1,7 +1,7 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/llm-accounts/contract'
 import type { TurnResult } from '@sand/loops/contract'
-import type { Entry, ToolResultBlock } from '@sand/messages'
+import type { Entry, ToolCallBlock, ToolResultBlock } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { SessionSummary } from '@sand/sessions-sqlite/contract'
 import type { Pending } from '@sand/steering/contract'
@@ -23,6 +23,7 @@ export interface Thread {
   unread: boolean
   live: LiveBlock[]
   tools: ToolProgress
+  step?: ToolCallBlock
   queued: Pending[]
   followUps: Pending[]
   context?: ContextUsage
