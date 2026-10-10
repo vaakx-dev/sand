@@ -24,5 +24,6 @@ export default definePlugin({
     })
     ctx.provide('hostProjects', { all: registry.all, merge: registry.merge })
     for (const setup of projectRequests({ hub: ctx.hub, registry, root, list, placeChanged })) ctx.effect(setup)
+    registry.refresh().catch(() => {})
   },
 })

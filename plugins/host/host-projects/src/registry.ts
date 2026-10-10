@@ -1,6 +1,7 @@
 import { isInside, mergeProjects, remoteKey } from '@sand/kit'
 import { samePath } from '@sand/kit/fs'
 import type { Project, ProjectFolder, ProjectPatch } from './contract'
+import { gitRemote } from './folder/git'
 import { inspectFolder } from './folder/inspect'
 import { existingFolder, localCopy, nextStamp } from './list'
 import type { ProjectStore } from './store'
@@ -28,10 +29,26 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     return live.filter(project => remoteKey(project.remote ?? '') === key).map(project => project.id)
   }
 
+  const refreshRemote = async (project: Project, remote: string | undefined) => {
+    if (!remote || remoteKey(remote) === remoteKey(project.remote ?? '')) return project
+    return commit({ ...project, remote, updated: nextStamp(project.updated) })
+  }
+  const refresh = async () => {
+    for (const listed of store.all()) {
+      const copy = localCopy(listed, device)
+      if (!copy) continue
+      const remote = await gitRemote(copy.path)
+      const project = store.get(listed.id)
+      if (project && !project.deleted) await refreshRemote(project, remote)
+    }
+  }
+
   const inspect = async (path: string): Promise<ProjectFolder> => {
     const full = await existingFolder(path)
     const facts = await inspectFolder(full)
-    const project = copyAt(full)?.id
+    const current = copyAt(full)
+    if (current) await refreshRemote(current, facts.remote)
+    const project = current?.id
     const holds = (id: string) => {
       const copy = localCopy(known(id), device)
       return Boolean(copy && isInside(full, copy.path))
@@ -46,14 +63,13 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     const facts = await inspectFolder(full)
     const now = Date.now()
     const current = copyAt(full)
+    if (current && id && current.id !== id) throw new Error(`${full} is already a copy of ${current.name}`)
+    if (current) return refreshRemote(current, facts.remote)
     if (!id) {
-      if (current) return current
       const copy = { path: full, added: now, updated: now }
       const remote = facts.remote ? { remote: facts.remote } : {}
       return commit({ id: Bun.randomUUIDv7(), name: facts.name, ...remote, copies: { [device]: copy }, updated: now })
     }
-    if (current && current.id !== id) throw new Error(`${full} is already a copy of ${current.name}`)
-    if (current) return current
     const project = known(id)
     const previous = project.copies[device]
     const copy = { path: full, added: now, updated: nextStamp(previous?.updated ?? 0) }
@@ -93,7 +109,7 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     return true
   }
 
-  return { all: () => store.all(), inspect, add, update, remove, merge, known }
+  return { all: () => store.all(), inspect, add, update, remove, merge, known, refresh }
 }
 
 export type Registry = ReturnType<typeof createRegistry>
