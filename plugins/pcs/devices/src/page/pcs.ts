@@ -1,6 +1,6 @@
 import type { PcList } from '@sand/host-remotes/contract'
 import type { LoginState } from '@sand/llm-accounts/contract'
-import { clock, derive, div, hint, list, settingsSection, show } from '@sand/dom'
+import { clock, derive, hintRow, rowList, settingsSection, show } from '@sand/dom'
 import type { PcHealthStore } from '../health/state'
 import type { DeviceSource } from '../source'
 import { healthPanel } from './health'
@@ -26,9 +26,9 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
     {},
     show(
       () => !source.pcs.get(),
-      () => div({ class: 'bg-neutral-900' }, hint('Loading…')),
+      () => hintRow('Loading…'),
     ),
-    list(
+    rowList(
       all,
       row => row.pc.id,
       row => {
@@ -43,7 +43,6 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
           busy: () => health.busy(id),
         })
       },
-      div({ class: 'contents' }),
     ),
   )
 }

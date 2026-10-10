@@ -1,21 +1,9 @@
-import { derive, div, dynamicChild, exactTime, h3, icon, list, primaryAction, quietButton, rowButton, settingsSection, sig, span, untrack, type Sig } from '@sand/dom'
+import { checkMark, derive, div, dynamicChild, exactTime, h3, primaryAction, quietButton, rowButton, rowList, settingsSection, sheetBody, sheetFoot, sig, span, untrack, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'
 import { canUpdate, changesFor } from '../fleet/status'
 import { pcStatusLine } from '../pc-line'
-import { sheetFoot } from './foot'
-
-const markLook = (checked: boolean, pickable: boolean) => {
-  if (!pickable) return 'opacity-0'
-  return checked ? 'bg-accent-500 text-white' : 'ring-1 ring-neutral-600'
-}
-
-const checkMark = (checked: () => boolean, pickable: () => boolean) =>
-  span(
-    { class: ['inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors', () => markLook(checked(), pickable())] },
-    icon('check', 12),
-  )
 
 const pcChoice = (row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<string>>) => {
   const pickable = () => canUpdate(row.get().status)
@@ -35,7 +23,7 @@ const pcChoice = (row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<string>>) =>
       class: 'gap-3 bg-neutral-900 px-4 py-3',
       onClick: toggle,
     },
-    checkMark(checked, pickable),
+    checkMark(checked, () => (pickable() ? '' : 'opacity-0')),
     div({ class: 'flex min-w-0 flex-1 flex-col' }, span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().name), pcStatusLine(row, fleet)),
   )
 }
@@ -54,8 +42,8 @@ export const chooseBody = (fleet: Fleet, close: () => void) => {
       : null
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    div(
-      { class: 'flex min-h-0 flex-col gap-5 overflow-auto px-5 pt-1 pb-5' },
+    sheetBody(
+      { class: 'gap-5' },
       span({ class: 'px-1 text-xs text-neutral-500' }, () => {
         const target = fleet.target.get()
         return target ? `Published ${exactTime(target.publishedAt)}` : ''
@@ -64,7 +52,7 @@ export const chooseBody = (fleet: Fleet, close: () => void) => {
         changes.map(list => list.map(change => change.commit).join()),
         whatsNew,
       ),
-      settingsSection({ title: 'PCs' }, list(fleet.pcs, pc => pc.key, row => pcChoice(row, fleet, selected), div({ class: 'contents' }))),
+      settingsSection({ title: 'PCs' }, rowList(fleet.pcs, pc => pc.key, row => pcChoice(row, fleet, selected))),
     ),
     sheetFoot(
       quietButton({ onClick: later }, 'Later'),

@@ -1,4 +1,4 @@
-import { contextMenu, derive, div, dynamicChild, event, plainButton, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, pressOpens, show, sig, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
@@ -30,18 +30,8 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const title = () => (started.get() ? `This thread runs on ${name()}. Continue it on another PC` : 'Choose which PC runs this')
 
   const chip = () =>
-    plainButton(
-      {
-        title,
-        class: [
-          'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200',
-          () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'),
-        ],
-        onMouseDown: event(toggle, { stop: true, prevent: true }),
-        onClick: (click: MouseEvent) => {
-          if (click.detail === 0) toggle()
-        },
-      },
+    chipButton(
+      { title, active: open, ...pressOpens(toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,
@@ -53,11 +43,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
       context.view(),
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
       show(open, () =>
-        popover(
-          close,
-          { class: 'bottom-full left-0 mb-3 w-96 max-w-full overflow-auto', style: { maxHeight: `calc(100vh - ${SPACE['32']})` } },
-          dynamicChild(changes.version, menu),
-        ),
+        chipPopover(close, { class: 'left-0 w-96' }, dynamicChild(changes.version, menu)),
       ),
     )
 

@@ -1,7 +1,7 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
-import { overlay, secondaryAction, settingsRow, settingsSection, sheet, sheetHead } from '@sand/dom'
+import { overlay, secondaryAction, settingsRow, settingsSection, sheet, sheetBody, sheetHead } from '@sand/dom'
 import type { Context } from 'drydock'
-import { note, sheetBody } from '../components'
+import { note } from '../components'
 import { overlaySlot } from '../overlay-slot'
 import type { DeviceSource } from '../source'
 import { tailscaleSection } from './tailscale'
@@ -18,7 +18,7 @@ const awaySheet = (source: DeviceSource, close: () => void) =>
     sheet(
       { 'aria-label': 'Use sand away from home', class: 'max-w-lg' },
       sheetHead('Use sand away from home', close),
-      sheetBody(note('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(source)),
+      sheetBody({ class: 'gap-4' }, note('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(source)),
     ),
   )
 

@@ -6,7 +6,7 @@
       "name": "sand-workspace",
       "devDependencies": {
         "@types/bun": "^1.4.2",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.2",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.3",
         "typescript": "^7.0.2",
       },
     },
@@ -96,7 +96,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/kit": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.2",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.3",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
         "lucide": "^1.52.0",
       },
@@ -668,6 +668,7 @@
         "@sand/host-plugin-library": "workspace:*",
         "@sand/host-plugin-sync": "workspace:*",
         "@sand/host-plugin-versions": "workspace:*",
+        "@sand/kit": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
@@ -1110,6 +1111,7 @@
       "name": "@sand/commands",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/dom": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
@@ -1655,7 +1657,7 @@
 
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
 
-    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#79e74da", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-79e74da", "sha512-Cyjjn73mcvLLgWruuPq4OAm23NTueCJiJYg9OuFTmL5Y+NTeBGYAqahY/lS7h2Q7eacptxpJpWlJ0OD00ZoPWg=="],
+    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#5dbea9e", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-5dbea9e", "sha512-d6rdu3Y7L2QvPqAQE5k7aHwjlnPybb6ooAYgl5ih1senUI+f8A0hyaTqejNllDM/v8Co6OmGU3NiDi4SvgAdMw=="],
 
     "bun-types": ["bun-types@1.4.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-bxV1FgK7yBIzjRe5zBozIM4Bem11ZJcCXSrjWRG3YWLt8yFDePu4cLjpebO8OvPeIE9trbyPF4fuj3Cia4Fj3w=="],
 

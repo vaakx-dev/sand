@@ -1,5 +1,5 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { ago, clock, contextMenu, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
+import { ago, clock, contextMenu, derive, div, hintRow, icon, rowAction, rowList, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
@@ -45,10 +45,10 @@ export const phonesSection = (ctx: Context<'wire'>, source: DeviceSource, pair: 
   const devices = derive(() => [...(source.pcs.get()?.devices ?? [])].sort((a, b) => Number(b.id === self) - Number(a.id === self)))
   return settingsSection(
     { title: 'Phones and browsers', action: secondaryAction({ size: 'sm', onClick: pair }, 'Add a phone') },
-    list(devices, device => device.id, device => phoneRow(ctx, source, device, self, now), div({ class: 'contents' })),
+    rowList(devices, device => device.id, device => phoneRow(ctx, source, device, self, now)),
     show(
       devices.map(current => current.length === 0),
-      () => div({ class: 'bg-neutral-900' }, hint('None yet.')),
+      () => hintRow('None yet.'),
     ),
   )
 }

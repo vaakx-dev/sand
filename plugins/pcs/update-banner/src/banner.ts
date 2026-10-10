@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, primaryAction, quietButton, span, spinner, type Child } from '@sand/dom'
+import { derive, div, dynamicChild, icon, okMark, primaryAction, quietButton, span, spinner, type Child } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeLine, isNotable } from './changes'
 import type { Fleet } from './fleet/model'
@@ -62,7 +62,7 @@ const content = (fleet: Fleet, kind: BannerKind, open: () => void): Child[] => {
       ]
     case 'done':
       return [
-        statusMark('text-success-400', icon('check', 14)),
+        okMark(),
         text(() => `${count()} updated to ${runName(fleet)}`),
         primaryAction({ size: 'sm', onClick: fleet.finish }, 'Done'),
       ]

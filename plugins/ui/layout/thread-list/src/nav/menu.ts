@@ -1,5 +1,5 @@
 import type { Drafts } from '@sand/composer-card/contract'
-import { copyWithNotice, errorMessage, openTab, type NavAction } from '@sand/dom'
+import { attempt, copyWithNotice, openTab, type NavAction } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
@@ -7,9 +7,6 @@ import { renamePage } from '../palette/session'
 import { snoozeAction } from '../snooze/actions'
 
 type Ctx = Context<'threads'>
-
-const attempt = (ctx: Ctx, failed: string, work: () => Promise<unknown>) => () =>
-  work().catch(error => ctx.notify?.push(`${failed}: ${errorMessage(error)}`, { level: 'error' }))
 
 const rename = async (ctx: Ctx, thread: Thread) => {
   if (ctx.palette) return ctx.palette.open(renamePage(ctx, thread))
@@ -36,9 +33,12 @@ const openActions = (ctx: Ctx, thread: Thread) => {
   const actions: NavAction[] = [
     { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => openTab(ctx.threads.link(thread.id)) },
   ]
-  if (ctx.palette || ctx.picker) actions.push({ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: attempt(ctx, 'Could not rename', () => rename(ctx, thread)) })
-  if (ctx.wire && thread.info.messages) actions.push({ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: attempt(ctx, 'Could not rename', () => retitle(ctx, thread)) })
-  if (!thread.device && thread.info.messages) actions.push({ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: attempt(ctx, 'Could not branch', () => branch(ctx, thread)) })
+  if (ctx.palette || ctx.picker)
+    actions.push({ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: () => attempt(ctx.notify, 'Could not rename', () => rename(ctx, thread)) })
+  if (ctx.wire && thread.info.messages)
+    actions.push({ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: () => attempt(ctx.notify, 'Could not rename', () => retitle(ctx, thread)) })
+  if (!thread.device && thread.info.messages)
+    actions.push({ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: () => attempt(ctx.notify, 'Could not branch', () => branch(ctx, thread)) })
   return actions
 }
 
@@ -65,7 +65,7 @@ const deleteAction = (ctx: Ctx, thread: Thread): NavAction => ({
   icon: 'trash',
   danger: true,
   confirm: `Delete “${thread.info.title ?? 'Untitled thread'}”? This can’t be undone.`,
-  run: attempt(ctx, 'Could not delete', () => remove(ctx, thread)),
+  run: () => attempt(ctx.notify, 'Could not delete', () => remove(ctx, thread)),
 })
 
 export const threadMenu = (ctx: Ctx, id: string): NavAction[] => {

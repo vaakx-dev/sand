@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, iconButton, overlay, place, sheet, sheetHead, show, sig, untrack } from '@sand/dom'
+import { derive, dynamicChild, icon, iconButton, overlay, place, sheet, sheetBody, sheetHead, show, sig, untrack } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
 import type { ServerDraft } from '../../contract'
 import { planNames } from '../names'
@@ -84,7 +84,7 @@ const sheetView = (control: LoginControl, done: (text?: string) => void, first?:
           () => iconButton({ title: 'Back', onClick: back }, icon('back')),
         ),
       ),
-      div({ class: 'flex min-h-0 flex-col gap-4 overflow-auto px-5 pt-1 pb-5' }, dynamicChild(bodyKey, body)),
+      sheetBody({ class: 'gap-4' }, dynamicChild(bodyKey, body)),
     ),
   )
 }

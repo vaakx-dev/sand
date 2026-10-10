@@ -15,7 +15,7 @@ export default definePlugin({
   async apply(ctx) {
     const { home, device } = ctx.hostOptions
     const store = await projectStore(home, device.id)
-    await seedSandHome(store, home, device.id).catch(() => {})
+    await seedSandHome(store, home, device.id).catch(error => ctx.report(error))
     const root = await projectRoot(home)
     const place = () => ({ device: device.id, home: homedir(), sep, root: root.get(), scratch: join(home, 'scratch') })
     const list = () => projectList(store.all(), place())
@@ -26,6 +26,6 @@ export default definePlugin({
     })
     ctx.provide('hostProjects', { all: registry.all, merge: registry.merge })
     for (const setup of projectRequests({ hub: ctx.hub, registry, root, list, placeChanged })) ctx.effect(setup)
-    registry.refresh().catch(() => {})
+    registry.refresh().catch(error => ctx.report(error))
   },
 })

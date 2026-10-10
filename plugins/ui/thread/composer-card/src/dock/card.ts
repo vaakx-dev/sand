@@ -1,4 +1,4 @@
-import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, SPACE, span, textarea, type Sig } from '@sand/dom'
+import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, span, textarea, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { agentsChip } from '../agents/chip'
 import { fromPaste, pasteLimit } from '../attachments/content'
@@ -90,7 +90,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     field,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      span({ class: 'inline-flex', style: { marginLeft: `calc(-1 * ${SPACE['2']})` } }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 18))),
+      span({ class: 'inline-flex -ml-2' }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 18))),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),

@@ -16,12 +16,13 @@ interface CatalogOptions {
   accounts: Accounts
   prices: PriceList
   changed(): void
+  report(error: unknown): void
 }
 
 export type Catalog = ReturnType<typeof createCatalog>
 
-export const createCatalog = ({ home, accounts, prices, changed }: CatalogOptions) => {
-  const prefsStore = prefsFile(home)
+export const createCatalog = ({ home, accounts, prices, changed, report }: CatalogOptions) => {
+  const prefsStore = prefsFile(home, report)
   const cacheStore = cacheFile(home)
   let prefs = emptyPrefs()
   let cache: ModelCache = {}

@@ -1,8 +1,8 @@
-import { isQuietFolder, nearestRoot } from '@sand/kit/fs'
+import { isQuietFolder, isWithin, nearestRoot } from '@sand/kit/fs'
 import { join, resolve } from 'node:path'
 import type { Project } from '../contract'
 import { linkOwners, readOldRecords } from './old'
-import { type Seed, seedProject, within } from './seed'
+import { type Seed, seedProject } from './seed'
 import { threadFolders } from './threads'
 
 interface Root {
@@ -30,8 +30,8 @@ export const migrateProjects = async (home: string, device: string): Promise<Pro
   const paths = new Set<string>()
   const now = Date.now()
   const scratch = resolve(join(home, 'scratch'))
-  const usable = (path: string) => !within(path, scratch) && !isQuietFolder(path)
-  const covered = (path: string) => [...paths].some(copy => within(path, copy))
+  const usable = (path: string) => !isWithin(path, scratch) && !isQuietFolder(path)
+  const covered = (path: string) => [...paths].some(copy => isWithin(path, copy))
   const add = async (seed: Seed) => {
     projects.push(await seedProject(device, seed, now))
     paths.add(seed.path)

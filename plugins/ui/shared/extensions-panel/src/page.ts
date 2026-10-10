@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { chevron, copyWithNotice, div, dynamicChild, el, h3, list, quietButton, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
+import { chevron, copyWithNotice, div, dynamicChild, el, h3, list, quietButton, rowList, secondaryAction, settingsSection, show, sig, span, type Child, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'
 import { choiceRow } from './choices'
@@ -71,7 +71,7 @@ export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
     { class: 'flex flex-col gap-6' },
     settingsSection(
       { title: 'Interface parts' },
-      list(
+      rowList(
         parts,
         extension => extension.id,
         extension =>
@@ -79,7 +79,6 @@ export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
             extension.map(value => `${value.configured}|${value.label}|${value.summary}`),
             () => partRow(extension.get(), () => toggle(extension.get())),
           ),
-        div({ class: 'contents' }),
       ),
     ),
     div(

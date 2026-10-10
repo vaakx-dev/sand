@@ -1,5 +1,5 @@
 import type { WorktreeState } from '../../contract'
-import { div, errorMessage, overlay, primaryAction, quietButton, selectMenu, sheet, sheetHead, sig } from '@sand/dom'
+import { div, errorMessage, overlay, primaryAction, quietButton, selectMenu, sheet, sheetFoot, sheetHead, sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Thread } from '@sand/web-client/contract'
 import type { WebContext, WorktreeClient } from '../client'
@@ -50,8 +50,7 @@ export const moveSheet = (ctx: WebContext, client: WorktreeClient, form: MoveFor
         state.changed > 0 ? checkRow(carry, `Take the ${plural(state.changed, 'changed file')} with it`, `Your folder goes back to a clean ${state.branch ?? 'checkout'}`) : null,
         hasSetup ? checkRow(setup, 'Set it up', ...setupLine(state.setup)) : null,
       ),
-      div(
-        { class: 'flex shrink-0 items-center justify-end gap-2 border-t border-neutral-700 px-5 py-3' },
+      sheetFoot(
         quietButton({ onClick: close }, 'Cancel'),
         primaryAction({ disabled: () => !branch.get().trim(), onClick: submit }, 'Move'),
       ),

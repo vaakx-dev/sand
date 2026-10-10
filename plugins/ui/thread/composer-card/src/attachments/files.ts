@@ -14,11 +14,9 @@ export interface Attached {
 
 let next = 0
 
-const storedSize = (content: object) => ('size' in content && typeof content.size === 'number' ? content.size : 0)
-
 const sizeOf = (content: UserContent) => {
   if (content.type === 'text') return content.text.length
-  if (typeof content.data !== 'string') return storedSize(content)
+  if (typeof content.data !== 'string') return content.size
   if (content.type === 'document' && content.mediaType === 'text/plain') return content.data.length
   return Math.round((content.data.length * 3) / 4)
 }

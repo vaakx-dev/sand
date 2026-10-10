@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, div, dynamicChild, hint, list, p, quietButton, segmented, settingsSection, show, textInput, type Choice } from '@sand/dom'
+import { derive, div, dynamicChild, hintRow, p, quietButton, rowList, segmented, settingsSection, show, textInput, type Choice } from '@sand/dom'
 import { addRow } from './add'
 import type { Catalog } from './catalog'
 import type { Filter, Mode } from './filter'
@@ -56,7 +56,7 @@ const status = (catalog: Catalog, filter: Filter) =>
     state => {
       if (state === 'error') return errorRow(catalog)
       if (state === 'rows') return null
-      return div({ class: 'bg-neutral-900' }, hint(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter))))
+      return hintRow(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter)))
     },
   )
 
@@ -67,7 +67,7 @@ export const modelsSection = (source: SourceInfo, catalog: Catalog, filter: Filt
     settingsSection(
       {},
       status(catalog, filter),
-      list(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep), div({ class: 'contents' })),
+      rowList(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep)),
       show(
         filter.more.map(more => more > 0),
         () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show more (${filter.more.get()})`)),

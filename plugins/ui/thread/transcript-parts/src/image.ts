@@ -4,9 +4,8 @@ import type { Context } from 'drydock'
 import type { ImageOptions, MediaImage } from './contract'
 
 const sizeOf = (block: ImageBlock) => {
-  const width = 'width' in block ? Number(block.width) : 0
-  const height = 'height' in block ? Number(block.height) : 0
-  return width && height ? { width, height } : undefined
+  if (typeof block.data === 'string' || !block.width || !block.height) return undefined
+  return { width: block.width, height: block.height }
 }
 
 const fit = (block: ImageBlock, { maxHeight, class: extra, ...props }: ImageOptions) => {

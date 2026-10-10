@@ -1,5 +1,5 @@
 import type { NavAction, NavItem } from '@sand/dom'
-import { colorVar, div, dynamicChild, icon, intent, keys, pressMenu, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
+import { colorVar, div, dynamicChild, icon, intent, keys, pressMenu, projectAvatar, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
 import type { CardRow } from '../rows/build'
 import type { MenuRequest } from './menu'
 import { status } from './status'
@@ -21,11 +21,7 @@ const strong = ({ item, selected }: CardParts) => selected.get() || item.get().u
 
 const titleClass = (parts: CardParts) => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-400')
 
-const avatar = ({ item, project }: CardParts) =>
-  dynamicChild(
-    item.map(value => value.icon ?? ''),
-    url => (url ? projectIcon('', url) : dynamicChild(project, projectIcon)),
-  )
+const avatar = ({ item, project }: CardParts) => projectAvatar(project, item.map(value => value.icon))
 
 const statusSlot = (parts: CardParts, extra = '') =>
   span({ class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden', extra]) }, status(parts.item, parts.minute))

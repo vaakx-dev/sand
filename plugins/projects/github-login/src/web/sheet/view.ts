@@ -1,4 +1,4 @@
-import { copyButton, div, dot, dynamicChild, icon, openTab, overlay, p, primaryAction, secondaryAction, sheet, sheetHead, span, type Child } from '@sand/dom'
+import { copyButton, div, dot, dynamicChild, icon, openTab, overlay, p, primaryAction, secondaryAction, sheet, sheetBody, sheetHead, span, type Child } from '@sand/dom'
 import type { GithubPending } from '../../contract'
 import type { SignInModel } from './model'
 
@@ -63,8 +63,8 @@ export const signInSheet = (model: SignInModel, close: () => void) =>
     sheet(
       { 'aria-label': 'Sign in to GitHub', class: 'max-w-md' },
       sheetHead('Sign in to GitHub', close),
-      div(
-        { class: 'flex min-h-0 flex-col gap-4 overflow-auto px-5 pt-1 pb-5' },
+      sheetBody(
+        { class: 'gap-4' },
         dynamicChild(model.key, () => body(model)),
         p(
           { class: 'text-xs text-neutral-500' },

@@ -1,5 +1,5 @@
 import { isRecord, serial } from '@sand/kit'
-import { replaceFile } from '@sand/kit/fs'
+import { writeAtomic } from '@sand/kit/fs'
 import type { Pending } from '@sand/steering/contract'
 import { join } from 'node:path'
 
@@ -7,7 +7,6 @@ type Queues = Record<string, Pending[]>
 
 export const createStore = async (home: string) => {
   const path = join(home, 'followups.json')
-  const staging = `${path}.${Bun.randomUUIDv7()}.tmp`
   const file = Bun.file(path)
 
   const read = async (): Promise<Queues> => {
@@ -27,8 +26,7 @@ export const createStore = async (home: string) => {
     const items = queues.get(session)
     if (items?.length) data[session] = items
     else delete data[session]
-    await Bun.write(staging, JSON.stringify(data))
-    await replaceFile(staging, path)
+    await writeAtomic(path, JSON.stringify(data))
   }
 
   return {

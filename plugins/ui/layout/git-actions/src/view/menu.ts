@@ -1,6 +1,6 @@
 import type { GitStatus } from '@sand/git/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
-import { div, icon, openTab, popoverItem, span, type Child, type IconName } from '@sand/dom'
+import { div, icon, menuSeparator, openTab, popoverItem, span, type Child, type IconName } from '@sand/dom'
 import type { GitContext, Model, Pr } from '../model'
 
 interface Entry {
@@ -10,8 +10,6 @@ interface Entry {
   note?: string
   blocked?: string
 }
-
-const separator = () => div({ class: 'mx-2 my-1 border-t border-neutral-700' })
 
 const entryView = ({ label, glyph, run, note, blocked }: Entry, close: () => void) =>
   popoverItem(
@@ -55,7 +53,7 @@ export const gitMenu = (ctx: GitContext, model: Model, close: () => void): Child
   return [
     div({ class: 'flex min-w-0 items-center gap-2 px-2 pt-2 pb-1 font-mono text-xs text-neutral-500' }, icon('branch', 12), span({ class: 'truncate' }, git?.branch ?? '')),
     ...view.map(entry => entryView(entry, close)),
-    view.length && place.length ? separator() : null,
+    view.length && place.length ? menuSeparator() : null,
     ...place.map(entry => entryView(entry, close)),
   ]
 }

@@ -90,11 +90,10 @@ export const writePlugin = async (root: string, work: string, incoming: PluginFi
       const back = await rename(join(trash, incoming.plugin), target).then(() => true, () => false)
       if (!back) return false
     }
-    if (moved.length) {
-      await mkdir(target, { recursive: true }).catch(() => {})
-      await carryOver(staging, target, moved, []).catch(() => {})
-    }
-    return true
+    if (!moved.length) return true
+    return mkdir(target, { recursive: true })
+      .then(() => carryOver(staging, target, moved, []))
+      .then(() => true, () => false)
   }
   try {
     await carryOver(target, staging, await unsharedPaths(target), moved)

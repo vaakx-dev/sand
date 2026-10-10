@@ -1,6 +1,6 @@
 import type { PrSummary } from '@sand/github/contract'
 import { isUnnamed } from '@sand/worktrees/contract'
-import { derive, div, dynamicChild, icon, plainButton, popover, shine, show, sig, span } from '@sand/dom'
+import { chipButton, derive, div, dynamicChild, icon, popover, shine, show, sig, span } from '@sand/dom'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
 import { gitMenu } from './menu'
@@ -52,14 +52,11 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
   })
   const trigger = () => {
     const pr = model.pr.get()
-    return plainButton(
+    return chipButton(
       {
         title: () => model.status.get()?.branch ?? '',
         'aria-expanded': open,
-        class: [
-          'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200',
-          () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'),
-        ],
+        active: open,
         onClick: toggle,
       },
       ...(pr ? [prLabel(pr)] : branchLabel(model)),

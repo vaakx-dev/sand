@@ -2,6 +2,7 @@ import { div, p, span, type Child } from '@vaakx-dev/vrui'
 import { icon } from '../../icons/lucide'
 import type { NavAction } from '../../shell/nav/types'
 import { controlButton, rowButton, secondaryAction } from '../button'
+import { menuSeparator } from '../menu'
 import { askView } from './ask'
 import { choiceChips, type ChipHandlers } from './chips'
 
@@ -71,11 +72,9 @@ const choiceRow = (action: NavAction, control: MenuControl, size: ItemSize) =>
     choiceChips(action, chipHandlers(control, action), 'sm'),
   )
 
-const separator = () => div({ role: 'separator', class: 'mx-2 my-1 h-px bg-neutral-700' })
-
 export const menuItems = (actions: NavAction[], control: MenuControl, size: ItemSize): Child[] =>
   actions.flatMap((action, index) => [
-    index > 0 && action.group !== actions[index - 1]?.group ? separator() : null,
+    index > 0 && action.group !== actions[index - 1]?.group ? menuSeparator() : null,
     action.choices ? choiceRow(action, control, size) : item(action, control, size),
   ])
 

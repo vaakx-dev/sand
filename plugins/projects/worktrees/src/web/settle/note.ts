@@ -1,8 +1,7 @@
 import type { RemovedEntry } from '../../contract'
 import type { RenderEntry } from '@sand/transcript-parts/contract'
-import { div, errorMessage, secondaryAction, show, sig, span, type Pulse, type Sig } from '@sand/dom'
+import { div, errorMessage, okMark, secondaryAction, show, sig, span, type Pulse, type Sig } from '@sand/dom'
 import type { WebContext, WorktreeClient } from '../client'
-import { okMark } from '../ok-mark'
 
 const samePlace = (a: string, b: string) => a.replace(/[\\/]+$/, '').toLowerCase() === b.replace(/[\\/]+$/, '').toLowerCase()
 

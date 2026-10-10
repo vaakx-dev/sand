@@ -2,7 +2,7 @@ import { ghMissing, spawnGh } from './run'
 
 const codeWait = 20_000
 const loginWait = 16 * 60_000
-const codePattern = /one-time code: ([A-Z0-9]{4}-[A-Z0-9]{4})/
+const codePattern = /one-time code:? \(?([A-Z0-9]{4}-[A-Z0-9]{4})/i
 const urlPattern = /(https:\/\/\S+\/login\/device)/
 
 interface DeviceCode {

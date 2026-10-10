@@ -1,5 +1,5 @@
 import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
-import { badge, contextMenu, div, quietButton, rowAction, secondaryAction, settingsRow, sig, span, type Child, type Sig, type Tone } from '@sand/dom'
+import { badge, contextMenu, div, quietButton, rowAction, rowWarning, secondaryAction, settingsRow, sig, span, type Child, type Sig, type Tone } from '@sand/dom'
 import { originLabels } from './filter'
 import { pluginMenu } from './menu'
 
@@ -29,9 +29,8 @@ const detail = (plugin: PluginEntry) => {
 }
 
 const changedNote = (plugin: PluginEntry, actions: RowActions) =>
-  div(
-    { class: 'mx-4 mb-3 flex flex-wrap items-center gap-3 rounded-lg bg-warning-950 px-3 py-2' },
-    span({ class: 'min-w-0 flex-1 text-xs text-warning-400' }, 'The built-in changed since you customised it.'),
+  rowWarning(
+    'The built-in changed since you customised it.',
     quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.keep(plugin) }, 'Keep mine'),
     secondaryAction({ size: 'sm', disabled: actions.busy, onClick: () => actions.ask(plugin) }, 'Ask sand'),
   )

@@ -1,6 +1,5 @@
 import type { SetupStep, WorktreeProgress } from '../../contract'
-import { clock, derive, div, dynamicChild, icon, iconButton, list, show, span, spinner, type Sig } from '@sand/dom'
-import { okMark } from '../ok-mark'
+import { clock, derive, div, dynamicChild, icon, iconButton, list, okMark, show, span, spinner, type Sig } from '@sand/dom'
 
 const seconds = (ms: number) => (ms < 10_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`)
 

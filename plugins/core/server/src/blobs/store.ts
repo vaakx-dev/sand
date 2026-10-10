@@ -1,4 +1,5 @@
-import { readdir, rename, rm, stat, utimes } from 'node:fs/promises'
+import { writeAtomic } from '@sand/kit/fs'
+import { readdir, rm, stat, utimes } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const blobHash = /^[a-f0-9]{64}$/
@@ -30,9 +31,7 @@ export const createBlobStore = (folder: string, report: (error: unknown) => void
     const target = path(hash)
     const now = new Date()
     if (await Bun.file(target).exists()) return utimes(target, now, now)
-    const temp = `${target}.${crypto.randomUUID()}.tmp`
-    await Bun.write(temp, bytes())
-    await rename(temp, target)
+    await writeAtomic(target, bytes())
   }
 
   const expired = async (name: string, cutoff: number) => {

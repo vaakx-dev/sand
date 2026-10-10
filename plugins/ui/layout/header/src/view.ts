@@ -1,4 +1,4 @@
-import { appIcon, derive, div, dropdown, dynamicChild, icon, iconButton, layer, plainButton, projectIcon, show, sidebarToggle, span, tildeHome, type Pulse, type Sig } from '@sand/dom'
+import { appIcon, derive, div, dropdown, dynamicChild, icon, iconButton, layer, plainButton, projectAvatar, show, sidebarToggle, span, tildeHome, type Pulse, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
@@ -16,10 +16,7 @@ const sidebarButton = (narrow: Sig<boolean>, onClick: () => void) =>
 const projectCrumb = (ctx: Context, changes: Pulse, cwd: Sig<string | undefined>, name: Sig<string>) =>
   span(
     { class: 'hidden max-w-48 shrink-0 items-center gap-2 text-neutral-400 md:flex', title: cwd.map(path => tildeHome(path ?? '')) },
-    dynamicChild(
-      changes.read(() => projectIconUrl(ctx, cwd.get())),
-      url => (url ? projectIcon('', url) : dynamicChild(name, projectIcon)),
-    ),
+    projectAvatar(name, changes.read(() => projectIconUrl(ctx, cwd.get()))),
     span({ class: 'truncate' }, name),
   )
 

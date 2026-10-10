@@ -1,4 +1,4 @@
-import { contextMenu, copyWithNotice, derive, div, errorMessage, icon, iconButton, show, span, type Derive, type MenuSpec, type NavAction } from '@sand/dom'
+import { contextMenu, copyWithNotice, derive, div, errorMessage, icon, iconButton, show, span, statusBanner, type Derive, type MenuSpec, type NavAction } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { GoalView } from './slot'
@@ -20,15 +20,11 @@ export const goalBanner = (ctx: Context, view: Derive<GoalView | null>, hasComma
   const goal = () => view.get()?.goal
   const reason = derive(() => goal()?.reason ?? '')
   const menu = contextMenu()
-  return div(
-    {
-      role: 'status',
-      class: 'flex min-h-10 w-full items-center gap-3 rounded-lg bg-neutral-800 px-3 py-1 text-sm text-neutral-300 animate-fade',
-      ...menu.target(() => {
-        const objective = goal()?.objective
-        return objective ? bannerMenu(ctx, objective) : undefined
-      }),
-    },
+  return statusBanner(
+    menu.target(() => {
+      const objective = goal()?.objective
+      return objective ? bannerMenu(ctx, objective) : undefined
+    }),
     span({ class: 'inline-flex shrink-0 text-accent-400' }, icon('goal', 15)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },

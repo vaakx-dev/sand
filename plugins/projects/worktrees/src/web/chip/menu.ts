@@ -1,8 +1,7 @@
 import type { WorktreeEntry, WorktreeState } from '../../contract'
-import { div, groupLabel, icon, menuItem, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
+import { div, groupLabel, icon, menuItem, menuSeparator, okMark, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
 import { uuid } from '@sand/kit'
 import type { WebContext } from '../client'
-import { okMark } from '../ok-mark'
 import type { Choice, Choices } from './choices'
 import type { ChipTarget } from './target'
 
@@ -51,7 +50,7 @@ const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choic
   if (!others.length) return []
   const current = currentPath(state, choice)
   return [
-    div({ class: 'mx-2 my-1 border-t border-neutral-700' }),
+    menuSeparator(),
     groupLabel('Existing worktrees'),
     ...others.map(entry => {
       const use = () => pick({ mode: 'existing', path: entry.path, branch: entry.branch })

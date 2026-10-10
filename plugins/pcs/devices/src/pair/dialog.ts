@@ -1,4 +1,4 @@
-import { div, dynamicChild, effect, onTimeout, overlay, sheet, sheetHead, show } from '@sand/dom'
+import { dynamicChild, effect, onTimeout, overlay, sheet, sheetBody, sheetHead, show } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 import { pairInvite } from './invite'
@@ -20,10 +20,7 @@ export const pairDialog = (ctx: Context<'wire'>, source: DeviceSource, shown: Se
       sheet(
         { 'aria-label': 'Pair a new device', class: 'max-w-lg' },
         sheetHead('Pair a new device', close),
-        div(
-          { class: 'flex min-h-0 flex-col overflow-auto px-5 pt-1 pb-5' },
-          dynamicChild(invite, current => current && inviteBody(current, source.listenOnLan)),
-        ),
+        sheetBody({}, dynamicChild(invite, current => current && inviteBody(current, source.listenOnLan))),
       ),
     ),
   )

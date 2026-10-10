@@ -1,10 +1,8 @@
 import type { Picker } from '@sand/picker/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, icon, popover, popoverItem, sig, span } from '@sand/dom'
+import { icon, menuSeparator, popover, popoverItem, sig, span } from '@sand/dom'
 import { reportError, type ProjectsContext } from '../context'
 import { copyEntries, projectEntries, visibilityEntry, type Entry } from './actions'
-
-const separator = () => div({ role: 'separator', class: 'mx-2 my-1 border-t border-neutral-700' })
 
 const confirmed = async (picker: Picker, group: ProjectGroup) => {
   const picked = await picker.choose(`Delete ${group.name}?`, [
@@ -51,9 +49,9 @@ export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => 
     close,
     { class: 'top-full right-0 mt-1' },
     ...projectEntries(ctx, group).map(item),
-    copies.length ? separator() : null,
+    copies.length ? menuSeparator() : null,
     ...copies.map(item),
-    separator(),
+    menuSeparator(),
     item(visibilityEntry(ctx, group)),
     deleteItem(ctx, group, close),
   )

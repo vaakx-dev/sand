@@ -43,7 +43,7 @@ export default definePlugin({
     const accounts = createAccounts(await authPath(home), changed)
     const login = createLogin(accounts)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
-    const catalog = createCatalog({ home, accounts, prices: priceList(options.prices), changed })
+    const catalog = createCatalog({ home, accounts, prices: priceList(options.prices), changed, report: error => ctx.report(error) })
 
     const notify = (text: string) => (ctx.ui ? ctx.ui.notify(text) : console.error(text))
     const onLimits = (parsed: Limits) => {

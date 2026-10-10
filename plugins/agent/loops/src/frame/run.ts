@@ -1,5 +1,5 @@
-import { emptyUsage, textOf } from '@sand/kit'
-import type { Entry, Message, Prompt, UserContent } from '@sand/messages'
+import { emptyUsage, promptContent, textOf } from '@sand/kit'
+import type { Entry, Message, Prompt } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { LoopsContext } from '../context'
 import type { LoopImpl, TurnHooks, TurnResult } from '../contract'
@@ -10,8 +10,6 @@ import { createPartial } from './partial'
 import { resultOf } from './result'
 import type { TurnState } from './state'
 import { record } from './usage'
-
-const content = (prompt: Prompt): UserContent[] => (typeof prompt === 'string' ? [{ type: 'text', text: prompt }] : prompt)
 
 const keepPartial = (session: Session, state: TurnState) => {
   const message = state.partial.message()
@@ -30,7 +28,7 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
 
   const open = async (session: Session, prompt: Prompt, signal: AbortSignal, state: TurnState) => {
     await ctx.waterfall('turn.prepare', session, signal)
-    const user: Message = { role: 'user', content: await ctx.waterfall('turn.prompt', content(prompt), session) }
+    const user: Message = { role: 'user', content: await ctx.waterfall('turn.prompt', promptContent(prompt), session) }
     const opening = session.append('message', user)
     ctx.emit('turn.start', session, user)
     state.choice = await ctx.bail('model.choose', session, user)

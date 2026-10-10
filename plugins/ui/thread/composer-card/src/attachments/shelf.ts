@@ -26,7 +26,7 @@ const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =
       title: () => `${item.get().name} · ${bytes(item.get().bytes)}`,
       ...menuOf(ctx, files, menu, item),
     },
-    img({ class: 'h-full w-full', style: { objectFit: 'cover' }, src: preview(item.get().content) ?? '', alt: item.get().name }),
+    img({ class: 'h-full w-full object-cover', src: preview(item.get().content) ?? '', alt: item.get().name }),
     iconButton({ size: 'sm', title: 'Remove', class: 'absolute top-1 right-1 rounded-full bg-black/50 text-white', onClick: () => files.remove(item.get().id) }, icon('x', 12)),
   )
 
@@ -46,7 +46,7 @@ const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>)
     ),
     span({ class: ['min-w-0 flex-1 truncate', () => (failed() ? 'text-danger-300' : '')] }, () => item.get().name),
     span(
-      { class: ['shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')], style: { maxWidth: '50%' } },
+      { class: ['max-w-1/2 shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] },
       () => item.get().error ?? (item.get().loading ? 'Reading…' : bytes(item.get().bytes)),
     ),
     iconButton({ size: 'sm', title: 'Remove', onClick: () => files.remove(item.get().id) }, icon('x', 13)),

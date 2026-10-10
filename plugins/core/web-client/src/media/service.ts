@@ -1,10 +1,8 @@
-import type { ImageBlock, MediaRef, UserContent } from '@sand/messages'
+import type { ImageBlock, UserContent } from '@sand/messages'
 import type { Media, Wire } from '../contract'
 import { intersectionObserver, listen } from '@sand/dom'
 import { base64Of } from '../integrations/base64'
 import type { Store } from '../threads/store'
-
-type Stored = Partial<MediaRef> & { data?: string }
 
 const nearView = '800px'
 
@@ -41,20 +39,19 @@ export const createMedia = (wire: Wire, store: Store): Media => {
   }
 
   const restore = async (block: UserContent, thread?: string): Promise<UserContent> => {
-    const { blob: hash, size, width, height, ...rest } = block as UserContent & Stored
-    if (block.type === 'text' || typeof rest.data === 'string' || !hash) return block
+    if (block.type === 'text' || typeof block.data === 'string') return block
+    const { blob: hash, size, width, height, ...rest } = block
     const blob = await fetchBlob(hash, thread)
     const data = block.mediaType.startsWith('text/') ? await blob.text() : await base64Of(blob)
-    return { ...rest, data } as UserContent
+    return { ...rest, data }
   }
 
   return {
     show(image, block, thread) {
       image.decoding = 'async'
       image.loading = 'lazy'
-      const hash = (block as ImageBlock & Stored).blob
       if (typeof block.data === 'string') image.src = dataUrl(block)
-      else if (hash) whenNearView(image, () => void load(image, hash, thread).catch(() => void (image.title ||= 'This image could not be loaded')))
+      else whenNearView(image, () => void load(image, block.blob, thread).catch(() => void (image.title ||= 'This image could not be loaded')))
       return image
     },
     inline: (content, thread) => Promise.all(content.map(block => restore(block, thread))),

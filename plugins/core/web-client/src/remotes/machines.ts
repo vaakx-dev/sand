@@ -63,7 +63,9 @@ export const createMachines = (ctx: Context, wire: Wire, home: HomeWire, links: 
     async add(link) {
       const remote = await wire.call<Remote>({ type: 'remotes.add', link }, thisDevice)
       await refresh()
-      return get(remote.id)!
+      const machine = get(remote.id)
+      if (!machine) throw new Error(`${remote.name} was added, but this page could not load it. Reload to see it.`)
+      return machine
     },
     remove: id => wire.call({ type: 'remotes.remove', remote: id }, thisDevice).then(() => undefined),
     retry(id) {

@@ -21,7 +21,7 @@ const rowsOf = (thread?: Thread): Row[] =>
 
 const dragHandle = (steer: Sig<boolean>) =>
   span(
-    { class: 'inline-flex w-6 shrink-0 justify-center text-neutral-500', style: { cursor: () => (steer.get() ? '' : 'grab') }, title: () => (steer.get() ? '' : 'Drag to reorder') },
+    { class: ['inline-flex w-6 shrink-0 justify-center text-neutral-500', { 'cursor-grab': steer.map(value => !value) }], title: () => (steer.get() ? '' : 'Drag to reorder') },
     dynamicChild(steer, value => span({ class: 'inline-flex' }, icon(value ? 'steer' : 'grip', 14))),
   )
 

@@ -1,6 +1,6 @@
 import { plural, remoteKey } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { ago, div, iconButton, icon, projectIcon, show, span, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import { ago, div, iconButton, icon, projectIcon, sectionRow, show, span, statusLine, type ContextMenu, type Derive, type Sig } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { locationLine, noCopyLine } from './location'
 import { rowMenu } from './menu'
@@ -14,13 +14,7 @@ const summary = (group: ProjectGroup) => {
 }
 
 const remoteLine = (remote?: string) =>
-  remote
-    ? div(
-        { class: 'flex min-w-0 items-center gap-2 text-xs text-neutral-500', title: remote },
-        span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)),
-        span({ class: 'min-w-0 truncate' }, remoteKey(remote) || remote),
-      )
-    : null
+  remote ? statusLine({ mark: span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)), text: remoteKey(remote) || remote, title: remote }) : null
 
 const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
   const flows = ctx.syncFlows
@@ -47,8 +41,8 @@ export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: Project
   const locations = byRecent(group.locations)
   const primary = locations.length > 1 ? locations[0] : undefined
   const opened = open.map(id => id === group.id)
-  return div(
-    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => groupSpec(ctx, group)) },
+  return sectionRow(
+    menu.target(() => groupSpec(ctx, group)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
       div(

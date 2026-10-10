@@ -1,4 +1,4 @@
-import { contextMenu, div, dynamicChild, icon, list, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
+import { contextMenu, div, dynamicChild, icon, rowList, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
 import { actionButton, fleetAction, pcActionKind } from '../actions'
 import type { Fleet, PcView } from '../fleet/model'
 import { channelNames, versionText } from '../fleet/text'
@@ -33,4 +33,4 @@ const pcRow = (row: Sig<PcView>, fleet: Fleet) => {
 }
 
 export const pcsSection = (fleet: Fleet) =>
-  settingsSection({ title: 'PCs' }, list(fleet.pcs, pc => pc.key, row => pcRow(row, fleet), div({ class: 'contents' })))
+  settingsSection({ title: 'PCs' }, rowList(fleet.pcs, pc => pc.key, row => pcRow(row, fleet)))

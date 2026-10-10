@@ -1,7 +1,6 @@
 import type { InstalledPlugin } from '@sand/host-plugin-sync/contract'
-import { derive, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
-import { plural } from '../plural'
-import { noteRow, rows } from '../rows'
+import { derive, hintRow, rowList, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { PluginSource } from '../source'
 
 const pluginRow = (source: PluginSource, plugin: Sig<InstalledPlugin>) => {
@@ -25,14 +24,14 @@ export const installedSection = (source: PluginSource) => {
   const plugins = derive(() => source.state.get()?.plugins ?? [])
   return settingsSection(
     { title: 'Sharing with your other PCs' },
-    rows(plugins, plugin => plugin.name, plugin => pluginRow(source, plugin)),
+    rowList(plugins, plugin => plugin.name, plugin => pluginRow(source, plugin)),
     show(
       () => source.state.get() === undefined,
-      () => noteRow('Loading…'),
+      () => hintRow('Loading…'),
     ),
     show(
       () => source.state.get()?.plugins.length === 0,
-      () => noteRow('No plugins in ~/.sand/plugins yet.'),
+      () => hintRow('No plugins in ~/.sand/plugins yet.'),
     ),
   )
 }

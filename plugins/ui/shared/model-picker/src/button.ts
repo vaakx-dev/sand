@@ -1,9 +1,8 @@
-import { button, derive, div, dynamicChild, icon, mount, onDocument, popover, show, sig, span, type StyleMap } from '@sand/dom'
+import { button, derive, div, dynamicChild, icon, mount, onDocument, popover, pressOpens, show, sig, span, type StyleMap } from '@sand/dom'
 import type { PickerTarget } from './contract'
 import type { PickerKit } from './kit'
 import { modelPanel } from './panel/panel'
 import { logo } from './panel/source'
-import { toggles } from './toggle'
 
 const gap = 8
 const panelHeight = 480
@@ -60,7 +59,7 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
         'flex h-8 max-w-full min-w-40 items-center gap-2 rounded-lg pr-2 pl-3 text-sm text-neutral-100 cursor-pointer outline-none hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-accent-500',
         () => (open.get() ? 'bg-neutral-700' : 'bg-neutral-800'),
       ],
-      ...toggles(toggle),
+      ...pressOpens(toggle),
       onMount: node => {
         anchor = node
         return mount(document.body, show(open, panel))

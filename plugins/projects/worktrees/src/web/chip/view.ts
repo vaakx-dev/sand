@@ -1,4 +1,4 @@
-import { contextMenu, derive, div, dynamicChild, event, icon, plainButton, popover, show, sig, SPACE, span, untrack, type Pulse } from '@sand/dom'
+import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, icon, pressOpens, show, sig, span, untrack, type Pulse } from '@sand/dom'
 import type { WebContext, WorktreeClient } from '../client'
 import type { States } from '../states'
 import type { Choices } from './choices'
@@ -26,18 +26,8 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
   const title = () => (target.get().state?.worktree ? `This thread works in ${target.get().state?.root}` : 'Choose where this thread works')
 
   const chip = () =>
-    plainButton(
-      {
-        title,
-        class: [
-          'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200',
-          () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'),
-        ],
-        onMouseDown: event(toggle, { stop: true, prevent: true }),
-        onClick: (click: MouseEvent) => {
-          if (click.detail === 0) toggle()
-        },
-      },
+    chipButton(
+      { title, active: open, ...pressOpens(toggle) },
       span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, () => label.get().text),
       span({ class: 'inline-flex shrink-0' }, icon('down', 12)),
@@ -53,9 +43,9 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
       context.view(),
       dynamicChild(derive(() => label.get().glyph), chip),
       show(open, () =>
-        popover(
+        chipPopover(
           close,
-          { class: 'right-0 bottom-full mb-3 w-80 max-w-full overflow-auto', style: { maxHeight: `calc(100vh - ${SPACE['32']})` } },
+          { class: 'right-0 w-80' },
           dynamicChild(derive(() => changes.version.get() + states.version.get()), items),
         ),
       ),

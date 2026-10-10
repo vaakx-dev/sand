@@ -1,6 +1,5 @@
 import type { VersionTarget } from '@sand/host-plugin-versions/contract'
-import { derive, div, settingsRow, settingsSection, show, span, type Sig } from '@sand/dom'
-import { rows } from '../rows'
+import { derive, div, rowList, settingsRow, settingsSection, show, span, type Sig } from '@sand/dom'
 import type { VersionsSource } from './source'
 import { historyToggle } from './versions'
 
@@ -29,7 +28,7 @@ const targetSection = (source: VersionsSource, title: string, wanted: (target: V
     () =>
       settingsSection(
         { title },
-        rows(targets, target => target.key, target => targetRow(source, target)),
+        rowList(targets, target => target.key, target => targetRow(source, target)),
       ),
   )
 }

@@ -1,5 +1,5 @@
 import type { PanelSpec } from '@sand/dom'
-import { badge, derive, div, dynamicChild, icon, iconButton, keep, layer, list, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
+import { badge, derive, div, dynamicChild, icon, iconButton, keep, layer, list, paneHead, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
 import type { Surface } from './surface'
 
 export interface Page {
@@ -55,8 +55,7 @@ const hideButton = (floating: boolean, hide: () => void) =>
 export const panelsView = (parts: PanelsParts) =>
   div(
     { class: () => hostClass(parts.surface) },
-    div(
-      { class: 'flex h-12 shrink-0 items-center gap-2 pl-4 pr-3' },
+    paneHead(
       div(
         { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
         list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),

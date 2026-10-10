@@ -1,3 +1,4 @@
+import { uniqueStrings } from '@sand/kit'
 import { gitMaybe } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 
@@ -18,7 +19,7 @@ export const branch = async (cwd: string) => {
 }
 
 export const branches = async (cwds: unknown) => {
-  const wanted = Array.isArray(cwds) ? [...new Set(cwds.filter((cwd): cwd is string => typeof cwd === 'string'))].slice(0, most) : []
+  const wanted = uniqueStrings(cwds, most)
   const found = await Promise.all(wanted.map(branch))
   return Object.fromEntries(wanted.map((cwd, index) => [cwd, found[index] ?? null]))
 }

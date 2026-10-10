@@ -1,4 +1,4 @@
-import { errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
+import { attempt, type MenuSpec, type NavAction } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { ProjectChoice } from './choices'
@@ -10,9 +10,6 @@ export interface ProjectMenuHooks {
   done(): void
   leave(): void
 }
-
-const attempt = (ctx: Context, failed: string, work: () => Promise<unknown>) =>
-  work().catch(error => ctx.notify?.push(`${failed}: ${errorMessage(error)}`, { level: 'error' }))
 
 const showOnly = (choice: ProjectChoice, hooks: ProjectMenuHooks): NavAction => ({
   id: 'show-only',
@@ -48,7 +45,7 @@ const newThread = (ctx: Context, group: ProjectGroup, hooks: ProjectMenuHooks): 
     await threads.draft(here.path, device)
     ctx.composer?.focus()
   }
-  return [{ id: 'new-thread', label: 'New thread here', icon: 'compose', group: 'show', run: () => attempt(ctx, 'Could not start a thread', start) }]
+  return [{ id: 'new-thread', label: 'New thread here', icon: 'compose', group: 'show', run: () => attempt(ctx.notify, 'Could not start a thread', start) }]
 }
 
 const rename = (ctx: Context, group: ProjectGroup): NavAction => ({
@@ -64,7 +61,7 @@ const rename = (ctx: Context, group: ProjectGroup): NavAction => ({
       const name = oneLine(text)
       return name && name !== group.name ? `Rename to ${name}` : undefined
     },
-    run: text => attempt(ctx, 'Could not rename', async () => ctx.projects?.rename(group, oneLine(text))),
+    run: text => attempt(ctx.notify, 'Could not rename', async () => ctx.projects?.rename(group, oneLine(text))),
   },
   run: () => {},
 })
@@ -76,7 +73,7 @@ const hide = (ctx: Context, group: ProjectGroup, hooks: ProjectMenuHooks, active
   group: 'edit',
   danger: true,
   run: () =>
-    attempt(ctx, 'Could not hide', async () => {
+    attempt(ctx.notify, 'Could not hide', async () => {
       if (active) hooks.filter(undefined)
       hooks.done()
       await ctx.projects?.hide(group, true)

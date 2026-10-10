@@ -1,12 +1,9 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { button, div, dynamicChild, event, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, chipPopover, div, dynamicChild, icon, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { PanelContext } from './actions'
 import { logo, sourceName } from './source'
 
-const panelSize = {
-  width: `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`,
-  maxHeight: `calc(100vh - ${SPACE['32']})`,
-}
+const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
 export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
   const open = sig(false)
@@ -49,10 +46,7 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
             'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
             () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'),
           ],
-          onMouseDown: event(toggle, { stop: true, prevent: true }),
-          onClick: press => {
-            if (press.detail === 0) toggle()
-          },
+          ...pressOpens(toggle),
         },
         dynamicChild(
           model.map(value => value?.provider),
@@ -82,7 +76,7 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
         ),
       ),
       show(open, () =>
-        popover(close, { class: 'right-0 bottom-full mb-3 overflow-auto', style: panelSize }, ctx.modelPicker.panel(target, close, { flash })),
+        chipPopover(close, { class: 'right-0', width: panelWidth }, ctx.modelPicker.panel(target, close, { flash })),
       ),
     )
 

@@ -16,6 +16,8 @@ export const menuItem = ({ size = 'md', active = false, class: extra, ...props }
     ...children,
   )
 
+export const menuSeparator = () => div({ role: 'separator', class: 'mx-2 my-1 h-px bg-neutral-700' })
+
 export const groupLabel = (...children: Child[]) => div({ class: 'px-3 pt-3 pb-1 text-xs font-medium text-neutral-500' }, ...children)
 
 const closeOnOutsidePress = (node: HTMLElement, close: () => void) =>

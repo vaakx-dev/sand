@@ -1,5 +1,4 @@
-import { isInside } from '@sand/kit'
-import { samePath } from '@sand/kit/fs'
+import { isWithin } from '@sand/kit/fs'
 import type { Sessions } from '@sand/sessions-sqlite/contract'
 import type { WorktreesConfig } from '../config'
 import type { Publish } from '../setup/steps'
@@ -22,7 +21,7 @@ export const idle = (ops: Ops, id: string) => {
   if (ops.running.has(id)) throw new Error('Wait for the turn to finish first')
 }
 
-export const sessionsIn = (ops: Ops, root: string) => ops.sessions.list().filter(summary => samePath(summary.cwd, root) || isInside(summary.cwd, root))
+export const sessionsIn = (ops: Ops, root: string) => ops.sessions.list().filter(summary => isWithin(summary.cwd, root))
 
 export const busyIn = (ops: Ops, root: string) => sessionsIn(ops, root).some(summary => ops.running.has(summary.id))
 

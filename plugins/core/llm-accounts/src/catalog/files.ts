@@ -43,7 +43,7 @@ const cacheOf = (value: unknown): ModelCache =>
     return checked ? [[source, checked]] : []
   }))
 
-const jsonFile = <T>(path: string, parse: (value: unknown) => T) => {
+const jsonFile = <T>(path: string, parse: (value: unknown) => T, failed: (error: unknown) => void) => {
   const queue = serial()
   return {
     async read(): Promise<T> {
@@ -54,11 +54,11 @@ const jsonFile = <T>(path: string, parse: (value: unknown) => T) => {
       }
     },
     write(value: T) {
-      return queue(() => writePrivateJson(path, value)).catch(() => {})
+      return queue(() => writePrivateJson(path, value)).catch(failed)
     },
   }
 }
 
-export const prefsFile = (home: string) => jsonFile(join(home, 'model-catalog.json'), prefsOf)
+export const prefsFile = (home: string, failed: (error: unknown) => void) => jsonFile(join(home, 'model-catalog.json'), prefsOf, failed)
 
-export const cacheFile = (home: string) => jsonFile(join(home, 'model-cache.json'), cacheOf)
+export const cacheFile = (home: string) => jsonFile(join(home, 'model-cache.json'), cacheOf, () => {})

@@ -1,7 +1,8 @@
-import { div, event, h2, type Child, type Props } from '@vaakx-dev/vrui'
+import { div, event, type Child, type Props } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { layer, modal } from '../shell/layers'
 import { iconButton } from './button'
+import { headTitle } from './page-head'
 
 export const overlay = (close: () => void, ...children: Child[]) => {
   const previous = document.activeElement
@@ -28,10 +29,16 @@ export const sheet = ({ class: extra, ...props }: Props<HTMLDivElement>, ...chil
 export const sheetHead = (title: Child, close: () => void, ...extra: Child[]) =>
   div(
     { class: 'flex shrink-0 items-center gap-3 pt-3 pr-3 pb-1 pl-5' },
-    h2({ class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, title),
+    headTitle(2, title),
     ...extra,
     iconButton({ title: 'Close', onClick: close }, icon('x')),
   )
+
+export const sheetBody = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
+  div({ ...props, class: ['flex min-h-0 flex-col overflow-auto px-5 pt-1 pb-5', extra] }, ...children)
+
+export const sheetFoot = (...children: Child[]) =>
+  div({ class: 'flex shrink-0 items-center justify-end gap-2 border-t border-neutral-700 px-5 py-3' }, ...children)
 
 export const drawer = (close: () => void, { class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) => {
   const previous = document.activeElement

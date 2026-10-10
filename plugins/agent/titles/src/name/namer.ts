@@ -1,10 +1,9 @@
 import type { LLM } from '@sand/llm-accounts/contract'
-import type { UsageRecord } from '@sand/loops/contract'
 import type { Message } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
 import type { Prefs } from '../prefs'
-import { usageSource } from '@sand/kit'
+import { usageRecord } from '@sand/kit'
 import { askName } from './ask'
 import { modelOptions, namingModel } from './model'
 import { conversation } from './prompt'
@@ -34,8 +33,7 @@ export const createNamer = (ctx: Context<'sessions'>, prefs: Prefs) => {
     const model = namingModel(llm, saved.model, ctx.modelSettings?.effective(session).model)
     const reply = await askName(llm, text, { model, ...modelOptions(llm, model, saved) })
     if (!reply) return undefined
-    const record: UsageRecord = { id: Bun.randomUUIDv7(), model, ...usageSource(llm.provider?.(model)), usage: reply.usage }
-    ctx.sessions.open(session.id)?.append('usage', record)
+    ctx.sessions.open(session.id)?.append('usage', usageRecord(llm.provider?.(model), model, reply.usage))
     return reply.name || undefined
   }
 

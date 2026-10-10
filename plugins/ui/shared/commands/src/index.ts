@@ -1,3 +1,4 @@
+import { collectScope, onTimeout } from '@sand/dom'
 import type { Commands, WebCommand } from './contract'
 import { definePlugin } from 'drydock'
 
@@ -6,18 +7,18 @@ export default definePlugin({
   description: 'Command host: merges local commands with the server commands relayed to the page',
   apply(ctx) {
     let entries: WebCommand[] = []
-    let queued = false
+    let queued: (() => void) | undefined
 
     const emitChange = () => {
-      queued = false
+      queued = undefined
       ctx.emit('commands.change')
     }
 
     const changed = () => {
-      if (queued) return
-      queued = true
-      void Promise.resolve().then(emitChange)
+      queued ??= collectScope(() => onTimeout(emitChange)).value
     }
+
+    ctx.effect(() => () => queued?.())
 
     const get = (name: string) => {
       const named = entries.filter(command => command.name === name)

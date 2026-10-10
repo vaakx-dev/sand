@@ -1,4 +1,4 @@
-import { copyButton, derive, div, dynamicChild, icon, rowAction, secondaryAction, settingsSection, span, type Child } from '@sand/dom'
+import { copyButton, derive, div, dynamicChild, icon, itemRow, rowAction, secondaryAction, settingsSection, span, type Child } from '@sand/dom'
 import type { GithubCli, GithubState } from '../contract'
 import { githubTile } from './mark'
 import type { GithubControl } from './state'
@@ -7,17 +7,7 @@ const reach = (pcs: number) => (pcs > 1 ? `Agents on all ${pcs} PCs` : 'Agents o
 
 const usedBy = (state: GithubState) => [state.from && `From ${state.from}`, `${reach(state.pcs)} use this login for gh and git push`].filter(Boolean).join(' · ')
 
-const row = (title: Child, detail: Child, ...controls: Child[]) =>
-  div(
-    { class: 'flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 bg-neutral-900 px-4 py-3' },
-    githubTile(),
-    div(
-      { class: 'flex min-w-32 flex-1 flex-col' },
-      span({ class: 'truncate text-sm font-medium text-neutral-100' }, title),
-      span({ class: 'text-xs text-neutral-500' }, detail),
-    ),
-    ...controls,
-  )
+const row = (title: Child, detail: Child, ...controls: Child[]) => itemRow({}, githubTile(), title, detail, ...controls)
 
 const signedInRow = (state: GithubState, control: GithubControl) =>
   row(state.login, usedBy(state), rowAction({ label: 'Sign out', danger: true, run: () => void control.run({ type: 'github.logout' }) }))

@@ -1,5 +1,5 @@
 import type { WorktreeSetup } from '../../contract'
-import { div, icon, keys, rowButton, span, textInput, type Child, type Sig } from '@sand/dom'
+import { checkMark, div, icon, keys, rowButton, span, textInput, type Child, type Sig } from '@sand/dom'
 
 const mono = (text: string) => span({ class: 'font-mono text-neutral-400' }, text)
 
@@ -24,14 +24,6 @@ export const field = (label: string, control: Child) =>
 export const checkRow = (checked: Sig<boolean>, title: Child, ...detail: Child[]) =>
   rowButton(
     { role: 'checkbox', 'aria-checked': () => String(checked.get()), class: 'items-start gap-3 rounded-xl bg-neutral-900 px-4 py-3', onClick: checked.toggle() },
-    span(
-      {
-        class: [
-          'mt-px inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors',
-          () => (checked.get() ? 'bg-accent-500 text-white' : 'text-transparent ring-1 ring-neutral-600'),
-        ],
-      },
-      icon('check', 12),
-    ),
+    checkMark(() => checked.get(), 'mt-px'),
     div({ class: 'flex min-w-0 flex-1 flex-col gap-1' }, span({ class: 'text-sm text-neutral-100' }, title), span({ class: 'text-xs text-neutral-500' }, ...detail)),
   )

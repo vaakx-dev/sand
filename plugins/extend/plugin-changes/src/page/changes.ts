@@ -1,8 +1,7 @@
 import type { PluginChangeKind, PluginOffer } from '@sand/host-plugin-sync/contract'
-import { badge, derive, div, icon, p, primaryAction, quietButton, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
+import { badge, derive, div, hintRow, icon, p, primaryAction, quietButton, rowList, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
+import { plural } from '@sand/kit'
 import { groupOffers, offerSummary, type OfferGroup } from '../offers'
-import { plural } from '../plural'
-import { noteRow, rows } from '../rows'
 import type { PluginSource } from '../source'
 
 const tags: Record<PluginChangeKind, Tone> = { changed: 'warning', new: 'accent', removed: 'neutral' }
@@ -44,7 +43,7 @@ const groupSection = (source: PluginSource, group: Sig<OfferGroup>, busy: () => 
       quietButton({ size: 'sm', disabled: busy, onClick: () => void source.skip(group.get().peer, names()) }, 'Skip'),
       primaryAction({ size: 'sm', disabled: busy, onClick: () => void source.apply(group.get().peer, names()) }, 'Apply all'),
     ),
-    rows(
+    rowList(
       derive(() => group.get().offers),
       offer => `${offer.plugin}:${offer.kind}`,
       offer => offerRow(source, offer, busy),
@@ -57,14 +56,14 @@ export const changesSection = (source: PluginSource) => {
   const groups = derive(() => groupOffers(source.state.get()?.offers ?? []))
   return div(
     { class: 'flex flex-col gap-3' },
-    rows(groups, group => group.peer, group => groupSection(source, group, busy)),
+    rowList(groups, group => group.peer, group => groupSection(source, group, busy)),
     show(
       () => Boolean(source.state.get()?.offers.length),
       () => p({ class: 'px-1 text-xs text-neutral-500' }, 'Applying restarts the runtime; running threads keep going.'),
     ),
     show(
       () => source.state.get()?.offers.length === 0,
-      () => settingsSection({}, noteRow('Plugins match your other PCs.')),
+      () => settingsSection({}, hintRow('Plugins match your other PCs.')),
     ),
   )
 }

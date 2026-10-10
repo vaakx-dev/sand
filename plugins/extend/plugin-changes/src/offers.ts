@@ -1,5 +1,5 @@
 import type { PluginOffer } from '@sand/host-plugin-sync/contract'
-import { plural } from './plural'
+import { plural } from '@sand/kit'
 
 export interface OfferGroup {
   peer: string

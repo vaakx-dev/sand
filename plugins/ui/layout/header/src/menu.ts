@@ -1,4 +1,4 @@
-import { copyWithNotice, div, icon, popoverItem, span, type Child, type IconName } from '@sand/dom'
+import { copyWithNotice, icon, menuSeparator, popoverItem, span, type Child, type IconName } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -7,8 +7,6 @@ interface Entry {
   icon: IconName
   run(): void | Promise<void>
 }
-
-const separator = () => div({ class: 'mx-2 my-1 border-t border-neutral-700' })
 
 const entryView = (entry: Entry, close: () => void) =>
   popoverItem(
@@ -53,7 +51,7 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
   const app = [...command(ctx, 'devices', 'Connect a device', 'smartphone'), ...command(ctx, 'extensions', 'Interface', 'gear')]
   return [
     ...session.map(entry => entryView(entry, close)),
-    session.length && app.length ? separator() : null,
+    session.length && app.length ? menuSeparator() : null,
     ...app.map(entry => entryView(entry, close)),
   ]
 }

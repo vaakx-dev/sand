@@ -1,4 +1,4 @@
-import { appIcon, derive, div, dismissible, dynamicChild, h1, icon, iconButton, show, type Sig } from '@sand/dom'
+import { appIcon, derive, div, dismissible, dynamicChild, headTitle, icon, iconButton, paneHead, show, type Sig } from '@sand/dom'
 import type { SettingsPage } from './contract'
 import type { PageStore } from './pages'
 
@@ -23,10 +23,9 @@ export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
     )
   return div(
     { class: 'flex h-full min-h-0 flex-1 flex-col bg-neutral-900', onMount: node => dismissible(node, close, { overlay: false }) },
-    div(
-      { class: 'flex h-12 shrink-0 items-center gap-2 pl-4 pr-3' },
+    paneHead(
       show(narrow, () => iconButton({ title: 'Settings', 'aria-label': 'Settings', onClick: showPages }, appIcon(20))),
-      h1({ class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, () => page.get()?.label ?? ''),
+      headTitle(1, () => page.get()?.label ?? ''),
       show(narrow, () => iconButton({ title: 'Close settings', 'aria-label': 'Close settings', onClick: close }, icon('x'))),
     ),
     dynamicChild(page, body),

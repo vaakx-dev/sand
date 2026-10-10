@@ -22,7 +22,7 @@ const hoverAt = ({ currentTarget, clientX, clientY }: PointerEvent, count: numbe
 }
 
 const axisLabel = (text: string, top: string) =>
-  span({ class: 'absolute right-0 text-xs text-neutral-500 tabular-nums whitespace-nowrap', style: { top, transform: 'translateY(-50%)' } }, text)
+  span({ class: 'absolute right-0 -translate-y-1/2 text-xs text-neutral-500 tabular-nums whitespace-nowrap', style: { top } }, text)
 
 const strokes = (drawn: Series[], toY: (value: number) => number, step: number) =>
   drawn.map(series => {

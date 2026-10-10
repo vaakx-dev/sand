@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { contextMenu, derive, div, hint, list, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, hintRow, rowList, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
 import { favouritesOf } from '@sand/kit'
 import type { Kit } from './kit'
 import { settingsMenu } from './menu'
@@ -57,9 +57,9 @@ export const favouritesPage = (kit: Kit) => {
       {},
       show(
         models.map(found => !found.length),
-        () => div({ class: 'bg-neutral-900' }, hint('No favourites yet. Star a model in one of your accounts to keep it at the top of the picker.')),
+        () => hintRow('No favourites yet. Star a model in one of your accounts to keep it at the top of the picker.'),
       ),
-      list(models, model => model.id, row => favouriteRow(kit, row, unstar), div({ class: 'contents' })),
+      rowList(models, model => model.id, row => favouriteRow(kit, row, unstar)),
     ),
   )
 }
