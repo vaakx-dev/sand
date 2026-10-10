@@ -21,7 +21,6 @@
 - Glob before you read; don't guess paths.
 - Edit source with the edit tool, one call per file at a time, never with sed, perl or python rewrites. If an edit fails, re-read the file before retrying.
 - Other agents may be editing this tree at the same time. Only touch files your task needs, don't revert or reformat changes you didn't make, don't run repo-wide formatters, and don't touch the git index (`add`, `reset`, `stash`, `checkout --`) unless asked.
-- If a request could mean different things, ask one short question first. A mockup or plan means an HTML page, not real code.
+- A mockup or plan means an HTML page, not real code.
 - Verify before you report: run `bun run check` after code changes and look at UI changes in a browser. Only call something tested if you ran it, and say what you ran. Don't state numbers you didn't measure.
-- Always finish with a short report: what changed, what you verified, what's left. Subagents included.
 - Keep replies short and plain, without jargon.

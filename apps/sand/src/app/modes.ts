@@ -16,7 +16,6 @@ const core = [
   'steering',
   'loop-react',
   'loop-plan',
-  'loop-trial',
   'hooks',
   'compaction',
   'goal',

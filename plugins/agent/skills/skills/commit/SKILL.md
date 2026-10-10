@@ -1,6 +1,6 @@
 ---
 name: commit
-description: 'Use when preparing or making a Git commit. Explicit trigger: “commit.”'
+description: Use when preparing or making a Git commit.
 ---
 
 # Commit

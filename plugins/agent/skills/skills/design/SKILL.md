@@ -1,6 +1,6 @@
 ---
 name: design
-description: Use when creating, changing, or reviewing any user interface, including layout, typography, styling, and interaction design.
+description: 'Use when creating, changing or reviewing any user interface: layout, typography, styling and interaction.'
 ---
 
 # Design

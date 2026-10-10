@@ -1,6 +1,7 @@
 import type { Effort } from '@sand/llm-accounts/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
+import { z } from 'zod'
 import { jsonSchema, parseOutput, type Schema } from './schema'
 import type { Run } from './store'
 
@@ -79,6 +80,7 @@ export const createApi = (ctx: Context<'agents'>, options: Options) => {
   return {
     args: options.args,
     signal,
+    z,
     agent: (task: string, agentOptions?: AgentOptions) => handled(agent(task, agentOptions)),
     parallel: <T>(tasks: (() => Promise<T>)[]) => handled(Promise.all(tasks.map(task => handled(Promise.resolve().then(task))))),
     pipeline: <T>(items: T[], ...stages: ((value: any, item: T) => unknown)[]) =>

@@ -18,23 +18,20 @@ const description = `Run a TypeScript workflow that orchestrates subagents in co
 The script default-exports an async function that receives the workflow API:
 
 \`\`\`ts
-import { z } from 'zod'
-
-export default async function ({ agent, parallel, pipeline, phase, log, args }) {
+export default async function ({ agent, parallel, pipeline, phase, log, args, z }) {
   phase('Review')
-  const reviews = await parallel(args.files.map((file: string) => () =>
+  return parallel(args.files.map((file: string) => () =>
     agent(\`Review \${file} for bugs and report each with its line number.\`, {
       agent: 'explore',
       model: 'haiku',
       schema: z.object({ bugs: z.array(z.object({ line: z.number(), issue: z.string() })) }),
     })))
-  return reviews
 }
 \`\`\`
 
-- agent(task, { agent?, label?, schema?, model?, effort? }) runs a subagent and resolves to its final report, or to a validated object when a zod schema is given. It resolves to null if the user stops that one agent, so handle null results. label is 3 to 6 words naming it in the UI. model picks a model by short name such as "haiku" or "opus"; it defaults to the agent definition's model, else the parent's. effort sets the reasoning effort ("low", "medium", "high", "xhigh" or "max"). Subagents cannot see this conversation, so tasks must be self-contained.
+- agent(task, { agent?, label?, schema?, model?, effort? }) runs a subagent and resolves to its final report, or to a validated object when a zod schema is given. It resolves to null if the user stops that one agent, so handle null results. Options work as in the agent tool; tasks must be self-contained.
 - parallel(thunks) runs functions concurrently. pipeline(items, ...stages) sends each item through the stages independently; each stage receives (value, item).
-- phase(title) and log(text) report progress. args is the args input.
+- phase(title) and log(text) report progress. args is the args input. z is zod.
 - Finished agent calls are cached, so resume reruns the script and only repeats unfinished work.
 - The return value becomes the workflow result.`
 

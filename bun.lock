@@ -61,7 +61,6 @@
         "@sand/llm-accounts": "workspace:*",
         "@sand/loop-plan": "workspace:*",
         "@sand/loop-react": "workspace:*",
-        "@sand/loop-trial": "workspace:*",
         "@sand/loops": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/panel-changes": "workspace:*",
@@ -288,22 +287,6 @@
         "@sand/loops": "workspace:*",
         "@sand/messages": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
-      },
-    },
-    "plugins/agent/loop-trial": {
-      "name": "@sand/loop-trial",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/kit": "workspace:*",
-        "@sand/llm-accounts": "workspace:*",
-        "@sand/loops": "workspace:*",
-        "@sand/messages": "workspace:*",
-        "@sand/paths": "workspace:*",
-        "@sand/server": "workspace:*",
-        "@sand/sessions-sqlite": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
-        "zod": "^4.6.5",
       },
     },
     "plugins/agent/loops": {
@@ -1505,8 +1488,6 @@
     "@sand/loop-plan": ["@sand/loop-plan@workspace:plugins/agent/loop-plan"],
 
     "@sand/loop-react": ["@sand/loop-react@workspace:plugins/agent/loop-react"],
-
-    "@sand/loop-trial": ["@sand/loop-trial@workspace:plugins/agent/loop-trial"],
 
     "@sand/loops": ["@sand/loops@workspace:plugins/agent/loops"],
 

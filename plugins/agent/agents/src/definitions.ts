@@ -9,11 +9,11 @@ import { parseEffort } from './settings'
 export const builtins: AgentDefinition[] = [
   {
     name: 'general',
-    description: 'General-purpose agent for multi-step work: research, code changes, running commands.',
+    description: 'Multi-step work: research, code changes, running commands.',
   },
   {
     name: 'explore',
-    description: 'Read-only agent for finding code, answering questions about a codebase, and broad searches.',
+    description: 'Read-only: finding code, answering questions about a codebase, broad searches.',
     tools: ['read', 'glob', 'grep', 'shell'],
     prompt: 'You are read-only: never create, modify or delete files. Use shell only for read-only commands such as git log, ls or cat.',
   },

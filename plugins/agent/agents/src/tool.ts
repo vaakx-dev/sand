@@ -30,7 +30,7 @@ const report = (result: TurnResult) => {
 }
 
 export const describeAgents = (list: AgentDefinition[], llm: LLM | undefined) =>
-  `Delegate a task to a subagent. It works independently in its own context with its own tools and returns a final report; only that report enters your context. Use it for broad searches, independent pieces of work that can run in parallel, and tasks that would flood your context. Call it several times in one response to run agents in parallel. Set background to keep working while it runs.
+  `Delegate a task to a subagent. It works in its own context with its own tools, and only its final report enters yours. Use it for broad searches, independent work that can run in parallel, and tasks that would flood your context. Call it several times in one response to run agents in parallel. Set background to keep working while it runs.
 
 ${catalog(list, llm)}`
 
