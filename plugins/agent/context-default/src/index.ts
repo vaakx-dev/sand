@@ -13,9 +13,10 @@ export default definePlugin({
     ctx.provide('context', {
       async build(session) {
         const stored = session.path().find(entry => entry.type === 'system')
+        const model = ctx.modelSettings?.effective(session).model
         const system = stored
           ? (stored.data as string)
-          : (session.append('system', await compose(instructions, session, config.instructions)).data as string)
+          : (session.append('system', await compose(instructions, session, model, config.instructions)).data as string)
         return { system, messages: session.messages(), tools: ctx.tools.specs() }
       },
     })
