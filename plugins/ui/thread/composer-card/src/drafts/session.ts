@@ -54,12 +54,18 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
     ready = true
   }
 
+  const retarget = (next: Key | undefined) => {
+    if (!key || !next?.target || next.target === key.target) return
+    key.target = next.target
+    keep()
+  }
+
   const promotes = (next: Key | undefined) =>
     Boolean(model.sending.get() && key?.target && next && !next.target && !ctx.threads.get(next.id)?.info.head)
 
   const open = (id: string | undefined) => {
     const next = keyOf(ctx, id)
-    if (next?.id === key?.id) return
+    if (next?.id === key?.id) return retarget(next)
     if (promotes(next)) {
       drop(key!.id)
       key = next

@@ -12,7 +12,8 @@ export const createListed = (ctx: Context) => {
     list: () => [...entries.values()].sort((a, b) => b.updated - a.updated),
     set(target: DraftTarget, saved: Saved, updated = Date.now()) {
       const known = entries.get(target.id)
-      if (known && known.text === saved.text && known.attachments === saved.items.length) return
+      const same = known && known.cwd === target.cwd && known.device === target.device
+      if (same && known.text === saved.text && known.attachments === saved.items.length) return
       entries.set(target.id, { ...target, text: saved.text, attachments: saved.items.length, updated })
       changed()
     },
