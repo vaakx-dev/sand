@@ -1,4 +1,4 @@
-import { div, groupLabel } from '@sand/dom'
+import { div, groupLabel, type ContextMenu } from '@sand/dom'
 import { isInside } from '@sand/kit'
 import type { Machine } from '@sand/web-client/contract'
 import { choosePc } from './choose'
@@ -32,7 +32,7 @@ const quickMenu = (ctx: PickerContext, cwd: string, device: string | undefined, 
   )
 }
 
-export const pcMenu = (ctx: PickerContext, close: () => void) => {
+export const pcMenu = (ctx: PickerContext, close: () => void, context: ContextMenu) => {
   const { group, device, cwd } = currentTarget(ctx)
   if (!group) return quickMenu(ctx, cwd, device, close)
   return div(
@@ -41,10 +41,17 @@ export const pcMenu = (ctx: PickerContext, close: () => void) => {
     div(
       { class: 'flex flex-col gap-1 px-1' },
       ...ctx.machines.list().map(machine =>
-        pcRow(ctx, group, machine, deviceOf(machine) === device, () => {
-          close()
-          void choosePc(ctx, group, machine)
-        }),
+        pcRow(
+          ctx,
+          group,
+          machine,
+          deviceOf(machine) === device,
+          () => {
+            close()
+            void choosePc(ctx, group, machine)
+          },
+          context,
+        ),
       ),
     ),
   )

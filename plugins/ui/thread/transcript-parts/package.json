@@ -15,7 +15,8 @@
       "toolViews"
     ],
     "uses": {
-      "media": "images load only from inline data"
+      "media": "images load only from inline data",
+      "notify": "copying is not confirmed"
     }
   },
   "dependencies": {

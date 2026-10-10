@@ -1,5 +1,6 @@
-import type { NavAction, NavChoice } from '@sand/dom'
-import { button, focusable, span, stopThen, type ClassValue, type StyleMap } from '@sand/dom'
+import { button, span, stopThen, type ClassValue, type StyleMap } from '@vaakx-dev/vrui'
+import type { NavAction, NavChoice } from '../../shell/nav/types'
+import { focusable } from '../button'
 
 export type ChipSize = 'sm' | 'lg'
 

@@ -19,9 +19,9 @@ export const hostOf = (url: string) => {
 export const openLink = (url: string, label = `Open ${hostOf(url)}`) =>
   secondaryAction({ size: 'sm', onClick: () => void window.open(url, '_blank', 'noopener') }, label)
 
-export const accountRow = (logo: Child, title: Child, detail: Child, ...controls: Child[]) =>
+export const accountRowWith = (props: object, logo: Child, title: Child, detail: Child, ...controls: Child[]) =>
   div(
-    { class: 'flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 bg-neutral-900 px-4 py-3' },
+    { class: 'flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 bg-neutral-900 px-4 py-3', ...props },
     logo,
     div(
       { class: 'flex min-w-32 flex-1 flex-col' },
@@ -30,6 +30,8 @@ export const accountRow = (logo: Child, title: Child, detail: Child, ...controls
     ),
     controls.length ? div({ class: 'flex shrink-0 flex-wrap items-center gap-3' }, ...controls) : null,
   )
+
+export const accountRow = (logo: Child, title: Child, detail: Child, ...controls: Child[]) => accountRowWith({}, logo, title, detail, ...controls)
 
 export const busyAction = (busy: Busy, run: () => Promise<void>) => async () => {
   busy.set(true)

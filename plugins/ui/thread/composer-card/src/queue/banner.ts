@@ -1,10 +1,11 @@
 import type { Prompt } from '@sand/messages'
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { badge, color, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
+import { badge, color, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../components/glass'
 import type { Model } from '../model'
+import { queueMenu } from './menu'
 import { queueThumb } from './thumb'
 
 interface Row {
@@ -20,6 +21,7 @@ const rowsOf = (thread?: Thread): Row[] =>
 export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => {
   const rows = model.changes.read(() => rowsOf(ctx.threads.current()))
   const open = sig(true)
+  const menu = contextMenu()
   const dragged = sig<string | undefined>(undefined)
   const over = sig<string | undefined>(undefined)
 
@@ -51,6 +53,7 @@ export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => 
         ],
         style: { boxShadow: () => (over.get() === id ? `inset 0 2px 0 ${color('accent', 400)}` : '') },
         draggable: queued,
+        ...menu.target(() => queueMenu(ctx, model, act, item(), entry.get().steer)),
         onDragStart: event => {
           dragged.set(id)
           event.dataTransfer?.setData('text/plain', id)
@@ -99,6 +102,7 @@ export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => 
           iconButton({ size: 'sm', title: () => (open.get() ? 'Collapse' : 'Expand'), onClick: () => open.set(!open.get()) }, dynamicChild(open, value => span({ class: 'inline-flex' }, icon(value ? 'down' : 'up', 14)))),
         ),
         show(open, () => list(rows, entry => entry.item.id, row, div({ class: 'mt-1 flex flex-col' }))),
+        menu.view(),
       ),
   )
 }

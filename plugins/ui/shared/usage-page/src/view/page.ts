@@ -22,7 +22,7 @@ const content = (usage: Merged, model: UsageModel) => {
     used
       ? div(
           { class: 'flex flex-col gap-4' },
-          breakdownView({ usage, nameOf: model.nameOf, openThread: model.openThread }, model.breakdown),
+          breakdownView({ usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }, model.breakdown),
           unpricedNotes(usage.unpriced),
         )
       : null,

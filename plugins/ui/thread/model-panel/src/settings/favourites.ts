@@ -1,6 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { derive, div, hint, list, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, hint, list, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
 import type { Kit } from './kit'
+import { settingsMenu } from './menu'
 import { crumb, logo } from './parts'
 import { favouritesOf } from './sources'
 import { starButton, starIcon } from './star'
@@ -10,17 +11,30 @@ const sourceText = (kit: Kit, model: ModelInfo) => {
   return [kit.sourceLabel(model), via].filter(Boolean).join(' ')
 }
 
-const favouriteRow = (kit: Kit, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) =>
-  div(
+const menuOf = (kit: Kit, model: ModelInfo, unstar: (model: ModelInfo) => void) =>
+  settingsMenu(kit, model, {
+    toggleFavourite: () => unstar(model),
+    toggleHidden: () => void kit.run({ type: 'models.pref', model: model.id, hidden: !model.hidden }),
+    ...(model.added && { remove: () => void kit.run({ type: 'models.remove', model: model.id }) }),
+  })
+
+const favouriteRow = (kit: Kit, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) => {
+  const menu = contextMenu()
+  return div(
     { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 py-2 pr-3 pl-4' },
-    logo(untrack(() => row.get().provider)),
     div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().label),
-      span({ class: 'truncate text-xs text-neutral-500' }, () => sourceText(kit, row.get())),
+      { class: 'flex min-w-0 flex-1 items-center gap-3', ...menu.target(() => menuOf(kit, row.get(), unstar)) },
+      logo(untrack(() => row.get().provider)),
+      div(
+        { class: 'flex min-w-0 flex-1 flex-col' },
+        span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().label),
+        span({ class: 'truncate text-xs text-neutral-500' }, () => sourceText(kit, row.get())),
+      ),
     ),
     starButton(untrack(() => row.get().label), true, () => unstar(row.get())),
+    menu.view(),
   )
+}
 
 export const favouritesPage = (kit: Kit) => {
   const removed = sig(new Set<string>())

@@ -1,14 +1,25 @@
-import { derive, div, dynamicChild, icon, iconButton, img, list, span, spinner, SPACE, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, dynamicChild, icon, iconButton, img, list, span, spinner, SPACE, type ContextMenu, type Sig } from '@sand/dom'
+import type { Context } from 'drydock'
 import { preview } from './content'
 import type { Attached, Files } from './files'
+import { attachmentMenu } from './menu'
+
+type Ctx = Context<'threads'>
 
 const size = (bytes: number) => (bytes >= 1_000_000 ? `${(bytes / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1000))} KB`)
 
 const isImage = (item: Attached) => item.content?.type === 'image'
 
-const thumb = (files: Files, item: Sig<Attached>) =>
+const menuOf = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =>
+  menu.target(() => attachmentMenu(ctx, files, item.get(), size(item.get().bytes)))
+
+const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =>
   span(
-    { class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-neutral-600 animate-rise', title: () => `${item.get().name} · ${size(item.get().bytes)}` },
+    {
+      class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-neutral-600 animate-rise',
+      title: () => `${item.get().name} · ${size(item.get().bytes)}`,
+      ...menuOf(ctx, files, menu, item),
+    },
     img({ class: 'h-full w-full', style: { objectFit: 'cover' }, src: preview(item.get().content!) ?? '', alt: item.get().name }),
     iconButton(
       { size: 'sm', title: 'Remove', class: 'absolute rounded-full bg-black/50 text-white', style: { top: SPACE['1'], right: SPACE['1'] }, onClick: () => files.remove(item.get().id) },
@@ -21,11 +32,11 @@ const kindOf = (item: Attached) => {
   return item.content?.type === 'document' && item.content.mediaType === 'application/pdf' ? 'pdf' : 'file'
 }
 
-const fileRow = (files: Files, item: Sig<Attached>) => {
+const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) => {
   const failed = () => Boolean(item.get().error)
   const kind = derive(() => kindOf(item.get()))
   return div(
-    { class: 'flex min-h-8 items-center gap-2 text-sm text-neutral-300' },
+    { class: 'flex min-h-8 items-center gap-2 text-sm text-neutral-300', ...menuOf(ctx, files, menu, item) },
     span(
       { class: ['inline-flex shrink-0', () => (failed() || kind.get() === 'pdf' ? 'text-danger-400' : 'text-neutral-400')] },
       dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(value === 'pdf' ? 'file-text' : 'file', 15)))),
@@ -36,19 +47,22 @@ const fileRow = (files: Files, item: Sig<Attached>) => {
   )
 }
 
-export const shelf = (files: Files) =>
-  div(
+export const shelf = (ctx: Ctx, files: Files) => {
+  const menu = contextMenu()
+  return div(
     { class: 'flex flex-col', hidden: files.items.map(items => !items.length) },
     list(
       files.items.map(items => items.filter(isImage)),
       item => item.id,
-      item => thumb(files, item),
+      item => thumb(ctx, files, menu, item),
       div({ class: 'mb-3 flex flex-wrap gap-2', hidden: files.items.map(items => !items.some(isImage)) }),
     ),
     list(
       files.items.map(items => items.filter(item => !isImage(item))),
       item => item.id,
-      item => fileRow(files, item),
+      item => fileRow(ctx, files, menu, item),
       div({ class: 'mb-2 flex flex-col', hidden: files.items.map(items => items.every(isImage)) }),
     ),
+    menu.view(),
   )
+}

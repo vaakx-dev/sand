@@ -3,6 +3,7 @@ import { chevron, div, dynamicChild, el, list, quietButton, secondaryAction, set
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'
 import { choiceRow } from './choices'
+import { copyId } from './menu'
 import { partRow } from './parts'
 import { readRoles, type Roles } from './roles'
 
@@ -37,7 +38,7 @@ const details = (ctx: Context<'extensions'>, state: ReturnType<typeof readState>
     list(cards, card => card.extension.id, card =>
       dynamicChild(
         card.map(value => JSON.stringify(value)),
-        () => extensionCard(card.get(), () => toggle(card.get().extension)),
+        () => extensionCard(card.get(), () => toggle(card.get().extension), () => void copyId(ctx, card.get().extension.id)),
       ),
     ),
     div(

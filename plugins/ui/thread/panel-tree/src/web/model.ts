@@ -98,6 +98,10 @@ export const treeModel = (source: TreeSource) => {
       editor = thread.get()
       editing.set(id)
     },
+    async setLabel(id: string, text: string) {
+      const current = thread.get()
+      if (current) await source.label(current, id, text)
+    },
     labelOf: (id: string) => untrack(() => nodes.get().get(id)?.label?.text ?? ''),
     async finish(id: string, value: string | undefined) {
       editing.set(null)

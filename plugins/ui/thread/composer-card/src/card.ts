@@ -86,7 +86,7 @@ export const card = (parts: CardParts) => {
   const node = glassPanel(
     { tint: () => (dropping.get() ? 'accent' : 'plain'), class: 'relative rounded-2xl px-3 pt-3' },
     slots.host('above', 'mb-2 flex flex-col gap-1'),
-    shelf(model.files),
+    shelf(ctx, model.files),
     agentsChip(model.working),
     field,
     div(

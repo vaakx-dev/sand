@@ -1,7 +1,8 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { ago, clock, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
+import { ago, clock, contextMenu, derive, div, hint, icon, list, rowAction, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
+import { phoneMenu } from './phone-menu'
 
 const used = (at: number) => {
   const since = ago(at)
@@ -29,7 +30,12 @@ const phoneRow = (ctx: Context, source: DeviceSource, device: Sig<PairedDevice>,
     ctx.picker ? rowAction({ label: 'Rename', run: () => void rename(ctx, source, device.get()) }) : null,
     rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(source.fail) }),
   )
-  return settingsRow(label, actions, detail)
+  const menu = contextMenu()
+  return div(
+    { class: 'flex flex-col', ...menu.target(() => phoneMenu(source, device.get(), id === self)) },
+    menu.view(),
+    settingsRow(label, actions, detail),
+  )
 }
 
 export const phonesSection = (ctx: Context<'wire'>, source: DeviceSource, pair: () => void) => {

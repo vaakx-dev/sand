@@ -1,15 +1,18 @@
-import type { NavAction, NavItem } from '@sand/dom'
-import { button, dismissible, div, dynamicChild, event, focusable, icon, layer, sig, span, tildeHome, type Sig } from '@sand/dom'
+import { button, div, dynamicChild, event, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { icon } from '../../icons/lucide'
+import { dismissible, layer } from '../../shell/layers'
+import type { NavAction } from '../../shell/nav/types'
+import { focusable } from '../button'
 import { askView } from './ask'
 import { choiceChips, choiceCount } from './chips'
 import { arrowKeys, chipHandlers, choose, confirmView, firstStep, menuItems, returnFocus, type MenuControl, type MenuStep } from './items'
-import type { MenuRequest } from './view'
+import type { MenuRequest } from './request'
 
-const head = (item: NavItem) =>
+const head = ({ title, subtitle }: MenuRequest) =>
   div(
     { class: 'px-3 pt-1 pb-3' },
-    div({ class: 'truncate text-sm font-semibold text-neutral-100' }, item.title),
-    div({ class: 'truncate text-xs text-neutral-500' }, [item.project, tildeHome(item.path ?? '')].filter(Boolean).join(' · ')),
+    div({ class: 'truncate text-sm font-semibold text-neutral-100' }, title),
+    subtitle ? div({ class: 'truncate text-xs text-neutral-500' }, subtitle) : null,
   )
 
 const tileLook = (action: NavAction, open: boolean) =>
@@ -59,11 +62,12 @@ const choices = (actions: NavAction[], control: MenuControl, expand?: string) =>
   return div(
     big.length ? tiles(big, control, expanded) : null,
     chipsFor(big, control, expanded),
-    rest.length ? div({ class: 'flex flex-col border-t border-neutral-700 pt-1' }, ...menuItems(rest, control, 'md')) : null,
+    rest.length ? div({ class: ['flex flex-col', big.length ? 'border-t border-neutral-700 pt-1' : ''] }, ...menuItems(rest, control, 'md')) : null,
   )
 }
 
-export const menuSheet = (request: MenuRequest, actions: NavAction[], close: () => void) => {
+export const menuSheet = (request: MenuRequest, close: () => void) => {
+  const { actions } = request
   const current = sig<MenuStep | undefined>(firstStep(actions, request.ask))
   let pressed = Boolean(current.get())
   const control: MenuControl = {
@@ -76,6 +80,7 @@ export const menuSheet = (request: MenuRequest, actions: NavAction[], close: () 
   return div(
     {
       class: [layer.dialog, 'fixed inset-0 flex items-end bg-black/50 animate-fade'],
+      'data-menu-layer': '',
       onPointerDown: event(close, { self: true }),
       onMount: node => {
         const stopEscape = dismissible(node, close)
@@ -89,7 +94,7 @@ export const menuSheet = (request: MenuRequest, actions: NavAction[], close: () 
     div(
       {
         role: 'menu',
-        'aria-label': request.row.item.title,
+        'aria-label': request.title,
         class: 'w-full bg-neutral-800 px-2 pt-2 ring-1 ring-neutral-700 animate-rise',
         style: { borderRadius: '1rem 1rem 0 0', paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' },
         onPointerDown: () => {
@@ -98,7 +103,7 @@ export const menuSheet = (request: MenuRequest, actions: NavAction[], close: () 
         onKeyDown: arrowKeys,
       },
       div({ class: 'mx-auto mb-2 h-1 w-8 rounded-full bg-neutral-600' }),
-      head(request.row.item),
+      head(request),
       dynamicChild(current, step => (step ? div(stepView(step)) : choices(actions, control, request.expand))),
     ),
   )

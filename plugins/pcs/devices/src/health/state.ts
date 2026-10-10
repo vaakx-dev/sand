@@ -190,7 +190,13 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     ctx.notify?.push(health.healthy ? `${name} repaired` : `${name} still has problems`, health.healthy ? undefined : { level: 'error' })
   }
 
-  return { state, refresh, repair }
+  const busy = (device: string) => {
+    const entry = entries.get(device)
+    const status = entry && current(entry).status
+    return status === 'checking' || status === 'repairing'
+  }
+
+  return { state, refresh, repair, busy }
 }
 
 export type PcHealthStore = ReturnType<typeof pcHealthStore>

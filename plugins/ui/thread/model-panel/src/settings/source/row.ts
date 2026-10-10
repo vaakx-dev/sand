@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, div, icon, rowAction, rowButton, show, span, untrack, type Sig } from '@sand/dom'
+import { badge, contextMenu, div, icon, rowAction, rowButton, show, span, untrack, type Sig } from '@sand/dom'
 import { tokens } from '@sand/kit'
 import { starButton } from '../star'
 import type { Catalog } from './catalog'
@@ -24,10 +24,17 @@ export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: strin
     keep(model.id)
     void catalog.setHidden(model, !model.hidden)
   }
+  const menu = contextMenu()
   return div(
     { class: 'flex items-center gap-1 bg-neutral-900 pr-3' },
     rowButton(
-      { role: 'checkbox', 'aria-checked': () => String(shown()), 'aria-label': `Show ${label} in the picker`, class: 'min-h-12 flex-1 gap-3 py-2 pl-4', onClick: toggle },
+      {
+        role: 'checkbox',
+        'aria-checked': () => String(shown()),
+        'aria-label': `Show ${label} in the picker`,
+        class: 'min-h-12 flex-1 gap-3 py-2 pl-4',
+        ...menu.target(() => catalog.menu(row.get(), keep), toggle),
+      },
       checkMark(shown),
       div(
         { class: 'flex min-w-0 flex-1 flex-col' },
@@ -46,5 +53,6 @@ export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: strin
     ),
     show(added, () => rowAction({ label: 'Remove', danger: true, run: () => void catalog.remove(row.get()) })),
     starButton(label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
+    menu.view(),
   )
 }

@@ -1,4 +1,4 @@
-import { button, derive, div, dynamicChild, focusable, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, contextMenu, derive, div, dynamicChild, focusable, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
@@ -40,9 +40,11 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
     open.set(true)
   }
 
+  const context = contextMenu()
+
   const menu = () => {
     const { thread } = currentTarget(ctx)
-    return thread && hasMessages(thread) ? continueMenu(ctx, thread, close) : pcMenu(ctx, close)
+    return thread && hasMessages(thread) ? continueMenu(ctx, thread, close) : pcMenu(ctx, close, context)
   }
 
   const title = () => (started.get() ? `This thread runs on ${name()}. Continue it on another PC` : 'Choose which PC runs this')
@@ -58,6 +60,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const pill = () =>
     div(
       { class: 'flex min-w-0 items-center', hidden },
+      context.view(),
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
       show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, dynamicChild(changes.version, menu))),
     )

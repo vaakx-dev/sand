@@ -1,4 +1,4 @@
-import { button, div, focusable, providerIcon, span, table, tbody, td, th, thead, tr } from '@sand/dom'
+import { button, contextMenu, div, focusable, providerIcon, span, table, tbody, td, th, thead, tr, type ContextMenu } from '@sand/dom'
 import { tokens, tokensOf } from '@sand/kit'
 import type { Account } from '../../data/types'
 import { billedText, planText } from '../../format'
@@ -39,11 +39,11 @@ const accountChips = (keys: string[], accounts: Map<string, Account>) =>
     }),
   )
 
-const rowView = (row: Row, accounts: Map<string, Account>) =>
+const rowView = (row: Row, accounts: Map<string, Account>, menu: ContextMenu) =>
   tr(
     {
       class: ['border-b border-neutral-800 text-sm text-neutral-400 transition-colors', row.open && 'cursor-pointer hover:bg-neutral-800'],
-      onClick: row.open,
+      ...(row.menu ? menu.target(row.menu, row.open) : { onClick: row.open }),
     },
     nameCell(row),
     td({ class: numberCell }, accountChips(row.accounts, accounts)),
@@ -54,8 +54,10 @@ const rowView = (row: Row, accounts: Map<string, Account>) =>
 
 export const breakdownTable = (name: string, rows: Row[], accounts: Account[]) => {
   const byKey = new Map(accounts.map(account => [account.key, account]))
+  const menu = contextMenu()
   return div(
     { class: 'min-w-0 overflow-auto' },
-    table({ class: 'w-full', style: { borderCollapse: 'collapse' } }, head(name), tbody(rows.map(row => rowView(row, byKey)))),
+    menu.view(),
+    table({ class: 'w-full', style: { borderCollapse: 'collapse' } }, head(name), tbody(rows.map(row => rowView(row, byKey, menu)))),
   )
 }

@@ -1,6 +1,6 @@
 import type { Markdown } from '@sand/markdown/contract'
 import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '@sand/transcript-parts/contract'
-import { button, chevron, focusable, type Child, type Sig } from '@sand/dom'
+import { button, chevron, focusable, type Child, type ContextMenu, type NavAction, type Sig } from '@sand/dom'
 
 export interface Row {
   key: string
@@ -14,6 +14,8 @@ export interface RowContext {
   thread: string
   parts: TranscriptParts
   markdown: Markdown
+  menu: ContextMenu
+  rewrite(entry: string, text: string): NavAction[]
 }
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row

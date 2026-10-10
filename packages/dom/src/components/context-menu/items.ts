@@ -1,5 +1,7 @@
-import type { NavAction } from '@sand/dom'
-import { controlButton, div, el, icon, rowButton, secondaryAction, span, type Child } from '@sand/dom'
+import { div, el, span, type Child } from '@vaakx-dev/vrui'
+import { icon } from '../../icons/lucide'
+import type { NavAction } from '../../shell/nav/types'
+import { controlButton, rowButton, secondaryAction } from '../button'
 import { choiceChips, type ChipHandlers } from './chips'
 
 export type ItemSize = 'sm' | 'md'
@@ -28,6 +30,7 @@ const finish = (control: MenuControl, run: () => void | Promise<unknown>) => {
 export const choose = (control: MenuControl, action: NavAction) => (event: MouseEvent) => {
   if (!control.armed(event)) return
   if (action.confirm) return control.step({ kind: 'confirm', action })
+  if (action.ask && !action.choices) return control.step({ kind: 'ask', action })
   finish(control, () => action.run())
 }
 

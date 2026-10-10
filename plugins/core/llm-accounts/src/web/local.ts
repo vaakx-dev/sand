@@ -1,7 +1,8 @@
-import { derive, div, dot, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
+import { contextMenu, derive, div, dot, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch, type ContextMenu } from '@sand/dom'
 import type { LoginAccount, LoginState } from '../contract'
 import { accountLogo, howText } from './names'
-import { accountRow, busyAction } from './parts'
+import { accountSpec } from './account-menu'
+import { accountRow, accountRowWith, busyAction } from './parts'
 import type { LoginControl } from './state'
 
 type Fix = (account: LoginAccount) => void
@@ -32,8 +33,9 @@ const detail = (account: LoginAccount) => {
 
 const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
 
-const signedInRow = (account: LoginAccount, control: LoginControl, fix: Fix) =>
-  accountRow(
+const signedInRow = (account: LoginAccount, control: LoginControl, fix: Fix, menu: ContextMenu) =>
+  accountRowWith(
+    menu.target(() => accountSpec(account, control, fix)),
     accountLogo(account.provider),
     account.label,
     detail(account),
@@ -58,9 +60,11 @@ const shown = (state: LoginState) => state.accounts.filter(account => account.si
 
 const emptyText = (state: LoginState) => (state.remote.length ? 'None yet. Add one, or use the ones below.' : 'None yet. Add one to start using sand.')
 
-export const localSection = (control: LoginControl, fix: Fix) =>
-  settingsSection(
+export const localSection = (control: LoginControl, fix: Fix) => {
+  const menu = contextMenu()
+  return settingsSection(
     { title: 'On this PC' },
+    menu.view(),
     dynamicChild(
       derive(() => {
         const state = control.state.get()
@@ -73,8 +77,9 @@ export const localSection = (control: LoginControl, fix: Fix) =>
         if (!list.length) return div({ class: 'bg-neutral-900' }, hint(emptyText(state)))
         return span(
           { class: 'contents' },
-          list.map(account => (account.signedIn ? signedInRow(account, control, fix) : brokenRow(account, fix))),
+          list.map(account => (account.signedIn ? signedInRow(account, control, fix, menu) : brokenRow(account, fix))),
         )
       },
     ),
   )
+}

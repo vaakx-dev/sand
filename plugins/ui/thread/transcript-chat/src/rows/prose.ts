@@ -14,8 +14,10 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     })
     const render = streamedMarkdown(node, context.markdown)
     effect(() => render(text.get(), streaming.get()))
+    const { menus } = context.parts
+    const press = menus.text(context.menu, () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text')] }))
     return div(
-      { class: 'group mb-3 text-sm' },
+      { class: 'group mb-3 text-sm', ...press.props },
       node,
       div(
         { class: 'mt-1 flex h-6 items-center opacity-0 group-hover:opacity-100' },

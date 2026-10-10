@@ -1,4 +1,4 @@
-import { errorMessage, pulse } from '@sand/dom'
+import { copyText, errorMessage, pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { pcList } from './pcs'
 import { usagePage } from './view/page'
@@ -19,6 +19,11 @@ export default definePlugin({
     const pcs = pcList(ctx)
     const fail = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
+    const copy = async (text: string, what: string) => {
+      const copied = await copyText(text)
+      ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
+    }
+
     ctx.watch('settings', settings => {
       if (!settings) return
       const openThread = (id: string) => {
@@ -35,6 +40,7 @@ export default definePlugin({
           },
           refreshLimits: () => (ctx.limits ? ctx.limits.refresh().catch(fail) : Promise.resolve()),
           openThread: ctx.threads ? openThread : undefined,
+          copy,
         })
       const page = settings.page({ id: 'usage', label: 'Usage', icon: 'chart', order: 60, render })
       const command = ctx.watch('commands', commands =>

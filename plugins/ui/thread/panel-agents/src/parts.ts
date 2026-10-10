@@ -1,10 +1,20 @@
-import { div, duration, keys, show, span, type Child, type ClassValue, type Sig } from '@sand/dom'
+import { div, duration, keys, show, span, type Child, type ClassValue, type ContextMenu, type MenuSpec, type Sig } from '@sand/dom'
 import type { Run } from './runs'
 
 export interface Actions {
   open(id: string): void
   cancel(run: Run): Promise<boolean>
   interrupt(id: string): Promise<boolean>
+  copy(text: string, what: string): Promise<void>
+}
+
+export interface Rows extends Actions {
+  menu: ContextMenu
+}
+
+export interface Menu {
+  menu: ContextMenu
+  spec: () => MenuSpec | undefined
 }
 
 export const since = (started: number, ended: number | undefined, now: number) => duration(Math.max(0, (ended ?? now) - started))
@@ -24,12 +34,13 @@ export const noteLine = (text: Sig<string | undefined>, tone: string) =>
 
 export const markSlot = (...children: Child[]) => div({ class: 'flex h-5 shrink-0 items-center' }, ...children)
 
-export const pressable = (press: () => void, enabled: () => boolean, extra: ClassValue, ...children: Child[]) => {
+export const pressable = (press: () => void, enabled: () => boolean, extra: ClassValue, menu: Menu | undefined, ...children: Child[]) => {
   const run = () => {
     if (enabled()) press()
   }
   return div(
     {
+      ...(menu ? menu.menu.target(menu.spec, run) : { onClick: run }),
       role: () => (enabled() ? 'button' : undefined),
       tabIndex: () => (enabled() ? 0 : -1),
       class: [
@@ -37,7 +48,6 @@ export const pressable = (press: () => void, enabled: () => boolean, extra: Clas
         () => (enabled() ? 'cursor-pointer hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-accent-500' : ''),
         extra,
       ],
-      onClick: run,
       onKeyDown: keys({ Enter: run, ' ': run }, { self: true }),
     },
     ...children,

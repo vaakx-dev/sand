@@ -21,6 +21,7 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'titles.get': {}
     'titles.save': TitlePatch
+    'titles.rename': { session: string }
   }
 
   interface WireEvents {

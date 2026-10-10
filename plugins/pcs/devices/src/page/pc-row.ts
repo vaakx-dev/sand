@@ -1,6 +1,7 @@
 import type { PcInfo } from '@sand/host-remotes/contract'
-import { ago, badge, div, dot, dynamicChild, icon, quietButton, rowAction, secondaryAction, show, span, tile, type Sig, type Tone } from '@sand/dom'
+import { ago, badge, contextMenu, div, dot, dynamicChild, icon, quietButton, rowAction, secondaryAction, show, span, tile, type Sig, type Tone } from '@sand/dom'
 import { routeKind } from '@sand/kit'
+import { pcMenu } from './pc-menu'
 
 export interface PcRow {
   pc: PcInfo
@@ -12,6 +13,9 @@ export interface PcRowActions {
   health(open: Sig<boolean>): HTMLElement
   remove(): void
   pairAgain(): void
+  check(): void
+  repair(): void
+  busy(): boolean
 }
 
 const systems: Record<string, string> = { win32: 'Windows', linux: 'Linux', darwin: 'macOS' }
@@ -57,11 +61,13 @@ const controls = (row: Sig<PcRow>, open: Sig<boolean>, actions: PcRowActions) =>
 
 const sharesChip = (shares: string[]) => (shares.length ? badge('accent', `Shares ${shares.join(', ')}`) : span({ class: 'hidden' }))
 
-export const pcRow = (row: Sig<PcRow>, now: Sig<number>, open: Sig<boolean>, actions: PcRowActions) =>
-  div(
+export const pcRow = (row: Sig<PcRow>, now: Sig<number>, open: Sig<boolean>, actions: PcRowActions) => {
+  const menu = contextMenu()
+  return div(
     { class: 'flex flex-col bg-neutral-900' },
+    menu.view(),
     div(
-      { class: 'flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3' },
+      { class: 'flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3', ...menu.target(() => pcMenu(row.get(), actions)) },
       tile(icon('laptop', 16)),
       div(
         { class: 'flex min-w-32 flex-1 flex-col' },
@@ -84,3 +90,4 @@ export const pcRow = (row: Sig<PcRow>, now: Sig<number>, open: Sig<boolean>, act
     dynamicChild(row.map(current => (current.self ? 'paired' : current.pc.pairing)), pairing => (pairing === 'paired' ? span({ class: 'hidden' }) : pairingNote(row.get().pc, actions.pairAgain))),
     show(open, () => actions.health(open)),
   )
+}

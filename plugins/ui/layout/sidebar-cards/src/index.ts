@@ -3,6 +3,7 @@ import { definePlugin } from 'drydock'
 import type { MenuRequest } from './menu/view'
 import { choiceName, projectChoices } from './project-choices'
 import { projectFilter } from './project-filter'
+import { chipMenu, choiceMenu } from './project-menu'
 import { buildRows, cardsIn, openByDefault, type RowOptions } from './rows'
 import { sectionState } from './sections'
 import { sidebarView } from './view'
@@ -58,6 +59,8 @@ export default definePlugin({
         project: filter.project,
         label,
         filter: filter.set,
+        choiceMenu: (choice, done) => choiceMenu(ctx, choice, filter.project.get() === choice.key, { filter: filter.set, done, leave: () => closeDrawer(ctx) }),
+        chipMenu: () => chipMenu(ctx, filter.project.get(), label.get(), { filter: filter.set, done: () => {}, leave: () => {} }),
         hide: () => ctx.layout?.toggle('side', false),
         run(action) {
           host.run(action)

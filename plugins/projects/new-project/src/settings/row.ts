@@ -1,6 +1,7 @@
 import { plural, remoteKey } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { ago, div, iconButton, icon, projectIcon, show, span, type Sig } from '@sand/dom'
+import { ago, div, iconButton, icon, projectIcon, show, span, type ContextMenu, type Sig } from '@sand/dom'
+import { groupSpec } from './context'
 import { locationLine, noCopyLine } from './location'
 import { rowMenu } from './menu'
 import { byRecent, withoutCopy } from './places'
@@ -47,12 +48,12 @@ const menuButton = (group: ProjectGroup, open: Sig<string | undefined>) =>
     icon('more', 16),
   )
 
-export const groupRow = (ctx: ProjectsContext, group: ProjectGroup, open: Sig<string | undefined>) => {
+export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, open: Sig<string | undefined>) => {
   const locations = byRecent(group.locations)
   const primary = locations[0]
   const multiple = locations.length > 1
   return div(
-    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3' },
+    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => groupSpec(ctx, group)) },
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
       div(
@@ -62,7 +63,7 @@ export const groupRow = (ctx: ProjectsContext, group: ProjectGroup, open: Sig<st
         span({ class: 'shrink-0 text-xs text-neutral-500' }, summary(group)),
       ),
       remoteLine(group.remote),
-      ...locations.map(entry => locationLine(ctx, entry, multiple ? primary : undefined)),
+      ...locations.map(entry => locationLine(ctx, menu, entry, multiple ? primary : undefined)),
       ...noCopyLines(ctx, group),
     ),
     div(

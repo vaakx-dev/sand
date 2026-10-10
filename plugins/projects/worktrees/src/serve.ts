@@ -2,7 +2,7 @@ import type { Server } from '@sand/server/contract'
 import { listState } from './ops/list'
 import { marksOf } from './ops/marks'
 import { moveSession } from './ops/move'
-import { removeSessionWorktree } from './ops/remove'
+import { removeSessionWorktree, removeWorktreeAt } from './ops/remove'
 import { restoreSession } from './ops/restore'
 import type { Intents } from './ops/intents'
 import type { Naming } from './ops/naming'
@@ -22,6 +22,8 @@ export const serveWorktrees = (server: Server, ops: Ops, intents: Intents, namin
     ),
     server.handle('worktrees.restore', ({ session, entry }) => restoreSession(ops, session, entry)),
     server.handle('worktrees.rename', ({ session }) => naming.rename(session)),
+    server.handle('worktrees.name', ({ path, name }) => naming.nameAt(path, name)),
+    server.handle('worktrees.drop', ({ path }) => removeWorktreeAt(ops, path)),
   ]
   return () => disposers.forEach(dispose => void dispose())
 }

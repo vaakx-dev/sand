@@ -1,6 +1,5 @@
 import type { NavAction } from '@sand/dom'
-import { derive, dismissible, dynamicChild, icon, iconButton, span, type Sig } from '@sand/dom'
-import { choiceChips } from './menu/chips'
+import { choiceChips, derive, dismissible, dynamicChild, icon, iconButton, span, type Sig } from '@sand/dom'
 
 export interface StripParts {
   menu: Sig<NavAction[]>
