@@ -1,4 +1,4 @@
-import { button, derive, div, dropdown, dynamicChild, icon, iconButton, layer, projectIcon, show, sidebarToggle, span, tildeHome, type Pulse } from '@sand/dom'
+import { appIcon, button, derive, div, dropdown, dynamicChild, icon, iconButton, layer, projectIcon, show, sidebarToggle, span, tildeHome, type Pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 import { agentsWorking } from './activity'
 import { renameSession, sessionMenu } from './menu'
@@ -35,7 +35,7 @@ export const headerView = (ctx: Context, changes: Pulse, slots: Slots) => {
   const menu = show(sideHidden, () =>
     dynamicChild(narrow, value =>
       value
-        ? iconButton({ title: 'Threads', 'aria-label': 'Threads', onClick: showSide }, icon('menu'))
+        ? iconButton({ title: 'Threads', 'aria-label': 'Threads', onClick: showSide }, appIcon(20))
         : sidebarToggle({ title: 'Show the sidebar', 'aria-label': 'Show the sidebar', onClick: showSide }),
     ),
   )

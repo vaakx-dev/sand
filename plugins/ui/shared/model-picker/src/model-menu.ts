@@ -1,17 +1,5 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { copyText, type MenuSpec, type NavAction } from '@sand/dom'
-import type { PanelContext } from './actions'
-
-export interface ModelMenuInput {
-  model: ModelInfo
-  subtitle?: string
-  notify: PanelContext['notify']
-  use?: () => void
-  makeDefault?: () => void
-  toggleFavourite?: () => void
-  toggleHidden?: () => void
-  remove?: () => void
-}
+import type { ModelMenuInput } from './contract'
 
 export const modelMenu = ({ model, subtitle, notify, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {
   const favourite = model.favourite !== undefined

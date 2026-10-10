@@ -5,24 +5,23 @@
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
-    "label": "Model picker",
-    "summary": "One pill in the composer that opens model, effort and fast mode",
+    "label": "Model pill",
+    "summary": "One pill in the composer that opens the model picker, plus the Models settings page",
     "uses": {
       "composer": "no pill; /model and /effort open the server sheet",
       "palette": "no model rows in the palette",
       "commands": "/model and /effort with no argument open the server sheet",
       "notify": "problems show inside the panel",
       "settings": "no Models settings page",
-      "wire": "models from another PC show no online dot and stay enabled when it is offline"
+      "wire": "model changes cannot be saved"
     }
   },
   "dependencies": {
-    "@sand/host-remotes": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
-    "@sand/loops": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/model-picker": "workspace:*",
     "@sand/palette": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

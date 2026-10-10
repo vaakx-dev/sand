@@ -1,8 +1,7 @@
-import { button, div, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse, type Sig } from '@sand/dom'
-import type { Actions, PanelContext } from './actions'
-import { modelPanel } from './panel/panel'
-import { logo, sourceName } from './panel/source'
-import type { PcStatus } from './pcs'
+import type { PickerTarget } from '@sand/model-picker/contract'
+import { button, div, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import type { PanelContext } from './actions'
+import { logo, sourceName } from './source'
 import { toggles } from './toggle'
 
 const pillLook =
@@ -15,14 +14,13 @@ const above = {
   maxHeight: `calc(100vh - ${SPACE['32']})`,
 }
 
-export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse, problem: Sig<string>, pcs: PcStatus) => {
+export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
   const open = sig(false)
-  const flash = sig(false)
+  let flash = false
   const close = () => open.set(false)
   const reveal = (effort: boolean) => {
-    flash.set(effort)
+    flash = effort
     open.set(true)
-    pcs.refresh()
   }
   const toggle = () => (open.get() ? close() : reveal(false))
 
@@ -35,7 +33,7 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
   const sourceTip = () => {
     const known = source.get()
     if (!known) return ''
-    return known.via && pcs.online(known.via) === false ? `${sourceName(known)} · offline` : sourceName(known)
+    return known.via && ctx.modelPicker.online(known.via) === false ? `${sourceName(known)} · offline` : sourceName(known)
   }
   const pillTip = () =>
     current.get() ? [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ') : ''
@@ -76,7 +74,7 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
             span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${ctx.models.label(next.get()!)}` : '')),
           ),
       ),
-      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, modelPanel(ctx, actions, { changes, flash, problem, pcs, close }))),
+      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, ctx.modelPicker.panel(target, close, { flash }))),
     )
 
   return {

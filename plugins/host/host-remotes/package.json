@@ -1,14 +1,14 @@
 {
   "name": "@sand/host-remotes",
   "version": "0.0.0",
-  "description": "Other PCs running sand: pairs with them both ways, keeps the pairs linked and lists them as Your PCs",
+  "description": "Other PCs running sand: pairs with them both ways, keeps the pairs linked and lists them as Your devices",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "label": "Your PCs",
+    "label": "Your devices",
     "summary": "Other PCs running sand",
     "provides": [
       "hostRemotes"

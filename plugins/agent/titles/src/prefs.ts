@@ -1,9 +1,17 @@
+import type { Effort } from '@sand/llm-accounts/contract'
 import type { TitlePatch, TitleSettings } from './contract'
 import { join } from 'node:path'
 
+const efforts: readonly unknown[] = ['low', 'medium', 'high', 'xhigh', 'max'] satisfies Effort[]
+
 const clean = (data: unknown): TitleSettings => {
   const value = typeof data === 'object' && data !== null && !Array.isArray(data) ? (data as Record<string, unknown>) : {}
-  return { auto: value.auto !== false, ...(typeof value.model === 'string' && value.model && { model: value.model }) }
+  return {
+    auto: value.auto !== false,
+    ...(typeof value.model === 'string' && value.model && { model: value.model }),
+    ...(efforts.includes(value.effort) && { effort: value.effort as Effort }),
+    ...(value.speed === 'fast' && { speed: 'fast' as const }),
+  }
 }
 
 export const loadPrefs = async (home: string) => {

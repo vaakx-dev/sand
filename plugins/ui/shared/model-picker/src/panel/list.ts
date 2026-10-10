@@ -13,14 +13,12 @@ const settingsLink = (scene: Scene, text: string) =>
 
 const sourceList = (scene: Scene, source: SourceInfo) => {
   const models = scene.models.filter(model => model.source === source.id)
-  const hidden = source.total - source.shown
   return [
     heading(source.label, sourceDetail(source)),
     models.map(model => modelRow(model, scene)),
     scene.offline(source) && hint(`${source.via} is offline. Its models come back when it does.`),
     source.error && hint(`Could not list the models: ${source.error}`),
-    !models.length && !hidden && !source.error && hint('No models yet'),
-    hidden > 0 && hint(`${hidden} more hidden`, scene.openSettings ? ' · ' : '', settingsLink(scene, 'Choose in Settings')),
+    !models.length && !source.error && hint(source.total ? 'All models are hidden' : 'No models yet'),
   ]
 }
 

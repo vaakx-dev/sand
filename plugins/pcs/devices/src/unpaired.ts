@@ -25,7 +25,7 @@ const unpairedView = () => {
       div(
         { class: 'flex flex-col gap-3 p-5' },
         el('h2', { class: 'text-sm font-semibold text-neutral-100' }, 'This browser isn’t paired with sand'),
-        p({ class: 'text-sm text-neutral-400' }, 'On a paired device open Settings → Your PCs → Add a phone, or run sand on this PC.'),
+        p({ class: 'text-sm text-neutral-400' }, 'On a paired device open Settings → Your devices → Add a phone, or run sand on this PC.'),
         div(
           { class: 'flex flex-wrap items-center gap-2' },
           textInput({

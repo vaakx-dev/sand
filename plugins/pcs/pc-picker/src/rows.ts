@@ -1,6 +1,5 @@
 import { badge, div, icon, menuItem, span, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
-import { copyOn } from './group'
 import { rowMenu } from './row-menu'
 import { statusOf } from './status'
 import { deviceOf, type PickerContext } from './target'
@@ -18,12 +17,7 @@ const tag = (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
   return status.muted ? span({ class: 'shrink-0 text-xs text-neutral-500' }, status.text) : badge(status.tone, status.text)
 }
 
-const where = (group: ProjectGroup, machine: Machine) => {
-  const location = copyOn(group, deviceOf(machine))
-  return location ? location.path : `${group.name} isn't on this PC yet`
-}
-
-const machineRow = (machine: Machine, selected: boolean, line: string, choose: () => void, end?: Child, context?: RowMenu) =>
+const machineRow = (machine: Machine, selected: boolean, choose: () => void, end?: Child, context?: RowMenu) =>
   menuItem(
     {
       role: 'menuitemradio',
@@ -34,20 +28,12 @@ const machineRow = (machine: Machine, selected: boolean, line: string, choose: (
       ...(context ? context.menu.target(context.spec, choose) : { onClick: choose }),
     },
     span({ class: 'inline-flex shrink-0 text-neutral-400' }, machineIcon(machine)),
-    div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      div(
-        { class: 'flex min-w-0 items-baseline gap-2' },
-        span({ class: 'truncate font-medium' }, machine.name),
-        machine.local && span({ class: 'shrink-0 text-xs text-neutral-500' }, 'this PC'),
-      ),
-      span({ class: 'truncate text-xs text-neutral-500', title: line }, line),
-    ),
+    span({ class: 'min-w-0 flex-1 truncate font-medium' }, machine.name),
     end,
   )
 
 export const pcRow = (ctx: PickerContext, group: ProjectGroup, machine: Machine, selected: boolean, choose: () => void, menu: ContextMenu) =>
-  machineRow(machine, selected, where(group, machine), choose, tag(ctx, group, machine), { menu, spec: () => rowMenu(ctx, group, machine, choose) })
+  machineRow(machine, selected, choose, tag(ctx, group, machine), { menu, spec: () => rowMenu(ctx, group, machine, choose) })
 
-export const quickRow = (machine: Machine, selected: boolean, choose: () => void, line = 'Quick thread') =>
-  machineRow(machine, selected, line, choose, !machine.online && span({ class: 'shrink-0 text-xs text-neutral-500' }, 'Offline'))
+export const quickRow = (machine: Machine, selected: boolean, choose: () => void) =>
+  machineRow(machine, selected, choose, !machine.online && span({ class: 'shrink-0 text-xs text-neutral-500' }, 'Offline'))

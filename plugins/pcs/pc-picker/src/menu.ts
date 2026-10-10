@@ -26,7 +26,7 @@ const quickMenu = (ctx: PickerContext, cwd: string, device: string | undefined, 
           close()
           if (!here) void startQuick(ctx, machine)
         }
-        return quickRow(machine, here, choose, here && folder ? folder : 'Quick thread')
+        return quickRow(machine, here, choose)
       }),
     ),
   )

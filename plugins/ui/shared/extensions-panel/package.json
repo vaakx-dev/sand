@@ -6,7 +6,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Interface settings",
-    "summary": "Choose the chat style, sidebar and composer, and turn parts of the interface on or off",
+    "summary": "Choose the chat style, sidebar and composer; turn parts of the interface on or off on the Plugins page",
     "provides": [],
     "uses": {
       "commands": "no /extensions command"

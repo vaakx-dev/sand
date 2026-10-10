@@ -1,7 +1,7 @@
 import { dynamicChild, segmented, type Sig } from '@sand/dom'
 import { block, heading, spacer } from '../parts'
 import { rowsOf, type Breakdown, type RowSource } from './rows'
-import { breakdownTable } from './table'
+import { breakdownList } from './list'
 
 const labels = (hourly: boolean): Record<Breakdown, string> => ({
   projects: 'Project',
@@ -16,6 +16,6 @@ export const breakdownView = (source: RowSource, view: Sig<Breakdown>) => {
   const choices = (Object.keys(names) as Breakdown[]).map(value => ({ value, label: names[value] }))
   return block(
     [heading('Breakdown'), spacer(), segmented(choices, view, value => view.set(value), { label: 'Breakdown' })],
-    dynamicChild(view, current => breakdownTable(names[current], rowsOf(source, current), source.usage.accounts)),
+    dynamicChild(view, current => breakdownList(rowsOf(source, current), source.usage.accounts)),
   )
 }

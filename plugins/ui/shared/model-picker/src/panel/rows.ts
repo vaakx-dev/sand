@@ -11,8 +11,7 @@ const radio = (on: boolean) =>
   )
 
 export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => {
-  const { choice } = scene
-  const on = model.id === choice.shown.model
+  const on = model.id === scene.shown.model
   const source = scene.source(model)
   return menuItem(
     {
@@ -31,8 +30,8 @@ export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => 
     div(
       { class: 'flex shrink-0 items-center gap-2' },
       scene.fresh(model) && badge('accent', 'New'),
-      choice.pending && on && model.id !== choice.current.model && badge('warning', 'Next'),
-      model.id === choice.defaults.model && badge('neutral', 'Default'),
+      scene.target.badge?.(model),
+      model.id === scene.defaults.model && badge('neutral', 'Default'),
       withSource && source && badge('neutral', source.label),
       span({ class: 'font-mono text-xs text-neutral-500' }, model.context ? tokens(model.context) : ''),
     ),

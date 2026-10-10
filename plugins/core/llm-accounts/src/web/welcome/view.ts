@@ -31,7 +31,7 @@ const joinView = (model: WelcomeModel) => {
     { class: 'flex w-full flex-col items-center gap-6' },
     heading('Connect to your other PC'),
     column(
-      note('On that PC, open Settings → Your PCs → Add a PC → It already has sand, copy its link and paste it here.'),
+      note('On that PC, open Settings → Your devices → Add a PC → It already has sand, copy its link and paste it here.'),
       textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Pairing link', bindValue: link, onKeyDown: keys({ Enter: connect }), onMount: node => node.focus() }),
       p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !model.error.get() }, () => model.error.get()),
       div(

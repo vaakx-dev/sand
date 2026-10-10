@@ -13,7 +13,7 @@
     "provides": [
       "names"
     ],
-    "summary": "Names new threads with a small model, and /retitle",
+    "summary": "Names new threads and their branches with the text gen model, and /retitle",
     "uses": {
       "llm": "threads keep the cut first prompt as their name",
       "server": "the settings section cannot read or save the naming settings",
@@ -28,6 +28,7 @@
     "@sand/loops": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/model-picker": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",

@@ -1,16 +1,16 @@
 {
   "name": "@sand/devices",
   "version": "0.0.0",
-  "description": "Your PCs: add and pair other PCs, pair phones and browsers, and reach sand away from home",
+  "description": "Your devices: add and pair other PCs, pair phones and browsers, and reach sand away from home",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
-    "label": "Your PCs",
+    "label": "Your devices",
     "summary": "Add another PC with one command or a pairing link, pair a phone with a QR code, and remove paired devices",
     "uses": {
       "commands": "opens the pair dialog from a Devices button in the sidebar instead of /devices",
       "nav": "no sidebar button when there is no /devices command",
-      "settings": "no Your PCs settings page",
+      "settings": "no Your devices settings page",
       "notify": "no message when a device pairs or a request fails",
       "picker": "no Rename on phones and browsers"
     }

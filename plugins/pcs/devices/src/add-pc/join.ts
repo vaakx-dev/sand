@@ -52,7 +52,7 @@ export const joinStep = (ctx: Context<'wire'>, source: DeviceSource, joined: (na
   }
   return div(
     { class: 'flex flex-col gap-4' },
-    note('On the other PC, open Settings → Your PCs → Add a PC → It already has sand, and paste this link there.'),
+    note('On the other PC, open Settings → Your devices → Add a PC → It already has sand, and paste this link there.'),
     dynamicChild(derive(() => ({ current: invite.get(), failure: error.get() })), ({ current, failure }) => {
       if (current) return inviteBody(current, listen, 'pc')
       return note(failure ? `Couldn't create a link: ${errorMessage(failure)}` : 'Creating a link…')

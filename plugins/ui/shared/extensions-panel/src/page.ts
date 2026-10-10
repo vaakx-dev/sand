@@ -51,9 +51,17 @@ const details = (ctx: Context<'extensions'>, state: ReturnType<typeof readState>
 
 export const interfacePage = (ctx: Context<'extensions'>, changes: Pulse) => {
   const state = readState(ctx, changes, new Map())
+  const swaps = state.map(({ roles, extensions }) => roles.swaps(extensions))
+  return settingsSection(
+    {},
+    dynamicChild(swaps, groups => div({ class: 'contents' }, groups.map(group => choiceRow(ctx.extensions, group.role, group.candidates, state.get().roles)))),
+  )
+}
+
+export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
+  const state = readState(ctx, changes, new Map())
   const open = sig(false)
   const toggle = (extension: ExtensionInfo) => (extension.configured ? ctx.extensions.disable(extension.id) : ctx.extensions.enable(extension.id))
-  const swaps = state.map(({ roles, extensions }) => roles.swaps(extensions))
   const parts = state.map(({ extensions, roles }) => {
     const swappable = new Set(roles.swaps(extensions).flatMap(group => group.candidates.map(candidate => candidate.id)))
     const locked = lockedIds(roles)
@@ -63,11 +71,7 @@ export const interfacePage = (ctx: Context<'extensions'>, changes: Pulse) => {
   return div(
     { class: 'flex flex-col gap-6' },
     settingsSection(
-      {},
-      dynamicChild(swaps, groups => div({ class: 'contents' }, groups.map(group => choiceRow(ctx.extensions, group.role, group.candidates, state.get().roles)))),
-    ),
-    settingsSection(
-      { title: 'Parts' },
+      { title: 'Interface parts' },
       list(
         parts,
         extension => extension.id,
