@@ -5,7 +5,7 @@ description: 'Open or update a GitHub pull request. Trigger: "pr".'
 
 # File PR
 
-Rebase onto the base branch and read the full diff. Run the project's checks and try the changed behavior until you've seen it work. Fix what fails before opening the PR. If the branch has an open PR, update it.
+Rebase onto the base branch and read the full diff. If the branch has an open PR, update it.
 
 Title it like a commit: one change, what is now true, under 60 characters.
 
