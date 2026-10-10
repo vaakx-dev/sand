@@ -2,7 +2,7 @@ import type { EffectiveSettings, SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
 
-export type PanelContext = Context<'models' | 'threads'>
+export type PanelContext = Context<'models' | 'modelPicker' | 'threads'>
 
 const speedWord = (speed?: string | null) => (speed === 'fast' ? 'on' : speed === 'normal' ? 'off' : 'default')
 
@@ -30,14 +30,7 @@ export const createActions = (ctx: PanelContext, fail: (text: string) => void) =
     run('model', `${words} --default`)
   }
 
-  const send = (work?: Promise<unknown>) => void work?.catch(error => fail(errorMessage(error)))
-
-  const saveModel = (model: string) =>
-    send(ctx.wire?.call({ type: 'ui.command', name: 'model', args: `${model} --default --quiet`, cwd: ctx.threads.cwd() }))
-
-  const prefer = (model: string, pref: { hidden?: boolean; favourite?: boolean }) => send(ctx.wire?.call({ type: 'models.pref', model, ...pref }))
-
-  return { set, reset, makeDefault, run, saveModel, prefer }
+  return { set, reset, makeDefault, run }
 }
 
 export type Actions = ReturnType<typeof createActions>

@@ -1,0 +1,34 @@
+{
+  "name": "@sand/model-picker",
+  "version": "0.0.0",
+  "description": "The model picker: search, model sources, effort and fast mode in one panel, for the composer and settings",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Model picker",
+    "summary": "One panel to pick a model, effort and fast mode, used by the composer and settings",
+    "provides": [
+      "modelPicker"
+    ],
+    "uses": {
+      "wire": "no favourite, hide or make default actions, and models from another PC show no online dot",
+      "settings": "no link to the Models settings page",
+      "notify": "failed model actions are not reported"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

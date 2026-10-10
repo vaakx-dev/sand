@@ -1,4 +1,4 @@
-import type { LLM } from '@sand/llm-accounts/contract'
+import type { LLM, LLMRequest } from '@sand/llm-accounts/contract'
 import type { Message } from '@sand/messages'
 import { shorten } from '../title'
 import { system } from './prompt'
@@ -12,9 +12,9 @@ const clean = (reply: string) => {
   return shorten(bare.replace(/\s+/g, ' '), maxLength)
 }
 
-export const askName = async (llm: LLM, text: string, model?: string) => {
+export const askName = async (llm: LLM, text: string, choice: Pick<LLMRequest, 'model' | 'effort' | 'speed'>) => {
   const message: Message = { role: 'user', content: [{ type: 'text', text: `Name this thread:\n\n${text}` }] }
-  for await (const event of llm.stream({ system, messages: [message], tools: [], model }, AbortSignal.timeout(timeout))) {
+  for await (const event of llm.stream({ system, messages: [message], tools: [], ...choice }, AbortSignal.timeout(timeout))) {
     if (event.type !== 'done') continue
     const reply = event.message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join(' ')
     return { name: clean(reply), usage: event.usage }

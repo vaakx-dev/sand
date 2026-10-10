@@ -1,6 +1,6 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
 import { button, div, focusable, icon, rowButton, span, tile, type Child } from '@sand/dom'
-import { logo as sourceLogo } from '../panel/source'
+import { logo as sourceLogo } from '../source'
 import type { Kit } from './kit'
 
 export const logo = (provider?: string) => tile(sourceLogo(provider, 18))

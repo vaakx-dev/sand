@@ -1,32 +1,30 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
+import type { ModelPicker, PickerTarget } from '@sand/model-picker/contract'
 import type { TitlePatch, TitleSettings } from '../contract'
-import { derive, div, dynamicChild, selectMenu, settingsRow, settingsSection, toggleSwitch, type Sig } from '@sand/dom'
+import { div, dynamicChild, settingsRow, settingsSection, toggleSwitch, type Sig } from '@sand/dom'
 
-const sameAsThread = { value: '', label: 'Same as the thread' }
+const textGenTarget = (state: Sig<TitleSettings | undefined>, picker: ModelPicker, save: (patch: TitlePatch) => void): PickerTarget => ({
+  shown: () => {
+    const settings = state.get()
+    return settings && picker.resolve(settings)
+  },
+  set: ({ model, effort, speed }) => save({ ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }),
+})
 
-const choices = (models: ModelInfo[], chosen?: string) => {
-  const listed = models.map(model => ({ value: model.id, label: model.label }))
-  if (!chosen) return [sameAsThread, ...listed]
-  return listed.some(choice => choice.value === chosen) ? listed : [{ value: chosen, label: chosen }, ...listed]
-}
-
-const section = ({ auto, model }: TitleSettings, models: ModelInfo[], save: (patch: TitlePatch) => void) =>
+const section = (state: Sig<TitleSettings | undefined>, picker: ModelPicker | undefined, save: (patch: TitlePatch) => void) =>
   settingsSection(
-    { title: 'Thread names' },
+    { title: 'Text generation' },
     settingsRow(
       'Name new threads',
-      toggleSwitch({ on: auto, 'aria-label': 'Name new threads', onClick: () => save({ auto: !auto }) }),
-      'A small model writes a short name from your first message',
+      toggleSwitch({ on: () => state.get()?.auto ?? false, 'aria-label': 'Name new threads', onClick: () => save({ auto: !state.get()?.auto }) }),
+      'The text gen model writes a short name from your first message',
     ),
-    settingsRow(
-      'Naming model',
-      selectMenu(choices(models, model), model ?? '', id => id && save({ model: id })),
-      'Only used for names',
-    ),
+    picker ? settingsRow('Text gen model', picker.button(textGenTarget(state, picker, save), 'Text gen model'), 'Writes thread names and branch names') : null,
   )
 
-export const titlesSection = (state: Sig<TitleSettings | undefined>, models: Sig<ModelInfo[]>, save: (patch: TitlePatch) => void) =>
-  dynamicChild(
-    derive(() => ({ settings: state.get(), models: models.get() })),
-    ({ settings, models }) => (settings ? section(settings, models, save) : div({ class: 'hidden' })),
+export const titlesSection = (state: Sig<TitleSettings | undefined>, picker: Sig<ModelPicker | undefined>, save: (patch: TitlePatch) => void) =>
+  dynamicChild(picker, current =>
+    dynamicChild(
+      state.map(settings => Boolean(settings)),
+      loaded => (loaded ? section(state, current, save) : div({ class: 'hidden' })),
+    ),
   )

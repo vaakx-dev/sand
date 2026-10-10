@@ -1,20 +1,15 @@
 import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
-import type { EffectiveSettings, SessionSettings } from '@sand/model/contract'
+import type { SessionSettings } from '@sand/model/contract'
 import type { MenuSpec } from '@sand/dom'
-import type { Actions, PanelContext } from '../actions'
+import type { Picked, PickerTarget } from '../contract'
+import { send, type PickerKit } from '../kit'
 import { modelMenu } from '../model-menu'
-import type { PcStatus } from '../pcs'
 import type { View } from './view'
 
-export interface Choice {
-  shown: EffectiveSettings
-  current: EffectiveSettings
-  pending: boolean
-  defaults: SessionSettings
-}
-
 export interface Scene {
-  choice: Choice
+  shown: Picked
+  defaults: SessionSettings
+  target: PickerTarget
   models: ModelInfo[]
   sources: SourceInfo[]
   fresh: (model: ModelInfo) => boolean
@@ -26,14 +21,16 @@ export interface Scene {
   openSettings?: () => void
 }
 
-export const readScene = (ctx: PanelContext, actions: Actions, view: View, pcs: PcStatus, close: () => void): Scene | undefined => {
-  const state = ctx.models.state()
-  if (!state) return undefined
+export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
+  const shown = target.shown()
+  if (!shown) return undefined
   const sources = ctx.models.sources()
   const settings = ctx.settings
-  const pick = (model: ModelInfo) => actions.set({ model: model.id })
+  const pick = (model: ModelInfo) => target.set({ model: model.id })
   return {
-    choice: { shown: state.next ?? state.current, current: state.current, pending: Boolean(state.next), defaults: ctx.models.defaults() },
+    shown,
+    defaults: ctx.models.defaults(),
+    target,
     models: ctx.models.list(),
     sources,
     fresh: model => Boolean(model.fresh) || view.fresh.has(model.id),
@@ -48,9 +45,9 @@ export const readScene = (ctx: PanelContext, actions: Actions, view: View, pcs: 
         notify: ctx.notify,
         use: () => pick(model),
         ...(ctx.wire && {
-          makeDefault: () => actions.saveModel(model.id),
-          toggleFavourite: () => actions.prefer(model.id, { favourite: model.favourite === undefined }),
-          toggleHidden: () => actions.prefer(model.id, { hidden: !model.hidden }),
+          makeDefault: () => send(ctx, { type: 'ui.command', name: 'model', args: `${model.id} --default --quiet`, cwd: ctx.threads?.cwd() }),
+          toggleFavourite: () => send(ctx, { type: 'models.pref', model: model.id, favourite: model.favourite === undefined }),
+          toggleHidden: () => send(ctx, { type: 'models.pref', model: model.id, hidden: !model.hidden }),
         }),
       }),
     ...(settings && {

@@ -1,6 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { div, finePointer, icon, searchInput } from '@sand/dom'
-import type { PanelContext } from '../actions'
 import type { Scene } from './scene'
 import type { View } from './view'
 
@@ -12,11 +11,15 @@ export const findModels = (scene: Scene, query: string): ModelInfo[] => {
   })
 }
 
-const restoreFocus = (ctx: PanelContext, node: HTMLElement) => () => {
-  if (document.activeElement === node || document.activeElement === document.body) ctx.composer?.focus()
+const restoreFocus = (node: HTMLElement) => {
+  const before = document.activeElement
+  return () => {
+    if (document.activeElement !== node && document.activeElement !== document.body) return
+    if (before instanceof HTMLElement && before.isConnected) before.focus()
+  }
 }
 
-export const searchField = (ctx: PanelContext, view: View, pickFirst: () => void) => {
+export const searchField = (view: View, pickFirst: () => void) => {
   const fine = finePointer()
   return div(
     { class: 'mx-1 mt-1 mb-2 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-neutral-900 px-3 text-neutral-500' },
@@ -38,8 +41,9 @@ export const searchField = (ctx: PanelContext, view: View, pickFirst: () => void
         }
       },
       onMount: node => {
+        const restore = restoreFocus(node)
         if (fine.get()) node.focus()
-        return restoreFocus(ctx, node)
+        return restore
       },
     }),
   )

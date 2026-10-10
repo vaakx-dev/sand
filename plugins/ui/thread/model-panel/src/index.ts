@@ -1,22 +1,23 @@
+import type {} from '@sand/model-picker/contract'
 import { errorMessage, owned, pulse, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { createActions, serverCommand } from './actions'
 import { modelSource } from './palette'
-import { pcStatus } from './pcs'
 import { createPicker } from './pill'
 import { modelsPage } from './settings'
+import { composerTarget } from './target'
 
 export default definePlugin({
   name: 'model-panel',
-  description: 'One pill for model, effort and fast mode; it opens one panel. Also adds palette rows.',
-  inject: ['models', 'threads'],
+  description: 'One pill in the composer that opens the model picker. Also adds palette rows and the Models settings page.',
+  inject: ['models', 'modelPicker', 'threads'],
   uses: {
     composer: 'no pill; /model and /effort open the server sheet',
     palette: 'no model rows in the palette',
     commands: '/model and /effort with no argument open the server sheet',
     notify: 'problems show inside the panel',
     settings: 'no Models settings page',
-    wire: 'models from another PC show no online dot and stay enabled when it is offline',
+    wire: 'model changes cannot be saved',
   },
   apply(ctx) {
     const problem = sig('')
@@ -38,8 +39,7 @@ export default definePlugin({
     ctx.on('thread.select', () => {
       lastKey = stateKey()
     })
-    const pcs = owned(ctx, () => pcStatus(ctx))
-    const picker = owned(ctx, () => createPicker(ctx, actions, changes, problem, pcs))
+    const picker = owned(ctx, () => createPicker(ctx, composerTarget(ctx, actions, changes, problem), changes))
     let slotted = false
 
     const sheet = (effort: boolean) => void serverCommand(ctx, effort ? 'effort' : 'model', '').catch(error => fail(errorMessage(error)))

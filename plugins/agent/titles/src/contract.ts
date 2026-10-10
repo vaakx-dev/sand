@@ -1,3 +1,4 @@
+import type { Effort, Speed } from '@sand/llm-accounts/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 
 export interface Names {
@@ -13,6 +14,8 @@ declare module 'drydock' {
 export interface TitleSettings {
   auto: boolean
   model?: string
+  effort?: Effort
+  speed?: Speed
 }
 
 export type TitlePatch = Partial<TitleSettings>
