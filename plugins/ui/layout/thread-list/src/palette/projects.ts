@@ -16,13 +16,17 @@ const placeDetail = (ctx: Context<'threads'>, place: Place) =>
   place.away ? awayDetail(ctx, place) : `${pcNames(ctx, place).join(', ')} · ${shortPath(ctx, place.path, place.device)}`
 
 const hideAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
-  label: 'Hide',
+  label: 'Hide project',
+  icon: 'x',
   danger: true,
+  returnAfter: true,
   run: () => ctx.projects?.hide(group, true),
 })
 
 const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
   label: 'Rename',
+  icon: 'pencil',
+  returnAfter: true,
   async run() {
     const name = (await ctx.picker?.input('Rename project', group.name))?.replace(/\s+/g, ' ').trim()
     if (name && name !== group.name) await ctx.projects?.rename(group, name)
@@ -31,6 +35,7 @@ const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => (
 
 const startAction = (ctx: Context<'threads'>, location: ProjectEntry): PaletteItemAction => ({
   label: `Start on ${pcName(ctx, location.device)}`,
+  icon: ctx.machines?.get(location.device)?.local === false ? 'monitor' : 'laptop',
   run: () => draft(ctx, location.path, location.device),
 })
 

@@ -9,12 +9,26 @@ import { rowView } from './row'
 
 const typedIn = (event: KeyboardEvent) => (event.target instanceof HTMLInputElement ? event.target.value : '')
 
-const keyHandler = ({ box, nav, nested, enter }: PageModel) => {
+const pressesButton = (event: KeyboardEvent) => event.target instanceof HTMLButtonElement && (event.key === 'Enter' || event.key === ' ')
+
+const caretAtEnd = (event: KeyboardEvent) =>
+  !(event.target instanceof HTMLInputElement) || event.target.selectionStart === event.target.value.length
+
+const opensActions = (event: KeyboardEvent, model: PageModel) =>
+  event.key === 'ArrowRight' && !event.shiftKey && caretAtEnd(event) && model.openActions()
+
+const keyHandler = (model: PageModel) => {
+  const { box, nav, nested, enter } = model
   const listMap = { ...box.keyMap, Enter: enter, Escape: nav.dismiss }
   const listKeys = keys(listMap, { stop: true })
   const backKeys = keys({ ...listMap, Backspace: () => nav.back() }, { stop: true })
   return (event: KeyboardEvent) => {
-    if (event.isComposing) return
+    if (event.isComposing || pressesButton(event)) return
+    if (opensActions(event, model)) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     const handle = nested && !typedIn(event) ? backKeys : listKeys
     handle(event)
   }
@@ -34,7 +48,7 @@ const results = (model: PageModel) =>
       const first = untrack(() => entry.get())
       if ('group' in first) return groupLabel(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
-      return rowView(first.item, position, model.box, model.act)
+      return rowView(first.item, position, model.box, model.more)
     },
     div({ class: 'max-h-96 overflow-auto overscroll-contain px-2 pb-2' }),
   )
