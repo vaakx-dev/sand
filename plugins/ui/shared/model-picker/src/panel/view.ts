@@ -1,16 +1,16 @@
 import { batch, contextMenu, sig } from '@sand/dom'
-import type { PanelContext } from '../actions'
+import type { PickerTarget } from '../contract'
+import type { PickerContext } from '../kit'
 
 export const FAVOURITES = ':favourites'
 
-const startAt = (ctx: PanelContext) => {
-  const state = ctx.models.state()
-  const source = ctx.models.info((state?.next ?? state?.current)?.model)?.source
+const startAt = (ctx: PickerContext, target: PickerTarget) => {
+  const source = ctx.models.info(target.shown()?.model)?.source
   return source && ctx.models.sources().some(known => known.id === source) ? source : FAVOURITES
 }
 
-export const openView = (ctx: PanelContext) => ({
-  at: sig(startAt(ctx)),
+export const openView = (ctx: PickerContext, target: PickerTarget) => ({
+  at: sig(startAt(ctx, target)),
   query: sig(''),
   fresh: new Set(
     ctx.models

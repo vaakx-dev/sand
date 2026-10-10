@@ -7,15 +7,20 @@ import type { Namer } from './name/namer'
 
 export const serveTitles = (ctx: Context<'sessions'>, server: Server, prefs: Prefs, namer: Namer) => {
   const view = (): TitleSettings => {
-    const { auto, model } = prefs.get()
+    const { model, ...rest } = prefs.get()
     const shown = namingModel(ctx.llm, model)
-    return { auto, ...(shown && { model: shown }) }
+    return { ...rest, ...(shown && { model: shown }) }
   }
   const share = () => server.broadcast('titles.change', [view()])
   const disposers = [
     server.handle('titles.get', view),
-    server.handle('titles.save', async ({ auto, model }) => {
-      await prefs.save({ ...(typeof auto === 'boolean' && { auto }), ...(typeof model === 'string' && model && { model }) })
+    server.handle('titles.save', async ({ auto, model, effort, speed }) => {
+      await prefs.save({
+        ...(typeof auto === 'boolean' && { auto }),
+        ...(typeof model === 'string' && model && { model }),
+        ...(effort && { effort }),
+        ...(speed && { speed }),
+      })
       share()
       return view()
     }),

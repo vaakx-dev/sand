@@ -6,7 +6,7 @@ import type { Context } from 'drydock'
 import type { Prefs } from '../prefs'
 import { usageSource } from '@sand/kit'
 import { askName } from './ask'
-import { namingModel } from './model'
+import { modelOptions, namingModel } from './model'
 import { conversation } from './prompt'
 
 const modelWait = 15_000
@@ -30,8 +30,9 @@ export const createNamer = (ctx: Context<'sessions'>, prefs: Prefs) => {
     const text = conversation(messages)
     if (!llm || !text) return undefined
     await modelsReady(llm)
-    const model = namingModel(llm, prefs.get().model, ctx.modelSettings?.effective(session).model)
-    const reply = await askName(llm, text, model)
+    const saved = prefs.get()
+    const model = namingModel(llm, saved.model, ctx.modelSettings?.effective(session).model)
+    const reply = await askName(llm, text, { model, ...modelOptions(llm, model, saved) })
     if (!reply) return undefined
     const record: UsageRecord = { id: Bun.randomUUIDv7(), model, ...usageSource(llm, model), usage: reply.usage }
     ctx.sessions.open(session.id)?.append('usage', record)
