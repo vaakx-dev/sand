@@ -1,17 +1,17 @@
 ---
 name: commit
-description: Use when preparing or making a Git commit.
+description: Make a Git commit.
 ---
 
 # Commit
 
-Use `type(scope): short summary`, for example:
+Title it `type(scope): what is now true`.
 
 ```text
-feat(server): added health endpoint
+fix(auth): repeated failed logins pause sign-in
 ```
 
-The title is usually enough. Only add a body when important detail needs explaining. Leave a blank line, then use `- ` bullets that add information rather than repeat the title.
+The title is usually enough. Add a body only for what the diff doesn't show, as `- ` bullets after a blank line.
 
 | Type | Meaning |
 |---|---|
@@ -27,8 +27,8 @@ The title is usually enough. Only add a body when important detail needs explain
 | `chore` | Other maintenance |
 | `revert` | Revert an earlier commit |
 
-Do not add AI attribution: no `Co-authored-by` trailers, "Generated with" lines, or mentions of the model or agent.
+Leave out AI attribution, such as Co-authored-by trailers and model names.
 
-If you did not make the changes yourself, inspect repository status and the staged diff first, commit only intended changes, and check the resulting commit.
+If someone else made the changes, check `git status` and the staged diff, commit only what was meant, and check the result.
 
-This skill does not authorize amending or pushing by itself.
+This skill doesn't authorize amending or pushing.

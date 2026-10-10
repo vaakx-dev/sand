@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: 'Use when asked to watch or babysit a pull request until it is green. Explicit trigger: “babysit.”'
+description: 'Watch a PR and fix failures until it''s green. Trigger: "babysit".'
 ---
 
 # Babysit PR
