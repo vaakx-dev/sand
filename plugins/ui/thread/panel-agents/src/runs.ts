@@ -1,4 +1,5 @@
 import type { AgentRun, Thread } from '@sand/web-client/contract'
+import { agentTitle } from '@sand/kit'
 import { startedBy, type Calls } from './origin'
 import { currentStep } from './step'
 
@@ -29,14 +30,9 @@ export interface Run {
   members: Member[]
 }
 
-const tidy = (title?: string | null) => {
-  const flat = (title ?? '').replace(/\s+/g, ' ').trim()
-  return /^.*?[.!?](?=\s|$)/.exec(flat)?.[0] ?? (flat || 'Sub-agent')
-}
-
 const member = (thread: Thread, modelOf: ModelOf): Member => ({
   id: thread.id,
-  title: tidy(thread.info.title),
+  title: agentTitle(thread.info.title),
   model: modelOf(thread),
   running: thread.running,
   started: thread.info.created,

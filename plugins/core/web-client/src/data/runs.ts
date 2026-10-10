@@ -1,11 +1,7 @@
 import type { AgentRun, JobState, Thread } from '../contract'
+import { agentTitle } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { Store } from '../threads/store'
-
-const tidy = (title?: string | null) => {
-  const flat = (title ?? '').replace(/\s+/g, ' ').trim()
-  return /^.*?[.!?](?=\s|$)/.exec(flat)?.[0] ?? (flat || 'Sub-agent')
-}
 
 const agentName = (thread: Thread) => {
   for (const entry of thread.entries.values()) if (entry.type === 'agent') return (entry.data as { name?: string }).name ?? 'agent'
@@ -37,7 +33,7 @@ const jobRun = (job: JobState, agents: Thread[]): AgentRun => {
     id: job.id,
     kind: workflow ? 'workflow' : 'agent',
     name,
-    title: tidy(single?.info.title ?? task),
+    title: agentTitle(single?.info.title ?? task),
     status: job.status,
     started: job.started,
     ...(job.ended && { ended: job.ended }),
@@ -52,7 +48,7 @@ const sessionRun = (agent: Thread): AgentRun => ({
   id: agent.id,
   kind: 'agent',
   name: agentName(agent),
-  title: tidy(agent.info.title),
+  title: agentTitle(agent.info.title),
   status: agent.running ? 'running' : 'done',
   started: agent.info.created,
   ...(!agent.running && { ended: agent.info.updated }),
@@ -66,7 +62,7 @@ const groupRun = (origin: string, agents: Thread[], parent: Thread | undefined):
     id: origin,
     kind: 'workflow',
     name: 'workflow',
-    title: tidy(callLabel(parent, origin) ?? 'Workflow'),
+    title: agentTitle(callLabel(parent, origin) ?? 'Workflow'),
     status: running ? 'running' : 'done',
     started: Math.min(...agents.map(agent => agent.info.created)),
     ...(!running && { ended: lastEnd(agents) }),
@@ -113,5 +109,5 @@ export const createRuns = (ctx: Context, store: Store, jobs: (parent: string) =>
     return result.sort((a, b) => b.started - a.started)
   }
 
-  return { children, runs }
+  return runs
 }

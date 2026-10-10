@@ -49,12 +49,9 @@ export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
   ctx.on('wire.event', received => event(thisDevice, received))
 
   const list = (parent?: string) => [...devices.values()].flatMap(known => [...known.values()]).filter(job => !parent || job.parent === parent)
-  const runs = createRuns(ctx, store, list)
-
   const jobs: Jobs = {
     list,
-    runs: runs.runs,
-    children: runs.children,
+    runs: createRuns(ctx, store, list),
     cancel: id => wire.call({ type: 'job.cancel', job: id }, deviceOf(id)).then(() => undefined),
   }
   return { jobs, hello, event, forget }

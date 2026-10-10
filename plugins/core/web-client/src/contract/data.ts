@@ -26,7 +26,6 @@ export interface AgentRun {
 export interface Jobs {
   list(parent?: string): JobState[]
   runs(parent: string): AgentRun[]
-  children(parent: string): Thread[]
   cancel(id: string): Promise<void>
 }
 

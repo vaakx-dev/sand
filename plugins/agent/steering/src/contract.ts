@@ -27,6 +27,7 @@ declare module 'drydock' {
   interface Events {
     'turn.steer': (session: Session, content: UserContent[], id: string) => void
     'turn.queue': (session: Session) => void
+    'turn.unsteer': (session: Session, id: string) => void
   }
 }
 
