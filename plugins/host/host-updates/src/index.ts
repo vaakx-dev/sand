@@ -11,6 +11,7 @@ import {
   writeShim,
 } from '@sand/kit/host'
 import { definePlugin } from 'drydock'
+import { announcer } from './announce'
 import { hostCodeChanged } from './host-code'
 import { checkLoads } from './install/check'
 import { cleanupBuilds } from './install/cleanup'
@@ -54,6 +55,7 @@ export default definePlugin({
         cleanup: keep => cleanupBuilds(home, keep),
         restart: () => ctx.emit('host.restart'),
         changed: state => ctx.hub.broadcast({ name: 'updates.change', args: [state] }),
+        announce: announcer(home),
       },
       store,
     )

@@ -43,6 +43,7 @@ declare module '@sand/protocol/wire' {
     'updates.later': {}
     'updates.apply': { build: string }
     'updates.restart': {}
+    'updates.heard': { channel: UpdateChannel; build: string }
     'updates.channel': { channel: UpdateChannel }
     'updates.repair': {}
     'pc.repair': { device: string; resume?: boolean }

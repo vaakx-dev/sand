@@ -16,6 +16,11 @@ export const updateRequests = (hub: Hub, updater: Updater): (() => Dispose)[] =>
     }),
   () => hub.handle('updates.restart', () => updater.restartNow()),
   () =>
+    hub.handle('updates.heard', ({ channel, build }) => {
+      if (!isChannel(channel) || !text(build)) throw new Error('updates.heard needs a channel and a build')
+      return updater.heard(channel, build)
+    }),
+  () =>
     hub.handle('updates.channel', ({ channel }) => {
       if (!isChannel(channel)) throw new Error('updates.channel needs "release", "nightly" or "dev"')
       return updater.setChannel(channel)

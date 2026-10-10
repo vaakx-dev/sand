@@ -29,6 +29,7 @@ export interface UpdaterDeps {
   cleanup(keep: string[]): Promise<void>
   restart(): void
   changed(state: UpdateState): void
+  announce(channel: UpdateChannel, build: string): void
 }
 
 export interface Updater {
@@ -37,6 +38,7 @@ export interface Updater {
   later(): Promise<UpdateState>
   setChannel(channel: UpdateChannel): Promise<UpdateState>
   apply(build: string): Promise<UpdateState>
+  heard(channel: UpdateChannel, build: string): UpdateState
   restartNow(): UpdateState
   repair(): Promise<UpdateState & { target: BuildInfo }>
   start(): void

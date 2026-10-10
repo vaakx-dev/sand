@@ -82,8 +82,10 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       if (channel !== store.channel()) return
       checkError = undefined
       if (busy()) return
-      if (phase === 'failed' && latest?.build.id !== release.build.id) settle('idle')
+      const found = latest?.build.id !== release.build.id
+      if (phase === 'failed' && found) settle('idle')
       latest = release
+      if (found) deps.announce(channel, release.build.id)
     } catch (failure) {
       if (channel !== store.channel()) return
       checkError = errorMessage(failure)
@@ -160,6 +162,11 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     })
   }
 
+  const heard = (channel: UpdateChannel, build: string) => {
+    if (channel === store.channel() && latest?.build.id !== build && build !== current?.id) void check()
+    return snapshot()
+  }
+
   const restartNow = () => {
     if (phase === 'waiting') installer.hurry()
     return snapshot()
@@ -177,6 +184,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     later,
     setChannel,
     apply,
+    heard,
     restartNow,
     repair,
     start() {
@@ -189,7 +197,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
         })
         .catch(() => {})
       const cleanup = installed ? () => void installer.cleanup([deps.app.root(), deps.hostRoot]) : undefined
-      stopSchedule = scheduleChecks(() => void check(), cleanup)
+      stopSchedule = scheduleChecks(() => void check(), store.channel, cleanup)
     },
     stop() {
       epoch++
