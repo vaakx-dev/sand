@@ -4,6 +4,7 @@ const currentOnly = new Set([
   'web.extensions',
   'skills.change',
   'models.change',
+  'titles.change',
 ])
 
 export const passes = (name: string, current: boolean) => current || !currentOnly.has(name)
