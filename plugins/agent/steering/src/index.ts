@@ -12,7 +12,11 @@ export default definePlugin({
 
     const steering: Steering = {
       steer: (session, prompt, label) => (ctx.loop.active(session) ? queues.add(session, prompt, label) : undefined),
-      unsteer: (session, id) => queues.remove(session, id),
+      unsteer(session, id) {
+        const removed = queues.remove(session, id)
+        if (removed) ctx.emit('turn.unsteer', session, id)
+        return removed
+      },
       list: queues.list,
     }
 

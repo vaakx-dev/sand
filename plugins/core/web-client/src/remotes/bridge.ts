@@ -1,6 +1,7 @@
 import type { RelayEvent } from '@sand/server/contract'
 import type { Wire } from '../contract'
 import type { Context } from 'drydock'
+import type { createJobs } from '../data/jobs'
 import type { createProjects } from '../data/projects'
 import { isRelayEvent, relayEvents } from '../relay/events'
 import { applyEvent } from '../threads/events'
@@ -15,6 +16,7 @@ export const bridgeRemotes = (
   wire: Wire,
   threads: ReturnType<typeof createThreads>,
   projects: ReturnType<typeof createProjects>,
+  jobs: ReturnType<typeof createJobs>,
 ): LinkHandlers => {
   const relays = new Map<string, (event: RelayEvent) => void>()
   const relay = (device: string) => {
@@ -29,6 +31,7 @@ export const bridgeRemotes = (
     hello(device, hello) {
       greetRemote(store, device, hello)
       void projects.refresh(device)
+      jobs.hello(device, hello)
       const current = threads.current()
       const reload = threads.list().filter(thread => thread.device === device && (thread.running || thread.id === current?.id))
       for (const thread of reload) void threads.load(thread.id)
@@ -36,12 +39,14 @@ export const bridgeRemotes = (
     event(device, event) {
       applyEvent(store, event, id => void threads.load(id), device)
       projects.event(device, event)
+      jobs.event(device, event)
       if (isRelayEvent(event)) relay(device)(event)
       ctx.emit('machines.event', device, event)
     },
     drop(device) {
       dropRemote(store, device)
       projects.forget(device)
+      jobs.forget(device)
       relays.delete(device)
     },
     state: () => ctx.emit('machines.change'),

@@ -4,6 +4,7 @@ import { definePlugin } from 'drydock'
 import { createActivity } from './activity'
 import { createDrain } from './drain'
 import { createFailures } from './failures'
+import { guardCrashes } from './guard'
 
 export const runtimeLink = definePlugin({
   name: 'runtime-link',
@@ -13,6 +14,7 @@ export const runtimeLink = definePlugin({
     const secret = process.env[runtimeEnv.secret]
     if (!id || !secret || !process.send) return
 
+    guardCrashes(ctx)
     const send = (message: RuntimeMessage) => void process.send?.(message)
     const failures = createFailures(ctx)
     let ready = false

@@ -1,14 +1,18 @@
-import { pulse } from '@sand/dom'
+import { derive, pulse } from '@sand/dom'
 import type { Context } from 'drydock'
 
+const shownLimit = 2
+
 export const createWorking = (ctx: Context<'threads'>) => {
-  const changes = pulse(ctx, ['jobs.change', 'thread.select', 'thread.change'], ['jobs', 'panels'])
+  const changes = pulse(ctx, ['jobs.change', 'threads.change', 'thread.select', 'thread.change'], ['jobs', 'panels'])
+  const runs = changes.read(() => {
+    const thread = ctx.threads.current()
+    return thread ? (ctx.jobs?.runs(thread.id).filter(run => run.status === 'running') ?? []) : []
+  })
   return {
-    count: changes.read(() => {
-      const thread = ctx.threads.current()
-      if (!thread || thread.running) return 0
-      return ctx.jobs?.list(thread.id).filter(job => job.status === 'running').length ?? 0
-    }),
+    runs,
+    shown: derive(() => runs.get().slice(0, shownLimit)),
+    more: derive(() => Math.max(0, runs.get().length - shownLimit)),
     clickable: changes.read(() => Boolean(ctx.panels)),
     open: () => ctx.panels?.show('agents'),
   }

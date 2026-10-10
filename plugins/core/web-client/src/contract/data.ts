@@ -1,15 +1,31 @@
-import type { WireJob } from '@sand/agents/contract'
+import type { JobStatus, WireJob } from '@sand/agents/contract'
 import type { GrepMatch } from '@sand/files/contract'
 import type { EffortLevel, Limits, ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SessionSettings, SettingsPatch, SettingsState } from '@sand/model/contract'
 import type { SkillSummary } from '@sand/skills/contract'
+import type { Thread } from './threads'
 
 export interface JobState extends WireJob {
   notes: string[]
 }
 
+export interface AgentRun {
+  id: string
+  kind: 'workflow' | 'agent'
+  name: string
+  title: string
+  status: JobStatus
+  started: number
+  ended?: number
+  note?: string
+  job?: string
+  session?: string
+  agents: Thread[]
+}
+
 export interface Jobs {
   list(parent?: string): JobState[]
+  runs(parent: string): AgentRun[]
   cancel(id: string): Promise<void>
 }
 
