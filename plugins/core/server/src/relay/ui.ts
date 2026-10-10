@@ -1,6 +1,7 @@
 import type { PickItem, PickOptions, UI } from '../contract'
 import { reportText } from '@sand/kit'
 import { existsSync } from 'node:fs'
+import { tailOf } from '../requests/tail'
 import { info } from '../socket/serialize'
 import { invocation } from './invocation'
 import { tell } from './peer'
@@ -55,7 +56,12 @@ export const relayUI = (state: RelayState): UI => {
       if (!current) return
       current.session = session
       current.peer.focus = session
-      tell(current.peer, 'ui.open', session ? { info: info(session), entries: session.entries() } : null, draft, cwd)
+      if (!session) return tell(current.peer, 'ui.open', null, draft, cwd)
+      tailOf(state.ctx, session)
+        .then(tail => {
+          if (current.peer.focus?.id === session.id) tell(current.peer, 'ui.open', { info: info(session), ...tail }, draft, cwd)
+        })
+        .catch(error => state.ctx.report(error))
     },
     attach(content) {
       const current = target()

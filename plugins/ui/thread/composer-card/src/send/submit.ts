@@ -37,7 +37,7 @@ const asked = (message: Message) => message.role === 'user' && !hasToolResult(me
 export const retry = async (ctx: Context<'threads' | 'turns'>) => {
   const thread = ctx.threads.current()
   if (!thread || thread.running) return
-  const entry = ctx.threads.path(thread.id).findLast(candidate => candidate.type === 'message' && asked(candidate.data as Message))
+  const entry = await ctx.threads.findLast(thread.id, candidate => candidate.type === 'message' && asked(candidate.data as Message))
   if (!entry) return
   const content = (entry.data as Message).content as UserContent[]
   await ctx.threads.checkout(thread.id, entry.parent)

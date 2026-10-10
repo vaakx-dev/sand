@@ -2,13 +2,15 @@ import type { BroadcastEvents } from './events'
 import type { CoreRequests } from './requests'
 
 export interface WireRequests extends CoreRequests {
-  hello: {}
+  hello: { since?: string | null; known?: string }
 }
 
 export interface WireEvents extends BroadcastEvents {}
 
 export interface HelloFields {
   safe?: boolean
+  tag?: string
+  same?: boolean
 }
 
 export type Hello = HelloFields

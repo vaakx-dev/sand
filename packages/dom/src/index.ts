@@ -16,6 +16,7 @@ export type { Nav, NavAction, NavAsk, NavChoice, NavItem, NavItemState, NavList 
 export { cssOrder, place, stage } from './shell/place'
 export { float, floating } from './shell/float'
 export { asPanel, type PanelControl } from './shell/panel'
+export { watchShown, type Shown } from './shell/shown'
 export { dismissible, hasOpenLayer, layer } from './shell/layers'
 export { closeDrawer, navHost, type NavHost } from './shell/nav/host'
 export { navEntries, navItems, navSlot, type NavEntriesOptions, type NavEntry } from './shell/nav/entries'

@@ -3,12 +3,13 @@ import { errorMessage } from '@sand/kit'
 import type { ServerWebSocket, WebSocketHandler } from 'bun'
 import { serialize } from './serialize'
 
-type Socket = ServerWebSocket<unknown>
+export type Socket = ServerWebSocket<unknown>
 
 export interface SocketHandlers {
   join(socket: Socket): void
   leave(socket: Socket): void
   answer(socket: Socket, request: ClientMessage): Promise<unknown>
+  settle(): void
   malformed(error: unknown): void
 }
 
@@ -30,16 +31,23 @@ export const createSockets = (handlers: SocketHandlers) => {
     } catch (error) {
       return handlers.malformed(new Error(`Dropped a malformed frame: ${errorMessage(error)}`))
     }
+    let message: ServerMessage
     try {
-      send(socket, { type: 'result', id: request.id, result: serialize(await handlers.answer(socket, request)) })
+      message = { type: 'result', id: request.id, result: serialize(await handlers.answer(socket, request)) }
     } catch (error) {
-      send(socket, { type: 'result', id: request.id, error: errorMessage(error) })
+      message = { type: 'result', id: request.id, error: errorMessage(error) }
     }
+    handlers.settle()
+    send(socket, message)
   }
 
   const broadcast = (name: string, args: unknown[]) => {
     const payload = JSON.stringify({ type: 'event', name, args: serialize(args) as unknown[] } satisfies ServerMessage)
     for (const client of clients) client.send(payload)
+  }
+
+  const publish = (payload: string, to: (socket: Socket) => boolean) => {
+    for (const client of clients) if (to(client)) client.send(payload)
   }
 
   const websocket: WebSocketHandler<unknown> = {
@@ -55,5 +63,5 @@ export const createSockets = (handlers: SocketHandlers) => {
     message: (socket, data) => void receive(socket, String(data)),
   }
 
-  return { broadcast, websocket }
+  return { broadcast, publish, websocket }
 }

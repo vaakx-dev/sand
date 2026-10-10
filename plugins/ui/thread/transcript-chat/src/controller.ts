@@ -11,6 +11,7 @@ import { pageSize, windowed } from './window'
 
 export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
   const parts = ctx.transcriptParts
+  const cache = parts.itemCache()
   const jumpShown = sig(false)
   const slot = slotHost()
   const empty = hero(ctx)
@@ -66,13 +67,17 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
 
   const paint = (thread: Thread, current: ThreadView, grow = 0) => {
     const context: RowContext = { registry, states, thread: thread.id, parts, markdown: ctx.markdown }
-    const items = parts.items(thread, ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
+    const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
     current.rows.set(windowed(current, items, grow).flatMap(item => itemRows(item, context)))
   }
 
   const reveal = () => {
     const thread = ctx.threads.current()
-    if (!thread || !shown || shown.id !== thread.id || !shown.view.truncated) return false
+    if (!thread || !shown || shown.id !== thread.id) return false
+    if (!shown.view.truncated) {
+      if (ctx.threads.older(thread.id)) void ctx.threads.page(thread.id)
+      return false
+    }
     const current = shown.view
     keepAnchor(scroller, current.column, () => {
       current.painted.done = false
@@ -105,7 +110,8 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
   }
 
   const forget = () => {
-    const gone = views.ids().filter(id => !ctx.threads.get(id))
+    const current = ctx.threads.current()?.id
+    const gone = views.ids().filter(id => id !== current && !ctx.threads.get(id)?.entries.size)
     if (!gone.length) return
     for (const id of gone) {
       if (shown?.id === id) shown = undefined
@@ -114,11 +120,17 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     render()
   }
 
+  const refresh = () => {
+    cache.reset()
+    render()
+  }
+
   const clear = () => {
+    cache.reset()
     slot.clear()
     views.clear()
   }
 
   const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd))
-  return { root, render, forget, scrollToEnd, clear }
+  return { root, render, refresh, forget, scrollToEnd, clear, stale: cache.reset }
 }

@@ -1,7 +1,7 @@
 import type { Markdown } from '@sand/markdown/contract'
 import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
 import type { ToolViews } from '@sand/transcript-parts/contract'
-import { div, el, fold, img } from '@sand/dom'
+import { div, el, fold } from '@sand/dom'
 import { plural } from '@sand/kit'
 
 const shownLines = 120
@@ -48,7 +48,7 @@ export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'])
     if (!tool.result) return undefined
     if (tool.result.isError) return views.errorBody(tool)
     const found = media(tool)
-    if (found?.type === 'image') return div(img({ class: 'block max-h-80 max-w-full rounded-md', src: `data:${found.mediaType};base64,${found.data}`, alt: found.name ?? 'image' }))
+    if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
     if (found) return div({ class: 'font-mono text-xs text-neutral-400' }, found.name ?? 'document')
     const { lines, tail } = parse(tool, views)
     const shown = lines.slice(0, shownLines)

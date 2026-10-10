@@ -1,6 +1,6 @@
 import type { WireEvent } from '@sand/protocol'
 import type { WireSession } from '@sand/sessions-sqlite/contract'
-import { applyLive } from './live'
+import { applyLive, catchUp } from './live'
 import type { Store } from './store'
 
 export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device?: string) => {
@@ -15,17 +15,19 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       return store.remove(event.args[0].$session.id)
   }
   const thread = ({ $session }: WireSession) => store.upsert($session, device)
-  const changed = (id: string, list = true) => store.changed(id, list)
+  const known = (id: string) => store.threads.get(id)
+  const changed = (id: string) => store.changed(id)
   switch (event.name) {
     case 'session.update':
       return changed(thread(event.args[0]).id)
     case 'session.entry': {
       const [session, entry] = event.args
       const found = thread(session)
-      found.entries.set(entry.id, entry)
+      const open = found.id === store.current
+      if (found.loaded || open) found.entries.set(entry.id, entry)
       found.info = { ...found.info, head: entry.id, updated: Math.max(found.info.updated, entry.at) }
       if (entry.type === 'message') found.live = []
-      if (!found.loaded) load(found.id)
+      if (!found.loaded && open) load(found.id)
       return changed(found.id)
     }
     case 'turn.start': {
@@ -51,22 +53,31 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       found.queued = found.queued.filter(steer => steer.id !== event.args[2])
       return changed(found.id)
     }
+    case 'live.snapshot': {
+      const found = known(event.args[0])
+      if (!found) return
+      catchUp(found, event.args[1])
+      return changed(found.id)
+    }
     case 'llm.event': {
-      const found = thread(event.args[1])
+      const found = known(event.args[1].$session.id)
+      if (!found) return
       applyLive(found, event.args[0])
-      return changed(found.id, false)
+      return changed(found.id)
     }
     case 'tool.start': {
-      const found = thread(event.args[1])
+      const found = known(event.args[1].$session.id)
+      if (!found) return
       found.tools.running.add(event.args[0].id)
-      return changed(found.id, false)
+      return changed(found.id)
     }
     case 'tool.result': {
       const [result, call, session] = event.args
-      const found = thread(session)
+      const found = known(session.$session.id)
+      if (!found) return
       found.tools.running.delete(call.id)
       found.tools.results.set(call.id, result)
-      return changed(found.id, false)
+      return changed(found.id)
     }
     case 'agent.start':
     case 'agent.end':

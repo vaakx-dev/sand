@@ -1,5 +1,5 @@
 import type { AttachmentLimits } from '@sand/attachments/contract'
-import type { UserContent } from '@sand/messages'
+import type { MediaRef, UserContent } from '@sand/messages'
 import { errorMessage, sig } from '@sand/dom'
 import { contentName, fromFile } from './content'
 
@@ -16,6 +16,7 @@ let next = 0
 
 const sizeOf = (content: UserContent) => {
   if (content.type === 'text') return content.text.length
+  if (typeof content.data !== 'string') return (content as Partial<MediaRef>).size ?? 0
   if (content.type === 'document' && content.mediaType === 'text/plain') return content.data.length
   return Math.round((content.data.length * 3) / 4)
 }

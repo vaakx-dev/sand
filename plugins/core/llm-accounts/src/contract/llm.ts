@@ -45,6 +45,8 @@ export type LLMEvent =
   | { type: 'block'; index: number; block: Block }
   | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage }
 
+export type LiveEvent = Exclude<LLMEvent, { type: 'block' | 'done' }> | { type: 'block'; index: number } | { type: 'done' }
+
 export interface LimitWindow {
   id: string
   label: string

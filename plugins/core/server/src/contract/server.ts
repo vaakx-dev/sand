@@ -12,4 +12,5 @@ export interface Server {
   handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
   handle(type: string, handler: RequestHandler): Dispose
   broadcast<K extends WireEventName>(name: K, args: WireEvents[K]): void
+  inlineMedia(type: string): Dispose
 }

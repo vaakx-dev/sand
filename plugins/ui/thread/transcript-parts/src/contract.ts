@@ -1,5 +1,5 @@
 import type { Sig } from '@sand/dom'
-import type { Entry, Notification, ToolResultBlock, UserPart } from '@sand/messages'
+import type { Entry, ImageBlock, Notification, ToolResultBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { RenderEntry, RenderTool, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
 import type { Thread } from '@sand/web-client/contract'
@@ -62,13 +62,29 @@ export interface ToolStepOptions {
   toggle(): void
 }
 
+export interface ItemCache {
+  items(thread: Thread, path: () => Entry[], custom: (type: string) => boolean, describe?: DescribeSettings): Item[]
+  reset(): void
+}
+
 export interface TranscriptParts {
   items(thread: Thread, path: Entry[], custom: (type: string) => boolean, describe?: DescribeSettings): Item[]
+  itemCache(): ItemCache
   sections(text: string): string[]
   registry(changed?: () => void): RendererRegistry
   openStates(): OpenStates
   toolStep(tool: Sig<ToolView>, options: ToolStepOptions): HTMLElement
+  image: MediaImage
 }
+
+export interface ImageOptions {
+  class?: string
+  alt?: string
+  title?: string
+  maxHeight?: number
+}
+
+export type MediaImage = (block: ImageBlock, thread: string | undefined, options?: ImageOptions) => HTMLImageElement
 
 export type TruncatedAt = 'before' | 'after'
 
@@ -77,6 +93,7 @@ export interface ToolViews {
   resultText(result?: ToolResultBlock): string
   errorBody(tool: ToolView): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
+  image: MediaImage
 }
 
 declare module 'drydock' {

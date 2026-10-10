@@ -10,6 +10,7 @@ export const serveTransfer = (ctx: SessionsContext, server: Server) => {
   const staging = createStaging()
   const handlers = [
     server.handle('thread.export', exportThread(ctx)),
+    server.inlineMedia('thread.export'),
     server.handle('thread.stage', request => void staging.add(request.transfer, acceptFormat(ctx.sessions, request.entries, request.format))),
     server.handle('thread.import', importThread(ctx, staging)),
     server.handle('thread.link', linkThread(ctx)),

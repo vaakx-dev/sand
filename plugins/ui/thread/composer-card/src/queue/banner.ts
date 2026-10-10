@@ -1,11 +1,11 @@
 import type { Prompt } from '@sand/messages'
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { badge, color, derive, div, dynamicChild, errorMessage, icon, iconButton, img, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
+import { badge, color, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
-import { preview } from '../attachments/content'
 import { bannerPanel } from '../components/glass'
 import type { Model } from '../model'
+import { queueThumb } from './thumb'
 
 interface Row {
   item: Pending
@@ -13,11 +13,6 @@ interface Row {
 }
 
 const imageOf = (prompt: Prompt) => (typeof prompt === 'string' ? undefined : prompt.find(block => block.type === 'image'))
-
-const thumbnail = (prompt: Prompt) => {
-  const image = imageOf(prompt)
-  return (image && preview(image)) || ''
-}
 
 const rowsOf = (thread?: Thread): Row[] =>
   thread ? [...thread.queued.map(item => ({ item, steer: true })), ...thread.followUps.map(item => ({ item, steer: false }))] : []
@@ -79,7 +74,7 @@ export const queueBanner = (ctx: Context<'threads' | 'turns'>, model: Model) => 
         { class: 'inline-flex w-6 shrink-0 justify-center text-neutral-500', style: { cursor: () => (steer.get() ? '' : 'grab') }, title: () => (steer.get() ? '' : 'Drag to reorder') },
         dynamicChild(steer, value => span({ class: 'inline-flex' }, icon(value ? 'steer' : 'grip', 14))),
       ),
-      show(hasImage, () => img({ class: 'h-4 w-4 shrink-0 rounded-sm', style: { objectFit: 'cover' }, src: () => preview(imageOf(item().prompt)!) ?? '', alt: '' })),
+      show(hasImage, () => queueThumb(ctx, item().prompt)),
       span({ class: 'min-w-0 flex-1 truncate' }, () => item().label),
       show(steer, () => badge('neutral', 'Next step')),
       show(queued, () => iconButton({ size: 'sm', title: 'Edit', onClick: () => model.edit(item()) }, icon('pencil', 13))),

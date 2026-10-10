@@ -23,6 +23,7 @@ export default definePlugin({
     wire: 'no offline state; sends fail when the connection drops',
     jobs: 'no still-working agents chip',
     panels: 'the still-working agents chip is not clickable',
+    media: 'queued images stored on the server show no thumbnail',
   },
   apply(ctx) {
     style(ctx, css)

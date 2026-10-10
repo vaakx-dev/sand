@@ -1,7 +1,7 @@
 import type { LLMRequest } from '@sand/llm-accounts/contract'
 import type { Message, ToolCallBlock, ToolResultBlock, UserContent } from '@sand/messages'
 import type { OpenedSession } from '@sand/server/contract'
-import type { Session, WireSession } from '@sand/sessions-sqlite/contract'
+import type { Session, WireSession, WireSessionRef } from '@sand/sessions-sqlite/contract'
 import type { LoopInfo, LoopState, Loops, ModelChoice, ToolAsk, ToolDecision } from './loops'
 import type { Loop, TurnResult } from './turn'
 
@@ -51,8 +51,8 @@ declare module '@sand/protocol/wire' {
     'turn.start': [session: WireSession, prompt: Message]
     'turn.end': [session: WireSession, result: TurnResult]
     'turn.continue': [session: WireSession, content: UserContent[]]
-    'tool.start': [call: ToolCallBlock, session: WireSession]
-    'tool.result': [result: ToolResultBlock, call: ToolCallBlock, session: WireSession]
+    'tool.start': [call: ToolCallBlock, session: WireSessionRef]
+    'tool.result': [result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]
     'loop.change': [session: string, state: LoopState]
   }
 

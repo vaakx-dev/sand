@@ -21,7 +21,8 @@
       "skillIndex",
       "projects",
       "sync",
-      "machines"
+      "machines",
+      "media"
     ],
     "uses": {
       "notify": "server notices go to the console",

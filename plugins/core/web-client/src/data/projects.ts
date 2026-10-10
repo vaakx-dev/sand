@@ -8,6 +8,7 @@ import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
 import { buildGroups, copyEntry, groupAt, type Lists, realDevice, sameDevice } from './groups'
 import { projectIcons } from './icons'
+import { keptLists } from './kept'
 
 const fallback = { device: '', home: '~', sep: '/', root: '~', scratch: '' }
 
@@ -46,6 +47,12 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const forget = (device: string) => {
     if (lists.delete(device)) changed()
+  }
+
+  const restore = (saved: unknown, devices: Set<string>) => {
+    const missing = keptLists(saved).filter(([device]) => !lists.has(device) && (device === thisDevice || devices.has(device)))
+    for (const [device, list] of missing) lists.set(device, list)
+    if (missing.length) changed()
   }
 
   ctx.on('wire.hello', () => void refresh())
@@ -132,5 +139,5 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     },
   }
 
-  return { projects, refresh, event, forget }
+  return { projects, refresh, event, forget, restore, kept: () => Object.fromEntries(lists) }
 }

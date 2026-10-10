@@ -4,6 +4,7 @@ import type { Context } from 'drydock'
 import { split } from '../attachments/content'
 import { contentsOf, type Attached, type Files } from '../attachments/files'
 import type { Saved } from '../drafts/store'
+import { inlineFiles } from './inline'
 
 interface Origin {
   thread?: string
@@ -36,6 +37,7 @@ export const createEditing = (ctx: Context<'threads' | 'turns'>, text: Sig<strin
     text.set(parts.text)
     files.set(parts.items)
     editing.set(item.id)
+    void inlineFiles(ctx, files, parts.items, () => editing.get() === item.id)
   }
 
   const vanish = () => {

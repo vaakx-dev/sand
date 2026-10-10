@@ -10,6 +10,7 @@ export const serveLoops = (ctx: LoopsContext, loops: Loops, choice: Choice) => {
   }
 
   ctx.on('session.opened', (opened, thread) => ({ ...opened, loop: choice.state(thread) }))
+  ctx.on('session.carry', types => [...types, 'loop'])
   ctx.on('server.hello', hello => ({ ...hello, loops: loops.list() }))
   ctx.watch('server', server => {
     if (!server) return

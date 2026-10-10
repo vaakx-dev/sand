@@ -12,7 +12,7 @@ export interface GoalView {
 
 const viewOf = (ctx: Context<'threads'>): GoalView | undefined => {
   const thread = ctx.threads.current()
-  const goal = thread && activeGoal(ctx.threads.path(thread.id))
+  const goal = thread && activeGoal(ctx.threads.path(thread.id, { carried: true }))
   return goal && { thread: thread.id, goal, running: thread.running }
 }
 

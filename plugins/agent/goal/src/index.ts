@@ -1,5 +1,7 @@
 import { definePlugin } from 'drydock'
+import type {} from '@sand/server/contract'
 import { goalCommand } from './command'
+import { entryType } from './goal'
 import { checkOnStop } from './stop'
 
 export default definePlugin({
@@ -9,6 +11,7 @@ export default definePlugin({
   uses: { ui: 'there is no /goal command and goal changes are not announced' },
   apply(ctx) {
     ctx.on('turn.stop', checkOnStop(ctx))
+    ctx.on('session.carry', types => [...types, entryType])
     ctx.watch('ui', ui => ui?.command(goalCommand(ctx, ui)))
   },
 })

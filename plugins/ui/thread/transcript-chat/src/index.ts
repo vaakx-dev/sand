@@ -11,7 +11,7 @@ export default definePlugin({
   uses: { layout: 'lands loose on the stage', composer: 'the empty-state hint does not focus a composer', commands: 'the empty state cannot open the extensions drawer', projects: 'the empty state shows the sand logo instead of the project icon', palette: 'the empty state does not offer search' },
   apply(ctx) {
     style(ctx, css)
-    const registry = ctx.transcriptParts.registry(() => chat.render())
+    const registry = ctx.transcriptParts.registry(() => chat.refresh())
     const chat = owned(ctx, () => chatController(ctx, registry, ctx.transcriptParts.openStates()))
     const transcript: Transcript = { tool: registry.tool, entry: registry.entry, scrollToEnd: chat.scrollToEnd }
 
@@ -22,6 +22,7 @@ export default definePlugin({
     })
     ctx.on('thread.select', () => chat.render())
     ctx.on('threads.change', chat.forget)
+    ctx.on('models.change', chat.stale)
     ctx.effect(() => () => chat.clear())
     ctx.provide('transcript', transcript)
   },

@@ -1,7 +1,7 @@
 import type { Job, WireJob } from '@sand/agents/contract'
 import type { Session, SessionInfo } from '@sand/sessions-sqlite/contract'
 
-const isSession = (value: object): value is Session =>
+export const isSession = (value: object): value is Session =>
   typeof (value as Session).path === 'function' && typeof (value as Session).append === 'function'
 
 const isJob = (value: object): value is Job => typeof (value as Job).cancel === 'function' && 'status' in value

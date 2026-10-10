@@ -83,8 +83,13 @@ const plain: Parser = (lines, start, refs) => {
 
 const parsers: Parser[] = [fenced, atxHeading, ruled, table, list, quoted, indentedCode, plain]
 
-export const parseBlocks = (lines: string[], refs: Refs): Node[] => {
-  const nodes: Node[] = []
+export interface Span {
+  node: Node
+  start: number
+}
+
+export const blockSpans = (lines: string[], refs: Refs): Span[] => {
+  const spans: Span[] = []
   let index = 0
   while (index < lines.length) {
     if (!lines[index]!.trim()) {
@@ -94,10 +99,12 @@ export const parseBlocks = (lines: string[], refs: Refs): Node[] => {
     for (const parser of parsers) {
       const block = parser(lines, index, refs)
       if (!block) continue
-      nodes.push(block.node)
+      spans.push({ node: block.node, start: index })
       index = block.next
       break
     }
   }
-  return nodes
+  return spans
 }
+
+export const parseBlocks = (lines: string[], refs: Refs): Node[] => blockSpans(lines, refs).map(span => span.node)

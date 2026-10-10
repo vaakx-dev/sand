@@ -14,11 +14,14 @@ const reportOf = (step: Step): Report[] => {
 
 const reportItems = (group: ToolGroup): Item[] => group.steps.flatMap(reportOf).map(report => ({ kind: 'report', key: report.key, report }))
 
-export const groupAccumulator = () => {
-  let group: ToolGroup | undefined
+export const groupAccumulator = (from?: ToolGroup) => {
+  let group: ToolGroup | undefined = from && { ...from, steps: [...from.steps] }
   return {
     get open() {
       return group !== undefined
+    },
+    get current() {
+      return group
     },
     add(step: Step, start: number, at: number) {
       group ??= { kind: 'tools', key: `g:${step.key}`, steps: [], start, end: at, running: false }

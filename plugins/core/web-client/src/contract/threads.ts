@@ -16,7 +16,12 @@ export interface Thread {
   device?: string
   info: SessionSummary
   entries: Map<string, Entry>
+  carried?: Entry[]
+  complete?: boolean
+  cursor?: string
+  floor?: string
   loaded: boolean
+  cached?: boolean
   failed?: string
   running: boolean
   started?: number
@@ -55,8 +60,13 @@ export interface Threads {
   select(id: string | undefined): Promise<void>
   load(id: string): Promise<Thread | undefined>
   create(options?: NewThread): Promise<Thread>
-  path(id: string): Entry[]
+  path(id: string, options?: { carried?: boolean }): Entry[]
   link(id: string): string
+  older(id: string): boolean
+  page(id: string): Promise<void>
+  findLast(id: string, test: (entry: Entry) => boolean): Promise<Entry | undefined>
+  full(id: string): Promise<void>
+  children(id: string): Promise<void>
   rename(id: string, title: string): Promise<void>
   remove(id: string): Promise<void>
   checkout(id: string, entry: string | null): Promise<void>

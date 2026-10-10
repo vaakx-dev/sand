@@ -4,6 +4,8 @@ import { definePlugin } from 'drydock'
 import { lineView, type LineContext, type StepOptions } from './line'
 import { failedLine, itemLines, loadingLine, type Line } from './lines'
 
+const revealDistance = 400
+
 export default definePlugin({
   name: 'transcript-log',
   description: 'Dense terminal-style log: one line per message or tool call; tool lines open to show their output',
@@ -21,11 +23,18 @@ export default definePlugin({
       div(
         {
           class: 'min-h-0 flex-1 overflow-auto px-3 pt-3 font-mono text-xs text-neutral-300 md:px-4',
-          onScroll: () => jumpShown.set(!nearEnd(scroller)),
+          onScroll: () => {
+            jumpShown.set(!nearEnd(scroller))
+            older()
+          },
         },
         div({ style: { paddingBottom: 'var(--dock-h, 0px)' } }, list(lines, line => line.key, line => lineView(line, context), div({ class: 'mx-auto w-full max-w-5xl pb-6' }))),
       ),
     )
+    const older = () => {
+      const thread = ctx.threads.current()
+      if (thread?.loaded && scroller.clientHeight && scroller.scrollTop < revealDistance && ctx.threads.older(thread.id)) void ctx.threads.page(thread.id)
+    }
     const scrollToEnd = () => {
       toEnd(scroller)
       jumpShown.set(false)
@@ -48,6 +57,7 @@ export default definePlugin({
       }
       if (pinned) scrollToEnd()
       else jumpShown.set(!nearEnd(scroller))
+      older()
     }
 
     const transcript: Transcript = { tool: registry.tool, entry: registry.entry, scrollToEnd }

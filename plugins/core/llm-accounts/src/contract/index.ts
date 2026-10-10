@@ -1,5 +1,5 @@
-import type { Session, WireSession } from '@sand/sessions-sqlite/contract'
-import type { LLM, LLMEvent, Limits } from './llm'
+import type { Session, WireSessionRef } from '@sand/sessions-sqlite/contract'
+import type { LiveEvent, LLM, LLMEvent, Limits } from './llm'
 import type { LoginProvider, LoginState } from './login'
 
 export type * from './llm'
@@ -30,7 +30,7 @@ declare module '@sand/protocol/wire' {
   }
 
   interface WireEvents {
-    'llm.event': [event: LLMEvent, session: WireSession]
+    'llm.event': [event: LiveEvent, session: WireSessionRef]
     'llm.limits': [limits: Limits]
     'login.change': [state: LoginState]
   }

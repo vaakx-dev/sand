@@ -1,4 +1,4 @@
-import type { LiveBlock, LLMEvent } from '@sand/llm-accounts/contract'
+import type { LiveBlock, LiveEvent } from '@sand/llm-accounts/contract'
 
 const place = (live: LiveBlock[], block: LiveBlock) => {
   const index = live.findIndex(other => other.index === block.index)
@@ -18,7 +18,7 @@ const update = (live: LiveBlock[], index: number, change: (block: LiveBlock) => 
   return next
 }
 
-export const applyLiveEvent = (live: LiveBlock[], event: LLMEvent): LiveBlock[] => {
+export const applyLiveEvent = (live: LiveBlock[], event: LiveEvent): LiveBlock[] => {
   if (event.type === 'start') return []
   if (event.type === 'tool_call') return place(live, { type: 'tool', index: event.index, id: event.id, name: event.name, input: '' })
   if (event.type === 'tool_input')

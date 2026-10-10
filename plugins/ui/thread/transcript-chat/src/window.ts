@@ -5,7 +5,8 @@ export const pageSize = 40
 
 export const windowed = (view: ThreadView, items: Item[], grow = 0) => {
   const anchored = view.first ? items.findIndex(item => item.key === view.first) : -1
-  const start = Math.max(0, (anchored >= 0 ? anchored : items.length - pageSize) - grow)
+  const fallback = items.length - (view.first && view.size ? view.size : pageSize)
+  const start = Math.max(0, (anchored >= 0 ? anchored : fallback) - grow)
   view.first = items[start]?.key
   view.truncated = start > 0
   view.size = items.length - start

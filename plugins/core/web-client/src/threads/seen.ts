@@ -6,7 +6,7 @@ import type { Store } from './store'
 export const trackSeen = (ctx: Context, wire: Wire, store: Store) => {
   const mark = () => {
     const thread: Thread | undefined = store.current ? store.threads.get(store.current) : undefined
-    if (!thread || document.visibilityState !== 'visible') return
+    if (!thread || document.visibilityState !== 'visible' || wire.state() !== 'open') return
     const at = thread.info.updated
     if (at <= (thread.info.seen ?? thread.info.created)) return
     thread.info = { ...thread.info, seen: at }

@@ -13,16 +13,23 @@ const listRequest = (threads: Threads): WireRequest => {
 export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): SkillIndex => {
   let skills: SkillSummary[] = []
   let sequence = 0
+  let queued = false
   const set = (next: SkillSummary[]) => {
     skills = next
     ctx.emit('skills.change')
   }
-  const refresh = () => {
+  const ask = () => {
+    queued = false
     const ticket = ++sequence
     wire.call<SkillSummary[]>(listRequest(threads)).then(
       next => ticket === sequence && set(next),
       () => {},
     )
+  }
+  const refresh = () => {
+    if (queued) return
+    queued = true
+    queueMicrotask(ask)
   }
   ctx.on('wire.hello', hello => {
     set(hello.skills)

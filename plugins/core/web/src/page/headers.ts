@@ -12,10 +12,10 @@ const policy = [
   "frame-ancestors 'none'",
 ].join('; ')
 
-export const headers = (type: string) => ({
+export const headers = (type: string, cache = 'no-store') => ({
   'content-type': `${type}; charset=utf-8`,
   'content-security-policy': policy,
   'referrer-policy': 'no-referrer',
   'x-content-type-options': 'nosniff',
-  'cache-control': 'no-store',
+  'cache-control': cache,
 })

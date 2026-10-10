@@ -1,4 +1,5 @@
 import type { Database } from 'bun:sqlite'
+import { syncLog } from './sync/schema'
 
 type Step = (db: Database) => void
 
@@ -35,7 +36,12 @@ const additive: Step = db => {
 
 const addSnoozed: Step = additive
 
-const steps: Step[] = [additive, addSnoozed]
+const coveringIndex: Step = db => {
+  db.run('create index if not exists entries_session_type_at on entries (session, type, at)')
+  db.run('drop index if exists entries_session')
+}
+
+const steps: Step[] = [additive, addSnoozed, coveringIndex, syncLog]
 
 export const migrate = (db: Database) => {
   const { user_version } = db.query<{ user_version: number }, []>('pragma user_version').get()!

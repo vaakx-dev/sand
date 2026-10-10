@@ -5,6 +5,7 @@ import { pairFragment } from '../auth/fragment'
 import { createHostAuth } from '../auth/host'
 import { hostKeys } from '../auth/keys'
 import { homeHost, setHomeHost } from '../connection/book'
+import type { HelloKeep } from '../connection/hello'
 import { createPcConnection, type PcConnection } from '../connection/pc'
 
 export interface HomeWire extends Wire {
@@ -12,7 +13,13 @@ export interface HomeWire extends Wire {
   nudge(): void
 }
 
-export const startWire = (ctx: Context, changed: () => void): HomeWire => {
+export const startWire = (
+  ctx: Context,
+  changed: () => void,
+  since: () => string | undefined,
+  gate: (host: string) => Promise<void>,
+  kept: HelloKeep,
+): HomeWire => {
   const fragment = pairFragment()
   let pc: PcConnection | undefined
   let hello: Hello | undefined
@@ -29,9 +36,10 @@ export const startWire = (ctx: Context, changed: () => void): HomeWire => {
     seeds: () => [location.origin],
     expected: homeHost,
     trusted: () => location.origin,
-    ticket: auth.socketUrl,
+    ticket: (base, host) => gate(host).then(() => auth.socketUrl(base, host)),
     offline: 'Not connected to the sand server',
     event: event => ctx.emit('wire.event', event),
+    since,
     hello(next) {
       hello = next
       ctx.emit('wire.hello', next)
@@ -46,6 +54,7 @@ export const startWire = (ctx: Context, changed: () => void): HomeWire => {
       changed()
     },
     identified: setHomeHost,
+    kept,
   })
   pc = home
   ctx.effect(() => () => home.close())

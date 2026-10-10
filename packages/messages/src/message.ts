@@ -17,6 +17,13 @@ export interface DocumentBlock {
   name?: string
 }
 
+export interface MediaRef {
+  blob: string
+  size: number
+  width?: number
+  height?: number
+}
+
 export interface ThinkingBlock {
   type: 'thinking'
   thinking: string

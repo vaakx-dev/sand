@@ -6,6 +6,7 @@ import type { QueueState } from '@sand/steering/contract'
 import type { DraftTarget, Thread } from '../contract'
 import type { Context } from 'drydock'
 import { nextFrame } from './frame'
+import { listKey } from './listed'
 
 const blank = (info: SessionSummary): Thread => ({
   id: info.id,
@@ -31,15 +32,23 @@ export const walk = (entries: Map<string, Entry>, head: string | null) => {
   return path.reverse()
 }
 
+export interface StoreWatcher {
+  changed(id: string): void
+  removed(id: string): void
+}
+
 export class Store {
   readonly threads = new Map<string, Thread>()
+  private watchers = new Set<StoreWatcher>()
   current: string | undefined
   draft: DraftTarget | undefined
   idle = false
   readonly settings = new Map<string, SettingsState>()
+  readonly synced = new Map<string, string>()
   private starts = new Map<string, (() => void)[]>()
   private dirty = new Set<string>()
   private listed = false
+  private keys = new WeakMap<Thread, string>()
   private frame: (() => void) | undefined
 
   constructor(private ctx: Context) {}
@@ -54,7 +63,7 @@ export class Store {
       const differs = Object.entries(info).some(([key, value]) => existing.info[key as keyof SessionSummary] !== value)
       if (!differs) return existing
       existing.info = { ...existing.info, ...info }
-      this.changed(info.id, true)
+      this.changed(info.id)
       return existing
     }
     const thread = blank({ updated: info.created, messages: 0, named: false, ...info })
@@ -92,12 +101,18 @@ export class Store {
     const thread = this.threads.get(id)
     if (!thread) return
     thread.info = { ...thread.info, ...meta }
-    this.changed(id, true)
+    this.changed(id)
+  }
+
+  watch(watcher: StoreWatcher) {
+    this.watchers.add(watcher)
+    return () => void this.watchers.delete(watcher)
   }
 
   remove(id: string) {
-    this.threads.delete(id)
+    if (!this.threads.delete(id)) return
     this.dirty.delete(id)
+    for (const watcher of this.watchers) watcher.removed(id)
     this.changed(undefined, true)
   }
 
@@ -107,6 +122,7 @@ export class Store {
       thread.unread = thread.id !== this.current && thread.info.updated > (thread.info.seen ?? thread.info.created)
       thread.version++
       this.dirty.add(thread.id)
+      for (const watcher of this.watchers) watcher.changed(thread.id)
     }
     this.listed ||= list
     this.frame ??= nextFrame(() => this.flush())
@@ -116,10 +132,19 @@ export class Store {
     this.frame?.()
   }
 
+  private relisted(id: string) {
+    const thread = this.threads.get(id)
+    if (!thread) return false
+    const key = listKey(thread)
+    const changed = this.keys.get(thread) !== key
+    this.keys.set(thread, key)
+    return changed
+  }
+
   private flush() {
     this.frame = undefined
     const ids = [...this.dirty]
-    const listed = this.listed
+    const listed = ids.map(id => this.relisted(id)).includes(true) || this.listed
     this.dirty.clear()
     this.listed = false
     for (const id of ids) this.ctx.emit('thread.change', id)

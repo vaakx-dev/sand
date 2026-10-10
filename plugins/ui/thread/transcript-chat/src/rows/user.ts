@@ -1,18 +1,15 @@
-import type { ImageBlock, UserPart } from '@sand/messages'
-import { div, el, icon, span } from '@sand/dom'
-import { row, type RowMaker } from './row'
+import type { UserPart } from '@sand/messages'
+import { div, icon, span } from '@sand/dom'
+import { row, type RowContext, type RowMaker } from './row'
 
 const chip = 'inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs'
 
-const preview = (block: ImageBlock) => `data:${block.mediaType};base64,${block.data}`
-
-const attachment = (part: UserPart) => {
+const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
-    return el('img', {
+    return context.parts.image(part.block, context.thread, {
       class: 'block max-h-32 max-w-48 rounded-lg bg-neutral-800',
-      src: preview(part.block),
-      alt: part.block.name ?? 'image',
       title: part.block.name ?? '',
+      maxHeight: 128,
     })
   if (part.kind === 'document') {
     const name = part.block.name ?? 'document'
@@ -34,9 +31,9 @@ const bubble = (text: string) => div({ class: 'transcript-chat-bubble rounded-xl
 const message = (...children: (HTMLElement | false | null | '')[]) =>
   div({ class: 'my-6 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
-export const userRow: RowMaker<'user'> = item => {
+export const userRow: RowMaker<'user'> = (item, context) => {
   const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
-  const attachments = item.parts.map(attachment).filter(Boolean)
+  const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
   return row(`user:${item.key}`, item, () =>
     message(
       item.steer && label('steered'),

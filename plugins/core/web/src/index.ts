@@ -7,6 +7,7 @@ import { createSite } from './extensions/site'
 import { headers } from './page/headers'
 import { iconRoutes } from './page/icons'
 import { page } from './page/page'
+import { scriptResponse } from './page/script'
 import { pwaRoutes } from './pwa/routes'
 
 export default definePlugin({
@@ -32,7 +33,7 @@ export default definePlugin({
     })
     const routes = {
       '/': () => new Response(page(site.current().id, site.enabled()), { headers: headers('text/html') }),
-      '/app.js': () => new Response(site.current().script, { headers: headers('text/javascript') }),
+      '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       ...iconRoutes,
       ...pwaRoutes,

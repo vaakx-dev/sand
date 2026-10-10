@@ -13,7 +13,10 @@
     "provides": [
       "transcriptParts",
       "toolViews"
-    ]
+    ],
+    "uses": {
+      "media": "images load only from inline data"
+    }
   },
   "dependencies": {
     "@sand/compaction": "workspace:*",

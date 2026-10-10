@@ -18,3 +18,11 @@ export const branch = async (cwd: string) => {
   cache.set(cwd, { at: Date.now(), branch: found })
   return found
 }
+
+const most = 500
+
+export const branches = async (cwds: unknown) => {
+  const wanted = Array.isArray(cwds) ? [...new Set(cwds.filter((cwd): cwd is string => typeof cwd === 'string'))].slice(0, most) : []
+  const found = await Promise.all(wanted.map(cwd => branch(cwd).catch(() => undefined)))
+  return Object.fromEntries(wanted.map((cwd, i) => [cwd, found[i] ?? null]))
+}

@@ -1,4 +1,4 @@
-import { asPanel, collectScope, disposeAll } from '@sand/dom'
+import { asPanel, collectScope, disposeAll, watchShown, type Shown } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { treeSource } from './source'
 import { createTreeView, type TreeView } from './view'
@@ -11,7 +11,13 @@ export default definePlugin({
   apply(ctx) {
     const source = treeSource(ctx)
     const views = new Set<TreeView>()
+    const shown = new Set<Shown>()
+    const complete = () => {
+      const thread = ctx.threads.current()
+      if (thread?.loaded && !thread.complete && [...shown].some(watch => watch.get())) void ctx.threads.full(thread.id)
+    }
     const sync = () => {
+      complete()
       for (const view of views) view.sync()
     }
 
@@ -24,7 +30,11 @@ export default definePlugin({
         const { value: view, scope } = collectScope(() => createTreeView(source))
         body.append(view.root)
         views.add(view)
+        const watch = watchShown(body, complete)
+        shown.add(watch)
         return () => {
+          watch.stop()
+          shown.delete(watch)
           views.delete(view)
           view.root.remove()
           disposeAll(scope)

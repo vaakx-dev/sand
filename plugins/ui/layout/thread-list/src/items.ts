@@ -2,7 +2,8 @@ import type { ThreadDraft } from '@sand/composer-card/contract'
 import type { NavItem } from '@sand/dom'
 import type { Thread } from '@sand/web-client/contract'
 import { plural } from '@sand/kit'
-import { noBackground, type BackgroundOf } from './background'
+import { noBackground, type Background, type BackgroundOf } from './background'
+import { uncached, type ItemCache } from './cache'
 import { byPosition } from './order'
 import type { ProjectLookup } from './project-lookup'
 import { isBack, snoozedUntil } from './snooze/actions'
@@ -30,8 +31,7 @@ const where = (cwd: string, device: string | undefined, places: Places, quick?: 
 
 const stateOf = (thread: Thread, jobs: number): NavItem['state'] => (thread.running ? 'running' : jobs > 0 ? 'background' : 'idle')
 
-const navItem = (thread: Thread, background: BackgroundOf, lookup: ProjectLookup, places: Places): NavItem => {
-  const { count, since } = background(thread.id)
+const navItem = (thread: Thread, { count, since }: Background, lookup: ProjectLookup, places: Places): NavItem => {
   const project = lookup(thread.info.cwd, thread.device, thread.info.project)
   const at = where(thread.info.cwd, thread.device, places, project.quick)
   return {
@@ -56,8 +56,17 @@ const navItem = (thread: Thread, background: BackgroundOf, lookup: ProjectLookup
   }
 }
 
-export const navItems = (threads: Thread[], lookup: ProjectLookup, places: Places = {}, background: BackgroundOf = noBackground) =>
-  visibleThreads(threads).map(thread => navItem(thread, background, lookup, places))
+export const navItems = (
+  threads: Thread[],
+  lookup: ProjectLookup,
+  places: Places = {},
+  background: BackgroundOf = noBackground,
+  cache: ItemCache = uncached,
+) =>
+  visibleThreads(threads).map(thread => {
+    const jobs = background(thread.id)
+    return cache(thread, jobs, () => navItem(thread, jobs, lookup, places))
+  })
 
 export const draftNavId = (id: string) => `draft:${id}`
 

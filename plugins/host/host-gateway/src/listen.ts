@@ -19,6 +19,7 @@ export const createListen =
       websocket: {
         data: {} as SocketData,
         maxPayloadLength,
+        perMessageDeflate: true,
         open: ws => hub.open(ws, ws.data.device),
         message: (ws, data) => hub.message(ws, String(data)),
         close: ws => hub.close(ws),

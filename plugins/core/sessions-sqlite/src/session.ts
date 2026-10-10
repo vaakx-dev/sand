@@ -1,6 +1,8 @@
 import type { Entry, Message } from '@sand/messages'
+import type { EntryCache } from './cache'
 import type { Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
+import type { Paging } from './paging'
 
 type Row = Omit<Entry, 'data'> & { data: string }
 
@@ -9,7 +11,7 @@ export interface SessionHooks {
   update(session: Session): void
 }
 
-export const createSession = (db: Database, info: SessionInfo, hooks: SessionHooks): Session => {
+export const createSession = (db: Database, info: SessionInfo, hooks: SessionHooks, cache: EntryCache, paging: Paging): Session => {
   const insert = db.query('insert into entries (id, session, parent, at, type, data) values ($id, $session, $parent, $at, $type, $data)')
   const setHead = db.query('update sessions set head = $head where id = $id')
   const setTitle = db.query('update sessions set title = $title, named = $named where id = $id')
@@ -19,8 +21,14 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     setHead.run({ head: added.at(-1)!.id, id: info.id })
   })
   let entries: Map<string, Entry> | undefined
-  const all = () =>
-    (entries ??= new Map(load.all({ session: info.id }).map(row => [row.id, { ...row, data: JSON.parse(row.data) }])))
+  const unload = () => {
+    entries = undefined
+  }
+  const all = () => {
+    const map = (entries ??= new Map(load.all({ session: info.id }).map(row => [row.id, { ...row, data: JSON.parse(row.data) }])))
+    cache.touch(info.id, unload)
+    return map
+  }
 
   const session: Session = {
     ...info,
@@ -36,17 +44,24 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
       if (!items.length) return
       const added = items.map((item, index) => ({ ...item, session: info.id, parent: index ? items[index - 1]!.id : session.head }))
       append(...added)
-      for (const entry of added) all().set(entry.id, entry)
+      const map = all()
+      for (const entry of added) map.set(entry.id, entry)
       session.head = added.at(-1)!.id
       hooks.update(session)
     },
     path() {
       const path: Entry[] = []
-      for (let entry = session.head ? all().get(session.head) : undefined; entry; entry = all().get(entry.parent ?? '')) {
+      const map = all()
+      for (let entry = session.head ? map.get(session.head) : undefined; entry; entry = map.get(entry.parent ?? '')) {
         path.push(entry)
       }
       return path.reverse()
     },
+    page(before, size) {
+      return paging.page(info.id, before ? paging.parent(info.id, before) : session.head, size)
+    },
+    since: after => paging.since(info.id, session.head, after),
+    carried: (before, types) => paging.carried(info.id, before, types),
     entries: () => [...all().values()].sort((a, b) => a.at - b.at || a.id.localeCompare(b.id)),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {

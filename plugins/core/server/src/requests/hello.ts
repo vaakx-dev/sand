@@ -1,23 +1,29 @@
-import type { Hello } from '@sand/protocol'
+import type { Hello, WireRequestOf } from '@sand/protocol'
 import type { ServerContext } from '../context'
 
 export const helloRequest = (ctx: ServerContext) => {
-  const active = new Set<string>()
-  ctx.on('turn.start', session => void active.add(session.id))
+  const active = new Map<string, number>()
+  ctx.on('turn.start', session => void active.set(session.id, Date.now()))
   ctx.on('turn.end', session => void active.delete(session.id))
 
-  const base = (): Hello => ({
+  const summaries = (request: WireRequestOf<'hello'>) => {
+    if (!('since' in request)) return { sessions: ctx.sessions.list() }
+    return ctx.sessions.synced(request.since ?? null, [...active.keys()])
+  }
+
+  const base = (request: WireRequestOf<'hello'>): Hello => ({
     models: ctx.llm?.models?.(),
     levels: ctx.llm?.levels?.(),
     limits: ctx.llm?.limits?.(),
     defaults: ctx.modelSettings?.defaults(),
     attachments: ctx.attachments?.limits,
-    sessions: ctx.sessions.list(),
-    active: [...active],
+    ...summaries(request),
+    active: [...active.keys()],
+    started: Object.fromEntries(active),
     jobs: [],
     skills: [],
     safe: ctx.cli.safe,
   })
 
-  return () => ctx.waterfall('server.hello', base())
+  return (request: WireRequestOf<'hello'>) => ctx.waterfall('server.hello', base(request))
 }

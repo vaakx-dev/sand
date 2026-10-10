@@ -4,17 +4,18 @@ const sameShell = (a: Node, b: Node) => {
   return [...b.attributes].every(attribute => a.getAttribute(attribute.name) === attribute.value)
 }
 
-export const morph = (parent: Node, next: Node[]) => {
+const leaf = (node: Node) => node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE
+
+export const morph = (parent: Node, next: Node[], offset = 0) => {
   next.forEach((node, index) => {
-    const old = parent.childNodes[index]
+    const old = parent.childNodes[offset + index]
     if (!old) return void parent.appendChild(node)
-    if (old.isEqualNode(node)) return
-    if (old.nodeType === Node.TEXT_NODE && node.nodeType === Node.TEXT_NODE) {
-      old.nodeValue = node.nodeValue
+    if (leaf(old) && old.nodeType === node.nodeType) {
+      if (old.nodeValue !== node.nodeValue) old.nodeValue = node.nodeValue
       return
     }
     if (sameShell(old, node)) return morph(old, [...node.childNodes])
     parent.replaceChild(node, old)
   })
-  while (parent.childNodes.length > next.length) parent.lastChild!.remove()
+  while (parent.childNodes.length > offset + next.length) parent.lastChild!.remove()
 }

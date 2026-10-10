@@ -30,10 +30,30 @@ export interface SessionSummary extends SessionInfo, Partial<SessionMeta> {
   named: boolean
 }
 
+export interface PageSize {
+  entries?: number
+  bytes?: number
+}
+
+export interface EntryPage {
+  entries: Entry[]
+  more: boolean
+}
+
+export interface SyncedSummaries {
+  sessions: SessionSummary[]
+  removed?: string[]
+  sync: string
+  delta: boolean
+}
+
 export interface Session extends SessionInfo {
   append(type: string, data: unknown, id?: string, at?: number): Entry
   appendMany(entries: Pick<Entry, 'id' | 'type' | 'data' | 'at'>[]): void
   path(): Entry[]
+  page(before?: string | null, size?: PageSize): EntryPage
+  since(after: string): Entry[] | undefined
+  carried(before: string, types: string[]): Entry[]
   entries(): Entry[]
   messages(): Message[]
   checkout(entry: string | null): void
@@ -78,6 +98,8 @@ export interface Sessions {
   open(id: string): Session | undefined
   branch(session: Session, id?: string, at?: string | null): Session
   list(): SessionSummary[]
+  synced(since: string | null, active: string[]): SyncedSummaries
+  children(parent: string): SessionSummary[]
   remove(id: string): void
   entriesOfType?(type: string): Entry[]
   readonly format: number
@@ -88,6 +110,10 @@ export type SessionMetaUpdate = SessionMeta & { id: string }
 
 export interface WireSession {
   $session: SessionInfo
+}
+
+export interface WireSessionRef {
+  $session: Pick<SessionInfo, 'id'>
 }
 
 declare module 'drydock' {

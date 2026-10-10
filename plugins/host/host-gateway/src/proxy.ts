@@ -8,7 +8,7 @@ const credentials = new Set(['authorization', 'cookie'])
 const bodiless = new Set(['GET', 'HEAD'])
 const waitForRuntime = 30_000
 
-export type Fetch = (url: URL, init: RequestInit) => Promise<Response>
+export type Fetch = (url: URL, init: RequestInit & { decompress?: boolean }) => Promise<Response>
 
 const requestHeaders = (headers: Headers) => {
   const copy = new Headers()
@@ -20,10 +20,8 @@ const requestHeaders = (headers: Headers) => {
 
 const responseHeaders = (headers: Headers, secret: string) => {
   const copy = new Headers()
-  const decoded = headers.has('content-encoding')
   headers.forEach((value, key) => {
     if (hopByHop.has(key) || value.includes(secret)) return
-    if (decoded && (key === 'content-encoding' || key === 'content-length')) return
     copy.append(key, value)
   })
   return copy
@@ -38,6 +36,7 @@ export const createProxy = (runtimes: Runtimes, send: Fetch = fetch) => async (r
       headers: requestHeaders(request.headers),
       body: bodiless.has(request.method) ? undefined : request.body,
       redirect: 'manual',
+      decompress: false,
       signal: request.signal,
     })
     return new Response(upstream.body, {

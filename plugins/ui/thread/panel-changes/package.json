@@ -12,13 +12,15 @@
     "summary": "Files the agent edited, with their diffs",
     "uses": {
       "panels": "draws its own plain panel",
-      "commands": "no /changes command"
+      "commands": "no /changes command",
+      "wire": "the hidden Edits badge counts only the loaded part of the thread"
     }
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/web-client": "workspace:*",

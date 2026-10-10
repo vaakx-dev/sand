@@ -8,6 +8,8 @@ import type { NoticeLevel, PickItem, PickOptions, ReportRow } from './ui'
 export interface OpenedSession {
   info: SessionInfo
   entries: Entry[]
+  partial?: boolean
+  carried?: Entry[]
   queue?: QueueState
   settings?: SettingsState
   live?: LiveBlock[]

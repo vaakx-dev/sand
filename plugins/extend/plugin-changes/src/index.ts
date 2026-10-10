@@ -5,6 +5,7 @@ import { askSand } from './library/ask'
 import { librarySource } from './library/source'
 import { offerNotice } from './notice'
 import { pluginsPage } from './page'
+import { page } from './shown'
 import type { RowActions } from './page/catalog/warning'
 import { pluginSource } from './source'
 
@@ -37,7 +38,7 @@ export default definePlugin({
       },
     }
     ctx.watch('settings', settings =>
-      settings?.page({ id: 'plugins', label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(source, library, versions, actions) }),
+      settings?.page({ id: page, label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(source, library, versions, actions) }),
     )
   },
 })

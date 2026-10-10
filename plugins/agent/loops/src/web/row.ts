@@ -8,7 +8,7 @@ type ViewContext = Context<'wire' | 'threads'>
 const nameOf = (entry: Entry | undefined) => (entry?.data as LoopChoice | undefined)?.name ?? null
 
 const previousName = (ctx: ViewContext, entry: Entry, thread: string) => {
-  const path = ctx.threads.path(thread)
+  const path = ctx.threads.path(thread, { carried: true })
   const index = path.findIndex(item => item.id === entry.id)
   return nameOf((index < 0 ? path : path.slice(0, index)).findLast(item => item.type === 'loop'))
 }

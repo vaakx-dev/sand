@@ -1,6 +1,7 @@
 import type { PluginLibrary } from '@sand/host-plugin-library/contract'
 import { errorMessage, sig } from '@sand/dom'
 import type { Context } from 'drydock'
+import { whenShown } from '../shown'
 
 type Action = 'plugins.customise' | 'plugins.keep' | 'plugins.restore'
 
@@ -38,12 +39,11 @@ export const librarySource = (ctx: Context<'wire'>) => {
 
   const keep = (plugin: string) => void run('plugins.keep', plugin)
 
-  ctx.on('wire.hello', load)
+  const refresh = whenShown(ctx, load)
   ctx.on('wire.event', event => {
     if (event.name === 'plugins.library') library.set(event.args[0])
-    if (event.name === 'plugins.change') load()
+    if (event.name === 'plugins.change') refresh()
   })
-  if (ctx.wire.hello()) load()
 
   return { library, busy, customise, restore, keep, fail }
 }

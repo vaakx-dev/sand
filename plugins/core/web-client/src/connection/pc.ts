@@ -6,6 +6,7 @@ import { Unpaired } from '../auth/unpaired'
 import type { Call } from '../wire/connection'
 import { learn } from './book'
 import { candidates } from './candidates'
+import { helloMemory, type HelloKeep } from './hello'
 import { openRoute, type Opened, type Slot, type SlotHandlers } from './open'
 import { createRetry } from './retry'
 import { selectRoute, type Route } from './select'
@@ -22,8 +23,10 @@ export interface PcOptions {
   offline: string
   event(event: WireEvent): void
   hello(hello: Hello): void
+  since?(): string | undefined
   changed(): void
   identified?(id: string): void
+  kept?: HelloKeep
 }
 
 export interface PcConnection {
@@ -58,6 +61,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
   let busy = false
   let closed = false
   const retry = createRetry(() => void work(attempt))
+  const hellos = helloMemory(options.kept)
 
   const status = (): ConnectionStatus => {
     if (unpaired) return 'unpaired'
@@ -114,15 +118,21 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
       return info
     })
 
+  const greeting = () => {
+    const known = hellos.known()
+    return { type: 'hello' as const, since: options.since?.() ?? null, ...(known && { known }) }
+  }
+
   const resync = (slot: Slot) => {
-    void slot.connection.call<Hello>({ type: 'hello' }).then(
-      hello => slot === current && options.hello(hello),
+    void slot.connection.call<Hello>(greeting()).then(
+      hello => slot === current && options.hello(hellos.take(hello)),
       () => {},
     )
     void askDevice(slot, heartbeatWait).catch(() => {})
   }
 
   const handlers: SlotHandlers = {
+    greeting,
     event(slot, event) {
       if (slot !== current) return
       options.event(event)
@@ -157,7 +167,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
     if (!old) since = Date.now()
     unpaired = false
     everOpened = true
-    options.hello(hello)
+    options.hello(hellos.take(hello))
     plan()
     options.changed()
     learnRoutes(slot, id)

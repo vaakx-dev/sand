@@ -5,63 +5,66 @@ import type { NewThread, Thread, Threads, Wire } from '../contract'
 import { isInside, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { requestedSession, sessionLink, showSession } from './address'
-import { clearTurn } from './live'
+import { followHeads } from './heads'
+import { applyHello } from './hello'
 import { threadLoader } from './loading'
+import { threadPages } from './pages'
+import { hasOlder, pathOf } from './path'
 import { trackSeen } from './seen'
-import { walk, type Store } from './store'
+import type { Store } from './store'
 
-const preloadCount = 6
+type Extra = { adopt(opened: OpenedSession, device?: string): Thread; restored(): void }
 
-export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads & { adopt(opened: OpenedSession, device?: string): Thread } => {
-  const { install, load } = threadLoader(ctx, wire, store)
+export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>): Threads & Extra => {
+  const { install, load } = threadLoader(ctx, wire, store, hydrate)
+  const pages = threadPages(wire, store)
 
   const focus = (id: string | undefined) => void wire.call({ type: 'ui.focus', ...(id && { session: id }) }).catch(() => {})
 
-  const open = async (id: string | undefined, idle = false) => {
+  const show = (id: string | undefined, idle = false) => {
     store.idle = !id && idle
     store.current = id
     if (id) store.draft = undefined
     else store.draft ??= { id: uuid(), cwd: cwd() }
     const thread = id ? store.threads.get(id) : undefined
     if (thread) thread.unread = false
-    focus(id)
     showSession(id)
     ctx.emit('thread.select', id)
     store.changed(id, true)
-    if (thread && !thread.loaded) await load(thread.id)
+    return thread
+  }
+
+  const open = async (id: string | undefined, idle = false) => {
+    const thread = show(id, idle)
+    focus(id)
+    if (id && !thread?.loaded) await load(id)
   }
 
   const select = (id: string | undefined) => open(id)
 
-  const visible = () =>
-    [...store.threads.values()].filter(thread => thread.info.kind !== 'agent').sort((a, b) => b.info.updated - a.info.updated)
-
-  const preload = async () => {
-    const running = [...store.threads.values()].filter(thread => thread.running)
-    for (const thread of [...running, ...visible().slice(0, preloadCount)]) if (!thread.loaded) await load(thread.id)
-  }
-
   let greeted = false
 
-  const greet = (hello: Hello) => {
-    const known = new Set(hello.sessions.map(info => info.id))
-    const local = () => [...store.threads.values()].filter(thread => !thread.device)
-    for (const thread of local()) if (!known.has(thread.id)) store.remove(thread.id)
-    for (const info of hello.sessions) store.upsert(info)
-    for (const thread of local()) {
-      thread.running = hello.active.includes(thread.id)
-      if (!thread.running) clearTurn(thread)
-      thread.loaded = false
-    }
+  const restored = () => {
     const asked = requestedSession()
+    if (!greeted && asked && store.threads.has(asked)) show(asked)
+  }
+
+  const openAsked = async (asked: string | undefined) => {
+    if (asked && !store.threads.has(asked)) await load(asked)
+    await open(asked && store.threads.has(asked) ? asked : undefined, true)
+  }
+
+  const greet = (hello: Hello) => {
+    applyHello(store, hello)
     const first = !greeted
     greeted = true
-    const target = first ? (asked && store.threads.has(asked) ? asked : undefined) : store.current
-    void open(target, first || store.idle).then(preload)
+    if (first) void openAsked(requestedSession())
+    else void open(store.current, store.idle)
   }
 
   ctx.on('wire.hello', greet)
   trackSeen(ctx, wire, store)
+  followHeads(ctx, store, load)
 
   const call = (request: Parameters<Wire['call']>[0]) => wire.call(request).then(() => undefined)
   const missing = (path: string) => Boolean(ctx.projects?.list().some(project => !project.device && project.path === path && project.missing))
@@ -88,6 +91,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
 
   return {
     adopt: install,
+    restored,
     cwd,
     device: () => store.device(),
     async draft(folder, device, id = uuid()) {
@@ -115,11 +119,19 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
       thread.loaded = true
       return thread
     },
-    path: id => {
+    path: (id, options) => {
       const thread = store.threads.get(id)
-      return thread ? walk(thread.entries, thread.info.head) : []
+      return thread ? pathOf(thread, options?.carried) : []
     },
     link: sessionLink,
+    older: id => {
+      const thread = store.threads.get(id)
+      return thread ? hasOlder(thread) : false
+    },
+    page: pages.page,
+    findLast: pages.findLast,
+    full: pages.full,
+    children: pages.children,
     rename: (id, title) => call({ type: 'session.rename', session: id, title, named: true }),
     remove: id => call({ type: 'sessions.remove', session: id }),
     async checkout(id, entry) {
@@ -127,6 +139,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store): Threads &
       const thread = store.threads.get(id)
       if (!thread) return
       thread.info = { ...thread.info, head: entry }
+      if (entry && !thread.entries.has(entry)) await load(id)
       store.changed(id, true)
     },
     async branch(id, at) {

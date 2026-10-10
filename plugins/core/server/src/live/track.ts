@@ -1,15 +1,11 @@
 import type { LiveBlock } from '@sand/llm-accounts/contract'
+import type { LiveSnapshot } from '../contract'
 import { applyLiveEvent } from '@sand/kit'
 import type { ServerContext } from '../context'
 
 interface Streaming {
   live: LiveBlock[]
   tools: Set<string>
-}
-
-export interface LiveSnapshot {
-  live: LiveBlock[]
-  tools: string[]
 }
 
 export type LiveTracker = ReturnType<typeof createLiveTracker>

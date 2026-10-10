@@ -1,18 +1,25 @@
 import type { Session, Sessions } from '@sand/sessions-sqlite/contract'
 import type { Source } from './tree'
 
-export const sessionSource = (sessions: Sessions | undefined, session: Session, root = true, seen = new Set<string>()): Source => {
-  seen.add(session.id)
-  const children = (sessions?.list() ?? []).filter(info => info.kind === 'agent' && info.parent === session.id && !seen.has(info.id))
-  return {
-    id: session.id,
-    cwd: session.cwd,
-    entries: session.path(),
-    label: root ? undefined : (session.title ?? undefined),
-    origin: session.origin,
-    children: children.flatMap(info => {
-      const child = sessions?.open(info.id)
-      return child ? [sessionSource(sessions, child, false, seen)] : []
-    }),
+export const sessionSource = (sessions: Sessions | undefined, session: Session): Source => {
+  const agents = sessions?.children(session.id) ?? []
+  const seen = new Set<string>()
+
+  const build = (current: Session, root: boolean): Source => {
+    seen.add(current.id)
+    const own = agents.filter(info => info.parent === current.id && !seen.has(info.id))
+    return {
+      id: current.id,
+      cwd: current.cwd,
+      entries: current.path(),
+      label: root ? undefined : (current.title ?? undefined),
+      origin: current.origin,
+      children: own.flatMap(info => {
+        const child = sessions?.open(info.id)
+        return child ? [build(child, false)] : []
+      }),
+    }
   }
+
+  return build(session, true)
 }

@@ -1,17 +1,19 @@
 import { copyButton, div, dynamicChild, effect, fold, shine, show, span } from '@sand/dom'
-import { morph } from '../integrations/morph'
+import { streamedMarkdown } from '../integrations/streamed'
 import { row, worked, type RowMaker } from './row'
 
 export const textRow: RowMaker<'text'> = (item, context) =>
   row(`text:${item.key}`, item, data => {
     const text = data.map(value => value.text)
+    const streaming = data.map(value => value.streaming)
     const node = div({
       class: [
         'markdown prose text-neutral-300 wrap-anywhere',
-        () => (data.get().streaming ? 'transcript-chat-streaming' : ''),
+        () => (streaming.get() ? 'transcript-chat-streaming' : ''),
       ],
     })
-    effect(() => morph(node, context.markdown.nodes(text.get())))
+    const render = streamedMarkdown(node, context.markdown)
+    effect(() => render(text.get(), streaming.get()))
     return div(
       { class: 'group mb-3 text-sm' },
       node,

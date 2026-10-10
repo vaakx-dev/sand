@@ -17,8 +17,10 @@ export interface Link {
 
 export interface LinkHandlers {
   hello(device: string, hello: Hello): void
+  since(device: string): string | undefined
   event(device: string, event: WireEvent): void
   drop(device: string): void
+  keep(devices: Set<string>): void
   state(): void
 }
 
@@ -39,6 +41,7 @@ const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers):
     offline: `${remote.name} is offline`,
     event: event => handlers().event(link.remote.id, event),
     hello: hello => handlers().hello(link.remote.id, hello),
+    since: () => handlers().since(link.remote.id),
     changed: () => handlers().state(),
   })
   const link: Link = {
@@ -55,7 +58,7 @@ const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers):
 
 const sameRoutes = (a: Remote, b: Remote) => urlsOf(a).join('\n') === urlsOf(b).join('\n')
 
-const idle: LinkHandlers = { hello() {}, event() {}, drop() {}, state() {} }
+const idle: LinkHandlers = { hello() {}, since: () => undefined, event() {}, drop() {}, keep() {}, state() {} }
 
 export const createLinks = (invite: Invite) => {
   const links = new Map<string, Link>()
@@ -84,6 +87,7 @@ export const createLinks = (invite: Invite) => {
     sync(remotes: Remote[]) {
       const wanted = new Set(remotes.map(remote => remote.id))
       for (const id of [...links.keys()]) if (!wanted.has(id)) drop(id)
+      handlers.keep(wanted)
       for (const remote of remotes) {
         const link = links.get(remote.id)
         if (link) refresh(link, remote)

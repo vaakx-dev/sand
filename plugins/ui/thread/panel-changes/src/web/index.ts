@@ -1,8 +1,10 @@
-import { asPanel, attach, effect, sig, untrack } from '@sand/dom'
+import { asPanel, attach, effect, sig, untrack, watchShown, type Shown } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import type { Changes } from '../changes/collect'
 import { collectTree } from '../changes/tree'
 import { matchFile } from '../changes/lines'
+import { familyLoader } from './family'
+import { remoteFiles } from './remote'
 import { familyKey, familyOf, sourceOf } from './sources'
 import { changesView, type Reveal } from './view'
 
@@ -10,7 +12,11 @@ export default definePlugin({
   name: 'panel-changes',
   description: 'Edits: files the agent edited or wrote in the current thread, with per-file diffs and +/− counts',
   inject: ['threads'],
-  uses: { panels: 'draws its own plain panel', commands: 'no /changes command' },
+  uses: {
+    panels: 'draws its own plain panel',
+    commands: 'no /changes command',
+    wire: 'the hidden Edits badge counts only the loaded part of the thread',
+  },
   apply(ctx) {
     const closed = sig((ctx.hot.data.closed ??= {}) as Record<string, boolean>)
     const changes = sig<Changes | undefined>(undefined)
@@ -19,6 +25,9 @@ export default definePlugin({
     const revealed = sig<Reveal | undefined>(undefined)
     let key: string | undefined
     let badge = 0
+    const shown = new Set<Shown>()
+    const visible = () => [...shown].some(watch => watch.get())
+    const completeFamily = familyLoader(ctx)
 
     const toggle = (id: string) => {
       const next = { ...closed.get(), [id]: !closed.get()[id] }
@@ -26,17 +35,30 @@ export default definePlugin({
       closed.set(next)
     }
 
+    const showBadge = () => {
+      const thread = ctx.threads.current()
+      const local = changes.get()?.files ?? []
+      const stored = thread && !visible() && turn.get() === undefined ? remote.of(thread.id) : undefined
+      const count = stored ? new Set([...stored, ...local.map(file => file.key)]).size : local.length
+      if (count !== badge) control.update({ badge: (badge = count) || undefined })
+    }
+
+    const remote = remoteFiles(ctx, showBadge)
+    ctx.effect(() => remote.stop)
+
     const paint = () => {
       const thread = ctx.threads.current()
       empty.set(thread ? 'No edits yet.' : 'No thread selected.')
       const family = thread ? familyOf(ctx, thread) : []
-      for (const member of family) if (!member.loaded && !member.failed) void ctx.threads.load(member.id)
-      const next = thread ? `${familyKey(family)}|${turn.get()}` : ''
-      if (next === key) return
-      key = next
-      changes.set(thread ? collectTree(sourceOf(ctx, thread), turn.get()) : undefined)
-      const files = changes.get()?.files.length ?? 0
-      if (files !== badge) control.update({ badge: (badge = files) || undefined })
+      const members = familyKey(family)
+      if (thread && visible()) completeFamily(thread, family)
+      else if (thread) remote.want(thread, members)
+      const next = thread ? `${members}|${turn.get()}` : ''
+      if (next !== key) {
+        key = next
+        changes.set(thread ? collectTree(sourceOf(ctx, thread), turn.get()) : undefined)
+      }
+      showBadge()
     }
 
     const reveal = (path: string) => {
@@ -51,7 +73,16 @@ export default definePlugin({
       title: 'Edits',
       icon: 'compare',
       order: 10,
-      render: body => attach(body, () => changesView({ changes, empty, turn, closed, revealed }, toggle)),
+      render(body) {
+        const detach = attach(body, () => changesView({ changes, empty, turn, closed, revealed }, toggle))
+        const watch = watchShown(body, paint)
+        shown.add(watch)
+        return () => {
+          watch.stop()
+          shown.delete(watch)
+          detach()
+        }
+      },
     })
 
     ctx.on('thread.change', id => {

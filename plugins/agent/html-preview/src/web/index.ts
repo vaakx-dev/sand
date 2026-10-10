@@ -1,7 +1,7 @@
 import type { ImageBlock } from '@sand/messages'
 import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
 import type { ToolViews } from '@sand/transcript-parts/contract'
-import { div, el, img } from '@sand/dom'
+import { div, el } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { consoleHeading } from '../output'
 
@@ -27,9 +27,7 @@ const previewRenderer = (views: ToolViews): ToolRenderer => ({
       { class: 'flex flex-col gap-2' },
       div(
         { class: 'flex max-h-96 flex-col overflow-auto rounded-md' },
-        ...screenshots(tool).map(shot =>
-          img({ class: 'block max-w-full', src: `data:${shot.mediaType};base64,${shot.data}`, alt: 'Preview' }),
-        ),
+        ...screenshots(tool).map(shot => views.image(shot, tool.thread, { class: 'block max-w-full', alt: 'Preview' })),
       ),
       el('pre', { class: 'whitespace-pre-wrap wrap-anywhere font-mono text-xs text-neutral-400' }, views.resultText(tool.result).split(consoleHeading)[1] ?? ''),
     )

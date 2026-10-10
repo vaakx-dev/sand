@@ -1,4 +1,4 @@
-import { asPanel, attach, onInterval, sig } from '@sand/dom'
+import { asPanel, attach, onInterval, sig, watchShown, type Shown } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { modelsUnlike } from './models'
@@ -21,6 +21,8 @@ export default definePlugin({
     const now = sig(Date.now())
     let badge = 0
     let stopTicking: (() => void) | undefined
+    let asked: string | undefined
+    const shown = new Set<Shown>()
 
     const running = () => rows.get().filter(row => row.status === 'running').length
 
@@ -47,7 +49,15 @@ export default definePlugin({
       }
     }
 
+    const fetchChildren = () => {
+      const current = ctx.threads.current()
+      if (!current || asked === current.id || ![...shown].some(watch => watch.get())) return
+      asked = current.id
+      void ctx.threads.children(current.id)
+    }
+
     const paint = () => {
+      fetchChildren()
       compute()
       now.set(Date.now())
       tick()
@@ -79,7 +89,16 @@ export default definePlugin({
       title: 'Agents',
       icon: 'bot',
       order: 20,
-      render: body => attach(body, () => agentsView({ rows, parent, empty, now }, actions)),
+      render(body) {
+        const detach = attach(body, () => agentsView({ rows, parent, empty, now }, actions))
+        const watch = watchShown(body, paint)
+        shown.add(watch)
+        return () => {
+          watch.stop()
+          shown.delete(watch)
+          detach()
+        }
+      },
     })
     paint()
 

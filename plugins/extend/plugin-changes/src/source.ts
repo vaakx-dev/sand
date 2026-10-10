@@ -9,7 +9,10 @@ export const pluginSource = (ctx: Context<'wire'>) => {
   const fail = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
   const load = () => {
-    ctx.wire.call<PluginSyncState>({ type: 'plugins.state' }).then(next => state.set(next), fail)
+    ctx.wire.call<PluginSyncState>({ type: 'plugins.state' }).then(
+      next => state.set(next),
+      () => state.set(undefined),
+    )
   }
 
   const run = async (key: string, call: () => Promise<PluginSyncState>) => {

@@ -84,7 +84,7 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   }
 
   ctx.on('wire.hello', () => {
-    seen.delete(local)
+    seen.add(local)
     void load(local)
   })
   ctx.on('wire.event', event => onEvent(local, event))

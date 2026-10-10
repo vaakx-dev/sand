@@ -1,4 +1,4 @@
-import type { Hello, WireEvent } from '@sand/protocol'
+import type { Hello, WireEvent, WireRequestOf } from '@sand/protocol'
 import { connect, type Connection } from '../wire/connection'
 import type { Route } from './select'
 import { within } from './timeout'
@@ -17,6 +17,7 @@ export interface Opened {
 export interface SlotHandlers {
   event(slot: Slot, event: WireEvent): void
   close(slot: Slot): void
+  greeting(): WireRequestOf<'hello'>
 }
 
 const openWait = 10_000
@@ -41,7 +42,7 @@ export const openRoute = async (
   const opened: Slot = { connection }
   slot = opened
   try {
-    const hello = await within(connection.call<Hello>({ type: 'hello' }), openWait, `${route.url} did not say hello`)
+    const hello = await within(connection.call<Hello>(handlers.greeting()), openWait, `${route.url} did not say hello`)
     return { slot: opened, hello, route, id }
   } catch (error) {
     connection.close()

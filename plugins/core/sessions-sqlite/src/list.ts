@@ -1,15 +1,17 @@
 import type { SessionInfo, SessionSummary } from './contract'
 import type { Database } from 'bun:sqlite'
 
-type Row = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; snoozed: number | null; seen: number; position: number }
+export type SummaryRow = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; snoozed: number | null; seen: number; position: number }
+
+export const toSummary = (row: SummaryRow): SessionSummary => ({ ...row, named: Boolean(row.named), pinned: Boolean(row.pinned) })
 
 export const summaries = (db: Database) => {
-  const query = db.query<Row, []>(
+  const query = db.query<SummaryRow, []>(
     `select s.*, coalesce(max(e.at), s.created) as updated, count(case when e.type = 'message' then 1 end) as messages
      from sessions s left join entries e on e.session = s.id
      group by s.id order by updated desc`,
   )
-  return (): SessionSummary[] => query.all().map(row => ({ ...row, named: Boolean(row.named), pinned: Boolean(row.pinned) }))
+  return (): SessionSummary[] => query.all().map(toSummary)
 }
 
 export const remover = (db: Database) => {

@@ -1,6 +1,7 @@
 import type { Version, VersionTarget } from '@sand/host-plugin-versions/contract'
 import { derive, errorMessage, exactTime, sig } from '@sand/dom'
 import type { Context } from 'drydock'
+import { whenShown } from '../shown'
 
 export const versionsSource = (ctx: Context<'wire'>) => {
   const targets = sig<VersionTarget[]>([])
@@ -28,11 +29,10 @@ export const versionsSource = (ctx: Context<'wire'>) => {
     }
   }
 
-  ctx.on('wire.hello', load)
+  whenShown(ctx, load)
   ctx.on('wire.event', event => {
     if (event.name === 'versions.change') targets.set(event.args[0])
   })
-  if (ctx.wire.hello()) load()
 
   return { targets, busy, target, restore }
 }
