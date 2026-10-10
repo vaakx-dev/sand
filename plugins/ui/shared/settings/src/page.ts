@@ -1,4 +1,4 @@
-import { derive, div, dismissible, dynamicChild, el, icon, iconButton, show, type Sig } from '@sand/dom'
+import { appIcon, derive, div, dismissible, dynamicChild, el, icon, iconButton, show, type Sig } from '@sand/dom'
 import type { SettingsPage } from './contract'
 import type { PageStore } from './pages'
 
@@ -26,7 +26,7 @@ export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
     { class: 'flex h-full min-h-0 flex-1 flex-col bg-neutral-900', onMount: node => dismissible(node, close, { overlay: false }) },
     div(
       { class: 'flex h-12 shrink-0 items-center gap-2 pl-4 pr-3' },
-      show(narrow, () => iconButton({ title: 'Settings', 'aria-label': 'Settings', onClick: showPages }, icon('menu'))),
+      show(narrow, () => iconButton({ title: 'Settings', 'aria-label': 'Settings', onClick: showPages }, appIcon(20))),
       el('h1', { class: 'min-w-0 flex-1 truncate text-sm font-semibold text-neutral-100' }, () => page.get()?.label ?? ''),
       show(narrow, () => iconButton({ title: 'Close settings', 'aria-label': 'Close settings', onClick: close }, icon('x'))),
     ),

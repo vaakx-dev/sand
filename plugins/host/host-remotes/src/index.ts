@@ -13,7 +13,7 @@ const every = 60_000
 
 export default definePlugin({
   name: 'host-remotes',
-  description: 'Other PCs running sand: pairs with them both ways, keeps the pairs linked and lists them as Your PCs',
+  description: 'Other PCs running sand: pairs with them both ways, keeps the pairs linked and lists them as Your devices',
   inject: ['hostOptions', 'hub', 'hostDevices', 'hostHttp'],
   async apply(ctx) {
     const { home, device: self } = ctx.hostOptions

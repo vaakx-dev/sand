@@ -49,7 +49,7 @@ const failedBlock = (list: InstallProgress[]) => {
     { class: 'flex flex-col gap-3 rounded-xl bg-neutral-900 p-3' },
     p({ class: 'text-sm text-neutral-100' }, list.at(-1)?.error ? `Install failed: ${list.at(-1)!.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
     health ? healthDetails(health) : null,
-    note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Your PCs.'),
+    note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Your devices.'),
   )
 }
 

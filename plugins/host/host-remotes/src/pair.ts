@@ -26,7 +26,7 @@ export interface PairBackOptions {
 
 export const pairWith = async (link: string, { self, urls, mint }: PairBackOptions): Promise<{ record: RemoteRecord; mutual: boolean }> => {
   const parsed = parsePairLink(link)
-  if (!parsed) throw new Error('Paste the pairing link from Your PCs on the other PC (it ends in #pair=...)')
+  if (!parsed) throw new Error('Paste the pairing link from Your devices on the other PC (it ends in #pair=...)')
   const { url, secret } = parsed
   const identity = await fetchHostIdentity(url)
   if (identity.deviceId === self.id) throw new Error('That link opens this PC')
