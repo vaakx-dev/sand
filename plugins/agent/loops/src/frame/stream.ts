@@ -8,6 +8,7 @@ import type { TurnState } from './state'
 import { add } from './usage'
 
 const read = async (ctx: LoopsContext, llm: LLM, request: LLMRequest, session: Session, signal: AbortSignal, state: TurnState) => {
+  signal.throwIfAborted()
   const events = llm.stream(request, signal)[Symbol.asyncIterator]()
   try {
     for (let next = await untilAborted(events.next(), signal); !next.done; next = await untilAborted(events.next(), signal)) {

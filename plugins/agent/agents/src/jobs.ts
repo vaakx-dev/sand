@@ -2,6 +2,7 @@ import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Job, JobStatus } from './contract'
 import { errorMessage, untilAborted } from '@sand/kit'
 import type { Context } from 'drydock'
+import { createDelivery } from './deliver'
 
 const limit = 30_000
 
@@ -36,7 +37,7 @@ export const createJobs = (ctx: Context<'loop'>) => {
   })
 
   ctx.on('turn.end', (session, result) => {
-    if (result.stopReason !== 'interrupted') return
+    if (result.stopReason !== 'interrupted' || session.kind !== 'agent') return
     for (const job of jobs.values()) {
       if (job.parent !== session.id || job.status !== 'running') continue
       silenced.add(job.id)
@@ -49,10 +50,7 @@ export const createJobs = (ctx: Context<'loop'>) => {
     if (job) job.note = text
   })
 
-  const deliver = (session: Session, text: string) => {
-    if (ctx.steering?.steer(session, text)) return
-    ctx.loop.run(session, text).catch(error => ctx.ui?.notify(`Could not deliver a background result: ${errorMessage(error)}`, 'error'))
-  }
+  const deliver = createDelivery(ctx)
 
   const start = (parent: Session, label: string, work: (signal: AbortSignal, job: Job) => Promise<string>, origin?: string) => {
     const controller = new AbortController()
@@ -73,13 +71,16 @@ export const createJobs = (ctx: Context<'loop'>) => {
       job.ended = Date.now()
       release()
       ctx.emit('job.end', job, output)
-      if (!disposing && !silenced.delete(job.id)) deliver(parent, notification(job, output))
+      const quiet = silenced.delete(job.id) || (status === 'cancelled' && !ctx.loop.active(parent))
+      if (!disposing && !quiet) deliver(parent, notification(job, output))
       wake()
     }
-    untilAborted(work(controller.signal, job), controller.signal).then(
-      output => finish(controller.signal.aborted ? 'cancelled' : 'done', output),
-      error => finish(controller.signal.aborted ? 'cancelled' : 'failed', errorMessage(error)),
-    )
+    untilAborted(work(controller.signal, job), controller.signal)
+      .then(
+        output => finish(controller.signal.aborted ? 'cancelled' : 'done', output),
+        error => finish(controller.signal.aborted ? 'cancelled' : 'failed', errorMessage(error)),
+      )
+      .catch(error => ctx.ui?.notify(`Background job ${job.id} could not finish cleanly: ${errorMessage(error)}`, 'error'))
     return job
   }
 
