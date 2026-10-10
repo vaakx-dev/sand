@@ -1,4 +1,4 @@
-import { asPanel, attach, effect, sig, untrack, watchShown, type Shown } from '@sand/dom'
+import { asPanel, attach, copyText, effect, sig, untrack, watchShown, type Shown } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import type { Changes } from '../changes/collect'
 import { collectTree } from '../changes/tree'
@@ -16,6 +16,7 @@ export default definePlugin({
     panels: 'draws its own plain panel',
     commands: 'no /changes command',
     wire: 'the hidden Edits badge counts only the loaded part of the thread',
+    notify: 'copying a file path from the file menu is not confirmed',
   },
   apply(ctx) {
     const closed = sig((ctx.hot.data.closed ??= {}) as Record<string, boolean>)
@@ -33,6 +34,11 @@ export default definePlugin({
       const next = { ...closed.get(), [id]: !closed.get()[id] }
       ctx.hot.data.closed = next
       closed.set(next)
+    }
+
+    const copy = async (text: string, what: string) => {
+      const copied = await copyText(text)
+      ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
     }
 
     const showBadge = () => {
@@ -74,7 +80,7 @@ export default definePlugin({
       icon: 'compare',
       order: 10,
       render(body) {
-        const detach = attach(body, () => changesView({ changes, empty, turn, closed, revealed }, toggle))
+        const detach = attach(body, () => changesView({ changes, empty, turn, closed, revealed, copy }, toggle))
         const watch = watchShown(body, paint)
         shown.add(watch)
         return () => {

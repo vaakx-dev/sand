@@ -1,4 +1,4 @@
-import { onTimeout } from '@sand/dom'
+import { onTimeout } from '@vaakx-dev/vrui'
 
 const holdMs = 450
 const slop = 10

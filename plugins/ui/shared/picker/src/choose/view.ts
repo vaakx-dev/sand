@@ -1,14 +1,14 @@
 import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
-import { div, keys, list, quietButton, searchInput, searchRow, show, span, untrack, type Sig } from '@sand/dom'
+import { contextMenu, div, keys, list, quietButton, searchInput, searchRow, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
 import { openSheet } from '../overlay'
 import { pickModel, type PickModel } from './model'
 import { row } from './row'
 
-const results = <T>(model: PickModel<T>, fine: Sig<boolean>) =>
+const results = <T>(model: PickModel<T>, fine: Sig<boolean>, menu: ContextMenu) =>
   list(
     model.shown,
     index => index,
-    (index, position) => row(model.items[untrack(() => index.get())]!, position, model, fine),
+    (index, position) => row(model.items[untrack(() => index.get())]!, position, model, fine, menu),
     div({ class: 'min-h-0 flex-1 overflow-auto px-2 pb-2' }),
   )
 
@@ -30,6 +30,7 @@ export const choose = <T>(cancels: Set<() => void>, fine: Sig<boolean>, title: s
       resolve(picked)
     }
     const model = pickModel(items, options, finish)
+    const menu = contextMenu()
     cancels.add(model.cancel)
 
     const field = searchInput({
@@ -46,7 +47,8 @@ export const choose = <T>(cancels: Set<() => void>, fine: Sig<boolean>, title: s
       model.cancel,
       keys({ ...model.box.keyMap, Escape: model.cancel }, { stop: true }),
       searchRow(field),
-      results(model, fine),
+      results(model, fine, menu),
+      menu.view(),
       show(
         model.shown.map(found => !found.length),
         () => div({ class: 'p-6 text-center text-sm text-neutral-500' }, items.length ? 'Nothing matches' : (options.empty ?? 'Nothing here')),

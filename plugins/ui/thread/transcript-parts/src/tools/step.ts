@@ -1,6 +1,6 @@
 import type { ToolBadge, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolStepOptions } from '../contract'
-import { badge, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
+import type { MenuKit, ToolStepOptions } from '../contract'
+import { badge, contextMenu, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
 
 const counts = (text: string) =>
   text
@@ -11,7 +11,7 @@ const badgeView = (found: ToolBadge | undefined) => (found ? badge(found.tone, f
 
 const metaView = (text: string) => span({ class: 'shrink-0 text-xs text-neutral-500' }, counts(text))
 
-export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle }: ToolStepOptions) => {
+export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle, menu }: ToolStepOptions, menus: MenuKit) => {
   const signature = derive(() => {
     const current = tool.get()
     return [current.status, current.result ? 1 : 0, JSON.stringify(current.call.input ?? null).length, version.get()].join(':')
@@ -33,7 +33,21 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle 
       return content ? toolBody(content) : div({ class: 'hidden' })
     },
   )
-  return toolCard(
+  const own = menu ?? contextMenu()
+  const press = menus.text(
+    own,
+    () => ({
+      title: shown.get().verb,
+      subtitle: shown.get().label,
+      actions: [
+        ...renderer(tool.get().call.name).actions(tool.get()),
+        menus.copy('copy', 'Copy', () => renderer(tool.get().call.name).copy(tool.get()), 'output'),
+        { id: 'toggle', label: open.get() ? 'Collapse' : 'Expand', icon: open.get() ? 'up' : 'down', run: toggle },
+      ],
+    }),
+    node => node.firstElementChild?.firstElementChild ?? null,
+  )
+  const card = toolCard(
     {
       icon: dynamicChild(
         shown.map(value => value.icon),
@@ -54,8 +68,11 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle 
       ],
       failed: derive(() => tool.get().status === 'failed'),
       actions: copyButton({ text: () => renderer(tool.get().call.name).copy(tool.get()) }),
-      onToggle: toggle,
+      onToggle: () => {
+        if (!press.held()) toggle()
+      },
     },
     body,
   )
+  return div(press.props, card, !menu && own.view())
 }

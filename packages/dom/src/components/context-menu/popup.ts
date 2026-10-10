@@ -1,8 +1,9 @@
-import type { NavAction } from '@sand/dom'
-import { div, dynamicChild, layer, onWindow, popover, sig } from '@sand/dom'
+import { div, dynamicChild, onWindow, sig } from '@vaakx-dev/vrui'
+import { layer } from '../../shell/layers'
+import { popover } from '../menu'
 import { askView } from './ask'
 import { arrowKeys, confirmView, firstStep, focusFirst, menuItems, returnFocus, type MenuControl, type MenuStep } from './items'
-import type { MenuRequest } from './view'
+import type { MenuRequest } from './request'
 
 const margin = 8
 
@@ -22,7 +23,8 @@ const stepView = (step: MenuStep, control: MenuControl, back: () => void) =>
     step.kind === 'confirm' ? confirmView(step.action, control, back, 'sm') : step.action.ask ? askView(step.action.ask, control.close, 'sm') : null,
   )
 
-export const menuPopup = (request: MenuRequest, actions: NavAction[], close: () => void) => {
+export const menuPopup = (request: MenuRequest, close: () => void) => {
+  const { actions } = request
   const current = sig<MenuStep | undefined>(firstStep(actions, request.ask))
   const at = sig({ x: request.x, y: request.y })
   const control: MenuControl = { close, step: next => current.set(next), armed: () => true }
@@ -34,6 +36,7 @@ export const menuPopup = (request: MenuRequest, actions: NavAction[], close: () 
   return div(
     {
       class: [layer.dialog, 'fixed'],
+      'data-menu-layer': '',
       style: { left: () => `${at.get().x}px`, top: () => `${at.get().y}px` },
       onMount: node => {
         root = node

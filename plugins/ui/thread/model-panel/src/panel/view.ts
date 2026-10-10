@@ -1,4 +1,4 @@
-import { batch, sig } from '@sand/dom'
+import { batch, contextMenu, sig } from '@sand/dom'
 import type { PanelContext } from '../actions'
 
 export const FAVOURITES = ':favourites'
@@ -22,6 +22,7 @@ export const openView = (ctx: PanelContext) => ({
   place: '',
   scroll: 0,
   focus: '',
+  menu: contextMenu(),
 })
 
 export type View = ReturnType<typeof openView>

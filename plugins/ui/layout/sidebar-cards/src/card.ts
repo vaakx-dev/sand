@@ -1,6 +1,5 @@
 import type { NavAction, NavItem, NavList } from '@sand/dom'
-import { color, div, dynamicChild, focusable, icon, intent, keys, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
-import { pressMenu } from './menu/press'
+import { color, div, dynamicChild, focusable, icon, intent, keys, pressMenu, projectIcon, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
 import type { MenuRequest } from './menu/view'
 import { status } from './status'
 import { actionStrip, type StripParts } from './strip'
@@ -66,11 +65,11 @@ const fullBody = (parts: CardParts) => {
 const compactTitle = (value: NavItem) => [value.title, [value.project, tildeHome(value.path ?? '')].filter(Boolean).join(' · ')].filter(Boolean).join('\n')
 
 const compactBody = (parts: CardParts) => {
-  const { item, selected } = parts
+  const { item } = parts
   return div(
     { class: 'flex h-5 items-center gap-2', title: item.map(compactTitle) },
-    span({ class: ['inline-flex shrink-0 transition group-hover:opacity-100', () => (selected.get() ? 'opacity-100' : 'opacity-50')] }, avatar(parts)),
-    span({ class: ['min-w-0 flex-1 truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-500')] }, item.map(value => value.title)),
+    span({ class: 'inline-flex shrink-0' }, avatar(parts)),
+    span({ class: ['min-w-0 flex-1 truncate text-sm', () => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-400')] }, item.map(value => value.title)),
     statusSlot(parts, 'text-xs'),
     actionStrip(parts.strip, 'group-hover:flex touch-current:flex', true),
   )
@@ -120,6 +119,7 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
         'group relative block w-full select-none rounded-lg px-3 transition',
         () => (compact.get() ? 'mb-px py-1' : 'mb-1 py-2'),
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
+        () => (compact.get() && !selected.get() ? 'opacity-50 hover:opacity-100 focus-visible:opacity-100' : ''),
       ],
       onClick: () => press.held() || pick(row.get()),
       onKeyDown: keys({ Enter: () => pick(row.get()), ' ': () => pick(row.get()) }, { self: true, repeat: false }),

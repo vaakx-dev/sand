@@ -43,15 +43,20 @@ export const createNaming = (ops: Ops, names: () => Names | undefined) => {
   const sessionsIn = (root: string) => ops.sessions.list().filter(summary => samePath(summary.cwd, root) || isInside(summary.cwd, root))
   const busy = (root: string) => sessionsIn(root).some(summary => ops.running.has(summary.id))
 
-  const renameBranch = async (repo: Repo, session: Session, branch: string, asked: boolean) => {
+  const suggested = async (session: Session) => {
+    const name = (await names()?.suggest(session).catch(() => undefined)) ?? session.title
+    return name ? branchFor(name) : undefined
+  }
+
+  const renameBranch = async (repo: Repo, session: Session | undefined, branch: string, asked: boolean, wanted?: string) => {
     if (!asked && !isUnnamed(branch)) return branch
     if (await pushed(repo.root)) {
       if (asked) throw new Error('This branch is pushed, so it keeps its name')
       return branch
     }
-    const name = (await names()?.suggest(session).catch(() => undefined)) ?? session.title
-    if (!name || branchFor(name) === branch) return branch
-    const next = await freeBranch(repo.root, branchFor(name))
+    const target = wanted ?? (session && (await suggested(session)))
+    if (!target || target === branch) return branch
+    const next = wanted ? target : await freeBranch(repo.root, target)
     await gitOk(repo.root, ['branch', '-m', branch, next])
     return next
   }
@@ -75,14 +80,43 @@ export const createNaming = (ops: Ops, names: () => Names | undefined) => {
       if (asked) later.add(session.id)
       return
     }
-    const branch = await renameBranch(repo, session, repo.branch, asked)
+    await apply(repo, repo.branch, session, asked)
+  }
+
+  const apply = async (repo: Repo, from: string, session: Session | undefined, asked: boolean, wanted?: string) => {
+    const branch = await renameBranch(repo, session, from, asked, wanted)
     const moved = await moveFolder(repo, branch).catch(() => false)
-    if (branch === repo.branch && !moved) return
+    if (branch === from && !moved) return
     forgetMarks()
     ops.changed(repo.main)
   }
 
+  const latestIn = (root: string) => {
+    const [latest] = sessionsIn(root)
+      .filter(summary => summary.kind === 'main')
+      .sort((a, b) => b.updated - a.updated)
+    return latest && (ops.sessions.open(latest.id) ?? undefined)
+  }
+
+  const checkName = async (root: string, name: string) => {
+    if (!(await gitMaybe(root, ['check-ref-format', '--branch', name]))) throw new Error(`${name} is not a valid branch name`)
+    if (await branchExists(root, name)) throw new Error(`A branch named ${name} already exists`)
+  }
+
+  const nameAt = async (path: unknown, wanted: unknown) => {
+    const repo = await repoOf(String(path ?? ''))
+    if (!repo?.linked || !repo.branch) throw new Error('That folder is not a worktree on a branch')
+    if (busy(repo.root)) throw new Error('A thread is working there. Wait for its turn to finish')
+    const name = typeof wanted === 'string' ? wanted.trim() : ''
+    if (name) await checkName(repo.root, name)
+    else if (!repo.branch.startsWith('sand/')) throw new Error('Only branches sand made can get a new name by themselves')
+    const session = latestIn(repo.root)
+    if (!name && !session) throw new Error('No thread works there, so there is nothing to name it after')
+    await apply(repo, repo.branch, session, true, name || undefined)
+  }
+
   return {
+    nameAt,
     async settle(session: Session) {
       if (session.kind !== 'main') return
       await name(session, later.delete(session.id)).catch(() => {})

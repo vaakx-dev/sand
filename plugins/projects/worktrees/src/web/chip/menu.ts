@@ -1,5 +1,5 @@
 import type { WorktreeEntry, WorktreeState } from '../../contract'
-import { div, groupLabel, icon, menuItem, span, tildeHome, type Child } from '@sand/dom'
+import { div, groupLabel, icon, menuItem, span, tildeHome, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
 import { uuid } from '@sand/kit'
 import type { WebContext } from '../client'
 import type { Choice, Choices } from './choices'
@@ -12,11 +12,18 @@ interface Row {
   selected: boolean
   choose(): void
   end?: Child
+  menu?: () => MenuSpec
 }
 
-const row = ({ glyph, title, line, selected, choose, end }: Row) =>
+const row = ({ glyph, title, line, selected, choose, end, menu }: Row, context?: ContextMenu) =>
   menuItem(
-    { role: 'menuitemradio', 'aria-checked': String(selected), active: selected, class: 'py-2 hover:bg-neutral-700', onClick: choose },
+    {
+      role: 'menuitemradio',
+      'aria-checked': String(selected),
+      active: selected,
+      class: 'py-2 hover:bg-neutral-700',
+      ...(menu && context ? context.target(menu, choose) : { onClick: choose }),
+    },
     span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(glyph, 16)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
@@ -28,23 +35,33 @@ const row = ({ glyph, title, line, selected, choose, end }: Row) =>
 
 const changes = (entry: WorktreeEntry) => (entry.changed ? span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, `●${entry.changed}`) : undefined)
 
-const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choice) => void) => {
+export interface EntryMenus {
+  context: ContextMenu
+  spec(entry: WorktreeEntry, use: () => void): MenuSpec
+}
+
+const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choice) => void, menus: EntryMenus) => {
   const others = state.worktrees.filter(entry => !entry.main)
   if (!others.length) return []
   const current = state.worktree ? state.root : choice.mode === 'existing' ? choice.path : ''
   return [
     div({ class: 'mx-2 my-1 border-t border-neutral-700' }),
     groupLabel('Existing worktrees'),
-    ...others.map(entry =>
-      row({
-        glyph: 'branch',
-        title: entry.branch ?? tildeHome(entry.path),
-        line: tildeHome(entry.path),
-        selected: entry.path === current,
-        choose: () => pick({ mode: 'existing', path: entry.path, branch: entry.branch }),
-        end: changes(entry),
-      }),
-    ),
+    ...others.map(entry => {
+      const use = () => pick({ mode: 'existing', path: entry.path, branch: entry.branch })
+      return row(
+        {
+          glyph: 'branch',
+          title: entry.branch ?? tildeHome(entry.path),
+          line: tildeHome(entry.path),
+          selected: entry.path === current,
+          choose: use,
+          end: changes(entry),
+          menu: () => menus.spec(entry, use),
+        },
+        menus.context,
+      )
+    }),
   ]
 }
 
@@ -58,7 +75,7 @@ const choose = async (ctx: WebContext, choices: Choices, { state, draft }: ChipT
   ctx.composer?.focus()
 }
 
-export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget, close: () => void) => {
+export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget, close: () => void, menus: EntryMenus) => {
   const { state, choice } = target
   if (!state) return div()
   const pick = (next: Choice) => {
@@ -78,6 +95,6 @@ export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget,
       selected: local === 'new',
       choose: () => pick({ mode: 'new', base: from }),
     }),
-    ...existingRows(state, choice, pick),
+    ...existingRows(state, choice, pick, menus),
   )
 }

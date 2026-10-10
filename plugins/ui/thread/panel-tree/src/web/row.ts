@@ -1,6 +1,7 @@
-import { badge, button, div, dynamicChild, effect, exactTime, icon, iconButton, primaryAction, secondaryAction, show, span, stopThen, type Derive, type Sig } from '@sand/dom'
+import { badge, button, div, dynamicChild, effect, exactTime, icon, iconButton, primaryAction, secondaryAction, show, span, stopThen, type ContextMenu, type Derive, type Sig } from '@sand/dom'
 import type { TreeNode } from '../tree/forest'
 import type { Row } from '../tree/layout'
+import { rowMenu } from './menu'
 
 export interface RowActions {
   select(id: string): void
@@ -8,6 +9,7 @@ export interface RowActions {
   fold(id: string): void
   label(id: string): void
   fork(id: string): void
+  setLabel(id: string, text: string): Promise<void>
 }
 
 export interface TreeItem {
@@ -89,14 +91,17 @@ const revealWhenSelected = (selected: Derive<boolean>) => (node: Node) =>
     if (selected.get()) (node as HTMLElement).scrollIntoView({ block: 'nearest' })
   })
 
-export const rowView = (item: Sig<TreeItem>, actions: RowActions) => {
+export const rowView = (item: Sig<TreeItem>, actions: RowActions, menu: ContextMenu) => {
   const selected = item.map(value => value.selected)
   return div(
     {
       role: 'option',
       'aria-selected': selected,
       class: () => ['mx-2 min-w-0 cursor-pointer rounded-lg px-2 py-2', background(item.get())],
-      onClick: () => actions.select(item.get().row.id),
+      ...menu.target(
+        () => rowMenu(item.get(), actions),
+        () => actions.select(item.get().row.id),
+      ),
       onMount: revealWhenSelected(selected),
     },
     dynamicChild(item.map(signature), () => content(item, actions)),

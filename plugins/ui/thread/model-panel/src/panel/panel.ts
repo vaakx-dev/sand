@@ -68,5 +68,6 @@ export const modelPanel = (ctx: PanelContext, actions: Actions, deps: PanelDeps)
       derive(() => `${deps.changes.version.get()}:${deps.problem.get()}:${deps.pcs.key()}`),
       () => body(ctx, actions, view, deps),
     ),
+    view.menu.view(),
   ]
 }

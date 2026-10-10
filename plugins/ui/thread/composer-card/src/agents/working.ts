@@ -1,9 +1,12 @@
 import { derive, pulse } from '@sand/dom'
+import type { AgentRun } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
+import { runMenu } from './menu'
 
 const shownLimit = 2
 
-export const createWorking = (ctx: Context<'threads'>) => {
+export const createWorking = (ctx: Context<'threads' | 'turns'>) => {
+  const open = () => ctx.panels?.show('agents')
   const changes = pulse(ctx, ['jobs.change', 'threads.change', 'thread.select', 'thread.change'], ['jobs', 'panels'])
   const runs = changes.read(() => {
     const thread = ctx.threads.current()
@@ -14,7 +17,8 @@ export const createWorking = (ctx: Context<'threads'>) => {
     shown: derive(() => runs.get().slice(0, shownLimit)),
     more: derive(() => Math.max(0, runs.get().length - shownLimit)),
     clickable: changes.read(() => Boolean(ctx.panels)),
-    open: () => ctx.panels?.show('agents'),
+    open,
+    menu: (run: AgentRun) => runMenu(ctx, open, run),
   }
 }
 

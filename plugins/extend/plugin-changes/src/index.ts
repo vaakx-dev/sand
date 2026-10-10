@@ -1,4 +1,5 @@
 import { definePlugin } from 'drydock'
+import { copyWithNotice } from './copy'
 import { versionsSource } from './history/source'
 import { historyToggle } from './history/versions'
 import { askSand } from './library/ask'
@@ -28,7 +29,9 @@ export default definePlugin({
     offerNotice(ctx, source)
     const actions: RowActions = {
       busy: () => library.busy.get() !== undefined,
-      history: key => historyToggle(versions, key),
+      history: (key, open) => historyToggle(versions, key, open),
+      hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),
+      copy: (text, what) => copyWithNotice(ctx, text, what),
       customise: plugin => void library.customise(plugin.name),
       restore: plugin => void library.restore(plugin.name),
       keep: plugin => library.keep(plugin.name),

@@ -1,7 +1,8 @@
 import { badge, div, show, sig, span, type Sig } from '@sand/dom'
 import type { Repeated } from './counts'
 import { memberRows } from './members'
-import { pressable, since, type Actions } from './parts'
+import { agentMenu } from './menu'
+import { pressable, since, type Rows } from './parts'
 import type { Run } from './runs'
 
 const outcomes: Record<Run['status'], [word: string, tone: string]> = {
@@ -16,13 +17,13 @@ const outcome = (run: Run) => {
   return run.ended ? `${word} · ${since(run.started, run.ended, run.ended)}` : word
 }
 
-export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, actions: Actions) => {
+export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, rows: Rows) => {
   const run = item.map(value => value.run)
   const open = sig(false)
   const foldable = () => run.get().kind === 'workflow' && run.get().members.length > 0
   const press = () => {
     const session = run.get().session
-    if (session) actions.open(session)
+    if (session) rows.open(session)
     else if (foldable()) open.set(!open.get())
   }
   return div(
@@ -30,6 +31,10 @@ export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, actions: Acti
       press,
       () => Boolean(run.get().session) || foldable(),
       'flex h-8 items-center gap-2 px-3 text-sm',
+      {
+        menu: rows.menu,
+        spec: () => agentMenu(rows, { title: run.get().title, session: run.get().session }),
+      },
       div(
         { class: 'flex min-w-0 flex-1 items-center gap-2' },
         span({ class: 'min-w-0 truncate text-neutral-200', title: run.map(value => value.title) }, run.map(value => value.title)),
@@ -46,7 +51,7 @@ export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, actions: Acti
         memberRows(
           run.map(value => value.members),
           now,
-          actions,
+          rows,
         ),
       ),
     ),

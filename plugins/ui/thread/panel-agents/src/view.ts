@@ -1,8 +1,8 @@
-import { derive, div, groupLabel, hint, icon, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, groupLabel, hint, icon, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import { agentRow } from './agent-row'
 import { collapseRepeats, runningAgents } from './counts'
 import { finishedRow } from './finished'
-import type { Actions } from './parts'
+import type { Actions, Rows } from './parts'
 import type { Run } from './runs'
 import { workflowBlock } from './workflow'
 
@@ -36,7 +36,7 @@ const parentLink = (parent: Sig<ParentLink | undefined>, open: (id: string) => v
     ),
   )
 
-const runningSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) =>
+const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) =>
   show(
     runs.map(items => items.length > 0),
     () =>
@@ -48,12 +48,12 @@ const runningSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) =>
         list(
           runs,
           run => run.id,
-          run => (run.get().kind === 'workflow' ? workflowBlock(run, now, actions) : agentRow(run, now, actions)),
+          run => (run.get().kind === 'workflow' ? workflowBlock(run, now, rows) : agentRow(run, now, rows)),
         ),
       ),
   )
 
-const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) => {
+const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) => {
   const expanded = sig(false)
   const groups = runs.map(collapseRepeats)
   const shown = derive(() => (expanded.get() ? groups.get() : groups.get().slice(0, folded)))
@@ -63,7 +63,7 @@ const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) =
     () =>
       div(
         groupLabel(() => `Finished · ${runs.get().length}`),
-        list(shown, item => item.run.id, item => finishedRow(item, now, actions)),
+        list(shown, item => item.run.id, item => finishedRow(item, now, rows)),
         show(
           hidden.map(count => count > 0),
           () => quietButton({ size: 'sm', class: 'mt-1 ml-3', onClick: () => expanded.set(true) }, () => `Show ${hidden.get()} more`),
@@ -72,22 +72,25 @@ const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, actions: Actions) =
   )
 }
 
-export const agentsView = (state: AgentsState, actions: Actions) =>
-  div(
+export const agentsView = (state: AgentsState, actions: Actions) => {
+  const rows: Rows = { ...actions, menu: contextMenu() }
+  return div(
     { class: 'px-2 pb-4' },
     parentLink(state.parent, actions.open),
     runningSection(
       state.runs.map(runs => runs.filter(run => run.status === 'running')),
       state.now,
-      actions,
+      rows,
     ),
     finishedSection(
       state.runs.map(runs => runs.filter(run => run.status !== 'running')),
       state.now,
-      actions,
+      rows,
     ),
     show(
       state.runs.map(runs => !runs.length),
       () => hint(state.empty),
     ),
+    rows.menu.view(),
   )
+}

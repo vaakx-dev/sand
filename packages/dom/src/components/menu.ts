@@ -22,7 +22,8 @@ export const groupLabel = (...children: Child[]) => div({ class: 'px-3 pt-3 pb-1
 const closeOnOutsidePress = (node: HTMLElement, close: () => void) =>
   onDocument(node, 'mousedown', event => {
     const anchor = node.offsetParent ?? node
-    if (!anchor.contains(event.target as Node)) close()
+    const target = event.target as Element
+    if (!anchor.contains(target) && !target.closest?.('[data-menu-layer]')) close()
   })
 
 export const popover = (close: () => void, { class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>

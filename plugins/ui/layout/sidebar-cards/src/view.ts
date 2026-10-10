@@ -1,6 +1,7 @@
-import type { NavAction } from '@sand/dom'
+import type { ContextMenu, MenuSpec, NavAction } from '@sand/dom'
 import {
   clock,
+  contextMenu,
   derive,
   div,
   dynamicChild,
@@ -54,6 +55,8 @@ export interface SidebarParts {
   project: Sig<string>
   label: Sig<string>
   filter(project: string | undefined): void
+  choiceMenu(choice: ProjectChoice, done: () => void): MenuSpec
+  chipMenu(): MenuSpec
   hide(): void
   run(action: NavAction): void
   busy(id: string): boolean
@@ -75,7 +78,7 @@ const filterButton = (parts: SidebarParts, open: Sig<boolean>) =>
     icon('folder'),
   )
 
-const filterMenu = (parts: SidebarParts, open: Sig<boolean>) => {
+const filterMenu = (parts: SidebarParts, open: Sig<boolean>, context: ContextMenu) => {
   const close = () => open.set(false)
   const choose = (project: string | undefined) => {
     parts.filter(project)
@@ -86,24 +89,27 @@ const filterMenu = (parts: SidebarParts, open: Sig<boolean>) => {
       close,
       { class: 'left-2 right-2 max-h-80 overflow-auto', style: { top: '100%' } },
       popoverItem({ active: !parts.project.get(), onClick: () => choose(undefined) }, 'All projects'),
-      ...parts.projects.get().map(({ key, name, icon: url, count }) =>
+      ...parts.projects.get().map(choice =>
         popoverItem(
-          { active: parts.project.get() === key, onClick: () => choose(key) },
-          projectIcon(name, url),
-          span({ class: 'min-w-0 flex-1 truncate' }, name),
-          count ? span({ class: 'shrink-0 text-xs tabular-nums text-neutral-500' }, String(count)) : null,
+          { active: parts.project.get() === choice.key, ...context.target(() => parts.choiceMenu(choice, close), () => choose(choice.key)) },
+          projectIcon(choice.name, choice.icon),
+          span({ class: 'min-w-0 flex-1 truncate' }, choice.name),
+          choice.count ? span({ class: 'shrink-0 text-xs tabular-nums text-neutral-500' }, String(choice.count)) : null,
         ),
       ),
     ),
   )
 }
 
-const filterChip = (parts: SidebarParts) =>
+const filterChip = (parts: SidebarParts, context: ContextMenu) =>
   show(
     parts.project.map(Boolean),
     () =>
       div(
-        { class: 'relative mx-2 mb-1 flex h-8 items-center gap-2 rounded-lg bg-neutral-900 pr-1 pl-3 text-xs text-neutral-300' },
+        {
+          class: 'relative mx-2 mb-1 flex h-8 items-center gap-2 rounded-lg bg-neutral-900 pr-1 pl-3 text-xs text-neutral-300',
+          ...context.target(() => parts.chipMenu()),
+        },
         dynamicChild(parts.label, name => projectIcon(name, parts.projects.get().find(choice => choice.key === parts.project.get())?.icon)),
         span({ class: 'min-w-0 flex-1 truncate' }, parts.label),
         iconButton({ size: 'sm', title: 'Show all projects', onClick: () => parts.filter(undefined) }, icon('x', 14)),
@@ -118,6 +124,7 @@ export const sidebarView = (parts: SidebarParts) => {
   const footer = derive(() => parts.actions.get().filter(action => action.place === 'footer' && !action.end))
   const footerEnd = derive(() => parts.actions.get().filter(action => action.place === 'footer' && action.end))
   const filtering = sig(false)
+  const context = contextMenu()
   return div(
     { class: () => ['relative flex h-full min-h-0 flex-col bg-neutral-950', parts.narrow.get() ? 'w-full' : 'w-64'] },
     div(
@@ -130,9 +137,9 @@ export const sidebarView = (parts: SidebarParts) => {
       list(wide, action => action.id, action => wideAction(action, parts), div({ class: 'flex min-w-0 flex-1' })),
       filterButton(parts, filtering),
       list(compact, action => action.id, action => iconAction(action, parts), div({ class: 'flex shrink-0 items-center gap-1' })),
-      filterMenu(parts, filtering),
+      filterMenu(parts, filtering, context),
     ),
-    filterChip(parts),
+    filterChip(parts, context),
     div(
       { class: 'min-h-0 flex-1 overflow-auto overscroll-contain px-2 pb-3' },
       list(parts.rows, row => row.key, row => rowView(row, handlers)),
@@ -147,5 +154,6 @@ export const sidebarView = (parts: SidebarParts) => {
       list(footerEnd, action => action.id, action => iconAction(action, parts), div({ class: 'flex items-center gap-1' })),
     ),
     actionMenu(parts.menu, () => parts.menu.set(undefined)),
+    context.view(),
   )
 }

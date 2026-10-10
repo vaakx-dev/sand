@@ -5,6 +5,8 @@ import type { Kit } from './kit'
 const save = (kit: Kit, command: string, value: string) =>
   void kit.run({ type: 'ui.command', name: command, args: `${value} --default --quiet`, cwd: kit.ctx.threads.cwd() })
 
+export const makeDefault = (kit: Kit, model: ModelInfo) => save(kit, 'model', model.id)
+
 const optionLabel = (kit: Kit, model: ModelInfo) => [model.label, kit.sourceLabel(model)].filter(Boolean).join(' · ')
 
 export const defaultsKey = (kit: Kit) => {
