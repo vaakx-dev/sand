@@ -9,9 +9,9 @@ const installer = 'https://vaakx-dev.github.io/sand/install'
 
 export const installCommand = (os: InstallSystem, url: string, secret: string, channel: UpdateChannel) => {
   const link = installLink(url, secret)
-  const nightly = channel === 'nightly'
-  if (os === 'win') return `${nightly ? "$env:SAND_CHANNEL='nightly'; " : ''}$env:SAND_PAIR='${link}'; irm ${installer}.ps1 | iex`
-  return `curl -fsSL ${installer}.sh | sh -s -- ${nightly ? '--nightly ' : ''}--pair '${link}'`
+  const release = channel === 'release'
+  if (os === 'win') return `${release ? '' : `$env:SAND_CHANNEL='${channel}'; `}$env:SAND_PAIR='${link}'; irm ${installer}.ps1 | iex`
+  return `curl -fsSL ${installer}.sh | sh -s -- ${release ? '' : `--channel ${channel} `}--pair '${link}'`
 }
 
 export const routeFor = (routes: HostRoute[], via: InstallVia) => {

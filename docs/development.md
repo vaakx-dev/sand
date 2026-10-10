@@ -24,3 +24,5 @@ Releases are Git tags. sand reads its version from `apps/sand/package.json`. To 
 The release workflow runs the checks on the tag and publishes a GitHub release with notes generated from the commits. If the checks fail, it publishes nothing. A version with a suffix such as `-alpha.2` is published as a pre-release.
 
 The nightly workflow runs once a day. If `main` has changed since the last nightly build and the checks pass, it moves the `nightly` tag and its pre-release to the newest commit on `main`. You can also start it by hand from the Actions tab.
+
+The dev workflow runs on every push to `main`. If the checks pass, it moves the `dev` tag and its pre-release to that commit. To try your changes on your own PCs, set **Updates from** to **Dev** in **Settings**, push, and click **Check now** once the workflow finishes.

@@ -1,0 +1,36 @@
+name: Dev
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dev
+  cancel-in-progress: false
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - name: Build the release assets
+        run: bun apps/sand/src/main.ts release-assets "$RUNNER_TEMP/assets"
+      - name: Move the dev release to this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit="$(git rev-parse HEAD)"
+          gh release delete dev --cleanup-tag --yes || true
+          gh release create dev --target "$commit" --prerelease --latest=false \
+            --title "Dev ${commit:0:7}" \
+            --notes "Built from ${commit:0:7} on main. This release moves with every push to main that passes the checks, so it may break. Install it with \`curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --dev\`, or in PowerShell with \`\$env:SAND_CHANNEL='dev'; irm https://vaakx-dev.github.io/sand/install.ps1 | iex\`." \
+            "$RUNNER_TEMP/assets/sand.tar.gz" "$RUNNER_TEMP/assets/sand-build.json"

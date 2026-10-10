@@ -86,7 +86,7 @@ cleanup() {
 }
 
 usage() {
-  printf '%s\n' 'usage: install.sh [--nightly] [--pair <link from Add a PC>]' >&2
+  printf '%s\n' 'usage: install.sh [--nightly | --dev | --channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
   exit 2
 }
 
@@ -94,6 +94,7 @@ read_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
       --nightly) channel=nightly ;;
+      --dev) channel=dev ;;
       --channel)
         [ $# -gt 1 ] || usage
         channel=$2
@@ -109,8 +110,8 @@ read_args() {
     shift
   done
   case "$channel" in
-    release|nightly) ;;
-    *) fail "Unknown channel '$channel'; use release or nightly." ;;
+    release|nightly|dev) ;;
+    *) fail "Unknown channel '$channel'; use release, nightly or dev." ;;
   esac
 }
 
@@ -198,7 +199,7 @@ find_release() {
     label=$assets
     return 0
   fi
-  tag=nightly
+  tag=$channel
   if [ "$channel" = release ]; then
     curl -fsSL -H 'accept: application/vnd.github+json' "https://api.github.com/repos/$repo/releases?per_page=50" -o "$work/releases.json" </dev/null ||
       fail 'Could not ask GitHub for the sand releases. Check the internet connection, or wait a few minutes if GitHub is limiting requests, then run the command again.'

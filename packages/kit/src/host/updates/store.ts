@@ -22,7 +22,7 @@ export interface UpdateStore {
 
 const day = 24 * 60 * 60 * 1000
 
-export const isChannel = (value: unknown): value is UpdateChannel => value === 'release' || value === 'nightly'
+export const isChannel = (value: unknown): value is UpdateChannel => value === 'release' || value === 'nightly' || value === 'dev'
 
 const parseLater = (later: unknown): LaterEntry | undefined => {
   if (!later || typeof later !== 'object') return

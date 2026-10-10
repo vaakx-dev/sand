@@ -96,7 +96,7 @@ function Install-Sand {
       $url = $env:SAND_RELEASE_URL.TrimEnd('/')
       return @{ Assets = $url; Label = $url }
     }
-    $tag = 'nightly'
+    $tag = $channel
     if ($channel -eq 'release') {
       try {
         $releases = Invoke-RestMethod -UseBasicParsing -Uri ('https://api.github.com/repos/' + $repo + '/releases?per_page=50') -Headers @{ 'User-Agent' = 'sand-install'; 'Accept' = 'application/vnd.github+json' }
@@ -106,8 +106,8 @@ function Install-Sand {
       $newest = $releases | Where-Object { -not $_.draft -and $_.published_at -and ([string]$_.tag_name).StartsWith('v') } | Sort-Object -Property published_at -Descending | Select-Object -First 1
       if (-not $newest) { throw 'There is no sand release on GitHub yet. Set $env:SAND_CHANNEL=''nightly'' to get the nightly build.' }
       $tag = [string]$newest.tag_name
-    } elseif ($channel -ne 'nightly') {
-      throw ('Unknown channel ''' + $channel + '''; use release or nightly.')
+    } elseif ($channel -ne 'nightly' -and $channel -ne 'dev') {
+      throw ('Unknown channel ''' + $channel + '''; use release, nightly or dev.')
     }
     return @{ Assets = ('https://github.com/' + $repo + '/releases/download/' + $tag); Label = ('sand ' + $tag) }
   }

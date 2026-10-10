@@ -1,7 +1,7 @@
 import type { ReleaseInfo, UpdateChannel } from '@sand/host-updates/contract'
 import type { BuildStamp } from '../dist/build'
 import { repoApi, type ApiRelease } from './api'
-import { bundleAsset, nightlyTag, releasePrefix, repo, stampAsset } from './repo'
+import { bundleAsset, releasePrefix, repo, stampAsset } from './repo'
 import { GithubError, MissingAssets } from './request'
 import { fetchStamp } from './stamp'
 
@@ -20,9 +20,9 @@ const newestTagged = (releases: ApiRelease[]) =>
     .sort((a, b) => published(b) - published(a))[0]
 
 const pick = async (channel: UpdateChannel) => {
-  if (channel === 'nightly') {
-    const release = await repoApi<ApiRelease>(`/releases/tags/${nightlyTag}`)
-    if (!release || release.draft) throw new GithubError(`there is no nightly build of sand on GitHub yet`)
+  if (channel !== 'release') {
+    const release = await repoApi<ApiRelease>(`/releases/tags/${channel}`)
+    if (!release || release.draft) throw new GithubError(`there is no ${channel} build of sand on GitHub yet`)
     return release
   }
   const releases = await repoApi<ApiRelease[]>('/releases?per_page=50')
