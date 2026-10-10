@@ -26,7 +26,9 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
 
   const open = async (request: AgentRequest, definition: AgentDefinition, depth: number) => {
     const { parent, task, label, origin } = request
-    const system = await compose(definition, parent, ctx.instructions)
+    const settings = childSettings(request, definition, ctx.llm)
+    const model = ctx.modelSettings?.resolve(settings ?? {}).model
+    const system = await compose(definition, parent, ctx.instructions, model)
     const session = ctx.sessions.create({
       cwd: parent.cwd,
       project: parent.project,
@@ -36,7 +38,6 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
       kind: 'agent',
     })
     session.append('agent', { name: definition.name, depth, system } satisfies AgentMeta)
-    const settings = childSettings(request, definition, ctx.llm)
     if (settings) session.append('settings', settings)
     return session
   }

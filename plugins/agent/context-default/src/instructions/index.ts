@@ -5,6 +5,6 @@ import { environment } from './environment'
 import { projectInstructions } from './project'
 
 export const createInstructions = (tools: Tools, paths: Paths): Instructions => ({
-  environment: cwd => environment(cwd, tools.notes()),
+  environment: (cwd, model) => environment(cwd, tools.notes(), model),
   project: (cwd, project) => projectInstructions(paths.projectFolder(cwd, project)),
 })
