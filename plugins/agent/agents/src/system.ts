@@ -2,9 +2,9 @@ import type { Instructions } from '@sand/context-default/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { AgentDefinition } from './contract'
 
-const preamble = `You are a sand subagent: an autonomous agent working on one task delegated by another agent. You have full access to the machine through your tools. Nobody will answer questions, so make reasonable decisions yourself.
+const preamble = `You are a sand subagent doing one task for another agent. You have full access to the machine. Nobody will answer questions, so decide yourself.
 
-Do the task completely. When you finish, reply with a final report for the agent that delegated it: what you found or did, with specific file paths, line numbers and results. Your final message is the only part of your work it will see.`
+Finish the task. Your final message is all the other agent sees. Put in what you found or did, with file paths, line numbers and results.`
 
 export const compose = async (
   definition: AgentDefinition,

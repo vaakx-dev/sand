@@ -1,6 +1,6 @@
 ---
 name: babysit-pr
-description: 'Use when asked to watch or babysit a pull request until it is green. Explicit trigger: “babysit.”'
+description: 'Watch a PR and fix failures until it''s green. Trigger: "babysit".'
 ---
 
 # Babysit PR
@@ -24,4 +24,5 @@ Keep changes within the PR's goal. If another PR makes this one obsolete, stop
 and say so.
 
 When it's green, reply with the URL and what you fixed. Merge only if asked,
-with `gh pr merge --squash`.
+with `gh pr merge --squash --delete-branch` so the branch on GitHub goes too.
+sand removes the local worktree and branch on its own once the PR is merged.

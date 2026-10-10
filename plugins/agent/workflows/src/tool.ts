@@ -13,7 +13,7 @@ const input = z.object({
   background: z.boolean().optional().describe('Defaults to true. Set false to wait for the result in this call.'),
 })
 
-const description = `Run a TypeScript workflow that orchestrates subagents in code: fan work out, pipeline it, and collect structured results. Use it when a task splits into many independent agent jobs. It runs in the background by default and reports back as a <task-notification>.
+const description = `Run a TypeScript script that orchestrates many subagents. Use when a task splits into many independent agent jobs. Runs in the background and reports as a <task-notification>.
 
 The script default-exports an async function that receives the workflow API:
 
@@ -46,6 +46,6 @@ export const workflowTool = (ctx: Context<'agents'>, root: string): Tool<typeof 
     if (background === false) return execute(ctx, execution, signal)
     const work = (jobSignal: AbortSignal, job: Job) => execute(ctx, { ...execution, job: job.id }, jobSignal)
     const job = ctx.agents.background(session, `workflow ${execution.label}`, work, call.id)
-    return `Started workflow ${run.id} as background job ${job.id}. Its result will arrive as a <task-notification>. To rerun it with cached agent results, call workflow with resume: "${run.id}". You don't need to wait for it: keep working on other things, or end your turn and it will wake you when it finishes. Never sleep or poll for it.`
+    return `Started workflow ${run.id} as background job ${job.id}. Its result arrives as a <task-notification>. To rerun with cached agent results, call workflow with resume: "${run.id}". Keep working or end your turn; it will wake you. Don't sleep or poll.`
   },
 })

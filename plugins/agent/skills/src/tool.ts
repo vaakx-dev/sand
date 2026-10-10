@@ -5,7 +5,7 @@ import { skillBlock } from './expand'
 
 const input = z.object({ name: z.string().describe('Name of the skill to load') })
 
-export const describeSkills = (list: Skill[]) => `Load a skill's instructions before doing a task it covers. The result includes the skill's folder so you can read any files it references.
+export const describeSkills = (list: Skill[]) => `Load a skill before doing a task it covers. The result includes the skill's folder for any files it references.
 
 Available skills:
 ${list.map(skill => `- ${skill.name}: ${skill.description}`).join('\n')}`

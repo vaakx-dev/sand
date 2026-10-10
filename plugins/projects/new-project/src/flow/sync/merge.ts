@@ -3,7 +3,7 @@ import type { PalettePage } from '@sand/palette/contract'
 import type { FlowContext } from '../types'
 
 export const mergePrompt = (files: string[]) =>
-  `Resolve the merge conflicts in these files: ${files.join(', ')}. Each contains conflict markers (the lines starting with seven less-than signs, seven equals signs and seven greater-than signs) with both PCs versions. Combine both sets of changes, remove all markers, then run the project tests and tell me what you did.`
+  `Resolve the merge conflicts in ${files.join(', ')}. Each has conflict markers with both PCs' versions. Keep both sets of changes, remove the markers, run the project's tests and tell me what you did.`
 
 export const mergePage = (ctx: FlowContext, ref: ProjectRef, files: string[], here: string, other: string): PalettePage => ({
   id: 'merge-prompt',
