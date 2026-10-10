@@ -1,5 +1,5 @@
 import type { PaletteItem } from '../contract'
-import { div, icon, iconButton, menuItem, optionProps, projectIcon, read, span, stopThen, working, type Listbox, type MaybeReactive } from '@sand/dom'
+import { div, icon, iconButton, menuItem, optionProps, projectIcon, read, span, stopThen, working, type ContextMenu, type Listbox, type MaybeReactive, type MenuSpec } from '@sand/dom'
 
 const lead = (item: PaletteItem) => {
   if (item.busy) return working(16)
@@ -25,12 +25,14 @@ const withMore = (row: HTMLElement, item: PaletteItem, active: () => boolean, mo
     ),
   )
 
-export const rowView = (item: PaletteItem, position: MaybeReactive<number>, box: Listbox, more: (item: PaletteItem) => void) => {
+export const rowView = (item: PaletteItem, position: MaybeReactive<number>, box: Listbox, more: (item: PaletteItem) => void, menu: ContextMenu, spec: (item: PaletteItem) => MenuSpec) => {
+  const press = (onClick: (event: MouseEvent) => void) => (item.actions?.length ? menu.target(() => spec(item), onClick) : { onClick })
   const active = () => box.isSelected(read(position))
-  const { onMouseMove, ...option } = optionProps(box, position)
+  const { onMouseMove, onClick, ...option } = optionProps(box, position)
   const row = menuItem(
     {
       ...option,
+      ...press(onClick),
       ...(item.disabled ? {} : { onMouseMove }),
       active,
       'aria-disabled': item.disabled,

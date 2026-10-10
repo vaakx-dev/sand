@@ -1,4 +1,5 @@
 import type { Entry, ToolCallBlock, ToolResultBlock } from '@sand/messages'
+import type { NavAction } from '@sand/dom'
 import type { Dispose } from 'drydock'
 
 export type ToolStatus = 'pending' | 'running' | 'done' | 'failed'
@@ -26,6 +27,7 @@ export interface ToolRenderer {
   badge?(tool: ToolView): ToolBadge | undefined
   copy?(tool: ToolView): string
   body?(tool: ToolView): HTMLElement | undefined
+  actions?(tool: ToolView): NavAction[]
 }
 
 export type RenderEntry = (entry: Entry, thread: string) => HTMLElement | undefined

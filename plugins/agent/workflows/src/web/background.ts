@@ -3,6 +3,7 @@ import type { Jobs, JobState } from '@sand/web-client/contract'
 import { onInterval } from '@sand/dom'
 import { duration } from '@sand/kit'
 import type { Context, Dispose } from 'drydock'
+import { jobActions } from './menu'
 
 const refresh = 5000
 
@@ -24,8 +25,9 @@ const plainMeta = (tool: ToolView) => (tool.status === 'running' ? 'running' : t
 
 const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: 'failed', tone: 'danger' } : undefined)
 
-const withJobs = (base: ToolRenderer, jobs: Jobs): ToolRenderer => ({
+const withJobs = (ctx: Context, base: ToolRenderer, jobs: Jobs): ToolRenderer => ({
   ...base,
+  actions: jobActions(ctx, jobs),
   meta(tool) {
     const job = jobOf(jobs, tool)
     if (!job) return plainMeta(tool)
@@ -50,7 +52,7 @@ export const trackJobs = (ctx: Context, transcript: Transcript, name: string, ba
   let registered: Dispose | undefined
   const register = (jobs?: Jobs) => {
     void registered?.()
-    registered = transcript.tool(name, jobs ? withJobs(base, jobs) : base)
+    registered = transcript.tool(name, jobs ? withJobs(ctx, base, jobs) : base)
   }
   register()
   const unwatch = ctx.watch('jobs', jobs => {

@@ -2,7 +2,8 @@ import { relationLabel } from '@sand/kit'
 import type { SyncRelation } from '@sand/sync/contract'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { SyncFlows } from '../contract'
-import { badge, div, dot, icon, quietButton, span, type Child, type Tone } from '@sand/dom'
+import { badge, div, dot, icon, quietButton, span, type Child, type ContextMenu, type MenuSpec, type Tone } from '@sand/dom'
+import { copySpec } from './context'
 import { isOnline, machineKey, machineName, shorten } from './places'
 import type { ProjectsContext } from './types'
 
@@ -19,12 +20,28 @@ const relationTag = (ctx: ProjectsContext, entry: ProjectEntry, primary: Project
   return relation ? badge(tones[relation], relationLabel(relation, machineName(ctx, primary.device))) : null
 }
 
-const lineRow = (...children: Child[]) => div({ class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs' }, ...children)
+const lineRow = (props: object, ...children: Child[]) => div({ class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs', ...props }, ...children)
 
-export const locationLine = (ctx: ProjectsContext, entry: ProjectEntry, primary?: ProjectEntry) => {
+const ownMenu = (menu: ContextMenu, spec: () => MenuSpec) => {
+  const props = menu.target(spec)
+  return {
+    ...props,
+    onPointerDown: (event: PointerEvent) => {
+      event.stopPropagation()
+      props.onPointerDown(event)
+    },
+    onContextMenu: (event: MouseEvent) => {
+      event.stopPropagation()
+      props.onContextMenu(event)
+    },
+  }
+}
+
+export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: ProjectEntry, primary?: ProjectEntry) => {
   const online = isOnline(ctx, entry.device)
   const dimmed = !online || entry.missing
   return lineRow(
+    ownMenu(menu, () => copySpec(ctx, entry)),
     div(
       { class: ['flex min-w-0 items-center gap-2', dimmed ? 'opacity-50' : ''] },
       dot(online ? 'success' : 'neutral'),
@@ -39,6 +56,7 @@ export const locationLine = (ctx: ProjectsContext, entry: ProjectEntry, primary?
 
 export const noCopyLine = (flows: SyncFlows, group: ProjectGroup, machine: Machine) =>
   lineRow(
+    {},
     div(
       { class: 'flex min-w-0 items-center gap-2' },
       dot('neutral'),

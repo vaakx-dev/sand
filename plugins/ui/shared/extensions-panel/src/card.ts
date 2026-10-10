@@ -1,5 +1,6 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { div, dot, span, toggleSwitch, type Tone } from '@sand/dom'
+import { contextMenu, div, dot, span, toggleSwitch, type Tone } from '@sand/dom'
+import { extensionMenu } from './menu'
 import type { Roles } from './roles'
 
 const statusText: Record<string, string> = { off: 'off', pending: 'waiting', starting: 'starting', active: 'active', failed: 'failed', disposed: 'off' }
@@ -49,9 +50,12 @@ const status = (extension: ExtensionInfo) =>
     ? span({ class: 'ml-auto shrink-0 text-xs text-danger-400', title: 'The build failed; the server log has the error' }, 'not built')
     : span({ class: ['ml-auto shrink-0 text-xs', statusTone[extension.status] ?? 'text-neutral-500'] }, statusText[extension.status] ?? extension.status)
 
-export const extensionCard = ({ extension, provides, needs, locked }: CardModel, toggle: () => void) =>
-  div(
-    { class: ['mb-2 rounded-xl bg-neutral-800 p-3', extension.configured ? '' : 'opacity-50'] },
+export const extensionCard = (model: CardModel, toggle: () => void, copyId: () => void) => {
+  const { extension, provides, needs, locked } = model
+  const menu = contextMenu()
+  return div(
+    { class: ['mb-2 rounded-xl bg-neutral-800 p-3', extension.configured ? '' : 'opacity-50'], ...menu.target(() => extensionMenu(model, toggle, copyId)) },
+    menu.view(),
     div(
       { class: 'flex min-w-0 items-center gap-3' },
       toggleSwitch({
@@ -78,3 +82,4 @@ export const extensionCard = ({ extension, provides, needs, locked }: CardModel,
       : null,
     extension.error && div({ class: 'mt-2 whitespace-pre-wrap wrap-anywhere font-mono text-xs text-danger-400' }, extension.error),
   )
+}

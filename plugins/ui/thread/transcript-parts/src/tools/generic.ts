@@ -53,4 +53,5 @@ export const genericRenderer = (name: string): Required<ToolRenderer> => ({
       section('Input', tool.call.malformed ?? inputText(tool.call.input)),
       tool.result && section(tool.result.isError ? 'Error' : 'Output', resultText(tool.result) || 'no output', !!tool.result.isError),
     ),
+  actions: () => [],
 })

@@ -12,6 +12,8 @@ export const worktreeClient = ({ wire }: WebContext) => ({
   settle: (session: string, branch: string, pr?: number) => wire.call<SettleResult>({ type: 'worktrees.settle', session, branch, ...(pr && { pr }) }),
   restore: (session: string, entry: string) => wire.call<MoveResult>({ type: 'worktrees.restore', session, entry }),
   rename: (session: string) => wire.call<RenameResult>({ type: 'worktrees.rename', session }),
+  nameAt: (path: string, name: string | undefined, device?: string) => wire.call<void>({ type: 'worktrees.name', path, ...(name && { name }) }, device),
+  drop: (path: string, device?: string) => wire.call<void>({ type: 'worktrees.drop', path }, device),
 })
 
 export type WorktreeClient = ReturnType<typeof worktreeClient>

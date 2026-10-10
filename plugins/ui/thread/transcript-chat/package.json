@@ -18,7 +18,8 @@
       "composer": "the empty-state hint does not focus a composer",
       "commands": "the empty state cannot open the extensions drawer",
       "projects": "the empty state shows the sand logo instead of the project icon",
-      "palette": "the empty state does not offer search"
+      "palette": "the empty state does not offer search",
+      "notify": "editing and forking messages is not confirmed"
     }
   },
   "dependencies": {

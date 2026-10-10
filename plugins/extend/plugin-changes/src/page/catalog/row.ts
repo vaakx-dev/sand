@@ -1,6 +1,7 @@
 import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
-import { badge, div, rowAction, secondaryAction, settingsRow, span, type Tone } from '@sand/dom'
+import { badge, contextMenu, div, rowAction, secondaryAction, settingsRow, sig, span, type Tone } from '@sand/dom'
 import { originLabels } from './filter'
+import { pluginMenu } from './menu'
 import { changedNote, type RowActions } from './warning'
 
 const tones: Record<PluginOrigin, Tone> = { builtin: 'neutral', customised: 'accent', yours: 'success' }
@@ -17,18 +18,25 @@ const detail = (plugin: PluginEntry) => {
   return plugin.description ?? ''
 }
 
-export const pluginRow = (plugin: PluginEntry, actions: RowActions) =>
-  div(
+export const pluginRow = (plugin: PluginEntry, actions: RowActions) => {
+  const menu = contextMenu()
+  const history = sig(false)
+  return div(
     { class: 'flex flex-col bg-neutral-900' },
-    settingsRow(
-      span(
-        { class: 'flex min-w-0 items-center gap-2' },
-        span({ class: 'truncate', title: plugin.folder }, plugin.name),
-        badge(tones[plugin.origin], originLabels[plugin.origin]),
+    div(
+      { class: 'flex flex-col', ...menu.target(() => pluginMenu(plugin, actions, history)) },
+      menu.view(),
+      settingsRow(
+        span(
+          { class: 'flex min-w-0 items-center gap-2' },
+          span({ class: 'truncate', title: plugin.folder }, plugin.name),
+          badge(tones[plugin.origin], originLabels[plugin.origin]),
+        ),
+        control(plugin, actions),
+        detail(plugin),
       ),
-      control(plugin, actions),
-      detail(plugin),
+      plugin.changed ? changedNote(plugin, actions) : null,
     ),
-    plugin.changed ? changedNote(plugin, actions) : null,
-    plugin.origin === 'builtin' ? null : actions.history(`plugins/${plugin.name}`),
+    plugin.origin === 'builtin' ? null : actions.history(`plugins/${plugin.name}`, history),
   )
+}

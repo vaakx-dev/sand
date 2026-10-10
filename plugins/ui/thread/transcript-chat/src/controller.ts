@@ -1,10 +1,11 @@
 import type { OpenStates, RendererRegistry } from '@sand/transcript-parts/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { div, jumpButton, listen, nearEnd, sig, toEnd } from '@sand/dom'
+import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { fill, keepAnchor, savedScroll, scrollTo } from './integrations/scroll'
 import { itemRows, type RowContext } from './rows'
+import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
 import { Views, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
@@ -14,6 +15,7 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
   const cache = parts.itemCache()
   const jumpShown = sig(false)
   const slot = slotHost()
+  const menu = contextMenu()
   const empty = hero(ctx)
   let shown: { id: string; view: ThreadView } | undefined
   let pinned = true
@@ -66,7 +68,15 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
   }
 
   const paint = (thread: Thread, current: ThreadView, grow = 0) => {
-    const context: RowContext = { registry, states, thread: thread.id, parts, markdown: ctx.markdown }
+    const context: RowContext = {
+      registry,
+      states,
+      thread: thread.id,
+      parts,
+      markdown: ctx.markdown,
+      menu,
+      rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
+    }
     const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
     current.rows.set(windowed(current, items, grow).flatMap(item => itemRows(item, context)))
   }
@@ -131,6 +141,6 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     views.clear()
   }
 
-  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd))
+  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd), menu.view())
   return { root, render, refresh, forget, scrollToEnd, clear, stale: cache.reset }
 }

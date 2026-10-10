@@ -21,6 +21,11 @@ const rename = async (ctx: Ctx, thread: Thread) => {
   if (name && name !== thread.info.title) await ctx.threads.rename(thread.id, name)
 }
 
+const retitle = async (ctx: Ctx, thread: Thread) => {
+  const title = await ctx.wire?.call<string>({ type: 'titles.rename', session: thread.id }, thread.device)
+  if (title) ctx.notify?.push(`Thread renamed to ${title}`)
+}
+
 const branch = async (ctx: Ctx, thread: Thread) => {
   const copied = await ctx.threads.branch(thread.id)
   await ctx.threads.select(copied.id)
@@ -34,6 +39,9 @@ const remove = async (ctx: Ctx, thread: Thread) => {
 const openActions = (ctx: Ctx, thread: Thread): NavAction[] => [
   { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => void window.open(ctx.threads.link(thread.id), '_blank', 'noopener') },
   ...(ctx.palette || ctx.picker ? [{ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: attempt(ctx, 'Could not rename', () => rename(ctx, thread)) }] : []),
+  ...(ctx.wire && thread.info.messages
+    ? [{ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: attempt(ctx, 'Could not rename', () => retitle(ctx, thread)) }]
+    : []),
   ...(!thread.device && thread.info.messages
     ? [{ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: attempt(ctx, 'Could not branch', () => branch(ctx, thread)) }]
     : []),

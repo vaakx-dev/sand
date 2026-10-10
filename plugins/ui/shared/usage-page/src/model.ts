@@ -16,6 +16,7 @@ export interface UsageDeps {
   limits(): Limits[]
   refreshLimits?(): Promise<void>
   openThread?(id: string): void
+  copy(text: string, what: string): void
 }
 
 export interface Notice {
@@ -102,6 +103,8 @@ export const usageModel = (deps: UsageDeps) => {
     refresh: fleet.refresh,
     checkLimits: deps.refreshLimits ? checkLimits : undefined,
     openThread: deps.openThread,
+    copy: deps.copy,
+    showOnly: (id: string) => pc.set(id),
   }
 }
 

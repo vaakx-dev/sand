@@ -1,6 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { effect, errorMessage, sig, untrack } from '@sand/dom'
 import type { Kit } from '../kit'
+import { settingsMenu } from '../menu'
 
 const starred = Number.MAX_SAFE_INTEGER
 
@@ -85,6 +86,16 @@ export const createCatalog = (kit: Kit, source: string) => {
     return model
   }
 
+  const menu = (model: ModelInfo, keep: (id: string) => void) =>
+    settingsMenu(kit, model, {
+      toggleFavourite: () => void setFavourite(model, model.favourite === undefined),
+      toggleHidden: () => {
+        keep(model.id)
+        void setHidden(model, !model.hidden)
+      },
+      ...(model.added && { remove: () => void remove(model) }),
+    })
+
   effect(() => {
     kit.changes.version.get()
     untrack(() => void load())
@@ -99,6 +110,7 @@ export const createCatalog = (kit: Kit, source: string) => {
     setFavourite,
     remove,
     add,
+    menu,
   }
 }
 

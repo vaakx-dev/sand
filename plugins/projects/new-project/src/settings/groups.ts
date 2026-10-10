@@ -1,6 +1,6 @@
 import { plural } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, sig, type Pulse, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
 import { sourcesPage } from '../flow/sources'
 import { projectList } from './list'
 import { refreshStates } from './refresh'
@@ -22,7 +22,7 @@ const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) =>
     ? quietButton({ size: 'sm', active: showHidden.get(), onClick: () => showHidden.set(!showHidden.get()) }, 'Show hidden')
     : null
 
-export const groupsSection = (ctx: ProjectsContext, changes: Pulse, live: Sig<number>) => {
+export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse, live: Sig<number>) => {
   const showHidden = sig(false)
   const open = sig<string | undefined>(undefined)
   const refreshed = new Set<string>()
@@ -36,7 +36,7 @@ export const groupsSection = (ctx: ProjectsContext, changes: Pulse, live: Sig<nu
     refreshStates(ctx, groups, refreshed)
     return projectList(
       { title: heading(groups), action: div({ class: 'flex items-center gap-2' }, hiddenToggle(ctx, showHidden), addButton(ctx)) },
-      ...(groups.length ? groups.map(group => groupRow(ctx, group, open)) : [settingsRow('No saved projects')]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open)) : [settingsRow('No saved projects')]),
     )
   })
 }

@@ -14,7 +14,7 @@ const toolView = (step: Sig<ToolStep>, context: RowContext) => {
   const { open, toggle } = context.states.get(untrack(() => step.get().key))
   return context.parts.toolStep(
     step.map(value => value.tool),
-    { renderer: context.registry.toolRenderer, version: context.registry.version, open, toggle },
+    { renderer: context.registry.toolRenderer, version: context.registry.version, open, toggle, menu: context.menu },
   )
 }
 

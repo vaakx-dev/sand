@@ -1,4 +1,4 @@
-import type { Sig } from '@sand/dom'
+import type { ContextMenu, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
 import type { Entry, ImageBlock, Notification, ToolResultBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { RenderEntry, RenderTool, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
@@ -60,6 +60,17 @@ export interface ToolStepOptions {
   version: Sig<number>
   open: Sig<boolean>
   toggle(): void
+  menu?: ContextMenu
+}
+
+export interface TextMenu {
+  props: ReturnType<typeof pressMenu>['props']
+  held(): boolean
+}
+
+export interface MenuKit {
+  text(menu: ContextMenu, spec: () => MenuSpec | undefined, within?: (node: HTMLElement) => Element | null): TextMenu
+  copy(id: string, label: string, text: () => string, what: string): NavAction
 }
 
 export interface ItemCache {
@@ -73,6 +84,7 @@ export interface TranscriptParts {
   sections(text: string): string[]
   registry(changed?: () => void): RendererRegistry
   openStates(): OpenStates
+  menus: MenuKit
   toolStep(tool: Sig<ToolView>, options: ToolStepOptions): HTMLElement
   image: MediaImage
 }

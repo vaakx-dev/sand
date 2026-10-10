@@ -1,4 +1,4 @@
-import { derive, div, dropdown, hint, icon, list, popoverItem, secondaryAction, show, span, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, dropdown, hint, icon, list, popoverItem, secondaryAction, show, span, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Changes } from '../changes/collect'
 import { totals } from '../changes/lines'
@@ -15,6 +15,7 @@ export interface ChangesState {
   turn: Sig<number | undefined>
   closed: Sig<Record<string, boolean>>
   revealed: Sig<Reveal | undefined>
+  copy: (text: string, what: string) => void
 }
 
 const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns' : `Turn ${turn}`)
@@ -42,8 +43,10 @@ const turnPicker = (state: ChangesState) =>
 export const changesView = (state: ChangesState, toggle: (key: string) => void) => {
   const files = derive(() => state.changes.get()?.files ?? [])
   const sum = derive(() => totals(files.get()))
+  const menu = contextMenu()
   return div(
     { class: 'min-h-full pb-4' },
+    menu.view(),
     div(
       { class: 'flex h-10 items-center gap-3 pl-4 pr-4 text-xs text-neutral-400', hidden: state.changes.map(changes => !changes?.turns.length) },
       turnPicker(state),
@@ -54,7 +57,7 @@ export const changesView = (state: ChangesState, toggle: (key: string) => void) 
         () => sum.get().del,
       ),
     ),
-    list(files, file => file.key, file => fileView(file, state, toggle)),
+    list(files, file => file.key, file => fileView(file, state, toggle, menu)),
     show(
       files.map(items => !items.length),
       () => hint(state.empty),

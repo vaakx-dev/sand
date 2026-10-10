@@ -1,4 +1,4 @@
-import { div, dynamicChild, finePointer, hint, keys, list, quietButton, show, textInput } from '@sand/dom'
+import { contextMenu, div, dynamicChild, finePointer, hint, keys, list, quietButton, show, textInput } from '@sand/dom'
 import { filterNames, filters } from '../tree/filter'
 import { rowsPerPage } from './integrations/page'
 import { labelEditor } from './label-input'
@@ -15,7 +15,9 @@ export const createTreeView = (source: TreeSource) => {
     fold: model.fold,
     label: model.edit,
     fork: model.fork,
+    setLabel: model.setLabel,
   }
+  const menu = contextMenu()
 
   const finish = async (id: string, value: string | undefined) => {
     await model.finish(id, value)
@@ -32,7 +34,7 @@ export const createTreeView = (source: TreeSource) => {
   const listView = list(
     model.items,
     item => item.row.id,
-    item => rowView(item, actions),
+    item => rowView(item, actions, menu),
     div({ class: 'min-h-0 flex-1 overflow-auto pb-2', role: 'listbox' }),
   )
 
@@ -69,6 +71,7 @@ export const createTreeView = (source: TreeSource) => {
       () => hint(() => (model.thread.get() ? 'No entries match.' : 'No thread selected.')),
     ),
     dynamicChild(model.editing, id => (id ? labelEditor(model.labelOf(id), value => void finish(id, value)) : div({ class: 'hidden' }))),
+    menu.view(),
   )
 
   model.sync()

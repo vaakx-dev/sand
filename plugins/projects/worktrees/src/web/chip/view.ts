@@ -1,8 +1,9 @@
-import { button, derive, div, dynamicChild, focusable, icon, popover, show, sig, SPACE, span, untrack, type Pulse } from '@sand/dom'
-import type { WebContext } from '../client'
+import { button, contextMenu, derive, div, dynamicChild, focusable, icon, popover, show, sig, SPACE, span, untrack, type Pulse } from '@sand/dom'
+import type { WebContext, WorktreeClient } from '../client'
 import type { States } from '../states'
 import type { Choices } from './choices'
-import { draftMenu } from './menu'
+import { entryMenu } from './entry-menu'
+import { draftMenu, type EntryMenus } from './menu'
 import { chipLabel, chipTarget } from './target'
 
 const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors ' + focusable
@@ -25,7 +26,7 @@ const press = (action: () => void) => ({
   },
 })
 
-export const createChip = (ctx: WebContext, states: States, choices: Choices, changes: Pulse) => {
+export const createChip = (ctx: WebContext, client: WorktreeClient, states: States, choices: Choices, changes: Pulse) => {
   const open = sig(false)
   const close = () => open.set(false)
   const target = changes.read(() => {
@@ -52,11 +53,14 @@ export const createChip = (ctx: WebContext, states: States, choices: Choices, ch
       span({ class: 'inline-flex shrink-0' }, icon('down', 12)),
     )
 
-  const items = () => draftMenu(ctx, choices, target.get(), close)
+  const context = contextMenu()
+  const menus: EntryMenus = { context, spec: (entry, use) => entryMenu(ctx, client, entry, target.get().device, use) }
+  const items = () => draftMenu(ctx, choices, target.get(), close, menus)
 
   const pill = () =>
     div(
       { class: 'flex min-w-0 items-center', hidden },
+      context.view(),
       dynamicChild(derive(() => label.get().glyph), chip),
       show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, dynamicChild(derive(() => changes.version.get() + states.version.get()), items))),
     )

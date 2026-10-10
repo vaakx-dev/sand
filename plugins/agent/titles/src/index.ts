@@ -23,7 +23,7 @@ export default definePlugin({
       session.rename(title, false)
       if (session.kind !== 'agent' && prefs.get().auto) void namer.replace(session, title, prompt)
     })
-    ctx.watch('server', server => (server ? serveTitles(ctx, server, prefs) : undefined))
+    ctx.watch('server', server => (server ? serveTitles(ctx, server, prefs, namer) : undefined))
     ctx.plugin(titlesUI(namer))
   },
 })

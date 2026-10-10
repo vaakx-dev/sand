@@ -6,7 +6,7 @@ export default definePlugin({
   name: 'extensions-panel',
   description: 'Interface settings page: chat style, sidebar and composer choices, parts to turn on or off, and every extension with its roles for plugin authors',
   inject: ['extensions', 'settings'],
-  uses: { commands: 'no /extensions command' },
+  uses: { commands: 'no /extensions command', notify: 'copying an id shows no message' },
   apply(ctx) {
     const changes = pulse(ctx)
     ctx.on('extensions.change', changes.schedule)

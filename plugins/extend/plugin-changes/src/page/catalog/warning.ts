@@ -1,9 +1,11 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
-import { div, quietButton, secondaryAction, span, type Child } from '@sand/dom'
+import { div, quietButton, secondaryAction, span, type Child, type Sig } from '@sand/dom'
 
 export interface RowActions {
   busy: () => boolean
-  history(key: string): Child
+  history(key: string, open: Sig<boolean>): Child
+  hasHistory(key: string): boolean
+  copy(text: string, what: string): () => Promise<void>
   customise(plugin: PluginEntry): void
   restore(plugin: PluginEntry): void
   keep(plugin: PluginEntry): void

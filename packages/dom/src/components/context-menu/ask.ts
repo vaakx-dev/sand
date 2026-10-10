@@ -1,5 +1,6 @@
-import type { NavAsk } from '@sand/dom'
-import { derive, div, input, keys, primaryAction, sig, span } from '@sand/dom'
+import { derive, div, input, keys, sig, span } from '@vaakx-dev/vrui'
+import type { NavAsk } from '../../shell/nav/types'
+import { primaryAction } from '../button'
 
 export type AskSize = 'sm' | 'md'
 

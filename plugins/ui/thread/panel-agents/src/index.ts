@@ -1,4 +1,4 @@
-import { asPanel, attach, sig, watchShown, type Shown } from '@sand/dom'
+import { asPanel, attach, copyText, sig, watchShown, type Shown } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { runningAgents } from './counts'
@@ -70,6 +70,10 @@ export default definePlugin({
 
     const actions: Actions = {
       open: id => void ctx.threads.select(id),
+      copy: async (text, what) => {
+        const copied = await copyText(text)
+        ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
+      },
       interrupt: id => guarded(() => interrupt(id)),
       cancel: run =>
         guarded(async () => {

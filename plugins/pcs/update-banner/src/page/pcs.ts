@@ -1,7 +1,8 @@
-import { div, dynamicChild, icon, list, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
+import { contextMenu, div, dynamicChild, icon, list, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
 import type { Fleet, PcView } from '../fleet/model'
 import { channelNames, versionText } from '../fleet/text'
 import { pcStatusLine } from '../pc-line'
+import { pcMenu } from './pc-menu'
 
 const actionKey = (pc: PcView) => {
   const { status } = pc
@@ -29,9 +30,11 @@ const action = (row: Sig<PcView>, fleet: Fleet, kind: string) => {
   }
 }
 
-const pcRow = (row: Sig<PcView>, fleet: Fleet) =>
-  div(
-    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 px-4 py-3' },
+const pcRow = (row: Sig<PcView>, fleet: Fleet) => {
+  const menu = contextMenu()
+  return div(
+    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => pcMenu(row.get(), fleet, actionKey(row.get()))) },
+    menu.view(),
     tile(icon('laptop', 16)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
@@ -40,6 +43,7 @@ const pcRow = (row: Sig<PcView>, fleet: Fleet) =>
     ),
     dynamicChild(row.map(actionKey), kind => action(row, fleet, kind)),
   )
+}
 
 export const pcsSection = (fleet: Fleet) =>
   settingsSection({ title: 'PCs' }, list(fleet.pcs, pc => pc.key, row => pcRow(row, fleet), div({ class: 'contents' })))

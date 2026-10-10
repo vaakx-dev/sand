@@ -40,6 +40,9 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
           health: () => healthPanel({ id, name, local: self, online: row.get().pc.online }, health),
           remove: () => void source.removePc(id).catch(source.fail),
           pairAgain,
+          check: () => health.refresh(id, self),
+          repair: () => void health.repair(id, name),
+          busy: () => health.busy(id),
         })
       },
       div({ class: 'contents' }),

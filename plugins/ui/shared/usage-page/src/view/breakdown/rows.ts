@@ -1,9 +1,10 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { tildeHome, type Child } from '@sand/dom'
+import { tildeHome, type Child, type MenuSpec } from '@sand/dom'
 import { folderName, periodTitle } from '@sand/kit'
 import { addTotals, byCost, emptyTotals, grouped, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { chip, muted } from '../parts'
+import { pcMenu, threadMenu } from './menu'
 
 export type Breakdown = 'projects' | 'models' | 'threads' | 'pcs' | 'periods'
 
@@ -15,12 +16,15 @@ export interface Row {
   accounts: string[]
   totals: UsageTotals
   open?: () => void
+  menu?: () => MenuSpec
 }
 
 export interface RowSource {
   usage: Merged
   nameOf(id: string): string
   openThread?: (id: string) => void
+  copy(text: string, what: string): void
+  showOnly(pc: string): void
 }
 
 const top = 10
@@ -49,9 +53,11 @@ const threadRows = (source: RowSource): Row[] =>
     accounts: thread.accounts,
     totals: thread,
     open: source.openThread && (() => source.openThread?.(thread.id)),
+    menu: threadMenu(thread, source),
   }))
 
-const pcRows = ({ usage }: RowSource): Row[] => usage.pcs.map(pc => ({ key: pc.id, name: pc.name, extra: [], accounts: pc.accounts, totals: pc }))
+const pcRows = (source: RowSource): Row[] =>
+  source.usage.pcs.map(pc => ({ key: pc.id, name: pc.name, extra: [], accounts: pc.accounts, totals: pc, menu: pcMenu(pc, source) }))
 
 const periodRows = ({ usage }: RowSource): Row[] =>
   usage.periods

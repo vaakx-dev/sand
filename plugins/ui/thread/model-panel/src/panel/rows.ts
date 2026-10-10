@@ -23,7 +23,7 @@ export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => 
       disabled: scene.offline(source) && !on,
       class: 'py-2 hover:bg-neutral-700',
       ...(withSource && source && { title: `${model.label} · ${sourceName(source)}` }),
-      onClick: () => scene.pick(model),
+      ...scene.menu.target(() => scene.menuOf(model), () => scene.pick(model)),
     },
     radio(on),
     withSource && logo(model.provider, 14),

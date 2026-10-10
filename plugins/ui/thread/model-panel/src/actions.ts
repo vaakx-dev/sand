@@ -30,7 +30,14 @@ export const createActions = (ctx: PanelContext, fail: (text: string) => void) =
     run('model', `${words} --default`)
   }
 
-  return { set, reset, makeDefault, run }
+  const send = (work?: Promise<unknown>) => void work?.catch(error => fail(errorMessage(error)))
+
+  const saveModel = (model: string) =>
+    send(ctx.wire?.call({ type: 'ui.command', name: 'model', args: `${model} --default --quiet`, cwd: ctx.threads.cwd() }))
+
+  const prefer = (model: string, pref: { hidden?: boolean; favourite?: boolean }) => send(ctx.wire?.call({ type: 'models.pref', model, ...pref }))
+
+  return { set, reset, makeDefault, run, saveModel, prefer }
 }
 
 export type Actions = ReturnType<typeof createActions>

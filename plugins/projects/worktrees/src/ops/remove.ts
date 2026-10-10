@@ -1,3 +1,5 @@
+import { isInside } from '@sand/kit'
+import { samePath } from '@sand/kit/fs'
 import { removedType, type RemovedEntry, type SettleResult } from '../contract'
 import { changedCount, headOf, repoOf, unpushedCount, within } from '../git/repo'
 import { removeWorktree } from '../git/worktree'
@@ -31,4 +33,21 @@ export const removeSessionWorktree = async (ops: Ops, id: unknown, options: Remo
   forgetMarks()
   ops.changed(repo.main)
   return { settled: true, removed }
+}
+
+export const removeWorktreeAt = async (ops: Ops, path: unknown) => {
+  const repo = await repoOf(String(path ?? ''))
+  if (!repo?.linked) throw new Error('That folder is not a worktree')
+  const inside = ops.sessions.list().filter(summary => samePath(summary.cwd, repo.root) || isInside(summary.cwd, repo.root))
+  if (inside.some(summary => ops.running.has(summary.id))) throw new Error('A thread is working there. Wait for its turn to finish')
+  const head = await headOf(repo.root)
+  await removeWorktree(repo.main, repo.root, repo.branch, true)
+  for (const summary of inside) {
+    const session = ops.sessions.open(summary.id)
+    if (!session) continue
+    relocate(session, within(repo.root, session.cwd, repo.main), `The worktree at ${repo.root} was removed.`)
+    session.append(removedType, { branch: repo.branch ?? '', path: repo.root, head, cwd: summary.cwd } satisfies RemovedEntry)
+  }
+  forgetMarks()
+  ops.changed(repo.main)
 }

@@ -7,6 +7,8 @@ export const pageCss = `
 :root { color-scheme: dark; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; outline: 0; }
 html, body { height: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+[data-menu] { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 body { background: ${color('neutral', 900)}; color: ${color('neutral', 100)}; font: ${fontSize}/${lineHeight} ${sans}; -webkit-font-smoothing: antialiased; overflow: hidden; }
 button { font: inherit; color: inherit; background: none; text-align: left; }
 input, textarea, select { font: inherit; color: inherit; background: none; }

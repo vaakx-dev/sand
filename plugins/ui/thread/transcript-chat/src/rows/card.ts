@@ -19,12 +19,17 @@ const whole = (text: string, context: RowContext) =>
     div({ class: 'markdown' }, context.markdown.nodes(text)),
   )
 
-const section = (text: string, key: string, context: RowContext) => {
+const section = (text: string, key: string, context: RowContext, held: () => boolean) => {
   const { open, toggle } = context.states.get(key)
   return div(
     { class: 'rounded-lg bg-neutral-900' },
     rowButton(
-      { class: 'min-h-8 gap-2 rounded-lg px-2 text-sm text-neutral-200 hover:bg-neutral-800', onClick: toggle },
+      {
+        class: 'min-h-8 gap-2 rounded-lg px-2 text-sm text-neutral-200 hover:bg-neutral-800',
+        onClick: () => {
+          if (!held()) toggle()
+        },
+      },
       chevron(() => open.get()),
       span({ class: 'min-w-0 flex-1 truncate' }, summary(text)),
     ),
@@ -39,8 +44,13 @@ const statusBadge = (status: string) => badge(tones[status as keyof typeof tones
 export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {
     const sections = context.parts.sections(card.text)
+    const { menus } = context.parts
+    const press = menus.text(context.menu, () => ({ title: card.kind, subtitle: card.name, actions: [menus.copy('copy', 'Copy result', () => card.text, 'result')] }))
     return div(
-      { class: ['mt-2 mb-4 flex gap-3 rounded-xl p-3 text-sm text-neutral-300', card.failed ? 'bg-danger-950' : 'bg-accent-950'] },
+      {
+        class: ['mt-2 mb-4 flex gap-3 rounded-xl p-3 text-sm text-neutral-300', card.failed ? 'bg-danger-950' : 'bg-accent-950'],
+        ...(card.text ? press.props : {}),
+      },
       span({ class: 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent-900 text-accent-400' }, icon(card.icon, 15)),
       div(
         { class: 'min-w-0 flex-1' },
@@ -54,7 +64,7 @@ export const cardRow = (card: Card, context: RowContext) =>
         sections.length > 1
           ? div(
               { class: 'flex flex-col gap-1' },
-              sections.map((text, index) => section(text, `${card.key}:${index}`, context)),
+              sections.map((text, index) => section(text, `${card.key}:${index}`, context, press.held)),
             )
           : card.text && whole(sections[0] ?? '', context),
       ),

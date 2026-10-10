@@ -1,4 +1,4 @@
-import type { PaletteItem, PalettePage } from '../contract'
+import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
 import { batch, derive, effect, errorMessage, listbox, onTimeout, sig, untrack } from '@sand/dom'
 import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
@@ -85,6 +85,20 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
 
   const more = (item: PaletteItem) => advance(actionsPage(item))
 
+  const runAction = (action: PaletteItemAction) => {
+    if (!action.returnAfter) {
+      nav.close(page)
+      return Promise.resolve()
+        .then(() => action.run())
+        .catch(nav.fail)
+    }
+    return Promise.resolve()
+      .then(() => action.run())
+      .then(() => {
+        if (nav.isTop(page)) reloads.update(count => count + 1)
+      }, nav.fail)
+  }
+
   const openActions = () => {
     const item = untrack(() => results.get()[box.selected.get()])
     if (!item?.actions?.length) return false
@@ -159,6 +173,7 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     card,
     nested: nav.trail().length > 1,
     more,
+    runAction,
     openActions,
     submit,
     confirm,

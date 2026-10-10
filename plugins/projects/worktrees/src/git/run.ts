@@ -12,7 +12,7 @@ const quiet = {
 }
 
 export const git = async (cwd: string, args: string[]): Promise<GitResult> => {
-  const child = Bun.spawn(['git', '-c', 'core.quotepath=off', ...args], {
+  const child = Bun.spawn(['git', '-c', 'core.quotepath=off', '-c', 'core.longpaths=true', ...args], {
     cwd,
     stdin: 'ignore',
     stdout: 'pipe',

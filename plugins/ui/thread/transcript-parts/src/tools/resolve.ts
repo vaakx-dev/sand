@@ -15,5 +15,6 @@ export const resolveRenderer = (name: string, found?: RenderTool | ToolRenderer)
     badge: found.badge ?? base.badge,
     copy: found.copy ?? label,
     body: found.body ?? base.body,
+    actions: found.actions ?? base.actions,
   }
 }

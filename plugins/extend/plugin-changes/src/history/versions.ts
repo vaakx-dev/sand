@@ -1,5 +1,5 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { badge, chevron, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type Sig } from '@sand/dom'
+import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type Sig } from '@sand/dom'
 import type { VersionsSource } from './source'
 
 const sources: Record<VersionSource, string> = {
@@ -14,8 +14,24 @@ const sources: Record<VersionSource, string> = {
 const versionRow = (source: VersionsSource, target: () => VersionTarget, version: Sig<Version>) => {
   const current = derive(() => target().current === version.get().id)
   const good = derive(() => target().good === version.get().id)
+  const menu = contextMenu()
+  const spec = (): MenuSpec => {
+    const { at, hash, source: from } = version.get()
+    const restorable = !current.get() && source.busy.get() === undefined
+    return {
+      title: exactTime(at),
+      subtitle: sources[from],
+      actions: [
+        ...(restorable
+          ? [{ id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: () => void source.restore(target(), version.get()) }]
+          : []),
+        { id: 'copy-hash', label: 'Copy hash', icon: 'copy', group: 'copy', run: source.copy(hash, 'hash') },
+      ],
+    }
+  }
   return div(
-    { class: 'flex min-h-8 flex-wrap items-center gap-3 px-2 text-xs' },
+    { class: 'flex min-h-8 flex-wrap items-center gap-3 px-2 text-xs', ...menu.target(spec) },
+    menu.view(),
     span({ class: 'tabular-nums text-neutral-300' }, () => exactTime(version.get().at)),
     span({ class: 'text-neutral-500' }, () => sources[version.get().source]),
     span({ class: 'tabular-nums text-neutral-500', title: () => version.get().hash }, () => version.get().hash.slice(0, 7)),
@@ -33,9 +49,8 @@ const versionRow = (source: VersionsSource, target: () => VersionTarget, version
   )
 }
 
-export const historyToggle = (source: VersionsSource, key: string) => {
+export const historyToggle = (source: VersionsSource, key: string, open: Sig<boolean> = sig(false)) => {
   const target = source.target(key)
-  const open = sig(false)
   const versions = derive(() => target.get()?.versions ?? [])
   return show(
     derive(() => versions.get().length > 0),

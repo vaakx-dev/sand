@@ -1,10 +1,10 @@
-import type { ProjectGroup } from '@sand/web-client/contract'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import { div, errorMessage, icon, popover, popoverItem, span } from '@sand/dom'
 import { byRecent, isOnline, machineName, withoutCopy } from './places'
 import { deleteItem } from './remove'
 import type { ProjectsContext } from './types'
 
-interface Entry {
+export interface Entry {
   label: string
   icon: string
   disabled?: boolean
@@ -31,15 +31,18 @@ const rename = async (ctx: ProjectsContext, group: ProjectGroup) => {
   if (name && name !== group.name) await ctx.projects.rename(group, name)
 }
 
-const startThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
-  const target = byRecent(group.locations).find(entry => !entry.missing && isOnline(ctx, entry.device))
-  if (!target) return
-  await ctx.threads.draft(target.path, target.device)
+export const startAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
+  await ctx.threads.draft(entry.path, entry.device)
   ctx.settings?.close()
   ctx.composer?.focus()
 }
 
-const actions = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
+const startThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
+  const target = byRecent(group.locations).find(entry => !entry.missing && isOnline(ctx, entry.device))
+  if (target) await startAt(ctx, target)
+}
+
+export const actions = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
   const startable = group.locations.some(entry => !entry.missing && isOnline(ctx, entry.device))
   const syncFlows = ctx.syncFlows
   return [
@@ -49,7 +52,7 @@ const actions = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
   ]
 }
 
-const forgets = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
+export const forgets = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
   group.locations.map(entry => ({
     label: `Forget copy on ${machineName(ctx, entry.device)}`,
     icon: 'x',

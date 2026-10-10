@@ -108,6 +108,8 @@ declare module '@sand/protocol/wire' {
     'worktrees.settle': { session: string; branch?: string; pr?: number }
     'worktrees.restore': { session: string; entry: string }
     'worktrees.rename': { session: string }
+    'worktrees.name': { path: string; name?: string }
+    'worktrees.drop': { path: string }
   }
 
   interface WireEvents {
