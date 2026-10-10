@@ -1,6 +1,8 @@
-import type { LLM, LLMEvent, LLMRequest, ProviderInfo } from './contract'
+import type { LLM, LLMEvent, LLMRequest, ModelInfo, ProviderInfo } from './contract'
 import type { Accounts } from './auth/accounts'
 import type { Catalog } from './catalog'
+import { qualify } from './catalog/build'
+import { cached } from './catalog/cached'
 import { viewOf } from './catalog/view'
 import type { LocalLLM } from './local'
 import type { Peers } from './peers/peers'
@@ -8,11 +10,24 @@ import { remoteSources } from './peers/sources'
 
 const fallback: ProviderInfo = { id: 'accounts', label: 'Accounts', billing: 'api' }
 
-export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog) => {
-  const view = viewOf(() => [...catalog.entries(), ...remoteSources(peers, accounts).map(({ meta, models }) => catalog.entry(meta, models))])
+const remoteIndex = (peers: Peers, accounts: Accounts) => {
+  const sources = remoteSources(peers, accounts)
+  return {
+    sources,
+    byId: new Map(sources.map(source => [source.meta.id, source])),
+    prices: new Map(sources.flatMap(source => Object.entries(source.prices))),
+  }
+}
 
-  const remote = async function* (source: string, id: string, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
-    for await (const event of peers.stream(source, { ...request, model: id }, signal)) yield event.type === 'start' ? { ...event, model: id } : event
+export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog) => {
+  const remotes = cached(() => remoteIndex(peers, accounts))
+  const view = viewOf(() => [...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))])
+
+  const remote = async function* (model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    const source = remotes.get().byId.get(model.source ?? '')
+    if (!source) throw view.missing(model.id)
+    const sent = { ...request, model: qualify(source.account, model.name ?? model.id) }
+    for await (const event of peers.stream(source.account, sent, signal, source.pc)) yield event.type === 'start' ? { ...event, model: model.id } : event
   }
 
   const provider = (model?: string): ProviderInfo => {
@@ -30,7 +45,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       await Promise.all([accounts.ready, catalog.ready, peers.ready])
       const model = view.resolve(request.model)
       if (!model?.source) throw view.missing(request.model)
-      if (model.via) yield* remote(model.source, model.id, request, signal)
+      if (model.via) yield* remote(model, request, signal)
       else yield* local.stream({ ...request, model: model.id }, signal)
     },
     provider,
@@ -42,8 +57,13 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     },
     price: model => {
       const id = view.find(model)?.id ?? model
-      return local.price(id) ?? peers.price(id)
+      return catalog.price(id) ?? remotes.get().prices.get(id)
     },
   }
-  return { llm, view }
+
+  const reset = () => {
+    remotes.reset()
+    view.reset()
+  }
+  return { llm, view, reset }
 }

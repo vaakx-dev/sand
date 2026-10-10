@@ -48,6 +48,24 @@ export const removed = (prefs: Prefs, source: string, name: string): Prefs => {
 
 export const newModels = (prefs: Prefs, source: string, mode: NewModels): Prefs => ({ ...prefs, newModels: { ...prefs.newModels, [source]: mode } })
 
+const dropKey = <T>(record: Record<string, T>, key: string) => {
+  const { [key]: _, ...rest } = record
+  return rest
+}
+
+export const forgotten = (prefs: Prefs, source: string): Prefs => {
+  const owned = (id: string) => id.startsWith(`${source}/`)
+  return {
+    hide: prefs.hide.filter(id => !owned(id)),
+    show: prefs.show.filter(id => !owned(id)),
+    favourites: prefs.favourites.filter(id => !owned(id)),
+    added: dropKey(prefs.added, source),
+    newModels: dropKey(prefs.newModels, source),
+    seen: dropKey(prefs.seen, source),
+    fresh: dropKey(prefs.fresh, source),
+  }
+}
+
 export const seen = (prefs: Prefs, source: string): Prefs => {
   const { [source]: _, ...fresh } = prefs.fresh
   return { ...prefs, fresh }

@@ -55,7 +55,6 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
   return {
     view,
     models: view.models,
-    find: view.find,
     levels: () => levels,
     async *stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
       await Promise.all([accounts.ready, catalog.ready])

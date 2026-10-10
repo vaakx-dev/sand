@@ -1,9 +1,7 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
 import { icon, providerIcon } from '@sand/dom'
 
-const servers = new Set(['server', 'ollama', 'lmstudio'])
-
-export const logo = (provider: string | undefined, size = 16) => providerIcon(provider, size) ?? icon(provider && servers.has(provider) ? 'monitor' : 'sparkles', size)
+export const logo = (provider: string | undefined, size = 16) => providerIcon(provider, size) ?? icon('sparkles', size)
 
 export const sourceDetail = (source: SourceInfo) => {
   if (source.via) return `On ${source.via}`

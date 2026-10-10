@@ -3,18 +3,14 @@ import type { ModelsUpdate, SessionSettings, SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Choices } from './choices'
 import type { Defaults } from './defaults'
-import { modelOf, resolve } from './effective'
+import { canonical, resolve } from './effective'
 
 export const serveSettings = (ctx: Context<'sessions'>, server: Server, choices: Choices, defaults: Defaults) => {
-  const canonical = (settings: SessionSettings): SessionSettings => {
-    const found = settings.model ? modelOf(ctx.llm, settings.model) : undefined
-    return found ? { ...settings, model: found.id } : settings
-  }
   const update = (): ModelsUpdate => ({
     models: ctx.llm?.models?.() ?? [],
     sources: ctx.llm?.sources?.() ?? [],
     levels: ctx.llm?.levels?.() ?? [],
-    defaults: canonical(defaults.get()),
+    defaults: canonical(ctx.llm, defaults.get()),
   })
   const share = (id: string) => {
     const session = ctx.sessions.open(id)

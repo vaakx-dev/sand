@@ -32,11 +32,13 @@ export default definePlugin({
     let syncing = false
     let live = true
     let offered = ''
+    let resetViews = () => {}
 
     const signature = () => (merged ? JSON.stringify([merged.llm.models(), merged.llm.sources()]) : '')
 
     const changed = () => {
       if (!live) return
+      resetViews()
       if (syncing) catalog.sync()
       const now = signature()
       if (merged && now !== offered) {
@@ -64,7 +66,12 @@ export default definePlugin({
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, catalog, claude, codex, compat, limits: () => limits })
     const peers = createPeers({ home, changed, limitsChanged: parsed => ctx.emit('llm.limits', parsed) })
-    merged = mergeLLM(local, peers, accounts, catalog)
+    const llm = mergeLLM(local, peers, accounts, catalog)
+    merged = llm
+    resetViews = () => {
+      local.view.reset()
+      llm.reset()
+    }
     offered = signature()
     state = () => loginState(accounts, peers, users)
     syncing = true

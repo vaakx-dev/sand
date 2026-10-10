@@ -3,7 +3,6 @@ export interface CompatTarget {
   key?: string
   model: string
   name: string
-  headers?: Record<string, string>
   reasoning?: boolean
   images?: boolean
 }
@@ -26,5 +25,4 @@ export const compatHeaders = (target: CompatTarget): Record<string, string> => (
   'content-type': 'application/json',
   ...(target.key && { authorization: `Bearer ${target.key}` }),
   ...(isOpenRouter(target.base) && openRouterHeaders),
-  ...target.headers,
 })

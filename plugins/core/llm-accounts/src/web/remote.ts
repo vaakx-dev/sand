@@ -4,7 +4,8 @@ import { accountLogo, howText, readyChip } from './names'
 import { accountRow } from './parts'
 import type { LoginControl } from './state'
 
-const ownHere = (state: LoginState, account: LoginRemoteAccount) => state.accounts.some(local => local.id === account.id && local.signedIn)
+const ownHere = (state: LoginState, account: LoginRemoteAccount) =>
+  account.kind !== 'server' && state.accounts.some(local => local.id === account.id && local.signedIn)
 
 const detail = (state: LoginState, account: LoginRemoteAccount) =>
   [howText(account), `on ${account.pc}`, ownHere(state, account) && 'this PC uses its own'].filter(Boolean).join(' · ')

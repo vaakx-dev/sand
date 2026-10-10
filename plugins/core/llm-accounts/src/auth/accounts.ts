@@ -88,14 +88,16 @@ export const createAccounts = (path: string, changed: () => void) => {
 
   const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
 
-  const rejected = async (id: SignInKind, key: string, current: OAuth, error: unknown): Promise<Credential> => {
-    const latest = locate(await store.read(), id)
+  const rejected = async (id: SignInKind, current: OAuth, error: unknown): Promise<Credential> => {
+    const fromDisk = await store.read()
+    const latest = locate(fromDisk, id)
     if (latest?.credential.type === 'oauth' && latest.credential.refresh !== current.refresh) {
       saved = { ...saved, [latest.key]: latest.credential }
       return latest.credential
     }
     errors.set(id, `Signed out: ${message(error)}`)
-    if (key === id) await save({ [key]: undefined })
+    const keys = holders({ ...saved, ...fromDisk }, id)
+    if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
     else changed()
     throw new Error(`${fixedLabels[id]} sign-in expired. ${signInError(fixedLabels[id]).message}`)
   }
@@ -116,7 +118,7 @@ export const createAccounts = (path: string, changed: () => void) => {
       return next
     } catch (error) {
       if (!(error instanceof TokenError && error.rejected)) throw error
-      return rejected(id, latest.key, current, error)
+      return rejected(id, current, error)
     }
   }
 

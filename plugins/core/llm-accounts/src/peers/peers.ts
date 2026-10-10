@@ -125,10 +125,10 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
   const source = (id: string) => candidates(id).find(peer => !peer.refused)
   const nameOf = (id: string) => (isFixed(id) ? fixedLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
-  async function* stream(id: string, request: LLMRequest, signal?: AbortSignal): AsyncGenerator<LLMEvent> {
+  async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pc?: string): AsyncGenerator<LLMEvent> {
     await first
     let problem: Error | undefined
-    for (const peer of candidates(id)) {
+    for (const peer of candidates(id).filter(found => !pc || found.pc.id === pc)) {
       const name = account(peer, id)?.label ?? nameOf(id)
       let body: ReadableStream<Uint8Array>
       try {
@@ -158,9 +158,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     list,
     account,
     source,
-    serves: (id: string) => candidates(id).length > 0,
     stream,
     limits: () => source('claude')?.limits,
-    price: (model: string) => list().find(peer => peer.info?.prices[model])?.info?.prices[model],
   }
 }

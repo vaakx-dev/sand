@@ -6,6 +6,11 @@ export const modelOf = (llm: LLM | undefined, id?: string) => {
   return llm?.find?.(id) ?? llm?.models?.().find(info => info.id === id)
 }
 
+export const canonical = (llm: LLM | undefined, settings: SessionSettings): SessionSettings => {
+  const found = modelOf(llm, settings.model)
+  return found ? { ...settings, model: found.id } : settings
+}
+
 export const resolve = (chosen: SessionSettings, defaults: SessionSettings, llm?: LLM): EffectiveSettings => {
   const asked = chosen.model ?? defaults.model
   const info = modelOf(llm, asked)

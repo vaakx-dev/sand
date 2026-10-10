@@ -1,12 +1,12 @@
 import type { ModelInfo, ModelPrice } from '../contract'
 import type { Accounts } from '../auth/accounts'
-import { newModelsDefaults } from '../auth/kinds'
+import { isFixed, newModelsDefaults } from '../auth/kinds'
 import { rawMessage } from '../errors'
 import { builtinNames } from './builtin'
 import { decorate, modelOf, split } from './build'
 import { discover } from './discovery'
 import { cacheFile, emptyPrefs, prefsFile } from './files'
-import { noticed } from './prefs'
+import { forgotten, noticed } from './prefs'
 import { localMetas } from './sources'
 import type { Entry, ModelCache, Prefs, SourceMeta } from './types'
 
@@ -61,10 +61,12 @@ export const createCatalog = ({ home, accounts, changed }: CatalogOptions) => {
   const run = async (meta: SourceMeta) => {
     try {
       const models = await discover(accounts, meta)
+      if (!accounts.ids().includes(meta.id)) return
       store(meta.id, { checked: Date.now(), models })
       prefs = noticed(prefs, meta.id, models.map(model => model.name), mode(meta))
       void prefsStore.write(prefs)
     } catch (error) {
+      if (!accounts.ids().includes(meta.id)) return
       const before = cache[meta.id]?.models
       store(meta.id, { checked: Date.now(), ...(before && { models: before }), error: rawMessage(error) })
     }
@@ -84,9 +86,25 @@ export const createCatalog = ({ home, accounts, changed }: CatalogOptions) => {
     await Promise.all(localMetas(accounts).filter(meta => !source || meta.id === source).map(refreshOne))
   }
 
+  const forget = (id: string) => {
+    prints.delete(id)
+    if (isFixed(id)) return
+    prefs = forgotten(prefs, id)
+    void prefsStore.write(prefs)
+  }
+
+  const prune = (ids: Set<string>) => {
+    const stale = Object.keys(cache).filter(id => !ids.has(id))
+    if (!stale.length) return
+    cache = Object.fromEntries(Object.entries(cache).filter(([id]) => ids.has(id)))
+    void cacheStore.write(cache)
+  }
+
   const sync = () => {
     const metas = localMetas(accounts)
-    for (const id of [...prints.keys()]) if (!metas.some(meta => meta.id === id)) prints.delete(id)
+    const ids = new Set(metas.map(meta => meta.id))
+    for (const id of [...prints.keys()]) if (!ids.has(id)) forget(id)
+    prune(ids)
     for (const meta of metas) {
       const print = accounts.fingerprint(meta.id)
       if (prints.get(meta.id) === print) continue

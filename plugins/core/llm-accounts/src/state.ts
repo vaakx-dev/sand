@@ -24,7 +24,7 @@ const remoteAccounts = (peers: Peers, accounts: Accounts): LoginRemoteAccount[] 
       device: peer.pc.id,
       pc: peer.pc.name,
       online: peer.online && !peer.refused,
-      inUse: !accounts.signedIn(id) && peers.source(id)?.pc.id === peer.pc.id,
+      inUse: kind === 'server' ? !peer.refused : !accounts.signedIn(id) && peers.source(id)?.pc.id === peer.pc.id,
     })),
   )
 
