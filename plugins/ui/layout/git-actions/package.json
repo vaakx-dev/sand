@@ -1,17 +1,17 @@
 {
   "name": "@sand/git-actions",
   "version": "0.0.0",
-  "description": "Git state under the composer: branch, changed files, unpushed commits, the PR pill and a button for the next step",
+  "description": "Git status under the composer: the branch or PR and changed files, with a menu to view edits, open the PR, move to a worktree or rename",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
-    "label": "Git actions",
-    "summary": "Branch, PR status and the next-step git button under the composer",
+    "label": "Git status",
+    "summary": "Branch or PR and changed files under the composer",
     "uses": {
-      "pulls": "no PR pill, and the button never suggests babysitting or merging",
-      "worktrees": "no Move to worktree item, and the branch shows here instead of in the worktree chip",
-      "picker": "no Switch branch item",
-      "models": "a new thread started from the button uses the default model"
+      "pulls": "no PR status or Open PR item",
+      "worktrees": "no Move to a worktree item, and a new worktree shows its branch name instead of naming…",
+      "panels": "no View edits item",
+      "commands": "Regenerate name goes straight to the server"
     }
   },
   "dependencies": {
@@ -20,6 +20,8 @@
     "@sand/git": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/panels-tabs": "workspace:*",
+    "@sand/protocol": "workspace:*",
     "@sand/worktrees": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

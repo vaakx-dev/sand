@@ -81,18 +81,3 @@ export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget,
     ...existingRows(state, choice, pick),
   )
 }
-
-export const threadMenu = (openMove: () => void, close: () => void) =>
-  div(
-    { class: 'flex flex-col gap-1 p-1' },
-    row({
-      glyph: 'folder-git',
-      title: 'Move to worktree…',
-      line: 'its own folder and branch, taking the changes with it',
-      selected: false,
-      choose: () => {
-        close()
-        openMove()
-      },
-    }),
-  )

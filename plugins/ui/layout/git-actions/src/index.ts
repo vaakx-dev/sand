@@ -6,13 +6,13 @@ import { gitWidget } from './view/widget'
 
 export default definePlugin({
   name: 'git-actions',
-  description: 'Git state under the composer: branch, changed files, unpushed commits, the PR pill and a button for the next step',
-  inject: ['composer', 'threads', 'turns', 'gitStatus'],
+  description: 'Git status under the composer: the branch or PR and changed files, with a menu to view edits, open the PR, move to a worktree or rename',
+  inject: ['composer', 'threads', 'gitStatus'],
   uses: {
-    pulls: 'no PR pill, and the button never suggests babysitting or merging',
-    worktrees: 'no Move to worktree item, and the branch shows here instead of in the worktree chip',
-    picker: 'no Switch branch item',
-    models: 'a new thread started from the button uses the default model',
+    pulls: 'no PR status or Open PR item',
+    worktrees: 'no Move to a worktree item, and a new worktree shows its branch name instead of naming…',
+    panels: 'no View edits item',
+    commands: 'Regenerate name goes straight to the server',
   },
   apply(ctx) {
     const model = owned(ctx, () => createModel(ctx))

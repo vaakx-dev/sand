@@ -1,7 +1,7 @@
 {
   "name": "@sand/worktrees",
   "version": "0.0.0",
-  "description": "Git worktrees for threads: start a thread in a worktree, move a thread into one, set it up, and clean it up after its PR merges",
+  "description": "Git worktrees for threads: start a thread in a worktree, move a thread into one, name its branch after the thread, set it up, and clean it up after its PR merges",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

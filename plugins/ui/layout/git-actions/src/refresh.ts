@@ -1,7 +1,7 @@
-import type { ActionContext } from './actions/send'
-import type { Model } from './model'
+import type { WireEvent } from '@sand/protocol'
+import type { GitContext, Model } from './model'
 
-export const refreshOnTurns = (ctx: ActionContext, model: Model) => {
+export const refreshOnTurns = (ctx: GitContext, model: Model) => {
   let running = false
   let branch: string | undefined
 
@@ -16,6 +16,12 @@ export const refreshOnTurns = (ctx: ActionContext, model: Model) => {
     if (running && !thread.running) model.refresh()
     running = thread.running
   })
+
+  const moved = (event: WireEvent) => {
+    if (event.name === 'worktrees.change') model.refresh()
+  }
+  ctx.on('wire.event', moved)
+  ctx.on('machines.event', (_device, event) => moved(event))
 
   ctx.on('gitStatus.change', () => {
     const name = model.status.get()?.branch

@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@sand/attachments": "workspace:*",
-    "@sand/compaction": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/messages": "workspace:*",

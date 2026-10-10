@@ -33,7 +33,7 @@ export default definePlugin({
     const choices = owned(ctx, () => createChoices(ctx, client))
     const changes = pulse(ctx, ['thread.select', 'threads.change', 'drafts.change', 'worktrees.change'])
     const openMove = moveOpener(ctx, client, states)
-    const chip = owned(ctx, () => createChip(ctx, states, choices, changes, () => void openMove()))
+    const chip = owned(ctx, () => createChip(ctx, states, choices, changes))
 
     onWorktreeEvent(ctx, 'worktrees.change', () => {
       states.forget()

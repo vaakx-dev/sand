@@ -3,7 +3,8 @@ import { plural } from '@sand/kit'
 import { existsSync } from 'node:fs'
 import { branchExists, changedCount, repoOf, within } from '../git/repo'
 import { gitOk } from '../git/run'
-import { addWorktree, carryChanges, removeWorktree } from '../git/worktree'
+import { addWorktree, carryChanges, markNamed, removeWorktree } from '../git/worktree'
+import { fromTitle } from '../slug'
 import { locate } from '../place'
 import { readSetup } from '../setup/file'
 import { setupSteps } from '../setup/plan'
@@ -35,6 +36,7 @@ export const moveSession = async (ops: Ops, request: MoveRequest): Promise<MoveR
     label: `Create worktree on ${branch}`,
     async run() {
       await addWorktree(repo.root, branch, path, base)
+      if (fromTitle(branch, session.title)) await markNamed(repo.root, branch)
       if (!changed) switchThread()
     },
   }

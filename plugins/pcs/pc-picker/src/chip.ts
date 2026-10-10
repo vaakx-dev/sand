@@ -11,7 +11,7 @@ const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs
 const above = {
   left: '0',
   bottom: '100%',
-  width: `min(${SPACE['96']}, calc(100vw - ${SPACE['12']}))`,
+  width: `min(${SPACE['96']}, 100%)`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
 }
 
@@ -57,7 +57,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
 
   const pill = () =>
     div(
-      { class: 'relative flex min-w-0 items-center', hidden },
+      { class: 'flex min-w-0 items-center', hidden },
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
       show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, dynamicChild(changes.version, menu))),
     )

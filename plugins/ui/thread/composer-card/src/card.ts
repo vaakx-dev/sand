@@ -1,6 +1,5 @@
-import type { ContextUsage } from '@sand/compaction/contract'
 import type { CompletionSource } from './contract'
-import { derive, div, dropdown, errorMessage, hasOpenLayer, icon, iconButton, input, media, show, SPACE, span, textarea, type Derive, type Sig } from '@sand/dom'
+import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, SPACE, span, textarea, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { agentsChip } from './agents/chip'
 import { fromPaste, pasteLimit } from './attachments/content'
@@ -8,7 +7,6 @@ import { shelf } from './attachments/shelf'
 import { createCompletion } from './complete'
 import { builtinSources } from './complete/sources'
 import { glassPanel } from './components/glass'
-import { contextDetails, contextRing } from './context/ring'
 import { autosize } from './integrations/autosize'
 import type { Model } from './model'
 import { sendControl } from './send/button'
@@ -32,24 +30,9 @@ const placeholder = (model: Model) => () => {
   return model.mode.get() === 'queue' ? 'Queue a follow-up' : 'Add to the running turn'
 }
 
-const usageOf = (ctx: Context<'threads'>) => ctx.threads.current()?.context
-
-const moreMenu = (parts: CardParts, usage: Derive<ContextUsage | undefined>) =>
-  show(usage.map(Boolean), () =>
-    dropdown({
-      placement: 'above-right',
-      keepFocus: true,
-      menuClass: 'w-64',
-      trigger: (toggle, open) => iconButton({ title: 'More', active: open, onClick: toggle }, icon('more', 16)),
-      items: close => [contextDetails(parts.ctx, usage, close, parts.model.fail)],
-    }),
-  )
-
 export const card = (parts: CardParts) => {
   const { ctx, model, slots, dropping } = parts
   const coarse = media('(pointer: coarse)')
-  const phone = media('(max-width: 760px)')
-  const usage = model.changes.read(() => usageOf(ctx))
 
   const field = textarea({
     rows: 1,
@@ -112,8 +95,6 @@ export const card = (parts: CardParts) => {
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
-      show(derive(() => !phone.get()), () => contextRing(ctx, usage, model.fail)),
-      show(phone, () => moreMenu(parts, usage)),
       sendControl(model),
     ),
     picker,

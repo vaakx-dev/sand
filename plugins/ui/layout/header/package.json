@@ -18,7 +18,8 @@
       "layout": "no drawer or panel buttons",
       "commands": "the thread menu only renames and copies the link",
       "picker": "no rename",
-      "projects": "the project name and icon come from the folder alone"
+      "projects": "the project name and icon come from the folder alone",
+      "worktrees": "a thread in a worktree shows the worktree folder as its project"
     }
   },
   "dependencies": {

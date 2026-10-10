@@ -2,7 +2,6 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import { circle, div, dropdown, errorMessage, icon, iconButton, secondaryAction, show, svg, type Derive } from '@sand/dom'
 import { percent, tokens } from '@sand/kit'
 import type { Context } from 'drydock'
-import { runCommand } from '../send/submit'
 
 const radius = 8
 const around = 2 * Math.PI * radius
@@ -36,25 +35,31 @@ const usageLine = (usage: Derive<ContextUsage | undefined>) => () => {
   return value.compacting ? `Compacting · ${line}` : line
 }
 
-export const contextDetails = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>, done: () => void, fail: (text: string) => void) => {
-  const compact = () => {
+const compact = async (ctx: Context<'threads'>) => {
+  if (ctx.commands?.get('compact')) return void (await ctx.commands.run('compact', ''))
+  if (!ctx.wire) throw new Error('No command host is loaded to run /compact')
+  await ctx.wire.call({ type: 'ui.command', name: 'compact', args: '', session: ctx.threads.current()?.id, cwd: ctx.threads.cwd() })
+}
+
+const details = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>, done: () => void) => {
+  const run = () => {
     done()
-    runCommand(ctx, 'compact').catch(error => (ctx.notify ? ctx.notify.push(errorMessage(error), { level: 'error' }) : fail(errorMessage(error))))
+    compact(ctx).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
   }
   return div(
     { class: 'flex flex-col gap-2 p-2' },
     div({ class: 'px-1 text-sm text-neutral-300' }, usageLine(usage)),
-    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: compact }, icon('compact', 13), 'Compact now'),
+    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: run }, icon('compact', 13), 'Compact now'),
   )
 }
 
-export const contextRing = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>, fail: (text: string) => void) =>
+export const contextRing = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>) =>
   show(usage.map(Boolean), () =>
     dropdown({
       placement: 'above-right',
       keepFocus: true,
       menuClass: 'w-48',
       trigger: (toggle, open) => iconButton({ title: usageLine(usage), 'aria-label': 'Context window', active: open, onClick: toggle }, ringIcon(usage)),
-      items: close => [contextDetails(ctx, usage, close, fail)],
+      items: close => [details(ctx, usage, close)],
     }),
   )

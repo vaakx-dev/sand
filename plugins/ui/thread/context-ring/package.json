@@ -1,0 +1,23 @@
+{
+  "name": "@sand/context-ring",
+  "version": "0.0.0",
+  "description": "A ring next to send that shows how full the context window is, with Compact now",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Context ring",
+    "summary": "How full the context window is, next to send, with Compact now",
+    "uses": {
+      "commands": "Compact now goes straight to the server",
+      "notify": "a failed compact is not reported"
+    },
+    "enabled": false
+  },
+  "dependencies": {
+    "@sand/compaction": "workspace:*",
+    "@sand/composer-card": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

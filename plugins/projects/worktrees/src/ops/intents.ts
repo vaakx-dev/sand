@@ -7,12 +7,6 @@ import { forgetMarks } from './marks'
 import { startInWorktree } from './start'
 import { openSession, type Ops } from './types'
 
-const textOf = (content: UserContent[]) =>
-  content
-    .flatMap(block => (block.type === 'text' ? [block.text] : []))
-    .join(' ')
-    .trim()
-
 const useExisting = async (ops: Ops, session: Session, path: string) => {
   const repo = await repoOf(session.cwd)
   const found = repo?.checkouts.find(checkout => samePath(checkout.path, path))
@@ -34,7 +28,7 @@ export const createIntents = (ops: Ops) => {
       if (!waiting.has(session.id)) return content
       const base = waiting.get(session.id)
       waiting.delete(session.id)
-      await startInWorktree(ops, session, textOf(content), base).catch(() => {})
+      await startInWorktree(ops, session, base).catch(() => {})
       return content
     },
   }

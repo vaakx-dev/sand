@@ -74,6 +74,10 @@ export type SettleResult = { settled: true; removed: RemovedEntry } | { settled:
 
 export const removedType = 'worktree-removed'
 
+export const unnamedBranch = (session: string) => `sand/new-${session.replace(/[^0-9a-z]/gi, '').slice(-6).toLowerCase()}`
+
+export const isUnnamed = (branch: string | null | undefined) => Boolean(branch && /^sand\/new-[0-9a-z]{6}$/.test(branch))
+
 export interface Worktrees {
   openMove(): void
   of(cwd: string, device?: string): WorktreeMark | null | undefined

@@ -13,12 +13,13 @@ export default definePlugin({
     picker: 'no rename',
     jobs: 'no working dot on the panel button',
     projects: 'the project name and icon come from the folder alone',
+    worktrees: 'a thread in a worktree shows the worktree folder as its project',
   },
   apply(ctx) {
     const changes = pulse(
       ctx,
-      ['threads.change', 'thread.select', 'layout.change', 'wire.state', 'projects.change', 'jobs.change'],
-      ['threads', 'layout', 'wire', 'projects', 'jobs'],
+      ['threads.change', 'thread.select', 'layout.change', 'wire.state', 'projects.change', 'jobs.change', 'worktrees.change'],
+      ['threads', 'layout', 'wire', 'projects', 'jobs', 'worktrees'],
     )
     const slots = owned(ctx, createSlots)
     const view = owned(ctx, () => headerView(ctx, changes, slots))

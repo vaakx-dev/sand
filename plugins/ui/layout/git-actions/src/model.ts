@@ -1,11 +1,19 @@
+import type { PrSummary } from '@sand/github/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
 import { pulse, sig } from '@sand/dom'
-import type { ActionContext } from './actions/send'
-import { nextStep, type Pr } from './state/next'
+import type { Context } from 'drydock'
 
-export const createModel = (ctx: ActionContext) => {
+export type GitContext = Context<'composer' | 'threads' | 'gitStatus'>
+
+export type Pr = PrSummary | null | undefined
+
+export const createModel = (ctx: GitContext) => {
   const changes = pulse(ctx, ['gitStatus.change', 'pulls.change', 'thread.select', 'threads.change', 'wire.state'], ['gitStatus', 'pulls'])
   const target = () => ({ cwd: ctx.threads.current()?.info.cwd ?? ctx.threads.cwd(), device: ctx.threads.device() })
+  const started = changes.read(() => {
+    const thread = ctx.threads.current()
+    return Boolean(thread && (thread.info.messages > 0 || thread.entries.size > 0))
+  })
   const status = changes.read(() => {
     const { cwd, device } = target()
     return ctx.gitStatus.of(cwd, device)
@@ -16,7 +24,6 @@ export const createModel = (ctx: ActionContext) => {
     const { cwd, device } = target()
     return ctx.pulls?.of(cwd, device)
   })
-  const step = changes.read(() => nextStep(status.get(), pr.get()))
   const worktrees = sig<Worktrees | undefined>(undefined)
   ctx.watch('worktrees', role => {
     worktrees.set(role)
@@ -34,7 +41,7 @@ export const createModel = (ctx: ActionContext) => {
     refreshPr()
   }
 
-  return { status, pr, step, worktrees, target, refresh, refreshPr }
+  return { status, pr, started, worktrees, target, refresh, refreshPr }
 }
 
 export type Model = ReturnType<typeof createModel>

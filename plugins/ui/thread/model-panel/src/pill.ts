@@ -11,7 +11,7 @@ const pillLook =
 const above = {
   right: '0',
   bottom: '100%',
-  width: `min(calc(${SPACE['96']} + ${SPACE['12']}), calc(100vw - ${SPACE['12']}))`,
+  width: `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
 }
 
@@ -42,7 +42,7 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
 
   const pill = () =>
     div(
-      { class: 'relative flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
+      { class: 'flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
       button(
         {
           type: 'button',

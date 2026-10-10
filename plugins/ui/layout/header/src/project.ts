@@ -10,17 +10,21 @@ export const isQuick = (ctx: Context, cwd: string | undefined) => {
   return !cwd || (Boolean(scratch) && isInside(cwd, scratch))
 }
 
+const homeOf = (ctx: Context, cwd: string) => ctx.worktrees?.of(cwd, ctx.threads?.device())?.main ?? cwd
+
 export const projectName = (ctx: Context, cwd: string | undefined) => {
   if (isQuick(ctx, cwd)) return quickName
   if (!cwd) return ''
-  return ctx.projects?.group(cwd, ctx.threads?.device())?.name || folderName(cwd)
+  const home = homeOf(ctx, cwd)
+  return ctx.projects?.group(home, ctx.threads?.device())?.name || folderName(home)
 }
 
 export const projectIconUrl = (ctx: Context, cwd: string | undefined) => {
   if (isQuick(ctx, cwd)) return quickThreadIcon
   if (!cwd || !ctx.projects) return ''
   const device = ctx.threads?.device()
-  const group = ctx.projects.group(cwd, device)
+  const home = homeOf(ctx, cwd)
+  const group = ctx.projects.group(home, device)
   const locations = group?.locations ?? []
-  return ctx.projects.icon(cwd, device) ?? locations.map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean) ?? ''
+  return ctx.projects.icon(home, device) ?? locations.map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean) ?? ''
 }
