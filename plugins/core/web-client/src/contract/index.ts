@@ -40,5 +40,6 @@ declare module 'drydock' {
     'skills.change': () => void
     'projects.change': () => void
     'machines.change': () => void
+    'machines.event': (device: string, event: WireEvent) => void
   }
 }

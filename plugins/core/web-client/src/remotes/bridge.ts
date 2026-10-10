@@ -37,6 +37,7 @@ export const bridgeRemotes = (
       applyEvent(store, event, id => void threads.load(id), device)
       projects.event(device, event)
       if (isRelayEvent(event)) relay(device)(event)
+      ctx.emit('machines.event', device, event)
     },
     drop(device) {
       dropRemote(store, device)

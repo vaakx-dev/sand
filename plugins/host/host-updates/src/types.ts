@@ -37,6 +37,7 @@ export interface Updater {
   later(): Promise<UpdateState>
   setChannel(channel: UpdateChannel): Promise<UpdateState>
   apply(build: string): Promise<UpdateState>
+  restartNow(): UpdateState
   repair(): Promise<UpdateState & { target: BuildInfo }>
   start(): void
   stop(): void

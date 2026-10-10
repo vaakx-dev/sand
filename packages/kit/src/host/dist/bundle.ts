@@ -14,10 +14,17 @@ const readModules = async (root: string): Promise<AppFile[]> => {
   return Promise.all(found.map(async ({ path, file }) => ({ path, bytes: await Bun.file(file).bytes() })))
 }
 
-export const packBundle = async (root: string): Promise<Bundle> => {
+export type BuildHistory = Pick<BuildStamp, 'commit' | 'changes'>
+
+const historyOf = (history: BuildHistory | undefined, saved: BuildStamp | undefined): BuildHistory => {
+  const { commit, changes } = history ?? saved ?? {}
+  return { ...(commit ? { commit } : {}), ...(changes?.length ? { changes } : {}) }
+}
+
+export const packBundle = async (root: string, history?: BuildHistory): Promise<Bundle> => {
   const bun = sharedBun()
-  const [{ build, hash, files }, modules, links] = await Promise.all([readBuild(root), readModules(root), workspaceLinks(root)])
-  const stamp: BuildStamp = { ...build, hash, modules: moduleHash(modules), links, bun }
+  const [{ build, hash, files, stamp: saved }, modules, links] = await Promise.all([readBuild(root), readModules(root), workspaceLinks(root)])
+  const stamp: BuildStamp = { ...build, ...historyOf(history, saved), hash, modules: moduleHash(modules), links, bun }
   const entries = {
     ...Object.fromEntries([...files, ...modules].map(file => [file.path, file.bytes])),
     [buildStamp]: JSON.stringify(stamp),

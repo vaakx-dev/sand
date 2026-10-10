@@ -1,5 +1,5 @@
 import type { HostBundle } from '@sand/host-dist/contract'
-import type { BuildInfo } from '@sand/protocol'
+import type { BuildChange, BuildInfo } from '@sand/protocol'
 import { join } from 'node:path'
 import { buildStamp, scanApp } from './files'
 
@@ -13,6 +13,7 @@ export interface BuildStamp extends BuildInfo {
   modules?: string
   links?: Record<string, string>
   bun?: string
+  changes?: BuildChange[]
 }
 
 export interface Bundle extends HostBundle {
@@ -24,6 +25,7 @@ export interface AppBuild {
   build: BuildInfo
   hash: string
   files: AppFile[]
+  stamp?: BuildStamp
 }
 
 const cacheTime = 5000
@@ -47,6 +49,8 @@ export const readStamp = async (root: string): Promise<BuildStamp | undefined> =
   return isStamp(stamp) ? stamp : undefined
 }
 
+export const stampBuild = ({ id, time, commit }: BuildInfo): BuildInfo => ({ id, time, ...(commit && { commit }) })
+
 export const hashFiles = (files: AppFile[]) => {
   const hasher = new Bun.CryptoHasher('sha256')
   for (const { path, bytes } of files) {
@@ -67,8 +71,8 @@ export const hashApp = async (root: string) => {
 
 export const readBuild = async (root: string): Promise<AppBuild> => {
   const [{ hash, files, latest }, stamp] = await Promise.all([hashApp(root), readStamp(root)])
-  const build = stamp ? { id: stamp.id, time: stamp.time } : { id: hash, time: latest }
-  return { build, hash, files }
+  const build = stamp ? stampBuild(stamp) : { id: hash, time: latest }
+  return { build, hash, files, stamp }
 }
 
 type BuildCheck = Omit<AppBuild, 'files'>

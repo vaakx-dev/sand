@@ -1,4 +1,4 @@
-import type { BuildInfo } from '@sand/protocol'
+import type { BuildChange, BuildInfo } from '@sand/protocol'
 
 export type UpdateChannel = 'release' | 'nightly' | 'dev'
 
@@ -9,6 +9,7 @@ export interface ReleaseInfo {
   publishedAt: number
   notesUrl: string
   build: BuildInfo
+  changes?: BuildChange[]
 }
 
 export type UpdatePhase = 'idle' | 'downloading' | 'installing' | 'switching' | 'waiting' | 'restarting' | 'failed'
@@ -25,6 +26,7 @@ export interface UpdateState {
   checkError?: string
   phase: UpdatePhase
   error?: string
+  running?: number
 }
 
 export interface PcRepairResult {
@@ -40,6 +42,7 @@ declare module '@sand/protocol/wire' {
     'updates.check': {}
     'updates.later': {}
     'updates.apply': { build: string }
+    'updates.restart': {}
     'updates.channel': { channel: UpdateChannel }
     'updates.repair': {}
     'pc.repair': { device: string; resume?: boolean }

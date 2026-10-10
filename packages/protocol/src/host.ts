@@ -3,6 +3,14 @@ import type { FailedPlugin } from './runtime'
 export interface BuildInfo {
   id: string
   time: number
+  commit?: string
+}
+
+export interface BuildChange {
+  commit: string
+  type: string
+  scope?: string
+  summary: string
 }
 
 export interface DeviceInfo {

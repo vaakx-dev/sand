@@ -18,6 +18,9 @@ const restartDelay = 300
 
 export const cancelled = new Error('cancelled')
 
+export const runningWork = (deps: Pick<UpdaterDeps, 'runtimes'>) =>
+  deps.runtimes.live().reduce((count, runtime) => count + runtime.activity.sessions.length + runtime.activity.jobs.length, 0)
+
 const short = (id: string | undefined) => (id ?? 'unknown').slice(0, 6)
 
 export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) => {
@@ -25,14 +28,15 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     if (!progress.live(ticket)) throw cancelled
   }
 
-  const idle = () =>
-    deps.runtimes.live().every(runtime => !runtime.activity.sessions.length && !runtime.activity.jobs.length)
+  let rushed = false
 
   const drain = async (ticket: number) => {
+    rushed = false
     const until = Date.now() + deps.drainTimeout
-    while (!idle() && Date.now() < until) {
+    while (runningWork(deps) && !rushed && Date.now() < until) {
       await Bun.sleep(Math.max(0, Math.min(drainPoll, until - Date.now())))
       ensureLive(ticket)
+      progress.step('waiting', ticket)
     }
   }
 
@@ -104,5 +108,9 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
     }
   }
 
-  return { install, cleanup }
+  const hurry = () => {
+    rushed = true
+  }
+
+  return { install, cleanup, hurry }
 }

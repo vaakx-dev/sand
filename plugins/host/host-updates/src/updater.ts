@@ -2,7 +2,7 @@ import { errorMessage } from '@sand/kit'
 import { isInstalled, type GithubRelease, type UpdateStore } from '@sand/kit/host'
 import type { BuildInfo } from '@sand/protocol'
 import type { UpdateChannel, UpdatePhase, UpdateState } from './contract'
-import { cancelled, createInstaller } from './install/run'
+import { cancelled, createInstaller, runningWork } from './install/run'
 import { buildOf, isNewer, releaseInfo } from './offer'
 import { scheduleChecks } from './schedule'
 import type { Updater, UpdaterDeps } from './types'
@@ -39,6 +39,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     checkError,
     phase,
     error,
+    running: runningWork(deps),
   })
 
   const commit = () => {
@@ -159,6 +160,11 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     })
   }
 
+  const restartNow = () => {
+    if (phase === 'waiting') installer.hurry()
+    return snapshot()
+  }
+
   const later = async () => {
     if (latest) await store.hide(latest.build.id)
     if (phase === 'failed') settle('idle')
@@ -171,6 +177,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
     later,
     setChannel,
     apply,
+    restartNow,
     repair,
     start() {
       if (stopSchedule) return
