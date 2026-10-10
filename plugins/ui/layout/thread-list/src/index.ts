@@ -23,6 +23,7 @@ export default definePlugin({
     drafts: 'unsent new threads are not listed',
     jobs: 'threads whose background agents are still running look idle',
     branches: 'threads show their folder instead of their git branch',
+    worktrees: 'threads in a git worktree show no worktree icon',
   },
   apply(ctx) {
     const threads = ctx.threads
@@ -31,20 +32,20 @@ export default definePlugin({
       void threads.draft(place.path, place.device).then(() => ctx.composer?.focus())
     }
     const create = () => (ctx.palette ? ctx.palette.open(newThreadPage(ctx)) : here())
-    const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change'] as const
+    const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change', 'worktrees.change'] as const
     const epoch = lookupEpoch(ctx)
 
     ctx.watch('nav', nav => {
       if (!nav) {
         const layer = ctx.layer()
-        const changes = pulse(layer, [...events], ['drafts', 'jobs', 'branches'])
+        const changes = pulse(layer, [...events], ['drafts', 'jobs', 'branches', 'worktrees'])
         place(layer, 'top', owned(layer, () => switcher(threadNavList(ctx, epoch), changes, create)), 1)
         return () => void layer.dispose()
       }
       const list = nav.list(threadNavList(ctx, epoch))
       const action = nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create })
       const update = () => list.update()
-      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update), wakeTimer(ctx, update)]
+      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update), ctx.watch('worktrees', update), wakeTimer(ctx, update)]
       return () => {
         disposers.forEach(dispose => void dispose?.())
         action()

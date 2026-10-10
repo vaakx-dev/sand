@@ -4,11 +4,15 @@
   "description": "The shell tool",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "label": "Shell tool",
-    "summary": "Runs shell commands for the agent"
+    "summary": "Runs shell commands for the agent",
+    "provides": [
+      "shellEnv"
+    ]
   },
   "dependencies": {
     "@sand/tools": "workspace:*",

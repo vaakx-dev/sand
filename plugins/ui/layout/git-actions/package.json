@@ -1,0 +1,26 @@
+{
+  "name": "@sand/git-actions",
+  "version": "0.0.0",
+  "description": "Git state in the header: branch, changed files, unpushed commits, the PR pill and a button for the next step",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Git actions",
+    "summary": "Branch, PR status and the next-step git button in the header",
+    "uses": {
+      "pulls": "no PR pill, and the button never suggests babysitting or merging",
+      "worktrees": "no Move to worktree item",
+      "picker": "no Switch branch item",
+      "models": "a new thread started from the button uses the default model"
+    }
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/header": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/worktrees": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

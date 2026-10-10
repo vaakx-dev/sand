@@ -42,6 +42,7 @@ export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
               ...command('fork', 'Fork from an earlier message', 'fork'),
               ...command('clone', 'Duplicate thread', 'duplicate'),
               ...command('continue', 'Continue on another PC…', 'monitor'),
+              ...command('worktree', 'Move to worktree…', 'folder-git'),
             ]),
         {
           label: 'Copy link',

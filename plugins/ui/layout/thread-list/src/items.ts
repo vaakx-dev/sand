@@ -19,6 +19,7 @@ export type BranchOf = (cwd: string, device?: string) => string | undefined
 export interface Places {
   machine?: MachineName
   branch?: BranchOf
+  worktree?: (cwd: string, device?: string) => boolean
 }
 
 const where = (cwd: string, device: string | undefined, places: Places, quick?: boolean) => {
@@ -26,7 +27,8 @@ const where = (cwd: string, device: string | undefined, places: Places, quick?: 
   const at = quick ? '' : (branch ?? place(cwd))
   const pc = device && places.machine?.(device)
   const text = [pc, at].filter(Boolean).join(' · ')
-  return { subtitle: text, subtitleIcon: branch ? 'branch' : 'folder' }
+  const worktree = !quick && places.worktree?.(cwd, device)
+  return { subtitle: text, subtitleIcon: worktree ? 'folder-git' : branch ? 'branch' : 'folder' }
 }
 
 const stateOf = (thread: Thread, jobs: number): NavItem['state'] => (thread.running ? 'running' : jobs > 0 ? 'background' : 'idle')

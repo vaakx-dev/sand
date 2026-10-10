@@ -1,6 +1,8 @@
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
+import type {} from './contract'
 import { detect } from './detect'
+import { shellEnv } from './env'
 import { shellTool } from './tool'
 
 export default definePlugin({
@@ -12,7 +14,9 @@ export default definePlugin({
     max_output: z.number().int().positive().default(30_000),
   }),
   apply(ctx, config) {
-    const tool = shellTool(detect(config.shell), config.timeout_ms, config.max_output)
+    const env = shellEnv()
+    ctx.provide('shellEnv', env.service)
+    const tool = shellTool(detect(config.shell), config.timeout_ms, config.max_output, env.values)
     ctx.effect(() => ctx.tools.register(tool))
   },
 })

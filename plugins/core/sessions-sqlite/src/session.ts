@@ -15,6 +15,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
   const insert = db.query('insert into entries (id, session, parent, at, type, data) values ($id, $session, $parent, $at, $type, $data)')
   const setHead = db.query('update sessions set head = $head where id = $id')
   const setTitle = db.query('update sessions set title = $title, named = $named where id = $id')
+  const setCwd = db.query('update sessions set cwd = $cwd where id = $id')
   const load = db.query<Row, { session: string }>('select * from entries where session = $session')
   const append = db.transaction((...added: Entry[]) => {
     for (const entry of added) insert.run({ ...entry, data: JSON.stringify(entry.data) })
@@ -72,6 +73,11 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     rename(title, named = true) {
       setTitle.run({ title, named: named ? 1 : 0, id: info.id })
       session.title = title
+      hooks.update(session)
+    },
+    relocate(cwd) {
+      setCwd.run({ cwd, id: info.id })
+      session.cwd = cwd
       hooks.update(session)
     },
   }

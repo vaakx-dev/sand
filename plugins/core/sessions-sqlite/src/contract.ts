@@ -58,6 +58,7 @@ export interface Session extends SessionInfo {
   messages(): Message[]
   checkout(entry: string | null): void
   rename(title: string, named?: boolean): void
+  relocate(cwd: string): void
 }
 
 export interface ThreadLink {

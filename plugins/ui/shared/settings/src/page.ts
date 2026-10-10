@@ -11,15 +11,15 @@ export interface PageParts {
 
 export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
   const page = derive(() => store.pages.get().find(candidate => candidate.id === store.current.get()))
-  const extras = derive(() => store.sections.get().filter(section => section.page === page.get()?.id))
+  const extras = (above: boolean) =>
+    dynamicChild(
+      derive(() => store.sections.get().filter(section => section.page === page.get()?.id && (section.order ?? 0) < 0 === above)),
+      sections => div({ class: 'contents' }, ...sections.map(section => section.render())),
+    )
   const scroller: HTMLElement = div({ class: 'min-h-0 flex-1 overflow-auto overscroll-contain' })
   const render = (shown: SettingsPage | undefined) => {
     scroller.scrollTop = 0
-    return div(
-      { class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' },
-      shown?.render() ?? null,
-      dynamicChild(extras, sections => div({ class: 'contents' }, ...sections.map(section => section.render()))),
-    )
+    return div({ class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pt-2 pb-12' }, extras(true), shown?.render() ?? null, extras(false))
   }
   scroller.append(dynamicChild(page, render))
   return div(

@@ -1,0 +1,29 @@
+{
+  "name": "@sand/github",
+  "version": "0.0.0",
+  "description": "GitHub pull request tools and skills: a short PR status in one call, waiting for checks and feedback, filing and babysitting PRs",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "GitHub",
+    "provides": [
+      "pulls"
+    ],
+    "summary": "PR status and waiting tools, the file-pr and babysit-pr skills, and the PR of a thread's branch for the page",
+    "uses": {
+      "skills": "the agent gets no PR skills",
+      "server": "the page cannot read a branch's PR"
+    }
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "@sand/skills": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

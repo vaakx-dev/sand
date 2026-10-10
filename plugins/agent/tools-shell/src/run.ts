@@ -9,6 +9,7 @@ export interface RunOptions {
   signal: AbortSignal
   timeout: number
   verbatim?: boolean
+  env?: Record<string, string>
 }
 
 const collect = (stream: ReadableStream<Uint8Array>) => {
@@ -49,9 +50,10 @@ const killTree = async (child: Subprocess) => {
   }
 }
 
-export const run = async (argv: string[], { cwd, signal, timeout, verbatim = false }: RunOptions) => {
+export const run = async (argv: string[], { cwd, signal, timeout, verbatim = false, env = {} }: RunOptions) => {
   const child = Bun.spawn(argv, {
     cwd,
+    env: { ...process.env, ...env },
     stdin: 'ignore',
     stdout: 'pipe',
     stderr: 'pipe',

@@ -1,14 +1,15 @@
 import { owned, place, pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
+import { createSlots } from './slots'
 import { headerView } from './view'
 
 export default definePlugin({
   name: 'header',
-  description: 'Breadcrumb bar: project / title with a thread menu, git branch, and buttons for the side drawer and the right panel',
+  description: 'Breadcrumb bar: project / title with a thread menu, git branch, slots for other controls, and buttons for the side drawer and the right panel',
   uses: {
     threads: 'shows just "sand"',
     layout: 'no drawer or panel buttons',
-    branches: 'no branch name',
+    branches: 'no branch name unless another extension fills the header',
     commands: 'the thread menu only renames and copies the link',
     picker: 'no rename',
     jobs: 'no working dot on the panel button',
@@ -22,7 +23,9 @@ export default definePlugin({
       ['threads', 'layout', 'wire', 'machines', 'projects', 'jobs', 'branches'],
     )
     const branchOf = (cwd: string | undefined) => ctx.branches?.of(cwd ?? '', ctx.threads?.device())
-    const view = owned(ctx, () => headerView(ctx, changes, branchOf))
+    const slots = owned(ctx, createSlots)
+    const view = owned(ctx, () => headerView(ctx, changes, branchOf, slots))
     place(ctx, 'main', view, 0)
+    ctx.provide('header', { slot: (view, order) => slots.add(view, order) })
   },
 })

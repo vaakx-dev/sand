@@ -1,0 +1,23 @@
+{
+  "name": "@sand/github-login",
+  "version": "0.0.0",
+  "description": "GitHub sign-in for sand: reuses or creates a gh login, shares it with every PC and gives agent shells GH_TOKEN",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "GitHub sign-in",
+    "summary": "One GitHub login for gh and git push on every PC"
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools-shell": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

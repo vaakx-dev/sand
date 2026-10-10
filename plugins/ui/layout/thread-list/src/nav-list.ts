@@ -19,6 +19,7 @@ export const threadNavList = (ctx: Context<'threads'>, epoch: () => number): Nav
   const places: Places = {
     machine: device => ctx.machines?.get(device)?.name,
     branch: (cwd, device) => ctx.branches?.of(cwd, device),
+    worktree: (cwd, device) => Boolean(ctx.worktrees?.of(cwd, device)),
   }
   const lookup = projectLookup(ctx)
   const background = backgroundOf(ctx)

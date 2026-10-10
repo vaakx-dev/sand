@@ -31,6 +31,4 @@ Do not add AI attribution: no `Co-authored-by` trailers, "Generated with" lines,
 
 If you did not make the changes yourself, inspect repository status and the staged diff first, commit only intended changes, and check the resulting commit.
 
-Before committing, propose the message and the files it covers, then wait for the user to approve. If the request includes `-y`, commit without asking.
-
 This skill does not authorize amending or pushing by itself.

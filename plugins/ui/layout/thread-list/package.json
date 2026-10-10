@@ -17,7 +17,8 @@
       "machines": "threads from other PCs show no PC name",
       "drafts": "unsent new threads are not listed",
       "jobs": "threads whose background agents are still running look idle",
-      "branches": "threads show their folder instead of their git branch"
+      "branches": "threads show their folder instead of their git branch",
+      "worktrees": "threads in a git worktree show no worktree icon"
     }
   },
   "dependencies": {

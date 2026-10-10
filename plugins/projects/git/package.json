@@ -1,7 +1,7 @@
 {
   "name": "@sand/git",
   "version": "0.0.0",
-  "description": "Answers git questions about a project folder for the page, such as the current branch",
+  "description": "Answers git questions about a project folder for the page: the current branch, changed files, unpushed commits and local branches",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -11,14 +11,16 @@
     "web": "./src/web/index.ts",
     "label": "Git",
     "provides": [
-      "branches"
+      "branches",
+      "gitStatus"
     ],
-    "summary": "The current git branch of a project folder",
+    "summary": "The git branch and status of a project folder",
     "uses": {
       "server": "does nothing"
     }
   },
   "dependencies": {
+    "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

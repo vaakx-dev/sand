@@ -4,8 +4,9 @@ import { agentsWorking } from './activity'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
 import { isQuick, pcLabel, projectIconUrl, projectName, quickName } from './project'
+import type { Slots } from './slots'
 
-export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string | undefined) => string | undefined) => {
+export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string | undefined) => string | undefined, slots: Slots) => {
   const cwd = changes.read(() => {
     const threads = ctx.threads
     return threads ? (threads.current()?.info.cwd ?? threads.cwd()) : undefined
@@ -26,7 +27,7 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
   })
   const parent = changes.read(() => parentOf(ctx))
   const working = changes.read(() => agentsWorking(ctx))
-  const branch = changes.read(() => branchOf(cwd.get()) ?? '')
+  const branch = changes.read(() => (slots.filled.get() ? '' : (branchOf(cwd.get()) ?? '')))
   const layout = changes.read(() => ctx.layout?.state())
   const narrow = layout.map(state => state?.narrow ?? false)
 
@@ -108,6 +109,7 @@ export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string 
       titleMenu,
     ),
     branchName,
+    slots.host(),
     panel,
   )
 }

@@ -11,13 +11,13 @@ const input = z.object({
 const truncate = (text: string, max: number) =>
   text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted …\n${text.slice(-max / 2)}`
 
-export const shellTool = (shell: Shell, timeout: number, maxOutput: number): Tool<typeof input> => ({
+export const shellTool = (shell: Shell, timeout: number, maxOutput: number, env: () => Record<string, string>): Tool<typeof input> => ({
   name: 'shell',
   description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
   environment: `Shell: ${shell.name}`,
   input,
   async run({ command, timeout_ms = timeout }, { cwd, signal }) {
-    const { code, timedOut, stdout, stderr } = await run(shell.argv(command), { cwd, signal, timeout: timeout_ms, verbatim: shell.verbatim })
+    const { code, timedOut, stdout, stderr } = await run(shell.argv(command), { cwd, signal, timeout: timeout_ms, verbatim: shell.verbatim, env: env() })
     const output = truncate([stdout, stderr].filter(Boolean).join('\n').trimEnd(), maxOutput)
     return `${output || '(no output)'}\n[exit code ${code}${timedOut ? ', timed out' : ''}]`
   },
