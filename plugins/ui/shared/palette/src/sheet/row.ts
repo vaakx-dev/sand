@@ -12,9 +12,14 @@ const withMore = (row: HTMLElement, item: PaletteItem, active: () => boolean, mo
     { class: 'group relative' },
     row,
     div(
-      { class: ['absolute inset-y-0 right-1 flex items-center', () => (active() ? '' : 'opacity-0 group-hover:opacity-100')] },
+      { class: 'absolute inset-y-0 right-1 flex items-center' },
       iconButton(
-        { title: `More for ${item.label}`, 'aria-label': `More for ${item.label}`, onClick: stopThen(() => more(item)) },
+        {
+          title: `More for ${item.label}`,
+          'aria-label': `More for ${item.label}`,
+          class: () => (active() ? '' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'),
+          onClick: stopThen(() => more(item)),
+        },
         icon('more', 16),
       ),
     ),

@@ -33,14 +33,18 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     const to = nav.trail().indexOf(page) - 1
     void Promise.resolve()
       .then(() => item.run?.())
-      .then(() => (to >= 0 ? nav.back(to) : reloads.update(count => count + 1)), nav.fail)
+      .then(() => {
+        if (!nav.isTop(page)) return
+        if (to >= 0) nav.back(to)
+        else reloads.update(count => count + 1)
+      }, nav.fail)
   }
 
   const choose = (item: PaletteItem | undefined) => {
     if (!item || item.disabled) return
     if (item.page) return advance(item.page())
     if (item.fill !== undefined) return fill(item.fill)
-    if (item.keepOpen) return runThenBack(item)
+    if (item.returnAfter) return runThenBack(item)
     nav.close(page)
     void Promise.resolve()
       .then(() => item.run?.())
@@ -80,6 +84,13 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
   }
 
   const more = (item: PaletteItem) => advance(actionsPage(item))
+
+  const openActions = () => {
+    const item = untrack(() => results.get()[box.selected.get()])
+    if (!item?.actions?.length) return false
+    more(item)
+    return true
+  }
 
   const attempt = async (work: () => Promise<void>) => {
     if (busy.get()) return
@@ -148,6 +159,7 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     card,
     nested: nav.trail().length > 1,
     more,
+    openActions,
     submit,
     confirm,
     enter,

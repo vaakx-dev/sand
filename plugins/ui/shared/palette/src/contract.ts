@@ -13,7 +13,7 @@ export interface PaletteItem {
   search?: string
   disabled?: boolean
   danger?: boolean
-  keepOpen?: boolean
+  returnAfter?: boolean
   fill?: string
   actions?: PaletteItemAction[]
   page?(): PalettePage
@@ -24,7 +24,7 @@ export interface PaletteItemAction {
   label: string
   icon?: string
   danger?: boolean
-  keepOpen?: boolean
+  returnAfter?: boolean
   run(): void | Promise<void>
 }
 

@@ -19,14 +19,14 @@ const hideAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
   label: 'Hide project',
   icon: 'x',
   danger: true,
-  keepOpen: true,
+  returnAfter: true,
   run: () => ctx.projects?.hide(group, true),
 })
 
 const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
   label: 'Rename',
   icon: 'pencil',
-  keepOpen: true,
+  returnAfter: true,
   async run() {
     const name = (await ctx.picker?.input('Rename project', group.name))?.replace(/\s+/g, ' ').trim()
     if (name && name !== group.name) await ctx.projects?.rename(group, name)

@@ -10,7 +10,7 @@ export const actionsPage = (item: PaletteItem): PalettePage => ({
       icon: action.icon,
       label: action.label,
       danger: action.danger,
-      keepOpen: action.keepOpen,
+      returnAfter: action.returnAfter,
       run: action.run,
     })),
 })
