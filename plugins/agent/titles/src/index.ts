@@ -15,6 +15,7 @@ export default definePlugin({
   async apply(ctx) {
     const prefs = await loadPrefs(ctx.paths.home)
     const namer = createNamer(ctx, prefs)
+    ctx.provide('names', { suggest: namer.suggest })
     ctx.on('turn.start', (session, prompt) => {
       if (session.title) return
       const title = titleOf(prompt)

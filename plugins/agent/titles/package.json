@@ -10,6 +10,9 @@
   "sand": {
     "web": "./src/web/index.ts",
     "label": "Titles",
+    "provides": [
+      "names"
+    ],
     "summary": "Names new threads with a small model, and /retitle",
     "uses": {
       "llm": "threads keep the cut first prompt as their name",

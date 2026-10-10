@@ -11,6 +11,7 @@ import { moveOpener } from './move/open'
 import { mountProgress } from './progress/slot'
 import { createProgress } from './progress/store'
 import { autoSettle } from './settle/auto'
+import { renamer } from './rename'
 import { removedNote } from './settle/note'
 import { createStates } from './states'
 
@@ -40,7 +41,8 @@ export default definePlugin({
       marks.forget()
     })
 
-    const worktrees: Worktrees = { openMove: () => void openMove(), of: marks.of }
+    const rename = renamer(ctx, client)
+    const worktrees: Worktrees = { openMove: () => void openMove(), rename: () => void rename(), of: marks.of }
     ctx.provide('worktrees', worktrees)
 
     ctx.watch('composer', composer => {

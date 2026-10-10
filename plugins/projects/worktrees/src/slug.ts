@@ -13,9 +13,3 @@ export const slugOf = (text: string) =>
     .replace(/-+$/, '') || 'thread'
 
 export const branchFor = (text: string) => `sand/${slugOf(text)}`
-
-export const fromTitle = (branch: string, title: string | null) => {
-  if (!title) return false
-  const wanted = branchFor(title)
-  return branch === wanted || new RegExp(`^${wanted}-\\d+$`).test(branch)
-}

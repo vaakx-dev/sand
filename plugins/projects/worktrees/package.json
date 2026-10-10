@@ -1,7 +1,7 @@
 {
   "name": "@sand/worktrees",
   "version": "0.0.0",
-  "description": "Git worktrees for threads: start a thread in a worktree, move a thread into one, name its branch after the thread, set it up, and clean it up after its PR merges",
+  "description": "Git worktrees for threads: start a thread in a worktree, move a thread into one, name its branch and folder from the task, set it up, and clean it up after its PR merges",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -15,7 +15,8 @@
       "worktrees"
     ],
     "uses": {
-      "server": "the page cannot list, create, move or remove worktrees",
+      "server": "the page cannot list, create, move, rename or remove worktrees",
+      "names": "a new worktree takes the thread name instead of a name of its own",
       "composer": "no Local or worktree choice in the composer and no setup progress above it",
       "commands": "no /worktree command, so the thread menu has no Move to worktree item",
       "transcript": "removed worktrees show no note with a Restore button in the thread",
@@ -34,6 +35,7 @@
     "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
+    "@sand/titles": "workspace:*",
     "@sand/transcript-chat": "workspace:*",
     "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",

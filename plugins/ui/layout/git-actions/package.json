@@ -1,7 +1,7 @@
 {
   "name": "@sand/git-actions",
   "version": "0.0.0",
-  "description": "Git status under the composer: the branch or PR and changed files, with a menu to view edits, open the PR, move to a worktree or rename",
+  "description": "Git status under the composer: the branch or PR and changed files, with a menu to view edits, open the PR, move to a worktree or rename the worktree",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
@@ -9,9 +9,8 @@
     "summary": "Branch or PR and changed files under the composer",
     "uses": {
       "pulls": "no PR status or Open PR item",
-      "worktrees": "no Move to a worktree item, and a new worktree shows its branch name instead of naming…",
-      "panels": "no View edits item",
-      "commands": "Regenerate name goes straight to the server"
+      "worktrees": "no Move to a worktree or Regenerate name items",
+      "panels": "no View edits item"
     }
   },
   "dependencies": {

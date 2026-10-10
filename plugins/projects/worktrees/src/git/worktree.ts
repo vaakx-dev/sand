@@ -4,12 +4,6 @@ import { applyStash, dropStash, stashAll } from './stash'
 
 export const addWorktree = (repo: string, branch: string, path: string, base: string) => gitOk(repo, ['worktree', 'add', '-b', branch, path, base])
 
-const namedKey = (branch: string) => `branch.${branch}.sandnamed`
-
-export const markNamed = (repo: string, branch: string) => gitOk(repo, ['config', namedKey(branch), 'true'])
-
-export const namedBySand = async (repo: string, branch: string) => (await gitMaybe(repo, ['config', '--get', namedKey(branch)])) === 'true'
-
 export const restoreWorktree = async (repo: string, branch: string, path: string, head: string) => {
   if (!branch) return gitOk(repo, ['worktree', 'add', '--detach', path, head])
   return (await branchExists(repo, branch)) ? gitOk(repo, ['worktree', 'add', path, branch]) : addWorktree(repo, branch, path, head)

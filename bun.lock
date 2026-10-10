@@ -1026,6 +1026,7 @@
         "@sand/protocol": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/sessions-sqlite": "workspace:*",
+        "@sand/titles": "workspace:*",
         "@sand/transcript-chat": "workspace:*",
         "@sand/web-client": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
@@ -1687,6 +1688,8 @@
 
     "@sand/gesture-swipe/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
+    "@sand/git-actions/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
+
     "@sand/header/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/keys/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
@@ -1694,6 +1697,8 @@
     "@sand/model-panel/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/panel-agents/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
+
+    "@sand/panels-tabs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/pc-picker/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 

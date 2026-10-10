@@ -78,8 +78,13 @@ export const unnamedBranch = (session: string) => `sand/new-${session.replace(/[
 
 export const isUnnamed = (branch: string | null | undefined) => Boolean(branch && /^sand\/new-[0-9a-z]{6}$/.test(branch))
 
+export interface RenameResult {
+  later: boolean
+}
+
 export interface Worktrees {
   openMove(): void
+  rename(): void
   of(cwd: string, device?: string): WorktreeMark | null | undefined
 }
 
@@ -102,6 +107,7 @@ declare module '@sand/protocol/wire' {
     'worktrees.remove': { session: string; force?: boolean }
     'worktrees.settle': { session: string; branch?: string; pr?: number }
     'worktrees.restore': { session: string; entry: string }
+    'worktrees.rename': { session: string }
   }
 
   interface WireEvents {

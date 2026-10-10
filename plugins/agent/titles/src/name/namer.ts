@@ -39,6 +39,7 @@ export const createNamer = (ctx: Context<'sessions'>, prefs: Prefs) => {
   }
 
   return {
+    suggest: (session: Session) => name(session, session.messages()),
     async replace(session: Session, placeholder: string, prompt: Message) {
       const title = await name(session, [prompt]).catch(() => undefined)
       const live = ctx.sessions.open(session.id)
