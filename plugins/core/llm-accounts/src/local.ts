@@ -2,6 +2,7 @@ import type { EffortLevel, Limits, LLMEvent, LLMRequest, ModelInfo, ModelPrice }
 import type { Accounts } from './auth/accounts'
 import { signInError } from './auth/kinds'
 import type { Catalog } from './catalog'
+import { sourceRef } from './catalog/sources'
 import type { SourceMeta } from './catalog/types'
 import { viewOf } from './catalog/view'
 import type { CompatTarget } from './compat/client'
@@ -22,7 +23,7 @@ export interface Routes {
   claude: { stream: Stream; probe(): Promise<void> }
   codex: { stream: Stream }
   compat: { stream(target: CompatTarget, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> }
-  limits(): Limits | undefined
+  limits(): Record<string, Limits>
 }
 
 const openRouterBase = 'https://openrouter.ai/api/v1'
@@ -31,6 +32,7 @@ export type LocalLLM = ReturnType<typeof createLocal>
 
 export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }: Routes) => {
   const view = viewOf(catalog.entries)
+  const ownLimits = (source = 'claude'): Limits | undefined => (accounts.signedIn(source) ? limits()[source] : undefined)
 
   const target = async (meta: SourceMeta, model: ModelInfo, name: string): Promise<CompatTarget> => {
     const common = { model: name, name: meta.label, reasoning: model.efforts.length > 0, images: !!model.images }
@@ -61,14 +63,19 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
       const model = view.resolve(request.model)
       const meta = model?.source ? view.entry(model.source)?.meta : undefined
       if (!model || !meta) throw view.missing(request.model)
-      for await (const event of route(meta, model, request, signal)) yield event.type === 'start' ? { ...event, model: model.id } : event
+      const source = sourceRef(meta)
+      for await (const event of route(meta, model, request, signal)) {
+        if (event.type === 'start') yield { ...event, model: model.id }
+        else yield event.type === 'done' ? { ...event, source } : event
+      }
     },
-    limits,
+    limits: ownLimits,
+    allLimits: () => Object.values(limits()).filter(found => accounts.signedIn(found.source ?? 'claude')),
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready
       if (accounts.signedIn('claude')) await claude.probe()
-      return limits()
+      return ownLimits()
     },
   }
 }

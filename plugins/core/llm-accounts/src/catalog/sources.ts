@@ -1,4 +1,4 @@
-import type { SourceInfo } from '../contract'
+import type { SourceInfo, SourceRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { billings } from '../auth/kinds'
 import type { Entry, SourceMeta } from './types'
@@ -11,6 +11,8 @@ export const localMeta = (accounts: Accounts, id: string): SourceMeta | undefine
 }
 
 export const localMetas = (accounts: Accounts) => accounts.ids().flatMap(id => localMeta(accounts, id) ?? [])
+
+export const sourceRef = ({ id, label, provider, billing, plan }: SourceMeta): SourceRef => ({ source: id, label, provider, billing, ...(plan && { plan }) })
 
 const searchable = new Set(['openrouter', 'openai'])
 

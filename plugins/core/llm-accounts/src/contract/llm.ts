@@ -72,7 +72,17 @@ export type LLMEvent =
   | { type: 'tool_call'; index: number; id: string; name: string }
   | { type: 'tool_input'; index: number; json: string }
   | { type: 'block'; index: number; block: Block }
-  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage }
+  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; source?: SourceRef }
+
+export interface SourceRef {
+  source: string
+  label: string
+  provider: string
+  billing: Billing
+  plan?: string
+  pc?: string
+  pcName?: string
+}
 
 export interface LimitWindow {
   id: string
@@ -84,7 +94,9 @@ export interface LimitWindow {
 }
 
 export interface Limits {
-  provider?: string
+  source?: string
+  pc?: string
+  pcName?: string
   windows: LimitWindow[]
   status?: string
   updated: number
@@ -113,6 +125,7 @@ export interface LLM {
   stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent>
   provider?(model?: string): ProviderInfo
   limits?(): Limits | undefined
+  sourceLimits?(): Limits[]
   refreshLimits?(): Promise<Limits | undefined>
   price?(model: string): ModelPrice | undefined
 }

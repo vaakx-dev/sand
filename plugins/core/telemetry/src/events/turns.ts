@@ -38,7 +38,7 @@ export const watchTurns = (ctx: Context, capture: Capture) => {
     capture('turn.finished', {
       ...turn.settings,
       ...(turn.usage?.model && { model: turn.usage.model }),
-      ...(turn.usage?.provider && { provider: turn.usage.provider }),
+      ...(turn.usage?.source && { provider: turn.usage.source }),
       result: result.stopReason,
       duration_ms: Date.now() - turn.at,
       input_tokens: result.usage.input,

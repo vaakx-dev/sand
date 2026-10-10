@@ -49,7 +49,11 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       else yield* local.stream({ ...request, model: model.id }, signal)
     },
     provider,
-    limits: () => (accounts.signedIn('claude') ? local.limits() : peers.limits()),
+    limits: () => (accounts.signedIn('claude') ? local.limits() : peers.limits()) ?? local.limits('codex'),
+    sourceLimits: () => {
+      const borrowed = accounts.signedIn('claude') ? undefined : peers.limits()
+      return [...local.allLimits(), ...(borrowed ? [borrowed] : [])]
+    },
     refreshLimits: async () => {
       if (accounts.signedIn('claude')) return local.refreshLimits()
       await peers.refresh(true)

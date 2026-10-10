@@ -1,7 +1,8 @@
 import type { UsageBucket } from '@sand/usage/contract'
-import { div, providerIcon, span } from '@sand/dom'
+import { div, span, type Child } from '@sand/dom'
 import { periodTitle } from '@sand/kit'
-import { metricText, type Metric } from '../../../format'
+import { metricText, type Metric } from '../../format'
+import { seriesName } from './legend'
 import type { Series } from './series'
 
 export interface Hover {
@@ -24,14 +25,8 @@ const placement = ({ x, y, width, height }: Hover) => {
   }
 }
 
-const row = (label: Series['provider'] | 'total', value: string) =>
-  div(
-    { class: 'flex items-center justify-between gap-4' },
-    label === 'total'
-      ? span({ class: 'text-neutral-500' }, 'Total')
-      : span({ class: 'flex items-center gap-2 text-neutral-500' }, providerIcon(label.id, 12), label.label),
-    span({ class: 'text-neutral-100 tabular-nums' }, value),
-  )
+const row = (label: Child, value: string) =>
+  div({ class: 'flex items-center justify-between gap-4' }, span({ class: 'text-neutral-500' }, label), span({ class: 'text-neutral-100 tabular-nums' }, value))
 
 export const tooltip = (hover: Hover, key: string, bucket: UsageBucket, series: Series[], metric: Metric) =>
   div(
@@ -40,8 +35,8 @@ export const tooltip = (hover: Hover, key: string, bucket: UsageBucket, series: 
       style: placement(hover),
     },
     span({ class: 'mb-1 text-neutral-500' }, periodTitle(key, bucket)),
-    series.map(line => row(line.provider, metricText(line.values[hover.index] ?? 0, metric))),
+    series.map(line => row(seriesName(line), metricText(line.values[hover.index] ?? 0, metric))),
     series.length > 1
-      ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, row('total', metricText(series.reduce((sum, line) => sum + (line.values[hover.index] ?? 0), 0), metric)))
+      ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, row('Total', metricText(series.reduce((sum, line) => sum + (line.values[hover.index] ?? 0), 0), metric)))
       : null,
   )

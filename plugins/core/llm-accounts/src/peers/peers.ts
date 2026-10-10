@@ -1,7 +1,7 @@
 import type { Limits, LLMEvent, LLMRequest } from '../contract'
 import { isFixed, fixedLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
-import type { ShareInfo } from '../share/info'
+import { sharedRef, type ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
 import { fetchInfo, findUrl, Offline, Refused } from './http'
@@ -9,6 +9,7 @@ import { readEvents } from './lines'
 import { bareName, normalize } from './normalize'
 import { openStream } from './open'
 import { readRemotes, type RemotePc } from './remotes'
+import { tagged } from './tag'
 
 export interface PeerState {
   pc: RemotePc
@@ -27,6 +28,15 @@ export interface PeersOptions {
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+const ownedBy = (pc: RemotePc, { windows, status, updated, source }: Limits): Limits => ({
+  source: source ?? 'claude',
+  pc: pc.id,
+  pcName: pc.name,
+  windows,
+  ...(status && { status }),
+  updated,
+})
 
 const rank = (state: PeerState) => (state.refused ? 2 : state.online ? 0 : 1)
 
@@ -59,7 +69,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
 
   const remember = (pc: RemotePc, { limits: sent, ...raw }: ShareInfo) => {
     const info = normalize(raw)
-    const limits = sent && { ...sent, provider: 'claude' }
+    const limits = sent && ownedBy(pc, sent)
     const current = state(pc)
     const before = current.limits
     Object.assign(current, { info, limits, online: true, checked: true, refused: false, error: undefined })
@@ -145,7 +155,8 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
         peer.online = true
         changed()
       }
-      yield* readEvents(body, peer.pc.name, signal)
+      const shared = account(peer, id)
+      yield* tagged(readEvents(body, peer.pc.name, signal), peer.pc, shared && sharedRef(shared))
       return
     }
     void refresh()

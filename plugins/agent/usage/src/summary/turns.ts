@@ -1,14 +1,10 @@
-import type { Billing } from '@sand/llm-accounts/contract'
 import type { UsageRecord } from '@sand/loops/contract'
-import type { Entry, Usage } from '@sand/messages'
+import type { Entry } from '@sand/messages'
 
-export interface Turn {
+export interface Turn extends Omit<UsageRecord, 'id' | 'model'> {
   at: number
   session: string
   model: string
-  provider?: string
-  billing?: Billing
-  usage: Usage
 }
 
 const copyFinder = (isBranch: (session: string) => boolean) => {
@@ -27,20 +23,17 @@ const copyFinder = (isBranch: (session: string) => boolean) => {
   }
 }
 
+const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): Turn => ({
+  ...tags,
+  at: entry.at,
+  session: entry.session,
+  model: model ?? 'unknown',
+})
+
 export const turnsOf = (entries: Entry[], isBranch: (session: string) => boolean): Turn[] => {
   const isCopy = copyFinder(isBranch)
   return entries.flatMap(entry => {
     const record = entry.data as UsageRecord
-    if (isCopy(entry, record)) return []
-    return [
-      {
-        at: entry.at,
-        session: entry.session,
-        model: record.model ?? 'unknown',
-        ...(record.provider && { provider: record.provider }),
-        ...(record.billing && { billing: record.billing }),
-        usage: record.usage,
-      },
-    ]
+    return isCopy(entry, record) ? [] : [turnOf(entry, record)]
   })
 }

@@ -14,7 +14,7 @@ const feedback = (goal: Goal, reason: string) =>
 const judge = async (ctx: GoalContext, session: Session, goal: Goal, signal: AbortSignal) => {
   const request = await ctx.waterfall('context.build', await ctx.context.build(session), session)
   const verdict = await check(ctx.llm, request, goal.objective, signal)
-  if (verdict.usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model), usage: verdict.usage } satisfies UsageRecord)
+  if (verdict.usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model, verdict.source), usage: verdict.usage } satisfies UsageRecord)
   return verdict
 }
 

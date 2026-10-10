@@ -7,18 +7,20 @@ import { decorate, modelOf, split } from './build'
 import { discover } from './discovery'
 import { cacheFile, emptyPrefs, prefsFile } from './files'
 import { forgotten, noticed } from './prefs'
+import type { PriceList } from './prices'
 import { localMetas } from './sources'
 import type { Entry, ModelCache, Prefs, SourceMeta } from './types'
 
 export interface CatalogOptions {
   home: string
   accounts: Accounts
+  prices: PriceList
   changed(): void
 }
 
 export type Catalog = ReturnType<typeof createCatalog>
 
-export const createCatalog = ({ home, accounts, changed }: CatalogOptions) => {
+export const createCatalog = ({ home, accounts, prices, changed }: CatalogOptions) => {
   const prefsStore = prefsFile(home)
   const cacheStore = cacheFile(home)
   let prefs = emptyPrefs()
@@ -123,8 +125,11 @@ export const createCatalog = ({ home, accounts, changed }: CatalogOptions) => {
     sync,
     price(id: string): ModelPrice | undefined {
       const parts = split(id)
-      if (!parts || accounts.kind(parts.source) !== 'openrouter') return undefined
-      return cache[parts.source]?.models?.find(model => model.name === parts.name)?.price
+      const name = parts?.name ?? id
+      const kind = parts && accounts.kind(parts.source)
+      const found = parts && kind === 'openrouter' ? cache[parts.source]?.models?.find(model => model.name === name)?.price : undefined
+      const listed = !parts || (!!kind && kind !== 'server')
+      return prices.custom(id, name) ?? found ?? (listed ? prices.known(name) : undefined)
     },
   }
 }

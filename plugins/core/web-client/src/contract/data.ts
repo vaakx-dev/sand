@@ -46,6 +46,7 @@ export interface Models {
 
 export interface LimitsFeed {
   current(): Limits | undefined
+  all(): Limits[]
   refresh(): Promise<void>
 }
 

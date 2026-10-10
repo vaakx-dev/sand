@@ -1,5 +1,7 @@
+import type { Limits } from '@sand/llm-accounts/contract'
 import { definePlugin } from 'drydock'
 import { report } from './format'
+import { limitsOf } from './limits'
 import { summaryHandler } from './summary/serve'
 
 const stale = 60_000
@@ -9,6 +11,14 @@ export default definePlugin({
   description: 'Plan limits in /usage, plus token and cost totals for the usage page and sand usage',
   inject: ['ui'],
   apply(ctx) {
+    const current = () => limitsOf(ctx.llm)
+
+    const nameOf = (limits: Limits) => {
+      const source = ctx.llm?.sources?.().find(found => found.id === limits.source)
+      const label = source?.label ?? limits.source ?? 'Claude Code'
+      return limits.pcName ? `${label} on ${limits.pcName}` : label
+    }
+
     ctx.watch('server', server => {
       if (!server) return
       const disposers = [
@@ -22,13 +32,14 @@ export default definePlugin({
         name: 'usage',
         description: 'Show how much of your plan limits is left',
         async run() {
-          let limits = ctx.llm?.limits?.()
-          if ((!limits || Date.now() - limits.updated > stale) && ctx.llm?.refreshLimits) {
+          let limits = current()
+          if ((!limits.length || limits.some(found => Date.now() - found.updated > stale)) && ctx.llm?.refreshLimits) {
             ctx.ui.notify('Checking usage…')
-            limits = await ctx.llm.refreshLimits()
+            await ctx.llm.refreshLimits()
+            limits = current()
           }
-          if (!limits) return ctx.ui.notify('This provider does not report usage limits')
-          ctx.ui.report('Usage', report(limits))
+          if (!limits.length) return ctx.ui.notify('None of your accounts report plan limits')
+          ctx.ui.report('Usage', report(limits, nameOf))
         },
       }),
     )

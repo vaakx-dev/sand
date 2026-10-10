@@ -5,10 +5,11 @@ import { createAccounts } from './auth/accounts'
 import { createLogin } from './auth/login'
 import { authPath } from './auth/path'
 import { createCatalog } from './catalog'
+import { priceList } from './catalog/prices'
 import { createClaude } from './claude/client'
 import { createCodex } from './codex/client'
 import { createCompat } from './compat/client'
-import { config } from './config'
+import { config, configSchema } from './config'
 import { mergeLLM } from './llm'
 import { createLocal } from './local'
 import { createPeers } from './peers/peers'
@@ -24,8 +25,9 @@ const refreshEvery = 60_000
 export default definePlugin({
   name: 'llm-accounts',
   inject: ['cli'],
-  async apply(ctx) {
-    let limits = ctx.hot.data.limits as Limits | undefined
+  config: configSchema,
+  async apply(ctx, options) {
+    let limits = (ctx.hot.data.sourceLimits ?? {}) as Record<string, Limits>
     let server: Server | undefined
     let merged: ReturnType<typeof mergeLLM> | undefined
     let state: (() => ReturnType<typeof loginState>) | undefined
@@ -52,15 +54,15 @@ export default definePlugin({
     const accounts = createAccounts(await authPath(home), changed)
     const login = createLogin(accounts)
     const users = createUsers((ctx.hot.data.sharePcs ??= new Map()) as Map<string, LoginSharePc>, changed)
-    const catalog = createCatalog({ home, accounts, changed })
+    const catalog = createCatalog({ home, accounts, prices: priceList(options.prices), changed })
 
     const notify = (text: string) => (ctx.ui ? ctx.ui.notify(text) : console.error(text))
     const onLimits = (parsed: Limits) => {
-      limits = ctx.hot.data.limits = parsed
+      limits = ctx.hot.data.sourceLimits = { ...limits, [parsed.source ?? 'claude']: parsed }
       ctx.emit('llm.limits', parsed)
     }
     const claude = createClaude({ accounts, maxTokens: config.max_tokens, thinking: config.thinking, retries: config.max_retries, notify, onLimits })
-    const codex = createCodex({ accounts, retries: config.max_retries })
+    const codex = createCodex({ accounts, retries: config.max_retries, onLimits })
     const compat = createCompat({ retries: config.max_retries })
 
     await Promise.all([accounts.ready, catalog.ready])

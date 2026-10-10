@@ -1,4 +1,4 @@
-import type { LLM } from '@sand/llm-accounts/contract'
+import type { LLM, SourceRef } from '@sand/llm-accounts/contract'
 import type { Message, Usage } from '@sand/messages'
 import { promptText, system } from './prompt'
 import { serialize } from './serialize'
@@ -37,7 +37,7 @@ const ask = async (llm: LLM, text: string, model?: string, signal?: AbortSignal)
     if (event.stopReason === 'max_tokens') throw new Error('The summary hit the output token limit')
     const summary = event.message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n').trim()
     if (!summary) throw new Error('Compaction produced an empty summary')
-    return { summary, usage: event.usage }
+    return { summary, usage: event.usage, source: event.source }
   }
   throw new Error('The summary stream ended without a reply')
 }
@@ -46,11 +46,13 @@ export const summarize = async (llm: LLM, { model, messages, previous, instructi
   const parts = messages.map(serialize).filter(Boolean)
   let summary = previous
   let usage: Usage | undefined
+  let source: SourceRef | undefined
   for (const chunk of chunks(parts, Math.floor(limit * chunkShare * charsPerToken))) {
     const reply = await ask(llm, promptText(chunk.join('\n\n'), summary, instructions), model, signal)
     summary = reply.summary
     usage = add(usage, reply.usage)
+    source = reply.source ?? source
   }
   if (!summary) throw new Error('There was nothing to summarize')
-  return { summary, usage }
+  return { summary, usage, source }
 }

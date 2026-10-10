@@ -46,7 +46,7 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
     const controller = new AbortController()
     const external = options.signal ?? options.overrides?.signal
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
-    const state: TurnState = { usage: empty(), stopReason: 'end_turn', reply: '', partial: createPartial() }
+    const state: TurnState = { usage: empty(), sources: new Map(), stopReason: 'end_turn', reply: '', partial: createPartial() }
     const hooks = createHooks(ctx, session, signal, options.overrides ?? {}, state)
     active.set(session.id, controller)
     const release = ctx.busy()
@@ -76,7 +76,7 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
       active.delete(session.id)
       release()
     }
-    record(session, state.usage, state.model, options.overrides?.llm ?? ctx.llm)
+    record(session, state, options.overrides?.llm ?? ctx.llm)
     const result = resultOf(state, failure)
     ctx.emit('turn.end', session, result)
     if (failure) throw failure.error

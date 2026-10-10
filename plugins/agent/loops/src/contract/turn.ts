@@ -13,8 +13,13 @@ export interface TurnResult {
 export interface UsageRecord {
   id?: string
   model?: string
+  source?: string
+  account?: string
   provider?: string
   billing?: Billing
+  plan?: string
+  pc?: string
+  pcName?: string
   usage: Usage
 }
 
