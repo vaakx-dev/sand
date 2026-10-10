@@ -25,7 +25,7 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     }
     fill(scroller, reveal)
   }
-  const scroller = div({ class: 'relative min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node)
+  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node)
   listen(
     scroller,
     'load',

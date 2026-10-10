@@ -28,6 +28,7 @@ export { isMac } from './text/platform'
 export { matching, score } from './text/match'
 export { copyText } from './integrations/clipboard'
 export { nearEnd, toEnd } from './scroll/end'
+export { dockFade } from './scroll/fade'
 export { jumpButton } from './scroll/jump'
 export { style } from './integrations/style'
 export {

@@ -1,5 +1,5 @@
 import type { Transcript } from '@sand/transcript-chat/contract'
-import { div, jumpButton, list, nearEnd, owned, place, sig, toEnd } from '@sand/dom'
+import { div, dockFade, jumpButton, list, nearEnd, owned, place, sig, toEnd } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { lineView, type LineContext, type StepOptions } from './line'
 import { failedLine, itemLines, loadingLine, type Line } from './lines'
@@ -22,13 +22,13 @@ export default definePlugin({
     const scroller = owned(ctx, () =>
       div(
         {
-          class: 'min-h-0 flex-1 overflow-auto px-3 pt-3 font-mono text-xs text-neutral-300 md:px-4',
+          class: 'relative z-0 min-h-0 flex-1 overflow-auto px-3 pt-3 font-mono text-xs text-neutral-300 md:px-4',
           onScroll: () => {
             jumpShown.set(!nearEnd(scroller))
             older()
           },
         },
-        div({ style: { paddingBottom: 'var(--dock-h, 0px)' } }, list(lines, line => line.key, line => lineView(line, context), div({ class: 'mx-auto w-full max-w-5xl pb-6' }))),
+        div(list(lines, line => line.key, line => lineView(line, context), div({ class: 'mx-auto w-full max-w-5xl pb-6' })), dockFade()),
       ),
     )
     const older = () => {

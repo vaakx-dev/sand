@@ -1,4 +1,4 @@
-import { collectScope, disposeAll, div, list, sig, untrack, type Disposer, type Sig } from '@sand/dom'
+import { collectScope, disposeAll, div, dockFade, list, sig, untrack, type Disposer, type Sig } from '@sand/dom'
 import type { Row } from './rows'
 
 export interface ThreadView {
@@ -25,8 +25,9 @@ const build = () =>
       return painted.done ? div({ class: 'animate-fade' }, node) : node
     }
     const column = div(
-      { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', style: { paddingBottom: 'var(--dock-h, 0px)' }, hidden: visible.map(value => !value) },
+      { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', hidden: visible.map(value => !value) },
       list(rows, row => row.key, rowNode, div({ class: 'pb-6' })),
+      dockFade(),
     )
     return { column, rows, visible, painted }
   })
