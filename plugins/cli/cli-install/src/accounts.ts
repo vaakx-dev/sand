@@ -4,7 +4,7 @@ import type { LoginState } from '@sand/llm-accounts/contract'
 const patience = 30_000
 const pause = 2000
 
-const named = (state: LoginState) => [...new Set(state.remote.filter(account => account.inUse).map(account => (account.method === 'oauth' ? account.subscription : account.label)))]
+const named = (state: LoginState) => [...new Set(state.remote.filter(account => account.inUse).map(account => account.label))]
 
 export const waitForAccounts = async (daemon: Daemon, from: string) => {
   const until = Date.now() + patience

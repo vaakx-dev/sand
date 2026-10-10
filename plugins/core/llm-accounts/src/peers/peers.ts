@@ -1,11 +1,12 @@
-import type { Limits, LLMEvent, LLMRequest, LoginProvider } from '../contract'
-import { accountName } from '../auth/accounts'
+import type { Limits, LLMEvent, LLMRequest } from '../contract'
+import { isFixed, fixedLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
 import { fetchInfo, findUrl, Offline, Refused } from './http'
 import { readEvents } from './lines'
+import { bareName, normalize } from './normalize'
 import { openStream } from './open'
 import { readRemotes, type RemotePc } from './remotes'
 
@@ -56,7 +57,9 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     void cache.write(next).catch(() => {})
   }
 
-  const remember = (pc: RemotePc, { limits, ...info }: ShareInfo) => {
+  const remember = (pc: RemotePc, { limits: sent, ...raw }: ShareInfo) => {
+    const info = normalize(raw)
+    const limits = sent && { ...sent, provider: 'claude' }
     const current = state(pc)
     const before = current.limits
     Object.assign(current, { info, limits, online: true, checked: true, refused: false, error: undefined })
@@ -110,25 +113,27 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
   const refresh = (limits = false) => (checking ??= run(limits).finally(() => (checking = undefined)))
 
   const ready = cache.read().then(async found => {
-    saved = found
+    saved = Object.fromEntries(Object.entries(found).map(([id, info]) => [id, normalize(info)]))
     await sync()
     changed()
   })
   const first = ready.then(() => refresh())
 
   const list = () => pcs.map(state)
-  const account = (peer: PeerState, provider: LoginProvider) => peer.info?.accounts.find(found => found.provider === provider)
-  const candidates = (provider: LoginProvider) => list().filter(peer => account(peer, provider)).sort((a, b) => rank(a) - rank(b))
-  const source = (provider: LoginProvider) => candidates(provider).find(peer => !peer.refused)
+  const account = (peer: PeerState, id: string) => peer.info?.accounts.find(found => found.id === id)
+  const candidates = (id: string) => list().filter(peer => account(peer, id)).sort((a, b) => rank(a) - rank(b))
+  const source = (id: string) => candidates(id).find(peer => !peer.refused)
+  const nameOf = (id: string) => (isFixed(id) ? fixedLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
-  async function* stream(provider: LoginProvider, request: LLMRequest, signal?: AbortSignal): AsyncGenerator<LLMEvent> {
+  async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pc?: string): AsyncGenerator<LLMEvent> {
     await first
     let problem: Error | undefined
-    for (const peer of candidates(provider)) {
-      const name = accountName(provider, account(peer, provider)?.method)
+    for (const peer of candidates(id).filter(found => !pc || found.pc.id === pc)) {
+      const name = account(peer, id)?.label ?? nameOf(id)
       let body: ReadableStream<Uint8Array>
       try {
-        body = await openStream(peer.pc, request, signal, { connect, forget: () => bases.delete(peer.pc.id) })
+        const sent = { ...request, model: bareName(peer.info, id, request.model) }
+        body = await openStream(peer.pc, sent, signal, { connect, forget: () => bases.delete(peer.pc.id) })
       } catch (error) {
         if (signal?.aborted) throw error
         problem ??= failure(peer.pc.name, name, error)
@@ -144,7 +149,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
       return
     }
     void refresh()
-    throw problem ?? new Error(`No paired PC shares ${accountName(provider)}`)
+    throw problem ?? new Error(`No paired PC shares ${nameOf(id)}`)
   }
 
   return {
@@ -153,9 +158,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     list,
     account,
     source,
-    serves: (provider: LoginProvider) => candidates(provider).length > 0,
     stream,
-    limits: () => source('anthropic')?.limits,
-    price: (model: string) => list().find(peer => peer.info?.prices[model])?.info?.prices[model],
+    limits: () => source('claude')?.limits,
   }
 }

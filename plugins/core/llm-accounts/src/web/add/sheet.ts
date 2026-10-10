@@ -1,97 +1,67 @@
-import { derive, div, dynamicChild, effect, icon, iconButton, overlay, place, sheet, sheetHead, show, sig, untrack } from '@sand/dom'
-import type { LoginProvider } from '../../contract'
+import { derive, div, dynamicChild, icon, iconButton, overlay, place, sheet, sheetHead, show, sig, untrack } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
+import { planNames } from '../names'
 import type { LoginControl } from '../state'
 import { chooseStep } from './choose'
-import { keyStep } from './key'
+import { detectStep } from './detect'
+import { signInFlow } from './flow'
+import { keyNames, keyStep } from './key'
+import { serverStep } from './server'
 import { phaseOf, signInView } from './sign-in'
+import { customServer, type Step } from './steps'
 
-type Step = { kind: 'choose' } | { kind: 'sign-in'; provider: LoginProvider } | { kind: 'key' }
+const choose: Step = { kind: 'choose' }
 
-const names: Record<LoginProvider, string> = { anthropic: 'Claude', openai: 'ChatGPT' }
-const keyNames: Record<LoginProvider, string> = { anthropic: 'Anthropic', openai: 'OpenAI' }
+const titleOf = (step: Step, conflict: boolean) => {
+  if (step.kind === 'choose') return 'Add account'
+  if (step.kind === 'key') return `Add an ${keyNames[step.account]} API key`
+  if (step.kind === 'detect') return 'Ollama or LM Studio'
+  if (step.kind === 'server') return step.draft.id ? `Edit ${step.draft.name}` : step.draft.name ? `Add ${step.draft.name}` : 'Add a server'
+  return conflict ? planNames[step.account] : `Sign in to ${planNames[step.account]}`
+}
 
-const sheetView = (control: LoginControl, done: (text?: string) => void, first?: LoginProvider) => {
-  const step = sig<Step>({ kind: 'choose' })
-  const busy = sig(false)
-  const touched = new Set<LoginProvider>()
-  let waited = false
+const sheetView = (control: LoginControl, done: (text?: string) => void, first?: Step) => {
+  const step = sig<Step>(choose)
+  const flow = signInFlow(control, step, done)
 
-  const account = (provider: LoginProvider) => control.state.get()?.accounts.find(found => found.provider === provider)
-  const shown = () => {
-    const current = step.get()
-    return current.kind === 'sign-in' ? current.provider : undefined
-  }
-
-  const run = async (work: () => Promise<void>) => {
-    busy.set(true)
-    try {
-      await work()
-    } finally {
-      busy.set(false)
-    }
-  }
-
-  const start = (provider: LoginProvider, anyway = false) => {
-    touched.add(provider)
-    waited = false
-    step.set({ kind: 'sign-in', provider })
-    return run(() => control.run({ type: 'login.start', provider, ...(anyway && { anyway: true }) }))
-  }
-
-  const cancelStarted = () => {
-    for (const provider of touched) {
-      const found = account(provider)
-      if (found?.pending || found?.conflict) void control.run({ type: 'login.cancel', provider })
-    }
-    touched.clear()
-  }
+  const go = (next: Step) => (next.kind === 'sign-in' ? void flow.start(next.account) : step.set(next))
 
   const close = () => {
-    cancelStarted()
+    flow.cancel()
     done()
   }
 
   const back = () => {
-    cancelStarted()
-    step.set({ kind: 'choose' })
+    flow.cancel()
+    step.set(choose)
   }
-
-  effect(() => {
-    const provider = shown()
-    const found = provider && account(provider)
-    if (!found) return
-    if (found.pending) waited = true
-    else if (waited && found.signedIn && found.method === 'oauth') untrack(() => queueMicrotask(() => done(`Signed in to ${found.subscription}`)))
-  })
 
   const title = derive(() => {
     const current = step.get()
-    if (current.kind === 'choose') return 'Add account'
-    if (current.kind === 'key') return 'Add an API key'
-    return account(current.provider)?.conflict ? names[current.provider] : `Sign in to ${names[current.provider]}`
+    return titleOf(current, current.kind === 'sign-in' && !!control.account(current.account)?.conflict)
   })
 
   const bodyKey = derive(() => {
     const current = step.get()
+    if (current.kind === 'key') return `key:${current.account}`
+    if (current.kind === 'server') return `server:${current.draft.id ?? ''}:${current.draft.url}`
     if (current.kind !== 'sign-in') return current.kind
-    const found = account(current.provider)
-    return `sign-in:${current.provider}:${phaseOf(found)}:${found?.pending?.url ?? ''}`
+    const found = control.account(current.account)
+    return `sign-in:${current.account}:${phaseOf(found)}:${found?.pending?.url ?? ''}`
   })
 
   const body = () => {
     const current = untrack(() => step.get())
-    if (current.kind === 'choose') return chooseStep(untrack(() => control.state.get()), provider => void start(provider), () => step.set({ kind: 'key' }))
-    if (current.kind === 'key') return keyStep(control, provider => done(`Saved the ${keyNames[provider]} API key`))
-    const provider = current.provider
-    return signInView(phaseOf(untrack(() => account(provider))), () => account(provider), control, {
-      keep: () => void run(() => control.run({ type: 'login.cancel', provider })).then(() => done()),
-      anyway: () => void start(provider, true),
-      retry: () => void start(provider),
-    }, busy)
+    if (current.kind === 'choose') return chooseStep(untrack(() => control.state.get()), go)
+    if (current.kind === 'key') return keyStep(control, current.account, () => done(`Saved the ${keyNames[current.account]} API key`))
+    if (current.kind === 'detect')
+      return detectStep(control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))
+    if (current.kind === 'server') return serverStep(control, current.draft, name => done(current.draft.id ? `Saved ${name}` : `Added ${name}`))
+    const phase = phaseOf(untrack(() => control.account(current.account)))
+    return signInView(current.account, phase, control, flow.actionsFor(current.account), flow.busy)
   }
 
-  if (first) void start(first)
+  if (first) go(first)
 
   return overlay(
     close,
@@ -120,9 +90,9 @@ export const addAccount = (ctx: Context, control: LoginControl) => {
     close()
     if (text) ctx.notify?.push(text)
   }
-  const open = (provider?: LoginProvider) => {
+  const open = (step?: Step) => {
     close()
-    unplace = place(ctx, 'overlay', () => sheetView(control, finished, provider), 100)
+    unplace = place(ctx, 'overlay', () => sheetView(control, finished, step), 100)
   }
   ctx.effect(() => close)
   return { open }

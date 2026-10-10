@@ -1,7 +1,7 @@
 import type { EffortLevel, ModelInfo } from '@sand/llm-accounts/contract'
 import { segmented, span, type Sig } from '@sand/dom'
 import type { Actions } from '../actions'
-import type { Choice } from './rows'
+import type { Choice } from './scene'
 
 const defaultMark = () => span({ class: 'h-1 w-1 shrink-0 rounded-full bg-neutral-500' })
 

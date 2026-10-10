@@ -39,5 +39,5 @@ export const parseLimits = (headers: Headers): Limits | undefined => {
   if (!windows.length) return undefined
   windows.sort((a, b) => rank(a) - rank(b) || a.id.localeCompare(b.id))
   const status = headers.get(`${prefix}status`)
-  return { provider: 'anthropic', windows, ...(status && { status }), updated: Date.now() }
+  return { provider: 'claude', windows, ...(status && { status }), updated: Date.now() }
 }

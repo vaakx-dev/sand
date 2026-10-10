@@ -1,11 +1,20 @@
 import type { LLM } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SessionSettings } from './contract'
 
-export const modelOf = (llm: LLM | undefined, id?: string) => llm?.models?.().find(info => info.id === id)
+export const modelOf = (llm: LLM | undefined, id?: string) => {
+  if (!id) return undefined
+  return llm?.find?.(id) ?? llm?.models?.().find(info => info.id === id)
+}
+
+export const canonical = (llm: LLM | undefined, settings: SessionSettings): SessionSettings => {
+  const found = modelOf(llm, settings.model)
+  return found ? { ...settings, model: found.id } : settings
+}
 
 export const resolve = (chosen: SessionSettings, defaults: SessionSettings, llm?: LLM): EffectiveSettings => {
-  const model = chosen.model ?? defaults.model
-  const info = modelOf(llm, model)
+  const asked = chosen.model ?? defaults.model
+  const info = modelOf(llm, asked)
+  const model = info?.id ?? asked
   const efforts = info?.efforts ?? []
   const wanted = chosen.effort ?? defaults.effort
   const supportsEffort = efforts.length > 0

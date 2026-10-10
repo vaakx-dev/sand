@@ -1,6 +1,6 @@
 import type { Session, WireSession } from '@sand/sessions-sqlite/contract'
-import type { LLM, LLMEvent, Limits } from './llm'
-import type { LoginProvider, LoginState } from './login'
+import type { LLM, LLMEvent, Limits, NewModels } from './llm'
+import type { KeyKind, LoginState, ServerDraft, SignInKind } from './login'
 
 export type * from './llm'
 export type * from './login'
@@ -21,12 +21,21 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'limits.refresh': {}
     'login.status': {}
-    'login.start': { provider: LoginProvider; anyway?: boolean }
-    'login.finish': { provider: LoginProvider; code: string }
-    'login.key': { provider: LoginProvider; key: string; baseUrl?: string }
-    'login.cancel': { provider: LoginProvider }
-    'login.logout': { provider: LoginProvider }
-    'login.shared': { provider: LoginProvider; shared: boolean }
+    'login.start': { account: SignInKind; anyway?: boolean }
+    'login.finish': { account: SignInKind; code: string }
+    'login.key': { account: KeyKind; key: string; baseUrl?: string }
+    'login.server': ServerDraft
+    'login.detect': {}
+    'login.cancel': { account: string }
+    'login.logout': { account: string }
+    'login.shared': { account: string; shared: boolean }
+    'models.catalog': { source: string }
+    'models.pref': { model: string; hidden?: boolean; favourite?: boolean }
+    'models.add': { source: string; name: string }
+    'models.remove': { model: string }
+    'models.newModels': { source: string; mode: NewModels }
+    'models.seen': { source: string }
+    'models.refresh': { source?: string }
   }
 
   interface WireEvents {

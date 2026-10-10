@@ -23,4 +23,6 @@ const label = (id: string) => {
 const guess = (id: string): Omit<ModelInfo, 'id'> =>
   id.includes('haiku') ? { label: label(id), efforts: [] } : { label: label(id), efforts, defaultEffort: 'high', fast: fastModels.has(id) }
 
+export const knownClaude = (id: string) => id in known
+
 export const describeClaude = (id: string): ModelInfo => ({ id, provider: 'anthropic', ...(known[id] ?? guess(id)) })

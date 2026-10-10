@@ -7,7 +7,7 @@ import { healthPanel } from './health'
 import { pcRow, type PcRow } from './pc-row'
 
 const ownShares = (login: LoginState | undefined) =>
-  login?.accounts.filter(account => account.signedIn && account.shared && !account.env).map(account => (account.method === 'oauth' ? account.subscription : account.label)) ?? []
+  login?.accounts.filter(account => account.signedIn && account.shared && !account.env).map(account => account.label) ?? []
 
 const sharesOf = (login: LoginState | undefined, id: string) => login?.pcs.find(pc => pc.device === id)?.shares ?? []
 

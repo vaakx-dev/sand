@@ -1,6 +1,7 @@
-import { button, derive, div, dot, dynamicChild, icon, popover, providerIcon, show, sig, SPACE, span, type Pulse, type Sig } from '@sand/dom'
+import { button, div, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse, type Sig } from '@sand/dom'
 import type { Actions, PanelContext } from './actions'
-import { panelBody } from './panel/panel'
+import { modelPanel } from './panel/panel'
+import { logo, sourceName } from './panel/source'
 import type { PcStatus } from './pcs'
 import { toggles } from './toggle'
 
@@ -10,17 +11,9 @@ const pillLook =
 const above = {
   left: '0',
   bottom: '100%',
-  width: `min(${SPACE['96']}, calc(100vw - ${SPACE['12']}))`,
+  width: `min(calc(${SPACE['96']} + ${SPACE['12']}), calc(100vw - ${SPACE['12']}))`,
   maxHeight: `calc(100vh - ${SPACE['32']})`,
 }
-
-const viaTag = (pc: () => string, online: () => boolean | undefined) =>
-  span(
-    { class: 'flex min-w-0 shrink items-center gap-1 text-neutral-500', title: () => (online() === false ? `${pc()} is offline` : `Runs on ${pc()}`) },
-    span({ class: 'hidden shrink-0 sm:inline' }, '·'),
-    dynamicChild(derive(() => (online() === false ? 'neutral' : 'success')), dot),
-    span({ class: 'hidden truncate sm:inline' }, pc),
-  )
 
 export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse, problem: Sig<string>, pcs: PcStatus) => {
   const open = sig(false)
@@ -35,13 +28,17 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
 
   const current = changes.read(() => ctx.models.state()?.current)
   const next = changes.read(() => ctx.models.state()?.next)
-  const modelLabel = () => (current.get() ? (ctx.models.info(current.get()!.model)?.label ?? current.get()!.model ?? '') : '')
-  const via = derive(() => (current.get() ? (ctx.models.info(current.get()!.model)?.via ?? '') : ''))
+  const model = changes.read(() => ctx.models.info(ctx.models.state()?.current.model))
+  const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
+  const modelLabel = () => model.get()?.label ?? current.get()?.model ?? ''
   const effortLabel = () => ctx.models.levels().find(level => level.id === current.get()?.effort)?.label ?? ''
-  const pillTip = () => {
-    const value = current.get()
-    return value ? [value.model, via.get() && `from ${via.get()}`, effortLabel() && `${effortLabel()} effort`, value.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ') : ''
+  const sourceTip = () => {
+    const known = source.get()
+    if (!known) return ''
+    return known.via && pcs.online(known.via) === false ? `${sourceName(known)} · offline` : sourceName(known)
   }
+  const pillTip = () =>
+    current.get() ? [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ') : ''
 
   const pill = () =>
     div(
@@ -54,18 +51,11 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
           ...toggles(toggle),
         },
         dynamicChild(
-          current.map(value => (value ? ctx.models.info(value.model)?.provider : undefined)),
-          provider => providerIcon(provider) ?? icon('sparkles'),
+          model.map(value => value?.provider),
+          provider => logo(provider),
         ),
         span({ class: 'min-w-0 truncate' }, modelLabel),
-        show(
-          via.map(Boolean),
-          () =>
-            viaTag(
-              () => via.get(),
-              () => pcs.online(via.get()),
-            ),
-        ),
+        show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate text-neutral-500 sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),
         show(
           current.map(value => Boolean(value?.effort)),
           () => span({ class: 'hidden shrink-0 text-neutral-500 sm:inline' }, () => `· ${effortLabel()}`),
@@ -86,13 +76,7 @@ export const createPicker = (ctx: PanelContext, actions: Actions, changes: Pulse
             span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${ctx.models.label(next.get()!)}` : '')),
           ),
       ),
-      show(open, () =>
-        popover(
-          close,
-          { class: 'mb-3 overflow-auto', style: above },
-          dynamicChild(derive(() => `${changes.version.get()}:${problem.get()}:${pcs.key()}`), () => panelBody(ctx, actions, flash, problem.get(), pcs)),
-        ),
-      ),
+      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, modelPanel(ctx, actions, { changes, flash, problem, pcs, close }))),
     )
 
   return {

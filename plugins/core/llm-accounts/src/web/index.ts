@@ -8,7 +8,7 @@ import { welcomeView } from './welcome/view'
 
 export default definePlugin({
   name: 'llm-accounts-web',
-  description: 'Accounts page in settings and the first-run welcome: sign in with Claude and ChatGPT subscriptions or API keys, or use accounts from another PC',
+  description: 'Accounts page in settings and the first-run welcome: sign in with Claude and ChatGPT plans, add API keys or local servers, or use accounts from another PC',
   inject: ['wire'],
   uses: {
     settings: 'no Accounts page; the welcome opens the add-account sheet on its own',

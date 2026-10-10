@@ -1,7 +1,7 @@
 import { definePlugin } from 'drydock'
 import { createChoices } from './choices'
 import { createDefaults } from './defaults'
-import { resolve } from './effective'
+import { canonical, resolve } from './effective'
 import { flagSettings } from './flags'
 import { serveSettings } from './serve'
 import { settingsOf, updateSettings } from './settings'
@@ -18,7 +18,7 @@ export default definePlugin({
       effective: session => resolve(settingsOf(session), defaults.get(), ctx.llm),
       resolve: settings => resolve(settings, defaults.get(), ctx.llm),
       state: choices.state,
-      defaults: defaults.get,
+      defaults: () => canonical(ctx.llm, defaults.get()),
       update: updateSettings,
       flags: () => flagSettings(ctx.cli?.flags, ctx.llm),
     })
