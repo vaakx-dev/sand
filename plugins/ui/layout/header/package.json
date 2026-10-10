@@ -11,7 +11,7 @@
     "uses": {
       "threads": "shows just \"sand\"",
       "layout": "no drawer or panel buttons",
-      "wire": "no branch name",
+      "branches": "no branch name",
       "commands": "the thread menu only renames and copies the link",
       "picker": "no rename",
       "machines": "a thread on another PC says \"Other PC\" instead of its name",

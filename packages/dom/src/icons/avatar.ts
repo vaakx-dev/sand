@@ -1,4 +1,9 @@
 import { img, PALETTE, span } from '@vaakx-dev/vrui'
+import { sandPalette } from '../theme/palette'
+
+const dashedCircle = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.25" fill="none" stroke="${sandPalette.neutral!['400']}" stroke-width="1.5" pathLength="16" stroke-dasharray="1.25 0.75"/></svg>`
+
+export const quickThreadIcon = `data:image/svg+xml,${encodeURIComponent(dashedCircle)}`
 
 const colors = [
   PALETTE.indigo['500'],

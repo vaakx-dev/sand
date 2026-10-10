@@ -1,7 +1,8 @@
 import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
 import type { WireEvent } from '@sand/protocol'
 import type { ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
-import { uuid } from '@sand/kit'
+import { appIconUrl } from '@sand/dom'
+import { isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
@@ -58,7 +59,12 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const place = (device?: string) => lists.get(device || thisDevice) ?? fallback
 
-  const group = (path: string, device?: string) => groupAt(all(), path, device, place(device).home)
+  const inScratch = (path: string, device?: string) => {
+    const { scratch } = place(device)
+    return Boolean(scratch) && isInside(path, scratch)
+  }
+
+  const group = (path: string, device?: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
 
   const icons = projectIcons(ctx, wire)
   ctx.on('wire.hello', icons.clear)
@@ -91,7 +97,8 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     group,
     icon(path, device) {
       const found = group(path, device)
-      return found && icons.get(found)
+      if (!found) return undefined
+      return found.id === sandHomeProject ? appIconUrl() : icons.get(found)
     },
     place,
     browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),

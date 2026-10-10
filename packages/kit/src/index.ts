@@ -25,6 +25,7 @@ export { isLoopbackHost, isTailscaleHost, routeKind, routeLabel, routeRank, rout
 export { applyLiveEvent } from './live/apply'
 export { reportText } from './report/text'
 export { copyProject, relationLabel, relationOf, sendProject, sendSnapshot, type CopyRun, type Report, type SyncCall } from './sync'
+export { sandHomeName, sandHomeProject } from './projects/home'
 export { mergeProject, mergeProjects } from './projects/merge'
 export { remoteKey } from './projects/remote'
 export { matchModel } from './models/match'

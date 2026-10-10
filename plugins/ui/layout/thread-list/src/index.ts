@@ -20,6 +20,7 @@ export default definePlugin({
     machines: 'threads from other PCs show no PC name',
     drafts: 'unsent new threads are not listed',
     jobs: 'threads whose background agents are still running look idle',
+    branches: 'threads show their folder instead of their git branch',
   },
   apply(ctx) {
     const threads = ctx.threads
@@ -28,19 +29,19 @@ export default definePlugin({
       void threads.draft(place.path, place.device).then(() => ctx.composer?.focus())
     }
     const create = () => (ctx.palette ? ctx.palette.open(newThreadPage(ctx)) : here())
-    const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change'] as const
+    const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change'] as const
 
     ctx.watch('nav', nav => {
       if (!nav) {
         const layer = ctx.layer()
-        const changes = pulse(layer, [...events], ['drafts', 'jobs'])
+        const changes = pulse(layer, [...events], ['drafts', 'jobs', 'branches'])
         place(layer, 'top', owned(layer, () => switcher(threadNavList(ctx), changes, create)), 1)
         return () => void layer.dispose()
       }
       const list = nav.list(threadNavList(ctx))
       const action = nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create })
       const update = () => list.update()
-      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update)]
+      const disposers = [...events.map(name => ctx.on(name, update)), ctx.watch('drafts', update), ctx.watch('jobs', update), ctx.watch('branches', update)]
       return () => {
         disposers.forEach(dispose => void dispose?.())
         action()

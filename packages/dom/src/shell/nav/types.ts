@@ -7,6 +7,7 @@ export interface NavItem {
   id: string
   title: string
   subtitle?: string
+  subtitleIcon?: string
   path?: string
   project?: string
   projectKey?: string

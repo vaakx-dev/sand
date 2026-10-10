@@ -16,7 +16,8 @@
       "syncFlows": "a project with no copy on this PC starts on another PC instead of offering to clone or sync it",
       "machines": "threads from other PCs show no PC name",
       "drafts": "unsent new threads are not listed",
-      "jobs": "threads whose background agents are still running look idle"
+      "jobs": "threads whose background agents are still running look idle",
+      "branches": "threads show their folder instead of their git branch"
     }
   },
   "dependencies": {

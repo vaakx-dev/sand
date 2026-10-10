@@ -85,8 +85,15 @@ const fullBody = (parts: CardParts) => {
       item.map(value => value.title),
     ),
     div(
-      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-500' },
-      span({ class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) }, icon('folder', 11), span({ class: 'truncate' }, item.map(value => value.subtitle ?? ''))),
+      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (item.get().subtitle ? 'flex' : 'hidden touch-current:flex')] },
+      span(
+        { class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) },
+        dynamicChild(
+          item.map(value => value.subtitleIcon ?? 'folder'),
+          name => icon(name, 11),
+        ),
+        span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
+      ),
       dynamicChild(menuKey, () => actionStrip(menu.get(), 'touch-current:flex')),
     ),
   )

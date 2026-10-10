@@ -3,20 +3,27 @@ import type { Context } from 'drydock'
 import { agentsWorking } from './activity'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
-import { pcLabel, projectIconUrl, projectName } from './project'
+import { isQuick, pcLabel, projectIconUrl, projectName, quickName } from './project'
 
 export const headerView = (ctx: Context, changes: Pulse, branchOf: (cwd: string | undefined) => string | undefined) => {
   const cwd = changes.read(() => {
     const threads = ctx.threads
     return threads ? (threads.current()?.info.cwd ?? threads.cwd()) : undefined
   })
-  const name = changes.read(() => projectName(ctx, cwd.get()))
+  const quick = changes.read(() => isQuick(ctx, cwd.get()))
+  const idle = changes.read(() => Boolean(ctx.threads?.idle()))
+  const untitled = changes.read(() => {
+    const thread = ctx.threads?.current()
+    return Boolean(thread && !thread.info.title)
+  })
+  const name = changes.read(() => (quick.get() && untitled.get() && !idle.get() ? '' : projectName(ctx, cwd.get())))
   const title = changes.read(() => {
     const threads = ctx.threads
     const thread = threads?.current()
-    return !threads ? 'sand' : thread ? (thread.info.title ?? 'Untitled thread') : 'New thread'
+    if (!threads) return 'sand'
+    if (!thread) return 'New thread'
+    return thread.info.title ?? (quick.get() ? quickName : 'Untitled thread')
   })
-  const idle = changes.read(() => Boolean(ctx.threads?.idle()))
   const parent = changes.read(() => parentOf(ctx))
   const working = changes.read(() => agentsWorking(ctx))
   const branch = changes.read(() => branchOf(cwd.get()) ?? '')

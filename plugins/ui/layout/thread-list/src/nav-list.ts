@@ -2,7 +2,7 @@ import type { ThreadDraft } from '@sand/composer-card/contract'
 import type { NavList } from '@sand/dom'
 import type { Context } from 'drydock'
 import { backgroundOf } from './background'
-import { draftItem, draftNavId, navItems } from './items'
+import { draftItem, draftNavId, navItems, type Places } from './items'
 import { draftMenu, threadMenu } from './menu'
 import { moveThread } from './order'
 import { prefetcher } from './prefetch'
@@ -15,7 +15,10 @@ const openDraft = (ctx: Context<'threads'>, draft: ThreadDraft) =>
 const draftOf = (ctx: Context, id: string) => ctx.drafts?.list().find(draft => draftNavId(draft.id) === id)
 
 export const threadNavList = (ctx: Context<'threads'>): NavList => {
-  const machine = (device: string) => ctx.machines?.get(device)?.name
+  const places: Places = {
+    machine: device => ctx.machines?.get(device)?.name,
+    branch: (cwd, device) => ctx.branches?.of(cwd, device),
+  }
   const lookup = projectLookup(ctx)
   const background = backgroundOf(ctx)
   const prefetch = prefetcher(ctx.threads)
@@ -23,7 +26,7 @@ export const threadNavList = (ctx: Context<'threads'>): NavList => {
     id: 'sessions',
     title: 'Threads',
     order: 10,
-    items: () => [...(ctx.drafts?.list() ?? []).map(draft => draftItem(draft, lookup, machine)), ...navItems(ctx.threads.list(), lookup, machine, background)],
+    items: () => [...(ctx.drafts?.list() ?? []).map(draft => draftItem(draft, lookup, places)), ...navItems(ctx.threads.list(), lookup, places, background)],
     selected() {
       const drafting = ctx.threads.drafting()
       return visibleAncestor(ctx.threads, ctx.threads.current())?.id ?? (drafting && draftNavId(drafting.id))
