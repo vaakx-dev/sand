@@ -20,7 +20,7 @@ export const segmentField = (part: TextSegment, props: FieldProps) => {
     bindValue: part.value,
     placeholder: props.placeholder,
     hidden: props.hidden,
-    class: 'block max-h-48 min-h-8 w-full resize-none bg-transparent px-1 text-base text-neutral-100 outline-none md:text-sm',
+    class: 'block max-h-48 min-h-8 w-full resize-none bg-transparent px-1 text-base text-neutral-100 outline-none placeholder:text-neutral-500 md:text-sm',
     style: { lineHeight: '1.65' },
     onKeyDown: props.keydown,
     onPaste: props.paste,

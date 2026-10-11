@@ -5,7 +5,7 @@ import { chevron, div, plainButton, type Child, type ContextMenu, type NavAction
 export interface Row<T = unknown> {
   key: string
   data: T
-  view(data: Sig<T>): HTMLElement
+  view(data: Sig<T>, railed?: Sig<boolean>): HTMLElement
 }
 
 export interface RowContext {
@@ -24,9 +24,9 @@ export interface RowContext {
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row
 
-export const row = <T>(key: string, data: T, view: (data: Sig<T>) => HTMLElement): Row<T> => ({ key, data, view })
+export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({ key, data, view })
 
-export const actionRow = (extra: string, ...children: Child[]) => div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100', extra] }, ...children)
+export const actionRow = (extra: string, ...children: Child[]) => div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100', extra] }, ...children)
 
 export const worked = (toggle: () => void, open: Sig<boolean>, ...children: Child[]) =>
   plainButton(

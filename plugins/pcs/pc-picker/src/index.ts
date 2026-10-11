@@ -1,4 +1,4 @@
-import { owned, pulse, sig } from '@sand/dom'
+import { effect, owned, pulse, sig, untrack } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { mountSendBack } from './banner/slot'
 import { watchTurnEnds } from './banner/turns'
@@ -28,10 +28,13 @@ export default definePlugin({
     refreshOnProjectChange(ctx)
     watchTurnEnds(ctx, armed)
 
-    ctx.effect(() => {
-      const remove = ctx.composer.slot('tray-start', chip.pill)
-      return () => void remove()
-    })
+    ctx.effect(() =>
+      effect(() => {
+        if (chip.hidden.get()) return
+        const remove = untrack(() => ctx.composer.slot('tray-start', chip.pill))
+        return () => void remove()
+      }),
+    )
     ctx.effect(() => mountSendBack(ctx, ctx.composer, changes, armed))
 
     ctx.watch('commands', commands => commands?.add(continueCommand(ctx)))

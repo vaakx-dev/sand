@@ -16,7 +16,7 @@ const tones: Record<string, Tone> = { done: 'success', completed: 'success', fai
 
 const summary = (text: string) => oneLine(text.split('\n').find(line => line.trim())?.replace(/^[#>*\-\s`]+|[*`]+/g, '') ?? '', 140)
 
-const markdown = (text: string, context: RowContext) => div({ class: 'markdown' }, context.markdown.nodes(text, context.images()))
+const markdown = (text: string, context: RowContext) => div(context.markdown.nodes(text, context.images()))
 
 const whole = (text: string, context: RowContext) =>
   fold({ lines: text.split('\n').length, chars: text.length, copy: () => text, copyLabel: 'Copy' }, markdown(text, context))

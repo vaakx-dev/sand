@@ -1,5 +1,5 @@
 import type { NavAction } from '@sand/dom'
-import { choiceChips, derive, dismissible, disposeAll, dynamicChild, icon, iconButton, onPressOutside, span, stopThen, type Sig } from '@sand/dom'
+import { choiceChips, derive, dismissible, disposeAll, dynamicChild, icon, iconButton, onPressOutside, span, stopThen, type ClassValue, type Sig } from '@sand/dom'
 
 export interface StripParts {
   menu: Sig<NavAction[]>
@@ -48,7 +48,7 @@ const chips = (action: NavAction, parts: StripParts) => {
   )
 }
 
-export const actionStrip = (parts: StripParts, reveal: string, inline: boolean) => {
+export const actionStrip = (parts: StripParts, reveal: ClassValue, inline: boolean) => {
   const chosen = () => (inline ? quickOf(parts).find(action => action.id === parts.choosing.get() && action.choices) : undefined)
   return span(
     { class: () => (chosen() ? 'flex items-center' : ['hidden items-center gap-1', reveal]) },

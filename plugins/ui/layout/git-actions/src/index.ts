@@ -1,4 +1,4 @@
-import { owned } from '@sand/dom'
+import { derive, effect, owned, untrack } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { createModel } from './model'
 import { refreshOnTurns } from './refresh'
@@ -19,6 +19,13 @@ export default definePlugin({
   apply(ctx) {
     const model = owned(ctx, () => createModel(ctx))
     refreshOnTurns(ctx, model)
-    ctx.effect(() => ctx.composer.slot('tray-end', () => gitWidget(ctx, model)))
+    const shown = derive(() => Boolean(model.status.get()) && model.started.get())
+    ctx.effect(() =>
+      effect(() => {
+        if (!shown.get()) return
+        const remove = untrack(() => ctx.composer.slot('tray-end', () => gitWidget(ctx, model)))
+        return () => void remove()
+      }),
+    )
   },
 })

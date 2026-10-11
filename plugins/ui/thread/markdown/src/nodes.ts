@@ -35,16 +35,16 @@ export const listBlock = (ordered: boolean, start: number, tasks: boolean, items
   return ordered ? ol({ class: indent, ...(start !== 1 && { start }) }, items) : ul({ class: indent }, items)
 }
 
-export const listItem = (children: Node[]) => li({ class: 'my-1' }, children)
+export const listItem = (children: Node[]) => li({ class: 'my-1 marker:text-neutral-500' }, children)
 
 export const taskItem = (done: boolean, children: Node[]) =>
   li({ class: 'my-1 list-none' }, span({ class: 'mr-2 text-accent-400' }, done ? '☑' : '☐'), children)
 
 export const tableCell = (head: boolean, align: Align | undefined, children: Inline[]) =>
-  (head ? th : td)({ class: ['border-b border-neutral-800 px-3 py-2', alignments[align ?? 'left'], head && 'font-semibold text-neutral-100'] }, children)
+  (head ? th : td)({ class: ['border-b border-neutral-800 px-3 py-2 align-top', alignments[align ?? 'left'], head && 'font-semibold text-neutral-100'] }, children)
 
 export const tableBlock = (head: HTMLElement[], rows: HTMLElement[][]) =>
-  div({ class: [block, 'overflow-auto'] }, table({ class: 'text-xs' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
+  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse text-xs' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
 
 export const inlineCode = (value: string) => el('code', { class: 'rounded-md bg-neutral-700 px-1 py-px font-mono text-xs text-neutral-100' }, value)
 

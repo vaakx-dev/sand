@@ -1,6 +1,6 @@
 import type { Region } from '@sand/dom'
 import { div, layer, list, type Sig, type Store } from '@sand/dom'
-import { grip, sizedStyle, type Edge, type Widths } from './resize'
+import { grip, sizedStyle, type Widths } from './resize'
 import { backdropOpacity, slideAside, slideSide, type Shift } from './slide'
 
 export type Open = Record<'side' | 'aside', boolean>
@@ -37,11 +37,11 @@ export const buildShell = ({ narrow, open, views, covers, filled, covered, shift
   const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const showSide = () => open.side.get() || (!narrow.get() && covered.get().side)
   const dragging = () => narrow.get() && shift.get() !== undefined
-  const sized = (edge: Edge) => (!narrow.get() && widths.get()[edge] ? '' : null)
+  const sideSized = () => !narrow.get() && Boolean(widths.get().side)
+  const fill = (shown: () => boolean) => div({ class: () => (shown() ? ['contents', sideSized() && '*:w-full'] : 'hidden') })
 
   const side: HTMLElement = div(
     {
-      'data-sized': () => sized('side'),
       class: () => {
         if (!filled.get().side || !(showSide() || dragging())) return 'hidden'
         return narrow.get()
@@ -50,8 +50,8 @@ export const buildShell = ({ narrow, open, views, covers, filled, covered, shift
       },
       style: () => (narrow.get() ? { ...drawer, ...slideSide(shift.get()) } : sizedStyle(widths, 'side')),
     },
-    placed(views.side, div({ 'data-fill': '', class: () => (covered.get().side ? 'hidden' : 'contents') })),
-    placed(covers.side, div({ 'data-fill': '', class: () => (covered.get().side ? 'contents' : 'hidden') })),
+    placed(views.side, fill(() => !covered.get().side)),
+    placed(covers.side, fill(() => covered.get().side)),
     grip('side', () => side, () => aside, widths, () => narrow.get()),
   )
 

@@ -1,12 +1,11 @@
 import type { Composer } from '@sand/composer-card/contract'
-import { effect, pulse, style, untrack, type Derive } from '@sand/dom'
+import { effect, pulse, untrack, type Derive } from '@sand/dom'
 import { definePlugin, type Context } from 'drydock'
 import { toolName } from '../reply'
 import { openAsk } from './answering'
 import { serverAsks } from './asks'
 import { pendingAsk, type PendingAsk } from './pending'
 import { askRenderer } from './row'
-import { css } from './style'
 
 const mountAsk = (ctx: Context<'wire'>, composer: Composer, pending: Derive<PendingAsk | undefined>) =>
   effect(() => {
@@ -25,7 +24,6 @@ export default definePlugin({
     toolViews: 'asked questions and their answers are not shown in the thread',
   },
   apply(ctx) {
-    style(ctx, css)
     const changes = pulse(ctx, ['thread.select', 'thread.change', 'threads.change'])
     const pending = pendingAsk(ctx, changes, serverAsks(ctx, changes.bump))
     ctx.watch('composer', composer => (composer ? mountAsk(ctx, composer, pending) : undefined))

@@ -18,6 +18,8 @@ export const createSlots = () => {
     return () => entries.update(all => all.filter(other => other !== entry))
   }
 
+  const empty = (...places: ComposerSlot[]) => entries.map(all => !all.some(entry => places.includes(entry.where)))
+
   const host = (where: ComposerSlot, className: string) =>
     list(
       entries.map(all => all.filter(entry => entry.where === where).sort((a, b) => a.order - b.order)),
@@ -26,10 +28,10 @@ export const createSlots = () => {
         const { view } = entry.get()
         return typeof view === 'function' ? view() : view
       },
-      div({ class: className, hidden: entries.map(all => !all.some(entry => entry.where === where)) }),
+      div({ class: className, hidden: empty(where) }),
     )
 
-  return { add, host }
+  return { add, host, empty }
 }
 
 export type Slots = ReturnType<typeof createSlots>

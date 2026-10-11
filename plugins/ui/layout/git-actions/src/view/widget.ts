@@ -33,8 +33,8 @@ const chipTitle = (git: GitStatus | undefined) => {
 const branchLabel = (model: Model) => {
   const git = model.status.get()
   const branch = git?.branch ?? ''
-  if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-middle' }, 'naming…'))]
-  return [glyph(git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-middle' }, branch.replace(/^sand\//, ''))]
+  if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-box-trim' }, 'naming…'))]
+  return [glyph(git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-box-trim' }, branch.replace(/^sand\//, ''))]
 }
 
 const prLabel = (pr: PrSummary, behind: boolean) => {
@@ -42,7 +42,7 @@ const prLabel = (pr: PrSummary, behind: boolean) => {
   return span(
     { class: ['inline-flex shrink-0 items-center gap-1.5', tones[state.tone]], title: `#${pr.number} ${pr.title} · ${state.label}` },
     glyph('compare', behind),
-    span({ class: 'text-middle' }, `PR #${pr.number}`),
+    span({ class: 'text-box-trim' }, `PR #${pr.number}`),
   )
 }
 
@@ -50,7 +50,7 @@ const changedCount = (model: Model) => {
   const changed = derive(() => model.status.get()?.changed ?? 0)
   return show(
     () => changed.get() > 0,
-    () => span({ class: 'shrink-0 tabular-nums text-middle', title: () => `${changed.get()} changed` }, () => `●${changed.get()}`),
+    () => span({ class: 'shrink-0 tabular-nums text-box-trim', title: () => `${changed.get()} changed` }, () => `●${changed.get()}`),
   )
 }
 
@@ -80,13 +80,9 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
       changedCount(model),
     )
   }
-  return show(
-    () => Boolean(model.status.get()) && model.started.get(),
-    () =>
-      div(
-        { class: 'flex min-w-0 items-center' },
-        dynamicChild(key, trigger),
-        show(open, () => popover(close, { class: 'bottom-full right-0 mb-2 w-80 max-w-full' }, ...gitMenu(ctx, model, close))),
-      ),
+  return div(
+    { class: 'flex min-w-0 items-center' },
+    dynamicChild(key, trigger),
+    show(open, () => popover(close, { class: 'bottom-full right-0 mb-2 w-80 max-w-full' }, ...gitMenu(ctx, model, close))),
   )
 }

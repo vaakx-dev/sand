@@ -10,6 +10,6 @@ export const appIcon = (size = 20) =>
 export const sidebarToggle = (props: Props<HTMLButtonElement>) =>
   iconButton(
     { ...props, class: ['group', props.class] },
-    span({ class: 'flex group-hover:hidden' }, appIcon(20)),
-    span({ class: 'hidden group-hover:flex' }, icon('sidebar')),
+    span({ class: 'flex group-hover:hidden group-focus-visible-within:hidden' }, appIcon(20)),
+    span({ class: 'hidden group-hover:flex group-focus-visible-within:flex' }, icon('sidebar')),
   )

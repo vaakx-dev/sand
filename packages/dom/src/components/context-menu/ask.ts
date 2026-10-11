@@ -19,7 +19,7 @@ export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
       placeholder: ask.placeholder,
       'aria-label': ask.tip,
       class: [
-        'w-full min-w-0 rounded-lg bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-700 focus:ring-accent-500',
+        'w-full min-w-0 rounded-lg bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 placeholder:text-neutral-500 ring-neutral-700 focus:ring-accent-500',
         size === 'sm' ? 'h-8 text-sm' : 'h-12 text-base',
       ],
       bindValue: text,

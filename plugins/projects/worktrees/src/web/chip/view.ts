@@ -1,4 +1,5 @@
-import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, icon, pressOpens, show, sig, span, untrack, type Pulse } from '@sand/dom'
+import type { Composer } from '@sand/composer-card/contract'
+import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, effect, icon, pressOpens, show, sig, span, untrack, type Pulse } from '@sand/dom'
 import type { WebContext, WorktreeClient } from '../client'
 import type { States } from '../states'
 import type { Choices } from './choices'
@@ -29,7 +30,7 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
     chipButton(
       { title, active: open, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 12)),
-      span({ class: 'min-w-0 truncate py-1 text-middle' }, () => label.get().text),
+      span({ class: 'min-w-0 truncate py-1 text-box-trim' }, () => label.get().text),
       span({ class: 'inline-flex shrink-0' }, icon('down', 12)),
     )
 
@@ -39,7 +40,7 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
 
   const pill = () =>
     div(
-      { class: 'flex min-w-0 items-center', hidden },
+      { class: 'flex min-w-0 items-center' },
       context.view(),
       dynamicChild(derive(() => label.get().glyph), chip),
       show(open, () =>
@@ -51,5 +52,14 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
       ),
     )
 
-  return { pill }
+  return { pill, hidden }
 }
+
+export type Chip = ReturnType<typeof createChip>
+
+export const mountChip = (composer: Composer, chip: Chip) =>
+  effect(() => {
+    if (chip.hidden.get()) return
+    const remove = untrack(() => composer.slot('tray-end', chip.pill, -1))
+    return () => void remove()
+  })

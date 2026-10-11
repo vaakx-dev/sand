@@ -21,7 +21,7 @@ const time = (at?: number) => (at ? new Date(at).toTimeString().slice(0, 5) : ''
 
 const content = (value: Line, markdown: Markdown) => {
   if (value.node) return value.node
-  if (value.markdown) return span({ class: 'markdown' }, markdown.inline(value.text))
+  if (value.markdown) return span(markdown.inline(value.text))
   return span(value.text)
 }
 

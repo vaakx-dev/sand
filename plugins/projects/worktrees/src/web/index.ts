@@ -4,7 +4,7 @@ import { owned, pulse } from '@sand/dom'
 import { joinDisposers } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { createChoices } from './chip/choices'
-import { createChip } from './chip/view'
+import { createChip, mountChip } from './chip/view'
 import { worktreeClient } from './client'
 import { onWorktreeEvent } from './events'
 import { createMarks } from './marks'
@@ -46,7 +46,7 @@ export default definePlugin({
     const worktrees: Worktrees = { openMove: () => void openMove(), rename: () => void rename(), of: marks.of }
     ctx.provide('worktrees', worktrees)
 
-    ctx.watch('composer', composer => composer && joinDisposers(composer.slot('tray-end', chip.pill, -1), mountProgress(ctx, composer, progress, changes)))
+    ctx.watch('composer', composer => composer && joinDisposers(mountChip(composer, chip), mountProgress(ctx, composer, progress, changes)))
     ctx.watch('commands', commands =>
       commands?.add({
         name: 'worktree',
