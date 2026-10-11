@@ -1,6 +1,6 @@
-import type { WorktreeEntry, WorktreeState } from '../../contract'
+import type { StartPoint, WorktreeEntry, WorktreeState } from '../../contract'
 import { div, groupLabel, icon, menuItem, menuSeparator, okMark, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
-import { uuid } from '@sand/kit'
+import { plural, uuid } from '@sand/kit'
 import type { WebContext } from '../client'
 import type { Choice, Choices } from './choices'
 import type { ChipTarget } from './target'
@@ -70,6 +70,29 @@ const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choic
   ]
 }
 
+const startRows = (point: StartPoint | undefined, base: string | undefined, pick: (choice: Choice) => void) => {
+  if (!point?.latest) return []
+  const { branch, latest } = point
+  return [
+    menuSeparator(),
+    groupLabel('Start from'),
+    row({
+      glyph: 'globe',
+      title: `Latest ${branch}`,
+      line: `${latest.ref}, fetched when it starts`,
+      selected: base === latest.ref,
+      choose: () => pick({ mode: 'new', base: latest.ref }),
+    }),
+    row({
+      glyph: 'branch',
+      title: `Your ${branch}`,
+      line: latest.behind ? `${plural(latest.behind, 'commit')} behind ${latest.ref}` : `Same as ${latest.ref}`,
+      selected: base === branch,
+      choose: () => pick({ mode: 'new', base: branch }),
+    }),
+  ]
+}
+
 const choose = async (ctx: WebContext, choices: Choices, { state, draft }: ChipTarget, next: Choice) => {
   if (!state || !draft) return
   if (state.worktree && next.mode !== 'existing') {
@@ -87,19 +110,22 @@ export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget,
     close()
     void choose(ctx, choices, target, next)
   }
-  const base = state.worktrees.find(entry => entry.main)?.branch ?? state.branch
-  const from = (state.worktree ? base : (state.branch ?? base)) ?? undefined
+  const home = state.worktrees.find(entry => entry.main)?.branch ?? state.branch
+  const point = state.startPoint
+  const fresh = point?.latest?.ref ?? point?.branch
   const mode = state.worktree ? undefined : choice.mode
+  const base = mode === 'new' && choice.mode === 'new' ? choice.base : undefined
   return div(
     { class: 'flex flex-col gap-1 p-1' },
-    row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${base ? ` on ${base}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
+    row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${home ? ` on ${home}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
     row({
       glyph: 'folder-git',
       title: 'New worktree',
-      line: `its own folder and branch, from ${from ?? 'HEAD'}`,
+      line: point?.latest ? 'its own folder and branch' : `its own folder and branch, from ${fresh ?? 'HEAD'}`,
       selected: mode === 'new',
-      choose: () => pick({ mode: 'new', base: from }),
+      choose: () => pick({ mode: 'new', base: fresh }),
     }),
+    ...startRows(point, base, pick),
     ...existingRows(state, choice, pick, menus),
   )
 }

@@ -12,6 +12,11 @@ export interface WorktreeSetup {
   autoSettle: boolean
 }
 
+export interface StartPoint {
+  branch: string
+  latest?: { ref: string; behind: number }
+}
+
 export interface WorktreeState {
   root: string
   main: string
@@ -22,6 +27,7 @@ export interface WorktreeState {
   worktrees: WorktreeEntry[]
   branches: string[]
   setup: WorktreeSetup
+  startPoint?: StartPoint
 }
 
 export interface WorktreeMark {

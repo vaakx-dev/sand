@@ -2,7 +2,7 @@ import { branchExists } from './repo'
 import { gitMaybe, gitOk } from '@sand/kit/git'
 import { applyStash, dropStash, stashAll } from './stash'
 
-export const addWorktree = (repo: string, branch: string, path: string, base: string) => gitOk(repo, ['worktree', 'add', '-b', branch, path, base])
+export const addWorktree = (repo: string, branch: string, path: string, base: string) => gitOk(repo, ['worktree', 'add', '--no-track', '-b', branch, path, base])
 
 export const restoreWorktree = async (repo: string, branch: string, path: string, head: string) => {
   if (!branch) return gitOk(repo, ['worktree', 'add', '--detach', path, head])

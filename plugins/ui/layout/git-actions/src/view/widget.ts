@@ -1,6 +1,8 @@
+import type { GitStatus } from '@sand/git/contract'
 import type { PrSummary } from '@sand/github/contract'
 import { isUnnamed } from '@sand/worktrees/contract'
-import { chipButton, derive, div, dynamicChild, icon, popover, popupTrigger, shine, show, sig, span } from '@sand/dom'
+import { chipButton, derive, div, dynamicChild, icon, popover, popupTrigger, shine, show, sig, span, type IconName } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
 import { gitMenu } from './menu'
@@ -13,18 +15,33 @@ const tones: Record<PillTone, string> = {
   quiet: 'text-neutral-400',
 }
 
+const isBehind = (git: GitStatus | undefined) => Boolean(git?.base && git.behindBase)
+
+const glyph = (name: IconName, behind: boolean) =>
+  span(
+    { class: 'relative inline-flex shrink-0' },
+    icon(name, 12),
+    behind ? span({ class: 'absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-warning-400 ring-1 ring-neutral-900' }) : null,
+  )
+
+const chipTitle = (git: GitStatus | undefined) => {
+  if (!git) return ''
+  if (!isBehind(git)) return git.branch
+  return `${git.branch}\n${git.base} has ${plural(git.behindBase, 'new commit')}`
+}
+
 const branchLabel = (model: Model) => {
   const git = model.status.get()
   const branch = git?.branch ?? ''
   if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-middle' }, 'naming…'))]
-  return [icon(git?.worktree ? 'folder-git' : 'branch', 12), span({ class: 'min-w-0 truncate py-1 text-middle' }, branch.replace(/^sand\//, ''))]
+  return [glyph(git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-middle' }, branch.replace(/^sand\//, ''))]
 }
 
-const prLabel = (pr: PrSummary) => {
+const prLabel = (pr: PrSummary, behind: boolean) => {
   const state = pillState(pr)
   return span(
-    { class: ['inline-flex shrink-0 items-center gap-1', tones[state.tone]], title: `#${pr.number} ${pr.title} · ${state.label}` },
-    icon('compare', 12),
+    { class: ['inline-flex shrink-0 items-center gap-1.5', tones[state.tone]], title: `#${pr.number} ${pr.title} · ${state.label}` },
+    glyph('compare', behind),
     span({ class: 'text-middle' }, `PR #${pr.number}`),
   )
 }
@@ -48,18 +65,18 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
   const key = derive(() => {
     const git = model.status.get()
     const pr = model.pr.get()
-    return `${git?.branch}:${git?.worktree}:${pr?.number}:${pr ? pillState(pr).tone : ''}`
+    return `${git?.branch}:${git?.worktree}:${isBehind(git)}:${pr?.number}:${pr ? pillState(pr).tone : ''}`
   })
   const trigger = () => {
     const pr = model.pr.get()
     return chipButton(
       {
-        title: () => model.status.get()?.branch ?? '',
+        title: () => chipTitle(model.status.get()),
         ...popupTrigger(open),
         active: open,
         onClick: toggle,
       },
-      ...(pr ? [prLabel(pr)] : branchLabel(model)),
+      ...(pr ? [prLabel(pr, isBehind(model.status.get()))] : branchLabel(model)),
       changedCount(model),
     )
   }

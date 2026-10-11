@@ -51,6 +51,17 @@ export const localBranches = async (path: string) =>
     .filter(Boolean)
     .slice(0, 50)
 
-export const branchExists = async (path: string, branch: string) => (await gitMaybe(path, ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`])) !== undefined
+const refExists = async (path: string, ref: string) => (await gitMaybe(path, ['show-ref', '--verify', '--quiet', ref])) !== undefined
+
+export const branchExists = (path: string, branch: string) => refExists(path, `refs/heads/${branch}`)
+
+export const isRemoteBranch = (path: string, ref: string) => refExists(path, `refs/remotes/${ref}`)
+
+export const latestOf = async (path: string, branch: string) => {
+  const ref = await gitMaybe(path, ['rev-parse', '--abbrev-ref', `${branch}@{upstream}`])
+  if (!ref) return undefined
+  const behind = Number(await gitMaybe(path, ['rev-list', '--count', `${branch}..${ref}`])) || 0
+  return { ref, behind }
+}
 
 export const headOf = (path: string) => gitOk(path, ['rev-parse', 'HEAD'])

@@ -5,7 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./fs": "./src/fs/index.ts",
-    "./git": "./src/git/run.ts",
+    "./git": "./src/git/index.ts",
     "./host": "./src/host/index.ts"
   },
   "dependencies": {

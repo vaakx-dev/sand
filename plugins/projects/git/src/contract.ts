@@ -7,6 +7,7 @@ export interface GitStatus {
   changed: number
   ahead: number
   behind: number
+  behindBase: number
   upstream?: string
   worktree: boolean
   base?: string

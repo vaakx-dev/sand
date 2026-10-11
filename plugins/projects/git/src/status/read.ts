@@ -1,14 +1,15 @@
 import type { GitStatus } from '../contract'
 import { existsSync } from 'node:fs'
-import { gitMaybe } from '@sand/kit/git'
+import { fetchOrigin, gitMaybe } from '@sand/kit/git'
 import { isLinkedWorktree, parsePorcelain } from './parse'
 
 const remoteHead = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'origin/HEAD'])) || undefined
 
-const unpushed = async (cwd: string, base: string) => Number(await gitMaybe(cwd, ['rev-list', '--count', `${base}..HEAD`])) || 0
+const commitsIn = async (cwd: string, range: string) => Number(await gitMaybe(cwd, ['rev-list', '--count', range])) || 0
 
 export const readStatus = async (cwd: string): Promise<GitStatus | null> => {
   if (!cwd || !existsSync(cwd)) return null
+  void fetchOrigin(cwd)
   const [porcelain, dirs, originHead] = await Promise.all([
     gitMaybe(cwd, ['status', '--porcelain=v2', '--branch']),
     gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir']),
@@ -17,6 +18,10 @@ export const readStatus = async (cwd: string): Promise<GitStatus | null> => {
   if (porcelain === undefined) return null
   const status = parsePorcelain(porcelain)
   const base = originHead?.replace(/^origin\//, '')
-  const ahead = !status.upstream && originHead && status.branch !== base && status.branch !== 'HEAD' ? await unpushed(cwd, originHead) : status.ahead
-  return { ...status, ahead, worktree: isLinkedWorktree(dirs), ...(base && { base }) }
+  const onFeature = Boolean(originHead) && status.branch !== base && status.branch !== 'HEAD'
+  const [ahead, behindBase] = await Promise.all([
+    onFeature && !status.upstream ? commitsIn(cwd, `${originHead}..HEAD`) : status.ahead,
+    onFeature ? commitsIn(cwd, `HEAD..${originHead}`) : 0,
+  ])
+  return { ...status, ahead, behindBase, worktree: isLinkedWorktree(dirs), ...(base && { base }) }
 }

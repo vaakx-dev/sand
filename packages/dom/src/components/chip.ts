@@ -15,7 +15,7 @@ export const chipButton = ({ active, ...props }: ChipProps, ...children: Child[]
     {
       ...props,
       class: [
-        'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200',
+        'inline-flex h-6 min-w-0 items-center gap-1.5 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200',
         () => (read(active) ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'),
       ],
     },
