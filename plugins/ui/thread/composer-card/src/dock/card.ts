@@ -1,11 +1,11 @@
-import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, span, textarea, type Sig } from '@sand/dom'
+import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { agentsChip } from '../agents/chip'
 import { fromPaste, pasteLimit } from '../attachments/content'
 import { shelf } from '../attachments/shelf'
 import { createCompletion } from '../complete/model'
 import { builtinSources } from '../complete/sources'
-import { autosize } from '../integrations/autosize'
+import { createEditor } from '../editor/view'
 import type { Model } from '../model'
 import { sendControl } from '../send/button'
 import { interrupt } from '../send/submit'
@@ -57,19 +57,8 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     model.files.attach([fromPaste(pasted)])
   }
 
-  const field = textarea({
-    rows: 1,
-    enterKeyHint: 'enter',
-    bindValue: model.text,
-    placeholder: placeholder(model),
-    class: 'block max-h-48 min-h-8 w-full resize-none bg-transparent px-1 text-base text-neutral-100 outline-none md:text-sm',
-    style: { lineHeight: '1.65' },
-    onKeyDown: keydown,
-    onPaste: paste,
-  })
-  autosize(field, model.text)
-
-  const completion = createCompletion(field, builtinSources(ctx), () => void model.send())
+  const editor = createEditor(model.segments, { placeholder: placeholder(model), keydown, paste })
+  const completion = createCompletion(editor.node, editor.active, builtinSources(ctx), () => void model.send())
 
   const picker = input({
     type: 'file',
@@ -87,7 +76,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     slots.host('above', 'mb-2 flex flex-col gap-1'),
     shelf(ctx, model.files),
     agentsChip(model.working),
-    field,
+    editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
       span({ class: 'inline-flex -ml-2' }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 18))),
@@ -99,7 +88,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     picker,
   )
 
-  return { node, field, completion, choose }
+  return { node, editor, completion, choose }
 }
 
 export type Card = ReturnType<typeof card>

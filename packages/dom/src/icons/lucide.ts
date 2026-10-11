@@ -58,6 +58,7 @@ import {
   Plus,
   Puzzle,
   RefreshCw,
+  Reply,
   RotateCcw,
   Search,
   Settings,
@@ -163,6 +164,7 @@ const nodes = {
   'trend-down': TrendingDown,
   'zoom-in': ZoomIn,
   'zoom-out': ZoomOut,
+  reply: Reply,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes

@@ -1335,6 +1335,15 @@
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
+    "plugins/ui/thread/quote-reply": {
+      "name": "@sand/quote-reply",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/composer-card": "workspace:*",
+        "@sand/dom": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+      },
+    },
     "plugins/ui/thread/transcript-chat": {
       "name": "@sand/transcript-chat",
       "version": "0.0.0",
@@ -1567,6 +1576,8 @@
 
     "@sand/protocol": ["@sand/protocol@workspace:packages/protocol"],
 
+    "@sand/quote-reply": ["@sand/quote-reply@workspace:plugins/ui/thread/quote-reply"],
+
     "@sand/reload": ["@sand/reload@workspace:plugins/extend/reload"],
 
     "@sand/safe-banner": ["@sand/safe-banner@workspace:plugins/ui/shared/safe-banner"],
@@ -1709,8 +1720,6 @@
 
     "@sand/ask/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/attachments/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/cli-devices/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/cli-install/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
@@ -1724,8 +1733,6 @@
     "@sand/cli-remotes/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/cli-usage/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/composer-card/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/config-toml/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 

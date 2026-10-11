@@ -9,7 +9,7 @@ export default definePlugin({
   inject: ['threads', 'transcriptParts', 'markdown'],
   uses: {
     layout: 'lands loose on the stage',
-    composer: 'the empty-state hint does not focus a composer',
+    composer: 'the empty-state hint does not focus a composer, and messages offer no Quote in reply',
     commands: 'the empty state cannot open the extensions drawer',
     projects: 'the empty state shows the sand logo instead of the project icon',
     palette: 'the empty state does not offer search',

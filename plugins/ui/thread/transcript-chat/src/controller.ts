@@ -3,7 +3,9 @@ import type { Thread } from '@sand/web-client/contract'
 import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
+import { findQuote, quoteFlash } from './integrations/quote-jump'
 import { fill, keepAnchor, scrollTo } from './integrations/scroll'
+import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import type { RowContext } from './rows/row'
 import { slotHost } from './slot'
@@ -68,6 +70,13 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     return shown
   }
 
+  const flash = quoteFlash(scroller)
+  const jump = (from: Element, quote: string) => {
+    const range = shown && findQuote(shown.rowList, from, quote)
+    if (range) flash(range)
+    else ctx.notify?.push("Couldn't find the quoted text in the messages above", { level: 'info' })
+  }
+
   const repaint = () => {
     const thread = ctx.threads.current()
     if (thread && shown?.id === thread.id) paint(thread, shown)
@@ -82,6 +91,8 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
       markdown: ctx.markdown,
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
+      reply: text => replyActions(ctx, text),
+      jump,
       repaint,
     }
     const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))

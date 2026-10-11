@@ -38,20 +38,19 @@ export default definePlugin({
     })
 
     const composer: Composer = {
-      focus: () => current?.field.focus(),
+      focus: () => current?.editor.focus(),
       value: () => model.text.get(),
       set(value) {
         model.text.set(value)
-        const field = current?.field
-        if (!field) return
-        field.focus()
-        field.selectionStart = field.selectionEnd = value.length
+        current?.editor.focusEnd()
       },
       insert(value) {
-        const field = current?.field
-        if (!field) return model.text.update(text => text + value)
-        field.setRangeText(value, field.selectionStart, field.selectionEnd, 'end')
-        model.text.set(field.value)
+        if (current) current.editor.insert(value)
+        else model.text.update(text => text + value)
+      },
+      quote(text) {
+        if (current) current.editor.quote(text)
+        else model.segments.quote(text)
       },
       attach: content => model.files.attach(content),
       slot: (where, view, order) => slots.add(where, view, order),
