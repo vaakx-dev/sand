@@ -6,6 +6,7 @@ import type { Context } from 'drydock'
 import { createWorking } from './agents/working'
 import { compose } from './attachments/content'
 import { createFiles, type Attached } from './attachments/files'
+import { createSegments } from './editor/segments'
 import { createEditing } from './queue/editing'
 import { retry, submit } from './send/submit'
 
@@ -33,6 +34,7 @@ export type TurnError = NonNullable<ReturnType<typeof turnErrorOf>>
 
 export const createModel = (ctx: Ctx) => {
   const text = sig('')
+  const segments = createSegments(text)
   const files = createFiles(() => ctx.wire?.hello()?.attachments)
   const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
   const sending = sig(false)
@@ -147,6 +149,7 @@ export const createModel = (ctx: Ctx) => {
 
   return {
     text,
+    segments,
     files,
     failure,
     editing,

@@ -1,24 +1,25 @@
 import { copyButton, div, dynamicChild, effect, fold, shine, show, span } from '@sand/dom'
 import { streamedMarkdown } from '../integrations/streamed'
-import { row, worked, type RowMaker } from './row'
+import { actionRow, row, worked, type RowMaker } from './row'
 
 export const textRow: RowMaker<'text'> = (item, context) =>
   row(`text:${item.key}`, item, data => {
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
-    const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')] })
+    const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')], 'data-quote': '' })
     const render = streamedMarkdown(node, context.markdown)
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context.parts
-    const press = menus.text(context.menu, () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text')] }))
+    const spec = () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text'), ...context.reply(text.get())] })
+    const press = menus.text(context.menu, spec)
     return div(
       { class: 'group mb-3 text-sm', ...press.props },
       node,
-      div(
-        { class: 'transcript-chat-copy mt-1 flex h-6 items-center opacity-0 group-hover:opacity-100' },
+      actionRow(
+        'transcript-chat-copy mt-1',
         show(
           () => !streaming.get(),
-          () => copyButton({ text: () => text.get(), label: 'Copy' }),
+          () => span({ class: 'flex items-center gap-1' }, copyButton({ text: () => text.get(), label: 'Copy' }), menus.more(context.menu, spec)),
         ),
       ),
     )

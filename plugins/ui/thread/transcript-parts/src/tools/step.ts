@@ -1,5 +1,5 @@
 import type { MenuKit, ToolBadge, ToolStepOptions, ToolView } from '../contract'
-import { badge, contextMenu, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
+import { badge, contextMenu, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type MenuSpec, type Sig } from '@sand/dom'
 
 const countTone = (part: string) => {
   if (/^[+]\d+$/.test(part)) return 'text-success-400'
@@ -40,7 +40,7 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle,
     },
   )
   const own = menu ?? contextMenu()
-  const press = menus.text(own, () => ({
+  const spec = (): MenuSpec => ({
     title: shown.get().verb,
     subtitle: shown.get().label,
     actions: [
@@ -48,7 +48,8 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle,
       menus.copy('copy', 'Copy', copy, 'output'),
       { id: 'toggle', label: open.get() ? 'Collapse' : 'Expand', icon: open.get() ? 'up' : 'down', run: toggle },
     ],
-  }))
+  })
+  const press = menus.text(own, spec)
   const card = toolCard(
     {
       icon: dynamicChild(
@@ -69,7 +70,7 @@ export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle,
         ),
       ],
       failed: derive(() => tool.get().status === 'failed'),
-      actions: copyButton({ text: copy }),
+      actions: [copyButton({ text: copy }), menus.more(own, spec)],
       onToggle: () => {
         if (!press.held()) toggle()
       },

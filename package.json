@@ -51,6 +51,7 @@
       "plugins/ui/thread/markdown/src/**",
       "plugins/ui/thread/model-panel/src/**",
       "plugins/ui/thread/panel-agents/src/**",
+      "plugins/ui/thread/quote-reply/src/**",
       "plugins/ui/thread/transcript-chat/src/**",
       "plugins/ui/thread/transcript-log/src/**",
       "plugins/ui/thread/transcript-parts/src/**",

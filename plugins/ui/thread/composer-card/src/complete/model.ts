@@ -19,7 +19,7 @@ export interface CompletionSource {
 
 const limit = 20
 
-export const createCompletion = (input: HTMLTextAreaElement, sources: CompletionSource[], submit: () => void) => {
+export const createCompletion = (host: HTMLElement, active: () => HTMLTextAreaElement | undefined, sources: CompletionSource[], submit: () => void) => {
   const items = sig<Suggestion[]>([])
   const hint = sig<string | undefined>(undefined)
   const source = sig<CompletionSource | undefined>(undefined)
@@ -34,6 +34,8 @@ export const createCompletion = (input: HTMLTextAreaElement, sources: Completion
   }
 
   const insert = (text: string) => {
+    const input = active()
+    if (!input) return
     const cursor = input.selectionStart ?? input.value.length
     input.value = input.value.slice(0, start) + text + input.value.slice(cursor)
     input.selectionStart = input.selectionEnd = start + text.length
@@ -78,6 +80,8 @@ export const createCompletion = (input: HTMLTextAreaElement, sources: Completion
   }
 
   const update = () => {
+    const input = active()
+    if (!input) return close()
     const typed = input.value.slice(0, input.selectionStart ?? input.value.length)
     for (const candidate of sources) {
       const query = candidate.pattern.exec(typed)?.[1]
@@ -91,9 +95,9 @@ export const createCompletion = (input: HTMLTextAreaElement, sources: Completion
     close()
   }
 
-  listen(input, 'input', update)
-  listen(input, 'click', update)
-  listen(input, 'blur', close)
+  listen(host, 'input', update)
+  listen(host, 'click', update)
+  listen(host, 'focusout', close)
 
   return { items, hint, source, visible, box, close, keydown }
 }
