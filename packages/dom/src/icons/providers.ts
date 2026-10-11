@@ -1,5 +1,5 @@
 import { colorVar, icon, path, rect, span, svg, textEl, type Child } from '@vaakx-dev/vrui'
-import { Server } from 'lucide'
+import { Server, Sparkles } from 'lucide'
 import { sans } from '../theme/tokens'
 
 interface Mark {
@@ -66,5 +66,7 @@ export const providerIcon = (name: string | undefined, size = 16) => {
   if (monogram) return monogramIcon(monogram, size)
   return provider === 'server' ? serverIcon(size) : null
 }
+
+export const modelLogo = (provider: string | undefined, size = 16) => providerIcon(provider, size) ?? icon(Sparkles, size, 1.8)
 
 export const providerColor = (name: string, order = 0) => knownColor(aliases[name] ?? name) ?? series[order % series.length]!

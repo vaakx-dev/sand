@@ -1,7 +1,7 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { button, chipPopover, div, dynamicChild, icon, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, chipPopover, div, dynamicChild, icon, modelLogo, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { sourceName } from '@sand/kit'
 import type { PanelContext } from './actions'
-import { logo, sourceName } from './source'
 
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
@@ -50,7 +50,7 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
         },
         dynamicChild(
           model.map(value => value?.provider),
-          provider => logo(provider),
+          provider => modelLogo(provider),
         ),
         span({ class: 'min-w-0 truncate' }, modelLabel),
         show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate text-neutral-500 sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),

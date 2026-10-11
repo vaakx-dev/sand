@@ -1,9 +1,8 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, icon, plainButton, rowButton, span, tile, type Child } from '@sand/dom'
-import { logo as sourceLogo } from '../source'
+import { div, icon, modelLogo, plainButton, rowButton, span, tile, type Child } from '@sand/dom'
 import type { Kit } from './kit'
 
-export const logo = (provider?: string) => tile(sourceLogo(provider, 18))
+export const logo = (provider?: string) => tile(modelLogo(provider, 18))
 
 export const whereText = (source: SourceInfo) => (source.via ? `on ${source.via}${source.online === false ? ' · offline' : ''}` : '')
 

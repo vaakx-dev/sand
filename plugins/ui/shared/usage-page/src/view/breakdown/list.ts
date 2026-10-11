@@ -28,7 +28,7 @@ const shareBar = (row: Row, { accounts, colorOf, peak }: ListParts) => {
   const width = peak > 0 ? Math.max(1.5, (row.totals.cost / peak) * 100) : 0
   return div(
     { class: 'h-1 overflow-hidden rounded-full bg-neutral-800' },
-    div({ class: 'h-full rounded-full bg-accent-500', style: { width: `${width}%`, ...(provider ? { backgroundColor: colorOf(provider) } : {}) } }),
+    div({ class: 'h-full rounded-full bg-accent-500', style: { width: `${width}%`, ...(provider && { backgroundColor: colorOf(provider) }) } }),
   )
 }
 

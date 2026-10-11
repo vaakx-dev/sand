@@ -16,6 +16,7 @@ export default definePlugin({
     wire: 'no favourite, hide or make default actions, and models from another PC show no online dot',
     settings: 'no link to the Models settings page',
     notify: 'failed model actions are not reported',
+    threads: 'Make default runs without the current folder',
   },
   apply(ctx) {
     const kit: PickerKit = {

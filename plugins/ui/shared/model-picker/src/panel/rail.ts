@@ -1,7 +1,7 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, dot, icon, keys, plainButton, span, type Child } from '@sand/dom'
+import { div, dot, icon, keys, modelLogo, plainButton, span, type Child } from '@sand/dom'
 import type { Scene } from './scene'
-import { logo, sourceTitle } from './source'
+import { sourceTitle } from './source'
 import { FAVOURITES, goTo, type View } from './view'
 
 interface Entry {
@@ -41,7 +41,7 @@ const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
   return {
     id: source.id,
     title: sourceTitle(source, offline),
-    glyph: logo(source.provider),
+    glyph: modelLogo(source.provider),
     dim: offline,
     fresh: source.fresh > 0,
     key: source.billing === 'api',

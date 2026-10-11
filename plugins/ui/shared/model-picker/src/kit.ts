@@ -1,3 +1,4 @@
+import type { WireRequest } from '@sand/protocol'
 import type {} from '@sand/settings/contract'
 import type {} from '@sand/toasts/contract'
 import type {} from '@sand/web-client/contract'
@@ -13,7 +14,5 @@ export interface PickerKit {
   pcs: PcStatus
 }
 
-type Request = Parameters<NonNullable<PickerContext['wire']>['call']>[0]
-
-export const send = (ctx: PickerContext, request: Request) =>
+export const send = (ctx: PickerContext, request: WireRequest) =>
   void ctx.wire?.call(request).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
