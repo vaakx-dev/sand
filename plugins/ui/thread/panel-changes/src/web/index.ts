@@ -1,4 +1,5 @@
 import { copyWithNotice, effect, shownPanel, sig, untrack } from '@sand/dom'
+import type { Thread } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import type { Changes } from '../changes/collect'
 import { collectTree } from '../changes/tree'
@@ -6,6 +7,7 @@ import { matchFile } from '../changes/lines'
 import { familyLoader } from './family'
 import { remoteFiles } from './remote'
 import { familyKey, familyOf, sourceOf } from './sources'
+import { keepUnchanged } from './unchanged'
 import { changesView, type Reveal } from './view'
 
 export default definePlugin({
@@ -26,6 +28,7 @@ export default definePlugin({
     const revealed = sig<Reveal | undefined>(undefined)
     let key: string | undefined
     let badge = 0
+    let hiddenFiles: string[] = []
     const completeFamily = familyLoader(ctx)
 
     const toggle = (id: string) => {
@@ -38,9 +41,10 @@ export default definePlugin({
 
     const showBadge = () => {
       const thread = ctx.threads.current()
-      const local = changes.get()?.files ?? []
-      const stored = thread && !control.shown() && turn.get() === undefined ? remote.of(thread.id) : undefined
-      const count = stored ? new Set([...stored, ...local.map(file => file.key)]).size : local.length
+      const open = control.shown()
+      const local = open ? (changes.get()?.files ?? []).map(file => file.key) : hiddenFiles
+      const stored = thread && !open && turn.get() === undefined ? remote.of(thread.id) : undefined
+      const count = stored ? new Set([...stored, ...local]).size : local.length
       if (count === badge) return
       badge = count
       control.update({ badge: count || undefined })
@@ -49,22 +53,29 @@ export default definePlugin({
     const remote = remoteFiles(ctx, showBadge)
     ctx.effect(() => remote.stop)
 
+    const collectShown = (thread: Thread) => changes.set(keepUnchanged(changes.get(), collectTree(sourceOf(ctx, thread), { turn: turn.get() })))
+
     const paint = () => {
       const thread = ctx.threads.current()
       empty.set(thread ? 'No edits yet.' : 'No thread selected.')
       const family = thread ? familyOf(ctx, thread) : []
       const members = familyKey(family)
-      if (thread && control.shown()) completeFamily(thread, family)
+      const open = control.shown()
+      if (thread && open) completeFamily(thread, family)
       else if (thread) remote.want(thread, members)
-      const next = thread ? `${members}|${turn.get()}` : ''
+      const next = thread ? `${members}|${turn.get()}|${open}` : ''
       if (next !== key) {
         key = next
-        changes.set(thread ? collectTree(sourceOf(ctx, thread), turn.get()) : undefined)
+        if (!thread) changes.set(undefined)
+        else if (open) collectShown(thread)
+        else hiddenFiles = collectTree(sourceOf(ctx, thread), { turn: turn.get(), diffs: false }).files.map(file => file.key)
       }
       showBadge()
     }
 
     const reveal = (path: string) => {
+      const thread = ctx.threads.current()
+      if (thread) collectShown(thread)
       const file = matchFile(changes.get()?.files ?? [], path)
       if (!file) return
       if (closed.get()[file.key]) toggle(file.key)
@@ -74,7 +85,7 @@ export default definePlugin({
     const control = shownPanel(
       ctx,
       { id: 'changes', title: 'Edits', icon: 'compare', order: 10 },
-      () => changesView({ changes, empty, turn, closed, revealed, copy }, toggle),
+      body => changesView({ changes, empty, turn, closed, revealed, copy, scroller: body }, toggle),
       paint,
     )
 
