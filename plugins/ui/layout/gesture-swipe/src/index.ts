@@ -1,5 +1,6 @@
 import { collectScope, disposeAll } from '@sand/dom'
 import { definePlugin } from 'drydock'
+import { frameSwipes } from './integrations/frames'
 import { swipeGesture } from './integrations/touch'
 
 export default definePlugin({
@@ -9,7 +10,11 @@ export default definePlugin({
   apply(ctx) {
     ctx.watch('layout', layout => {
       if (!layout) return
-      const { scope } = collectScope(() => swipeGesture(() => layout.swipe()))
+      const begin = () => layout.swipe()
+      const { scope } = collectScope(() => {
+        swipeGesture(begin)
+        frameSwipes(begin)
+      })
       return () => disposeAll(scope)
     })
   },

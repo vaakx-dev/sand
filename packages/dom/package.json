@@ -6,6 +6,7 @@
     ".": "./src/index.ts",
     "./page": "./src/theme/page.ts",
     "./palette": "./src/theme/palette.ts",
+    "./swipe-relay": "./src/swipe/relay.ts",
     "./tokens": "./src/theme/tokens.ts"
   },
   "dependencies": {
