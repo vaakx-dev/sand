@@ -102,7 +102,7 @@ export const sidebarView = (parts: SidebarParts) => {
     div(
       { class: 'relative flex h-12 shrink-0 items-center px-2 text-neutral-400' },
       sidebarToggle({ title: 'Hide the sidebar', 'aria-label': 'Hide the sidebar', onClick: parts.hide }),
-      el('b', { class: 'text-middle text-sm font-semibold text-neutral-300' }, 'sand'),
+      el('b', { class: 'text-box-trim text-sm font-semibold text-neutral-300' }, 'sand'),
     ),
     topActions(parts, context),
     filterChip(parts, context),

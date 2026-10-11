@@ -34,7 +34,7 @@ export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', me
         span({ class: ['min-w-0 flex-1 truncate text-xs', targetClass ?? 'font-mono text-neutral-200'], title: targetTitle }, target),
         meta,
       ),
-      actions && div({ class: 'flex shrink-0 items-center opacity-0 group-hover:opacity-100' }, actions),
+      actions && div({ class: 'flex shrink-0 items-center opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100' }, actions),
     ),
     ...body,
   )

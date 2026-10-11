@@ -12,7 +12,7 @@ export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => 
   const completing = () => card.completion.visible.get()
   const completions = completionPopup(() => !completing(), ...completionView(card.completion))
   const view = div(
-    { class: 'cc-dock pointer-events-none relative z-10 shrink-0 px-3 pt-12 pb-3 md:px-4' },
+    { class: 'pointer-events-none relative z-10 shrink-0 px-3 pt-12 pb-3 md:px-4', style: { marginTop: 'calc(-1 * var(--dock-h, 0px))' } },
     div(
       { class: 'pointer-events-auto relative mx-auto w-full max-w-3xl' },
       div({ class: 'relative flex flex-col', hidden: completing }, ...errorBanners(ctx, model), queueBanner(ctx, model), slots.host('banner', 'relative flex flex-col')),

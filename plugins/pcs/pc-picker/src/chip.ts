@@ -33,13 +33,13 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
     chipButton(
       { title, active: open, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
-      span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
-      machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,
+      span({ class: 'min-w-0 truncate py-1 text-box-trim' }, name),
+      machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-box-trim' }, '· Offline') : null,
     )
 
   const pill = () =>
     div(
-      { class: 'flex min-w-0 items-center', hidden },
+      { class: 'flex min-w-0 items-center' },
       context.view(),
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
       show(open, () =>
@@ -47,5 +47,5 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
       ),
     )
 
-  return { pill }
+  return { pill, hidden }
 }

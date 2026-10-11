@@ -38,7 +38,7 @@ const blocks = (text: string, context: RowContext) =>
 
 const bubble = (text: string, press: TextMenu, context: RowContext) =>
   div(
-    { class: 'transcript-chat-bubble rounded-xl bg-neutral-800 px-4 text-sm text-neutral-100 whitespace-pre-wrap wrap-anywhere', 'data-quote': '', ...press.props },
+    { class: 'rounded-xl bg-neutral-800 px-4 py-4 text-sm text-box-trim text-neutral-100 whitespace-pre-wrap wrap-anywhere', 'data-quote': '', ...press.props },
     blocks(text, context),
   )
 

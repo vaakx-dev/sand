@@ -7,8 +7,11 @@ import { turnRow } from './header'
 const railed = (inner: Row, rail: boolean) =>
   row(inner.key, { inner: inner.data, rail }, data =>
     div(
-      { class: () => (data.get().rail ? 'transcript-chat-rail ml-2 border-l border-neutral-800 pl-3' : '') },
-      inner.view(data.map(value => value.inner)),
+      { class: () => (data.get().rail ? 'ml-2 flow-root border-l border-neutral-800 pl-3' : '') },
+      inner.view(
+        data.map(value => value.inner),
+        data.map(value => value.rail),
+      ),
     ),
   )
 

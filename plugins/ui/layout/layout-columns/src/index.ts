@@ -1,8 +1,8 @@
 import type { Layout, LayoutState, Region } from '@sand/dom'
-import { batch, cssOrder, derive, dismissible, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack, type Sig } from '@sand/dom'
+import { batch, cssOrder, derive, dismissible, effect, media, mount, owned, setStyle, sig, stage, store, untrack, type Sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'
-import { gripCss, savedWidths } from './resize'
+import { savedWidths } from './resize'
 import { buildShell, type Coverable, type Open, type Views } from './shell'
 import type { Shift } from './slide'
 import { swiper } from './swipe'
@@ -60,7 +60,6 @@ export default definePlugin({
       }
     }
 
-    style(ctx, gripCss)
     const widths = savedWidths()
     const root = owned(ctx, () => buildShell({ narrow, open, views, covers, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
 

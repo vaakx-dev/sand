@@ -20,7 +20,7 @@ export const contextMenu = () => {
     })
     return {
       ...press.props,
-      'data-menu': '',
+      onSelectStart: (event: Event) => event.preventDefault(),
       onClick: (event: MouseEvent) => {
         if (!press.held()) onClick?.(event)
       },
