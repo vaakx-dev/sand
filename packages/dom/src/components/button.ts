@@ -41,7 +41,7 @@ export const rowButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, 
   plainButton({ ...props, class: ['flex w-full min-w-0 items-center text-left', extra] }, ...children)
 
 export const primaryAction = (props: ButtonProps, ...children: Child[]) =>
-  controlButton('font-medium bg-accent-500 text-white hover:bg-accent-600', props, ...children)
+  controlButton('font-medium bg-accent-500 text-neutral-950 hover:bg-accent-600', props, ...children)
 
 export const secondaryAction = (props: ButtonProps, ...children: Child[]) =>
   controlButton('font-medium bg-neutral-700 text-neutral-100 hover:bg-neutral-600', props, ...children)

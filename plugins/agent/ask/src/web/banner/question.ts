@@ -11,7 +11,7 @@ const hints: Partial<Record<AskKind, string>> = { multi: 'Pick any', rank: 'Drag
 const own = (state: AskState) =>
   div(
     { class: 'ask-own flex items-start gap-3 rounded-xl bg-accent-950 px-3 py-2 text-sm' },
-    span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent-500 text-white' }, icon('pencil', 12)),
+    span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent-500 text-neutral-950' }, icon('pencil', 12)),
     span(
       { class: 'flex min-w-0 flex-col' },
       span({ class: 'text-neutral-100' }, 'Your answer'),
