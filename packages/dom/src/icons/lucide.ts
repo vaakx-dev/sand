@@ -78,6 +78,8 @@ import {
   Wrench,
   X,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide'
 
 const nodes = {
@@ -159,6 +161,8 @@ const nodes = {
   gauge: Gauge,
   'trend-up': TrendingUp,
   'trend-down': TrendingDown,
+  'zoom-in': ZoomIn,
+  'zoom-out': ZoomOut,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes

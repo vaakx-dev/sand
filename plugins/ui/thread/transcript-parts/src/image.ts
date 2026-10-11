@@ -20,9 +20,15 @@ const inline = (image: HTMLImageElement, block: ImageBlock) => {
   return image
 }
 
+const viewable = (ctx: Context, block: ImageBlock, thread: string | undefined, options: ImageOptions) => {
+  const viewer = ctx.imageViewer
+  if (!viewer || !thread) return fit(block, options)
+  return { ...fit(block, { ...options, class: [options.class, 'cursor-zoom-in'] }), onClick: () => viewer.open(thread, block) }
+}
+
 export const mediaImage =
   (ctx: Context): MediaImage =>
   (block, thread, options = {}) => {
-    const image = img({ alt: block.name ?? 'image', ...fit(block, options) })
+    const image = img({ alt: block.name ?? 'image', ...viewable(ctx, block, thread, options) })
     return ctx.media ? ctx.media.show(image, block, thread) : inline(image, block)
   }
