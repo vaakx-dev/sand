@@ -23,8 +23,8 @@ const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns'
 
 const turnPicker = (state: ChangesState) =>
   dropdown({
-    trigger: toggle =>
-      secondaryAction({ size: 'sm', onClick: toggle }, () => turnName(state.turn.get()), span({ class: 'inline-flex text-neutral-400' }, icon('down', 12))),
+    trigger: press =>
+      secondaryAction({ size: 'sm', ...press }, () => turnName(state.turn.get()), span({ class: 'inline-flex text-neutral-400' }, icon('down', 12))),
     items: close =>
       [undefined, ...(state.changes.get()?.turns ?? [])].map(turn =>
         popoverItem(

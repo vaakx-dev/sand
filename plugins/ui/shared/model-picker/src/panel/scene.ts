@@ -30,7 +30,10 @@ export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: V
   if (!shown) return undefined
   const sources = ctx.models.sources()
   const settings = ctx.settings
-  const pick = (model: ModelInfo) => target.set({ model: model.id })
+  const pick = (model: ModelInfo) => {
+    target.set({ model: model.id })
+    close()
+  }
   const sourceOf = (model: ModelInfo) => sources.find(source => source.id === model.source)
   return {
     shown,

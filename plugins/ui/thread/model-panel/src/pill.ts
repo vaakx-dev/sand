@@ -46,7 +46,7 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
             'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
             () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'),
           ],
-          ...pressOpens(toggle),
+          ...pressOpens(open, toggle),
         },
         dynamicChild(
           model.map(value => value?.provider),

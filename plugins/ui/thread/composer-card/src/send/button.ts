@@ -71,7 +71,7 @@ const modeMenu = (model: Model) =>
     placement: 'above-right',
     keepFocus: true,
     menuClass: 'w-64',
-    trigger: (toggle, open) => iconButton({ size: 'sm', title: 'Send options', active: open, onClick: toggle }, icon('down', 14)),
+    trigger: (press, open) => iconButton({ size: 'sm', title: 'Send options', active: open, ...press }, icon('down', 14)),
     items: close => [option(model, close, 'queue'), option(model, close, 'steer')],
   })
 

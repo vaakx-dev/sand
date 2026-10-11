@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, modelLogo, onDocument, plainButton, popover, portal, pressOpens, show, sig, span, type StyleMap } from '@sand/dom'
+import { derive, div, dynamicChild, icon, modelLogo, onDocument, onWindow, plainButton, popover, portal, pressOpens, show, sig, span, type StyleMap } from '@sand/dom'
 import type { PickerTarget } from './contract'
 import type { PickerKit } from './kit'
 import { modelPanel } from './panel/panel'
@@ -32,8 +32,11 @@ const closeOnScroll = (inner: HTMLElement, close: () => void) =>
 export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string) => {
   const open = sig(false)
   const close = () => open.set(false)
-  let place: StyleMap = {}
+  const place = sig<StyleMap>({})
   let anchor: HTMLElement | undefined
+  const placePanel = () => {
+    if (anchor) place.set(placeNear(anchor.getBoundingClientRect()))
+  }
 
   const shown = kit.changes.read(() => target.shown())
   const model = derive(() => kit.ctx.models.info(shown.get()?.model))
@@ -43,26 +46,34 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
   }
   const toggle = () => {
     if (open.get()) return close()
-    if (anchor) place = placeNear(anchor.getBoundingClientRect())
+    placePanel()
     open.set(true)
   }
   const panel = () =>
     popover(
       close,
       { class: 'overflow-auto', style: place },
-      div({ class: 'flex flex-col', onMount: inner => closeOnScroll(inner, close) }, modelPanel(kit, target, close)),
+      div(
+        {
+          class: 'flex flex-col',
+          onMount: inner => {
+            closeOnScroll(inner, close)
+            onWindow(inner, 'resize', placePanel)
+          },
+        },
+        modelPanel(kit, target, close),
+      ),
     )
 
   return plainButton(
     {
       title: text,
       'aria-label': () => `${label}: ${text()}`,
-      'aria-expanded': () => String(open.get()),
       class: [
         'flex h-8 max-w-full min-w-40 items-center gap-2 rounded-lg pr-2 pl-3 text-sm text-neutral-100 hover:bg-neutral-700',
         () => (open.get() ? 'bg-neutral-700' : 'bg-neutral-800'),
       ],
-      ...pressOpens(toggle),
+      ...pressOpens(open, toggle),
       onMount: node => {
         anchor = node
       },

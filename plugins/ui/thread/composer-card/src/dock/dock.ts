@@ -1,4 +1,4 @@
-import { div } from '@sand/dom'
+import { div, onPressOutside } from '@sand/dom'
 import { chatDrop } from '../attachments/drop'
 import { completionView } from '../complete/view'
 import { errorBanners } from '../errors/banners'
@@ -10,12 +10,17 @@ import { tray } from './tray'
 
 export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => {
   const completing = () => card.completion.visible.get()
+  const completions = completionPopup(() => !completing(), ...completionView(card.completion))
   const view = div(
     { class: 'cc-dock pointer-events-none relative z-10 shrink-0 px-3 pt-12 pb-3 md:px-4' },
     div(
       { class: 'pointer-events-auto relative mx-auto w-full max-w-3xl' },
       div({ class: 'relative flex flex-col', hidden: completing }, ...errorBanners(ctx, model), queueBanner(ctx, model), slots.host('banner', 'relative flex flex-col')),
-      div({ class: 'relative' }, completionPopup(() => !completing(), ...completionView(card.completion)), div({ class: 'relative z-10' }, card.node)),
+      div(
+        { class: 'relative', onMount: () => onPressOutside(completions, card.completion.close, [completions, card.editor.node]) },
+        completions,
+        div({ class: 'relative z-10' }, card.node),
+      ),
       tray(slots),
     ),
     chatDrop(dropping, () => parentRect(view)),
