@@ -4,6 +4,7 @@ import type { KeyKind, LoginState, ServerDraft, SignInKind } from './login'
 
 export type * from './llm'
 export type * from './login'
+export type * from './setup'
 
 declare module 'drydock' {
   interface Services {

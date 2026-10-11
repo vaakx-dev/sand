@@ -1,14 +1,18 @@
 import { derive, errorMessage, pulse, sig } from '@sand/dom'
 import type { Remote } from '@sand/host-remotes/contract'
 import type { Context } from 'drydock'
+import type { ModelSetup } from '../../contract'
+import { addFlow } from '../add/add-flow'
+import type { Step } from '../add/steps'
 import { whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 
-export type WelcomeStep = 'start' | 'join' | 'joined'
+export type WelcomeStep = 'start' | 'add' | 'join' | 'joined' | 'connected'
 
 export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
   const step = sig<WelcomeStep>('start')
   const joined = sig<Remote | undefined>(undefined)
+  const setup = sig<ModelSetup | undefined>(undefined)
   const skipped = sig(false)
   const busy = sig(false)
   const error = sig('')
@@ -19,6 +23,29 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
     return !!state && !state.accounts.some(account => account.signedIn) && !state.remote.length && !state.pcs.length
   })
   const active = derive(() => !skipped.get() && (step.get() !== 'start' || (fresh.get() && quiet.get())))
+  ctx.watch('modelSetup', value => setup.set(value))
+
+  const go = (next: WelcomeStep) => {
+    error.set('')
+    step.set(next)
+  }
+
+  const usable = () => {
+    const state = control.state.get()
+    return !!state && (state.accounts.some(account => account.signedIn) || state.remote.length > 0)
+  }
+
+  const add = addFlow(control, () => go(usable() ? 'connected' : 'start'))
+
+  const pick = (next: Step) => {
+    go('add')
+    add.go(next)
+  }
+
+  const back = () => {
+    add.back()
+    go('start')
+  }
 
   const connect = async (link: string) => {
     try {
@@ -36,18 +63,25 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
     await whileBusy(busy, () => connect(link.trim()))
   }
 
-  const finish = () => {
+  const close = () => {
+    add.cancel()
     skipped.set(true)
     step.set('start')
+  }
+
+  const finish = () => {
+    close()
     ctx.composer?.focus()
   }
 
-  const go = (next: WelcomeStep) => {
-    error.set('')
-    step.set(next)
+  const next = () => {
+    const found = setup.get()
+    if (!found) return finish()
+    close()
+    found.start()
   }
 
-  return { step, joined, busy, error, active, join, finish, go }
+  return { step, joined, setup, busy, error, active, add, go, pick, back, join, finish, next }
 }
 
 export type WelcomeModel = ReturnType<typeof welcomeModel>
