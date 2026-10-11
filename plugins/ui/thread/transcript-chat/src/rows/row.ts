@@ -16,6 +16,8 @@ export interface RowContext {
   markdown: Markdown
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
+  reply(text: string): NavAction[]
+  jump(from: Element, quote: string): void
   repaint(): void
 }
 

@@ -6,11 +6,11 @@ export const textRow: RowMaker<'text'> = (item, context) =>
   row(`text:${item.key}`, item, data => {
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
-    const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')] })
+    const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')], 'data-quote': '' })
     const render = streamedMarkdown(node, context.markdown)
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context.parts
-    const press = menus.text(context.menu, () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text')] }))
+    const press = menus.text(context.menu, () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text'), ...context.reply(text.get())] }))
     return div(
       { class: 'group mb-3 text-sm', ...press.props },
       node,

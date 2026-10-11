@@ -21,6 +21,7 @@ export interface Composer {
   value(): string
   set(text: string): void
   insert(text: string): void
+  quote(text: string): void
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
   capture(capture: ComposerCapture): Dispose

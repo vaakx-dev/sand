@@ -1,11 +1,7 @@
 import { copyWithNotice, pressMenu, type ContextMenu, type MenuSpec } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { MenuKit } from './contract'
-
-const selectingIn = (node: EventTarget | null) => {
-  const selection = getSelection()
-  return Boolean(selection && !selection.isCollapsed && node instanceof Node && node.contains(selection.anchorNode))
-}
+import { selectingIn } from './integrations/select'
 
 const textMenu = (menu: ContextMenu, spec: () => MenuSpec | undefined) => {
   const press = pressMenu(at => {
@@ -17,10 +13,10 @@ const textMenu = (menu: ContextMenu, spec: () => MenuSpec | undefined) => {
     ...press.props,
     onPointerDown(event: PointerEvent) {
       touch = event.pointerType === 'touch'
-      press.props.onPointerDown(event)
+      if (!touch) press.props.onPointerDown(event)
     },
     onContextMenu(event: MouseEvent) {
-      if (!touch && selectingIn(event.currentTarget)) return
+      if (touch || selectingIn(event.currentTarget)) return
       press.props.onContextMenu(event)
     },
   }

@@ -51,6 +51,7 @@ export { drawer, overlay, sheet, sheetBody, sheetFoot, sheetHead } from './compo
 export { toggleSwitch } from './components/toggle'
 export { segmented, selectMenu, settingsRow, settingsSection, type Choice } from './components/settings'
 export { copyButton } from './components/copy'
+export { quoteButton } from './components/quote'
 export { choiceButton, choiceList, tile } from './components/choice'
 export { headTitle, pageHead, paneHead } from './components/page-head'
 export { rowAction } from './components/row-action'
