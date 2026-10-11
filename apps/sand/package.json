@@ -9,6 +9,8 @@
     "@sand/agents": "workspace:*",
     "@sand/ask": "workspace:*",
     "@sand/attachments": "workspace:*",
+    "@sand/browser-engine": "workspace:*",
+    "@sand/browser-tools": "workspace:*",
     "@sand/cli-devices": "workspace:*",
     "@sand/cli-install": "workspace:*",
     "@sand/cli-launch": "workspace:*",

@@ -1,6 +1,6 @@
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
-import { findBrowser } from './browser'
+import { findBrowser } from '@sand/browser-engine/chrome'
 import { previewTool } from './tool'
 
 export default definePlugin({

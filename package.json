@@ -12,6 +12,7 @@
     "plugins/extend/*",
     "plugins/cli/*",
     "plugins/host/*",
+    "plugins/browser/*",
     "apps/*"
   ],
   "scripts": {
@@ -36,6 +37,7 @@
     "browser": [
       "packages/dom/src/**",
       "plugins/*/*/src/web/**",
+      "plugins/browser/browser-panel/src/**",
       "plugins/ui/*/*/src/web/**",
       "plugins/core/web/src/boot/**",
       "plugins/core/web-client/src/**",

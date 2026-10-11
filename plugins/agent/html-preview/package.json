@@ -15,6 +15,7 @@
     }
   },
   "dependencies": {
+    "@sand/browser-engine": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/html-render": "workspace:*",
     "@sand/messages": "workspace:*",

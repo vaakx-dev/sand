@@ -1,0 +1,25 @@
+{
+  "name": "@sand/browser-panel",
+  "version": "0.0.0",
+  "description": "Browser panel: a live headless Chrome tab you and the agent share, with input, pick, screenshot and console",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Browser panel",
+    "summary": "A live browser tab you and the agent share",
+    "uses": {
+      "panels": "draws its own plain panel and cannot open itself when the agent starts browsing",
+      "composer": "screenshots and picked elements cannot be attached",
+      "notify": "failed browser actions are not reported"
+    }
+  },
+  "dependencies": {
+    "@sand/browser-engine": "workspace:*",
+    "@sand/composer-card": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

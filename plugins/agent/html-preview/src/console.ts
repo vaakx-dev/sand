@@ -1,4 +1,4 @@
-import type { ExceptionDetails, Page, RemoteObject } from './cdp'
+import type { Cdp, ExceptionDetails, RemoteObject } from '@sand/browser-engine/chrome'
 
 export type Level = 'log' | 'info' | 'warning' | 'error'
 
@@ -21,14 +21,14 @@ const argText = (arg: RemoteObject) => String(arg.value ?? arg.unserializableVal
 
 export const exceptionText = (details: ExceptionDetails) => details.exception?.description ?? details.text
 
-export const collect = (page: Page): Console => {
+export const collect = (page: Cdp): Console => {
   const messages: ConsoleMessage[] = []
   const add = (level: Level, text: string) => {
     if (messages.length < maxMessages) messages.push({ level, text: text.slice(0, maxMessageLength) })
   }
-  page.on('Runtime.consoleAPICalled', params => add(levels[params.type] ?? 'log', params.args.map(argText).join(' ')))
-  page.on('Runtime.exceptionThrown', ({ exceptionDetails }) => add('error', exceptionText(exceptionDetails)))
-  page.on('Log.entryAdded', ({ entry }) => {
+  page.on<{ type: string; args: RemoteObject[] }>('Runtime.consoleAPICalled', params => add(levels[params.type] ?? 'log', params.args.map(argText).join(' ')))
+  page.on<{ exceptionDetails: ExceptionDetails }>('Runtime.exceptionThrown', ({ exceptionDetails }) => add('error', exceptionText(exceptionDetails)))
+  page.on<{ entry: { level: string; text: string; url?: string } }>('Log.entryAdded', ({ entry }) => {
     if (entry.level === 'warning' || entry.level === 'error') add(entry.level, entry.url ? `${entry.text} (${entry.url})` : entry.text)
   })
   return { messages, add }
