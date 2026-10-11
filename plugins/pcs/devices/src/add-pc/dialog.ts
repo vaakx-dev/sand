@@ -1,4 +1,4 @@
-import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, icon, iconButton, overlay, p, primaryAction, sheet, sheetBody, sheetHead, show, sig, tile, untrack } from '@sand/dom'
+import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, icon, overlay, p, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, show, sig, tile, untrack } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
@@ -23,13 +23,12 @@ const chooseStep = (pick: (mode: AddPcMode) => void) =>
     choiceButton({ mark: tile(icon('link', 16)), title: 'It already has sand', detail: 'Connect with a pairing link', onClick: () => pick('join') }),
   )
 
-const doneStep = (done: Done, close: () => void) =>
+const doneStep = (done: Done) =>
   div(
     { class: 'flex flex-col items-center gap-2 py-2 text-center' },
     doneMark(),
     p({ class: 'mt-1 text-base font-semibold text-neutral-100' }, done.title),
     p({ class: 'text-sm text-neutral-400' }, done.detail),
-    div({ class: 'mt-3 flex justify-center' }, primaryAction({ onClick: close }, 'Done')),
   )
 
 export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {
@@ -48,7 +47,7 @@ export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: (
 
   const body = (key: string) => {
     const finished = untrack(() => done.get())
-    if (key === 'done' && finished) return doneStep(finished, close)
+    if (key === 'done' && finished) return doneStep(finished)
     if (key === 'install') return installStep(ctx, source, installed, running)
     if (key === 'join') return joinStep(ctx, source, joined)
     return chooseStep(next => mode.set(next))
@@ -57,16 +56,18 @@ export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: (
   return overlay(
     close,
     sheet(
-      { 'aria-label': 'Add a PC', class: 'max-w-lg' },
-      sheetHead(
-        () => (done.get() ? '' : titles[mode.get()]),
+      { 'aria-label': 'Add a PC', size: 'md' },
+      sheetHead({
+        title: () => (done.get() ? '' : titles[mode.get()]),
         close,
-        show(
-          () => mode.get() !== 'choose' && !done.get() && !running.get(),
-          () => iconButton({ title: 'Back', onClick: () => mode.set('choose') }, icon('back')),
-        ),
+        back: () => mode.set('choose'),
+        backShown: () => mode.get() !== 'choose' && !done.get() && !running.get(),
+      }),
+      sheetBody({}, dynamicChild(derive(() => (done.get() ? 'done' : mode.get())), body)),
+      show(
+        () => !!done.get(),
+        () => sheetFoot(primaryAction({ onClick: close }, 'Done')),
       ),
-      sheetBody({ class: 'gap-4' }, dynamicChild(derive(() => (done.get() ? 'done' : mode.get())), body)),
     ),
   )
 }

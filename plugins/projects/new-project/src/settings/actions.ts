@@ -32,7 +32,7 @@ const startThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
 export const projectEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
   const syncFlows = ctx.syncFlows
   return [
-    ...(ctx.picker ? [{ label: 'Rename', icon: 'pencil', run: () => rename(ctx, group) } satisfies Entry] : []),
+    ...(ctx.picker ? [{ label: 'Rename…', icon: 'pencil', run: () => rename(ctx, group) } satisfies Entry] : []),
     { label: 'New thread', icon: 'compose', disabled: !group.locations.some(entry => startable(ctx, entry)), run: () => startThread(ctx, group) },
     ...(syncFlows ? [{ label: 'Add a copy on another PC', icon: 'folder-plus', disabled: !withoutCopy(ctx, group).length, run: () => syncFlows.add(group) } satisfies Entry] : []),
   ]

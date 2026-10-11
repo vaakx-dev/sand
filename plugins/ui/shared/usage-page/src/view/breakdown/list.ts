@@ -1,10 +1,10 @@
-import { contextMenu, div, plainButton, providerIcon, span, type ContextMenu } from '@sand/dom'
+import { badge, contextMenu, div, plainButton, providerIcon, span, type ContextMenu } from '@sand/dom'
 import { tokens, tokensOf } from '@sand/kit'
 import { colorsOf } from '../../data/providers'
 import type { Account } from '../../data/types'
 import { billedText, onPlanOf, planText } from '../../format'
 import { shortName } from '../../names'
-import { chip, muted } from '../parts'
+import { muted } from '../parts'
 import type { Row } from './rows'
 
 interface ListParts {
@@ -35,7 +35,7 @@ const shareBar = (row: Row, { accounts, colorOf, peak }: ListParts) => {
 const accountChips = (keys: string[], accounts: Map<string, Account>) =>
   keys.flatMap(key => {
     const account = accounts.get(key)
-    return account ? [chip(providerIcon(account.provider, 10), shortName(account))] : []
+    return account ? [badge('neutral', providerIcon(account.provider, 12), shortName(account))] : []
   })
 
 const detailLine = (row: Row, { accounts }: ListParts) =>
@@ -50,7 +50,7 @@ const detailLine = (row: Row, { accounts }: ListParts) =>
 const rowView = (row: Row, parts: ListParts) =>
   div(
     {
-      class: ['flex flex-col gap-2 border-b border-neutral-800 py-3 transition-colors', row.open && 'cursor-pointer hover:bg-neutral-800'],
+      class: ['flex flex-col gap-2 bg-neutral-900 px-4 py-3 transition-colors', row.open && 'cursor-pointer hover:bg-neutral-800'],
       ...(row.menu ? parts.menu.target(row.menu, row.open) : { onClick: row.open }),
     },
     nameLine(row),
@@ -66,5 +66,5 @@ export const breakdownList = (rows: Row[], accounts: Account[]) => {
     peak: Math.max(0, ...rows.map(row => row.totals.cost)),
     menu,
   }
-  return div({ class: 'flex min-w-0 flex-col' }, menu.view(), ...rows.map(row => rowView(row, parts)))
+  return div({ class: 'contents' }, menu.view(), ...rows.map(row => rowView(row, parts)))
 }

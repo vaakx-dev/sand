@@ -1,5 +1,5 @@
 import type { WorktreeState } from '../../contract'
-import { div, errorMessage, overlay, primaryAction, quietButton, selectMenu, sheet, sheetFoot, sheetHead, sig } from '@sand/dom'
+import { div, errorMessage, overlay, primaryAction, secondaryAction, selectMenu, sheet, sheetBody, sheetFoot, sheetHead, sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Thread } from '@sand/web-client/contract'
 import type { WebContext, WorktreeClient } from '../client'
@@ -41,17 +41,17 @@ export const moveSheet = (ctx: WebContext, client: WorktreeClient, form: MoveFor
   return overlay(
     close,
     sheet(
-      { 'aria-label': 'Move this thread to a worktree', class: 'max-w-lg' },
-      sheetHead('Move this thread to a worktree', close),
-      div(
-        { class: 'flex min-h-0 flex-col gap-3 overflow-auto px-5 pt-2 pb-5' },
+      { 'aria-label': 'Move this thread to a worktree', size: 'md' },
+      sheetHead({ title: 'Move this thread to a worktree', close }),
+      sheetBody(
+        {},
         field('Branch', branchInput(branch, submit)),
         field('Based on', div({ class: 'flex rounded-lg ring-1 ring-neutral-700' }, selectMenu(baseChoices(state), base, value => base.set(value)))),
         state.changed > 0 ? checkRow(carry, `Take the ${plural(state.changed, 'changed file')} with it`, `Your folder goes back to a clean ${state.branch ?? 'checkout'}`) : null,
         hasSetup ? checkRow(setup, 'Set it up', ...setupLine(state.setup)) : null,
       ),
       sheetFoot(
-        quietButton({ onClick: close }, 'Cancel'),
+        secondaryAction({ onClick: close }, 'Cancel'),
         primaryAction({ disabled: () => !branch.get().trim(), onClick: submit }, 'Move'),
       ),
     ),

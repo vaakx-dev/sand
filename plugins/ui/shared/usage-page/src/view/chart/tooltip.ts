@@ -1,5 +1,5 @@
 import type { UsageBucket } from '@sand/usage/contract'
-import { div, span, type Child } from '@sand/dom'
+import { div, layer, portal, span, type Child } from '@sand/dom'
 import { periodTitle } from '@sand/kit'
 import { metricText, type Metric } from '../../format'
 import { seriesName } from './legend'
@@ -9,15 +9,13 @@ export interface Hover {
   index: number
   x: number
   y: number
-  width: number
-  height: number
 }
 
 const gap = 12
 
-const placement = ({ x, y, width, height }: Hover) => {
-  const right = x < width / 2
-  const below = y < height / 2
+const placement = ({ x, y }: Hover) => {
+  const right = x < innerWidth / 2
+  const below = y < innerHeight / 2
   return {
     left: `${right ? x + gap : x - gap}px`,
     top: `${below ? y + gap : y - gap}px`,
@@ -31,13 +29,19 @@ const row = (label: Child, value: string) =>
 export const tooltip = (hover: Hover, key: string, bucket: UsageBucket, series: Series[], metric: Metric) => {
   const valueAt = (line: Series) => line.values[hover.index] ?? 0
   const total = series.reduce((sum, line) => sum + valueAt(line), 0)
-  return div(
-    {
-      class: 'pointer-events-none absolute z-10 flex min-w-40 flex-col gap-1 rounded-xl bg-neutral-800 px-3 py-2 text-xs whitespace-nowrap shadow-lg ring-1 ring-neutral-700',
-      style: placement(hover),
-    },
-    span({ class: 'mb-1 text-neutral-500' }, periodTitle(key, bucket)),
-    series.map(line => row(seriesName(line), metricText(valueAt(line), metric))),
-    series.length > 1 ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, row('Total', metricText(total, metric))) : null,
+  return portal(
+    document.body,
+    div(
+      {
+        class: [
+          layer.tooltip,
+          'pointer-events-none fixed flex min-w-40 flex-col gap-1 rounded-xl bg-neutral-800 px-3 py-2 text-xs whitespace-nowrap shadow-lg ring-1 ring-neutral-700',
+        ],
+        style: placement(hover),
+      },
+      span({ class: 'mb-1 text-neutral-500' }, periodTitle(key, bucket)),
+      series.map(line => row(seriesName(line), metricText(valueAt(line), metric))),
+      series.length > 1 ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, row('Total', metricText(total, metric))) : null,
+    ),
   )
 }

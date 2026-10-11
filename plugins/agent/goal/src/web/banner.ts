@@ -1,4 +1,4 @@
-import { contextMenu, copyWithNotice, derive, div, errorMessage, icon, iconButton, show, span, statusBanner, type Derive, type MenuSpec, type NavAction } from '@sand/dom'
+import { closeButton, contextMenu, copyWithNotice, derive, div, errorMessage, icon, show, span, statusBanner, type Derive, type MenuSpec, type NavAction } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { GoalView } from './slot'
@@ -25,7 +25,7 @@ export const goalBanner = (ctx: Context, view: Derive<GoalView | null>, hasComma
       const objective = goal()?.objective
       return objective ? bannerMenu(ctx, objective) : undefined
     }),
-    span({ class: 'inline-flex shrink-0 text-accent-400' }, icon('goal', 15)),
+    span({ class: 'inline-flex shrink-0 text-accent-400' }, icon('goal', 14)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
       div(
@@ -39,7 +39,7 @@ export const goalBanner = (ctx: Context, view: Derive<GoalView | null>, hasComma
         () => span({ class: 'truncate text-xs text-neutral-500', title: reason }, () => `Last check: ${reason.get()}`),
       ),
     ),
-    show(hasCommands, () => iconButton({ size: 'sm', title: 'Clear goal', onClick: () => clear(ctx) }, icon('x', 13))),
+    show(hasCommands, () => closeButton({ size: 'sm', title: 'Clear goal', onClick: () => clear(ctx) })),
     menu.view(),
   )
 }

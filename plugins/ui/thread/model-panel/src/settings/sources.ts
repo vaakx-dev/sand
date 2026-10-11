@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { badge, div, secondaryAction, settingsSection, span, tile } from '@sand/dom'
+import { badge, itemRow, secondaryAction, settingsSection, span, tile } from '@sand/dom'
 import { favouritesOf } from '@sand/kit'
 import type { Kit } from './kit'
 import { linkRow, logo, whereText } from './parts'
@@ -31,9 +31,11 @@ const sourceRow = (kit: Kit, source: SourceInfo) =>
   })
 
 const emptyRow = (kit: Kit) =>
-  div(
-    { class: 'flex min-h-12 flex-wrap items-center gap-3 bg-neutral-900 px-4 py-3' },
-    span({ class: 'min-w-0 flex-1 text-sm text-neutral-400' }, 'No accounts yet. Add one to choose models.'),
+  itemRow(
+    {},
+    null,
+    'No accounts yet',
+    'Add one to choose models',
     secondaryAction({ size: 'sm', onClick: () => kit.ctx.settings?.open('accounts') }, 'Open Accounts'),
   )
 

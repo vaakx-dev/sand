@@ -1,6 +1,6 @@
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { badge, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, reorder, show, sig, span, type Sig } from '@sand/dom'
+import { badge, chevron, closeButton, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, reorder, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../dock/glass'
 import type { Model } from '../model'
@@ -28,11 +28,14 @@ const dragHandle = (steer: Sig<boolean>) =>
 const header = (count: () => number, open: Sig<boolean>) =>
   div(
     { class: 'flex min-h-6 items-center gap-2 text-neutral-400' },
-    icon('queued', 13),
+    icon('queued', 14),
     span({ class: 'font-medium text-neutral-200' }, 'Queued'),
     span(() => String(count())),
     span({ class: 'flex-1' }),
-    iconButton({ size: 'sm', title: () => (open.get() ? 'Collapse' : 'Expand'), onClick: open.toggle() }, dynamicChild(open, value => span({ class: 'inline-flex' }, icon(value ? 'down' : 'up', 14)))),
+    iconButton(
+      { size: 'sm', title: () => (open.get() ? 'Collapse' : 'Expand'), 'aria-expanded': () => String(open.get()), onClick: open.toggle() },
+      chevron(() => open.get(), 14),
+    ),
   )
 
 export const queueBanner = (ctx: Ctx, model: Model) => {
@@ -71,9 +74,9 @@ export const queueBanner = (ctx: Ctx, model: Model) => {
       show(() => Boolean(imageOf(item().prompt)), () => queueThumb(ctx, item().prompt)),
       span({ class: 'min-w-0 flex-1 truncate' }, () => item().label),
       show(steer, () => badge('neutral', 'Next step')),
-      show(queued, () => iconButton({ size: 'sm', title: 'Edit', onClick: () => model.edit(item()) }, icon('pencil', 13))),
-      show(queued, () => quietButton({ size: 'sm', onClick: () => act(thread => ctx.turns.promote(thread, item().id)) }, icon('promote', 13), () => (model.running.get() ? 'Steer' : 'Send now'))),
-      iconButton({ size: 'sm', title: 'Remove', onClick: () => act(thread => ctx.turns.withdraw(thread, item().id)) }, icon('x', 13)),
+      show(queued, () => iconButton({ size: 'sm', title: 'Edit', onClick: () => model.edit(item()) }, icon('pencil', 14))),
+      show(queued, () => quietButton({ size: 'sm', onClick: () => act(thread => ctx.turns.promote(thread, item().id)) }, icon('promote', 14), () => (model.running.get() ? 'Steer' : 'Send now'))),
+      closeButton({ title: 'Remove', size: 'sm', onClick: () => act(thread => ctx.turns.withdraw(thread, item().id)) }),
     )
   }
 

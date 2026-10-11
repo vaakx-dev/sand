@@ -139,6 +139,7 @@ export interface ToolViews {
   field(input: unknown, key: string): string
   resultText(result?: ToolResultBlock): string
   errorBody(tool: ToolView): HTMLElement
+  outputText(text: string, error: boolean): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
   image: MediaImage
   backgroundJobs(transcript: Transcript, name: string, base: ToolRenderer): Dispose

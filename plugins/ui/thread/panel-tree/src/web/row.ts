@@ -43,8 +43,7 @@ const dotClass = (item: TreeItem) => {
 }
 
 const textClass = (item: TreeItem) => {
-  if (item.head || item.selected) return 'text-neutral-100'
-  return item.active ? 'text-neutral-300' : 'text-neutral-400'
+  return item.head || item.selected || item.active ? 'text-neutral-100' : 'text-neutral-400'
 }
 
 const details = (item: Sig<TreeItem>, actions: RowActions) => {
@@ -56,8 +55,8 @@ const details = (item: Sig<TreeItem>, actions: RowActions) => {
     div(
       { class: 'flex flex-wrap items-center gap-2' },
       !head && primaryAction({ size: 'sm', onClick: stopThen(() => actions.jump(row.id)) }, 'Go here'),
-      secondaryAction({ size: 'sm', onClick: stopThen(() => actions.fork(row.id)) }, icon('fork', 12), 'Fork'),
-      iconButton({ size: 'sm', title: tree.label ? 'Change label' : 'Add a label', onClick: stopThen(() => actions.label(row.id)) }, icon('tag', 13)),
+      secondaryAction({ size: 'sm', onClick: stopThen(() => actions.fork(row.id)) }, icon('fork', 14), 'Fork'),
+      iconButton({ size: 'sm', title: tree.label ? 'Change label' : 'Add label', onClick: stopThen(() => actions.label(row.id)) }, icon('tag', 14)),
     ),
   )
 }
@@ -92,7 +91,7 @@ const content = (item: Sig<TreeItem>, actions: RowActions) => {
 
 const signature = ({ row, tree, head }: TreeItem) => [row.prefix, row.glyph, row.fold, tree.label, tree.described.text, head].join('|')
 
-const background = (item: TreeItem) => (item.selected ? 'bg-neutral-800' : 'hover:bg-neutral-900')
+const background = (item: TreeItem) => (item.selected ? 'bg-neutral-700' : 'hover:bg-neutral-800')
 
 const revealWhenSelected = (selected: Derive<boolean>) => (node: Element) =>
   effect(() => {
@@ -105,7 +104,7 @@ export const rowView = (item: Sig<TreeItem>, actions: RowActions, menu: ContextM
     {
       role: 'option',
       'aria-selected': selected,
-      class: () => ['mx-2 min-w-0 cursor-pointer rounded-lg px-2 py-2', background(item.get())],
+      class: () => ['min-w-0 cursor-pointer rounded-lg px-2 py-1.5', background(item.get())],
       ...menu.target(
         () => rowMenu(item.get(), actions),
         () => actions.select(item.get().row.id),

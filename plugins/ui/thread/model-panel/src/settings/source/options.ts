@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { ago, clock, div, icon, quietButton, settingsRow, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
+import { ago, clock, div, errorText, icon, quietButton, settingsRow, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
 import type { Kit } from '../kit'
 
 const checkedText = (at: number | undefined, now: number) => {
@@ -19,8 +19,8 @@ const refreshLine = (kit: Kit, source: () => SourceInfo) => {
   return div(
     { class: 'flex flex-wrap items-center gap-x-3 gap-y-1 px-1' },
     span({ class: 'text-xs text-neutral-500' }, () => checkedText(source().checked, now.get())),
-    span({ class: 'min-w-0 flex-1 text-xs wrap-anywhere text-danger-400' }, () => source().error ?? ''),
-    quietButton({ size: 'sm', disabled: busy, onClick: () => void refresh() }, icon('reload', 12), () => (busy.get() ? 'Checking…' : 'Check for new models')),
+    div({ class: 'min-w-0 flex-1' }, errorText(() => source().error ?? '')),
+    quietButton({ size: 'sm', disabled: busy, onClick: () => void refresh() }, icon('reload', 14), () => (busy.get() ? 'Checking…' : 'Check now')),
   )
 }
 

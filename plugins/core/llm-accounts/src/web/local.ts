@@ -63,7 +63,7 @@ const brokenRow = (account: LoginAccount, fix: Fix) =>
 
 const shown = (state: LoginState) => state.accounts.filter(account => account.signedIn || (account.error && !account.pending))
 
-const emptyText = (state: LoginState) => (state.remote.length ? 'None yet. Add one, or use the ones below.' : 'None yet. Add one to start using sand.')
+const emptyText = (state: LoginState) => (state.remote.length ? 'No accounts yet. Add one, or use the ones below' : 'No accounts yet. Add one to start using sand')
 
 export const localSection = (control: LoginControl, fix: Fix) => {
   const menu = contextMenu()

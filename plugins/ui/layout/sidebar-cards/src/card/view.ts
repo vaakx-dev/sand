@@ -37,7 +37,7 @@ const fullBody = (parts: CardParts) => {
   const { item, project } = parts
   return div(
     div(
-      { class: 'flex h-5 items-center gap-2 text-xs text-neutral-400' },
+      { class: 'flex h-5 items-center gap-1.5 text-xs text-neutral-400' },
       avatar(parts),
       span({ class: 'min-w-0 flex-1 truncate', title: project }, project),
       show(
@@ -54,7 +54,7 @@ const fullBody = (parts: CardParts) => {
         { class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) },
         dynamicChild(
           item.map(value => value.subtitleIcon ?? 'folder'),
-          name => icon(name, 11),
+          name => icon(name, 12),
         ),
         span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
       ),
@@ -67,7 +67,7 @@ const compactTitle = (value: NavItem) => [value.title, [value.project, tildeHome
 
 const compactBody = (parts: CardParts) =>
   div(
-    { class: 'flex h-5 items-center gap-2', title: parts.item.map(compactTitle) },
+    { class: 'flex h-5 items-center gap-1.5', title: parts.item.map(compactTitle) },
     span({ class: 'inline-flex shrink-0' }, avatar(parts)),
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => titleClass(parts)] }, parts.item.map(value => value.title)),
     statusSlot(parts, 'text-xs'),

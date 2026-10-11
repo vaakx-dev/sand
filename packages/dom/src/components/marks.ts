@@ -5,13 +5,13 @@ import { icon } from '../icons/lucide'
 export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange' | 'sky'
 
 const badgeTones: Record<Tone, string> = {
-  neutral: 'bg-neutral-800 text-neutral-400',
+  neutral: 'bg-neutral-700 text-neutral-300',
   accent: 'bg-accent-950 text-accent-300',
   success: 'bg-success-950 text-success-400',
   warning: 'bg-warning-950 text-warning-400',
   danger: 'bg-danger-950 text-danger-400',
-  orange: 'bg-neutral-800 text-orange-400',
-  sky: 'bg-neutral-800 text-sky-400',
+  orange: 'bg-neutral-700 text-orange-400',
+  sky: 'bg-neutral-700 text-sky-400',
 }
 
 const dotTones: Record<Tone, string> = {
@@ -24,8 +24,11 @@ const dotTones: Record<Tone, string> = {
   sky: 'bg-sky-400',
 }
 
-export const badge = (tone: Tone, ...children: Child[]) =>
-  span({ class: ['inline-flex shrink-0 items-center gap-1 rounded-md px-2 text-xs font-medium whitespace-nowrap', badgeTones[tone]] }, ...children)
+const badgeLook = 'inline-flex items-center gap-1 rounded-md px-2 text-xs font-medium whitespace-nowrap'
+
+export const badge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'shrink-0', badgeTones[tone]] }, ...children)
+
+export const shrinkBadge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'min-w-0 max-w-full', badgeTones[tone]] }, ...children)
 
 export const dot = (tone: Tone) => span({ class: ['h-2 w-2 shrink-0 rounded-full', dotTones[tone]] })
 

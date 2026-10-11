@@ -33,7 +33,7 @@ export const changesView = (state: ChangesState) => {
   const display = displayState()
   const all = derive(() => state.changes.get()?.files ?? [])
   const files = derive(() => (display.wide() ? all.get().filter(matches(display.filter.get())) : all.get()))
-  const emptyText = () => (all.get().length ? 'No files match the filter.' : state.empty.get())
+  const emptyText = () => (all.get().length ? 'No files match the filter' : state.empty.get())
   const menu = contextMenu()
   const scroller: HTMLElement = div(
     { class: 'min-h-0 flex-1 overflow-y-auto pb-4' },

@@ -1,5 +1,5 @@
 import type { WireState } from '@sand/web-client/contract'
-import { div, h2, keys, overlay, p, secondaryAction, sheet, show, sig, textInput } from '@sand/dom'
+import { errorText, keys, note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, show, sig, textInput } from '@sand/dom'
 import { parsePairLink } from '@sand/kit'
 import type { Context } from 'drydock'
 import { overlaySlot } from './overlay-slot'
@@ -23,25 +23,21 @@ const unpairedView = () => {
   return overlay(
     () => {},
     sheet(
-      { 'aria-label': 'Pair this browser', class: 'max-w-md' },
-      div(
-        { class: 'flex flex-col gap-3 p-5' },
-        h2({ class: 'text-sm font-semibold text-neutral-100' }, 'This browser isn’t paired with sand'),
-        p({ class: 'text-sm text-neutral-400' }, 'On a paired device open Settings → Your devices → Add a phone, or run sand on this PC.'),
-        div(
-          { class: 'flex flex-wrap items-center gap-2' },
-          textInput({
-            class: 'min-w-40 flex-1',
-            placeholder: 'Paste a pairing link',
-            'aria-label': 'Pairing link',
-            bindValue: link,
-            onInput: () => wrong.set(false),
-            onKeyDown: keys({ Enter: submit }),
-          }),
-          secondaryAction({ disabled: () => !link.get().trim(), onClick: submit }, 'Pair'),
-        ),
-        show(wrong, () => p({ class: 'text-xs text-danger-400' }, 'That isn’t a pairing link. It ends in #pair=…')),
+      { 'aria-label': 'Pair this browser', size: 'sm' },
+      sheetHead({ title: 'This browser isn’t paired with sand' }),
+      sheetBody(
+        {},
+        note('On a paired device open Settings → Devices → Add a phone, or run sand on this PC.'),
+        textInput({
+          placeholder: 'Paste a pairing link',
+          'aria-label': 'Pairing link',
+          bindValue: link,
+          onInput: () => wrong.set(false),
+          onKeyDown: keys({ Enter: submit }),
+        }),
+        show(wrong, () => errorText('That isn’t a pairing link. It ends in #pair=…')),
       ),
+      sheetFoot(primaryAction({ disabled: () => !link.get().trim(), onClick: submit }, 'Pair')),
     ),
   )
 }

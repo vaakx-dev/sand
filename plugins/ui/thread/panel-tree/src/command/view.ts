@@ -27,5 +27,5 @@ export const options = (view: TreeView, selected: number): PickOptions => ({
   query: view.query,
   selected,
   rank: false,
-  empty: 'No entries match',
+  empty: 'No matches',
 })

@@ -1,7 +1,7 @@
-import { copyButton, div, dynamicChild, rowButton, sig, span } from '@sand/dom'
+import { copyButton, div, dynamicChild, note, rowButton, sig, span } from '@sand/dom'
 import { routeKind, routeLabel } from '@sand/kit'
 import type { PairInvite } from '@sand/host-devices/contract'
-import { linkText, note } from '../components'
+import { linkText } from '../components'
 import { listenBox } from './listen'
 import { qrCode } from './qr'
 

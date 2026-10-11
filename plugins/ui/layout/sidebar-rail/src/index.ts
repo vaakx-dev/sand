@@ -1,7 +1,9 @@
 import type { NavAction } from '@sand/dom'
-import { closeDrawer, derive, div, icon, list, navEntries, navHost, owned, place, pulse } from '@sand/dom'
+import { appIcon, closeDrawer, derive, div, dynamicChild, list, navEntries, navHost, owned, place, pulse, sideHead, span } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { actionButton, itemButton, separator } from './button'
+
+const wideHead = () => div({ class: 'flex h-12 shrink-0 items-center justify-center' }, span({ class: 'flex h-8 w-8 items-center justify-center' }, appIcon(20)))
 
 export default definePlugin({
   name: 'sidebar-rail',
@@ -21,12 +23,15 @@ export default definePlugin({
       const top = derive(() => host.actions.get().filter(action => action.place !== 'footer'))
       const footer = derive(() => host.actions.get().filter(action => action.place === 'footer'))
       return div(
-        { class: () => ['flex h-full min-h-0 flex-col gap-1 bg-neutral-950 py-3', narrow.get() ? 'w-full items-stretch px-2' : 'w-16 items-center'] },
-        div({ class: () => ['mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-800 text-accent-400', narrow.get() ? 'ml-2' : ''] }, icon('logo', 16)),
-        list(top, action => action.id, action => actionButton(action, narrow, run, host.busy), div({ class: 'contents' })),
-        separator(narrow),
-        list(entries, entry => entry.key, entry => itemButton(entry, narrow, drag), div({ class: () => ['flex min-h-0 w-full flex-1 flex-col gap-1 overflow-auto scrollbar-none', narrow.get() ? 'items-stretch' : 'items-center'] })),
-        list(footer, action => action.id, action => actionButton(action, narrow, run, host.busy), div({ class: 'contents' })),
+        { class: () => ['flex h-full min-h-0 flex-col bg-neutral-950 pb-3', narrow.get() ? 'w-full' : 'w-12'] },
+        dynamicChild(narrow, value => (value ? sideHead('Sand', () => ctx.layout?.toggle('side', false)) : wideHead())),
+        div(
+          { class: () => ['flex min-h-0 flex-1 flex-col gap-1', narrow.get() ? 'items-stretch px-2' : 'items-center'] },
+          list(top, action => action.id, action => actionButton(action, narrow, run, host.busy), div({ class: 'contents' })),
+          separator(narrow),
+          list(entries, entry => entry.key, entry => itemButton(entry, narrow, drag), div({ class: () => ['flex min-h-0 w-full flex-1 flex-col gap-1 overflow-auto scrollbar-none', narrow.get() ? 'items-stretch' : 'items-center'] })),
+          list(footer, action => action.id, action => actionButton(action, narrow, run, host.busy), div({ class: 'contents' })),
+        ),
       )
     }
 

@@ -34,7 +34,7 @@ const openActions = (ctx: Ctx, thread: Thread) => {
     { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => openTab(ctx.threads.link(thread.id)) },
   ]
   if (ctx.palette || ctx.picker)
-    actions.push({ id: 'rename', group: 'open', label: 'Rename', icon: 'pencil', tile: true, run: () => attempt(ctx.notify, 'Could not rename', () => rename(ctx, thread)) })
+    actions.push({ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(ctx.notify, 'Could not rename', () => rename(ctx, thread)) })
   if (ctx.wire && thread.info.messages)
     actions.push({ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: () => attempt(ctx.notify, 'Could not rename', () => retitle(ctx, thread)) })
   if (!thread.device && thread.info.messages)
@@ -54,7 +54,7 @@ const organiseActions = (ctx: Ctx, thread: Thread): NavAction[] => {
 
 const copyActions = (ctx: Ctx, thread: Thread) => {
   const actions: NavAction[] = [{ id: 'copy-link', group: 'copy', label: 'Copy link', icon: 'link', run: () => copyWithNotice(ctx.notify, ctx.threads.link(thread.id), 'link') }]
-  if (thread.info.cwd) actions.push({ id: 'copy-path', group: 'copy', label: 'Copy folder path', icon: 'folder', run: () => copyWithNotice(ctx.notify, thread.info.cwd, 'folder path') })
+  if (thread.info.cwd) actions.push({ id: 'copy-path', group: 'copy', label: 'Copy path', icon: 'folder', run: () => copyWithNotice(ctx.notify, thread.info.cwd, 'path') })
   return actions
 }
 

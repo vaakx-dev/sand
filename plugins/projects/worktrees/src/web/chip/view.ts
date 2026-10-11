@@ -28,10 +28,9 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
 
   const chip = () =>
     chipButton(
-      { title, active: open, ...pressOpens(open, toggle) },
+      { title, active: open, menu: true, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 12)),
       span({ class: 'min-w-0 truncate py-1 text-box-trim' }, () => label.get().text),
-      span({ class: 'inline-flex shrink-0' }, icon('down', 12)),
     )
 
   const context = contextMenu()
@@ -46,7 +45,7 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
       show(open, () =>
         chipPopover(
           close,
-          { class: 'right-0 w-80' },
+          { class: 'right-0' },
           dynamicChild(derive(() => changes.version.get() + states.version.get()), items),
         ),
       ),

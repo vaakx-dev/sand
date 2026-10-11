@@ -15,7 +15,7 @@ export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: strin
   }
   const menu = contextMenu()
   return div(
-    { class: 'flex items-center gap-1 bg-neutral-900 pr-3' },
+    { class: 'flex items-center gap-3 bg-neutral-900 pr-4' },
     rowButton(
       {
         role: 'checkbox',
@@ -29,7 +29,7 @@ export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: strin
         { class: 'flex min-w-0 flex-1 flex-col' },
         span(
           { class: 'flex min-w-0 items-center gap-2' },
-          span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().label),
+          span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().label),
           show(row.map(catalog.isNew), () => badge('accent', 'New')),
           show(added, () => badge('neutral', 'Added')),
         ),

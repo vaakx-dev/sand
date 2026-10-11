@@ -1,5 +1,5 @@
 import type { ContextMenu, NavAction } from '@sand/dom'
-import { clock, contextMenu, derive, div, el, iconButton, list, navActionIcon, navButton, show, sidebarToggle, sig, span, type Sig } from '@sand/dom'
+import { clock, contextMenu, derive, div, hint, iconButton, list, navActionIcon, navButton, show, sideHead, sig, span, type Sig } from '@sand/dom'
 import { actionMenu, type MenuRequest } from './card/menu'
 import { filterButton, filterChip, filterMenu, type FilterParts } from './project/view'
 import type { CardRow, Row } from './rows/build'
@@ -90,7 +90,7 @@ const threadRows = (parts: SidebarParts) => {
     list(parts.rows, row => row.key, row => rowView(row, handlers)),
     show(
       () => !parts.rows.get().length,
-      () => div({ class: 'px-3 py-4 text-xs text-neutral-500' }, () => (parts.project.get() ? `No threads in ${parts.label.get()} yet.` : 'No threads yet.')),
+      () => hint(() => (parts.project.get() ? `No threads in ${parts.label.get()} yet` : 'No threads yet')),
     ),
   )
 }
@@ -99,11 +99,7 @@ export const sidebarView = (parts: SidebarParts) => {
   const context = contextMenu()
   return div(
     { class: () => ['relative flex h-full min-h-0 flex-col bg-neutral-950', parts.narrow.get() ? 'w-full' : 'w-64'] },
-    div(
-      { class: 'relative flex h-12 shrink-0 items-center px-2 text-neutral-400' },
-      sidebarToggle({ title: 'Hide the sidebar', 'aria-label': 'Hide the sidebar', onClick: parts.hide }),
-      el('b', { class: 'text-box-trim text-sm font-semibold text-neutral-300' }, 'sand'),
-    ),
+    sideHead('Sand', parts.hide),
     topActions(parts, context),
     filterChip(parts, context),
     threadRows(parts),

@@ -23,7 +23,7 @@ const agentBar = (tab: TabModel, control: (driver: Driver) => void) =>
   bar(
     span({ class: 'h-2 w-2 shrink-0 rounded-full bg-accent-400', onMount: pulsing }),
     span({ class: 'min-w-0 flex-1 truncate text-accent-300', text: () => drivingText(tab) }),
-    primaryAction({ size: 'sm', onClick: () => control('user') }, icon('hand', 13), 'Take control'),
+    primaryAction({ size: 'sm', onClick: () => control('user') }, icon('hand', 14), 'Take control'),
   )
 
 export const statusBar = (tab: TabModel, mode: Derive<ControlMode>, control: (driver: Driver) => void) =>

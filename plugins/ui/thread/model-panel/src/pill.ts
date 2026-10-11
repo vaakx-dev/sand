@@ -1,5 +1,5 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { button, chipPopover, div, dynamicChild, icon, modelLogo, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { chipButton, chipPopover, div, dynamicChild, icon, modelLogo, pressOpens, show, shrinkBadge, sig, SPACE, span, type Pulse } from '@sand/dom'
 import { sourceName } from '@sand/kit'
 import type { PanelContext } from './actions'
 
@@ -21,10 +21,6 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
   const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
   const chosen = current.map(value => Boolean(value?.model))
   const modelLabel = () => model.get()?.label ?? current.get()?.model ?? 'Choose a model'
-  const tone = () => {
-    if (open.get()) return 'bg-neutral-700 text-neutral-100'
-    return chosen.get() ? 'text-neutral-400' : 'text-warning-400'
-  }
   const effortLabel = () => ctx.models.levels().find(level => level.id === current.get()?.effort)?.label ?? ''
   const nextLabel = () => {
     const value = next.get()
@@ -43,41 +39,32 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
   const view = () =>
     div(
       { class: 'flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
-      button(
-        {
-          type: 'button',
-          title: pillTip,
-          class: [
-            'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
-            tone,
-          ],
-          ...pressOpens(open, toggle),
-        },
+      chipButton(
+        { active: open, menu: true, warning: () => !chosen.get(), class: 'max-w-full', title: pillTip, ...pressOpens(open, toggle) },
         dynamicChild(
           model.map(value => value?.provider),
-          provider => (provider ? modelLogo(provider) : null),
+          provider => (provider ? modelLogo(provider, 12) : null),
         ),
         span({ class: 'min-w-0 truncate' }, modelLabel),
-        show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate text-neutral-500 sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),
+        show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),
         show(
           current.map(value => Boolean(value?.effort)),
-          () => span({ class: 'hidden shrink-0 text-neutral-500 sm:inline' }, () => `· ${effortLabel()}`),
+          () => span({ class: 'hidden shrink-0 sm:inline' }, () => `· ${effortLabel()}`),
         ),
         show(
           current.map(value => value?.speed === 'fast'),
-          () => span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('zap', 13)),
+          () => span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('zap', 12)),
         ),
-        span({ class: 'hidden shrink-0 sm:inline-flex' }, icon('down', 12)),
       ),
       show(next.map(Boolean), () =>
         span(
-          {
-            class: 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md bg-warning-950 px-2 text-xs text-warning-400',
-            title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : ''),
-          },
-          icon('clock', 12),
-          span({ class: 'shrink-0' }, 'Next'),
-          span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${nextLabel()}` : '')),
+          { class: 'inline-flex min-w-0', title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : '') },
+          shrinkBadge(
+            'warning',
+            icon('clock', 12),
+            span({ class: 'shrink-0' }, 'Next'),
+            span({ class: 'hidden min-w-0 truncate sm:inline' }, () => (next.get() ? `: ${nextLabel()}` : '')),
+          ),
         ),
       ),
       show(open, () =>

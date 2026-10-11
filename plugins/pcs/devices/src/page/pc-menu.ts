@@ -4,7 +4,7 @@ import type { PcRow, PcRowActions } from './pc-row'
 export const pcMenu = ({ pc, self, shares }: PcRow, actions: PcRowActions): MenuSpec => {
   const busy = actions.busy()
   const list: (NavAction | false)[] = [
-    { id: 'check', label: 'Check again', icon: 'reload', group: 'health', run: actions.check },
+    { id: 'check', label: 'Check now', icon: 'reload', group: 'health', run: actions.check },
     !self && { id: 'repair', label: 'Repair', icon: 'wrench', group: 'health', run: busy ? () => {} : actions.repair },
     !self && pc.pairing !== 'paired' && { id: 'pair-again', label: 'Pair again', icon: 'link', group: 'pair', run: actions.pairAgain },
     !self && {

@@ -1,4 +1,4 @@
-import { icon, iconButton, overlay, place, sheet, sheetBody, sheetHead, show } from '@sand/dom'
+import { overlay, place, sheet, sheetHead } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
 import type { LoginControl } from '../state'
 import { addFlow } from './add-flow'
@@ -17,16 +17,9 @@ const sheetView = (control: LoginControl, done: (text?: string) => void, first?:
   return overlay(
     close,
     sheet(
-      { 'aria-label': 'Add account', class: 'max-w-md' },
-      sheetHead(
-        add.title,
-        close,
-        show(
-          () => add.step.get().kind !== 'choose',
-          () => iconButton({ title: 'Back', onClick: add.back }, icon('back')),
-        ),
-      ),
-      sheetBody({ class: 'gap-4' }, add.view()),
+      { 'aria-label': 'Add an account', size: 'md' },
+      sheetHead({ title: add.title, close, back: add.back, backShown: () => add.step.get().kind !== 'choose' }),
+      add.view(),
     ),
   )
 }

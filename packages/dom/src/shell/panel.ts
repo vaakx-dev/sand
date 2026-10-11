@@ -1,5 +1,6 @@
-import { collectScope, disposeAll, div, intersectionObserver, mount } from '@vaakx-dev/vrui'
+import { collectScope, disposeAll, div, intersectionObserver, mount, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
+import { headTitle, paneHead } from '../components/page-head'
 import { icon } from '../icons/lucide'
 import { place } from './place'
 import type { Handle, PanelPatch, PanelSpec } from './types'
@@ -7,7 +8,7 @@ import type { Handle, PanelPatch, PanelSpec } from './types'
 const plainPanel = (spec: PanelSpec, body: HTMLElement) =>
   div(
     { class: 'flex min-h-0 w-full flex-1 flex-col' },
-    div({ class: 'flex h-10 shrink-0 items-center gap-2 px-4 text-xs text-neutral-300' }, icon(spec.icon ?? 'panel', 14), spec.title),
+    paneHead({}, span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(spec.icon ?? 'panel', 16)), headTitle(2, spec.title)),
     body,
   )
 

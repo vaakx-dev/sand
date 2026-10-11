@@ -20,7 +20,7 @@ const lines = ({ toolViews: { field } }: Ctx, tool: ToolView): DiffLine[] => {
 const opener = (ctx: Ctx, tool: ToolView) => {
   const { commands } = ctx
   if (!commands?.get('changes') || tool.result?.isError) return undefined
-  return secondaryAction({ size: 'sm', class: 'mt-2', onClick: () => void commands.run('changes', path(ctx, tool)) }, 'Open in changes')
+  return secondaryAction({ size: 'sm', class: 'mt-2', onClick: () => void commands.run('changes', path(ctx, tool)) }, 'Open in Edits')
 }
 
 const body = (ctx: Ctx) => (tool: ToolView) => {

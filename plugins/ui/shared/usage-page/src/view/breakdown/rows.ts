@@ -1,9 +1,9 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { tildeHome, type Child, type MenuSpec } from '@sand/dom'
+import { badge, tildeHome, type Child, type MenuSpec } from '@sand/dom'
 import { byCost, emptyTotals, folderName, grouped, periodTitle } from '@sand/kit'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
-import { chip, muted } from '../parts'
+import { muted } from '../parts'
 import { pcMenu, threadMenu } from './menu'
 
 export const breakdowns = ['projects', 'models', 'threads', 'pcs', 'periods'] as const
@@ -31,7 +31,7 @@ export interface RowSource {
 
 const maxRows = 10
 
-const pcChips = (ids: string[], { usage, nameOf }: RowSource) => (usage.pcs.length > 1 ? ids.map(id => chip(nameOf(id))) : [])
+const pcChips = (ids: string[], { usage, nameOf }: RowSource) => (usage.pcs.length > 1 ? ids.map(id => badge('neutral', nameOf(id))) : [])
 
 const projectRows = (source: RowSource): Row[] =>
   source.usage.projects.map(project => ({ key: project.name, name: project.name, extra: pcChips(project.machines, source), accounts: project.accounts, totals: project }))

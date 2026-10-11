@@ -12,6 +12,10 @@ export interface RowOptions {
   limit(key: string): number
 }
 
+export const pageSize = 25
+
+export const pageStep = pageSize * 2
+
 const backFirst = (items: NavItem[]) => [...items.filter(item => item.back), ...items.filter(item => !item.back)]
 
 const bySnooze = (a: NavItem, b: NavItem) => (a.snoozed ?? 0) - (b.snoozed ?? 0)

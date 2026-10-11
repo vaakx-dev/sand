@@ -1,8 +1,7 @@
-import { badge, div, dynamicChild, itemRow, primaryAction, secondaryAction, settingsSection, sig } from '@sand/dom'
+import { badge, dynamicChild, itemRow, note, primaryAction, secondaryAction, settingsSection, sheetStep, sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { DetectedServer } from '../../contract'
 import { accountLogo } from '../names'
-import { actions, note } from '../parts'
 import type { LoginControl } from '../state'
 
 const shortUrl = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/v1\/?$/, '')
@@ -19,10 +18,10 @@ const foundRow = (control: LoginControl, server: DetectedServer, add: (server: D
   )
 
 const nothing = (look: () => void, custom: () => void) =>
-  div(
-    { class: 'flex flex-col gap-4' },
+  sheetStep(
     note("Didn't find Ollama at localhost:11434 or LM Studio at localhost:1234. Start one and look again, or enter its URL."),
-    actions(secondaryAction({ onClick: custom }, 'Enter a URL'), primaryAction({ onClick: look }, 'Look again')),
+    secondaryAction({ onClick: custom }, 'Enter a URL'),
+    primaryAction({ onClick: look }, 'Look again'),
   )
 
 export const detectStep = (control: LoginControl, add: (server: DetectedServer) => void, custom: () => void) => {
@@ -33,8 +32,8 @@ export const detectStep = (control: LoginControl, add: (server: DetectedServer) 
   }
   void look()
   return dynamicChild(found, list => {
-    if (!list) return note('Looking for Ollama and LM Studio on this PC…')
+    if (!list) return sheetStep(note('Looking for Ollama and LM Studio on this PC…'))
     if (!list.length) return nothing(() => void look(), custom)
-    return settingsSection({}, list.map(server => foundRow(control, server, add)))
+    return sheetStep(settingsSection({}, list.map(server => foundRow(control, server, add))))
   })
 }

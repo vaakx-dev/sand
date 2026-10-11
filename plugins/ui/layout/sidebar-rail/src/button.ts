@@ -1,9 +1,9 @@
-import type { NavAction, NavItem, Tone } from '@sand/dom'
-import { div, dot, dynamicChild, icon, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, type NavEntry, type Reorder, type Sig } from '@sand/dom'
+import type { NavAction, NavItem } from '@sand/dom'
+import { div, dot, dynamicChild, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, stateMark, type NavEntry, type Reorder, type Sig } from '@sand/dom'
 
 const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [
-  'relative flex h-10 shrink-0 items-center gap-3 rounded-lg transition-colors',
-  narrow.get() ? 'w-full justify-start px-2' : 'w-10 justify-center',
+  'relative flex shrink-0 items-center gap-3 rounded-lg transition-colors',
+  narrow.get() ? 'h-10 w-full justify-start px-2' : 'h-8 w-8 justify-center',
   selected() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100',
 ]
 
@@ -12,20 +12,19 @@ const label = (narrow: Sig<boolean>, strong: () => boolean, text: () => string) 
 
 const corner = { transform: 'translate(50%, -50%)' }
 
-const toneOf = (item: NavItem): Tone | undefined => {
-  if (item.state === 'running') return 'accent'
-  if (item.state === 'background') return 'sky'
-  if (item.state === 'waiting') return 'warning'
-  if (item.unread) return 'orange'
-  return undefined
+const markOf = (item: NavItem) => {
+  if (item.state === 'draft') return stateMark('draft')
+  if (item.state === 'running') return dot('accent')
+  if (item.state === 'background') return stateMark('agent')
+  if (item.state === 'waiting') return dot('warning')
+  if (item.unread) return stateMark('unread')
+  return null
 }
 
 const badge = (item: NavItem) => {
-  if (item.state === 'draft')
-    return span({ class: 'absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white ring-2 ring-neutral-950', style: corner }, icon('pencil', 8))
-  const tone = toneOf(item)
-  if (!tone) return null
-  return span({ class: 'absolute top-0 right-0 flex rounded-full ring-2 ring-neutral-950', style: corner }, dot(tone))
+  const mark = markOf(item)
+  if (!mark) return null
+  return span({ class: 'absolute top-0 right-0 flex rounded-full bg-neutral-950 ring-2 ring-neutral-950', style: corner }, mark)
 }
 
 const avatar = (item: NavItem) =>
@@ -41,7 +40,7 @@ export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: 
       title: action.map(value => value.label),
       onClick: () => run(action.get()),
     },
-    navActionIcon(action, busy, 17),
+    navActionIcon(action, busy),
     label(narrow, () => false, () => action.get().label),
   )
 
