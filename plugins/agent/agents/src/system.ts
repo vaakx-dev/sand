@@ -4,7 +4,7 @@ import type { AgentDefinition } from './contract'
 
 const preamble = `You are a sand subagent doing one task for another agent. You have full access to the machine. Nobody will answer questions, so decide yourself.
 
-Finish the task. Your final message is all the other agent sees. Put in what you found or did, with file paths, line numbers and results.`
+Finish the task. Your final message is all the other agent sees. Put in what you found or did, with sources, such as file paths or links, and results.`
 
 export const compose = async (
   definition: AgentDefinition,

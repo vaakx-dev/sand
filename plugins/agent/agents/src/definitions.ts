@@ -12,7 +12,7 @@ export const builtins: AgentDefinition[] = [
   },
   {
     name: 'explore',
-    description: 'Read-only search and questions about code.',
+    description: 'Read-only search and questions about files.',
     tools: ['read', 'glob', 'grep', 'shell'],
     prompt: "Read-only. Don't create, change or delete files. Use shell only for commands that read, like git log, ls or cat.",
   },
