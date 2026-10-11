@@ -33,9 +33,7 @@ export const initials = (text: string) =>
     .toUpperCase() || '?'
 
 export const projectIcon = (name: string, url?: string) =>
-  url
-    ? img({ src: url, alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-sm' })
-    : img({ src: duneIcon(name), alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-full' })
+  img({ src: url || duneIcon(name), alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-sm' })
 
 export const projectAvatar = (name: ReactiveValue<string>, url: ReactiveValue<string | undefined>) =>
   dynamicChild(url, found => (found ? projectIcon('', found) : dynamicChild(name, current => projectIcon(current))))

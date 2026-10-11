@@ -1,7 +1,7 @@
 import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
 import type { WireEvent, WireRequest } from '@sand/protocol'
 import type { Machines, ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
-import { appIconUrl } from '@sand/dom'
+import { appIconUrl, duneIcon } from '@sand/dom'
 import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
@@ -77,7 +77,9 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
   ctx.on('wire.hello', icons.clear)
   ctx.effect(() => icons.clear)
 
-  const groupIcon = (found: ProjectGroup) => (found.id === sandHomeProject ? appIconUrl() : icons.get(found))
+  const iconFile = (found: ProjectGroup) => (found.id === sandHomeProject ? appIconUrl() : icons.get(found))
+
+  const groupIcon = (found: ProjectGroup) => iconFile(found) ?? (found.icon && duneIcon(found.name, found.icon))
 
   const entryFor = (project: Project, device?: string): ProjectEntry => {
     const found = get(project.id)?.locations.find(location => sameDevice(location.device, device))
@@ -111,6 +113,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
       return found && groupIcon(found)
     },
     groupIcon,
+    iconFile,
     place,
     browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),
     mkdir: (path, device) => call<void>({ type: 'fs.mkdir', path }, device),
@@ -118,6 +121,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
     add: (path, device, project) => registered({ type: 'projects.add', path, ...(project ? { project } : {}) }, device),
     rename: (target, name) => update(target, { name }),
     hide: (target, hidden) => update(target, { hidden }),
+    setIcon: (target, icon) => update(target, { icon }),
     async remove(target) {
       await call<void>({ type: 'projects.remove', project: target.id })
       await refresh()

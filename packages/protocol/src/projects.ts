@@ -5,10 +5,16 @@ export interface ProjectCopy {
   removed?: boolean
 }
 
+export interface ProjectIcon {
+  shape?: number
+  hue?: number
+}
+
 export interface Project {
   id: string
   name: string
   remote?: string
+  icon?: ProjectIcon
   copies: Record<string, ProjectCopy>
   updated: number
   hidden?: boolean
