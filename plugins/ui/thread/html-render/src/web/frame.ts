@@ -1,6 +1,6 @@
 import type { Wire } from '@sand/web-client/contract'
 import type { HtmlRenderEntry } from '../contract'
-import { div, effect, openTab, resource, show, sig } from '@sand/dom'
+import { div, effect, openTab, resource, show, sig, type Swipe } from '@sand/dom'
 import { maxHeight, minHeight } from '../page/limits'
 import { hostPath } from '../page/protocol'
 import { listenToFrame, sandboxedFrame, showPageIn } from './integrations/frame'
@@ -15,7 +15,7 @@ const loadingNote = () => div({ class: 'pointer-events-none absolute inset-0 fle
 
 const failure = (title: string) => div({ class: 'flex h-full items-center justify-center text-xs text-neutral-500' }, `Couldn't load ${title}`)
 
-export const htmlFrame = (wire: Wire, thread: string, data: HtmlRenderEntry) => {
+export const htmlFrame = (wire: Wire, thread: string, data: HtmlRenderEntry, swipe: () => Swipe | undefined) => {
   const cap = data.height ?? maxHeight
   const height = sig(clamp(data.height ?? lastHeights.get(data.id) ?? startHeight, cap))
   const resize = (next: number) => {
@@ -48,7 +48,7 @@ export const htmlFrame = (wire: Wire, thread: string, data: HtmlRenderEntry) => 
     {
       class: 'relative mb-4 w-full',
       style: { height: () => `${height.get()}px` },
-      onMount: () => listenToFrame(frame, { resize, open: openTab }),
+      onMount: () => listenToFrame(frame, { resize, open: openTab, swipe }),
     },
     show(() => !failed.get(), () => frame),
     show(() => !failed.get() && page.data.get() === undefined, loadingNote),
