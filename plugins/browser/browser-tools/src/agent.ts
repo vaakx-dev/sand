@@ -29,6 +29,7 @@ export const browserAgent = (tools: string[], llm: LLM | undefined, choice: Agen
     description: 'Drives the in-app browser the user sees: opens localhost, files and web pages, clicks, types, reads the page and console. Give it a goal and what to report back.',
     prompt,
     tools,
-    ...(model && { model: model.id, effort: choice.effort }),
+    ...(model && { model: model.id }),
+    effort: choice.effort,
   }
 }
