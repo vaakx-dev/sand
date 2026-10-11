@@ -1,8 +1,6 @@
 import type { Database } from 'bun:sqlite'
 import { createEntryCache } from './cache'
 import type { CreateSession, Session, SessionInfo, Sessions } from './contract'
-import { rewriter } from './format/rewrite'
-import { current, upgrade } from './format/upgrade'
 import { remover, summaries } from './list'
 import { createPaging } from './paging'
 import { parseRow, type Row } from './paging/rows'
@@ -12,7 +10,7 @@ import { syncedSummaries } from './sync/summaries'
 const loadedLimit = 20
 
 const insertSql =
-  'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, format, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $format, $created, $created)'
+  'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $created, $created)'
 
 export interface StoreOptions {
   hooks: SessionHooks & { remove(session: Session): void }
@@ -28,7 +26,6 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
   const insert = db.query(insertSql)
   const find = db.query<SessionInfo, { id: string }>('select * from sessions where id = $id')
   const ofType = db.query<Row, { type: string }>('select * from entries where type = $type order by at')
-  const rewrite = rewriter(db)
   const sync = syncedSummaries(db)
   const removeAll = remover(db)
 
@@ -61,7 +58,6 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
         parent: parent ?? null,
         origin: origin ?? null,
         kind: kind ?? 'main',
-        format: current,
       }
       insert.run({ ...info })
       const session = remember(info)
@@ -73,7 +69,7 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
       if (cached) return cached
       const info = find.get({ id })
       if (!info) return undefined
-      return remember((info.format ?? 1) < current ? rewrite(info) : info)
+      return remember(info)
     },
     require(id) {
       const session = sessions.open(id)
@@ -98,8 +94,6 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
       for (const removed of removeAll(id)) forget(removed)
       hooks.remove(session)
     },
-    format: current,
-    upgrade,
   }
 
   return { sessions, forget }

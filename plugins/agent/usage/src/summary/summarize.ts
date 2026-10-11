@@ -25,8 +25,7 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
   const threads = threadBook(infos)
   const total = emptyTotals()
 
-  const isBranch = (id: string) => infos.get(id)?.kind === 'branch'
-  for (const turn of turnsOf(sessions.entriesOfType?.('usage') ?? [], isBranch)) {
+  for (const turn of turnsOf(sessions.entriesOfType?.('usage') ?? [])) {
     if (turn.at < query.since) continue
     const id = identify(turn)
     const price = llm?.price?.(turn.model)

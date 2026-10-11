@@ -18,7 +18,7 @@ export interface UsageTotals {
 }
 
 export interface UsageRecord {
-  id?: string
+  id: string
   model?: string
   source?: string
   account?: string

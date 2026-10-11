@@ -4,7 +4,7 @@ import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { ShareInfo } from '../share/info'
 
-export type CachedInfo = Omit<ShareInfo, 'limits'> & { legacy?: boolean }
+export type CachedInfo = Omit<ShareInfo, 'limits'>
 
 export type PeerCache = Record<string, CachedInfo>
 

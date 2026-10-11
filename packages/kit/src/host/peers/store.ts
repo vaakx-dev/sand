@@ -12,14 +12,13 @@ const text = (value: unknown): value is string => typeof value === 'string' && v
 const parse = (value: unknown): RemoteRecord | undefined => {
   if (!isRecord(value)) return
   const { id, name, platform, url, urls, key } = value
-  if (!text(id) || !text(url) || !text(key)) return
-  const routes = Array.isArray(urls) ? urls.filter(text) : []
+  if (!text(id) || !text(url) || !Array.isArray(urls) || !text(key)) return
   return {
     id,
     name: text(name) ? name : url,
     platform: text(platform) ? platform : '',
     url,
-    urls: routes.length ? routes : [url],
+    urls: urls.filter(text),
     key,
   }
 }

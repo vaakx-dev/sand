@@ -86,15 +86,13 @@ cleanup() {
 }
 
 usage() {
-  printf '%s\n' 'usage: install.sh [--nightly | --dev | --channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
+  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
   exit 2
 }
 
 read_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
-      --nightly) channel=nightly ;;
-      --dev) channel=dev ;;
       --channel)
         [ $# -gt 1 ] || usage
         channel=$2
@@ -204,7 +202,7 @@ find_release() {
     curl -fsSL -H 'accept: application/vnd.github+json' "https://api.github.com/repos/$repo/releases?per_page=50" -o "$work/releases.json" </dev/null ||
       fail 'Could not ask GitHub for the sand releases. Check the internet connection, or wait a few minutes if GitHub is limiting requests, then run the command again.'
     tag=$(newest_release "$work/releases.json")
-    [ -n "$tag" ] || fail "There is no sand release on GitHub yet. Run the command with --nightly to get the nightly build."
+    [ -n "$tag" ] || fail "There is no sand release on GitHub yet. Run the command with --channel nightly to get the nightly build."
   fi
   assets="https://github.com/$repo/releases/download/$tag"
   label="sand $tag"

@@ -20,7 +20,6 @@ export interface Ticket {
 export interface HostIdentity {
   deviceId: string
   name: string
-  version: string
   build?: BuildInfo
 }
 

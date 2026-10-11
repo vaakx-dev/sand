@@ -14,9 +14,8 @@ const text = (value: unknown): value is string => typeof value === 'string' && v
 const parse = (value: unknown): RemotePc | undefined => {
   if (!isRecord(value)) return
   const { id, name, url, urls, key } = value
-  if (!text(id) || !text(url) || !text(key)) return
-  const routes = Array.isArray(urls) ? urls.filter(text) : []
-  return { id, name: text(name) ? name : url, urls: [...new Set([url, ...routes])], key }
+  if (!text(id) || !text(url) || !Array.isArray(urls) || !text(key)) return
+  return { id, name: text(name) ? name : url, urls: [...new Set([url, ...urls.filter(text)])], key }
 }
 
 const remotesPath = async (home: string) => {

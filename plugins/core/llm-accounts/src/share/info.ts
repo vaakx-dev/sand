@@ -1,6 +1,5 @@
-import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice, SourceRef } from '../contract'
+import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice } from '../contract'
 import type { Accounts } from '../auth/accounts'
-import { billings } from '../auth/kinds'
 import type { LocalLLM } from '../local'
 
 export const sharePaths = { info: '/llm/share/info', stream: '/llm/share/stream' } as const
@@ -10,7 +9,6 @@ export interface SharedAccount {
   kind: AccountKind
   provider: string
   label: string
-  subscription?: string
   method: LoginMethod
   plan?: string
 }
@@ -27,16 +25,8 @@ export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: 
 
 export const sharedIds = (accounts: Accounts) => accounts.ids().filter(accounts.shared)
 
-export const sharedRef = ({ id, kind, provider, label, plan }: SharedAccount): SourceRef => ({
-  source: id,
-  label,
-  provider,
-  billing: billings[kind] ?? 'api',
-  ...(plan && { plan }),
-})
-
 const shareable = ({ id, kind, provider, label, method, plan }: LoginAccount): SharedAccount[] =>
-  method ? [{ id, kind, provider, label, subscription: label, method, ...(plan && { plan }) }] : []
+  method ? [{ id, kind, provider, label, method, ...(plan && { plan }) }] : []
 
 export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
   const shared = new Set(sharedIds(accounts))

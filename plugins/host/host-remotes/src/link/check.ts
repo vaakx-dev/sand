@@ -31,7 +31,7 @@ export const createChecks = ({ self, urls, store, devices, status, renamed }: Ch
   const settle = async (record: RemoteRecord, reply: LinkReply) => {
     if (reply.kind === 'refused') return status.refuse(record.id, refusedText(record.name))
     status.reached(record.id, reply.url)
-    if (reply.kind === 'linked') await learn(record.id, reply.result.device)
+    await learn(record.id, reply.result.device)
   }
 
   const check = async (record: RemoteRecord) => {

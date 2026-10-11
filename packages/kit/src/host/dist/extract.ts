@@ -1,11 +1,10 @@
 import type { BuildInfo } from '@sand/protocol'
 import { mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { isRecord } from '../../json/record'
-import { hashApp, readStamp } from './build'
+import { hashApp, isStamp, readStamp } from './build'
 import { validVersion } from './bun/home'
 import { buildStamp, isAppPath } from './files'
-import { hashModules, isLinkEntry, isModulePath, modulesFolder, releaseDamaged, releaseTooOld } from './release/manifest'
+import { hashModules, isLinkEntry, isModulePath, modulesFolder, releaseDamaged } from './release/manifest'
 
 type Entries = Map<string, File>
 
@@ -28,16 +27,12 @@ const parseStamp = async (entries: Entries) => {
     .get(buildStamp)!
     .json()
     .catch(() => undefined)
-  if (!isRecord(stamp)) throw new Error(releaseDamaged)
+  if (!isStamp(stamp)) throw new Error(releaseDamaged)
   return stamp
 }
 
-const isLinkMap = (links: unknown): links is Record<string, string> =>
-  isRecord(links) && Object.values(links).every(target => typeof target === 'string')
-
 const readRelease = async (entries: Entries): Promise<Release> => {
   const { modules, links, bun } = await parseStamp(entries)
-  if (typeof modules !== 'string' || !isLinkMap(links) || typeof bun !== 'string') throw new Error(releaseTooOld)
   if (!validVersion.test(bun)) throw new Error(`not a sand bundle: Bun ${bun}`)
   for (const [link, target] of Object.entries(links)) {
     if (!isLinkEntry(link, target)) throw new Error(`not a sand bundle: link ${link}`)

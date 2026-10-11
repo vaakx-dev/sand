@@ -47,7 +47,7 @@ export default definePlugin({
 
     const notify = (text: string) => (ctx.ui ? ctx.ui.notify(text) : console.error(text))
     const onLimits = (parsed: Limits) => {
-      limits = ctx.hot.data.sourceLimits = { ...limits, [parsed.source ?? 'claude']: parsed }
+      limits = ctx.hot.data.sourceLimits = { ...limits, [parsed.source]: parsed }
       ctx.emit('llm.limits', parsed)
     }
     const claude = createClaude({ accounts, maxTokens, retries, notify, onLimits })

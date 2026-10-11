@@ -1,12 +1,6 @@
 import { errorMessage, mergeProjects, serial } from '@sand/kit'
 import { projectsPath, readProjectsFile, writeProjectsFile } from '@sand/kit/fs'
 import type { Project } from './contract'
-import { migrateProjects } from './migrate'
-
-const loadProjects = async (home: string, device: string) => {
-  const saved = await readProjectsFile(home)
-  return { projects: saved ?? (await migrateProjects(home, device)), migrated: !saved }
-}
 
 const loadFailed = (home: string, error: unknown) =>
   new Error(
@@ -14,18 +8,17 @@ const loadFailed = (home: string, error: unknown) =>
     { cause: error },
   )
 
-export const projectStore = async (home: string, device: string, report: (error: unknown) => void) => {
-  const loaded = await loadProjects(home, device).catch(error => {
+export const projectStore = async (home: string, report: (error: unknown) => void) => {
+  const loaded = await readProjectsFile(home).catch(error => {
     report(loadFailed(home, error))
     return undefined
   })
-  let projects = mergeProjects(loaded?.projects ?? [], [])
+  let projects = mergeProjects(loaded ?? [], [])
   const queue = serial()
   const save = (next: Project[]) => {
     projects = next
     return loaded ? queue(() => writeProjectsFile(home, projects)) : Promise.resolve()
   }
-  if (loaded?.migrated) await save(projects)
   return {
     all: () => projects,
     get: (id: string) => projects.find(project => project.id === id),

@@ -3,7 +3,6 @@ import { Refused } from './http'
 
 const refusedText = (error: Refused, pc: string, provider: string) => {
   if (error.status === 401) return `${pc} no longer accepts this PC — pair it again`
-  if (error.status === 404) return `${pc} runs an older sand that can't share accounts — update it`
   if (error.status === 403) return `${pc} doesn't share ${provider} anymore`
   return `${pc} couldn't use ${provider}`
 }

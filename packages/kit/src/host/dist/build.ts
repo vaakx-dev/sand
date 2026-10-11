@@ -10,9 +10,9 @@ export interface AppFile {
 
 export interface BuildStamp extends BuildInfo {
   hash: string
-  modules?: string
-  links?: Record<string, string>
-  bun?: string
+  modules: string
+  links: Record<string, string>
+  bun: string
   changes?: BuildChange[]
 }
 
@@ -24,13 +24,19 @@ export interface Bundle extends HostBundle {
 const cacheTime = 5000
 const buildId = /^[0-9a-f]{6,64}$/
 
+const isLinkMap = (links: unknown): links is Record<string, string> =>
+  isRecord(links) && Object.values(links).every(target => typeof target === 'string')
+
 export const isStamp = (value: unknown): value is BuildStamp =>
   isRecord(value) &&
   typeof value.id === 'string' &&
   buildId.test(value.id) &&
   typeof value.hash === 'string' &&
   typeof value.time === 'number' &&
-  Number.isFinite(value.time)
+  Number.isFinite(value.time) &&
+  typeof value.modules === 'string' &&
+  isLinkMap(value.links) &&
+  typeof value.bun === 'string'
 
 export const readStamp = async (root: string): Promise<BuildStamp | undefined> => {
   const stamp: unknown = await Bun.file(join(root, buildStamp))

@@ -31,6 +31,5 @@ export const exportThread =
       cwd: session.cwd,
       scratch: isInside(session.cwd, ctx.paths.scratchRoot()),
       ...page(entries, Math.max(0, request.offset)),
-      format: ctx.sessions.format,
     }
   }

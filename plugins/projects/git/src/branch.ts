@@ -9,7 +9,7 @@ const cache = new Map<string, { at: number; branch?: string }>()
 
 const read = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])) || undefined
 
-export const branch = async (cwd: string) => {
+const branch = async (cwd: string) => {
   if (!cwd || !existsSync(cwd)) return undefined
   const cached = cache.get(cwd)
   if (cached && Date.now() - cached.at < freshMs) return cached.branch

@@ -6,8 +6,7 @@ import { fixedIds, fixedLabels, isFixed, isSignInKind, logos, signInError, type 
 import { fixedAccount, serverAccount, type Status } from './listing'
 import { refreshOpenAI } from './openai'
 import { TokenError } from './request'
-import { displaced, holders, locate } from './slots'
-import { authStore, serversOf, type Credential, type OAuth, type Saved, type ServerEntry, type Tokens } from './store'
+import { authStore, credentialOf, serversOf, type Credential, type OAuth, type Saved, type ServerEntry, type Tokens } from './store'
 
 const refreshers: Record<SignInKind, (tokens: Tokens) => Promise<Tokens>> = { claude: refreshClaude, codex: refreshOpenAI }
 
@@ -25,8 +24,7 @@ export const createAccounts = (path: string, changed: () => void) => {
   const conflicts = new Map<string, LoginConflict>()
   const refreshing = new Map<string, Promise<Credential>>()
 
-  const located = (id: string) => (isFixed(id) ? locate(saved, id) : undefined)
-  const stored = (id: string) => located(id)?.credential
+  const stored = (id: string) => (isFixed(id) ? credentialOf(saved, id) : undefined)
   const credential = (id: string): Credential | undefined => stored(id) ?? envKey(id)
   const servers = () => serversOf(saved)
   const server = (id: string) => servers().find(found => found.id === id)
@@ -64,8 +62,7 @@ export const createAccounts = (path: string, changed: () => void) => {
   const saveServers = (list: ServerEntry[]) => save({ servers: list.length ? list : undefined })
 
   const forget = async (id: FixedId, fromDisk: Saved) => {
-    const keys = holders({ ...saved, ...fromDisk }, id)
-    if (keys.length) await save(Object.fromEntries(keys.map(key => [key, undefined])))
+    if (credentialOf({ ...saved, ...fromDisk }, id)) await save({ [id]: undefined })
     else changed()
   }
 
@@ -82,10 +79,10 @@ export const createAccounts = (path: string, changed: () => void) => {
 
   const rejected = async (id: SignInKind, current: OAuth, error: unknown): Promise<Credential> => {
     const fromDisk = await store.read()
-    const latest = locate(fromDisk, id)
-    if (latest?.credential.type === 'oauth' && latest.credential.refresh !== current.refresh) {
-      saved = { ...saved, [latest.key]: latest.credential }
-      return latest.credential
+    const latest = credentialOf(fromDisk, id)
+    if (latest?.type === 'oauth' && latest.refresh !== current.refresh) {
+      saved = { ...saved, [id]: latest }
+      return latest
     }
     errors.set(id, `Signed out: ${errorMessage(error)}`)
     await forget(id, fromDisk)
@@ -93,18 +90,17 @@ export const createAccounts = (path: string, changed: () => void) => {
   }
 
   const renew = async (id: FixedId): Promise<Credential> => {
-    const latest = locate(await store.read(), id) ?? located(id)
-    if (!latest) throw signInError(fixedLabels[id])
-    const current = latest.credential
+    const current = credentialOf(await store.read(), id) ?? stored(id)
+    if (!current) throw signInError(fixedLabels[id])
     if (current.type === 'api_key' || fresh(current)) {
-      saved = { ...saved, [latest.key]: current }
+      saved = { ...saved, [id]: current }
       return current
     }
     if (!isSignInKind(id)) throw signInError(fixedLabels[id])
     try {
       const next: OAuth = { ...(await refreshers[id](current)), type: 'oauth', ...(current.shared !== undefined && { shared: current.shared }) }
       errors.delete(id)
-      await save({ [latest.key]: next })
+      await save({ [id]: next })
       return next
     } catch (error) {
       if (!(error instanceof TokenError && error.rejected)) throw error
@@ -144,9 +140,9 @@ export const createAccounts = (path: string, changed: () => void) => {
     async setShared(id: string, value: boolean) {
       await ready
       if (server(id)) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
-      const found = located(id)
+      const found = stored(id)
       if (!found) throw new Error(credential(id) ? `This key comes from ${envNames[id]}, so it stays on this PC` : signInError(label(id)).message)
-      await save({ [found.key]: { ...found.credential, shared: value } })
+      await save({ [id]: { ...found, shared: value } })
     },
     conflict(id: string, value: LoginConflict | undefined) {
       if (value) conflicts.set(id, value)
@@ -182,7 +178,7 @@ export const createAccounts = (path: string, changed: () => void) => {
     async saveKey(id: KeyKind, key: string, baseUrl = '') {
       await ready
       settle(id)
-      await save({ ...displaced(saved, id), [id]: { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keptShare(id) } })
+      await save({ [id]: { type: 'api_key', key, ...(baseUrl && { base_url: baseUrl }), ...keptShare(id) } })
     },
     async saveServer(entry: ServerEntry, error?: string) {
       await ready

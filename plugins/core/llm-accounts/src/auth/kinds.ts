@@ -54,10 +54,4 @@ export const isKeyKind = (id: unknown): id is KeyKind => keyKinds.some(kind => k
 
 export const isServerProvider = (value: unknown): value is ServerProvider => serverProviders.some(provider => provider === value)
 
-export const legacyId = (provider: string, method: string): FixedId => {
-  const oauth = method === 'oauth'
-  if (provider === 'openai') return oauth ? 'codex' : 'openai'
-  return oauth ? 'claude' : 'anthropic'
-}
-
 export const signInError = (label?: string) => new Error(`Sign in${label ? ` to ${label}` : ''} under Settings → Accounts`)

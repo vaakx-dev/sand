@@ -17,7 +17,6 @@ export const serveSteering = (ctx: Context<'sessions'>, steering: Steering) => {
       server.handle({
         'loop.steer': request => steering.steer(sessions.require(request.session), request.prompt, request.label) ?? null,
         'loop.unsteer': request => steering.unsteer(sessions.require(request.session), request.item),
-        'queue.get': request => queueState(ctx, steering, sessions.require(request.session)),
       }),
     )
   })

@@ -29,7 +29,7 @@ declare module '@sand/protocol/wire' {
     'sessions.branch': { session: string; into: string; at?: string | null }
     'sessions.remove': { session: string }
     'sessions.children': { parent: string }
-    'session.open': { session: string; tail?: boolean }
+    'session.open': { session: string }
     'session.page': { session: string; before: string; limit?: number }
     'session.since': { session: string; after: string }
     'session.entries': { session: string }

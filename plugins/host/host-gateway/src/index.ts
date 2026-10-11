@@ -15,7 +15,6 @@ import { hostRoutes } from './network/routes'
 import { loadLan } from './network/settings'
 import { createToggle } from './network/toggle'
 import { createProxy } from './proxy'
-import { hostVersion } from './version'
 
 export default definePlugin({
   name: 'host-gateway',
@@ -49,7 +48,6 @@ export default definePlugin({
       devices: ctx.hostDevices,
       admin,
       tickets: createTickets(),
-      version: await hostVersion(ctx.hostOptions.main),
       build: async () => hostBuild?.info(),
       routeUrls,
       accept: async (back, address) => (remotes ? remotes.accept(back, address) : false),

@@ -66,7 +66,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
   }
 
   const open = async (id: string, replace = false) => {
-    const request = () => wire.call<OpenedSession>({ type: 'session.open', session: id, tail: true })
+    const request = () => wire.call<OpenedSession>({ type: 'session.open', session: id })
     const opened = await request().catch(error => (reconnecting(id) ? Promise.reject(error) : wait(retryDelay).then(request)))
     const known = store.threads.get(id)
     if (replace && known) known.entries = new Map()

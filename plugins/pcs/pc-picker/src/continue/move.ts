@@ -9,7 +9,7 @@ export interface MoveOptions {
 
 const copyEntries = async (wire: Wire, thread: Thread, source: Machine, target: Machine, transfer: string) => {
   const exported = (offset: number) => wire.call<ThreadExportPage>({ type: 'thread.export', session: thread.id, offset }, source.device ?? '')
-  const stage = (page: ThreadExportPage) => wire.call({ type: 'thread.stage', transfer, entries: page.entries, format: page.format }, target.device ?? '')
+  const stage = (page: ThreadExportPage) => wire.call({ type: 'thread.stage', transfer, entries: page.entries }, target.device ?? '')
   const first = await exported(0)
   await stage(first)
   let page = first

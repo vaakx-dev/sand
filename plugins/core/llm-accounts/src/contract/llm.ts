@@ -53,7 +53,7 @@ export type LLMEvent =
   | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; source?: SourceRef }
 
 export interface Limits {
-  source?: string
+  source: string
   pc?: string
   pcName?: string
   windows: LimitWindow[]

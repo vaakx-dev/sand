@@ -1,13 +1,9 @@
-import type { LLMEvent, SourceRef } from '../contract'
+import type { LLMEvent } from '../contract'
 import type { RemotePc } from './remotes'
 
-export async function* tagged(events: AsyncIterable<LLMEvent>, pc: RemotePc, shared?: SourceRef): AsyncGenerator<LLMEvent> {
+export async function* tagged(events: AsyncIterable<LLMEvent>, pc: RemotePc): AsyncGenerator<LLMEvent> {
   for await (const event of events) {
-    if (event.type !== 'done') {
-      yield event
-      continue
-    }
-    const own = event.source ?? shared
-    yield own ? { ...event, source: { ...own, pc: pc.id, pcName: pc.name } } : event
+    if (event.type === 'done' && event.source) yield { ...event, source: { ...event.source, pc: pc.id, pcName: pc.name } }
+    else yield event
   }
 }

@@ -25,7 +25,7 @@ export const pagingRequests = (ctx: ServerContext, live: LiveTracker): WireHandl
   return {
     'session.open': async request => {
       const found = session(request.session)
-      return opened(found, request.tail ? await tailOf(ctx, found) : { entries: found.entries() })
+      return opened(found, await tailOf(ctx, found))
     },
     'session.page': request => {
       const limit = Math.floor(Number(request.limit))

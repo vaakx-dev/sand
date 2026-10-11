@@ -1,4 +1,4 @@
-import { closeDrawer, derive, effect, navHost, owned, place, pulse, reorder, sig } from '@sand/dom'
+import { closeDrawer, derive, navHost, owned, place, pulse, reorder, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import type { MenuRequest } from './card/menu'
 import { choiceName, projectChoices } from './project/choices'
@@ -34,10 +34,6 @@ export default definePlugin({
         return projectChoices(ctx, host.lists.get())
       })
       const label = derive(() => choiceName(choices.get(), filter.project.get()))
-      effect(() => {
-        const found = choices.get()
-        if (!ctx.projects || ctx.projects.groups({ hidden: true }).length) filter.migrate(found)
-      })
       const rows = derive(() =>
         buildRows(host.lists.get(), {
           project: filter.project.get(),

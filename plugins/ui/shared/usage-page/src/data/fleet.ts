@@ -4,7 +4,6 @@ import { derive, errorMessage, sig, type Sig } from '@sand/dom'
 import { usageQuery, type UsageRange } from '@sand/kit'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
-import { isSummary } from './valid'
 
 interface PcState {
   at: number
@@ -38,9 +37,8 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>)
     asked.add(pc.id)
     put(pc.id, { busy: true })
     wire
-      .call<unknown>({ type: 'usage.summary', ...usageQuery(current) }, pc.local ? undefined : pc.id)
+      .call<UsageSummary>({ type: 'usage.summary', ...usageQuery(current) }, pc.local ? undefined : pc.id)
       .then(result => {
-        if (!isSummary(result)) throw new Error('it needs a newer sand to report usage')
         if (run !== generation) return
         const id = idOf(pc)
         const cached = { at: Date.now(), summary: result }

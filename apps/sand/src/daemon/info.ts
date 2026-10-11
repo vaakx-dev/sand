@@ -6,8 +6,7 @@ const infoFile = (home: string) => join(home, 'server.json')
 
 export const readInfo = async (home: string): Promise<ServerInfo | undefined> => {
   try {
-    const info = (await Bun.file(infoFile(home)).json()) as ServerInfo
-    return { ...info, urls: info.urls ?? [info.url] }
+    return (await Bun.file(infoFile(home)).json()) as ServerInfo
   } catch {
     return undefined
   }
@@ -26,7 +25,6 @@ export const isAlive = (pid: number) => {
 const fetchHealth = ({ url, key }: ServerInfo) => fetch(`${url}${hostPaths.health}`, { headers: bearer(key), signal: AbortSignal.timeout(1500) })
 
 const answers = async (info: ServerInfo) => {
-  if (!info.key) return false
   try {
     return (await fetchHealth(info)).ok
   } catch {

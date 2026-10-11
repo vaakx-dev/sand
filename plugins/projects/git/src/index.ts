@@ -1,5 +1,5 @@
 import { definePlugin } from 'drydock'
-import { branch, branches } from './branch'
+import { branches } from './branch'
 import { readStatus } from './status/read'
 
 export default definePlugin({
@@ -9,7 +9,6 @@ export default definePlugin({
   apply(ctx) {
     ctx.watch('server', server =>
       server?.handle({
-        'git.branch': ({ cwd }) => branch(cwd),
         'git.branches': ({ cwds }) => branches(cwds),
         'git.status': ({ cwd }) => readStatus(cwd),
       }),

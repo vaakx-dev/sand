@@ -4,21 +4,16 @@ import { errorMessage } from '../../../text/error'
 import { type BuildStamp, hashApp, readStamp } from '../build'
 import { validVersion, writeBuildBun } from '../bun/home'
 import { createLinks } from './link'
-import { hashModules, releaseDamaged, releaseTooOld } from './manifest'
+import { hashModules, releaseDamaged } from './manifest'
 import { checkResolution } from './resolve'
 
-type ReleaseStamp = BuildStamp & Required<Pick<BuildStamp, 'modules' | 'links' | 'bun'>>
-
-const releaseStamp = async (root: string): Promise<ReleaseStamp> => {
+const releaseStamp = async (root: string): Promise<BuildStamp> => {
   const stamp = await readStamp(root)
-  if (!stamp) throw new Error(releaseDamaged)
-  const { modules, links, bun } = stamp
-  if (typeof modules !== 'string' || !links || typeof links !== 'object' || typeof bun !== 'string') throw new Error(releaseTooOld)
-  if (!validVersion.test(bun) || Object.values(links).some(target => typeof target !== 'string')) throw new Error(releaseDamaged)
-  return { ...stamp, modules, links, bun }
+  if (!stamp || !validVersion.test(stamp.bun)) throw new Error(releaseDamaged)
+  return stamp
 }
 
-const verifyFiles = async (root: string, stamp: ReleaseStamp) => {
+const verifyFiles = async (root: string, stamp: BuildStamp) => {
   const [app, modules] = await Promise.all([
     hashApp(root),
     hashModules(root, new Set(Object.keys(stamp.links))).catch(() => undefined),

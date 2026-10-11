@@ -28,7 +28,7 @@ export const appRoot = (main: string) => resolve(dirname(main), '..', '..', '..'
 
 export const isInstalled = (root: string, home: string) => {
   const path = relative(appsFolder(home), root)
-  return !path.startsWith('..') && !isAbsolute(path)
+  return !!path && !path.startsWith('..') && !isAbsolute(path)
 }
 
 export const readPointer = async (home: string, name: Pointer): Promise<string | undefined> => {
@@ -45,9 +45,9 @@ const writePointer = (home: string, name: Pointer, value: string) => writeAtomic
 
 export const installedRoot = async (home: string): Promise<string | undefined> => {
   const current = await readPointer(home, 'current')
-  if (current && (await Bun.file(appMain(buildFolder(home, current))).exists())) return buildFolder(home, current)
-  if (await Bun.file(appMain(appsFolder(home))).exists()) return appsFolder(home)
-  return undefined
+  if (!current) return undefined
+  const root = buildFolder(home, current)
+  return (await Bun.file(appMain(root)).exists()) ? root : undefined
 }
 
 export const switchTo = async (home: string, name: string) => {

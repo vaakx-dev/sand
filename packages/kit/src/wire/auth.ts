@@ -18,18 +18,16 @@ const json = async <T>(response: Response): Promise<T> => {
 
 interface IdentityAnswer {
   deviceId?: string
-  id?: string
   name?: string
-  version?: string
   build?: unknown
 }
 
 export const fetchHostIdentity = async (base: string, wait = timeout): Promise<HostIdentity> => {
   const body = await json<IdentityAnswer>(await fetch(endpoint(base, hostPaths.identity), { signal: AbortSignal.timeout(wait) }))
-  const deviceId = body?.deviceId ?? body?.id
+  const deviceId = body?.deviceId
   if (!deviceId) throw new Error(`${base} did not say which PC it is`)
   const build = parseBuildInfo(body.build)
-  return { deviceId, name: body.name ?? '', version: body.version ?? '', ...(build && { build }) }
+  return { deviceId, name: body.name ?? '', ...(build && { build }) }
 }
 
 export const redeemPairing = async (base: string, request: PairRequest): Promise<PairResult> =>

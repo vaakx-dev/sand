@@ -13,7 +13,6 @@ export const serveLoops = (ctx: LoopsContext, loops: Loops, choice: Choice) => {
     return joinDisposers(
       ctx.on('loop.change', (thread, state) => server.broadcast('loop.change', [thread.id, state])),
       server.handle({
-        'loops.list': () => loops.list(),
         'loop.choose': request => {
           const thread = sessions.require(request.session)
           loops.choose(thread, request.loop)

@@ -19,7 +19,7 @@ const seedOf = ({ id, label, provider, billing, plan }: SourceInfo): AccountId =
 })
 
 const limitsOwner = (limits: Limits, seeds: Map<string, AccountId>): AccountId => {
-  const source = limits.source ?? 'claude'
+  const { source } = limits
   const key = accountKey({ source, pc: limits.pc })
   const seed = limits.pc ? undefined : seeds.get(key)
   const facts = factsOf(source)

@@ -1,8 +1,7 @@
 import type { RuntimeChange } from './runtime'
 
 export interface WireRequests {
-  hello: { since?: string | null; known?: string }
-  'git.branch': { cwd: string }
+  hello: { since: string | null; known?: string }
   'git.branches': { cwds: string[] }
 }
 

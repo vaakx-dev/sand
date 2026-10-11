@@ -20,7 +20,7 @@ const answersAs = async (url: string, id: string): Promise<string | undefined> =
     const response = await fetch(`${trimSlash(url)}/identity`, { signal: AbortSignal.timeout(identityTimeout) })
     if (!response.ok) return `${url} · HTTP ${response.status}`
     const body: unknown = await response.json()
-    const answered = isRecord(body) ? (body.deviceId ?? body.id) : undefined
+    const answered = isRecord(body) ? body.deviceId : undefined
     return answered === id ? undefined : `${url} · a different PC answered`
   } catch (error) {
     return `${url} · ${rawMessage(error)}`
@@ -39,14 +39,10 @@ export const refusal = async (response: Response) => {
   return text || `HTTP ${response.status}`
 }
 
-const sharesAccounts = (value: unknown): value is ShareInfo => isRecord(value) && Array.isArray(value.accounts) && Array.isArray(value.models)
-
 export const fetchInfo = async (base: string, pc: RemotePc, refresh: boolean): Promise<ShareInfo> => {
   const url = `${base}${sharePaths.info}${refresh ? '?refresh=1' : ''}`
   const response = await fetch(url, { headers: bearer(pc.key), signal: AbortSignal.timeout(infoTimeout) })
   if (response.status === 401 || response.status === 403 || response.status === 404) throw new Refused(response.status, await refusal(response))
   if (!response.ok) throw new Error(await refusal(response))
-  const info: unknown = await response.json()
-  if (!sharesAccounts(info)) throw new Refused(404, 'it runs an older sand')
-  return info
+  return (await response.json()) as ShareInfo
 }

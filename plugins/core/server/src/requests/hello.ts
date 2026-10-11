@@ -23,11 +23,6 @@ export const helloRequest = (ctx: ServerContext) => {
   ctx.on('turn.start', session => void active.set(session.id, Date.now()))
   ctx.on('turn.end', session => void active.delete(session.id))
 
-  const summaries = (request: HelloRequest) => {
-    if (!('since' in request)) return { sessions: ctx.sessions.list() }
-    return ctx.sessions.synced(request.since ?? null, [...active.keys()])
-  }
-
   const base = (request: HelloRequest): Hello => ({
     models: ctx.llm?.models?.(),
     sources: ctx.llm?.sources?.(),
@@ -35,7 +30,7 @@ export const helloRequest = (ctx: ServerContext) => {
     limits: ctx.llm?.limits?.(),
     defaults: ctx.modelSettings?.defaults(),
     attachments: ctx.attachments?.limits,
-    ...summaries(request),
+    ...ctx.sessions.synced(request.since, [...active.keys()]),
     active: [...active.keys()],
     started: Object.fromEntries(active),
     jobs: [],
@@ -45,6 +40,6 @@ export const helloRequest = (ctx: ServerContext) => {
 
   return async (request: HelloRequest) => {
     const hello = await ctx.waterfall('server.hello', base(request))
-    return trimmed('since' in request ? withBusyFamilies(ctx, hello, [...active.keys()]) : hello, request.known)
+    return trimmed(withBusyFamilies(ctx, hello, [...active.keys()]), request.known)
   }
 }

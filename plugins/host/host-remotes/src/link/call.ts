@@ -5,7 +5,7 @@ import type { RemoteRecord } from '../contract'
 
 const timeout = 5000
 
-export type LinkReply = { kind: 'linked'; url: string; result: PairLinkResult } | { kind: 'refused' | 'old'; url: string }
+export type LinkReply = { kind: 'linked'; url: string; result: PairLinkResult } | { kind: 'refused'; url: string }
 
 const linkAt = async (url: string, record: RemoteRecord, body: PairLinkRequest): Promise<LinkReply | undefined> => {
   const response = await fetch(`${trimSlash(url)}${hostPaths.pairLink}`, {
@@ -15,7 +15,6 @@ const linkAt = async (url: string, record: RemoteRecord, body: PairLinkRequest):
     signal: AbortSignal.timeout(timeout),
   })
   if (response.status === 401 || response.status === 403) return { kind: 'refused', url }
-  if (response.status === 404 || response.status === 405) return { kind: 'old', url }
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
   const result = (await response.json()) as PairLinkResult
   return result?.device?.id === record.id ? { kind: 'linked', url, result } : undefined

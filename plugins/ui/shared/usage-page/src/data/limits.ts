@@ -4,10 +4,8 @@ import { accountKey, emptyTotals } from '@sand/kit'
 import { providerOf, sourceName } from '../names'
 import type { Account, Pc } from './types'
 
-const sourceOf = (limits: Limits) => limits.source ?? 'claude'
-
 export const ownsLimits = (account: AccountUsage, limits: Limits, home: string) =>
-  account.source === sourceOf(limits) && account.pc === (limits.pc ?? home)
+  account.source === limits.source && account.pc === (limits.pc ?? home)
 
 export const newest = (a?: Limits, b?: Limits) => {
   if (!a || !b) return a ?? b
@@ -15,7 +13,7 @@ export const newest = (a?: Limits, b?: Limits) => {
 }
 
 const unusedAccount = (limits: Limits, home: Pc): Account => {
-  const source = sourceOf(limits)
+  const { source } = limits
   const pc = limits.pc ?? home.id
   return {
     ...emptyTotals(),

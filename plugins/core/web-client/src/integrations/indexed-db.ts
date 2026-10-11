@@ -6,8 +6,7 @@ export type PickStore = (store: (typeof stores)[number]) => IDBObjectStore
 
 let database: Promise<IDBDatabase> | undefined
 
-const upgrade = (db: IDBDatabase) => {
-  for (const store of [...db.objectStoreNames]) db.deleteObjectStore(store)
+const createStores = (db: IDBDatabase) => {
   for (const store of stores) db.createObjectStore(store)
 }
 
@@ -15,7 +14,7 @@ const connect = () =>
   new Promise<IDBDatabase>((resolve, reject) => {
     if (typeof indexedDB === 'undefined') return reject(new Error('No IndexedDB'))
     const opening = indexedDB.open(name, version)
-    opening.onupgradeneeded = () => upgrade(opening.result)
+    opening.onupgradeneeded = () => createStores(opening.result)
     opening.onerror = () => reject(opening.error)
     opening.onblocked = () => reject(new Error('Cache is blocked'))
     opening.onsuccess = () => {
@@ -28,17 +27,7 @@ const connect = () =>
     }
   })
 
-const dropped = () =>
-  new Promise<void>((resolve, reject) => {
-    const deleting = indexedDB.deleteDatabase(name)
-    deleting.onsuccess = () => resolve()
-    deleting.onerror = () => reject(deleting.error)
-    deleting.onblocked = () => reject(new Error('Cache is blocked'))
-  })
-
-const newer = (error: unknown) => error instanceof DOMException && error.name === 'VersionError'
-
-const open = () => (database ??= connect().catch(error => (newer(error) ? dropped().then(connect) : Promise.reject(error))))
+const open = () => (database ??= connect())
 
 export const transact = async <T>(mode: IDBTransactionMode, run: (pick: PickStore) => () => T) => {
   const db = await open()

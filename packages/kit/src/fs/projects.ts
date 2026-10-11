@@ -36,20 +36,23 @@ export const parseProject = (value: unknown): Project | undefined => {
   }
 }
 
+const projectsOf = (value: unknown): Project[] => {
+  if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) throw new Error('Not a version 2 projects file')
+  return value.projects.flatMap(entry => parseProject(entry) ?? [])
+}
+
 export const parseProjectsFile = (text: string): Project[] | undefined => {
   try {
-    const value: unknown = JSON.parse(text)
-    if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
-    return value.projects.flatMap(entry => parseProject(entry) ?? [])
+    return projectsOf(JSON.parse(text))
   } catch {
     return undefined
   }
 }
 
-export const readProjectsFile = async (home: string): Promise<Project[] | undefined> => {
+export const readProjectsFile = async (home: string): Promise<Project[]> => {
   const file = Bun.file(projectsPath(home))
-  if (!(await file.exists())) return undefined
-  return parseProjectsFile(await file.text())
+  if (!(await file.exists())) return []
+  return projectsOf(await file.json())
 }
 
 export const writeProjectsFile = (home: string, projects: Project[]) =>

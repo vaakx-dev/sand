@@ -25,7 +25,6 @@ export interface RoutesOptions {
   devices: Pick<HostDevices, 'get' | 'redeem' | 'remove'>
   caller: Caller
   tickets: Tickets
-  version: string
   build(): Promise<BuildInfo | undefined>
   routeUrls(): string[]
   accept(back: PairBack, address?: string): Promise<boolean>
@@ -34,8 +33,8 @@ export interface RoutesOptions {
   stop(): void
 }
 
-export const createRoutes = ({ identity, devices, caller, tickets, version, build, routeUrls, accept, invite, status, stop }: RoutesOptions) => {
-  const self: HostIdentity = { deviceId: identity.id, name: identity.name, version }
+export const createRoutes = ({ identity, devices, caller, tickets, build, routeUrls, accept, invite, status, stop }: RoutesOptions) => {
+  const self: HostIdentity = { deviceId: identity.id, name: identity.name }
   const pairHandler = createPairHandler({ identity, devices, routeUrls, accept })
 
   const authed =
