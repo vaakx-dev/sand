@@ -1,7 +1,8 @@
 import type { ExtensionInfo, Extensions } from '@sand/web/contract'
-import { segmented, settingsRow } from '@sand/dom'
+import { div, dynamicChild, segmented, settingsRow, settingsSection, type Pulse } from '@sand/dom'
 import { capital } from '@sand/kit'
-import type { Roles } from './roles'
+import type { Context } from 'drydock'
+import { interfaceState, type Roles } from './roles'
 
 const roleTitles: Record<string, string> = {
   transcript: 'Chat style',
@@ -19,13 +20,20 @@ const sharedPrefix = (ids: string[]) => {
 
 const optionName = (id: string, prefix: number) => capital(id.split('-').slice(prefix).join(' '))
 
-export const choiceRow = (extensions: Extensions, role: string, candidates: ExtensionInfo[], roles: Roles) => {
-  const active = roles.provider(role)
+const choiceRow = (extensions: Extensions, role: string, candidates: ExtensionInfo[], roles: Roles) => {
   const prefix = sharedPrefix(candidates.map(candidate => candidate.id))
   const only = (keep: string) => {
     for (const candidate of candidates) if (candidate.id !== keep && candidate.configured) extensions.disable(candidate.id)
     extensions.enable(keep)
   }
   const choices = candidates.map(candidate => ({ value: candidate.id, label: optionName(candidate.id, prefix), title: candidate.summary ?? candidate.description ?? candidate.id }))
-  return settingsRow(roleTitles[role] ?? capital(role), segmented(choices, active, only))
+  return settingsRow(roleTitles[role] ?? capital(role), segmented(choices, roles.provider(role), only))
 }
+
+export const interfacePage = (ctx: Context<'extensions'>, changes: Pulse) =>
+  settingsSection(
+    {},
+    dynamicChild(interfaceState(ctx, changes), ({ roles }) =>
+      div({ class: 'contents' }, roles.swaps().map(group => choiceRow(ctx.extensions, group.role, group.candidates, roles))),
+    ),
+  )

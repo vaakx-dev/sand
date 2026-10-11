@@ -5,7 +5,7 @@ import type { PanelContext } from './actions'
 
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
-export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
+export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
   const open = sig(false)
   let flash = false
   const close = () => open.set(false)
@@ -35,7 +35,7 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
     return [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
   }
 
-  const pill = () =>
+  const view = () =>
     div(
       { class: 'flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
       button(
@@ -80,5 +80,5 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
       ),
     )
 
-  return { pill, open: reveal }
+  return { view, open: reveal }
 }

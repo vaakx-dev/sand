@@ -45,7 +45,15 @@ export default definePlugin({
       },
     })
     const checks = createChecks({ self, urls, store, devices, status, renamed: () => ctx.hub.broadcast({ name: 'remotes.change', args: [remotes.list()] }) })
-    const checkSoon = (id: string) => setTimeout(() => void checks.one(id), checkAfterPairing)
+    const pending = new Set<Timer>()
+    ctx.effect(() => () => pending.forEach(clearTimeout))
+    const checkSoon = (id: string) => {
+      const timer = setTimeout(() => {
+        pending.delete(timer)
+        void checks.one(id)
+      }, checkAfterPairing)
+      pending.add(timer)
+    }
     const accept = async (back: PairBack, address?: string) => {
       const stored = await remotes.accept(back, address)
       if (stored) checkSoon(back.device.id)

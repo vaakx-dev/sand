@@ -1,15 +1,9 @@
-import type { Effort, ModelInfo, Speed } from '@sand/llm-accounts/contract'
-import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
+import type { ModelInfo } from '@sand/llm-accounts/contract'
+import type { EffectiveSettings, SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { Notify } from '@sand/toasts/contract'
 import type { Child, MenuSpec } from '@sand/dom'
 
-export interface Picked {
-  model?: string
-  effort?: Effort
-  speed: Speed
-  supportsEffort: boolean
-  supportsFast: boolean
-}
+export type Picked = Omit<EffectiveSettings, 'chosen' | 'source'>
 
 export interface PickerTarget {
   shown(): Picked | undefined

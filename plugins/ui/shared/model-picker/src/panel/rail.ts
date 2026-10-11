@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, dot, icon, keys, modelLogo, plainButton, span, type Child } from '@sand/dom'
+import { div, dot, icon, keys, modelLogo, plainButton, show, span, type Child } from '@sand/dom'
 import type { Scene } from './scene'
 import { sourceTitle } from './source'
 import { FAVOURITES, goTo, type View } from './view'
@@ -30,7 +30,7 @@ const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
       onClick: () => goTo(view, entry.id),
     },
     span({ class: ['inline-flex', entry.dim && 'opacity-50'] }, entry.glyph),
-    span({ class: ['absolute top-2 bottom-2 left-0 w-1 rounded-full bg-accent-400', () => !selected() && 'hidden'] }),
+    show(selected, () => span({ class: 'absolute top-2 bottom-2 left-0 w-1 rounded-full bg-accent-400' })),
     entry.key && span({ class: 'absolute right-1 bottom-1 inline-flex rounded-sm bg-neutral-800 text-neutral-200' }, icon('key', 10)),
     entry.fresh && span({ class: 'absolute top-1 right-1 flex' }, dot('accent')),
   )

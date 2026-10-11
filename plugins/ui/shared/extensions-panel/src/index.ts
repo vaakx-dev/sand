@@ -1,6 +1,7 @@
 import { pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
-import { interfacePage, partsSection } from './page'
+import { interfacePage } from './choices'
+import { partsSection } from './parts'
 
 export default definePlugin({
   name: 'extensions-panel',

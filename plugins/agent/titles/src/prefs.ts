@@ -13,7 +13,7 @@ const clean = (data: unknown): TitleSettings => {
     auto: value.auto !== false,
     ...(typeof value.model === 'string' && value.model && { model: value.model }),
     ...(isEffort(value.effort) && { effort: value.effort }),
-    ...(value.speed === 'fast' && { speed: 'fast' as const }),
+    ...(value.speed === 'fast' && { speed: value.speed }),
   }
 }
 

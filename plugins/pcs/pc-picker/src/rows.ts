@@ -50,5 +50,3 @@ export const pcRow = (ctx: PickerContext, group: ProjectGroup, machine: Machine,
     choose,
     menu: { context, spec: () => rowMenu(ctx, group, machine, choose) },
   })
-
-export const quickRow = (machine: Machine, selected: boolean, choose: () => void) => machineRow(machine, { selected, end: offlineNote(machine), choose })

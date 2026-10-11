@@ -1,4 +1,5 @@
 import type { ExtensionInfo } from '@sand/web/contract'
+import type { Pulse } from '@sand/dom'
 import { grouped } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -7,11 +8,12 @@ export interface Roles {
   shadowed(role: string): string[]
   provides(extension: ExtensionInfo): string[]
   all(): string[]
-  swaps(list: ExtensionInfo[]): { role: string; candidates: ExtensionInfo[] }[]
+  swaps(): { role: string; candidates: ExtensionInfo[] }[]
 }
 
-export const readRoles = (ctx: Context, seen: Map<string, Set<string>>): Roles => {
-  const extensions = ctx.extensions?.list() ?? []
+const self = 'extensions-panel'
+
+const readRoles = (ctx: Context, extensions: ExtensionInfo[], seen: Map<string, Set<string>>): Roles => {
   const idOf = (name: string) => extensions.find(extension => extension.name === name)?.id ?? name
   const services = (ctx.inspector?.services() ?? []).filter(service => service.key !== 'inspector')
   const stacks = new Map<string, string[]>()
@@ -27,10 +29,22 @@ export const readRoles = (ctx: Context, seen: Map<string, Set<string>>): Roles =
     shadowed: role => (stacks.get(role) ?? []).filter(id => id !== active.get(role)),
     provides,
     all: () => [...active.keys()].sort(),
-    swaps: list =>
-      [...new Set(list.flatMap(provides))]
+    swaps: () =>
+      [...new Set(extensions.flatMap(provides))]
         .sort()
-        .map(role => ({ role, candidates: list.filter(extension => provides(extension).includes(role)) }))
+        .map(role => ({ role, candidates: extensions.filter(extension => provides(extension).includes(role)) }))
         .filter(group => group.candidates.length > 1),
   }
 }
+
+export const lockedIds = (roles: Roles) => new Set([self, roles.provider('settings')])
+
+export const interfaceState = (ctx: Context<'extensions'>, changes: Pulse) => {
+  const seen = new Map<string, Set<string>>()
+  return changes.read(() => {
+    const extensions = ctx.extensions.list()
+    return { extensions, roles: readRoles(ctx, extensions, seen) }
+  })
+}
+
+export type InterfaceState = ReturnType<typeof interfaceState>

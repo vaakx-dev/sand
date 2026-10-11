@@ -1,4 +1,4 @@
-import { copyButton, derive, div, dynamicChild, effect, errorMessage, onTimeout, p, segmented, show, sig, span, untrack, type Child, type Sig } from '@sand/dom'
+import { copyButton, derive, div, dynamicChild, effect, errorMessage, onTimeout, p, segmented, show, sig, span, untrack, type Child, type Choice, type Sig } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { HostRoute } from '@sand/host-gateway/contract'
 import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
@@ -11,10 +11,10 @@ import { installCommand, routeFor, type InstallSystem, type InstallVia } from '.
 import { installedName, progressList } from './progress'
 import { installTicket } from './ticket'
 
-const systems = [
-  { value: 'win' as const, label: 'Windows' },
-  { value: 'mac' as const, label: 'macOS' },
-  { value: 'linux' as const, label: 'Linux' },
+const systems: Choice<InstallSystem>[] = [
+  { value: 'win', label: 'Windows' },
+  { value: 'mac', label: 'macOS' },
+  { value: 'linux', label: 'Linux' },
 ]
 
 const platforms: Record<string, InstallSystem> = { win32: 'win', darwin: 'mac', linux: 'linux' }

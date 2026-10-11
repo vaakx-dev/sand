@@ -1,10 +1,11 @@
-import type { EffortLevel, ModelInfo } from '@sand/llm-accounts/contract'
 import { div, segmented, span, toggleSwitch } from '@sand/dom'
-import type { Picked, PickerTarget } from '../contract'
+import type { PickerContext } from '../kit'
+import type { Scene } from './scene'
 
-export const effortBar = (shown: Picked, levels: EffortLevel[], model: ModelInfo | undefined, flash: boolean, target: PickerTarget) =>
-  segmented(
-    levels.map(level => ({
+export const effortBar = (ctx: PickerContext, { shown, target }: Scene, flash: boolean) => {
+  const model = ctx.models.info(shown.model)
+  return segmented(
+    ctx.models.levels().map(level => ({
       value: level.id,
       label: level.label,
       disabled: !shown.supportsEffort || !model?.efforts.includes(level.id),
@@ -14,8 +15,9 @@ export const effortBar = (shown: Picked, levels: EffortLevel[], model: ModelInfo
     effort => target.set({ effort }),
     { label: 'Effort', inset: true, fill: true, class: ['mx-1 mt-2', flash && 'ring-2 ring-accent-500'] },
   )
+}
 
-export const fastRow = (shown: Picked, target: PickerTarget) => {
+export const fastRow = ({ shown, target }: Scene) => {
   const on = shown.speed === 'fast'
   return div(
     { class: 'mx-1 mt-1 flex items-center gap-3 rounded-lg px-3 py-2' },

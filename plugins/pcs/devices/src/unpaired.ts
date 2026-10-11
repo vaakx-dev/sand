@@ -16,8 +16,9 @@ const unpairedView = () => {
   const link = sig('')
   const wrong = sig(false)
   const submit = () => {
-    wrong.set(!follow(link.get()))
-    if (!wrong.get()) link.set('')
+    const followed = follow(link.get())
+    wrong.set(!followed)
+    if (followed) link.set('')
   }
   return overlay(
     () => {},

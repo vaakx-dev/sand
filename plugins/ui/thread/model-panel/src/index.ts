@@ -1,9 +1,11 @@
 import type {} from '@sand/model-picker/contract'
-import { owned, pulse, sig } from '@sand/dom'
+import { owned, sig } from '@sand/dom'
+import { joinDisposers } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { createActions } from './actions'
+import { modelChanges } from './changes'
 import { modelSource } from './palette'
-import { createPicker } from './pill'
+import { modelPill } from './pill'
 import { modelsPage } from './settings'
 import { composerTarget } from './target'
 
@@ -23,30 +25,15 @@ export default definePlugin({
     const problem = sig('')
     const fail = (text: string) => (ctx.notify ? ctx.notify.push(text, { level: 'error' }) : problem.set(text))
     const actions = createActions(ctx, fail)
-    const changes = pulse(ctx, ['models.change', 'thread.select'], ['models'])
-    const stateKey = () => JSON.stringify([ctx.models.state(), ctx.threads.current()?.running ?? false])
-    let lastKey = stateKey()
-    const remember = () => {
-      lastKey = stateKey()
-    }
-    ctx.on('models.change', remember)
-    ctx.on('thread.select', remember)
-    ctx.on('thread.change', id => {
-      if (id !== ctx.threads.current()?.id) return
-      const key = stateKey()
-      if (key === lastKey) return
-      lastKey = key
-      changes.bump()
-    })
-
-    const picker = owned(ctx, () => createPicker(ctx, composerTarget(ctx, actions, changes, problem), changes))
+    const changes = modelChanges(ctx)
+    const pill = owned(ctx, () => modelPill(ctx, composerTarget(ctx, actions, changes, problem), changes))
     let slotted = false
-    const open = (effort: boolean) => (slotted ? picker.open(effort) : actions.run(effort ? 'effort' : 'model'))
+    const open = (effort: boolean) => (slotted ? pill.open(effort) : actions.run(effort ? 'effort' : 'model'))
 
     ctx.watch('composer', composer => {
       if (!composer) return
       slotted = true
-      const remove = composer.slot('end', picker.pill, 0)
+      const remove = composer.slot('end', pill.view, 0)
       return () => {
         slotted = false
         void remove()
@@ -67,8 +54,7 @@ export default definePlugin({
           source: 'local',
           run: args => (args.trim() ? ctx.threads.command(name, args) : open(name === 'effort')),
         })
-      const added = [local('model', 'Choose the model, effort and fast mode'), local('effort', 'Choose how hard the model thinks')]
-      return () => added.forEach(dispose => void dispose())
+      return joinDisposers(local('model', 'Choose the model, effort and fast mode'), local('effort', 'Choose how hard the model thinks'))
     })
   },
 })

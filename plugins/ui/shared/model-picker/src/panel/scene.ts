@@ -1,8 +1,9 @@
 import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { MenuSpec } from '@sand/dom'
+import type { WireRequest } from '@sand/protocol'
+import { errorMessage, type MenuSpec } from '@sand/dom'
 import type { Picked, PickerTarget } from '../contract'
-import { send, type PickerKit } from '../kit'
+import type { PickerContext, PickerKit } from '../kit'
 import { modelMenu } from '../model-menu'
 import type { View } from './view'
 
@@ -20,6 +21,9 @@ export interface Scene {
   menuOf: (model: ModelInfo) => MenuSpec
   openSettings?: () => void
 }
+
+const send = (ctx: PickerContext, request: WireRequest) =>
+  void ctx.wire?.call(request).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
 
 export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
   const shown = target.shown()

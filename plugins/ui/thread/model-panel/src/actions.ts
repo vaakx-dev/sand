@@ -5,7 +5,7 @@ import type { Context } from 'drydock'
 
 export type PanelContext = Context<'models' | 'modelPicker' | 'threads'>
 
-const speedWords: Record<Speed, string> = { fast: 'on', normal: 'off' }
+export const speedWords: Record<Speed, string> = { fast: 'on', normal: 'off' }
 
 export const createActions = (ctx: PanelContext, fail: (text: string) => void) => {
   const send = (work?: Promise<unknown>) => void work?.catch(error => fail(errorMessage(error)))

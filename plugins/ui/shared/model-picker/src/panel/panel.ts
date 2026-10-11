@@ -22,11 +22,9 @@ const refocus = (view: View, node: HTMLElement) => {
   node.querySelector<HTMLElement>(`[data-focus="${CSS.escape(view.focus)}"]`)?.focus()
 }
 
-const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => void, options: PanelOptions) => {
+const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => void, flash: boolean) => {
   const scene = readScene(kit, target, view, close)
   if (!scene) return div({ class: 'px-3 py-4 text-xs text-neutral-500' }, 'Loading the models…')
-  const { shown } = scene
-  const model = kit.ctx.models.info(shown.model)
   return div(
     {
       class: 'flex min-h-0 flex-col pb-1',
@@ -36,13 +34,13 @@ const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => voi
       onMount: node => refocus(view, node),
     },
     div({ class: 'flex max-h-80 min-h-0 border-b border-solid border-neutral-700' }, rail(scene, view), modelList(scene, view)),
-    effortBar(shown, kit.ctx.models.levels(), model, options.flash ?? false, target),
-    fastRow(shown, target),
-    target.extra?.() ?? null,
+    effortBar(kit.ctx, scene, flash),
+    fastRow(scene),
+    target.extra?.(),
   )
 }
 
-export const modelPanel = (kit: PickerKit, target: PickerTarget, close: () => void, options: PanelOptions = {}) => {
+export const modelPanel = (kit: PickerKit, target: PickerTarget, close: () => void, { flash = false }: PanelOptions = {}) => {
   const view = openView(kit.ctx, target)
   markSeen(kit, view)
   kit.pcs.refresh()
@@ -55,7 +53,7 @@ export const modelPanel = (kit: PickerKit, target: PickerTarget, close: () => vo
     searchField(view, pickFirst),
     dynamicChild(
       derive(() => `${kit.changes.version.get()}:${kit.pcs.key()}:${JSON.stringify(target.shown())}:${target.key?.() ?? ''}`),
-      () => body(kit, target, view, close, options),
+      () => body(kit, target, view, close, flash),
     ),
     view.menu.view(),
   ]

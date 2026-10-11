@@ -1,7 +1,7 @@
 import type { ContextMenu } from '@sand/dom'
 import type { Machine } from '@sand/web-client/contract'
 import { choosePc } from './choose'
-import { machineList, pcRow, quickRow } from './rows'
+import { machineList, machineRow, offlineNote, pcRow } from './rows'
 import { currentTarget, type PickerContext } from './target'
 
 const startQuick = async (ctx: PickerContext, machine: Machine) => {
@@ -11,16 +11,16 @@ const startQuick = async (ctx: PickerContext, machine: Machine) => {
 }
 
 const quickMenu = (ctx: PickerContext, cwd: string, device: string | undefined, close: () => void) => {
-  const folder = ctx.projects.quick(cwd, device) ? undefined : cwd
+  const inFolder = Boolean(cwd) && !ctx.projects.quick(cwd, device)
   const rows = ctx.machines.list().map(machine => {
     const here = machine.device === device
     const choose = () => {
       close()
       if (!here) void startQuick(ctx, machine)
     }
-    return quickRow(machine, here, choose)
+    return machineRow(machine, { selected: here, end: offlineNote(machine), choose })
   })
-  return machineList(folder ? 'Run on' : 'Start a quick thread on', rows)
+  return machineList(inFolder ? 'Run on' : 'Start a quick thread on', rows)
 }
 
 export const pcMenu = (ctx: PickerContext, close: () => void, context: ContextMenu) => {
