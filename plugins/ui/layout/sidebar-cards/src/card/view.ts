@@ -23,8 +23,15 @@ const titleClass = (parts: CardParts) => (strong(parts) ? 'font-semibold text-ne
 
 const avatar = ({ item, project }: CardParts) => projectAvatar(project, item.map(value => value.icon))
 
+const onHover = 'group-hover:flex group-focus-visible-within:flex'
+
+const onTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:flex' : '')
+
 const statusSlot = (parts: CardParts, extra = '') =>
-  span({ class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden', extra]) }, status(parts.item, parts.minute))
+  span(
+    { class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden group-focus-visible-within:hidden', extra]) },
+    status(parts.item, parts.minute),
+  )
 
 const fullBody = (parts: CardParts) => {
   const { item, project } = parts
@@ -38,11 +45,11 @@ const fullBody = (parts: CardParts) => {
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
       ),
       statusSlot(parts),
-      actionStrip(parts.strip, 'group-hover:flex', true),
+      actionStrip(parts.strip, onHover, true),
     ),
     div({ class: ['truncate text-sm', () => titleClass(parts)], title: item.map(value => value.title) }, item.map(value => value.title)),
     div(
-      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (item.get().subtitle ? 'flex' : 'hidden touch-current:flex')] },
+      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (item.get().subtitle ? 'flex' : ['hidden', onTouchCurrent(parts)])] },
       span(
         { class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) },
         dynamicChild(
@@ -51,7 +58,7 @@ const fullBody = (parts: CardParts) => {
         ),
         span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
       ),
-      actionStrip(parts.strip, 'touch-current:flex', false),
+      actionStrip(parts.strip, () => onTouchCurrent(parts), false),
     ),
   )
 }
@@ -64,7 +71,7 @@ const compactBody = (parts: CardParts) =>
     span({ class: 'inline-flex shrink-0' }, avatar(parts)),
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => titleClass(parts)] }, parts.item.map(value => value.title)),
     statusSlot(parts, 'text-xs'),
-    actionStrip(parts.strip, 'group-hover:flex touch-current:flex', true),
+    actionStrip(parts.strip, [onHover, () => onTouchCurrent(parts)], true),
   )
 
 const pointBelow = (event: MouseEvent) => {
@@ -107,7 +114,7 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       'aria-current': selected,
       'aria-haspopup': menu.map(actions => (actions.length ? 'menu' : undefined)),
       class: [
-        'group relative block w-full cursor-pointer select-none rounded-lg px-3 outline-none transition focus-visible:ring-2 focus-visible:ring-accent-500',
+        'group relative block w-full cursor-pointer select-none callout-none rounded-lg px-3 outline-none transition focus-visible:ring-2 focus-visible:ring-accent-500',
         () => (compact.get() ? 'mb-px py-1' : 'mb-1 py-2'),
         () => (selected.get() ? 'bg-neutral-700' : 'hover:bg-neutral-800'),
         () => (compact.get() && !selected.get() ? 'opacity-50 hover:opacity-100 focus-visible:opacity-100' : ''),
@@ -121,7 +128,7 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       },
       ...dragging,
       ...press.props,
-      style: { ...dragging.style, '-webkit-touch-callout': 'none' },
+      style: dragging.style,
     },
     show(
       item.map(value => value.state === 'draft'),

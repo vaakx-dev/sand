@@ -43,7 +43,7 @@ export const chatDrop = (dropping: Sig<boolean>, area: () => DOMRect | undefined
     return div(
       { class: ['pointer-events-none fixed z-30 p-2', rect ? '' : 'inset-0'], style: rect && placed(rect) },
       div(
-        { class: 'cc-drop flex h-full w-full items-center justify-center rounded-2xl border-2 border-accent-500' },
+        { class: 'flex h-full w-full items-center justify-center rounded-2xl border-2 border-dashed border-accent-500 bg-accent-500/5' },
         span({ class: 'inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-100 shadow-xl ring-1 ring-accent-900' }, icon('paperclip', 16), 'Drop files to attach'),
       ),
     )

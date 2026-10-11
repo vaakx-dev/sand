@@ -21,7 +21,7 @@ export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[
     title || action
       ? div({ class: 'flex min-h-8 items-center gap-3 px-1' }, h2({ class: 'min-w-0 flex-1 text-xs font-medium text-neutral-500' }, title ?? ''), action ?? null)
       : null,
-    div({ class: 'rounded-rows flex flex-col gap-y-px rounded-xl border border-neutral-800 bg-neutral-800' }, ...rows),
+    div({ class: 'flex flex-col gap-y-px rounded-xl *:first:rounded-t-xl *:last:rounded-b-xl border border-neutral-800 bg-neutral-800' }, ...rows),
   )
 
 export const settingsRow = (label: Child, control?: Child, detail?: Child) =>

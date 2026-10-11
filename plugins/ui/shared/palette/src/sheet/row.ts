@@ -19,7 +19,7 @@ const withMore = (row: HTMLElement, item: PaletteItem, active: () => boolean, mo
         {
           title: `More for ${item.label}`,
           'aria-label': `More for ${item.label}`,
-          class: () => (active() ? '' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'),
+          class: () => (active() ? '' : 'opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100'),
           onClick: stopThen(() => more(item)),
         },
         icon('more', 16),

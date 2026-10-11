@@ -30,7 +30,11 @@ export const badge = (tone: Tone, ...children: Child[]) =>
 export const dot = (tone: Tone) => span({ class: ['h-2 w-2 shrink-0 rounded-full', dotTones[tone]] })
 
 export const spinner = (size: 14 | 16 = 14) =>
-  span({ class: 'spinner shrink-0' }, span({ class: 'spinner-turn animate-spin' }, icon('loader', size)), span({ class: 'spinner-still' }, icon('working', size)))
+  span(
+    { class: 'inline-flex shrink-0' },
+    span({ class: 'inline-flex animate-spin motion-reduce:hidden' }, icon('loader', size)),
+    span({ class: 'hidden motion-reduce:inline-flex' }, icon('working', size)),
+  )
 
 export const working = (size = 14, title: MaybeReactive<string> = 'Working') => span({ class: 'inline-flex shrink-0 text-accent-400', title }, icon('working', size))
 

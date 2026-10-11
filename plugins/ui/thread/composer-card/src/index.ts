@@ -1,5 +1,5 @@
 import type { Composer } from './contract'
-import { listen, owned, place, style } from '@sand/dom'
+import { listen, owned, place } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'
 import { bindLocalCommands } from './commands'
@@ -8,7 +8,6 @@ import { dock } from './dock/dock'
 import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
 import { createModel } from './model'
-import { css } from './style'
 
 export default definePlugin({
   name: 'composer-card',
@@ -27,7 +26,6 @@ export default definePlugin({
     notify: 'failed stops and copies are not reported',
   },
   apply(ctx) {
-    style(ctx, css)
     const slots = createSlots()
     let current: Card | undefined
     const { model, dropping, session } = owned(ctx, () => {

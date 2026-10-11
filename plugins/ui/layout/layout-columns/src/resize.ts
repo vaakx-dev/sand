@@ -1,4 +1,4 @@
-import { colorVar, div, sig, stored, type Sig } from '@sand/dom'
+import { div, sig, span, stored, type Sig } from '@sand/dom'
 
 export type Edge = 'side' | 'aside'
 
@@ -9,14 +9,7 @@ export type Widths = Sig<Partial<Record<Edge, number>>>
 
 export const savedWidths = (): Widths => stored<Partial<Record<Edge, number>>>('sand.layout.widths', {})
 
-export const gripCss = `
-[data-grip] { position: absolute; top: 0; bottom: 0; z-index: 10; width: 9px; cursor: col-resize; touch-action: none; }
-[data-grip="side"] { right: -5px; }
-[data-grip="aside"] { left: -5px; }
-[data-grip]::after { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; transition: background-color .15s; }
-[data-grip]:hover::after, [data-grip][data-dragging]::after { background: ${colorVar('accent', 500)}; }
-[data-sized] > [data-fill] > * { width: 100%; }
-`
+const placement: Record<Edge, string> = { side: '-right-1', aside: '-left-1' }
 
 const clamp = (edge: Edge, width: number, others: number) => {
   const [min, max] = limits[edge]
@@ -38,11 +31,10 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
   const direction = edge === 'side' ? 1 : -1
   const dragging = sig<Drag | undefined>(undefined)
   const end = () => dragging.set(undefined)
+  const line = span({ class: ['absolute inset-y-0 left-1 w-px transition-colors group-hover:bg-accent-500', () => dragging.get() && 'bg-accent-500'] })
   const handle: HTMLElement = div({
-    'data-grip': edge,
-    'data-dragging': () => (dragging.get() ? '' : null),
     title: 'Drag to resize, double-click to reset',
-    class: () => (hidden() ? 'hidden' : null),
+    class: () => (hidden() ? 'hidden' : ['group absolute inset-y-0 z-10 w-2 cursor-col-resize touch-none', placement[edge]]),
     onPointerDown: event => {
       if (event.button !== 0) return
       event.preventDefault()
@@ -56,7 +48,7 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
     onPointerUp: end,
     onPointerCancel: end,
     onDblClick: () => forget(widths, edge),
-  })
+  }, line)
   return handle
 }
 

@@ -3,10 +3,10 @@ import { streamedMarkdown } from '../integrations/streamed'
 import { actionRow, row, worked, type RowMaker } from './row'
 
 export const textRow: RowMaker<'text'> = (item, context) =>
-  row(`text:${item.key}`, item, data => {
+  row(`text:${item.key}`, item, (data, railed) => {
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
-    const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')], 'data-quote': '' })
+    const node = div({ class: ['leading-relaxed text-neutral-300 wrap-anywhere', () => (streaming.get() ? '*:animate-fade' : '')], 'data-quote': '' })
     const render = streamedMarkdown(node, context.markdown, context.images())
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context.parts
@@ -15,12 +15,16 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     return div(
       { class: 'group mb-3 text-sm', ...press.props },
       node,
-      actionRow(
-        'transcript-chat-copy mt-1',
-        show(
-          () => !streaming.get(),
-          () => span({ class: 'flex items-center gap-1' }, copyButton({ text: () => text.get(), label: 'Copy' }), menus.more(context.menu, spec)),
-        ),
+      show(
+        () => !railed?.get(),
+        () =>
+          actionRow(
+            'mt-1',
+            show(
+              () => !streaming.get(),
+              () => span({ class: 'flex items-center gap-1' }, copyButton({ text: () => text.get(), label: 'Copy' }), menus.more(context.menu, spec)),
+            ),
+          ),
       ),
     )
   })
