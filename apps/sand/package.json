@@ -45,6 +45,7 @@
     "@sand/host-updates": "workspace:*",
     "@sand/host-watch": "workspace:*",
     "@sand/reload": "workspace:*",
+    "@sand/reply-images": "workspace:*",
     "@sand/html-preview": "workspace:*",
     "@sand/html-render": "workspace:*",
     "@sand/kit": "workspace:*",

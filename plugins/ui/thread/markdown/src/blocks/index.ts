@@ -2,8 +2,8 @@ import { codeBlock } from '../code/block'
 import { inline } from '../inline'
 import { displayMath, mathBlock } from '../math/block'
 import { blockquote, heading, paragraph, thematicBreak } from '../nodes'
+import type { Scope } from '../scope'
 import { parseList } from './list'
-import type { Refs } from './refs'
 import { closingFence, fence, heading as atx, indentOf, listMarker, quote, rule, setext, startsBlock } from './rules'
 import { isTableStart, parseTable } from './table'
 
@@ -12,9 +12,9 @@ interface Block {
   next: number
 }
 
-type Parser = (lines: string[], start: number, refs: Refs) => Block | undefined
+type Parser = (lines: string[], start: number, scope: Scope) => Block | undefined
 
-const titled = (level: number, content: string, refs: Refs) => heading(level, inline(content, refs))
+const titled = (level: number, content: string, scope: Scope) => heading(level, inline(content, scope))
 
 const fenced: Parser = (lines, start) => {
   const open = fence.exec(lines[start]!)
@@ -32,21 +32,21 @@ const fenced: Parser = (lines, start) => {
   return { node: language === 'math' ? displayMath(code) : codeBlock(code, language), next: index + 1 }
 }
 
-const atxHeading: Parser = (lines, start, refs) => {
+const atxHeading: Parser = (lines, start, scope) => {
   const match = atx.exec(lines[start]!)
-  return match ? { node: titled(match[1]!.length, match[2] ?? '', refs), next: start + 1 } : undefined
+  return match ? { node: titled(match[1]!.length, match[2] ?? '', scope), next: start + 1 } : undefined
 }
 
 const ruled: Parser = (lines, start) => (rule.test(lines[start]!) ? { node: thematicBreak(), next: start + 1 } : undefined)
 
-const table: Parser = (lines, start, refs) => (isTableStart(lines, start) ? parseTable(lines, start, refs) : undefined)
+const table: Parser = (lines, start, scope) => (isTableStart(lines, start) ? parseTable(lines, start, scope) : undefined)
 
-const list: Parser = (lines, start, refs) => {
+const list: Parser = (lines, start, scope) => {
   const marker = listMarker(lines[start]!)
-  return marker && marker.indent < 4 ? parseList(lines, start, refs, parseBlocks) : undefined
+  return marker && marker.indent < 4 ? parseList(lines, start, scope, parseBlocks) : undefined
 }
 
-const quoted: Parser = (lines, start, refs) => {
+const quoted: Parser = (lines, start, scope) => {
   if (!quote.test(lines[start]!)) return undefined
   const body: string[] = []
   let index = start
@@ -57,7 +57,7 @@ const quoted: Parser = (lines, start, refs) => {
     else break
     index++
   }
-  return { node: blockquote(parseBlocks(body, refs)), next: index }
+  return { node: blockquote(parseBlocks(body, scope)), next: index }
 }
 
 const indentedCode: Parser = (lines, start) => {
@@ -69,19 +69,19 @@ const indentedCode: Parser = (lines, start) => {
   return { node: codeBlock(body.join('\n'), ''), next: index }
 }
 
-const plain: Parser = (lines, start, refs) => {
+const plain: Parser = (lines, start, scope) => {
   const body = [lines[start]!.trimStart()]
   let index = start + 1
   while (index < lines.length) {
     const line = lines[index]!
     if (!line.trim()) break
     const underline = setext.exec(line)
-    if (underline) return { node: titled(underline[1]!.startsWith('=') ? 1 : 2, body.join('\n').trim(), refs), next: index + 1 }
+    if (underline) return { node: titled(underline[1]!.startsWith('=') ? 1 : 2, body.join('\n').trim(), scope), next: index + 1 }
     if (startsBlock(line) || isTableStart(lines, index)) break
     body.push(line.trimStart())
     index++
   }
-  return { node: paragraph(inline(body.join('\n').trimEnd(), refs)), next: index }
+  return { node: paragraph(inline(body.join('\n').trimEnd(), scope)), next: index }
 }
 
 const parsers: Parser[] = [fenced, mathBlock, atxHeading, ruled, table, list, quoted, indentedCode, plain]
@@ -91,7 +91,7 @@ export interface Span {
   start: number
 }
 
-export const blockSpans = (lines: string[], refs: Refs): Span[] => {
+export const blockSpans = (lines: string[], scope: Scope): Span[] => {
   const spans: Span[] = []
   let index = 0
   while (index < lines.length) {
@@ -100,7 +100,7 @@ export const blockSpans = (lines: string[], refs: Refs): Span[] => {
       continue
     }
     for (const parser of parsers) {
-      const block = parser(lines, index, refs)
+      const block = parser(lines, index, scope)
       if (!block) continue
       spans.push({ node: block.node, start: index })
       index = block.next
@@ -110,4 +110,4 @@ export const blockSpans = (lines: string[], refs: Refs): Span[] => {
   return spans
 }
 
-export const parseBlocks = (lines: string[], refs: Refs): Node[] => blockSpans(lines, refs).map(span => span.node)
+export const parseBlocks = (lines: string[], scope: Scope): Node[] => blockSpans(lines, scope).map(span => span.node)

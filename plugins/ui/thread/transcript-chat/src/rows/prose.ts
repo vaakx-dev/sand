@@ -7,7 +7,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
     const node = div({ class: ['markdown prose text-neutral-300 wrap-anywhere', () => (streaming.get() ? 'transcript-chat-streaming' : '')], 'data-quote': '' })
-    const render = streamedMarkdown(node, context.markdown)
+    const render = streamedMarkdown(node, context.markdown, context.images())
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context.parts
     const spec = () => ({ title: 'Reply', actions: [menus.copy('copy', 'Copy text', () => text.get(), 'text'), ...context.reply(text.get())] })
