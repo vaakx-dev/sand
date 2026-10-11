@@ -7,5 +7,5 @@ import { collectTree } from './tree'
 export const serveChangedFiles = (ctx: Context, server: Server) =>
   server.handle('changes.files', request => {
     const session = ctx.sessions?.open(request.session)
-    return session ? collectTree(sessionSource(ctx.sessions, session)).files.map(file => file.key) : []
+    return session ? collectTree(sessionSource(ctx.sessions, session), { diffs: false }).files.map(file => file.key) : []
   })

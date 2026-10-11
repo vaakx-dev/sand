@@ -16,6 +16,7 @@ export interface ChangesState {
   closed: Sig<Record<string, boolean>>
   revealed: Sig<Reveal | undefined>
   copy: (text: string, what: string) => void
+  scroller: HTMLElement
 }
 
 const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns' : `Turn ${turn}`)

@@ -1,7 +1,7 @@
-import { badge, chevron, diffRow, div, dynamicChild, effect, layer, rowButton, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
+import { badge, chevron, div, effect, layer, rowButton, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
 import type { FileChange } from '../changes/collect'
-import { shownLines } from '../changes/lines'
 import { counts } from './counts'
+import { lazyDiff } from './lazy-diff'
 import { fileMenu } from './menu'
 import type { ChangesState } from './view'
 
@@ -11,7 +11,7 @@ const revealWhenAsked = (file: Sig<FileChange>, revealed: ChangesState['revealed
     if (key && key === untrack(() => file.get().key)) node.scrollIntoView({ block: 'start' })
   })
 
-export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: ChangesState, toggle: (key: string) => void, menu: ContextMenu) => {
+export const fileView = (file: Sig<FileChange>, { closed, revealed, copy, scroller }: ChangesState, toggle: (key: string) => void, menu: ContextMenu) => {
   const isClosed = () => Boolean(closed.get()[file.get().key])
   const shape = () => {
     const { add, del, hunks } = file.get()
@@ -43,6 +43,6 @@ export const fileView = (file: Sig<FileChange>, { closed, revealed, copy }: Chan
         () => file.get().del,
       ),
     ),
-    dynamicChild(shape, () => (isClosed() ? null : div(shownLines(file.get()).map(line => diffRow(line))))),
+    lazyDiff(file, shape, isClosed, scroller),
   )
 }

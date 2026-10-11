@@ -37,7 +37,7 @@ const panelOf = (ctx: Context, spec: PanelSpec) => {
   }
 }
 
-export const shownPanel = (ctx: Context, spec: Omit<PanelSpec, 'render'>, view: () => HTMLElement, changed: () => void) => {
+export const shownPanel = (ctx: Context, spec: Omit<PanelSpec, 'render'>, view: (body: HTMLElement) => HTMLElement, changed: () => void) => {
   const visible = new Set<HTMLElement>()
   const seen = (body: HTMLElement, records: IntersectionObserverEntry[]) => {
     const next = records.at(-1)?.isIntersecting ?? visible.has(body)
@@ -51,7 +51,7 @@ export const shownPanel = (ctx: Context, spec: Omit<PanelSpec, 'render'>, view: 
     render(body) {
       const { scope } = collectScope(() => {
         intersectionObserver(body, records => seen(body, records))
-        mount(body, view())
+        mount(body, view(body))
       })
       return () => {
         visible.delete(body)
