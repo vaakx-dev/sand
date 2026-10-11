@@ -1,4 +1,4 @@
-import type { ContextMenu, IconName, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
+import type { ClassValue, ContextMenu, IconName, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
 import type { Entry, ImageBlock, Notification, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Thread } from '@sand/web-client/contract'
@@ -124,7 +124,7 @@ export interface TranscriptParts {
 }
 
 export interface ImageOptions {
-  class?: string
+  class?: ClassValue
   alt?: string
   title?: string
   maxHeight?: number

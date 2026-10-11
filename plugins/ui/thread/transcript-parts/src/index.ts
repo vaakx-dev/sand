@@ -16,6 +16,7 @@ export default definePlugin({
   description: 'Shared pieces for transcripts and tool views: thread items, tool cards, renderer registry, images',
   uses: {
     media: 'images load only from inline data',
+    imageViewer: 'images do not open full screen',
     notify: 'copying is not confirmed and a failed Stop is not reported',
     jobs: 'agent and workflow calls do not show their background run',
   },
