@@ -1,0 +1,24 @@
+{
+  "name": "@sand/browser-engine",
+  "version": "0.0.0",
+  "description": "In-app browser engine: a headless Chrome tab per thread that the agent and the browser panel share",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts",
+    "./address": "./src/address.ts",
+    "./chrome": "./src/chrome/index.ts"
+  },
+  "sand": {
+    "provides": [
+      "browser"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

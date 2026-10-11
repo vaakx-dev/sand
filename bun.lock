@@ -20,6 +20,8 @@
         "@sand/agents": "workspace:*",
         "@sand/ask": "workspace:*",
         "@sand/attachments": "workspace:*",
+        "@sand/browser-engine": "workspace:*",
+        "@sand/browser-tools": "workspace:*",
         "@sand/cli-devices": "workspace:*",
         "@sand/cli-install": "workspace:*",
         "@sand/cli-launch": "workspace:*",
@@ -244,6 +246,7 @@
       "name": "@sand/html-preview",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/browser-engine": "workspace:*",
         "@sand/dom": "workspace:*",
         "@sand/html-render": "workspace:*",
         "@sand/messages": "workspace:*",
@@ -427,6 +430,47 @@
         "@sand/agents": "workspace:*",
         "@sand/kit": "workspace:*",
         "@sand/llm-accounts": "workspace:*",
+        "@sand/sessions-sqlite": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/transcript-parts": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
+    "plugins/browser/browser-engine": {
+      "name": "@sand/browser-engine",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/kit": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "@sand/server": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
+    "plugins/browser/browser-panel": {
+      "name": "@sand/browser-panel",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/browser-engine": "workspace:*",
+        "@sand/composer-card": "workspace:*",
+        "@sand/dom": "workspace:*",
+        "@sand/messages": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+      },
+    },
+    "plugins/browser/browser-tools": {
+      "name": "@sand/browser-tools",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/agents": "workspace:*",
+        "@sand/browser-engine": "workspace:*",
+        "@sand/dom": "workspace:*",
+        "@sand/kit": "workspace:*",
+        "@sand/llm-accounts": "workspace:*",
+        "@sand/messages": "workspace:*",
         "@sand/sessions-sqlite": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/transcript-parts": "workspace:*",
@@ -1436,6 +1480,12 @@
 
     "@sand/attachments": ["@sand/attachments@workspace:plugins/agent/attachments"],
 
+    "@sand/browser-engine": ["@sand/browser-engine@workspace:plugins/browser/browser-engine"],
+
+    "@sand/browser-panel": ["@sand/browser-panel@workspace:plugins/browser/browser-panel"],
+
+    "@sand/browser-tools": ["@sand/browser-tools@workspace:plugins/browser/browser-tools"],
+
     "@sand/cli-devices": ["@sand/cli-devices@workspace:plugins/cli/cli-devices"],
 
     "@sand/cli-install": ["@sand/cli-install@workspace:plugins/cli/cli-install"],
@@ -1724,71 +1774,21 @@
 
     "zod": ["zod@4.6.5", "", {}, "sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q=="],
 
-    "@sand/ask/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/attachments/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-devices/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-install/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-launch/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-project/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-release/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-remotes/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/cli-usage/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/composer-card/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/config-toml/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/context-ring/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/devices/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/dom/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#5dbea9e", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-5dbea9e", "sha512-d6rdu3Y7L2QvPqAQE5k7aHwjlnPybb6ooAYgl5ih1senUI+f8A0hyaTqejNllDM/v8Co6OmGU3NiDi4SvgAdMw=="],
 
-    "@sand/extend/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/extensions-panel/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/find-files/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/folders/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/followups/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/gesture-swipe/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/git/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/git-actions/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/github/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/github-login/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/goal/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/header/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/hooks/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/host-plugin-library/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/host-project-sync/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/host-updates/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/host-watch/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/html-preview/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/html-render/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/image-viewer/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
@@ -1796,23 +1796,11 @@
 
     "@sand/layout-columns/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/loop-plan/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/loop-react/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/markdown/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/math/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/model-panel/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/model-picker/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/panel-agents/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/panel-changes/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/panel-tree/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/panels-tabs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
@@ -1820,17 +1808,9 @@
 
     "@sand/plugin-changes/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/projects/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/quote-reply/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/reload/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/safe-banner/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/session-info/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/sessions-ui/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/sidebar-cards/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
@@ -1838,17 +1818,7 @@
 
     "@sand/sidebar-tabs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/telemetry/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/thread-list/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/titles/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/toasts/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/tools-fs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/tools-shell/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/tooltips/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
@@ -1856,11 +1826,7 @@
 
     "@sand/transcript-log/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/ui-headless/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
     "@sand/update-banner/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/usage/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/usage-page/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
@@ -1871,13 +1837,5 @@
     "@sand/view-read/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/view-shell/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/web/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/workflows/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "@sand/worktrees/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
-
-    "sand/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
   }
 }

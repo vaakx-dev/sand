@@ -1,0 +1,30 @@
+{
+  "name": "@sand/browser-tools",
+  "version": "0.0.0",
+  "description": "browser_* tools and the browser sub-agent that uses them, plus their views in the thread",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Browser tool views",
+    "summary": "Shows what the browser agent did: pages opened, clicks, typing and screenshots",
+    "uses": {
+      "transcript": "browser calls use the generic tool view"
+    }
+  },
+  "dependencies": {
+    "@sand/agents": "workspace:*",
+    "@sand/browser-engine": "workspace:*",
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

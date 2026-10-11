@@ -1,6 +1,5 @@
-import type { ExceptionDetails, Page } from './cdp'
+import { launch, type Cdp, type ExceptionDetails } from '@sand/browser-engine/chrome'
 import { join } from 'node:path'
-import { launch } from './cdp'
 import { collect, exceptionText, type Console, type ConsoleMessage } from './console'
 import { tiles, type Region } from './tiles'
 
@@ -40,15 +39,15 @@ const elementRect = (selector: string) => `(() => {
   return { x, y, width, height }
 })()`
 
-const loaded = (page: Page) => new Promise<void>(resolve => page.on('Page.loadEventFired', () => resolve()))
+const loaded = (page: Cdp) => new Promise<void>(resolve => page.on('Page.loadEventFired', () => resolve()))
 
-const evaluate = async <T = unknown>(page: Page, expression: string) =>
+const evaluate = async <T = unknown>(page: Cdp, expression: string) =>
   (await page.send<{ result: { value: T } }>('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result.value
 
-const resize = (page: Page, shot: Shot, height: number) =>
+const resize = (page: Cdp, shot: Shot, height: number) =>
   page.send('Emulation.setDeviceMetricsOverride', { width: shot.width, height, deviceScaleFactor: shot.scale, mobile: shot.width < 500 })
 
-const open = async (page: Page, dir: string, html: string, shot: Shot) => {
+const open = async (page: Cdp, dir: string, html: string, shot: Shot) => {
   await Promise.all(['Page.enable', 'Runtime.enable', 'Log.enable'].map(method => page.send(method)))
   await resize(page, shot, viewportHeight)
   await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] })
@@ -60,7 +59,7 @@ const open = async (page: Page, dir: string, html: string, shot: Shot) => {
   await evaluate(page, settled)
 }
 
-const runScript = async (page: Page, script: string, output: Console) => {
+const runScript = async (page: Cdp, script: string, output: Console) => {
   const expression = `(async () => {\n${script}\n})()`
   const { exceptionDetails } = await page.send<{ exceptionDetails?: ExceptionDetails }>('Runtime.evaluate', { expression, awaitPromise: true, userGesture: true })
   if (exceptionDetails) output.add('error', `script: ${exceptionText(exceptionDetails)}`)
@@ -80,7 +79,7 @@ const clamp = (rect: Region, width: number, height: number): Region => {
   return { x, y, width: Math.min(width, Math.ceil(rect.x + rect.width)) - x, height: Math.min(height, Math.ceil(rect.y + rect.height)) - y }
 }
 
-const regionOf = async (page: Page, selector: string | undefined, width: number, height: number): Promise<Region> => {
+const regionOf = async (page: Cdp, selector: string | undefined, width: number, height: number): Promise<Region> => {
   if (!selector) return { x: 0, y: 0, width, height }
   const rect = await evaluate<Region | null>(page, elementRect(selector))
   if (!rect) throw new Error(`No element matches ${selector}`)
@@ -89,7 +88,7 @@ const regionOf = async (page: Page, selector: string | undefined, width: number,
   return region
 }
 
-const screenshots = async (page: Page, parts: Region[]) => {
+const screenshots = async (page: Cdp, parts: Region[]) => {
   const images: string[] = []
   for (const clip of parts) images.push((await page.send<{ data: string }>('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } })).data)
   return images
@@ -100,7 +99,7 @@ const withoutFolder = (messages: ConsoleMessage[], dir: string) => {
   return messages.map(message => ({ ...message, text: message.text.replaceAll(folder, '') }))
 }
 
-const render = async (page: Page, dir: string, html: string, shot: Shot): Promise<Capture> => {
+const render = async (page: Cdp, dir: string, html: string, shot: Shot): Promise<Capture> => {
   const output = collect(page)
   await open(page, dir, html, shot)
   if (shot.script) await runScript(page, shot.script, output)
@@ -116,9 +115,9 @@ const render = async (page: Page, dir: string, html: string, shot: Shot): Promis
 }
 
 export const capture = async (executable: string, html: string, shot: Shot, signal: AbortSignal) => {
-  const browser = await launch(executable)
+  const browser = await launch(executable, ['--hide-scrollbars'])
   try {
-    return await Promise.race([browser.open().then(page => render(page, browser.dir, html, shot)), aborted(signal)])
+    return await Promise.race([browser.open().then(page => render(page.cdp, browser.dir, html, shot)), aborted(signal)])
   } finally {
     await browser.close()
   }
