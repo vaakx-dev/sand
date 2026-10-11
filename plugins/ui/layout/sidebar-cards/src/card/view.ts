@@ -122,10 +122,6 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       onClick: () => press.held() || pick(row.get()),
       onKeyDown: keys({ Enter: () => pick(row.get()), ' ': () => pick(row.get()) }, { self: true, repeat: false }),
       ...hover,
-      onPointerLeave: () => {
-        hover.onPointerLeave()
-        choosing.set(undefined)
-      },
       ...dragging,
       ...press.props,
       style: dragging.style,
