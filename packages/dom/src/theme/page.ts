@@ -24,6 +24,8 @@ svg { flex: none; display: block; }
 }
 #stage { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: auto; }
 .prose { line-height: 1.7; }
+.rounded-rows > :first-child { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+.rounded-rows > :last-child { border-bottom-left-radius: inherit; border-bottom-right-radius: inherit; }
 .text-middle { text-box: trim-both ex alphabetic; }
 .spinner, .spinner-turn { display: inline-flex; }
 .spinner-still { display: none; }
