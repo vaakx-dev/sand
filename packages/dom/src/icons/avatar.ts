@@ -1,5 +1,6 @@
-import { dynamicChild, img, PALETTE, span, type ReactiveValue } from '@vaakx-dev/vrui'
+import { dynamicChild, img, PALETTE, type ReactiveValue } from '@vaakx-dev/vrui'
 import { neutral } from '../theme/palette'
+import { duneIcon } from './dunes'
 
 const dashedCircle = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.25" fill="none" stroke="${neutral['400']}" stroke-width="1.5" pathLength="16" stroke-dasharray="1.25 0.75"/></svg>`
 
@@ -34,10 +35,7 @@ export const initials = (text: string) =>
 export const projectIcon = (name: string, url?: string) =>
   url
     ? img({ src: url, alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-sm' })
-    : span(
-        { class: 'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-xs font-bold text-white', style: { background: projectColor(name) } },
-        (name[0] ?? '?').toUpperCase(),
-      )
+    : img({ src: duneIcon(name), alt: '', width: 16, height: 16, draggable: false, class: 'h-4 w-4 shrink-0 rounded-full' })
 
 export const projectAvatar = (name: ReactiveValue<string>, url: ReactiveValue<string | undefined>) =>
   dynamicChild(url, found => (found ? projectIcon('', found) : dynamicChild(name, current => projectIcon(current))))
