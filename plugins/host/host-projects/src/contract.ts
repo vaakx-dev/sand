@@ -1,10 +1,11 @@
-import type { Project } from '@sand/protocol'
+import type { Project, ProjectIcon } from '@sand/protocol'
 
-export type { Project, ProjectCopy, ProjectRef } from '@sand/protocol'
+export type { Project, ProjectCopy, ProjectIcon, ProjectRef } from '@sand/protocol'
 
 export interface ProjectPatch {
   name?: string
   hidden?: boolean
+  icon?: ProjectIcon | null
 }
 
 export interface ProjectPlace {

@@ -62,6 +62,7 @@ const groupOf = (lists: Lists, project: Project, stats: Map<string, Stat>): Proj
     id: project.id,
     name: project.name,
     ...(project.remote ? { remote: project.remote } : {}),
+    ...(project.icon ? { icon: project.icon } : {}),
     hidden: Boolean(project.hidden),
     threads: locations.reduce((total, location) => total + location.threads, 0),
     updated: locations[0]?.updated ?? 0,

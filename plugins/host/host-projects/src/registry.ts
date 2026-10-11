@@ -84,6 +84,8 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
       next.name = name
     }
     if (patch.hidden !== undefined) next.hidden = patch.hidden
+    if (patch.icon) next.icon = patch.icon
+    if (patch.icon === null) delete next.icon
     return commit(next)
   }
 

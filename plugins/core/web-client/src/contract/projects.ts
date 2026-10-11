@@ -1,4 +1,4 @@
-import type { FolderListing, ProjectFolder, ProjectPlace } from '@sand/host-projects/contract'
+import type { FolderListing, ProjectFolder, ProjectIcon, ProjectPlace } from '@sand/host-projects/contract'
 
 export interface ProjectEntry {
   project: string
@@ -15,6 +15,7 @@ export interface ProjectGroup {
   id: string
   name: string
   remote?: string
+  icon?: ProjectIcon
   hidden: boolean
   threads: number
   updated: number
@@ -30,6 +31,7 @@ export interface Projects {
   quick(path: string, device?: string): boolean
   icon(path: string, device?: string): string | undefined
   groupIcon(group: ProjectGroup): string | undefined
+  iconFile(group: ProjectGroup): string | undefined
   place(device?: string): ProjectPlace
   browse(path: string, device?: string): Promise<FolderListing>
   mkdir(path: string, device?: string): Promise<void>
@@ -39,6 +41,7 @@ export interface Projects {
   remove(group: ProjectGroup): Promise<void>
   rename(group: ProjectGroup, name: string): Promise<void>
   hide(group: ProjectGroup, hidden: boolean): Promise<void>
+  setIcon(group: ProjectGroup, icon: ProjectIcon | null): Promise<void>
   setRoot(root: string, device?: string): Promise<void>
   create(name: string, device?: string): Promise<ProjectEntry>
   clone(url: string, into: string, device?: string, progress?: (text: string) => void, project?: string): Promise<ProjectEntry>
