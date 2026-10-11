@@ -144,7 +144,7 @@ export const createModel = (ctx: Ctx) => {
     const items = files.contents()
     if (id) return empty.get() ? undefined : saveEdit(id, value, items)
     if (!items.length && commandLike.test(value)) return runCommand(value)
-    if (modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
+    if ((value || items.length) && modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
     return sendPrompt(value, items)
   }
 
