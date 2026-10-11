@@ -26,8 +26,8 @@ export default definePlugin({
     ctx.watch('settings', settings => {
       if (!settings) return
       const openThread = (id: string) => {
-        settings.close()
         void ctx.threads?.select(id).catch(fail)
+        settings.close()
       }
       const render = () =>
         usagePage({
