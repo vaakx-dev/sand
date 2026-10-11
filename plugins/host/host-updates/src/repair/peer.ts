@@ -1,16 +1,12 @@
 import type { HostHealth } from '@sand/host-health/contract'
-import type { RemoteRecord } from '@sand/host-remotes/contract'
-import { errorMessage } from '@sand/kit'
+import { errorMessage, isRecord } from '@sand/kit'
 import { callPeer, healthText, parseHealth, remoteStore, waitHealthy, type HealthOutcome } from '@sand/kit/host'
 import type { DeviceInfo, WireRequest } from '@sand/protocol'
 import type { PcRepairResult } from '../contract'
 
-export type PeerCall = (record: RemoteRecord, request: WireRequest, sockets: Set<WebSocket>, timeout?: number) => Promise<unknown>
-
 export interface RepairDeps {
   home: string
   self: DeviceInfo
-  call?: PeerCall
 }
 
 interface PeerState {
@@ -27,16 +23,14 @@ const healthTimeout = 120_000
 
 const short = (id: string | undefined) => (id ?? 'unknown').slice(0, 6)
 
-const isObject = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object'
+const buildId = (value: unknown) => (isRecord(value) && typeof value.id === 'string' ? value.id : undefined)
 
 const parseState = (value: unknown): PeerState | undefined => {
-  if (!isObject(value) || typeof value.phase !== 'string') return
+  if (!isRecord(value) || typeof value.phase !== 'string') return
   return { phase: value.phase, error: typeof value.error === 'string' ? value.error : undefined, current: buildId(value.current) }
 }
 
-const buildId = (value: unknown) => (isObject(value) && typeof value.id === 'string' ? value.id : undefined)
-
-const targetOf = (value: unknown) => (isObject(value) ? buildId(value.target) : undefined)
+const targetOf = (value: unknown) => (isRecord(value) ? buildId(value.target) : undefined)
 
 const finished = (state: PeerState | undefined) => state?.phase === 'idle' || state?.phase === 'failed'
 
@@ -78,9 +72,8 @@ export const repairPeer = async (deps: RepairDeps, device: string): Promise<PcRe
   if (device === deps.self.id) throw new Error('This PC cannot repair itself; use Repair on another PC')
   const record = (await remoteStore(deps.home)).get(device)
   if (!record) throw new Error('Unknown PC')
-  const call = deps.call ?? callPeer
   const sockets = new Set<WebSocket>()
-  const ask: Ask = (request, timeout) => call(record, request, sockets, timeout)
+  const ask: Ask = (request, timeout) => callPeer(record, request, sockets, timeout)
   try {
     let started: unknown
     try {

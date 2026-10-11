@@ -1,12 +1,12 @@
 import type { Hidden } from '../folder/hidden'
-import { emptyState, readState, writeState, type FolderState } from '../folder/store'
+import { readState, writeHead, writeState, type FolderState } from '../folder/store'
 import { commitTree, folderTree } from '../snapshot/tree'
 import { remaining } from './remaining'
 
 export const finalise = async (hidden: Hidden, state: FolderState) => {
   const tree = await folderTree(hidden)
   const head = await commitTree(hidden, tree, [state.ours, state.pending], 'sand sync merge')
-  await writeState(hidden, { ...emptyState(), head })
+  await writeHead(hidden, head)
   return head
 }
 
@@ -21,4 +21,8 @@ export const settle = async (hidden: Hidden): Promise<FolderState> => {
   const next = { ...state, conflicts: open }
   await writeState(hidden, next)
   return next
+}
+
+export const requireSettled = async (hidden: Hidden) => {
+  if ((await settle(hidden)).pending) throw new Error('Resolve the conflicts in this folder first')
 }

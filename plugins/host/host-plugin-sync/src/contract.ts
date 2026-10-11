@@ -1,7 +1,6 @@
-export interface PluginTree {
-  hash: string
-  files: Record<string, string>
-}
+import type { PluginTree } from '@sand/protocol'
+
+export type { PluginTree } from '@sand/protocol'
 
 export interface PluginManifest {
   device: string

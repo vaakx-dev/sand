@@ -1,11 +1,11 @@
 import type { Runtimes, RuntimeView } from '@sand/host-runtimes/contract'
 import type { Hello } from '@sand/protocol'
 import { type Client, send } from './client'
-import { passes } from './filter'
 import { peek } from './frames'
 import { mergeHello } from './hello'
 
 const prompting = new Set(['ui.pick', 'ui.input'])
+const currentOnly = new Set(['ui.relay', 'web.build', 'web.extensions', 'skills.change', 'models.change', 'titles.change'])
 
 const helloResult = (raw: string, runtime: RuntimeView, runtimes: Runtimes) => {
   const message = JSON.parse(raw) as { error?: string; result?: Hello }
@@ -29,7 +29,7 @@ export const createDownstream = (runtimes: Runtimes) => (client: Client, runtime
     client.waiting.delete(frame.id)
     return send(client, client.hellos.delete(frame.id) ? helloResult(raw, runtime, runtimes) : raw)
   }
-  if (!passes(frame.name, runtimes.current()?.id === runtime.id)) return
+  if (currentOnly.has(frame.name) && runtimes.current()?.id !== runtime.id) return
   if (prompting.has(frame.name)) {
     const id = promptId(raw)
     if (id) client.prompts.set(id, runtime.id)

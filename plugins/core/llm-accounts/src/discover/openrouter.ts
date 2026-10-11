@@ -1,5 +1,7 @@
 import type { ModelPrice } from '../contract'
-import { bearer, getJson } from './http'
+import { bearer, isRecord } from '@sand/kit'
+import { listIn, nonEmpty, positive } from './fields'
+import { getJson } from './http'
 import type { Discovered } from './types'
 
 const url = 'https://openrouter.ai/api/v1/models'
@@ -11,23 +13,27 @@ const perToken = (value: unknown) => {
   return Number.isFinite(number) && number >= 0 ? Number((number * perMillion).toPrecision(12)) : undefined
 }
 
-const priceOf = (pricing: any): ModelPrice | undefined => {
-  const input = perToken(pricing?.prompt)
-  const output = perToken(pricing?.completion)
+const priceOf = (pricing: unknown): ModelPrice | undefined => {
+  if (!isRecord(pricing)) return undefined
+  const input = perToken(pricing.prompt)
+  const output = perToken(pricing.completion)
   if (input === undefined || output === undefined) return undefined
   return { input, output, cacheRead: perToken(pricing.input_cache_read) ?? 0, cacheWrite: perToken(pricing.input_cache_write) ?? 0 }
 }
 
-const describe = (entry: any): Discovered | undefined => {
-  const parameters: unknown[] = Array.isArray(entry?.supported_parameters) ? entry.supported_parameters : []
-  if (typeof entry?.id !== 'string' || !entry.id || !parameters.includes('tools')) return undefined
+const listOf = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])
+
+const describe = (entry: unknown): Discovered | undefined => {
+  if (!isRecord(entry)) return undefined
+  const id = nonEmpty(entry.id)
+  const parameters = listOf(entry.supported_parameters)
+  if (!id || !parameters.includes('tools')) return undefined
   const reasoning = parameters.includes('reasoning')
-  const modalities: unknown[] = Array.isArray(entry.architecture?.input_modalities) ? entry.architecture.input_modalities : []
-  const label = typeof entry.name === 'string' && entry.name ? entry.name.replace(/^[^:]+:\s+/, '') : entry.id
+  const modalities = listOf(isRecord(entry.architecture) ? entry.architecture.input_modalities : undefined)
   return {
-    name: entry.id,
-    label,
-    context: typeof entry.context_length === 'number' && entry.context_length > 0 ? entry.context_length : undefined,
+    name: id,
+    label: nonEmpty(entry.name)?.replace(/^[^:]+:\s+/, '') ?? id,
+    context: positive(entry.context_length),
     images: modalities.includes('image'),
     efforts: reasoning ? ['low', 'medium', 'high'] : [],
     defaultEffort: reasoning ? 'medium' : undefined,
@@ -37,6 +43,5 @@ const describe = (entry: any): Discovered | undefined => {
 
 export const discoverOpenRouter = async (key: string): Promise<Discovered[]> => {
   const body = await getJson(source, url, bearer(key))
-  if (!Array.isArray(body?.data)) throw new Error(`${source} model list failed: unexpected answer`)
-  return body.data.map(describe).filter((model: Discovered | undefined): model is Discovered => !!model)
+  return listIn(source, body, 'data').flatMap(entry => describe(entry) ?? [])
 }

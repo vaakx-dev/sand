@@ -4,10 +4,9 @@ import { feedbackOnly, hasToolResult, parseCommand } from '@sand/kit'
 import type { Context } from 'drydock'
 import { compose, contentName } from '../attachments/content'
 
-export const runCommand = async (ctx: Context<'threads'>, name: string, args = '') => {
-  if (ctx.commands?.get(name)) return void (await ctx.commands.run(name, args))
-  if (!ctx.wire) throw new Error(`No command host is loaded to run /${name}`)
-  await ctx.wire.call({ type: 'ui.command', name, args, session: ctx.threads.current()?.id, cwd: ctx.threads.cwd() })
+const runCommand = async (ctx: Context<'threads'>, name: string, args: string) => {
+  if (!ctx.commands?.get(name)) return ctx.threads.command(name, args)
+  await ctx.commands.run(name, args)
 }
 
 const prompt = (text: string, attachments: UserContent[]): Prompt => (attachments.length ? compose(text, attachments) : text)

@@ -2,7 +2,7 @@ import { appendFile, mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-export const chunkSize = 1024 * 1024
+const chunkSize = 1024 * 1024
 
 const lifetime = 15 * 60 * 1000
 
@@ -15,7 +15,7 @@ interface Receiving extends Entry {
   received: number
 }
 
-const folder = () => join(tmpdir(), 'sand-sync')
+const folder = join(tmpdir(), 'sand-sync')
 
 const safe = (id: string) => id.replace(/[^\w-]/g, '')
 
@@ -39,9 +39,9 @@ export const createTransfers = () => {
   }
 
   return {
-    async reserve(name: string) {
-      await mkdir(folder(), { recursive: true })
-      return join(folder(), `${name}-${Bun.randomUUIDv7()}.bundle`)
+    async reserve() {
+      await mkdir(folder, { recursive: true })
+      return join(folder, `out-${Bun.randomUUIDv7()}.bundle`)
     },
 
     offer(file: string) {
@@ -59,8 +59,8 @@ export const createTransfers = () => {
     },
 
     async receive(id: string, index: number, data: string) {
-      await mkdir(folder(), { recursive: true })
-      const current = incoming.get(id) ?? { file: join(folder(), `in-${safe(id)}.bundle`), received: 0 }
+      await mkdir(folder, { recursive: true })
+      const current = incoming.get(id) ?? { file: join(folder, `in-${safe(id)}.bundle`), received: 0 }
       if (index === 0) {
         await rm(current.file, { force: true })
         current.received = 0

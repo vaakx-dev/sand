@@ -1,4 +1,5 @@
 import type { Dispose } from 'drydock'
+import type { IconName } from '../../icons/lucide'
 import type { Handle } from '../types'
 
 export type NavItemState = 'idle' | 'running' | 'background' | 'waiting' | 'draft'
@@ -7,7 +8,7 @@ export interface NavItem {
   id: string
   title: string
   subtitle?: string
-  subtitleIcon?: string
+  subtitleIcon?: IconName
   path?: string
   project?: string
   projectKey?: string
@@ -42,7 +43,7 @@ export interface NavList {
 export interface NavAction {
   id: string
   label: string
-  icon?: string
+  icon?: IconName
   order?: number
   wide?: boolean
   place?: 'footer'

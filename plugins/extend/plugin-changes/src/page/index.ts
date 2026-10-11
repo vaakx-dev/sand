@@ -4,7 +4,7 @@ import type { VersionsSource } from '../history/source'
 import type { LibrarySource } from '../library/source'
 import type { PluginSource } from '../source'
 import { catalogSection } from './catalog'
-import type { RowActions } from './catalog/warning'
+import type { RowActions } from './catalog/row'
 import { changesSection } from './changes'
 import { installedSection } from './installed'
 

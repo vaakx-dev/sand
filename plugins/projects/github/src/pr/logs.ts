@@ -10,12 +10,16 @@ const prefix = /^[^\t]*\t[^\t]*\t(\d{4}-\d\d-\d\dT\S+ ?)?/
 const maxLine = 300
 
 const ungroup = (lines: string[]) => {
+  const kept: string[] = []
   let inGroup = false
-  return lines.flatMap(line => {
-    if (line.startsWith('##[group]')) return (inGroup = true), [`▸ ${line.slice(9)}`]
-    if (line.startsWith('##[endgroup]')) return (inGroup = false), []
-    return inGroup ? [] : [line]
-  })
+  for (const line of lines) {
+    if (line.startsWith('##[group]')) {
+      inGroup = true
+      kept.push(`▸ ${line.slice('##[group]'.length)}`)
+    } else if (line.startsWith('##[endgroup]')) inGroup = false
+    else if (!inGroup) kept.push(line)
+  }
+  return kept
 }
 
 const tail = (log: string) => {

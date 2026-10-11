@@ -34,7 +34,7 @@ export default definePlugin({
       ),
     )
 
-    floating(ctx, () => dynamicChild(report, shown => (shown ? reportView(shown, () => report.set(undefined)) : div({ hidden: true }))))
+    floating(ctx, () => dynamicChild(report, shown => (shown ? reportView(shown, () => report.set(undefined)) : null)))
 
     const notify: Notify = {
       push(text, { level = 'info', action, timeout } = {}) {

@@ -17,7 +17,7 @@ export default definePlugin({
         label: 'Plan, then do',
         description: 'Looks around read-only and writes a numbered plan, then carries it out',
         plugin: 'loop-plan',
-        run: runPlan({ tools: config.plan_tools, steps: config.max_plan_steps }),
+        run: runPlan(ctx.loops, { tools: config.plan_tools, steps: config.max_plan_steps }),
       }),
     )
   },

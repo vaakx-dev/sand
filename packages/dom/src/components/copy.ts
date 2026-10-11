@@ -1,4 +1,4 @@
-import { dynamicChild, onTimeout, sig } from '@vaakx-dev/vrui'
+import { dynamicChild, effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { copyText } from '../integrations/clipboard'
 import { iconButton, quietButton, type ButtonProps } from './button'
@@ -13,15 +13,17 @@ const words: Record<CopyState, string> = { idle: '', copied: 'Copied', failed: '
 
 export const copyButton = ({ text, label, ...props }: CopyProps) => {
   const state = sig<CopyState>('idle')
-  let cancel: (() => void) | undefined
+  const copies = sig(0)
+  effect(() => {
+    if (copies.get()) onTimeout(() => state.set('idle'), resetAfter)
+  })
   const copy = async () => {
     const copied = await copyText(text())
-    cancel?.()
     state.set(copied ? 'copied' : 'failed')
-    cancel = onTimeout(() => state.set('idle'), resetAfter)
+    copies.update(count => count + 1)
   }
   const glyph = (size: number) => dynamicChild(state, value => icon(value === 'copied' ? 'check' : 'copy', size))
-  if (!label)
-    return iconButton({ size: 'sm', title: () => words[state.get()] || 'Copy', 'aria-label': () => words[state.get()] || 'Copy', ...props, onClick: () => void copy() }, glyph(13))
-  return quietButton({ size: 'sm', ...props, onClick: () => void copy() }, glyph(12), () => words[state.get()] || label)
+  const word = (fallback: string) => () => words[state.get()] || fallback
+  if (label) return quietButton({ size: 'sm', ...props, onClick: () => void copy() }, glyph(12), word(label))
+  return iconButton({ size: 'sm', title: word('Copy'), 'aria-label': word('Copy'), ...props, onClick: () => void copy() }, glyph(13))
 }

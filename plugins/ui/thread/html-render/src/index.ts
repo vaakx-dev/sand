@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import type { HtmlPages, HtmlRenderEntry } from './contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
@@ -25,11 +26,9 @@ export default definePlugin({
     const pages: HtmlPages = { columnWidth, maxHeight, load }
     ctx.provide('htmlPages', pages)
     ctx.effect(() => ctx.tools.register(renderTool(store, pages, (session, artifact) => ctx.emit('artifact.saved', session, artifact))))
-    ctx.watch('server', server => {
-      if (!server) return
-      const disposers = [server.handle('html.page', ({ render }) => store.read(render)), server.route(hostPath, hostRoute, { public: true })]
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch('server', server =>
+      server ? joinDisposers(server.handle('html.page', ({ render }) => store.read(render)), server.route(hostPath, hostRoute, { public: true })) : undefined,
+    )
     ctx.watch('skills', skills => skills?.register(skillDir, { tokens: tokenTable(), column: String(columnWidth), max_height: String(maxHeight) }))
     ctx.on('session.remove', () => {
       const entries = ctx.sessions?.entriesOfType?.(entryType)

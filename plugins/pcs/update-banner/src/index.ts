@@ -17,6 +17,7 @@ export default definePlugin({
   apply(ctx) {
     const fleet = owned(ctx, () => createFleet(ctx))
     const kind = owned(ctx, () => bannerKind(fleet))
+    const shown = owned(ctx, () => kind.map(Boolean))
     let unplaceSheet: Dispose | undefined
     const close = () => {
       void unplaceSheet?.()
@@ -26,10 +27,9 @@ export default definePlugin({
       close()
       unplaceSheet = place(ctx, 'overlay', () => updateSheet(fleet, close), 100)
     }
-    ctx.effect(() => close)
     ctx.effect(() =>
       effect(() => {
-        if (!kind.get()) return
+        if (!shown.get()) return
         const remove = untrack(() => place(ctx, 'top', () => bannerView(fleet, () => kind.get(), open), -1))
         return () => void remove()
       }),

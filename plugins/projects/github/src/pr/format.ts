@@ -34,10 +34,8 @@ const who = (comment: Comment) => `@${comment.author?.login ?? 'ghost'}`
 
 const lower = (value: string) => value.toLowerCase().replaceAll('_', ' ')
 
-export const headDate = (pr: PrView) => pr.commits.at(-1)?.committedDate ?? ''
-
-export const newFeedback = (pr: PrView) => {
-  const since = headDate(pr)
+const newFeedback = (pr: PrView) => {
+  const since = pr.commits.at(-1)?.committedDate ?? ''
   const comments = pr.comments.filter(comment => comment.createdAt > since && comment.body.trim())
   const reviews = pr.reviews
     .filter(review => review.submittedAt > since && review.body.trim())
@@ -58,9 +56,9 @@ const list = <T>(title: string, items: T[], line: (item: T) => string) =>
 const names = (checks: Check[]) => [...new Set(checks.map(checkName))].join(', ')
 
 const checks = (pr: Pr) => {
+  if (!pr.statusCheckRollup.length) return ['Checks: none']
   const count = (outcome: Outcome) => byOutcome(pr.statusCheckRollup, outcome)
   const [passed, failed, cancelled, pending] = [count('passed'), count('failed'), count('cancelled'), count('pending')]
-  if (!pr.statusCheckRollup.length) return ['Checks: none']
   const shown = new Set(pr.failures.map(failure => failure.name))
   const rest = failed.filter(check => !shown.has(checkName(check)))
   return [

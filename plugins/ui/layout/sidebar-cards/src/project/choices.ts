@@ -1,0 +1,44 @@
+import type { NavList } from '@sand/dom'
+import type { Context } from 'drydock'
+
+export interface ProjectChoice {
+  key: string
+  name: string
+  icon?: string
+  count: number
+}
+
+export const inProject = (item: { project?: string; projectKey?: string }, key: string) => item.projectKey === key || item.project === key
+
+const itemChoices = (lists: NavList[]) => {
+  const found = new Map<string, ProjectChoice>()
+  for (const item of lists.flatMap(list => list.items())) {
+    const key = item.projectKey ?? item.project
+    if (!key) continue
+    const choice = found.get(key) ?? { key, name: item.project ?? key, icon: item.icon, count: 0 }
+    choice.count += 1
+    choice.icon ??= item.icon
+    found.set(key, choice)
+  }
+  return found
+}
+
+const groupChoices = (ctx: Context) => {
+  const projects = ctx.projects
+  if (!projects) return []
+  return projects.groups().map((group): ProjectChoice => ({ key: group.id, name: group.name, icon: projects.groupIcon(group), count: 0 }))
+}
+
+export const projectChoices = (ctx: Context, lists: NavList[]): ProjectChoice[] => {
+  const found = itemChoices(lists)
+  const hidden = new Set(ctx.projects?.groups({ hidden: true }).filter(group => group.hidden).map(group => group.id))
+  for (const key of hidden) found.delete(key)
+  for (const choice of groupChoices(ctx)) {
+    const known = found.get(choice.key)
+    if (known) known.icon ??= choice.icon
+    else found.set(choice.key, choice)
+  }
+  return [...found.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export const choiceName = (choices: ProjectChoice[], key: string) => choices.find(found => found.key === key)?.name ?? key

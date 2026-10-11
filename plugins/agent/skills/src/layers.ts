@@ -12,7 +12,8 @@ export const merge = (global: Skill[], project: Skill[]) => {
 }
 
 export const projectSkills = (ctx: Context<'paths' | 'watcher'>, globalRoots: string[], changed: () => void) => {
-  const folders = ctx.watcher.folders(dir => discover(new Map(), [dir], error => ctx.report(error)), [] as Skill[], changed)
+  const none: Skill[] = []
+  const folders = ctx.watcher.folders(dir => discover(new Map(), [dir], error => ctx.report(error)), none, changed)
   ctx.effect(() => folders.close)
   return (cwd: string, project?: string | null): Promise<Skill[]> => {
     const dir = join(ctx.paths.projectFolder(cwd, project), '.sand', 'skills')

@@ -1,5 +1,7 @@
 import type { HostRoute, RouteKind } from '@sand/host-gateway/contract'
-import { routeKind } from '@sand/kit'
+import { isRecord, routeKind } from '@sand/kit'
+import { loadRecord, loadText, saveJson, saveText } from '../integrations/storage'
+import { originOf } from './url'
 
 export interface StoredRoute {
   url: string
@@ -11,45 +13,21 @@ export interface StoredRoute {
 
 type Book = Record<string, StoredRoute[]>
 
-const storageKey = 'sand.routes'
+const routesKey = 'sand.routes'
 const homeKey = 'sand.home'
 const limit = 16
 const stale = 30 * 24 * 60 * 60 * 1000
 
-export const originOf = (url: string) => {
-  try {
-    const parsed = new URL(url)
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.origin : undefined
-  } catch {
-    return undefined
-  }
-}
+const isRoute = (value: unknown): value is StoredRoute =>
+  isRecord(value) && typeof value.url === 'string' && typeof value.kind === 'string'
 
-const valid = (value: unknown): value is StoredRoute =>
-  typeof value === 'object' && value !== null && typeof (value as StoredRoute).url === 'string' && typeof (value as StoredRoute).kind === 'string'
-
-const read = (): Book => {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
-    return Object.fromEntries(
-      Object.entries(parsed).map(([host, list]) => [host, Array.isArray(list) ? list.filter(valid) : []]),
-    )
-  } catch {
-    return {}
-  }
-}
-
-const write = (book: Book) => {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(book))
-  } catch {}
-}
+const read = (): Book =>
+  Object.fromEntries(Object.entries(loadRecord(routesKey)).map(([host, list]) => [host, Array.isArray(list) ? list.filter(isRoute) : []]))
 
 const update = (host: string, change: (list: StoredRoute[]) => StoredRoute[]) => {
   const book = read()
   book[host] = change(book[host] ?? [])
-  write(book)
+  saveJson(routesKey, book)
 }
 
 const entry = (list: StoredRoute[], url: string) => list.find(route => route.url === url)
@@ -92,16 +70,6 @@ export const failed = (host: string, url: string) => {
   update(host, list => list.map(route => (route.url === origin ? { ...route, failed: Date.now() } : route)))
 }
 
-export const homeHost = (): string | undefined => {
-  try {
-    return localStorage.getItem(homeKey) ?? undefined
-  } catch {
-    return undefined
-  }
-}
+export const homeHost = () => loadText(homeKey)
 
-export const setHomeHost = (id: string) => {
-  try {
-    localStorage.setItem(homeKey, id)
-  } catch {}
-}
+export const setHomeHost = (id: string) => saveText(homeKey, id)

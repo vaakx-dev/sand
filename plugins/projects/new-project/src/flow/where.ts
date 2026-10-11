@@ -1,14 +1,14 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { Machine } from '@sand/web-client/contract'
+import type { ProjectsContext } from '../context'
 import { connectItem } from './connect'
-import type { FlowContext } from './types'
 
 const platforms: Record<string, string> = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }
 
 const describe = (machine: Machine) => {
   if (machine.local) return 'This device'
-  const where = [machine.platform && (platforms[machine.platform] ?? machine.platform), machine.address].filter(Boolean).join(' · ')
-  return machine.online ? where : `Offline · ${machine.address ?? ''}`
+  if (!machine.online) return `Offline · ${machine.address ?? ''}`
+  return [machine.platform && (platforms[machine.platform] ?? machine.platform), machine.address].filter(Boolean).join(' · ')
 }
 
 export const machineItem = (machine: Machine, next: (machine: Machine) => PalettePage): PaletteItem => ({
@@ -21,13 +21,10 @@ export const machineItem = (machine: Machine, next: (machine: Machine) => Palett
   page: () => next(machine),
 })
 
-export const wherePage = (ctx: FlowContext, next: (machine: Machine) => PalettePage): PalettePage => ({
+export const wherePage = (ctx: ProjectsContext, next: (machine: Machine) => PalettePage): PalettePage => ({
   id: 'where',
   title: 'Where',
   placeholder: 'Search environments…',
   empty: 'No matching environments.',
-  items: () => [
-    ...ctx.machines.list().map(machine => machineItem(machine, next)),
-    connectItem(ctx),
-  ],
+  items: () => [...ctx.machines.list().map(machine => machineItem(machine, next)), connectItem(ctx)],
 })

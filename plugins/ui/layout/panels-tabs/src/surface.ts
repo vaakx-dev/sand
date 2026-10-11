@@ -1,5 +1,4 @@
-import type { Layout } from '@sand/layout-columns/contract'
-import { place, sig } from '@sand/dom'
+import { place, sig, type Layout } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
 
 export interface Surface {

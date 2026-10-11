@@ -1,17 +1,19 @@
+import { isRecord } from '@sand/kit'
 import { gh } from './run'
 
 const host = 'github.com'
 
-interface HostEntry {
-  state?: string
-  active?: boolean
-  login?: string
+const isActive = (entry: unknown): entry is Record<string, unknown> => isRecord(entry) && Boolean(entry.active) && entry.state === 'success'
+
+const activeLogin = (entries: unknown) => {
+  const active = Array.isArray(entries) ? entries.find(isActive) : undefined
+  return typeof active?.login === 'string' ? active.login : undefined
 }
 
 const fromJson = (text: string) => {
   try {
-    const hosts = (JSON.parse(text) as { hosts?: Record<string, HostEntry[]> }).hosts?.[host] ?? []
-    return hosts.find(entry => entry.active && entry.state === 'success')?.login
+    const parsed: unknown = JSON.parse(text)
+    return isRecord(parsed) && isRecord(parsed.hosts) ? activeLogin(parsed.hosts[host]) : undefined
   } catch {
     return undefined
   }
@@ -40,7 +42,8 @@ export const loginOf = async (token: string) => {
     signal: AbortSignal.timeout(10_000),
   })
   if (!response.ok) throw new Error(`GitHub did not accept the token (HTTP ${response.status})`)
-  const { login } = (await response.json()) as { login?: string }
+  const body: unknown = await response.json()
+  const login = isRecord(body) && typeof body.login === 'string' ? body.login : undefined
   if (!login) throw new Error('GitHub did not say which account the token belongs to')
   return login
 }

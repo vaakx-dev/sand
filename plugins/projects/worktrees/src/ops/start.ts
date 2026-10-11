@@ -6,8 +6,7 @@ import { freePlace } from '../place'
 import { readSetup } from '../setup/file'
 import { setupSteps } from '../setup/plan'
 import { runSteps } from '../setup/steps'
-import { forgetMarks } from './marks'
-import type { Ops } from './types'
+import type { Ops } from './context'
 
 export const startInWorktree = async (ops: Ops, session: Session, base?: string) => {
   const repo = await repoOf(session.cwd)
@@ -22,6 +21,5 @@ export const startInWorktree = async (ops: Ops, session: Session, base?: string)
     },
   }
   await runSteps(session.id, [create, ...setupSteps(setup, repo.main, path)], ops.publish)
-  forgetMarks()
   ops.changed(repo.main)
 }

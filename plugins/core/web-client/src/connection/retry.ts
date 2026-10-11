@@ -1,33 +1,35 @@
-import { retryDelay } from './backoff'
+import { after } from '../detached'
+
+const backoff = (failures: number) => Math.min(30_000, 1000 * 2 ** failures) * (0.5 + Math.random() * 0.5)
 
 export const createRetry = (run: () => void) => {
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let cancel: (() => void) | undefined
   let at: number | undefined
   let failures = 0
 
   const clear = () => {
-    clearTimeout(timer)
-    timer = undefined
+    cancel?.()
+    cancel = undefined
     at = undefined
   }
 
   return {
     at: () => at,
     failures: () => failures,
-    pending: () => timer !== undefined,
+    pending: () => cancel !== undefined,
     reset() {
       failures = 0
     },
     clear,
     schedule() {
       clear()
-      const delay = retryDelay(failures++)
+      const delay = backoff(failures++)
       at = Date.now() + delay
-      timer = setTimeout(() => {
-        timer = undefined
+      cancel = after(delay, () => {
+        cancel = undefined
         at = undefined
         run()
-      }, delay)
+      })
     },
   }
 }

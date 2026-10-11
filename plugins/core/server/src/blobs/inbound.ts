@@ -1,20 +1,11 @@
 import { isRef, isText, rewrite, type Ref } from './media'
-import type { BlobStore } from './store'
-
-type Recover = (session: string) => Promise<void>
+import type { FindBlob } from './store'
 
 const missing = (ref: Ref) => new Error(`${ref.name ?? `An attached ${ref.type}`} is no longer stored on this PC`)
 
-export const createInbound = (store: BlobStore, recover: Recover) => {
-  const fileOf = async (ref: Ref, session?: string) => {
-    const file = await store.file(ref.blob)
-    if (file || !session) return file
-    await recover(session)
-    return store.file(ref.blob)
-  }
-
+export const createInbound = (find: FindBlob) => {
   const restore = async (ref: Ref, session?: string) => {
-    const file = await fileOf(ref, session)
+    const file = await find(ref.blob, session)
     if (!file) throw missing(ref)
     const { blob, size, width, height, ...block } = ref
     const data = isText(ref.mediaType) ? await file.text() : Buffer.from(await file.bytes()).toString('base64')

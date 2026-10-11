@@ -1,9 +1,9 @@
 import { stored } from '@sand/dom'
-import { ranges, type Range } from './range'
+import { usageRanges, type UsageRange } from '@sand/kit'
 
 export const allPcs = ''
 
 export const usagePrefs = () => ({
-  range: stored<Range>('sand.usage.range', '30d', value => ranges.includes(value as Range)),
+  range: stored<UsageRange>('sand.usage.range', '30d', value => usageRanges.some(range => range === value)),
   pc: stored<string>('sand.usage.pc', allPcs),
 })

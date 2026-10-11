@@ -1,11 +1,8 @@
+import { errorMessage, isRecord } from '@sand/kit'
 import type { TurnResult } from '../contract'
-import { errorMessage } from '@sand/kit'
 import type { TurnState } from './state'
 
-const detailOf = (error: unknown) => {
-  const detail = (error as { detail?: unknown } | undefined)?.detail
-  return typeof detail === 'string' && detail ? detail : undefined
-}
+const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail === 'string' && error.detail) || undefined
 
 export const resultOf = (state: TurnState, failure?: { error: unknown }): TurnResult => {
   const detail = failure && detailOf(failure.error)

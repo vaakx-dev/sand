@@ -23,7 +23,8 @@
       "wire": "no offline state; sends fail when the connection drops",
       "jobs": "no still-working agents chip",
       "panels": "the still-working agents chip is not clickable",
-      "media": "queued images stored on the server show no thumbnail"
+      "media": "queued images stored on the server show no thumbnail",
+      "notify": "failed stops and copies are not reported"
     }
   },
   "dependencies": {

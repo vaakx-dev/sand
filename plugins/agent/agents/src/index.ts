@@ -13,6 +13,13 @@ import { agentTool } from './tool'
 export default definePlugin({
   name: 'agents',
   inject: ['loop', 'paths', 'sessions', 'tools', 'watcher'],
+  uses: {
+    llm: 'agent definitions cannot set an effort level',
+    instructions: 'sub-agents get no environment or project instructions in their prompt',
+    modelSettings: 'sub-agents get no model name in their prompt',
+    ui: 'background results that cannot be delivered fail silently',
+    steering: 'background results start a new turn instead of joining the running one',
+  },
   config: z.object({
     max_depth: z.number().int().min(0).default(6),
     max_agents: z.number().int().positive().default(32),

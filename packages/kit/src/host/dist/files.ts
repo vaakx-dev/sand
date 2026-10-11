@@ -1,11 +1,16 @@
 import { lstat, readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { compare } from '../../text/compare'
 
-export const appFolders = ['apps', 'packages', 'plugins']
-export const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
+const appFolders = ['apps', 'packages', 'plugins']
+const appTopFiles = ['package.json', 'bun.lock', 'tsconfig.json']
 export const buildStamp = 'sand-build.json'
+export const bundleAsset = 'sand.tar.gz'
+export const stampAsset = 'sand-build.json'
 
 const skipped = (name: string) => !name || name.startsWith('.') || name === 'node_modules'
+
+const byPath = (a: { path: string }, b: { path: string }) => compare(a.path, b.path)
 
 export const isAppPath = (path: string) => {
   if (appTopFiles.includes(path)) return true
@@ -57,7 +62,7 @@ const walkModule = async (folder: string, path: string, found: ModuleFile[]) => 
 export const moduleFiles = async (deps: { name: string; dir: string }[]): Promise<ModuleFile[]> => {
   const found: ModuleFile[] = []
   for (const { name, dir } of deps) await walkModule(dir, `node_modules/${name}`, found)
-  return found.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+  return found.sort(byPath)
 }
 
 export const scanApp = async (root: string): Promise<AppScan> => {
@@ -72,6 +77,6 @@ export const scanApp = async (root: string): Promise<AppScan> => {
     scan.latest = Math.max(scan.latest, found.mtime)
     scan.files.push({ path: name, file: found.file })
   }
-  scan.files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+  scan.files.sort(byPath)
   return scan
 }

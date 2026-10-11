@@ -1,5 +1,0 @@
-export const repo = 'vaakx-dev/sand'
-export const api = 'https://api.github.com'
-export const bundleAsset = 'sand.tar.gz'
-export const stampAsset = 'sand-build.json'
-export const releasePrefix = 'v'

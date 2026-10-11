@@ -1,4 +1,5 @@
 import type { PrSummary } from '@sand/github/contract'
+import { plural } from '@sand/kit'
 
 export type PillTone = 'running' | 'failing' | 'ready' | 'merged' | 'quiet'
 
@@ -6,8 +7,6 @@ export interface PillState {
   label: string
   tone: PillTone
 }
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export const pillState = (pr: PrSummary): PillState => {
   if (pr.state === 'merged') return { label: 'merged', tone: 'merged' }

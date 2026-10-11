@@ -1,17 +1,19 @@
 import type { Region } from '@sand/dom'
-import { div, layer, type Sig, type Store } from '@sand/dom'
+import { div, layer, list, type Sig, type Store } from '@sand/dom'
 import { grip, sizedStyle, type Edge, type Widths } from './resize'
 import { backdropOpacity, slideAside, slideSide, type Shift } from './slide'
-
-export const regions: Region[] = ['top', 'side', 'main', 'aside', 'bottom', 'overlay']
 
 export type Open = Record<'side' | 'aside', boolean>
 
 export type Coverable = 'side' | 'main'
 
+export type Views<K extends string> = Record<K, Sig<HTMLElement[]>>
+
 export interface ShellState {
   narrow: Sig<boolean>
   open: Store<Open>
+  views: Views<Region>
+  covers: Views<Coverable>
   filled: Sig<Record<Region, boolean>>
   covered: Sig<Record<Coverable, boolean>>
   shift: Sig<Shift | undefined>
@@ -20,39 +22,45 @@ export interface ShellState {
 }
 
 const safeArea = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
-const drawer = { top: '0', bottom: '0', left: '0', maxWidth: '85vw', paddingTop: 'env(safe-area-inset-top)' }
+const drawer = { maxWidth: '85vw', paddingTop: 'env(safe-area-inset-top)' }
 const sheet = { paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }
 
-export const buildShell = ({ narrow, open, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
-  const strip = (region: Region) => div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') })
+const placed = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
+  list(
+    views,
+    view => view,
+    view => view.get(),
+    container,
+  )
+
+export const buildShell = ({ narrow, open, views, covers, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
+  const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const showSide = () => open.side.get() || (!narrow.get() && covered.get().side)
   const dragging = () => narrow.get() && shift.get() !== undefined
-
   const sized = (edge: Edge) => (!narrow.get() && widths.get()[edge] ? '' : null)
 
-  const sideBody = div({ 'data-fill': '', class: () => (covered.get().side ? 'hidden' : 'contents') })
-  const sideCover = div({ 'data-fill': '', class: () => (covered.get().side ? 'contents' : 'hidden') })
   const side: HTMLElement = div(
     {
       'data-sized': () => sized('side'),
       class: () => {
         if (!filled.get().side || !(showSide() || dragging())) return 'hidden'
         return narrow.get()
-          ? [layer.drawer, 'fixed flex w-80 flex-col bg-neutral-950 shadow-xl', swiped.get() ? null : 'animate-drawer']
+          ? [layer.drawer, 'fixed inset-y-0 left-0 flex w-80 flex-col bg-neutral-950 shadow-xl', swiped.get() ? null : 'animate-drawer']
           : 'relative flex min-h-0 shrink-0 flex-col border-r border-neutral-800 bg-neutral-950'
       },
       style: () => (narrow.get() ? { ...drawer, ...slideSide(shift.get()) } : sizedStyle(widths, 'side')),
     },
-    sideBody,
-    sideCover,
+    placed(views.side, div({ 'data-fill': '', class: () => (covered.get().side ? 'hidden' : 'contents') })),
+    placed(covers.side, div({ 'data-fill': '', class: () => (covered.get().side ? 'contents' : 'hidden') })),
     grip('side', () => side, () => aside, widths, () => narrow.get()),
   )
 
-  const mainBody = div({ class: 'contents' })
-  const mainCover = div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })
-  const main = div({ class: 'relative flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900', style: { isolation: 'isolate' } }, mainBody, mainCover)
+  const main = div(
+    { class: 'relative flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900', style: { isolation: 'isolate' } },
+    placed(views.main, div({ class: 'contents' })),
+    placed(covers.main, div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })),
+  )
 
-  const asideBody = div({ class: 'contents' })
   const aside: HTMLElement = div(
     {
       class: () => {
@@ -63,19 +71,9 @@ export const buildShell = ({ narrow, open, filled, covered, shift, swiped, width
       },
       style: () => (narrow.get() ? { ...sheet, ...slideAside(shift.get()) } : sizedStyle(widths, 'aside')),
     },
-    asideBody,
+    placed(views.aside, div({ class: 'contents' })),
     grip('aside', () => aside, () => side, widths, () => narrow.get()),
   )
-
-  const areas: Record<Region, HTMLElement> = {
-    top: strip('top'),
-    side: sideBody,
-    main: mainBody,
-    aside: asideBody,
-    bottom: strip('bottom'),
-    overlay: div({ class: 'contents' }),
-  }
-  const covers: Record<Coverable, HTMLElement> = { side: sideCover, main: mainCover }
 
   const backdrop = div({
     class: () =>
@@ -86,13 +84,12 @@ export const buildShell = ({ narrow, open, filled, covered, shift, swiped, width
     onClick: closeSide,
   })
 
-  const root = div(
+  return div(
     { class: 'absolute inset-0 flex flex-col bg-neutral-900', style: { padding: safeArea } },
-    areas.top,
+    strip('top'),
     backdrop,
     div({ class: 'flex min-h-0 min-w-0 flex-1' }, side, main, aside),
-    areas.bottom,
-    areas.overlay,
+    strip('bottom'),
+    placed(views.overlay, div({ class: 'contents' })),
   )
-  return { root, areas, covers }
 }

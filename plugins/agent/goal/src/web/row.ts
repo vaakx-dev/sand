@@ -1,8 +1,8 @@
 import type { Entry } from '@sand/messages'
-import { div, icon, span } from '@sand/dom'
+import { div, icon, span, type IconName } from '@sand/dom'
 import type { Goal } from '../goal'
 
-const line = (tone: string, symbol: string, text: string) =>
+const line = (tone: string, symbol: IconName, text: string) =>
   div(
     { class: ['mt-2 mb-4 flex items-center justify-center gap-2 text-xs', tone] },
     span({ class: 'inline-flex shrink-0' }, icon(symbol, 13)),

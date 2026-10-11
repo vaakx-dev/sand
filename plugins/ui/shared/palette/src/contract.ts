@@ -1,3 +1,4 @@
+import type { IconName } from '@sand/dom'
 import type { Dispose } from 'drydock'
 
 export interface PaletteItem {
@@ -6,7 +7,7 @@ export interface PaletteItem {
   label: string
   detail?: string
   meta?: string
-  icon?: string
+  icon?: IconName
   avatar?: string
   avatarIcon?: string
   busy?: boolean
@@ -22,7 +23,7 @@ export interface PaletteItem {
 
 export interface PaletteItemAction {
   label: string
-  icon?: string
+  icon?: IconName
   danger?: boolean
   returnAfter?: boolean
   run(): void | Promise<void>
@@ -30,7 +31,7 @@ export interface PaletteItemAction {
 
 export interface PaletteCard {
   label?: string
-  icon?: string
+  icon?: IconName
   title: string
   detail?: string
   mono?: boolean

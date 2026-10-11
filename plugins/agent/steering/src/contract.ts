@@ -35,7 +35,6 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'loop.steer': { session: string; prompt: Prompt; label?: string }
     'loop.unsteer': { session: string; item: string }
-    'queue.get': { session: string }
   }
 
   interface WireEvents {

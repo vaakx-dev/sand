@@ -1,31 +1,27 @@
-import type { RelayEvent } from '@sand/server/contract'
-import type { Wire } from '../contract'
+import type { Models, Wire } from '../contract'
 import type { Context } from 'drydock'
-import type { createJobs } from '../data/jobs'
-import type { createProjects } from '../data/projects'
+import type { JobService } from '../data/jobs'
+import type { ProjectService } from '../data/projects'
 import { isRelayEvent, relayEvents } from '../relay/events'
 import { applyEvent } from '../threads/events'
 import { applyHello } from '../threads/hello'
-import type { createThreads } from '../threads/service'
+import type { ThreadService } from '../threads/service'
 import type { Store } from '../threads/store'
 import type { LinkHandlers } from './links'
-import { devicesOf, dropRemote } from './sessions'
 
-export const bridgeRemotes = (
-  ctx: Context,
-  store: Store,
-  wire: Wire,
-  threads: ReturnType<typeof createThreads>,
-  projects: ReturnType<typeof createProjects>,
-  jobs: ReturnType<typeof createJobs>,
-): LinkHandlers => {
-  const relays = new Map<string, (event: RelayEvent) => void>()
-  const relay = (device: string) => {
-    const known = relays.get(device)
-    if (known) return known
-    const created = relayEvents(ctx, request => wire.call(request, device), threads, opened => threads.adopt(opened, device), device)
-    relays.set(device, created)
-    return created
+interface Bridged {
+  wire: Wire
+  threads: ThreadService
+  projects: ProjectService
+  jobs: JobService
+  models: Models
+}
+
+export const bridgeRemotes = (ctx: Context, store: Store, { wire, threads, projects, jobs, models }: Bridged): LinkHandlers => {
+  const forget = (device: string) => {
+    for (const thread of [...store.threads.values()]) if (thread.device === device) store.remove(thread.id)
+    store.synced.delete(device)
+    projects.forget(device)
   }
 
   return {
@@ -41,21 +37,15 @@ export const bridgeRemotes = (
       applyEvent(store, event, id => void threads.load(id), device)
       projects.event(device, event)
       jobs.event(device, event)
-      if (isRelayEvent(event)) relay(device)(event)
+      if (isRelayEvent(event)) relayEvents(ctx, wire, threads, models, device)(event)
       ctx.emit('machines.event', device, event)
     },
     drop(device) {
-      dropRemote(store, device)
-      projects.forget(device)
+      forget(device)
       jobs.forget(device)
-      relays.delete(device)
     },
     keep(devices) {
-      for (const device of devicesOf(store)) {
-        if (devices.has(device)) continue
-        dropRemote(store, device)
-        projects.forget(device)
-      }
+      for (const device of store.devices()) if (!devices.has(device)) forget(device)
     },
     state: () => ctx.emit('machines.change'),
   }

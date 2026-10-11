@@ -1,4 +1,5 @@
 import type { Effort, ModelInfo } from '../contract'
+import { capital } from '@sand/kit'
 
 const upToMax: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 const upToXhigh: Effort[] = ['low', 'medium', 'high', 'xhigh']
@@ -20,7 +21,7 @@ const textOnly = new Set(['gpt-5.3-codex-spark'])
 const label = (id: string) =>
   id
     .split('-')
-    .map((part, index) => (index === 0 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
+    .map((part, index) => (index === 0 ? part.toUpperCase() : capital(part)))
     .join(' ')
     .replace(/^GPT /, 'GPT-')
 

@@ -1,3 +1,4 @@
+import { plural } from '@sand/kit'
 import type { Paths } from '@sand/paths/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Context } from 'drydock'
@@ -24,7 +25,7 @@ export const projectLoader = (ctx: Context<'paths'>, folders: HookFolders, trust
   const declined = new Set<string>()
 
   const ask = async (root: string, names: string[]) => {
-    const files = `${names.length} ${names.length === 1 ? 'file' : 'files'}: ${names.join(', ')}`
+    const files = `${plural(names.length, 'file')}: ${names.join(', ')}`
     const items = [
       { label: 'Trust and run', value: true },
       { label: 'Not now', value: false },

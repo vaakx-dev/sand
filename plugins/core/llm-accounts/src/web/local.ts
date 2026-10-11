@@ -1,15 +1,15 @@
-import { contextMenu, derive, div, dot, dynamicChild, hint, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch, type ContextMenu } from '@sand/dom'
+import { contextMenu, derive, div, dot, dynamicChild, hintRow, itemRow, label, rowAction, secondaryAction, settingsSection, sig, span, toggleSwitch, type ContextMenu } from '@sand/dom'
 import type { LoginAccount, LoginState } from '../contract'
 import { accountLogo, howText } from './names'
 import { accountSpec } from './account-menu'
-import { accountRow, accountRowWith, busyAction } from './parts'
+import { whileBusy } from './parts'
 import type { LoginControl } from './state'
 
 type Fix = (account: LoginAccount) => void
 
 const shareSwitch = (account: LoginAccount, control: LoginControl) => {
   const busy = sig(false)
-  const toggle = busyAction(busy, () => control.run({ type: 'login.shared', account: account.id, shared: !account.shared }))
+  const toggle = () => whileBusy(busy, () => control.run({ type: 'login.shared', account: account.id, shared: !account.shared }))
   return label(
     { class: 'flex items-center gap-2 text-xs text-neutral-400' },
     'Share with my PCs',
@@ -33,23 +33,28 @@ const detail = (account: LoginAccount) => {
 
 const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
 
+const rowControls = (account: LoginAccount, control: LoginControl, fix: Fix) => {
+  if (account.env) return []
+  const server = account.kind === 'server'
+  return [
+    server && account.error ? secondaryAction({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
+    shareSwitch(account, control),
+    rowAction({ label: server ? 'Remove' : 'Sign out', danger: true, run: () => void control.run({ type: 'login.logout', account: account.id }) }),
+  ]
+}
+
 const signedInRow = (account: LoginAccount, control: LoginControl, fix: Fix, menu: ContextMenu) =>
-  accountRowWith(
+  itemRow(
     menu.target(() => accountSpec(account, control, fix)),
     accountLogo(account.provider),
     account.label,
     detail(account),
-    ...(account.env
-      ? []
-      : [
-          account.kind === 'server' && account.error ? secondaryAction({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
-          shareSwitch(account, control),
-          rowAction({ label: account.kind === 'server' ? 'Remove' : 'Sign out', danger: true, run: () => void control.run({ type: 'login.logout', account: account.id }) }),
-        ]),
+    ...rowControls(account, control, fix),
   )
 
 const brokenRow = (account: LoginAccount, fix: Fix) =>
-  accountRow(
+  itemRow(
+    {},
     accountLogo(account.provider),
     account.label,
     span({ class: 'text-danger-400' }, account.error ?? ''),
@@ -72,10 +77,10 @@ export const localSection = (control: LoginControl, fix: Fix) => {
       }),
       () => {
         const state = control.state.get()
-        if (!state) return div({ class: 'bg-neutral-900' }, hint('Loading…'))
+        if (!state) return hintRow('Loading…')
         const list = shown(state)
-        if (!list.length) return div({ class: 'bg-neutral-900' }, hint(emptyText(state)))
-        return span(
+        if (!list.length) return hintRow(emptyText(state))
+        return div(
           { class: 'contents' },
           list.map(account => (account.signedIn ? signedInRow(account, control, fix, menu) : brokenRow(account, fix))),
         )

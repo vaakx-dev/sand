@@ -14,6 +14,7 @@
       "hub": "paired PCs can't share one person ID with this PC",
       "hostDevices": "connected browsers and phones are not counted",
       "modelSettings": "events carry no model or effort",
+      "llm": "events carry no provider",
       "loops": "events carry no loop name"
     }
   },

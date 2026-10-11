@@ -1,4 +1,5 @@
-import { newSecret, runtimeEnv, withSafe } from '@sand/kit/host'
+import { randomSecret } from '@sand/kit/fs'
+import { runtimeEnv, withSafe } from '@sand/kit/host'
 import type { FailedPlugin, HostMessage, RuntimeActivity, RuntimeMessage } from '@sand/protocol'
 import type { Subprocess } from 'bun'
 import { homedir } from 'node:os'
@@ -19,7 +20,7 @@ export interface Child {
 
 export const spawnRuntime = (main: string, safe: boolean, receive: (child: Child, message: RuntimeMessage) => void): Child => {
   const id = Bun.randomUUIDv7()
-  const secret = newSecret()
+  const secret = randomSecret(24)
   const proc = Bun.spawn([process.execPath, main, 'runtime'], {
     cwd: homedir(),
     env: withSafe({ ...process.env, [runtimeEnv.id]: id, [runtimeEnv.secret]: secret }, safe),

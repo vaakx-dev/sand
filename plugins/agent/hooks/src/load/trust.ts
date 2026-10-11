@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { join } from 'node:path'
 
 type TrustRecords = Record<string, { hash: string; at: number }>
@@ -13,7 +14,7 @@ export const trustStore = (home: string): TrustStore => {
   const read = () =>
     (records ??= file
       .json()
-      .then(data => (data && typeof data === 'object' ? (data as TrustRecords) : {}))
+      .then(data => (isRecord(data) ? (data as TrustRecords) : {}))
       .catch((): TrustRecords => ({})))
 
   return {

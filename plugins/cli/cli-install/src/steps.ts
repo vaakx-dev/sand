@@ -13,7 +13,12 @@ import {
   readStamp,
   setCurrentApp,
 } from '@sand/kit/host'
-import type { Installer } from './installer'
+
+export interface Installer {
+  home: string
+  daemon: Daemon
+  open(): Promise<unknown>
+}
 
 const again = 'run the install command again'
 

@@ -11,7 +11,7 @@ const effortOf = (model: string, wanted: Effort | undefined): Effort => {
 
 const firstPrompt = (messages: Message[]) => JSON.stringify(messages.find(message => message.role === 'user')?.content ?? [])
 
-export const cacheKey = (request: LLMRequest) =>
+const cacheKey = (request: LLMRequest) =>
   createHash('sha256').update(request.system).update('\n').update(firstPrompt(request.messages)).digest('hex').slice(0, 32)
 
 export const codexBody = (request: LLMRequest, model: string) => ({

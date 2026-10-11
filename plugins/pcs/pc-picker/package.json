@@ -24,7 +24,7 @@
     "@sand/kit": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/sync": "workspace:*",
-    "@sand/transcript-chat": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
     "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

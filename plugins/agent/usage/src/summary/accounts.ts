@@ -1,11 +1,9 @@
 import type { LLM, Limits, SourceInfo } from '@sand/llm-accounts/contract'
 import type { AccountUsage } from '../contract'
 import type { AccountId } from './identity'
-import { accountKey } from '@sand/kit'
+import { accountKey, byCost, emptyTotals, grouped } from '@sand/kit'
 import { limitsOf } from '../limits'
-import { grouped } from './grouped'
 import { factsOf } from './labels'
-import { byCost, emptyTotals } from './totals'
 
 type Tally = AccountUsage & { roots: Set<string> }
 
@@ -21,7 +19,7 @@ const seedOf = ({ id, label, provider, billing, plan }: SourceInfo): AccountId =
 })
 
 const limitsOwner = (limits: Limits, seeds: Map<string, AccountId>): AccountId => {
-  const source = limits.source ?? 'claude'
+  const { source } = limits
   const key = accountKey({ source, pc: limits.pc })
   const seed = limits.pc ? undefined : seeds.get(key)
   const facts = factsOf(source)

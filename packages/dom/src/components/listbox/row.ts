@@ -1,10 +1,9 @@
-import { div, effect, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
-import { read } from '../../reactive/read'
+import { div, effect, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import type { Listbox } from './model'
 
-const revealWhenSelected = (box: Listbox, index: MaybeReactive<number>) => (node: Node) =>
+const revealWhenSelected = (box: Listbox, index: MaybeReactive<number>) => (node: Element) =>
   effect(() => {
-    if (box.isSelected(read(index)) && box.following()) (node as HTMLElement).scrollIntoView({ block: 'nearest' })
+    if (box.isSelected(read(index)) && box.following()) node.scrollIntoView({ block: 'nearest' })
   })
 
 export const optionProps = (box: Listbox, index: MaybeReactive<number>) => ({

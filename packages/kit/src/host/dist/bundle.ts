@@ -1,8 +1,8 @@
 import { readBuild, type AppFile, type Bundle, type BuildStamp } from './build'
 import { buildStamp, moduleFiles } from './files'
 import { runtimeDeps } from './release/deps'
-import { workspaceLinks } from './release/links'
 import { moduleHash } from './release/manifest'
+import { workspaceLinks } from './release/workspaces'
 
 const sharedBun = () => {
   if (Bun.version.includes('-')) throw new Error('sand can only share release builds of Bun')
@@ -14,7 +14,7 @@ const readModules = async (root: string): Promise<AppFile[]> => {
   return Promise.all(found.map(async ({ path, file }) => ({ path, bytes: await Bun.file(file).bytes() })))
 }
 
-export type BuildHistory = Pick<BuildStamp, 'commit' | 'changes'>
+type BuildHistory = Pick<BuildStamp, 'commit' | 'changes'>
 
 const historyOf = (history: BuildHistory | undefined, saved: BuildStamp | undefined): BuildHistory => {
   const { commit, changes } = history ?? saved ?? {}

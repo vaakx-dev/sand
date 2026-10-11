@@ -1,6 +1,6 @@
 import { colorsOf } from '../../data/providers'
 import type { Account, Merged } from '../../data/types'
-import { valueOf, type Metric } from '../../format'
+import { metricValue, type Metric } from '../../format'
 import { isSubscription } from '../../names'
 import { periodKeys } from '../../range'
 
@@ -26,7 +26,7 @@ export const seriesOf = (usage: Merged, metric: Metric) => {
   const labelOf = labelsOf(used)
   const colorOf = colorsOf(usage.accounts)
   const series: Series[] = used.map(account => {
-    const values = keys.map(key => valueOf(byKey.get(key)?.accounts[account.key], metric))
+    const values = keys.map(key => metricValue(byKey.get(key)?.accounts[account.key], metric))
     return {
       account,
       label: labelOf(account),

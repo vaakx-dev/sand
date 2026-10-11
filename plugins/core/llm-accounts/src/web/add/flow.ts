@@ -1,5 +1,6 @@
-import { effect, sig, untrack, type Sig } from '@sand/dom'
+import { effect, onTimeout, sig, type Sig } from '@sand/dom'
 import type { SignInKind } from '../../contract'
+import { whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 import type { SignInActions } from './sign-in'
 import type { Step } from './steps'
@@ -9,20 +10,11 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: (text?:
   const touched = new Set<SignInKind>()
   let waited = false
 
-  const run = async (work: () => Promise<void>) => {
-    busy.set(true)
-    try {
-      await work()
-    } finally {
-      busy.set(false)
-    }
-  }
-
   const start = (account: SignInKind, anyway = false) => {
     touched.add(account)
     waited = false
     step.set({ kind: 'sign-in', account })
-    return run(() => control.run({ type: 'login.start', account, ...(anyway && { anyway: true }) }))
+    return whileBusy(busy, () => control.run({ type: 'login.start', account, ...(anyway && { anyway: true }) }))
   }
 
   const cancel = () => {
@@ -38,11 +30,11 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: (text?:
     const found = current.kind === 'sign-in' ? control.account(current.account) : undefined
     if (!found) return
     if (found.pending) waited = true
-    else if (waited && found.signedIn && found.method === 'oauth') untrack(() => queueMicrotask(() => done(`Signed in to ${found.label}`)))
+    else if (waited && found.signedIn && found.method === 'oauth') onTimeout(() => done(`Signed in to ${found.label}`))
   })
 
   const actionsFor = (account: SignInKind): SignInActions => ({
-    keep: () => void run(() => control.run({ type: 'login.cancel', account })).then(() => done()),
+    keep: () => void whileBusy(busy, () => control.run({ type: 'login.cancel', account })).then(() => done()),
     anyway: () => void start(account, true),
     retry: () => void start(account),
   })

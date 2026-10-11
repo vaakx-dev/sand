@@ -24,6 +24,7 @@ export default definePlugin({
   inject: ['tools'],
   uses: {
     skills: 'the agent gets no guide to writing plugins',
+    inspector: 'plugin details list no services or hooks',
     webExtensions: 'the plugin tool shows no web extensions',
   },
   apply(ctx) {

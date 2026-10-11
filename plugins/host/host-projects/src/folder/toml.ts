@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { join } from 'node:path'
 
 export interface ProjectToml {
@@ -9,7 +10,8 @@ const text = (value: unknown) => (typeof value === 'string' && value.trim() ? va
 
 export const readProjectToml = async (folder: string): Promise<ProjectToml> => {
   try {
-    const data = Bun.TOML.parse(await Bun.file(join(folder, '.sand', 'project.toml')).text()) as Record<string, unknown>
+    const data: unknown = Bun.TOML.parse(await Bun.file(join(folder, '.sand', 'project.toml')).text())
+    if (!isRecord(data)) return {}
     const name = text(data.name)
     const setup = text(data.setup)
     return { ...(name ? { name } : {}), ...(setup ? { setup } : {}) }

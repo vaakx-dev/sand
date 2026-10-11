@@ -8,7 +8,11 @@ export default definePlugin({
   name: 'goal',
   description: '/goal: the agent keeps working until a separate check confirms a condition holds',
   inject: ['llm', 'context', 'loop', 'sessions'],
-  uses: { ui: 'there is no /goal command and goal changes are not announced' },
+  uses: {
+    ui: 'there is no /goal command and goal changes are not announced',
+    agents: 'the goal is checked even while background agents are still running',
+    modelSettings: 'a thread started by /goal ignores the model chosen before it existed',
+  },
   apply(ctx) {
     ctx.on('turn.stop', checkOnStop(ctx))
     ctx.on('session.carry', types => [...types, entryType])

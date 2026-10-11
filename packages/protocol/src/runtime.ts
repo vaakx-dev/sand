@@ -4,12 +4,6 @@ export type RuntimeAccess = 'denied' | 'public' | 'client'
 
 export type RuntimeReason = 'start' | 'reload' | 'watch' | 'crash' | 'plugins' | 'update' | 'safe'
 
-declare module './wire/registry' {
-  interface WireRequests {
-    'runtimes.safe': { on: boolean }
-  }
-}
-
 export interface FailedPlugin {
   id: string
   error: string
@@ -39,4 +33,21 @@ export interface Runtime {
   caller(request: Request): RouteCaller | undefined
   listening(url: string): void
   swap(): void
+}
+
+declare module './wire' {
+  interface WireRequests {
+    'runtimes.safe': { on: boolean }
+  }
+}
+
+declare module 'drydock' {
+  interface Services {
+    runtime: Runtime
+  }
+
+  interface Events {
+    'runtime.drain': () => void
+    'runtime.release': (sessions: string[]) => void
+  }
 }

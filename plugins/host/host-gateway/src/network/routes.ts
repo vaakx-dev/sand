@@ -1,7 +1,6 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
 import { routeKind } from '@sand/kit'
 import type { HostRoute } from '../contract'
-import { isLoopbackUrl } from './addresses'
 
 export interface RoutesInput {
   urls: string[]
@@ -12,10 +11,7 @@ export interface RoutesInput {
 
 const tailnet = (url: string): HostRoute => ({ url, kind: 'tailscale' })
 
-const unique = (routes: HostRoute[]) => {
-  const seen = new Set<string>()
-  return routes.filter(route => !seen.has(route.url) && seen.add(route.url))
-}
+const unique = (routes: HostRoute[]) => routes.filter((route, index) => routes.findIndex(other => other.url === route.url) === index)
 
 const tailnetHttp = ({ lan, port, tailscale }: RoutesInput) => {
   if (!lan || !tailscale?.running) return { ips: [], names: [] }
@@ -26,7 +22,7 @@ const tailnetHttp = ({ lan, port, tailscale }: RoutesInput) => {
 }
 
 export const hostRoutes = (input: RoutesInput): HostRoute[] => {
-  const listed = input.urls.filter(url => !isLoopbackUrl(url)).map(url => ({ url, kind: routeKind(url) }))
+  const listed = input.urls.map(url => ({ url, kind: routeKind(url) })).filter(route => route.kind !== 'local')
   const { ips, names } = tailnetHttp(input)
   const { serving, httpsUrl } = input.tailscale ?? {}
   return unique([

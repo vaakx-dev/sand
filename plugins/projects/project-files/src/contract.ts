@@ -12,8 +12,6 @@ export interface LocalCopy {
 }
 
 export interface ProjectFiles {
-  read(): Promise<Project[] | undefined>
-  write(projects: Project[]): Promise<void>
   local(): LocalProjects
   copies(): LocalCopy[]
   ofFolder(dir: string): string | null

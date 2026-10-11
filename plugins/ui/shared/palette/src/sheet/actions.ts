@@ -1,4 +1,5 @@
-import type { PaletteItem, PalettePage } from '../contract'
+import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
+import type { MenuSpec } from '@sand/dom'
 
 export const actionsPage = (item: PaletteItem): PalettePage => ({
   id: `actions:${item.id}`,
@@ -13,4 +14,16 @@ export const actionsPage = (item: PaletteItem): PalettePage => ({
       returnAfter: action.returnAfter,
       run: action.run,
     })),
+})
+
+export const actionsMenu = (item: PaletteItem, runAction: (action: PaletteItemAction) => Promise<void>): MenuSpec => ({
+  title: item.label,
+  subtitle: item.detail,
+  actions: (item.actions ?? []).map((action, index) => ({
+    id: `action:${index}`,
+    label: action.label,
+    icon: action.icon,
+    danger: action.danger,
+    run: () => runAction(action),
+  })),
 })

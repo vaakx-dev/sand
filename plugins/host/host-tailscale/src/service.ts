@@ -1,26 +1,27 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, serial } from '@sand/kit'
+import { findTailscale } from './binary'
 import type { HostTailscale, TailscaleState } from './contract'
 import { serveOff, serveOn } from './serve'
 import { loadSettings, saveSettings, type TailscaleSettings } from './settings'
 import { type Detected, detect, sandTarget } from './status'
 
-export interface TailscaleOptions {
-  binary: string | undefined
+interface TailscaleOptions {
   home: string
   port: number
-  changed?(state: TailscaleState): void
+  changed(state: TailscaleState): void
 }
 
-export interface TailscaleService extends HostTailscale {
+interface TailscaleService extends HostTailscale {
   resume(): Promise<TailscaleState>
 }
 
-export const createTailscale = async ({ binary, home, port, changed }: TailscaleOptions): Promise<TailscaleService> => {
+export const createTailscale = async ({ home, port, changed }: TailscaleOptions): Promise<TailscaleService> => {
+  const binary = findTailscale()
+  const queue = serial()
   let settings: TailscaleSettings = await loadSettings(home)
   let detected: Detected = { installed: Boolean(binary), running: false }
   let failure: string | undefined
   let resumePending = false
-  let queue: Promise<unknown> = Promise.resolve()
 
   const serving = () => port > 0 && detected.target === sandTarget(port)
   const owned = () => Boolean(detected.target) && (detected.target === sandTarget(port) || detected.target === settings.target)
@@ -48,7 +49,7 @@ export const createTailscale = async ({ binary, home, port, changed }: Tailscale
     const next = build()
     if (JSON.stringify(next) === JSON.stringify(current)) return current
     current = next
-    changed?.(next)
+    changed(next)
     return next
   }
 
@@ -73,14 +74,13 @@ export const createTailscale = async ({ binary, home, port, changed }: Tailscale
     detected = await detect(binary)
   }
 
-  const enqueue = (task: () => Promise<TailscaleState>) => {
-    const next = queue.then(task).catch(error => {
-      failure = errorMessage(error)
-      return publish()
-    })
-    queue = next
-    return next
-  }
+  const enqueue = (task: () => Promise<TailscaleState>) =>
+    queue(() =>
+      task().catch(error => {
+        failure = errorMessage(error)
+        return publish()
+      }),
+    )
 
   const refresh = () =>
     enqueue(async () => {

@@ -25,8 +25,7 @@ export const sandboxedFrame = (props: Props<HTMLIFrameElement>) =>
 export const showPageIn = (frame: HTMLIFrameElement, html: string) => post(frame, { method: showPage, params: { html } })
 
 export const listenToFrame = (frame: HTMLIFrameElement, events: FrameEvents) =>
-  listen(window, 'message', event => {
-    const { source, data } = event as MessageEvent
+  listen(window, 'message', ({ source, data }: MessageEvent) => {
     const message = data as Message | null
     if (source !== frame.contentWindow || message?.jsonrpc !== '2.0') return
     if (message.method === sizeChanged && typeof message.params?.height === 'number') events.resize(message.params.height)

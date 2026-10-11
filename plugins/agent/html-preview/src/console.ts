@@ -1,4 +1,4 @@
-import type { Page } from './cdp'
+import type { ExceptionDetails, Page, RemoteObject } from './cdp'
 
 export type Level = 'log' | 'info' | 'warning' | 'error'
 
@@ -17,9 +17,9 @@ const maxMessageLength = 1000
 
 const levels: Record<string, Level> = { warning: 'warning', warn: 'warning', error: 'error', assert: 'error', info: 'info' }
 
-const argText = (arg: Record<string, any>) => String(arg.value ?? arg.unserializableValue ?? arg.description ?? arg.type)
+const argText = (arg: RemoteObject) => String(arg.value ?? arg.unserializableValue ?? arg.description ?? arg.type)
 
-export const exceptionText = (details: Record<string, any>) => details.exception?.description ?? details.text
+export const exceptionText = (details: ExceptionDetails) => details.exception?.description ?? details.text
 
 export const collect = (page: Page): Console => {
   const messages: ConsoleMessage[] = []

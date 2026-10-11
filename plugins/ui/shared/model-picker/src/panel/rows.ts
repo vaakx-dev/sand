@@ -1,8 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, div, menuItem, span } from '@sand/dom'
-import { tokens } from '@sand/kit'
+import { badge, div, menuItem, modelLogo, span } from '@sand/dom'
+import { sourceName, tokens } from '@sand/kit'
 import type { Scene } from './scene'
-import { logo, sourceName } from './source'
 
 const radio = (on: boolean) =>
   span(
@@ -25,7 +24,7 @@ export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => 
       ...scene.menu.target(() => scene.menuOf(model), () => scene.pick(model)),
     },
     radio(on),
-    withSource && logo(model.provider, 14),
+    withSource && modelLogo(model.provider, 14),
     span({ class: 'min-w-0 flex-1 truncate font-medium' }, model.label),
     div(
       { class: 'flex shrink-0 items-center gap-2' },

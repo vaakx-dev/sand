@@ -1,11 +1,12 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import { remoteKey } from '@sand/kit'
+import type { ProjectsContext } from '../context'
 import { reviewPage } from './review'
-import { deviceOf, type Choice, type FlowContext } from './types'
+import type { Choice } from './types'
 
-const copyItem = (ctx: FlowContext, choice: Choice, group: ProjectGroup): PaletteItem => {
-  const here = group.locations.find(location => location.device === deviceOf(choice.machine))
+const copyItem = (ctx: ProjectsContext, choice: Choice, group: ProjectGroup): PaletteItem => {
+  const here = group.locations.find(location => location.device === choice.machine.device)
   return {
     id: `match:${group.id}`,
     icon: 'link',
@@ -16,7 +17,7 @@ const copyItem = (ctx: FlowContext, choice: Choice, group: ProjectGroup): Palett
   }
 }
 
-const matchPage = (ctx: FlowContext, choice: Choice, groups: ProjectGroup[]): PalettePage => ({
+const matchPage = (ctx: ProjectsContext, choice: Choice, groups: ProjectGroup[]): PalettePage => ({
   id: 'match',
   title: `Same git remote as ${groups.length === 1 ? groups[0]!.name : `${groups.length} projects`}`,
   placeholder: 'Search…',
@@ -27,26 +28,18 @@ const matchPage = (ctx: FlowContext, choice: Choice, groups: ProjectGroup[]): Pa
   ],
 })
 
-const sameRemote = (ctx: FlowContext, url: string) => {
+const offerMatches = (ctx: ProjectsContext, choice: Choice, groups: ProjectGroup[]) => (groups.length ? matchPage(ctx, choice, groups) : reviewPage(ctx, choice))
+
+const sameRemote = (ctx: ProjectsContext, url: string) => {
   const key = remoteKey(url)
   return key ? ctx.projects.groups({ hidden: true }).filter(group => group.remote && remoteKey(group.remote) === key) : []
 }
 
-const inspected = async (ctx: FlowContext, choice: Choice): Promise<{ choice: Choice; groups: ProjectGroup[] }> => {
-  const folder = await ctx.projects.inspect(choice.path, deviceOf(choice.machine)).catch(() => undefined)
-  if (!folder) return { choice, groups: [] }
-  if (folder.project) return { choice: { ...choice, existing: folder.project }, groups: [] }
-  const groups = folder.matches.map(id => ctx.projects.get(id)).filter((group): group is ProjectGroup => Boolean(group))
-  return { choice, groups }
-}
-
-export const suggestPage = async (ctx: FlowContext, choice: Choice): Promise<PalettePage> => {
+export const suggestPage = async (ctx: ProjectsContext, choice: Choice): Promise<PalettePage> => {
   if (choice.project) return reviewPage(ctx, choice)
-  if (choice.how === 'clone' && choice.repo) {
-    const groups = sameRemote(ctx, choice.repo.url)
-    return groups.length ? matchPage(ctx, choice, groups) : reviewPage(ctx, choice)
-  }
+  if (choice.how === 'clone') return offerMatches(ctx, choice, sameRemote(ctx, choice.repo.url))
   if (choice.how !== 'add') return reviewPage(ctx, choice)
-  const found = await inspected(ctx, choice)
-  return found.groups.length ? matchPage(ctx, found.choice, found.groups) : reviewPage(ctx, found.choice)
+  const folder = await ctx.projects.inspect(choice.path, choice.machine.device).catch(() => undefined)
+  if (folder?.project) return reviewPage(ctx, { ...choice, existing: folder.project })
+  return offerMatches(ctx, choice, folder?.matches.flatMap(id => ctx.projects.get(id) ?? []) ?? [])
 }

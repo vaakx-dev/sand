@@ -1,6 +1,7 @@
 import type { Command, UI } from '@sand/server/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
-import { commandThread, errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/kit'
+import { commandThread } from '@sand/server/thread'
 import type { Context } from 'drydock'
 import { activeGoal, describeGoal, entryType, type Goal } from './goal'
 

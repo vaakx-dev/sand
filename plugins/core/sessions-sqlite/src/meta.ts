@@ -19,28 +19,17 @@ export const sessionMeta = (db: Database) => {
     return { id, ...row, pinned: Boolean(row.pinned) }
   }
 
+  const after = (id: string, change: () => void) => {
+    change()
+    return get(id)
+  }
+
   return {
-    pin(id: string, pinned: boolean) {
-      pin.run({ id, pinned: pinned ? 1 : 0 })
-      return get(id)
-    },
-    settle(id: string, settled: boolean) {
-      if (settled) settle.run({ id, now: Date.now() })
-      else unsettle.run({ id })
-      return get(id)
-    },
-    snooze(id: string, until: number | null) {
-      snooze.run({ id, until })
-      return get(id)
-    },
-    see(id: string, at: number) {
-      see.run({ id, at })
-      return get(id)
-    },
-    move(id: string, position: number) {
-      move.run({ id, position })
-      return get(id)
-    },
+    pin: (id: string, pinned: boolean) => after(id, () => pin.run({ id, pinned: pinned ? 1 : 0 })),
+    settle: (id: string, settled: boolean) => after(id, () => (settled ? settle.run({ id, now: Date.now() }) : unsettle.run({ id }))),
+    snooze: (id: string, until: number | null) => after(id, () => snooze.run({ id, until })),
+    see: (id: string, at: number) => after(id, () => see.run({ id, at })),
+    move: (id: string, position: number) => after(id, () => move.run({ id, position })),
   }
 }
 
@@ -51,12 +40,11 @@ export const serveMeta = (server: Server, meta: ReturnType<typeof sessionMeta>) 
     server.broadcast('session.meta', [update])
     return update
   }
-  const handlers = [
-    server.handle('session.pin', request => publish(meta.pin(String(request.session), Boolean(request.pinned)))),
-    server.handle('session.settle', request => publish(meta.settle(String(request.session), Boolean(request.settled)))),
-    server.handle('session.snooze', request => publish(meta.snooze(String(request.session), untilOf(request.until)))),
-    server.handle('session.seen', request => publish(meta.see(String(request.session), Number(request.at)))),
-    server.handle('session.move', request => publish(meta.move(String(request.session), Number(request.position)))),
-  ]
-  return () => handlers.forEach(dispose => void dispose())
+  return server.handle({
+    'session.pin': request => publish(meta.pin(String(request.session), Boolean(request.pinned))),
+    'session.settle': request => publish(meta.settle(String(request.session), Boolean(request.settled))),
+    'session.snooze': request => publish(meta.snooze(String(request.session), untilOf(request.until))),
+    'session.seen': request => publish(meta.see(String(request.session), Number(request.at))),
+    'session.move': request => publish(meta.move(String(request.session), Number(request.position))),
+  })
 }

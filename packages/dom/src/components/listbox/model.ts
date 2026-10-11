@@ -1,16 +1,15 @@
-import { keys, sig, untrack, type KeyMap } from '@vaakx-dev/vrui'
+import { sig, untrack, type KeyMap } from '@vaakx-dev/vrui'
 
 export interface ListboxOptions {
   count(): number
   choose(index: number): void
   start?: number
   wrap?: boolean
-  pageSize?: number
 }
 
-export type Listbox = ReturnType<typeof listbox>
+const pageSize = 10
 
-export const listbox = ({ count, choose, start = 0, wrap = false, pageSize = 10 }: ListboxOptions) => {
+export const listbox = ({ count, choose, start = 0, wrap = false }: ListboxOptions) => {
   const selected = sig(start)
   let following = true
 
@@ -49,8 +48,6 @@ export const listbox = ({ count, choose, start = 0, wrap = false, pageSize = 10 
     },
   }
 
-  const handleKeys = keys(keyMap, { stop: true })
-
   return {
     selected,
     isSelected: (index: number) => selected.get() === index,
@@ -60,14 +57,10 @@ export const listbox = ({ count, choose, start = 0, wrap = false, pageSize = 10 
       if (selected.get() !== index) select(index, false)
     },
     clear: () => selected.set(-1),
-    move,
-    page,
     first: () => select(0),
-    last: () => select(total() - 1),
     pick,
     keyMap,
-    onKeyDown: (event: KeyboardEvent) => {
-      if (!event.isComposing) handleKeys(event)
-    },
   }
 }
+
+export type Listbox = ReturnType<typeof listbox>

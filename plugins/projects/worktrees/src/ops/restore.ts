@@ -5,9 +5,8 @@ import { restoreWorktree } from '../git/worktree'
 import { readSetup } from '../setup/file'
 import { setupSteps } from '../setup/plan'
 import { runSteps } from '../setup/steps'
-import { forgetMarks } from './marks'
+import { idle, openSession, type Ops } from './context'
 import { relocate } from './relocate'
-import { idle, openSession, type Ops } from './types'
 
 export const restoreSession = async (ops: Ops, id: unknown, entryId: unknown): Promise<MoveResult> => {
   const session = openSession(ops, id)
@@ -27,7 +26,6 @@ export const restoreSession = async (ops: Ops, id: unknown, entryId: unknown): P
     },
   }
   const outcome = await runSteps(session.id, [restore, ...setupSteps(setup, repo.main, removed.path)], ops.publish)
-  forgetMarks()
   ops.changed(repo.main)
   if (outcome.failed === 0) throw new Error(outcome.error)
   return { path: removed.path, branch: removed.branch }

@@ -1,6 +1,5 @@
 import type { AccountUsage, UsageSummary, UsageTotals } from '@sand/usage/contract'
 import { periodLabel, plural, tokens, tokensOf, usageCost, windowText } from '@sand/kit'
-import { rangeTitle, type Range } from './range'
 
 const table = (head: string[], rows: string[][]) => {
   const all = [head, ...rows]
@@ -34,12 +33,12 @@ const limitLines = (accounts: AccountUsage[]) => {
   ])
 }
 
-export const printSummary = (summary: UsageSummary, range: Range) => {
+export const summaryText = (summary: UsageSummary, title: string) => {
   const { total } = summary
   const labels = new Map(summary.accounts.map(account => [account.key, accountName(account)]))
   const { input, cacheRead, cacheWrite, output } = total.usage
   return [
-    rangeTitle[range],
+    title,
     ...pairs([
       ['API cost', usageCost(total)],
       ['Tokens', `${tokens(tokensOf(total.usage))} · ${tokens(input)} input · ${tokens(cacheRead)} cache read · ${tokens(cacheWrite)} cache write · ${tokens(output)} output`],

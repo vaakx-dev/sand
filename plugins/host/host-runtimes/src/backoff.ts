@@ -2,7 +2,7 @@ const first = 1_000
 const longest = 30_000
 const stable = 60_000
 
-export const backoffDelay = (failures: number) => Math.min(first * 2 ** failures, longest)
+const backoffDelay = (failures: number) => Math.min(first * 2 ** failures, longest)
 
 export const createBackoff = (restart: () => void) => {
   let failures = 0

@@ -17,7 +17,8 @@ export const createCatalog = (kit: Kit, source: string) => {
 
   const arrange = (list: ModelInfo[]) => {
     for (const model of list) if (!order.has(model.id)) order.set(model.id, order.size)
-    return [...list].sort((a, b) => order.get(a.id)! - order.get(b.id)!)
+    const rank = (model: ModelInfo) => order.get(model.id) ?? 0
+    return [...list].sort((a, b) => rank(a) - rank(b))
   }
 
   const markSeen = (list: ModelInfo[]) => {

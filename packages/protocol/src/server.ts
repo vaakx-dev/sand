@@ -12,6 +12,13 @@ export type RequestHandler = (request: { type: string } & Record<string, unknown
 
 export type WireHandler<K extends WireRequestType> = (request: WireRequestOf<K>) => unknown
 
+export type WireHandlers = { [K in WireRequestType]?: WireHandler<K> }
+
+export type ReportRow =
+  | { kind: 'pair'; label: string; value: string }
+  | { kind: 'bar'; label: string; fraction: number; value: string }
+  | { kind: 'text'; text: string; mono?: boolean }
+
 export interface ServerInfo {
   url: string
   urls: string[]

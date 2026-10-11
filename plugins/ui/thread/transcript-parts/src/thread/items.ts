@@ -1,10 +1,9 @@
 import type { LiveBlock } from '@sand/llm-accounts/contract'
 import type { Entry } from '@sand/messages'
-import type { ToolView } from '@sand/transcript-chat/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { DescribeSettings, Item, NoticeTone, Step } from '../contract'
+import type { DescribeSettings, Item, NoticeTone, ToolView } from '../contract'
 import { tokens } from '@sand/kit'
-import { groupAccumulator } from './groups'
+import { itemCollector } from './collect'
 import { partialInput } from './results'
 import { settledItems, type Settled } from './settled'
 
@@ -31,32 +30,21 @@ const endingNotice = (thread: Thread): Item[] => {
 }
 
 export const liveItems = (settled: Settled, thread: Thread): Item[] => {
-  const groups = groupAccumulator(settled.group)
-  const items: Item[] = []
-
-  const emit = (...next: Item[]) => items.push(...groups.take(), ...next)
-
-  const step = (value: Step, at: number) => groups.add(value, settled.last, at)
-
-  const thinking = (key: string, text: string, streaming: boolean, at: number) => {
-    if (groups.open) step({ kind: 'thinking', key, text, streaming }, at)
-    else items.push({ kind: 'thinking', key, text, streaming, at })
-  }
-
+  const list = itemCollector(settled.group)
   const now = Date.now()
   for (const block of thread.live) {
     const key = `${thread.info.head}:${block.index}`
-    if (block.type === 'text') emit({ kind: 'text', key, text: block.text, streaming: !block.done, at: now })
-    else if (block.type === 'thinking') thinking(key, block.text, !block.done, now)
-    else if (block.type === 'tool') step({ kind: 'tool', key: block.id, tool: liveTool(block, thread) }, now)
+    if (block.type === 'text') list.emit({ kind: 'text', key, text: block.text, streaming: !block.done, at: now })
+    else if (block.type === 'thinking') list.thinking(key, block.text, !block.done, now)
+    else if (block.type === 'tool') list.step({ kind: 'tool', key: block.id, tool: liveTool(block, thread) }, settled.last, now)
   }
 
-  if (thread.context?.compacting) emit({ kind: 'notice', key: 'compacting', text: `Compacting conversation at ${tokens(thread.context.used)} tokens…`, tone: 'dim' })
-  if (groups.open) items.push(...groups.take(thread.running))
-  else if (thread.running && !isStreaming(items.at(-1) ?? settled.items.at(-1))) items.push({ kind: 'live', key: 'live' })
-  items.push(...endingNotice(thread))
-  return settled.items.concat(items)
+  if (thread.context?.compacting) list.emit({ kind: 'notice', key: 'compacting', text: `Compacting conversation at ${tokens(thread.context.used)} tokens…`, tone: 'dim' })
+  if (list.group) list.close(thread.running)
+  else if (thread.running && !isStreaming(list.items.at(-1) ?? settled.items.at(-1))) list.items.push({ kind: 'live', key: 'live' })
+  list.items.push(...endingNotice(thread))
+  return settled.items.concat(list.items)
 }
 
-export const threadItems = (thread: Thread, path: Entry[], custom: (type: string) => boolean, describe?: DescribeSettings): Item[] =>
+export const threadItems = (thread: Thread, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Item[] =>
   liveItems(settledItems(thread, path, custom, describe), thread)

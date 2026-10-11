@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, dynamicChild, hint, providerIcon, settingsSection, untrack } from '@sand/dom'
+import { div, dynamicChild, hintRow, providerIcon, settingsSection, untrack } from '@sand/dom'
 import type { Kit } from '../kit'
 import { crumb, whereText } from '../parts'
 import { createCatalog } from './catalog'
@@ -13,7 +13,7 @@ const body = (kit: Kit, first: SourceInfo, latest: () => SourceInfo) => {
   return div({ class: 'flex flex-col gap-6' }, modelsSection(first, catalog, filter), optionsSection(kit, latest))
 }
 
-const gone = () => settingsSection({}, div({ class: 'bg-neutral-900' }, hint('This account is no longer signed in.')))
+const gone = () => settingsSection({}, hintRow('This account is no longer signed in.'))
 
 const title = (source: SourceInfo | undefined, id: string) => {
   if (!source) return id

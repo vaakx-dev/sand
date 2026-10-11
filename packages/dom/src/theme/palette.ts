@@ -1,4 +1,4 @@
-const neutral = {
+export const neutral = {
   '50': '#fafafa',
   '100': '#f2f2f3',
   '200': '#dcdcdf',

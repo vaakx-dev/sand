@@ -2,8 +2,7 @@ import type { PalettePage } from '../contract'
 import { contextMenu, derive, div, dynamicChild, groupLabel, keys, list, show, untrack, type ContextMenu } from '@sand/dom'
 import { cardView, reviewView } from './card'
 import { crumbs } from './crumbs'
-import { pageHead } from './head'
-import { itemMenu } from './menu'
+import { paletteHead } from './head'
 import { pageModel, type PageModel } from './model'
 import type { PageNav } from './nav'
 import { rowView } from './row'
@@ -49,7 +48,7 @@ const results = (model: PageModel, menu: ContextMenu) =>
       const first = untrack(() => entry.get())
       if ('group' in first) return groupLabel(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
-      return rowView(first.item, position, model.box, model.more, menu, item => itemMenu(item, model.runAction))
+      return rowView(first.item, position, model, menu)
     },
     div({ class: 'max-h-96 overflow-auto overscroll-contain px-2 pb-2' }),
   )
@@ -67,9 +66,9 @@ export const pageView = (page: PalettePage, nav: PageNav, initial = '') => {
       },
     },
     crumbs(nav),
-    pageHead(model),
+    paletteHead(model),
     failureLine(model, false, 'pb-2'),
-    dynamicChild(model.card, found => (found ? cardView(found) : div())),
+    dynamicChild(model.card, found => (found ? cardView(found) : null)),
     page.review ? reviewView(page.review, model.busy, model.progress, () => void model.confirm()) : null,
     failureLine(model, true, 'pb-3'),
     results(model, menu),

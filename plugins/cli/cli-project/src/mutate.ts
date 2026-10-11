@@ -2,14 +2,13 @@ import type { Project, ProjectList, ProjectPatch } from '@sand/host-projects/con
 import { resolve } from 'node:path'
 import { usage } from './usage'
 import type { ProjectFlags } from './flags'
-import { findGroup } from './find'
-import { describeGroup, loadGroups, locationOn, noteOffline } from './groups'
+import { loadGroup } from './find'
+import { describeGroup, locationOn, noteOffline } from './groups'
 import type { Pcs } from './pcs'
 
 const patchProject = async (pcs: Pcs, value: string | undefined, patch: ProjectPatch, done: (name: string) => string) => {
   if (!value) throw new Error(usage)
-  const { groups } = await loadGroups(pcs)
-  const group = findGroup(groups, value)
+  const { group } = await loadGroup(pcs, value)
   await pcs.call({ type: 'projects.update', project: group.id, patch })
   console.log(done(group.name))
 }
@@ -22,8 +21,7 @@ export const addProject = async (pcs: Pcs, [path]: string[]) => {
 
 export const removeProject = async (pcs: Pcs, [value]: string[], { on }: ProjectFlags) => {
   if (!value) throw new Error(usage)
-  const { groups, offline, device } = await loadGroups(pcs)
-  const group = findGroup(groups, value)
+  const { group, offline, device } = await loadGroup(pcs, value)
   if (!on) {
     noteOffline(offline)
     console.log(`deleting ${describeGroup(group)} on every PC; the folders stay on disk`)

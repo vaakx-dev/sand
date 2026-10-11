@@ -1,15 +1,25 @@
 import { plural } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, settingsSection, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
+import type { ProjectsContext } from '../context'
 import { sourcesPage } from '../flow/sources'
-import { projectList } from './list'
-import { refreshStates } from './refresh'
 import { groupRow } from './row'
-import type { ProjectsContext } from './types'
 
 const heading = (groups: ProjectGroup[]) => {
   const pcs = new Set(groups.flatMap(group => group.locations.map(entry => entry.device ?? ''))).size
   return groups.length ? `${plural(groups.length, 'project')} on ${plural(pcs, 'PC')}` : 'Projects'
+}
+
+const refreshStates = (ctx: ProjectsContext, groups: ProjectGroup[], done: Set<string>) => {
+  const sync = ctx.sync
+  if (!sync) return
+  const entries = groups.filter(group => group.locations.length > 1).flatMap(group => group.locations)
+  for (const entry of entries) {
+    const key = `${entry.device ?? ''}\0${entry.path}`
+    if (done.has(key) || entry.missing || !ctx.machines.online(entry.device)) continue
+    done.add(key)
+    sync.refresh(entry).catch(() => undefined)
+  }
 }
 
 const addButton = (ctx: ProjectsContext) => {
@@ -19,7 +29,7 @@ const addButton = (ctx: ProjectsContext) => {
 
 const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) =>
   showHidden.get() || ctx.projects.groups({ hidden: true }).some(group => group.hidden)
-    ? quietButton({ size: 'sm', active: showHidden.get(), onClick: () => showHidden.set(!showHidden.get()) }, 'Show hidden')
+    ? quietButton({ size: 'sm', active: showHidden.get(), onClick: showHidden.toggle() }, 'Show hidden')
     : null
 
 export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse, live: Sig<number>) => {
@@ -34,7 +44,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
   return dynamicChild(source, ({ hidden }) => {
     const groups = ctx.projects.groups({ hidden })
     refreshStates(ctx, groups, refreshed)
-    return projectList(
+    return settingsSection(
       { title: heading(groups), action: div({ class: 'flex items-center gap-2' }, hiddenToggle(ctx, showHidden), addButton(ctx)) },
       ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open)) : [settingsRow('No saved projects')]),
     )

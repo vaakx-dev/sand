@@ -54,7 +54,6 @@ export interface HookFileState {
 
 export interface Hooks {
   files(): HookFileState[]
-  trusted(folder: string): boolean
 }
 
 declare module 'drydock' {

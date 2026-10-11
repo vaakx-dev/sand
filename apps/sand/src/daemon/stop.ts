@@ -2,6 +2,11 @@ import type { ServerInfo } from '@sand/protocol'
 import { bearer, hostPaths } from '@sand/kit'
 import { isAlive, readInfo } from './info'
 
+const waitForExit = async (pid: number) => {
+  for (let tries = 0; tries < 100 && isAlive(pid); tries++) await Bun.sleep(100)
+  return !isAlive(pid)
+}
+
 const askToStop = async (info: ServerInfo) => {
   try {
     await fetch(`${info.url}${hostPaths.stop}`, { method: 'POST', headers: bearer(info.key), signal: AbortSignal.timeout(3000) })
@@ -10,8 +15,7 @@ const askToStop = async (info: ServerInfo) => {
 
 const stopWindows = async (info: ServerInfo) => {
   await askToStop(info)
-  for (let tries = 0; tries < 100 && isAlive(info.pid); tries++) await Bun.sleep(100)
-  if (!isAlive(info.pid)) return
+  if (await waitForExit(info.pid)) return
   try {
     process.kill(info.pid)
   } catch {}
@@ -19,8 +23,7 @@ const stopWindows = async (info: ServerInfo) => {
 
 const stopPosix = async (info: ServerInfo) => {
   process.kill(info.pid, 'SIGINT')
-  for (let tries = 0; tries < 100 && isAlive(info.pid); tries++) await Bun.sleep(100)
-  if (isAlive(info.pid)) process.kill(info.pid, 'SIGTERM')
+  if (!(await waitForExit(info.pid))) process.kill(info.pid, 'SIGTERM')
 }
 
 export const stop = async (home: string) => {

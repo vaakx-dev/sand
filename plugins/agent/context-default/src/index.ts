@@ -1,3 +1,4 @@
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { createInstructions } from './instructions'
@@ -9,16 +10,16 @@ export default definePlugin({
   config: z.object({ instructions: z.string().optional() }),
   apply(ctx, config) {
     const instructions = createInstructions(ctx.tools, ctx.paths)
+    const systemPrompt = async (session: Session) => {
+      const stored = session.path().find(entry => entry.type === 'system')
+      if (stored) return String(stored.data)
+      const system = await compose(instructions, session, ctx.modelSettings?.effective(session).model, config.instructions)
+      session.append('system', system)
+      return system
+    }
     ctx.provide('instructions', instructions)
     ctx.provide('context', {
-      async build(session) {
-        const stored = session.path().find(entry => entry.type === 'system')
-        const model = ctx.modelSettings?.effective(session).model
-        const system = stored
-          ? (stored.data as string)
-          : (session.append('system', await compose(instructions, session, model, config.instructions)).data as string)
-        return { system, messages: session.messages(), tools: ctx.tools.specs() }
-      },
+      build: async session => ({ system: await systemPrompt(session), messages: session.messages(), tools: ctx.tools.specs() }),
     })
   },
 })

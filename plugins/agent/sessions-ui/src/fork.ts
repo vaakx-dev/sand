@@ -1,16 +1,18 @@
-import type { Message } from '@sand/messages'
+import type { Entry, Message } from '@sand/messages'
 import type { Command } from '@sand/server/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import { feedbackOnly, oneLine, promptText } from '@sand/kit'
 import type { SessionsContext } from './types'
 
-const userPrompts = (session: Session) =>
-  session
-    .path()
-    .filter(entry => entry.type === 'message' && (entry.data as Message).role === 'user' && !feedbackOnly(entry.data as Message))
-    .map(entry => ({ entry, message: entry.data as Message, text: promptText(entry.data as Message, ' ') }))
-    .filter(({ text }) => text.trim())
-    .reverse()
+const userPrompt = (entry: Entry) => {
+  if (entry.type !== 'message') return []
+  const message = entry.data as Message
+  if (message.role !== 'user' || feedbackOnly(message)) return []
+  const text = promptText(message, ' ')
+  return text.trim() ? [{ entry, message, text }] : []
+}
+
+const userPrompts = (session: Session) => session.path().flatMap(userPrompt).reverse()
 
 const toolResults = (message: Message) => message.content.filter(block => block.type === 'tool_result')
 

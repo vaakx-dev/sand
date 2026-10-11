@@ -1,4 +1,4 @@
-import { delayed, derive, div, dynamicChild, settingsRow, settingsSection, show, span, spinner } from '@sand/dom'
+import { delayed, derive, div, dynamicChild, settingsRow, settingsSection, show, spinner } from '@sand/dom'
 import type { Merged } from '../data/types'
 import { usageModel, type UsageDeps, type UsageModel } from '../model'
 import { accountsView } from './accounts'
@@ -8,33 +8,40 @@ import { headline } from './headline'
 import { offlineNotices, unpricedNotes } from './notices'
 import { toolbar } from './toolbar'
 
-const note = (text: string) => settingsSection({}, settingsRow(text))
+type BodyState = Merged | 'waiting' | 'empty' | 'missing'
+
+const noUsage = () => settingsSection({}, settingsRow('No usage in this range'))
 
 const pending = () => div({ class: 'flex h-24 items-center justify-center text-neutral-500' }, show(delayed(true), () => spinner(16)))
 
 const content = (usage: Merged, model: UsageModel) => {
-  const used = usage.total.turns > 0
+  const accounts = accountsView(usage.accounts, { now: model.now, nameOf: model.nameOf, checking: model.checking, check: model.checkLimits })
+  if (!usage.total.turns) return div({ class: 'flex flex-col gap-10' }, accounts, noUsage())
   return div(
     { class: 'flex flex-col gap-10' },
-    used ? headline(usage) : null,
-    accountsView(usage.accounts, { now: model.now, nameOf: model.nameOf, checking: model.checking, check: model.checkLimits }),
-    used ? chartView(usage, model.metric) : note('No usage in this range'),
-    used
-      ? div(
-          { class: 'flex flex-col gap-4' },
-          breakdownView({ usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }, model.breakdown),
-          unpricedNotes(usage.unpriced),
-        )
-      : null,
+    headline(usage),
+    accounts,
+    chartView(usage, model.metric),
+    div(
+      { class: 'flex flex-col gap-4' },
+      breakdownView({ usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }, model.breakdown),
+      unpricedNotes(usage.unpriced),
+    ),
   )
 }
 
-const stateOf = (model: UsageModel) => model.usage.get() ?? (model.busy.get() ? 'waiting' : model.notices.get().length ? 'missing' : 'empty')
+const stateOf = (model: UsageModel): BodyState => {
+  const usage = model.usage.get()
+  if (usage) return usage
+  if (model.busy.get()) return 'waiting'
+  return model.notices.get().length ? 'missing' : 'empty'
+}
 
-const body = (model: UsageModel) =>
-  dynamicChild(derive(() => stateOf(model)), state =>
-    typeof state === 'object' ? content(state, model) : state === 'waiting' ? pending() : state === 'empty' ? note('No usage in this range') : span(),
-  )
+const bodyOf = (state: BodyState, model: UsageModel) => {
+  if (typeof state === 'object') return content(state, model)
+  if (state === 'waiting') return pending()
+  return state === 'empty' ? noUsage() : null
+}
 
 export const usagePage = (deps: UsageDeps) => {
   const model = usageModel(deps)
@@ -42,6 +49,12 @@ export const usagePage = (deps: UsageDeps) => {
     { class: 'flex w-full flex-col gap-8' },
     toolbar(model),
     dynamicChild(model.notices, notices => offlineNotices(notices, model.now)),
-    div({ class: ['transition', () => (model.busy.get() && model.usage.get() ? 'opacity-75' : '')] }, body(model)),
+    div(
+      { class: ['transition', () => (model.busy.get() && model.usage.get() ? 'opacity-75' : '')] },
+      dynamicChild(
+        derive(() => stateOf(model)),
+        state => bodyOf(state, model),
+      ),
+    ),
   )
 }

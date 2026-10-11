@@ -23,9 +23,6 @@ const pollFor = 90_000
 const settleDelay = 2_000
 const repairWait = 25 * 60_000
 
-const isRepairResult = (value: unknown): value is PcRepairResult =>
-  typeof value === 'object' && value !== null && typeof (value as PcRepairResult).ok === 'boolean'
-
 const answered = (health: HostHealth): PcHealthState => ({ status: health.healthy ? 'healthy' : 'problem', health })
 
 const fallback = (health: HostHealth | undefined, error: string): PcHealthState =>
@@ -37,10 +34,14 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
   let alive = true
 
   const later = (run: () => void, ms: number) => {
-    const cancel = onTimeout(() => {
+    const stop = onTimeout(() => {
       timers.delete(cancel)
       if (alive) run()
     }, ms)
+    const cancel = () => {
+      stop()
+      timers.delete(cancel)
+    }
     timers.add(cancel)
     return cancel
   }
@@ -50,7 +51,6 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
   ctx.effect(() => () => {
     alive = false
     for (const cancel of timers) cancel()
-    timers.clear()
   })
 
   const ask = (device: string, local: boolean) =>
@@ -99,10 +99,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
   let settling: (() => void) | undefined
 
   const refreshLocal = () => {
-    if (settling) {
-      settling()
-      timers.delete(settling)
-    }
+    settling?.()
     settling = later(() => {
       settling = undefined
       for (const [device, entry] of entries) if (entry.local) check(device, entry)
@@ -136,7 +133,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     while (alive && Date.now() < deadline) {
       if (ctx.wire.state() === 'open') {
         try {
-          return await ctx.wire.call<unknown>({ type: 'pc.repair', device, resume: true })
+          return await ctx.wire.call<PcRepairResult>({ type: 'pc.repair', device, resume: true })
         } catch {
           if (ctx.wire.state() === 'open') break
         }
@@ -148,7 +145,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
 
   const callRepair = async (device: string) => {
     try {
-      return await ctx.wire.call<unknown>({ type: 'pc.repair', device })
+      return await ctx.wire.call<PcRepairResult>({ type: 'pc.repair', device })
     } catch (error) {
       return await resumeRepair(device, error)
     }
@@ -164,7 +161,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
       entry.sig.set(fallback(health, message))
       ctx.notify?.push(message, { level: 'error' })
     }
-    let result: unknown
+    let result: PcRepairResult
     try {
       result = await callRepair(device)
     } catch (error) {
@@ -172,7 +169,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
       return
     }
     if (!alive) return
-    if (isRepairResult(result) && !result.ok) {
+    if (!result.ok) {
       const after = await ask(device, entry.local).catch(() => undefined)
       if (alive) fail(`Repair of ${name} failed: ${result.error ?? 'no reason given'}`, after ?? previous)
       return

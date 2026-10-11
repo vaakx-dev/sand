@@ -1,15 +1,18 @@
 import type { LLMEvent } from '../contract'
+import { errorMessage } from '@sand/kit'
 import { detailOf } from '../errors'
 import type { ShareLine } from './info'
 
 const heartbeat = 5_000
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
+const errorLine = (error: unknown): ShareLine => {
+  const detail = detailOf(error)
+  return { type: 'error', message: errorMessage(error), ...(detail && { detail }) }
+}
 
 export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEvent>, signal: AbortSignal) => {
-  const upstream = new AbortController()
-  const stop = () => upstream.abort()
-  signal.addEventListener('abort', stop, { once: true })
+  const cancelled = new AbortController()
+  const upstream = AbortSignal.any([signal, cancelled.signal])
   const encoder = new TextEncoder()
   let closed = false
   let beat: ReturnType<typeof setInterval> | undefined
@@ -17,7 +20,6 @@ export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEv
   const finish = () => {
     closed = true
     clearInterval(beat)
-    signal.removeEventListener('abort', stop)
   }
 
   const body = new ReadableStream<Uint8Array>({
@@ -32,13 +34,12 @@ export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEv
       }
       beat = setInterval(() => line({ type: 'ping' }), heartbeat)
       try {
-        for await (const event of events(upstream.signal)) {
+        for await (const event of events(upstream)) {
           if (closed) break
           line(event)
         }
       } catch (error) {
-        const detail = detailOf(error)
-        if (!upstream.signal.aborted) line({ type: 'error', message: message(error), ...(detail && { detail }) })
+        if (!upstream.aborted) line(errorLine(error))
       }
       const open = !closed
       finish()
@@ -46,7 +47,7 @@ export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEv
     },
     cancel() {
       finish()
-      stop()
+      cancelled.abort()
     },
   })
 

@@ -1,6 +1,7 @@
 import type { Entry, Message, ToolCallBlock } from '@sand/messages'
-import { feedbackLine, promptText, userParts } from '@sand/kit'
-import { actionsText, type ToolAction } from './action'
+import { capital, feedbackLine, oneLine, promptText, textOf, userParts } from '@sand/kit'
+import { actionsText, toolAction, type ToolAction } from './action'
+import type { LabelData } from './labels'
 
 export type NodeKind = 'prompt' | 'reply' | 'step' | 'tools' | 'notification' | 'compaction' | 'setting'
 
@@ -11,25 +12,14 @@ export interface Described {
   detail: string
 }
 
-export type DescribeTool = (call: ToolCallBlock) => ToolAction
-
-export interface LabelData {
-  target: string
-  label: string | null
-}
-
 const maxDetail = 4000
 
 const recordNames: Record<string, string> = { usage: 'Token usage', goal: 'Goal' }
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
-
-const flat = (text: string) => text.replace(/\s+/g, ' ').trim().slice(0, 200)
-
 const described = (kind: NodeKind, who: string, text: string, detail = text): Described => ({
   kind,
   who,
-  text: flat(text),
+  text: oneLine(text).slice(0, 200),
   detail: detail.trim().slice(0, maxDetail),
 })
 
@@ -41,26 +31,30 @@ const toolsNode = (kind: NodeKind, actions: ToolAction[]) => {
   return described(kind, who, text, actions.map(action => `${action.verb} · ${action.target}`).join('\n'))
 }
 
-const user = (message: Message, calls: Map<string, ToolCallBlock>, tool: DescribeTool): Described => {
-  const text = promptText(message)
-  const results = message.content.flatMap(block => {
+const resultActions = (message: Message, calls: Map<string, ToolCallBlock>) =>
+  message.content.flatMap(block => {
     if (block.type !== 'tool_result') return []
     const call = calls.get(block.callId)
-    return [call ? tool(call) : { verb: 'Tool', target: '' }]
+    return [call ? toolAction(call) : { verb: 'Tool', target: '' }]
   })
+
+const user = (message: Message, calls: Map<string, ToolCallBlock>): Described => {
+  const results = resultActions(message, calls)
   if (results.length) return toolsNode('tools', results)
-  const task = userParts(message).flatMap(part => (part.kind === 'notification' ? [part.notification] : []))[0]
+  const text = promptText(message)
+  const parts = userParts(message)
+  const task = parts.flatMap(part => (part.kind === 'notification' ? [part.notification] : []))[0]
   if (task && !text.trim()) return described('notification', 'Agent', `${task.label} — ${task.status}`)
-  const feedback = userParts(message).flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))[0]
-  if (feedback && !text.trim()) return described('notification', capitalize(feedback.source), feedbackLine(feedback), feedback.text)
-  const shown = [text, ...attachments(message)].join(' ')
-  return described('prompt', 'You', shown, [text, ...attachments(message)].join('\n'))
+  const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))[0]
+  if (feedback && !text.trim()) return described('notification', capital(feedback.source), feedbackLine(feedback), feedback.text)
+  const shown = [text, ...attachments(message)]
+  return described('prompt', 'You', shown.join(' '), shown.join('\n'))
 }
 
-const assistant = (message: Message, tool: DescribeTool): Described => {
-  const text = message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n\n')
+const assistant = (message: Message): Described => {
+  const text = textOf(message.content, '\n\n')
   if (text.trim()) return described('reply', 'sand', text)
-  const calls = message.content.flatMap(block => (block.type === 'tool_call' ? [tool(block)] : []))
+  const calls = message.content.flatMap(block => (block.type === 'tool_call' ? [toolAction(block)] : []))
   return calls.length ? toolsNode('step', calls) : described('step', 'sand', '(no content)')
 }
 
@@ -72,11 +66,11 @@ const setting = (entry: Entry) => {
   return described('setting', 'Note', recordNames[entry.type] ?? entry.type)
 }
 
-export const describe = (entry: Entry, calls: Map<string, ToolCallBlock>, tool: DescribeTool): Described => {
+export const describe = (entry: Entry, calls: Map<string, ToolCallBlock>): Described => {
   if (entry.type === 'compaction') return described('compaction', 'Compacted', 'Earlier messages were summarized')
   if (entry.type !== 'message') return setting(entry)
   const message = entry.data as Message
-  return message.role === 'user' ? user(message, calls, tool) : assistant(message, tool)
+  return message.role === 'user' ? user(message, calls) : assistant(message)
 }
 
-export const isPrompt = (entry: Entry) => describe(entry, new Map(), () => ({ verb: '', target: '' })).kind === 'prompt'
+export const isPrompt = (entry: Entry) => describe(entry, new Map()).kind === 'prompt'

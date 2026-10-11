@@ -1,11 +1,9 @@
 import type { Prompt, UserContent } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { Pending } from './contract'
-import { promptLabel } from '@sand/kit'
+import { promptContent, promptLabel } from '@sand/kit'
 
-export type Steer = Pending & { prompt: UserContent[] }
-
-const content = (prompt: Prompt): UserContent[] => (typeof prompt === 'string' ? [{ type: 'text', text: prompt }] : prompt)
+type Steer = Pending & { prompt: UserContent[] }
 
 export const createQueues = (changed: (session: Session) => void) => {
   const queues = new Map<string, Steer[]>()
@@ -18,7 +16,7 @@ export const createQueues = (changed: (session: Session) => void) => {
   return {
     list,
     add(session: Session, prompt: Prompt, label?: string) {
-      const steer: Steer = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt: content(prompt), at: Date.now() }
+      const steer: Steer = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt: promptContent(prompt), at: Date.now() }
       set(session, [...list(session), steer])
       return steer.id
     },

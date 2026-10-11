@@ -1,5 +1,5 @@
 import type { Session } from '@sand/sessions-sqlite/contract'
-import type { SettingsPatch, SettingsState } from './contract'
+import type { SessionSettings, SettingsPatch, SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Defaults } from './defaults'
 import { resolve } from './effective'
@@ -8,7 +8,7 @@ import { clean, same, settingsOf, writeSettings } from './settings'
 export type Timing = 'now' | 'next'
 
 export const createChoices = (ctx: Context, defaults: Defaults) => {
-  const pending = new Map<string, ReturnType<typeof clean>>()
+  const pending = new Map<string, SessionSettings>()
 
   const change = (session: Session, patch: SettingsPatch): Timing => {
     const current = settingsOf(session)
@@ -36,7 +36,12 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
     return { current: resolve(settingsOf(session), defaults.get(), ctx.llm), ...(next && { next: resolve(next, defaults.get(), ctx.llm) }) }
   }
 
-  return { change, settle, state }
+  const shown = (session?: Session) => {
+    const { current, next } = state(session)
+    return next ?? current
+  }
+
+  return { change, settle, state, shown }
 }
 
 export type Choices = ReturnType<typeof createChoices>

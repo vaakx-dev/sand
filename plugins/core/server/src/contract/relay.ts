@@ -5,15 +5,18 @@ import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 import type { QueueState } from '@sand/steering/contract'
 import type { NoticeLevel, PickItem, PickOptions, ReportRow } from './ui'
 
-export interface OpenedSession {
+export interface LiveSnapshot {
+  live: LiveBlock[]
+  tools: string[]
+}
+
+export interface OpenedSession extends Partial<LiveSnapshot> {
   info: SessionInfo
   entries: Entry[]
   partial?: boolean
   carried?: Entry[]
   queue?: QueueState
   settings?: SettingsState
-  live?: LiveBlock[]
-  tools?: string[]
 }
 
 export interface RelayContributions {

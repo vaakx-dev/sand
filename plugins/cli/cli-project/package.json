@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@sand/host-projects": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",

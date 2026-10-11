@@ -15,8 +15,9 @@ export const skillTool = (skills: Skills, global: Skill[]): Tool<typeof input> =
   description: describeSkills(global),
   input,
   async run({ name }, { cwd, session }) {
-    const skill = await skills.get(name, cwd, session.project)
-    if (!skill) throw new Error(`Unknown skill "${name}". Available: ${(await skills.list(cwd, session.project)).map(item => item.name).join(', ')}`)
+    const list = await skills.list(cwd, session.project)
+    const skill = list.find(item => item.name === name)
+    if (!skill) throw new Error(`Unknown skill "${name}". Available: ${list.map(item => item.name).join(', ')}`)
     return skillBlock(skill).text
   },
 })

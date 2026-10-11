@@ -1,6 +1,6 @@
-import { badge, div, dynamicChild, p, quietButton, secondaryAction, span, type Sig, type Tone } from '@sand/dom'
+import { badge, div, dynamicChild, p, quietButton, secondaryAction, span, type Tone } from '@sand/dom'
 import { healthDetails } from '../health/details'
-import type { PcHealthState, PcHealthStore } from '../health/state'
+import type { PcHealthState, PcHealthStatus, PcHealthStore } from '../health/state'
 
 export interface HealthTarget {
   id: string
@@ -9,17 +9,13 @@ export interface HealthTarget {
   online: boolean
 }
 
-type HealthStatus = PcHealthState['status']
-
-const badges: Record<HealthStatus, [Tone, string]> = {
+const badges: Record<PcHealthStatus, [Tone, string]> = {
   checking: ['neutral', 'Checking…'],
   healthy: ['success', 'Healthy'],
   problem: ['danger', 'Problem'],
   unknown: ['warning', "Can't check"],
   repairing: ['accent', 'Repairing…'],
 }
-
-const busy = (status: HealthStatus) => status === 'checking' || status === 'repairing'
 
 const report = (state: PcHealthState) =>
   div(
@@ -30,17 +26,21 @@ const report = (state: PcHealthState) =>
   )
 
 export const healthPanel = (target: HealthTarget, health: PcHealthStore) => {
-  const state: Sig<PcHealthState> = health.state(target.id, target.local, target.online)
+  const state = health.state(target.id, target.local, target.online)
+  const busy = () => ['checking', 'repairing'].includes(state.get().status)
+  const repair = target.local
+    ? []
+    : [
+        secondaryAction({ size: 'sm', disabled: busy, onClick: () => void health.repair(target.id, target.name) }, 'Repair'),
+        span({ class: 'text-xs text-neutral-500' }, `Repair reinstalls the latest sand from GitHub on ${target.name}.`),
+      ]
   return div(
     { class: 'flex flex-col gap-3 px-4 pb-3' },
     dynamicChild(state, report),
     div(
       { class: 'flex flex-wrap items-center gap-3' },
-      quietButton({ size: 'sm', disabled: () => busy(state.get().status), onClick: () => health.refresh(target.id, target.local) }, 'Check again'),
-      target.local
-        ? null
-        : secondaryAction({ size: 'sm', disabled: () => busy(state.get().status), onClick: () => void health.repair(target.id, target.name) }, 'Repair'),
-      target.local ? null : span({ class: 'text-xs text-neutral-500' }, `Repair reinstalls the latest sand from GitHub on ${target.name}.`),
+      quietButton({ size: 'sm', disabled: busy, onClick: () => health.refresh(target.id, target.local) }, 'Check again'),
+      ...repair,
     ),
   )
 }

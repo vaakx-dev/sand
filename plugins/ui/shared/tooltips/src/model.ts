@@ -4,6 +4,8 @@ import { adoptTitles, tipOf } from './integrations/titles'
 
 type Source = 'pointer' | 'focus'
 
+type Point = { x: number; y: number }
+
 export interface Tip {
   anchor: Element
   text: string
@@ -26,7 +28,7 @@ export const tooltipModel = () => {
   let anchor: Element | undefined
   let source: Source | undefined
   let pressed: Element | undefined
-  let point: { x: number; y: number } | undefined
+  let point: Point | undefined
   let wait: (() => void) | undefined
   let frame: (() => void) | undefined
   let closedAt = 0
@@ -81,10 +83,10 @@ export const tooltipModel = () => {
   return {
     tip,
     close,
-    track(at: { x: number; y: number }) {
+    track(at: Point) {
       point = at
     },
-    over(target: Element, at: { x: number; y: number }) {
+    over(target: Element, at: Point) {
       point = at
       hover(target)
     },

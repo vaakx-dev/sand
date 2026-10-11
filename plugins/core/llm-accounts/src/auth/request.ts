@@ -1,3 +1,5 @@
+import { fieldsOf, isText, type Json } from './json'
+
 export class TokenError extends Error {
   constructor(
     readonly status: number,
@@ -13,20 +15,22 @@ export class TokenError extends Error {
 
 const attempts = 3
 
-export const postToken = async (url: string, init: RequestInit): Promise<any> => {
+const backoff = (attempt: number) => Bun.sleep(500 * 2 ** (attempt - 1))
+
+export const postToken = async (url: string, init: RequestInit): Promise<Json> => {
   for (let attempt = 1; ; attempt++) {
     let response: Response
     try {
       response = await fetch(url, { method: 'POST', ...init })
     } catch (error) {
       if (attempt >= attempts || init.signal?.aborted) throw error
-      await Bun.sleep(500 * 2 ** (attempt - 1))
+      await backoff(attempt)
       continue
     }
-    if (response.ok) return response.json()
+    if (response.ok) return fieldsOf(await response.json())
     if (response.status >= 500 && attempt < attempts) {
       await response.body?.cancel()
-      await Bun.sleep(500 * 2 ** (attempt - 1))
+      await backoff(attempt)
       continue
     }
     const text = await response.text().catch(() => '')
@@ -40,6 +44,6 @@ export const expiresAt = (seconds: unknown) => {
 }
 
 export const required = (value: unknown, name: string) => {
-  if (typeof value !== 'string' || !value) throw new Error(`Token response has no ${name}`)
+  if (!isText(value)) throw new Error(`Token response has no ${name}`)
   return value
 }

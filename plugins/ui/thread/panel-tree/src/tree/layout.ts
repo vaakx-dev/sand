@@ -27,6 +27,17 @@ const foldable = (forest: Forest, id: string) => {
   return parent == null || (forest.children.get(parent)?.length ?? 0) > 1
 }
 
+const foldOf = (forest: Forest, id: string, closed: boolean): Row['fold'] => {
+  if (closed) return 'closed'
+  if (foldable(forest, id)) return 'open'
+}
+
+const glyphOf = (fold: Row['fold'], connected: boolean) => {
+  if (fold === 'closed') return '⊞'
+  if (fold === 'open') return '⊟'
+  return connected ? '─' : ''
+}
+
 const indentation = (gutters: Gutter[], display: number, connector: string) => {
   let text = ''
   for (let level = 0; level < display; level++) {
@@ -49,8 +60,8 @@ export const layout = (forest: Forest, folded: Set<string>): Row[] => {
     const display = Math.max(0, many ? frame.indent - 1 : frame.indent)
     const closed = folded.has(frame.id)
     const connected = frame.branched && !frame.virtual
-    const fold = closed ? 'closed' : foldable(forest, frame.id) ? 'open' : undefined
-    const glyph = closed ? '⊞' : fold ? '⊟' : connected ? '─' : ''
+    const fold = foldOf(forest, frame.id, closed)
+    const glyph = glyphOf(fold, connected)
     const connector = connected ? `${frame.last ? '└' : '├'}${glyph} ` : ''
     const prefix = indentation(frame.gutters, display, connector)
     const placed = connected && prefix.endsWith(connector)
@@ -58,7 +69,7 @@ export const layout = (forest: Forest, folded: Set<string>): Row[] => {
       id: frame.id,
       prefix: placed ? prefix.slice(0, -2) : prefix,
       glyph: placed || closed ? glyph : '',
-      ...(fold && { fold }),
+      fold,
     })
     if (closed) continue
     const children = forest.children.get(frame.id) ?? []

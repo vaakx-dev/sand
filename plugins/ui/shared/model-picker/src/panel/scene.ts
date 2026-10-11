@@ -1,8 +1,9 @@
 import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { MenuSpec } from '@sand/dom'
+import type { WireRequest } from '@sand/protocol'
+import { errorMessage, type MenuSpec } from '@sand/dom'
 import type { Picked, PickerTarget } from '../contract'
-import { send, type PickerKit } from '../kit'
+import type { PickerContext, PickerKit } from '../kit'
 import { modelMenu } from '../model-menu'
 import type { View } from './view'
 
@@ -21,12 +22,16 @@ export interface Scene {
   openSettings?: () => void
 }
 
+const send = (ctx: PickerContext, request: WireRequest) =>
+  void ctx.wire?.call(request).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+
 export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
   const shown = target.shown()
   if (!shown) return undefined
   const sources = ctx.models.sources()
   const settings = ctx.settings
   const pick = (model: ModelInfo) => target.set({ model: model.id })
+  const sourceOf = (model: ModelInfo) => sources.find(source => source.id === model.source)
   return {
     shown,
     defaults: ctx.models.defaults(),
@@ -34,14 +39,14 @@ export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: V
     models: ctx.models.list(),
     sources,
     fresh: model => Boolean(model.fresh) || view.fresh.has(model.id),
-    source: model => sources.find(source => source.id === model.source),
+    source: sourceOf,
     offline: source => (source?.via ? (pcs.online(source.via) ?? source.online) === false : false),
     pick,
     menu: view.menu,
     menuOf: model =>
       modelMenu({
         model,
-        subtitle: sources.find(source => source.id === model.source)?.label,
+        subtitle: sourceOf(model)?.label,
         notify: ctx.notify,
         use: () => pick(model),
         ...(ctx.wire && {

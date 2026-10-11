@@ -1,12 +1,12 @@
-import { asPanel, attach, copyText, sig, watchShown, type Shown } from '@sand/dom'
+import { copyWithNotice, shownPanel, sig } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
 import { definePlugin } from 'drydock'
-import { runningAgents } from './counts'
-import { modelsUnlike } from './models'
-import type { Actions } from './parts'
-import { toRuns, type Run } from './runs'
+import { runningAgents } from './runs/counts'
+import { modelsUnlike } from './runs/models'
+import { toRuns, type Run } from './runs/runs'
 import { ticker } from './ticker'
-import { agentsView, type ParentLink } from './view'
+import type { Actions } from './view/parts'
+import { agentsView, type ParentLink } from './view/view'
 
 export default definePlugin({
   name: 'panel-agents',
@@ -16,6 +16,7 @@ export default definePlugin({
     panels: 'draws its own plain panel',
     turns: 'running foreground sub-agents cannot be stopped',
     models: 'sub-agents on another model do not show it',
+    notify: 'failed stops and copies are not reported',
   },
   apply(ctx) {
     const runs = sig<Run[]>([])
@@ -24,7 +25,6 @@ export default definePlugin({
     const clock = ticker()
     let badge = 0
     let asked: string | undefined
-    const shown = new Set<Shown>()
 
     const compute = () => {
       const current = ctx.threads.current()
@@ -41,7 +41,7 @@ export default definePlugin({
 
     const fetchChildren = () => {
       const current = ctx.threads.current()
-      if (!current || asked === current.id || ![...shown].some(watch => watch.get())) return
+      if (!current || asked === current.id || !control.shown()) return
       asked = current.id
       void ctx.threads.children(current.id)
     }
@@ -51,7 +51,9 @@ export default definePlugin({
       compute()
       clock.set(runs.get().some(run => run.status === 'running'))
       const count = runningAgents(runs.get())
-      if (count !== badge) control.update({ badge: (badge = count) || undefined })
+      if (count === badge) return
+      badge = count
+      control.update({ badge: count || undefined })
     }
 
     const interrupt = async (id: string) => {
@@ -68,40 +70,25 @@ export default definePlugin({
       }
     }
 
-    const actions: Actions = {
-      open: id => void ctx.threads.select(id),
-      copy: async (text, what) => {
-        const copied = await copyText(text)
-        ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
-      },
-      interrupt: id => guarded(() => interrupt(id)),
-      cancel: run =>
-        guarded(async () => {
-          if (run.job) {
-            await ctx.jobs.cancel(run.job)
-            return true
-          }
-          return run.session ? await interrupt(run.session) : false
-        }),
+    const cancel = async (run: Run) => {
+      if (!run.job) return run.session ? await interrupt(run.session) : false
+      await ctx.jobs.cancel(run.job)
+      return true
     }
 
-    compute()
-    const control = asPanel(ctx, {
-      id: 'agents',
-      title: 'Agents',
-      icon: 'bot',
-      order: 20,
-      render(body) {
-        const detach = attach(body, () => agentsView({ runs, parent, empty, now: clock.now }, actions))
-        const watch = watchShown(body, paint)
-        shown.add(watch)
-        return () => {
-          watch.stop()
-          shown.delete(watch)
-          detach()
-        }
-      },
-    })
+    const actions: Actions = {
+      open: id => void ctx.threads.select(id),
+      copy: (text, what) => copyWithNotice(ctx.notify, text, what),
+      interrupt: id => guarded(() => interrupt(id)),
+      cancel: run => guarded(() => cancel(run)),
+    }
+
+    const control = shownPanel(
+      ctx,
+      { id: 'agents', title: 'Agents', icon: 'bot', order: 20 },
+      () => agentsView({ runs, parent, empty, now: clock.now }, actions),
+      paint,
+    )
     paint()
 
     ctx.effect(() => clock.dispose)

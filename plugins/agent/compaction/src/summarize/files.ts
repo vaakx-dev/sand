@@ -1,20 +1,19 @@
+import { isRecord } from '@sand/kit'
 import type { Message } from '@sand/messages'
 import type { CompactedFiles } from '../contract'
 
 const readers = new Set(['read'])
 const writers = new Set(['write', 'edit'])
 
-const pathOf = (input: unknown) => {
-  const path = (input as { path?: unknown } | null)?.path
-  return typeof path === 'string' ? path : undefined
-}
+const pathOf = (input: unknown) => (isRecord(input) && typeof input.path === 'string' ? input.path : undefined)
 
 export const filesOf = (messages: Message[], previous?: CompactedFiles): CompactedFiles => {
   const read = new Set(previous?.read)
   const modified = new Set(previous?.modified)
   for (const block of messages.flatMap(message => message.content)) {
-    const path = block.type === 'tool_call' ? pathOf(block.input) : undefined
-    if (!path || block.type !== 'tool_call') continue
+    if (block.type !== 'tool_call') continue
+    const path = pathOf(block.input)
+    if (!path) continue
     if (readers.has(block.name)) read.add(path)
     if (writers.has(block.name)) modified.add(path)
   }

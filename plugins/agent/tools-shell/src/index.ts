@@ -1,6 +1,5 @@
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
-import type {} from './contract'
 import { detect } from './detect'
 import { shellEnv } from './env'
 import { shellTool } from './tool'

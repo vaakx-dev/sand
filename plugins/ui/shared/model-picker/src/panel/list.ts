@@ -1,5 +1,6 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { button, derive, div, dynamicChild, effect, focusable, groupLabel, hint, span } from '@sand/dom'
+import { derive, div, dynamicChild, effect, groupLabel, hint, plainButton, span } from '@sand/dom'
+import { favouritesOf } from '@sand/kit'
 import { modelRow } from './rows'
 import type { Scene } from './scene'
 import { findModels } from './search'
@@ -8,8 +9,8 @@ import { FAVOURITES, type View } from './view'
 
 const heading = (label: string, detail?: string) => groupLabel(span({ class: 'text-neutral-200' }, label), detail ? ` · ${detail}` : '')
 
-const settingsLink = (scene: Scene, text: string) =>
-  scene.openSettings ? button({ type: 'button', class: ['text-neutral-300 hover:text-neutral-100', focusable], onClick: scene.openSettings }, text) : null
+const settingsHint = (scene: Scene, text: string, link: string) =>
+  hint(text, scene.openSettings && [' · ', plainButton({ class: 'text-neutral-300 hover:text-neutral-100', onClick: scene.openSettings }, link)])
 
 const sourceList = (scene: Scene, source: SourceInfo) => {
   const models = scene.models.filter(model => model.source === source.id)
@@ -23,11 +24,11 @@ const sourceList = (scene: Scene, source: SourceInfo) => {
 }
 
 const favouriteList = (scene: Scene) => {
-  const favourites = scene.models.filter(model => model.favourite !== undefined).sort((a, b) => (a.favourite ?? 0) - (b.favourite ?? 0))
+  const favourites = favouritesOf(scene.models)
   return [
     heading('Favourites'),
     favourites.map(model => modelRow(model, scene, true)),
-    !favourites.length && hint('No favourites yet', scene.openSettings ? ' · ' : '', settingsLink(scene, 'Star models in Settings')),
+    !favourites.length && settingsHint(scene, 'No favourites yet', 'Star models in Settings'),
   ]
 }
 
@@ -56,8 +57,8 @@ export const modelList = (scene: Scene, view: View) => {
   return div(
     {
       class: 'min-w-0 flex-1 overflow-auto px-1 pb-1',
-      onScroll: event => {
-        view.scroll = (event.currentTarget as HTMLElement).scrollTop
+      onScroll: ({ target }) => {
+        if (target instanceof HTMLElement) view.scroll = target.scrollTop
       },
       onMount: keepScroll,
     },

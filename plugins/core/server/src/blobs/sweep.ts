@@ -1,4 +1,4 @@
-import { stat, writeFile } from 'node:fs/promises'
+import { stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { BlobStore } from './store'
 
@@ -18,7 +18,7 @@ export const scheduleSweep = (store: BlobStore, folder: string, report: (error: 
   const sweep = async () => {
     if (!(await due())) return
     await store.sweep(Date.now() - kept)
-    await writeFile(marker, '').catch(() => {})
+    await Bun.write(marker, '').catch(() => {})
   }
 
   let busy = false

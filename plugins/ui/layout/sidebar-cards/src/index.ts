@@ -1,11 +1,11 @@
-import { closeDrawer, derive, effect, navHost, owned, place, pulse, reorder, sig } from '@sand/dom'
+import { closeDrawer, derive, navHost, owned, place, pulse, reorder, sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
-import type { MenuRequest } from './menu/view'
-import { choiceName, projectChoices } from './project-choices'
-import { projectFilter } from './project-filter'
-import { chipMenu, choiceMenu } from './project-menu'
-import { buildRows, cardsIn, openByDefault, type RowOptions } from './rows'
-import { sectionState } from './sections'
+import type { MenuRequest } from './card/menu'
+import { choiceName, projectChoices } from './project/choices'
+import { projectFilter } from './project/filter'
+import { chipMenu, choiceMenu } from './project/menu'
+import { buildRows, cardsIn, openByDefault } from './rows/build'
+import { sectionState } from './rows/sections'
 import { sidebarView } from './view'
 
 const pageSize = 25
@@ -16,32 +16,32 @@ export default definePlugin({
   uses: {
     layout: 'lands loose on the stage',
     projects: 'the project filter lists only projects that have threads',
+    threads: 'project menus offer no New thread here',
+    composer: 'New thread here does not focus the prompt',
+    notify: 'failed project actions are not reported',
   },
   apply(ctx) {
     const host = navHost(ctx)
     const layout = pulse(ctx, ['layout.change'], ['layout'])
     const registry = pulse(ctx, ['projects.change'], ['projects'])
     const menu = sig<MenuRequest | undefined>(undefined)
-    const { sections, limits, filter, rows, choices, label } = owned(ctx, () => {
+    const limits = sig<Record<string, number>>({})
+    const { sections, filter, rows, choices, label } = owned(ctx, () => {
       const sections = sectionState()
-      const limits = sig<Record<string, number>>({})
       const filter = projectFilter()
       const choices = derive(() => {
         registry.version.get()
         return projectChoices(ctx, host.lists.get())
       })
       const label = derive(() => choiceName(choices.get(), filter.project.get()))
-      effect(() => {
-        const found = choices.get()
-        if (!ctx.projects || ctx.projects.groups({ hidden: true }).length) filter.migrate(found)
-      })
-      const options = (): RowOptions => ({
-        project: filter.project.get(),
-        isOpen: sections.isOpen,
-        limit: key => limits.get()[key] ?? pageSize,
-      })
-      const rows = derive(() => buildRows(host.lists.get(), options()))
-      return { sections, limits, filter, rows, choices, label }
+      const rows = derive(() =>
+        buildRows(host.lists.get(), {
+          project: filter.project.get(),
+          isOpen: sections.isOpen,
+          limit: key => limits.get()[key] ?? pageSize,
+        }),
+      )
+      return { sections, filter, rows, choices, label }
     })
     const drag = reorder({
       axis: 'y',

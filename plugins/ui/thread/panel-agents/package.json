@@ -10,7 +10,8 @@
     "uses": {
       "panels": "draws its own plain panel",
       "turns": "running foreground sub-agents cannot be stopped",
-      "models": "sub-agents on another model do not show it"
+      "models": "sub-agents on another model do not show it",
+      "notify": "failed stops and copies are not reported"
     }
   },
   "dependencies": {

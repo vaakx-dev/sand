@@ -1,15 +1,13 @@
 import type { OpenStates } from '../contract'
-import { derive, sig, type Sig } from '@sand/dom'
+import { sig, type Sig } from '@sand/dom'
 
 export const openStates = (): OpenStates => {
-  const states = new Map<string, Sig<boolean | undefined>>()
+  const states = new Map<string, Sig<boolean>>()
   return {
-    get(key, fallback = () => false) {
-      let state = states.get(key)
-      if (!state) states.set(key, (state = sig<boolean | undefined>(undefined)))
-      const chosen = state
-      const open = derive(() => chosen.get() ?? fallback())
-      return { open, toggle: () => chosen.set(!open.get()) }
+    get(key) {
+      const open = states.get(key) ?? sig(false)
+      states.set(key, open)
+      return { open, toggle: open.toggle() }
     },
   }
 }

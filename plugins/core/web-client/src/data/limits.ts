@@ -2,7 +2,7 @@ import type { Limits } from '@sand/llm-accounts/contract'
 import type { LimitsFeed, Wire } from '../contract'
 import type { Context } from 'drydock'
 
-const keyOf = (limits: Limits) => `${limits.source ?? 'claude'}|${limits.pc ?? ''}`
+const keyOf = (limits: Limits) => `${limits.source}|${limits.pc ?? ''}`
 
 export const createLimits = (ctx: Context, wire: Wire): LimitsFeed => {
   let limits: Limits | undefined

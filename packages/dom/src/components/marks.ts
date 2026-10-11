@@ -1,10 +1,8 @@
 import { duration } from '@sand/kit'
-import { div, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { clock, div, read, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { clock } from '../reactive/owned'
-import { read } from '../reactive/read'
 
-export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange'
+export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange' | 'sky'
 
 const badgeTones: Record<Tone, string> = {
   neutral: 'bg-neutral-800 text-neutral-400',
@@ -13,6 +11,7 @@ const badgeTones: Record<Tone, string> = {
   warning: 'bg-warning-950 text-warning-400',
   danger: 'bg-danger-950 text-danger-400',
   orange: 'bg-neutral-800 text-orange-400',
+  sky: 'bg-neutral-800 text-sky-400',
 }
 
 const dotTones: Record<Tone, string> = {
@@ -22,6 +21,7 @@ const dotTones: Record<Tone, string> = {
   warning: 'bg-warning-400',
   danger: 'bg-danger-400',
   orange: 'bg-orange-400',
+  sky: 'bg-sky-400',
 }
 
 export const badge = (tone: Tone, ...children: Child[]) =>
@@ -46,3 +46,29 @@ export const chevron = (open: () => boolean, size = 13) =>
   span({ class: ['inline-flex shrink-0 transition', () => (open() ? 'rotate-90' : '')] }, icon('right', size))
 
 export const hint = (...children: Child[]) => div({ class: 'px-4 py-3 text-xs text-neutral-500' }, ...children)
+
+export const okMark = (size: 14 | 16 = 14) => span({ class: 'inline-flex shrink-0 text-success-400' }, icon('check', size))
+
+export const doneMark = () =>
+  span({ class: 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-950 text-success-400' }, icon('check', 20))
+
+export const checkMark = (on: () => boolean, extra?: ClassValue) =>
+  span(
+    {
+      class: [
+        'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors',
+        () => (on() ? 'bg-accent-500 text-white' : 'text-transparent ring-1 ring-neutral-600'),
+        extra,
+      ],
+    },
+    icon('check', 12),
+  )
+
+export interface StatusLineProps {
+  mark: Child
+  text: Child
+  title: MaybeReactive<string>
+}
+
+export const statusLine = ({ mark, text, title }: StatusLineProps, ...extra: Child[]) =>
+  div({ class: 'flex min-w-0 items-center gap-2 text-xs text-neutral-500', title }, mark, span({ class: 'min-w-0 truncate' }, text), ...extra)

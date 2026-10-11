@@ -16,7 +16,8 @@
     "uses": {
       "wire": "no favourite, hide or make default actions, and models from another PC show no online dot",
       "settings": "no link to the Models settings page",
-      "notify": "failed model actions are not reported"
+      "notify": "failed model actions are not reported",
+      "threads": "Make default runs without the current folder"
     }
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "@sand/llm-accounts": "workspace:*",
     "@sand/loops": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/protocol": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/web-client": "workspace:*",

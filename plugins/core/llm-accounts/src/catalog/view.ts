@@ -38,8 +38,9 @@ export const viewOf = (entries: () => Entry[]) => {
     const found = find(id) ?? index.get().all.find(model => model.name === id)
     if (found) return found
     const parts = split(id)
-    const owner = parts && entry(parts.source)
-    return owner && parts ? modelOf(owner.meta, { name: parts.name }) : undefined
+    if (!parts) return undefined
+    const owner = entry(parts.source)
+    return owner && modelOf(owner.meta, { name: parts.name })
   }
 
   const missing = (id?: string) => {

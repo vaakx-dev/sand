@@ -1,3 +1,4 @@
+import { compare } from '@sand/kit'
 import type { PluginChangeKind, PluginManifest, PluginOffer, PluginTree } from '../contract'
 
 interface CompareInput {
@@ -13,8 +14,6 @@ interface Candidate {
   kind: PluginChangeKind
   both: boolean
 }
-
-const byName = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const own = <T>(map: Record<string, T>, key: string): T | undefined => (Object.hasOwn(map, key) ? map[key] : undefined)
 
@@ -51,14 +50,14 @@ const caseFolded = (mine: PluginManifest, theirs: PluginManifest) => {
   return names
 }
 
-export const compare = ({ peer, mine, theirs, bases, skipped, local }: CompareInput) => {
+export const diffManifests = ({ peer, mine, theirs, bases, skipped, local }: CompareInput) => {
   const offers: PluginOffer[] = []
   const nextBases: Record<string, string> = {}
   const nextSkipped: Record<string, string> = {}
   const theirLocal = new Set(theirs.local)
   const folded = caseFolded(mine, theirs)
   const localNames = new Set(folded.values())
-  const names = [...new Set([...Object.keys(mine.plugins).filter(name => !localNames.has(name)), ...Object.keys(theirs.plugins)])].sort(byName)
+  const names = [...new Set([...Object.keys(mine.plugins).filter(name => !localNames.has(name)), ...Object.keys(theirs.plugins)])].sort(compare)
   for (const name of names) {
     const localName = folded.get(name) ?? name
     const m = own(mine.plugins, localName)

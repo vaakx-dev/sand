@@ -1,13 +1,12 @@
 import type { Message } from '@sand/messages'
-import { promptText, userParts } from '@sand/kit'
+import { oneLine, promptText, userParts } from '@sand/kit'
 
 const maxLength = 50
 
 const fileNames = (message: Message) =>
   userParts(message).flatMap(part => (part.kind === 'image' || part.kind === 'document' ? [part.block.name ?? part.block.type] : []))
 
-const promptWords = (message: Message) =>
-  [promptText(message, ' '), ...fileNames(message)].join(' ').replace(/\s+/g, ' ').trim()
+const promptWords = (message: Message) => oneLine([promptText(message, ' '), ...fileNames(message)].join(' '))
 
 export const shorten = (text: string, max = maxLength) => {
   if (text.length <= max) return text

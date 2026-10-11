@@ -1,10 +1,6 @@
-import type { HostHealth } from '@sand/host-health/contract'
-import type { BuildInfo } from '@sand/protocol'
+import type { BuildInfo, HostHealth } from '@sand/protocol'
 
-export interface HostBundle {
-  build: BuildInfo
-  bytes: Uint8Array<ArrayBuffer>
-}
+export type { HostBundle } from '@sand/protocol'
 
 export interface HostBuild {
   info(): Promise<BuildInfo>

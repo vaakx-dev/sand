@@ -8,19 +8,19 @@ export interface Tickets {
   redeem(ticket: string): string | undefined
 }
 
-export const createTickets = (now: () => number = Date.now): Tickets => {
+export const createTickets = (): Tickets => {
   const pending = new Map<string, { device: string; expires: number }>()
 
   const sweep = () => {
-    const time = now()
-    for (const [hash, entry] of pending) if (entry.expires <= time) pending.delete(hash)
+    const now = Date.now()
+    for (const [hash, entry] of pending) if (entry.expires <= now) pending.delete(hash)
   }
 
   return {
     issue(device) {
       sweep()
       const ticket = randomSecret()
-      const expires = now() + ttl
+      const expires = Date.now() + ttl
       pending.set(hashSecret(ticket), { device, expires })
       return { ticket, expires }
     },

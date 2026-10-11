@@ -1,10 +1,10 @@
 import type { HookRecord } from '../contract'
 
-export const fileName = (source: string) => source.split('/').pop() ?? source
+const fileName = (source: string) => source.split('/').pop() ?? source
 
 const toolName = (detail?: string) => detail?.split(':')[0] ?? 'a tool'
 
-export const action = (record: HookRecord) => {
+const action = (record: HookRecord) => {
   switch (record.outcome) {
     case 'allowed':
     case 'denied':

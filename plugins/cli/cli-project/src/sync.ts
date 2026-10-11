@@ -1,8 +1,9 @@
-import { plural, sendProject } from '@sand/kit'
+import { plural } from '@sand/kit'
+import { sendProject } from '@sand/sync/flows'
 import { usage } from './usage'
 import type { ProjectFlags } from './flags'
-import { findGroup } from './find'
-import { loadGroups, locationOn } from './groups'
+import { loadGroup } from './find'
+import { locationOn } from './groups'
 import type { Pcs } from './pcs'
 import { progressPrinter } from './progress'
 
@@ -10,8 +11,7 @@ export const syncProject = async (pcs: Pcs, [value]: string[], { from, to }: Pro
   if (!value || !from || !to) throw new Error(usage)
   const source = pcs.named(from)
   const target = pcs.named(to)
-  const { groups } = await loadGroups(pcs)
-  const group = findGroup(groups, value)
+  const { group } = await loadGroup(pcs, value)
   const here = locationOn(group, source)
   const there = locationOn(group, target)
   if (!here) throw new Error(`${group.name} is not on ${source.name}`)

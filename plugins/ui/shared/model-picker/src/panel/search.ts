@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { div, finePointer, icon, searchInput } from '@sand/dom'
+import { div, finePointer, icon, returnFocus, searchInput } from '@sand/dom'
 import type { Scene } from './scene'
 import type { View } from './view'
 
@@ -9,14 +9,6 @@ export const findModels = (scene: Scene, query: string): ModelInfo[] => {
     const text = `${model.label} ${model.name ?? model.id} ${scene.source(model)?.label ?? ''}`.toLowerCase()
     return words.every(word => text.includes(word))
   })
-}
-
-const restoreFocus = (node: HTMLElement) => {
-  const before = document.activeElement
-  return () => {
-    if (document.activeElement !== node && document.activeElement !== document.body) return
-    if (before instanceof HTMLElement && before.isConnected) before.focus()
-  }
 }
 
 export const searchField = (view: View, pickFirst: () => void) => {
@@ -41,7 +33,7 @@ export const searchField = (view: View, pickFirst: () => void) => {
         }
       },
       onMount: node => {
-        const restore = restoreFocus(node)
+        const restore = returnFocus(node, document.activeElement)
         if (fine.get()) node.focus()
         return restore
       },

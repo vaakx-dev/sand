@@ -1,13 +1,13 @@
-import type { CompletionSource, Composer } from './contract'
+import type { Composer } from './contract'
 import { listen, owned, place, style } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'
-import { defaultSources, type Card } from './card'
 import { bindLocalCommands } from './commands'
-import { dock } from './dock'
+import { card, type Card } from './dock/card'
+import { dock } from './dock/dock'
+import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
 import { createModel } from './model'
-import { createSlots } from './slots'
 import { css } from './style'
 
 export default definePlugin({
@@ -24,10 +24,10 @@ export default definePlugin({
     jobs: 'no still-working agents chip',
     panels: 'the still-working agents chip is not clickable',
     media: 'queued images stored on the server show no thumbnail',
+    notify: 'failed stops and copies are not reported',
   },
   apply(ctx) {
     style(ctx, css)
-    const extra = new Set<CompletionSource>()
     const slots = createSlots()
     let current: Card | undefined
     const { model, dropping, session } = owned(ctx, () => {
@@ -42,8 +42,10 @@ export default definePlugin({
       value: () => model.text.get(),
       set(value) {
         model.text.set(value)
-        current?.field.focus()
-        if (current) current.field.selectionStart = current.field.selectionEnd = value.length
+        const field = current?.field
+        if (!field) return
+        field.focus()
+        field.selectionStart = field.selectionEnd = value.length
       },
       insert(value) {
         const field = current?.field
@@ -52,16 +54,21 @@ export default definePlugin({
         model.text.set(field.value)
       },
       attach: content => model.files.attach(content),
-      completer(source) {
-        extra.add(source)
-        return () => void extra.delete(source)
-      },
       slot: (where, view, order) => slots.add(where, view, order),
       capture: entry => model.addCapture(entry),
     }
 
+    const parts = { ctx, model, slots, dropping }
     session.start()
-    place(ctx, 'main', () => dock({ ctx, model, slots, dropping, sources: defaultSources(ctx, extra) }, built => (current = built)), 2)
+    place(
+      ctx,
+      'main',
+      () => {
+        current = card(parts)
+        return dock(parts, current)
+      },
+      2,
+    )
     bindLocalCommands(ctx, () => current?.choose())
     ctx.on('thread.select', session.open)
     ctx.effect(() => () => session.keep())

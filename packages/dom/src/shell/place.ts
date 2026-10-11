@@ -1,5 +1,6 @@
-import { byId, collectScope, disposeAll, div, mount } from '@vaakx-dev/vrui'
+import { byId, collectScope, disposeAll, div, mount, type Child } from '@vaakx-dev/vrui'
 import type { Context, Dispose } from 'drydock'
+import { owned } from '../reactive/owned'
 import type { Region } from './types'
 
 export const stage = () => byId('stage')
@@ -18,3 +19,9 @@ export const place = (ctx: Context, region: Region, view: HTMLElement | (() => H
       disposeAll(scope)
     }
   })
+
+export const floating = (ctx: Context, build: () => Child) => owned(ctx, () => mount(document.body, build()))
+
+export const closeDrawer = (ctx: Context) => {
+  if (ctx.layout?.state().narrow) ctx.layout.toggle('side', false)
+}

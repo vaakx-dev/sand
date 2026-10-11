@@ -54,10 +54,7 @@ export const startHooks = (ctx: Context<'cli' | 'paths' | 'watcher'>, notify: Sh
   ctx.effect(() => () => book.clear())
 
   return {
-    service: {
-      files: () => [...homeFolders.states(), ...projectFolders.states()].map(visible),
-      trusted: folder => projectDir(folder) === homeDir || projectFolders.trusted(folder),
-    },
+    service: { files: () => [...homeFolders.states(), ...projectFolders.states()].map(visible) },
     async scan(cwd) {
       await homeFolders.get(homeDir)
       const dir = projectDir(ctx.paths.projectFolder(cwd))

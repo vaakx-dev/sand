@@ -1,11 +1,7 @@
-import { effect, onTimeout, sig, untrack } from '@sand/dom'
+import { effect, sig, untrack } from '@sand/dom'
 import type { InstallProgress, InstallTicket } from '@sand/host-dist/contract'
 import type { Context } from 'drydock'
-
-const renewMargin = 30_000
-const minRenew = 60_000
-
-const renewDelay = (expires: number) => Math.max(expires - Date.now() - renewMargin, minRenew)
+import { renewBeforeExpiry } from '../renew'
 
 const merged = (list: InstallProgress[], next: InstallProgress) => {
   if (next.step === 'connected') return [next]
@@ -21,27 +17,28 @@ export const installTicket = (ctx: Context<'wire'>) => {
   const progress = sig<InstallProgress[]>([])
   const error = sig<unknown>(undefined)
   const renew = sig(0)
-  let closed = false
 
   const started = () => untrack(() => progress.get().length > 0)
 
-  const cancel = (old: InstallTicket | undefined) => {
-    if (old && !started()) ctx.wire.call({ type: 'install.cancel', install: old.id }).catch(() => undefined)
+  const drop = (id: string) => void ctx.wire.call({ type: 'install.cancel', install: id }).catch(() => {})
+
+  const cancelUnused = () => {
+    const old = untrack(() => ticket.get())
+    if (old && !started()) drop(old.id)
   }
 
   effect(() => {
     renew.get()
-    if (started() || closed) return
+    if (started()) return
     let current = true
     untrack(() => {
-      cancel(ticket.get())
+      cancelUnused()
       ticket.set(undefined)
       ctx.wire.call<InstallTicket>({ type: 'install.create' }).then(
         next => {
-          if (current && !closed) {
-            error.set(undefined)
-            ticket.set(next)
-          } else ctx.wire.call({ type: 'install.cancel', install: next.id }).catch(() => undefined)
+          if (!current) return drop(next.id)
+          error.set(undefined)
+          ticket.set(next)
         },
         failure => {
           if (current) error.set(failure)
@@ -55,26 +52,18 @@ export const installTicket = (ctx: Context<'wire'>) => {
 
   effect(() => {
     const active = ticket.get()
-    if (active && progress.get().length === 0) onTimeout(() => renew.update(count => count + 1), renewDelay(active.expires))
+    if (active && progress.get().length === 0) renewBeforeExpiry(active.expires, renew)
   })
 
   effect(() => {
     const off = ctx.on('wire.event', event => {
-      if (event.name !== 'install.progress') return
-      const next = event.args[0]
-      if (next.install !== ticket.get()?.id) return
-      progress.update(list => merged(list, next))
+      if (event.name !== 'install.progress' || event.args[0].install !== ticket.get()?.id) return
+      progress.update(list => merged(list, event.args[0]))
     })
     return () => void off()
   })
 
-  const close = () => {
-    if (closed) return
-    closed = true
-    cancel(ticket.get())
-  }
+  effect(() => cancelUnused)
 
-  effect(() => close)
-
-  return { ticket, progress, error, close }
+  return { ticket, progress, error }
 }

@@ -1,5 +1,5 @@
 import { dynamicChild, span, type Sig } from '@sand/dom'
-import type { Thread } from '@sand/web-client/contract'
+import type { AgentRun, Thread } from '@sand/web-client/contract'
 
 const segmentLimit = 8
 
@@ -10,16 +10,15 @@ const tone = (agent: Thread) => {
   return 'bg-success-400'
 }
 
-const segments = (tones: string[]) =>
-  span(
-    { class: ['shrink-0 gap-px', tones.length ? 'flex' : 'hidden'] },
-    tones.map(value => span({ class: ['h-1 w-2 rounded-full', value] })),
-  )
+const segments = (tones: string[]) => span({ class: 'flex shrink-0 gap-px' }, tones.map(value => span({ class: ['h-1 w-2 rounded-full', value] })))
 
-const counted = (agents: Thread[]) => `${agents.filter(agent => !agent.running).length}/${agents.length}`
+const count = (run: Sig<AgentRun>) => span({ class: 'shrink-0 tabular-nums' }, run.map(value => `${value.finished}/${value.agents.length}`))
 
-export const progress = (agents: Sig<Thread[]>) =>
+export const progress = (run: Sig<AgentRun>) =>
   dynamicChild(
-    agents.map(list => (list.length > segmentLimit ? 'count' : list.map(tone).join(' '))),
-    key => (key === 'count' ? span({ class: 'shrink-0 tabular-nums' }, agents.map(counted)) : segments(key ? key.split(' ') : [])),
+    run.map(({ agents }) => (agents.length > segmentLimit ? 'count' : agents.map(tone).join(' '))),
+    key => {
+      if (key === 'count') return count(run)
+      return key ? segments(key.split(' ')) : null
+    },
   )

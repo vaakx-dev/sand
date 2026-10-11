@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, div, dynamicChild, hint, list, p, quietButton, segmented, settingsSection, show, textInput, type Choice } from '@sand/dom'
+import { derive, div, dynamicChild, hintRow, p, quietButton, rowList, segmented, settingsSection, show, textInput, type Choice } from '@sand/dom'
 import { addRow } from './add'
 import type { Catalog } from './catalog'
 import type { Filter, Mode } from './filter'
@@ -36,18 +36,27 @@ const emptyText = (catalog: Catalog, filter: Filter) => {
   return 'No models yet'
 }
 
+type Status = 'error' | 'loading' | 'rows' | 'empty'
+
+const statusOf = (catalog: Catalog, filter: Filter): Status => {
+  if (!catalog.models.get()) return catalog.error.get() ? 'error' : 'loading'
+  return filter.found.get().length ? 'rows' : 'empty'
+}
+
+const errorRow = (catalog: Catalog) =>
+  div(
+    { class: 'flex flex-wrap items-center gap-3 bg-neutral-900 px-4 py-3' },
+    p({ class: 'min-w-0 flex-1 text-xs wrap-anywhere text-danger-400' }, () => catalog.error.get()),
+    quietButton({ size: 'sm', onClick: () => void catalog.reload() }, 'Try again'),
+  )
+
 const status = (catalog: Catalog, filter: Filter) =>
   dynamicChild(
-    derive(() => (catalog.error.get() && !catalog.models.get() ? 'error' : !catalog.models.get() ? 'loading' : filter.found.get().length ? 'rows' : 'empty')),
+    derive(() => statusOf(catalog, filter)),
     state => {
-      if (state === 'error')
-        return div(
-          { class: 'flex flex-wrap items-center gap-3 bg-neutral-900 px-4 py-3' },
-          p({ class: 'min-w-0 flex-1 text-xs wrap-anywhere text-danger-400' }, () => catalog.error.get()),
-          quietButton({ size: 'sm', onClick: () => void catalog.reload() }, 'Try again'),
-        )
-      if (state === 'rows') return div({ class: 'hidden' })
-      return div({ class: 'bg-neutral-900' }, hint(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter))))
+      if (state === 'error') return errorRow(catalog)
+      if (state === 'rows') return null
+      return hintRow(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter)))
     },
   )
 
@@ -58,7 +67,7 @@ export const modelsSection = (source: SourceInfo, catalog: Catalog, filter: Filt
     settingsSection(
       {},
       status(catalog, filter),
-      list(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep), div({ class: 'contents' })),
+      rowList(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep)),
       show(
         filter.more.map(more => more > 0),
         () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show more (${filter.more.get()})`)),

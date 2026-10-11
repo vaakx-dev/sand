@@ -1,8 +1,9 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { Artifact } from '@sand/html-render/contract'
+import { emptyUsage, sumUsage } from '@sand/kit'
 import type { Limits, LLMEvent } from '@sand/llm-accounts/contract'
 import type { TurnResult } from '@sand/loops/contract'
-import type { ToolCallBlock, ToolResultBlock, Usage, UserContent } from '@sand/messages'
+import type { ToolCallBlock, ToolResultBlock, UserContent } from '@sand/messages'
 import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 import type { Printer, Summary } from '../print/printer'
 import { agentEnded, agentStarted, jobEnded, type JobView } from '../print/progress'
@@ -10,17 +11,10 @@ import { ownModel, type ModelLookup } from './models'
 import { createCompactionLines } from './compaction'
 import { createTracker } from './tracker'
 
-const addUsage = (a: Usage, b: Usage): Usage => ({
-  input: a.input + b.input,
-  output: a.output + b.output,
-  cacheRead: a.cacheRead + b.cacheRead,
-  cacheWrite: a.cacheWrite + b.cacheWrite,
-})
-
 export const createFollower = (root: () => string | undefined, printer: Printer, models?: ModelLookup) => {
   const tracker = createTracker(root)
   const compaction = createCompactionLines(tracker.has)
-  const summary: Summary = { usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 } }
+  const summary: Summary = { usage: emptyUsage() }
   const mine = (session: string) => session === root()
   let turned = false
   let ended: TurnResult | undefined
@@ -58,7 +52,7 @@ export const createFollower = (root: () => string | undefined, printer: Printer,
     turnEnd(session: string, result: TurnResult) {
       if (!mine(session)) return
       ended = result
-      summary.usage = addUsage(summary.usage, result.usage)
+      summary.usage = sumUsage(summary.usage, result.usage)
       if (result.stopReason === 'interrupted') printer.progress('■ interrupted')
       tracker.turnEnded(result.stopReason === 'interrupted')
     },

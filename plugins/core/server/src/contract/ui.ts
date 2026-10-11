@@ -1,7 +1,10 @@
 import type { Dispose } from 'drydock'
 import type { UserContent } from '@sand/messages'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
+import type { ReportRow } from '@sand/protocol'
 import type { Session } from '@sand/sessions-sqlite/contract'
+
+export type { ReportRow } from '@sand/protocol'
 
 export interface Command {
   name: string
@@ -46,11 +49,6 @@ export interface Picked<T> {
 }
 
 export type NoticeLevel = 'info' | 'error'
-
-export type ReportRow =
-  | { kind: 'pair'; label: string; value: string }
-  | { kind: 'bar'; label: string; fraction: number; value: string }
-  | { kind: 'text'; text: string; mono?: boolean }
 
 export interface UI {
   command(command: Command): Dispose

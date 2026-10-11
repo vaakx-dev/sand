@@ -11,6 +11,7 @@ export default definePlugin({
   name: 'host-devices',
   description: 'Paired devices: their keys, one-time pairing secrets and the device list',
   inject: ['hostOptions', 'hub'],
+  uses: { hostBuild: 'device.info has no build info' },
   async apply(ctx) {
     const store = await loadDeviceStore(ctx.hostOptions.home)
     const devices = createHostDevices(store, createInvites(), ctx.hub)

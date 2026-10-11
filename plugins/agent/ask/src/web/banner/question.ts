@@ -1,5 +1,5 @@
 import type { AskKind, AskQuestion } from '../../contract'
-import { derive, div, el, icon, show, span } from '@sand/dom'
+import { div, el, icon, show, span } from '@sand/dom'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 import { choicesView } from './choices'
@@ -15,7 +15,7 @@ const own = (state: AskState) =>
     span(
       { class: 'flex min-w-0 flex-col' },
       span({ class: 'text-neutral-100' }, 'Your answer'),
-      span({ class: 'wrap-anywhere text-xs text-neutral-300 italic' }, () => state.draft.get().text.trim()),
+      span({ class: 'wrap-anywhere text-xs text-neutral-300 italic' }, () => state.typed.get()),
     ),
   )
 
@@ -27,7 +27,6 @@ const options = (state: AskState, actions: AskActions, question: AskQuestion) =>
 }
 
 export const questionView = (state: AskState, actions: AskActions, question: AskQuestion) => {
-  const typed = derive(() => question.type !== 'text' && Boolean(state.draft.get().text.trim()))
   const hint = hints[question.type]
   return div(
     { class: 'flex flex-col gap-2' },
@@ -40,6 +39,6 @@ export const questionView = (state: AskState, actions: AskActions, question: Ask
       ? el('pre', { class: 'max-h-40 overflow-auto rounded-lg bg-neutral-950 px-3 py-2 font-mono text-xs whitespace-pre-wrap wrap-anywhere text-neutral-300' }, question.detail)
       : '',
     options(state, actions, question),
-    show(typed, () => own(state)),
+    show(() => question.type !== 'text' && Boolean(state.typed.get()), () => own(state)),
   )
 }

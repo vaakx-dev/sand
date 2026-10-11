@@ -1,6 +1,6 @@
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { pulse } from '../../reactive/owned'
+import { pulse } from '../../reactive/pulse'
 import type { Nav, NavAction, NavList } from './types'
 
 const byOrder = <T extends { order?: number }>(items: T[]) => [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -65,10 +65,6 @@ export const navHost = (ctx: Context) => {
     busy: pending.busy,
     run: pending.run,
   }
-}
-
-export const closeDrawer = (ctx: Context) => {
-  if (ctx.layout?.state().narrow) ctx.layout.toggle('side', false)
 }
 
 export type NavHost = ReturnType<typeof navHost>

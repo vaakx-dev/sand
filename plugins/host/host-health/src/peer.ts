@@ -1,5 +1,5 @@
-import type { HostHealth } from '@sand/host-health/contract'
 import { callPeer, parseHealth, PeerError, remoteStore } from '@sand/kit/host'
+import type { HostHealth } from './contract'
 
 const timeout = 20_000
 

@@ -1,6 +1,7 @@
-import { readdir, stat } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { PluginTree } from '@sand/host-plugin-sync/contract'
+import type { PluginTree } from '@sand/protocol'
+import { isFolder } from '../../fs/folder'
 import { fileHash, treeHash } from './hash'
 import { validPluginName } from './names'
 import { pluginFiles } from './walk'
@@ -13,12 +14,6 @@ export const scanPlugin = async (folder: string): Promise<PluginTree> => {
   return { hash: treeHash(files), files }
 }
 
-const linkedFolder = (path: string) =>
-  stat(path).then(
-    info => info.isDirectory(),
-    () => false,
-  )
-
 const pluginFolders = async (root: string) => {
   const entries = await readdir(root, { withFileTypes: true }).catch(() => [])
   const names: string[] = []
@@ -26,7 +21,7 @@ const pluginFolders = async (root: string) => {
   for (const entry of entries) {
     if (!validPluginName(entry.name)) continue
     if (entry.isDirectory()) names.push(entry.name)
-    else if (entry.isSymbolicLink() && (await linkedFolder(join(root, entry.name)))) {
+    else if (entry.isSymbolicLink() && (await isFolder(join(root, entry.name)))) {
       names.push(entry.name)
       linked.add(entry.name)
     }

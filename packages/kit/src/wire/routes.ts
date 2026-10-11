@@ -1,4 +1,4 @@
-import type { RouteKind } from '@sand/host-gateway/contract'
+import type { RouteKind } from '@sand/protocol'
 
 const ranks: Record<RouteKind, number> = { local: 0, lan: 1, tailscale: 2 }
 
@@ -24,12 +24,12 @@ export const isLoopbackHost = (hostname: string) => {
   return host === 'localhost' || host === '::1' || ipv4(host)?.[0] === 127
 }
 
-export const isTailscaleHost = (hostname: string) => {
+const isTailscaleHost = (hostname: string) => {
   const host = unbracket(hostname).replace(/\.$/, '')
   if (host.endsWith('.ts.net')) return true
   if (host.startsWith('fd7a:115c:a1e0:')) return true
-  const parts = ipv4(host)
-  return parts?.[0] === 100 && (parts[1] ?? 0) >= 64 && (parts[1] ?? 0) <= 127
+  const [first, second = 0] = ipv4(host) ?? []
+  return first === 100 && second >= 64 && second <= 127
 }
 
 export const routeKind = (url: string): RouteKind => {

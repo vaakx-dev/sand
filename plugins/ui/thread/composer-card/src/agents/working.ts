@@ -10,7 +10,7 @@ export const createWorking = (ctx: Context<'threads' | 'turns'>) => {
   const changes = pulse(ctx, ['jobs.change', 'threads.change', 'thread.select', 'thread.change'], ['jobs', 'panels'])
   const runs = changes.read(() => {
     const thread = ctx.threads.current()
-    return thread ? (ctx.jobs?.runs(thread.id).filter(run => run.status === 'running') ?? []) : []
+    return thread ? (ctx.jobs?.running(thread.id) ?? []) : []
   })
   return {
     runs,

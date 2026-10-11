@@ -3,7 +3,7 @@ import type { TurnResult } from '@sand/loops/contract'
 import type { Tool } from '@sand/tools/contract'
 import type { AgentDefinition, Agents } from './contract'
 import { z } from 'zod'
-import { catalog } from './catalog'
+import { describeAgents } from './catalog'
 import { agentTitle } from './title'
 
 const effortInput = (llm: LLM | undefined) => {
@@ -28,11 +28,6 @@ const report = (result: TurnResult) => {
   if (result.stopReason === 'interrupted') return 'The subagent was interrupted before finishing.'
   return result.text || 'The subagent finished without a final report.'
 }
-
-export const describeAgents = (list: AgentDefinition[], llm: LLM | undefined) =>
-  `Delegate a task to a subagent. Use for broad searches, parallel work, or anything that would flood your context. Only its final report comes back. Several calls in one response run in parallel.
-
-${catalog(list, llm)}`
 
 export const agentTool = (
   agents: Agents,

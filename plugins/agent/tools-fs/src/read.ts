@@ -1,8 +1,9 @@
 import type { Attachments } from '@sand/attachments/contract'
+import { isFolder } from '@sand/kit/fs'
 import type { Tool } from '@sand/tools/contract'
-import { extname } from 'node:path'
+import { extname, resolve } from 'node:path'
 import { z } from 'zod'
-import { isDirectory, locate, readText } from './files'
+import { readText } from './files'
 
 const media = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.heic', '.avif', '.pdf'])
 
@@ -18,8 +19,8 @@ export const readTool = (attachments: () => Attachments): Tool<typeof input> => 
     'Read a file. Text is returned with line numbers. Images and PDFs are returned as images and documents you can see. Use offset and limit for large text files.',
   input,
   async run({ path, offset = 1, limit = 2000 }, { cwd }) {
-    const full = locate(cwd, path)
-    if (await isDirectory(full)) throw new Error(`${path} is a directory`)
+    const full = resolve(cwd, path)
+    if (await isFolder(full)) throw new Error(`${path} is a directory`)
     if (media.has(extname(full).toLowerCase())) return [await attachments().fromFile(full)]
     const text = await readText(full)
     if (text.slice(0, 8192).includes('\0')) throw new Error(`${path} is a binary file`)

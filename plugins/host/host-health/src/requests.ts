@@ -2,7 +2,7 @@ import type { Hub } from '@sand/host-hub/contract'
 import type { HostHealth } from './contract'
 import type { Dispose } from 'drydock'
 
-export interface HealthRequestOptions {
+interface HealthRequestOptions {
   self: string
   local(): Promise<HostHealth>
   peer(device: string): Promise<HostHealth>

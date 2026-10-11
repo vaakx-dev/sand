@@ -1,6 +1,6 @@
 import type { Command, PickItem, ReportRow, UI } from '@sand/server/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
-import { commandThread } from '@sand/kit'
+import { commandThread } from '@sand/server/thread'
 import type { LoopsContext } from './context'
 import type { LoopInfo, Loops } from './contract'
 

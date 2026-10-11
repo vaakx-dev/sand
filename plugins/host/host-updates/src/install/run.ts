@@ -1,6 +1,7 @@
 import type { BuildInfo } from '@sand/protocol'
 import { errorMessage } from '@sand/kit'
-import { healthText, type GithubRelease, type HealthOutcome } from '@sand/kit/host'
+import { healthText, type HealthOutcome } from '@sand/kit/host'
+import type { GithubRelease } from '../github/release'
 import { basename } from 'node:path'
 import type { UpdatePhase } from '../contract'
 import type { PreparedBuild, UpdaterDeps } from '../types'

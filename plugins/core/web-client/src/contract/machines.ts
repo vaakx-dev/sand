@@ -17,6 +17,7 @@ export interface ConnectionInfo {
 
 export interface Machine {
   id: string
+  device?: string
   name: string
   local: boolean
   online: boolean
@@ -29,6 +30,8 @@ export interface Machine {
 export interface Machines {
   list(): Machine[]
   get(id?: string): Machine | undefined
+  name(device?: string): string
+  online(device?: string): boolean
   add(link: string): Promise<Machine>
   remove(id: string): Promise<void>
   retry(id?: string): void

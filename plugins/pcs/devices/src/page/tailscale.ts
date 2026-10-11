@@ -1,12 +1,9 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
-import { copyButton, div, dot, dynamicChild, p, settingsRow, settingsSection, show, sig, span, toggleSwitch } from '@sand/dom'
+import { copyButton, div, dot, dynamicChild, p, settingsRow, settingsSection, show, sig, span, toggleSwitch, type Tone } from '@sand/dom'
 import { linkText } from '../components'
 import type { DeviceSource } from '../source'
 
-const hidden = () => div({ class: 'hidden' })
-
-const status = (tone: 'neutral' | 'warning' | 'success', label: string) =>
-  span({ class: 'flex min-w-0 items-center gap-2' }, dot(tone), span({ class: 'truncate' }, label))
+const status = (tone: Tone, label: string) => span({ class: 'flex min-w-0 items-center gap-2' }, dot(tone), span({ class: 'truncate' }, label))
 
 const statusRow = (state: TailscaleState) => {
   if (!state.installed) return settingsRow(status('neutral', 'Not installed'), null, 'Install Tailscale to reach sand away from home')
@@ -15,11 +12,7 @@ const statusRow = (state: TailscaleState) => {
 }
 
 const servingRow = (url: string) =>
-  div(
-    { class: 'flex items-center gap-2 bg-neutral-900 px-4 py-2' },
-    linkText(url),
-    copyButton({ text: () => url, label: 'Copy' }),
-  )
+  div({ class: 'flex items-center gap-2 bg-neutral-900 px-4 py-2' }, linkText(url), copyButton({ text: () => url, label: 'Copy' }))
 
 const errorRow = (error: string) => div({ class: 'bg-neutral-900 px-4 py-3' }, p({ class: 'text-xs wrap-anywhere whitespace-pre-wrap text-danger-400' }, error))
 
@@ -30,37 +23,34 @@ export const tailscaleSection = (source: DeviceSource) => {
   const busy = sig(false)
   const state = source.tailscale
   const https = () => state.get()?.https ?? false
-  const toggle = async () => {
+  const toggle = () => {
     busy.set(true)
-    try {
-      await source.setHttps(!https())
-    } catch (error) {
-      source.fail(error)
-    } finally {
-      busy.set(false)
-    }
+    source
+      .setHttps(!https())
+      .catch(source.fail)
+      .finally(() => busy.set(false))
   }
   return show(state.map(Boolean), () =>
     settingsSection(
       { title: 'Tailscale' },
-      dynamicChild(state, current => (current ? statusRow(current) : hidden())),
+      dynamicChild(state, current => current && statusRow(current)),
       settingsRow(
         'HTTPS through Tailscale',
         toggleSwitch({
           on: https,
           'aria-label': 'HTTPS through Tailscale',
           disabled: () => busy.get() || (!state.get()?.running && !https()),
-          onClick: () => void toggle(),
+          onClick: toggle,
         }),
         () => helpText(state.get()?.name),
       ),
       dynamicChild(
         state.map(current => (current?.serving && current.httpsUrl) || ''),
-        url => (url ? servingRow(url) : hidden()),
+        url => (url ? servingRow(url) : null),
       ),
       dynamicChild(
         state.map(current => current?.error ?? ''),
-        error => (error ? errorRow(error) : hidden()),
+        error => (error ? errorRow(error) : null),
       ),
     ),
   )

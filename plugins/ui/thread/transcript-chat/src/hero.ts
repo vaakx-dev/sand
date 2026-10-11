@@ -4,6 +4,8 @@ import { idleHints } from './idle'
 
 const size = 96
 
+type Below = 'off' | 'idle' | 'draft'
+
 const typingOff = (ctx: Context) =>
   div(
     { class: 'mt-4 flex flex-col items-center gap-3' },
@@ -12,23 +14,26 @@ const typingOff = (ctx: Context) =>
       secondaryAction({ size: 'sm', class: 'pointer-events-auto', onClick: () => void ctx.commands?.run('extensions') }, 'Open Interface'),
   )
 
-const projectIconUrl = (ctx: Context) => {
-  const threads = ctx.threads
-  if (!threads) return ''
-  const cwd = threads.current()?.info.cwd ?? threads.cwd()
-  if (!cwd || !ctx.projects) return ''
-  const device = threads.device()
-  const locations = ctx.projects.group(cwd, device)?.locations ?? []
-  return ctx.projects.icon(cwd, device) ?? locations.map(location => ctx.projects?.icon(location.path, location.device)).find(Boolean) ?? ''
+const projectIconUrl = (ctx: Context<'threads'>) => {
+  const cwd = ctx.threads.current()?.info.cwd ?? ctx.threads.cwd()
+  return (cwd && ctx.projects?.icon(cwd, ctx.threads.device())) || ''
 }
 
-const mark = (url: string) =>
-  url
-    ? img({ src: url, alt: '', width: size, height: size, draggable: false, class: 'shrink-0 rounded-2xl' })
-    : appIcon(size)
+const mark = (url: string) => {
+  if (!url) return appIcon(size)
+  return img({ src: url, alt: '', width: size, height: size, draggable: false, class: 'shrink-0 rounded-2xl' })
+}
 
-const below = (ctx: Context<'threads'>, state: 'off' | 'idle' | 'draft') =>
-  state === 'off' ? typingOff(ctx) : state === 'idle' ? idleHints(ctx) : span()
+const belowState = (ctx: Context<'threads'>): Below => {
+  if (!ctx.composer) return 'off'
+  return ctx.threads.idle() ? 'idle' : 'draft'
+}
+
+const below = (ctx: Context<'threads'>, state: Below) => {
+  if (state === 'off') return typingOff(ctx)
+  if (state === 'idle') return idleHints(ctx)
+  return null
+}
 
 export const hero = (ctx: Context<'threads'>) => {
   const changes = pulse(ctx, ['threads.change', 'thread.select', 'projects.change'], ['threads', 'projects', 'composer', 'commands', 'palette'])
@@ -36,7 +41,7 @@ export const hero = (ctx: Context<'threads'>) => {
     { class: 'pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-5 pb-32 text-center' },
     div({ class: 'mx-auto flex opacity-25', style: { filter: 'grayscale(0.35)' } }, dynamicChild(changes.read(() => projectIconUrl(ctx)), mark)),
     dynamicChild(
-      changes.read(() => (!ctx.composer ? 'off' : ctx.threads.idle() ? 'idle' : 'draft')),
+      changes.read(() => belowState(ctx)),
       state => below(ctx, state),
     ),
   )

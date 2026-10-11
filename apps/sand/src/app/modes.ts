@@ -56,7 +56,7 @@ const host = [
   'telemetry',
 ]
 
-export interface ModeSetup {
+interface ModeSetup {
   plugins: string[]
   user?: boolean
 }

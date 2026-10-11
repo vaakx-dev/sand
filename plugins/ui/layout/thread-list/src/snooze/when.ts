@@ -32,7 +32,8 @@ const dayOffset = (word: string, today: number) => {
 
 const isWeekday = (word: string) => !['today', 'tomorrow', 'tmr'].includes(word)
 
-export const parseWhen = (raw: string, now = Date.now()) => {
+export const parseWhen = (raw: string) => {
+  const now = Date.now()
   const text = raw.trim().toLowerCase().replace(/\s+/g, ' ')
   const span = /^(\d+(?:\.\d+)?) ?(m|h|d|w)$/.exec(text)
   if (span) return now + Number(span[1]) * units[span[2]!]!
@@ -48,9 +49,9 @@ export const parseWhen = (raw: string, now = Date.now()) => {
   return at.getTime() > now ? at.getTime() : undefined
 }
 
-export const backLabel = (at: number, now = Date.now()) => {
+export const backLabel = (at: number) => {
   const date = new Date(at)
   const time = date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
-  const today = date.toDateString() === new Date(now).toDateString()
+  const today = date.toDateString() === new Date().toDateString()
   return today ? `back ${time}` : `back ${date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}, ${time}`
 }

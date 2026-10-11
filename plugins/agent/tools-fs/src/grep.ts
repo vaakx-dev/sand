@@ -1,6 +1,6 @@
 import type { Tool } from '@sand/tools/contract'
+import { resolve } from 'node:path'
 import { z } from 'zod'
-import { locate } from './files'
 import { matches } from './search/matches'
 
 const limit = 200
@@ -20,7 +20,7 @@ export const grep: Tool<typeof input> = {
   input,
   async run({ pattern, path = '.', glob = '**/*', ignore_case, include_ignored }, { cwd, signal }) {
     const found: string[] = []
-    const query = { pattern, root: locate(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal }
+    const query = { pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal }
     for await (const match of matches(query)) {
       found.push(match)
       if (found.length >= limit) return found.join('\n') + `\n… stopped at ${limit} matches`

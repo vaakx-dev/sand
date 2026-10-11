@@ -1,28 +1,10 @@
-export interface ProjectCopy {
-  path: string
-  added: number
-  updated: number
-  removed?: boolean
-}
+import type { Project } from '@sand/protocol'
 
-export interface Project {
-  id: string
-  name: string
-  remote?: string
-  copies: Record<string, ProjectCopy>
-  updated: number
-  hidden?: boolean
-  deleted?: boolean
-}
+export type { Project, ProjectCopy, ProjectRef } from '@sand/protocol'
 
 export interface ProjectPatch {
   name?: string
   hidden?: boolean
-}
-
-export interface ProjectRef {
-  path: string
-  device?: string
 }
 
 export interface ProjectPlace {

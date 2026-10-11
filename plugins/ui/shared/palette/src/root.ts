@@ -12,7 +12,7 @@ const gather = (source: PaletteSource, query: string) => {
 export const merged = (sources: PaletteSource[], query: string) => {
   const groups = new Map<string, PaletteItem[]>()
   const seen = new Set<string>()
-  for (const source of [...sources].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+  for (const source of sources.toSorted((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
     for (const item of gather(source, query)) {
       if (seen.has(item.id)) continue
       seen.add(item.id)

@@ -3,13 +3,13 @@ import type { Thread } from '@sand/web-client/contract'
 import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd, untrack } from '@sand/dom'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
-import { fill, keepAnchor, savedScroll, scrollTo } from './integrations/scroll'
-import type { RowContext } from './rows'
+import { fill, keepAnchor, scrollTo } from './integrations/scroll'
 import { rewriteActions } from './rows/rewrite'
+import type { RowContext } from './rows/row'
 import { slotHost } from './slot'
 import { foldTurns } from './turns/fold'
 import { shownRows } from './turns/rows'
-import { Views, type ThreadView } from './view'
+import { threadViews, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
 
 export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
@@ -18,8 +18,9 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
   const jumpShown = sig(false)
   const slot = slotHost()
   const menu = contextMenu()
+  const views = threadViews()
   const empty = hero(ctx)
-  let shown: { id: string; view: ThreadView } | undefined
+  let shown: ThreadView | undefined
   let pinned = true
 
   const onScroll = () => {
@@ -29,7 +30,7 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     }
     fill(scroller, reveal)
   }
-  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node)
+  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node, views.node)
   listen(
     scroller,
     'load',
@@ -38,7 +39,6 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     },
     true,
   )
-  const views = new Views(scroller)
 
   const scrollToEnd = () => {
     toEnd(scroller)
@@ -48,8 +48,8 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
 
   const stash = () => {
     if (!shown) return
-    shown.view.scroll = savedScroll(scroller, nearEnd(scroller))
-    shown.view.visible.set(false)
+    shown.scroll = nearEnd(scroller) ? undefined : scroller.scrollTop
+    shown.visible.set(false)
     shown = undefined
   }
 
@@ -60,21 +60,20 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
   }
 
   const showThread = (id: string) => {
-    if (shown?.id === id) return shown.view
+    if (shown?.id === id) return shown
     stash()
     slot.clear()
-    const next = views.get(id)
-    next.visible.set(true)
-    shown = { id, view: next }
-    return next
+    shown = views.get(id)
+    shown.visible.set(true)
+    return shown
   }
 
   const repaint = () => {
     const thread = ctx.threads.current()
-    if (thread && shown?.id === thread.id) paint(thread, shown.view)
+    if (thread && shown?.id === thread.id) paint(thread, shown)
   }
 
-  const paint = (thread: Thread, current: ThreadView, grow = 0) => {
+  const paint = (thread: Thread, view: ThreadView, grow = 0) => {
     const context: RowContext = {
       registry,
       states,
@@ -92,21 +91,21 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
       started: thread.started,
       open: key => untrack(() => states.get(key).open.get()),
     })
-    current.rows.set(windowed(current, folded, grow).flatMap(entry => shownRows(entry, context)))
+    view.rows.set(windowed(view, folded, grow).flatMap(entry => shownRows(entry, context)))
   }
 
   const reveal = () => {
     const thread = ctx.threads.current()
-    if (!thread || !shown || shown.id !== thread.id) return false
-    if (!shown.view.truncated) {
+    const view = shown
+    if (!thread || view?.id !== thread.id) return false
+    if (!view.truncated) {
       if (ctx.threads.older(thread.id)) void ctx.threads.page(thread.id)
       return false
     }
-    const current = shown.view
-    keepAnchor(scroller, current.column, () => {
-      current.painted.done = false
-      paint(thread, current, pageSize)
-      current.painted.done = true
+    keepAnchor(scroller, view.rowList, () => {
+      view.animate = false
+      paint(thread, view, pageSize)
+      view.animate = true
     })
     return true
   }
@@ -120,13 +119,13 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
       return showSlot(`failed:${thread.id}:${problem}`, () => failed(problem, () => void ctx.threads.load(thread.id)))
     }
     const switching = shown?.id !== thread.id
-    const current = showThread(thread.id)
-    const restoring = switching && current.scroll !== undefined
-    const tail = switching ? !restoring : nearEnd(scroller)
-    if (tail && (switching || current.size > 2 * pageSize)) current.first = undefined
-    paint(thread, current)
-    current.painted.done = true
-    if (restoring) scrollTo(scroller, current.scroll!)
+    const view = showThread(thread.id)
+    const saved = switching ? view.scroll : undefined
+    const tail = switching ? saved === undefined : nearEnd(scroller)
+    if (tail && (switching || view.size > 2 * pageSize)) view.first = undefined
+    paint(thread, view)
+    view.animate = true
+    if (saved !== undefined) scrollTo(scroller, saved)
     else if (tail) toEnd(scroller)
     fill(scroller, reveal)
     pinned = nearEnd(scroller)
@@ -149,12 +148,6 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     render()
   }
 
-  const clear = () => {
-    cache.reset()
-    slot.clear()
-    views.clear()
-  }
-
   const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd), menu.view())
-  return { root, render, refresh, forget, scrollToEnd, clear, stale: cache.reset }
+  return { root, render, refresh, forget, stale: cache.reset }
 }

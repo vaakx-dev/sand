@@ -1,11 +1,16 @@
-import { copyButton, div, el } from '@sand/dom'
+import { collectScope, copyButton, disposeAll, div, el, onDisconnect } from '@sand/dom'
 import { highlight } from './highlight'
-import { ownedByNode } from './owned'
 
 const fingerprint = (value: string) => {
   let hash = 0
   for (let index = 0; index < value.length; index++) hash = (Math.imul(hash, 31) + value.charCodeAt(index)) | 0
   return `${value.length}:${(hash >>> 0).toString(36)}`
+}
+
+const ownedByNode = <T extends Node>(build: () => T): T => {
+  const { value, scope } = collectScope(build)
+  collectScope(() => onDisconnect(value, () => disposeAll(scope)))
+  return value
 }
 
 const copyCode = (code: string) => ownedByNode(() => copyButton({ text: () => code, 'data-code': fingerprint(code) }))

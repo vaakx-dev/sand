@@ -5,7 +5,7 @@ import { createHostAuth } from '../auth/host'
 import { learn } from '../connection/book'
 import { createPcConnection } from '../connection/pc'
 
-export interface Link {
+interface Link {
   remote: Remote
   state(): WireState
   info(): ConnectionInfo
@@ -24,7 +24,7 @@ export interface LinkHandlers {
   state(): void
 }
 
-export type Invite = (id: string) => Promise<RemoteInvite>
+type Invite = (id: string) => Promise<RemoteInvite>
 
 const urlsOf = (remote: Remote) => [remote.url, ...remote.urls]
 
@@ -48,7 +48,7 @@ const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers):
     remote,
     state: connection.state,
     info: connection.info,
-    call: request => connection.call(request),
+    call: connection.call,
     fetch: auth.fetch,
     nudge: connection.nudge,
     close: connection.close,

@@ -6,7 +6,7 @@ import { pairedPcs, syncPeers } from './share/peers'
 import type { ShareSide } from './share/route'
 import { authFile, githubStore, isSignedIn, timeOf, type GithubRecord } from './store'
 
-export interface LoginOptions {
+interface LoginOptions {
   home: string
   changed(): void
 }

@@ -1,4 +1,4 @@
-export interface LinkStatus {
+interface LinkStatus {
   online: boolean
   checked: boolean
   refused: boolean
@@ -22,7 +22,7 @@ export const createStatus = (changed: () => void) => {
     refused: (id: string) => states.get(id)?.refused === true,
     reached: (id: string, url: string) => set(id, { online: true, checked: true, refused: false, lastSeen: Date.now(), url }),
     refuse: (id: string, error: string) => set(id, { ...states.get(id), online: true, checked: true, refused: true, lastSeen: Date.now(), error }),
-    lost: (id: string, error: string) => set(id, { ...states.get(id), online: false, checked: true, refused: states.get(id)?.refused ?? false, error }),
+    lost: (id: string, error: string) => set(id, { refused: false, ...states.get(id), online: false, checked: true, error }),
     accepted: (id: string) => {
       const before = states.get(id)
       if (before?.refused) set(id, { ...before, refused: false, error: undefined })

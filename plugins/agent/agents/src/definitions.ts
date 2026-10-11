@@ -1,9 +1,8 @@
 import type { Effort } from '@sand/llm-accounts/contract'
 import type { AgentDefinition } from './contract'
-import { errorMessage } from '@sand/kit'
+import { errorMessage, parseFrontmatter } from '@sand/kit'
 import { scanFolder } from '@sand/kit/fs'
 import { basename, join } from 'node:path'
-import { parseFrontmatter } from './frontmatter'
 import { parseEffort } from './settings'
 
 export const builtins: AgentDefinition[] = [
@@ -47,13 +46,8 @@ const parseOrReport = async (path: string, efforts: Effort[], report: (error: un
   }
 }
 
-const loadFolder = async (dir: string, efforts: Effort[], report: (error: unknown) => void) => {
+export const loadDefinitions = async (dir: string, efforts: Effort[], report: (error: unknown) => void) => {
   const files = await scanFolder(dir, '*.md')
   const parsed = await Promise.all(files.map(file => parseOrReport(join(dir, file), efforts, report)))
   return parsed.flat()
-}
-
-export const loadDefinitions = async (dirs: string[], efforts: Effort[], report: (error: unknown) => void) => {
-  const folders = await Promise.all(dirs.map(dir => loadFolder(dir, efforts, report)))
-  return folders.flat()
 }

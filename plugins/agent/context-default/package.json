@@ -13,7 +13,10 @@
     "provides": [
       "context",
       "instructions"
-    ]
+    ],
+    "uses": {
+      "modelSettings": "the system prompt leaves out the model name"
+    }
   },
   "dependencies": {
     "@sand/llm-accounts": "workspace:*",

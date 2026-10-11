@@ -9,7 +9,8 @@
     "summary": "Go to a file or search the project from the palette",
     "uses": {
       "palette": "nothing is shown",
-      "composer": "picked files cannot be added to a prompt"
+      "composer": "picked files cannot be added to a prompt",
+      "notify": "no message when no composer is loaded"
     }
   },
   "dependencies": {

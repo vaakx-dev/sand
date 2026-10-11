@@ -1,10 +1,11 @@
+import { serial } from '@sand/kit'
 import { type PluginScan, scanPlugins } from '@sand/kit/host'
 import { join } from 'node:path'
-import { createApplier } from './apply'
+import { createApplier } from './apply/applier'
 import type { PluginManifest, PluginOffer } from './contract'
-import { createPeerRounds } from './peers'
+import { createPeerRounds } from './peers/rounds'
 import { readPlugin } from './scan/read'
-import { compare } from './state/offers'
+import { diffManifests } from './state/offers'
 import { parseManifest } from './state/parse'
 import { syncStore } from './state/store'
 import { syncView } from './state/view'
@@ -19,7 +20,7 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
   let offers: PluginOffer[] = []
   let shown = ''
   let stopped = false
-  let computing: Promise<void> = Promise.resolve()
+  const queue = serial()
 
   const localSet = () => new Set([...store.local(), ...scan.linked])
 
@@ -36,8 +37,15 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
     const local = localSet()
     const next: PluginOffer[] = []
     for (const [id, peer] of peers.known) {
-      const file = store.get()
-      const result = compare({ peer: { id, name: peer.name }, mine: ours, theirs: peer.manifest, bases: file.bases[id] ?? {}, skipped: file.skipped[id] ?? {}, local })
+      const { bases, skipped } = store.get()
+      const result = diffManifests({
+        peer: { id, name: peer.name },
+        mine: ours,
+        theirs: peer.manifest,
+        bases: bases[id] ?? {},
+        skipped: skipped[id] ?? {},
+        local,
+      })
       await store.settle(id, result.bases, result.skipped)
       next.push(...result.offers)
     }
@@ -49,10 +57,7 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
     if (!stopped) options.changed(state)
   }
 
-  const recompute = () => {
-    computing = computing.catch(() => {}).then(compute)
-    return computing
-  }
+  const recompute = () => queue(compute)
 
   const peers = createPeerRounds({ link, store, manifest, recompute, stopped: () => stopped })
 
@@ -67,10 +72,7 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
   const apply = createApplier({ root, work, link, offers: () => offers, refresh: rescan, swap: options.swap, state: view, snapshot: options.snapshot })
 
   return {
-    async state() {
-      await computing.catch(() => {})
-      return view()
-    },
+    state: () => queue(async () => view()),
     async exchange(value) {
       const claimed = parseManifest(value)
       const paired = (await link.list()).some(item => item.id === claimed.device)

@@ -8,7 +8,6 @@
     "label": "Context ring",
     "summary": "How full the context window is, next to send, with Compact now",
     "uses": {
-      "commands": "Compact now goes straight to the server",
       "notify": "a failed compact is not reported"
     },
     "enabled": false

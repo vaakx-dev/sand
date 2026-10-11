@@ -14,13 +14,12 @@ export default definePlugin({
     const defaults = await createDefaults(ctx.cli.home, () => ({ model: ctx.llm?.models?.()[0]?.id }))
     const choices = createChoices(ctx, defaults)
     ctx.provide('modelSettings', {
-      of: settingsOf,
       effective: session => resolve(settingsOf(session), defaults.get(), ctx.llm),
       resolve: settings => resolve(settings, defaults.get(), ctx.llm),
       state: choices.state,
       defaults: () => canonical(ctx.llm, defaults.get()),
       update: updateSettings,
-      flags: () => flagSettings(ctx.cli?.flags, ctx.llm),
+      flags: () => flagSettings(ctx.cli.flags, ctx.llm),
     })
     ctx.on(
       'context.build',

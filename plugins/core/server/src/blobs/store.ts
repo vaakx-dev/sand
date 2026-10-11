@@ -1,7 +1,8 @@
-import { readdir, rename, rm, stat, utimes } from 'node:fs/promises'
+import { writeAtomic } from '@sand/kit/fs'
+import { readdir, rm, stat, utimes } from 'node:fs/promises'
 import { join } from 'node:path'
 
-export const blobHash = /^[a-f0-9]{64}$/
+const blobHash = /^[a-f0-9]{64}$/
 
 const touchEvery = 86_400_000
 
@@ -10,6 +11,8 @@ export interface BlobStore {
   put(hash: string, bytes: () => Uint8Array): void
   sweep(cutoff: number): Promise<void>
 }
+
+export type FindBlob = (hash: string, session?: string | null) => Promise<Bun.BunFile | undefined>
 
 export const createBlobStore = (folder: string, report: (error: unknown) => void): BlobStore => {
   const touched = new Map<string, number>()
@@ -28,15 +31,15 @@ export const createBlobStore = (folder: string, report: (error: unknown) => void
     const target = path(hash)
     const now = new Date()
     if (await Bun.file(target).exists()) return utimes(target, now, now)
-    const temp = `${target}.${crypto.randomUUID()}.tmp`
-    await Bun.write(temp, bytes())
-    await rename(temp, target)
+    await writeAtomic(target, bytes())
   }
 
   const expired = async (name: string, cutoff: number) => {
     const info = await stat(path(name)).catch(() => undefined)
     return Boolean(info?.isFile() && info.mtimeMs < cutoff)
   }
+
+  const inUse = (hash: string, cutoff: number) => pending.has(hash) || (touched.get(hash) ?? 0) >= cutoff
 
   const remove = (name: string) => rm(path(name), { force: true }).catch(() => {})
 
@@ -59,17 +62,14 @@ export const createBlobStore = (folder: string, report: (error: unknown) => void
       })
     },
     async sweep(cutoff) {
-      const names = await readdir(folder).catch(() => [] as string[])
+      const names = await readdir(folder).catch((): string[] => [])
       for (const name of names) {
-        const blob = blobHash.test(name)
-        if (!blob && !name.endsWith('.tmp')) continue
-        if (blob && (pending.has(name) || (touched.get(name) ?? 0) >= cutoff)) continue
-        if (!(await expired(name, cutoff))) continue
-        if (!blob) {
-          await remove(name)
+        if (name.endsWith('.tmp')) {
+          if (await expired(name, cutoff)) await remove(name)
           continue
         }
-        if (pending.has(name) || (touched.get(name) ?? 0) >= cutoff) continue
+        if (!blobHash.test(name) || inUse(name, cutoff)) continue
+        if (!(await expired(name, cutoff)) || inUse(name, cutoff)) continue
         touched.delete(name)
         await queue(name, () => remove(name))
       }

@@ -5,12 +5,15 @@ const agentList = (definitions: AgentDefinition[]) =>
   definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')
 
 const modelList = (llm: LLM | undefined) => {
-  const seen = new Set<string>()
-  const models = (llm?.models?.() ?? []).filter(model => !seen.has(model.label) && !!seen.add(model.label))
-  if (!models.length) return ''
-  const names = models.map(model => `${model.label}${model.summary ? ` (${model.summary})` : ''}`)
+  const models = llm?.models?.() ?? []
+  const unique = models.filter((model, index) => models.findIndex(other => other.label === model.label) === index)
+  if (!unique.length) return ''
+  const names = unique.map(model => `${model.label}${model.summary ? ` (${model.summary})` : ''}`)
   return `\n\nAvailable models: ${names.join(', ')}. Use a smaller model for mechanical search and bulk reading; keep the default for judgement-heavy work.`
 }
 
-export const catalog = (definitions: AgentDefinition[], llm: LLM | undefined) =>
-  `Available agents:\n${agentList(definitions)}${modelList(llm)}`
+export const describeAgents = (definitions: AgentDefinition[], llm: LLM | undefined) =>
+  `Delegate a task to a subagent. Use for broad searches, parallel work, or anything that would flood your context. Only its final report comes back. Several calls in one response run in parallel.
+
+Available agents:
+${agentList(definitions)}${modelList(llm)}`

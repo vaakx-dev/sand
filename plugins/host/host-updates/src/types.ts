@@ -1,5 +1,6 @@
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import type { GithubRelease, HealthOutcome } from '@sand/kit/host'
+import type { HealthOutcome } from '@sand/kit/host'
+import type { GithubRelease } from './github/release'
 import type { BuildInfo, HostApp } from '@sand/protocol'
 import type { UpdateChannel, UpdateState } from './contract'
 

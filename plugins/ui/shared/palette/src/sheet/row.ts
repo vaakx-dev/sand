@@ -1,5 +1,7 @@
 import type { PaletteItem } from '../contract'
-import { div, icon, iconButton, menuItem, optionProps, projectIcon, read, span, stopThen, working, type ContextMenu, type Listbox, type MaybeReactive, type MenuSpec } from '@sand/dom'
+import { div, icon, iconButton, menuItem, optionProps, projectIcon, read, span, stopThen, working, type ContextMenu, type MaybeReactive } from '@sand/dom'
+import { actionsMenu } from './actions'
+import type { PageModel } from './model'
 
 const lead = (item: PaletteItem) => {
   if (item.busy) return working(16)
@@ -25,14 +27,14 @@ const withMore = (row: HTMLElement, item: PaletteItem, active: () => boolean, mo
     ),
   )
 
-export const rowView = (item: PaletteItem, position: MaybeReactive<number>, box: Listbox, more: (item: PaletteItem) => void, menu: ContextMenu, spec: (item: PaletteItem) => MenuSpec) => {
-  const press = (onClick: (event: MouseEvent) => void) => (item.actions?.length ? menu.target(() => spec(item), onClick) : { onClick })
-  const active = () => box.isSelected(read(position))
-  const { onMouseMove, onClick, ...option } = optionProps(box, position)
+export const rowView = (item: PaletteItem, position: MaybeReactive<number>, model: PageModel, menu: ContextMenu) => {
+  const hasActions = Boolean(item.actions?.length)
+  const active = () => model.box.isSelected(read(position))
+  const { onMouseMove, onClick, ...option } = optionProps(model.box, position)
   const row = menuItem(
     {
       ...option,
-      ...press(onClick),
+      ...(hasActions ? menu.target(() => actionsMenu(item, model.runAction), onClick) : { onClick }),
       ...(item.disabled ? {} : { onMouseMove }),
       active,
       'aria-disabled': item.disabled,
@@ -46,7 +48,7 @@ export const rowView = (item: PaletteItem, position: MaybeReactive<number>, box:
     ),
     item.meta ? span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, item.meta) : null,
     item.page ? span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('right', 14)) : null,
-    item.actions?.length ? span({ class: 'w-8 shrink-0' }) : null,
+    hasActions ? span({ class: 'w-8 shrink-0' }) : null,
   )
-  return item.actions?.length ? withMore(row, item, active, more) : row
+  return hasActions ? withMore(row, item, active, model.more) : row
 }

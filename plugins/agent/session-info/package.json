@@ -8,7 +8,10 @@
   },
   "sand": {
     "label": "Thread name",
-    "summary": "/name"
+    "summary": "/name",
+    "uses": {
+      "modelSettings": "a thread started by /name ignores the model chosen before it existed"
+    }
   },
   "dependencies": {
     "@sand/kit": "workspace:*",

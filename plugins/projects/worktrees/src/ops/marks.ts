@@ -1,8 +1,9 @@
 import type { WorktreeMark } from '../contract'
+import { uniqueStrings } from '@sand/kit'
 import { samePath } from '@sand/kit/fs'
 import { existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { gitMaybe } from '../git/run'
+import { gitMaybe } from '@sand/kit/git'
 
 const freshMs = 10_000
 const most = 500
@@ -28,7 +29,7 @@ export const markOf = async (cwd: string) => {
 export const forgetMarks = () => cache.clear()
 
 export const marksOf = async (cwds: unknown) => {
-  const wanted = Array.isArray(cwds) ? [...new Set(cwds.filter((cwd): cwd is string => typeof cwd === 'string'))].slice(0, most) : []
+  const wanted = uniqueStrings(cwds, most)
   const found = await Promise.all(wanted.map(markOf))
   return Object.fromEntries(wanted.map((cwd, index) => [cwd, found[index] ?? null]))
 }

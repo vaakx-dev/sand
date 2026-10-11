@@ -1,7 +1,5 @@
 import type { Feedback, Message, TextBlock } from '@sand/messages'
 
-export type { Feedback }
-
 const pattern = /^<(stop-feedback|note) source="([^"]+)">([\s\S]*)<\/\1>$/
 
 export const stopFeedback = (source: string, text: string): TextBlock => ({

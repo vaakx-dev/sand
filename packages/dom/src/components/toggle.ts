@@ -1,5 +1,4 @@
-import { button, span, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
-import { read } from '../reactive/read'
+import { button, read, span, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 
 export const toggleSwitch = ({ on, class: extra, ...props }: Props<HTMLButtonElement> & { on: MaybeReactive<boolean> }) =>
   button(

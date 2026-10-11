@@ -1,16 +1,15 @@
+import { uniqueStrings } from '@sand/kit'
+import { gitMaybe } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 
 const freshMs = 5000
+const most = 500
 
 const cache = new Map<string, { at: number; branch?: string }>()
 
-const read = async (cwd: string) => {
-  const git = Bun.spawn(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], { cwd, stdin: 'ignore', stdout: 'pipe', stderr: 'ignore', windowsHide: true })
-  const [output, code] = await Promise.all([new Response(git.stdout).text(), git.exited])
-  return code === 0 && output.trim() ? output.trim() : undefined
-}
+const read = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])) || undefined
 
-export const branch = async (cwd: string) => {
+const branch = async (cwd: string) => {
   if (!cwd || !existsSync(cwd)) return undefined
   const cached = cache.get(cwd)
   if (cached && Date.now() - cached.at < freshMs) return cached.branch
@@ -19,10 +18,8 @@ export const branch = async (cwd: string) => {
   return found
 }
 
-const most = 500
-
 export const branches = async (cwds: unknown) => {
-  const wanted = Array.isArray(cwds) ? [...new Set(cwds.filter((cwd): cwd is string => typeof cwd === 'string'))].slice(0, most) : []
-  const found = await Promise.all(wanted.map(cwd => branch(cwd).catch(() => undefined)))
-  return Object.fromEntries(wanted.map((cwd, i) => [cwd, found[i] ?? null]))
+  const wanted = uniqueStrings(cwds, most)
+  const found = await Promise.all(wanted.map(branch))
+  return Object.fromEntries(wanted.map((cwd, index) => [cwd, found[index] ?? null]))
 }

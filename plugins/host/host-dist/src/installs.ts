@@ -1,27 +1,17 @@
-import type { HostHealth } from '@sand/host-health/contract'
 import { hashSecret, randomSecret } from '@sand/kit/fs'
 import type { InstallProgress, InstallStage, InstallStep, InstallTicket } from './contract'
 
-export interface InstallGrant {
+interface InstallGrant {
   id: string
   expires: number
   started: boolean
   name?: string
 }
 
-interface InstallKeyOptions {
-  ttl?: number
-  working?: number
-  report?: (progress: InstallProgress) => void
-}
+type StepDetail = Pick<InstallProgress, 'name' | 'plugins' | 'accounts' | 'error' | 'health'>
 
-interface StepDetail {
-  name?: string
-  plugins?: number
-  accounts?: string[]
-  error?: string
-  health?: HostHealth
-}
+const ttl = 10 * 60_000
+const working = 30 * 60_000
 
 const stages: Record<InstallStep, InstallStage> = {
   connected: 'installing',
@@ -34,7 +24,7 @@ const stages: Record<InstallStep, InstallStage> = {
   failed: 'failed',
 }
 
-export const createInstallKeys = ({ ttl = 10 * 60_000, working = 30 * 60_000, report }: InstallKeyOptions = {}) => {
+export const createInstallKeys = (report: (progress: InstallProgress) => void) => {
   const grants = new Map<string, InstallGrant>()
 
   const dropExpired = () => {
@@ -65,7 +55,7 @@ export const createInstallKeys = ({ ttl = 10 * 60_000, working = 30 * 60_000, re
         grant.expires = Math.max(grant.expires, Date.now() + working)
       }
       if (extra.name) grant.name = extra.name
-      report?.({ install: grant.id, step, stage: stages[step], at: Date.now(), ...(grant.name ? { name: grant.name } : {}), ...extra })
+      report({ install: grant.id, step, stage: stages[step], at: Date.now(), ...(grant.name ? { name: grant.name } : {}), ...extra })
       return grant
     },
     finish(secret: string): void {

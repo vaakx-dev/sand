@@ -5,7 +5,7 @@ const keep = 10
 const settle = 10_000
 
 const family = (store: Store) => {
-  const current = store.current ? store.threads.get(store.current) : undefined
+  const current = store.currentThread()
   const ids = new Set<string>()
   if (current) ids.add(current.id)
   if (current?.info.parent) ids.add(current.info.parent)

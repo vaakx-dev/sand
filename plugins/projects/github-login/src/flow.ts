@@ -5,7 +5,7 @@ import { ghToken } from './gh/login'
 
 const codeLife = 15 * 60_000
 
-export interface FlowOptions {
+interface FlowOptions {
   changed(): void
   signIn(token: string): Promise<void>
 }
@@ -38,18 +38,21 @@ export const createFlow = ({ changed, signIn }: FlowOptions) => {
     async start() {
       if (running) return
       error = undefined
-      let flow: DeviceLogin | undefined
+      let flow: DeviceLogin
       try {
         flow = running = deviceLogin()
+      } catch (problem) {
+        error = errorMessage(problem)
+        return changed()
+      }
+      try {
         const code = await flow.code
         if (running !== flow) return
         pending = { ...code, expires: Date.now() + codeLife }
       } catch (problem) {
-        if (flow && running !== flow) return
+        if (running !== flow) return
         error = errorMessage(problem)
-        if (flow) finish(flow)
-        else changed()
-        return
+        return finish(flow)
       }
       changed()
       void watch(flow)
@@ -62,5 +65,3 @@ export const createFlow = ({ changed, signIn }: FlowOptions) => {
     },
   }
 }
-
-export type Flow = ReturnType<typeof createFlow>

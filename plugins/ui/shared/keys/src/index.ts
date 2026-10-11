@@ -44,7 +44,7 @@ export default definePlugin({
       },
     }
 
-    ctx.effect(() => listen(window, 'keydown', event => press(event as KeyboardEvent)))
+    ctx.effect(() => listen<KeyboardEvent>(window, 'keydown', press))
     ctx.provide('keys', keys)
   },
 })

@@ -1,7 +1,8 @@
 import type { WireState } from '@sand/web-client/contract'
-import { div, el, keys, overlay, p, place, secondaryAction, sheet, show, sig, textInput } from '@sand/dom'
+import { div, h2, keys, overlay, p, secondaryAction, sheet, show, sig, textInput } from '@sand/dom'
 import { parsePairLink } from '@sand/kit'
-import type { Context, Dispose } from 'drydock'
+import type { Context } from 'drydock'
+import { overlaySlot } from './overlay-slot'
 
 const follow = (text: string) => {
   const link = parsePairLink(text)
@@ -15,8 +16,9 @@ const unpairedView = () => {
   const link = sig('')
   const wrong = sig(false)
   const submit = () => {
-    wrong.set(!follow(link.get()))
-    if (!wrong.get()) link.set('')
+    const followed = follow(link.get())
+    wrong.set(!followed)
+    if (followed) link.set('')
   }
   return overlay(
     () => {},
@@ -24,7 +26,7 @@ const unpairedView = () => {
       { 'aria-label': 'Pair this browser', class: 'max-w-md' },
       div(
         { class: 'flex flex-col gap-3 p-5' },
-        el('h2', { class: 'text-sm font-semibold text-neutral-100' }, 'This browser isn’t paired with sand'),
+        h2({ class: 'text-sm font-semibold text-neutral-100' }, 'This browser isn’t paired with sand'),
         p({ class: 'text-sm text-neutral-400' }, 'On a paired device open Settings → Your devices → Add a phone, or run sand on this PC.'),
         div(
           { class: 'flex flex-wrap items-center gap-2' },
@@ -45,18 +47,11 @@ const unpairedView = () => {
 }
 
 export const unpairedOverlay = (ctx: Context<'wire'>) => {
-  let unplace: Dispose | undefined
+  const slot = overlaySlot(ctx, 200)
   const sync = (state: WireState) => {
-    if (state === 'unpaired' && !unplace) unplace = place(ctx, 'overlay', unpairedView, 200)
-    if (state !== 'unpaired' && unplace) {
-      void unplace()
-      unplace = undefined
-    }
+    if (state !== 'unpaired') return slot.close()
+    if (!slot.isOpen()) slot.open(unpairedView)
   }
   ctx.on('wire.state', sync)
   sync(ctx.wire.state())
-  ctx.effect(() => () => {
-    void unplace?.()
-    unplace = undefined
-  })
 }

@@ -42,7 +42,7 @@ export const createSockets = (handlers: SocketHandlers) => {
   }
 
   const broadcast = (name: string, args: unknown[]) => {
-    const payload = JSON.stringify({ type: 'event', name, args: serialize(args) as unknown[] } satisfies ServerMessage)
+    const payload = JSON.stringify({ type: 'event', name, args: args.map(serialize) } satisfies ServerMessage)
     for (const client of clients) client.send(payload)
   }
 

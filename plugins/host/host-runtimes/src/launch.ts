@@ -1,12 +1,11 @@
 import type { FailedPlugin, RuntimeMessage } from '@sand/protocol'
 import { terminate } from './kill'
+import { listFailed } from './notices'
 import { spawnRuntime, type Child } from './spawn'
 
 const readyTimeout = 60_000
 
 export type Launched = { child: Child } | { error: string; failed?: FailedPlugin[] }
-
-const listFailed = (failed: FailedPlugin[]) => failed.map(plugin => `${plugin.id}: ${plugin.error}`).join('; ')
 
 export const createLauncher = (main: () => string, receive: (child: Child, message: RuntimeMessage) => void) => {
   const pending = new Map<Child, (result: Launched) => void>()

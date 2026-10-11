@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage, serial } from '@sand/kit'
 import { removeQuietly } from '@sand/kit/host'
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -10,16 +10,7 @@ import { discoverTargets, present, type TargetInfo, targetInfo } from './targets
 
 const keep = 30
 
-const serial = () => {
-  let tail: Promise<unknown> = Promise.resolve()
-  return <T>(task: () => Promise<T>): Promise<T> => {
-    const next = tail.then(task)
-    tail = next.catch(() => {})
-    return next
-  }
-}
-
-export const createVersionStore = async (home: string, changed: () => void = () => {}) => {
+export const createVersionStore = async (home: string, changed: () => void) => {
   const root = join(home, 'versions')
   const staging = join(root, '.staging')
   await mkdir(root, { recursive: true })
@@ -41,10 +32,10 @@ export const createVersionStore = async (home: string, changed: () => void = () 
   const prune = async (key: string) => {
     const list = versionsOf(key)
     while (list.length > keep) {
-      const at = list.findIndex(version => version.id !== index.good[key])
-      if (at < 0) return
-      const [old] = list.splice(at, 1)
-      await rm(folderOf(key, old!.id), { recursive: true, force: true })
+      const old = list.find(version => version.id !== index.good[key])
+      if (!old) return
+      list.splice(list.indexOf(old), 1)
+      await rm(folderOf(key, old.id), { recursive: true, force: true })
     }
   }
 
@@ -156,5 +147,3 @@ export const createVersionStore = async (home: string, changed: () => void = () 
 
   return { list, snapshot, restore, markGood, autoRestore }
 }
-
-export type VersionStore = Awaited<ReturnType<typeof createVersionStore>>

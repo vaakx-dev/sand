@@ -30,14 +30,16 @@ export const replaceTarget = async (info: TargetInfo, version: string | undefine
   try {
     await mkdir(dirname(info.path), { recursive: true })
     const trash = join(work, 'trash')
-    if (!version) return void (await rename(info.path, trash).catch(() => {}))
     const incoming = join(work, 'incoming')
-    if (!info.folder) {
+    if (!version) {
+      await rename(info.path, trash).catch(() => {})
+    } else if (info.folder) {
+      await copyPlugin(version, incoming)
+      await swapFolder(info, incoming, trash)
+    } else {
       await Bun.write(incoming, Bun.file(contentAt(info, version)))
-      return void (await rename(incoming, info.path))
+      await rename(incoming, info.path)
     }
-    await copyPlugin(version, incoming)
-    await swapFolder(info, incoming, trash)
   } finally {
     await removeQuietly(work)
   }

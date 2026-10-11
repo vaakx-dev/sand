@@ -1,7 +1,7 @@
-import type { TurnResult, UsageRecord } from '@sand/loops/contract'
+import type { TurnResult } from '@sand/loops/contract'
 import type { UserContent } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
-import { errorMessage, stopFeedback, usageSource } from '@sand/kit'
+import { errorMessage, stopFeedback, usageRecord } from '@sand/kit'
 import type { Context } from 'drydock'
 import { check } from './check'
 import { activeGoal, entryType, sameGoal, type Goal } from './goal'
@@ -14,7 +14,7 @@ const feedback = (goal: Goal, reason: string) =>
 const judge = async (ctx: GoalContext, session: Session, goal: Goal, signal: AbortSignal) => {
   const request = await ctx.waterfall('context.build', await ctx.context.build(session), session)
   const verdict = await check(ctx.llm, request, goal.objective, signal)
-  if (verdict.usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model, verdict.source), usage: verdict.usage } satisfies UsageRecord)
+  if (verdict.usage) session.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, verdict.usage, verdict.source))
   return verdict
 }
 

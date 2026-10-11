@@ -1,5 +1,5 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type Sig } from '@sand/dom'
+import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type NavAction, type Sig } from '@sand/dom'
 import type { VersionsSource } from './source'
 
 const sources: Record<VersionSource, string> = {
@@ -11,20 +11,23 @@ const sources: Record<VersionSource, string> = {
   'auto-restore': 'Brought back after a failed start',
 }
 
-const versionRow = (source: VersionsSource, target: () => VersionTarget, version: Sig<Version>) => {
-  const current = derive(() => target().current === version.get().id)
-  const good = derive(() => target().good === version.get().id)
+const versionRow = (source: VersionsSource, target: () => VersionTarget | undefined, version: Sig<Version>) => {
+  const current = derive(() => target()?.current === version.get().id)
+  const good = derive(() => target()?.good === version.get().id)
+  const busy = () => source.busy.get() !== undefined
+  const restore = () => {
+    const found = target()
+    if (found) void source.restore(found, version.get())
+  }
   const menu = contextMenu()
   const spec = (): MenuSpec => {
     const { at, hash, source: from } = version.get()
-    const restorable = !current.get() && source.busy.get() === undefined
+    const restoreAction: NavAction = { id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: restore }
     return {
       title: exactTime(at),
       subtitle: sources[from],
       actions: [
-        ...(restorable
-          ? [{ id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: () => void source.restore(target(), version.get()) }]
-          : []),
+        ...(current.get() || busy() ? [] : [restoreAction]),
         { id: 'copy-hash', label: 'Copy hash', icon: 'copy', group: 'copy', run: source.copy(hash, 'hash') },
       ],
     }
@@ -38,14 +41,7 @@ const versionRow = (source: VersionsSource, target: () => VersionTarget, version
     show(current, () => badge('accent', 'Current')),
     show(good, () => badge('success', 'Last good start')),
     span({ class: 'flex-1' }),
-    secondaryAction(
-      {
-        size: 'sm',
-        disabled: () => current.get() || source.busy.get() !== undefined,
-        onClick: () => void source.restore(target(), version.get()),
-      },
-      'Restore',
-    ),
+    secondaryAction({ size: 'sm', disabled: () => current.get() || busy(), onClick: restore }, 'Restore'),
   )
 }
 
@@ -53,13 +49,13 @@ export const historyToggle = (source: VersionsSource, key: string, open: Sig<boo
   const target = source.target(key)
   const versions = derive(() => target.get()?.versions ?? [])
   return show(
-    derive(() => versions.get().length > 0),
+    () => versions.get().length > 0,
     () =>
       div(
         { class: 'flex flex-col px-2 pb-2' },
         div(
           quietButton(
-            { size: 'sm', 'aria-expanded': open, onClick: () => open.set(!open.get()) },
+            { size: 'sm', 'aria-expanded': open, onClick: open.toggle() },
             chevron(() => open.get(), 12),
             () => `History · ${versions.get().length}`,
           ),
@@ -68,7 +64,7 @@ export const historyToggle = (source: VersionsSource, key: string, open: Sig<boo
           list(
             versions,
             version => version.id,
-            version => versionRow(source, () => target.get()!, version),
+            version => versionRow(source, () => target.get(), version),
             div({ class: 'flex flex-col' }),
           ),
         ),

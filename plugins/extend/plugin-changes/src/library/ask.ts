@@ -6,7 +6,7 @@ const snapshotLine = (plugin: PluginEntry) =>
     ? `- The built-in as I copied it: ${plugin.base}`
     : `- The built-in as I copied it isn't on this PC, because the copy came from another PC${plugin.from?.version ? ` (sand ${plugin.from.version})` : ''}. Work from the current built-in instead.`
 
-export const askPrompt = (plugin: PluginEntry) =>
+const askPrompt = (plugin: PluginEntry) =>
   [
     `My sand plugin "${plugin.name}" is a customised copy of the built-in plugin of the same name, and the built-in has changed since I copied it${plugin.from?.version ? ` from sand ${plugin.from.version}` : ''}.`,
     '',

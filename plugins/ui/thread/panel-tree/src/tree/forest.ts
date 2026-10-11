@@ -1,13 +1,13 @@
 import type { Entry } from '@sand/messages'
 import { toolCalls } from '@sand/kit'
-import { describe, type DescribeTool, type Described } from './describe'
+import { describe, type Described } from './describe'
 import { passes, type Filter } from './filter'
-import { labelsOf, type Label } from './labels'
+import { labelsOf } from './labels'
 
 export interface TreeNode {
   entry: Entry
   described: Described
-  label?: Label
+  label?: string
 }
 
 export interface Forest {
@@ -17,12 +17,10 @@ export interface Forest {
   active: Set<string>
 }
 
-export const nodesOf = (entries: Entry[], tool: DescribeTool) => {
+export const nodesOf = (entries: Entry[]) => {
   const calls = toolCalls(entries)
   const labels = labelsOf(entries)
-  return new Map(
-    entries.map((entry): [string, TreeNode] => [entry.id, { entry, described: describe(entry, calls, tool), label: labels.get(entry.id) }]),
-  )
+  return new Map(entries.map((entry): [string, TreeNode] => [entry.id, { entry, described: describe(entry, calls), label: labels.get(entry.id) }]))
 }
 
 export const ancestors = (nodes: Map<string, TreeNode>, id: string | null) => {
@@ -37,7 +35,7 @@ export const growForest = (nodes: Map<string, TreeNode>, head: string | null, fi
   const shown = ({ entry, described, label }: TreeNode) => {
     if (described.kind === 'step' && entry.id !== head) return false
     if (!passes(filter, described, Boolean(label))) return false
-    const text = [label?.text, described.who, described.detail].join(' ').toLowerCase()
+    const text = [label, described.who, described.detail].join(' ').toLowerCase()
     return tokens.every(token => text.includes(token))
   }
   const visible = new Set([...nodes.values()].filter(shown).map(node => node.entry.id))

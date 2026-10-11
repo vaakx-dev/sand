@@ -1,6 +1,5 @@
 import type { Markdown } from '@sand/markdown/contract'
-import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, el, fold } from '@sand/dom'
 import { plural } from '@sand/kit'
 
@@ -10,10 +9,11 @@ const numbered = /^\s*(\d+)\t(.*)$/
 const parse = (tool: ToolView, { resultText }: ToolViews) => {
   const rows = resultText(tool.result).split('\n')
   const lines = rows.flatMap(row => {
-    const found = numbered.exec(row)
-    return found ? [{ number: found[1]!, text: found[2]! }] : []
+    const [, number, text] = numbered.exec(row) ?? []
+    return number === undefined ? [] : [{ number, text: text ?? '' }]
   })
-  return { lines, tail: rows.at(-1)?.startsWith('…') ? rows.at(-1) : undefined }
+  const last = rows.at(-1)
+  return { lines, tail: last?.startsWith('…') ? last : undefined }
 }
 
 const hiddenNote = (capped: number, tail: string | undefined, views: ToolViews) => {
@@ -23,11 +23,29 @@ const hiddenNote = (capped: number, tail: string | undefined, views: ToolViews) 
   return total > 0 && views.truncatedNote(total, 'after')
 }
 
-const language = (path: string) => /\.([\w]+)$/.exec(path)?.[1] ?? ''
+const language = (path: string) => /\.(\w+)$/.exec(path)?.[1] ?? ''
 
 const media = (tool: ToolView) => tool.result?.content.find(block => block.type !== 'text')
 
-export const readRenderer = (views: ToolViews, highlight: Markdown['highlight']): ToolRenderer => ({
+const code = (tool: ToolView, views: ToolViews, highlight: Markdown['highlight'] | undefined) => {
+  const { lines, tail } = parse(tool, views)
+  const shown = lines.slice(0, shownLines)
+  const text = shown.map(line => line.text).join('\n')
+  return div(
+    { class: 'text-xs text-neutral-400' },
+    fold(
+      { lines: shown.length, copy: () => text, copyLabel: 'Copy text' },
+      div(
+        { class: 'flex gap-3 overflow-auto font-mono' },
+        el('pre', { class: 'shrink-0 select-none text-right text-neutral-500 opacity-75' }, shown.map(line => line.number).join('\n')),
+        el('pre', { class: 'text-neutral-300' }, highlight ? highlight(text, language(views.field(tool.call.input, 'path'))) : text),
+      ),
+    ),
+    hiddenNote(lines.length - shownLines, tail, views),
+  )
+}
+
+export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'] | undefined): ToolRenderer => ({
   icon: 'file-text',
   verb: 'Read',
   activeVerb: 'Reading',
@@ -40,8 +58,7 @@ export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'])
     if (!tool.result || tool.result.isError) return ''
     const found = media(tool)
     if (found) return found.type === 'image' ? 'image' : 'document'
-    const count = parse(tool, views).lines.length
-    return plural(count, 'line')
+    return plural(parse(tool, views).lines.length, 'line')
   },
   copy: tool => views.field(tool.call.input, 'path'),
   body(tool) {
@@ -50,20 +67,6 @@ export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'])
     const found = media(tool)
     if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
     if (found) return div({ class: 'font-mono text-xs text-neutral-400' }, found.name ?? 'document')
-    const { lines, tail } = parse(tool, views)
-    const shown = lines.slice(0, shownLines)
-    const code = highlight(shown.map(line => line.text).join('\n'), language(views.field(tool.call.input, 'path')))
-    return div(
-      { class: 'text-xs text-neutral-400' },
-      fold(
-        { lines: shown.length, copy: () => shown.map(line => line.text).join('\n'), copyLabel: 'Copy text' },
-        div(
-          { class: 'flex gap-3 overflow-auto font-mono' },
-          el('pre', { class: 'shrink-0 select-none text-right text-neutral-500 opacity-75' }, shown.map(line => line.number).join('\n')),
-          el('pre', { class: 'text-neutral-300' }, code),
-        ),
-      ),
-      hiddenNote(lines.length - shownLines, tail, views),
-    )
+    return code(tool, views, highlight)
   },
 })

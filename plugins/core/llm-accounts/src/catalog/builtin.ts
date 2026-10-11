@@ -27,8 +27,6 @@ const families: Partial<Record<AccountKind, Family>> = { claude: claudeFamily, a
 
 export const builtinNames = (kind: AccountKind) => families[kind]?.names ?? []
 
-export const hasBuiltin = (kind: AccountKind) => !!families[kind]
-
 const defined = (found: Discovered): Partial<Described> => {
   const { name: _, price: __, ...rest } = found
   return Object.fromEntries(Object.entries(rest).filter(([, value]) => value !== undefined))

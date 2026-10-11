@@ -1,5 +1,7 @@
-import type { DeviceInfo, DeviceKind } from '@sand/protocol'
+import type { DeviceInfo, DeviceKind, PairRequest } from '@sand/protocol'
 import type { Dispose } from 'drydock'
+
+export type { PairBack, PairInvite, PairRequest, PairResult } from '@sand/protocol'
 
 export interface PairedDevice {
   id: string
@@ -7,27 +9,6 @@ export interface PairedDevice {
   kind: DeviceKind
   added: number
   lastSeen: number
-}
-
-export interface PairBack {
-  device: DeviceInfo
-  urls: string[]
-  key: string
-}
-
-export interface PairRequest {
-  secret: string
-  name: string
-  kind: DeviceKind
-  back?: PairBack
-}
-
-export interface PairResult {
-  deviceId: string
-  key: string
-  host: DeviceInfo
-  urls: string[]
-  back?: boolean
 }
 
 export interface PairLinkRequest {
@@ -39,12 +20,6 @@ export interface PairLinkRequest {
 export interface PairLinkResult {
   device: DeviceInfo
   accepts: boolean
-}
-
-export interface PairInvite {
-  secret: string
-  expires: number
-  links: string[]
 }
 
 export interface DeviceRemoval {

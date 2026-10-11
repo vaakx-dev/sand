@@ -26,7 +26,7 @@ const perform = async (ctx: Context<'agents'>, execution: Execution, signal: Abo
   }
   const controller = new AbortController()
   const scoped = AbortSignal.any([signal, controller.signal])
-  const api = createApi(ctx, { ...execution, signal: scoped })
+  const api = createApi(ctx, execution, scoped)
   try {
     scoped.throwIfAborted()
     const result = await untilAborted(Promise.resolve(module.default(api)), scoped)

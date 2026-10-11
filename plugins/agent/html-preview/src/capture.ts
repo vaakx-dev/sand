@@ -1,5 +1,6 @@
+import type { ExceptionDetails, Page } from './cdp'
 import { join } from 'node:path'
-import { launch, type Page } from './cdp'
+import { launch } from './cdp'
 import { collect, exceptionText, type Console, type ConsoleMessage } from './console'
 import { tiles, type Region } from './tiles'
 
@@ -29,6 +30,8 @@ const measure = `(() => {
 
 const painted = 'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))'
 
+const settled = `document.fonts.ready.then(() => new Promise(resolve => setTimeout(resolve, ${settleMs})))`
+
 const elementRect = (selector: string) => `(() => {
   scrollTo(0, 0)
   const element = document.querySelector(${JSON.stringify(selector)})
@@ -39,12 +42,27 @@ const elementRect = (selector: string) => `(() => {
 
 const loaded = (page: Page) => new Promise<void>(resolve => page.on('Page.loadEventFired', () => resolve()))
 
-const evaluate = async (page: Page, expression: string) =>
-  (await page.send<{ result: { value: unknown } }>('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result.value
+const evaluate = async <T = unknown>(page: Page, expression: string) =>
+  (await page.send<{ result: { value: T } }>('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })).result.value
+
+const resize = (page: Page, shot: Shot, height: number) =>
+  page.send('Emulation.setDeviceMetricsOverride', { width: shot.width, height, deviceScaleFactor: shot.scale, mobile: shot.width < 500 })
+
+const open = async (page: Page, dir: string, html: string, shot: Shot) => {
+  await Promise.all(['Page.enable', 'Runtime.enable', 'Log.enable'].map(method => page.send(method)))
+  await resize(page, shot, viewportHeight)
+  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] })
+  const file = join(dir, 'page.html')
+  await Bun.write(file, html)
+  const load = loaded(page)
+  await page.send('Page.navigate', { url: Bun.pathToFileURL(file).href })
+  await load
+  await evaluate(page, settled)
+}
 
 const runScript = async (page: Page, script: string, output: Console) => {
   const expression = `(async () => {\n${script}\n})()`
-  const { exceptionDetails } = await page.send('Runtime.evaluate', { expression, awaitPromise: true, userGesture: true })
+  const { exceptionDetails } = await page.send<{ exceptionDetails?: ExceptionDetails }>('Runtime.evaluate', { expression, awaitPromise: true, userGesture: true })
   if (exceptionDetails) output.add('error', `script: ${exceptionText(exceptionDetails)}`)
   await evaluate(page, painted)
 }
@@ -64,38 +82,37 @@ const clamp = (rect: Region, width: number, height: number): Region => {
 
 const regionOf = async (page: Page, selector: string | undefined, width: number, height: number): Promise<Region> => {
   if (!selector) return { x: 0, y: 0, width, height }
-  const rect = (await evaluate(page, elementRect(selector))) as Region | null
+  const rect = await evaluate<Region | null>(page, elementRect(selector))
   if (!rect) throw new Error(`No element matches ${selector}`)
   const region = clamp(rect, width, height)
   if (region.width <= 0 || region.height <= 0) throw new Error(`${selector} has no visible area on the page`)
   return region
 }
 
+const screenshots = async (page: Page, parts: Region[]) => {
+  const images: string[] = []
+  for (const clip of parts) images.push((await page.send<{ data: string }>('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } })).data)
+  return images
+}
+
+const withoutFolder = (messages: ConsoleMessage[], dir: string) => {
+  const folder = `${Bun.pathToFileURL(dir).href}/`
+  return messages.map(message => ({ ...message, text: message.text.replaceAll(folder, '') }))
+}
+
 const render = async (page: Page, dir: string, html: string, shot: Shot): Promise<Capture> => {
   const output = collect(page)
-  const metrics = (height: number) => ({ width: shot.width, height, deviceScaleFactor: shot.scale, mobile: shot.width < 500 })
-  await Promise.all(['Page.enable', 'Runtime.enable', 'Log.enable'].map(method => page.send(method)))
-  await page.send('Emulation.setDeviceMetricsOverride', metrics(viewportHeight))
-  await page.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: 'dark' }] })
-  const file = join(dir, 'page.html')
-  await Bun.write(file, html)
-  const load = loaded(page)
-  await page.send('Page.navigate', { url: Bun.pathToFileURL(file).href })
-  await load
-  await evaluate(page, `document.fonts.ready.then(() => new Promise(resolve => setTimeout(resolve, ${settleMs})))`)
+  await open(page, dir, html, shot)
   if (shot.script) await runScript(page, shot.script, output)
   const contentHeight = Number(await evaluate(page, measure))
   const pageHeight = Math.min(Math.max(contentHeight, 1), shot.maxHeight)
-  await page.send('Emulation.setDeviceMetricsOverride', metrics(pageHeight))
+  await resize(page, shot, pageHeight)
   await evaluate(page, painted)
   const region = await regionOf(page, shot.selector, shot.width, pageHeight)
   const parts = tiles(region, shot.scale)
-  const images: string[] = []
-  for (const clip of parts) images.push((await page.send<{ data: string }>('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } })).data)
+  const images = await screenshots(page, parts)
   const shownHeight = parts.reduce((sum, part) => sum + part.height, 0)
-  const folder = `${Bun.pathToFileURL(dir).href}/`
-  const messages = output.messages.map(message => ({ ...message, text: message.text.replaceAll(folder, '') }))
-  return { contentHeight, region, shownHeight, images, messages }
+  return { contentHeight, region, shownHeight, images, messages: withoutFolder(output.messages, dir) }
 }
 
 export const capture = async (executable: string, html: string, shot: Shot, signal: AbortSignal) => {

@@ -1,7 +1,6 @@
 import type { Version, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { derive, errorMessage, exactTime, sig } from '@sand/dom'
+import { copyWithNotice, derive, errorMessage, exactTime, sig } from '@sand/dom'
 import type { Context } from 'drydock'
-import { copyWithNotice } from '../copy'
 import { whenShown } from '../shown'
 
 export const versionsSource = (ctx: Context<'wire'>) => {
@@ -35,7 +34,7 @@ export const versionsSource = (ctx: Context<'wire'>) => {
     if (event.name === 'versions.change') targets.set(event.args[0])
   })
 
-  const copy = (text: string, what: string) => copyWithNotice(ctx, text, what)
+  const copy = (text: string, what: string) => () => copyWithNotice(ctx.notify, text, what)
 
   return { targets, busy, target, restore, copy }
 }

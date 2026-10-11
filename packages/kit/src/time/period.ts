@@ -1,4 +1,4 @@
-import type { UsageBucket } from '@sand/usage/contract'
+import type { UsageBucket } from '@sand/protocol'
 
 const periodDate = (key: string) => {
   const [day = key, hour = '0'] = key.split(' ')

@@ -1,9 +1,9 @@
-import type { Hello } from '@sand/protocol'
-import { helloParts } from '@sand/kit'
+import type { Hello, WireRequestOf } from '@sand/protocol'
+import { helloParts, isRecord } from '@sand/kit'
 
 const kept = 4
 
-export interface SavedHello {
+interface SavedHello {
   tag: string
   shared: Partial<Hello>
 }
@@ -13,11 +13,8 @@ export interface HelloKeep {
   save(saved: SavedHello): void
 }
 
-const usable = (value: unknown): value is SavedHello => {
-  if (!value || typeof value !== 'object') return false
-  const { tag, shared } = value as Partial<SavedHello>
-  return typeof tag === 'string' && tag.length > 0 && Boolean(shared) && typeof shared === 'object' && !Array.isArray(shared)
-}
+const isSaved = (value: unknown): value is SavedHello =>
+  isRecord(value) && typeof value.tag === 'string' && value.tag.length > 0 && isRecord(value.shared)
 
 export const helloMemory = (keep?: HelloKeep) => {
   const shared = new Map<string, Partial<Hello>>()
@@ -28,7 +25,7 @@ export const helloMemory = (keep?: HelloKeep) => {
     if (loaded || !keep) return
     loaded = true
     const saved = keep.load()
-    if (last || !usable(saved)) return
+    if (last || !isSaved(saved)) return
     shared.set(saved.tag, saved.shared)
     last = saved.tag
   }
@@ -45,15 +42,15 @@ export const helloMemory = (keep?: HelloKeep) => {
   }
 
   return {
-    known() {
+    greeting(since: string | null): WireRequestOf<'hello'> {
       load()
-      return last
+      return { type: 'hello', since, ...(last && { known: last }) }
     },
     take(hello: Hello): Hello {
       if (!hello.same) return remember(hello)
       const { same, ...rest } = hello
       const before = hello.tag ? shared.get(hello.tag) : undefined
-      return before ? ({ ...before, ...rest } as Hello) : rest
+      return before ? { ...before, ...rest } : rest
     },
   }
 }

@@ -22,7 +22,7 @@ const card = (tip: Sig<Tip | undefined>) => {
         left: () => px(spot.get()?.left),
         transformOrigin: () => (spot.get()?.above === false ? 'top center' : 'bottom center'),
       },
-      onMount: node => void resizeObserver(node as Element, () => place(node as Element)),
+      onMount: node => void resizeObserver(node, () => place(node)),
     },
     () => tip.get()?.text ?? '',
   )
@@ -31,5 +31,5 @@ const card = (tip: Sig<Tip | undefined>) => {
 export const bubble = (tip: Sig<Tip | undefined>) =>
   dynamicChild(
     derive(() => tip.get()?.round),
-    round => (round === undefined ? div({ hidden: true }) : card(tip)),
+    round => (round === undefined ? null : card(tip)),
   )

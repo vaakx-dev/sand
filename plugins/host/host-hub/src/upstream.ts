@@ -3,7 +3,7 @@ import { upstreamSocketUrl } from '@sand/kit/host'
 
 const retryDelay = 1000
 
-export interface UpstreamHandlers {
+interface UpstreamHandlers {
   message(raw: string): void
   lost(): void
   alive(): boolean

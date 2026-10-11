@@ -11,14 +11,14 @@
       "transcript"
     ],
     "uses": {
-      "layout": "lands loose on the stage"
+      "layout": "lands loose on the stage",
+      "models": "model switches show the raw model id"
     },
     "enabled": false
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
     "@sand/markdown": "workspace:*",
-    "@sand/transcript-chat": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

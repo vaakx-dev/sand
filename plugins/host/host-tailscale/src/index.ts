@@ -1,5 +1,4 @@
 import { definePlugin } from 'drydock'
-import { findTailscale } from './binary'
 import type { TailscaleState } from './contract'
 import { createTailscale } from './service'
 
@@ -17,7 +16,7 @@ export default definePlugin({
       ctx.hub.broadcast({ name: 'tailscale.change', args: [state] })
     }
     const { home, port } = ctx.hostOptions
-    const tailscale = await createTailscale({ binary: findTailscale(), home, port, changed })
+    const tailscale = await createTailscale({ home, port, changed })
     ctx.effect(() => () => {
       active = false
     })

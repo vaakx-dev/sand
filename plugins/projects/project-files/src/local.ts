@@ -1,6 +1,7 @@
-import { isQuietFolder, nearestRoot, parseProjectsFile, projectsPath, samePath } from '@sand/kit/fs'
+import { isRecord } from '@sand/kit'
+import { isQuietFolder, isWithin, nearestRoot, parseProjectsFile, projectsPath, samePath } from '@sand/kit/fs'
 import { readFileSync, statSync } from 'node:fs'
-import { isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { join, resolve } from 'node:path'
 import type { LocalCopy, LocalProjects } from './contract'
 
 interface Cached {
@@ -28,8 +29,8 @@ const readText = (path: string) => {
 
 const readDevice = (home: string) => {
   try {
-    const { id } = JSON.parse(readText(join(home, 'device.json')) ?? '{}')
-    return typeof id === 'string' && id ? id : undefined
+    const saved: unknown = JSON.parse(readText(join(home, 'device.json')) ?? '{}')
+    return isRecord(saved) && typeof saved.id === 'string' && saved.id ? saved.id : undefined
   } catch {
     return undefined
   }
@@ -43,11 +44,6 @@ const copiesOf = ({ device, projects }: LocalProjects): LocalCopy[] => {
       return copy && !copy.removed ? [{ project: project.id, path: resolve(copy.path) }] : []
     })
     .sort((a, b) => b.path.length - a.path.length)
-}
-
-const contains = (folder: string, path: string) => {
-  const rel = relative(folder, path)
-  return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))
 }
 
 export const localFiles = (home: string) => {
@@ -68,8 +64,8 @@ export const localFiles = (home: string) => {
   const ofFolder = (cwd: string): string | null => {
     if (!cwd) return null
     const path = resolve(cwd)
-    if (contains(join(home, 'scratch'), path)) return null
-    const copy = copies().find(copy => (isQuietFolder(copy.path) ? samePath(copy.path, path) : contains(copy.path, path)))
+    if (isWithin(path, join(home, 'scratch'))) return null
+    const copy = copies().find(copy => (isQuietFolder(copy.path) ? samePath(copy.path, path) : isWithin(path, copy.path)))
     if (!copy) return null
     return samePath(copy.path, path) || !nearestRoot(path, copy.path) ? copy.project : null
   }

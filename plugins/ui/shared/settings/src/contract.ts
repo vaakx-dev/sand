@@ -1,9 +1,10 @@
+import type { IconName } from '@sand/dom'
 import type { Dispose } from 'drydock'
 
 export interface SettingsPage {
   id: string
   label: string
-  icon?: string
+  icon?: IconName
   order?: number
   render(): HTMLElement
 }

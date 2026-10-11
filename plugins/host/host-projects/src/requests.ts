@@ -1,12 +1,12 @@
 import type { Hub } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { ProjectList } from './contract'
-import { fullPath } from './list'
-import { cloneFolder, createFolder } from './make'
+import { cloneFolder, createFolder } from './make/folders'
+import { fullPath } from './paths'
 import type { Registry } from './registry'
 import type { ProjectRoot } from './root'
 
-export interface ProjectRequests {
+interface ProjectRequests {
   hub: Hub
   registry: Registry
   root: ProjectRoot

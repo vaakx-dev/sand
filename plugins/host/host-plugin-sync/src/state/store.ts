@@ -1,24 +1,22 @@
+import { isRecord, serial } from '@sand/kit'
 import { writePrivateJson } from '@sand/kit/fs'
 import { join } from 'node:path'
 import type { SyncFile } from '../types'
 
 const empty = (): SyncFile => ({ local: [], bases: {}, skipped: {} })
 
-const record = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value)
-
 const strings = (value: unknown): Record<string, string> =>
-  record(value)
+  isRecord(value)
     ? Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
     : {}
 
 const nested = (value: unknown): Record<string, Record<string, string>> =>
-  record(value) ? Object.fromEntries(Object.entries(value).map(([peer, entries]) => [peer, strings(entries)])) : {}
+  isRecord(value) ? Object.fromEntries(Object.entries(value).map(([peer, entries]) => [peer, strings(entries)])) : {}
 
 const read = async (file: string): Promise<SyncFile> => {
   try {
     const data: unknown = await Bun.file(file).json()
-    if (!record(data)) return empty()
+    if (!isRecord(data)) return empty()
     const local = Array.isArray(data.local) ? data.local.filter((name): name is string => typeof name === 'string') : []
     return { local: [...new Set(local)].sort(), bases: nested(data.bases), skipped: nested(data.skipped) }
   } catch {
@@ -40,11 +38,10 @@ const keepPeers = (map: Record<string, Record<string, string>>, keep: Set<string
 export const syncStore = async (home: string) => {
   const file = join(home, 'plugin-sync.json')
   let data = await read(file)
-  let saving: Promise<void> = Promise.resolve()
+  const queue = serial()
   const save = (next: SyncFile) => {
     data = next
-    saving = saving.catch(() => {}).then(() => writePrivateJson(file, data))
-    return saving
+    return queue(() => writePrivateJson(file, data))
   }
   return {
     get: (): SyncFile => data,

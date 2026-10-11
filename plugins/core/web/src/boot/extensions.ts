@@ -24,7 +24,10 @@ export const provideExtensions = (ctx: Context, build: string, bundled: BundledE
 
   const apply = (next: Wanted) => {
     wanted = { ...wanted, ...next }
-    for (const extension of bundled) (wanted[extension.id] ? mount : unmount)(extension.id)
+    for (const { id } of bundled) {
+      if (wanted[id]) mount(id)
+      else unmount(id)
+    }
     ctx.emit('extensions.change')
   }
 

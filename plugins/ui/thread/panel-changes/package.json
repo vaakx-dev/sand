@@ -13,7 +13,8 @@
     "uses": {
       "panels": "draws its own plain panel",
       "commands": "no /changes command",
-      "wire": "the hidden Edits badge counts only the loaded part of the thread"
+      "wire": "the hidden Edits badge counts only the loaded part of the thread",
+      "notify": "copying a file path from the file menu is not confirmed"
     }
   },
   "dependencies": {

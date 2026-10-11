@@ -1,7 +1,6 @@
-import { derive, div, dynamicChild, hint, settingsSection, span } from '@sand/dom'
+import { derive, dynamicChild, hintRow, itemRow, settingsSection } from '@sand/dom'
 import type { LoginRemoteAccount, LoginState } from '../contract'
 import { accountLogo, howText, readyChip } from './names'
-import { accountRow } from './parts'
 import type { LoginControl } from './state'
 
 const ownHere = (state: LoginState, account: LoginRemoteAccount) =>
@@ -11,7 +10,7 @@ const detail = (state: LoginState, account: LoginRemoteAccount) =>
   [howText(account), `on ${account.pc}`, ownHere(state, account) && 'this PC uses its own'].filter(Boolean).join(' · ')
 
 export const remoteRow = (state: LoginState, account: LoginRemoteAccount) =>
-  accountRow(accountLogo(account.provider), account.label, detail(state, account), readyChip(account.online))
+  itemRow({}, accountLogo(account.provider), account.label, detail(state, account), readyChip(account.online))
 
 const problems = (state: LoginState) => state.pcs.flatMap(pc => (pc.error && !pc.shares.length ? [pc.error] : []))
 
@@ -24,11 +23,11 @@ export const remoteSection = (control: LoginControl) =>
     }),
     key => {
       const state = control.state.get()
-      if (!key || !state) return div({ class: 'hidden' })
+      if (!key || !state) return null
       return settingsSection(
         { title: 'From your PCs' },
-        span({ class: 'contents' }, state.remote.map(account => remoteRow(state, account))),
-        span({ class: 'contents' }, problems(state).map(text => div({ class: 'bg-neutral-900' }, hint(text)))),
+        state.remote.map(account => remoteRow(state, account)),
+        problems(state).map(problem => hintRow(problem)),
       )
     },
   )

@@ -16,11 +16,11 @@ export const sameDevice = (a?: string, b?: string) => (a || thisDevice) === (b |
 
 const homeId = (lists: Lists) => lists.get(thisDevice)?.device
 
-export const realDevice = (lists: Lists, device?: string) => (device ? device : homeId(lists))
+export const realDevice = (lists: Lists, device?: string) => device || homeId(lists)
 
 const webDevice = (lists: Lists, id: string) => (id === homeId(lists) ? undefined : id)
 
-export const registry = (lists: Lists) =>
+const registry = (lists: Lists) =>
   [...lists.values()].reduce<Project[]>((all, list) => mergeProjects(all, list.projects), []).filter(project => !project.deleted)
 
 const threadStats = (threads: Iterable<Thread>) => {

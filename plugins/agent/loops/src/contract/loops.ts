@@ -1,7 +1,6 @@
-import type { Effort, LLM, LLMRequest, Speed } from '@sand/llm-accounts/contract'
-import type { Entry, Message, Prompt, StopReason, ToolCallBlock, ToolResultBlock, Usage, UserContent } from '@sand/messages'
+import type { Effort, LLMRequest, Speed } from '@sand/llm-accounts/contract'
+import type { Entry, Message, StopReason, ToolCallBlock, ToolResultBlock, UserContent } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
-import type { Tools } from '@sand/tools/contract'
 import type { Dispose } from 'drydock'
 import type { TurnResult } from './turn'
 
@@ -22,19 +21,15 @@ export interface Turn {
 
 export interface StreamDone {
   message: Message
-  usage: Usage
   stopReason: StopReason
 }
 
 export interface TurnHooks {
-  build(): Promise<LLMRequest>
-  stream(request: LLMRequest): Promise<StreamDone>
-  send(): Promise<StreamDone>
+  send(shape?: (request: LLMRequest) => LLMRequest): Promise<StreamDone>
   respond(message: Message): Promise<Message>
   tools(calls: ToolCallBlock[]): Promise<ToolResultBlock[]>
   inbox(): Promise<UserContent[]>
   stop(outcome: TurnOutcome): Promise<UserContent[] | undefined>
-  overflow(error: unknown): Promise<boolean>
   append(message: Message): Entry
 }
 
@@ -45,12 +40,6 @@ export interface TurnOutcome {
 
 export interface LoopImpl extends LoopInfo {
   run(turn: Turn): Promise<TurnOutcome>
-}
-
-export interface RunOverrides {
-  signal?: AbortSignal
-  llm?: LLM
-  tools?: Tools
 }
 
 export interface LoopChoice {
@@ -73,7 +62,7 @@ export interface Loops {
   choose(session: Session, name: string | null, reason?: string): void
   defaultName(): string
   setDefault(name: string): Promise<void>
-  runWith(loop: LoopImpl, session: Session, prompt: Prompt, overrides?: RunOverrides): Promise<TurnResult>
+  react(turn: Turn): Promise<TurnOutcome>
 }
 
 export interface ModelChoice {

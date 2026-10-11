@@ -76,4 +76,5 @@ export interface Threads {
   settle(id: string, settled: boolean): Promise<void>
   snooze(id: string, until: number | null): Promise<void>
   move(id: string, position: number): Promise<void>
+  command(name: string, args?: string): Promise<void>
 }

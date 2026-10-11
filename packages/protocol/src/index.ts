@@ -1,7 +1,9 @@
-import './registry'
-
 export type * from './cli'
 export type * from './host'
+export type * from './llm'
+export type * from './pairing'
+export type * from './projects'
 export type * from './runtime'
 export type * from './server'
+export type * from './usage'
 export type * from './wire'

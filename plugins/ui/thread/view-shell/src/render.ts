@@ -1,5 +1,4 @@
-import type { ToolBadge, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, el, fold, span } from '@sand/dom'
 
 const shownLines = 400

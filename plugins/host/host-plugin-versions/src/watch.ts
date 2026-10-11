@@ -11,7 +11,7 @@ export const watchTargets = (home: string, changed: () => void) => {
   let timer: Timer | undefined
   const nested = new Map<string, FSWatcher>()
 
-  const kick = (name: string | null) => {
+  const kick = (name: string | null = null) => {
     if (ignored(name)) return
     clearTimeout(timer)
     timer = setTimeout(changed, settle)
@@ -31,7 +31,7 @@ export const watchTargets = (home: string, changed: () => void) => {
 
   const top = watch(home, (_, name) => {
     if (name && folders.has(name)) arm(name)
-    if (name && (folders.has(name) || name === 'loops.json')) kick(null)
+    if (name && (folders.has(name) || name === 'loops.json')) kick()
   })
   top.on('error', () => {})
   for (const folder of folders) arm(folder)

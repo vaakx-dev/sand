@@ -1,8 +1,8 @@
-import type { ToolBadge, ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import { div, el, fold } from '@sand/dom'
+import type { ToolBadge, ToolRenderer, ToolView } from '../contract'
+import { div, fold } from '@sand/dom'
 import { resultText } from '../thread/results'
 import { toolLabel } from './label'
-import { errorTone } from './notes'
+import { outputText } from './notes'
 
 const clipAt = 8000
 
@@ -14,13 +14,15 @@ const preview = (tool: ToolView) => {
   return lines.length > 1 ? `${lines.length} lines` : ''
 }
 
+const fieldText = (key: string, value: unknown) => {
+  if (typeof value !== 'string') return `${key}: ${JSON.stringify(value, null, 2)}`
+  return value.includes('\n') ? `${key}:\n${value.replace(/^/gm, '  ')}` : `${key}: ${value}`
+}
+
 const inputText = (input: unknown) => {
   if (typeof input !== 'object' || !input || Array.isArray(input)) return JSON.stringify(input, null, 2) ?? ''
   return Object.entries(input)
-    .map(([key, value]) => {
-      if (typeof value !== 'string') return `${key}: ${JSON.stringify(value, null, 2)}`
-      return value.includes('\n') ? `${key}:\n${value.replace(/^/gm, '  ')}` : `${key}: ${value}`
-    })
+    .map(([key, value]) => fieldText(key, value))
     .join('\n')
 }
 
@@ -32,11 +34,14 @@ const section = (title: string, body: string, error = false) => {
   const text = clip(body)
   return div(
     div({ class: 'mb-1 text-xs font-medium text-neutral-500' }, title),
-    fold(
-      { lines: text.split('\n').length, chars: text.length, copy: () => body, copyLabel: `Copy ${title.toLowerCase()}` },
-      el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', error ? errorTone : 'text-neutral-400'] }, text),
-    ),
+    fold({ lines: text.split('\n').length, chars: text.length, copy: () => body, copyLabel: `Copy ${title.toLowerCase()}` }, outputText(text, error)),
   )
+}
+
+const resultSection = (tool: ToolView) => {
+  if (!tool.result) return undefined
+  const error = Boolean(tool.result.isError)
+  return section(error ? 'Error' : 'Output', resultText(tool.result) || 'no output', error)
 }
 
 export const genericRenderer = (name: string): Required<ToolRenderer> => ({
@@ -47,11 +52,6 @@ export const genericRenderer = (name: string): Required<ToolRenderer> => ({
   meta: preview,
   badge: failedBadge,
   copy: toolLabel,
-  body: tool =>
-    div(
-      { class: 'flex flex-col gap-3' },
-      section('Input', tool.call.malformed ?? inputText(tool.call.input)),
-      tool.result && section(tool.result.isError ? 'Error' : 'Output', resultText(tool.result) || 'no output', !!tool.result.isError),
-    ),
+  body: tool => div({ class: 'flex flex-col gap-3' }, section('Input', tool.call.malformed ?? inputText(tool.call.input)), resultSection(tool)),
   actions: () => [],
 })

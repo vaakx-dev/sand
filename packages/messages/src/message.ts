@@ -3,26 +3,35 @@ export interface TextBlock {
   text: string
 }
 
-export interface ImageBlock {
-  type: 'image'
-  mediaType: string
-  data: string
-  name?: string
-}
-
-export interface DocumentBlock {
-  type: 'document'
-  mediaType: 'application/pdf' | 'text/plain'
-  data: string
-  name?: string
-}
-
 export interface MediaRef {
   blob: string
   size: number
   width?: number
   height?: number
 }
+
+interface InlineMedia {
+  data: string
+  blob?: undefined
+}
+
+interface StoredMedia extends MediaRef {
+  data?: undefined
+}
+
+export type MediaData = InlineMedia | StoredMedia
+
+export type ImageBlock = {
+  type: 'image'
+  mediaType: string
+  name?: string
+} & MediaData
+
+export type DocumentBlock = {
+  type: 'document'
+  mediaType: 'application/pdf' | 'text/plain'
+  name?: string
+} & MediaData
 
 export interface ThinkingBlock {
   type: 'thinking'
@@ -60,3 +69,5 @@ export interface Message {
   role: 'user' | 'assistant'
   content: Block[]
 }
+
+export type StopReason = 'end_turn' | 'max_tokens' | 'stop_sequence' | 'tool_use' | 'pause_turn' | 'refusal' | (string & {})

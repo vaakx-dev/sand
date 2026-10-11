@@ -31,7 +31,6 @@
     "@sand/host-dist": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-health": "workspace:*",
-    "@sand/host-health": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-plugin-library": "workspace:*",
     "@sand/host-plugin-sync": "workspace:*",

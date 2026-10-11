@@ -1,12 +1,11 @@
 import type { Limits, LLMEvent, LLMRequest } from '../contract'
 import { isFixed, fixedLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
-import { sharedRef, type ShareInfo } from '../share/info'
+import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
-import { fetchInfo, findUrl, Offline, Refused } from './http'
+import { fetchInfo, findUrl, Refused } from './http'
 import { readEvents } from './lines'
-import { bareName, normalize } from './normalize'
 import { openStream } from './open'
 import { readRemotes, type RemotePc } from './remotes'
 import { tagged } from './tag'
@@ -21,7 +20,7 @@ export interface PeerState {
   error?: string
 }
 
-export interface PeersOptions {
+interface PeersOptions {
   home: string
   changed(): void
   limitsChanged(limits: Limits): void
@@ -30,7 +29,7 @@ export interface PeersOptions {
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 const ownedBy = (pc: RemotePc, { windows, status, updated, source }: Limits): Limits => ({
-  source: source ?? 'claude',
+  source,
   pc: pc.id,
   pcName: pc.name,
   windows,
@@ -67,8 +66,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     void cache.write(next).catch(() => {})
   }
 
-  const remember = (pc: RemotePc, { limits: sent, ...raw }: ShareInfo) => {
-    const info = normalize(raw)
+  const remember = (pc: RemotePc, { limits: sent, ...info }: ShareInfo) => {
     const limits = sent && ownedBy(pc, sent)
     const current = state(pc)
     const before = current.limits
@@ -82,8 +80,8 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     current.checked = true
     bases.delete(pc.id)
     if (error instanceof Refused && error.status === 401) Object.assign(current, { online: true, refused: true, error: `${pc.name} no longer accepts this PC — pair it again` })
-    else if (error instanceof Refused) Object.assign(current, { online: true, refused: false, info: undefined, error: `${pc.name} runs an older sand without account sharing` })
-    else Object.assign(current, { online: false, error: `${pc.name} is offline: ${error instanceof Offline ? error.message : rawMessage(error)}` })
+    else if (error instanceof Refused) Object.assign(current, { online: true, refused: false, info: undefined, error: `${pc.name} doesn't share accounts` })
+    else Object.assign(current, { online: false, error: `${pc.name} is offline: ${rawMessage(error)}` })
   }
 
   const connect = async (pc: RemotePc) => {
@@ -123,7 +121,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
   const refresh = (limits = false) => (checking ??= run(limits).finally(() => (checking = undefined)))
 
   const ready = cache.read().then(async found => {
-    saved = Object.fromEntries(Object.entries(found).map(([id, info]) => [id, normalize(info)]))
+    saved = found
     await sync()
     changed()
   })
@@ -142,8 +140,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
       const name = account(peer, id)?.label ?? nameOf(id)
       let body: ReadableStream<Uint8Array>
       try {
-        const sent = { ...request, model: bareName(peer.info, id, request.model) }
-        body = await openStream(peer.pc, sent, signal, { connect, forget: () => bases.delete(peer.pc.id) })
+        body = await openStream(peer.pc, request, signal, { connect, forget: () => bases.delete(peer.pc.id) })
       } catch (error) {
         if (signal?.aborted) throw error
         problem ??= failure(peer.pc.name, name, error)
@@ -155,8 +152,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
         peer.online = true
         changed()
       }
-      const shared = account(peer, id)
-      yield* tagged(readEvents(body, peer.pc.name, signal), peer.pc, shared && sharedRef(shared))
+      yield* tagged(readEvents(body, peer.pc.name, signal), peer.pc)
       return
     }
     void refresh()

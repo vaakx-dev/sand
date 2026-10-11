@@ -1,29 +1,33 @@
 import type { HostBuild } from '@sand/host-dist/contract'
 import type { HostRemotes } from '@sand/host-remotes/contract'
+import { routeKind } from '@sand/kit'
 import { randomSecret } from '@sand/kit/fs'
 import { definePlugin } from 'drydock'
 import { createTickets } from './auth/tickets'
-import { createHttpRegistry } from './http/extra'
+import { createHttpRegistry } from './http/registry'
 import { createResponder } from './http/respond'
 import { writeServerInfo } from './info'
 import { createInviter } from './invite'
 import { createListen } from './listen'
-import { isLoopbackUrl } from './network/addresses'
 import { createListener } from './network/listener'
 import { createRoutePublisher } from './network/publish'
 import { hostRoutes } from './network/routes'
 import { loadLan } from './network/settings'
 import { createToggle } from './network/toggle'
 import { createProxy } from './proxy'
-import { hostVersion } from './version'
 
 export default definePlugin({
   name: 'host-gateway',
   inject: ['hostOptions', 'runtimes', 'hub', 'hostDevices'],
+  uses: {
+    hostBuild: 'the identity route has no build info',
+    hostRemotes: 'PCs that pair with this one are not paired back',
+    tailscale: 'Tailscale addresses are not offered as routes',
+  },
   async apply(ctx) {
     const { home, port, device } = ctx.hostOptions
     const admin = randomSecret()
-    const http = createHttpRegistry()
+    const registry = createHttpRegistry()
     let hostBuild: HostBuild | undefined
     ctx.watch('hostBuild', impl => {
       hostBuild = impl
@@ -35,15 +39,15 @@ export default definePlugin({
     const routes = () =>
       hostRoutes({ urls: listener.urls(), lan: listener.state().lan, port: listener.port, tailscale: ctx.tailscale?.state() })
     const routeUrls = () => routes().map(route => route.url)
-    const reachUrls = () => [...new Set([...routeUrls(), ...listener.urls().filter(isLoopbackUrl)])]
-    ctx.provide('hostHttp', { route: http.route, urls: reachUrls })
+    const localUrls = () => listener.urls().filter(url => routeKind(url) === 'local')
+    const reachUrls = () => [...new Set([...routeUrls(), ...localUrls()])]
+    ctx.provide('hostHttp', { route: registry.route, urls: reachUrls })
     const invite = createInviter(ctx.hostDevices, reachUrls)
     const respond = createResponder({
       identity: device,
       devices: ctx.hostDevices,
       admin,
       tickets: createTickets(),
-      version: await hostVersion(ctx.hostOptions.main),
       build: async () => hostBuild?.info(),
       routeUrls,
       accept: async (back, address) => (remotes ? remotes.accept(back, address) : false),
@@ -51,11 +55,10 @@ export default definePlugin({
       status: () => ctx.runtimes.status(),
       stop: () => void setTimeout(() => ctx.emit('host.stop'), 100),
       proxy: createProxy(ctx.runtimes),
-      extra: http,
+      registry,
     })
     const listener = createListener(createListen(respond, ctx.hub), await loadLan(home), port)
     const save = () => writeServerInfo(home, listener.urls(), admin)
-
     const publish = createRoutePublisher(routes, next => ctx.hub.broadcast({ name: 'routes.change', args: [next] }))
 
     const toggle = createToggle({

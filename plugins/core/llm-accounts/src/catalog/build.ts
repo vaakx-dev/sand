@@ -1,6 +1,6 @@
 import type { ModelInfo } from '../contract'
 import type { Discovered } from '../discover'
-import { builtinNames, builtinRank, describe, hasBuiltin } from './builtin'
+import { builtinNames, builtinRank, describe } from './builtin'
 import type { Prefs, SourceMeta } from './types'
 
 export const qualify = (source: string, name: string) => `${source}/${name}`
@@ -19,11 +19,9 @@ export const modelOf = (meta: SourceMeta, found: Discovered): ModelInfo => ({
   ...(meta.via && { via: meta.via }),
 })
 
-export const shownByDefault = (meta: SourceMeta, name: string) => {
-  if (meta.via) return true
-  if (meta.kind === 'server') return true
-  if (meta.kind === 'openrouter') return false
-  return hasBuiltin(meta.kind) && builtinNames(meta.kind).includes(name)
+const shownByDefault = (meta: SourceMeta, name: string) => {
+  if (meta.via || meta.kind === 'server') return true
+  return builtinNames(meta.kind).includes(name)
 }
 
 const order = (meta: SourceMeta) => (a: ModelInfo, b: ModelInfo) =>
@@ -41,7 +39,7 @@ export const decorate = (meta: SourceMeta, bases: ModelInfo[], prefs: Prefs): Mo
   return [...bases.map(strip), ...extra]
     .map(model => {
       const name = model.name ?? model.id
-      const visible = hide.has(model.id) ? false : show.has(model.id) || added.includes(name) || shownByDefault(meta, name)
+      const visible = !hide.has(model.id) && (show.has(model.id) || added.includes(name) || shownByDefault(meta, name))
       const favourite = prefs.favourites.indexOf(model.id)
       return {
         ...model,

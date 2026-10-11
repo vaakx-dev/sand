@@ -1,11 +1,11 @@
+import { isFolder } from '@sand/kit/fs'
 import { basename, dirname, resolve } from 'node:path'
-import { isDirectory } from '../files'
 import { lines, ripgrep, scope } from './ripgrep'
 import { walk } from './walk'
 
 const maxSize = 1_000_000
 
-export interface Query {
+interface Query {
   pattern: string
   root: string
   glob: string
@@ -14,10 +14,10 @@ export interface Query {
   signal: AbortSignal
 }
 
-const format = (file: string, line: number | string, text: string) => `${file}:${line}: ${text.trim().slice(0, 300)}`
+const matchLine = (file: string, line: number | string, text: string) => `${file}:${line}: ${text.trim().slice(0, 300)}`
 
 async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
-  const directory = await isDirectory(root)
+  const directory = await isFolder(root)
   const args = ['--line-number', '--no-heading', '--with-filename', '--null', '--color', 'never', '--max-filesize', '1M', '--engine', 'auto']
   if (ignoreCase) args.push('--ignore-case')
   if (directory && glob !== '**/*') args.push('--glob', glob)
@@ -26,12 +26,12 @@ async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, i
   for await (const line of lines(binary, args, directory ? root : dirname(root), signal)) {
     const [file = '', rest = ''] = line.split('\0')
     const colon = rest.indexOf(':')
-    yield format(file, rest.slice(0, colon), rest.slice(colon + 1))
+    yield matchLine(file, rest.slice(0, colon), rest.slice(colon + 1))
   }
 }
 
 async function* files(root: string, glob: string, includeIgnored?: boolean, signal?: AbortSignal) {
-  if (await isDirectory(root)) {
+  if (await isFolder(root)) {
     for await (const file of walk(glob, root, includeIgnored, signal)) yield { full: resolve(root, file), shown: file }
   } else {
     yield { full: root, shown: basename(root) }
@@ -47,7 +47,7 @@ async function* withScan({ pattern, root, glob, ignoreCase, includeIgnored, sign
     const text = await file.text()
     if (text.includes('\0')) continue
     for (const [index, line] of text.split(/\r?\n/).entries()) {
-      if (regex.test(line)) yield format(shown, index + 1, line)
+      if (regex.test(line)) yield matchLine(shown, index + 1, line)
     }
   }
 }

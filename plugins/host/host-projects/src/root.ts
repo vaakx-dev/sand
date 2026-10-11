@@ -1,10 +1,15 @@
+import { isRecord } from '@sand/kit'
 import { expandHome } from '@sand/kit/fs'
 import { join } from 'node:path'
 
+const savedRoot = async (file: string) => {
+  const saved: unknown = await Bun.file(file).json().catch(() => undefined)
+  return isRecord(saved) && typeof saved.root === 'string' && saved.root ? saved.root : '~/Projects'
+}
+
 export const projectRoot = async (home: string) => {
   const file = join(home, 'project-root.json')
-  const saved = await Bun.file(file).json().catch(() => undefined)
-  let root = typeof saved?.root === 'string' && saved.root ? expandHome(saved.root) : expandHome('~/Projects')
+  let root = expandHome(await savedRoot(file))
   return {
     get: () => root,
     async set(next: string) {

@@ -7,22 +7,6 @@ export interface Turn extends Omit<UsageRecord, 'id' | 'model'> {
   model: string
 }
 
-const copyFinder = (isBranch: (session: string) => boolean) => {
-  const ids = new Set<string>()
-  const contents = new Set<string>()
-  return (entry: Entry, record: UsageRecord) => {
-    if (record.id) {
-      const copied = ids.has(record.id)
-      ids.add(record.id)
-      return copied
-    }
-    const content = JSON.stringify(record)
-    const copied = isBranch(entry.session) && contents.has(content)
-    contents.add(content)
-    return copied
-  }
-}
-
 const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): Turn => ({
   ...tags,
   at: entry.at,
@@ -30,10 +14,12 @@ const turnOf = (entry: Entry, { id: _, model, ...tags }: UsageRecord): Turn => (
   model: model ?? 'unknown',
 })
 
-export const turnsOf = (entries: Entry[], isBranch: (session: string) => boolean): Turn[] => {
-  const isCopy = copyFinder(isBranch)
+export const turnsOf = (entries: Entry[]): Turn[] => {
+  const seen = new Set<string>()
   return entries.flatMap(entry => {
     const record = entry.data as UsageRecord
-    return isCopy(entry, record) ? [] : [turnOf(entry, record)]
+    if (seen.has(record.id)) return []
+    seen.add(record.id)
+    return [turnOf(entry, record)]
   })
 }

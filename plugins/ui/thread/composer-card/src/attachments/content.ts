@@ -1,5 +1,5 @@
 import type { AttachmentLimits } from '@sand/attachments/contract'
-import type { UserContent } from '@sand/messages'
+import type { Prompt, UserContent } from '@sand/messages'
 import { imageLabel } from '@sand/kit'
 import { fitImage } from '../integrations/resize'
 
@@ -43,8 +43,8 @@ export const compose = (text: string, items: UserContent[]): UserContent[] => {
   return text.trim() ? [...parts, { type: 'text', text }] : parts
 }
 
-export const split = (prompt: string | UserContent[]) => {
-  if (typeof prompt === 'string') return { text: prompt, items: [] as UserContent[] }
+export const split = (prompt: Prompt): { text: string; items: UserContent[] } => {
+  if (typeof prompt === 'string') return { text: prompt, items: [] }
   const items = prompt.filter((block): block is Exclude<UserContent, { type: 'text' }> => block.type !== 'text')
   const labels = new Set(items.flatMap(item => (item.type === 'image' ? [imageLabel(item)] : [])))
   const text = prompt.flatMap(block => (block.type === 'text' && !labels.has(block.text) ? [block.text] : [])).join('\n\n')
@@ -53,4 +53,4 @@ export const split = (prompt: string | UserContent[]) => {
 
 export const contentName = (item: UserContent) => ('name' in item && item.name) || item.type
 
-export const preview = (item: UserContent) => (item.type === 'image' ? `data:${item.mediaType};base64,${item.data}` : undefined)
+export const preview = (item?: UserContent) => (item?.type === 'image' ? `data:${item.mediaType};base64,${item.data}` : undefined)

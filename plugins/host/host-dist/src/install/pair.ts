@@ -1,9 +1,10 @@
 import type { HttpCall, HttpRoute } from '@sand/host-gateway/contract'
 import type { HostRemotes } from '@sand/host-remotes/contract'
-import { errorMessage, pairLink, parsePairLink, routeKind } from '@sand/kit'
+import { errorMessage, isRecord, pairLink, parsePairLink, routeKind } from '@sand/kit'
+import { readJson, textReply } from '@sand/kit/host'
 import type { InstallPairRequest, InstallPairResult } from '../contract'
 import type { InstallKeys } from '../installs'
-import { expired, installSecret, readText, text } from './base'
+import { expired, installSecret } from './base'
 
 const limit = 16 * 1024
 
@@ -14,16 +15,12 @@ export interface PairRouteDeps {
   name: string
 }
 
-const pairRequest = (body: string | undefined): InstallPairRequest | undefined => {
-  if (body === undefined) return
-  try {
-    const { name, links } = JSON.parse(body) as Record<string, unknown>
-    if (typeof name !== 'string' || !name.trim() || !Array.isArray(links) || !links.length) return
-    if (!links.every(link => typeof link === 'string')) return
-    return { name: name.trim(), links }
-  } catch {
-    return
-  }
+const pairRequest = (body: unknown): InstallPairRequest | undefined => {
+  if (!isRecord(body)) return
+  const { name, links } = body
+  if (typeof name !== 'string' || !name.trim() || !Array.isArray(links) || !links.length) return
+  if (!links.every(link => typeof link === 'string')) return
+  return { name: name.trim(), links }
 }
 
 const peerHost = (address: string) => {
@@ -66,11 +63,11 @@ export const pairRoute = ({ installs, remotes, id, name }: PairRouteDeps): HttpR
   async handle(call) {
     const secret = installSecret(call)
     if (!secret || !installs.check(secret)) return expired()
-    const request = pairRequest(await readText(call.request, limit))
-    if (!request) return text('expected {name, links} as JSON', 400)
+    const request = pairRequest(await readJson(call.request, limit))
+    if (!request) return textReply('expected {name, links} as JSON', 400)
     installs.step(secret, 'pairing', { name: request.name })
     const failure = await pairBack(remotes, candidates(call, request.links))
-    if (failure !== undefined) return text(`Could not pair with ${request.name}: ${failure}`, 502)
+    if (failure !== undefined) return textReply(`Could not pair with ${request.name}: ${failure}`, 502)
     const result: InstallPairResult = { id, name }
     installs.step(secret, 'checking')
     return Response.json(result, { headers: { 'cache-control': 'no-store' } })

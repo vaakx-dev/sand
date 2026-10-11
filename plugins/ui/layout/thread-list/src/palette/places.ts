@@ -13,7 +13,7 @@ export interface Place {
   away?: boolean
 }
 
-const isOnline = (ctx: Context, device?: string) => !device || !ctx.machines || Boolean(ctx.machines.get(device)?.online)
+const isOnline = (ctx: Context, device?: string) => !device || (ctx.machines?.online(device) ?? true)
 
 const usable = (ctx: Context, location: ProjectEntry) => !location.missing && isOnline(ctx, location.device)
 
@@ -59,9 +59,9 @@ export const places = (ctx: Context<'threads'>): Place[] => {
     .sort((a, b) => Number(b.id === here) - Number(a.id === here) || Number(a.away ?? false) - Number(b.away ?? false) || b.updated - a.updated)
 }
 
-export const machineName = (ctx: Context, device?: string) => (device ? (ctx.machines?.get(device)?.name ?? 'Other PC') : undefined)
+export const machineName = (ctx: Context, device?: string) => (device ? ctx.machines?.name(device) : undefined)
 
-export const pcName = (ctx: Context, device?: string) => machineName(ctx, device) ?? ctx.machines?.get()?.name ?? 'Local'
+export const pcName = (ctx: Context, device?: string) => ctx.machines?.name(device) ?? 'Local'
 
 export const pcNames = (ctx: Context, place: Place) => [...new Set((place.group?.locations ?? [place]).map(location => pcName(ctx, location.device)))]
 

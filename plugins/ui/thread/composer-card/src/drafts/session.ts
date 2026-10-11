@@ -24,8 +24,6 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
   let ready = false
   let sent: { id: string; text: string } | undefined
 
-  const snapshot = (): Saved => model.draft()
-
   const drop = (id: string) => {
     store.remove(id)
     listed.delete(id)
@@ -39,7 +37,7 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
 
   const keep = (leaving = false) => {
     if (!key || !ready) return
-    const saved = snapshot()
+    const saved = model.draft()
     publish(saved, leaving)
     store.save(key.id, { ...saved, target: key.target, updated: listed.updated(key.id) ?? Date.now() })
   }
@@ -66,8 +64,8 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
   const open = (id: string | undefined) => {
     const next = keyOf(ctx, id)
     if (next?.id === key?.id) return retarget(next)
-    if (promotes(next)) {
-      drop(key!.id)
+    if (key && promotes(next)) {
+      drop(key.id)
       key = next
       return
     }
@@ -86,7 +84,7 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
   }
 
   effect(() => {
-    const saved = snapshot()
+    const saved = model.draft()
     if (!ready) return
     untrack(() => publish(saved, false))
     return onTimeout(() => keep(), 300)

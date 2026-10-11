@@ -1,11 +1,9 @@
-import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
+import type { SourceInfo } from '@sand/llm-accounts/contract'
 import { badge, div, secondaryAction, settingsSection, span, tile } from '@sand/dom'
+import { favouritesOf } from '@sand/kit'
 import type { Kit } from './kit'
 import { linkRow, logo, whereText } from './parts'
 import { starIcon } from './star'
-
-export const favouritesOf = (models: ModelInfo[]) =>
-  models.filter(model => model.favourite !== undefined).sort((a, b) => (a.favourite ?? 0) - (b.favourite ?? 0))
 
 export const sourcesKey = (kit: Kit) =>
   JSON.stringify([kit.ctx.models.sources(), favouritesOf(kit.ctx.models.list()).map(model => model.label)])

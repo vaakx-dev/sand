@@ -1,19 +1,16 @@
+import { listen } from '@sand/dom'
+import { joinDisposers } from '@sand/kit'
+
 export const onWake = (nudge: (online: boolean) => void, offline: () => void) => {
   const wake = () => nudge(false)
-  const online = () => nudge(true)
-  const visible = () => {
-    if (document.visibilityState === 'visible') nudge(false)
+  const shown = () => {
+    if (document.visibilityState === 'visible') wake()
   }
-  addEventListener('online', online)
-  addEventListener('offline', offline)
-  addEventListener('focus', wake)
-  addEventListener('pageshow', wake)
-  document.addEventListener('visibilitychange', visible)
-  return () => {
-    removeEventListener('online', online)
-    removeEventListener('offline', offline)
-    removeEventListener('focus', wake)
-    removeEventListener('pageshow', wake)
-    document.removeEventListener('visibilitychange', visible)
-  }
+  return joinDisposers(
+    listen(window, 'online', () => nudge(true)),
+    listen(window, 'offline', offline),
+    listen(window, 'focus', wake),
+    listen(window, 'pageshow', wake),
+    listen(document, 'visibilitychange', shown),
+  )
 }

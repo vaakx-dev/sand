@@ -13,7 +13,6 @@ export interface SessionInfo {
   parent: string | null
   origin: string | null
   kind: SessionKind
-  format?: number
 }
 
 export interface SessionMeta {
@@ -78,7 +77,6 @@ export interface ThreadExportPage {
   scratch: boolean
   entries: Entry[]
   next: number | null
-  format: number
 }
 
 export type ThreadImportResult = { session: string } | { missing: string }
@@ -97,14 +95,13 @@ export interface CreateSession {
 export interface Sessions {
   create(options: CreateSession): Session
   open(id: string): Session | undefined
+  require(id: string): Session
   branch(session: Session, id?: string, at?: string | null): Session
   list(): SessionSummary[]
   synced(since: string | null, active: string[]): SyncedSummaries
   children(parent: string): SessionSummary[]
   remove(id: string): void
   entriesOfType?(type: string): Entry[]
-  readonly format: number
-  upgrade(entries: Entry[], from: number): Entry[]
 }
 
 export type SessionMetaUpdate = SessionMeta & { id: string }

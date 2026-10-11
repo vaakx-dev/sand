@@ -1,4 +1,4 @@
-import { div, preventThen, show, sig, type Child, type ClassValue, type Sig, type StyleMap } from '@vaakx-dev/vrui'
+import { div, preventThen, show, sig, type Child, type ClassValue, type Sig } from '@vaakx-dev/vrui'
 import { popover } from './menu'
 
 export type Placement = 'below-left' | 'below-right' | 'above-left' | 'above-right'
@@ -12,20 +12,19 @@ export interface DropdownProps {
   menuClass?: ClassValue
 }
 
-const anchors: Record<Placement, { class: string; style: StyleMap }> = {
-  'below-left': { class: 'mt-1', style: { top: '100%', left: '0' } },
-  'below-right': { class: 'mt-1', style: { top: '100%', right: '0' } },
-  'above-left': { class: 'mb-2', style: { bottom: '100%', left: '0' } },
-  'above-right': { class: 'mb-2', style: { bottom: '100%', right: '0' } },
+const anchors: Record<Placement, string> = {
+  'below-left': 'top-full left-0 mt-1',
+  'below-right': 'top-full right-0 mt-1',
+  'above-left': 'bottom-full left-0 mb-2',
+  'above-right': 'bottom-full right-0 mb-2',
 }
 
 export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus = false, class: extra, menuClass }: DropdownProps) => {
   const open = sig(false)
   const close = () => open.set(false)
-  const anchor = anchors[placement]
   return div(
     { class: ['relative flex min-w-0', extra], onMouseDown: keepFocus ? preventThen() : undefined },
-    trigger(() => open.set(!open.get()), open),
-    show(open, () => popover(close, { class: [anchor.class, menuClass], style: anchor.style }, ...items(close))),
+    trigger(open.toggle(), open),
+    show(open, () => popover(close, { class: [anchors[placement], menuClass] }, ...items(close))),
   )
 }

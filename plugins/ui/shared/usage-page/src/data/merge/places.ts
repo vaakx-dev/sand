@@ -1,5 +1,5 @@
-import { folderName } from '@sand/kit'
-import { addTotals, byCost, emptyTotals, grouped, including } from '../totals'
+import { byCost, emptyTotals, folderName, grouped } from '@sand/kit'
+import { addTotals, including } from '../totals'
 import type { PcSummary, PcUsage, Project, Thread } from '../types'
 
 export const mergeThreads = (parts: PcSummary[]): Thread[] =>

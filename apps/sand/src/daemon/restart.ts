@@ -9,15 +9,13 @@ import { stop } from './stop'
 const startWait = 90_000
 const healthWait = 120_000
 
-const askHealth = (info: ServerInfo) => ask<HostHealth>(info, { type: 'host.health' }, 10_000)
-
 const launch = async (home: string) => {
   const info = await start(home, { wait: startWait, stopOnFail: true })
   console.log(`restarted sand (pid ${info.pid})`)
   return info
 }
 
-const checkHealth = (info: ServerInfo) => waitHealthy(() => askHealth(info), { timeout: healthWait })
+const checkHealth = (info: ServerInfo) => waitHealthy(() => ask<HostHealth>(info, { type: 'host.health' }, 10_000), { timeout: healthWait })
 
 const rollback = async (home: string) => {
   try {

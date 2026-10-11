@@ -1,4 +1,4 @@
-import { button, contextMenu, div, focusable, providerIcon, span, type ContextMenu } from '@sand/dom'
+import { contextMenu, div, plainButton, providerIcon, span, type ContextMenu } from '@sand/dom'
 import { tokens, tokensOf } from '@sand/kit'
 import { colorsOf } from '../../data/providers'
 import type { Account } from '../../data/types'
@@ -18,7 +18,7 @@ const nameLine = (row: Row) =>
   div(
     { class: 'flex min-w-0 items-baseline gap-3 text-sm text-neutral-100' },
     row.open
-      ? button({ type: 'button', class: ['min-w-0 flex-1 truncate rounded-sm text-left hover:underline', focusable], title: row.hint }, row.name)
+      ? plainButton({ class: 'min-w-0 flex-1 truncate rounded-sm text-left hover:underline', title: row.hint }, row.name)
       : span({ class: 'min-w-0 flex-1 truncate', title: row.hint }, row.name),
     span({ class: 'shrink-0 tabular-nums' }, billedText(row.totals)),
   )
@@ -28,7 +28,7 @@ const shareBar = (row: Row, { accounts, colorOf, peak }: ListParts) => {
   const width = peak > 0 ? Math.max(1.5, (row.totals.cost / peak) * 100) : 0
   return div(
     { class: 'h-1 overflow-hidden rounded-full bg-neutral-800' },
-    div({ class: 'h-full rounded-full bg-accent-500', style: { width: `${width}%`, ...(provider ? { backgroundColor: colorOf(provider) } : {}) } }),
+    div({ class: 'h-full rounded-full bg-accent-500', style: { width: `${width}%`, ...(provider && { backgroundColor: colorOf(provider) }) } }),
   )
 }
 

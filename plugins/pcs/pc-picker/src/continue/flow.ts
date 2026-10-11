@@ -4,7 +4,6 @@ import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
 import { copyOn } from '../group'
 import { offerSend } from './changes'
-import { ensureCopy } from './ensure'
 import { moveThread, type MoveOptions } from './move'
 import { foldersFor, planDestination } from './place'
 
@@ -80,7 +79,10 @@ const moveTo = async (ctx: ContinueContext, thread: Thread, source: Machine, tar
     if (plan.from && !(await offerSend(ctx, plan.from, plan.to, source, target))) return
     return move(ctx, thread, source, target, plan.folders, { project: plan.project })
   }
-  if (plan.kind === 'nocopy' && ensureCopy(ctx, plan.group, target, afterCopy(ctx, thread, target, plan.group))) return
+  if (plan.kind === 'nocopy' && ctx.syncFlows) {
+    ctx.notify?.push(`${plan.group.name} isn't on ${target.name} yet`)
+    return ctx.syncFlows.copy(plan.group, target.device, afterCopy(ctx, thread, target, plan.group))
+  }
   return move(ctx, thread, source, target, [thread.info.cwd], { ask: askFolder(ctx, target) })
 }
 

@@ -1,18 +1,23 @@
-import { isInside } from '@sand/kit'
-import { samePath } from '@sand/kit/fs'
+import type { Session } from '@sand/sessions-sqlite/contract'
 import { removedType, type RemovedEntry, type SettleResult } from '../contract'
-import { changedCount, headOf, repoOf, unpushedCount, within } from '../git/repo'
+import { changedCount, headOf, repoOf, unpushedCount, within, type Repo } from '../git/repo'
 import { removeWorktree } from '../git/worktree'
 import { readSetup } from '../setup/file'
-import { forgetMarks } from './marks'
+import { idleIn, openSession, sessionsIn, type Ops } from './context'
 import { relocate } from './relocate'
-import { openSession, type Ops } from './types'
 
-export interface RemoveOptions {
+interface RemoveOptions {
   force?: boolean
   auto?: boolean
   branch?: string
   pr?: number
+}
+
+const moveOut = (session: Session, repo: Repo, head: string, why: string, pr?: number) => {
+  const removed: RemovedEntry = { branch: repo.branch ?? '', path: repo.root, head, cwd: session.cwd, ...(pr && { pr }) }
+  relocate(session, within(repo.root, session.cwd, repo.main), why)
+  session.append(removedType, removed)
+  return removed
 }
 
 export const removeSessionWorktree = async (ops: Ops, id: unknown, options: RemoveOptions): Promise<SettleResult> => {
@@ -26,11 +31,8 @@ export const removeSessionWorktree = async (ops: Ops, id: unknown, options: Remo
   if (!options.force && (changed || ahead)) return { settled: false, reason: changed ? 'changed' : 'unpushed', changed, ahead }
   const head = await headOf(repo.root)
   await removeWorktree(repo.main, repo.root, repo.branch, options.force)
-  const removed: RemovedEntry = { branch: repo.branch ?? '', path: repo.root, head, cwd: session.cwd, ...(options.pr && { pr: options.pr }) }
   const why = options.pr ? `PR #${options.pr} was merged, so its worktree at ${repo.root} was removed.` : `The worktree at ${repo.root} was removed.`
-  relocate(session, within(repo.root, session.cwd, repo.main), why)
-  session.append(removedType, removed)
-  forgetMarks()
+  const removed = moveOut(session, repo, head, why, options.pr)
   ops.changed(repo.main)
   return { settled: true, removed }
 }
@@ -38,16 +40,13 @@ export const removeSessionWorktree = async (ops: Ops, id: unknown, options: Remo
 export const removeWorktreeAt = async (ops: Ops, path: unknown) => {
   const repo = await repoOf(String(path ?? ''))
   if (!repo?.linked) throw new Error('That folder is not a worktree')
-  const inside = ops.sessions.list().filter(summary => samePath(summary.cwd, repo.root) || isInside(summary.cwd, repo.root))
-  if (inside.some(summary => ops.running.has(summary.id))) throw new Error('A thread is working there. Wait for its turn to finish')
+  idleIn(ops, repo.root)
+  const inside = sessionsIn(ops, repo.root)
   const head = await headOf(repo.root)
   await removeWorktree(repo.main, repo.root, repo.branch, true)
   for (const summary of inside) {
     const session = ops.sessions.open(summary.id)
-    if (!session) continue
-    relocate(session, within(repo.root, session.cwd, repo.main), `The worktree at ${repo.root} was removed.`)
-    session.append(removedType, { branch: repo.branch ?? '', path: repo.root, head, cwd: summary.cwd } satisfies RemovedEntry)
+    if (session) moveOut(session, repo, head, `The worktree at ${repo.root} was removed.`)
   }
-  forgetMarks()
   ops.changed(repo.main)
 }

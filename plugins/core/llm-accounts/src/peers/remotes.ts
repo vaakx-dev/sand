@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -11,11 +12,10 @@ export interface RemotePc {
 const text = (value: unknown): value is string => typeof value === 'string' && value.length > 0
 
 const parse = (value: unknown): RemotePc | undefined => {
-  if (!value || typeof value !== 'object') return
-  const { id, name, url, urls, key } = value as Record<string, unknown>
-  if (!text(id) || !text(url) || !text(key)) return
-  const routes = Array.isArray(urls) ? urls.filter(text) : []
-  return { id, name: text(name) ? name : url, urls: [...new Set([url, ...routes])], key }
+  if (!isRecord(value)) return
+  const { id, name, url, urls, key } = value
+  if (!text(id) || !text(url) || !Array.isArray(urls) || !text(key)) return
+  return { id, name: text(name) ? name : url, urls: [...new Set([url, ...urls.filter(text)])], key }
 }
 
 const remotesPath = async (home: string) => {

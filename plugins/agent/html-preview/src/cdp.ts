@@ -1,13 +1,39 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { Subprocess } from 'bun'
 
-type Handler = (params: Record<string, any>) => void
+export interface RemoteObject {
+  type: string
+  value?: unknown
+  unserializableValue?: string
+  description?: string
+}
+
+export interface ExceptionDetails {
+  text: string
+  exception?: RemoteObject
+}
+
+interface Events {
+  'Page.loadEventFired': unknown
+  'Runtime.consoleAPICalled': { type: string; args: RemoteObject[] }
+  'Runtime.exceptionThrown': { exceptionDetails: ExceptionDetails }
+  'Log.entryAdded': { entry: { level: string; text: string; url?: string } }
+}
+
+interface Listener {
+  method: string
+  deliver(params: unknown): void
+}
+
+interface Waiting {
+  resolve(result: unknown): void
+  reject(error: Error): void
+}
 
 export interface Page {
-  send<T = Record<string, any>>(method: string, params?: Record<string, unknown>): Promise<T>
-  on(method: string, handler: Handler): void
+  send<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>
+  on<K extends keyof Events>(method: K, handler: (params: Events[K]) => void): void
 }
 
 export interface Browser {
@@ -41,8 +67,8 @@ const devtoolsUrl = async (stderr: ReadableStream<Uint8Array>) => {
 const connect = (url: string) =>
   new Promise<Page>((resolve, reject) => {
     const socket = new WebSocket(url)
-    const pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>()
-    const handlers = new Map<string, Handler[]>()
+    const pending = new Map<number, Waiting>()
+    const listeners: Listener[] = []
     let next = 0
     socket.onopen = () =>
       resolve({
@@ -52,7 +78,7 @@ const connect = (url: string) =>
           return new Promise((resolve, reject) => pending.set(id, { resolve, reject }))
         },
         on(method, handler) {
-          handlers.set(method, [...(handlers.get(method) ?? []), handler])
+          listeners.push({ method, deliver: handler })
         },
       })
     socket.onerror = () => reject(new Error('Could not connect to the browser'))
@@ -63,11 +89,13 @@ const connect = (url: string) =>
     socket.onmessage = event => {
       const message = JSON.parse(String(event.data))
       const waiting = message.id === undefined ? undefined : pending.get(message.id)
-      if (waiting) {
-        pending.delete(message.id)
-        if (message.error) waiting.reject(new Error(message.error.message))
-        else waiting.resolve(message.result)
-      } else if (message.method) for (const handler of handlers.get(message.method) ?? []) handler(message.params)
+      if (!waiting) {
+        for (const listener of listeners) if (listener.method === message.method) listener.deliver(message.params)
+        return
+      }
+      pending.delete(message.id)
+      if (message.error) waiting.reject(new Error(message.error.message))
+      else waiting.resolve(message.result)
     }
   })
 
@@ -87,15 +115,18 @@ const flags = (dir: string) => [
 
 const remove = (dir: string) => rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
 
-export const launch = async (executable: string): Promise<Browser> => {
-  const dir = await mkdtemp(join(tmpdir(), 'sand-preview-'))
-  let child: Subprocess<'ignore', 'ignore', 'pipe'>
+const spawn = async (executable: string, dir: string) => {
   try {
-    child = Bun.spawn([executable, ...flags(dir)], { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe', windowsHide: true })
+    return Bun.spawn([executable, ...flags(dir)], { stdin: 'ignore', stdout: 'ignore', stderr: 'pipe', windowsHide: true })
   } catch (error) {
     await remove(dir)
     throw error
   }
+}
+
+export const launch = async (executable: string): Promise<Browser> => {
+  const dir = await mkdtemp(join(tmpdir(), 'sand-preview-'))
+  const child = await spawn(executable, dir)
   const close = async () => {
     child.kill()
     await child.exited
@@ -107,7 +138,7 @@ export const launch = async (executable: string): Promise<Browser> => {
       dir,
       async open() {
         const response = await fetch(`http://${url.host}/json/new?about:blank`, { method: 'PUT' })
-        const target = (await response.json()) as { webSocketDebuggerUrl: string }
+        const target: { webSocketDebuggerUrl: string } = await response.json()
         return connect(target.webSocketDebuggerUrl)
       },
       close,

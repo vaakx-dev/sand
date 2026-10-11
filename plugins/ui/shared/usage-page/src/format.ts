@@ -3,7 +3,10 @@ import { ago, dollars, tokens, tokensOf } from '@sand/kit'
 
 export type Metric = 'cost' | 'tokens'
 
-export const valueOf = (totals: UsageTotals | undefined, metric: Metric) => (!totals ? 0 : metric === 'cost' ? totals.cost : tokensOf(totals.usage))
+export const metricValue = (totals: UsageTotals | undefined, metric: Metric) => {
+  if (!totals) return 0
+  return metric === 'cost' ? totals.cost : tokensOf(totals.usage)
+}
 
 export const metricText = (value: number, metric: Metric) => (metric === 'cost' ? dollars(value) : tokens(value))
 

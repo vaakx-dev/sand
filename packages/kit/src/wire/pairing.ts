@@ -1,3 +1,5 @@
+import { trimSlash } from '../text/url'
+
 export const hostPaths = {
   identity: '/identity',
   pair: '/pair',
@@ -14,8 +16,6 @@ export const hostPaths = {
   installDone: '/install/done',
   installFail: '/install/fail',
 } as const
-
-const trimSlash = (base: string) => base.replace(/\/+$/, '')
 
 export const pairLink = (base: string, secret: string) => `${trimSlash(base)}/#pair=${encodeURIComponent(secret)}`
 

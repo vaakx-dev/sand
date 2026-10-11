@@ -1,13 +1,14 @@
-import { copyButton, div, dot, keys, onInterval, p, primaryAction, secondaryAction, sig, span, textInput, untrack } from '@sand/dom'
+import { clock, copyButton, div, dot, keys, p, primaryAction, secondaryAction, sig, span, textInput, untrack, type Child, type Sig } from '@sand/dom'
 import type { LoginAccount, LoginPending, SignInKind } from '../../contract'
 import { planNames } from '../names'
-import { actions, busyAction, hostOf, note, openLink, problem, type Busy } from '../parts'
+import { actions, hostOf, note, openLink, problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 
 type Paste = Extract<LoginPending, { kind: 'paste' }>
 type Device = Extract<LoginPending, { kind: 'device' }>
+type Busy = Sig<boolean>
 
-export type Phase = 'starting' | 'conflict' | 'paste' | 'device' | 'error'
+type Phase = 'starting' | 'conflict' | 'paste' | 'device' | 'error'
 
 export interface SignInActions {
   keep(): void
@@ -21,7 +22,7 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
   return account?.error ? 'error' : 'starting'
 }
 
-const step = (number: string, text: string, ...extra: Parameters<typeof div>[1][]) =>
+const step = (number: string, text: string, ...extra: Child[]) =>
   div(
     { class: 'flex items-center gap-3 text-sm text-neutral-200' },
     span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-xs text-neutral-300' }, number),
@@ -47,7 +48,9 @@ const conflictView = (kind: SignInKind, account: LoginAccount, actionsFor: SignI
 const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
   const code = sig('')
   const ready = () => !busy.get() && !!code.get().trim()
-  const finish = busyAction(busy, () => control.run({ type: 'login.finish', account: kind, code: code.get().trim() }))
+  const submit = () => {
+    if (ready()) void whileBusy(busy, () => control.run({ type: 'login.finish', account: kind, code: code.get().trim() }))
+  }
   return div(
     { class: 'flex flex-col gap-4' },
     step('1', 'Approve sand in your browser', openLink(pending.url)),
@@ -57,19 +60,19 @@ const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pe
       placeholder: `Code from ${hostOf(pending.url)}`,
       'aria-label': 'Sign-in code',
       bindValue: code,
-      onKeyDown: keys({ Enter: () => ready() && void finish() }),
+      onKeyDown: keys({ Enter: submit }),
     }),
     problem(() => account()?.error ?? ''),
-    actions(copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }), primaryAction({ disabled: () => !ready(), onClick: () => void finish() }, 'Sign in')),
+    actions(copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }), primaryAction({ disabled: () => !ready(), onClick: submit }, 'Sign in')),
   )
 }
 
 const countdown = (expires: number) => {
-  const now = sig(Date.now())
-  onInterval(() => now.set(Date.now()), 1000)
+  const now = clock()
   return () => {
     const seconds = Math.max(0, Math.round((expires - now.get()) / 1000))
-    return seconds ? `Waiting… ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} left` : 'The code expired. Close this and try again.'
+    if (!seconds) return 'The code expired. Close this and try again.'
+    return `Waiting… ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} left`
   }
 }
 

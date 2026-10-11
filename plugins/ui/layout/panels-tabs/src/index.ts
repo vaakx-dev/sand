@@ -12,7 +12,8 @@ export default definePlugin({
   uses: { layout: 'opens as a drawer over the page' },
   apply(ctx) {
     const pages = sig<Page[]>([])
-    const wanted = sig(ctx.hot.data.selected as string | undefined)
+    const saved = ctx.hot.data.selected
+    const wanted = sig(typeof saved === 'string' ? saved : undefined)
     const selected = selectedPage(pages, wanted)
     let next = 0
 
@@ -39,13 +40,8 @@ export default definePlugin({
         surface.setOpen(true)
         ctx.emit('panels.change', panels.current())
       },
-      toggle(id) {
-        if (panels.current() === id) panels.hide()
-        else panels.show(id)
-      },
       hide: () => surface.setOpen(false),
       current: () => (surface.open() ? selected.get() : undefined),
-      list: () => pages.get().map(page => page.spec.id),
     }
 
     const surface = createSurface(

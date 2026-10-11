@@ -43,7 +43,6 @@ declare module '@sand/server/contract' {
 
 declare module '@sand/protocol/wire' {
   interface WireRequests {
-    'loops.list': {}
     'loop.choose': { session: string; loop: string | null }
   }
 

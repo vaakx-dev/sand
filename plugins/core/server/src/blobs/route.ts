@@ -1,22 +1,15 @@
 import type { RouteHandler } from '../contract'
 import { contentType } from './sniff'
-import type { BlobStore } from './store'
-
-export const blobPath = '/blob'
+import type { FindBlob } from './store'
 
 const cached = (hash: string) => ({ etag: `"${hash}"`, 'cache-control': 'private, max-age=31536000, immutable' })
 
 export const blobRoute =
-  (store: BlobStore, recover: (session: string) => Promise<void>): RouteHandler =>
+  (find: FindBlob): RouteHandler =>
   async request => {
     const params = new URL(request.url).searchParams
     const hash = params.get('hash') ?? ''
-    const session = params.get('session')
-    let file = await store.file(hash)
-    if (!file && session) {
-      await recover(session)
-      file = await store.file(hash)
-    }
+    const file = await find(hash, params.get('session'))
     if (!file) return new Response('not found', { status: 404 })
     const headers = cached(hash)
     if (request.headers.get('if-none-match') === headers.etag) return new Response(null, { status: 304, headers })

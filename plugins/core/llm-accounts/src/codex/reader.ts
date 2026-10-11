@@ -1,6 +1,8 @@
-import type { Block, StopReason, ToolCallBlock, Usage } from '@sand/messages'
+import type { Block, StopReason, Usage } from '@sand/messages'
 import type { LLMEvent } from '../contract'
+import { parseToolInput } from '../http/tool-input'
 import { encodeReasoning } from '../reasoning'
+import type { CodexEvent, CodexItem, CodexResponse, CodexUsage } from './events'
 
 interface Slot {
   index: number
@@ -8,7 +10,7 @@ interface Slot {
   json: string
 }
 
-const blockOf = (item: any): Block | undefined => {
+const blockOf = (item: CodexItem | undefined): Block | undefined => {
   switch (item?.type) {
     case 'reasoning':
       return { type: 'thinking', thinking: '' }
@@ -19,42 +21,33 @@ const blockOf = (item: any): Block | undefined => {
   }
 }
 
-const parseInput = (block: ToolCallBlock, json: string) => {
-  if (!json.trim()) return
-  try {
-    const input = JSON.parse(json)
-    if (input && typeof input === 'object' && !Array.isArray(input)) block.input = input
-    else block.malformed = json
-  } catch {
-    block.malformed = json
-  }
-}
+const texts = (parts: { text?: string }[] | undefined) => (parts ?? []).map(part => part?.text ?? '').join('\n\n')
 
-const texts = (parts: any[] | undefined, key: string) => (parts ?? []).map(part => part?.[key] ?? '').join('\n\n')
-
-const usageOf = (raw: any): Usage => {
+const usageOf = (raw: CodexUsage | undefined): Usage => {
   const cached = raw?.input_tokens_details?.cached_tokens ?? 0
   return { input: Math.max(0, (raw?.input_tokens ?? 0) - cached), output: raw?.output_tokens ?? 0, cacheRead: cached, cacheWrite: 0 }
 }
 
-const stopOf = (response: any, calls: boolean): StopReason => {
-  const reason = response?.incomplete_details?.reason
-  if (response?.status === 'incomplete') return reason === 'max_output_tokens' ? 'max_tokens' : reason === 'content_filter' ? 'refusal' : (reason ?? 'incomplete')
-  return calls ? 'tool_use' : 'end_turn'
+const stopOf = (response: CodexResponse | undefined, calls: boolean): StopReason => {
+  if (response?.status !== 'incomplete') return calls ? 'tool_use' : 'end_turn'
+  const reason = response.incomplete_details?.reason
+  if (reason === 'max_output_tokens') return 'max_tokens'
+  if (reason === 'content_filter') return 'refusal'
+  return reason ?? 'incomplete'
 }
 
-const failure = (event: any) => {
+const failure = (event: CodexEvent) => {
   const error = event.response?.error ?? event.error ?? event
   return new Error(`ChatGPT error: ${error?.message ?? error?.code ?? JSON.stringify(event)}`)
 }
 
-export async function* readCodex(stream: AsyncIterable<any>, model: string): AsyncIterable<LLMEvent> {
-  const slots = new Map<number, Slot>()
+export async function* readCodex(stream: AsyncIterable<CodexEvent>, model: string): AsyncIterable<LLMEvent> {
+  const slots = new Map<number | undefined, Slot>()
   const blocks: Block[] = []
-  const reasoning = new Map<string, { block: Block; item: any }>()
+  const reasoning = new Map<string, { block: Block; item: CodexItem }>()
   let started = false
 
-  const open = (outputIndex: number, item: any) => {
+  const open = (outputIndex: number | undefined, item: CodexItem | undefined) => {
     const existing = slots.get(outputIndex)
     if (existing) return { slot: existing, fresh: false }
     const block = blockOf(item)
@@ -80,7 +73,7 @@ export async function* readCodex(stream: AsyncIterable<any>, model: string): Asy
         break
       }
       case 'response.reasoning_summary_part.added':
-        if (slot?.block.type === 'thinking' && event.summary_index > 0) {
+        if (slot?.block.type === 'thinking' && (event.summary_index ?? 0) > 0) {
           slot.block.thinking += '\n\n'
           yield { type: 'thinking', index: slot.index, text: '\n\n' }
         }
@@ -119,14 +112,14 @@ export async function* readCodex(stream: AsyncIterable<any>, model: string): Asy
         const item = event.item
         const block = done.block
         if (block.type === 'thinking') {
-          block.thinking = texts(item.summary, 'text') || texts(item.content, 'text') || block.thinking
+          block.thinking = texts(item?.summary) || texts(item?.content) || block.thinking
           block.signature = encodeReasoning(item)
-          if (item.id) reasoning.set(item.id, { block, item })
+          if (item?.id) reasoning.set(item.id, { block, item })
         } else if (block.type === 'text') {
-          block.text = (item.content ?? []).map((part: any) => part?.text ?? part?.refusal ?? '').join('') || block.text
+          block.text = (item?.content ?? []).map(part => part?.text ?? part?.refusal ?? '').join('') || block.text
         } else if (block.type === 'tool_call') {
           if (fresh) yield { type: 'tool_call', index: done.index, id: block.id, name: block.name }
-          parseInput(block, item.arguments ?? done.json)
+          parseToolInput(block, item?.arguments ?? done.json)
         }
         slots.delete(event.output_index)
         yield { type: 'block', index: done.index, block }
@@ -136,7 +129,7 @@ export async function* readCodex(stream: AsyncIterable<any>, model: string): Asy
       case 'response.done':
       case 'response.incomplete': {
         for (const item of event.response?.output ?? []) {
-          const found = item?.type === 'reasoning' && item.encrypted_content ? reasoning.get(item.id) : undefined
+          const found = item?.type === 'reasoning' && item.encrypted_content && item.id ? reasoning.get(item.id) : undefined
           if (found?.block.type === 'thinking' && !found.item.encrypted_content) {
             found.block.signature = encodeReasoning({ ...found.item, encrypted_content: item.encrypted_content })
           }

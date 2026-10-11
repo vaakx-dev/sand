@@ -1,3 +1,4 @@
+import { oneLine, textOf } from '@sand/kit'
 import type { LLM, LLMRequest } from '@sand/llm-accounts/contract'
 import type { Message } from '@sand/messages'
 import { shorten } from '../title'
@@ -9,15 +10,14 @@ const maxLength = 60
 const clean = (reply: string) => {
   const first = reply.trim().split('\n', 1)[0] ?? ''
   const bare = first.replace(/^(thread )?(name|title):\s*/i, '').replace(/^["'`*\s]+|["'`*.\s]+$/g, '')
-  return shorten(bare.replace(/\s+/g, ' '), maxLength)
+  return shorten(oneLine(bare), maxLength)
 }
 
 export const askName = async (llm: LLM, text: string, choice: Pick<LLMRequest, 'model' | 'effort' | 'speed'>) => {
   const message: Message = { role: 'user', content: [{ type: 'text', text: `Name this thread:\n\n${text}` }] }
   for await (const event of llm.stream({ system, messages: [message], tools: [], ...choice }, AbortSignal.timeout(timeout))) {
     if (event.type !== 'done') continue
-    const reply = event.message.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join(' ')
-    return { name: clean(reply), usage: event.usage }
+    return { name: clean(textOf(event.message.content, ' ')), usage: event.usage }
   }
   return undefined
 }

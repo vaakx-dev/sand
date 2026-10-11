@@ -1,9 +1,10 @@
 import { errorMessage } from '@sand/kit'
-import { isInstalled, type GithubRelease, type UpdateStore } from '@sand/kit/host'
+import { isInstalled, stampBuild, type UpdateStore } from '@sand/kit/host'
 import type { BuildInfo } from '@sand/protocol'
 import type { UpdateChannel, UpdatePhase, UpdateState } from './contract'
+import type { GithubRelease } from './github/release'
 import { cancelled, createInstaller, runningWork } from './install/run'
-import { buildOf, isNewer, releaseInfo } from './offer'
+import { isNewer, releaseInfo } from './offer'
 import { scheduleChecks } from './schedule'
 import type { Updater, UpdaterDeps } from './types'
 
@@ -158,7 +159,7 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       latest = release
       checkedAt = Date.now()
       begin(release, true)
-      return { ...snapshot(), target: buildOf(release.build) }
+      return { ...snapshot(), target: stampBuild(release.build) }
     })
   }
 

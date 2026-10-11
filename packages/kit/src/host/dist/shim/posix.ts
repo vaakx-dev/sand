@@ -10,7 +10,7 @@ const doubleQuoted = (value: string) => value.replace(/[\\$`"]/g, '\\$&')
 
 const fishQuote = (value: string) => `'${value.replace(/[\\']/g, '\\$&')}'`
 
-export const posixShim = ({ home }: { home: string }) =>
+const posixShim = (home: string) =>
   [
     '#!/bin/sh',
     `apps=${quote(appsFolder(home))}`,
@@ -60,35 +60,41 @@ const shellProfile = async (user: string) => {
   return process.platform === 'darwin' ? macBashProfile(user) : join(user, '.bashrc')
 }
 
-const addToProfiles = async (bin: string) => {
-  const user = homedir()
-  const line = `export PATH="${doubleQuoted(bin)}:$PATH"`
+const profileTargets = async (user: string) => {
   const profiles = ['.bashrc', '.zshrc', '.profile'].map(name => join(user, name))
-  const found = (await Promise.all(profiles.map(async file => ((await exists(file)) ? file : undefined)))).filter(
-    (file): file is string => file !== undefined,
-  )
+  const present = await Promise.all(profiles.map(exists))
+  const found = profiles.filter((_, index) => present[index])
   const own = await shellProfile(user)
   const fallback = found.length ? [] : [join(user, '.profile')]
-  const targets = [...new Set([...found, ...(own ? [own] : fallback)])]
+  return [...new Set([...found, ...(own ? [own] : fallback)])]
+}
+
+const addToShellProfiles = async (user: string, bin: string) => {
+  const line = `export PATH="${doubleQuoted(bin)}:$PATH"`
   let changed = false
-  for (const file of targets) if (await appendLine(file, line, bin)) changed = true
-  const fish = join(user, '.config', 'fish')
-  if (await exists(fish)) {
-    await mkdir(join(fish, 'conf.d'), { recursive: true })
-    if (await appendLine(join(fish, 'conf.d', 'sand.fish'), `fish_add_path ${fishQuote(bin)}`, bin)) changed = true
-  }
+  for (const file of await profileTargets(user)) if (await appendLine(file, line, bin)) changed = true
   return changed
+}
+
+const addToFish = async (user: string, bin: string) => {
+  const fish = join(user, '.config', 'fish')
+  if (!(await exists(fish))) return false
+  await mkdir(join(fish, 'conf.d'), { recursive: true })
+  return appendLine(join(fish, 'conf.d', 'sand.fish'), `fish_add_path ${fishQuote(bin)}`, bin)
 }
 
 export const writePosixShim = async (home: string, bin: string) => {
   await mkdir(bin, { recursive: true })
   const shim = join(bin, 'sand')
-  await Bun.write(shim, posixShim({ home }))
+  await Bun.write(shim, posixShim(home))
   await chmod(shim, 0o755)
 }
 
-export const posixPath = async ({ home, bin }: { home: string; bin: string }) => {
+export const posixPath = async (home: string, bin: string) => {
   await writePosixShim(home, bin)
   if ((process.env.PATH ?? '').split(delimiter).includes(bin)) return { bin, changed: false }
-  return { bin, changed: await addToProfiles(bin), hint: 'Open a new terminal to use sand' }
+  const user = homedir()
+  const shells = await addToShellProfiles(user, bin)
+  const fish = await addToFish(user, bin)
+  return { bin, changed: shells || fish, hint: 'Open a new terminal to use sand' }
 }

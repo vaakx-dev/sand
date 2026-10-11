@@ -2,9 +2,10 @@ import type {} from '@sand/loops/contract'
 import type { Server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { configSchema } from './config'
+import type { Ops } from './ops/context'
 import { createIntents } from './ops/intents'
+import { forgetMarks } from './ops/marks'
 import { createNaming } from './ops/naming'
-import type { Ops } from './ops/types'
 import { serveWorktrees } from './serve'
 
 export default definePlugin({
@@ -26,7 +27,10 @@ export default definePlugin({
       sessions: ctx.sessions,
       running,
       publish: progress => server?.broadcast('worktrees.progress', [progress]),
-      changed: main => server?.broadcast('worktrees.change', [main]),
+      changed: main => {
+        forgetMarks()
+        server?.broadcast('worktrees.change', [main])
+      },
     }
     const intents = createIntents(ops)
     ctx.on('turn.prompt', intents.apply)

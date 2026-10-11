@@ -17,7 +17,7 @@ export const filesPage = (ctx: Context<'threads' | 'fileIndex'>): PalettePage =>
       const files = await listed
       return matching(files, query, true)
         .slice(0, 50)
-        .map(index => files[index]!)
+        .flatMap(index => files[index] ?? [])
         .map(path => ({
           id: `file:${path}`,
           icon: 'file',

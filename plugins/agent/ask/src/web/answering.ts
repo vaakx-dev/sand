@@ -1,7 +1,8 @@
 import type { Composer, ComposerCapture } from '@sand/composer-card/contract'
 import type { AskAnswer } from '../contract'
+import { effect, onTimeout, sig } from '@sand/dom'
 import type { Context } from 'drydock'
-import { choicesOf } from '../choices'
+import { choicesOf } from '../reply'
 import { askBanner } from './banner/panel'
 import type { PendingAsk } from './pending'
 import { createState, type AskState } from './state'
@@ -24,7 +25,7 @@ const digit = (event: KeyboardEvent) => !event.altKey && !event.ctrlKey && !even
 
 export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAsk) => {
   const state = createState(ask.questions)
-  let live = true
+  const pickedAt = sig<number | undefined>(undefined)
 
   const send = async (answers: AskAnswer[] | null) => {
     if (state.sending.get()) return
@@ -32,7 +33,7 @@ export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAs
     try {
       await ctx.wire.call({ type: 'ask.answer', session: ask.thread, call: ask.call, answers })
     } finally {
-      if (live) state.sending.set(false)
+      state.sending.set(false)
     }
   }
 
@@ -43,12 +44,20 @@ export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAs
     if (composer.value() !== text) composer.set(text)
   }
 
+  effect(() => {
+    const at = pickedAt.get()
+    if (at === undefined) return
+    onTimeout(() => {
+      pickedAt.set(undefined)
+      if (state.current.get() === at) go(at + 1)
+    }, advanceDelay)
+  })
+
   const pick = (index: number) => {
     const at = state.current.get()
     state.pick(index)
     if (composer.value()) composer.set('')
-    if (state.question.get().type === 'multi' || state.finishing.get()) return
-    setTimeout(() => live && state.current.get() === at && go(at + 1), advanceDelay)
+    if (state.question.get().type !== 'multi' && !state.finishing.get()) pickedAt.set(at)
   }
 
   const actions: AskActions = { go, pick, move: state.move, skip: () => void send(null) }
@@ -77,8 +86,5 @@ export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAs
   }
 
   const disposers = [composer.slot('banner', () => askBanner(state, actions), 10), composer.capture(capture)]
-  return () => {
-    live = false
-    disposers.forEach(dispose => void dispose())
-  }
+  return () => disposers.forEach(dispose => void dispose())
 }

@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@sand/loops": "workspace:*",
-    "@sand/messages": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

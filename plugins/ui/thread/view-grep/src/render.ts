@@ -1,7 +1,6 @@
-import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, el, fold, span, type Child } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { grouped, plural } from '@sand/kit'
 
 const shownRows = 200
 const match = /^(.*?):(\d+): (.*)$/
@@ -20,31 +19,32 @@ const marked = (text: string, pattern: RegExp | undefined): Child[] => {
 
 const regex = (tool: ToolView, { field }: ToolViews) => {
   try {
-    return new RegExp(field(tool.call.input, 'pattern'), (tool.call.input as { ignore_case?: boolean })?.ignore_case ? 'gi' : 'g')
+    return new RegExp(field(tool.call.input, 'pattern'), field(tool.call.input, 'ignore_case') === 'true' ? 'gi' : 'g')
   } catch {
     return undefined
   }
 }
 
-const allRows = (tool: ToolView, { resultText }: ToolViews) => resultText(tool.result).split('\n').filter(Boolean)
+const output = (tool: ToolView, { resultText }: ToolViews) => {
+  const all = resultText(tool.result).split('\n').filter(Boolean)
+  return { rows: all.filter(row => !row.startsWith('…')), stop: all.find(row => row.startsWith('…')) }
+}
 
-const rows = (tool: ToolView, views: ToolViews) => allRows(tool, views).filter(row => !row.startsWith('…'))
+const hitRow = (line: string, text: string, pattern: RegExp | undefined) =>
+  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, line), span({ class: 'wrap-anywhere' }, marked(text, pattern)))
 
-const stopRow = (tool: ToolView, views: ToolViews) => allRows(tool, views).find(row => row.startsWith('…'))
-
-const grouped = (tool: ToolView, views: ToolViews) => {
+const matches = (tool: ToolView, views: ToolViews) => {
   const pattern = regex(tool, views)
   const files = new Map<string, HTMLElement[]>()
   const loose: HTMLElement[] = []
-  for (const row of rows(tool, views).slice(0, shownRows)) {
+  for (const row of output(tool, views).rows.slice(0, shownRows)) {
     const found = match.exec(row)
     if (!found) {
       loose.push(div({ class: 'mt-2 text-neutral-500 wrap-anywhere' }, row))
       continue
     }
-    const list = files.get(found[1]!) ?? []
-    list.push(div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, found[2]!), span({ class: 'wrap-anywhere' }, marked(found[3]!, pattern))))
-    files.set(found[1]!, list)
+    const [, file = '', line = '', text = ''] = found
+    grouped(files, file, () => []).push(hitRow(line, text, pattern))
   }
   return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-300 wrap-anywhere' }, file), hits)), ...loose]
 }
@@ -52,11 +52,10 @@ const grouped = (tool: ToolView, views: ToolViews) => {
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
 
 const box = (tool: ToolView, content: Child, views: ToolViews) => {
-  const text = views.resultText(tool.result)
-  const hidden = rows(tool, views).length - shownRows
-  const stop = stopRow(tool, views)
+  const { rows, stop } = output(tool, views)
+  const hidden = rows.length - shownRows
   return div(
-    fold({ lines: Math.min(rows(tool, views).length, shownRows), copy: () => text }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
+    fold({ lines: Math.min(rows.length, shownRows), copy: () => views.resultText(tool.result) }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
     hidden > 0 && views.truncatedNote(hidden, 'after'),
     stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
   )
@@ -80,11 +79,11 @@ export const grepRenderer = (views: ToolViews): ToolRenderer => ({
   meta(tool) {
     if (!tool.result || tool.result.isError) return ''
     if (empty(tool, views)) return 'no matches'
-    const count = rows(tool, views).filter(row => match.test(row)).length
+    const count = output(tool, views).rows.filter(row => match.test(row)).length
     return count === 1 ? '1 match' : `${count} matches`
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => grouped(tool, views), views),
+  body: tool => body(tool, () => matches(tool, views), views),
 })
 
 export const globRenderer = (views: ToolViews): ToolRenderer => ({
@@ -95,9 +94,8 @@ export const globRenderer = (views: ToolViews): ToolRenderer => ({
   meta(tool) {
     if (!tool.result || tool.result.isError) return ''
     if (empty(tool, views)) return 'no files'
-    const count = rows(tool, views).filter(row => !row.startsWith('…')).length
-    return plural(count, 'file')
+    return plural(output(tool, views).rows.length, 'file')
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, rows(tool, views).slice(0, shownRows).join('\n')), views),
+  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), views),
 })

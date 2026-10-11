@@ -1,11 +1,10 @@
+import type { WireHandlers } from '@sand/protocol'
 import { existsSync } from 'node:fs'
 import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
-import type { CoreHandlers } from './registry'
-import { openSession } from './open'
 
-export const sessionRequests = (ctx: ServerContext): CoreHandlers => {
-  const session = (id: string) => openSession(ctx, id)
+export const sessionRequests = (ctx: ServerContext): WireHandlers => {
+  const session = (id: string) => ctx.sessions.require(id)
   return {
     'sessions.list': () => ctx.sessions.list(),
     'sessions.create': request => {
@@ -32,5 +31,7 @@ export const sessionRequests = (ctx: ServerContext): CoreHandlers => {
       session(request.session).rename(request.title, request.named)
       return true
     },
+    'loop.run': request => ctx.loop.run(session(request.session), request.prompt),
+    'loop.interrupt': request => ctx.loop.interrupt(session(request.session)),
   }
 }

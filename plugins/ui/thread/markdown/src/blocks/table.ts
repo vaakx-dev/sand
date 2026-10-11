@@ -1,5 +1,5 @@
 import { inline } from '../inline'
-import { tableBlock, tableCell, tableRow, type Align } from '../nodes'
+import { tableBlock, tableCell, type Align } from '../nodes'
 import type { Refs } from './refs'
 
 const delimiterRow = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/
@@ -46,12 +46,12 @@ const alignment = (cell: string): Align | undefined => {
 }
 
 const row = (cells: string[], aligns: (Align | undefined)[], head: boolean, refs: Refs) =>
-  tableRow(aligns.map((align, index) => tableCell(head, align, inline(cells[index] ?? '', refs))))
+  aligns.map((align, index) => tableCell(head, align, inline(cells[index] ?? '', refs)))
 
 export const parseTable = (lines: string[], start: number, refs: Refs) => {
   const aligns = splitRow(lines[start + 1]!).map(alignment)
   const head = row(splitRow(lines[start]!), aligns, true, refs)
-  const rows: HTMLElement[] = []
+  const rows: HTMLElement[][] = []
   let index = start + 2
   while (index < lines.length && lines[index]!.trim() && lines[index]!.includes('|')) rows.push(row(splitRow(lines[index++]!), aligns, false, refs))
   return { node: tableBlock(head, rows), next: index }

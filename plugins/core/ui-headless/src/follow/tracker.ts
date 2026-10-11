@@ -53,5 +53,3 @@ export const createTracker = (root: () => string | undefined) => {
     },
   }
 }
-
-export type Tracker = ReturnType<typeof createTracker>

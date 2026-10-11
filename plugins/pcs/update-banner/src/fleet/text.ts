@@ -1,10 +1,9 @@
 import type { ReleaseInfo, UpdateChannel, UpdatePhase } from '@sand/host-updates/contract'
 import type { Tone } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { BuildInfo } from '@sand/protocol'
 import type { RunStatus } from './run'
 import { isFar, type PcStatus } from './status'
-
-export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export const channelNames: Record<UpdateChannel, string> = { release: 'Releases', nightly: 'Nightly', dev: 'Dev' }
 
@@ -14,7 +13,7 @@ export const versionText = (build: BuildInfo | undefined, target: ReleaseInfo | 
   return build.commit ? build.commit.slice(0, 7) : `build ${build.id.slice(0, 6)}`
 }
 
-export const phaseText = (phase: UpdatePhase, running = 0) => {
+const phaseText = (phase: UpdatePhase, running = 0) => {
   switch (phase) {
     case 'downloading':
       return 'Downloading from GitHub…'

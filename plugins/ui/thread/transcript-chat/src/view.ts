@@ -1,70 +1,67 @@
-import { collectScope, disposeAll, div, dockFade, list, sig, untrack, type Disposer, type Sig } from '@sand/dom'
-import type { Row } from './rows'
+import { div, dockFade, list, sig, untrack, type Sig } from '@sand/dom'
+import type { Row } from './rows/row'
 
 export interface ThreadView {
-  column: HTMLElement
+  id: string
   rows: Sig<Row[]>
+  rowList: HTMLElement
   visible: Sig<boolean>
+  animate: boolean
   scroll: number | undefined
   first: string | undefined
   truncated: boolean
   size: number
-  painted: { done: boolean }
-  scope: Disposer[]
 }
 
 const kept = 6
 
-const build = () =>
-  collectScope(() => {
-    const rows = sig<Row[]>([])
-    const visible = sig(false)
-    const painted = { done: false }
-    const rowNode = (row: Sig<Row>) => {
-      const node = untrack(() => row.get()).view(row.map(value => value.data))
-      return painted.done ? div({ class: 'animate-fade' }, node) : node
-    }
-    const column = div(
-      { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', hidden: visible.map(value => !value) },
-      list(rows, row => row.key, rowNode, div({ class: 'pb-6' })),
-      dockFade(),
-    )
-    return { column, rows, visible, painted }
-  })
+const threadView = (id: string): ThreadView => ({
+  id,
+  rows: sig<Row[]>([]),
+  rowList: div({ class: 'pb-6' }),
+  visible: sig(false),
+  animate: false,
+  scroll: undefined,
+  first: undefined,
+  truncated: false,
+  size: 0,
+})
 
-export class Views {
-  private views = new Map<string, ThreadView>()
+const rowNode = (view: ThreadView, row: Sig<Row>) => {
+  const node = untrack(() => row.get()).view(row.map(value => value.data))
+  return view.animate ? div({ class: 'animate-fade' }, node) : node
+}
 
-  constructor(private parent: HTMLElement) {}
+const column = (view: ThreadView) =>
+  div(
+    { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', hidden: view.visible.map(value => !value) },
+    list(view.rows, row => row.key, row => rowNode(view, row), view.rowList),
+    dockFade(),
+  )
 
-  get(id: string) {
-    const view = this.views.get(id) ?? this.create()
-    this.views.delete(id)
-    this.views.set(id, view)
-    while (this.views.size > kept) this.drop(this.views.keys().next().value!)
+export const threadViews = () => {
+  const recent = new Map<string, ThreadView>()
+  const mounted = sig<ThreadView[]>([])
+
+  const drop = (id: string) => {
+    recent.delete(id)
+    mounted.update(views => views.filter(view => view.id !== id))
+  }
+
+  const get = (id: string) => {
+    const view = recent.get(id) ?? threadView(id)
+    if (!recent.has(id)) mounted.update(views => [...views, view])
+    recent.delete(id)
+    recent.set(id, view)
+    for (const old of [...recent.keys()].slice(0, -kept)) drop(old)
     return view
   }
 
-  ids() {
-    return [...this.views.keys()]
-  }
+  const node = list(
+    mounted,
+    view => view.id,
+    view => column(untrack(() => view.get())),
+  )
 
-  drop(id: string) {
-    const view = this.views.get(id)
-    if (!view) return
-    view.column.remove()
-    disposeAll(view.scope)
-    this.views.delete(id)
-  }
-
-  clear() {
-    for (const id of this.ids()) this.drop(id)
-  }
-
-  private create(): ThreadView {
-    const { value, scope } = build()
-    const view = { ...value, scope, scroll: undefined, first: undefined, truncated: false, size: 0 }
-    this.parent.append(view.column)
-    return view
-  }
+  return { node, get, drop, ids: () => [...recent.keys()] }
 }

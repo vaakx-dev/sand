@@ -12,6 +12,7 @@
     "summary": "/usage, and the totals behind the usage page and sand usage",
     "uses": {
       "server": "the page and sand usage get no totals",
+      "sessions": "the usage page cannot count tokens or cost",
       "llm": "no plan limits"
     }
   },

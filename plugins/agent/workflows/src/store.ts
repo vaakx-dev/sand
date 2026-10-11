@@ -1,3 +1,4 @@
+import { serial } from '@sand/kit'
 import { join } from 'node:path'
 
 export interface Run {
@@ -12,10 +13,9 @@ export interface Run {
 const open = async (dir: string, id: string, script: string, args: unknown): Promise<Run> => {
   const cacheFile = Bun.file(join(dir, 'cache.json'))
   const results: Record<string, unknown> = (await cacheFile.exists()) ? await cacheFile.json() : {}
-  let saving = Promise.resolve()
-  const save = () => {
-    saving = saving.then(() => Bun.write(cacheFile, JSON.stringify(results, null, 2)).then(() => undefined))
-    return saving
+  const queue = serial()
+  const save = async () => {
+    await queue(() => Bun.write(cacheFile, JSON.stringify(results, null, 2)))
   }
   return { id, dir, script, args, results, save }
 }

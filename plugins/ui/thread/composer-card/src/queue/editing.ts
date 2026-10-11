@@ -1,15 +1,23 @@
+import type { UserContent } from '@sand/messages'
 import type { Pending } from '@sand/steering/contract'
 import { effect, sig, untrack, type Pulse, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { split } from '../attachments/content'
 import { contentsOf, type Attached, type Files } from '../attachments/files'
 import type { Saved } from '../drafts/store'
-import { inlineFiles } from './inline'
 
 interface Origin {
   thread?: string
   text: string
   items: Attached[]
+}
+
+const same = (left: UserContent[], right: UserContent[]) => left.length === right.length && left.every((item, index) => item === right[index])
+
+const inlineFiles = async (ctx: Context<'threads'>, files: Files, items: UserContent[], current: () => boolean) => {
+  if (!ctx.media || !items.length) return
+  const inlined = await ctx.media.inline(items, ctx.threads.current()?.id).catch(() => items)
+  if (current() && same(files.contents(), items) && !same(inlined, items)) files.set(inlined)
 }
 
 export const createEditing = (ctx: Context<'threads' | 'turns'>, text: Sig<string>, files: Files, changes: Pulse) => {

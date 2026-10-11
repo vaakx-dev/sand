@@ -2,10 +2,8 @@ import { definePlugin } from 'drydock'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { discover } from './discover'
+import { userPlugins } from './discover'
 import { loadModes } from './modes'
-import { mounter } from './mount'
-import { splitOverrides } from './overrides'
 import { entries, locate } from './plugins'
 import { readConfig } from './read'
 
@@ -25,12 +23,17 @@ export default definePlugin({
     if (!setup) throw new Error(`No plugin set for mode "${ctx.cli.mode}" in ${config.modes_file}`)
     const safe = ctx.cli.safe
     const user = setup.user ?? true
-    const settings = safe ? undefined : await readConfig([global])
+    const settings = safe ? undefined : await readConfig(global)
     const folders = safe || !user ? [] : [join(ctx.cli.home, 'plugins')]
-    const found = await Promise.all(folders.map(discover))
-    const { overrides, others } = splitOverrides(found.flat(), config.resolve_from)
-    const mount = mounter(ctx, id => overrides.get(id) ?? locate(id, config.resolve_from, config.plugins_dir))
+    const { overrides, others } = await userPlugins(folders, config.resolve_from)
+    const pathOf = (id: string) => overrides.get(id) ?? locate(id, config.resolve_from, config.plugins_dir)
 
-    for (const [id, options] of entries([...setup.plugins, ...others], settings?.plugins, user)) mount(id, options)
+    for (const [id, options] of entries([...setup.plugins, ...others], settings?.plugins, user)) {
+      try {
+        ctx.load(pathOf(id), options)
+      } catch (error) {
+        ctx.report(error)
+      }
+    }
   },
 })

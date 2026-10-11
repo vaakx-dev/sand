@@ -1,6 +1,7 @@
 import type { PalettePage } from '../contract'
-import { div, dynamicChild, errorMessage, overlay, sheet, type Sig } from '@sand/dom'
+import { dynamicChild, overlay, sheet, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
+import { reportFailure } from '../failure'
 import type { PageMemory, PageNav } from './nav'
 import { pageView } from './page'
 
@@ -26,10 +27,7 @@ export const paletteSheet = (ctx: Context, stack: Sig<PalettePage[]>, query: () 
     },
     close,
     dismiss,
-    fail(error) {
-      if (ctx.notify) ctx.notify.push(errorMessage(error), { level: 'error' })
-      else console.error(error)
-    },
+    fail: error => reportFailure(ctx, error),
     isTop: page => top() === page,
     hold(page) {
       held.add(page)
@@ -44,7 +42,7 @@ export const paletteSheet = (ctx: Context, stack: Sig<PalettePage[]>, query: () 
   let opening = true
   const view = (pages: PalettePage[]) => {
     const page = pages.at(-1)
-    if (!page) return div()
+    if (!page) return null
     const initial = opening ? query() : ''
     opening = false
     return pageView(page, nav, initial)

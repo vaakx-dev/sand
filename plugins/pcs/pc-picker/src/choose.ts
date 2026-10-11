@@ -2,7 +2,7 @@ import { errorMessage } from '@sand/dom'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
 import { newerSource } from './status'
-import { deviceOf, refOf, type PickerContext } from './target'
+import { refOf, type PickerContext } from './target'
 
 const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machine, location: ProjectEntry) => {
   const source = newerSource(ctx, group, location)
@@ -21,7 +21,7 @@ const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machi
 
 export const choosePc = async (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
   if (!machine.online) return
-  const device = deviceOf(machine)
+  const { device } = machine
   const location = copyOn(group, device)
   if (!location) {
     if (ctx.syncFlows) return ctx.syncFlows.copy(group, device)

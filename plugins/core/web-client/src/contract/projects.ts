@@ -26,7 +26,10 @@ export interface Projects {
   groups(options?: { hidden?: boolean }): ProjectGroup[]
   get(id: string): ProjectGroup | undefined
   group(path: string, device?: string): ProjectGroup | undefined
+  name(path: string, device?: string): string
+  quick(path: string, device?: string): boolean
   icon(path: string, device?: string): string | undefined
+  groupIcon(group: ProjectGroup): string | undefined
   place(device?: string): ProjectPlace
   browse(path: string, device?: string): Promise<FolderListing>
   mkdir(path: string, device?: string): Promise<void>

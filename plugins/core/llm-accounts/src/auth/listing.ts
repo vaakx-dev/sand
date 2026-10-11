@@ -9,7 +9,7 @@ export interface Status {
   error?: string
 }
 
-export interface FixedState {
+interface FixedState {
   credential?: Credential
   fromEnv: boolean
   shared: boolean

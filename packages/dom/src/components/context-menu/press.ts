@@ -15,6 +15,8 @@ const keyboardPoint = (node: HTMLElement) => {
   return { x: box.left + 16, y: box.bottom - 4 }
 }
 
+const pointOf = (event: MouseEvent, node: HTMLElement) => (event.clientX || event.clientY ? { x: event.clientX, y: event.clientY } : keyboardPoint(node))
+
 export const pressMenu = (open: (at: PressAt) => void) => {
   let start: { x: number; y: number; node: HTMLElement } | undefined
   let stopTimer: (() => void) | undefined
@@ -40,9 +42,10 @@ export const pressMenu = (open: (at: PressAt) => void) => {
       onPointerDown(event: PointerEvent) {
         held = false
         cancel()
-        if (event.pointerType !== 'touch') return
-        start = { x: event.clientX, y: event.clientY, node: event.currentTarget as HTMLElement }
-        stopTimer = onTimeout(hold, holdMs)
+        const node = event.currentTarget
+        if (event.pointerType !== 'touch' || !(node instanceof HTMLElement)) return
+        start = { x: event.clientX, y: event.clientY, node }
+        stopTimer = onTimeout(hold, holdMs, node)
       },
       onPointerMove(event: PointerEvent) {
         if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > slop) cancel()
@@ -52,10 +55,9 @@ export const pressMenu = (open: (at: PressAt) => void) => {
       onContextMenu(event: MouseEvent) {
         event.preventDefault()
         if (start) return hold()
-        if (held) return
-        const node = event.currentTarget as HTMLElement
-        const point = event.clientX || event.clientY ? { x: event.clientX, y: event.clientY } : keyboardPoint(node)
-        open({ ...point, touch: false, from: node })
+        const node = event.currentTarget
+        if (held || !(node instanceof HTMLElement)) return
+        open({ ...pointOf(event, node), touch: false, from: node })
       },
     },
     held() {

@@ -1,14 +1,7 @@
 import type { PairBack, PairedDevice } from '@sand/host-devices/contract'
-import type { DeviceInfo } from '@sand/protocol'
+import type { DeviceInfo, Remote } from '@sand/protocol'
 
-export interface Remote extends DeviceInfo {
-  url: string
-  urls: string[]
-}
-
-export interface RemoteRecord extends Remote {
-  key: string
-}
+export type { Remote, RemoteRecord } from '@sand/protocol'
 
 export interface RemoteInvite {
   secret: string

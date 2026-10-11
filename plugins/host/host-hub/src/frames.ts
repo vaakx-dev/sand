@@ -1,4 +1,4 @@
-export type RuntimeFrame = { type: 'result'; id: number } | { type: 'event'; name: string }
+type RuntimeFrame = { type: 'result'; id: number } | { type: 'event'; name: string }
 
 const resultHead = /^\{"type":"result","id":(-?\d+)[,}]/
 const eventHead = /^\{"type":"event","name":"([^"\\]+)"/
@@ -16,6 +16,6 @@ export const peek = (raw: string): RuntimeFrame | undefined => {
   const result = resultHead.exec(raw)
   if (result) return { type: 'result', id: Number(result[1]) }
   const event = eventHead.exec(raw)
-  if (event) return { type: 'event', name: event[1] as string }
+  if (event) return { type: 'event', name: event[1]! }
   return parsed(raw)
 }

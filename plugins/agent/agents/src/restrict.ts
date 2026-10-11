@@ -1,7 +1,7 @@
 import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { Meta } from './meta'
-import { describeAgents } from './tool'
+import { describeAgents } from './catalog'
 
 const recursive = new Set(['agent', 'workflow'])
 

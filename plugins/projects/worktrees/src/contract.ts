@@ -29,11 +29,9 @@ export interface WorktreeMark {
   main: string
 }
 
-export type StepState = 'wait' | 'run' | 'ok' | 'fail'
-
 export interface SetupStep {
   label: string
-  state: StepState
+  state: 'wait' | 'run' | 'ok' | 'fail'
   started?: number
   ms?: number
 }
@@ -68,9 +66,9 @@ export interface RemovedEntry {
   pr?: number
 }
 
-export type HoldReason = 'off' | 'local' | 'running' | 'branch' | 'changed' | 'unpushed'
-
-export type SettleResult = { settled: true; removed: RemovedEntry } | { settled: false; reason: HoldReason; changed?: number; ahead?: number }
+export type SettleResult =
+  | { settled: true; removed: RemovedEntry }
+  | { settled: false; reason: 'off' | 'local' | 'running' | 'branch' | 'changed' | 'unpushed'; changed?: number; ahead?: number }
 
 export const removedType = 'worktree-removed'
 

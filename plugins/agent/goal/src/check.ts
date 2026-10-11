@@ -1,3 +1,4 @@
+import { isRecord, textOf } from '@sand/kit'
 import type { LLM, LLMRequest, SourceRef } from '@sand/llm-accounts/contract'
 import type { Message, Usage } from '@sand/messages'
 
@@ -18,14 +19,12 @@ It is met only if its end state holds now. Progress doesn't count, and neither d
 
 Don't call tools. Reply with only JSON: {"met": true or false, "reason": "one or two sentences"}`
 
-const textOf = (message?: Message) => message?.content.flatMap(block => (block.type === 'text' ? [block.text] : [])).join('\n') ?? ''
-
 const parse = (text: string) => {
   const json = /\{[\s\S]*\}/.exec(text)?.[0]
   if (!json) return undefined
   try {
-    const value = JSON.parse(json) as { met?: unknown; reason?: unknown }
-    return typeof value.met === 'boolean' ? { met: value.met, reason: String(value.reason ?? '').trim() } : undefined
+    const value: unknown = JSON.parse(json)
+    return isRecord(value) && typeof value.met === 'boolean' ? { met: value.met, reason: String(value.reason ?? '').trim() } : undefined
   } catch {
     return undefined
   }
@@ -39,6 +38,6 @@ export const check = async (llm: LLM, request: LLMRequest, objective: string, si
   for await (const event of llm.stream({ ...request, messages: [...request.messages, ask] }, signal)) {
     if (event.type === 'done') ({ message: reply, usage, source } = event)
   }
-  const verdict = parse(textOf(reply)) ?? { met: false, reason: 'The check gave no clear verdict; show evidence that the goal holds.' }
+  const verdict = parse(reply ? textOf(reply.content) : '') ?? { met: false, reason: 'The check gave no clear verdict; show evidence that the goal holds.' }
   return { ...verdict, reason: verdict.reason || (verdict.met ? 'The goal holds.' : 'The goal does not hold yet.'), usage, source }
 }

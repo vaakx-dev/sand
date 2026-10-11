@@ -1,6 +1,5 @@
 import type { ImageBlock } from '@sand/messages'
-import type { ToolRenderer, ToolView } from '@sand/transcript-chat/contract'
-import type { ToolViews } from '@sand/transcript-parts/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
 import { div, el } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { consoleHeading } from '../output'
