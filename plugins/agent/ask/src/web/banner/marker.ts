@@ -7,7 +7,7 @@ export const marker = (round: boolean, label: string, on: () => boolean) => {
       class: [
         'inline-flex h-5 w-5 shrink-0 items-center justify-center font-mono text-xs ring-1 transition-colors',
         round ? 'rounded-full' : 'rounded-md',
-        () => (checked.get() ? 'bg-accent-500 text-white ring-accent-500' : 'text-neutral-500 ring-neutral-600'),
+        () => (checked.get() ? 'bg-accent-500 text-neutral-950 ring-accent-500' : 'text-neutral-500 ring-neutral-600'),
       ],
     },
     dynamicChild(checked, value => (value ? span({ class: 'inline-flex' }, icon('check', 12)) : span(label))),

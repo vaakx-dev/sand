@@ -20,7 +20,7 @@ const tone = (look: Look) => {
   if (look === 'busy') return 'cursor-default bg-neutral-700 text-neutral-500'
   if (look === 'off') return 'cursor-default bg-accent-950 text-accent-400'
   if (look === 'stop') return 'bg-danger-500 text-white hover:bg-danger-600'
-  return 'bg-accent-500 text-white hover:bg-accent-600'
+  return 'bg-accent-500 text-neutral-950 hover:bg-accent-600'
 }
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {

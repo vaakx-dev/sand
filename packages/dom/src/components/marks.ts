@@ -57,7 +57,7 @@ export const checkMark = (on: () => boolean, extra?: ClassValue) =>
     {
       class: [
         'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors',
-        () => (on() ? 'bg-accent-500 text-white' : 'text-transparent ring-1 ring-neutral-600'),
+        () => (on() ? 'bg-accent-500 text-neutral-950' : 'text-transparent ring-1 ring-neutral-600'),
         extra,
       ],
     },
