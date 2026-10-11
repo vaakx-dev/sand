@@ -75,7 +75,7 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready
-      if (accounts.signedIn('claude')) await claude.probe()
+      if (accounts.signedIn('claude')) await claude.checkLimits()
       return ownLimits()
     },
   }
