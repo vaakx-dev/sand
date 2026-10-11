@@ -1,5 +1,6 @@
 import { codeBlock } from '../code/block'
 import { inline } from '../inline'
+import { displayMath, mathBlock } from '../math/block'
 import { blockquote, heading, paragraph, thematicBreak } from '../nodes'
 import { parseList } from './list'
 import type { Refs } from './refs'
@@ -26,7 +27,9 @@ const fenced: Parser = (lines, start) => {
     const line = lines[index++]!
     body.push(line.slice(Math.min(indent.length, indentOf(line))))
   }
-  return { node: codeBlock(body.join('\n'), open[3] ?? ''), next: index + 1 }
+  const code = body.join('\n')
+  const language = open[3] ?? ''
+  return { node: language === 'math' ? displayMath(code) : codeBlock(code, language), next: index + 1 }
 }
 
 const atxHeading: Parser = (lines, start, refs) => {
@@ -81,7 +84,7 @@ const plain: Parser = (lines, start, refs) => {
   return { node: paragraph(inline(body.join('\n').trimEnd(), refs)), next: index }
 }
 
-const parsers: Parser[] = [fenced, atxHeading, ruled, table, list, quoted, indentedCode, plain]
+const parsers: Parser[] = [fenced, mathBlock, atxHeading, ruled, table, list, quoted, indentedCode, plain]
 
 export interface Span {
   node: Node
