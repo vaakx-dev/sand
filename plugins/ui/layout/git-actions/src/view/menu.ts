@@ -38,7 +38,7 @@ const placeEntries = (git: GitStatus | undefined, worktrees: Worktrees | undefin
     {
       label: 'Regenerate name',
       glyph: 'sparkles',
-      note: 'New branch and folder name from the task',
+      note: 'New branch name from the task',
       blocked: pr || git.upstream ? 'The branch is pushed, so it keeps its name' : undefined,
       run: () => worktrees.rename(),
     },

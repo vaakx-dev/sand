@@ -10,7 +10,7 @@ import { serveWorktrees } from './serve'
 
 export default definePlugin({
   name: 'worktrees',
-  description: 'Starts threads in git worktrees, moves threads into them, names their branch and folder from the task, sets them up and removes them once their PR is merged',
+  description: 'Starts threads in git worktrees, moves threads into them, names their branch from the task, sets them up and removes them once their PR is merged',
   inject: ['sessions'],
   config: configSchema,
   uses: {
@@ -35,7 +35,7 @@ export default definePlugin({
     const intents = createIntents(ops)
     ctx.on('turn.prompt', intents.apply)
     const naming = createNaming(ops, () => ctx.names)
-    ctx.on('turn.end', session => void naming.settle(session))
+    ctx.on('turn.start', session => void naming.start(session).catch(() => {}))
     ctx.watch('server', found => {
       server = found
       if (!found) return

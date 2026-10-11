@@ -36,7 +36,7 @@ export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: Worktr
       label: 'Regenerate name',
       icon: 'sparkles',
       group: 'name',
-      run: () => client.nameAt(entry.path, undefined, device).catch(fail('rename the worktree')),
+      run: () => client.nameAt(entry.path, undefined, device).catch(fail('rename the branch')),
     },
     { id: 'copy-path', label: 'Copy path', icon: 'folder', group: 'copy', run: copy(entry.path, 'path') },
     !!branch && { id: 'copy-branch', label: 'Copy branch name', icon: 'copy', group: 'copy', run: copy(branch, 'branch name') },

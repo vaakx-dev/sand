@@ -23,7 +23,7 @@ export const idle = (ops: Ops, id: string) => {
 
 export const sessionsIn = (ops: Ops, root: string) => ops.sessions.list().filter(summary => isWithin(summary.cwd, root))
 
-export const busyIn = (ops: Ops, root: string) => sessionsIn(ops, root).some(summary => ops.running.has(summary.id))
+const busyIn = (ops: Ops, root: string) => sessionsIn(ops, root).some(summary => ops.running.has(summary.id))
 
 export const idleIn = (ops: Ops, root: string) => {
   if (busyIn(ops, root)) throw new Error('A thread is working there. Wait for its turn to finish')
