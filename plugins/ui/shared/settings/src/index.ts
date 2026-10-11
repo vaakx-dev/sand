@@ -1,5 +1,5 @@
 import type { Settings } from './contract'
-import { closeDrawer, icon, layer, mount, pulse, secondaryAction } from '@sand/dom'
+import { icon, layer, mount, pulse, secondaryAction } from '@sand/dom'
 import { definePlugin, type Dispose } from 'drydock'
 import { showPage } from './address'
 import { cover } from './cover'
@@ -26,10 +26,7 @@ export default definePlugin({
       uncover = undefined
     }
 
-    const choose = (id: string) => {
-      settings.open(id)
-      closeDrawer(ctx)
-    }
+    const choose = (id: string) => settings.open(id)
     const close = () => settings.close()
     const showPages = () => ctx.layout?.toggle('side', true)
 
