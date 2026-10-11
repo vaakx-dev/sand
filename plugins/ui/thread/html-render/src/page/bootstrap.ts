@@ -1,4 +1,3 @@
-import { swipeRelay } from '@sand/dom/swipe-relay'
 import { openLink, sizeChanged } from './protocol'
 import { themeVariables } from './tokens'
 
@@ -46,5 +45,4 @@ export const bootstrap = [
   `<style>${rootRule}</style>`,
   `<style>${baseCss}</style>`,
   `<script>${script}</script>`,
-  `<script>${swipeRelay}</script>`,
 ].join('')
