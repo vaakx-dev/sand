@@ -46,11 +46,11 @@ const defineAgent = (ctx: Context, agents: Agents, names: string[], choice: Agen
 
 export default definePlugin({
   name: 'browser-tools',
-  description: 'browser_* tools in an on-demand tool group, and a browser sub-agent that uses them on a small model',
+  description: 'browser_* tools in an on-demand tool group, and a browser sub-agent that uses them',
   inject: ['tools', 'browser', 'sessions'],
   uses: { agents: 'there is no browser sub-agent; the main agent finds the browser tools itself' },
   config: z.object({
-    model: z.string().default('haiku'),
+    model: z.string().optional(),
     effort: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).default('low'),
   }),
   apply(ctx, config) {

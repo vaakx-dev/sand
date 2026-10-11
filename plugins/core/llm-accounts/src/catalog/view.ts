@@ -7,6 +7,8 @@ import type { Entry } from './types'
 
 export type View = ReturnType<typeof viewOf>
 
+const noModel = 'No model chosen. Pick one with /model <name>, or save a default with /model <name> --default.'
+
 const byShown = (a: ModelInfo, b: ModelInfo) => Number(!!a.hidden) - Number(!!b.hidden) || a.label.localeCompare(b.label)
 
 const firstBy = <T>(items: T[], key: (item: T) => string) => {
@@ -34,7 +36,7 @@ export const viewOf = (entries: () => Entry[]) => {
   }
 
   const resolve = (id?: string): ModelInfo | undefined => {
-    if (!id) return index.get().shown[0]
+    if (!id) return undefined
     const found = find(id) ?? index.get().all.find(model => model.name === id)
     if (found) return found
     const parts = split(id)
@@ -46,7 +48,8 @@ export const viewOf = (entries: () => Entry[]) => {
   const missing = (id?: string) => {
     const source = id ? split(id)?.source : undefined
     if (source && isFixed(source)) return signInError(fixedLabels[source])
-    return id && index.get().entries.length ? new Error(`Unknown model "${id}"`) : signInError()
+    if (!index.get().entries.length) return signInError()
+    return id ? new Error(`Unknown model "${id}"`) : new Error(noModel)
   }
 
   return {
