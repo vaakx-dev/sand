@@ -1,0 +1,25 @@
+{
+  "name": "@sand/reply-images",
+  "version": "0.0.0",
+  "description": "Shows the image files a reply links to with markdown, inside the reply",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Reply images",
+    "summary": "Shows images on this PC that a reply links to, right in the reply",
+    "provides": [
+      "replyImages"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

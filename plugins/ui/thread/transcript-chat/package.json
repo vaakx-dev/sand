@@ -17,7 +17,8 @@
       "projects": "the empty state shows the sand logo instead of the project icon",
       "palette": "the empty state does not offer search",
       "notify": "editing and forking messages is not confirmed",
-      "models": "model switches show the raw model id"
+      "models": "model switches show the raw model id",
+      "replyImages": "images on this PC that replies link to show as links"
     }
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "@sand/kit": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/messages": "workspace:*",
+    "@sand/reply-images": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
     "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"

@@ -1,6 +1,6 @@
-import type { Refs } from '../blocks/refs'
 import { inlineMath } from '../math/inline'
 import { inlineCode, lineBreak, type Inline } from '../nodes'
+import type { Scope } from '../scope'
 import { delimiter, resolveEmphasis, type Item } from './emphasis'
 import { decodeEntity } from './entities'
 import { autolinkAt, bracketed } from './links'
@@ -11,7 +11,7 @@ interface Token {
   end: number
 }
 
-type Parser = (source: string, index: number, refs: Refs) => Token | undefined
+type Parser = (source: string, index: number, scope: Scope) => Token | undefined
 
 const lineEnd = / *\n */y
 
@@ -36,8 +36,8 @@ const emphasisRun: Parser = (source, index) => {
   return { item: delimiter(char, end - index, source[index - 1] ?? '', source[end] ?? ''), end }
 }
 
-const bracket: Parser = (source, index, refs) =>
-  source[index] === '[' || source.startsWith('![', index) ? bracketed(source, index, refs, inline) : undefined
+const bracket: Parser = (source, index, scope) =>
+  source[index] === '[' || source.startsWith('![', index) ? bracketed(source, index, scope, inline) : undefined
 
 const autolink: Parser = (source, index) => (source[index] === '<' || source[index] === 'h' ? autolinkAt(source, index) : undefined)
 
@@ -55,19 +55,19 @@ const lineBreakAt: Parser = (source, index) => {
 
 const parsers: Parser[] = [inlineMath, escapedBreak, escaped, codeSpan, emphasisRun, bracket, autolink, entity, lineBreakAt]
 
-const tokenAt = (source: string, index: number, refs: Refs): Token => {
+const tokenAt = (source: string, index: number, scope: Scope): Token => {
   for (const parser of parsers) {
-    const token = parser(source, index, refs)
+    const token = parser(source, index, scope)
     if (token) return token
   }
   return { item: source[index]!, end: index + 1 }
 }
 
-export const inline = (source: string, refs: Refs): Inline[] => {
+export const inline = (source: string, scope: Scope): Inline[] => {
   const items: Item[] = []
   let pending = ''
   for (let index = 0; index < source.length; ) {
-    const { item, end } = tokenAt(source, index, refs)
+    const { item, end } = tokenAt(source, index, scope)
     index = end
     if (typeof item === 'string') {
       pending += item

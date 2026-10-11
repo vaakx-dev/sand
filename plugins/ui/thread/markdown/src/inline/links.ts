@@ -1,8 +1,9 @@
-import { label, type Refs } from '../blocks/refs'
+import { label } from '../blocks/refs'
 import { anchor, blockedLink, type Inline } from '../nodes'
+import type { Scope } from '../scope'
 import { closingBracket, inlineDestination, matchAt } from './syntax'
 
-type Parse = (source: string, refs: Refs) => Inline[]
+type Parse = (source: string, scope: Scope) => Inline[]
 
 const allowed = new Set(['http:', 'https:', 'mailto:'])
 const autolink = /<([a-zA-Z][a-zA-Z\d+.-]{1,31}:[^\s<>]*)>/y
@@ -26,20 +27,25 @@ const link = (href: string, children: Inline[], title?: string): Node => {
 
 const imageLink = (src: string, alt: string, title?: string) => link(src, [`▣ ${alt || 'image'}`], title ?? src)
 
+const picture = (src: string, alt: string, title: string | undefined, scope: Scope) => {
+  const shown = safeUrl(src) ? undefined : scope.image?.(src, alt)
+  return shown ?? imageLink(src, alt, title)
+}
+
 const trimUrl = (url: string) => {
   let trimmed = url.replace(/[?!.,:;*_~'"]+$/, '')
   while (trimmed.endsWith(')') && trimmed.split('(').length < trimmed.split(')').length) trimmed = trimmed.slice(0, -1)
   return trimmed
 }
 
-export const bracketed = (source: string, start: number, refs: Refs, parse: Parse) => {
+export const bracketed = (source: string, start: number, scope: Scope, parse: Parse) => {
   const image = source[start] === '!'
   const open = image ? start + 1 : start
   const close = closingBracket(source, open)
   if (close < 0) return undefined
   const inner = source.slice(open + 1, close)
   const build = (url: string, end: number, title?: string) => ({
-    item: image ? imageLink(url, inner, title) : link(url, parse(inner, refs), title),
+    item: image ? picture(url, inner, title, scope) : link(url, parse(inner, scope), title),
     end,
   })
   if (source[close + 1] === '(') {
@@ -47,7 +53,7 @@ export const bracketed = (source: string, start: number, refs: Refs, parse: Pars
     if (target) return build(target.url, target.end, target.title)
   }
   const named = matchAt(reference, source, close + 1)
-  const found = refs.get(label(named?.[1] || inner))
+  const found = scope.refs.get(label(named?.[1] || inner))
   return found && build(found.url, close + 1 + (named?.[0].length ?? 0), found.title)
 }
 

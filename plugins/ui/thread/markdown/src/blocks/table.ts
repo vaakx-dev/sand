@@ -1,6 +1,6 @@
 import { inline } from '../inline'
 import { tableBlock, tableCell, type Align } from '../nodes'
-import type { Refs } from './refs'
+import type { Scope } from '../scope'
 
 const delimiterRow = /^ {0,3}\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)*\|?\s*$/
 
@@ -45,14 +45,14 @@ const alignment = (cell: string): Align | undefined => {
   return left ? 'left' : undefined
 }
 
-const row = (cells: string[], aligns: (Align | undefined)[], head: boolean, refs: Refs) =>
-  aligns.map((align, index) => tableCell(head, align, inline(cells[index] ?? '', refs)))
+const row = (cells: string[], aligns: (Align | undefined)[], head: boolean, scope: Scope) =>
+  aligns.map((align, index) => tableCell(head, align, inline(cells[index] ?? '', scope)))
 
-export const parseTable = (lines: string[], start: number, refs: Refs) => {
+export const parseTable = (lines: string[], start: number, scope: Scope) => {
   const aligns = splitRow(lines[start + 1]!).map(alignment)
-  const head = row(splitRow(lines[start]!), aligns, true, refs)
+  const head = row(splitRow(lines[start]!), aligns, true, scope)
   const rows: HTMLElement[][] = []
   let index = start + 2
-  while (index < lines.length && lines[index]!.trim() && lines[index]!.includes('|')) rows.push(row(splitRow(lines[index++]!), aligns, false, refs))
+  while (index < lines.length && lines[index]!.trim() && lines[index]!.includes('|')) rows.push(row(splitRow(lines[index++]!), aligns, false, scope))
   return { node: tableBlock(head, rows), next: index }
 }
