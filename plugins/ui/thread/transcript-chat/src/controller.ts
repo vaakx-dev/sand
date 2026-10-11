@@ -89,6 +89,7 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
       thread: thread.id,
       parts,
       markdown: ctx.markdown,
+      images: () => ctx.replyImages?.forReply(thread.id),
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       reply: text => replyActions(ctx, text),

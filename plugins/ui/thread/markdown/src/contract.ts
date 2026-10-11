@@ -4,9 +4,11 @@ export interface SettledMarkdown {
   open: Node[]
 }
 
+export type MarkdownImage = (src: string, alt: string) => Node | undefined
+
 export interface Markdown {
-  nodes(source: string): Node[]
-  settle(source: string): SettledMarkdown | undefined
+  nodes(source: string, image?: MarkdownImage): Node[]
+  settle(source: string, image?: MarkdownImage): SettledMarkdown | undefined
   inline(source: string): (Node | string)[]
   highlight(code: string, language: string): (Node | string)[]
 }

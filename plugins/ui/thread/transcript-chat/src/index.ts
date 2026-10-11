@@ -15,6 +15,7 @@ export default definePlugin({
     palette: 'the empty state does not offer search',
     notify: 'editing and forking messages is not confirmed',
     models: 'model switches show the raw model id',
+    replyImages: 'images on this PC that replies link to show as links',
   },
   apply(ctx) {
     style(ctx, css)

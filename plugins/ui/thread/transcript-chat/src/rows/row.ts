@@ -1,4 +1,4 @@
-import type { Markdown } from '@sand/markdown/contract'
+import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
 import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '@sand/transcript-parts/contract'
 import { chevron, div, plainButton, type Child, type ContextMenu, type NavAction, type Sig } from '@sand/dom'
 
@@ -14,6 +14,7 @@ export interface RowContext {
   thread: string
   parts: TranscriptParts
   markdown: Markdown
+  images(): MarkdownImage | undefined
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
   reply(text: string): NavAction[]
