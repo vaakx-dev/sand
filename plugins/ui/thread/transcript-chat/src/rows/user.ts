@@ -2,7 +2,7 @@ import type { UserPart } from '@sand/messages'
 import type { TextMenu } from '@sand/transcript-parts/contract'
 import { div, icon, quoteButton, span, type Child, type IconName } from '@sand/dom'
 import { oneLine, quoteBlocks } from '@sand/kit'
-import { row, type RowContext, type RowMaker } from './row'
+import { actionRow, row, type RowContext, type RowMaker } from './row'
 
 const chip = (name: string, iconName: IconName, tone: string, iconTone?: string) =>
   span(
@@ -43,21 +43,23 @@ const bubble = (text: string, press: TextMenu, context: RowContext) =>
   )
 
 const message = (...children: Child[]) =>
-  div({ class: 'my-6 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
+  div({ class: 'group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
 export const userRow: RowMaker<'user'> = (item, context) =>
   row(`user:${item.key}`, item, () => {
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
     const { menus } = context.parts
-    const press = menus.text(context.menu, () => ({
+    const spec = () => ({
       title: 'Message',
       subtitle: oneLine(text).slice(0, 80),
       actions: [menus.copy('copy', 'Copy message', () => text, 'message'), ...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))],
-    }))
+    })
+    const press = menus.text(context.menu, spec)
     return message(
       item.steer && div({ class: 'px-1 text-xs text-neutral-500' }, 'steered'),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
+      actionRow('-mt-1', menus.more(context.menu, spec)),
     )
   })

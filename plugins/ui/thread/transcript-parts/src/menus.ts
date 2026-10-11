@@ -1,4 +1,4 @@
-import { copyWithNotice, pressMenu, type ContextMenu, type MenuSpec } from '@sand/dom'
+import { copyWithNotice, icon, iconButton, pressMenu, type ContextMenu, type MenuSpec } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { MenuKit } from './contract'
 import { selectingIn } from './integrations/select'
@@ -23,7 +23,26 @@ const textMenu = (menu: ContextMenu, spec: () => MenuSpec | undefined) => {
   return { props, held: press.held }
 }
 
+const moreButton = (menu: ContextMenu, spec: () => MenuSpec | undefined) =>
+  iconButton(
+    {
+      size: 'sm',
+      title: 'More actions',
+      'aria-label': 'More actions',
+      onClick: (event: MouseEvent) => {
+        const from = event.currentTarget
+        const found = spec()
+        if (!(from instanceof HTMLElement) || !found) return
+        const box = from.getBoundingClientRect()
+        const touch = event instanceof PointerEvent && event.pointerType === 'touch'
+        menu.open({ x: box.left, y: box.bottom, touch, from, ...found })
+      },
+    },
+    icon('more', 14),
+  )
+
 export const menuKit = (ctx: Context): MenuKit => ({
   text: textMenu,
+  more: moreButton,
   copy: (id, label, text, what) => ({ id, label, icon: 'copy', tile: true, run: () => copyWithNotice(ctx.notify, text(), what) }),
 })

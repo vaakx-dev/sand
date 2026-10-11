@@ -104,6 +104,7 @@ export interface TextMenu {
 
 export interface MenuKit {
   text(menu: ContextMenu, spec: () => MenuSpec | undefined): TextMenu
+  more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
   copy(id: string, label: string, text: () => string, what: string): NavAction
 }
 
