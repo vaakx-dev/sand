@@ -1,4 +1,4 @@
-import type { MoveRequest, MoveResult, RenameResult, SettleResult, WorktreeIntent, WorktreeMark, WorktreeState } from '../contract'
+import type { MoveRequest, MoveResult, SettleResult, WorktreeIntent, WorktreeMark, WorktreeState } from '../contract'
 import type { Context } from 'drydock'
 
 export type WebContext = Context<'threads' | 'wire'>
@@ -11,7 +11,7 @@ export const worktreeClient = ({ wire }: WebContext) => ({
   forceRemove: (session: string) => wire.call<SettleResult>({ type: 'worktrees.remove', session, force: true }),
   settle: (session: string, branch: string, pr: number) => wire.call<SettleResult>({ type: 'worktrees.settle', session, branch, pr }),
   restore: (session: string, entry: string) => wire.call<MoveResult>({ type: 'worktrees.restore', session, entry }),
-  rename: (session: string) => wire.call<RenameResult>({ type: 'worktrees.rename', session }),
+  rename: (session: string) => wire.call<void>({ type: 'worktrees.rename', session }),
   nameAt: (path: string, name: string | undefined, device?: string) => wire.call<void>({ type: 'worktrees.name', path, ...(name && { name }) }, device),
   drop: (path: string, device?: string) => wire.call<void>({ type: 'worktrees.drop', path }, device),
 })

@@ -76,10 +76,6 @@ export const unnamedBranch = (session: string) => `sand/new-${session.replace(/[
 
 export const isUnnamed = (branch: string | null | undefined) => Boolean(branch && /^sand\/new-[0-9a-z]{6}$/.test(branch))
 
-export interface RenameResult {
-  later: boolean
-}
-
 export interface Worktrees {
   openMove(): void
   rename(): void
