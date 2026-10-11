@@ -1,0 +1,23 @@
+{
+  "name": "@sand/image-viewer",
+  "version": "0.0.0",
+  "description": "Opens a thread's images full screen to zoom, pan and flip through",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Image viewer",
+    "summary": "Click an image in a thread to see it full screen and flip through the rest",
+    "provides": [
+      "imageViewer"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

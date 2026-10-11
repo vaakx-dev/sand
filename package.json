@@ -47,6 +47,7 @@
       "plugins/ui/shared/*/src/**",
       "plugins/ui/thread/composer-card/src/**",
       "plugins/ui/thread/context-ring/src/**",
+      "plugins/ui/thread/image-viewer/src/**",
       "plugins/ui/thread/markdown/src/**",
       "plugins/ui/thread/model-panel/src/**",
       "plugins/ui/thread/panel-agents/src/**",
