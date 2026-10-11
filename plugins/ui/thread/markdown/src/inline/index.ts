@@ -1,4 +1,5 @@
 import type { Refs } from '../blocks/refs'
+import { inlineMath } from '../math/inline'
 import { inlineCode, lineBreak, type Inline } from '../nodes'
 import { delimiter, resolveEmphasis, type Item } from './emphasis'
 import { decodeEntity } from './entities'
@@ -52,7 +53,7 @@ const lineBreakAt: Parser = (source, index) => {
   return { item: found[0].startsWith('  ') ? lineBreak() : '\n', end: index + found[0].length }
 }
 
-const parsers: Parser[] = [escapedBreak, escaped, codeSpan, emphasisRun, bracket, autolink, entity, lineBreakAt]
+const parsers: Parser[] = [inlineMath, escapedBreak, escaped, codeSpan, emphasisRun, bracket, autolink, entity, lineBreakAt]
 
 const tokenAt = (source: string, index: number, refs: Refs): Token => {
   for (const parser of parsers) {

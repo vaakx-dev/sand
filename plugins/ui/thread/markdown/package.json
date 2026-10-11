@@ -12,10 +12,14 @@
     "summary": "Formats replies with headings, lists, tables, links and highlighted code",
     "provides": [
       "markdown"
-    ]
+    ],
+    "uses": {
+      "math": "formulas show as written"
+    }
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
+    "@sand/math": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }
