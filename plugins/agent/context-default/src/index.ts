@@ -19,7 +19,10 @@ export default definePlugin({
     }
     ctx.provide('instructions', instructions)
     ctx.provide('context', {
-      build: async session => ({ system: await systemPrompt(session), messages: session.messages(), tools: ctx.tools.specs() }),
+      build: async session => {
+        const messages = session.messages()
+        return { system: await systemPrompt(session), messages, tools: ctx.tools.specs(messages) }
+      },
     })
   },
 })

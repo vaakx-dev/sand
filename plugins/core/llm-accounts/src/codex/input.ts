@@ -1,4 +1,5 @@
 import type { Block, Message, ToolResultBlock, UserContent } from '@sand/messages'
+import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
 import { decodeReasoning } from '../reasoning'
 
@@ -20,11 +21,12 @@ const part = (block: UserContent, images: boolean): Item => {
 }
 
 const output = (result: ToolResultBlock, images: boolean) => {
-  if (result.content.every(block => block.type === 'text')) {
-    const text = result.content.map(block => block.text).join('\n')
+  const content = withoutReferences(result.content)
+  if (content.every(block => block.type === 'text')) {
+    const text = content.map(block => block.text).join('\n')
     return text || '(no output)'
   }
-  return result.content.map(block => part(block, images))
+  return content.map(block => part(block, images))
 }
 
 const userItems = (content: Block[], images: boolean): Item[] => {
