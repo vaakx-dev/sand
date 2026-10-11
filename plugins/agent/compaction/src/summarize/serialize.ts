@@ -1,4 +1,4 @@
-import type { Block, Message, UserContent } from '@sand/messages'
+import type { Block, Message, ToolResultContent } from '@sand/messages'
 
 const textLimit = 16_000
 const resultLimit = 2_000
@@ -7,11 +7,12 @@ const inputLimit = 800
 const clip = (text: string, limit: number) =>
   text.length <= limit ? text : `${text.slice(0, limit)}\n[… ${text.length - limit} more characters]`
 
-const contentText = (content: UserContent[]) =>
+const contentText = (content: ToolResultContent[]) =>
   content
     .map(block => {
       if (block.type === 'text') return block.text
       if (block.type === 'image') return '[image]'
+      if (block.type === 'tool_reference') return `[tool ${block.name}]`
       return block.mediaType === 'text/plain' ? block.data : `[pdf${block.name ? ` ${block.name}` : ''}]`
     })
     .join('\n')

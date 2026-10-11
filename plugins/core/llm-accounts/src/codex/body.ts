@@ -1,6 +1,7 @@
 import type { Message } from '@sand/messages'
 import type { Effort, LLMRequest } from '../contract'
 import { createHash } from 'node:crypto'
+import { loadedTools } from '../http/deferred'
 import { codexInput } from './input'
 import { describeCodex, takesImages } from './models'
 
@@ -14,19 +15,20 @@ const firstPrompt = (messages: Message[]) => JSON.stringify(messages.find(messag
 const cacheKey = (request: LLMRequest) =>
   createHash('sha256').update(request.system).update('\n').update(firstPrompt(request.messages)).digest('hex').slice(0, 32)
 
+const functions = (request: LLMRequest) =>
+  loadedTools(request.tools).map(tool => ({
+    type: 'function',
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.inputSchema,
+    strict: false,
+  }))
+
 export const codexBody = (request: LLMRequest, model: string) => ({
   model,
   instructions: request.system,
   input: codexInput(request.messages, takesImages(model)),
-  ...(request.tools.length && {
-    tools: request.tools.map(tool => ({
-      type: 'function',
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.inputSchema,
-      strict: false,
-    })),
-  }),
+  ...(loadedTools(request.tools).length && { tools: functions(request) }),
   tool_choice: 'auto',
   parallel_tool_calls: true,
   store: false,

@@ -3,6 +3,8 @@ import type { claudeBody } from './body'
 
 type ClaudeBody = ReturnType<typeof claudeBody>
 
+type Payload = Record<string, unknown>
+
 const prefix = 'mcp_'
 
 const prefixed = (name: string) => `${prefix}${capital(name)}`
@@ -19,11 +21,14 @@ export const prefixTools = (payload: ClaudeBody) => {
     names.set(renamed, name)
     return renamed
   }
+  const renameInner = (block: Payload) => (block.type === 'tool_reference' && typeof block.tool_name === 'string' ? { ...block, tool_name: rename(block.tool_name) } : block)
+  const renameBlock = (block: Payload) => {
+    if (block.type === 'tool_use' && typeof block.name === 'string') return { ...block, name: rename(block.name) }
+    if (block.type === 'tool_result' && Array.isArray(block.content)) return { ...block, content: block.content.map(renameInner) }
+    return block
+  }
   const tools = payload.tools?.map(tool => ({ ...tool, name: rename(tool.name) }))
-  const messages = payload.messages.map(message => ({
-    ...message,
-    content: message.content.map(block => (block.type === 'tool_use' && typeof block.name === 'string' ? { ...block, name: rename(block.name) } : block)),
-  }))
+  const messages = payload.messages.map(message => ({ ...message, content: message.content.map(renameBlock) }))
   const original = (name: string) => names.get(name) ?? guess(name)
   return { payload: { ...payload, messages, ...(tools && { tools }) }, original }
 }

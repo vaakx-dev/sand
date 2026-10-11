@@ -26,6 +26,7 @@ const description = "Show a finished HTML page (chart, table, diagram, mockup) a
 
 export const renderTool = (store: RenderStore, pages: HtmlPages, saved: (session: Session, artifact: Artifact) => void): Tool<typeof input> => ({
   name: 'html_render',
+  group: 'html',
   description,
   input,
   async run({ path, title, height }, { session, cwd }) {

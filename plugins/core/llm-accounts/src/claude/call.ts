@@ -38,13 +38,13 @@ const oauthHeaders = (access: string, fast: boolean) => ({
 
 const keyCall = (credential: ApiKey, request: LLMRequest, settings: ClaudeSettings): ClaudeCall => ({
   url: `${trimSlash(credential.base_url ?? keyBase)}/v1/messages`,
-  payload: claudeBody(request, settings),
+  payload: claudeBody(request, settings, !credential.base_url),
   headers: fast => keyHeaders(credential.key, fast),
   original: name => name,
 })
 
 const oauthCall = (access: string, request: LLMRequest, settings: ClaudeSettings): ClaudeCall => {
-  const { payload, original } = prefixTools(claudeBody(request, settings))
+  const { payload, original } = prefixTools(claudeBody(request, settings, true))
   return {
     url: oauthUrl,
     payload: { ...payload, system: claudeSystem(payload.system, payload.messages) },

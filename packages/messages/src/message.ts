@@ -56,10 +56,17 @@ export type UserContent = TextBlock | ImageBlock | DocumentBlock
 
 export type Prompt = string | UserContent[]
 
+export interface ToolReferenceBlock {
+  type: 'tool_reference'
+  name: string
+}
+
+export type ToolResultContent = UserContent | ToolReferenceBlock
+
 export interface ToolResultBlock {
   type: 'tool_result'
   callId: string
-  content: UserContent[]
+  content: ToolResultContent[]
   isError?: boolean
 }
 

@@ -13,6 +13,7 @@ const input = z.object({
 
 const pluginTool = (ctx: Context<'tools'>): Tool<typeof input> => ({
   name: 'plugin',
+  group: 'plugins',
   description:
     "List sand's plugins and web extensions with their status. Pass a name for its errors, services, hooks and roles. Load the sand-plugins skill before writing a plugin.",
   input,
@@ -28,6 +29,7 @@ export default definePlugin({
     webExtensions: 'the plugin tool shows no web extensions',
   },
   apply(ctx) {
+    ctx.effect(() => ctx.tools.group({ name: 'plugins', label: 'sand plugins', summary: "inspect sand's plugins and web extensions and their errors", load: 'on-demand' }))
     ctx.effect(() => ctx.tools.register(pluginTool(ctx)))
     ctx.watch('skills', skills => skills?.register(skillDir, { registry }))
   },

@@ -25,6 +25,7 @@ export default definePlugin({
     const store = renderStore(join(ctx.cli.home, 'renders'))
     const pages: HtmlPages = { columnWidth, maxHeight, load }
     ctx.provide('htmlPages', pages)
+    ctx.effect(() => ctx.tools.group({ name: 'html', label: 'HTML pages', summary: 'show HTML pages (charts, tables, mockups) in the thread, and preview them first', load: 'on-demand' }))
     ctx.effect(() => ctx.tools.register(renderTool(store, pages, (session, artifact) => ctx.emit('artifact.saved', session, artifact))))
     ctx.watch('server', server =>
       server ? joinDisposers(server.handle('html.page', ({ render }) => store.read(render)), server.route(hostPath, hostRoute, { public: true })) : undefined,

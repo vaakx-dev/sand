@@ -14,6 +14,7 @@ export default definePlugin({
   inject: ['tools'],
   uses: { skills: 'the agent gets no PR skills', server: "the page cannot read a branch's PR" },
   apply(ctx) {
+    ctx.effect(() => ctx.tools.group({ name: 'github', label: 'GitHub', summary: 'pull request status, and waiting for checks and review feedback', load: 'on-demand' }))
     ctx.effect(() => ctx.tools.register(statusTool))
     ctx.effect(() => ctx.tools.register(waitTool))
     ctx.watch('skills', service => (service ? joinDisposers(...skills.map(dir => service.register(dir))) : undefined))

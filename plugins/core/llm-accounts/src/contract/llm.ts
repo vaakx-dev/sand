@@ -8,6 +8,7 @@ export interface ToolSpec {
   name: string
   description: string
   inputSchema: Record<string, unknown>
+  deferred?: { found: boolean }
 }
 
 export type Speed = 'normal' | 'fast'
