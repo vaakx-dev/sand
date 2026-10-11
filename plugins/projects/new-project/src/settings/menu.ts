@@ -31,7 +31,7 @@ const deleteItem = (ctx: ProjectsContext, group: ProjectGroup, close: () => void
   )
 }
 
-export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => void) => {
+export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => void, looks: Entry[]) => {
   const item = (entry: Entry) =>
     popoverItem(
       {
@@ -49,6 +49,7 @@ export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => 
     close,
     { class: 'top-full right-0 mt-1' },
     ...projectEntries(ctx, group).map(item),
+    ...looks.map(item),
     copies.length ? menuSeparator() : null,
     ...copies.map(item),
     menuSeparator(),

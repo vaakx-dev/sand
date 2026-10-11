@@ -1,7 +1,8 @@
 import type { ProjectIcon } from '@sand/host-projects/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, duneIcon, dynamicChild, icon, img, keys, plainButton, projectIcon, quietButton, show, span, type Sig } from '@sand/dom'
+import { div, duneIcon, dynamicChild, icon, img, plainButton, popover, quietButton, show, span, type Sig } from '@sand/dom'
 import { reportError, type ProjectsContext } from '../context'
+import type { Entry } from './actions'
 
 export type Picking = { project: string; page: number } | undefined
 
@@ -40,44 +41,38 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
         duneChoice(duneIcon(group.name, { shape: option, hue }), 'h-8 w-8', option === shape, option ? `Dunes ${option}` : 'Default dunes', () => save(iconOf(option, hue))),
       ),
     )
-  return div(
-    {
-      role: 'group',
-      'aria-label': `Icon for ${group.name}`,
-      class: 'mt-2 flex max-w-80 flex-col gap-3 rounded-xl bg-neutral-800 p-3',
-      onKeyDown: keys({ Escape: () => picking.set(undefined) }),
-    },
+  return popover(
+    () => picking.set(undefined),
+    { role: 'group', 'aria-label': `Icon for ${group.name}`, class: 'top-full right-0 mt-1 w-80' },
     div(
-      { class: 'flex items-center justify-between gap-2' },
-      span({ class: 'text-xs text-neutral-500' }, 'Shape'),
-      quietButton({ size: 'sm', onClick: moreIdeas }, icon('reload', 12), 'New ideas'),
+      { class: 'flex flex-col gap-3 p-2' },
+      div(
+        { class: 'flex items-center justify-between gap-2' },
+        span({ class: 'text-xs text-neutral-500' }, 'Shape'),
+        quietButton({ size: 'sm', onClick: moreIdeas }, icon('reload', 12), 'New ideas'),
+      ),
+      dynamicChild(
+        picking.map(value => value?.page ?? 0),
+        shapeChoices,
+      ),
+      span({ class: 'text-xs text-neutral-500' }, 'Colour'),
+      div(
+        { class: 'flex flex-wrap gap-1' },
+        ...hues.map(option => duneChoice(duneIcon(group.name, { shape, hue: option.hue }), 'h-4 w-4', option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
+      ),
+      quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 12), 'Reset to default'),
     ),
-    dynamicChild(
-      picking.map(value => value?.page ?? 0),
-      shapeChoices,
-    ),
-    span({ class: 'text-xs text-neutral-500' }, 'Colour'),
-    div(
-      { class: 'flex flex-wrap gap-1' },
-      ...hues.map(option => duneChoice(duneIcon(group.name, { shape, hue: option.hue }), 'h-4 w-4', option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
-    ),
-    quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 12), 'Reset to default'),
   )
 }
 
-export const iconChoice = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) => {
-  const file = ctx.projects.iconFile(group)
-  if (file) return { toggle: projectIcon(group.name, file), picker: null }
-  const opened = picking.map(value => value?.project === group.id)
-  const toggle = plainButton(
-    {
-      class: 'flex shrink-0 rounded-full hover:ring-2 hover:ring-accent-500',
-      title: 'Change icon',
-      'aria-label': 'Change icon',
-      'aria-expanded': () => String(opened.get()),
-      onClick: () => picking.set(opened.get() ? undefined : { project: group.id, page: Math.floor((group.icon?.shape ?? 0) / shapesPerPage) }),
-    },
-    projectIcon(group.name, ctx.projects.groupIcon(group)),
-  )
-  return { toggle, picker: show(opened, () => iconPicker(ctx, group, picking)) }
+export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>): Entry[] => {
+  if (ctx.projects.iconFile(group)) return []
+  const run = () => picking.set({ project: group.id, page: Math.floor((group.icon?.shape ?? 0) / shapesPerPage) })
+  return [{ label: 'Change icon', icon: 'sparkles', run }]
 }
+
+export const iconPopover = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) =>
+  show(
+    picking.map(value => value?.project === group.id),
+    () => iconPicker(ctx, group, picking),
+  )
