@@ -1,4 +1,5 @@
 import { event, read, SPACE, type Child, type ClassValue, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { popupTrigger } from '../shell/press-outside'
 import { plainButton } from './button'
 import { popover } from './menu'
 
@@ -21,7 +22,8 @@ export const chipButton = ({ active, ...props }: ChipProps, ...children: Child[]
     ...children,
   )
 
-export const pressOpens = (toggle: () => void) => ({
+export const pressOpens = (open: MaybeReactive<boolean>, toggle: () => void) => ({
+  ...popupTrigger(open),
   onMouseDown: event(toggle, { stop: true, prevent: true }),
   onClick: (click: MouseEvent) => {
     if (click.detail === 0) toggle()

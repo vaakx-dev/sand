@@ -31,7 +31,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
 
   const chip = () =>
     chipButton(
-      { title, active: open, ...pressOpens(toggle) },
+      { title, active: open, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,

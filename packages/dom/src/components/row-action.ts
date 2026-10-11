@@ -1,4 +1,5 @@
 import { sig, stopThen } from '@vaakx-dev/vrui'
+import { onPressOutside } from '../shell/press-outside'
 import { controlButton } from './button'
 
 export interface RowActionProps {
@@ -22,6 +23,7 @@ export const rowAction = ({ label, danger, disabled, run }: RowActionProps) => {
         run()
       }),
       onMouseLeave: () => armed.set(false),
+      onMount: node => onPressOutside(node, () => armed.set(false)),
     },
     () => (armed.get() ? `${label}?` : label),
   )

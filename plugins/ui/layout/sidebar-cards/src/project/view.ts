@@ -1,5 +1,5 @@
 import type { ContextMenu, MenuSpec } from '@sand/dom'
-import { div, dynamicChild, icon, iconButton, list, popover, popoverItem, projectIcon, show, span, type Sig } from '@sand/dom'
+import { div, dynamicChild, icon, iconButton, list, popover, popoverItem, popupTrigger, projectIcon, show, span, type Sig } from '@sand/dom'
 import type { ProjectChoice } from './choices'
 
 export interface FilterParts {
@@ -17,6 +17,7 @@ export const filterButton = (parts: FilterParts, open: Sig<boolean>) =>
       title: () => (parts.project.get() ? `Showing ${parts.label.get()}` : 'Filter by project'),
       'aria-label': 'Filter by project',
       active: () => open.get() || Boolean(parts.project.get()),
+      ...popupTrigger(open),
       onClick: open.toggle(),
     },
     icon('folder'),

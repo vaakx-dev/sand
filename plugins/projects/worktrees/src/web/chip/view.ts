@@ -27,7 +27,7 @@ export const createChip = (ctx: WebContext, client: WorktreeClient, states: Stat
 
   const chip = () =>
     chipButton(
-      { title, active: open, ...pressOpens(toggle) },
+      { title, active: open, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, icon(label.get().glyph, 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, () => label.get().text),
       span({ class: 'inline-flex shrink-0' }, icon('down', 12)),

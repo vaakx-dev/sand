@@ -1,10 +1,13 @@
 import { div, preventThen, show, sig, type Child, type ClassValue, type Sig } from '@vaakx-dev/vrui'
+import { popupTrigger } from '../shell/press-outside'
 import { popover } from './menu'
 
 export type Placement = 'below-left' | 'below-right' | 'above-left' | 'above-right'
 
+const triggerProps = (open: Sig<boolean>) => ({ ...popupTrigger(open), onClick: open.toggle() })
+
 export interface DropdownProps {
-  trigger(toggle: () => void, open: Sig<boolean>): HTMLElement
+  trigger(press: ReturnType<typeof triggerProps>, open: Sig<boolean>): HTMLElement
   items(close: () => void): Child[]
   placement?: Placement
   keepFocus?: boolean
@@ -24,7 +27,7 @@ export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus =
   const close = () => open.set(false)
   return div(
     { class: ['relative flex min-w-0', extra], onMouseDown: keepFocus ? preventThen() : undefined },
-    trigger(open.toggle(), open),
+    trigger(triggerProps(open), open),
     show(open, () => popover(close, { class: [anchors[placement], menuClass] }, ...items(close))),
   )
 }

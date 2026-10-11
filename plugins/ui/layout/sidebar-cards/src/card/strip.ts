@@ -1,5 +1,5 @@
 import type { NavAction } from '@sand/dom'
-import { choiceChips, derive, dismissible, dynamicChild, icon, iconButton, span, stopThen, type Sig } from '@sand/dom'
+import { choiceChips, derive, dismissible, disposeAll, dynamicChild, icon, iconButton, onPressOutside, span, stopThen, type Sig } from '@sand/dom'
 
 export interface StripParts {
   menu: Sig<NavAction[]>
@@ -28,7 +28,13 @@ const quickButton = (action: NavAction, parts: StripParts, inline: boolean) =>
 const chips = (action: NavAction, parts: StripParts) => {
   const done = () => parts.choosing.set(undefined)
   return span(
-    { class: 'flex items-center', onMount: node => dismissible(node, done, { overlay: false }) },
+    {
+      class: 'flex items-center',
+      onMount: node => {
+        const stops = [dismissible(node, done, { overlay: false }), onPressOutside(node, done)]
+        return () => disposeAll(stops)
+      },
+    },
     choiceChips(action, {
       pick(choice) {
         done()

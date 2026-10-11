@@ -55,7 +55,7 @@ export const contextRing = (ctx: Context<'threads'>, usage: Usage) =>
       placement: 'above-right',
       keepFocus: true,
       menuClass: 'w-48',
-      trigger: (toggle, open) => iconButton({ title: usageLine(usage), 'aria-label': 'Context window', active: open, onClick: toggle }, ringIcon(usage)),
+      trigger: (press, open) => iconButton({ title: usageLine(usage), 'aria-label': 'Context window', active: open, ...press }, ringIcon(usage)),
       items: close => [details(ctx, usage, close)],
     }),
   )

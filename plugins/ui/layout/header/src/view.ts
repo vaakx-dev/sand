@@ -22,12 +22,12 @@ const projectCrumb = (ctx: Context, changes: Pulse, cwd: Sig<string | undefined>
 
 const titleMenu = (ctx: Context, title: Sig<string>) =>
   dropdown({
-    trigger: (toggle, open) =>
+    trigger: (press, open) =>
       plainButton(
         {
           class: ['flex h-8 min-w-0 items-center gap-1 rounded-lg px-2 hover:bg-neutral-800', () => (open.get() ? 'bg-neutral-800' : '')],
           title,
-          onClick: toggle,
+          ...press,
           onDblClick: () => void renameSession(ctx),
         },
         span({ class: 'min-w-0 truncate font-semibold text-neutral-100' }, title),
