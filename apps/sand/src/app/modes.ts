@@ -27,6 +27,8 @@ const core = [
   'reload',
   'html-render',
   'html-preview',
+  'browser-engine',
+  'browser-tools',
   'github',
   'github-login',
 ]
