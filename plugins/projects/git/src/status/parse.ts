@@ -11,7 +11,7 @@ const counts = (value: string | undefined) => {
   return { ahead: Number(match?.[1] ?? 0), behind: Number(match?.[2] ?? 0) }
 }
 
-export const parsePorcelain = (output: string): Omit<GitStatus, 'worktree' | 'base'> => {
+export const parsePorcelain = (output: string): Omit<GitStatus, 'worktree' | 'base' | 'behindBase'> => {
   const lines = output.split('\n').filter(Boolean)
   const head = header(lines, 'head')
   return {
