@@ -9,11 +9,14 @@
     "summary": "Choose the chat style, sidebar and composer; turn parts of the interface on or off on the Plugins page",
     "provides": [],
     "uses": {
-      "commands": "no /extensions command"
+      "commands": "no /extensions command",
+      "notify": "copying an id shows no message",
+      "inspector": "which part fills each role is not shown"
     }
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/web": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

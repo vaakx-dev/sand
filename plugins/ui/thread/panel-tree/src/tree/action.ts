@@ -1,5 +1,5 @@
 import type { ToolCallBlock } from '@sand/messages'
-import { oneLine, tildeHome } from '@sand/kit'
+import { capital, isRecord, oneLine, tildeHome } from '@sand/kit'
 
 export interface ToolAction {
   verb: string
@@ -18,16 +18,14 @@ const verbs: Record<string, [verb: string, fields: string[]]> = {
   skill: ['Skill', ['name']],
 }
 
-const capitalized = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
-
 const summary = (input: Record<string, unknown>) =>
   Object.values(input)
     .map(value => (typeof value === 'string' ? value : JSON.stringify(value)))
     .join(' ')
 
 export const toolAction = (call: ToolCallBlock): ToolAction => {
-  const [verb, fields] = verbs[call.name] ?? [capitalized(call.name), []]
-  const input = typeof call.input === 'object' && call.input ? (call.input as Record<string, unknown>) : {}
+  const [verb, fields] = verbs[call.name] ?? [capital(call.name), []]
+  const input = isRecord(call.input) ? call.input : {}
   const named = fields.map(field => input[field]).find((value): value is string => typeof value === 'string' && value.trim() !== '')
   return { verb, target: oneLine(tildeHome(named ?? summary(input)), 160) }
 }

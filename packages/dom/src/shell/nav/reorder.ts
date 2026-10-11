@@ -1,5 +1,4 @@
-import { sig } from '@vaakx-dev/vrui'
-import { color } from '../../theme/tokens'
+import { colorVar, sig } from '@vaakx-dev/vrui'
 
 export interface DragSlot {
   id: string
@@ -16,8 +15,6 @@ export interface ReorderOptions {
 }
 
 const edge = { x: { before: 'inset 2px 0 0', after: 'inset -2px 0 0' }, y: { before: 'inset 0 2px 0', after: 'inset 0 -2px 0' } }
-
-export type Reorder = ReturnType<typeof reorder>
 
 export const reorder = (options: ReorderOptions) => {
   const dragged = sig<DragSlot | undefined>(undefined)
@@ -54,7 +51,7 @@ export const reorder = (options: ReorderOptions) => {
     style: {
       boxShadow: () => {
         const target = over.get()
-        return target?.id === slot().id ? `${edge[options.axis][target.side]} ${color('accent', 400)}` : ''
+        return target?.id === slot().id ? `${edge[options.axis][target.side]} ${colorVar('accent', 400)}` : ''
       },
     },
     onDragStart(event: DragEvent) {
@@ -71,7 +68,8 @@ export const reorder = (options: ReorderOptions) => {
       if (current?.id !== slot().id || current.side !== side) over.set({ id: slot().id, side })
     },
     onDragLeave(event: DragEvent) {
-      const inside = (event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)
+      const { currentTarget, relatedTarget } = event
+      const inside = currentTarget instanceof Node && relatedTarget instanceof Node && currentTarget.contains(relatedTarget)
       if (!inside && over.get()?.id === slot().id) over.set(undefined)
     },
     onDrop(event: DragEvent) {
@@ -82,3 +80,5 @@ export const reorder = (options: ReorderOptions) => {
     onDragEnd: clear,
   })
 }
+
+export type Reorder = ReturnType<typeof reorder>

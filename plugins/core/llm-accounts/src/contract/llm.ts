@@ -1,5 +1,8 @@
 import type { Block, Message, StopReason, Usage } from '@sand/messages'
+import type { Billing, Effort, LimitWindow, LiveEvent, ModelInfo, ModelPrice, ProviderInfo, SourceRef } from '@sand/protocol'
 import type { AccountKind } from './login'
+
+export type { Billing, Effort, LimitWindow, LiveBlock, LiveEvent, ModelInfo, ModelPrice, ProviderInfo, SourceRef } from '@sand/protocol'
 
 export interface ToolSpec {
   name: string
@@ -7,32 +10,11 @@ export interface ToolSpec {
   inputSchema: Record<string, unknown>
 }
 
-export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
-
 export type Speed = 'normal' | 'fast'
 
 export interface EffortLevel {
   id: Effort
   label: string
-}
-
-export interface ModelInfo {
-  id: string
-  label: string
-  source?: string
-  name?: string
-  provider?: string
-  summary?: string
-  efforts: Effort[]
-  defaultEffort?: Effort
-  context?: number
-  fast?: boolean
-  images?: boolean
-  via?: string
-  hidden?: boolean
-  favourite?: number
-  fresh?: boolean
-  added?: boolean
 }
 
 export type NewModels = 'show' | 'hide'
@@ -66,58 +48,18 @@ export interface LLMRequest {
 }
 
 export type LLMEvent =
-  | { type: 'start'; model: string }
-  | { type: 'text'; index: number; text: string }
-  | { type: 'thinking'; index: number; text: string }
-  | { type: 'tool_call'; index: number; id: string; name: string }
-  | { type: 'tool_input'; index: number; json: string }
+  | Exclude<LiveEvent, { type: 'block' | 'done' }>
   | { type: 'block'; index: number; block: Block }
   | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; source?: SourceRef }
 
-export interface SourceRef {
-  source: string
-  label: string
-  provider: string
-  billing: Billing
-  plan?: string
-  pc?: string
-  pcName?: string
-}
-
-export type LiveEvent = Exclude<LLMEvent, { type: 'block' | 'done' }> | { type: 'block'; index: number } | { type: 'done' }
-
-export interface LimitWindow {
-  id: string
-  label: string
-  used: number
-  resetsAt?: number
-  duration?: number
-  status?: string
-}
-
 export interface Limits {
-  source?: string
+  source: string
   pc?: string
   pcName?: string
   windows: LimitWindow[]
   status?: string
   updated: number
 }
-
-export type ModelPrice = Record<keyof Usage, number>
-
-export type Billing = 'plan' | 'api' | 'credits' | 'local'
-
-export interface ProviderInfo {
-  id: string
-  label: string
-  billing: Billing
-  plan?: string
-}
-
-export type LiveBlock =
-  | { type: 'text' | 'thinking'; index: number; text: string; done?: boolean }
-  | { type: 'tool'; index: number; id: string; name: string; input: string }
 
 export interface LLM {
   models?(): ModelInfo[]

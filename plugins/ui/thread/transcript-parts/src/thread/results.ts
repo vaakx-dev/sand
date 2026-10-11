@@ -1,5 +1,5 @@
 import type { Entry, Message, ToolCallBlock, ToolResultBlock } from '@sand/messages'
-import type { ToolStatus } from '@sand/transcript-chat/contract'
+import type { ToolStatus } from '../contract'
 import type { Thread } from '@sand/web-client/contract'
 
 export type Results = Map<string, ToolResultBlock>
@@ -37,5 +37,5 @@ export const partialInput = (json: string): unknown => {
 
 export const field = (input: unknown, key: string) => {
   const value = (input as Record<string, unknown> | null | undefined)?.[key]
-  return typeof value === 'string' ? value : value === undefined ? '' : String(value)
+  return value === undefined ? '' : String(value)
 }

@@ -6,10 +6,7 @@ export default definePlugin({
   name: 'context-ring',
   description: 'A ring next to send that shows how full the context window is, with Compact now',
   inject: ['composer', 'threads'],
-  uses: {
-    commands: 'Compact now goes straight to the server',
-    notify: 'a failed compact is not reported',
-  },
+  uses: { notify: 'a failed compact is not reported' },
   apply(ctx) {
     const changes = pulse(ctx, ['thread.select'])
     ctx.on('thread.change', id => {

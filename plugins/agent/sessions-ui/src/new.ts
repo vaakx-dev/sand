@@ -1,16 +1,8 @@
 import type { Command } from '@sand/server/contract'
 import { isInside } from '@sand/kit'
-import { expandHome } from '@sand/kit/fs'
+import { expandHome, isFolder } from '@sand/kit/fs'
 import { homedir } from 'node:os'
 import type { SessionsContext } from './types'
-
-const isFolder = (path: string) =>
-  Bun.file(path)
-    .stat()
-    .then(
-      stats => stats.isDirectory(),
-      () => false,
-    )
 
 export const newCommand = (ctx: SessionsContext): Command => ({
   name: 'new',

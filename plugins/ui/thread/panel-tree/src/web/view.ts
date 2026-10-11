@@ -1,22 +1,13 @@
 import { contextMenu, div, dynamicChild, finePointer, hint, keys, list, quietButton, show, textInput } from '@sand/dom'
 import { filterNames, filters } from '../tree/filter'
 import { rowsPerPage } from './integrations/page'
-import { labelEditor } from './label-input'
+import { labelEditor } from './label-editor'
 import { treeModel, type TreeSource } from './model'
-import { rowView, type RowActions } from './row'
+import { rowView } from './row'
 
 export const createTreeView = (source: TreeSource) => {
   const model = treeModel(source)
   const fine = finePointer()
-
-  const actions: RowActions = {
-    select: model.select,
-    jump: model.jump,
-    fold: model.fold,
-    label: model.edit,
-    fork: model.fork,
-    setLabel: model.setLabel,
-  }
   const menu = contextMenu()
 
   const finish = async (id: string, value: string | undefined) => {
@@ -34,7 +25,7 @@ export const createTreeView = (source: TreeSource) => {
   const listView = list(
     model.items,
     item => item.row.id,
-    item => rowView(item, actions, menu),
+    item => rowView(item, model, menu),
     div({ class: 'min-h-0 flex-1 overflow-auto pb-2', role: 'listbox' }),
   )
 
@@ -58,7 +49,7 @@ export const createTreeView = (source: TreeSource) => {
       },
     },
     div(
-      { class: 'flex shrink-0 flex-col gap-2 px-3 pt-2 pb-2' },
+      { class: 'flex shrink-0 flex-col gap-2 px-3 py-2' },
       search,
       div(
         { class: 'flex flex-wrap gap-1' },
@@ -70,7 +61,7 @@ export const createTreeView = (source: TreeSource) => {
       model.items.map(rows => !rows.length),
       () => hint(() => (model.thread.get() ? 'No entries match.' : 'No thread selected.')),
     ),
-    dynamicChild(model.editing, id => (id ? labelEditor(model.labelOf(id), value => void finish(id, value)) : div({ class: 'hidden' }))),
+    dynamicChild(model.editing, id => (id ? labelEditor(model.labelOf(id), value => void finish(id, value)) : null)),
     menu.view(),
   )
 

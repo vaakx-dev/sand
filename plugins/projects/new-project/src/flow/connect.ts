@@ -1,10 +1,10 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import { parsePairLink } from '@sand/kit'
-import type { FlowContext } from './types'
+import type { ProjectsContext } from '../context'
 
 const looksLikeLink = (value: string) => Boolean(parsePairLink(value))
 
-const connectPage = (ctx: FlowContext): PalettePage => ({
+const connectPage = (ctx: ProjectsContext): PalettePage => ({
   id: 'connect',
   title: 'Connect another PC',
   empty: value =>
@@ -23,7 +23,7 @@ const connectPage = (ctx: FlowContext): PalettePage => ({
   },
 })
 
-export const connectItem = (ctx: FlowContext, group?: string): PaletteItem => ({
+export const connectItem = (ctx: ProjectsContext, group?: string): PaletteItem => ({
   id: 'machine:connect',
   group,
   icon: 'plus',

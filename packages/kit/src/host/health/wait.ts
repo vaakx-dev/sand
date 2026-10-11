@@ -1,21 +1,14 @@
-import { isHealthy } from './check'
-import type { HealthOutcome, HealthReport } from './types'
+import type { HostHealth } from '@sand/protocol'
+import { errorMessage } from '../../text/error'
+import { isHealthy, type HealthOutcome } from './check'
 
-export interface WaitOptions {
-  timeout?: number
-  interval?: number
-  settle?: number
-}
+const interval = 1000
+const settle = 10_000
 
-const isBad = (report: HealthReport) =>
+const isBad = (report: HostHealth) =>
   report.runtime === 'failed' || (report.runtime === 'ready' && (!report.web || report.failedPlugins.length > 0))
 
-const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
-
-export const waitHealthy = async (
-  read: () => Promise<HealthReport>,
-  { timeout = 120_000, interval = 1000, settle = 10_000 }: WaitOptions = {},
-): Promise<HealthOutcome> => {
+export const waitHealthy = async (read: () => Promise<HostHealth>, { timeout = 120_000 } = {}): Promise<HealthOutcome> => {
   const deadline = Date.now() + timeout
   let last: HealthOutcome = { ok: false, error: 'sand did not answer' }
   let badSince: number | undefined
@@ -26,7 +19,7 @@ export const waitHealthy = async (
       last = { ok: false, report }
       badSince = isBad(report) ? (badSince ?? Date.now()) : undefined
     } catch (error) {
-      last = { ok: false, report: last.report, error: message(error) }
+      last = { ok: false, report: last.report, error: errorMessage(error) }
     }
     if (badSince !== undefined && Date.now() - badSince >= settle) return last
     if (Date.now() >= deadline) return last

@@ -1,5 +1,7 @@
+import { errorCode } from './errors'
+
 const missing = (error: unknown) => {
-  const code = (error as { code?: string }).code
+  const code = errorCode(error)
   return code === 'ENOENT' || code === 'ENOTDIR'
 }
 

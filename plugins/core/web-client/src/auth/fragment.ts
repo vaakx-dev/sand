@@ -1,3 +1,4 @@
+import { listen } from '@sand/dom'
 import { pairSecret } from '@sand/kit'
 
 const takeFromHash = () => {
@@ -18,14 +19,12 @@ export const pairFragment = () => {
       pending = undefined
     },
     watch(changed: () => void) {
-      const listener = () => {
+      return listen(window, 'hashchange', () => {
         const secret = takeFromHash()
         if (!secret) return
         pending = secret
         changed()
-      }
-      addEventListener('hashchange', listener)
-      return () => removeEventListener('hashchange', listener)
+      })
     },
   }
 }

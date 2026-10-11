@@ -1,4 +1,4 @@
-import { copyText, errorMessage, pulse } from '@sand/dom'
+import { copyWithNotice, errorMessage, pulse } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { pcList } from './pcs'
 import { usagePage } from './view/page'
@@ -13,16 +13,15 @@ export default definePlugin({
     limits: 'limits only update when the page reloads',
     threads: 'thread rows do not open the thread',
     machines: "only this PC's usage",
+    notify: 'failures and copies are not reported',
+    nav: 'no Usage button in the sidebar',
   },
   apply(ctx) {
     const limits = pulse(ctx, ['limits.change'], ['limits'])
     const pcs = pcList(ctx)
     const fail = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
-    const copy = async (text: string, what: string) => {
-      const copied = await copyText(text)
-      ctx.notify?.push(copied ? `Copied ${what}` : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
-    }
+    const copy = (text: string, what: string) => copyWithNotice(ctx.notify, text, what)
 
     ctx.watch('settings', settings => {
       if (!settings) return

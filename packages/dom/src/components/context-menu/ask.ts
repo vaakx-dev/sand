@@ -2,14 +2,7 @@ import { derive, div, input, keys, sig, span } from '@vaakx-dev/vrui'
 import type { NavAsk } from '../../shell/nav/types'
 import { primaryAction } from '../button'
 
-export type AskSize = 'sm' | 'md'
-
-const fields: Record<AskSize, string> = {
-  sm: 'h-8 px-3 text-sm',
-  md: 'h-12 px-3 text-base',
-}
-
-export const askView = (ask: NavAsk, done: () => void, size: AskSize) => {
+export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
   const text = sig('')
   const preview = derive(() => (text.get().trim() ? ask.preview(text.get()) : undefined))
   const submit = () => {
@@ -25,8 +18,11 @@ export const askView = (ask: NavAsk, done: () => void, size: AskSize) => {
       spellcheck: false,
       placeholder: ask.placeholder,
       'aria-label': ask.tip,
-      class: ['w-full min-w-0 rounded-lg bg-neutral-900 text-neutral-100 outline-none ring-1 ring-neutral-700 focus:ring-accent-500', fields[size]],
-      onInput: event => text.set((event.currentTarget as HTMLInputElement).value),
+      class: [
+        'w-full min-w-0 rounded-lg bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-700 focus:ring-accent-500',
+        size === 'sm' ? 'h-8 text-sm' : 'h-12 text-base',
+      ],
+      bindValue: text,
       onKeyDown: keys({ Enter: submit }),
       onMount: node => node.focus(),
     }),
@@ -36,7 +32,7 @@ export const askView = (ask: NavAsk, done: () => void, size: AskSize) => {
         { class: () => ['min-w-0 flex-1 truncate text-xs', preview.get() ? 'text-accent-400' : 'text-neutral-500'] },
         () => preview.get() ?? (text.get().trim() ? `Try ${ask.placeholder}` : ''),
       ),
-      primaryAction({ size: size === 'md' ? 'md' : 'sm', disabled: () => !preview.get(), onClick: submit }, ask.submit),
+      primaryAction({ size, disabled: () => !preview.get(), onClick: submit }, ask.submit),
     ),
   )
 }

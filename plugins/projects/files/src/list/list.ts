@@ -1,8 +1,14 @@
-import { gitFiles } from './git'
+import { git } from '@sand/kit/git'
 import { skipped, walkFiles } from './walk'
 
 const limit = 20_000
 const freshMs = 10_000
+
+const gitFiles = (cwd: string) =>
+  git(cwd, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).then(
+    ({ code, out }) => (code === 0 ? out.split('\0').filter(Boolean) : undefined),
+    () => undefined,
+  )
 
 const visible = (path: string) => !path.split('/').some(part => skipped.has(part))
 

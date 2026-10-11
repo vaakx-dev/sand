@@ -1,4 +1,4 @@
-import { badge, button, div, dynamicChild, effect, exactTime, icon, iconButton, primaryAction, secondaryAction, show, span, stopThen, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import { badge, div, dynamicChild, effect, exactTime, icon, iconButton, plainButton, primaryAction, secondaryAction, show, span, stopThen, type ContextMenu, type Derive, type Sig } from '@sand/dom'
 import type { TreeNode } from '../tree/forest'
 import type { Row } from '../tree/layout'
 import { rowMenu } from './menu'
@@ -24,20 +24,28 @@ const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: '2-digi
 
 const glyphClass = 'flex h-5 w-4 shrink-0 items-center justify-center font-mono text-xs text-neutral-500'
 
-const glyph = (row: Row, actions: RowActions) =>
-  row.fold
-    ? button(
-        { type: 'button', class: [glyphClass, 'cursor-pointer hover:text-neutral-100'], title: row.fold === 'closed' ? 'Expand branch' : 'Collapse branch', onClick: stopThen(() => actions.fold(row.id)) },
-        row.glyph,
-      )
-    : row.glyph && span({ class: glyphClass }, row.glyph)
+const foldToggle = (row: Row, actions: RowActions) => {
+  const name = row.fold === 'closed' ? 'Expand branch' : 'Collapse branch'
+  return plainButton(
+    { class: [glyphClass, 'hover:text-neutral-100'], title: name, 'aria-label': name, 'aria-expanded': row.fold === 'open', onClick: stopThen(() => actions.fold(row.id)) },
+    row.glyph,
+  )
+}
+
+const glyph = (row: Row, actions: RowActions) => {
+  if (row.fold) return foldToggle(row, actions)
+  return row.glyph && span({ class: glyphClass }, row.glyph)
+}
 
 const dotClass = (item: TreeItem) => {
   if (item.head) return 'bg-accent-400 ring-4 ring-accent-950'
   return item.tree.described.kind === 'prompt' ? 'bg-neutral-300' : 'bg-neutral-500'
 }
 
-const textClass = (item: TreeItem) => (item.head || item.selected ? 'text-neutral-100' : item.active ? 'text-neutral-300' : 'text-neutral-400')
+const textClass = (item: TreeItem) => {
+  if (item.head || item.selected) return 'text-neutral-100'
+  return item.active ? 'text-neutral-300' : 'text-neutral-400'
+}
 
 const details = (item: Sig<TreeItem>, actions: RowActions) => {
   const { row, tree, head } = item.get()
@@ -66,7 +74,7 @@ const content = (item: Sig<TreeItem>, actions: RowActions) => {
       { class: 'min-w-0 flex-1' },
       div(
         { class: 'flex min-w-0 items-center gap-2' },
-        label && badge('warning', label.text),
+        label && badge('warning', label),
         span(
           { class: () => ['min-w-0 flex-1 truncate text-sm', textClass(item.get())] },
           span({ class: 'text-neutral-500' }, described.who),
@@ -82,13 +90,13 @@ const content = (item: Sig<TreeItem>, actions: RowActions) => {
   )
 }
 
-const signature = ({ row, tree, head }: TreeItem) => [row.prefix, row.glyph, row.fold, tree.label?.text, tree.described.text, head].join('|')
+const signature = ({ row, tree, head }: TreeItem) => [row.prefix, row.glyph, row.fold, tree.label, tree.described.text, head].join('|')
 
 const background = (item: TreeItem) => (item.selected ? 'bg-neutral-800' : 'hover:bg-neutral-900')
 
-const revealWhenSelected = (selected: Derive<boolean>) => (node: Node) =>
+const revealWhenSelected = (selected: Derive<boolean>) => (node: Element) =>
   effect(() => {
-    if (selected.get()) (node as HTMLElement).scrollIntoView({ block: 'nearest' })
+    if (selected.get()) node.scrollIntoView({ block: 'nearest' })
   })
 
 export const rowView = (item: Sig<TreeItem>, actions: RowActions, menu: ContextMenu) => {

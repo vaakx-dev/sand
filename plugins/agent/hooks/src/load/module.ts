@@ -2,7 +2,7 @@ import { errorMessage } from '@sand/kit'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import { definePlugin, type Context, type Handler } from 'drydock'
 import type { Hook, HookFileState, HookOptions, HookScope } from '../contract'
-import { isHookName } from '../wrap/args'
+import { hookSpecs, isHookName } from '../wrap/args'
 import { wrapHandler, type HookSlot, type WrapEnv } from '../wrap/wrap'
 import type { HookSource } from './files'
 
@@ -33,7 +33,7 @@ const collect = async (file: HookSource) => {
   const module = await import(file.path)
   if (typeof module.default !== 'function') throw new Error('The file does not default-export a function')
   const hook = ((name: string, handler: unknown, options: HookOptions = {}) => {
-    if (!isHookName(name)) throw new Error(`${name} is not a hook. Hooks: turn.prompt, turn.start, model.choose, context.build, llm.response, tool.before, tool.result, turn.stop, context.overflow, turn.end`)
+    if (!isHookName(name)) throw new Error(`${name} is not a hook. Hooks: ${Object.keys(hookSpecs).join(', ')}`)
     if (typeof handler !== 'function') throw new Error(`The handler for ${name} is not a function`)
     registrations.push({ slot: { name, timeouts: 0 }, handler: handler as Registration['handler'], options })
   }) as Hook

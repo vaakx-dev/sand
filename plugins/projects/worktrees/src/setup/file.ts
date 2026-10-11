@@ -1,4 +1,5 @@
 import type { WorktreeSetup } from '../contract'
+import { isRecord } from '@sand/kit'
 import { join } from 'node:path'
 
 const strings = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim() !== '') : [])
@@ -7,7 +8,8 @@ const read = async (folder: string) => {
   const file = Bun.file(join(folder, '.sand', 'worktree.toml'))
   if (!(await file.exists())) return undefined
   try {
-    return Bun.TOML.parse(await file.text()) as Record<string, unknown>
+    const table = Bun.TOML.parse(await file.text())
+    return isRecord(table) ? table : undefined
   } catch {
     return undefined
   }

@@ -1,9 +1,9 @@
 import type { LLMEvent } from '@sand/llm-accounts/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { ServerContext } from '../context'
-import type { LiveTracker } from '../live/track'
 import type { Socket } from '../socket/sockets'
 import { createCoalescer } from './coalesce'
+import type { LiveTracker } from './live'
 import { createWatchers } from './watch'
 import { eventFrame, liveEvent, sessionRef } from './wire'
 

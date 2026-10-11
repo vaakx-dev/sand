@@ -1,21 +1,7 @@
 import type { Billing, Limits } from '@sand/llm-accounts/contract'
-import type { Usage } from '@sand/messages'
+import type { UsageQuery, UsageTotals } from '@sand/protocol'
 
-export type UsageBucket = 'hour' | 'day'
-
-export interface UsageQuery {
-  since: number
-  bucket: UsageBucket
-  zone: string
-}
-
-export interface UsageTotals {
-  usage: Usage
-  turns: number
-  cost: number
-  billed: number
-  unpriced: number
-}
+export type { UsageBucket, UsageQuery, UsageTotals } from '@sand/protocol'
 
 export interface AccountUsage extends UsageTotals {
   key: string

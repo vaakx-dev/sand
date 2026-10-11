@@ -4,7 +4,7 @@ const windows = process.platform === 'win32'
 const drainGrace = 500
 const taskkillWait = 5000
 
-export interface RunOptions {
+interface RunOptions {
   cwd: string
   signal: AbortSignal
   timeout: number
@@ -30,7 +30,7 @@ const collect = (stream: ReadableStream<Uint8Array>) => {
   }
 }
 
-const lines = (text: string) => (windows ? text.replaceAll('\r\n', '\n') : text)
+const unixNewlines = (text: string) => (windows ? text.replaceAll('\r\n', '\n') : text)
 
 const taskkill = async (pid: number) => {
   const killer = Bun.spawn(['taskkill', '/pid', String(pid), '/T', '/F'], { stdio: ['ignore', 'ignore', 'ignore'], windowsHide: true })
@@ -67,7 +67,7 @@ export const run = async (argv: string[], { cwd, signal, timeout, verbatim = fal
   const abort = () => void killTree(child)
   const timer = setTimeout(() => {
     timedOut = true
-    void killTree(child)
+    abort()
   }, timeout)
   signal.addEventListener('abort', abort, { once: true })
   if (signal.aborted) abort()
@@ -78,5 +78,5 @@ export const run = async (argv: string[], { cwd, signal, timeout, verbatim = fal
 
   await Promise.race([Promise.all([stdout.done, stderr.done]), Bun.sleep(drainGrace)])
   await Promise.all([stdout.stop(), stderr.stop()])
-  return { code, timedOut, stdout: lines(stdout.text()), stderr: lines(stderr.text()) }
+  return { code, timedOut, stdout: unixNewlines(stdout.text()), stderr: unixNewlines(stderr.text()) }
 }

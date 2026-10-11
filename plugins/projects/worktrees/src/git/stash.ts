@@ -1,4 +1,4 @@
-import { gitMaybe, gitOk } from './run'
+import { gitMaybe, gitOk } from '@sand/kit/git'
 
 const top = (cwd: string) => gitMaybe(cwd, ['rev-parse', '-q', '--verify', 'refs/stash'])
 

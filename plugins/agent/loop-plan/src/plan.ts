@@ -1,6 +1,6 @@
+import { callsOf, refused, skip, textOf, truncated } from '@sand/kit'
 import type { Turn, TurnOutcome } from '@sand/loops/contract'
 import type { ToolCallBlock, ToolResultBlock } from '@sand/messages'
-import { callsOf, refused, skip, textOf, truncated } from './calls'
 
 export interface PlanOptions {
   tools: string[]
@@ -9,19 +9,12 @@ export interface PlanOptions {
 
 const suffix = '\n\nPlan mode. Read only. Reply with a numbered plan and make no edits.'
 
-const request = async (turn: Turn, options: PlanOptions) => {
-  const built = await turn.hooks.build()
-  return { ...built, system: `${built.system}${suffix}`, tools: built.tools.filter(tool => options.tools.includes(tool.name)) }
-}
-
-const send = async (turn: Turn, options: PlanOptions) => {
-  try {
-    return await turn.hooks.stream(await request(turn, options))
-  } catch (error) {
-    if (!(await turn.hooks.overflow(error))) throw error
-    return turn.hooks.stream(await request(turn, options))
-  }
-}
+const send = (turn: Turn, options: PlanOptions) =>
+  turn.hooks.send(request => ({
+    ...request,
+    system: `${request.system}${suffix}`,
+    tools: request.tools.filter(tool => options.tools.includes(tool.name)),
+  }))
 
 const readOnly = async (turn: Turn, calls: ToolCallBlock[], options: PlanOptions) => {
   const allowed = calls.filter(call => options.tools.includes(call.name))
@@ -40,7 +33,7 @@ export const plan = async (turn: Turn, outcome: TurnOutcome, options: PlanOption
     const done = await send(turn, options)
     const message = await turn.hooks.respond(done.message)
     outcome.stopReason = done.stopReason
-    outcome.text = textOf(message)
+    outcome.text = textOf(message.content)
     const calls = callsOf(message)
     if (done.stopReason === 'refusal') {
       if (calls.length) turn.hooks.append({ role: 'user', content: skip(calls, refused) })

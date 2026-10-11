@@ -1,4 +1,5 @@
 import type { Effort, ModelInfo } from '../contract'
+import { capital } from '@sand/kit'
 
 const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 
@@ -12,8 +13,6 @@ const known: Record<string, Omit<ModelInfo, 'id'>> = {
 }
 
 const fastModels = new Set(['claude-opus-5', 'claude-opus-4-8'])
-
-const capital = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
 
 const label = (id: string) => {
   const [family = id, ...version] = id.replace(/^claude-/, '').split('-')

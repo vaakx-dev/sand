@@ -6,9 +6,17 @@ import type { PageMemory, PageNav } from './nav'
 
 export type PageModel = ReturnType<typeof pageModel>
 
+type Run = () => void | Promise<void>
+
 const draftOf = (page: PalettePage, memory: PageMemory, initial: string) => {
   memory.text ??= sig(page.field?.value ?? initial)
   return memory.text
+}
+
+const emptyText = (page: PalettePage, query: string) => {
+  if (typeof page.empty === 'function') return page.empty(query)
+  if (page.empty !== undefined) return page.empty
+  return page.field || page.review ? '' : 'No matches.'
 }
 
 export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
@@ -24,31 +32,40 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
   const failure = sig('')
   const progress = sig('')
 
+  const reload = () => reloads.update(count => count + 1)
+
   const advance = (next: PalettePage) => {
     memory.selected = box.selected.get()
     nav.push(next)
   }
 
-  const runThenBack = (item: PaletteItem) => {
+  const closeAndRun = (run: Run) => {
+    nav.close(page)
+    return Promise.resolve().then(run).catch(nav.fail)
+  }
+
+  const runThenBack = (run: Run) => {
     const to = nav.trail().indexOf(page) - 1
     void Promise.resolve()
-      .then(() => item.run?.())
+      .then(run)
       .then(() => {
         if (!nav.isTop(page)) return
         if (to >= 0) nav.back(to)
-        else reloads.update(count => count + 1)
+        else reload()
       }, nav.fail)
+  }
+
+  const fill = (value: string) => {
+    text.set(value)
+    fills.update(count => count + 1)
   }
 
   const choose = (item: PaletteItem | undefined) => {
     if (!item || item.disabled) return
     if (item.page) return advance(item.page())
     if (item.fill !== undefined) return fill(item.fill)
-    if (item.returnAfter) return runThenBack(item)
-    nav.close(page)
-    void Promise.resolve()
-      .then(() => item.run?.())
-      .catch(nav.fail)
+    if (item.returnAfter) return runThenBack(() => item.run?.())
+    void closeAndRun(() => item.run?.())
   }
 
   const box = listbox({ count: () => results.get().length, choose: index => choose(results.get()[index]), start: field ? -1 : 0, wrap: true })
@@ -67,10 +84,12 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     const query = text.get()
     reloads.get()
     let current = true
-    const show = (items: PaletteItem[]) => {
-      if (current) present(items)
-    }
-    const load = () => untrack(() => loadItems(page, query).then(show, nav.fail))
+    const load = () =>
+      untrack(() =>
+        loadItems(page, query).then(items => {
+          if (current) present(items)
+        }, nav.fail),
+      )
     if (page.delay) onTimeout(load, page.delay)
     else load()
     return () => {
@@ -78,24 +97,14 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     }
   })
 
-  const fill = (value: string) => {
-    text.set(value)
-    fills.update(count => count + 1)
-  }
-
   const more = (item: PaletteItem) => advance(actionsPage(item))
 
   const runAction = (action: PaletteItemAction) => {
-    if (!action.returnAfter) {
-      nav.close(page)
-      return Promise.resolve()
-        .then(() => action.run())
-        .catch(nav.fail)
-    }
+    if (!action.returnAfter) return closeAndRun(() => action.run())
     return Promise.resolve()
       .then(() => action.run())
       .then(() => {
-        if (nav.isTop(page)) reloads.update(count => count + 1)
+        if (nav.isTop(page)) reload()
       }, nav.fail)
   }
 
@@ -143,10 +152,7 @@ export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
     else if (page.review) void confirm()
   }
 
-  const empty = derive(() => {
-    if (!loads.get() || results.get().length) return ''
-    return typeof page.empty === 'function' ? page.empty(text.get()) : (page.empty ?? (field || page.review ? '' : 'No matches.'))
-  })
+  const empty = derive(() => (!loads.get() || results.get().length ? '' : emptyText(page, text.get())))
 
   const action = derive(() => {
     loads.get()

@@ -1,29 +1,29 @@
 import type { HostDevices } from '@sand/host-devices/contract'
 import { errorMessage } from '@sand/kit'
+import { textReply } from '@sand/kit/host'
 import type { RouteCaller } from '@sand/protocol'
 import { adminDevice, createCaller } from '../auth/caller'
 import type { Proxy } from '../proxy'
 import { preflight, withCors } from './cors'
-import type { HttpRegistry } from './extra'
-import { text } from './reply'
+import type { HttpRegistry } from './registry'
 import { createRoutes, type Peer, type Reply, type Route, type RoutesOptions } from './routes'
 
-export interface ResponderOptions extends Omit<RoutesOptions, 'caller' | 'devices'> {
+interface ResponderOptions extends Omit<RoutesOptions, 'caller' | 'devices'> {
   devices: Pick<HostDevices, 'verify' | 'get' | 'redeem' | 'remove'>
   admin: string
   proxy: Proxy
-  extra: Pick<HttpRegistry, 'get'>
+  registry: Pick<HttpRegistry, 'get'>
 }
 
 type Allowed = Pick<Route, 'method'>
 
 const allows = (route: Allowed, method: string) => method === route.method || (route.method === 'GET' && method === 'HEAD')
 
-const notAllowed = (route: Allowed) => text('method not allowed', 405, { allow: `${route.method}, OPTIONS` })
+const notAllowed = (route: Allowed) => textReply('method not allowed', 405, { allow: `${route.method}, OPTIONS` })
 
 const failed = (error: unknown) => {
   console.error(`gateway request failed: ${errorMessage(error)}`)
-  return text('sand could not answer this request', 500)
+  return textReply('sand could not answer this request', 500)
 }
 
 export const createResponder = (options: ResponderOptions) => {
@@ -42,11 +42,11 @@ export const createResponder = (options: ResponderOptions) => {
     const url = new URL(request.url)
     const route = routes.get(url.pathname)
     if (route) return allows(route, request.method) ? route.handle(request, peer) : notAllowed(route)
-    const extra = options.extra.get(url.pathname)
-    if (!extra) return options.proxy(request, routeCaller(caller(request, peer.address)))
-    if (!allows(extra, request.method)) return notAllowed(extra)
+    const registered = options.registry.get(url.pathname)
+    if (!registered) return options.proxy(request, routeCaller(caller(request, peer.address)))
+    if (!allows(registered, request.method)) return notAllowed(registered)
     const device = caller(request, peer.address)
-    return extra.handle({ request, url, device, admin: device === adminDevice, address: peer.address })
+    return registered.handle({ request, url, device, admin: device === adminDevice, address: peer.address })
   }
 
   return (request: Request, peer: Peer): Reply => {

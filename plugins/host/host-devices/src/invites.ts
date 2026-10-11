@@ -1,8 +1,8 @@
 import { hashSecret, randomSecret } from '@sand/kit/fs'
 
-const inviteTtl = 10 * 60_000
+const ttl = 10 * 60_000
 
-export const createInvites = (ttl = inviteTtl) => {
+export const createInvites = () => {
   const pending = new Map<string, number>()
   const sweep = (now: number) => {
     for (const [hash, expires] of pending) if (expires <= now) pending.delete(hash)

@@ -1,11 +1,11 @@
-import type { Thread, Wire } from '../contract'
+import type { Wire } from '../contract'
 import { listen } from '@sand/dom'
 import type { Context } from 'drydock'
 import type { Store } from './store'
 
 export const trackSeen = (ctx: Context, wire: Wire, store: Store) => {
   const mark = () => {
-    const thread: Thread | undefined = store.current ? store.threads.get(store.current) : undefined
+    const thread = store.currentThread()
     if (!thread || document.visibilityState !== 'visible' || wire.state() !== 'open') return
     const at = thread.info.updated
     if (at <= (thread.info.seen ?? thread.info.created)) return
@@ -17,5 +17,4 @@ export const trackSeen = (ctx: Context, wire: Wire, store: Store) => {
     if (id === store.current) mark()
   })
   ctx.effect(() => listen(document, 'visibilitychange', mark))
-  return mark
 }

@@ -5,7 +5,7 @@ import type { DeviceKind } from '@sand/protocol'
 import type { DeviceRemoval, HostDevices, PairedDevice } from './contract'
 import type { Invites } from './invites'
 import { deviceName } from './names'
-import { deviceKinds, type DeviceRecord, type DeviceStore } from './store'
+import { isDeviceKind, type DeviceRecord, type DeviceStore } from './store'
 
 const seenInterval = 60_000
 const leftoverAge = 10 * 60_000
@@ -51,7 +51,7 @@ export const createHostDevices = (store: DeviceStore, invites: Invites, hub: Pic
       return record && view(record)
     },
     verify(key) {
-      if (typeof key !== 'string' || !key) return
+      if (!key) return
       const hash = hashSecret(key)
       let found: DeviceRecord | undefined
       for (const record of store.records()) if (sameHash(hash, record.keyHash)) found = record
@@ -61,9 +61,8 @@ export const createHostDevices = (store: DeviceStore, invites: Invites, hub: Pic
     },
     invite: () => invites.create(),
     async redeem({ secret, name, kind, back }) {
-      const expires = typeof secret === 'string' ? invites.take(secret) : undefined
-      if (expires === undefined) return
-      if (!deviceKinds.includes(kind as DeviceKind)) return
+      const expires = invites.take(secret)
+      if (expires === undefined || !isDeviceKind(kind)) return
       const peer = kind === 'pc' ? back?.device : undefined
       const { record, key } = await create(peer?.id ?? Bun.randomUUIDv7(), peer?.name ?? name, kind)
       const device = view(record)

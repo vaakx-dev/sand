@@ -1,12 +1,13 @@
 import type { WebCommand } from '@sand/commands/contract'
 import type { PaletteItem, PalettePage, PaletteSource } from './contract'
-import { errorMessage } from '@sand/dom'
 import type { Context } from 'drydock'
+import { reportFailure } from './failure'
 
 const titleOf = (command: WebCommand) => command.title ?? command.description.split(/ \(|; |, or /)[0]!
 
-const run = (ctx: Context, command: WebCommand, args = '') =>
-  void Promise.resolve(ctx.commands?.run(command.name, args)).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+const runCommand = async (ctx: Context, command: WebCommand, args = '') => {
+  await ctx.commands?.run(command.name, args)
+}
 
 const argsPage = (ctx: Context, command: WebCommand): PalettePage => ({
   id: `command:${command.name}`,
@@ -16,7 +17,7 @@ const argsPage = (ctx: Context, command: WebCommand): PalettePage => ({
     value: '',
     placeholder: command.args,
     action: value => ({ label: 'Run', enabled: Boolean(value.trim()) }),
-    submit: value => run(ctx, command, value.trim()),
+    submit: value => void runCommand(ctx, command, value.trim()).catch(error => reportFailure(ctx, error)),
   },
 })
 
@@ -27,7 +28,7 @@ const commandItem = (ctx: Context, command: WebCommand): PaletteItem => ({
   label: titleOf(command),
   detail: command.title ? command.description : `/${command.name}`,
   search: `/${command.name} ${command.description}`,
-  ...(command.args?.startsWith('<') ? { page: () => argsPage(ctx, command) } : { run: () => run(ctx, command) }),
+  ...(command.args?.startsWith('<') ? { page: () => argsPage(ctx, command) } : { run: () => runCommand(ctx, command) }),
 })
 
 export const commandSource = (ctx: Context): PaletteSource => ({

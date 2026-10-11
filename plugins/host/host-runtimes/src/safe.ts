@@ -1,20 +1,27 @@
-import { createStrikes } from './strikes'
+const strikeLimit = 3
+const strikeWindow = 10 * 60_000
 
-export const autoSafeText = (error: string) => `sand started in safe mode because your plugins kept crashing it: ${error}`
+const autoSafeText = (error: string) => `sand started in safe mode because your plugins kept crashing it: ${error}`
 
-export const createSafeMode = (initial: boolean, now?: () => number) => {
-  const strikes = createStrikes(now)
+export const createSafeMode = (initial: boolean) => {
   let on = initial
   let cause: string | undefined
+  let strikes: number[] = []
 
   const set = (next: boolean) => {
     on = next
     cause = undefined
-    strikes.reset()
+    strikes = []
+  }
+
+  const struckOut = () => {
+    const now = Date.now()
+    strikes = [...strikes.filter(time => now - time < strikeWindow), now]
+    return strikes.length >= strikeLimit
   }
 
   const failed = (error: string) => {
-    if (on || !strikes.add()) return false
+    if (on || !struckOut()) return false
     set(true)
     cause = error
     return true
@@ -22,7 +29,7 @@ export const createSafeMode = (initial: boolean, now?: () => number) => {
 
   const ready = (safe: boolean) => {
     if (!safe) {
-      strikes.reset()
+      strikes = []
       return undefined
     }
     const text = cause && autoSafeText(cause)

@@ -1,30 +1,10 @@
-import { button, contextMenu, derive, div, dynamicChild, focusable, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, pressOpens, show, sig, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
 import { refreshGroup } from './refresh'
 import { machineIcon } from './rows'
 import { currentTarget, hasMessages, type PickerContext } from './target'
-
-const look = 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md px-2 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-200 ' + focusable
-
-const above = {
-  left: '0',
-  bottom: '100%',
-  width: `min(${SPACE['96']}, 100%)`,
-  maxHeight: `calc(100vh - ${SPACE['32']})`,
-}
-
-const press = (action: () => void) => ({
-  onMouseDown: (event: MouseEvent) => {
-    event.stopPropagation()
-    event.preventDefault()
-    action()
-  },
-  onClick: (event: MouseEvent) => {
-    if (event.detail === 0) action()
-  },
-})
 
 export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse) => {
   const open = sig(false)
@@ -50,8 +30,8 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const title = () => (started.get() ? `This thread runs on ${name()}. Continue it on another PC` : 'Choose which PC runs this')
 
   const chip = () =>
-    button(
-      { type: 'button', title, class: [look, () => (open.get() ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500')], ...press(toggle) },
+    chipButton(
+      { title, active: open, ...pressOpens(toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
       span({ class: 'min-w-0 truncate py-1 text-middle' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-middle' }, '· Offline') : null,
@@ -62,7 +42,9 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
       { class: 'flex min-w-0 items-center', hidden },
       context.view(),
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
-      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, dynamicChild(changes.version, menu))),
+      show(open, () =>
+        chipPopover(close, { class: 'left-0 w-96' }, dynamicChild(changes.version, menu)),
+      ),
     )
 
   return { pill }

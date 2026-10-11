@@ -12,7 +12,6 @@ interface SourceUsage {
 export interface TurnState {
   usage: Usage
   sources: Map<string, SourceUsage>
-  model?: string
   stopReason: TurnResult['stopReason']
   reply: string
   partial: PartialReply

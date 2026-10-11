@@ -14,6 +14,7 @@ export default definePlugin({
     jobs: 'no working dot on the panel button',
     projects: 'the project name and icon come from the folder alone',
     worktrees: 'a thread in a worktree shows the worktree folder as its project',
+    notify: 'copying the link is not confirmed',
   },
   apply(ctx) {
     const changes = pulse(

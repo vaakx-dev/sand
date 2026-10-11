@@ -1,12 +1,14 @@
 import type { UsageTotals } from '@sand/usage/contract'
 import { tildeHome, type Child, type MenuSpec } from '@sand/dom'
-import { folderName, periodTitle } from '@sand/kit'
-import { addTotals, byCost, emptyTotals, grouped, including } from '../../data/totals'
+import { byCost, emptyTotals, folderName, grouped, periodTitle } from '@sand/kit'
+import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { chip, muted } from '../parts'
 import { pcMenu, threadMenu } from './menu'
 
-export type Breakdown = 'projects' | 'models' | 'threads' | 'pcs' | 'periods'
+export const breakdowns = ['projects', 'models', 'threads', 'pcs', 'periods'] as const
+
+export type Breakdown = (typeof breakdowns)[number]
 
 export interface Row {
   key: string
@@ -27,7 +29,7 @@ export interface RowSource {
   showOnly(pc: string): void
 }
 
-const top = 10
+const maxRows = 10
 
 const pcChips = (ids: string[], { usage, nameOf }: RowSource) => (usage.pcs.length > 1 ? ids.map(id => chip(nameOf(id))) : [])
 
@@ -44,17 +46,19 @@ const modelRows = ({ usage }: RowSource): Row[] => {
   return [...byModel.values()]
 }
 
-const threadRows = (source: RowSource): Row[] =>
-  source.usage.threads.map(thread => ({
+const threadRows = (source: RowSource): Row[] => {
+  const { openThread } = source
+  return source.usage.threads.map(thread => ({
     key: thread.id,
     name: thread.title ?? 'Untitled',
     hint: [thread.title, thread.cwd && tildeHome(thread.cwd)].filter(Boolean).join('\n'),
     extra: [thread.cwd ? muted(folderName(thread.cwd)) : null, ...pcChips([thread.machine], source)],
     accounts: thread.accounts,
     totals: thread,
-    open: source.openThread && (() => source.openThread?.(thread.id)),
+    open: openThread && (() => openThread(thread.id)),
     menu: threadMenu(thread, source),
   }))
+}
 
 const pcRows = (source: RowSource): Row[] =>
   source.usage.pcs.map(pc => ({ key: pc.id, name: pc.name, extra: [], accounts: pc.accounts, totals: pc, menu: pcMenu(pc, source) }))
@@ -82,5 +86,5 @@ const builders: Record<Breakdown, (source: RowSource) => Row[]> = {
 export const rowsOf = (source: RowSource, view: Breakdown) => {
   const rows = builders[view](source)
   const sorted = view === 'periods' ? rows : rows.sort((a, b) => byCost(a.totals, b.totals))
-  return sorted.slice(0, top)
+  return sorted.slice(0, maxRows)
 }

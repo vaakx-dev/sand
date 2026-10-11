@@ -1,16 +1,11 @@
 import { plural, remoteKey } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { ago, div, iconButton, icon, projectIcon, show, span, type ContextMenu, type Sig } from '@sand/dom'
-import { groupSpec } from './context'
+import { ago, div, iconButton, icon, projectIcon, sectionRow, show, span, statusLine, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import type { ProjectsContext } from '../context'
 import { locationLine, noCopyLine } from './location'
 import { rowMenu } from './menu'
 import { byRecent, withoutCopy } from './places'
-import type { ProjectsContext } from './types'
-
-const groupIcon = (ctx: ProjectsContext, group: ProjectGroup) => {
-  const url = group.locations.map(entry => ctx.projects.icon(entry.path, entry.device)).find(Boolean)
-  return projectIcon(group.name, url)
-}
+import { groupSpec } from './specs'
 
 const summary = (group: ProjectGroup) => {
   const age = ago(group.updated)
@@ -19,13 +14,7 @@ const summary = (group: ProjectGroup) => {
 }
 
 const remoteLine = (remote?: string) =>
-  remote
-    ? div(
-        { class: 'flex min-w-0 items-center gap-2 text-xs text-neutral-500', title: remote },
-        span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)),
-        span({ class: 'min-w-0 truncate' }, remoteKey(remote) || remote),
-      )
-    : null
+  remote ? statusLine({ mark: span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)), text: remoteKey(remote) || remote, title: remote }) : null
 
 const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
   const flows = ctx.syncFlows
@@ -35,44 +24,41 @@ const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
     .map(machine => noCopyLine(flows, group, machine))
 }
 
-const menuButton = (group: ProjectGroup, open: Sig<string | undefined>) =>
+const menuButton = (group: ProjectGroup, open: Sig<string | undefined>, opened: Derive<boolean>) =>
   iconButton(
     {
       size: 'sm',
       title: 'Project actions',
       'aria-label': 'Project actions',
       'aria-haspopup': 'menu',
-      active: open.map(id => id === group.id),
-      onClick: () => open.set(open.get() === group.id ? undefined : group.id),
+      active: opened,
+      onClick: () => open.set(opened.get() ? undefined : group.id),
     },
     icon('more', 16),
   )
 
 export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, open: Sig<string | undefined>) => {
   const locations = byRecent(group.locations)
-  const primary = locations[0]
-  const multiple = locations.length > 1
-  return div(
-    { class: 'flex items-start gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => groupSpec(ctx, group)) },
+  const primary = locations.length > 1 ? locations[0] : undefined
+  const opened = open.map(id => id === group.id)
+  return sectionRow(
+    menu.target(() => groupSpec(ctx, group)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
       div(
         { class: 'flex min-w-0 items-center gap-2' },
-        groupIcon(ctx, group),
+        projectIcon(group.name, ctx.projects.groupIcon(group)),
         span({ class: 'min-w-0 truncate text-sm text-neutral-100' }, group.name),
         span({ class: 'shrink-0 text-xs text-neutral-500' }, summary(group)),
       ),
       remoteLine(group.remote),
-      ...locations.map(entry => locationLine(ctx, menu, entry, multiple ? primary : undefined)),
+      ...locations.map(entry => locationLine(ctx, menu, entry, primary)),
       ...noCopyLines(ctx, group),
     ),
     div(
       { class: 'relative shrink-0' },
-      menuButton(group, open),
-      show(
-        open.map(id => id === group.id),
-        () => rowMenu(ctx, group, () => open.set(undefined)),
-      ),
+      menuButton(group, open, opened),
+      show(opened, () => rowMenu(ctx, group, () => open.set(undefined))),
     ),
   )
 }

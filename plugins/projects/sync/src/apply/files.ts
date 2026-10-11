@@ -35,9 +35,10 @@ export const checkoutPaths = async (hidden: Hidden, tree: string, paths: string[
 export const writeDiff = async (hidden: Hidden, fromTree: string, toTree: string) => {
   const listing = await hiddenOut(hidden, ['diff-tree', '-r', '-z', '--name-status', '--no-renames', fromTree, toTree])
   const items = listing.split('\0')
-  const removed: string[] = []
-  const written: string[] = []
-  for (let at = 0; at + 1 < items.length; at += 2) (items[at] === 'D' ? removed : written).push(items[at + 1] as string)
+  const paths = items.filter((_, index) => index % 2 === 1)
+  const deleted = (index: number) => items[index * 2] === 'D'
+  const removed = paths.filter((_, index) => deleted(index))
+  const written = paths.filter((_, index) => !deleted(index))
   await removeFiles(hidden, removed)
   await checkoutPaths(hidden, toTree, written)
   return removed.length + written.length

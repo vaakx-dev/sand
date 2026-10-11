@@ -1,6 +1,7 @@
 import { derive, errorMessage, pulse, sig } from '@sand/dom'
 import type { Remote } from '@sand/host-remotes/contract'
 import type { Context } from 'drydock'
+import { whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 
 export type WelcomeStep = 'start' | 'join' | 'joined'
@@ -19,19 +20,20 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
   })
   const active = derive(() => !skipped.get() && (step.get() !== 'start' || (fresh.get() && quiet.get())))
 
-  const join = async (link: string) => {
-    if (busy.get() || !link.trim()) return
-    busy.set(true)
-    error.set('')
+  const connect = async (link: string) => {
     try {
-      joined.set(await ctx.wire.call<Remote>({ type: 'remotes.add', link: link.trim() }))
+      joined.set(await ctx.wire.call<Remote>({ type: 'remotes.add', link }))
       step.set('joined')
       void control.load()
     } catch (failure) {
       error.set(errorMessage(failure))
-    } finally {
-      busy.set(false)
     }
+  }
+
+  const join = async (link: string) => {
+    if (busy.get() || !link.trim()) return
+    error.set('')
+    await whileBusy(busy, () => connect(link.trim()))
   }
 
   const finish = () => {

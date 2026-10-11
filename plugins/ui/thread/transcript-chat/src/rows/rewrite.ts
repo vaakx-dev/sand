@@ -2,9 +2,7 @@ import type { NavAction } from '@sand/dom'
 import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'
 
-type Ctx = Context<'threads'>
-
-export const rewriteActions = (ctx: Ctx, thread: string, entry: string, text: string): NavAction[] => {
+export const rewriteActions = (ctx: Context<'threads'>, thread: string, entry: string, text: string): NavAction[] => {
   const composer = ctx.composer
   if (!composer || !text || ctx.threads.get(thread)?.running) return []
   const parent = () => ctx.threads.path(thread).find(found => found.id === entry)?.parent

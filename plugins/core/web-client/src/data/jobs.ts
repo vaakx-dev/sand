@@ -6,20 +6,21 @@ import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
 import { createRuns } from './runs'
 
-const seed = (job: WireJob, known?: JobState): JobState => ({
-  ...job,
-  notes: known?.notes.length ? known.notes : job.note ? [job.note] : [],
-})
+const notesOf = (job: WireJob, known?: JobState) => {
+  if (known?.notes.length) return known.notes
+  return job.note ? [job.note] : []
+}
+
+const seed = (job: WireJob, known?: JobState): JobState => ({ ...job, notes: notesOf(job, known) })
 
 export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
   const devices = new Map<string, Map<string, JobState>>()
   const changed = () => ctx.emit('jobs.change')
-  const on = (device: string) => devices.get(device) ?? devices.set(device, new Map()).get(device)!
   const deviceOf = (id: string) => [...devices].find(([, jobs]) => jobs.has(id))?.[0]
 
   const keep = (device: string, job: WireJob) => {
-    const jobs = on(device)
-    jobs.set(job.id, seed(job, jobs.get(job.id)))
+    const jobs = devices.get(device) ?? new Map<string, JobState>()
+    devices.set(device, jobs.set(job.id, seed(job, jobs.get(job.id))))
     changed()
   }
 
@@ -49,10 +50,14 @@ export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
   ctx.on('wire.event', received => event(thisDevice, received))
 
   const list = (parent?: string) => [...devices.values()].flatMap(known => [...known.values()]).filter(job => !parent || job.parent === parent)
+  const runs = createRuns(ctx, store, list)
   const jobs: Jobs = {
     list,
-    runs: createRuns(ctx, store, list),
+    runs,
+    running: parent => runs(parent).filter(run => run.status === 'running'),
     cancel: id => wire.call({ type: 'job.cancel', job: id }, deviceOf(id)).then(() => undefined),
   }
   return { jobs, hello, event, forget }
 }
+
+export type JobService = ReturnType<typeof createJobs>

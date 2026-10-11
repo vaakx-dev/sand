@@ -1,5 +1,5 @@
 import type { SettingsPage } from './contract'
-import { appIcon, div, dynamicChild, el, icon, list, navButton, span, type Child, type Sig } from '@sand/dom'
+import { appIcon, div, dynamicChild, el, icon, list, nav, navButton, span, type Child, type Sig } from '@sand/dom'
 import type { PageStore } from './pages'
 
 export interface SideParts {
@@ -29,8 +29,7 @@ const pageButton = (page: Sig<SettingsPage>, store: PageStore, choose: (id: stri
 }
 
 export const sideView = ({ store, narrow, choose, back }: SideParts) =>
-  el(
-    'nav',
+  nav(
     { 'aria-label': 'Settings', class: () => ['flex h-full min-h-0 flex-col bg-neutral-950', narrow.get() ? 'w-full' : 'w-64'] },
     div(
       { class: 'flex h-12 shrink-0 items-center px-2' },

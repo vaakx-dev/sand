@@ -16,7 +16,8 @@
     ],
     "uses": {
       "media": "images load only from inline data",
-      "notify": "copying is not confirmed"
+      "notify": "copying is not confirmed and a failed Stop is not reported",
+      "jobs": "agent and workflow calls do not show their background run"
     }
   },
   "dependencies": {
@@ -26,7 +27,6 @@
     "@sand/llm-accounts": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/transcript-chat": "workspace:*",
     "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }

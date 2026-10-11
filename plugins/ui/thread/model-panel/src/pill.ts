@@ -1,20 +1,11 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { button, div, dynamicChild, icon, popover, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { button, chipPopover, div, dynamicChild, icon, modelLogo, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { sourceName } from '@sand/kit'
 import type { PanelContext } from './actions'
-import { logo, sourceName } from './source'
-import { toggles } from './toggle'
 
-const pillLook =
-  'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200'
+const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
-const above = {
-  right: '0',
-  bottom: '100%',
-  width: `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`,
-  maxHeight: `calc(100vh - ${SPACE['32']})`,
-}
-
-export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
+export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
   const open = sig(false)
   let flash = false
   const close = () => open.set(false)
@@ -30,27 +21,36 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
   const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
   const modelLabel = () => model.get()?.label ?? current.get()?.model ?? ''
   const effortLabel = () => ctx.models.levels().find(level => level.id === current.get()?.effort)?.label ?? ''
+  const nextLabel = () => {
+    const value = next.get()
+    return value ? ctx.models.label(value) : ''
+  }
   const sourceTip = () => {
     const known = source.get()
     if (!known) return ''
     return known.via && ctx.modelPicker.online(known.via) === false ? `${sourceName(known)} · offline` : sourceName(known)
   }
-  const pillTip = () =>
-    current.get() ? [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ') : ''
+  const pillTip = () => {
+    if (!current.get()) return ''
+    return [modelLabel(), sourceTip(), effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
+  }
 
-  const pill = () =>
+  const view = () =>
     div(
       { class: 'flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
       button(
         {
           type: 'button',
           title: pillTip,
-          class: [pillLook, () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400')],
-          ...toggles(toggle),
+          class: [
+            'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
+            () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'),
+          ],
+          ...pressOpens(toggle),
         },
         dynamicChild(
           model.map(value => value?.provider),
-          provider => logo(provider),
+          provider => modelLogo(provider),
         ),
         span({ class: 'min-w-0 truncate' }, modelLabel),
         show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate text-neutral-500 sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),
@@ -64,21 +64,21 @@ export const createPicker = (ctx: PanelContext, target: PickerTarget, changes: P
         ),
         span({ class: 'hidden shrink-0 sm:inline-flex' }, icon('down', 12)),
       ),
-      show(
-        next.map(Boolean),
-        () =>
-          span(
-            { class: 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md bg-warning-950 px-2 text-xs text-warning-400', title: () => (next.get() ? `Switches to ${ctx.models.label(next.get()!)} when this turn finishes` : '') },
-            icon('clock', 12),
-            span({ class: 'shrink-0' }, 'Next'),
-            span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${ctx.models.label(next.get()!)}` : '')),
-          ),
+      show(next.map(Boolean), () =>
+        span(
+          {
+            class: 'inline-flex h-6 min-w-0 items-center gap-1 rounded-md bg-warning-950 px-2 text-xs text-warning-400',
+            title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : ''),
+          },
+          icon('clock', 12),
+          span({ class: 'shrink-0' }, 'Next'),
+          span({ class: 'hidden truncate sm:inline' }, () => (next.get() ? `: ${nextLabel()}` : '')),
+        ),
       ),
-      show(open, () => popover(close, { class: 'mb-3 overflow-auto', style: above }, ctx.modelPicker.panel(target, close, { flash }))),
+      show(open, () =>
+        chipPopover(close, { class: 'right-0', width: panelWidth }, ctx.modelPicker.panel(target, close, { flash })),
+      ),
     )
 
-  return {
-    pill,
-    open: (effort = false) => reveal(effort),
-  }
+  return { view, open: reveal }
 }

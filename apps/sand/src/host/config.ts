@@ -16,10 +16,11 @@ const configPath = async (home: string) => {
 }
 
 const hostTable = async (path: string): Promise<unknown> => {
-  if (!(await Bun.file(path).exists())) return {}
+  const file = Bun.file(path)
+  if (!(await file.exists())) return {}
   try {
-    const parsed = Bun.TOML.parse(await Bun.file(path).text()) as Record<string, unknown>
-    return parsed.host ?? {}
+    const parsed = Bun.TOML.parse(await file.text())
+    return 'host' in parsed ? parsed.host : {}
   } catch (error) {
     throw new Error(`${path}: ${errorMessage(error)}`)
   }

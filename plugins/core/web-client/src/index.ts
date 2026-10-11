@@ -12,9 +12,8 @@ import { createMedia } from './media/service'
 import { bridgeRelay } from './relay/events'
 import { bridgeRemotes } from './remotes/bridge'
 import { createLinks } from './remotes/links'
-import { createMachines, machineChanges } from './remotes/machines'
+import { createMachines } from './remotes/machines'
 import { routeWire, thisDevice } from './remotes/route'
-import { devicesOf } from './remotes/sessions'
 import { applyEvent } from './threads/events'
 import { createThreads } from './threads/service'
 import { Store } from './threads/store'
@@ -35,36 +34,34 @@ export default definePlugin({
     const store = new Store(ctx)
     ctx.effect(() => () => store.dispose())
     const cache = createCache(ctx, store, () => local.pairing())
-    const local = startWire(ctx, machineChanges(ctx), () => store.synced.get(thisDevice), cache.gate, {
-      load: () => cache.saved('hello'),
-      save: saved => cache.keep('hello', saved),
-    })
+    const local = startWire(ctx, cache, () => store.synced.get(thisDevice))
     const links = createLinks(id => local.call<RemoteInvite>({ type: 'remotes.invite', remote: id }))
     ctx.effect(() => () => links.close())
     const wire = routeWire(local, links, store)
-    const threads = createThreads(ctx, wire, store, cache.hydrate)
-    const projects = createProjects(ctx, wire, store)
+    const machines = createMachines(ctx, wire, local, links)
+    const projects = createProjects(ctx, wire, store, machines)
+    const threads = createThreads(ctx, wire, store, projects.projects, cache.hydrate)
     void cache.ready.then(() => {
-      projects.restore(cache.saved('projects'), devicesOf(store))
+      projects.restore(cache.saved('projects'), store.devices())
       threads.restored()
     })
     ctx.on('projects.change', () => cache.keep('projects', projects.kept()))
     const jobs = createJobs(ctx, wire, store)
-    links.listen(bridgeRemotes(ctx, store, wire, threads, projects, jobs))
+    const models = createModels(ctx, wire, threads, store)
+    links.listen(bridgeRemotes(ctx, store, { wire, threads, projects, jobs, models }))
     ctx.on('wire.event', event => applyEvent(store, event, id => void threads.load(id)))
-    bridgeRelay(ctx, wire, threads, threads.adopt)
+    bridgeRelay(ctx, wire, threads, models)
     ctx.provide('wire', wire)
     ctx.provide('threads', threads)
     ctx.provide('turns', createTurns(wire, store))
     ctx.provide('jobs', jobs.jobs)
-    ctx.provide('models', createModels(ctx, wire, threads, store))
+    ctx.provide('models', models)
     ctx.provide('limits', createLimits(ctx, wire))
     ctx.provide('fileIndex', createFileIndex(wire, threads.cwd))
     ctx.provide('skillIndex', createSkillIndex(ctx, wire, threads))
     ctx.provide('projects', projects.projects)
-    ctx.provide('machines', createMachines(ctx, wire, local, links))
-    const media = createMedia(wire, store)
-    ctx.effect(() => media.dispose)
-    ctx.provide('media', media.media)
+    ctx.provide('sync', createSync(ctx, wire, projects))
+    ctx.provide('machines', machines)
+    ctx.provide('media', createMedia(wire, store))
   },
 })

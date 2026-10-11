@@ -9,16 +9,14 @@ export const skillBlock = (skill: Skill): TextBlock => ({
   text: `<skill name="${skill.name}" dir="${skill.dir}">\n${skill.body}\n</skill>`,
 })
 
-export const mentions = (content: UserContent[]) =>
+const mentions = (content: UserContent[]) =>
   new Set(content.flatMap(block => (block.type === 'text' ? [...block.text.matchAll(mention)].map(match => match[1]!) : [])))
-
-export const expand = (content: UserContent[], skills: Skill[]): UserContent[] =>
-  skills.length ? [...skills.map(skillBlock), ...content] : content
 
 export const expandMentions = (ctx: Context, skills: Skills) =>
   ctx.on('turn.prompt', async (content, session) => {
     const names = [...mentions(content)]
     if (!names.length) return content
     const list = await skills.list(session.cwd, session.project)
-    return expand(content, names.flatMap(name => list.find(skill => skill.name === name) ?? []))
+    const mentioned = names.flatMap(name => list.find(skill => skill.name === name) ?? [])
+    return mentioned.length ? [...mentioned.map(skillBlock), ...content] : content
   })

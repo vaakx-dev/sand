@@ -21,13 +21,13 @@ export type PcStatus =
   | { kind: 'newer' }
   | { kind: 'behind'; count?: number; beyond?: boolean }
 
-export const farBehind = 20
+const farBehind = 20
 
 const busyPhases: UpdatePhase[] = ['downloading', 'installing', 'switching', 'waiting', 'restarting']
 
 export const isBusy = (state: UpdateState | undefined) => !!state && busyPhases.includes(state.phase)
 
-export const behindBy = (target: ReleaseInfo, current: BuildInfo): number | undefined => {
+const behindBy = (target: ReleaseInfo, current: BuildInfo) => {
   if (current.id === target.build.id) return 0
   const index = current.commit ? (target.changes?.findIndex(change => change.commit === current.commit) ?? -1) : -1
   return index >= 0 ? index : undefined
@@ -55,13 +55,17 @@ export const isFar = (status: PcStatus) => status.kind === 'behind' && (!!status
 
 export const pickTarget = (states: UpdateState[], channel: UpdateChannel | undefined) =>
   states
-    .filter(state => state.channel === channel && state.latest)
-    .map(state => state.latest!)
+    .flatMap(state => (state.channel === channel && state.latest ? [state.latest] : []))
     .sort((a, b) => b.build.time - a.build.time)[0]
 
 export const changesFor = (target: ReleaseInfo | undefined, statuses: PcStatus[]) => {
   const changes = target?.changes ?? []
-  const counts = statuses.flatMap(status => (status.kind === 'behind' ? [status.count] : status.kind === 'channel' ? [undefined] : []))
-  if (!counts.length || counts.includes(undefined)) return changes
-  return changes.slice(0, Math.max(...(counts as number[])))
+  let most: number | undefined
+  for (const status of statuses) {
+    if (status.kind === 'channel') return changes
+    if (status.kind !== 'behind') continue
+    if (status.count === undefined) return changes
+    most = Math.max(most ?? 0, status.count)
+  }
+  return most === undefined ? changes : changes.slice(0, most)
 }

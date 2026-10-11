@@ -1,9 +1,8 @@
 import type { LLMRequest } from '@sand/llm-accounts/contract'
-import type { UsageRecord } from '@sand/loops/contract'
 import type { Entry } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { CompactionReason, CompactionRecord } from './contract'
-import { usageSource } from '@sand/kit'
+import { usageRecord } from '@sand/kit'
 import type { Context } from 'drydock'
 import { budgetOf, usageOf, type Budget } from './budget'
 import type { CompactionConfig } from './config'
@@ -60,7 +59,7 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
       }
       after = requestTokens(rewrite([...path, draft(session, record)], request))
       session.append('compaction', { ...record, after } satisfies CompactionRecord)
-      if (usage) session.append('usage', { id: Bun.randomUUIDv7(), model: request.model, ...usageSource(ctx.llm, request.model, source), usage } satisfies UsageRecord)
+      if (usage) session.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))
       tracker.reset(session.id)
       return after
     } finally {

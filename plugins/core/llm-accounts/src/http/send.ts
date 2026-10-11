@@ -28,7 +28,7 @@ const sleep = (ms: number, signal?: AbortSignal) =>
     signal?.addEventListener('abort', abort, { once: true })
   })
 
-export interface SendOptions {
+interface SendOptions {
   retries: number
   signal?: AbortSignal
   inspect?(response: Response): void

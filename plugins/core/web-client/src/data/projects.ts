@@ -1,8 +1,8 @@
 import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
-import type { WireEvent } from '@sand/protocol'
-import type { ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
+import type { WireEvent, WireRequest } from '@sand/protocol'
+import type { Machines, ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
 import { appIconUrl } from '@sand/dom'
-import { isInside, sandHomeProject, uuid } from '@sand/kit'
+import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
@@ -12,10 +12,10 @@ import { keptLists } from './kept'
 
 const fallback = { device: '', home: '~', sep: '/', root: '~', scratch: '' }
 
-export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
+export const createProjects = (ctx: Context, wire: Wire, store: Store, machines: Machines) => {
   const lists: Lists = new Map()
   const progress = new Map<string, (text: string) => void>()
-  const call = <T>(request: Parameters<Wire['call']>[0], device?: string) => wire.call<T>(request, device || thisDevice)
+  const call = <T>(request: WireRequest, device?: string) => wire.call<T>(request, device || thisDevice)
   let view: ProjectGroup[] | undefined
   let shown = ''
 
@@ -73,9 +73,11 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const group = (path: string, device?: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
 
-  const icons = projectIcons(ctx, wire)
+  const icons = projectIcons(ctx, wire, machines)
   ctx.on('wire.hello', icons.clear)
   ctx.effect(() => icons.clear)
+
+  const groupIcon = (found: ProjectGroup) => (found.id === sandHomeProject ? appIconUrl() : icons.get(found))
 
   const entryFor = (project: Project, device?: string): ProjectEntry => {
     const found = get(project.id)?.locations.find(location => sameDevice(location.device, device))
@@ -86,7 +88,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     return copyEntry(lists, project, id, copy)
   }
 
-  const registered = async (request: Parameters<Wire['call']>[0], device?: string) => {
+  const registered = async (request: WireRequest, device?: string) => {
     const project = await call<Project>(request, device)
     await refresh(device)
     return entryFor(project, device)
@@ -102,11 +104,13 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     groups: options => all().filter(found => options?.hidden || !found.hidden),
     get,
     group,
+    name: (path, device) => group(path, device)?.name || folderName(path),
+    quick: (path, device) => !path || inScratch(path, device),
     icon(path, device) {
       const found = group(path, device)
-      if (!found) return undefined
-      return found.id === sandHomeProject ? appIconUrl() : icons.get(found)
+      return found && groupIcon(found)
     },
+    groupIcon,
     place,
     browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),
     mkdir: (path, device) => call<void>({ type: 'fs.mkdir', path }, device),
@@ -141,3 +145,5 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   return { projects, refresh, event, forget, restore, kept: () => Object.fromEntries(lists) }
 }
+
+export type ProjectService = ReturnType<typeof createProjects>

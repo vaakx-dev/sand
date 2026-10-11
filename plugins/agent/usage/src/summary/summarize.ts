@@ -1,3 +1,4 @@
+import { emptyTotals } from '@sand/kit'
 import type { LLM } from '@sand/llm-accounts/contract'
 import type { Sessions } from '@sand/sessions-sqlite/contract'
 import type { UsageQuery, UsageSummary } from '../contract'
@@ -6,7 +7,7 @@ import { identityResolver } from './identity'
 import { modelBook } from './models'
 import { periodBook } from './periods'
 import { rootFinder, threadBook } from './threads'
-import { addUsage, emptyTotals, isBilled } from './totals'
+import { addUsage, isBilled } from './totals'
 import { turnsOf } from './turns'
 
 export interface UsageSources {
@@ -24,8 +25,7 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
   const threads = threadBook(infos)
   const total = emptyTotals()
 
-  const isBranch = (id: string) => infos.get(id)?.kind === 'branch'
-  for (const turn of turnsOf(sessions.entriesOfType?.('usage') ?? [], isBranch)) {
+  for (const turn of turnsOf(sessions.entriesOfType?.('usage') ?? [])) {
     if (turn.at < query.since) continue
     const id = identify(turn)
     const price = llm?.price?.(turn.model)

@@ -27,3 +27,5 @@ export const watchWorkflows = (ctx: Context, capture: Capture) => {
 
   return { claim, has }
 }
+
+export type Workflows = ReturnType<typeof watchWorkflows>

@@ -1,32 +1,41 @@
-export * from './channel'
-export * from './safe'
-export * from './dist/build'
+export { accessOf, callerOf, runtimeEnv, upstreamSocketUrl, upstreamUrl } from './channel'
+export { buildInfo, isStamp, readStamp, stampBuild, type BuildStamp } from './dist/build'
 export { packBundle } from './dist/bundle'
-export * from './dist/bun/home'
-export { fetchOfficialBun, UnknownBunTarget } from './dist/bun/github'
+export { fetchOfficialBun } from './dist/bun/github'
+export { bunBinary, bunFolder, defaultTarget, readBuildBun, readTarget, validVersion } from './dist/bun/home'
 export { extractBundle } from './dist/extract'
-export { buildStamp } from './dist/files'
+export { buildStamp, bundleAsset, stampAsset } from './dist/files'
 export { allowThroughFirewall, firewallHint } from './dist/firewall'
-export * from './dist/layout'
+export {
+  appMain,
+  appRoot,
+  appsFolder,
+  buildFolder,
+  inAppsFolder,
+  installedRoot,
+  isInstalled,
+  readPointer,
+  restorePrevious,
+  setCurrentApp,
+  switchTo,
+} from './dist/layout'
 export { dim, done, notice } from './dist/print'
 export { readyRelease } from './dist/release/ready'
-export { appRoot } from './dist/root'
 export { putSandOnPath, writeShim } from './dist/shim'
-export * from './github'
-export { healthText, isHealthy } from './health/check'
+export { healthText, type HealthOutcome } from './health/check'
 export { parseHealth } from './health/parse'
-export type { HealthOutcome, HealthReport } from './health/types'
-export { waitHealthy, type WaitOptions } from './health/wait'
-export { callPeer, PeerError } from './peers/call'
-export { remoteStore, toRemote, type RemoteStore } from './peers/store'
-export { remoteUrls } from './peers/urls'
-export { watchRemotes } from './peers/watch'
+export { waitHealthy } from './health/wait'
+export { readJson, readText, textReply } from './http'
+export { askHost, callPeer, PeerError, SocketError } from './peers/call'
+export { parsePeerLink } from './peers/link'
+export { remoteStore, remoteUrls, toRemote, watchRemotes, type RemoteStore } from './peers/store'
 export { copyPlugin } from './plugins/copy'
 export { fileHash, treeHash } from './plugins/hash'
 export { installDependencies } from './plugins/install'
 export { carryOver, unsharedPaths } from './plugins/keep'
-export * from './plugins/names'
-export * from './plugins/staging'
+export { executableList, safeRelative, unsharedName, validPluginName } from './plugins/names'
+export { exists, isLink, removeQuietly, renameBlocked, stagingFolder } from './plugins/staging'
 export { scanPlugin, scanPlugins, type PluginScan } from './plugins/tree'
 export { pluginFiles } from './plugins/walk'
-export { isChannel, loadStore as loadUpdateStore, type UpdateStore } from './updates/store'
+export { safeEnv, safeFromEnv, withSafe } from './safe'
+export { isChannel, loadUpdateStore, type UpdateStore } from './updates/store'

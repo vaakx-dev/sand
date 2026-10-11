@@ -1,11 +1,11 @@
+import { isFolder } from '@sand/kit/fs'
 import type { SyncInspect } from '../contract'
 import { join } from 'node:path'
-import { hiddenOut, type Hidden } from '../folder/hidden'
+import type { Hidden } from '../folder/hidden'
 import { blockedReason } from '../folder/paths'
-import { isDirectory, isGitFolder } from '../folder/stat'
+import { isGitFolder } from '../folder/stat'
 import { git } from '../git/run'
-import { folderTree } from '../snapshot/tree'
-import { treeSizes } from '../state/sizes'
+import { folderTree, treeSizes } from '../snapshot/tree'
 import { branchOf, remotesOf } from '../transfer/remotes'
 import { diskBytes } from './disk'
 import { findSecrets } from './secrets'
@@ -17,17 +17,17 @@ const dirtyCount = async (folder: string) => {
   return status.out.split('\0').filter(Boolean).length
 }
 
-const empty = (path: string, blocked?: string): SyncInspect => ({ path, git: false, files: 0, bytes: 0, historyBytes: 0, dirty: 0, skipped: [], secrets: [], remotes: {}, blocked })
+const blockedInspect = (path: string, blocked: string): SyncInspect => ({ path, git: false, files: 0, bytes: 0, historyBytes: 0, dirty: 0, skipped: [], secrets: [], remotes: {}, blocked })
 
 export const inspectFolder = async (hidden: Hidden, sandHome: string): Promise<SyncInspect> => {
   const folder = hidden.folder
-  if (!(await isDirectory(folder))) throw new Error(`${folder} is not a folder`)
+  if (!(await isFolder(folder))) throw new Error(`${folder} is not a folder`)
   const blocked = await blockedReason(folder, sandHome)
-  if (blocked) return empty(folder, blocked)
+  if (blocked) return blockedInspect(folder, blocked)
   const isGit = await isGitFolder(folder)
   const tree = await folderTree(hidden)
-  const [listing, skipped, secrets, setup, remotes, branch, historyBytes, dirty] = await Promise.all([
-    hiddenOut(hidden, ['ls-tree', '-r', '-l', '-z', tree]),
+  const [sizes, skipped, secrets, setup, remotes, branch, historyBytes, dirty] = await Promise.all([
+    treeSizes(hidden, tree),
     skippedEntries(hidden),
     findSecrets(folder),
     suggestedSetup(folder),
@@ -36,5 +36,5 @@ export const inspectFolder = async (hidden: Hidden, sandHome: string): Promise<S
     isGit ? diskBytes(join(folder, '.git')) : 0,
     isGit ? dirtyCount(folder) : 0,
   ])
-  return { path: folder, git: isGit, branch, ...treeSizes(listing), historyBytes, dirty, skipped, secrets, remotes, setup }
+  return { path: folder, git: isGit, branch, ...sizes, historyBytes, dirty, skipped, secrets, remotes, setup }
 }

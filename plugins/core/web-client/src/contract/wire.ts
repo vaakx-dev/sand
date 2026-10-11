@@ -9,8 +9,6 @@ export interface WirePairing {
 
 export interface Wire {
   state(): WireState
-  retryAt(): number | undefined
-  reconnect(): void
   hello(): Hello | undefined
   pairing(): WirePairing | undefined
   call<T = unknown>(request: WireRequest, device?: string): Promise<T>

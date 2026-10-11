@@ -1,5 +1,5 @@
 import { branchExists } from './repo'
-import { gitMaybe, gitOk } from './run'
+import { gitMaybe, gitOk } from '@sand/kit/git'
 import { applyStash, dropStash, stashAll } from './stash'
 
 export const addWorktree = (repo: string, branch: string, path: string, base: string) => gitOk(repo, ['worktree', 'add', '-b', branch, path, base])

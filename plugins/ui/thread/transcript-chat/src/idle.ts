@@ -17,7 +17,7 @@ const hint = (keys: string[], label: Child, run: () => void) =>
 
 const projectName = (ctx: Context<'threads'>) => {
   const cwd = ctx.threads.cwd()
-  return (cwd && (ctx.projects?.group(cwd, ctx.threads.device())?.name || folderName(cwd))) || 'sand'
+  return (cwd && (ctx.projects?.name(cwd, ctx.threads.device()) ?? folderName(cwd))) || 'sand'
 }
 
 export const idleHints = (ctx: Context<'threads'>) => {

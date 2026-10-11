@@ -2,7 +2,6 @@ import { derive, effect, untrack, type Pulse } from '@sand/dom'
 import type { Composer } from '@sand/composer-card/contract'
 import type { Context } from 'drydock'
 import { activeGoal, type Goal } from '../goal'
-import { goalBanner } from './banner'
 
 export interface GoalView {
   thread: string
@@ -28,9 +27,9 @@ export const goalState = (ctx: Context<'threads'>, changes: Pulse) => {
 
 export type GoalState = ReturnType<typeof goalState>
 
-export const mountGoal = (ctx: Context, composer: Composer, state: GoalState) =>
+export const mountGoal = (composer: Composer, state: GoalState, banner: () => HTMLElement) =>
   effect(() => {
     if (!state.identity.get()) return
-    const remove = untrack(() => composer.slot('above', () => goalBanner(ctx, state.view), -10))
+    const remove = untrack(() => composer.slot('above', banner, -10))
     return () => void remove()
   })

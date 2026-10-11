@@ -1,20 +1,18 @@
-import type { Project, ProjectCopy } from '@sand/host-projects/contract'
+import type { Project, ProjectCopy } from '@sand/protocol'
 import { join } from 'node:path'
-import { replaceFile } from './replace'
+import { isRecord } from '../json/record'
+import { writeAtomic } from './replace'
 
-type Fields = Record<string, unknown>
-
-const isFields = (value: unknown): value is Fields => !!value && typeof value === 'object' && !Array.isArray(value)
 const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 
 export const projectsPath = (home: string) => join(home, 'projects.json')
 
 const parseCopy = (value: unknown): ProjectCopy | undefined => {
-  if (!isFields(value) || typeof value.path !== 'string' || !value.path || !isTime(value.added) || !isTime(value.updated)) return undefined
+  if (!isRecord(value) || typeof value.path !== 'string' || !value.path || !isTime(value.added) || !isTime(value.updated)) return undefined
   return { path: value.path, added: value.added, updated: value.updated, ...(value.removed === true ? { removed: true } : {}) }
 }
 
-const parseCopies = (value: Fields) => {
+const parseCopies = (value: Record<string, unknown>) => {
   const copies: Record<string, ProjectCopy> = {}
   for (const [device, raw] of Object.entries(value)) {
     const copy = parseCopy(raw)
@@ -24,8 +22,8 @@ const parseCopies = (value: Fields) => {
 }
 
 export const parseProject = (value: unknown): Project | undefined => {
-  if (!isFields(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
-  if (!isTime(value.updated) || !isFields(value.copies)) return undefined
+  if (!isRecord(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
+  if (!isTime(value.updated) || !isRecord(value.copies)) return undefined
   if (value.remote !== undefined && typeof value.remote !== 'string') return undefined
   return {
     id: value.id,
@@ -38,24 +36,24 @@ export const parseProject = (value: unknown): Project | undefined => {
   }
 }
 
+const projectsOf = (value: unknown): Project[] => {
+  if (!isRecord(value) || value.version !== 2 || !Array.isArray(value.projects)) throw new Error('Not a version 2 projects file')
+  return value.projects.flatMap(entry => parseProject(entry) ?? [])
+}
+
 export const parseProjectsFile = (text: string): Project[] | undefined => {
   try {
-    const value: unknown = JSON.parse(text)
-    if (!isFields(value) || value.version !== 2 || !Array.isArray(value.projects)) return undefined
-    return value.projects.flatMap(entry => parseProject(entry) ?? [])
+    return projectsOf(JSON.parse(text))
   } catch {
     return undefined
   }
 }
 
-export const readProjectsFile = async (home: string): Promise<Project[] | undefined> => {
+export const readProjectsFile = async (home: string): Promise<Project[]> => {
   const file = Bun.file(projectsPath(home))
-  if (!(await file.exists())) return undefined
-  return parseProjectsFile(await file.text())
+  if (!(await file.exists())) return []
+  return projectsOf(await file.json())
 }
 
-export const writeProjectsFile = async (home: string, projects: Project[]) => {
-  const path = projectsPath(home)
-  await Bun.write(`${path}.tmp`, `${JSON.stringify({ version: 2, projects }, null, 2)}\n`)
-  await replaceFile(`${path}.tmp`, path)
-}
+export const writeProjectsFile = (home: string, projects: Project[]) =>
+  writeAtomic(projectsPath(home), `${JSON.stringify({ version: 2, projects }, null, 2)}\n`)

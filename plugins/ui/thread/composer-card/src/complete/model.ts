@@ -1,13 +1,25 @@
-import type { CompletionSource, Suggestion } from '../contract'
-import { derive, listbox, sig, type KeyMap } from '@sand/dom'
+import { derive, listbox, listen, sig, type IconName, type KeyMap } from '@sand/dom'
 
-export type Field = HTMLTextAreaElement | HTMLInputElement
+export interface Suggestion {
+  value: string
+  description?: string
+  submit?: boolean
+  partial?: boolean
+  group?: string
+  icon?: IconName
+  trigger?: string
+}
+
+export interface CompletionSource {
+  trigger: string
+  pattern: RegExp
+  items(query: string): Suggestion[] | Promise<Suggestion[]>
+  hint?(query: string): string | undefined
+}
 
 const limit = 20
 
-export type CompletionModel = ReturnType<typeof completionModel>
-
-export const completionModel = (input: Field, sources: () => CompletionSource[], submit: () => void) => {
+export const createCompletion = (input: HTMLTextAreaElement, sources: CompletionSource[], submit: () => void) => {
   const items = sig<Suggestion[]>([])
   const hint = sig<string | undefined>(undefined)
   const source = sig<CompletionSource | undefined>(undefined)
@@ -47,6 +59,14 @@ export const completionModel = (input: Field, sources: () => CompletionSource[],
     Escape: close,
   }
 
+  const keydown = (event: KeyboardEvent) => {
+    const handler = keyMap[event.key]
+    if (!handler || !visible.get()) return false
+    if (event.key !== 'Escape' && !items.get().length) return false
+    handler(event)
+    return true
+  }
+
   const show = (candidate: CompletionSource, query: string, typed: string, found: Suggestion[]) => {
     const shown = found.slice(0, limit)
     if (shown.length === 1 && shown[0]?.value === query) return close()
@@ -59,7 +79,7 @@ export const completionModel = (input: Field, sources: () => CompletionSource[],
 
   const update = () => {
     const typed = input.value.slice(0, input.selectionStart ?? input.value.length)
-    for (const candidate of sources()) {
+    for (const candidate of sources) {
       const query = candidate.pattern.exec(typed)?.[1]
       if (query === undefined) continue
       const ticket = ++request
@@ -71,5 +91,11 @@ export const completionModel = (input: Field, sources: () => CompletionSource[],
     close()
   }
 
-  return { items, hint, source, visible, box, keyMap, close, update }
+  listen(input, 'input', update)
+  listen(input, 'click', update)
+  listen(input, 'blur', close)
+
+  return { items, hint, source, visible, box, close, keydown }
 }
+
+export type Completion = ReturnType<typeof createCompletion>

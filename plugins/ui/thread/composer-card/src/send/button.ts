@@ -1,9 +1,10 @@
-import { button, delayed, derive, div, dropdown, dynamicChild, focusable, icon, iconButton, popoverItem, show, span, spinner, type Sig } from '@sand/dom'
+import type { FollowUpMode } from '@sand/web-client/contract'
+import { delayed, derive, div, dropdown, dynamicChild, icon, iconButton, plainButton, popoverItem, show, span, spinner, type IconName, type Sig } from '@sand/dom'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
 
-const icons: Record<Exclude<Look, 'busy' | 'capture'>, string> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
+const icons: Record<Exclude<Look, 'busy' | 'capture'>, IconName> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
 
 const titles: Record<Exclude<Look, 'capture'>, string> = {
   off: 'Send',
@@ -37,19 +38,32 @@ const offTitle = (model: Model) => {
   return model.blocked.get() ? "Remove the files that can't be attached" : 'Send'
 }
 
-const option = (model: Model, close: () => void, value: 'queue' | 'steer', glyph: string, title: string) =>
+const titleOf = (model: Model, look: Look) => {
+  if (look === 'capture') return model.capture.get()?.title() ?? 'Send'
+  return look === 'off' ? offTitle(model) : titles[look]
+}
+
+const glyphOf = (model: Model, look: Look): IconName | 'busy' => {
+  if (look === 'busy') return 'busy'
+  return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
+}
+
+const option = (model: Model, close: () => void, value: FollowUpMode) =>
   popoverItem(
     {
       active: () => model.mode.get() === value,
       class: 'py-1',
       onClick: () => {
-        model.setMode(value)
+        model.mode.set(value)
         close()
       },
     },
-    span({ class: 'inline-flex text-neutral-500' }, icon(glyph, 16)),
-    span({ class: 'min-w-0 flex-1 text-sm text-neutral-100' }, title),
-    show(derive(() => model.mode.get() === value), () => span({ class: 'inline-flex text-accent-400' }, icon('check', 14))),
+    span({ class: 'inline-flex text-neutral-500' }, icon(icons[value], 16)),
+    span({ class: 'min-w-0 flex-1 text-sm text-neutral-100' }, titles[value]),
+    show(
+      () => model.mode.get() === value,
+      () => span({ class: 'inline-flex text-accent-400' }, icon('check', 14)),
+    ),
   )
 
 const modeMenu = (model: Model) =>
@@ -58,18 +72,8 @@ const modeMenu = (model: Model) =>
     keepFocus: true,
     menuClass: 'w-64',
     trigger: (toggle, open) => iconButton({ size: 'sm', title: 'Send options', active: open, onClick: toggle }, icon('down', 14)),
-    items: close => [option(model, close, 'queue', 'queue', 'Send after this turn'), option(model, close, 'steer', 'steer', 'Add to the running turn')],
+    items: close => [option(model, close, 'queue'), option(model, close, 'steer')],
   })
-
-const titleOf = (model: Model, look: Look) => {
-  if (look === 'capture') return model.capture.get()?.title() ?? 'Send'
-  return look === 'off' ? offTitle(model) : titles[look]
-}
-
-const glyphOf = (model: Model, look: Look) => {
-  if (look === 'busy') return 'busy'
-  return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
-}
 
 export const sendControl = (model: Model) => {
   const sending = delayed(model.sending)
@@ -79,12 +83,11 @@ export const sendControl = (model: Model) => {
   return div(
     { class: 'ml-1 flex shrink-0 items-center gap-1' },
     show(split, () => modeMenu(model)),
-    button(
+    plainButton(
       {
-        type: 'button',
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
-        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', focusable, () => tone(look.get())],
+        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(look.get())],
         onClick: () => void model.send(),
       },
       dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),

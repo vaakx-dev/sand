@@ -1,6 +1,6 @@
 import type { Tool } from '@sand/tools/contract'
+import { resolve } from 'node:path'
 import { z } from 'zod'
-import { locate } from './files'
 import { walk } from './search/walk'
 
 const limit = 1000
@@ -17,7 +17,7 @@ export const glob: Tool<typeof input> = {
   input,
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []
-    for await (const file of walk(pattern, locate(cwd, path), include_ignored, signal)) {
+    for await (const file of walk(pattern, resolve(cwd, path), include_ignored, signal)) {
       files.push(file)
       if (files.length >= limit) break
     }

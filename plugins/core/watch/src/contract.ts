@@ -1,8 +1,5 @@
+import type { WatchOptions } from '@sand/kit/fs'
 import type { Dispose } from 'drydock'
-
-export interface WatchOptions {
-  recursive?: boolean
-}
 
 export interface WatchedFolders<T> {
   get(dir: string): Promise<T>

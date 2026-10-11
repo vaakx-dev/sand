@@ -1,6 +1,6 @@
 import type { Tool } from '@sand/tools/contract'
 import type { AskQuestion } from './contract'
-import { replyText, toolName } from './choices'
+import { replyText, toolName } from './reply'
 import { askInput } from './schema'
 import type { Waiting } from './waiting'
 

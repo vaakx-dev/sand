@@ -1,6 +1,6 @@
 import { div, duration, dynamicChild, elapsed, span, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
-import { row, worked, type Row, type RowContext } from '../rows/row'
+import { row, worked, type RowContext } from '../rows/row'
 import type { TurnHead } from './fold'
 
 const callsText = (head: TurnHead) => (head.calls ? ` · ${plural(head.calls, 'tool call')}` : '')
@@ -15,10 +15,10 @@ const working = (head: Sig<TurnHead>) =>
     span(() => callsText(head.get())),
   )
 
-export const turnRow = (head: TurnHead, context: RowContext): Row =>
+export const turnRow = (head: TurnHead, context: RowContext) =>
   row(head.key, head, data => {
     const { open, toggle } = context.states.get(head.key)
-    const flip = () => {
+    const unfold = () => {
       toggle()
       context.repaint()
     }
@@ -26,7 +26,7 @@ export const turnRow = (head: TurnHead, context: RowContext): Row =>
       { class: 'mb-3' },
       dynamicChild(
         data.map(value => value.running),
-        running => (running ? working(data) : worked(flip, open, span(() => took(data.get())))),
+        running => (running ? working(data) : worked(unfold, open, span(() => took(data.get())))),
       ),
     )
   })

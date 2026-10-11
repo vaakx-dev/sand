@@ -40,7 +40,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     models: view.models,
     find: view.find,
     sources: view.sources,
-    levels: () => local.levels(),
+    levels: local.levels,
     async *stream(request, signal) {
       await Promise.all([accounts.ready, catalog.ready, peers.ready])
       const model = view.resolve(request.model)

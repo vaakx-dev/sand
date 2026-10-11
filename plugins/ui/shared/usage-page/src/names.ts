@@ -1,3 +1,4 @@
+import { capital } from '@sand/kit'
 import type { AccountUsage } from '@sand/usage/contract'
 
 const brands: Record<string, string> = {
@@ -15,7 +16,7 @@ const sources: Record<string, { label: string; provider: string }> = {
   codex: { label: 'Codex', provider: 'openai' },
 }
 
-export const providerName = (id: string) => brands[id] ?? id.charAt(0).toUpperCase() + id.slice(1)
+export const providerName = (id: string) => brands[id] ?? capital(id)
 
 export const sourceName = (source: string) => sources[source]?.label ?? source
 

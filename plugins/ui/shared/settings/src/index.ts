@@ -1,5 +1,5 @@
 import type { Settings } from './contract'
-import { closeDrawer, float, icon, layer, pulse, secondaryAction } from '@sand/dom'
+import { closeDrawer, icon, layer, mount, pulse, secondaryAction } from '@sand/dom'
 import { definePlugin, type Dispose } from 'drydock'
 import { showPage } from './address'
 import { cover } from './cover'
@@ -19,11 +19,11 @@ export default definePlugin({
   apply(ctx) {
     const store = pageStore()
     const narrow = pulse(ctx, ['layout.change'], ['layout']).read(() => ctx.layout?.state().narrow ?? false)
-    let hide: Dispose | undefined
+    let uncover: Dispose | undefined
 
-    const unshow = () => {
-      void hide?.()
-      hide = undefined
+    const hide = () => {
+      void uncover?.()
+      uncover = undefined
     }
 
     const choose = (id: string) => {
@@ -34,9 +34,9 @@ export default definePlugin({
     const showPages = () => ctx.layout?.toggle('side', true)
 
     const render = () => {
-      unshow()
+      hide()
       if (!store.current.get()) return
-      hide = cover(
+      uncover = cover(
         ctx.layout,
         () => sideView({ store, narrow, choose, back: close }),
         () => pageView({ store, narrow, showPages, close }),
@@ -71,9 +71,10 @@ export default definePlugin({
     const restore = followThreads(ctx, settings.pages, settings.open, close)
     const toggle = () => (store.current.get() ? settings.close() : settings.open())
     const floatingButton = () =>
-      float(
+      mount(
+        document.body,
         secondaryAction(
-          { size: 'sm', class: [layer.drawer, 'fixed opacity-75'], style: { left: '0.75rem', bottom: '0.75rem' }, onClick: toggle },
+          { size: 'sm', class: [layer.drawer, 'fixed bottom-3 left-3 opacity-75'], onClick: toggle },
           icon('gear', 12),
           'Settings',
         ),
@@ -82,7 +83,7 @@ export default definePlugin({
     ctx.provide('settings', settings)
     ctx.watch('layout', () => {
       render()
-      return unshow
+      return hide
     })
     ctx.watch('nav', nav =>
       nav

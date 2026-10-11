@@ -7,7 +7,7 @@ import { inviteAt } from './invite'
 import type { Status } from './link/status'
 import { pairWith, unpair } from './pair'
 
-export interface RemotesOptions {
+interface RemotesOptions {
   store: RemoteStore
   self: DeviceInfo
   devices: Pick<HostDevices, 'mint' | 'remove'>
@@ -15,6 +15,8 @@ export interface RemotesOptions {
   urls(): string[]
   changed(remotes: Remote[]): void
 }
+
+const sameUrls = (record: RemoteRecord, urls: string[]) => urls.join(' ') === record.urls.join(' ')
 
 export const createRemotes = ({ store, self, devices, status, urls, changed }: RemotesOptions) => {
   const list = () => store.list().map(toRemote)
@@ -27,10 +29,10 @@ export const createRemotes = ({ store, self, devices, status, urls, changed }: R
     await store.put(record)
     changed(list())
   }
-  const learn = (id: string) => (next: string[]) => {
+  const saveInviteRoutes = (id: string) => (routes: string[]) => {
     const record = store.get(id)
-    if (!record || !next.length || next.join(' ') === record.urls.join(' ')) return
-    void save({ ...record, urls: next }).catch(() => {})
+    if (!record || !routes.length || sameUrls(record, routes)) return
+    void save({ ...record, urls: routes }).catch(() => {})
   }
   const forget = async (id: string) => {
     if (!store.get(id)) return
@@ -42,7 +44,7 @@ export const createRemotes = ({ store, self, devices, status, urls, changed }: R
   return {
     list,
     async add(link: string) {
-      const { record } = await pairWith(link, { self, urls: urls(), mint: devices.mint })
+      const record = await pairWith(link, { self, urls: urls(), mint: devices.mint })
       const previous = store.get(record.id)
       if (previous && previous.key !== record.key) await unpair(previous)
       status.accepted(record.id)
@@ -59,7 +61,7 @@ export const createRemotes = ({ store, self, devices, status, urls, changed }: R
     async learn({ device, urls: offered }: PairLinkRequest, address?: string) {
       const record = store.get(device.id)
       const routes = peerUrls(address, offered)
-      if (!record || !routes.length || routes.join(' ') === record.urls.join(' ')) return
+      if (!record || !routes.length || sameUrls(record, routes)) return
       await save({ ...record, url: routes[0]!, urls: routes })
     },
     async remove(id: string) {
@@ -74,7 +76,7 @@ export const createRemotes = ({ store, self, devices, status, urls, changed }: R
       if (!told) await unpair(record)
       await forget(device.id)
     },
-    invite: (id: string) => inviteAt(known(id), learn(id)),
+    invite: (id: string) => inviteAt(known(id), saveInviteRoutes(id)),
   }
 }
 

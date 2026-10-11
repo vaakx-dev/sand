@@ -1,6 +1,5 @@
-import { div, el, option, select, SPACE, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { div, h2, option, read, section, select, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { read } from '../reactive/read'
 import { quietButton } from './button'
 
 export interface SectionProps {
@@ -17,13 +16,12 @@ export interface Choice<T> {
 }
 
 export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[]) =>
-  el(
-    'section',
+  section(
     { class: 'flex flex-col gap-2' },
     title || action
-      ? div({ class: 'flex min-h-8 items-center gap-3 px-1' }, el('h2', { class: 'min-w-0 flex-1 text-xs font-medium text-neutral-500' }, title ?? ''), action ?? null)
+      ? div({ class: 'flex min-h-8 items-center gap-3 px-1' }, h2({ class: 'min-w-0 flex-1 text-xs font-medium text-neutral-500' }, title ?? ''), action ?? null)
       : null,
-    div({ class: 'flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-800', style: { rowGap: SPACE.px } }, ...rows),
+    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-xl border border-neutral-800 bg-neutral-800' }, ...rows),
   )
 
 export const settingsRow = (label: Child, control?: Child, detail?: Child) =>
@@ -74,15 +72,20 @@ export const segmented = <T>(
     ),
   )
 
-export const selectMenu = <T extends string>(choices: Choice<T>[], active: MaybeReactive<T | undefined>, choose: (value: T) => void) =>
-  div(
-    { class: 'relative flex min-w-40' },
-    select(
-      {
-        class: 'h-8 w-full appearance-none rounded-lg bg-neutral-800 pr-8 pl-3 text-sm text-neutral-100 cursor-pointer outline-none hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-accent-500',
-        onChange: event => choose((event.target as HTMLSelectElement).value as T),
+export const selectMenu = <T extends string>(choices: Choice<T>[], active: MaybeReactive<T | undefined>, choose: (value: T) => void) => {
+  const picker: HTMLSelectElement = select(
+    {
+      class: 'h-8 w-full appearance-none rounded-lg bg-neutral-800 pr-8 pl-3 text-sm text-neutral-100 cursor-pointer outline-none hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-accent-500',
+      onChange: () => {
+        const picked = choices.find(choice => choice.value === picker.value)
+        if (picked) choose(picked.value)
       },
-      choices.map(choice => option({ value: choice.value, selected: () => read(active) === choice.value }, choice.label)),
-    ),
+    },
+    choices.map(choice => option({ value: choice.value, selected: () => read(active) === choice.value }, choice.label)),
+  )
+  return div(
+    { class: 'relative flex min-w-40' },
+    picker,
     span({ class: 'pointer-events-none absolute inset-0 flex items-center justify-end pr-2 text-neutral-500' }, icon('down', 14)),
   )
+}

@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Chat transcript: bubbles, markdown, tool groups under each reply, agent reports, streamed in place",
   "type": "module",
-  "exports": {
-    "./contract": "./src/contract.ts"
-  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Chat",
@@ -19,7 +16,8 @@
       "commands": "the empty state cannot open the extensions drawer",
       "projects": "the empty state shows the sand logo instead of the project icon",
       "palette": "the empty state does not offer search",
-      "notify": "editing and forking messages is not confirmed"
+      "notify": "editing and forking messages is not confirmed",
+      "models": "model switches show the raw model id"
     }
   },
   "dependencies": {

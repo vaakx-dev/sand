@@ -1,23 +1,31 @@
 import type { Limits, LimitWindow } from '../contract'
+import { capital } from '@sand/kit'
 
 const prefix = 'anthropic-ratelimit-unified-'
 const utilization = /^anthropic-ratelimit-unified-(.+)-utilization$/
+const hour = 3_600_000
+const windowNames = new Map([
+  ['5h', '5-hour'],
+  ['7d', 'Weekly'],
+])
+const windowOrder = ['5h', '7d']
 
 const label = (id: string) => {
   const [window = id, ...rest] = id.split(/[_-]/)
-  const base = window === '5h' ? '5-hour' : window === '7d' ? 'Weekly' : window
+  const base = windowNames.get(window) ?? window
   const scope = rest.join(' ')
-  return scope ? `${base} · ${scope[0]!.toUpperCase()}${scope.slice(1)}` : base
+  return scope ? `${base} · ${capital(scope)}` : base
 }
-
-const hour = 3_600_000
 
 const durationOf = (id: string) => {
   const match = /^(\d+)([hd])/.exec(id)
   return match ? Number(match[1]) * (match[2] === 'h' ? hour : 24 * hour) : undefined
 }
 
-const rank = (window: LimitWindow) => (window.id.startsWith('5h') ? 0 : window.id.startsWith('7d') ? 1 : 2)
+const rank = (window: LimitWindow) => {
+  const index = windowOrder.findIndex(start => window.id.startsWith(start))
+  return index < 0 ? windowOrder.length : index
+}
 
 export const parseLimits = (headers: Headers): Limits | undefined => {
   const windows: LimitWindow[] = []

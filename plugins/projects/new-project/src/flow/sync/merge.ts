@@ -1,11 +1,11 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
 import type { PalettePage } from '@sand/palette/contract'
-import type { FlowContext } from '../types'
+import type { ProjectsContext } from '../../context'
 
-export const mergePrompt = (files: string[]) =>
+const mergePrompt = (files: string[]) =>
   `Resolve the merge conflicts in ${files.join(', ')}. Each has conflict markers with both PCs' versions. Keep both sets of changes, remove the markers, run the project's tests and tell me what you did.`
 
-export const mergePage = (ctx: FlowContext, ref: ProjectRef, files: string[], here: string, other: string): PalettePage => ({
+export const mergePage = (ctx: ProjectsContext, ref: ProjectRef, files: string[], here: string, other: string): PalettePage => ({
   id: 'merge-prompt',
   title: 'Let sand merge them',
   field: {

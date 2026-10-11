@@ -1,16 +1,23 @@
+import type { WireHandlers } from '@sand/protocol'
 import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Context } from 'drydock'
 import type { OpenedSession } from '../contract'
 import type { ServerContext } from '../context'
-import type { LiveTracker } from '../live/track'
 import { info } from '../socket/serialize'
-import { openSession } from './open'
-import type { CoreHandlers } from './registry'
-import { tailOf } from './tail'
+import type { LiveTracker } from '../stream/live'
 
 const pageLimit = 200
+const baseCarried = ['settings']
 
-export const pagingRequests = (ctx: ServerContext, live: LiveTracker): CoreHandlers => {
-  const session = (id: string) => openSession(ctx, id)
+export const tailOf = async (ctx: Context, session: Session) => {
+  const { entries, more } = session.page()
+  const oldest = entries[0]
+  const carried = more && oldest ? session.carried(oldest.id, await ctx.waterfall('session.carry', baseCarried)) : []
+  return { entries, partial: true, ...(carried.length && { carried }) }
+}
+
+export const pagingRequests = (ctx: ServerContext, live: LiveTracker): WireHandlers => {
+  const session = (id: string) => ctx.sessions.require(id)
   const opened = (found: Session, rest: Pick<OpenedSession, 'entries' | 'partial' | 'carried'>) => {
     const base: OpenedSession = { info: info(found), ...rest, settings: ctx.modelSettings?.state(found), ...live.snapshot(found.id) }
     return ctx.waterfall('session.opened', base, found)
@@ -18,7 +25,7 @@ export const pagingRequests = (ctx: ServerContext, live: LiveTracker): CoreHandl
   return {
     'session.open': async request => {
       const found = session(request.session)
-      return opened(found, request.tail ? await tailOf(ctx, found) : { entries: found.entries() })
+      return opened(found, await tailOf(ctx, found))
     },
     'session.page': request => {
       const limit = Math.floor(Number(request.limit))

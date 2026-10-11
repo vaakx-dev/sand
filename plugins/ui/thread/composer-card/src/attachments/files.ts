@@ -1,5 +1,5 @@
 import type { AttachmentLimits } from '@sand/attachments/contract'
-import type { MediaRef, UserContent } from '@sand/messages'
+import type { UserContent } from '@sand/messages'
 import { errorMessage, sig } from '@sand/dom'
 import { contentName, fromFile } from './content'
 
@@ -16,14 +16,14 @@ let next = 0
 
 const sizeOf = (content: UserContent) => {
   if (content.type === 'text') return content.text.length
-  if (typeof content.data !== 'string') return (content as Partial<MediaRef>).size ?? 0
+  if (typeof content.data !== 'string') return content.size
   if (content.type === 'document' && content.mediaType === 'text/plain') return content.data.length
   return Math.round((content.data.length * 3) / 4)
 }
 
 const wrap = (content: UserContent): Attached => ({ id: String(++next), name: contentName(content), bytes: sizeOf(content), content })
 
-const placeholder = (file: File): Attached => ({ id: String(++next), name: file.name, bytes: file.size, loading: true })
+const reading = (file: File): Attached => ({ id: String(++next), name: file.name, bytes: file.size, loading: true })
 
 export const contentsOf = (items: Attached[]) => items.flatMap(item => (item.content ? [item.content] : []))
 
@@ -43,11 +43,10 @@ export const createFiles = (limits: () => AttachmentLimits | undefined) => {
   return {
     items,
     async add(files: Iterable<File>) {
-      const picked = [...files]
+      const picked = [...files].map(file => ({ file, entry: reading(file) }))
       if (!picked.length) return
-      const entries = picked.map(placeholder)
-      items.update(list => [...list, ...entries])
-      await Promise.all(picked.map(async (file, index) => fill(await read(file, entries[index]!))))
+      items.update(list => [...list, ...picked.map(({ entry }) => entry)])
+      await Promise.all(picked.map(async ({ file, entry }) => fill(await read(file, entry))))
     },
     attach: (contents: UserContent[]) => items.update(list => [...list, ...contents.map(wrap)]),
     set: (contents: UserContent[]) => items.set(contents.map(wrap)),

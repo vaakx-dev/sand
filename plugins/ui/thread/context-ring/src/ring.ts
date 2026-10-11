@@ -3,14 +3,16 @@ import { circle, div, dropdown, errorMessage, icon, iconButton, secondaryAction,
 import { percent, tokens } from '@sand/kit'
 import type { Context } from 'drydock'
 
+type Usage = Derive<ContextUsage | undefined>
+
 const radius = 8
 const around = 2 * Math.PI * radius
 
-const share = (usage: ContextUsage) => Math.min(1, usage.used / usage.window)
+const share = (usage: ContextUsage | undefined) => (usage ? Math.min(1, usage.used / usage.window) : 0)
 
 const full = (usage: ContextUsage | undefined) => Boolean(usage && usage.used >= usage.limit)
 
-const ringIcon = (usage: Derive<ContextUsage | undefined>) =>
+const ringIcon = (usage: Usage) =>
   svg(
     { width: 20, height: 20, viewBox: '0 0 20 20', class: '-rotate-90' },
     circle({ cx: 10, cy: 10, r: radius, fill: 'none', stroke: 'currentColor', strokeWidth: 3, class: 'text-neutral-600' }),
@@ -24,36 +26,30 @@ const ringIcon = (usage: Derive<ContextUsage | undefined>) =>
       strokeLinecap: 'round',
       class: () => (full(usage.get()) ? 'text-danger-400' : 'text-neutral-400'),
       style: { transition: 'stroke-dasharray .3s' },
-      strokeDasharray: () => `${around * (usage.get() ? share(usage.get()!) : 0)} ${around}`,
+      strokeDasharray: () => `${around * share(usage.get())} ${around}`,
     }),
   )
 
-const usageLine = (usage: Derive<ContextUsage | undefined>) => () => {
+const usageLine = (usage: Usage) => () => {
   const value = usage.get()
   if (!value) return ''
   const line = `${percent(share(value))} · ${tokens(value.used)} of ${tokens(value.window)}`
   return value.compacting ? `Compacting · ${line}` : line
 }
 
-const compact = async (ctx: Context<'threads'>) => {
-  if (ctx.commands?.get('compact')) return void (await ctx.commands.run('compact', ''))
-  if (!ctx.wire) throw new Error('No command host is loaded to run /compact')
-  await ctx.wire.call({ type: 'ui.command', name: 'compact', args: '', session: ctx.threads.current()?.id, cwd: ctx.threads.cwd() })
-}
-
-const details = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>, done: () => void) => {
-  const run = () => {
+const details = (ctx: Context<'threads'>, usage: Usage, done: () => void) => {
+  const compact = () => {
     done()
-    compact(ctx).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+    ctx.threads.command('compact').catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
   }
   return div(
     { class: 'flex flex-col gap-2 p-2' },
     div({ class: 'px-1 text-sm text-neutral-300' }, usageLine(usage)),
-    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: run }, icon('compact', 13), 'Compact now'),
+    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: compact }, icon('compact', 13), 'Compact now'),
   )
 }
 
-export const contextRing = (ctx: Context<'threads'>, usage: Derive<ContextUsage | undefined>) =>
+export const contextRing = (ctx: Context<'threads'>, usage: Usage) =>
   show(usage.map(Boolean), () =>
     dropdown({
       placement: 'above-right',

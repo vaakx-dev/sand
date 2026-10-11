@@ -66,7 +66,4 @@ export const forgotten = (prefs: Prefs, source: string): Prefs => {
   }
 }
 
-export const seen = (prefs: Prefs, source: string): Prefs => {
-  const { [source]: _, ...fresh } = prefs.fresh
-  return { ...prefs, fresh }
-}
+export const seen = (prefs: Prefs, source: string): Prefs => ({ ...prefs, fresh: dropKey(prefs.fresh, source) })

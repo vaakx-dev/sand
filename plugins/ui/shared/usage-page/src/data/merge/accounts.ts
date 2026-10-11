@@ -1,6 +1,7 @@
 import type { AccountUsage } from '@sand/usage/contract'
+import { byCost } from '@sand/kit'
 import { newest } from '../limits'
-import { addTotals, byCost, including } from '../totals'
+import { addTotals, including } from '../totals'
 import type { Account, PcSummary } from '../types'
 
 const identityOf = ({ label, provider, billing, plan }: AccountUsage) => ({ label, provider, billing, ...(plan && { plan }) })

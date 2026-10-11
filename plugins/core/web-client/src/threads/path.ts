@@ -1,6 +1,18 @@
-import type { Entry } from '@sand/messages'
+import type { Entry, Message } from '@sand/messages'
 import type { Thread } from '../contract'
-import { walk } from './store'
+import { hasToolResult } from '@sand/kit'
+
+const walk = (entries: Map<string, Entry>, head: string | null) => {
+  const path: Entry[] = []
+  const seen = new Set<string>()
+  for (let entry = head ? entries.get(head) : undefined; entry && !seen.has(entry.id); entry = entries.get(entry.parent ?? '')) {
+    seen.add(entry.id)
+    path.push(entry)
+  }
+  return path.reverse()
+}
+
+const isPrompt = (message: Message) => message.role === 'user' && !hasToolResult(message)
 
 export const loadedPath = (thread: Thread) => walk(thread.entries, thread.info.head)
 
@@ -14,6 +26,11 @@ export const pathOf = (thread: Thread, carried = false): Entry[] => {
   if (!carried || !thread.carried?.length || !hasOlder(thread, path)) return path
   return [...thread.carried.filter(entry => !thread.entries.has(entry.id)), ...path]
 }
+
+export const turnStart = (thread: Thread) =>
+  loadedPath(thread)
+    .filter(entry => entry.type === 'message' && isPrompt(entry.data as Message))
+    .at(-1)?.at
 
 export const merge = (thread: Thread, entries: Entry[]) => {
   for (const entry of entries) thread.entries.set(entry.id, entry)

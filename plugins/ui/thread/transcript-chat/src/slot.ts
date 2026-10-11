@@ -1,4 +1,4 @@
-import { derive, dynamicChild, sig, span, untrack } from '@sand/dom'
+import { derive, dynamicChild, sig } from '@sand/dom'
 
 interface Slotted {
   key: string
@@ -8,9 +8,8 @@ interface Slotted {
 export const slotHost = () => {
   const slotted = sig<Slotted | undefined>(undefined)
   const key = derive(() => slotted.get()?.key ?? '')
-  const node = dynamicChild(key, () => untrack(() => slotted.get())?.build() ?? span({ class: 'hidden' }))
   return {
-    node,
+    node: dynamicChild(key, () => slotted.get()?.build()),
     show: (key: string, build: () => HTMLElement) => slotted.set({ key, build }),
     clear: () => slotted.set(undefined),
   }

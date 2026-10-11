@@ -1,15 +1,16 @@
-import type { Region } from '@sand/dom'
-import type { Layout, LayoutState } from './contract'
-import { batch, cssOrder, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack } from '@sand/dom'
+import type { Layout, LayoutState, Region } from '@sand/dom'
+import { batch, cssOrder, derive, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack, type Sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'
 import { gripCss, savedWidths } from './resize'
-import { buildShell, regions, type Coverable, type Open } from './shell'
+import { buildShell, type Coverable, type Open, type Views } from './shell'
 import type { Shift } from './slide'
 import { swiper } from './swipe'
 
 const narrowQuery = '(max-width: 760px)'
 const closed: Open = { side: false, aside: false }
+
+const has = (views: Sig<HTMLElement[]>) => views.get().length > 0
 
 export default definePlugin({
   name: 'layout-columns',
@@ -32,46 +33,51 @@ export default definePlugin({
         shift.set(undefined)
         swiped.set(false)
       })
-    const filled = sig(Object.fromEntries(regions.map(region => [region, false])) as Record<Region, boolean>)
-    const covered = sig<Record<Coverable, boolean>>({ side: false, main: false })
-    const widths = savedWidths()
-    style(ctx, gripCss)
-    const { root, areas, covers } = owned(ctx, () => buildShell({ narrow, open, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
 
-    const coverCount = (region: Region) => (region === 'side' || region === 'main' ? covers[region].childElementCount : 0)
+    const views: Views<Region> = { top: sig([]), side: sig([]), main: sig([]), aside: sig([]), bottom: sig([]), overlay: sig([]) }
+    const covers: Views<Coverable> = { side: sig([]), main: sig([]) }
+    const { covered, filled } = owned(ctx, () => ({
+      covered: derive(() => ({ side: has(covers.side), main: has(covers.main) })),
+      filled: derive(() => ({
+        top: has(views.top),
+        side: has(views.side) || has(covers.side),
+        main: has(views.main) || has(covers.main),
+        aside: has(views.aside),
+        bottom: has(views.bottom),
+        overlay: has(views.overlay),
+      })),
+    }))
     const state = (): LayoutState => ({ narrow: narrow.get(), open: current(), filled: { ...filled.get() } })
+    const changed = () => ctx.emit('layout.change', state())
 
-    const sync = () => {
-      covered.set({ side: covers.side.childElementCount > 0, main: covers.main.childElementCount > 0 })
-      filled.set(Object.fromEntries(regions.map(region => [region, areas[region].childElementCount + coverCount(region) > 0])) as Record<Region, boolean>)
-      ctx.emit('layout.change', state())
+    const add = (into: Sig<HTMLElement[]>, view: HTMLElement) => {
+      into.update(list => [...list, view])
+      changed()
+      return () => {
+        into.update(list => list.filter(other => other !== view))
+        changed()
+      }
     }
+
+    style(ctx, gripCss)
+    const widths = savedWidths()
+    const root = owned(ctx, () => buildShell({ narrow, open, views, covers, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
 
     const layout: Layout = {
       mount(region, view, order = 0) {
         setStyle(view, { order: cssOrder(order) })
-        areas[region].append(view)
-        sync()
-        return () => {
-          view.remove()
-          sync()
-        }
+        return add(views[region], view)
       },
       cover(region, view) {
         if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-        covers[region].append(view)
-        sync()
-        return () => {
-          view.remove()
-          sync()
-        }
+        return add(covers[region], view)
       },
       toggle(region, value) {
         const next = { ...current(), [region]: value ?? !open[region].get() }
         if (narrow.get() && next[region]) next[region === 'side' ? 'aside' : 'side'] = false
         if (!narrow.get()) remember(next)
         reset(next)
-        sync()
+        changed()
       },
       state,
       swipe: () => (narrow.get() ? beginSwipe() : undefined),
@@ -80,9 +86,10 @@ export default definePlugin({
       open,
       shift,
       swiped,
+      owner: root,
       commit: next => {
         adopt(next)
-        sync()
+        changed()
       },
     })
 
@@ -91,7 +98,7 @@ export default definePlugin({
         const matches = narrow.get()
         untrack(() => {
           reset(matches ? closed : remembered())
-          sync()
+          changed()
         })
       }),
     )

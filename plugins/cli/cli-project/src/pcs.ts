@@ -1,6 +1,6 @@
+import { remoteStore } from '@sand/kit/host'
 import type { Daemon, DeviceInfo } from '@sand/protocol'
-import type { SyncCall } from '@sand/kit'
-import { readRemotes } from './remotes'
+import type { SyncCall } from '@sand/sync/flows'
 
 const syncTimeout = 10 * 60_000
 
@@ -22,9 +22,9 @@ export interface Pcs {
 
 export const connectPcs = async (daemon: Daemon, home: string): Promise<Pcs> => {
   const info = await daemon.require()
-  const [device, remotes] = await Promise.all([daemon.request<DeviceInfo>({ type: 'device.info' }), readRemotes(home)])
+  const [device, store] = await Promise.all([daemon.request<DeviceInfo>({ type: 'device.info' }), remoteStore(home)])
   const local: Pc = { name: device.name, url: info.url, key: info.key }
-  const all = [local, ...remotes.map(({ id, name, url, key }): Pc => ({ device: id, name, url, key }))]
+  const all = [local, ...store.list().map(({ id, name, url, key }): Pc => ({ device: id, name, url, key }))]
 
   const call: SyncCall = (request, device) => {
     const pc = all.find(candidate => candidate.device === device)

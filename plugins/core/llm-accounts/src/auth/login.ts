@@ -1,4 +1,5 @@
 import type { DetectedServer, KeyKind, ServerDraft, SignInKind } from '../contract'
+import { trimSlash } from '@sand/kit'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
 import { authorizeClaude, exchangeClaude, type ClaudeFlow } from './anthropic'
@@ -18,7 +19,8 @@ export const createLogin = (accounts: Accounts) => {
 
   const startCodex = async () => {
     stopDevice()
-    const controller = (device = new AbortController())
+    const controller = new AbortController()
+    device = controller
     const started = await startDevice(controller.signal)
     const expires = Date.now() + deviceTimeout
     accounts.pend('codex', { kind: 'device', url: deviceUrl, code: started.code, expires })
@@ -34,13 +36,14 @@ export const createLogin = (accounts: Accounts) => {
       })
   }
 
+  const startClaude = async () => {
+    claude = await authorizeClaude()
+    accounts.pend('claude', { kind: 'paste', url: claude.url })
+  }
+
   const start = async (account: SignInKind) => {
     try {
-      if (account === 'codex') await startCodex()
-      else {
-        claude = await authorizeClaude()
-        accounts.pend('claude', { kind: 'paste', url: claude.url })
-      }
+      await (account === 'codex' ? startCodex() : startClaude())
     } catch (error) {
       accounts.fail(account, error)
     }
@@ -79,7 +82,7 @@ export const createLogin = (accounts: Accounts) => {
   const detect = async (): Promise<DetectedServer[]> => {
     await accounts.ready
     const added = new Set(accounts.servers().map(found => found.url))
-    return (await detectServers()).filter(found => !added.has(found.url.replace(/\/+$/, '')))
+    return (await detectServers()).filter(found => !added.has(trimSlash(found.url)))
   }
 
   const logout = async (account: string) => {

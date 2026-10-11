@@ -43,5 +43,5 @@ jobs:
           gh release delete nightly --cleanup-tag --yes || true
           gh release create nightly --target "$commit" --prerelease --latest=false \
             --title "Nightly $(date -u +%Y-%m-%d)" \
-            --notes "Built from ${commit:0:7} on main, the newest commit that passed the checks. This release moves at most once a day when main changes. Install it with \`curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --nightly\`, or in PowerShell with \`\$env:SAND_CHANNEL='nightly'; irm https://vaakx-dev.github.io/sand/install.ps1 | iex\`." \
+            --notes "Built from ${commit:0:7} on main, the newest commit that passed the checks. This release moves at most once a day when main changes. Install it with \`curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --channel nightly\`, or in PowerShell with \`\$env:SAND_CHANNEL='nightly'; irm https://vaakx-dev.github.io/sand/install.ps1 | iex\`." \
             "$RUNNER_TEMP/assets/sand.tar.gz" "$RUNNER_TEMP/assets/sand-build.json"

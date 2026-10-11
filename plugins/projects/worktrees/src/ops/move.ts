@@ -1,18 +1,15 @@
 import type { MoveRequest, MoveResult } from '../contract'
 import { plural } from '@sand/kit'
+import { gitOk } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 import { branchExists, changedCount, repoOf, within } from '../git/repo'
-import { gitOk } from '../git/run'
 import { addWorktree, carryChanges, removeWorktree } from '../git/worktree'
 import { locate } from '../place'
 import { readSetup } from '../setup/file'
 import { setupSteps } from '../setup/plan'
 import { runSteps, type Step } from '../setup/steps'
+import { idle, openSession, type Ops } from './context'
 import { relocate } from './relocate'
-import { forgetMarks } from './marks'
-import { idle, openSession, type Ops } from './types'
-
-const noSetup = { copy: [], run: [], autoSettle: true }
 
 export const moveSession = async (ops: Ops, request: MoveRequest): Promise<MoveResult> => {
   const session = openSession(ops, request.session)
@@ -26,7 +23,7 @@ export const moveSession = async (ops: Ops, request: MoveRequest): Promise<MoveR
   if (existsSync(path)) throw new Error(`${path} already exists`)
   const base = String(request.base ?? '').trim() || repo.branch || 'HEAD'
   const changed = request.carry === false ? 0 : await changedCount(repo.root)
-  const setup = request.setup === false ? noSetup : await readSetup([repo.main, repo.root], ops.config.auto_settle)
+  const setup = request.setup === false ? [] : setupSteps(await readSetup([repo.main, repo.root], ops.config.auto_settle), repo.main, path)
   const target = within(repo.root, session.cwd, path)
   const why = `This thread moved to a git worktree on branch ${branch}, based on ${base}.${changed ? ' The uncommitted changes moved with it.' : ''}`
   const switchThread = () => relocate(session, target, why)
@@ -51,8 +48,7 @@ export const moveSession = async (ops: Ops, request: MoveRequest): Promise<MoveR
     },
   }
   const core = changed ? [create, carry] : [create]
-  const outcome = await runSteps(session.id, [...core, ...setupSteps(setup, repo.main, path)], ops.publish)
-  forgetMarks()
+  const outcome = await runSteps(session.id, [...core, ...setup], ops.publish)
   ops.changed(repo.main)
   if (outcome.failed !== undefined && outcome.failed < core.length) throw new Error(outcome.error)
   return { path, branch }

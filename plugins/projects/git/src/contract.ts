@@ -15,7 +15,6 @@ export interface GitStatus {
 export interface GitStatuses {
   of(cwd: string, device?: string): GitStatus | undefined
   refresh(cwd: string, device?: string): void
-  locals(cwd: string, device?: string): Promise<string[]>
 }
 
 declare module 'drydock' {
@@ -33,6 +32,5 @@ declare module 'drydock' {
 declare module '@sand/protocol/wire' {
   interface WireRequests {
     'git.status': { cwd: string }
-    'git.locals': { cwd: string }
   }
 }

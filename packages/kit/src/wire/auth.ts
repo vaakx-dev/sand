@@ -1,13 +1,13 @@
-import type { PairInvite, PairRequest, PairResult } from '@sand/host-devices/contract'
-import type { HostIdentity, Ticket } from '@sand/host-gateway/contract'
-import type { BuildInfo } from '@sand/protocol'
+import type { HostIdentity, PairInvite, PairRequest, PairResult, Ticket } from '@sand/protocol'
+import { trimSlash } from '../text/url'
+import { parseBuildInfo } from './build'
 import { hostPaths } from './pairing'
 
 const timeout = 5000
 
 export const bearer = (key: string) => ({ authorization: `Bearer ${key}` })
 
-const endpoint = (base: string, path: string) => `${base.replace(/\/+$/, '')}${path}`
+const endpoint = (base: string, path: string) => `${trimSlash(base)}${path}`
 
 const failure = async (response: Response) => new Error((await response.text()) || `HTTP ${response.status}`)
 
@@ -18,24 +18,16 @@ const json = async <T>(response: Response): Promise<T> => {
 
 interface IdentityAnswer {
   deviceId?: string
-  id?: string
   name?: string
-  version?: string
-  build?: { id?: unknown; time?: unknown }
-}
-
-const readBuild = (build: IdentityAnswer['build']): BuildInfo | undefined => {
-  if (typeof build?.id !== 'string' || !build.id) return
-  if (typeof build.time !== 'number' || !Number.isFinite(build.time)) return
-  return { id: build.id, time: build.time }
+  build?: unknown
 }
 
 export const fetchHostIdentity = async (base: string, wait = timeout): Promise<HostIdentity> => {
   const body = await json<IdentityAnswer>(await fetch(endpoint(base, hostPaths.identity), { signal: AbortSignal.timeout(wait) }))
-  const deviceId = body?.deviceId ?? body?.id
+  const deviceId = body?.deviceId
   if (!deviceId) throw new Error(`${base} did not say which PC it is`)
-  const build = readBuild(body.build)
-  return { deviceId, name: body.name ?? '', version: body.version ?? '', ...(build && { build }) }
+  const build = parseBuildInfo(body.build)
+  return { deviceId, name: body.name ?? '', ...(build && { build }) }
 }
 
 export const redeemPairing = async (base: string, request: PairRequest): Promise<PairResult> =>

@@ -5,7 +5,7 @@ import { appsFolder, currentFile } from '../layout'
 
 const batchText = (value: string) => value.replaceAll('%', '%%')
 
-export const windowsShim = ({ home }: { home: string }) => {
+const windowsShim = (home: string) => {
   const apps = batchText(appsFolder(home))
   const current = batchText(currentFile(home))
   const bun = `${batchText(bunFolder(home))}\\%SAND_BUN%\\bun.exe`
@@ -71,10 +71,10 @@ const inProcessPath = (bin: string) => {
 
 export const writeWindowsShim = async (home: string, bin: string) => {
   await mkdir(bin, { recursive: true })
-  await Bun.write(join(bin, 'sand.cmd'), windowsShim({ home }))
+  await Bun.write(join(bin, 'sand.cmd'), windowsShim(home))
 }
 
-export const windowsPath = async ({ home, bin }: { home: string; bin: string }) => {
+export const windowsPath = async (home: string, bin: string) => {
   await writeWindowsShim(home, bin)
   const known = inProcessPath(bin)
   const result = await updateUserPath(bin).catch(() => undefined)

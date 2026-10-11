@@ -11,7 +11,7 @@ const read = async (reader: ReadableStreamDefaultReader<Uint8Array>, name: strin
   }
 }
 
-async function* split(body: ReadableStream<Uint8Array>, name: string, signal?: AbortSignal) {
+async function* lines(body: ReadableStream<Uint8Array>, name: string, signal?: AbortSignal) {
   const reader = body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
@@ -20,11 +20,10 @@ async function* split(body: ReadableStream<Uint8Array>, name: string, signal?: A
       const { value, done } = await read(reader, name, signal)
       if (done) break
       buffer += decoder.decode(value, { stream: true })
-      let end: number
-      while ((end = buffer.indexOf('\n')) >= 0) {
+      for (let end = buffer.indexOf('\n'); end >= 0; end = buffer.indexOf('\n')) {
         const line = buffer.slice(0, end).trim()
         buffer = buffer.slice(end + 1)
-        if (line) yield JSON.parse(line) as ShareLine
+        if (line) yield line
       }
     }
   } finally {
@@ -34,7 +33,8 @@ async function* split(body: ReadableStream<Uint8Array>, name: string, signal?: A
 
 export async function* readEvents(body: ReadableStream<Uint8Array>, name: string, signal?: AbortSignal): AsyncGenerator<LLMEvent> {
   let finished = false
-  for await (const line of split(body, name, signal)) {
+  for await (const text of lines(body, name, signal)) {
+    const line: ShareLine = JSON.parse(text)
     if (line.type === 'ping') continue
     if (line.type === 'error') throw new AccountError(`On ${name}: ${line.message}`, line.detail)
     if (line.type === 'done') finished = true

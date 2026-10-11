@@ -1,5 +1,5 @@
 import type { PaletteCard, PaletteReview } from '../contract'
-import { button, delayed, div, focusable, icon, show, span, spinner, type Sig } from '@sand/dom'
+import { delayed, div, dynamicChild, icon, primaryAction, show, span, spinner, type Sig } from '@sand/dom'
 
 export const cardView = (card: PaletteCard) =>
   div(
@@ -16,9 +16,8 @@ export const cardView = (card: PaletteCard) =>
     ),
   )
 
-export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: Sig<string>, confirm: () => void) => {
-  const waiting = delayed(busy)
-  return div(
+export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: Sig<string>, confirm: () => void) =>
+  div(
     { class: 'mx-3 mt-1 mb-3 rounded-xl bg-neutral-900 px-4 py-3' },
     div(
       { class: 'flex flex-col gap-2 pb-3 text-sm' },
@@ -30,17 +29,10 @@ export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: 
         ),
       ),
     ),
-    button(
-      {
-        type: 'button',
-        disabled: busy,
-        class: ['flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent-500 text-sm font-medium text-white hover:bg-accent-600', focusable],
-        onClick: confirm,
-      },
-      show(waiting, () => spinner()),
-      show(waiting.map(shown => !shown), () => icon('check', 14)),
+    primaryAction(
+      { size: 'lg', disabled: busy, class: 'w-full', onClick: confirm },
+      dynamicChild(delayed(busy), waiting => (waiting ? spinner() : icon('check', 14))),
       review.action,
     ),
     show(progress.map(Boolean), () => div({ class: 'truncate pt-2 text-xs text-neutral-500' }, () => progress.get())),
   )
-}

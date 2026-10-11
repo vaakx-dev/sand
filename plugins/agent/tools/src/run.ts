@@ -11,7 +11,7 @@ const result = (call: ToolCallBlock, text: string, isError?: boolean): ToolResul
 })
 
 export const run = async (
-  tool: Tool<any> | undefined,
+  tool: Tool | undefined,
   call: ToolCallBlock,
   context: Omit<ToolContext, 'call'>,
 ): Promise<ToolResultBlock> => {

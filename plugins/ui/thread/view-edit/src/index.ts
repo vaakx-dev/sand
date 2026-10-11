@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { editRenderer, writeRenderer } from './render'
 
@@ -7,11 +8,6 @@ export default definePlugin({
   inject: ['toolViews'],
   uses: { transcript: 'does nothing: edits use the generic view', commands: 'no "Open in changes" button' },
   apply(ctx) {
-    ctx.watch('transcript', transcript => {
-      if (!transcript) return
-      const commands = () => ctx.commands
-      const added = [transcript.tool('edit', editRenderer(commands, ctx.toolViews)), transcript.tool('write', writeRenderer(commands, ctx.toolViews))]
-      return () => added.forEach(dispose => void dispose())
-    })
+    ctx.watch('transcript', transcript => transcript && joinDisposers(transcript.tool('edit', editRenderer(ctx)), transcript.tool('write', writeRenderer(ctx))))
   },
 })

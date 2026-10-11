@@ -1,4 +1,4 @@
-import type { ToolView } from '@sand/transcript-chat/contract'
+import type { ToolView } from '../contract'
 import { oneLine } from '@sand/kit'
 import { field } from '../thread/results'
 

@@ -1,11 +1,13 @@
-import { errorMessage } from '@sand/kit'
+import { collectScope, errorMessage, onTimeout } from '@sand/dom'
 import type { Context, ScopeView } from 'drydock'
 import type { BrowserState, Extensions } from '../contract'
+
+const reportDelay = 500
 
 export const reportStates = (ctx: Context, extensions: Extensions, mounted: ReadonlyMap<string, ScopeView>) => {
   const errors = new Map<string, string>()
   let sent = ''
-  let timer: ReturnType<typeof setTimeout> | undefined
+  let cancel: (() => void) | undefined
 
   const owner = (scope: ScopeView) => {
     for (let at: ScopeView | undefined = scope; at; at = at.parent) {
@@ -19,11 +21,11 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
     const scope = mounted.get(id)
     const missing = scope?.status === 'pending' ? scope.missing().map(String) : []
     const last = error ?? errors.get(id)
-    return { id, status, inject, ...(last === undefined ? {} : { error: last }), ...(missing.length ? { missing } : {}) }
+    return { id, status, inject, ...(last !== undefined && { error: last }), ...(missing.length && { missing }) }
   }
 
   const send = async () => {
-    timer = undefined
+    cancel = undefined
     const wire = ctx.wire
     if (!wire || wire.state() !== 'open') return
     const states = extensions.list().map(info => state(info.id, info.status, info.error, info.inject))
@@ -34,8 +36,10 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
   }
 
   const schedule = () => {
-    timer ??= setTimeout(() => void send().catch(() => undefined), 500)
+    cancel ??= collectScope(() => onTimeout(() => void send().catch(() => undefined), reportDelay)).value
   }
+
+  ctx.effect(() => () => cancel?.())
 
   ctx.on('drydock.error', (scope, error) => {
     const id = owner(scope)

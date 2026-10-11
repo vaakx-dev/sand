@@ -1,15 +1,10 @@
+import { isFolder } from '@sand/kit/fs'
 import { fileHash, pluginFiles, treeHash, validPluginName } from '@sand/kit/host'
 import { stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { PluginFile, PluginFiles } from '../contract'
 
 const limit = 48 * 1024 * 1024
-
-const isFolder = (path: string) =>
-  stat(path).then(
-    info => info.isDirectory(),
-    () => false,
-  )
 
 export const readPlugin = async (root: string, plugin: string): Promise<PluginFiles> => {
   const folder = join(root, plugin)

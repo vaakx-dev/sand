@@ -1,19 +1,17 @@
-export interface Porcelain {
-  branch: string
-  upstream?: string
-  ahead: number
-  behind: number
-  changed: number
-}
+import type { GitStatus } from '../contract'
+import { samePath } from '@sand/kit/fs'
 
-const header = (lines: string[], key: string) => lines.find(line => line.startsWith(`# branch.${key} `))?.slice(key.length + 10)
+const header = (lines: string[], key: string) => {
+  const prefix = `# branch.${key} `
+  return lines.find(line => line.startsWith(prefix))?.slice(prefix.length)
+}
 
 const counts = (value: string | undefined) => {
   const match = value?.match(/^\+(\d+) -(\d+)$/)
   return { ahead: Number(match?.[1] ?? 0), behind: Number(match?.[2] ?? 0) }
 }
 
-export const parsePorcelain = (output: string): Porcelain => {
+export const parsePorcelain = (output: string): Omit<GitStatus, 'worktree' | 'base'> => {
   const lines = output.split('\n').filter(Boolean)
   const head = header(lines, 'head')
   return {
@@ -24,9 +22,7 @@ export const parsePorcelain = (output: string): Porcelain => {
   }
 }
 
-const normal = (path: string) => path.trim().replaceAll('\\', '/').replace(/\/+$/, '').toLowerCase()
-
 export const isLinkedWorktree = (output: string | undefined) => {
-  const [dir, common] = (output ?? '').split('\n').filter(Boolean)
-  return Boolean(dir && common && normal(dir) !== normal(common))
+  const [dir, common] = (output ?? '').split('\n').map(line => line.trim())
+  return Boolean(dir && common && !samePath(dir, common))
 }

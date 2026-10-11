@@ -1,8 +1,10 @@
 import type { StopReason, Usage } from '@sand/messages'
 import type { LLMEvent } from '../contract'
+import { isRecord } from '@sand/kit'
+import type { CompatChunk, CompatUsage } from './chunks'
 import { Collector } from './collect'
 
-const usageOf = (raw: any): Usage => {
+const usageOf = (raw: CompatUsage | null | undefined): Usage => {
   const cached = raw?.prompt_tokens_details?.cached_tokens ?? 0
   return { input: Math.max(0, (raw?.prompt_tokens ?? 0) - cached), output: raw?.completion_tokens ?? 0, cacheRead: cached, cacheWrite: 0 }
 }
@@ -14,34 +16,37 @@ const stopOf = (reason: string, calls: boolean): StopReason => {
   return reason === 'stop' ? 'end_turn' : reason
 }
 
-const failure = (error: any, name: string) => {
-  const detail = typeof error === 'string' ? error : (error?.message ?? error?.code ?? JSON.stringify(error))
-  return new Error(`${name} error: ${detail}`)
+const errorText = (error: unknown) => {
+  if (typeof error === 'string') return error
+  const own = isRecord(error) ? (error.message ?? error.code) : undefined
+  return own ?? JSON.stringify(error)
 }
+
+const failure = (error: unknown, name: string) => new Error(`${name} error: ${errorText(error)}`)
 
 const text = (value: unknown) => (typeof value === 'string' ? value : '')
 
-export async function* readCompat(stream: AsyncIterable<any>, model: string, name: string): AsyncIterable<LLMEvent> {
+export async function* readCompat(stream: AsyncIterable<CompatChunk>, model: string, name: string): AsyncIterable<LLMEvent> {
   const collector = new Collector()
   let started = false
   let finish: string | undefined
-  let usage: any
+  let usage: CompatUsage | undefined
 
   for await (const chunk of stream) {
-    if (chunk?.error) throw failure(chunk.error, name)
+    if (chunk.error) throw failure(chunk.error, name)
     if (!started) {
       started = true
-      yield { type: 'start', model: chunk?.model || model }
+      yield { type: 'start', model: chunk.model || model }
     }
-    if (chunk?.usage) usage = chunk.usage
-    for (const choice of chunk?.choices ?? []) {
-      if ((choice?.index ?? 0) !== 0) continue
+    if (chunk.usage) usage = chunk.usage
+    for (const choice of chunk.choices ?? []) {
+      if ((choice.index ?? 0) !== 0) continue
       const delta = choice.delta ?? {}
       const thinking = text(delta.reasoning) || text(delta.reasoning_content)
       if (thinking) yield* collector.text('thinking', thinking)
       const content = text(delta.content) || text(delta.refusal)
       if (content) yield* collector.text('text', content)
-      const calls: any[] = Array.isArray(delta.tool_calls) ? delta.tool_calls : []
+      const calls = Array.isArray(delta.tool_calls) ? delta.tool_calls : []
       for (const [position, call] of calls.entries()) yield* collector.tool(call, position)
       if (choice.finish_reason === 'error') throw failure(choice.error ?? 'the response stopped with an error', name)
       if (choice.finish_reason) finish = choice.finish_reason

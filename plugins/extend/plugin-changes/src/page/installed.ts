@@ -1,8 +1,7 @@
 import type { InstalledPlugin } from '@sand/host-plugin-sync/contract'
-import { derive, div, hint, list, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
+import { derive, hintRow, rowList, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
+import { plural } from '@sand/kit'
 import type { PluginSource } from '../source'
-
-export const fileCount = (count: number) => `${count} file${count === 1 ? '' : 's'}`
 
 const pluginRow = (source: PluginSource, plugin: Sig<InstalledPlugin>) => {
   const local = () => plugin.get().local
@@ -17,24 +16,22 @@ const pluginRow = (source: PluginSource, plugin: Sig<InstalledPlugin>) => {
         onClick: () => void source.setLocal(plugin.get().name, !local()),
       }),
     ],
-    () => (local() ? 'Not shared with your other PCs' : fileCount(plugin.get().files)),
+    () => (local() ? 'Not shared with your other PCs' : plural(plugin.get().files, 'file')),
   )
 }
-
-const notice = (text: string) => div({ class: 'bg-neutral-900' }, hint(text))
 
 export const installedSection = (source: PluginSource) => {
   const plugins = derive(() => source.state.get()?.plugins ?? [])
   return settingsSection(
     { title: 'Sharing with your other PCs' },
-    list(plugins, plugin => plugin.name, plugin => pluginRow(source, plugin), div({ class: 'contents' })),
+    rowList(plugins, plugin => plugin.name, plugin => pluginRow(source, plugin)),
     show(
-      source.state.map(state => state === undefined),
-      () => notice('Loading…'),
+      () => source.state.get() === undefined,
+      () => hintRow('Loading…'),
     ),
     show(
-      source.state.map(state => state?.plugins.length === 0),
-      () => notice('No plugins in ~/.sand/plugins yet.'),
+      () => source.state.get()?.plugins.length === 0,
+      () => hintRow('No plugins in ~/.sand/plugins yet.'),
     ),
   )
 }

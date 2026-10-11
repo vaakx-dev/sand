@@ -28,7 +28,7 @@ irm https://vaakx-dev.github.io/sand/install.ps1 | iex
 
 The installer downloads Bun and the newest sand release from GitHub into `~/.sand`, adds `sand` to your PATH, and opens sand in your browser. To sign in, open **Settings** and then **Accounts**. sand checks GitHub for updates and installs one when you click **Update** in **Settings**.
 
-To install the nightly build instead, run `curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --nightly`, or on Windows run `$env:SAND_CHANNEL='nightly'` before the command. For the dev build, use `--dev` or `$env:SAND_CHANNEL='dev'`. You can switch later with **Updates from** in **Settings**.
+To install the nightly build instead, run `curl -fsSL https://vaakx-dev.github.io/sand/install.sh | sh -s -- --channel nightly`, or on Windows run `$env:SAND_CHANNEL='nightly'` before the command. For the dev build, use `--channel dev` or `$env:SAND_CHANNEL='dev'`. You can switch later with **Updates from** in **Settings**.
 
 To add a phone, open **Your PCs** and scan the QR code. To add a PC, open **Your PCs**, choose **Add a PC**, and run the command it shows on the new PC. It runs the same installer and pairs the new PC with this one.
 

@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { approveTool } from './approve'
 import { createAsks } from './asks'
@@ -16,7 +17,7 @@ export default definePlugin({
     ctx.watch('server', server => {
       if (!server) return
       const asks = createAsks(waiting, server)
-      const disposers = [
+      return joinDisposers(
         ctx.tools.register(askTool(waiting)),
         ctx.provide('asks', asks),
         server.handle('ask.answer', ({ session, call, answers }) => waiting.answer(session, call, answersInput.parse(answers))),
@@ -24,8 +25,7 @@ export default definePlugin({
         ctx.on('server.hello', hello => ({ ...hello, asks: asks.all() })),
         ctx.on('tool.approve', approveTool(asks)),
         asks.close,
-      ]
-      return () => disposers.forEach(dispose => void dispose())
+      )
     })
   },
 })

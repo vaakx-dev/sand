@@ -1,14 +1,11 @@
 import { readdir, rename, rm, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { samePath } from '@sand/kit/fs'
-import { appsFolder, buildStamp, bunFolder, readBuildBun, readPointer, validVersion } from '@sand/kit/host'
+import { appsFolder, buildStamp, bunFolder, exists, readBuildBun, readPointer, validVersion } from '@sand/kit/host'
 import { readyFile } from './prepare'
 
-const flatFolders = new Set(['apps', 'packages', 'plugins', 'node_modules'])
 const unfinishedAge = 20 * 60 * 1000
 const oldPrefix = '.old-'
-
-const exists = (file: string) => stat(file).then(() => true, () => false)
 
 const isOld = async (folder: string) => {
   const info = await stat(folder).catch(() => undefined)
@@ -18,15 +15,22 @@ const isOld = async (folder: string) => {
 const removable = async (folder: string, name: string) => {
   if (name.startsWith(oldPrefix)) return true
   if (name.startsWith('.incoming-')) return isOld(folder)
-  if (name.startsWith('.') || flatFolders.has(name)) return false
+  if (name.startsWith('.')) return false
   if (!(await exists(join(folder, buildStamp)))) return false
   return (await exists(join(folder, readyFile))) || isOld(folder)
 }
 
+const moveAside = async (path: string) => {
+  const doomed = join(dirname(path), `${oldPrefix}${crypto.randomUUID()}`)
+  return rename(path, doomed).then(
+    () => doomed,
+    () => undefined,
+  )
+}
+
 const remove = async (path: string, name: string) => {
-  const doomed = name.startsWith(oldPrefix) ? path : join(dirname(path), `${oldPrefix}${crypto.randomUUID()}`)
-  if (doomed !== path && !(await rename(path, doomed).then(() => true, () => false))) return
-  await rm(doomed, { recursive: true, force: true }).catch(() => {})
+  const doomed = name.startsWith(oldPrefix) ? path : await moveAside(path)
+  if (doomed) await rm(doomed, { recursive: true, force: true }).catch(() => {})
 }
 
 const folders = async (folder: string) =>
@@ -45,7 +49,7 @@ const cleanupApps = async (home: string, keep: string[]) => {
 
 const bunsInUse = async (home: string) => {
   const folder = appsFolder(home)
-  const roots = [folder, ...(await folders(folder)).filter(name => !name.startsWith('.')).map(name => join(folder, name))]
+  const roots = (await folders(folder)).filter(name => !name.startsWith('.')).map(name => join(folder, name))
   const versions = await Promise.all(roots.map(root => readBuildBun(root)))
   return new Set([Bun.version, ...versions.filter(version => version !== undefined)])
 }

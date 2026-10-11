@@ -2,8 +2,6 @@ import type { Block, Message, Notification, UserPart } from '@sand/messages'
 import { readFeedback } from './feedback'
 import { isImageLabel } from './image'
 
-export type { Notification, UserPart }
-
 const tag = (source: string, name: string) => new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(source)?.[1]?.trim() ?? ''
 
 const outer = (source: string, name: string) => {

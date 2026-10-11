@@ -1,7 +1,8 @@
+import { isFolder } from '@sand/kit/fs'
 import type { SyncImported } from '../contract'
 import { mkdir, readdir } from 'node:fs/promises'
 import { hiddenLine, hiddenOut, type Hidden } from '../folder/hidden'
-import { exists, isDirectory } from '../folder/stat'
+import { exists } from '../folder/stat'
 import { git, gitOut } from '../git/run'
 import { prepareHidden } from '../snapshot/tree'
 
@@ -18,7 +19,7 @@ export const importSnapshot = async (hidden: Hidden, bundle: string | undefined,
 
 const requireFreshFolder = async (folder: string) => {
   if (!(await exists(folder))) return
-  if (!(await isDirectory(folder)) || (await readdir(folder)).length > 0) throw new Error(`${folder} already exists and is not empty`)
+  if (!(await isFolder(folder)) || (await readdir(folder)).length > 0) throw new Error(`${folder} already exists and is not empty`)
 }
 
 const firstBranch = async (folder: string) => (await gitOut(['for-each-ref', '--format=%(refname:short)', '--count=1', 'refs/heads'], { cwd: folder })).trim()

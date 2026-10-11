@@ -1,10 +1,10 @@
-import { dynamicChild, portal, sig, span } from '@vaakx-dev/vrui'
+import { dynamicChild, portal, sig } from '@vaakx-dev/vrui'
 import { menuPopup } from './popup'
 import { pressMenu } from './press'
 import type { MenuRequest, MenuSpec } from './request'
 import { menuSheet } from './sheet'
 
-export const menuLayer = (request: MenuRequest, close: () => void) => (request.touch ? menuSheet : menuPopup)(request, close)
+export const menuLayer = (request: MenuRequest, close: () => void) => (request.touch ? menuSheet(request, close) : menuPopup(request, close))
 
 export const contextMenu = () => {
   const opened = sig<MenuRequest | undefined>(undefined)
@@ -27,7 +27,7 @@ export const contextMenu = () => {
     }
   }
 
-  const view = () => dynamicChild(opened, request => span({ hidden: true }, request ? portal(document.body, menuLayer(request, close)) : null))
+  const view = () => dynamicChild(opened, request => (request ? portal(document.body, menuLayer(request, close)) : null))
 
   return { target, open, close, view }
 }

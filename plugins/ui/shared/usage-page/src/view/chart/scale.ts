@@ -1,7 +1,7 @@
 const niceStep = (raw: number) => {
   const power = 10 ** Math.floor(Math.log10(raw))
   const ratio = raw / power
-  return (ratio <= 1 ? 1 : ratio <= 2 ? 2 : ratio <= 5 ? 5 : 10) * power
+  return ([1, 2, 5].find(step => ratio <= step) ?? 10) * power
 }
 
 export const scaleFor = (peak: number) => {

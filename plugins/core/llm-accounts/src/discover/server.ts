@@ -1,4 +1,6 @@
-import { bearer, getJson, trimmed } from './http'
+import { bearer, isRecord, trimSlash } from '@sand/kit'
+import { listIn, nonEmpty } from './fields'
+import { getJson } from './http'
 import { contexts, isOllama } from './ollama'
 import type { Discovered } from './types'
 
@@ -10,15 +12,13 @@ const sourceOf = (base: string) => {
   }
 }
 
-export const modelIds = (body: any) =>
-  Array.isArray(body?.data) ? body.data.map((entry: any) => entry?.id).filter((id: unknown): id is string => typeof id === 'string' && !!id) : undefined
+export const modelIds = (source: string, body: unknown) => listIn(source, body, 'data').flatMap(entry => nonEmpty(isRecord(entry) ? entry.id : undefined) ?? [])
 
 export const discoverServer = async (base: string, key?: string): Promise<Discovered[]> => {
-  const url = trimmed(base)
+  const url = trimSlash(base)
   const source = sourceOf(url)
-  const ids = modelIds(await getJson(source, `${url}/models`, bearer(key)))
-  if (!ids) throw new Error(`${source} model list failed: unexpected answer`)
+  const ids = modelIds(source, await getJson(source, `${url}/models`, key ? bearer(key) : {}))
   const root = url.replace(/\/v1$/, '')
   const context = (await isOllama(root)) ? await contexts(root, ids) : new Map<string, number>()
-  return ids.map((id: string) => ({ name: id, label: id, efforts: [], context: context.get(id) }))
+  return ids.map(id => ({ name: id, label: id, efforts: [], context: context.get(id) }))
 }

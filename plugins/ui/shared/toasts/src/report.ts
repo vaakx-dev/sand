@@ -15,7 +15,7 @@ const pair = (label: string, ...value: (HTMLElement | string)[]) =>
 
 const bar = (fraction: number) =>
   div(
-    { class: 'mb-1 mt-1 h-2 w-full overflow-hidden rounded-full bg-neutral-700' },
+    { class: 'my-1 h-2 w-full overflow-hidden rounded-full bg-neutral-700' },
     div({ class: 'h-full rounded-full bg-accent-500', style: { width: `${Math.round(Math.min(1, Math.max(0, fraction)) * 100)}%` } }),
   )
 

@@ -1,7 +1,8 @@
 import type { Entry } from '@sand/messages'
 import { errorMessage, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
-import { busyNote, forkAt, forkedNote, labelData, moveOf, movedNote } from '../tree/moves'
+import { labelData } from '../tree/labels'
+import { busyNote, forkAt, forkedNote, moveOf, movedNote } from '../tree/moves'
 import type { TreeSource } from './model'
 
 type TreeContext = Context<'threads' | 'wire'>
@@ -12,8 +13,8 @@ export const treeSource = (ctx: TreeContext): TreeSource => {
 
   const idle = () => {
     const thread = ctx.threads.current()
-    if (thread?.running) say(busyNote, true)
-    return thread?.running ? undefined : thread
+    if (!thread?.running) return thread
+    say(busyNote, true)
   }
 
   const draft = (text: string | undefined, always: boolean) => {

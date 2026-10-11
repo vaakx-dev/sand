@@ -7,7 +7,7 @@ import { running } from './info'
 const ownMain = join(import.meta.dir, '..', 'main.ts')
 const logLimit = 5 * 1024 * 1024
 
-export const hostCommand = async (home: string): Promise<[bun: string, main: string]> => {
+const hostCommand = async (home: string): Promise<[bun: string, main: string]> => {
   const root = await installedRoot(home)
   if (!root) return [process.execPath, ownMain]
   const version = await readBuildBun(root)
@@ -26,7 +26,7 @@ const openLog = (log: string) => {
   return output
 }
 
-export interface StartOptions {
+interface StartOptions {
   wait?: number
   stopOnFail?: boolean
   safe?: boolean

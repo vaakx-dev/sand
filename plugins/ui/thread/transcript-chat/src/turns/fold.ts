@@ -39,10 +39,13 @@ const timeOf = (item: Item) => {
 }
 
 const split = (items: Item[]) => {
-  const turns: Turn[] = [{ body: [] }]
+  let current: Turn = { body: [] }
+  const turns = [current]
   for (const item of items) {
-    if (opens(item)) turns.push({ head: item, body: [] })
-    else if (item.kind !== 'live') turns.at(-1)!.body.push(item)
+    if (opens(item)) {
+      current = { head: item, body: [] }
+      turns.push(current)
+    } else if (item.kind !== 'live') current.body.push(item)
   }
   return turns.filter(turn => turn.head || turn.body.length)
 }
@@ -51,11 +54,7 @@ const pinned = (item: Item) => item.kind === 'custom' || item.kind === 'user'
 
 const trailing = (item: Item) => item.kind === 'notice' || pinned(item)
 
-const tail = (body: Item[]) => {
-  let from = body.length
-  while (from > 0 && trailing(body[from - 1]!)) from--
-  return from
-}
+const tail = (body: Item[]) => body.findLastIndex(item => !trailing(item)) + 1
 
 const answered = (body: Item[]) => body[tail(body) - 1]?.kind === 'text'
 
@@ -69,11 +68,12 @@ const callsIn = (work: Item[]) =>
   work.reduce((count, item) => count + (item.kind === 'tools' ? item.steps.filter(step => step.kind === 'tool').length : 0), 0)
 
 const headOf = (turn: Turn, work: Item[], running: boolean, started: number | undefined): TurnHead => {
-  const times = [turn.head, ...turn.body].flatMap(item => (item ? (timeOf(item) ?? []) : []))
+  const items = turn.head ? [turn.head, ...turn.body] : turn.body
+  const times = items.flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
   return {
     kind: 'turn',
-    key: `turn:${turn.head?.key ?? turn.body[0]!.key}`,
+    key: `turn:${items[0]!.key}`,
     running,
     start: running ? (started ?? first) : first,
     end: Math.max(0, ...times),

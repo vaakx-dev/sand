@@ -13,8 +13,8 @@ export default definePlugin({
     const fine = owned(ctx, finePointer)
     let closed = false
 
-    const turn = <T>(show: () => Promise<T | undefined>) => {
-      const next = queue.then(() => (closed ? undefined : show()))
+    const turn = <T>(open: () => Promise<T | undefined>) => {
+      const next = queue.then(() => (closed ? undefined : open()))
       queue = next.catch(() => {})
       return next
     }

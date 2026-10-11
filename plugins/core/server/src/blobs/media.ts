@@ -19,33 +19,23 @@ export const isRef = (value: Fields): value is Fields & Ref => isBlock(value) &&
 
 export const isText = (mediaType: string) => mediaType.startsWith('text/')
 
-export const isPlain = (value: object): value is Fields => {
+const isPlain = (value: object): value is Fields => {
   const prototype = Object.getPrototypeOf(value)
   return prototype === Object.prototype || prototype === null
 }
 
-export const bytesOf = ({ mediaType, data }: Media): Uint8Array =>
-  isText(mediaType) ? new TextEncoder().encode(data) : Buffer.from(data, 'base64')
-
-export const sizeOf = ({ mediaType, data }: Media) => {
-  if (isText(mediaType)) return Buffer.byteLength(data, 'utf8')
-  const padding = data.endsWith('==') ? 2 : data.endsWith('=') ? 1 : 0
-  return Math.floor((data.length * 3) / 4) - padding
+const rewriteArray = (value: unknown[], change: (fields: Fields) => unknown) => {
+  let copy: unknown[] | undefined
+  value.forEach((item, index) => {
+    const next = rewrite(item, change)
+    if (next === item) return
+    copy ??= [...value]
+    copy[index] = next
+  })
+  return copy ?? value
 }
 
-export const rewrite = (value: unknown, change: (fields: Fields) => unknown): unknown => {
-  if (!value || typeof value !== 'object') return value
-  if (Array.isArray(value)) {
-    let copy: unknown[] | undefined
-    value.forEach((item, index) => {
-      const next = rewrite(item, change)
-      if (next === item) return
-      copy ??= [...value]
-      copy[index] = next
-    })
-    return copy ?? value
-  }
-  if (!isPlain(value)) return value
+const rewriteFields = (value: Fields, change: (fields: Fields) => unknown) => {
   const changed = change(value)
   if (changed !== value) return changed
   let copy: Fields | undefined
@@ -57,4 +47,10 @@ export const rewrite = (value: unknown, change: (fields: Fields) => unknown): un
     copy[key] = next
   }
   return copy ?? value
+}
+
+export const rewrite = (value: unknown, change: (fields: Fields) => unknown): unknown => {
+  if (!value || typeof value !== 'object') return value
+  if (Array.isArray(value)) return rewriteArray(value, change)
+  return isPlain(value) ? rewriteFields(value, change) : value
 }

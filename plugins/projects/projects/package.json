@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@sand/host-projects": "workspace:*",
+    "@sand/kit": "workspace:*",
     "@sand/project-files": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",

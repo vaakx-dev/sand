@@ -1,22 +1,25 @@
+import { joinDisposers } from '@sand/kit'
 import type { Server } from '@sand/server/contract'
+import type { ThreadLinkEntries } from '@sand/sessions-sqlite/contract'
 import type { SessionsContext } from '../types'
 import { exportThread } from './export'
-import { acceptFormat } from './format'
 import { importThread } from './import'
-import { linkThread } from './link'
 import { createStaging } from './stage'
 
 export const serveTransfer = (ctx: SessionsContext, server: Server) => {
   const staging = createStaging()
-  const handlers = [
-    server.handle('thread.export', exportThread(ctx)),
+  return joinDisposers(
+    server.handle({
+      'thread.export': exportThread(ctx),
+      'thread.stage': request => void staging.add(request.transfer, request.entries),
+      'thread.import': importThread(ctx, staging),
+      'thread.link': request => {
+        const session = ctx.sessions.open(request.session)
+        if (!session) throw new Error('No such thread')
+        session.append('continued-to', request.to satisfies ThreadLinkEntries['continued-to'])
+      },
+    }),
     server.inlineMedia('thread.export'),
-    server.handle('thread.stage', request => void staging.add(request.transfer, acceptFormat(ctx.sessions, request.entries, request.format))),
-    server.handle('thread.import', importThread(ctx, staging)),
-    server.handle('thread.link', linkThread(ctx)),
-  ]
-  return () => {
-    handlers.forEach(dispose => void dispose())
-    staging.dispose()
-  }
+    staging.dispose,
+  )
 }

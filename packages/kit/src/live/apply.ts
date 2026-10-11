@@ -1,4 +1,4 @@
-import type { LiveBlock, LiveEvent } from '@sand/llm-accounts/contract'
+import type { LiveBlock, LiveEvent } from '@sand/protocol'
 
 const place = (live: LiveBlock[], block: LiveBlock) => {
   const index = live.findIndex(other => other.index === block.index)

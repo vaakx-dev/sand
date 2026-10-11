@@ -1,9 +1,12 @@
 import type { WireEvent } from '@sand/protocol'
 import type { WireSession } from '@sand/sessions-sqlite/contract'
-import { applyLive, catchUp } from './live'
+import { applyLiveEvent } from '@sand/kit'
+import { catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
 export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device?: string) => {
+  const thread = ({ $session }: WireSession) => store.upsert($session, device)
+  const known = (id: string) => store.threads.get(id)
   switch (event.name) {
     case 'session.meta':
       return store.meta(event.args[0])
@@ -13,13 +16,8 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       return store.context(...event.args)
     case 'session.remove':
       return store.remove(event.args[0].$session.id)
-  }
-  const thread = ({ $session }: WireSession) => store.upsert($session, device)
-  const known = (id: string) => store.threads.get(id)
-  const changed = (id: string) => store.changed(id)
-  switch (event.name) {
     case 'session.update':
-      return changed(thread(event.args[0]).id)
+      return store.changed(thread(event.args[0]).id)
     case 'session.entry': {
       const [session, entry] = event.args
       const found = thread(session)
@@ -28,7 +26,7 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       found.info = { ...found.info, head: entry.id, updated: Math.max(found.info.updated, entry.at) }
       if (entry.type === 'message') found.live = []
       if (!found.loaded && open) load(found.id)
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'turn.start': {
       const found = thread(event.args[0])
@@ -36,42 +34,39 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       found.started ??= Date.now()
       found.ended = undefined
       store.started(found.id)
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'turn.end': {
       const found = thread(event.args[0])
       found.running = false
-      found.started = undefined
-      found.queued = []
-      found.live = []
-      found.tools = { running: new Set(), results: new Map() }
+      clearTurn(found)
       found.step = undefined
       found.ended = event.args[1]
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'turn.steer': {
       const found = thread(event.args[0])
       found.queued = found.queued.filter(steer => steer.id !== event.args[2])
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'live.snapshot': {
       const found = known(event.args[0])
       if (!found) return
       catchUp(found, event.args[1])
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'llm.event': {
       const found = known(event.args[1].$session.id)
       if (!found) return
-      applyLive(found, event.args[0])
-      return changed(found.id)
+      found.live = applyLiveEvent(found.live, event.args[0])
+      return store.changed(found.id)
     }
     case 'tool.start': {
       const found = known(event.args[1].$session.id)
       if (!found) return
       found.tools.running.add(event.args[0].id)
       found.step = event.args[0]
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'tool.result': {
       const [result, call, session] = event.args
@@ -79,11 +74,11 @@ export const applyEvent = (store: Store, event: WireEvent, load: (id: string) =>
       if (!found) return
       found.tools.running.delete(call.id)
       found.tools.results.set(call.id, result)
-      return changed(found.id)
+      return store.changed(found.id)
     }
     case 'agent.start':
     case 'agent.end':
     case 'artifact.saved':
-      return changed(thread(event.args[0]).id)
+      return store.changed(thread(event.args[0]).id)
   }
 }

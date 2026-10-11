@@ -7,8 +7,8 @@ export interface SettledMarkdown {
 export interface Markdown {
   nodes(source: string): Node[]
   settle(source: string): SettledMarkdown | undefined
-  inline(source: string): Node[]
-  highlight(code: string, language: string): Node[]
+  inline(source: string): (Node | string)[]
+  highlight(code: string, language: string): (Node | string)[]
 }
 
 declare module 'drydock' {

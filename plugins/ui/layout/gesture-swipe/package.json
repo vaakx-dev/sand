@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@sand/dom": "workspace:*",
-    "@sand/layout-columns": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

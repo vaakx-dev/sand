@@ -1,4 +1,4 @@
-import { float, owned, registerInScope } from '@sand/dom'
+import { owned, portal, registerInScope } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { bubble } from './bubble'
 import { followEvents } from './events'
@@ -13,7 +13,7 @@ export default definePlugin({
       const model = tooltipModel()
       watchTitles(model.changed)
       followEvents(model)
-      float(bubble(model.tip))
+      portal(document.body, bubble(model.tip))
       registerInScope(() => {
         model.stop()
         restoreTitles()

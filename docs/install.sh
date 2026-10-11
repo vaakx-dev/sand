@@ -86,15 +86,13 @@ cleanup() {
 }
 
 usage() {
-  printf '%s\n' 'usage: install.sh [--nightly | --dev | --channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
+  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
   exit 2
 }
 
 read_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
-      --nightly) channel=nightly ;;
-      --dev) channel=dev ;;
       --channel)
         [ $# -gt 1 ] || usage
         channel=$2
@@ -204,7 +202,7 @@ find_release() {
     curl -fsSL -H 'accept: application/vnd.github+json' "https://api.github.com/repos/$repo/releases?per_page=50" -o "$work/releases.json" </dev/null ||
       fail 'Could not ask GitHub for the sand releases. Check the internet connection, or wait a few minutes if GitHub is limiting requests, then run the command again.'
     tag=$(newest_release "$work/releases.json")
-    [ -n "$tag" ] || fail "There is no sand release on GitHub yet. Run the command with --nightly to get the nightly build."
+    [ -n "$tag" ] || fail "There is no sand release on GitHub yet. Run the command with --channel nightly to get the nightly build."
   fi
   assets="https://github.com/$repo/releases/download/$tag"
   label="sand $tag"
@@ -304,7 +302,7 @@ unpack() {
   mkdir "$dir" </dev/null || fail "Could not create $dir"
   made=1
   SAND_BUNDLE="$work/sand.tar.gz" SAND_DIR="$dir" "$bun" -e 'await new Bun.Archive(await Bun.file(process.env.SAND_BUNDLE).bytes()).extract(process.env.SAND_DIR)' </dev/null || fail 'Could not unpack the sand download'
-  if ! problem=$("$bun" "$dir/apps/sand/src/host/dist/release/ready.ts" "$dir" </dev/null 2>&1); then
+  if ! problem=$("$bun" "$dir/packages/kit/src/host/dist/release/ready.ts" "$dir" </dev/null 2>&1); then
     fail "${problem:-The sand download could not be checked; run the command again}"
   fi
   ok 'Sand downloaded' "$dir"

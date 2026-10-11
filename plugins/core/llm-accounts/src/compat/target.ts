@@ -1,3 +1,5 @@
+import { bearer, trimSlash } from '@sand/kit'
+
 export interface CompatTarget {
   base: string
   key?: string
@@ -18,11 +20,11 @@ const isOpenRouter = (base: string) => {
 
 const openRouterHeaders = { 'HTTP-Referer': 'https://github.com/vaakx-dev/sand', 'X-Title': 'sand' }
 
-export const compatUrl = (target: CompatTarget) => `${target.base.replace(/\/+$/, '')}/chat/completions`
+export const compatUrl = (target: CompatTarget) => `${trimSlash(target.base)}/chat/completions`
 
 export const compatHeaders = (target: CompatTarget): Record<string, string> => ({
   accept: 'text/event-stream',
   'content-type': 'application/json',
-  ...(target.key && { authorization: `Bearer ${target.key}` }),
+  ...(target.key && bearer(target.key)),
   ...(isOpenRouter(target.base) && openRouterHeaders),
 })

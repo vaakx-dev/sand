@@ -35,13 +35,18 @@ export default async function ({ agent, parallel, pipeline, phase, log, args, z 
 - Finished agent calls are cached, so resume reruns the script and only repeats unfinished work.
 - The return value becomes the workflow result.`
 
+const openRun = (root: string, script: string | undefined, resume: string | undefined, args: unknown) => {
+  if (resume) return resumeRun(root, resume)
+  if (script) return createRun(root, script, args)
+  throw new Error('Provide a script, or a run id to resume')
+}
+
 export const workflowTool = (ctx: Context<'agents'>, root: string): Tool<typeof input> => ({
   name: 'workflow',
   description,
   input,
   async run({ script, resume, args, label, background }, { session, call, signal }) {
-    if (!script && !resume) throw new Error('Provide a script, or a run id to resume')
-    const run = resume ? await resumeRun(root, resume) : await createRun(root, script!, args)
+    const run = await openRun(root, script, resume, args)
     const execution = { run, label: label ?? run.id, parent: session, origin: call.id, args: args ?? run.args, resumed: Boolean(resume) }
     if (background === false) return execute(ctx, execution, signal)
     const work = (jobSignal: AbortSignal, job: Job) => execute(ctx, { ...execution, job: job.id }, jobSignal)

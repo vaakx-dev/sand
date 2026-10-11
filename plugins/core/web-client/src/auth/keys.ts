@@ -1,48 +1,35 @@
-export interface HostKey {
+import { listen } from '@sand/dom'
+import { isRecord } from '@sand/kit'
+import { loadRecord, saveJson } from '../integrations/storage'
+
+interface HostKey {
   device: string
   key: string
 }
 
-const storageKey = 'sand.keys'
+const keysKey = 'sand.keys'
 
-const valid = (value: unknown): value is HostKey =>
-  typeof value === 'object' &&
-  value !== null &&
-  typeof (value as HostKey).device === 'string' &&
-  typeof (value as HostKey).key === 'string'
+const isHostKey = (value: unknown): value is HostKey => isRecord(value) && typeof value.device === 'string' && typeof value.key === 'string'
 
-const read = (): Record<string, HostKey> => {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '{}')
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {}
-    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => valid(value)))
-  } catch {
-    return {}
-  }
-}
+const read = (): Record<string, HostKey> =>
+  Object.fromEntries(Object.entries(loadRecord(keysKey)).filter((entry): entry is [string, HostKey] => isHostKey(entry[1])))
 
-const write = (keys: Record<string, HostKey>) => {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(keys))
-  } catch {}
-}
+const write = (keys: Record<string, HostKey>) => saveJson(keysKey, keys)
 
 export const hostKeys = {
   get: (host: string): HostKey | undefined => read()[host],
   set(host: string, value: HostKey) {
     write({ ...read(), [host]: value })
   },
-  forget(host: string, key?: string) {
+  forget(host: string, key: string) {
     const keys = read()
-    if (!keys[host] || (key !== undefined && keys[host].key !== key)) return
+    if (keys[host]?.key !== key) return
     delete keys[host]
     write(keys)
   },
   watch(changed: () => void) {
-    const listener = (event: StorageEvent) => {
-      if (event.key === storageKey || event.key === null) changed()
-    }
-    addEventListener('storage', listener)
-    return () => removeEventListener('storage', listener)
+    return listen<StorageEvent>(window, 'storage', event => {
+      if (event.key === keysKey || event.key === null) changed()
+    })
   },
 }

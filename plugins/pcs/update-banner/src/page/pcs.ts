@@ -1,39 +1,26 @@
-import { contextMenu, div, dynamicChild, icon, list, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
+import { contextMenu, div, dynamicChild, icon, rowList, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
+import { actionButton, fleetAction, pcActionKind } from '../actions'
 import type { Fleet, PcView } from '../fleet/model'
 import { channelNames, versionText } from '../fleet/text'
 import { pcStatusLine } from '../pc-line'
 import { pcMenu } from './pc-menu'
 
-const actionKey = (pc: PcView) => {
-  const { status } = pc
-  if (status.kind === 'busy') return status.phase === 'waiting' && pc.state?.running ? 'restart' : ''
-  if (status.kind === 'behind' || status.kind === 'failed' || status.kind === 'channel') return status.kind
-  return ''
+const channelButton = (fleet: Fleet) => {
+  const channel = fleet.channel.get()
+  if (!channel) return null
+  return secondaryAction({ size: 'sm', disabled: fleet.busy, onClick: () => void fleet.setChannel(channel) }, `Use ${channelNames[channel]}`)
 }
 
-const action = (row: Sig<PcView>, fleet: Fleet, kind: string) => {
-  const key = row.get().key
-  const channel = fleet.channel.get()
-  switch (kind) {
-    case 'behind':
-      return secondaryAction({ size: 'sm', onClick: () => void fleet.update([key]) }, 'Update')
-    case 'failed':
-      return secondaryAction({ size: 'sm', onClick: () => fleet.retry(key) }, 'Try again')
-    case 'channel':
-      return channel
-        ? secondaryAction({ size: 'sm', disabled: fleet.busy, onClick: () => void fleet.setChannel(channel) }, `Use ${channelNames[channel]}`)
-        : span()
-    case 'restart':
-      return secondaryAction({ size: 'sm', onClick: () => void fleet.restartNow(key) }, 'Restart now')
-    default:
-      return span()
-  }
-}
+const controlKind = (pc: PcView) => (pc.status.kind === 'channel' ? 'channel' : pcActionKind(pc))
 
 const pcRow = (row: Sig<PcView>, fleet: Fleet) => {
   const menu = contextMenu()
+  const control = (kind: ReturnType<typeof controlKind>) => {
+    if (kind === 'channel') return channelButton(fleet)
+    return kind ? actionButton(fleetAction(fleet, row.get().key, kind)) : null
+  }
   return div(
-    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => pcMenu(row.get(), fleet, actionKey(row.get()))) },
+    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => pcMenu(row.get(), fleet)) },
     menu.view(),
     tile(icon('laptop', 16)),
     div(
@@ -41,9 +28,9 @@ const pcRow = (row: Sig<PcView>, fleet: Fleet) => {
       span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().name),
       pcStatusLine(row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
     ),
-    dynamicChild(row.map(actionKey), kind => action(row, fleet, kind)),
+    dynamicChild(row.map(controlKind), control),
   )
 }
 
 export const pcsSection = (fleet: Fleet) =>
-  settingsSection({ title: 'PCs' }, list(fleet.pcs, pc => pc.key, row => pcRow(row, fleet), div({ class: 'contents' })))
+  settingsSection({ title: 'PCs' }, rowList(fleet.pcs, pc => pc.key, row => pcRow(row, fleet)))

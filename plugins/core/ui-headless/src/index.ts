@@ -1,7 +1,7 @@
 import { definePlugin } from 'drydock'
-import { runLocal } from './local/run'
 import { createPrinter } from './print/printer'
-import { createHeadlessUI } from './ui/service'
+import { runPrompt } from './run/run'
+import { createHeadlessUI } from './ui'
 
 export default definePlugin({
   name: 'ui-headless',
@@ -27,7 +27,7 @@ export default definePlugin({
 
     const start = async () => {
       await ctx.settled()
-      return runLocal(ctx, { printer, ui, prompt, signal })
+      return runPrompt(ctx, { printer, ui, prompt, signal })
     }
     start().then(exit, error => {
       printer.error(error)

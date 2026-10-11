@@ -1,4 +1,5 @@
 import { mount, textarea } from '@vaakx-dev/vrui'
+import type { Notice } from '../notice/attempt'
 
 const fallback = (text: string) => {
   const field = textarea({ value: text, readOnly: true, class: 'fixed inset-0 opacity-0' })
@@ -17,4 +18,9 @@ export const copyText = async (text: string) => {
   } catch {
     return fallback(text)
   }
+}
+
+export const copyWithNotice = async (notify: Notice | undefined, text: string, what: string, done = `Copied ${what}`) => {
+  const copied = await copyText(text)
+  notify?.push(copied ? done : `Could not copy the ${what}`, { level: copied ? 'info' : 'error' })
 }

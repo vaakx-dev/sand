@@ -10,7 +10,7 @@ interface AccountsProps {
   now: Sig<number>
   nameOf(id: string): string
   checking: Sig<boolean>
-  check?: () => void
+  check(): void
 }
 
 const checkedAt = (accounts: Account[]) => Math.max(0, ...accounts.map(account => account.limits?.updated ?? 0))
@@ -23,10 +23,9 @@ const checkedText = (updated: number, now: Sig<number>) =>
 
 const limitsCheck = (accounts: Account[], props: AccountsProps) => {
   const updated = checkedAt(accounts)
-  const checkable = props.check && accounts.some(isSubscription)
   return [
     updated ? checkedText(updated, props.now) : null,
-    checkable ? secondaryAction({ size: 'sm', onClick: props.check, disabled: props.checking }, 'Check') : null,
+    accounts.some(isSubscription) ? secondaryAction({ size: 'sm', onClick: props.check, disabled: props.checking }, 'Check') : null,
   ]
 }
 
@@ -37,8 +36,7 @@ const providerSection = (provider: Provider, props: CardProps & AccountsProps) =
   )
 
 export const accountsView = (accounts: Account[], props: AccountsProps) => {
+  if (!accounts.length) return null
   const colorOf = colorsOf(accounts)
-  return accounts.length
-    ? div({ class: 'flex flex-col gap-8' }, providersOf(accounts).map(provider => providerSection(provider, { ...props, colorOf })))
-    : span()
+  return div({ class: 'flex flex-col gap-8' }, providersOf(accounts).map(provider => providerSection(provider, { ...props, colorOf })))
 }

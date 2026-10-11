@@ -25,11 +25,8 @@ export default definePlugin({
     let live = true
     let generation = 0
 
-    const list = async (cwd?: string, id?: string | null) => (cwd ? merge(global, await project(cwd, id)) : global)
-
     const skills: Skills = {
-      list,
-      get: async (name, cwd, id) => (await list(cwd, id)).find(skill => skill.name === name),
+      list: async (cwd, id) => (cwd ? merge(global, await project(cwd, id)) : global),
       register(dir, values = {}) {
         contributed.set(dir, values)
         void refresh()

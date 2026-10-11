@@ -11,21 +11,22 @@ import { usage } from './usage'
 
 type Action = (pcs: Pcs, args: string[], flags: ProjectFlags) => Promise<unknown>
 
-const actions: Record<string, Action> = {
-  list: listProjects,
-  add: addProject,
-  remove: removeProject,
-  rename: renameProject,
-  hide: hideProject,
-  show: showProject,
-  root: projectRoot,
-  copy: copyToPc,
-  sync: syncProject,
-  status: projectStatus,
-  resolve: resolveConflicts,
-}
+const actions = new Map<string, Action>([
+  ['list', listProjects],
+  ['add', addProject],
+  ['remove', removeProject],
+  ['rename', renameProject],
+  ['hide', hideProject],
+  ['show', showProject],
+  ['root', projectRoot],
+  ['copy', copyToPc],
+  ['sync', syncProject],
+  ['status', projectStatus],
+  ['resolve', resolveConflicts],
+])
 
 export const projects = async (daemon: Daemon, home: string, [name = 'list', ...args]: string[], flags: ProjectFlags) => {
-  if (!Object.hasOwn(actions, name)) throw new Error(usage)
-  await actions[name]!(await connectPcs(daemon, home), args, flags)
+  const action = actions.get(name)
+  if (!action) throw new Error(usage)
+  await action(await connectPcs(daemon, home), args, flags)
 }

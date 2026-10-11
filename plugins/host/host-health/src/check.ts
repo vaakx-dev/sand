@@ -1,25 +1,20 @@
-import type { Runtimes, RuntimeView } from '@sand/host-runtimes/contract'
+import type { Runtimes } from '@sand/host-runtimes/contract'
 import type { BuildInfo } from '@sand/protocol'
 import type { HostHealth, HostHealthCheck } from './contract'
+import { serverLogTail } from './log'
+import { probeWeb } from './web'
 
-export interface HealthOptions {
-  runtimes: Pick<Runtimes, 'status' | 'current'>
-  probe(runtime: RuntimeView | undefined): Promise<{ ok: boolean; error?: string }>
-  log(): Promise<string[]>
-  build(): Promise<BuildInfo | undefined>
-}
-
-export const createHealthCheck = (options: HealthOptions): HostHealthCheck => {
+export const createHealthCheck = (runtimes: Runtimes, home: string, build: () => Promise<BuildInfo | undefined>): HostHealthCheck => {
   let running: Promise<HostHealth> | undefined
 
   const run = async (): Promise<HostHealth> => {
-    const status = options.runtimes.status()
-    const current = options.runtimes.current()
+    const status = runtimes.status()
+    const current = runtimes.current()
     const failedPlugins = [...(current?.failed ?? status.failed ?? [])]
-    const [web, build, log] = await Promise.all([
-      status.runtime === 'ready' ? options.probe(current) : { ok: false, error: 'the runtime is not ready' },
-      options.build().catch(() => undefined),
-      options.log().catch(() => []),
+    const [web, info, log] = await Promise.all([
+      status.runtime === 'ready' ? probeWeb(current) : { ok: false, error: 'the runtime is not ready' },
+      build().catch(() => undefined),
+      serverLogTail(home),
     ])
     return {
       healthy: status.runtime === 'ready' && !failedPlugins.length && web.ok,
@@ -28,7 +23,7 @@ export const createHealthCheck = (options: HealthOptions): HostHealthCheck => {
       failedPlugins,
       web: web.ok,
       ...(web.error ? { webError: web.error } : {}),
-      ...(build ? { build } : {}),
+      ...(info ? { build: info } : {}),
       log,
     }
   }

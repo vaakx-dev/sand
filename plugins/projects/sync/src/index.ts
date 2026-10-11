@@ -1,5 +1,4 @@
 import { definePlugin } from 'drydock'
-import { serveSync } from './serve'
 import { createSync } from './service'
 
 export default definePlugin({
@@ -10,6 +9,6 @@ export default definePlugin({
   apply(ctx) {
     const sync = createSync(ctx.cli.home)
     ctx.effect(() => () => void sync.dispose())
-    ctx.watch('server', server => (server ? serveSync(server, sync.handlers) : undefined))
+    ctx.watch('server', server => server?.handle(sync.handlers))
   },
 })

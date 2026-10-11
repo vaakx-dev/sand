@@ -20,14 +20,14 @@ const fields = [
   'reviews',
 ].join(',')
 
-export const repoOf = (url: string) => new URL(url).pathname.split('/').slice(1, 3).join('/')
+export const nameWithOwner = (url: string) => new URL(url).pathname.split('/').slice(1, 3).join('/')
 
 export const viewPr = (pr: string | undefined, cwd: string, signal: AbortSignal) =>
   ghJson<PrView>(['pr', 'view', ...(pr ? [pr] : []), '--json', fields], cwd, signal)
 
 export const fetchPr = async (pr: string | undefined, cwd: string, signal: AbortSignal): Promise<Pr> => {
   const view = await viewPr(pr, cwd, signal)
-  const repo = repoOf(view.url)
+  const repo = nameWithOwner(view.url)
   const [threads, failed] = await Promise.all([
     unresolvedThreads(repo, view.number, cwd, signal),
     failures(view.statusCheckRollup, repo, cwd, signal),

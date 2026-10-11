@@ -1,11 +1,10 @@
 import type { ContextUsage } from '@sand/compaction/contract'
-import type { Entry } from '@sand/messages'
 import type { SettingsState } from '@sand/model/contract'
 import type { SessionInfo, SessionMetaUpdate, SessionSummary } from '@sand/sessions-sqlite/contract'
 import type { QueueState } from '@sand/steering/contract'
 import type { DraftTarget, Thread } from '../contract'
 import type { Context } from 'drydock'
-import { nextFrame } from './frame'
+import { nextFrame } from '../detached'
 import { listKey } from './listed'
 
 const blank = (info: SessionSummary): Thread => ({
@@ -22,17 +21,7 @@ const blank = (info: SessionSummary): Thread => ({
   version: 0,
 })
 
-export const walk = (entries: Map<string, Entry>, head: string | null) => {
-  const path: Entry[] = []
-  const seen = new Set<string>()
-  for (let entry = head ? entries.get(head) : undefined; entry && !seen.has(entry.id); entry = entries.get(entry.parent ?? '')) {
-    seen.add(entry.id)
-    path.push(entry)
-  }
-  return path.reverse()
-}
-
-export interface StoreWatcher {
+interface StoreWatcher {
   changed(id: string): void
   removed(id: string): void
 }
@@ -53,8 +42,16 @@ export class Store {
 
   constructor(private ctx: Context) {}
 
+  currentThread() {
+    return this.current ? this.threads.get(this.current) : undefined
+  }
+
   device() {
-    return this.current ? this.threads.get(this.current)?.device : this.draft?.device
+    return this.current ? this.currentThread()?.device : this.draft?.device
+  }
+
+  devices() {
+    return new Set([...this.threads.values()].flatMap(thread => (thread.device ? [thread.device] : [])))
   }
 
   upsert(info: SessionInfo & Partial<SessionSummary>, device?: string) {

@@ -8,8 +8,10 @@ const agentName = (thread: Thread) => {
   return 'agent'
 }
 
+const workflowPrefix = 'workflow '
+
 const splitLabel = (label: string) => {
-  if (label.startsWith('workflow ')) return { name: 'workflow', task: label.slice(9), workflow: true }
+  if (label.startsWith(workflowPrefix)) return { name: 'workflow', task: label.slice(workflowPrefix.length), workflow: true }
   const at = label.indexOf(': ')
   return at > 0 ? { name: label.slice(0, at), task: label.slice(at + 2), workflow: false } : { name: 'job', task: label, workflow: false }
 }
@@ -26,6 +28,8 @@ const callLabel = (parent: Thread | undefined, origin: string) => {
 
 const lastEnd = (agents: Thread[]) => Math.max(...agents.map(agent => agent.info.updated))
 
+const finished = (agents: Thread[]) => agents.filter(agent => !agent.running).length
+
 const jobRun = (job: JobState, agents: Thread[]): AgentRun => {
   const { name, task, workflow } = splitLabel(job.label)
   const single = workflow ? undefined : agents[0]
@@ -41,6 +45,7 @@ const jobRun = (job: JobState, agents: Thread[]): AgentRun => {
     job: job.id,
     ...(single && { session: single.id }),
     agents,
+    finished: finished(agents),
   }
 }
 
@@ -54,6 +59,7 @@ const sessionRun = (agent: Thread): AgentRun => ({
   ...(!agent.running && { ended: agent.info.updated }),
   session: agent.id,
   agents: [agent],
+  finished: finished([agent]),
 })
 
 const groupRun = (origin: string, agents: Thread[], parent: Thread | undefined): AgentRun => {
@@ -67,6 +73,7 @@ const groupRun = (origin: string, agents: Thread[], parent: Thread | undefined):
     started: Math.min(...agents.map(agent => agent.info.created)),
     ...(!running && { ended: lastEnd(agents) }),
     agents,
+    finished: finished(agents),
   }
 }
 

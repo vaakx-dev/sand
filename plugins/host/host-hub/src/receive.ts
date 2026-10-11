@@ -7,7 +7,7 @@ import type { Upstream } from './upstream'
 
 const waitTimeout = 60_000
 
-export interface ReceiveOptions {
+interface ReceiveOptions {
   runtimes: Runtimes
   handlers: Map<string, RequestHandler>
   upstream(client: Client, runtime: RuntimeView): Upstream

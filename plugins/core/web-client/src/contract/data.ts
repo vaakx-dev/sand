@@ -21,11 +21,13 @@ export interface AgentRun {
   job?: string
   session?: string
   agents: Thread[]
+  finished: number
 }
 
 export interface Jobs {
   list(parent?: string): JobState[]
   runs(parent: string): AgentRun[]
+  running(parent: string): AgentRun[]
   cancel(id: string): Promise<void>
 }
 

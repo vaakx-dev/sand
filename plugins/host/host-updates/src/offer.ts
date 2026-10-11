@@ -1,8 +1,7 @@
-import { stampBuild, type GithubRelease } from '@sand/kit/host'
+import { stampBuild } from '@sand/kit/host'
 import type { BuildInfo } from '@sand/protocol'
 import type { ReleaseInfo } from './contract'
-
-export const buildOf = (build: BuildInfo): BuildInfo => stampBuild(build)
+import type { GithubRelease } from './github/release'
 
 export const releaseInfo = ({ channel, tag, name, publishedAt, notesUrl, build }: GithubRelease): ReleaseInfo => ({
   channel,
@@ -10,7 +9,7 @@ export const releaseInfo = ({ channel, tag, name, publishedAt, notesUrl, build }
   name,
   publishedAt,
   notesUrl,
-  build: buildOf(build),
+  build: stampBuild(build),
   ...(build.changes?.length ? { changes: build.changes } : {}),
 })
 

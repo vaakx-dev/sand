@@ -1,9 +1,9 @@
 import type { DiffLine } from '@sand/kit'
 import type { FileChange } from './collect'
 
-const maxLines = 600
+const max = 600
 
-export const shownLines = (file: FileChange, max = maxLines): DiffLine[] => {
+export const shownLines = (file: FileChange): DiffLine[] => {
   const lines: DiffLine[] = []
   let shown = 0
   file.hunks.forEach((hunk, index) => {

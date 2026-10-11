@@ -1,7 +1,7 @@
-import { place } from '@sand/dom'
-import { definePlugin, type Dispose } from 'drydock'
+import { definePlugin } from 'drydock'
 import { addPcDialog, type AddPcMode } from './add-pc/dialog'
 import { pcHealthStore } from './health/state'
+import { overlaySlot } from './overlay-slot'
 import { pairDialog } from './pair/dialog'
 import { pcsPage } from './page'
 import { deviceSource } from './source'
@@ -19,58 +19,39 @@ export default definePlugin({
     picker: 'no Rename on phones and browsers',
   },
   apply(ctx) {
-    let unplace: Dispose | undefined
-    let shown = new Set<number>()
-
-    const close = () => {
-      void unplace?.()
-      unplace = undefined
-    }
+    const dialog = overlaySlot(ctx)
+    let invites = new Set<number>()
 
     ctx.on('wire.event', event => {
-      if (event.name !== 'pair.used' || !unplace || !shown.has(event.args[1])) return
-      close()
+      if (event.name !== 'pair.used' || !dialog.isOpen() || !invites.has(event.args[1])) return
+      dialog.close()
       ctx.notify?.push(`${event.args[0].name} paired`)
     })
 
     const source = deviceSource(ctx)
 
-    let unplaceAddPc: Dispose | undefined
-
-    const closeAddPc = () => {
-      void unplaceAddPc?.()
-      unplaceAddPc = undefined
+    const pair = () => {
+      const shown = new Set<number>()
+      invites = shown
+      dialog.open(() => pairDialog(ctx, source, shown, dialog.close))
     }
 
-    const open = () => {
-      close()
-      closeAddPc()
-      shown = new Set()
-      const invites = shown
-      unplace = place(ctx, 'overlay', () => pairDialog(ctx, source, invites, close), 100)
+    const addPc = (mode: AddPcMode = 'choose') => {
+      invites = new Set()
+      dialog.open(() => addPcDialog(ctx, source, dialog.close, mode))
     }
 
-    const openAddPc = (mode: AddPcMode = 'choose') => {
-      close()
-      closeAddPc()
-      unplaceAddPc = place(ctx, 'overlay', () => addPcDialog(ctx, source, closeAddPc, mode), 100)
-    }
-
-    ctx.effect(() => () => {
-      close()
-      closeAddPc()
-    })
     unpairedOverlay(ctx)
 
     const health = pcHealthStore(ctx)
-    const actions = { pair: open, addPc: () => openAddPc(), pairAgain: () => openAddPc('join') }
+    const actions = { pair, addPc: () => addPc(), pairAgain: () => addPc('join') }
     ctx.watch('settings', settings =>
       settings?.page({ id: 'devices', label: 'Your devices', icon: 'laptop', order: 27, render: () => pcsPage(ctx, source, health, actions) }),
     )
-    ctx.watch('commands', commands => commands?.add({ name: 'add-pc', description: 'Add another PC running sand', run: () => openAddPc() }))
+    ctx.watch('commands', commands => commands?.add({ name: 'add-pc', description: 'Add another PC running sand', run: () => addPc() }))
     ctx.watch('commands', commands => {
-      if (commands) return commands.add({ name: 'devices', description: 'Pair a phone or browser', run: open })
-      return ctx.watch('nav', nav => nav?.action({ id: 'devices', label: 'Devices', icon: 'smartphone', run: open }))
+      if (commands) return commands.add({ name: 'devices', description: 'Pair a phone or browser', run: pair })
+      return ctx.watch('nav', nav => nav?.action({ id: 'devices', label: 'Devices', icon: 'smartphone', run: pair }))
     })
   },
 })

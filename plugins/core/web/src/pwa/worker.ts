@@ -1,6 +1,6 @@
 import { offlinePage } from './offline'
 
-export const workerScript = `const offline = ${JSON.stringify(offlinePage)}
+const workerScript = `const offline = ${JSON.stringify(offlinePage)}
 const store = 'sand-shell-v1'
 const options = { ignoreVary: true }
 

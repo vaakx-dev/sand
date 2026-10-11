@@ -1,30 +1,45 @@
 import type { ImageBlock } from '@sand/messages'
+import type { AttachmentLimits } from './contract'
 
-export interface ImageLimits {
-  edge: number
-  bytes: number
+interface Encoding {
+  mediaType: string
+  encode(image: Bun.Image): Bun.Image
 }
 
 const sendable = new Set(['png', 'jpeg', 'webp', 'gif'])
 
 export const imageExtensions = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'heic', 'avif'])
 
-const base64 = (data: Uint8Array) => Buffer.from(data).toString('base64')
+const png: Encoding = { mediaType: 'image/png', encode: image => image.png() }
 
-export const normalizeImage = async (data: Uint8Array, name: string, limits: ImageLimits): Promise<ImageBlock> => {
-  const { width, height, format } = await new Bun.Image(data).metadata()
-  if (sendable.has(format) && Math.max(width, height) <= limits.edge && data.length <= limits.bytes) {
-    return { type: 'image', mediaType: `image/${format}`, data: base64(data), name }
+const jpeg = (quality: number): Encoding => ({ mediaType: 'image/jpeg', encode: image => image.jpeg({ quality }) })
+
+const unknownFormat = (error: unknown) => error instanceof Error && 'code' in error && error.code === 'ERR_IMAGE_UNKNOWN_FORMAT'
+
+const metadata = async (data: Uint8Array) => {
+  try {
+    return await new Bun.Image(data).metadata()
+  } catch (error) {
+    if (unknownFormat(error)) return undefined
+    throw error
   }
-  const resized = () => new Bun.Image(data).resize(limits.edge, limits.edge, { fit: 'inside', withoutEnlargement: true })
-  const attempts: [string, () => Bun.Image][] = [
-    ...(format === 'png' ? [['image/png', () => resized().png()] as [string, () => Bun.Image]] : []),
-    ['image/jpeg', () => resized().jpeg({ quality: 85 })],
-    ['image/jpeg', () => resized().jpeg({ quality: 70 })],
-  ]
-  for (const [mediaType, encode] of attempts) {
-    const bytes = await encode().bytes()
-    if (bytes.length <= limits.bytes) return { type: 'image', mediaType, data: base64(bytes), name }
+}
+
+const shrink = async (data: Uint8Array, format: string, name: string, { imageEdge, imageBytes }: AttachmentLimits): Promise<ImageBlock> => {
+  for (const { mediaType, encode } of [...(format === 'png' ? [png] : []), jpeg(85), jpeg(70)]) {
+    const resized = new Bun.Image(data).resize(imageEdge, imageEdge, { fit: 'inside', withoutEnlargement: true })
+    const bytes = await encode(resized).bytes()
+    if (bytes.length <= imageBytes) return { type: 'image', mediaType, data: bytes.toBase64(), name }
   }
   throw new Error(`${name} is still too large after resizing`)
+}
+
+export const image = async (data: Uint8Array, name: string, limits: AttachmentLimits): Promise<ImageBlock | undefined> => {
+  const found = await metadata(data)
+  if (!found) return undefined
+  const { width, height, format } = found
+  if (sendable.has(format) && Math.max(width, height) <= limits.imageEdge && data.length <= limits.imageBytes) {
+    return { type: 'image', mediaType: `image/${format}`, data: data.toBase64(), name }
+  }
+  return shrink(data, format, name, limits)
 }

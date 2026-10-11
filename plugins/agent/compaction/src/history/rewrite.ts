@@ -7,12 +7,11 @@ import { messageOf, view } from './view'
 const summaryText = ({ summary, files }: CompactionRecord) =>
   [`The earlier part of this conversation was compacted. Summary:\n\n${summary}`, files && filesText(files)].filter(Boolean).join('\n\n')
 
+const pinnedBlocks = (pinned: Message): Block[] => [{ type: 'text', text: 'The request the current work answers, verbatim:' }, ...pinned.content]
+
 const summaryMessage = (record: CompactionRecord, pinned?: Message): Message => ({
   role: 'user',
-  content: [
-    { type: 'text', text: summaryText(record) },
-    ...(pinned ? [{ type: 'text', text: 'The request the current work answers, verbatim:' } as Block, ...pinned.content] : []),
-  ],
+  content: [{ type: 'text', text: summaryText(record) }, ...(pinned ? pinnedBlocks(pinned) : [])],
 })
 
 export const pinnedMessage = (path: Entry[], id?: string) => {

@@ -1,10 +1,12 @@
 import { isInside, mergeProjects, remoteKey } from '@sand/kit'
-import { samePath } from '@sand/kit/fs'
 import type { Project, ProjectFolder, ProjectPatch } from './contract'
 import { gitRemote } from './folder/git'
 import { inspectFolder } from './folder/inspect'
-import { existingFolder, localCopy, nextStamp } from './list'
+import { localCopy, projectAt } from './list'
+import { existingFolder } from './paths'
 import type { ProjectStore } from './store'
+
+const nextStamp = (previous: number) => Math.max(Date.now(), previous + 1)
 
 export const createRegistry = (store: ProjectStore, device: string, changed: () => void) => {
   const commit = async (project: Project) => {
@@ -12,11 +14,7 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     changed()
     return store.get(project.id) ?? project
   }
-  const copyAt = (path: string) =>
-    store.all().find(project => {
-      const copy = localCopy(project, device)
-      return copy !== undefined && samePath(copy.path, path)
-    })
+  const copyAt = (path: string) => projectAt(store.all(), device, path)
   const known = (id: string) => {
     const project = store.get(id)
     if (!project || project.deleted) throw new Error('Unknown project')
@@ -25,8 +23,8 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
   const sameRemote = (remote: string | undefined, except?: string) => {
     const key = remote ? remoteKey(remote) : ''
     if (!key) return []
-    const live = store.all().filter(project => !project.deleted && project.id !== except && project.remote)
-    return live.filter(project => remoteKey(project.remote ?? '') === key).map(project => project.id)
+    const matches = (project: Project) => !project.deleted && project.id !== except && !!project.remote && remoteKey(project.remote) === key
+    return store.all().filter(matches).map(project => project.id)
   }
 
   const refreshRemote = async (project: Project, remote: string | undefined) => {

@@ -1,19 +1,8 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, contextMenu, div, icon, rowAction, rowButton, show, span, untrack, type Sig } from '@sand/dom'
+import { badge, checkMark, contextMenu, div, rowAction, rowButton, show, span, untrack, type Sig } from '@sand/dom'
 import { tokens } from '@sand/kit'
 import { starButton } from '../star'
 import type { Catalog } from './catalog'
-
-const checkMark = (on: () => boolean) =>
-  span(
-    {
-      class: [
-        'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md transition-colors',
-        () => (on() ? 'bg-accent-500 text-white' : 'text-transparent ring-1 ring-neutral-600'),
-      ],
-    },
-    icon('check', 12),
-  )
 
 export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: string) => void) => {
   const label = untrack(() => row.get().label)

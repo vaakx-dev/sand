@@ -20,7 +20,7 @@ export interface PluginSyncOptions {
   link: PeerLink
   swap(): Promise<boolean>
   changed(state: PluginSyncState): void
-  snapshot?(source: VersionSource, plugins: string[]): Promise<void>
+  snapshot(source: VersionSource, plugins: string[]): Promise<void>
 }
 
 export interface PluginSync {

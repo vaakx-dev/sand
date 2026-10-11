@@ -9,7 +9,10 @@ import { parseArgs } from 'node:util'
 import { run } from './app/run'
 import { stop } from './daemon/stop'
 
-const parsed = parseArgs({
+const {
+  values,
+  positionals: [command, ...args],
+} = parseArgs({
   options: {
     print: { type: 'string', short: 'p' },
     continue: { type: 'boolean', short: 'c' },
@@ -34,10 +37,8 @@ const parsed = parseArgs({
   strict: false,
 })
 
-const values = parsed.values as CliValues
-const text = (value: string | boolean | undefined) => (typeof value === 'string' ? value : undefined)
-const on = (value: string | boolean | undefined) => (value === true ? true : undefined)
-const [command, ...args] = parsed.positionals
+const text = (value: CliValues[string]) => (typeof value === 'string' ? value : undefined)
+const on = (value: CliValues[string]) => (value === true ? true : undefined)
 if (typeof values.home === 'string') process.env.SAND_HOME = resolve(values.home)
 const home = process.env.SAND_HOME ? expandHome(process.env.SAND_HOME) : join(homedir(), '.sand')
 const cwd = text(values.cwd)
@@ -47,8 +48,9 @@ const safe = values.safe === true || safeFromEnv()
 
 const dispatch = async () => {
   if (values.help || command === 'help') return run({ mode: 'command', home, args: ['help'], flags, values, safe })
-  if (typeof values.print === 'string' && values.print.startsWith('--')) throw new Error(`-p takes the prompt right after it, so "${values.print}" was read as the prompt. Put other flags first: sand --home <folder> -p "<prompt>"`)
-  if (typeof values.print === 'string') return run({ mode: 'print', home, args, flags, prompt: values.print, safe })
+  const prompt = text(values.print)
+  if (prompt?.startsWith('--')) throw new Error(`-p takes the prompt right after it, so "${prompt}" was read as the prompt. Put other flags first: sand --home <folder> -p "<prompt>"`)
+  if (prompt !== undefined) return run({ mode: 'print', home, args, flags, prompt, safe })
   if (command === 'serve') {
     if (safe) process.env[safeEnv] = '1'
     return (await import('./host/run')).runHost({ home })

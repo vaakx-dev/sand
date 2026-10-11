@@ -1,13 +1,12 @@
-import type { ToolView } from '@sand/transcript-chat/contract'
-import type { TruncatedAt } from '../contract'
+import type { ToolView, TruncatedAt } from '../contract'
 import { div, el } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { resultText } from '../thread/results'
 
-export const errorTone = 'text-danger-400'
+export const outputText = (text: string, error: boolean) =>
+  el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', error ? 'text-danger-400' : 'text-neutral-400'] }, text)
 
-export const errorBody = (tool: ToolView) =>
-  el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', errorTone] }, resultText(tool.result) || 'The tool failed without a message')
+export const errorBody = (tool: ToolView) => outputText(resultText(tool.result) || 'The tool failed without a message', true)
 
 export const truncatedNote = (count: number, position: TruncatedAt) =>
   div(

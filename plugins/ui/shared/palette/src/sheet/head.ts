@@ -33,7 +33,7 @@ const submitButton = ({ busy, action, submit }: PageModel) =>
     () => action.get()?.label ?? '',
   )
 
-export const pageHead = (model: PageModel) => {
+export const paletteHead = (model: PageModel) => {
   const { page, nested } = model
   const titled = (!nested && page.id !== 'root') || page.field?.kind === 'text'
   return div(

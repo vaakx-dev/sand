@@ -1,7 +1,7 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { button, div, dot, focusable, icon, keys, span, type Child } from '@sand/dom'
+import { div, dot, icon, keys, modelLogo, plainButton, show, span, type Child } from '@sand/dom'
 import type { Scene } from './scene'
-import { logo, sourceTitle } from './source'
+import { sourceTitle } from './source'
 import { FAVOURITES, goTo, type View } from './view'
 
 interface Entry {
@@ -15,9 +15,8 @@ interface Entry {
 
 const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
   const selected = () => !view.query.get() && view.at.get() === entry.id
-  return button(
+  return plainButton(
     {
-      type: 'button',
       role: 'tab',
       'data-focus': `tab:${entry.id}`,
       title: entry.title,
@@ -26,13 +25,12 @@ const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
       tabIndex: () => (selected() || unselected?.() ? 0 : -1),
       class: [
         'relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-        focusable,
         () => (selected() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100'),
       ],
       onClick: () => goTo(view, entry.id),
     },
     span({ class: ['inline-flex', entry.dim && 'opacity-50'] }, entry.glyph),
-    span({ class: ['absolute top-2 bottom-2 left-0 w-1 rounded-full bg-accent-400', () => !selected() && 'hidden'] }),
+    show(selected, () => span({ class: 'absolute top-2 bottom-2 left-0 w-1 rounded-full bg-accent-400' })),
     entry.key && span({ class: 'absolute right-1 bottom-1 inline-flex rounded-sm bg-neutral-800 text-neutral-200' }, icon('key', 10)),
     entry.fresh && span({ class: 'absolute top-1 right-1 flex' }, dot('accent')),
   )
@@ -43,7 +41,7 @@ const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
   return {
     id: source.id,
     title: sourceTitle(source, offline),
-    glyph: logo(source.provider),
+    glyph: modelLogo(source.provider),
     dim: offline,
     fresh: source.fresh > 0,
     key: source.billing === 'api',
@@ -52,9 +50,10 @@ const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
 
 const divider = () => div({ 'aria-hidden': 'true', class: 'my-1 h-px w-6 shrink-0 bg-neutral-700' })
 
-const step = (event: KeyboardEvent, to: (index: number, count: number) => number) => {
-  const tabs = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="tab"]')]
-  const next = tabs[to(tabs.indexOf(event.target as HTMLElement), tabs.length)]
+const step = ({ currentTarget, target }: KeyboardEvent, to: (index: number, count: number) => number) => {
+  if (!(currentTarget instanceof HTMLElement)) return
+  const tabs = [...currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')]
+  const next = tabs[to(tabs.findIndex(tab => tab === target), tabs.length)]
   next?.focus()
   next?.click()
 }

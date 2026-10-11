@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, iconButton, quietButton, span } from '@sand/dom'
+import { div, dynamicChild, icon, iconButton, quietButton, span } from '@sand/dom'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 
@@ -47,8 +47,8 @@ export const askHeader = (state: AskState, actions: AskActions) => {
     several ? dots(state) : '',
     quietButton({ size: 'sm', title: 'Skip these questions', disabled: () => state.sending.get(), onClick: actions.skip }, 'Skip'),
     iconButton(
-      { size: 'sm', title: () => (state.open.get() ? 'Collapse' : 'Expand'), onClick: () => state.open.update(open => !open) },
-      dynamicChild(derive(() => state.open.get()), open => span({ class: 'inline-flex' }, icon(open ? 'down' : 'up', 14))),
+      { size: 'sm', title: () => (state.open.get() ? 'Collapse' : 'Expand'), onClick: state.open.toggle() },
+      dynamicChild(state.open, open => span({ class: 'inline-flex' }, icon(open ? 'down' : 'up', 14))),
     ),
   )
 }

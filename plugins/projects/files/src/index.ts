@@ -12,13 +12,11 @@ export default definePlugin({
     const files: Files = { list: cachedList(), grep: grepFiles }
     const usable = (cwd?: string): cwd is string => Boolean(cwd && existsSync(cwd))
     ctx.provide('files', files)
-    ctx.watch('server', server => {
-      if (!server) return
-      const disposers = [
-        server.handle('files.list', async ({ cwd }) => (usable(cwd) ? files.list(cwd) : [])),
-        server.handle('files.grep', async ({ cwd, query }) => (usable(cwd) ? files.grep(cwd, query) : [])),
-      ]
-      return () => disposers.forEach(dispose => void dispose())
-    })
+    ctx.watch('server', server =>
+      server?.handle({
+        'files.list': async ({ cwd }) => (usable(cwd) ? files.list(cwd) : []),
+        'files.grep': async ({ cwd, query }) => (usable(cwd) ? files.grep(cwd, query) : []),
+      }),
+    )
   },
 })

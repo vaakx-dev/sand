@@ -1,5 +1,6 @@
-import type { SessionSettings, SettingsPatch } from './contract'
+import { isRecord, serial } from '@sand/kit'
 import { join } from 'node:path'
+import type { SessionSettings, SettingsPatch } from './contract'
 import { clean } from './settings'
 
 export interface Defaults {
@@ -10,7 +11,7 @@ export interface Defaults {
 const readSaved = async (file: string): Promise<SessionSettings> => {
   try {
     const data: unknown = await Bun.file(file).json()
-    return typeof data === 'object' && data !== null && !Array.isArray(data) ? clean(data) : {}
+    return isRecord(data) ? clean(data) : {}
   } catch {
     return {}
   }
@@ -19,16 +20,12 @@ const readSaved = async (file: string): Promise<SessionSettings> => {
 export const createDefaults = async (home: string, fallback: () => SessionSettings): Promise<Defaults> => {
   const file = join(home, 'model.json')
   let saved = await readSaved(file)
-  let writing = Promise.resolve()
-  const write = async () => {
-    await Bun.write(file, `${JSON.stringify(saved, null, 2)}\n`)
-  }
+  const queue = serial()
   return {
     get: () => ({ ...fallback(), ...saved }),
     async save(patch) {
       saved = clean({ ...saved, ...patch })
-      writing = writing.then(write)
-      await writing
+      await queue(() => Bun.write(file, `${JSON.stringify(saved, null, 2)}\n`))
     },
   }
 }

@@ -1,23 +1,13 @@
-import type { Entry } from '@sand/messages'
-import type { Session, SessionInfo, Sessions } from './contract'
 import { expandHome } from '@sand/kit/fs'
 import type {} from '@sand/paths/contract'
 import type {} from '@sand/project-files/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { createEntryCache } from './cache'
 import { open } from './db'
-import { rewriter } from './format/rewrite'
-import { current, upgrade } from './format/upgrade'
-import { remover, summaries } from './list'
 import { serveMeta, sessionMeta } from './meta'
-import { createPaging } from './paging'
 import { assignProjects } from './projects'
-import { createSession } from './session'
-import { syncedSummaries } from './sync/summaries'
-
-const loadedLimit = 20
+import { createStore } from './store'
 
 export default definePlugin({
   name: 'sessions-sqlite',
@@ -25,100 +15,37 @@ export default definePlugin({
   config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
     const { paths, projectFiles } = ctx
-    const { home } = paths
-    const db = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
+    const db = open(config.path ? expandHome(config.path, paths.home) : join(paths.home, 'sand.db'))
     ctx.effect(() => () => db.close())
-    const opened = new Map<string, Session>()
     const running = new Set<string>()
     ctx.on('turn.start', session => void running.add(session.id))
     ctx.on('turn.end', session => void running.delete(session.id))
-    const cache = createEntryCache(loadedLimit, id => running.has(id))
-    const forget = (id: string) => {
-      opened.delete(id)
-      cache.forget(id)
-    }
-    const hooks = {
-      entry: (session: Session, entry: Entry) => ctx.emit('session.entry', session, entry),
-      update: (session: Session) => ctx.emit('session.update', session),
-    }
-    const paging = createPaging(db)
-    const remember = (info: SessionInfo) => {
-      const session = createSession(db, info, hooks, cache, paging)
-      opened.set(info.id, session)
-      return session
-    }
-    const insert = db.query(
-      'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, format, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $format, $created, $created)',
-    )
-    const rewrite = rewriter(db)
-    const find = db.query<SessionInfo, { id: string }>('select * from sessions where id = $id')
-    const list = summaries(db)
-    const sync = syncedSummaries(db)
-    const removeAll = remover(db)
-    const ofType = db.query<Entry & { data: string }, { type: string }>('select * from entries where type = $type order by at')
 
-    const sessions: Sessions = {
-      create({ id = Bun.randomUUIDv7(), cwd, project, title, parent, origin, kind }) {
-        const info: SessionInfo = {
-          id,
-          created: Date.now(),
-          cwd: cwd || paths.scratchFolder(id),
-          project: cwd ? (project !== undefined ? project : projectFiles.ofFolder(cwd)) : null,
-          title: title ?? null,
-          head: null,
-          parent: parent ?? null,
-          origin: origin ?? null,
-          kind: kind ?? 'main',
-          format: current,
-        }
-        insert.run({ ...info })
-        const session = remember(info)
-        hooks.update(session)
-        return session
+    const { sessions, forget } = createStore(db, {
+      hooks: {
+        entry: (session, entry) => ctx.emit('session.entry', session, entry),
+        update: session => ctx.emit('session.update', session),
+        remove: session => ctx.emit('session.remove', session),
       },
-      open(id) {
-        const cached = opened.get(id)
-        if (cached) return cached
-        const info = find.get({ id })
-        if (!info) return undefined
-        return remember((info.format ?? 1) < current ? rewrite(info) : info)
-      },
-      branch(source, id, at) {
-        const title = source.title ? `${source.title} (branch)` : undefined
-        const copy = sessions.create({ id, cwd: source.cwd, project: source.project, title, parent: source.id, kind: 'branch' })
-        const path = source.path()
-        const end = at === undefined ? path.length : path.findIndex(entry => entry.id === at) + 1
-        for (const entry of path.slice(0, end)) copy.append(entry.type, entry.data)
-        return copy
-      },
-      list,
-      synced: sync.synced,
-      children: sync.children,
-      entriesOfType: type => ofType.all({ type }).map(row => ({ ...row, data: JSON.parse(row.data) })),
-      remove(id) {
-        const session = sessions.open(id)
-        if (!session) return
-        for (const removed of removeAll(id)) forget(removed)
-        ctx.emit('session.remove', session)
-      },
-      format: current,
-      upgrade,
-    }
+      running: id => running.has(id),
+      scratchFolder: id => paths.scratchFolder(id),
+      projectOf: cwd => projectFiles.ofFolder(cwd),
+    })
     ctx.provide('sessions', sessions)
     ctx.on('server.hello', hello => ({ ...hello, scratch: paths.scratchRoot() }))
-    ctx.on('runtime.release', ids => {
-      for (const id of ids) forget(id)
-    })
+    ctx.on('runtime.release', ids => ids.forEach(forget))
+
     const meta = sessionMeta(db)
     ctx.watch('server', server => (server ? serveMeta(server, meta) : undefined))
+
     assignProjects(db, projectFiles)
     ctx.effect(() =>
       projectFiles.onChange(() => {
         for (const { id, project } of assignProjects(db, projectFiles)) {
-          const cached = opened.get(id)
-          if (cached) cached.project = project
           const session = sessions.open(id)
-          if (session) hooks.update(session)
+          if (!session) continue
+          session.project = project
+          ctx.emit('session.update', session)
         }
       }),
     )

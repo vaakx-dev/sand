@@ -1,5 +1,6 @@
-import { derive, div, dynamicChild, icon, iconButton, overlay, place, sheet, sheetHead, show, sig, untrack } from '@sand/dom'
+import { derive, dynamicChild, icon, iconButton, overlay, place, sheet, sheetBody, sheetHead, show, sig, untrack } from '@sand/dom'
 import type { Context, Dispose } from 'drydock'
+import type { ServerDraft } from '../../contract'
 import { planNames } from '../names'
 import type { LoginControl } from '../state'
 import { chooseStep } from './choose'
@@ -12,11 +13,16 @@ import { customServer, type Step } from './steps'
 
 const choose: Step = { kind: 'choose' }
 
+const serverTitle = ({ id, name }: ServerDraft) => {
+  if (id) return `Edit ${name}`
+  return name ? `Add ${name}` : 'Add a server'
+}
+
 const titleOf = (step: Step, conflict: boolean) => {
   if (step.kind === 'choose') return 'Add account'
   if (step.kind === 'key') return `Add an ${keyNames[step.account]} API key`
   if (step.kind === 'detect') return 'Ollama or LM Studio'
-  if (step.kind === 'server') return step.draft.id ? `Edit ${step.draft.name}` : step.draft.name ? `Add ${step.draft.name}` : 'Add a server'
+  if (step.kind === 'server') return serverTitle(step.draft)
   return conflict ? planNames[step.account] : `Sign in to ${planNames[step.account]}`
 }
 
@@ -24,7 +30,10 @@ const sheetView = (control: LoginControl, done: (text?: string) => void, first?:
   const step = sig<Step>(choose)
   const flow = signInFlow(control, step, done)
 
-  const go = (next: Step) => (next.kind === 'sign-in' ? void flow.start(next.account) : step.set(next))
+  const go = (next: Step) => {
+    if (next.kind === 'sign-in') void flow.start(next.account)
+    else step.set(next)
+  }
 
   const close = () => {
     flow.cancel()
@@ -68,14 +77,14 @@ const sheetView = (control: LoginControl, done: (text?: string) => void, first?:
     sheet(
       { 'aria-label': 'Add account', class: 'max-w-md' },
       sheetHead(
-        () => title.get(),
+        title,
         close,
         show(
-          derive(() => step.get().kind !== 'choose'),
+          () => step.get().kind !== 'choose',
           () => iconButton({ title: 'Back', onClick: back }, icon('back')),
         ),
       ),
-      div({ class: 'flex min-h-0 flex-col gap-4 overflow-auto px-5 pt-1 pb-5' }, dynamicChild(bodyKey, body)),
+      sheetBody({ class: 'gap-4' }, dynamicChild(bodyKey, body)),
     ),
   )
 }

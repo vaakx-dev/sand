@@ -5,9 +5,12 @@ import type { Catalog } from './catalog'
 import { sourceRef } from './catalog/sources'
 import type { SourceMeta } from './catalog/types'
 import { viewOf } from './catalog/view'
-import type { CompatTarget } from './compat/client'
+import type { Claude } from './claude/client'
+import type { Codex } from './codex/client'
+import type { Compat } from './compat/client'
+import type { CompatTarget } from './compat/target'
 
-export const levels: EffortLevel[] = [
+const levels: EffortLevel[] = [
   { id: 'low', label: 'Low' },
   { id: 'medium', label: 'Medium' },
   { id: 'high', label: 'High' },
@@ -15,22 +18,20 @@ export const levels: EffortLevel[] = [
   { id: 'max', label: 'Max' },
 ]
 
-type Stream = (account: string, request: LLMRequest, signal?: AbortSignal) => AsyncIterable<LLMEvent>
+const openRouterBase = 'https://openrouter.ai/api/v1'
 
-export interface Routes {
+interface LocalOptions {
   accounts: Accounts
   catalog: Catalog
-  claude: { stream: Stream; probe(): Promise<void> }
-  codex: { stream: Stream }
-  compat: { stream(target: CompatTarget, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> }
+  claude: Claude
+  codex: Codex
+  compat: Compat
   limits(): Record<string, Limits>
 }
 
-const openRouterBase = 'https://openrouter.ai/api/v1'
-
 export type LocalLLM = ReturnType<typeof createLocal>
 
-export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }: Routes) => {
+export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }: LocalOptions) => {
   const view = viewOf(catalog.entries)
   const ownLimits = (source = 'claude'): Limits | undefined => (accounts.signedIn(source) ? limits()[source] : undefined)
 
@@ -70,7 +71,7 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
       }
     },
     limits: ownLimits,
-    allLimits: () => Object.values(limits()).filter(found => accounts.signedIn(found.source ?? 'claude')),
+    allLimits: () => Object.values(limits()).filter(found => accounts.signedIn(found.source)),
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready

@@ -1,6 +1,6 @@
 import type { PrState, PrSummary } from '../contract'
 import { byOutcome, checkName } from './checks'
-import { repoOf, viewPr } from './fetch'
+import { nameWithOwner, viewPr } from './fetch'
 import { unresolvedThreads } from './threads'
 
 const timeoutMs = 30000
@@ -17,8 +17,9 @@ export const prSummary = async (cwd: string): Promise<PrSummary | null> => {
   })
   if (!view) return null
   const state = states[view.state] ?? 'closed'
-  const threads = state === 'open' ? await unresolvedThreads(repoOf(view.url), view.number, cwd, signal).catch(() => []) : []
+  const threads = state === 'open' ? await unresolvedThreads(nameWithOwner(view.url), view.number, cwd, signal).catch(() => []) : []
   const checks = view.statusCheckRollup
+  const failed = byOutcome(checks, 'failed')
   return {
     number: view.number,
     title: view.title,
@@ -27,8 +28,8 @@ export const prSummary = async (cwd: string): Promise<PrSummary | null> => {
     draft: view.isDraft,
     branch: view.headRefName,
     base: view.baseRefName,
-    checks: { passed: byOutcome(checks, 'passed').length, failed: byOutcome(checks, 'failed').length, pending: byOutcome(checks, 'pending').length },
-    failing: [...new Set(byOutcome(checks, 'failed').map(checkName))],
+    checks: { passed: byOutcome(checks, 'passed').length, failed: failed.length, pending: byOutcome(checks, 'pending').length },
+    failing: [...new Set(failed.map(checkName))],
     unresolved: threads.length,
     mergeState: view.mergeStateStatus,
     review: view.reviewDecision,

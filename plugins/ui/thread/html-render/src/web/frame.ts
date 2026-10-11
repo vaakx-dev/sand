@@ -1,6 +1,6 @@
 import type { Wire } from '@sand/web-client/contract'
 import type { HtmlRenderEntry } from '../contract'
-import { div, effect, resource, show, sig } from '@sand/dom'
+import { div, effect, openTab, resource, show, sig } from '@sand/dom'
 import { maxHeight, minHeight } from '../page/limits'
 import { hostPath } from '../page/protocol'
 import { listenToFrame, sandboxedFrame, showPageIn } from './integrations/frame'
@@ -11,7 +11,7 @@ const lastHeights = new Map<string, number>()
 
 const clamp = (height: number, cap: number) => Math.min(cap, maxHeight, Math.max(minHeight, Math.round(height)))
 
-const openTab = (url: string) => void window.open(url, '_blank', 'noopener,noreferrer')
+const loadingNote = () => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-neutral-500' }, 'loading…')
 
 const failure = (title: string) => div({ class: 'flex h-full items-center justify-center text-xs text-neutral-500' }, `Couldn't load ${title}`)
 
@@ -50,10 +50,8 @@ export const htmlFrame = (wire: Wire, thread: string, data: HtmlRenderEntry) => 
       style: { height: () => `${height.get()}px` },
       onMount: () => listenToFrame(frame, { resize, open: openTab }),
     },
-    show(failed.map(failing => !failing), () => frame),
-    show(failed.map(failing => !failing), () =>
-      show(page.data.map(html => html === undefined), () => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-neutral-500' }, 'loading…')),
-    ),
+    show(() => !failed.get(), () => frame),
+    show(() => !failed.get() && page.data.get() === undefined, loadingNote),
     show(failed, () => failure(data.title)),
   )
 }

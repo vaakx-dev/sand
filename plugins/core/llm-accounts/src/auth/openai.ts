@@ -1,4 +1,5 @@
-import { jwtClaims } from './jwt'
+import { capital, untilAborted } from '@sand/kit'
+import { fieldsOf, isText, jwtClaims, type Json } from './json'
 import { expiresAt, postToken, required } from './request'
 import type { Tokens } from './store'
 
@@ -13,26 +14,26 @@ export const deviceTimeout = 15 * 60_000
 const authClaim = 'https://api.openai.com/auth'
 const profileClaim = 'https://api.openai.com/profile'
 
-export interface Device {
+interface Device {
   id: string
   code: string
   interval: number
 }
 
-const capital = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
-
-const tokensOf = (json: any): Tokens => {
-  const access = required(json?.access_token, 'access_token')
+const tokensOf = (json: Json): Tokens => {
+  const access = required(json.access_token, 'access_token')
   const claims = jwtClaims(access)
-  const identity = jwtClaims(json?.id_token)
-  const accountId = claims[authClaim]?.chatgpt_account_id ?? identity[authClaim]?.chatgpt_account_id
-  if (typeof accountId !== 'string' || !accountId) throw new Error('The ChatGPT token has no account id')
-  const email = identity.email ?? claims[profileClaim]?.email
-  const plan = claims[authClaim]?.chatgpt_plan_type ?? identity[authClaim]?.chatgpt_plan_type
+  const identity = jwtClaims(json.id_token)
+  const auth = fieldsOf(claims[authClaim])
+  const identityAuth = fieldsOf(identity[authClaim])
+  const accountId = auth.chatgpt_account_id ?? identityAuth.chatgpt_account_id
+  if (!isText(accountId)) throw new Error('The ChatGPT token has no account id')
+  const email = identity.email ?? fieldsOf(claims[profileClaim]).email
+  const plan = auth.chatgpt_plan_type ?? identityAuth.chatgpt_plan_type
   return {
     access,
-    refresh: required(json?.refresh_token, 'refresh_token'),
-    expires: expiresAt(json?.expires_in),
+    refresh: required(json.refresh_token, 'refresh_token'),
+    expires: expiresAt(json.expires_in),
     accountId,
     ...(typeof email === 'string' && { email }),
     ...(typeof plan === 'string' && { plan: capital(plan) }),
@@ -45,38 +46,32 @@ const form = (fields: Record<string, string>, signal?: AbortSignal): RequestInit
   signal,
 })
 
+const postJson = (url: string, body: Json, signal: AbortSignal) =>
+  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal })
+
 export const startDevice = async (signal: AbortSignal): Promise<Device> => {
-  const response = await fetch(userCodeUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: clientId }),
-    signal,
-  })
+  const response = await postJson(userCodeUrl, { client_id: clientId }, signal)
   if (!response.ok) throw new Error(`ChatGPT device sign-in failed (${response.status}): ${await response.text().catch(() => '')}`)
-  const json = (await response.json()) as any
-  const interval = Number(json?.interval ?? 5)
-  if (!json?.device_auth_id || !json.user_code || !Number.isFinite(interval)) throw new Error('ChatGPT sent an invalid device code')
-  return { id: json.device_auth_id, code: json.user_code, interval: Math.max(1, interval) }
+  const json = fieldsOf(await response.json())
+  const interval = Number(json.interval ?? 5)
+  const { device_auth_id: id, user_code: code } = json
+  if (!isText(id) || !isText(code) || !Number.isFinite(interval)) throw new Error('ChatGPT sent an invalid device code')
+  return { id, code, interval: Math.max(1, interval) }
 }
 
 const errorCode = (text: string) => {
   try {
-    const { error } = JSON.parse(text)
-    return typeof error === 'object' ? error?.code : error
+    const { error } = fieldsOf(JSON.parse(text))
+    return typeof error === 'object' ? fieldsOf(error).code : error
   } catch {}
 }
 
 const pollOnce = async (device: Device, signal: AbortSignal) => {
-  const response = await fetch(deviceTokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ device_auth_id: device.id, user_code: device.code }),
-    signal,
-  })
+  const response = await postJson(deviceTokenUrl, { device_auth_id: device.id, user_code: device.code }, signal)
   if (response.ok) {
-    const json = (await response.json()) as any
-    if (!json?.authorization_code || !json.code_verifier) throw new Error('ChatGPT sent an invalid device token')
-    return { code: json.authorization_code as string, verifier: json.code_verifier as string }
+    const { authorization_code: code, code_verifier: verifier } = fieldsOf(await response.json())
+    if (!isText(code) || !isText(verifier)) throw new Error('ChatGPT sent an invalid device token')
+    return { code, verifier }
   }
   if (response.status === 403 || response.status === 404) return 'pending'
   const text = await response.text().catch(() => '')
@@ -86,33 +81,17 @@ const pollOnce = async (device: Device, signal: AbortSignal) => {
   throw new Error(`ChatGPT sign-in failed (${response.status}): ${text}`)
 }
 
-const wait = (ms: number, signal: AbortSignal) =>
-  new Promise<void>((resolve, reject) => {
-    const abort = () => {
-      clearTimeout(timer)
-      reject(new Error('Sign-in cancelled'))
-    }
-    const timer = setTimeout(() => {
-      signal.removeEventListener('abort', abort)
-      resolve()
-    }, ms)
-    signal.addEventListener('abort', abort, { once: true })
-  })
-
 export const pollDevice = async (device: Device, deadline: number, signal: AbortSignal): Promise<Tokens> => {
   let interval = device.interval * 1000
   while (Date.now() < deadline) {
-    if (signal.aborted) throw new Error('Sign-in cancelled')
+    signal.throwIfAborted()
     const result = await pollOnce(device, signal)
     if (result === 'slow') interval += 5000
     else if (result !== 'pending') {
-      const json = await postToken(
-        tokenUrl,
-        form({ grant_type: 'authorization_code', client_id: clientId, code: result.code, code_verifier: result.verifier, redirect_uri: deviceRedirect }, signal),
-      )
-      return tokensOf(json)
+      const fields = { grant_type: 'authorization_code', client_id: clientId, code: result.code, code_verifier: result.verifier, redirect_uri: deviceRedirect }
+      return tokensOf(await postToken(tokenUrl, form(fields, signal)))
     }
-    await wait(Math.min(interval, Math.max(0, deadline - Date.now())), signal)
+    await untilAborted(Bun.sleep(Math.min(interval, Math.max(0, deadline - Date.now()))), signal)
   }
   throw new Error('The sign-in code expired. Start again.')
 }

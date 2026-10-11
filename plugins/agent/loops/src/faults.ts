@@ -9,9 +9,9 @@ import type { Registry } from './registry'
 
 const limit = 2
 
-export const faultType = 'loop-fault'
+const faultType = 'loop-fault'
 
-export interface LoopFault {
+interface LoopFault {
   name: string
   error: string
   count: number

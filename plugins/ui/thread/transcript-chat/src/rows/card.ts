@@ -1,9 +1,10 @@
-import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span } from '@sand/dom'
+import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span, type IconName, type Tone } from '@sand/dom'
+import { capital } from '@sand/kit'
 import { row, type RowContext } from './row'
 
 export interface Card {
   key: string
-  icon: string
+  icon: IconName
   kind: string
   name: string
   text: string
@@ -11,13 +12,14 @@ export interface Card {
   failed?: boolean
 }
 
+const tones: Record<string, Tone> = { done: 'success', completed: 'success', failed: 'danger', cancelled: 'neutral' }
+
 const summary = (text: string) => oneLine(text.split('\n').find(line => line.trim())?.replace(/^[#>*\-\s`]+|[*`]+/g, '') ?? '', 140)
 
+const markdown = (text: string, context: RowContext) => div({ class: 'markdown' }, context.markdown.nodes(text))
+
 const whole = (text: string, context: RowContext) =>
-  fold(
-    { lines: text.split('\n').length, chars: text.length, copy: () => text, copyLabel: 'Copy' },
-    div({ class: 'markdown' }, context.markdown.nodes(text)),
-  )
+  fold({ lines: text.split('\n').length, chars: text.length, copy: () => text, copyLabel: 'Copy' }, markdown(text, context))
 
 const section = (text: string, key: string, context: RowContext, held: () => boolean) => {
   const { open, toggle } = context.states.get(key)
@@ -33,13 +35,14 @@ const section = (text: string, key: string, context: RowContext, held: () => boo
       chevron(() => open.get()),
       span({ class: 'min-w-0 flex-1 truncate' }, summary(text)),
     ),
-    show(open, () => div({ class: 'px-3 pt-1 pb-3' }, div({ class: 'markdown' }, context.markdown.nodes(text)), div({ class: 'mt-2' }, copyButton({ text: () => text, label: 'Copy' })))),
+    show(open, () => div({ class: 'px-3 pt-1 pb-3' }, markdown(text, context), div({ class: 'mt-2' }, copyButton({ text: () => text, label: 'Copy' })))),
   )
 }
 
-const tones = { done: 'success', completed: 'success', failed: 'danger', cancelled: 'neutral' } as const
-
-const statusBadge = (status: string) => badge(tones[status as keyof typeof tones] ?? 'neutral', status.charAt(0).toUpperCase() + status.slice(1))
+const results = (card: Card, sections: string[], context: RowContext, held: () => boolean) => {
+  if (sections.length > 1) return div({ class: 'flex flex-col gap-1' }, sections.map((text, index) => section(text, `${card.key}:${index}`, context, held)))
+  return card.text && whole(sections[0] ?? '', context)
+}
 
 export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {
@@ -58,15 +61,10 @@ export const cardRow = (card: Card, context: RowContext) =>
           { class: ['flex min-h-6 items-center gap-2 text-xs', card.text && 'mb-2'] },
           span({ class: 'shrink-0 font-medium text-neutral-100' }, card.kind),
           span({ class: 'min-w-0 truncate text-neutral-400', title: card.name }, card.name),
-          card.status && statusBadge(card.status),
+          card.status && badge(tones[card.status] ?? 'neutral', capital(card.status)),
           sections.length > 1 && span({ class: 'shrink-0 text-neutral-500' }, `${sections.length} results`),
         ),
-        sections.length > 1
-          ? div(
-              { class: 'flex flex-col gap-1' },
-              sections.map((text, index) => section(text, `${card.key}:${index}`, context, press.held)),
-            )
-          : card.text && whole(sections[0] ?? '', context),
+        results(card, sections, context, press.held),
       ),
     )
   })

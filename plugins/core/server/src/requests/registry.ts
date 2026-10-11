@@ -1,31 +1,32 @@
-import type { RequestHandler, WireHandler, WireRequest, WireRequestType } from '@sand/protocol'
+import type { RequestHandler, WireHandler, WireHandlers, WireRequest, WireRequestType } from '@sand/protocol'
+import { joinDisposers } from '@sand/kit'
 import type { Dispose } from 'drydock'
 
-export type CoreHandlers = { [K in WireRequestType]?: WireHandler<K> }
+type Handler = (request: never) => unknown
 
 export const createRequests = () => {
-  const handlers = new Map<string, RequestHandler>()
+  const handlers = new Map<string, Handler>()
 
-  function handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
-  function handle(type: string, handler: RequestHandler): Dispose
-  function handle(type: string, handler: (request: never) => unknown) {
-    const entry = handler as RequestHandler
-    handlers.set(type, entry)
+  const handleOne = (type: string, handler: Handler) => {
+    handlers.set(type, handler)
     return () => {
-      if (handlers.get(type) === entry) handlers.delete(type)
+      if (handlers.get(type) === handler) handlers.delete(type)
     }
   }
 
-  const register = (core: CoreHandlers) => {
-    const disposers = Object.entries(core).map(([type, handler]) => handle(type, handler as RequestHandler))
-    return () => disposers.forEach(dispose => dispose())
+  function handle<K extends WireRequestType>(type: K, handler: WireHandler<K>): Dispose
+  function handle(type: string, handler: RequestHandler): Dispose
+  function handle(handlers: WireHandlers): Dispose
+  function handle(type: string | WireHandlers, handler?: Handler) {
+    if (typeof type === 'string') return handler ? handleOne(type, handler) : () => {}
+    return joinDisposers(...Object.entries(type).map(([name, each]) => handleOne(name, each)))
   }
 
   const answer = async (request: WireRequest) => {
     const handler = handlers.get(request.type)
     if (!handler) throw new Error(`The server has no handler for ${request.type}`)
-    return handler(request as Parameters<RequestHandler>[0])
+    return handler(request as never)
   }
 
-  return { handle, register, answer }
+  return { handle, answer }
 }

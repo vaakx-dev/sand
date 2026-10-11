@@ -1,8 +1,7 @@
-import { readProjectsFile, writeProjectsFile } from '@sand/kit/fs'
+import { debouncedWatch, projectsPath, samePath } from '@sand/kit/fs'
 import { definePlugin } from 'drydock'
-import type { ProjectFiles } from './contract'
+import { join } from 'node:path'
 import { localFiles } from './local'
-import { watchProjects } from './watch'
 
 export default definePlugin({
   name: 'project-files',
@@ -10,21 +9,15 @@ export default definePlugin({
   inject: ['cli'],
   apply(ctx) {
     const { home } = ctx.cli
-    const local = localFiles(home)
     const listeners = new Set<() => void>()
-    ctx.effect(() => watchProjects(home, () => listeners.forEach(listener => listener())))
-
-    const projectFiles: ProjectFiles = {
-      read: () => readProjectsFile(home),
-      write: projects => writeProjectsFile(home, projects),
-      local: local.local,
-      copies: local.copies,
-      ofFolder: local.ofFolder,
+    const isProjectsFile = (filename: string | null) => filename !== null && samePath(join(home, filename), projectsPath(home))
+    ctx.effect(() => debouncedWatch(home, { only: isProjectsFile }, () => listeners.forEach(listener => listener())))
+    ctx.provide('projectFiles', {
+      ...localFiles(home),
       onChange(onChange) {
         listeners.add(onChange)
         return () => void listeners.delete(onChange)
       },
-    }
-    ctx.provide('projectFiles', projectFiles)
+    })
   },
 })

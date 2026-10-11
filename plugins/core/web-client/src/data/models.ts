@@ -19,7 +19,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
       changed()
     }, () => {})
 
-  const fetch = (thread: string) => {
+  const askSettings = (thread: string) => {
     if (asking.has(thread)) return
     asking.add(thread)
     void wire
@@ -31,19 +31,18 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
       .finally(() => asking.delete(thread))
   }
 
-  ctx.on('wire.hello', hello => {
-    catalog = { models: hello.models ?? [], sources: hello.sources ?? [], levels: hello.levels ?? [], defaults: hello.defaults ?? {} }
+  const useCatalog = (next: ModelsUpdate) => {
+    catalog = next
     store.settings.clear()
     refreshDraft()
     changed()
-  })
+  }
+
+  ctx.on('wire.hello', hello =>
+    useCatalog({ models: hello.models ?? [], sources: hello.sources ?? [], levels: hello.levels ?? [], defaults: hello.defaults ?? {} }),
+  )
   ctx.on('wire.event', event => {
-    if (event.name === 'models.change') {
-      catalog = { ...event.args[0], sources: event.args[0].sources ?? [] }
-      store.settings.clear()
-      refreshDraft()
-      changed()
-    }
+    if (event.name === 'models.change') useCatalog({ ...event.args[0], sources: event.args[0].sources ?? [] })
     if (event.name === 'settings.change') {
       store.settings.set(...event.args)
       changed()
@@ -55,7 +54,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
   const state = (thread = threads.current()?.id) => {
     if (!thread) return draftState
     const known = store.settings.get(thread)
-    if (!known) fetch(thread)
+    if (!known) askSettings(thread)
     return known
   }
 
