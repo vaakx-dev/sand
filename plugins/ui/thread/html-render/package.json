@@ -12,7 +12,8 @@
     "label": "HTML renders",
     "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the thread",
     "uses": {
-      "transcript": "renders are not shown"
+      "transcript": "renders are not shown",
+      "layout": "swiping over a page does not move the sidebar"
     }
   },
   "dependencies": {

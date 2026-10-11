@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./gesture": "./src/gesture/index.ts",
     "./page": "./src/theme/page.ts",
     "./palette": "./src/theme/palette.ts",
     "./tokens": "./src/theme/tokens.ts"
