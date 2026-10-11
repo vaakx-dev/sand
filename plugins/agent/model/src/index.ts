@@ -11,7 +11,7 @@ export default definePlugin({
   name: 'model',
   inject: ['cli', 'sessions'],
   async apply(ctx) {
-    const defaults = await createDefaults(ctx.cli.home, () => ({ model: ctx.llm?.models?.()[0]?.id }))
+    const defaults = await createDefaults(ctx.cli.home)
     const choices = createChoices(ctx, defaults)
     ctx.provide('modelSettings', {
       effective: session => resolve(settingsOf(session), defaults.get(), ctx.llm),

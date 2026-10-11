@@ -17,12 +17,12 @@ const readSaved = async (file: string): Promise<SessionSettings> => {
   }
 }
 
-export const createDefaults = async (home: string, fallback: () => SessionSettings): Promise<Defaults> => {
+export const createDefaults = async (home: string): Promise<Defaults> => {
   const file = join(home, 'model.json')
   let saved = await readSaved(file)
   const queue = serial()
   return {
-    get: () => ({ ...fallback(), ...saved }),
+    get: () => saved,
     async save(patch) {
       saved = clean({ ...saved, ...patch })
       await queue(() => Bun.write(file, `${JSON.stringify(saved, null, 2)}\n`))

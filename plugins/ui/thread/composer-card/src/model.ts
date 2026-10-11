@@ -8,7 +8,7 @@ import { compose } from './attachments/content'
 import { createFiles, type Attached } from './attachments/files'
 import { createSegments } from './editor/segments'
 import { createEditing } from './queue/editing'
-import { retry, submit } from './send/submit'
+import { chooseModel, modelMissing, retry, submit } from './send/submit'
 
 type Ctx = Context<'threads' | 'turns'>
 
@@ -144,6 +144,7 @@ export const createModel = (ctx: Ctx) => {
     const items = files.contents()
     if (id) return empty.get() ? undefined : saveEdit(id, value, items)
     if (!items.length && commandLike.test(value)) return runCommand(value)
+    if (modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
     return sendPrompt(value, items)
   }
 

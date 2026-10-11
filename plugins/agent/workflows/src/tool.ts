@@ -23,7 +23,6 @@ export default async function ({ agent, parallel, pipeline, phase, log, args, z 
   return parallel(args.files.map((file: string) => () =>
     agent(\`Review \${file} for bugs and report each with its line number.\`, {
       agent: 'explore',
-      model: 'haiku',
       schema: z.object({ bugs: z.array(z.object({ line: z.number(), issue: z.string() })) }),
     })))
 }

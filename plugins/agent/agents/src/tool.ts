@@ -19,7 +19,7 @@ const inputSchema = (llm: LLM | undefined) =>
     model: z
       .string()
       .optional()
-      .describe('Model for this agent, e.g. "haiku" or "opus" (default: the agent\'s own model, else yours)'),
+      .describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
     effort: effortInput(llm).optional().describe('Reasoning effort (default: inherited)'),
     background: z.boolean().optional().describe('Return now. The report arrives later as a <task-notification>.'),
   })

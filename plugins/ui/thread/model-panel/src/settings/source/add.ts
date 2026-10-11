@@ -1,19 +1,8 @@
-import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
+import type { ModelInfo } from '@sand/llm-accounts/contract'
 import { div, errorMessage, keys, p, secondaryAction, sig, textInput } from '@sand/dom'
 import type { Catalog } from './catalog'
 
-const examples: Record<string, string> = {
-  openrouter: 'openai/gpt-oss-120b',
-  server: 'qwen3-coder:30b',
-  claude: 'claude-opus-5-5',
-  anthropic: 'claude-opus-5-5',
-  codex: 'gpt-6.1-sol',
-  openai: 'gpt-6.1',
-}
-
-const example = (source: SourceInfo) => examples[source.kind] ?? examples[source.id] ?? 'the model id'
-
-export const addRow = (source: SourceInfo, catalog: Catalog, added: (model: ModelInfo) => void) => {
+export const addRow = (catalog: Catalog, added: (model: ModelInfo) => void) => {
   const name = sig('')
   const busy = sig(false)
   const error = sig('')
@@ -38,7 +27,7 @@ export const addRow = (source: SourceInfo, catalog: Catalog, added: (model: Mode
     div(
       { class: 'flex items-center gap-2' },
       textInput({
-        placeholder: `Add by slug, like ${example(source)}`,
+        placeholder: 'Add by model id',
         'aria-label': 'Model slug',
         bindValue: name,
         onInput: () => error.set(''),

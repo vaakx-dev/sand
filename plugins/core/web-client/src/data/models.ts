@@ -71,7 +71,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
     const model = settings.model ?? catalog.defaults.model
     const known = info(model)
     const effort = settings.effort && known?.efforts.includes(settings.effort) ? settings.effort : undefined
-    return [known?.label ?? model ?? 'the default model', catalog.levels.find(level => level.id === effort)?.label, settings.speed === 'fast' && known?.fast && 'Fast']
+    return [known?.label ?? model ?? 'no model chosen', catalog.levels.find(level => level.id === effort)?.label, settings.speed === 'fast' && known?.fast && 'Fast']
       .filter(Boolean)
       .join(' · ')
   }

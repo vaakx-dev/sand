@@ -72,6 +72,6 @@ export const modelsSection = (source: SourceInfo, catalog: Catalog, filter: Filt
         filter.more.map(more => more > 0),
         () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show more (${filter.more.get()})`)),
       ),
-      source.slugs ? addRow(source, catalog, model => filter.keep(model.id)) : null,
+      source.slugs ? addRow(catalog, model => filter.keep(model.id)) : null,
     ),
   )

@@ -21,11 +21,10 @@ const unpaired = () => refuse('only paired PCs can use the accounts on this PC',
 const isRequest = (value: unknown): value is LLMRequest =>
   isRecord(value) && typeof value.system === 'string' && Array.isArray(value.messages) && Array.isArray(value.tools)
 
-const sharedModel = (local: LocalLLM, accounts: Accounts, wanted?: string) => {
+const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {
   const shared = new Set(sharedIds(accounts))
   const offered = local.view.entries().filter(entry => shared.has(entry.meta.id))
   const models = offered.flatMap(entry => entry.models)
-  if (!wanted) return models.find(model => !model.hidden)
   return (
     models.find(model => model.id === wanted) ??
     models.find(model => !model.hidden && model.name === wanted) ??
@@ -47,8 +46,9 @@ export const serveShare = (server: Server, { local, accounts, users }: ShareOpti
     if (request.method !== 'POST') return refuse('use POST', 405)
     const body = await request.json().catch(() => undefined)
     if (!isRequest(body)) return refuse('expected a model request', 400)
+    if (!body.model) return refuse('name a model', 400)
     const model = sharedModel(local, accounts, body.model)
-    if (!model?.source) return refuse(body.model ? `unknown model: ${body.model}` : 'this PC shares no accounts')
+    if (!model?.source) return refuse(`unknown model: ${body.model}`)
     if (!accounts.shared(model.source)) return refuse(`not shared: ${accounts.label(model.source)}`)
     users.used(caller)
     return streamLines(signal => local.stream({ ...body, model: model.id }, signal), request.signal)

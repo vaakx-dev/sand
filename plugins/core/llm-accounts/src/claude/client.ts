@@ -6,7 +6,6 @@ import { reaching } from '../reach'
 import type { ClaudeSettings } from './body'
 import { claudeCall, type ClaudeCall, type Payload } from './call'
 import { parseLimits } from './limits'
-import { claudeModels } from './models'
 import { read } from './reader'
 import { events } from './sse'
 import { fetchClaudeLimits } from './usage'
@@ -22,8 +21,6 @@ interface ClaudeOptions {
 export type Claude = ReturnType<typeof createClaude>
 
 export const createClaude = ({ accounts, maxTokens, retries, onLimits, notify }: ClaudeOptions) => {
-  const settings = (model?: string): ClaudeSettings => ({ model: model ?? claudeModels[0]!, maxTokens })
-
   const prepare = async (account: string, request: LLMRequest, chosen: ClaudeSettings) => ({
     ...claudeCall(await accounts.auth(account), request, chosen),
     name: accounts.label(account),
@@ -48,8 +45,8 @@ export const createClaude = ({ accounts, maxTokens, retries, onLimits, notify }:
   }
 
   return {
-    async *stream(account: string, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
-      const call = await prepare(account, request, settings(request.model))
+    async *stream(account: string, request: LLMRequest & { model: string }, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+      const call = await prepare(account, request, { model: request.model, maxTokens })
       const limited = 'speed' in call.payload ? atNormalSpeed(call) : undefined
       const response = await reaching(call.url, call.name, signal, () =>
         send(call.url, init(call, call.payload), { retries, signal, inspect: inspect(account), limited }),

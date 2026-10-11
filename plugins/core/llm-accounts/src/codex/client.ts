@@ -6,7 +6,6 @@ import { reaching } from '../reach'
 import { codexBody } from './body'
 import type { CodexEvent } from './events'
 import { codexLimitReached, parseCodexLimits } from './limits'
-import { codexModels } from './models'
 import { readCodex } from './reader'
 import { codexTarget } from './target'
 
@@ -32,16 +31,15 @@ export const createCodex = ({ accounts, retries, onLimits }: CodexOptions) => {
   }
 
   return {
-    async *stream(account: string, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    async *stream(account: string, request: LLMRequest & { model: string }, signal?: AbortSignal): AsyncIterable<LLMEvent> {
       const credential = await accounts.auth(account)
-      const id = request.model ?? codexModels[0]!
-      const payload = codexBody(request, id)
+      const payload = codexBody(request, request.model)
       const { url, headers } = codexTarget(credential, payload.prompt_cache_key)
       const name = accounts.label(account)
       const init = { method: 'POST', headers, body: JSON.stringify(payload) }
       const response = await reaching(url, name, signal, () => send(url, init, { retries, signal, inspect: inspect(account) }))
       if (!response.body) throw new Error('Empty response body')
-      yield* readCodex(sseEvents<CodexEvent>(response.body, 'ChatGPT'), id)
+      yield* readCodex(sseEvents<CodexEvent>(response.body, 'ChatGPT'), request.model)
     },
   }
 }

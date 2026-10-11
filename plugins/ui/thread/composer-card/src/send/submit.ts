@@ -13,6 +13,13 @@ const prompt = (text: string, attachments: UserContent[]): Prompt => (attachment
 
 const label = (text: string, attachments: UserContent[]) => text || attachments.map(contentName).join(', ')
 
+export const modelMissing = (ctx: Context) => {
+  const current = ctx.models?.state()?.current
+  return Boolean(current && !current.model)
+}
+
+export const chooseModel = (ctx: Context<'threads'>) => runCommand(ctx, 'model', '')
+
 export const interrupt = async (ctx: Context<'threads' | 'turns'>) => {
   const current = ctx.threads.current()
   if (current?.running) await ctx.turns.interrupt(current.id)

@@ -2,7 +2,7 @@ import type { AgentDefinition } from '@sand/agents/contract'
 import type { Effort, LLM } from '@sand/llm-accounts/contract'
 
 export interface AgentChoice {
-  model: string
+  model?: string
   effort: Effort
 }
 
@@ -16,7 +16,8 @@ const prompt = `You drive a browser tab that the user watches live in sand's Bro
 
 End with a short report: what you did, what you saw (quote exact text and errors), the final URL, and anything that blocked you.`
 
-const matching = (llm: LLM | undefined, query: string) => {
+const matching = (llm: LLM | undefined, query?: string) => {
+  if (!query) return undefined
   const wanted = query.toLowerCase()
   return llm?.models?.().find(model => model.id.includes(wanted) || model.label.toLowerCase().includes(wanted))
 }
