@@ -22,7 +22,7 @@ export const parentCrumb = (ctx: Context, parent: Sig<ParentLink | undefined>) =
         'aria-label': () => `Sub-agent of ${parent.get()?.title ?? 'the parent thread'}`,
         onClick: () => {
           const link = parent.get()
-          if (link) void ctx.threads?.select(link.id)
+          if (link) void ctx.threads?.back(link.id)
         },
       },
       icon('up', 13),

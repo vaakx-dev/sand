@@ -1,10 +1,12 @@
+import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/dom'
+
 const key = 'settings'
+const opened = 'settingsOpened'
 
-export const requestedPage = () => new URLSearchParams(location.search).get(key) ?? undefined
+export const requestedPage = () => addressParam(key)
 
-export const showPage = (id: string | undefined) => {
-  const url = new URL(location.href)
-  if (id) url.searchParams.set(key, id)
-  else url.searchParams.delete(key)
-  if (url.href !== location.href) history.replaceState(history.state, '', url)
-}
+export const openPage = (id: string) => pushAddress({ ...addressParams(), [key]: id }, { ...addressState(), [opened]: true })
+
+export const switchPage = (id: string) => updateAddress({ [key]: id })
+
+export const leavePage = () => (addressState()[opened] ? history.back() : updateAddress({ [key]: undefined }))
