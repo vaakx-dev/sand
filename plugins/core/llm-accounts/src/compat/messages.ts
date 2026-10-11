@@ -1,5 +1,6 @@
 import { textOf } from '@sand/kit'
 import type { Block, DocumentBlock, Message, ToolResultBlock, UserContent } from '@sand/messages'
+import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
 
 type ChatMessage = Record<string, unknown>
@@ -35,7 +36,7 @@ const resultPart = (block: UserContent) => {
   return documentText(block)
 }
 
-const resultText = (result: ToolResultBlock) => result.content.map(resultPart).join('\n').trim() || '(no output)'
+const resultText = (result: ToolResultBlock) => withoutReferences(result.content).map(resultPart).join('\n').trim() || '(no output)'
 
 const userMessages = (content: Block[], images: boolean): ChatMessage[] => {
   const results = content.flatMap(block => (block.type === 'tool_result' ? [{ role: 'tool', tool_call_id: block.callId, content: resultText(block) }] : []))

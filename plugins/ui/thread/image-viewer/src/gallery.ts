@@ -1,4 +1,4 @@
-import type { ImageBlock, Message, UserContent } from '@sand/messages'
+import type { ImageBlock, Message, ToolResultContent } from '@sand/messages'
 import type { Props } from '@sand/dom'
 import type { Threads } from '@sand/web-client/contract'
 
@@ -13,7 +13,7 @@ export interface ThreadImage {
 
 export type Picture = (block: ImageBlock, props: Props<HTMLImageElement>) => HTMLImageElement
 
-const imagesIn = (content: UserContent[], sender: Sender): ThreadImage[] =>
+const imagesIn = (content: ToolResultContent[], sender: Sender): ThreadImage[] =>
   content.flatMap(block => (block.type === 'image' ? [{ block, sender }] : []))
 
 const userImages = (message: Message): ThreadImage[] =>

@@ -31,6 +31,7 @@ const stopReason = (pr: PrView, before: string, started: number, minutes: number
 
 export const waitTool: Tool<typeof input> = {
   name: 'pr_wait',
+  group: 'github',
   description: "Wait until a PR's checks finish, new feedback arrives or its state changes. Returns the pr_status summary.",
   input,
   async run({ pr, timeout_minutes }, { cwd, signal }) {

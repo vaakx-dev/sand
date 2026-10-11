@@ -38,6 +38,7 @@ const shotNotes = (shot: Capture, selector: string | undefined) => {
 
 export const previewTool = (executable: string, pages: HtmlPages, timeoutMs: number): Tool<ReturnType<typeof inputFor>> => ({
   name: 'html_preview',
+  group: 'html',
   description: "Screenshot an HTML page and read its console before html_render. The user doesn't see it.",
   input: inputFor(pages),
   async run({ path, width = pages.columnWidth, script, selector }, { signal, cwd }): Promise<UserContent[]> {
