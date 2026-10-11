@@ -64,6 +64,18 @@ export const checkMark = (on: () => boolean, extra?: ClassValue) =>
     icon('check', 12),
   )
 
+export const radioMark = (on: () => boolean) =>
+  span(
+    { class: ['flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-solid', () => (on() ? 'border-accent-400' : 'border-neutral-600')] },
+    span({ class: ['h-2 w-2 rounded-full', () => (on() ? 'bg-accent-400' : '')] }),
+  )
+
+export const progressSteps = (count: number, reached: number) =>
+  div(
+    { class: 'flex items-center gap-1', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(count), 'aria-valuenow': String(reached) },
+    Array.from({ length: count }, (_, index) => span({ class: ['h-1 w-5 rounded-full', index < reached ? 'bg-accent-400' : 'bg-neutral-700'] })),
+  )
+
 export interface StatusLineProps {
   mark: Child
   text: Child

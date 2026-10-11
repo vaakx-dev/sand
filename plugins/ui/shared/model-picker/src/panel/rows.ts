@@ -1,13 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, div, menuItem, modelLogo, span } from '@sand/dom'
+import { badge, div, menuItem, modelLogo, radioMark, span } from '@sand/dom'
 import { sourceName, tokens } from '@sand/kit'
 import type { Scene } from './scene'
-
-const radio = (on: boolean) =>
-  span(
-    { class: ['flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-solid', on ? 'border-accent-400' : 'border-neutral-600'] },
-    on && span({ class: 'h-2 w-2 rounded-full bg-accent-400' }),
-  )
 
 export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => {
   const on = model.id === scene.shown.model
@@ -23,7 +17,7 @@ export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => 
       ...(withSource && source && { title: `${model.label} · ${sourceName(source)}` }),
       ...scene.menu.target(() => scene.menuOf(model), () => scene.pick(model)),
     },
-    radio(on),
+    radioMark(() => on),
     withSource && modelLogo(model.provider, 14),
     span({ class: 'min-w-0 flex-1 truncate font-medium' }, model.label),
     div(

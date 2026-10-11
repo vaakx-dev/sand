@@ -11,7 +11,8 @@ export default definePlugin({
   description: 'Accounts page in settings and the first-run welcome: sign in with Claude and ChatGPT plans, add API keys or local servers, or use accounts from another PC',
   inject: ['wire'],
   uses: {
-    settings: 'no Accounts page; the welcome opens the add-account sheet on its own',
+    settings: 'no Accounts page',
+    modelSetup: 'after signing in, the welcome ends with Start a thread instead of picking models',
     layout: 'the welcome lands loose on the stage',
     models: 'the welcome also shows when another plugin offers models',
     threads: 'the welcome also covers a thread that has messages',
@@ -26,10 +27,6 @@ export default definePlugin({
     if (ctx.wire.state() === 'open') void control.load()
     ctx.watch('settings', settings => settings?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', order: 25, render: () => accountsPage(control, add) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
-    const signIn = () => {
-      ctx.settings?.open('accounts')
-      add.open()
-    }
-    place(ctx, 'main', () => welcomeView(welcome, control, signIn), 0.5)
+    place(ctx, 'main', () => welcomeView(welcome, control), 0.5)
   },
 })

@@ -1204,6 +1204,20 @@
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
+    "plugins/ui/shared/model-setup": {
+      "name": "@sand/model-setup",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/composer-card": "workspace:*",
+        "@sand/dom": "workspace:*",
+        "@sand/kit": "workspace:*",
+        "@sand/llm-accounts": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/titles": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+      },
+    },
     "plugins/ui/shared/palette": {
       "name": "@sand/palette",
       "version": "0.0.0",
@@ -1620,6 +1634,8 @@
     "@sand/model-panel": ["@sand/model-panel@workspace:plugins/ui/thread/model-panel"],
 
     "@sand/model-picker": ["@sand/model-picker@workspace:plugins/ui/shared/model-picker"],
+
+    "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
 
     "@sand/new-project": ["@sand/new-project@workspace:plugins/projects/new-project"],
 
