@@ -1,6 +1,6 @@
 ---
 name: clean-code
-description: Write focused, readable code. Use when writing or changing code.
+description: Write focused, readable code. Load before writing or changing any code.
 ---
 
 # Clean code
@@ -9,6 +9,7 @@ Write the least code that does the job, in a shape the next reader can follow.
 
 ## Scope
 
+- Read the code you need before changing it.
 - Every changed line traces to the task.
 - Follow the project's instructions first, then this skill.
 - Copy the patterns of nearby code only where they meet these rules.

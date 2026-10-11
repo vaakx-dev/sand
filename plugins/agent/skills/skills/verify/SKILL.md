@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Check that a change works by running it. Use before saying something works.
+description: Check that a code change works by running it. Load before fixing a bug and before saying a change works.
 ---
 
 # Verify
@@ -13,9 +13,11 @@ Passing checks only shows the code builds. Run the changed thing the way a perso
    - A command: run it with the inputs the change touches, including a bad one.
    - A server or API: start a throwaway instance on a free port and call it.
    - A UI: open it in a headless browser at desktop and phone sizes, click through the changed flow and take screenshots.
-4. For a bug fix, show it failing on the base branch and working after.
+4. For a bug, reproduce it before you fix it, then show it working after.
 5. For a big change, also give the task and the diff to a fresh subagent and ask it to break the change.
 6. Stop anything you started.
+
+Keep fixing until the checks and the real run pass.
 
 Use throwaway data, homes and ports. Leave the user's running services alone.
 
