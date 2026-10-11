@@ -10,7 +10,7 @@ export default definePlugin({
   apply(ctx) {
     const host = navHost(ctx)
     const layout = pulse(ctx, ['layout.change'], ['layout'])
-    const { entries, drag } = owned(ctx, () => navEntries(host, { axis: 'y', onPick: () => closeDrawer(ctx) }))
+    const { entries, drag } = owned(ctx, () => navEntries(host, { axis: 'y' }))
 
     const view = () => {
       const narrow = layout.read(() => ctx.layout?.state().narrow ?? false)

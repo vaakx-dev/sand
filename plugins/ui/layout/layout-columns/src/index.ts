@@ -104,9 +104,6 @@ export default definePlugin({
     )
     ctx.effect(() => mount(stage(), root))
     ctx.provide('layout', layout)
-    ctx.on('thread.select', () => {
-      if (narrow.get() && open.side.get()) layout.toggle('side', false)
-    })
     ctx.watch('commands', commands => commands?.add({ name: 'panel', description: 'Toggle the right panel', run: () => layout.toggle('aside') }))
   },
 })

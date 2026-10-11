@@ -67,10 +67,7 @@ export default definePlugin({
           closeDrawer(ctx)
         },
         busy: host.busy,
-        pick(row) {
-          row.list.select(row.item.id)
-          closeDrawer(ctx)
-        },
+        pick: row => row.list.select(row.item.id),
         toggle: row => sections.toggle(row.key, openByDefault(row.name)),
         more: row => limits.update(current => ({ ...current, [row.section]: (current[row.section] ?? pageSize) + pageSize * 2 })),
       })
