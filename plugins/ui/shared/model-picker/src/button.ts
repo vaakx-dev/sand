@@ -80,7 +80,7 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
     },
     dynamicChild(
       model.map(value => value?.provider),
-      provider => span({ class: 'inline-flex shrink-0' }, modelLogo(provider, 14)),
+      provider => (provider ? span({ class: 'inline-flex shrink-0' }, modelLogo(provider, 14)) : null),
     ),
     span({ class: 'min-w-0 flex-1 truncate text-left' }, text),
     show(

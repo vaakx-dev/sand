@@ -14,7 +14,7 @@ export interface Settled {
 }
 
 const settingsText = (settings: SessionSettings) =>
-  [settings.model ?? 'the default model', settings.effort && `${settings.effort} effort`, settings.speed === 'fast' && 'fast'].filter(Boolean).join(' · ')
+  [settings.model ?? 'no model chosen', settings.effort && `${settings.effort} effort`, settings.speed === 'fast' && 'fast'].filter(Boolean).join(' · ')
 
 const compactedText = ({ before, after }: CompactionRecord) =>
   before && after ? `Conversation compacted · ${tokens(before)} → ${tokens(after)} tokens` : 'Conversation compacted'

@@ -19,7 +19,12 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
   const next = changes.read(() => ctx.models.state()?.next)
   const model = changes.read(() => ctx.models.info(ctx.models.state()?.current.model))
   const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
-  const modelLabel = () => model.get()?.label ?? current.get()?.model ?? ''
+  const chosen = current.map(value => Boolean(value?.model))
+  const modelLabel = () => model.get()?.label ?? current.get()?.model ?? 'Choose a model'
+  const tone = () => {
+    if (open.get()) return 'bg-neutral-700 text-neutral-100'
+    return chosen.get() ? 'text-neutral-400' : 'text-warning-400'
+  }
   const effortLabel = () => ctx.models.levels().find(level => level.id === current.get()?.effort)?.label ?? ''
   const nextLabel = () => {
     const value = next.get()
@@ -44,13 +49,13 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
           title: pillTip,
           class: [
             'inline-flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-sm cursor-pointer transition-colors hover:bg-neutral-700 hover:text-neutral-200',
-            () => (open.get() ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400'),
+            tone,
           ],
           ...pressOpens(open, toggle),
         },
         dynamicChild(
           model.map(value => value?.provider),
-          provider => modelLogo(provider),
+          provider => (provider ? modelLogo(provider) : null),
         ),
         span({ class: 'min-w-0 truncate' }, modelLabel),
         show(source.map(Boolean), () => span({ class: 'hidden min-w-0 truncate text-neutral-500 sm:inline' }, () => `· ${source.get()?.label ?? ''}`)),
