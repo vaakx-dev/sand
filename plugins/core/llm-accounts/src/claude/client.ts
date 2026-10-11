@@ -9,6 +9,7 @@ import { parseLimits } from './limits'
 import { claudeModels } from './models'
 import { read } from './reader'
 import { events } from './sse'
+import { fetchClaudeLimits } from './usage'
 
 interface ClaudeOptions {
   accounts: Accounts
@@ -56,11 +57,10 @@ export const createClaude = ({ accounts, maxTokens, retries, onLimits, notify }:
       if (!response.body) throw new Error('Empty response body')
       yield* restoreNames(read(events(response.body)), call.original)
     },
-    async probe() {
-      const request: LLMRequest = { system: '', messages: [{ role: 'user', content: [{ type: 'text', text: '.' }] }], tools: [] }
-      const call = await prepare('claude', request, { ...settings(), maxTokens: 1 })
-      const response = await reaching(call.url, call.name, undefined, () => send(call.url, init(call, call.payload), { retries, inspect: inspect('claude') }))
-      await response.body?.cancel()
+    async checkLimits() {
+      const credential = await accounts.auth('claude')
+      if (credential.type !== 'oauth') return
+      onLimits(await fetchClaudeLimits(credential.access, accounts.label('claude'), retries))
     },
   }
 }
