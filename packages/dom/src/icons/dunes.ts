@@ -1,3 +1,5 @@
+import type { ProjectIcon } from '@sand/protocol'
+
 const layers = [
   { base: 7.2, height: 2.2, lightness: 0.8, chroma: 0.09 },
   { base: 10.2, height: 1.5, lightness: 0.7, chroma: 0.12 },
@@ -25,11 +27,11 @@ const dune = (random: () => number, base: number, height: number) => {
   return `M${ridge.join('L')}L16 16L0 16Z`
 }
 
-export const duneIcon = (name: string) => {
-  const seed = hash(name)
-  const hue = seed % 360
+export const duneIcon = (name: string, { shape, hue }: ProjectIcon = {}) => {
+  const seed = hash(shape ? `${name}#${shape}` : name)
+  const tint = hue ?? seed % 360
   const random = randomFrom(seed)
-  const dunes = layers.map(layer => `<path d="${dune(random, layer.base, layer.height)}" fill="oklch(${layer.lightness} ${layer.chroma} ${hue})"/>`)
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="oklch(0.7 0.12 ${hue} / 0.18)"/>${dunes.join('')}</svg>`
+  const dunes = layers.map(layer => `<path d="${dune(random, layer.base, layer.height)}" fill="oklch(${layer.lightness} ${layer.chroma} ${tint})"/>`)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><clipPath id="round"><circle cx="8" cy="8" r="8"/></clipPath><g clip-path="url(#round)"><rect width="16" height="16" fill="oklch(0.7 0.12 ${tint} / 0.18)"/>${dunes.join('')}</g></svg>`
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }

@@ -3,6 +3,7 @@ import type { ProjectGroup } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, settingsSection, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { sourcesPage } from '../flow/sources'
+import type { Picking } from './icon'
 import { groupRow } from './row'
 
 const heading = (groups: ProjectGroup[]) => {
@@ -35,6 +36,7 @@ const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) =>
 export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: Pulse, live: Sig<number>) => {
   const showHidden = sig(false)
   const open = sig<string | undefined>(undefined)
+  const picking = sig<Picking>(undefined)
   const refreshed = new Set<string>()
   const source = derive(() => {
     changes.version.get()
@@ -46,7 +48,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
     refreshStates(ctx, groups, refreshed)
     return settingsSection(
       { title: heading(groups), action: div({ class: 'flex items-center gap-2' }, hiddenToggle(ctx, showHidden), addButton(ctx)) },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open)) : [settingsRow('No saved projects')]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open, picking)) : [settingsRow('No saved projects')]),
     )
   })
 }

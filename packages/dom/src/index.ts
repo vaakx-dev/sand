@@ -3,6 +3,7 @@ export { ago, duration, errorMessage, exactTime, oneLine, tildeHome } from '@san
 export { icon, type IconName } from './icons/lucide'
 export { modelLogo, providerColor, providerIcon } from './icons/providers'
 export { initials, projectAvatar, projectColor, projectIcon, quickThreadIcon } from './icons/avatar'
+export { duneIcon } from './icons/dunes'
 export { sandTheme } from './theme/colors'
 export { owned } from './reactive/owned'
 export { pulse, type Pulse } from './reactive/pulse'

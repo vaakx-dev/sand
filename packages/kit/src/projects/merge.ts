@@ -12,6 +12,7 @@ const normalFields = (project: Project): Omit<Project, 'copies'> => ({
   id: project.id,
   name: project.name,
   ...(typeof project.remote === 'string' ? { remote: project.remote } : {}),
+  ...(project.icon ? { icon: project.icon } : {}),
   updated: project.updated,
   ...(project.hidden ? { hidden: true } : {}),
   ...(project.deleted ? { deleted: true } : {}),
