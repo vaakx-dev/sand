@@ -1,9 +1,9 @@
 import type { Settings } from './contract'
 import { icon, layer, mount, pulse, secondaryAction } from '@sand/dom'
 import { definePlugin, type Dispose } from 'drydock'
-import { showPage } from './address'
+import { leavePage, openPage, switchPage } from './address'
 import { cover } from './cover'
-import { followThreads } from './follow'
+import { followAddress } from './follow'
 import { pageView } from './page'
 import { pageStore } from './pages'
 import { sideView } from './side'
@@ -40,13 +40,21 @@ export default definePlugin({
       )
     }
 
-    const go = (id: string | undefined) => {
+    const show = (id: string | undefined) => {
       const before = store.current.get()
       if (before === id) return
       store.show(id)
-      showPage(id)
       if (!before || !id) render()
       ctx.emit('settings.change', id)
+    }
+
+    const go = (id: string | undefined) => {
+      const before = store.current.get()
+      if (before === id) return
+      if (!id) leavePage()
+      else if (before) switchPage(id)
+      else openPage(id)
+      show(id)
     }
 
     const settings: Settings = {
@@ -65,7 +73,7 @@ export default definePlugin({
       current: () => store.current.get(),
     }
 
-    const restore = followThreads(ctx, settings.pages, settings.open, close)
+    const restore = followAddress(ctx, settings.pages, show)
     const toggle = () => (store.current.get() ? settings.close() : settings.open())
     const floatingButton = () =>
       mount(

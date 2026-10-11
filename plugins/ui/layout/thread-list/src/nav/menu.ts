@@ -25,7 +25,7 @@ const branch = async (ctx: Ctx, thread: Thread) => {
 }
 
 const remove = async (ctx: Ctx, thread: Thread) => {
-  if (ctx.threads.current()?.id === thread.id) await ctx.threads.select(undefined)
+  if (ctx.threads.current()?.id === thread.id) await ctx.threads.select(undefined, { replace: true })
   await ctx.threads.remove(thread.id)
 }
 

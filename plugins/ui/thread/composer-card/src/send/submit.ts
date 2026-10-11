@@ -26,7 +26,7 @@ export const submit = async (ctx: Context<'threads' | 'turns'>, text: string, at
   const thread = current ?? (await ctx.threads.create({ settings: ctx.models?.draft() }))
   if (!current) {
     ctx.models?.prepare()
-    await ctx.threads.select(thread.id)
+    await ctx.threads.select(thread.id, { replace: true })
   }
   await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments), mode)
 }

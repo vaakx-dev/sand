@@ -1,4 +1,5 @@
 import { disposeAll, onWindow } from '@vaakx-dev/vrui'
+import { onCloseRequest } from '../integrations/close-request'
 
 export const layer = {
   sticky: 'z-10',
@@ -21,13 +22,17 @@ export const hasOpenLayer = (overlaysOnly = false) => stack.some(open => open.ov
 export const dismissible = (owner: Node, close: () => void, { overlay = true } = {}) => {
   const entry: OpenLayer = { close, overlay }
   stack.push(entry)
-  const stop = onWindow<KeyboardEvent>(owner, 'keydown', event => {
-    if (event.key !== 'Escape' || event.defaultPrevented || stack.at(-1) !== entry) return
-    event.preventDefault()
-    close()
-  })
+  const stops = [
+    onWindow<KeyboardEvent>(owner, 'keydown', event => {
+      if (event.key !== 'Escape' || event.defaultPrevented || stack.at(-1) !== entry) return
+      event.preventDefault()
+      close()
+    }),
+    onCloseRequest(close),
+  ]
+  if (overlay) stops.push(onWindow(owner, 'popstate', close))
   return () => {
-    stop()
+    disposeAll(stops)
     const index = stack.lastIndexOf(entry)
     if (index >= 0) stack.splice(index, 1)
   }

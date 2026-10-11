@@ -1,5 +1,5 @@
 import type { Layout, LayoutState, Region } from '@sand/dom'
-import { batch, cssOrder, derive, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack, type Sig } from '@sand/dom'
+import { batch, cssOrder, derive, dismissible, effect, media, mount, owned, setStyle, sig, stage, store, style, untrack, type Sig } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'
 import { gripCss, savedWidths } from './resize'
@@ -9,6 +9,7 @@ import { swiper } from './swipe'
 
 const narrowQuery = '(max-width: 760px)'
 const closed: Open = { side: false, aside: false }
+const drawers = ['side', 'aside'] as const
 
 const has = (views: Sig<HTMLElement[]>) => views.get().length > 0
 
@@ -102,6 +103,13 @@ export default definePlugin({
         })
       }),
     )
+    owned(ctx, () => {
+      const drawer = derive(() => (narrow.get() ? drawers.find(region => open[region].get()) : undefined))
+      effect(() => {
+        const region = drawer.get()
+        if (region) return dismissible(root, () => layout.toggle(region, false), { overlay: false })
+      })
+    })
     ctx.effect(() => mount(stage(), root))
     ctx.provide('layout', layout)
     ctx.watch('commands', commands => commands?.add({ name: 'panel', description: 'Toggle the right panel', run: () => layout.toggle('aside') }))

@@ -58,7 +58,8 @@ export interface Threads {
   list(): Thread[]
   get(id: string): Thread | undefined
   current(): Thread | undefined
-  select(id: string | undefined): Promise<void>
+  select(id: string | undefined, options?: { replace?: boolean }): Promise<void>
+  back(id: string): Promise<void>
   load(id: string): Promise<Thread | undefined>
   create(options?: NewThread): Promise<Thread>
   path(id: string, options?: { carried?: boolean }): Entry[]
