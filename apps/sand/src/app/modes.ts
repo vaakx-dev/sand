@@ -33,7 +33,7 @@ const core = [
 
 const commands = ['sessions-ui', 'session-info', 'usage', 'panel-tree', 'panel-changes']
 
-const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups', 'ask', 'worktrees']
+const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups', 'ask', 'worktrees', 'math']
 
 const cli = ['cli-launch', 'cli-devices', 'cli-remotes', 'cli-project', 'cli-usage', 'cli-install', 'cli-release']
 

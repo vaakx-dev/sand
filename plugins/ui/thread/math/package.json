@@ -1,0 +1,25 @@
+{
+  "name": "@sand/math",
+  "version": "0.0.0",
+  "description": "Typesets LaTeX math formulas in the thread with KaTeX",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Math",
+    "summary": "Typesets LaTeX formulas, from inline symbols to aligned equations, matrices and chemistry",
+    "provides": [
+      "math"
+    ]
+  },
+  "dependencies": {
+    "@sand/dom": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/server": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "katex": "^0.19.0"
+  }
+}

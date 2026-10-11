@@ -2,6 +2,7 @@ const policy = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: blob:",
   "connect-src 'self' http: https: ws: wss:",
   "frame-src 'self'",

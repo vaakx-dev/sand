@@ -51,6 +51,7 @@
     "@sand/loop-plan": "workspace:*",
     "@sand/loop-react": "workspace:*",
     "@sand/loops": "workspace:*",
+    "@sand/math": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/panel-changes": "workspace:*",
     "@sand/panel-tree": "workspace:*",
