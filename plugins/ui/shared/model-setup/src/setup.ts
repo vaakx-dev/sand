@@ -42,6 +42,9 @@ export const modelSetup = (ctx: SetupContext) => {
   const start = async () => {
     askNamer = wantsNamer(await readTitles(ctx))
     model.set(ctx.models.defaults().model)
+    namer.set(undefined)
+    naming.set(true)
+    error.set('')
     if (!model.get()) return step.set('model')
     if (askNamer) return step.set('names')
     close()
@@ -53,17 +56,18 @@ export const modelSetup = (ctx: SetupContext) => {
     void save(() => ctx.wire.call({ type: 'ui.command', name: 'model', args: `${id} --default --quiet`, cwd: ctx.threads?.cwd() }), afterModel())
   }
 
-  const saveTitles = (patch: TitlePatch) => save(() => ctx.wire.call({ type: 'titles.save', ...patch }), 'done')
+  const saveTitles = (patch: TitlePatch) => ctx.wire.call({ type: 'titles.save', ...patch })
 
   const saveNamer = () => {
     const id = namer.get()
-    if (id) void saveTitles({ model: id })
+    if (id) void save(() => saveTitles({ model: id }), 'done')
   }
 
-  const namesOff = () => {
-    naming.set(false)
-    void saveTitles({ auto: false })
-  }
+  const namesOff = () =>
+    void save(async () => {
+      await saveTitles({ auto: false })
+      naming.set(false)
+    }, 'done')
 
   return {
     step,

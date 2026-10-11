@@ -72,7 +72,7 @@ export const radioMark = (on: () => boolean) =>
 
 export const progressSteps = (count: number, reached: number) =>
   div(
-    { class: 'flex items-center gap-1', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(count), 'aria-valuenow': String(reached) },
+    { class: 'flex items-center gap-1', role: 'progressbar', 'aria-label': `Step ${reached} of ${count}`, 'aria-valuemin': '1', 'aria-valuemax': String(count), 'aria-valuenow': String(reached) },
     Array.from({ length: count }, (_, index) => span({ class: ['h-1 w-5 rounded-full', index < reached ? 'bg-accent-400' : 'bg-neutral-700'] })),
   )
 
