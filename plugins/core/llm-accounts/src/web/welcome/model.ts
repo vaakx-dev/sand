@@ -14,6 +14,7 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
   const joined = sig<Remote | undefined>(undefined)
   const setup = sig<ModelSetup | undefined>(undefined)
   const skipped = sig(false)
+  const engaged = sig(false)
   const busy = sig(false)
   const error = sig('')
   const changes = pulse(ctx, ['models.change', 'thread.select', 'threads.change'], ['models', 'threads'])
@@ -22,20 +23,24 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
     const state = control.state.get()
     return !!state && !state.accounts.some(account => account.signedIn) && !state.remote.length && !state.pcs.length
   })
-  const active = derive(() => !skipped.get() && (step.get() !== 'start' || (fresh.get() && quiet.get())))
+  const active = derive(() => !skipped.get() && (engaged.get() || (fresh.get() && quiet.get())))
   ctx.watch('modelSetup', value => setup.set(value))
 
   const go = (next: WelcomeStep) => {
     error.set('')
+    engaged.set(true)
     step.set(next)
   }
 
-  const usable = () => {
+  const connected = derive(() => {
     const state = control.state.get()
     return !!state && (state.accounts.some(account => account.signedIn) || state.remote.length > 0)
-  }
+  })
 
-  const add = addFlow(control, () => go(usable() ? 'connected' : 'start'))
+  const add = addFlow(control, () => {
+    add.back()
+    go(connected.get() ? 'connected' : 'start')
+  })
 
   const pick = (next: Step) => {
     go('add')
@@ -81,7 +86,7 @@ export const welcomeModel = (ctx: Context<'wire'>, control: LoginControl) => {
     found.start()
   }
 
-  return { step, joined, setup, busy, error, active, add, go, pick, back, join, finish, next }
+  return { step, joined, setup, busy, error, active, connected, add, go, pick, back, join, finish, next }
 }
 
 export type WelcomeModel = ReturnType<typeof welcomeModel>

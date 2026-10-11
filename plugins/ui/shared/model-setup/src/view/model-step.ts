@@ -9,9 +9,9 @@ export const modelStep = (setup: ModelSetupState, models: Models, changes: Pulse
     2,
     setupHeading('Pick a model for new threads'),
     setupNote('You can switch per thread at any time.'),
-    setupColumn(modelList(models, changes, setup.model, 'Model for new threads'), problem(() => setup.error.get())),
+    setupColumn(modelList(models, changes, setup.model, { label: 'Model for new threads' }), problem(() => setup.error.get())),
     setupFooter(
-      quietButton({ onClick: setup.skipModel }, 'Skip'),
+      quietButton({ disabled: setup.busy, onClick: setup.skipModel }, 'Skip'),
       primaryAction({ disabled: () => setup.busy.get() || !setup.model.get(), onClick: setup.saveModel }, 'Next'),
     ),
   )

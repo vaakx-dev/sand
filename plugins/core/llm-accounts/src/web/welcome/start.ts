@@ -1,7 +1,8 @@
-import { choiceButton, choiceList, derive, div, dynamicChild, groupLabel, icon, quietButton, setupColumn, setupHeading, setupNote, setupScreen, tile } from '@sand/dom'
+import { choiceButton, choiceList, derive, div, dynamicChild, groupLabel, icon, quietButton, setupColumn, setupFooter, setupHeading, setupNote, setupScreen, tile } from '@sand/dom'
 import { chooseStep } from '../add/choose'
 import type { LoginControl } from '../state'
 import type { WelcomeModel } from './model'
+import { nextAction } from './next'
 
 const signedInKey = (control: LoginControl) => derive(() => JSON.stringify(control.state.get()?.accounts.map(account => [account.id, account.signedIn]) ?? []))
 
@@ -20,7 +21,9 @@ export const startView = (model: WelcomeModel, control: LoginControl) =>
       dynamicChild(signedInKey(control), () => chooseStep(control.state.get(), model.pick)),
       elsewhere(model),
     ),
-    quietButton({ size: 'sm', onClick: model.finish }, 'Skip for now'),
+    dynamicChild(model.connected, connected =>
+      connected ? setupFooter(quietButton({ onClick: model.finish }, 'Skip for now'), nextAction(model)) : quietButton({ size: 'sm', onClick: model.finish }, 'Skip for now'),
+    ),
   )
 
 export const addView = (model: WelcomeModel) =>
