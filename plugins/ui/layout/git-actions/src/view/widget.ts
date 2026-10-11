@@ -1,6 +1,6 @@
 import type { PrSummary } from '@sand/github/contract'
 import { isUnnamed } from '@sand/worktrees/contract'
-import { chipButton, derive, div, dynamicChild, icon, popover, shine, show, sig, span } from '@sand/dom'
+import { chipButton, derive, div, dynamicChild, icon, popover, popupTrigger, shine, show, sig, span } from '@sand/dom'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
 import { gitMenu } from './menu'
@@ -55,7 +55,7 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
     return chipButton(
       {
         title: () => model.status.get()?.branch ?? '',
-        'aria-expanded': open,
+        ...popupTrigger(open),
         active: open,
         onClick: toggle,
       },

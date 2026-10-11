@@ -1,6 +1,6 @@
 import { plural, remoteKey } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { ago, div, iconButton, icon, sectionRow, show, span, statusLine, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import { ago, div, iconButton, icon, popupTrigger, sectionRow, show, span, statusLine, type ContextMenu, type Derive, type Sig } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { iconChoice, type Picking } from './icon'
 import { locationLine, noCopyLine } from './location'
@@ -31,7 +31,7 @@ const menuButton = (group: ProjectGroup, open: Sig<string | undefined>, opened: 
       size: 'sm',
       title: 'Project actions',
       'aria-label': 'Project actions',
-      'aria-haspopup': 'menu',
+      ...popupTrigger(opened),
       active: opened,
       onClick: () => open.set(opened.get() ? undefined : group.id),
     },
