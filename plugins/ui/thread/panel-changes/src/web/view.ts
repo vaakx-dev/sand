@@ -1,66 +1,56 @@
-import { contextMenu, derive, div, dropdown, hint, icon, list, popoverItem, secondaryAction, show, span, type Sig } from '@sand/dom'
-import { plural } from '@sand/kit'
-import type { Changes } from '../changes/collect'
-import { totals } from '../changes/lines'
-import { counts } from './counts'
-import { fileView } from './file'
+import { contextMenu, derive, div, hint, list, resizeObserver, show, type Sig } from '@sand/dom'
+import type { Changes, FileChange } from '../changes/collect'
+import { displayState } from './display'
+import { fileView } from './files/file'
+import { fileTree } from './files/tree'
+import type { Viewed } from './files/viewed'
+import { toolbar } from './toolbar'
 
 export interface Reveal {
   key: string
 }
 
+export type Highlighter = (code: string, language: string) => (Node | string)[]
+
 export interface ChangesState {
   changes: Sig<Changes | undefined>
   empty: Sig<string>
   turn: Sig<number | undefined>
-  closed: Sig<Record<string, boolean>>
   revealed: Sig<Reveal | undefined>
-  copy: (text: string, what: string) => void
-  scroller: HTMLElement
+  viewed: Viewed
+  highlight: Sig<Highlighter | undefined>
+  isClosed(file: FileChange): boolean
+  toggle(file: FileChange): void
+  markViewed(file: FileChange): void
+  reveal(file: FileChange): void
+  quote(text: string): void
+  copy(text: string, what: string): void
 }
 
-const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns' : `Turn ${turn}`)
+const matches = (filter: string) => (file: FileChange) => file.path.toLowerCase().includes(filter.trim().toLowerCase())
 
-const turnPicker = (state: ChangesState) =>
-  dropdown({
-    trigger: press =>
-      secondaryAction({ size: 'sm', ...press }, () => turnName(state.turn.get()), span({ class: 'inline-flex text-neutral-400' }, icon('down', 12))),
-    items: close =>
-      [undefined, ...(state.changes.get()?.turns ?? [])].map(turn =>
-        popoverItem(
-          {
-            active: () => state.turn.get() === turn,
-            onClick: () => {
-              close()
-              state.turn.set(turn)
-            },
-          },
-          turnName(turn),
-        ),
-      ),
-  })
-
-export const changesView = (state: ChangesState, toggle: (key: string) => void) => {
-  const files = derive(() => state.changes.get()?.files ?? [])
-  const sum = derive(() => totals(files.get()))
+export const changesView = (state: ChangesState) => {
+  const display = displayState()
+  const all = derive(() => state.changes.get()?.files ?? [])
+  const files = derive(() => (display.wide() ? all.get().filter(matches(display.filter.get())) : all.get()))
+  const emptyText = () => (all.get().length ? 'No files match the filter.' : state.empty.get())
   const menu = contextMenu()
-  return div(
-    { class: 'min-h-full pb-4' },
-    menu.view(),
-    div(
-      { class: 'flex h-10 items-center gap-3 px-4 text-xs text-neutral-400', hidden: state.changes.map(changes => !changes?.turns.length) },
-      turnPicker(state),
-      span({ class: 'flex-1' }),
-      span({ class: 'text-neutral-500' }, () => plural(files.get().length, 'file')),
-      counts(
-        () => sum.get().add,
-        () => sum.get().del,
-      ),
-    ),
-    list(files, file => file.key, file => fileView(file, state, toggle, menu)),
+  const scroller: HTMLElement = div(
+    { class: 'min-h-0 flex-1 overflow-y-auto pb-4' },
+    list(files, file => file.key, file => fileView(file, state, display, menu, () => scroller)),
     show(
-      files.map(items => !items.length),
-      () => hint(state.empty),
+      () => !files.get().length,
+      () => hint(emptyText),
+    ),
+  )
+  return div(
+    { class: 'flex h-full flex-col', onMount: node => void resizeObserver(node, ([entry]) => entry && display.width.set(entry.contentRect.width)) },
+    menu.view(),
+    toolbar(state, display, all),
+    div(
+      { class: 'flex min-h-0 flex-1' },
+      show(display.wide, () => fileTree(files, state, display)),
+      scroller,
     ),
   )
 }

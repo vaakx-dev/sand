@@ -1,11 +1,11 @@
-import type { Entry } from '@sand/messages'
+import type { Entry, ToolResultBlock } from '@sand/messages'
 import { collectChanges, type Changes } from './collect'
 
 export interface Source {
   id: string
   cwd: string
   entries: Entry[]
-  failing?: Iterable<string>
+  results?: ToolResultBlock[]
   label?: string
   origin?: string | null
   children: Source[]
@@ -20,7 +20,7 @@ const gather = (source: Source, options: TreeOptions, fixedTurn: number | undefi
   const own = collectChanges(source.entries, {
     ...options,
     cwd: source.cwd,
-    failing: source.failing,
+    results: source.results,
     fixedTurn,
     ...(!root && { id: source.id, agent: source.label ?? 'agent' }),
   })

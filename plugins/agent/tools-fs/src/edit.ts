@@ -1,4 +1,4 @@
-import { plural } from '@sand/kit'
+import { atLine, plural } from '@sand/kit'
 import type { Tool } from '@sand/tools/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
@@ -14,6 +14,8 @@ const input = z.object({
 const matchEndings = (text: string, content: string) =>
   content.includes('\r\n') && !text.includes('\r\n') ? text.replaceAll('\n', '\r\n') : text
 
+const lineAt = (content: string, index: number) => content.slice(0, index).split('\n').length
+
 const replace = async (full: string, { path, old_string, new_string, replace_all }: z.infer<typeof input>) => {
   const content = await readText(full)
   const target = matchEndings(old_string, content)
@@ -22,7 +24,8 @@ const replace = async (full: string, { path, old_string, new_string, replace_all
   if (count > 1 && !replace_all) throw new Error(`old_string matches ${count} times in ${path}; add context or set replace_all`)
   const replacement = matchEndings(new_string, content)
   await Bun.write(full, replace_all ? content.replaceAll(target, replacement) : content.replace(target, () => replacement))
-  return `Replaced ${plural(replace_all ? count : 1, 'occurrence')} in ${path}`
+  if (count > 1) return `Replaced ${plural(count, 'occurrence')} in ${path}`
+  return `Replaced 1 occurrence in ${path}${atLine(lineAt(content, content.indexOf(target)))}`
 }
 
 export const edit: Tool<typeof input> = {

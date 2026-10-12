@@ -1,4 +1,4 @@
-import type { DiffLine } from '@sand/kit'
+import { trimContext, type DiffLine } from '@sand/kit'
 import type { FileChange } from './collect'
 
 const max = 600
@@ -8,7 +8,7 @@ export const shownLines = (file: FileChange): DiffLine[] => {
   let shown = 0
   file.hunks.forEach((hunk, index) => {
     if (index > 0 && shown < max) lines.push({ kind: 'gap', text: `edit ${index + 1}` })
-    for (const line of hunk) {
+    for (const line of trimContext(hunk.lines, 3)) {
       if (shown < max) lines.push(line)
       shown++
     }
