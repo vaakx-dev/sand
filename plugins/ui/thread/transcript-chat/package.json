@@ -27,6 +27,7 @@
     "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/reply-images": "workspace:*",
+    "@sand/steering": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
