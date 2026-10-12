@@ -33,6 +33,22 @@ export type DocumentBlock = {
   name?: string
 } & MediaData
 
+export interface UnpackedFolder {
+  path: string
+  files: number
+  entries: string[]
+  notes?: string[]
+}
+
+export interface FileBlock {
+  type: 'file'
+  name: string
+  path: string
+  size: number
+  mediaType?: string
+  unpacked?: UnpackedFolder
+}
+
 export interface ThinkingBlock {
   type: 'thinking'
   thinking: string
@@ -52,7 +68,7 @@ export interface ToolCallBlock {
   malformed?: string
 }
 
-export type UserContent = TextBlock | ImageBlock | DocumentBlock
+export type UserContent = TextBlock | ImageBlock | DocumentBlock | FileBlock
 
 export type Prompt = string | UserContent[]
 

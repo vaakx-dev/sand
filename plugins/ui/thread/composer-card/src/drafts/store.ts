@@ -1,10 +1,10 @@
-import type { UserContent } from '@sand/messages'
 import type { DraftTarget } from '@sand/web-client/contract'
+import type { Held } from '../attachments/files'
 import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/draft-db'
 
 export interface Saved {
   text: string
-  items: UserContent[]
+  items: Held[]
   target?: DraftTarget
   updated?: number
 }

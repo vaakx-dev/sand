@@ -39,7 +39,7 @@ export const createMedia = (wire: Wire, store: Store): Media => {
   }
 
   const restore = async (block: UserContent, thread?: string): Promise<UserContent> => {
-    if (block.type === 'text' || typeof block.data === 'string') return block
+    if (block.type === 'text' || block.type === 'file' || typeof block.data === 'string') return block
     const { blob: hash, size, width, height, ...rest } = block
     const blob = await fetchBlob(hash, thread)
     const data = block.mediaType.startsWith('text/') ? await blob.text() : await base64Of(blob)

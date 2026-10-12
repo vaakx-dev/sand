@@ -1,5 +1,6 @@
 import { lstat, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { limited } from '@sand/kit'
 
 const timeout = 4000
 
@@ -17,16 +18,14 @@ const walkBytes = async (path: string) => {
   const top = await lstat(path).catch(() => undefined)
   if (!top?.isDirectory()) return top?.isFile() ? top.size : 0
   const deadline = Date.now() + timeout
-  const pending = [path]
-  let total = 0
-  while (Date.now() < deadline) {
-    const folder = pending.pop()
-    if (folder === undefined) break
-    const found = await folderBytes(folder)
-    total += found.bytes
-    pending.push(...found.folders)
+  const run = limited(32)
+  const visit = async (folder: string): Promise<number> => {
+    if (Date.now() > deadline) return 0
+    const found = await run(() => folderBytes(folder))
+    const inner = await Promise.all(found.folders.map(visit))
+    return inner.reduce((sum, bytes) => sum + bytes, found.bytes)
   }
-  return total
+  return visit(path)
 }
 
 const duBytes = async (path: string) => {

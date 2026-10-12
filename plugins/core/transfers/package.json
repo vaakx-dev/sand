@@ -1,0 +1,26 @@
+{
+  "name": "@sand/transfers",
+  "version": "0.0.0",
+  "description": "Moves big files between the page, the CLI and PCs in raw HTTP chunks",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "File transfers",
+    "summary": "Sends and receives big files in chunks for uploads and project copies",
+    "provides": [
+      "transfers"
+    ],
+    "uses": {
+      "server": "files cannot be sent or received"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

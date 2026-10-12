@@ -1,3 +1,4 @@
+import { fileText, isUserContent } from '@sand/kit'
 import type { Block, Message, ToolResultBlock, UserContent } from '@sand/messages'
 import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
@@ -17,6 +18,8 @@ const part = (block: UserContent, images: boolean): Item => {
       return block.mediaType === 'application/pdf'
         ? { type: 'input_file', filename: block.name ?? 'document.pdf', file_data: `data:application/pdf;base64,${block.data}` }
         : { type: 'input_text', text: block.name ? `${block.name}\n\n${block.data}` : block.data }
+    case 'file':
+      return { type: 'input_text', text: fileText(block) }
   }
 }
 
@@ -33,7 +36,7 @@ const userItems = (content: Block[], images: boolean): Item[] => {
   const results = content.flatMap(block =>
     block.type === 'tool_result' ? [{ type: 'function_call_output', call_id: block.callId, output: output(block, images) }] : [],
   )
-  const parts = content.flatMap(block => (block.type === 'text' || block.type === 'image' || block.type === 'document' ? [part(block, images)] : []))
+  const parts = content.flatMap(block => (isUserContent(block) ? [part(block, images)] : []))
   return [...results, ...(parts.length ? [{ role: 'user', content: parts }] : [])]
 }
 

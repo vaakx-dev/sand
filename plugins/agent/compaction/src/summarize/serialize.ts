@@ -1,3 +1,4 @@
+import { fileText } from '@sand/kit'
 import type { Block, Message, ToolResultContent } from '@sand/messages'
 
 const textLimit = 16_000
@@ -13,6 +14,7 @@ const contentText = (content: ToolResultContent[]) =>
       if (block.type === 'text') return block.text
       if (block.type === 'image') return '[image]'
       if (block.type === 'tool_reference') return `[tool ${block.name}]`
+      if (block.type === 'file') return fileText(block)
       return block.mediaType === 'text/plain' ? block.data : `[pdf${block.name ? ` ${block.name}` : ''}]`
     })
     .join('\n')
@@ -26,6 +28,7 @@ const blockLines = (role: Message['role'], block: Block): string[] => {
       return line(speaker, block.text, textLimit)
     case 'image':
     case 'document':
+    case 'file':
       return line(speaker, contentText([block]), textLimit)
     case 'thinking':
       return line('Assistant thinking', block.thinking, resultLimit)

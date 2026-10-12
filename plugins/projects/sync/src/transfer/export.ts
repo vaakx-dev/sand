@@ -1,40 +1,43 @@
-import type { SyncExport } from '../contract'
-import { rm } from 'node:fs/promises'
+import type { Transfers } from '@sand/transfers/contract'
+import { link } from 'node:fs/promises'
 import { requireSettled } from '../conflicts/settle'
-import { hiddenGit, hiddenOut, type Hidden } from '../folder/hidden'
-import { isGitFolder } from '../folder/stat'
-import { git, gitOut } from '../git/run'
+import type { SyncExport } from '../contract'
+import { readVerified, streamVerified } from '../folder/content'
+import type { SyncedFolder } from '../folder/synced'
+import { mapLimit } from '../io/pool'
 import { snapshot } from '../snapshot/snapshot'
-import { hasCommit } from '../snapshot/tree'
-import { branchOf, remotesOf } from './remotes'
-import type { Transfers } from './transfers'
+import { encode, largeBlob, streamedBlob } from '../store/encoding'
+import type { PackWriter } from '../store/pack'
+import { planPack, type PackedBlob, type PackPlan } from './plan'
 
-const exportRef = 'refs/sync/export'
+const smallReads = 64
 
-const known = async (hidden: Hidden, ids: string[]) => {
-  const present = await Promise.all(ids.map(id => hasCommit(hidden, id)))
-  return ids.filter((_, index) => present[index])
+const bigReads = 4
+
+const isBig = ({ entry }: PackedBlob) => entry.size > largeBlob
+
+const addBlob = async ({ folder, store }: SyncedFolder, writer: PackWriter, { path, entry }: PackedBlob) => {
+  if (await store.has(entry.id)) return store.copyInto(writer, entry.id)
+  if (entry.size > streamedBlob) return writer.stream(entry.id, streamVerified(folder, path, entry))
+  await writer.add(entry.id, await encode(await readVerified(folder, path, entry)))
 }
 
-export const exportSnapshot = async (hidden: Hidden, have: string[], transfers: Transfers): Promise<SyncExport> => {
-  await requireSettled(hidden)
-  const commit = await snapshot(hidden)
-  await hiddenOut(hidden, ['update-ref', exportRef, commit])
+export const packSnapshot = (synced: SyncedFolder, head: string, plan: PackPlan) =>
+  synced.store.addPack(async writer => {
+    await mapLimit([...plan.snapshots, ...plan.trees], smallReads, id => synced.store.copyInto(writer, id))
+    await mapLimit(plan.blobs.filter(blob => !isBig(blob)), smallReads, blob => addBlob(synced, writer, blob))
+    await mapLimit(plan.blobs.filter(isBig), bigReads, blob => addBlob(synced, writer, blob))
+  }, head)
+
+const offer = async (pack: string, transfers: Transfers) => {
   const file = await transfers.reserve()
-  const excluded = (await known(hidden, have)).map(id => `^${id}`)
-  const bundled = await hiddenGit(hidden, ['bundle', 'create', file, exportRef, ...excluded])
-  if (bundled.code !== 0) await hiddenOut(hidden, ['bundle', 'create', file, exportRef])
-  return { ...transfers.offer(file), commit }
+  await link(pack, file).catch(() => Bun.write(file, Bun.file(pack)))
+  return transfers.offer(file)
 }
 
-export const exportHistory = async (folder: string, transfers: Transfers): Promise<SyncExport> => {
-  if (!(await isGitFolder(folder))) throw new Error(`${folder} is not a git repository`)
-  const file = await transfers.reserve()
-  const bundled = await git(['bundle', 'create', file, '--branches', '--tags'], { cwd: folder })
-  if (bundled.code !== 0) {
-    await rm(file, { force: true })
-    await gitOut(['rev-parse', '--git-dir'], { cwd: folder })
-    await Bun.write(file, '')
-  }
-  return { ...transfers.offer(file), branch: await branchOf(folder), remotes: await remotesOf(folder) }
+export const exportSnapshot = async (synced: SyncedFolder, have: string[], transfers: Transfers): Promise<SyncExport> => {
+  await requireSettled(synced)
+  const { head } = await snapshot(synced)
+  const pack = await packSnapshot(synced, head, await planPack(synced.store, head, have))
+  return { ...(await offer(pack, transfers)), commit: head }
 }

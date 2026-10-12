@@ -1,28 +1,29 @@
-import type { Hidden } from '../folder/hidden'
-import { readState, writeHead, writeState, type FolderState } from '../folder/store'
-import { commitTree, folderTree } from '../snapshot/tree'
+import { readState, writeHead, writeState, type FolderState } from '../folder/state'
+import type { SyncedFolder } from '../folder/synced'
+import { scanFolder } from '../snapshot/snapshot'
+import { writeSnapshot } from '../store/snapshots'
 import { remaining } from './remaining'
 
-export const finalise = async (hidden: Hidden, state: FolderState) => {
-  const tree = await folderTree(hidden)
-  const head = await commitTree(hidden, tree, [state.ours, state.pending], 'sand sync merge')
-  await writeHead(hidden, head)
+export const finalise = async (synced: SyncedFolder, state: FolderState) => {
+  const { tree } = await scanFolder(synced)
+  const head = await writeSnapshot(synced.store, tree, [state.ours, state.pending])
+  await writeHead(synced, head)
   return head
 }
 
-export const settle = async (hidden: Hidden): Promise<FolderState> => {
-  const state = await readState(hidden)
+export const settle = async (synced: SyncedFolder): Promise<FolderState> => {
+  const state = await readState(synced)
   if (!state.pending) return state
-  const open = await remaining(hidden, state)
+  const open = await remaining(synced, state)
   if (open.length === 0) {
-    await finalise(hidden, state)
-    return readState(hidden)
+    await finalise(synced, state)
+    return readState(synced)
   }
   const next = { ...state, conflicts: open }
-  await writeState(hidden, next)
+  await writeState(synced, next)
   return next
 }
 
-export const requireSettled = async (hidden: Hidden) => {
-  if ((await settle(hidden)).pending) throw new Error('Resolve the conflicts in this folder first')
+export const requireSettled = async (synced: SyncedFolder) => {
+  if ((await settle(synced)).pending) throw new Error('Resolve the conflicts in this folder first')
 }

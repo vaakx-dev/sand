@@ -1,3 +1,4 @@
+import { fileText } from '@sand/kit'
 import type { Block, Message, ToolReferenceBlock, ToolResultContent } from '@sand/messages'
 import type { LLMRequest, ToolSpec } from '../contract'
 import { loadedTools, withoutReferences } from '../http/deferred'
@@ -27,6 +28,8 @@ const block = (value: Block | ToolReferenceBlock): Record<string, unknown> => {
             : { type: 'text', media_type: 'text/plain', data: value.data },
         ...(value.name && { title: value.name }),
       }
+    case 'file':
+      return { type: 'text', text: fileText(value) }
     case 'thinking':
       return { type: 'thinking', thinking: value.thinking, signature: value.signature }
     case 'redacted_thinking':

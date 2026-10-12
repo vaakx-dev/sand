@@ -74,6 +74,7 @@
     "@sand/tools": "workspace:*",
     "@sand/tools-fs": "workspace:*",
     "@sand/tools-shell": "workspace:*",
+    "@sand/transfers": "workspace:*",
     "@sand/ui-headless": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/watch": "workspace:*",

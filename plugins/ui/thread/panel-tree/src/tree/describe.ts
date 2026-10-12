@@ -24,7 +24,7 @@ const described = (kind: NodeKind, who: string, text: string, detail = text): De
 })
 
 const attachments = (message: Message) =>
-  message.content.flatMap(block => (block.type === 'image' || block.type === 'document' ? [`[${block.name ?? block.type}]`] : []))
+  message.content.flatMap(block => (block.type === 'image' || block.type === 'document' || block.type === 'file' ? [`[${block.name ?? block.type}]`] : []))
 
 const toolsNode = (kind: NodeKind, actions: ToolAction[]) => {
   const { who, text } = actionsText(actions)

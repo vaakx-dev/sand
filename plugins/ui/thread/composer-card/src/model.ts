@@ -1,4 +1,3 @@
-import type { UserContent } from '@sand/messages'
 import type { FollowUpMode } from '@sand/web-client/contract'
 import type { ComposerCapture } from './contract'
 import { errorMessage } from '@sand/kit'
@@ -7,16 +6,16 @@ import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { createWorking } from './agents/working'
 import { compose } from './attachments/content'
-import { createFiles, type Attached } from './attachments/files'
+import { createFiles } from './attachments/files'
 import { createSegments } from './editor/segments'
 import { createEditing } from './queue/editing'
-import { chooseModel, modelMissing, retry, submit } from './send/submit'
+import { chooseModel, modelMissing, retry, sendDevice, submit } from './send/submit'
 
 type Ctx = Context<'threads' | 'turns'>
 
 interface Typed {
   text: string
-  items: Attached[]
+  ids: string
 }
 
 const isMode = (value: unknown) => value === 'queue' || value === 'steer'
@@ -37,7 +36,7 @@ export type TurnError = NonNullable<ReturnType<typeof turnErrorOf>>
 export const createModel = (ctx: Ctx) => {
   const text = sig('')
   const segments = createSegments(text)
-  const files = createFiles(() => ctx.wire?.hello()?.attachments)
+  const files = createFiles(ctx)
   const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
   const sending = sig(false)
   const mode = stored<FollowUpMode>('sand.follow-up-mode', 'queue', isMode)
@@ -80,9 +79,12 @@ export const createModel = (ctx: Ctx) => {
   const couldNotSend = (error: unknown) =>
     failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: true })
 
-  const typed = (): Typed => ({ text: text.get(), items: files.items.get() })
+  const typed = (): Typed => ({ text: text.get(), ids: files.items.get().map(item => item.id).join() })
 
-  const unchanged = (before: Typed) => text.get() === before.text && files.items.get() === before.items
+  const unchanged = (before: Typed) => {
+    const now = typed()
+    return now.text === before.text && now.ids === before.ids
+  }
 
   const attempt = async (busy: boolean, task: () => Promise<void>, failed: (error: unknown) => void) => {
     failure.set(undefined)
@@ -117,20 +119,22 @@ export const createModel = (ctx: Ctx) => {
     })
   }
 
-  const saveEdit = (id: string, value: string, items: UserContent[]) => {
+  const saveEdit = (id: string, value: string) => {
     const thread = ctx.threads.current()
     if (!thread || !edits.queued(id)) return edits.vanish()
     const before = typed()
     const task = async () => {
+      const items = await files.upload(thread.device)
       await ctx.turns.edit(thread.id, id, items.length ? compose(value, items) : value)
       if (unchanged(before) && editing.get() === id) edits.leave()
     }
     return attempt(true, task, couldNotSend)
   }
 
-  const sendPrompt = (value: string, items: UserContent[]) => {
+  const sendPrompt = (value: string) => {
     const before = typed()
     const task = async () => {
+      const items = await files.upload(sendDevice(ctx))
       await submit(ctx, value, items, running.get() ? mode.get() : undefined)
       if (unchanged(before)) clear()
     }
@@ -143,11 +147,11 @@ export const createModel = (ctx: Ctx) => {
     const active = capture.get()
     if (active && !commandLike.test(value)) return answer(active, value)
     const id = editing.get()
-    const items = files.contents()
-    if (id) return empty.get() ? undefined : saveEdit(id, value, items)
-    if (!items.length && commandLike.test(value)) return runCommand(value)
-    if ((value || items.length) && modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
-    return sendPrompt(value, items)
+    if (id) return empty.get() ? undefined : saveEdit(id, value)
+    const attached = files.items.get().length > 0
+    if (!attached && commandLike.test(value)) return runCommand(value)
+    if ((value || attached) && modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
+    return sendPrompt(value)
   }
 
   return {

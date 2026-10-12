@@ -5,6 +5,7 @@ export interface AttachmentLimits {
   imageBytes: number
   pdfBytes: number
   textLength: number
+  uploadBytes: number
 }
 
 export interface Attachments {
@@ -21,5 +22,9 @@ declare module 'drydock' {
 declare module '@sand/protocol/wire' {
   interface HelloFields {
     attachments?: AttachmentLimits
+  }
+
+  interface WireRequests {
+    'attachments.finish': { transfer: string; name: string; chunks: number; size: number }
   }
 }

@@ -4,7 +4,7 @@ import type { Pulse } from '@sand/kit/web'
 import { effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { split } from '../attachments/content'
-import { contentsOf, type Attached, type Files } from '../attachments/files'
+import { heldOf, type Attached, type Files } from '../attachments/files'
 import type { Saved } from '../drafts/store'
 
 interface Origin {
@@ -63,7 +63,7 @@ export const createEditing = (ctx: Context<'threads' | 'turns'>, text: Sig<strin
 
   const draft = (): Saved => {
     const saved = origin.get()
-    return saved ? { text: saved.text, items: contentsOf(saved.items) } : { text: text.get(), items: files.contents() }
+    return saved ? { text: saved.text, items: heldOf(saved.items) } : { text: text.get(), items: files.held() }
   }
 
   return { editing, queued, begin, leave, vanish, reset, draft }
