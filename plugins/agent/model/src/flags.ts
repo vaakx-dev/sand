@@ -9,7 +9,7 @@ export const flagSettings = ({ model, effort, fast }: CliFlags, llm?: LLM): Sess
   const level = effort && asEffort(llm, effort)
   if (effort && !level) throw new Error(`--effort must be one of ${effortIds(llm).join(', ')}`)
   return {
-    ...(model && { model: matchModel(model, llm?.models?.() ?? []) }),
+    ...(model && { model: matchModel(model, llm?.models?.() ?? [], llm?.find) }),
     ...(level && { effort: level }),
     ...(fast !== undefined && { speed: fast ? 'fast' : 'normal' }),
   }

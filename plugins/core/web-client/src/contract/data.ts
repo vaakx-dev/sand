@@ -32,6 +32,7 @@ export interface Jobs {
 }
 
 export interface Models {
+  device(): string
   list(): ModelInfo[]
   sources(): SourceInfo[]
   levels(): EffortLevel[]
