@@ -16,7 +16,8 @@ export interface ConnectionHandlers {
   greeting(): WireRequestOf<'hello'>
 }
 
-const openWait = 10_000
+const openWait = 15_000
+const helloWait = 30_000
 
 export const openRoute = async (
   route: Route,
@@ -37,7 +38,7 @@ export const openRoute = async (
   )
   opened = connection
   try {
-    const hello = await within(connection.call<Hello>(handlers.greeting()), openWait, `${route.url} did not say hello`)
+    const hello = await within(connection.call<Hello>(handlers.greeting()), helloWait, `${route.url} did not say hello`)
     return { connection, hello, route, id }
   } catch (error) {
     connection.close()

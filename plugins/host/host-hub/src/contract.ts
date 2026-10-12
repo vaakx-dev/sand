@@ -2,8 +2,9 @@ import type { WireEvent, WireHandler, WireRequestType } from '@sand/protocol'
 import type { Dispose } from 'drydock'
 
 export interface HubSocket {
-  send(data: string): void
+  send(data: string): number
   close(): void
+  terminate(): void
 }
 
 export interface Hub {

@@ -5,6 +5,8 @@ export type Call = <T = unknown>(request: WireRequest) => Promise<T>
 export interface Connection {
   call: Call
   close(): void
+  heardAt(): number
+  idle(): boolean
 }
 
 interface Handlers {
@@ -18,6 +20,12 @@ export const connect = (url: string, handlers: Handlers) =>
     const pending = new Map<number, { resolve(value: unknown): void; reject(error: Error): void }>()
     let next = 0
     let opened = false
+    let heardAt = Date.now()
+
+    const abandon = () => {
+      for (const waiting of pending.values()) waiting.reject(new Error('Disconnected from the sand server'))
+      pending.clear()
+    }
 
     const call: Call = request =>
       new Promise((resolveCall, rejectCall) => {
@@ -27,11 +35,18 @@ export const connect = (url: string, handlers: Handlers) =>
         socket.send(JSON.stringify({ ...request, id }))
       })
 
+    const close = () => {
+      socket.close()
+      abandon()
+    }
+
     socket.onopen = () => {
       opened = true
-      resolve({ call, close: () => socket.close() })
+      heardAt = Date.now()
+      resolve({ call, close, heardAt: () => heardAt, idle: () => pending.size === 0 })
     }
     socket.onmessage = event => {
+      heardAt = Date.now()
       const message = JSON.parse(String(event.data)) as ServerMessage
       if (message.type === 'event') return handlers.event({ name: message.name, args: message.args } as WireEvent)
       const waiting = pending.get(message.id)
@@ -40,8 +55,7 @@ export const connect = (url: string, handlers: Handlers) =>
       else waiting?.resolve(message.result)
     }
     socket.onclose = () => {
-      for (const waiting of pending.values()) waiting.reject(new Error('Disconnected from the sand server'))
-      pending.clear()
+      abandon()
       if (opened) handlers.close()
       else reject(new Error('Could not connect to the sand server'))
     }

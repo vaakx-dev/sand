@@ -1,7 +1,7 @@
 import type { LLMEvent } from '@sand/llm-accounts/contract'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { ServerContext } from '../context'
-import type { Socket } from '../socket/sockets'
+import { deliver, type Socket } from '../socket/sockets'
 import { createCoalescer } from './coalesce'
 import type { LiveTracker } from './live'
 import { createWatchers } from './watch'
@@ -25,7 +25,7 @@ export const createStream = (ctx: ServerContext, publish: Publish, tracker: Live
     coalescer.flush()
     watchers.focus(socket, session)
     const snapshot = session && tracker.snapshot(session)
-    if (snapshot) socket.send(eventFrame({ name: 'live.snapshot', args: [session, snapshot] }))
+    if (snapshot) deliver(socket, eventFrame({ name: 'live.snapshot', args: [session, snapshot] }))
   }
 
   return { focus, forget: watchers.forget, flush: coalescer.flush }
