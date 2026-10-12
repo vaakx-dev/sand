@@ -1,4 +1,4 @@
-import type { NavItem } from '@sand/dom'
+import type { NavItem } from '@sand/protocol'
 import type { Thread } from '@sand/web-client/contract'
 import { isBack } from '../snooze/actions'
 import type { Background } from './background'

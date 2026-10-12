@@ -1,6 +1,6 @@
 import type { Limits } from '@sand/llm-accounts/contract'
 import type { Wire } from '@sand/web-client/contract'
-import { clock, derive, effect, sig, untrack } from '@sand/dom'
+import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader } from './data/fleet'
 import { withLiveLimits } from './data/limits'
 import { mergeSummaries } from './data/merge'

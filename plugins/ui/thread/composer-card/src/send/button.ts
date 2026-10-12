@@ -1,21 +1,7 @@
+import { delayed } from '@sand/kit/web'
+import type { IconName, Kit } from '@sand/ui-kit/contract'
 import type { FollowUpMode } from '@sand/web-client/contract'
-import {
-  actionTones,
-  choiceItem,
-  delayed,
-  derive,
-  div,
-  dropdown,
-  dynamicChild,
-  icon,
-  iconButton,
-  plainButton,
-  show,
-  span,
-  spinner,
-  type IconName,
-  type Sig,
-} from '@sand/dom'
+import { derive, div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
@@ -32,7 +18,8 @@ const titles: Record<Exclude<Look, 'capture'>, string> = {
   busy: 'Sending',
 }
 
-const tone = (look: Look) => {
+const tone = (kit: Kit, look: Look) => {
+  const { actionTones } = kit
   if (look === 'busy') return 'cursor-default bg-neutral-700 text-neutral-500'
   if (look === 'off') return 'cursor-default bg-accent-950 text-accent-400'
   return look === 'stop' ? actionTones.danger : actionTones.primary
@@ -63,7 +50,7 @@ const glyphOf = (model: Model, look: Look): IconName | 'busy' => {
   return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
 }
 
-const option = (model: Model, close: () => void, value: FollowUpMode) =>
+const option = ({ choiceItem }: Kit, model: Model, close: () => void, value: FollowUpMode) =>
   choiceItem(
     {
       icon: icons[value],
@@ -76,28 +63,31 @@ const option = (model: Model, close: () => void, value: FollowUpMode) =>
     span({ class: 'min-w-0 flex-1' }, titles[value]),
   )
 
-const modeMenu = (model: Model) =>
-  dropdown({
+const modeMenu = (kit: Kit, model: Model) => {
+  const { dropdown, icon, iconButton } = kit
+  return dropdown({
     placement: 'above-right',
     keepFocus: true,
     menuClass: 'w-64',
     trigger: (press, open) => iconButton({ size: 'sm', title: 'Send options', active: open, ...press }, icon('down', 14)),
-    items: close => [option(model, close, 'queue'), option(model, close, 'steer')],
+    items: close => [option(kit, model, close, 'queue'), option(kit, model, close, 'steer')],
   })
+}
 
-export const sendControl = (model: Model) => {
+export const sendControl = (kit: Kit, model: Model) => {
+  const { icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
   const glyph = derive(() => glyphOf(model, look.get()))
   const split = derive(() => model.running.get() && !model.empty.get() && !model.editing.get() && !model.capture.get())
   return div(
     { class: 'ml-1 flex shrink-0 items-center gap-1' },
-    show(split, () => modeMenu(model)),
+    show(split, () => modeMenu(kit, model)),
     plainButton(
       {
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
-        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(look.get())],
+        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
         onClick: () => void model.send(),
       },
       dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),

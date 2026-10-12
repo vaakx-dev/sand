@@ -1,5 +1,6 @@
 import type { HistoryAction } from '@sand/browser-engine/contract'
-import { div, icon, iconButton, show, span, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { TabModel } from '../tab/model'
 import { urlField } from './url'
 
@@ -15,7 +16,8 @@ export interface ToolbarParts {
 
 const noTab = (tab: TabModel) => () => !tab.open.get()
 
-export const toolbar = (parts: ToolbarParts) => {
+export const toolbar = (kit: Kit, parts: ToolbarParts) => {
+  const { icon, iconButton } = kit
   const { tab } = parts
   return div(
     { class: 'flex shrink-0 flex-wrap items-center gap-1 border-b border-neutral-800 px-2 py-2' },
@@ -31,7 +33,7 @@ export const toolbar = (parts: ToolbarParts) => {
       { title: 'Reload', 'aria-label': 'Reload', disabled: noTab(tab), onClick: () => parts.history('reload') },
       span({ class: ['inline-flex', () => (tab.state.get()?.loading ? 'animate-spin' : '')] }, icon('reload', 16)),
     ),
-    urlField({ url: () => tab.state.get()?.url ?? '', title: () => tab.state.get()?.title ?? '', open: parts.go }),
+    urlField(kit, { url: () => tab.state.get()?.url ?? '', title: () => tab.state.get()?.title ?? '', open: parts.go }),
     iconButton(
       { title: 'Pick an element', 'aria-label': 'Pick an element', active: () => parts.picking.get(), disabled: noTab(tab), onClick: parts.togglePick },
       icon('pick', 16),

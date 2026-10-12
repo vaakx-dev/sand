@@ -1,4 +1,4 @@
-import { a, div, el, em, h1, h2, h3, h4, h5, h6, li, ol, p, span, strong, table, tbody, td, th, thead, tr, ul } from '@sand/dom'
+import { a, div, el, em, h1, h2, h3, h4, h5, h6, li, ol, p, span, strong, table, tbody, td, th, thead, tr, ul } from '@vaakx-dev/vrui'
 
 export type Inline = Node | string
 

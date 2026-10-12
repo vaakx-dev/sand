@@ -1,5 +1,5 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
-import { note, overlay, primaryAction, secondaryAction, settingsRow, settingsSection, sheet, sheetBody, sheetFoot, sheetHead } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { Context } from 'drydock'
 import { overlaySlot } from '../overlay-slot'
 import type { DeviceSource } from '../source'
@@ -11,24 +11,27 @@ const detail = (state: TailscaleState | undefined) => {
   return 'Works on any network with Tailscale'
 }
 
-const awaySheet = (source: DeviceSource, close: () => void) =>
-  overlay(
+const awaySheet = (kit: Kit, source: DeviceSource, close: () => void) => {
+  const { note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = kit
+  return overlay(
     close,
     sheet(
       { 'aria-label': 'Use sand away from home', size: 'md' },
       sheetHead({ title: 'Use sand away from home', close }),
-      sheetBody({}, note('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(source)),
+      sheetBody({}, note('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(kit, source)),
       sheetFoot(primaryAction({ onClick: close }, 'Done')),
     ),
   )
+}
 
-export const awaySection = (ctx: Context, source: DeviceSource) => {
+export const awaySection = (ctx: Context<'kit'>, source: DeviceSource) => {
+  const { secondaryAction, settingsRow, settingsSection } = ctx.kit
   const slot = overlaySlot(ctx)
   return settingsSection(
     {},
     settingsRow(
       'Use sand away from home',
-      secondaryAction({ size: 'sm', onClick: () => slot.open(() => awaySheet(source, slot.close)) }, () => (source.tailscale.get()?.serving ? 'Manage' : 'Set up')),
+      secondaryAction({ size: 'sm', onClick: () => slot.open(() => awaySheet(ctx.kit, source, slot.close)) }, () => (source.tailscale.get()?.serving ? 'Manage' : 'Set up')),
       () => detail(source.tailscale.get()),
     ),
   )

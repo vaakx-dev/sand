@@ -1,6 +1,7 @@
 import type { AttachmentLimits } from '@sand/attachments/contract'
 import type { UserContent } from '@sand/messages'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import { contentName, fromFile } from './content'
 
 export interface Attached {

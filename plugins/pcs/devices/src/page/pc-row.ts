@@ -1,6 +1,7 @@
 import type { PcInfo } from '@sand/host-remotes/contract'
-import { ago, badge, contextMenu, div, dot, dynamicChild, icon, itemRow, quietButton, rowAction, rowWarning, secondaryAction, show, sig, statusLine, tile, type Sig, type Tone } from '@sand/dom'
-import { routeKind } from '@sand/kit'
+import { ago, routeKind } from '@sand/kit'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, sig, type Sig } from '@vaakx-dev/vrui'
 import { pcMenu } from './pc-menu'
 
 export interface PcRow {
@@ -44,7 +45,7 @@ const tone = ({ pc, self }: PcRow): Tone => {
 const problem = (pc: PcInfo) =>
   pc.pairing === 'refused' ? `${pc.name} no longer accepts this PC.` : `Pairing with ${pc.name} isn't finished, so it only works one way.`
 
-const pcStatus = (row: Sig<PcRow>, now: Sig<number>) =>
+const pcStatus = ({ dot, statusLine }: Kit, row: Sig<PcRow>, now: Sig<number>) =>
   statusLine({
     mark: dynamicChild(row.map(tone), dot),
     text: () => {
@@ -54,7 +55,8 @@ const pcStatus = (row: Sig<PcRow>, now: Sig<number>) =>
     title: () => row.get().pc.error ?? '',
   })
 
-export const pcRow = (row: Sig<PcRow>, now: Sig<number>, actions: PcRowActions) => {
+export const pcRow = (kit: Kit, row: Sig<PcRow>, now: Sig<number>, actions: PcRowActions) => {
+  const { badge, contextMenu, icon, itemRow, quietButton, rowAction, rowWarning, secondaryAction, tile } = kit
   const open = sig(false)
   const menu = contextMenu()
   return div(
@@ -64,7 +66,7 @@ export const pcRow = (row: Sig<PcRow>, now: Sig<number>, actions: PcRowActions) 
       menu.target(() => pcMenu(row.get(), actions)),
       tile(icon('laptop', 16)),
       () => row.get().pc.name,
-      pcStatus(row, now),
+      pcStatus(kit, row, now),
       dynamicChild(
         row.map(current => current.shares.join(', ')),
         shares => (shares ? badge('accent', `Shares ${shares}`) : null),

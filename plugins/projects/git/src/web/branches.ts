@@ -1,4 +1,4 @@
-import { gathered, placeCache } from '@sand/dom'
+import { gathered, placeCache } from '@sand/kit/web'
 import type { Context } from 'drydock'
 import type { Branches } from '../contract'
 

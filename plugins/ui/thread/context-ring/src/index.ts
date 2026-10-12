@@ -1,11 +1,11 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { contextRing } from './ring'
 
 export default definePlugin({
   name: 'context-ring',
   description: 'A ring next to send that shows how full the context window is, with Compact now',
-  inject: ['composer', 'threads'],
+  inject: ['composer', 'threads', 'kit'],
   uses: { notify: 'a failed compact is not reported' },
   apply(ctx) {
     const changes = pulse(ctx, ['thread.select'])

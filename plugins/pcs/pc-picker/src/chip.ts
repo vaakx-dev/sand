@@ -1,12 +1,14 @@
-import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
+import { pressOpens, type Pulse } from '@sand/kit/web'
+import { derive, div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
 import { refreshGroup } from './refresh'
-import { machineIcon } from './rows'
+import { machineGlyph } from './rows'
 import { currentTarget, hasMessages, type PickerContext } from './target'
 
 export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse) => {
+  const { chipButton, chipPopover, contextMenu, icon } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const hidden = changes.read(() => ctx.machines.list().length < 2)
@@ -32,7 +34,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const chip = () =>
     chipButton(
       { title, active: open, menu: true, ...pressOpens(open, toggle) },
-      span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
+      span({ class: 'inline-flex shrink-0' }, icon(machineGlyph(machine.get()), 12)),
       span({ class: 'min-w-0 truncate py-1 text-box-trim' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-box-trim' }, '· Offline') : null,
     )

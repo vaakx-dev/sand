@@ -1,4 +1,4 @@
-import { listen } from '@sand/dom'
+import { listen } from '@vaakx-dev/vrui'
 import type { TooltipModel } from './model'
 
 const element = (target: EventTarget | null) => (target instanceof Element ? target : null)

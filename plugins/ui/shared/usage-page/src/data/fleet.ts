@@ -1,7 +1,7 @@
 import type { UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/web-client/contract'
-import { derive, errorMessage, sig, type Sig } from '@sand/dom'
-import { usageQuery, type UsageRange } from '@sand/kit'
+import { errorMessage, usageQuery, type UsageRange } from '@sand/kit'
+import { derive, sig, type Sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
 

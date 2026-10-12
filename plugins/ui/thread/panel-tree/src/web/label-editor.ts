@@ -1,6 +1,7 @@
-import { div, keys, primaryAction, secondaryAction, stopThen, textInput } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, keys, stopThen } from '@vaakx-dev/vrui'
 
-export const labelEditor = (value: string, done: (label: string | undefined) => void) => {
+export const labelEditor = ({ primaryAction, secondaryAction, textInput }: Kit, value: string, done: (label: string | undefined) => void) => {
   const field = textInput({
     value,
     placeholder: 'Label (empty to remove)',

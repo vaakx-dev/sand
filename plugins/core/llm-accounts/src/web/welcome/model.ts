@@ -1,5 +1,7 @@
-import { derive, errorMessage, pulse, sig } from '@sand/dom'
 import type { Remote } from '@sand/host-remotes/contract'
+import { errorMessage } from '@sand/kit'
+import { pulse } from '@sand/kit/web'
+import { derive, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { ModelSetup } from '../../contract'
 import { addFlow } from '../add/add-flow'

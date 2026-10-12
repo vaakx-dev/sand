@@ -1,4 +1,5 @@
 export const hostPath = '/html-frame'
+export const pageStart = '<!doctype html>'
 
 export const sizeChanged = 'ui/notifications/size-changed'
 export const openLink = 'ui/open-link'

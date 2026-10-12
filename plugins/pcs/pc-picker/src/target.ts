@@ -3,7 +3,7 @@ import type { ProjectGroup, Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { groupOf } from './group'
 
-export type PickerContext = Context<'composer' | 'threads' | 'projects' | 'machines'>
+export type PickerContext = Context<'composer' | 'threads' | 'projects' | 'machines' | 'kit'>
 
 export interface Target {
   cwd: string

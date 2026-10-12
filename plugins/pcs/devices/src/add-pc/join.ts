@@ -1,10 +1,13 @@
-import { derive, div, dynamicChild, effect, errorMessage, errorText, keys, note, secondaryAction, show, sig, textInput } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, effect, keys, show, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { pairInvite } from '../pair/invite'
 import { inviteBody } from '../pair/links'
 import type { DeviceSource } from '../source'
 
-const pasteRow = (source: DeviceSource, joined: (name: string) => void) => {
+const pasteRow = (kit: Kit, source: DeviceSource, joined: (name: string) => void) => {
+  const { errorText, note, secondaryAction, textInput } = kit
   const link = sig('')
   const busy = sig(false)
   const error = sig('')
@@ -32,7 +35,9 @@ const pasteRow = (source: DeviceSource, joined: (name: string) => void) => {
   )
 }
 
-export const joinStep = (ctx: Context<'wire'>, source: DeviceSource, joined: (name: string) => void) => {
+export const joinStep = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, joined: (name: string) => void) => {
+  const { kit } = ctx
+  const { errorText, note } = kit
   const shown = new Set<number>()
   const { invite, error } = pairInvite(ctx, source.epoch, shown)
   effect(() => {
@@ -46,9 +51,9 @@ export const joinStep = (ctx: Context<'wire'>, source: DeviceSource, joined: (na
     { class: 'flex flex-col gap-4' },
     note('On the other PC, open Settings → Devices → Add a PC → It already has sand, and paste this link there.'),
     dynamicChild(body, ({ current, failure }) => {
-      if (current) return inviteBody(current, source.listenOnLan, 'pc')
+      if (current) return inviteBody(kit, current, source.listenOnLan, 'pc')
       return failure ? errorText(`Couldn't create a link: ${errorMessage(failure)}`) : note('Creating a link…')
     }),
-    pasteRow(source, joined),
+    pasteRow(kit, source, joined),
   )
 }

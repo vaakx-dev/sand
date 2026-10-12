@@ -1,4 +1,3 @@
-import type { IconName } from '@sand/dom'
 import type { UserContent } from '@sand/messages'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Dispose } from 'drydock'
@@ -10,7 +9,7 @@ export type SlotView = HTMLElement | (() => HTMLElement)
 export interface ComposerCapture {
   placeholder(): string
   title(): string
-  icon(): IconName
+  icon(): string
   input?(text: string): void
   keydown?(event: KeyboardEvent): boolean
   send(text: string): void | Promise<void>

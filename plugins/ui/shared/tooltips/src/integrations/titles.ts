@@ -1,4 +1,4 @@
-import { scoped } from '@sand/dom'
+import { scoped } from '@vaakx-dev/vrui'
 
 const named = new WeakSet<Element>()
 

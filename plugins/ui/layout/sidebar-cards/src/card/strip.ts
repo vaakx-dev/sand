@@ -1,5 +1,7 @@
-import type { NavAction } from '@sand/dom'
-import { choiceChips, derive, dismissible, disposeAll, dynamicChild, icon, iconButton, onPressOutside, span, stopThen, type ClassValue, type Sig } from '@sand/dom'
+import { dismissible, onPressOutside } from '@sand/kit/web'
+import type { NavAction } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, disposeAll, dynamicChild, span, stopThen, type ClassValue, type Sig } from '@vaakx-dev/vrui'
 
 export interface StripParts {
   menu: Sig<NavAction[]>
@@ -11,7 +13,7 @@ export interface StripParts {
 
 const quickOf = (parts: StripParts) => parts.menu.get().filter(action => action.quick)
 
-const quickButton = (action: NavAction, parts: StripParts, inline: boolean) =>
+const quickButton = ({ icon, iconButton }: Kit, action: NavAction, parts: StripParts, inline: boolean) =>
   iconButton(
     {
       size: 'sm',
@@ -25,7 +27,7 @@ const quickButton = (action: NavAction, parts: StripParts, inline: boolean) =>
     icon(action.icon ?? 'right', 14),
   )
 
-const chips = (action: NavAction, parts: StripParts) => {
+const chips = ({ choiceChips }: Kit, action: NavAction, parts: StripParts) => {
   const done = () => parts.choosing.set(undefined)
   return span(
     {
@@ -48,7 +50,7 @@ const chips = (action: NavAction, parts: StripParts) => {
   )
 }
 
-export const actionStrip = (parts: StripParts, reveal: ClassValue, inline: boolean) => {
+export const actionStrip = (kit: Kit, parts: StripParts, reveal: ClassValue, inline: boolean) => {
   const chosen = () => (inline ? quickOf(parts).find(action => action.id === parts.choosing.get() && action.choices) : undefined)
   return span(
     { class: () => (chosen() ? 'flex items-center' : ['hidden items-center gap-1', reveal]) },
@@ -56,7 +58,7 @@ export const actionStrip = (parts: StripParts, reveal: ClassValue, inline: boole
       derive(() => `${parts.menuKey.get()}#${chosen()?.id ?? ''}`),
       () => {
         const action = chosen()
-        return action ? chips(action, parts) : span({ class: 'flex items-center gap-1' }, ...quickOf(parts).map(quick => quickButton(quick, parts, inline)))
+        return action ? chips(kit, action, parts) : span({ class: 'flex items-center gap-1' }, ...quickOf(parts).map(quick => quickButton(kit, quick, parts, inline)))
       },
     ),
   )

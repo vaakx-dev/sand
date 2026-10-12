@@ -1,6 +1,7 @@
 import type { WorktreeIntent } from '../../contract'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { DraftTarget, Thread } from '@sand/web-client/contract'
+import { sig } from '@vaakx-dev/vrui'
 import type { WebContext, WorktreeClient } from '../client'
 
 export type Choice = { mode: 'local' } | { mode: 'new'; base?: string } | { mode: 'existing'; path: string; branch: string | null }

@@ -1,4 +1,5 @@
-import { copyWithNotice, errorMessage, pulse } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { copyWithNotice, pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { pcList } from './pcs'
 import { usagePage } from './view/page'
@@ -6,7 +7,7 @@ import { usagePage } from './view/page'
 export default definePlugin({
   name: 'usage-page',
   description: 'Usage page in settings: plan limits, billed cost and tokens per account, across your PCs',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     settings: 'no Usage page; /usage shows the server report',
     commands: 'no /usage shortcut to the page',
@@ -30,7 +31,7 @@ export default definePlugin({
         settings.close()
       }
       const render = () =>
-        usagePage({
+        usagePage(ctx.kit, {
           wire: ctx.wire,
           pcs,
           limits: () => {

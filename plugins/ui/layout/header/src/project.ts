@@ -1,5 +1,5 @@
-import { quickThreadIcon } from '@sand/dom'
 import { folderName } from '@sand/kit'
+import type { ProjectLook } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export const quickName = 'Quick thread'
@@ -15,8 +15,8 @@ export const projectName = (ctx: Context, cwd: string | undefined) => {
   return ctx.projects?.name(home, ctx.threads?.device()) ?? folderName(home)
 }
 
-export const projectIconUrl = (ctx: Context, cwd: string | undefined) => {
-  if (isQuick(ctx, cwd)) return quickThreadIcon
-  if (!cwd) return ''
-  return ctx.projects?.icon(homeOf(ctx, cwd), ctx.threads?.device()) ?? ''
+export const projectLook = (ctx: Context, cwd: string | undefined): ProjectLook | undefined => {
+  if (isQuick(ctx, cwd)) return { quick: true }
+  if (!cwd) return undefined
+  return ctx.projects?.icon(homeOf(ctx, cwd), ctx.threads?.device())
 }

@@ -1,6 +1,8 @@
 import type { StartPoint, WorktreeEntry, WorktreeState } from '../../contract'
-import { choiceItem, div, groupLabel, menuSeparator, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
-import { plural, uuid } from '@sand/kit'
+import { plural, tildeHome, uuid } from '@sand/kit'
+import type { MenuSpec } from '@sand/protocol'
+import type { ContextMenu, IconName, Kit } from '@sand/ui-kit/contract'
+import { div, span, type Child } from '@vaakx-dev/vrui'
 import type { WebContext } from '../client'
 import type { Choice, Choices } from './choices'
 import type { ChipTarget } from './target'
@@ -20,7 +22,7 @@ export interface EntryMenus {
   spec(entry: WorktreeEntry, use: () => void): MenuSpec
 }
 
-const row = ({ glyph, title, line, selected, choose, end, menu }: Row, context?: ContextMenu) =>
+const row = ({ choiceItem }: Kit, { glyph, title, line, selected, choose, end, menu }: Row, context?: ContextMenu) =>
   choiceItem(
     {
       selected,
@@ -43,7 +45,8 @@ const currentPath = (state: WorktreeState, choice: Choice) => {
   return choice.mode === 'existing' ? choice.path : ''
 }
 
-const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choice) => void, menus: EntryMenus) => {
+const existingRows = (kit: Kit, state: WorktreeState, choice: Choice, pick: (choice: Choice) => void, menus: EntryMenus) => {
+  const { groupLabel, menuSeparator } = kit
   const others = state.worktrees.filter(entry => !entry.main)
   if (!others.length) return []
   const current = currentPath(state, choice)
@@ -53,6 +56,7 @@ const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choic
     ...others.map(entry => {
       const use = () => pick({ mode: 'existing', path: entry.path, branch: entry.branch })
       return row(
+        kit,
         {
           glyph: 'branch',
           title: entry.branch ?? tildeHome(entry.path),
@@ -68,20 +72,21 @@ const existingRows = (state: WorktreeState, choice: Choice, pick: (choice: Choic
   ]
 }
 
-const startRows = (point: StartPoint | undefined, base: string | undefined, pick: (choice: Choice) => void) => {
+const startRows = (kit: Kit, point: StartPoint | undefined, base: string | undefined, pick: (choice: Choice) => void) => {
+  const { groupLabel, menuSeparator } = kit
   if (!point?.latest) return []
   const { branch, latest } = point
   return [
     menuSeparator(),
     groupLabel('Start from'),
-    row({
+    row(kit, {
       glyph: 'globe',
       title: `Latest ${branch}`,
       line: `${latest.ref}, fetched when it starts`,
       selected: base === latest.ref,
       choose: () => pick({ mode: 'new', base: latest.ref }),
     }),
-    row({
+    row(kit, {
       glyph: 'branch',
       title: `Your ${branch}`,
       line: latest.behind ? `${plural(latest.behind, 'commit')} behind ${latest.ref}` : `Same as ${latest.ref}`,
@@ -115,15 +120,15 @@ export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget,
   const base = mode === 'new' && choice.mode === 'new' ? choice.base : undefined
   return div(
     { class: 'flex flex-col gap-1' },
-    row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${home ? ` on ${home}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
-    row({
+    row(ctx.kit, { glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${home ? ` on ${home}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
+    row(ctx.kit, {
       glyph: 'folder-git',
       title: 'New worktree',
       line: point?.latest ? 'its own folder and branch' : `its own folder and branch, from ${fresh ?? 'HEAD'}`,
       selected: mode === 'new',
       choose: () => pick({ mode: 'new', base: fresh }),
     }),
-    ...startRows(point, base, pick),
-    ...existingRows(state, choice, pick, menus),
+    ...startRows(ctx.kit, point, base, pick),
+    ...existingRows(ctx.kit, state, choice, pick, menus),
   )
 }

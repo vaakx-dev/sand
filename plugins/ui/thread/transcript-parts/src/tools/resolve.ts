@@ -1,8 +1,9 @@
 import type { RenderTool, ToolRenderer } from '../contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { genericRenderer } from './generic'
 
-export const resolveRenderer = (name: string, found?: RenderTool | ToolRenderer): Required<ToolRenderer> => {
-  const base = genericRenderer(name)
+export const resolveRenderer = (kit: Kit, name: string, found?: RenderTool | ToolRenderer): Required<ToolRenderer> => {
+  const base = genericRenderer(kit, name)
   if (!found) return base
   if (typeof found === 'function') return { ...base, body: found }
   const label = found.label ?? base.label

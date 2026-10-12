@@ -1,8 +1,11 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { div, errorMessage, errorText, keys, secondaryAction, show, sig, textInput } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, keys, show, sig } from '@vaakx-dev/vrui'
 import type { Catalog } from './catalog'
 
-export const addRow = (catalog: Catalog, added: (model: ModelInfo) => void) => {
+export const addRow = (kit: Kit, catalog: Catalog, added: (model: ModelInfo) => void) => {
+  const { errorText, secondaryAction, textInput } = kit
   const name = sig('')
   const busy = sig(false)
   const error = sig('')

@@ -1,4 +1,4 @@
-import type { NavList } from '@sand/dom'
+import type { NavList } from '@sand/protocol'
 import type { Context } from 'drydock'
 import { openDraft } from '../draft'
 import { projectLookup } from '../project-lookup'

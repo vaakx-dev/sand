@@ -1,5 +1,5 @@
 import type { AskAnswer, AskQuestion } from '../contract'
-import { derive, sig } from '@sand/dom'
+import { derive, sig } from '@vaakx-dev/vrui'
 
 interface Draft {
   picked: number[]

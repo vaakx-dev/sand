@@ -1,5 +1,5 @@
-import { div, span } from '@sand/dom'
 import { dollars, tokens, tokensOf } from '@sand/kit'
+import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../data/types'
 import { onPlanOf } from '../format'
 import { isSubscription } from '../names'

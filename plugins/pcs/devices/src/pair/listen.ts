@@ -1,6 +1,8 @@
-import { callout, div, secondaryAction, sig, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, sig, span } from '@vaakx-dev/vrui'
 
-export const listenBox = (text: string, listen: () => Promise<unknown>) => {
+export const listenBox = (kit: Kit, text: string, listen: () => Promise<unknown>) => {
+  const { callout, secondaryAction } = kit
   const busy = sig(false)
   const run = async () => {
     busy.set(true)

@@ -1,4 +1,4 @@
-import type { MenuSpec } from '@sand/dom'
+import type { MenuSpec } from '@sand/protocol'
 import type { FileChange } from '../../changes/collect'
 import type { ChangesState } from '../view'
 

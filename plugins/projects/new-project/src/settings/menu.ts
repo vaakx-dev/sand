@@ -1,6 +1,6 @@
 import type { Picker } from '@sand/picker/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { menuSeparator, popover, popoverItem, sig } from '@sand/dom'
+import { sig } from '@vaakx-dev/vrui'
 import { reportError, type ProjectsContext } from '../context'
 import { copyEntries, projectEntries, visibilityEntry, type Entry } from './actions'
 
@@ -13,6 +13,7 @@ const confirmed = async (picker: Picker, group: ProjectGroup) => {
 }
 
 const deleteItem = (ctx: ProjectsContext, group: ProjectGroup, close: () => void) => {
+  const { popoverItem } = ctx.kit
   const picker = ctx.picker
   const armed = sig(false)
   const remove = async () => {
@@ -28,6 +29,7 @@ const deleteItem = (ctx: ProjectsContext, group: ProjectGroup, close: () => void
 }
 
 export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => void, looks: Entry[]) => {
+  const { menuSeparator, popover, popoverItem } = ctx.kit
   const item = (entry: Entry) =>
     popoverItem(
       {

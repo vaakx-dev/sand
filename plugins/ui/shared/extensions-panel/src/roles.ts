@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import type { Pulse } from '@sand/dom'
+import type { Pulse } from '@sand/kit/web'
 import { grouped } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -37,7 +37,14 @@ const readRoles = (ctx: Context, extensions: ExtensionInfo[], seen: Map<string, 
   }
 }
 
-export const lockedIds = (roles: Roles) => new Set([self, roles.provider('settings')])
+export const lockedIds = (extensions: ExtensionInfo[], roles: Roles) => {
+  const locked = new Set([self])
+  for (const role of extensions.find(extension => extension.id === self)?.inject ?? []) {
+    const providers = extensions.filter(extension => extension.configured && roles.provides(extension).includes(role))
+    if (providers.length === 1) locked.add(providers[0]!.id)
+  }
+  return locked
+}
 
 export const interfaceState = (ctx: Context<'extensions'>, changes: Pulse) => {
   const seen = new Map<string, Set<string>>()

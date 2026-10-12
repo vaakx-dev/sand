@@ -1,5 +1,5 @@
-import { dynamicChild, span, type Sig } from '@sand/dom'
 import type { AgentRun, Thread } from '@sand/web-client/contract'
+import { dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 
 const segmentLimit = 8
 

@@ -1,5 +1,6 @@
 import type { NotifyAction } from './contract'
-import { closeButton, copyButton, div, effect, icon, onTimeout, primaryAction, sig, span, untrack, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, effect, onTimeout, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 
 export interface Toast {
   id: number
@@ -13,7 +14,7 @@ const lifetime = ({ text, action }: Toast) => Math.min(15000, (action ? 6000 : 3
 
 const staysOpen = (toast: Toast) => toast.level === 'error' && toast.timeout === undefined
 
-const actionButton = (action: NotifyAction, done: () => void) =>
+const actionButton = ({ primaryAction }: Kit, action: NotifyAction, done: () => void) =>
   primaryAction(
     {
       size: 'sm',
@@ -25,7 +26,8 @@ const actionButton = (action: NotifyAction, done: () => void) =>
     action.label,
   )
 
-export const toastView = (entry: Sig<Toast>, close: (toast: Toast) => void) => {
+export const toastView = (kit: Kit, entry: Sig<Toast>, close: (toast: Toast) => void) => {
+  const { closeButton, copyButton, icon } = kit
   const toast = untrack(() => entry.get())
   const error = toast.level === 'error'
   const hovered = sig(false)
@@ -46,7 +48,7 @@ export const toastView = (entry: Sig<Toast>, close: (toast: Toast) => void) => {
       (error || toast.action) &&
         div(
           { class: 'mt-2 flex items-center gap-1' },
-          toast.action && actionButton(toast.action, () => close(toast)),
+          toast.action && actionButton(kit, toast.action, () => close(toast)),
           error && copyButton({ text: () => toast.text, label: 'Copy' }),
         ),
     ),

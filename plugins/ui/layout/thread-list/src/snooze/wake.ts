@@ -1,4 +1,4 @@
-import { onTimeout } from '@sand/dom'
+import { onTimeout } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { isBack } from './actions'
 

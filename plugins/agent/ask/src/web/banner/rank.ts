@@ -1,9 +1,12 @@
 import type { AskQuestion } from '../../contract'
-import { derive, div, icon, iconButton, list, reorder, span, type Sig } from '@sand/dom'
+import { reorder } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, list, span, type Sig } from '@vaakx-dev/vrui'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 
-export const rankView = (state: AskState, actions: AskActions, question: AskQuestion) => {
+export const rankView = (kit: Kit, state: AskState, actions: AskActions, question: AskQuestion) => {
+  const { icon, iconButton } = kit
   const order = derive(() => state.draft.get().picked)
   const ids = () => order.get().map(String)
 

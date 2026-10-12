@@ -1,4 +1,4 @@
-import { owned, place, style } from '@sand/dom'
+import { owned, place, style } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { chatController } from './controller'
 import { css } from './style'
@@ -6,7 +6,7 @@ import { css } from './style'
 export default definePlugin({
   name: 'transcript-chat',
   description: 'Chat transcript: bubbles, markdown, "Worked for" tool groups, agent reports, streamed in place',
-  inject: ['threads', 'transcriptParts', 'markdown'],
+  inject: ['kit', 'threads', 'transcriptParts', 'markdown'],
   uses: {
     layout: 'lands loose on the stage',
     composer: 'the empty-state hint does not focus a composer, and messages offer no Quote in reply',

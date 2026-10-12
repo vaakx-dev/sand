@@ -1,4 +1,4 @@
-import type { MenuSpec, NavAction } from '@sand/dom'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { Actions } from './parts'
 
 export interface MenuTarget {

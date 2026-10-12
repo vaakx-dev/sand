@@ -1,5 +1,6 @@
-import { hasOpenLayer, listen, type Swipe } from '@sand/dom'
-import { canScrollToward, direction, editing, follow, selecting, type Drag } from '@sand/dom/gesture'
+import type { Swipe } from '@sand/protocol'
+import { canScrollToward, direction, editing, follow, hasOpenLayer, selecting, type Drag } from '@sand/kit/web'
+import { listen } from '@vaakx-dev/vrui'
 
 const edge = 24
 

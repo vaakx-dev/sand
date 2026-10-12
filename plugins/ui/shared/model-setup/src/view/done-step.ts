@@ -1,5 +1,5 @@
 import type { Models } from '@sand/web-client/contract'
-import { doneMark, primaryAction, setupHeading, setupNote } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { ModelSetupState } from '../setup'
 import { screen } from './layout'
 
@@ -13,11 +13,14 @@ const namesLine = (setup: ModelSetupState, models: Models) => {
   return id ? `${labelOf(models, id)} names them.` : ''
 }
 
-export const doneStep = (setup: ModelSetupState, models: Models) =>
-  screen(
+export const doneStep = (kit: Kit, setup: ModelSetupState, models: Models) => {
+  const { doneMark, primaryAction, setupHeading, setupNote } = kit
+  return screen(
+    kit,
     3,
     doneMark(),
     setupHeading("You're set"),
     setupNote([threadsLine(models, setup.model.get()), namesLine(setup, models), 'Change either in Settings → Models.'].filter(Boolean).join(' ')),
     primaryAction({ onClick: setup.close }, 'Start a thread'),
   )
+}

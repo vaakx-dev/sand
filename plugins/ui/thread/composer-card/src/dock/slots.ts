@@ -1,5 +1,5 @@
 import type { ComposerSlot, SlotView } from '../contract'
-import { div, list, sig } from '@sand/dom'
+import { div, list, sig } from '@vaakx-dev/vrui'
 
 interface Entry {
   id: number

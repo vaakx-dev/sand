@@ -14,6 +14,7 @@ import { rendererRegistry } from './transcript/registry'
 export default definePlugin({
   name: 'transcript-parts',
   description: 'Shared pieces for transcripts and tool views: thread items, tool cards, renderer registry, images',
+  inject: ['kit'],
   uses: {
     media: 'images load only from inline data',
     imageViewer: 'images do not open full screen',
@@ -27,11 +28,11 @@ export default definePlugin({
       items: threadItems,
       itemCache,
       sections: resultSections,
-      registry: rendererRegistry,
+      registry: changed => rendererRegistry(ctx.kit, changed),
       openStates,
       menus,
       image,
-      toolStep: (tool, options) => toolStep(tool, options, menus),
+      toolStep: (tool, options) => toolStep(ctx.kit, tool, options, menus),
     })
     ctx.provide('toolViews', { field, resultText, errorBody, outputText, truncatedNote, image, backgroundJobs: backgroundJobs(ctx) })
   },

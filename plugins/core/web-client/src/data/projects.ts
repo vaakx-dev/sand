@@ -1,7 +1,6 @@
 import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
-import type { WireEvent, WireRequest } from '@sand/protocol'
+import type { ProjectLook, WireEvent, WireRequest } from '@sand/protocol'
 import type { Machines, ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
-import { appIconUrl, duneIcon } from '@sand/dom'
 import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
@@ -77,9 +76,11 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
   ctx.on('wire.hello', icons.clear)
   ctx.effect(() => icons.clear)
 
-  const iconFile = (found: ProjectGroup) => (found.id === sandHomeProject ? appIconUrl() : icons.get(found))
-
-  const groupIcon = (found: ProjectGroup) => iconFile(found) ?? (found.icon && duneIcon(found.name, found.icon))
+  const groupIcon = (found: ProjectGroup): ProjectLook | undefined => {
+    if (found.id === sandHomeProject) return { app: true }
+    const file = icons.get(found)
+    return file ? { file } : found.icon
+  }
 
   const entryFor = (project: Project, device?: string): ProjectEntry => {
     const found = get(project.id)?.locations.find(location => sameDevice(location.device, device))
@@ -113,7 +114,6 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
       return found && groupIcon(found)
     },
     groupIcon,
-    iconFile,
     place,
     browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),
     mkdir: (path, device) => call<void>({ type: 'fs.mkdir', path }, device),

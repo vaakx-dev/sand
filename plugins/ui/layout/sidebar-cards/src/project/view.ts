@@ -1,5 +1,7 @@
-import type { ContextMenu, MenuSpec } from '@sand/dom'
-import { choiceItem, closeButton, div, dynamicChild, icon, iconButton, list, popover, popupTrigger, projectIcon, show, span, type Sig } from '@sand/dom'
+import { popupTrigger } from '@sand/kit/web'
+import type { MenuSpec } from '@sand/protocol'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectChoice } from './choices'
 
 export interface FilterParts {
@@ -11,7 +13,7 @@ export interface FilterParts {
   chipMenu(): MenuSpec
 }
 
-export const filterButton = (parts: FilterParts, open: Sig<boolean>) =>
+export const filterButton = ({ icon, iconButton }: Kit, parts: FilterParts, open: Sig<boolean>) =>
   iconButton(
     {
       title: () => (parts.project.get() ? `Showing ${parts.label.get()}` : 'Filter by project'),
@@ -23,7 +25,7 @@ export const filterButton = (parts: FilterParts, open: Sig<boolean>) =>
     icon('folder'),
   )
 
-const choiceRow = (choice: Sig<ProjectChoice>, parts: FilterParts, context: ContextMenu, choose: (project: string) => void, close: () => void) =>
+const choiceRow = ({ choiceItem, projectIcon }: Kit, choice: Sig<ProjectChoice>, parts: FilterParts, context: ContextMenu, choose: (project: string) => void, close: () => void) =>
   choiceItem(
     {
       selected: () => parts.project.get() === choice.get().key,
@@ -40,7 +42,8 @@ const choiceRow = (choice: Sig<ProjectChoice>, parts: FilterParts, context: Cont
     ),
   )
 
-export const filterMenu = (parts: FilterParts, open: Sig<boolean>, context: ContextMenu) => {
+export const filterMenu = (kit: Kit, parts: FilterParts, open: Sig<boolean>, context: ContextMenu) => {
+  const { choiceItem, popover } = kit
   const close = () => open.set(false)
   const choose = (project: string | undefined) => {
     parts.filter(project)
@@ -54,14 +57,14 @@ export const filterMenu = (parts: FilterParts, open: Sig<boolean>, context: Cont
       list(
         parts.projects,
         choice => choice.key,
-        choice => choiceRow(choice, parts, context, choose, close),
+        choice => choiceRow(kit, choice, parts, context, choose, close),
         div({ class: 'flex flex-col' }),
       ),
     ),
   )
 }
 
-export const filterChip = (parts: FilterParts, context: ContextMenu) =>
+export const filterChip = ({ closeButton, projectIcon }: Kit, parts: FilterParts, context: ContextMenu) =>
   show(parts.project.map(Boolean), () =>
     div(
       {

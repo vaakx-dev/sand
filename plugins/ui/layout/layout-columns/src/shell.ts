@@ -1,5 +1,6 @@
-import type { Region } from '@sand/dom'
-import { div, layer, list, type Sig, type Store } from '@sand/dom'
+import type { Region } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, list, type Sig, type Store } from '@vaakx-dev/vrui'
 import { grip, sizedStyle, type Widths } from './resize'
 import { backdropOpacity, slideAside, slideSide, type Shift } from './slide'
 
@@ -33,7 +34,7 @@ const placed = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
     container,
   )
 
-export const buildShell = ({ narrow, open, views, covers, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
+export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
   const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const showSide = () => open.side.get() || (!narrow.get() && covered.get().side)
   const dragging = () => narrow.get() && shift.get() !== undefined

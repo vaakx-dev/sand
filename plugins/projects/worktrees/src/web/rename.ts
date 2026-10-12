@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { WebContext, WorktreeClient } from './client'
 
 export const renamer = (ctx: WebContext, client: WorktreeClient) => async () => {

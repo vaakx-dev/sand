@@ -1,4 +1,4 @@
-import { onTimeout } from '@sand/dom'
+import { onTimeout } from '@vaakx-dev/vrui'
 
 const retryMs = [250, 500, 1000, 2000, 4000]
 

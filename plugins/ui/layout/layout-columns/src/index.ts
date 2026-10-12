@@ -1,5 +1,6 @@
-import type { Layout, LayoutState, Region } from '@sand/dom'
-import { batch, cssOrder, derive, dismissible, effect, media, mount, owned, setStyle, sig, stage, store, untrack, type Sig } from '@sand/dom'
+import { cssOrder, dismissible, owned } from '@sand/kit/web'
+import type { Layout, LayoutState, Region } from '@sand/protocol'
+import { batch, byId, derive, effect, media, mount, setStyle, sig, store, untrack, type Sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { layoutMemory } from './memory'
 import { savedWidths } from './resize'
@@ -16,6 +17,7 @@ const has = (views: Sig<HTMLElement[]>) => views.get().length > 0
 export default definePlugin({
   name: 'layout-columns',
   description: 'Top strip, side column, main column, aside column and bottom strip; side and aside become drawers on narrow screens',
+  inject: ['kit'],
   uses: { commands: 'no /panel command' },
   apply(ctx) {
     const { remembered, remember } = layoutMemory()
@@ -61,7 +63,7 @@ export default definePlugin({
     }
 
     const widths = savedWidths()
-    const root = owned(ctx, () => buildShell({ narrow, open, views, covers, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
+    const root = owned(ctx, () => buildShell(ctx.kit, { narrow, open, views, covers, filled, covered, shift, swiped, widths }, () => layout.toggle('side', false)))
 
     const layout: Layout = {
       mount(region, view, order = 0) {
@@ -109,7 +111,7 @@ export default definePlugin({
         if (region) return dismissible(root, () => layout.toggle(region, false), { overlay: false })
       })
     })
-    ctx.effect(() => mount(stage(), root))
+    ctx.effect(() => mount(byId('stage'), root))
     ctx.provide('layout', layout)
     ctx.watch('commands', commands => commands?.add({ name: 'panel', description: 'Toggle the right panel', run: () => layout.toggle('aside') }))
   },

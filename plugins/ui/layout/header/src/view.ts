@@ -1,22 +1,30 @@
-import { div, dot, dropdown, icon, iconButton, layer, navButton, paneHead, projectAvatar, show, showSideButton, sideHidden, span, tildeHome, type Pulse, type Sig } from '@sand/dom'
+import { tildeHome } from '@sand/kit'
+import type { Pulse } from '@sand/kit/web'
+import type { LayoutState } from '@sand/protocol'
+import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
-import { isQuick, projectIconUrl, projectName, quickName } from './project'
+import { isQuick, projectLook, projectName, quickName } from './project'
 import type { Slots } from './slots'
+
+const sideHidden = (state: LayoutState | undefined) => Boolean(state?.filled.side && (state.narrow || !state.open.side))
 
 const agentsWorking = (ctx: Context) =>
   Boolean(ctx.jobs?.list().some(job => job.status === 'running') || ctx.threads?.list().some(thread => thread.info.kind === 'agent' && thread.running))
 
-const projectCrumb = (ctx: Context, changes: Pulse, cwd: Sig<string | undefined>, name: Sig<string>) =>
-  span(
+const projectCrumb = (ctx: Context<'kit'>, changes: Pulse, cwd: Sig<string | undefined>, name: Sig<string>) => {
+  const { projectAvatar } = ctx.kit
+  return span(
     { class: 'hidden max-w-48 shrink-0 items-center gap-1.5 text-neutral-400 md:flex', title: cwd.map(path => tildeHome(path ?? '')) },
-    projectAvatar(name, changes.read(() => projectIconUrl(ctx, cwd.get()))),
+    projectAvatar(name, changes.read(() => projectLook(ctx, cwd.get()))),
     span({ class: 'truncate' }, name),
   )
+}
 
-const titleMenu = (ctx: Context, title: Sig<string>) =>
-  dropdown({
+const titleMenu = (ctx: Context<'kit'>, title: Sig<string>) => {
+  const { dropdown, icon, navButton } = ctx.kit
+  return dropdown({
     trigger: (press, open) =>
       navButton(
         {
@@ -30,15 +38,19 @@ const titleMenu = (ctx: Context, title: Sig<string>) =>
       ),
     items: close => sessionMenu(ctx, close),
   })
+}
 
-const panelButton = (ctx: Context, changes: Pulse, hidden: Sig<boolean>) =>
-  iconButton(
+const panelButton = (ctx: Context<'kit'>, changes: Pulse, hidden: Sig<boolean>) => {
+  const { dot, icon, iconButton } = ctx.kit
+  return iconButton(
     { class: 'relative', hidden, title: 'Show the panel', 'aria-label': 'Show the panel', onClick: () => ctx.layout?.toggle('aside', true) },
     icon('panel'),
     show(changes.read(() => agentsWorking(ctx)), () => span({ class: 'absolute right-1 top-1 flex', title: 'Agents running' }, dot('accent'))),
   )
+}
 
-export const headerView = (ctx: Context, changes: Pulse, slots: Slots) => {
+export const headerView = (ctx: Context<'kit'>, changes: Pulse, slots: Slots) => {
+  const { layer, paneHead, showSideButton } = ctx.kit
   const cwd = changes.read(() => ctx.threads?.current()?.info.cwd ?? ctx.threads?.cwd())
   const quick = changes.read(() => isQuick(ctx, cwd.get()))
   const idle = changes.read(() => Boolean(ctx.threads?.idle()))

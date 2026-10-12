@@ -1,7 +1,8 @@
-import { copyWithNotice, effect, shownPanel, sig, untrack } from '@sand/dom'
 import type {} from '@sand/composer-card/contract'
+import { copyWithNotice, shownPanel } from '@sand/kit/web'
 import type {} from '@sand/markdown/contract'
 import type { Thread } from '@sand/web-client/contract'
+import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import type { Changes, FileChange } from '../changes/collect'
 import { collectTree } from '../changes/tree'
@@ -16,7 +17,7 @@ import { changesView, type Highlighter, type Reveal } from './view'
 export default definePlugin({
   name: 'panel-changes',
   description: 'Edits: files the agent edited or wrote in the current thread, with per-file diffs and +/− counts',
-  inject: ['threads'],
+  inject: ['threads', 'kit'],
   uses: {
     panels: 'draws its own plain panel',
     commands: 'no /changes command',
@@ -114,7 +115,7 @@ export default definePlugin({
     const control = shownPanel(
       ctx,
       { id: 'changes', title: 'Edits', icon: 'compare', order: 10 },
-      () => changesView({ changes, empty, turn, revealed, viewed, highlight, isClosed, toggle, markViewed, reveal: revealFile, quote, copy }),
+      () => changesView(ctx.kit, { changes, empty, turn, revealed, viewed, highlight, isClosed, toggle, markViewed, reveal: revealFile, quote, copy }),
       paint,
     )
 

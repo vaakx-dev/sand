@@ -1,5 +1,6 @@
-import { choiceButton, choiceList, derive, div, doneMark, dynamicChild, icon, overlay, p, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, show, sig, tile, untrack } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, p, show, sig, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 import { installStep } from './install'
@@ -17,13 +18,13 @@ const titles: Record<AddPcMode, string> = { choose: 'Add a PC', install: 'Instal
 
 const listed = (names: string[]) => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`)
 
-const chooseStep = (pick: (mode: AddPcMode) => void) =>
+const chooseStep = ({ choiceButton, choiceList, icon, tile }: Kit, pick: (mode: AddPcMode) => void) =>
   choiceList(
     choiceButton({ mark: tile(icon('term', 16)), title: 'Install sand on it', detail: "For a PC that doesn't have sand yet", onClick: () => pick('install') }),
     choiceButton({ mark: tile(icon('link', 16)), title: 'It already has sand', detail: 'Connect with a pairing link', onClick: () => pick('join') }),
   )
 
-const doneStep = (done: Done) =>
+const doneStep = ({ doneMark }: Kit, done: Done) =>
   div(
     { class: 'flex flex-col items-center gap-2 py-2 text-center' },
     doneMark(),
@@ -31,7 +32,8 @@ const doneStep = (done: Done) =>
     p({ class: 'text-sm text-neutral-400' }, done.detail),
   )
 
-export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {
+export const addPcDialog = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {
+  const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ctx.kit
   source.load()
   const mode = sig<AddPcMode>(start)
   const done = sig<Done | undefined>(undefined)
@@ -47,10 +49,10 @@ export const addPcDialog = (ctx: Context<'wire'>, source: DeviceSource, close: (
 
   const body = (key: string) => {
     const finished = untrack(() => done.get())
-    if (key === 'done' && finished) return doneStep(finished)
+    if (key === 'done' && finished) return doneStep(ctx.kit, finished)
     if (key === 'install') return installStep(ctx, source, installed, running)
     if (key === 'join') return joinStep(ctx, source, joined)
-    return chooseStep(next => mode.set(next))
+    return chooseStep(ctx.kit, next => mode.set(next))
   }
 
   return overlay(

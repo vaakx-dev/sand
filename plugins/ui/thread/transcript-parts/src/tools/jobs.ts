@@ -1,17 +1,20 @@
 import type { ToolBadge, ToolView, ToolViews } from '../contract'
 import type { Jobs, JobState } from '@sand/web-client/contract'
-import { effect, errorMessage, onInterval, owned, pulse, sig, statusLabel, type NavAction } from '@sand/dom'
-import { duration } from '@sand/kit'
+import { duration, errorMessage } from '@sand/kit'
+import { owned, pulse } from '@sand/kit/web'
+import type { NavAction } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { effect, onInterval, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { resolveRenderer } from './resolve'
 
 const refresh = 5000
 
-const outcomes: Record<Exclude<JobState['status'], 'running'>, ToolBadge> = {
+const outcomes = ({ statusLabel }: Kit): Record<Exclude<JobState['status'], 'running'>, ToolBadge> => ({
   done: { text: statusLabel('done'), tone: 'success' },
   failed: { text: statusLabel('failed'), tone: 'danger' },
   cancelled: { text: statusLabel('cancelled'), tone: 'neutral' },
-}
+})
 
 const snapshot = (jobs?: Jobs) =>
   (jobs?.list() ?? [])
@@ -21,7 +24,8 @@ const snapshot = (jobs?: Jobs) =>
 
 const anyRunning = (jobs?: Jobs) => Boolean(jobs?.list().some(job => job.origin && job.status === 'running'))
 
-export const backgroundJobs = (ctx: Context): ToolViews['backgroundJobs'] => {
+export const backgroundJobs = (ctx: Context<'kit'>): ToolViews['backgroundJobs'] => {
+  const ended = outcomes(ctx.kit)
   const changes = pulse(ctx, ['jobs.change'], ['jobs'])
   const tick = sig(0)
   const seen = owned(ctx, () => {
@@ -48,7 +52,7 @@ export const backgroundJobs = (ctx: Context): ToolViews['backgroundJobs'] => {
   })
 
   return (transcript, name, base) => {
-    const plain = resolveRenderer(name, base)
+    const plain = resolveRenderer(ctx.kit, name, base)
     return transcript.tool(name, {
       ...plain,
       meta(tool) {
@@ -58,7 +62,7 @@ export const backgroundJobs = (ctx: Context): ToolViews['backgroundJobs'] => {
       },
       badge(tool) {
         const job = jobOf(tool)
-        return job && job.status !== 'running' ? outcomes[job.status] : plain.badge(tool)
+        return job && job.status !== 'running' ? ended[job.status] : plain.badge(tool)
       },
       actions(tool) {
         const job = jobOf(tool)

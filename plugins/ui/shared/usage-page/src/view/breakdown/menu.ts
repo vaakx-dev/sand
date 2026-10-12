@@ -1,4 +1,5 @@
-import { tildeHome, type MenuSpec, type NavAction } from '@sand/dom'
+import { tildeHome } from '@sand/kit'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { PcUsage, Thread } from '../../data/types'
 import type { RowSource } from './rows'
 

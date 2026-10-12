@@ -1,5 +1,6 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, fold, span, statusLabel } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, span } from '@vaakx-dev/vrui'
 
 const shownLines = 400
 const trailer = /\n?\[exit code (-?\d+)(, timed out)?\]\s*$/
@@ -12,7 +13,7 @@ const parse = (text: string) => {
 const fullCommand = (command: string) =>
   div({ class: 'mb-2 whitespace-pre-wrap wrap-anywhere font-mono text-xs text-neutral-300' }, span({ class: 'text-accent-400' }, '$ '), command)
 
-export const shellRenderer = ({ errorBody, field, outputText, resultText, truncatedNote }: ToolViews): ToolRenderer => {
+export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, outputText, resultText, truncatedNote }: ToolViews): ToolRenderer => {
   const command = (tool: ToolView) => field(tool.call.input, 'command')
   const multiline = (tool: ToolView) => command(tool).includes('\n') && fullCommand(command(tool))
   return {

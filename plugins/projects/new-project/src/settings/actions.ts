@@ -1,6 +1,6 @@
-import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import type { IconName } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import type { IconName } from '@sand/ui-kit/contract'
+import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
 import { byRecent, withoutCopy } from './places'
 

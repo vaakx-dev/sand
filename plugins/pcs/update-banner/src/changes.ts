@@ -1,6 +1,7 @@
-import { badge, div, p, quietButton, show, sig, span, type Tone } from '@sand/dom'
 import { capital, plural } from '@sand/kit'
 import type { BuildChange } from '@sand/protocol'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { div, p, show, sig, span } from '@vaakx-dev/vrui'
 
 interface Kind {
   label: string
@@ -21,7 +22,8 @@ export const isNotable = (change: BuildChange) => change.type in kinds
 
 export const changeLine = (change: BuildChange) => (change.scope ? `${scopeName(change.scope)}: ${change.summary}` : capital(change.summary))
 
-const changeRow = (change: BuildChange) => {
+const changeRow = (kit: Kit, change: BuildChange) => {
+  const { badge } = kit
   const kind = kinds[change.type] ?? other
   return div(
     { class: 'flex items-start gap-3' },
@@ -34,18 +36,23 @@ const changeRow = (change: BuildChange) => {
   )
 }
 
-const otherChanges = (others: BuildChange[], folded: boolean) => {
+const otherChanges = (kit: Kit, others: BuildChange[], folded: boolean) => {
+  const { quietButton } = kit
   const open = sig(!folded)
   const label = () => (open.get() ? 'Hide other changes' : `Show ${plural(others.length, 'other change')}`)
   return div(
     { class: 'flex flex-col gap-2' },
-    show(open, () => div({ class: 'flex flex-col gap-2' }, ...others.map(changeRow))),
+    show(open, () => div({ class: 'flex flex-col gap-2' }, ...others.map(change => changeRow(kit, change)))),
     folded ? div({ class: 'flex' }, quietButton({ size: 'sm', onClick: open.toggle() }, label)) : null,
   )
 }
 
-export const changeList = (changes: BuildChange[]) => {
+export const changeList = (kit: Kit, changes: BuildChange[]) => {
   const notable = changes.filter(isNotable)
   const others = changes.filter(change => !isNotable(change))
-  return div({ class: 'flex flex-col gap-2' }, ...notable.map(changeRow), others.length ? otherChanges(others, notable.length > 0) : null)
+  return div(
+    { class: 'flex flex-col gap-2' },
+    ...notable.map(change => changeRow(kit, change)),
+    others.length ? otherChanges(kit, others, notable.length > 0) : null,
+  )
 }

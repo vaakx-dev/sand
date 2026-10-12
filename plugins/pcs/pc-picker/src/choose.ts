@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
 import { newerSource } from './status'

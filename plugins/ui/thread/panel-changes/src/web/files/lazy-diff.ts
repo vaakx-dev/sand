@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, intersectionObserver, sig } from '@sand/dom'
+import { derive, div, dynamicChild, intersectionObserver, sig } from '@vaakx-dev/vrui'
 
 const margin = '1500px 0px'
 

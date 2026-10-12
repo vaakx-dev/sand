@@ -1,10 +1,10 @@
-import type { NavList } from '@sand/dom'
+import type { NavList, ProjectLook } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export interface ProjectChoice {
   key: string
   name: string
-  icon?: string
+  icon?: ProjectLook
   count: number
 }
 

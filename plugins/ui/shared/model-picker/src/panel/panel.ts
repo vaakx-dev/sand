@@ -1,6 +1,6 @@
-import { derive, div, dynamicChild, effect, hint } from '@sand/dom'
+import { derive, div, dynamicChild, effect } from '@vaakx-dev/vrui'
 import type { PanelOptions, PickerTarget } from '../contract'
-import type { PickerKit } from '../kit'
+import type { Picker, PickerContext } from '../deps'
 import { effortBar, fastRow } from './effort'
 import { modelList } from './list'
 import { rail } from './rail'
@@ -8,7 +8,7 @@ import { readScene } from './scene'
 import { findModels, modelSearch } from './search'
 import { openView, type View } from './view'
 
-const markSeen = ({ ctx }: PickerKit, view: View) =>
+const markSeen = (ctx: PickerContext, view: View) =>
   effect(() => {
     const at = view.at.get()
     if (view.query.get() || view.seen.has(at)) return
@@ -22,8 +22,9 @@ const refocus = (view: View, node: HTMLElement) => {
   node.querySelector<HTMLElement>(`[data-focus="${CSS.escape(view.focus)}"]`)?.focus()
 }
 
-const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => void, flash: boolean) => {
-  const scene = readScene(kit, target, view, close)
+const body = (picker: Picker, target: PickerTarget, view: View, close: () => void, flash: boolean) => {
+  const { hint } = picker.ctx.kit
+  const scene = readScene(picker, target, view, close)
   if (!scene) return hint('Loading…')
   return div(
     {
@@ -34,26 +35,27 @@ const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => voi
       onMount: node => refocus(view, node),
     },
     div({ class: 'flex max-h-80 min-h-0 border-b border-solid border-neutral-700' }, rail(scene, view), modelList(scene, view)),
-    effortBar(kit.ctx, scene, flash),
+    effortBar(picker.ctx, scene, flash),
     fastRow(scene),
     target.extra?.(),
   )
 }
 
-export const modelPanel = (kit: PickerKit, target: PickerTarget, close: () => void, { flash = false }: PanelOptions = {}) => {
-  const view = openView(kit.ctx, target)
-  markSeen(kit, view)
-  kit.pcs.refresh()
+export const modelPanel = (picker: Picker, target: PickerTarget, close: () => void, { flash = false }: PanelOptions = {}) => {
+  const { ctx, changes, pcs } = picker
+  const view = openView(ctx, target)
+  markSeen(ctx, view)
+  pcs.refresh()
   const pickFirst = () => {
-    const scene = readScene(kit, target, view, close)
+    const scene = readScene(picker, target, view, close)
     const first = scene && findModels(scene, view.query.get()).find(model => !scene.offline(scene.source(model)))
     if (first) scene.pick(first)
   }
   return [
-    modelSearch(view, pickFirst),
+    modelSearch(ctx.kit, view, pickFirst),
     dynamicChild(
-      derive(() => `${kit.changes.version.get()}:${kit.pcs.key()}:${JSON.stringify(target.shown())}:${target.key?.() ?? ''}`),
-      () => body(kit, target, view, close, flash),
+      derive(() => `${changes.version.get()}:${pcs.key()}:${JSON.stringify(target.shown())}:${target.key?.() ?? ''}`),
+      () => body(picker, target, view, close, flash),
     ),
     view.menu.view(),
   ]

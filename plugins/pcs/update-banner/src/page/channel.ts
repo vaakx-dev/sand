@@ -1,5 +1,5 @@
 import type { UpdateChannel } from '@sand/host-updates/contract'
-import { segmented, settingsRow, settingsSection } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { Fleet } from '../fleet/model'
 import { isBusy } from '../fleet/status'
 
@@ -14,7 +14,8 @@ const channelDetail = (channel: UpdateChannel | undefined) => {
   return detail ? `${detail} Every PC uses this.` : 'Every PC uses this.'
 }
 
-export const channelSection = (fleet: Fleet) => {
+export const channelSection = (kit: Kit, fleet: Fleet) => {
+  const { segmented, settingsRow, settingsSection } = kit
   const locked = () => fleet.busy.get() || !fleet.channel.get() || fleet.pcs.get().some(pc => isBusy(pc.state))
   const choose = (channel: UpdateChannel) => {
     if (!locked() && channel !== fleet.channel.get()) void fleet.setChannel(channel)

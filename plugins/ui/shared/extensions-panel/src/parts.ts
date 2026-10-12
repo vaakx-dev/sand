@@ -1,22 +1,25 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { chevron, div, dynamicChild, quietButton, rowList, settingsRow, settingsSection, show, sig, span, toggleSwitch, type Pulse } from '@sand/dom'
+import type { Pulse } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { details } from './details'
 import { interfaceState, lockedIds } from './roles'
 
-const partRow = (extension: ExtensionInfo, toggle: () => void) =>
+const partRow = ({ settingsRow, toggleSwitch }: Kit, extension: ExtensionInfo, toggle: () => void) =>
   settingsRow(
     span({ title: extension.summary ?? '' }, extension.label ?? extension.id),
     toggleSwitch({ on: extension.configured, title: extension.configured ? 'Turn off' : 'Turn on', onClick: toggle }),
   )
 
-export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
+export const partsSection = (ctx: Context<'extensions' | 'kit'>, changes: Pulse) => {
+  const { chevron, quietButton, rowList, settingsSection } = ctx.kit
   const state = interfaceState(ctx, changes)
   const open = sig(false)
   const toggle = (extension: ExtensionInfo) => (extension.configured ? ctx.extensions.disable(extension.id) : ctx.extensions.enable(extension.id))
   const parts = state.map(({ extensions, roles }) => {
     const swappable = new Set(roles.swaps().flatMap(group => group.candidates.map(candidate => candidate.id)))
-    const locked = lockedIds(roles)
+    const locked = lockedIds(extensions, roles)
     return extensions.filter(extension => extension.label && !swappable.has(extension.id) && !locked.has(extension.id))
   })
   return div(
@@ -29,7 +32,7 @@ export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
         extension =>
           dynamicChild(
             extension.map(value => `${value.configured}|${value.label}|${value.summary}`),
-            () => partRow(extension.get(), () => toggle(extension.get())),
+            () => partRow(ctx.kit, extension.get(), () => toggle(extension.get())),
           ),
       ),
     ),

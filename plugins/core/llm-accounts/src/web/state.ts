@@ -1,5 +1,6 @@
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { WireRequestOf } from '@sand/protocol'
+import { sig } from '@vaakx-dev/vrui'
 import type { DetectedServer, LoginState } from '../contract'
 import type { Context } from 'drydock'
 

@@ -1,5 +1,6 @@
-import { closeButton, derive, div, dynamicChild, icon, rowButton, secondaryAction, span } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { FileChange } from '../../changes/collect'
 import { blocksOf, selectionKey } from './blocks'
 import { emptyCells, lineCells } from './line'
@@ -14,14 +15,14 @@ const headRow = (text: string) => div({ class: 'flex h-8 items-center bg-neutral
 
 const foldText = ({ id, count }: Fold) => (id === restId ? `Show ${plural(count, 'more line')}` : `Show ${plural(count, 'unmodified line')}`)
 
-const foldRow = (row: Fold, view: DiffView) =>
+const foldRow = ({ icon, rowButton }: Kit, row: Fold, view: DiffView) =>
   rowButton(
     { class: 'h-8 gap-2 bg-neutral-900 px-3 font-sans text-accent-400 hover:bg-neutral-800', onClick: () => view.expand(row.id) },
     icon('unfold', 14),
     foldText(row),
   )
 
-const quoteBar = (view: DiffView) =>
+const quoteBar = ({ closeButton, icon, secondaryAction }: Kit, view: DiffView) =>
   div(
     { class: 'flex items-center gap-2 border-t border-b border-neutral-800 bg-neutral-900 px-3 py-1.5 font-sans' },
     span({ class: 'min-w-0 flex-1 truncate text-neutral-400' }, view.selected()?.label ?? ''),
@@ -29,8 +30,8 @@ const quoteBar = (view: DiffView) =>
     closeButton({ size: 'sm', title: 'Clear selection', onClick: view.clear }),
   )
 
-const withQuote = (row: HTMLElement, lines: (Line | undefined)[], view: DiffView) =>
-  lines.some(line => line && line.at === view.selected()?.to) ? [row, quoteBar(view)] : [row]
+const withQuote = (kit: Kit, row: HTMLElement, lines: (Line | undefined)[], view: DiffView) =>
+  lines.some(line => line && line.at === view.selected()?.to) ? [row, quoteBar(kit, view)] : [row]
 
 const unifiedLine = (line: Line, view: DiffView) => div({ class: 'flex' }, lineCells(line, view.compact ? [line.new ?? line.old] : [line.old, line.new], view))
 
@@ -41,19 +42,19 @@ const splitLine = ([left, right]: Pair, view: DiffView) =>
     right ? lineCells(right, [right.new], view, divider) : emptyCells(divider),
   )
 
-const drawn = (rows: (Row | SplitRow)[], view: DiffView) =>
+const drawn = (kit: Kit, rows: (Row | SplitRow)[], view: DiffView) =>
   rows.flatMap(row => {
     if (row.type === 'head') return [headRow(row.text)]
-    if (row.type === 'fold') return [foldRow(row, view)]
-    if (row.type === 'pair') return withQuote(splitLine(row.pair, view), row.pair, view)
-    return withQuote(unifiedLine(row.line, view), [row.line], view)
+    if (row.type === 'fold') return [foldRow(kit, row, view)]
+    if (row.type === 'pair') return withQuote(kit, splitLine(row.pair, view), row.pair, view)
+    return withQuote(kit, unifiedLine(row.line, view), [row.line], view)
   })
 
-const block = (rows: (Row | SplitRow)[], view: DiffView) => {
+const block = (kit: Kit, rows: (Row | SplitRow)[], view: DiffView) => {
   const key = selectionKey(rows)
   return dynamicChild(
     derive(() => key(view.selected())),
-    () => div({ class: 'contents' }, drawn(rows, view)),
+    () => div({ class: 'contents' }, drawn(kit, rows, view)),
   )
 }
 
@@ -62,7 +63,7 @@ const lineClicks = (view: DiffView) => (event: MouseEvent) => {
   if (cell?.dataset.at) view.select(Number(cell.dataset.at))
 }
 
-export const diffBody = (file: FileChange, view: DiffView) => {
+export const diffBody = (kit: Kit, file: FileChange, view: DiffView) => {
   const rows = rowsOf(file, view.open)
   markWords(rows)
   return div(
@@ -72,7 +73,7 @@ export const diffBody = (file: FileChange, view: DiffView) => {
     },
     div(
       { class: !view.wrap && 'min-w-max' },
-      blocksOf(view.split ? splitRows(rows) : rows).map(part => block(part, view)),
+      blocksOf(view.split ? splitRows(rows) : rows).map(part => block(kit, part, view)),
     ),
   )
 }

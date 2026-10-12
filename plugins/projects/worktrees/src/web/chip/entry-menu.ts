@@ -1,6 +1,7 @@
 import type { WorktreeEntry } from '../../contract'
-import { copyWithNotice, errorMessage, tildeHome, type MenuSpec, type NavAction } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { errorMessage, plural, tildeHome } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { WebContext, WorktreeClient } from '../client'
 
 const lost = (entry: WorktreeEntry) => {

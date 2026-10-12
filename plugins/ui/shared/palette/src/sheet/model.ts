@@ -1,5 +1,7 @@
 import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
-import { batch, derive, effect, errorMessage, listbox, onTimeout, sig, untrack } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { listbox } from '@sand/kit/web'
+import { batch, derive, effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'

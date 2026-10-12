@@ -1,5 +1,9 @@
-import type { NavAction, NavItem } from '@sand/dom'
-import { div, dot, dynamicChild, initials, intent, navActionIcon, navSlot, navTip, plainButton, projectColor, span, stateMark, type NavEntry, type Reorder, type Sig } from '@sand/dom'
+import { navTip } from '@sand/kit'
+import { intent, type NavEntries } from '@sand/kit/web'
+import type { NavAction, NavEntry, NavItem } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
+import { initials, projectColor } from './avatar'
 
 const shape = (narrow: Sig<boolean>, selected: () => boolean) => () => [
   'relative flex shrink-0 items-center gap-3 rounded-lg transition-colors',
@@ -12,28 +16,20 @@ const label = (narrow: Sig<boolean>, strong: () => boolean, text: () => string) 
 
 const corner = { transform: 'translate(50%, -50%)' }
 
-const markOf = (item: NavItem) => {
-  if (item.state === 'draft') return stateMark('draft')
-  if (item.state === 'running') return dot('accent')
-  if (item.state === 'background') return stateMark('agent')
-  if (item.state === 'waiting') return dot('warning')
-  if (item.unread) return stateMark('unread')
-  return null
-}
-
-const badge = (item: NavItem) => {
-  const mark = markOf(item)
+const badge = (kit: Kit, item: NavItem) => {
+  const { navMark } = kit
+  const mark = navMark(item, 10)
   if (!mark) return null
   return span({ class: 'absolute top-0 right-0 flex rounded-full bg-neutral-950 ring-2 ring-neutral-950', style: corner }, mark)
 }
 
 const avatar = (item: NavItem) =>
   span(
-    { class: 'flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold text-white', style: { background: projectColor(item.project ?? item.title) } },
+    { class: 'flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold text-neutral-50', style: { background: projectColor(item.project ?? item.title) } },
     initials(item.title),
   )
 
-export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: (action: NavAction) => void, busy: (id: string) => boolean) =>
+export const actionButton = ({ navActionIcon, plainButton }: Kit, action: Sig<NavAction>, narrow: Sig<boolean>, run: (action: NavAction) => void, busy: (id: string) => boolean) =>
   plainButton(
     {
       class: shape(narrow, () => false),
@@ -44,11 +40,12 @@ export const actionButton = (action: Sig<NavAction>, narrow: Sig<boolean>, run: 
     label(narrow, () => false, () => action.get().label),
   )
 
-export const itemButton = (entry: Sig<NavEntry>, narrow: Sig<boolean>, drag: Reorder) => {
+export const itemButton = (kit: Kit, entry: Sig<NavEntry>, narrow: Sig<boolean>, drag: NavEntries['drag']) => {
+  const { plainButton } = kit
   const item = entry.map(value => value.item)
   const selected = () => entry.get().selected
   return plainButton(
-    { class: shape(narrow, selected), title: item.map(navTip), onClick: () => entry.get().pick(), ...intent(() => entry.get().list.prefetch?.(entry.get().item.id)), ...drag(() => navSlot(entry.get())) },
+    { class: shape(narrow, selected), title: item.map(navTip), onClick: () => entry.get().pick(), ...intent(() => entry.get().list.prefetch?.(entry.get().item.id)), ...drag(() => entry.get()) },
     span(
       { class: 'relative flex shrink-0' },
       dynamicChild(
@@ -57,7 +54,7 @@ export const itemButton = (entry: Sig<NavEntry>, narrow: Sig<boolean>, drag: Reo
       ),
       dynamicChild(
         item.map(value => `${value.state}|${value.unread}`),
-        () => badge(item.get()),
+        () => badge(kit, item.get()),
       ),
     ),
     label(narrow, () => selected() || Boolean(item.get().unread), () => item.get().title),

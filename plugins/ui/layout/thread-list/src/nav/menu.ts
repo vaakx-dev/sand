@@ -1,6 +1,7 @@
 import type { Drafts } from '@sand/composer-card/contract'
-import { attempt, copyWithNotice, openTab, type NavAction } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import { attempt, copyWithNotice, openTab } from '@sand/kit/web'
+import type { NavAction } from '@sand/protocol'
 import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { renamePage } from '../palette/session'

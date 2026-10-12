@@ -1,6 +1,7 @@
 import type { UsageBucket } from '@sand/usage/contract'
-import { div, layer, portal, span, type Child } from '@sand/dom'
 import { periodTitle } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, portal, span, type Child } from '@vaakx-dev/vrui'
 import { metricText, type Metric } from '../../format'
 import { seriesName } from './legend'
 import type { Series } from './series'
@@ -26,7 +27,8 @@ const placement = ({ x, y }: Hover) => {
 const row = (label: Child, value: string) =>
   div({ class: 'flex items-center justify-between gap-4' }, span({ class: 'text-neutral-500' }, label), span({ class: 'text-neutral-100 tabular-nums' }, value))
 
-export const tooltip = (hover: Hover, key: string, bucket: UsageBucket, series: Series[], metric: Metric) => {
+export const tooltip = (kit: Kit, hover: Hover, key: string, bucket: UsageBucket, series: Series[], metric: Metric) => {
+  const { layer } = kit
   const valueAt = (line: Series) => line.values[hover.index] ?? 0
   const total = series.reduce((sum, line) => sum + valueAt(line), 0)
   return portal(
@@ -40,7 +42,7 @@ export const tooltip = (hover: Hover, key: string, bucket: UsageBucket, series: 
         style: placement(hover),
       },
       span({ class: 'mb-1 text-neutral-500' }, periodTitle(key, bucket)),
-      series.map(line => row(seriesName(line), metricText(valueAt(line), metric))),
+      series.map(line => row(seriesName(kit, line), metricText(valueAt(line), metric))),
       series.length > 1 ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, row('Total', metricText(total, metric))) : null,
     ),
   )

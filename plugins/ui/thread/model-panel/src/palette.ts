@@ -1,8 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings } from '@sand/model/contract'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
-import { matching } from '@sand/dom'
-import { sourceName, tokens } from '@sand/kit'
+import { matching, sourceName, tokens } from '@sand/kit'
 import type { Actions, PanelContext } from './actions'
 
 interface Row {

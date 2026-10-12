@@ -1,4 +1,4 @@
-import type { NavItem } from '@sand/dom'
+import type { NavItem } from '@sand/protocol'
 import type { AgentRun } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 

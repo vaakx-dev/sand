@@ -1,5 +1,7 @@
-import { ago, clock, derive, div, dynamicChild, errorRow, exactTime, openTab, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection, show } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { ago, exactTime, plural } from '@sand/kit'
+import { openTab } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { clock, derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import { changeList } from '../changes'
 import type { Fleet } from '../fleet/model'
 import { changesFor } from '../fleet/status'
@@ -22,7 +24,8 @@ const latestLabel = (fleet: Fleet) => {
   return localState(fleet)?.checking ? 'Checking GitHub…' : 'No release found yet'
 }
 
-export const latestSection = (fleet: Fleet, open: () => void) => {
+export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
+  const { errorRow, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection } = kit
   const now = clock(30_000)
   const pending = fleet.pending
   const changes = derive(() => {
@@ -54,7 +57,7 @@ export const latestSection = (fleet: Fleet, open: () => void) => {
     ),
     dynamicChild(
       changes.map(list => list.map(change => change.commit).join()),
-      () => (changes.get().length ? sectionRow({}, div({ class: 'min-w-0 flex-1' }, changeList(changes.get()))) : null),
+      () => (changes.get().length ? sectionRow({}, div({ class: 'min-w-0 flex-1' }, changeList(kit, changes.get()))) : null),
     ),
     show(() => !!checkError(), () => errorRow(checkError)),
   )

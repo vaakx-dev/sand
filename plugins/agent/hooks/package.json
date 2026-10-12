@@ -21,14 +21,15 @@
     }
   },
   "dependencies": {
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/loops": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/watch": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

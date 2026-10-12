@@ -1,10 +1,11 @@
-import { copyButton, div, effect, show, span } from '@sand/dom'
+import { div, effect, show, span } from '@vaakx-dev/vrui'
 import { streamedMarkdown } from '../integrations/streamed'
 import { actionRow, row, type RowMaker } from './row'
 import { thinkingCard } from './thinking'
 
 export const textRow: RowMaker<'text'> = (item, context) =>
   row(`text:${item.key}`, item, (data, railed) => {
+    const { copyButton } = context.kit
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
     const node = div({ class: ['leading-relaxed text-neutral-300 wrap-anywhere', () => (streaming.get() ? '*:animate-fade' : '')], 'data-quote': '' })
@@ -34,6 +35,6 @@ export const thinkingRow: RowMaker<'thinking'> = (item, context) =>
   row(`thinking:${item.key}`, item, data =>
     div(
       { class: 'mb-3' },
-      thinkingCard({ streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) }),
+      thinkingCard(context.kit, { streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) }),
     ),
   )

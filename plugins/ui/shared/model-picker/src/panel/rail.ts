@@ -1,5 +1,6 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, dot, icon, keys, modelLogo, plainButton, show, span, type Child } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, keys, show, span, type Child } from '@vaakx-dev/vrui'
 import type { Scene } from './scene'
 import { sourceTitle } from './source'
 import { FAVOURITES, goTo, type View } from './view'
@@ -13,7 +14,7 @@ interface Entry {
   key?: boolean
 }
 
-const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
+const railButton = ({ dot, icon, plainButton }: Kit, entry: Entry, view: View, unselected?: () => boolean) => {
   const selected = () => !view.query.get() && view.at.get() === entry.id
   return plainButton(
     {
@@ -37,6 +38,7 @@ const railButton = (entry: Entry, view: View, unselected?: () => boolean) => {
 }
 
 const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
+  const { modelLogo } = scene.kit
   const offline = scene.offline(source)
   return {
     id: source.id,
@@ -66,6 +68,8 @@ const arrows = keys({
 })
 
 export const rail = (scene: Scene, view: View) => {
+  const { kit } = scene
+  const { icon } = kit
   const local = scene.sources.filter(source => !source.via)
   const remote = scene.sources.filter(source => source.via)
   const favourites: Entry = { id: FAVOURITES, title: 'Favourites', glyph: span({ class: 'inline-flex text-warning-400' }, icon('star', 16)) }
@@ -78,10 +82,10 @@ export const rail = (scene: Scene, view: View) => {
       class: 'flex shrink-0 flex-col items-center gap-1 overflow-auto border-r border-solid border-neutral-700 px-2 pb-2',
       onKeyDown: arrows,
     },
-    railButton(favourites, view, unselected),
+    railButton(kit, favourites, view, unselected),
     local.length > 0 && divider(),
-    local.map(source => railButton(sourceEntry(scene, source), view)),
+    local.map(source => railButton(kit, sourceEntry(scene, source), view)),
     remote.length > 0 && divider(),
-    remote.map(source => railButton(sourceEntry(scene, source), view)),
+    remote.map(source => railButton(kit, sourceEntry(scene, source), view)),
   )
 }

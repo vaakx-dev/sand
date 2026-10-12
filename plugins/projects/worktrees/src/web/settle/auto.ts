@@ -1,6 +1,5 @@
 import type { SettleResult } from '../../contract'
-import { errorMessage } from '@sand/dom'
-import { joinDisposers, plural } from '@sand/kit'
+import { errorMessage, joinDisposers, plural } from '@sand/kit'
 import type {} from '@sand/github/contract'
 import type { Thread } from '@sand/web-client/contract'
 import type { WebContext, WorktreeClient } from '../client'

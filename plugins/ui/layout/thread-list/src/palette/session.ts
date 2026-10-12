@@ -1,7 +1,7 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { copyWithNotice } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
 import type { Context } from 'drydock'
 
 export const renamePage = (ctx: Context<'threads'>, thread: Thread): PalettePage => ({

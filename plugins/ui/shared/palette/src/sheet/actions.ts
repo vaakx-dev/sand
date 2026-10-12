@@ -1,5 +1,5 @@
 import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
-import type { MenuSpec } from '@sand/dom'
+import type { MenuSpec } from '@sand/protocol'
 
 export const actionsPage = (item: PaletteItem): PalettePage => ({
   id: `actions:${item.id}`,

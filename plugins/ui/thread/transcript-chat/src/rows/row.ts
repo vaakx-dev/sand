@@ -1,6 +1,8 @@
 import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
 import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '@sand/transcript-parts/contract'
-import { chevron, div, plainButton, type Child, type ContextMenu, type NavAction, type Sig } from '@sand/dom'
+import type { NavAction } from '@sand/protocol'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import { div, type Child, type Sig } from '@vaakx-dev/vrui'
 
 export interface Row<T = unknown> {
   key: string
@@ -9,6 +11,7 @@ export interface Row<T = unknown> {
 }
 
 export interface RowContext {
+  kit: Kit
   registry: RendererRegistry
   states: OpenStates
   thread: string
@@ -28,7 +31,7 @@ export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({
 
 export const actionRow = (extra: string, ...children: Child[]) => div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100', extra] }, ...children)
 
-export const worked = (toggle: () => void, open: Sig<boolean>, ...children: Child[]) =>
+export const worked = ({ chevron, plainButton }: Kit, toggle: () => void, open: Sig<boolean>, ...children: Child[]) =>
   plainButton(
     { class: 'inline-flex h-6 items-center gap-2 rounded-md px-1 text-sm text-neutral-400 hover:text-neutral-300', onClick: toggle },
     ...children,

@@ -1,5 +1,6 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { copyWithNotice, div, dynamicChild, el, rowList, secondaryAction, sectionRow, settingsSection, span } from '@sand/dom'
+import { copyWithNotice } from '@sand/kit/web'
+import { div, dynamicChild, el, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { cardModel, extensionCard } from './card'
 import { lockedIds, type InterfaceState, type Roles } from './roles'
@@ -17,15 +18,21 @@ const roleMap = (roles: Roles) =>
     }),
   )
 
-const resetAction = (ctx: Context<'extensions'>) =>
-  div(
+const resetAction = (ctx: Context<'extensions' | 'kit'>) => {
+  const { secondaryAction } = ctx.kit
+  return div(
     { class: 'flex items-center gap-3' },
     span({ class: 'text-xs text-neutral-500' }, `build ${ctx.extensions.build().slice(-8)}`),
     secondaryAction({ size: 'sm', onClick: () => ctx.extensions.reset() }, 'Reset to defaults'),
   )
+}
 
-export const details = (ctx: Context<'extensions'>, state: InterfaceState, toggle: (extension: ExtensionInfo) => void) => {
-  const cards = state.map(({ extensions, roles }) => extensions.map(extension => cardModel(extension, roles, lockedIds(roles).has(extension.id))))
+export const details = (ctx: Context<'extensions' | 'kit'>, state: InterfaceState, toggle: (extension: ExtensionInfo) => void) => {
+  const { rowList, sectionRow, settingsSection } = ctx.kit
+  const cards = state.map(({ extensions, roles }) => {
+    const locked = lockedIds(extensions, roles)
+    return extensions.map(extension => cardModel(extension, roles, locked.has(extension.id)))
+  })
   return div(
     { class: 'flex w-full flex-col gap-6' },
     settingsSection(
@@ -40,7 +47,7 @@ export const details = (ctx: Context<'extensions'>, state: InterfaceState, toggl
         card =>
           dynamicChild(
             card.map(value => JSON.stringify(value)),
-            () => extensionCard(card.get(), () => toggle(card.get().extension), () => void copyWithNotice(ctx.notify, card.get().extension.id, 'id')),
+            () => extensionCard(ctx.kit, card.get(), () => toggle(card.get().extension), () => void copyWithNotice(ctx.notify, card.get().extension.id, 'id')),
           ),
       ),
     ),

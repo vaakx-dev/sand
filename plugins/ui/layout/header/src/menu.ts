@@ -1,5 +1,7 @@
-import { copyWithNotice, menuSeparator, popoverItem, type Child, type IconName } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { IconName, Kit } from '@sand/ui-kit/contract'
+import type { Child } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 interface Entry {
@@ -8,7 +10,7 @@ interface Entry {
   run(): void | Promise<void>
 }
 
-const entryView = (entry: Entry, close: () => void) =>
+const entryView = ({ popoverItem }: Kit, entry: Entry, close: () => void) =>
   popoverItem(
     {
       icon: entry.icon,
@@ -45,13 +47,14 @@ const threadEntries = (ctx: Context, agent: boolean) => {
   return entries
 }
 
-export const sessionMenu = (ctx: Context, close: () => void): Child[] => {
+export const sessionMenu = (ctx: Context<'kit'>, close: () => void): Child[] => {
+  const { menuSeparator } = ctx.kit
   const thread = ctx.threads?.current()
   const session = thread ? threadEntries(ctx, thread.info.kind === 'agent') : []
   const app = [...command(ctx, 'devices', 'Connect a device', 'smartphone'), ...command(ctx, 'extensions', 'Interface', 'gear')]
   return [
-    ...session.map(entry => entryView(entry, close)),
+    ...session.map(entry => entryView(ctx.kit, entry, close)),
     session.length && app.length ? menuSeparator() : null,
-    ...app.map(entry => entryView(entry, close)),
+    ...app.map(entry => entryView(ctx.kit, entry, close)),
   ]
 }

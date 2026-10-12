@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path'
+import { join } from 'node:path'
 import type { Extension } from '../extensions/discover'
 import { compress, type Encoded } from './compress'
 import { manifestSource, virtualModules } from './virtual'
@@ -15,16 +15,14 @@ export interface Bundle {
 
 const placeholder = 'sand-build-id-placeholder'
 
-const shared = () => {
-  const dom = Bun.resolveSync('@sand/dom', import.meta.dir)
-  return {
-    drydock: Bun.resolveSync('drydock/browser', import.meta.dir),
-    '@sand/dom': dom,
-    '@sand/kit': Bun.resolveSync('@sand/kit', import.meta.dir),
-    '@sand/protocol': Bun.resolveSync('@sand/protocol', import.meta.dir),
-    '@vaakx-dev/vrui': Bun.resolveSync('@vaakx-dev/vrui', dirname(dom)),
-  }
-}
+const shared = (extensions: Extension[]) => ({
+  drydock: Bun.resolveSync('drydock/browser', import.meta.dir),
+  '@sand/kit': Bun.resolveSync('@sand/kit', import.meta.dir),
+  '@sand/kit/web': Bun.resolveSync('@sand/kit/web', import.meta.dir),
+  '@sand/protocol': Bun.resolveSync('@sand/protocol', import.meta.dir),
+  '@vaakx-dev/vrui': Bun.resolveSync('@vaakx-dev/vrui', import.meta.dir),
+  ...Object.fromEntries([...extensions].sort((a, b) => Number(b.builtin) - Number(a.builtin)).flatMap(extension => Object.entries(extension.modules))),
+})
 
 const compile = async (extensions: Extension[], bundled: Extension[], problems: string[]) => {
   const output = await Bun.build({
@@ -32,7 +30,7 @@ const compile = async (extensions: Extension[], bundled: Extension[], problems: 
     target: 'browser',
     conditions: ['browser'],
     minify: true,
-    plugins: [virtualModules(manifestSource(placeholder, extensions, bundled, problems), shared())],
+    plugins: [virtualModules(manifestSource(placeholder, extensions, bundled, problems), shared(extensions))],
     throw: false,
   })
   if (!output.success) return { error: output.logs.map(String).join('\n') }

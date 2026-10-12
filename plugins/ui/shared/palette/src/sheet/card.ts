@@ -1,7 +1,9 @@
 import type { PaletteCard, PaletteReview } from '../contract'
-import { delayed, div, dynamicChild, icon, primaryAction, show, span, spinner, type Sig } from '@sand/dom'
+import { delayed } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 
-export const cardView = (card: PaletteCard) =>
+export const cardView = ({ icon }: Kit, card: PaletteCard) =>
   div(
     { class: 'mx-2 mb-1 rounded-xl bg-neutral-900 px-3 py-2' },
     card.label ? div({ class: 'mb-1 text-xs font-medium text-neutral-500' }, card.label) : null,
@@ -16,7 +18,7 @@ export const cardView = (card: PaletteCard) =>
     ),
   )
 
-export const reviewView = (review: PaletteReview, busy: Sig<boolean>, progress: Sig<string>, confirm: () => void) =>
+export const reviewView = ({ icon, primaryAction, spinner }: Kit, review: PaletteReview, busy: Sig<boolean>, progress: Sig<string>, confirm: () => void) =>
   div(
     { class: 'mx-3 mt-1 mb-3 rounded-xl bg-neutral-900 px-4 py-3' },
     div(

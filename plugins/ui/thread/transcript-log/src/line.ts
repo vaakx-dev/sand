@@ -1,6 +1,6 @@
 import type { Markdown } from '@sand/markdown/contract'
 import type { ToolStepOptions, ToolView, TranscriptParts } from '@sand/transcript-parts/contract'
-import { div, dynamicChild, span, untrack, type Sig } from '@sand/dom'
+import { div, dynamicChild, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Line, LineTone } from './lines'
 
 export interface LineContext {

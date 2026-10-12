@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/dom'
+import type { NavAction } from '@sand/protocol'
 import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { backLabel, parseWhen, presets } from './when'

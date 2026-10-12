@@ -1,5 +1,6 @@
 import type { WorktreeState } from '../contract'
-import { placeCache, sig } from '@sand/dom'
+import { placeCache } from '@sand/kit/web'
+import { sig } from '@vaakx-dev/vrui'
 import type { WebContext, WorktreeClient } from './client'
 
 export const createStates = (ctx: WebContext, client: WorktreeClient) => {

@@ -1,5 +1,7 @@
 import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
-import { derive, effect, listbox, matching, sig, untrack } from '@sand/dom'
+import { matching } from '@sand/kit'
+import { listbox } from '@sand/kit/web'
+import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 
 const searchText = (item: PickItem<unknown>) => [item.label, item.detail, item.search].filter(Boolean).join(' ')
 

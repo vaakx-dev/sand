@@ -1,4 +1,4 @@
-import { div, sig, span, stored, type Sig } from '@sand/dom'
+import { div, sig, span, stored, type Sig } from '@vaakx-dev/vrui'
 
 export type Edge = 'side' | 'aside'
 

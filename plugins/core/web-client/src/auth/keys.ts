@@ -1,4 +1,4 @@
-import { listen } from '@sand/dom'
+import { listen } from '@vaakx-dev/vrui'
 import { isRecord } from '@sand/kit'
 import { loadRecord, saveJson } from '../integrations/storage'
 

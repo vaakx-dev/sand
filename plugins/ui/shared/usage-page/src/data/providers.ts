@@ -1,4 +1,3 @@
-import { providerColor } from '@sand/dom'
 import { grouped } from '@sand/kit'
 import type { Account } from './types'
 
@@ -16,9 +15,4 @@ export const providersOf = (accounts: Account[]) => {
     provider.cost += account.cost
   }
   return [...byId.values()].sort((a, b) => b.cost - a.cost)
-}
-
-export const colorsOf = (accounts: Account[]) => {
-  const order = providersOf(accounts).map(provider => provider.id)
-  return (provider: string) => providerColor(provider, order.indexOf(provider))
 }

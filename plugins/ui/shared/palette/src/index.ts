@@ -1,5 +1,6 @@
 import type { Palette, PalettePage, PaletteSource } from './contract'
-import { floating, show, sig } from '@sand/dom'
+import { floating } from '@sand/kit/web'
+import { show, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { commandSource } from './commands'
 import { merged, rootPage } from './root'
@@ -8,6 +9,7 @@ import { paletteSheet } from './sheet/sheet'
 export default definePlugin({
   name: 'palette',
   description: 'Command palette (mod+k): threads, projects and commands, with pages you step through and go back from',
+  inject: ['kit'],
   uses: {
     commands: 'commands are not listed',
     keys: 'no mod+k shortcut; use the Search action',

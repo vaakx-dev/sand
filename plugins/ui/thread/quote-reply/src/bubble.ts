@@ -1,11 +1,13 @@
-import { derive, div, icon, layer, media, onDocument, onWindow, plainButton, show, sig, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, media, onDocument, onWindow, show, sig, span } from '@vaakx-dev/vrui'
 import { clearSelection, readSelection, type Picked } from './integrations/selection'
 import { fallbackWidth, spotFor, type Spot } from './place'
 
 const tail = (spot: () => Spot | undefined) =>
   span({ class: ['absolute left-4 h-2 w-2 rotate-45 bg-neutral-800 group-hover:bg-neutral-700', () => (spot()?.under ? '-top-1' : '-bottom-1')] })
 
-export const replyBubble = (quote: (text: string) => void) => {
+export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
+  const { icon, layer, plainButton } = kit
   const picked = sig<Picked | undefined>(undefined)
   const touch = media('(pointer: coarse)')
   const width = sig(fallbackWidth)

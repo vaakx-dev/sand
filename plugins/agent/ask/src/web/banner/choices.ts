@@ -1,13 +1,15 @@
 import type { AskOption, AskQuestion } from '../../contract'
-import { div, el, sig, span, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, el, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 import { marker } from './marker'
 import { optionButton } from './option'
 
-const card = (state: AskState, actions: AskActions, question: AskQuestion, option: AskOption, index: number, focused: Sig<number>) => {
+const card = (kit: Kit, state: AskState, actions: AskActions, question: AskQuestion, option: AskOption, index: number, focused: Sig<number>) => {
   const on = () => state.draft.get().picked.includes(index)
   return optionButton(
+    kit,
     on,
     false,
     {
@@ -16,7 +18,7 @@ const card = (state: AskState, actions: AskActions, question: AskQuestion, optio
       onPointerEnter: () => focused.set(index),
       onFocus: () => focused.set(index),
     },
-    marker(question.type !== 'multi', String(index + 1), on),
+    marker(kit, question.type !== 'multi', String(index + 1), on),
     span(
       { class: 'flex min-w-0 flex-col' },
       span(
@@ -36,10 +38,10 @@ const preview = (question: AskQuestion, focused: Sig<number>) =>
     () => question.options[focused.get()]?.preview ?? '',
   )
 
-export const choicesView = (state: AskState, actions: AskActions, question: AskQuestion) => {
+export const choicesView = (kit: Kit, state: AskState, actions: AskActions, question: AskQuestion) => {
   const first = state.draft.get().picked[0] ?? Math.max(0, question.options.findIndex(option => option.recommended))
   const focused = sig(first)
-  const cards = question.options.map((option, index) => card(state, actions, question, option, index, focused))
+  const cards = question.options.map((option, index) => card(kit, state, actions, question, option, index, focused))
   if (!question.options.some(option => option.preview)) return div({ class: 'grid grid-cols-1 gap-2 sm:grid-cols-2' }, ...cards)
   return div(
     { class: 'grid grid-cols-1 gap-2 md:grid-cols-2' },

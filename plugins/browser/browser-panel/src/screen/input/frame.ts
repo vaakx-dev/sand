@@ -1,4 +1,4 @@
-import { onRaf } from '@sand/dom'
+import { onRaf } from '@vaakx-dev/vrui'
 
 export const perFrame = <T>(send: (value: T) => void, merge: (previous: T, next: T) => T = (_, next) => next) => {
   let pending: T | undefined

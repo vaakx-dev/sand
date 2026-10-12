@@ -1,5 +1,5 @@
-import type { NavAction } from '@sand/dom'
 import { errorMessage } from '@sand/kit'
+import type { NavAction } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export const rewriteActions = (ctx: Context<'threads'>, thread: string, entry: string, text: string): NavAction[] => {

@@ -31,11 +31,10 @@
       "plugins"
     ],
     "ui": [
-      "@vaakx-dev/vrui",
-      "@sand/dom"
+      "@vaakx-dev/vrui"
     ],
     "browser": [
-      "packages/dom/src/**",
+      "packages/kit/src/web/**",
       "plugins/*/*/src/web/**",
       "plugins/browser/browser-panel/src/**",
       "plugins/ui/*/*/src/web/**",
@@ -46,6 +45,7 @@
       "plugins/projects/find-files/src/**",
       "plugins/projects/new-project/src/**",
       "plugins/ui/layout/*/src/**",
+      "plugins/ui/look/*/src/**",
       "plugins/ui/shared/*/src/**",
       "plugins/ui/thread/composer-card/src/**",
       "plugins/ui/thread/context-ring/src/**",

@@ -1,10 +1,12 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, checkMark, contextMenu, div, rowAction, rowButton, show, span, untrack, type Sig } from '@sand/dom'
 import { tokens } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { starButton } from '../star'
 import type { Catalog } from './catalog'
 
-export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: string) => void) => {
+export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: (id: string) => void) => {
+  const { badge, checkMark, contextMenu, rowAction, rowButton } = kit
   const label = untrack(() => row.get().label)
   const shown = () => !row.get().hidden
   const added = row.map(model => !!model.added)
@@ -41,7 +43,7 @@ export const modelRow = (row: Sig<ModelInfo>, catalog: Catalog, keep: (id: strin
       }),
     ),
     show(added, () => rowAction({ label: 'Remove', danger: true, run: () => void catalog.remove(row.get()) })),
-    starButton(label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
+    starButton(kit, label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
     menu.view(),
   )
 }

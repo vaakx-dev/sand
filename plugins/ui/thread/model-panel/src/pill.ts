@@ -1,11 +1,13 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import { chipButton, chipPopover, div, dynamicChild, icon, modelLogo, pressOpens, show, shrinkBadge, sig, SPACE, span, type Pulse } from '@sand/dom'
 import { sourceName } from '@sand/kit'
+import { pressOpens, type Pulse } from '@sand/kit/web'
+import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './actions'
 
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
 export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
+  const { chipButton, chipPopover, icon, modelLogo, shrinkBadge } = ctx.kit
   const open = sig(false)
   let flash = false
   const close = () => open.set(false)

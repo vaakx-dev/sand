@@ -1,4 +1,5 @@
-import { div, icon, listen, show, sig, span, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, listen, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Files } from './files'
 
 const hasFiles = (event: DragEvent) => [...(event.dataTransfer?.types ?? [])].includes('Files')
@@ -37,7 +38,7 @@ export const catchFiles = (files: Files) => {
 
 const placed = (rect: DOMRect) => ({ left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px` })
 
-export const chatDrop = (dropping: Sig<boolean>, area: () => DOMRect | undefined) =>
+export const chatDrop = ({ icon }: Kit, dropping: Sig<boolean>, area: () => DOMRect | undefined) =>
   show(dropping, () => {
     const rect = area()
     return div(

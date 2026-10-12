@@ -1,4 +1,5 @@
-import { callout, copyButton, derive, div, dynamicChild, itemRow, rowAction, secondaryAction, settingsSection, span, type Child } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, span, type Child } from '@vaakx-dev/vrui'
 import type { GithubCli, GithubState } from '../contract'
 import { githubTile } from './mark'
 import type { GithubControl } from './state'
@@ -7,22 +8,30 @@ const reach = (pcs: number) => (pcs > 1 ? `Agents on all ${pcs} PCs` : 'Agents o
 
 const usedBy = (state: GithubState) => [state.from && `From ${state.from}`, `${reach(state.pcs)} use this login for gh and git push`].filter(Boolean).join(' · ')
 
-const row = (title: Child, detail: Child, ...controls: Child[]) => itemRow({}, githubTile(), title, detail, ...controls)
+const row = (kit: Kit, title: Child, detail: Child, ...controls: Child[]) => {
+  const { itemRow } = kit
+  return itemRow({}, githubTile(kit), title, detail, ...controls)
+}
 
-const signedInRow = (state: GithubState, control: GithubControl) =>
-  row(state.login, usedBy(state), rowAction({ label: 'Sign out', danger: true, run: () => void control.run({ type: 'github.logout' }) }))
+const signedInRow = (kit: Kit, state: GithubState, control: GithubControl) => {
+  const { rowAction } = kit
+  return row(kit, state.login, usedBy(state), rowAction({ label: 'Sign out', danger: true, run: () => void control.run({ type: 'github.logout' }) }))
+}
 
-const signedOutRow = ({ gh }: GithubState, signIn: () => void) =>
-  gh.installed
-    ? row('GitHub', 'Sign in so agents on every PC can use gh and git push', secondaryAction({ size: 'sm', onClick: signIn }, 'Sign in'))
-    : row('GitHub', 'Install gh on this PC to sign in here, or sign in on another PC')
+const signedOutRow = (kit: Kit, { gh }: GithubState, signIn: () => void) => {
+  const { secondaryAction } = kit
+  return gh.installed
+    ? row(kit, 'GitHub', 'Sign in so agents on every PC can use gh and git push', secondaryAction({ size: 'sm', onClick: signIn }, 'Sign in'))
+    : row(kit, 'GitHub', 'Install gh on this PC to sign in here, or sign in on another PC')
+}
 
 const warningText = (gh: GithubCli) =>
   gh.installed
     ? `gh ${gh.version} on this PC can't attach screenshots to PRs. Update to 2.99 or newer.`
     : "gh isn't installed on this PC, so agents here can't run gh."
 
-const warning = (gh: GithubCli) => {
+const warning = (kit: Kit, gh: GithubCli) => {
+  const { callout, copyButton } = kit
   const { command } = gh
   if (!command) return null
   return callout(
@@ -36,14 +45,16 @@ const warning = (gh: GithubCli) => {
   )
 }
 
-const view = (state: GithubState, control: GithubControl, signIn: () => void) =>
-  div(
+const view = (kit: Kit, state: GithubState, control: GithubControl, signIn: () => void) => {
+  const { settingsSection } = kit
+  return div(
     { class: 'flex flex-col gap-2' },
-    settingsSection({ title: 'GitHub' }, state.login ? signedInRow(state, control) : signedOutRow(state, signIn)),
-    warning(state.gh),
+    settingsSection({ title: 'GitHub' }, state.login ? signedInRow(kit, state, control) : signedOutRow(kit, state, signIn)),
+    warning(kit, state.gh),
   )
+}
 
-export const githubSection = (control: GithubControl, signIn: () => void) => {
+export const githubSection = (kit: Kit, control: GithubControl, signIn: () => void) => {
   void control.load()
   return dynamicChild(
     derive(() => {
@@ -52,7 +63,7 @@ export const githubSection = (control: GithubControl, signIn: () => void) => {
     }),
     () => {
       const state = control.state.get()
-      return state ? view(state, control, signIn) : null
+      return state ? view(kit, state, control, signIn) : null
     },
   )
 }

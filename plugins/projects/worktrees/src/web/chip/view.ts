@@ -1,5 +1,6 @@
 import type { Composer } from '@sand/composer-card/contract'
-import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, effect, icon, pressOpens, show, sig, span, untrack, type Pulse } from '@sand/dom'
+import { pressOpens, type Pulse } from '@sand/kit/web'
+import { derive, div, dynamicChild, effect, show, sig, span, untrack } from '@vaakx-dev/vrui'
 import type { WebContext, WorktreeClient } from '../client'
 import type { States } from '../states'
 import type { Choices } from './choices'
@@ -8,6 +9,7 @@ import { draftMenu, type EntryMenus } from './menu'
 import { chipLabel, chipTarget } from './target'
 
 export const createChip = (ctx: WebContext, client: WorktreeClient, states: States, choices: Choices, changes: Pulse) => {
+  const { chipButton, chipPopover, contextMenu, icon } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const target = changes.read(() => {

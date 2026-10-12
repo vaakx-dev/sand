@@ -1,5 +1,5 @@
 import type { OpenStates } from '../contract'
-import { sig, type Sig } from '@sand/dom'
+import { sig, type Sig } from '@vaakx-dev/vrui'
 
 export const openStates = (): OpenStates => {
   const states = new Map<string, Sig<boolean>>()

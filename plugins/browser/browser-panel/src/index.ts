@@ -1,5 +1,6 @@
-import { attempt, owned, shownPanel, sig } from '@sand/dom'
+import { attempt, owned, shownPanel } from '@sand/kit/web'
 import type { UserContent } from '@sand/messages'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { browserPanel } from './panel'
 import { tabModel } from './tab/model'
@@ -7,7 +8,7 @@ import { tabModel } from './tab/model'
 export default definePlugin({
   name: 'browser-panel',
   description: 'Browser panel: a live headless Chrome tab you and the agent share, with input, pick, screenshot and console',
-  inject: ['threads', 'wire'],
+  inject: ['threads', 'wire', 'kit'],
   uses: {
     panels: 'draws its own plain panel and cannot open itself when the agent starts browsing',
     composer: 'screenshots and picked elements cannot be attached',
@@ -26,7 +27,7 @@ export default definePlugin({
       ctx,
       { id: 'browser', title: 'Browser', icon: 'globe', order: 5 },
       () =>
-        browserPanel({
+        browserPanel(ctx.kit, {
           tab,
           visible,
           attach,

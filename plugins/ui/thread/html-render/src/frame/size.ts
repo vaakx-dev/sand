@@ -1,4 +1,4 @@
-import { listen, resizeObserver } from '@sand/dom'
+import { listen, resizeObserver } from '@vaakx-dev/vrui'
 import { sizeChanged } from '../page/protocol'
 import { post } from './post'
 

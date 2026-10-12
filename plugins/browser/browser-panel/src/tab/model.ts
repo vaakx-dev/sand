@@ -1,6 +1,6 @@
 import type { AgentAction, Driver, HistoryAction, Logs, Picked, Point, TabState, UserInput, Viewport } from '@sand/browser-engine/contract'
-import { derive, sig, untrack } from '@sand/dom'
 import type { WireRequest } from '@sand/protocol'
+import { derive, sig, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { rootKey, sameKey, type TabKey } from './root'
 

@@ -1,6 +1,6 @@
 import type { Composer, ComposerCapture } from '@sand/composer-card/contract'
 import type { AskAnswer } from '../contract'
-import { effect, onTimeout, sig } from '@sand/dom'
+import { effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { choicesOf } from '../reply'
 import { askBanner } from './banner/panel'
@@ -23,7 +23,7 @@ const placeholder = (state: AskState) => {
 
 const digit = (event: KeyboardEvent) => !event.altKey && !event.ctrlKey && !event.metaKey && /^[1-9]$/.test(event.key)
 
-export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAsk) => {
+export const openAsk = (ctx: Context<'wire' | 'kit'>, composer: Composer, ask: PendingAsk) => {
   const state = createState(ask.questions)
   const pickedAt = sig<number | undefined>(undefined)
 
@@ -85,6 +85,6 @@ export const openAsk = (ctx: Context<'wire'>, composer: Composer, ask: PendingAs
     },
   }
 
-  const disposers = [composer.slot('banner', () => askBanner(state, actions), 10), composer.capture(capture)]
+  const disposers = [composer.slot('banner', () => askBanner(ctx.kit, state, actions), 10), composer.capture(capture)]
   return () => disposers.forEach(dispose => void dispose())
 }

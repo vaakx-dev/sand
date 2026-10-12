@@ -1,4 +1,4 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { interfacePage } from './choices'
 import { partsSection } from './parts'
@@ -6,7 +6,7 @@ import { partsSection } from './parts'
 export default definePlugin({
   name: 'extensions-panel',
   description: 'Interface settings page for chat style, sidebar and composer choices, plus interface parts to turn on or off and every extension with its roles on the Plugins page',
-  inject: ['extensions', 'settings'],
+  inject: ['extensions', 'kit', 'settings'],
   uses: {
     commands: 'no /extensions command',
     notify: 'copying an id shows no message',

@@ -1,6 +1,5 @@
 import type { PalettePage } from '@sand/palette/contract'
-import { matching } from '@sand/dom'
-import { folderName } from '@sand/kit'
+import { folderName, matching } from '@sand/kit'
 import type { Context } from 'drydock'
 import { insertFile } from './insert'
 

@@ -1,4 +1,5 @@
-import { effect, owned, place, untrack } from '@sand/dom'
+import { owned, place } from '@sand/kit/web'
+import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin, type Dispose } from 'drydock'
 import { bannerKind, bannerView } from './banner'
 import { createFleet } from './fleet/model'
@@ -8,7 +9,7 @@ import { updateSheet } from './sheet/view'
 export default definePlugin({
   name: 'update-banner',
   description: 'Tells you what a newer sand changes and updates all your PCs to it when you click Update',
-  inject: ['wire', 'machines'],
+  inject: ['wire', 'machines', 'kit'],
   uses: {
     layout: 'the update notice sits loose above the app',
     notify: 'no message when an update request fails',
@@ -25,17 +26,17 @@ export default definePlugin({
     }
     const open = () => {
       close()
-      unplaceSheet = place(ctx, 'overlay', () => updateSheet(fleet, close), 100)
+      unplaceSheet = place(ctx, 'overlay', () => updateSheet(ctx.kit, fleet, close), 100)
     }
     ctx.effect(() =>
       effect(() => {
         if (!shown.get()) return
-        const remove = untrack(() => place(ctx, 'top', () => bannerView(fleet, () => kind.get(), open), -1))
+        const remove = untrack(() => place(ctx, 'top', () => bannerView(ctx.kit, fleet, () => kind.get(), open), -1))
         return () => void remove()
       }),
     )
     ctx.watch('settings', settings =>
-      settings?.page({ id: 'updates', label: 'Updates', icon: 'reload', order: 70, render: () => updatesPage(fleet, open) }),
+      settings?.page({ id: 'updates', label: 'Updates', icon: 'reload', order: 70, render: () => updatesPage(ctx.kit, fleet, open) }),
     )
   },
 })

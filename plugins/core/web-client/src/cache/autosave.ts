@@ -1,4 +1,5 @@
-import { listen, owned } from '@sand/dom'
+import { owned } from '@sand/kit/web'
+import { listen } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { after } from '../detached'
 import { onIdle } from '../integrations/idle'

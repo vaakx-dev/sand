@@ -1,4 +1,4 @@
-import { onTimeout, type Sig } from '@sand/dom'
+import { onTimeout, type Sig } from '@vaakx-dev/vrui'
 
 const renewMargin = 30_000
 const minRenew = 60_000

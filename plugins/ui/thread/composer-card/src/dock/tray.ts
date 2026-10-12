@@ -1,4 +1,4 @@
-import { div, SPACE, span } from '@sand/dom'
+import { div, SPACE, span } from '@vaakx-dev/vrui'
 import type { Slots } from './slots'
 
 const tuck = SPACE['4']

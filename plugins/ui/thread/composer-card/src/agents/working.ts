@@ -1,5 +1,6 @@
-import { derive, pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import type { AgentRun } from '@sand/web-client/contract'
+import { derive } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { runMenu } from './menu'
 

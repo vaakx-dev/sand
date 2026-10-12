@@ -1,4 +1,4 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import type { Context } from 'drydock'
 import type { Pc } from './data/types'
 

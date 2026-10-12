@@ -1,5 +1,5 @@
-import { sig } from '@sand/dom'
 import type { WireRequestOf } from '@sand/protocol'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { GithubFound, GithubState } from '../contract'
 

@@ -1,7 +1,9 @@
-import { copyButton, derive, div, dynamicChild, effect, errorMessage, errorText, note, onTimeout, segmented, show, sig, span, untrack, type Child, type Choice, type Sig } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { HostRoute } from '@sand/host-gateway/contract'
 import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
+import { errorMessage } from '@sand/kit'
+import type { Choice, Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, effect, onTimeout, show, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { healthDetails } from '../health/details'
 import { listenBox } from '../pair/listen'
@@ -37,17 +39,20 @@ const guess = (source: DeviceSource) => {
   return (platform && platforms[platform]) || agentSystem()
 }
 
-const failedBlock = (list: InstallProgress[]) => {
+const failedBlock = (kit: Kit, list: InstallProgress[]) => {
+  const { errorText, note } = kit
   const last = list.at(-1)
   return div(
     { class: 'flex flex-col gap-3 rounded-xl bg-neutral-900 p-3' },
     errorText(last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
-    last?.health ? healthDetails(last.health) : null,
+    last?.health ? healthDetails(kit, last.health) : null,
     note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Devices.'),
   )
 }
 
-export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (list: InstallProgress[]) => void, running: Sig<boolean>) => {
+export const installStep = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, ready: (list: InstallProgress[]) => void, running: Sig<boolean>) => {
+  const { kit } = ctx
+  const { copyButton, note, segmented } = kit
   const os = sig<InstallSystem>(guess(source))
   const via = sig<InstallVia>('lan')
   const ticket = installTicket(ctx)
@@ -90,7 +95,7 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
 
   const reach = (key: string | undefined) => {
     if (key === undefined) return note('Looking up the addresses of this PC…')
-    if (!key) return listenBox('sand only listens on this computer, so the new PC can’t reach it. Turn on network listening to install over your home wifi.', source.listenOnLan)
+    if (!key) return listenBox(kit, 'sand only listens on this computer, so the new PC can’t reach it. Turn on network listening to install over your home wifi.', source.listenOnLan)
     if (!key.includes(' ')) return null
     const choices = allVias.filter(value => key.includes(value)).map(value => ({ value, label: viaLabels[value] }))
     return field('Reach this PC via', segmented(choices, chosenVia, value => via.set(value), { label: 'Reach via' }))
@@ -130,9 +135,9 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
     ),
     show(
       () => Boolean(route.get()) || started.get(),
-      () => progressList(ticket.progress),
+      () => progressList(kit, ticket.progress),
     ),
-    show(failed, () => dynamicChild(ticket.progress, failedBlock)),
+    show(failed, () => dynamicChild(ticket.progress, list => failedBlock(kit, list))),
     show(
       () => !started.get() && Boolean(route.get()),
       () => note('The new PC downloads sand from GitHub, then pairs with this one. The command works for 10 minutes.'),

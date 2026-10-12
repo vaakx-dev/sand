@@ -1,19 +1,22 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { div, dynamicChild, hintRow, providerIcon, settingsSection, untrack } from '@sand/dom'
-import type { Kit } from '../kit'
+import { div, dynamicChild, untrack } from '@vaakx-dev/vrui'
+import type { Page } from '../page'
 import { crumb, whereText } from '../parts'
 import { createCatalog } from './catalog'
 import { createFilter } from './filter'
 import { modelsSection } from './models'
 import { optionsSection } from './options'
 
-const body = (kit: Kit, first: SourceInfo, latest: () => SourceInfo) => {
-  const catalog = createCatalog(kit, first.id)
+const body = (page: Page, first: SourceInfo, latest: () => SourceInfo) => {
+  const catalog = createCatalog(page, first.id)
   const filter = createFilter(first, catalog)
-  return div({ class: 'flex flex-col gap-6' }, modelsSection(first, catalog, filter), optionsSection(kit, latest))
+  return div({ class: 'flex flex-col gap-6' }, modelsSection(page.ctx.kit, first, catalog, filter), optionsSection(page, latest))
 }
 
-const gone = () => settingsSection({}, hintRow('This account is no longer signed in'))
+const gone = (page: Page) => {
+  const { hintRow, settingsSection } = page.ctx.kit
+  return settingsSection({}, hintRow('This account is no longer signed in'))
+}
 
 const title = (source: SourceInfo | undefined, id: string) => {
   if (!source) return id
@@ -21,16 +24,17 @@ const title = (source: SourceInfo | undefined, id: string) => {
   return where ? `${source.label} ${where}` : source.label
 }
 
-export const sourcePage = (kit: Kit, id: string) => {
-  const info = kit.changes.read(() => kit.source(id))
+export const sourcePage = (page: Page, id: string) => {
+  const { providerIcon } = page.ctx.kit
+  const info = page.changes.read(() => page.source(id))
   return div(
     { class: 'flex flex-col gap-6' },
-    crumb(kit, providerIcon(untrack(() => info.get()?.provider), 14), () => title(info.get(), id)),
+    crumb(page, providerIcon(untrack(() => info.get()?.provider), 14), () => title(info.get(), id)),
     dynamicChild(
       info.map(found => !!found),
       () => {
         const first = info.get()
-        return first ? body(kit, first, () => info.get() ?? first) : gone()
+        return first ? body(page, first, () => info.get() ?? first) : gone(page)
       },
     ),
   )

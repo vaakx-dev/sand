@@ -1,6 +1,7 @@
 import type { UserContent } from '@sand/messages'
 import type { Pending } from '@sand/steering/contract'
-import { effect, sig, untrack, type Pulse, type Sig } from '@sand/dom'
+import type { Pulse } from '@sand/kit/web'
+import { effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { split } from '../attachments/content'
 import { contentsOf, type Attached, type Files } from '../attachments/files'

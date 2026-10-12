@@ -1,4 +1,5 @@
-import { batch, onTimeout, type Sig, type Store, type Swipe } from '@sand/dom'
+import type { Swipe } from '@sand/protocol'
+import { batch, onTimeout, type Sig, type Store } from '@vaakx-dev/vrui'
 import type { Open } from './shell'
 import { drawerWidth, settleMs, type Shift } from './slide'
 

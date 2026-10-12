@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/dom'
+import type { NavAction } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export const replyActions = (ctx: Context, text: string): NavAction[] => {

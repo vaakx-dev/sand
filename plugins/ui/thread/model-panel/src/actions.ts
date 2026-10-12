@@ -1,9 +1,10 @@
 import type { Speed } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SettingsPatch } from '@sand/model/contract'
-import { errorMessage } from '@sand/dom'
+import type {} from '@sand/ui-kit/contract'
+import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'
 
-export type PanelContext = Context<'models' | 'modelPicker' | 'threads'>
+export type PanelContext = Context<'kit' | 'models' | 'modelPicker' | 'threads'>
 
 export const speedWords: Record<Speed, string> = { fast: 'on', normal: 'off' }
 

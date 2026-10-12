@@ -1,5 +1,6 @@
 import type { Composer } from './contract'
-import { listen, owned, place } from '@sand/dom'
+import { owned, place } from '@sand/kit/web'
+import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'
 import { bindLocalCommands } from './commands'
@@ -12,7 +13,7 @@ import { createModel } from './model'
 export default definePlugin({
   name: 'composer-card',
   description: 'Floating prompt card: send, follow-up queue, completion, attachments, context, unsent drafts, slots for other controls',
-  inject: ['threads', 'turns'],
+  inject: ['threads', 'turns', 'kit'],
   uses: {
     layout: 'lands loose on the stage',
     commands: '/ completion shows a hint, typed commands go straight to the server, and a failed turn offers no model picker',

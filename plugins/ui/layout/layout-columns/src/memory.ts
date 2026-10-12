@@ -1,4 +1,4 @@
-import { stored } from '@sand/dom'
+import { stored } from '@vaakx-dev/vrui'
 import type { Open } from './shell'
 
 export const layoutMemory = () => {

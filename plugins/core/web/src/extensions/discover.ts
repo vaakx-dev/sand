@@ -1,3 +1,4 @@
+import { isRecord } from '@sand/kit'
 import { basename, join, resolve } from 'node:path'
 import { pluginFolders } from './folders'
 
@@ -5,6 +6,7 @@ export interface Extension {
   id: string
   dir: string
   entry: string
+  modules: Record<string, string>
   builtin: boolean
   enabled: boolean
   provides: string[]
@@ -21,11 +23,27 @@ const text = (value: unknown) => (typeof value === 'string' && value.trim() ? va
 
 const strings = (value: unknown) => (Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [])
 
+const modulesOf = (dir: string, name: unknown, exports: unknown): Record<string, string> =>
+  typeof name === 'string' && isRecord(exports)
+    ? Object.fromEntries(
+        Object.entries(exports)
+          .filter((entry): entry is [string, string] => typeof entry[1] === 'string')
+          .map(([path, file]) => [`${name}${path.slice(1)}`, resolve(dir, file)]),
+      )
+    : {}
+
 const webManifest = async (dir: string) => {
   try {
-    const sand = (await Bun.file(join(dir, 'package.json')).json())?.sand
+    const { name, exports, sand } = (await Bun.file(join(dir, 'package.json')).json()) ?? {}
     return typeof sand?.web === 'string'
-      ? { entry: resolve(dir, sand.web), provides: strings(sand.provides), label: text(sand.label), summary: text(sand.summary), standard: sand.enabled !== false }
+      ? {
+          entry: resolve(dir, sand.web),
+          modules: modulesOf(dir, name, exports),
+          provides: strings(sand.provides),
+          label: text(sand.label),
+          summary: text(sand.summary),
+          standard: sand.enabled !== false,
+        }
       : undefined
   } catch {
     return undefined

@@ -1,6 +1,6 @@
 import type { DraftTarget } from '../contract'
-import { addressParam, addressState, pushAddress, updateAddress } from '@sand/dom'
 import { isRecord } from '@sand/kit'
+import { addressParam, addressState, pushAddress, updateAddress } from '@sand/kit/web'
 
 const key = 'session'
 

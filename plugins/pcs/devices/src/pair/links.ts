@@ -1,6 +1,7 @@
-import { copyButton, div, dynamicChild, note, rowButton, sig, span } from '@sand/dom'
-import { routeKind, routeLabel } from '@sand/kit'
 import type { PairInvite } from '@sand/host-devices/contract'
+import { routeKind, routeLabel } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import { linkText } from '../components'
 import { listenBox } from './listen'
 import { qrCode } from './qr'
@@ -32,7 +33,7 @@ const qrText: Record<InviteFor, string> = {
   pc: 'Copy the link below and paste it on the other PC.',
 }
 
-const linkRow = (url: string, chosen: () => boolean, choose: () => void) =>
+const linkRow = ({ copyButton, rowButton }: Kit, url: string, chosen: () => boolean, choose: () => void) =>
   div(
     { class: ['flex items-center gap-3 rounded-lg py-2 pr-2 pl-3', () => (chosen() ? 'bg-neutral-700' : 'hover:bg-neutral-700')] },
     rowButton(
@@ -43,9 +44,10 @@ const linkRow = (url: string, chosen: () => boolean, choose: () => void) =>
     copyButton({ text: () => url, label: 'Copy' }),
   )
 
-const qrPanel = (link: string, kind: InviteFor) => div({ class: 'flex flex-col items-center gap-2' }, qrCode(link), note(qrText[kind]))
+const qrPanel = ({ note }: Kit, link: string, kind: InviteFor) => div({ class: 'flex flex-col items-center gap-2' }, qrCode(link), note(qrText[kind]))
 
-export const inviteBody = (invite: PairInvite, listen: () => Promise<unknown>, kind: InviteFor = 'phone') => {
+export const inviteBody = (kit: Kit, invite: PairInvite, listen: () => Promise<unknown>, kind: InviteFor = 'phone') => {
+  const { note } = kit
   const reachable = invite.links.filter(link => !local(link))
   const shown = kind === 'pc' ? reachable : invite.links
   const chosen = sig(phoneLink(reachable) ?? '')
@@ -54,11 +56,11 @@ export const inviteBody = (invite: PairInvite, listen: () => Promise<unknown>, k
   }
   return div(
     { class: 'flex flex-col gap-4' },
-    reachable.length ? dynamicChild(chosen, link => qrPanel(link, kind)) : listenBox(listenText[kind], listen),
+    reachable.length ? dynamicChild(chosen, link => qrPanel(kit, link, kind)) : listenBox(kit, listenText[kind], listen),
     shown.length
       ? div(
           { class: 'flex flex-col gap-1' },
-          shown.map(link => linkRow(link, () => chosen.get() === link, () => choose(link))),
+          shown.map(link => linkRow(kit, link, () => chosen.get() === link, () => choose(link))),
         )
       : null,
     shown.length ? note('Works once, expires in 10 minutes. Anyone with it can use this sand.') : null,

@@ -1,8 +1,9 @@
 import { relationLabel } from '@sand/sync/flows'
 import type { SyncRelation } from '@sand/sync/contract'
+import type { ContextMenu, Kit, Tone } from '@sand/ui-kit/contract'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
+import { div, span, stopThen, type Child, type Props } from '@vaakx-dev/vrui'
 import type { SyncFlows } from '../contract'
-import { badge, div, dot, icon, quietButton, span, stopThen, type Child, type ContextMenu, type Props, type Tone } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { shorten } from './places'
 import { copySpec } from './specs'
@@ -15,11 +16,12 @@ const tones: Record<SyncRelation, Tone> = {
   unlinked: 'neutral',
 }
 
-export const machineMark = (tone: Tone, size: number) => [dot(tone), span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('monitor', size))]
+export const machineMark = ({ dot, icon }: Kit, tone: Tone, size: number) => [dot(tone), span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('monitor', size))]
 
 const line = (children: Child[], props: Props<HTMLDivElement> = {}) => div({ class: 'flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs', ...props }, ...children)
 
 const relationTag = (ctx: ProjectsContext, entry: ProjectEntry, primary: ProjectEntry) => {
+  const { badge } = ctx.kit
   const relation = ctx.sync?.relation(entry, primary)
   return relation ? badge(tones[relation], relationLabel(relation, ctx.machines.name(primary.device))) : null
 }
@@ -35,7 +37,7 @@ export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: Pro
     [
       div(
         { class: ['flex min-w-0 items-center gap-2', !online || entry.missing ? 'opacity-50' : ''] },
-        ...machineMark(online ? 'success' : 'neutral', 12),
+        ...machineMark(ctx.kit, online ? 'success' : 'neutral', 12),
         span({ class: 'shrink-0 text-neutral-300' }, ctx.machines.name(entry.device)),
         span({ class: 'min-w-0 truncate text-neutral-500', title: entry.path }, shorten(ctx, entry.path, entry.device)),
         entry.missing ? span({ class: 'shrink-0 text-warning-400' }, 'Missing') : null,
@@ -46,8 +48,10 @@ export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: Pro
   )
 }
 
-export const noCopyLine = (flows: SyncFlows, group: ProjectGroup, machine: Machine) =>
-  line([
-    div({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark('neutral', 12), span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`)),
+export const noCopyLine = (kit: Kit, flows: SyncFlows, group: ProjectGroup, machine: Machine) => {
+  const { icon, quietButton } = kit
+  return line([
+    div({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark(kit, 'neutral', 12), span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`)),
     quietButton({ size: 'sm', onClick: () => flows.copy(group, machine.device) }, icon('down', 14), 'Get a copy'),
   ])
+}

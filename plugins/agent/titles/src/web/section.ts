@@ -1,6 +1,7 @@
 import type { ModelPicker, PickerTarget } from '@sand/model-picker/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { TitlePatch, TitleSettings } from '../contract'
-import { dynamicChild, settingsRow, settingsSection, show, toggleSwitch, type Sig } from '@sand/dom'
+import { dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 
 type Save = (patch: TitlePatch) => void
 
@@ -12,23 +13,25 @@ const textGenTarget = (settings: Sig<TitleSettings | undefined>, picker: ModelPi
   set: ({ model, effort, speed }) => save({ ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }),
 })
 
-const autoRow = (settings: Sig<TitleSettings | undefined>, save: Save) =>
+const autoRow = ({ settingsRow, toggleSwitch }: Kit, settings: Sig<TitleSettings | undefined>, save: Save) =>
   settingsRow(
     'Name new threads',
     toggleSwitch({ on: () => settings.get()?.auto ?? false, 'aria-label': 'Name new threads', onClick: () => save({ auto: !settings.get()?.auto }) }),
     'The text gen model writes a short name from your first message',
   )
 
-const modelRow = (settings: Sig<TitleSettings | undefined>, picker: ModelPicker, save: Save) =>
+const modelRow = ({ settingsRow }: Kit, settings: Sig<TitleSettings | undefined>, picker: ModelPicker, save: Save) =>
   settingsRow('Text gen model', picker.button(textGenTarget(settings, picker, save), 'Text gen model'), 'Writes thread names and branch names')
 
-export const titlesSection = (settings: Sig<TitleSettings | undefined>, picker: Sig<ModelPicker | undefined>, save: Save) =>
-  show(
+export const titlesSection = (kit: Kit, settings: Sig<TitleSettings | undefined>, picker: Sig<ModelPicker | undefined>, save: Save) => {
+  const { settingsSection } = kit
+  return show(
     () => settings.get() !== undefined,
     () =>
       settingsSection(
         { title: 'Text generation' },
-        autoRow(settings, save),
-        dynamicChild(picker, current => current && modelRow(settings, current, save)),
+        autoRow(kit, settings, save),
+        dynamicChild(picker, current => current && modelRow(kit, settings, current, save)),
       ),
   )
+}

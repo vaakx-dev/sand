@@ -1,10 +1,11 @@
 import type { UserPart } from '@sand/messages'
 import type { TextMenu } from '@sand/transcript-parts/contract'
-import { div, icon, quoteButton, span, type Child, type IconName } from '@sand/dom'
 import { oneLine, quoteBlocks } from '@sand/kit'
+import type { IconName, Kit } from '@sand/ui-kit/contract'
+import { div, span, type Child } from '@vaakx-dev/vrui'
 import { actionRow, row, type RowContext, type RowMaker } from './row'
 
-const chip = (name: string, iconName: IconName, tone: string, iconTone?: string) =>
+const chip = ({ icon }: Kit, name: string, iconName: IconName, tone: string, iconTone?: string) =>
   span(
     { class: ['inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs', tone], title: name },
     span({ class: ['shrink-0', iconTone] }, icon(iconName, 14)),
@@ -14,13 +15,14 @@ const chip = (name: string, iconName: IconName, tone: string, iconTone?: string)
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
     return context.parts.image(part.block, context.thread, { class: 'block max-h-32 max-w-48 rounded-lg bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
-  if (part.kind === 'document') return chip(part.block.name ?? 'document', 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500')
-  if (part.kind === 'skill') return chip(part.name, 'sparkles', 'bg-accent-950 text-accent-400')
+  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500')
+  if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles', 'bg-accent-950 text-accent-400')
   return null
 }
 
-const quoted = (text: string, context: RowContext) =>
-  quoteButton(
+const quoted = (text: string, context: RowContext) => {
+  const { quoteButton } = context.kit
+  return quoteButton(
     {
       class: 'mt-3 w-full first:mt-0',
       title: 'Show where this came from',
@@ -30,6 +32,7 @@ const quoted = (text: string, context: RowContext) =>
     },
     text,
   )
+}
 
 const blocks = (text: string, context: RowContext) =>
   quoteBlocks(text)

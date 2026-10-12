@@ -1,6 +1,6 @@
 import type { ImageBlock } from '@sand/messages'
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, el } from '@sand/dom'
+import { div, el } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { consoleHeading } from '../output'
 

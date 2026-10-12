@@ -1,5 +1,6 @@
-import { colorVar, div, dynamicChild, line, path, sig, span, svg } from '@sand/dom'
 import { periodLabel } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { colorVar, div, dynamicChild, line, path, sig, span, svg } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import { tickText, type Metric } from '../../format'
 import { curve } from './curve'
@@ -40,7 +41,7 @@ const strokes = (drawn: Series[], toY: (value: number) => number, step: number) 
     }
   })
 
-export const plot = (usage: Merged, keys: string[], series: Series[], metric: Metric) => {
+export const plot = (kit: Kit, usage: Merged, keys: string[], series: Series[], metric: Metric) => {
   const { top: peak, ticks } = scaleFor(Math.max(0, ...series.flatMap(line => line.values)))
   const toY = (value: number) => height - (value / peak) * (height - top)
   const step = keys.length > 1 ? width / (keys.length - 1) : 0
@@ -85,7 +86,7 @@ export const plot = (usage: Merged, keys: string[], series: Series[], metric: Me
             visibility: () => (hover.get() ? 'visible' : 'hidden'),
           }),
         ),
-        dynamicChild(hover, current => (current ? tooltip(current, keys[current.index]!, usage.bucket, series, metric) : null)),
+        dynamicChild(hover, current => (current ? tooltip(kit, current, keys[current.index]!, usage.bucket, series, metric) : null)),
       ),
     ),
     div(

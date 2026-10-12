@@ -1,6 +1,6 @@
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import type { IconName } from '@sand/ui-kit/contract'
 import type { Machine } from '@sand/web-client/contract'
-import type { IconName } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { emptyPage } from './empty'
 import { folderPage } from './folder'

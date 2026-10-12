@@ -1,4 +1,4 @@
-import { onRaf, sig } from '@sand/dom'
+import { onRaf, sig } from '@vaakx-dev/vrui'
 import type { EventName } from 'drydock'
 import type { ProjectsContext } from '../context'
 

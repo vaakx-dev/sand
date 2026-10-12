@@ -1,7 +1,7 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Picked } from './contract'
-import type { PickerContext } from './kit'
+import type { PickerContext } from './deps'
 
 const effortOf = (settings: SessionSettings, model?: ModelInfo) => {
   if (!model?.efforts.length) return undefined

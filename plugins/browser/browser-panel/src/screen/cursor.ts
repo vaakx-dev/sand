@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, span } from '@sand/dom'
+import { derive, div, dynamicChild, span } from '@vaakx-dev/vrui'
 import { ping } from '../integrations/motion'
 import type { TabModel } from '../tab/model'
 import { recent } from '../tab/recent'

@@ -1,4 +1,6 @@
-import { groupLabel, hint, list, menuItem, optionProps, prevent, show, span, type Sig } from '@sand/dom'
+import { optionProps } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { list, prevent, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Completion, Suggestion } from './model'
 
 type Row = { kind: 'group'; title: string } | { kind: 'item'; item: Suggestion; index: number }
@@ -17,7 +19,8 @@ const pathLabel = (value: string, partial?: boolean) => {
   return [span({ class: 'text-neutral-500' }, bare.slice(0, cut)), bare.slice(cut), partial && span({ class: 'text-neutral-500' }, '/')]
 }
 
-const itemRow = (completion: Completion, item: Suggestion, index: Sig<number>) => {
+const itemRow = (kit: Kit, completion: Completion, item: Suggestion, index: Sig<number>) => {
+  const { menuItem } = kit
   const isFile = item.icon === 'file' || item.icon === 'folder'
   return menuItem(
     {
@@ -35,16 +38,20 @@ const itemRow = (completion: Completion, item: Suggestion, index: Sig<number>) =
   )
 }
 
-const rowView = (completion: Completion, row: Sig<Row>) => {
+const rowView = (kit: Kit, completion: Completion, row: Sig<Row>) => {
+  const { groupLabel } = kit
   const current = row.get()
   if (current.kind === 'group') return groupLabel(current.title)
-  return itemRow(completion, current.item, row.map(value => (value.kind === 'item' ? value.index : -1)))
+  return itemRow(kit, completion, current.item, row.map(value => (value.kind === 'item' ? value.index : -1)))
 }
 
-export const completionView = (completion: Completion) => [
-  list(completion.items.map(rowsOf), keyOf, row => rowView(completion, row)),
-  show(
-    () => !completion.items.get().length && Boolean(completion.hint.get()),
-    () => hint(() => completion.hint.get() ?? ''),
-  ),
-]
+export const completionView = (kit: Kit, completion: Completion) => {
+  const { hint } = kit
+  return [
+    list(completion.items.map(rowsOf), keyOf, row => rowView(kit, completion, row)),
+    show(
+      () => !completion.items.get().length && Boolean(completion.hint.get()),
+      () => hint(() => completion.hint.get() ?? ''),
+    ),
+  ]
+}

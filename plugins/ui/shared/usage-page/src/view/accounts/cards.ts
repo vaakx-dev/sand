@@ -1,5 +1,6 @@
-import type { Sig } from '@sand/dom'
 import { dollars, tokens, tokensOf } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import type { Sig } from '@vaakx-dev/vrui'
 import type { Account } from '../../data/types'
 import { isLocal, listText } from '../../names'
 import { card, stat, stats } from '../parts'
@@ -8,6 +9,7 @@ import { gauge } from './gauge'
 type NameOf = (id: string) => string
 
 export interface CardProps {
+  kit: Kit
   now: Sig<number>
   nameOf: NameOf
   colorOf(provider: string): string
@@ -38,12 +40,12 @@ const keyMeta = (account: Account, nameOf: NameOf) => {
 
 const valueNote = (account: Account) => (!account.turns || account.unpriced === account.turns ? undefined : `≈${dollars(account.cost)} at API prices`)
 
-const gauges = (account: Account, { now, colorOf }: CardProps) => (account.limits?.windows ?? []).map(window => gauge(window, colorOf(account.provider), now))
+const gauges = (account: Account, { kit, now, colorOf }: CardProps) => (account.limits?.windows ?? []).map(window => gauge(kit, window, colorOf(account.provider), now))
 
 const spentStat = (account: Account) => (isLocal(account) ? null : stat(account.billing === 'credits' ? 'Credits' : 'Billed', dollars(account.billed)))
 
 export const subscriptionCard = (account: Account, props: CardProps) =>
-  card(account.label, subscriptionMeta(account, props.nameOf), stats(gauges(account, props), stat('Used', `${tokens(tokensOf(account.usage))} tokens`, valueNote(account))))
+  card(props.kit, account.label, subscriptionMeta(account, props.nameOf), stats(gauges(account, props), stat('Used', `${tokens(tokensOf(account.usage))} tokens`, valueNote(account))))
 
 export const keyCard = (account: Account, props: CardProps) =>
-  card(account.label, keyMeta(account, props.nameOf), stats(gauges(account, props), spentStat(account), stat('Tokens', tokens(tokensOf(account.usage)))))
+  card(props.kit, account.label, keyMeta(account, props.nameOf), stats(gauges(account, props), spentStat(account), stat('Tokens', tokens(tokensOf(account.usage)))))

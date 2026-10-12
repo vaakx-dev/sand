@@ -1,4 +1,5 @@
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 export const safeSource = (ctx: Context<'wire'>) => {

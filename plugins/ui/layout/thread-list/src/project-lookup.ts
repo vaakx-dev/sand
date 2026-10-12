@@ -1,11 +1,11 @@
-import { quickThreadIcon } from '@sand/dom'
 import { folderName } from '@sand/kit'
+import type { ProjectLook } from '@sand/protocol'
 import type { Context } from 'drydock'
 
 export interface ProjectInfo {
   name: string
   key: string
-  icon?: string
+  icon?: ProjectLook
   quick?: boolean
 }
 
@@ -18,7 +18,7 @@ export const isQuick = (ctx: Context, cwd: string, device?: string) => ctx.proje
 export const findGroup = (ctx: Context, cwd: string, device?: string, project?: string | null) =>
   (project && ctx.projects?.get(project)) || ctx.projects?.group(cwd, device)
 
-const quick = (device?: string): ProjectInfo => ({ name: 'Quick thread', key: `${device ?? ''}\0quick`, icon: quickThreadIcon, quick: true })
+const quick = (device?: string): ProjectInfo => ({ name: 'Quick thread', key: `${device ?? ''}\0quick`, icon: { quick: true }, quick: true })
 
 export const projectLookup =
   (ctx: Context): ProjectLookup =>

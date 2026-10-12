@@ -1,13 +1,15 @@
-import { chipButton, contextMenu, div, dynamicChild, finePointer, hint, keys, list, searchRow, show } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, keys, list, media, show } from '@vaakx-dev/vrui'
 import { filterNames, filters } from '../tree/filter'
 import { rowsPerPage } from './integrations/page'
 import { labelEditor } from './label-editor'
 import { treeModel, type TreeSource } from './model'
 import { rowView } from './row'
 
-export const createTreeView = (source: TreeSource) => {
+export const createTreeView = (kit: Kit, source: TreeSource) => {
+  const { chipButton, contextMenu, hint, searchRow } = kit
   const model = treeModel(source)
-  const fine = finePointer()
+  const fine = media('(pointer: fine)')
   const menu = contextMenu()
 
   const finish = async (id: string, value: string | undefined) => {
@@ -30,7 +32,7 @@ export const createTreeView = (source: TreeSource) => {
   const listView = list(
     model.items,
     item => item.row.id,
-    item => rowView(item, model, menu),
+    item => rowView(kit, item, model, menu),
     div({ class: 'min-h-0 flex-1 overflow-auto px-2 pb-2', role: 'listbox' }),
   )
 
@@ -63,7 +65,7 @@ export const createTreeView = (source: TreeSource) => {
       model.items.map(rows => !rows.length),
       () => hint(() => (model.thread.get() ? 'No matches' : 'No thread selected')),
     ),
-    dynamicChild(model.editing, id => (id ? labelEditor(model.labelOf(id), value => void finish(id, value)) : null)),
+    dynamicChild(model.editing, id => (id ? labelEditor(kit, model.labelOf(id), value => void finish(id, value)) : null)),
     menu.view(),
   )
 

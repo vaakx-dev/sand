@@ -1,4 +1,4 @@
-import { onTimeout } from '@sand/dom'
+import { onTimeout } from '@vaakx-dev/vrui'
 
 const highlight = 'transcript-chat-quote'
 const shownFor = 2000

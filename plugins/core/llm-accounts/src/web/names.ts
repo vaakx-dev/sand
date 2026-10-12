@@ -1,5 +1,5 @@
-import { badge, dot, icon, providerIcon, tile } from '@sand/dom'
 import { capital } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { AccountKind, SignInKind } from '../contract'
 import { isSignInKind } from '../auth/kinds'
 
@@ -10,7 +10,7 @@ interface Described {
 
 export const planNames: Record<SignInKind, string> = { claude: 'Claude', codex: 'ChatGPT' }
 
-export const accountLogo = (provider: string) => tile(providerIcon(provider, 18) ?? icon('lock', 16))
+export const accountLogo = ({ icon, providerIcon, tile }: Kit, provider: string) => tile(providerIcon(provider, 18) ?? icon('lock', 16))
 
 const planText = (kind: SignInKind, plan?: string) => (plan ? `${planNames[kind]} ${capital(plan)}` : `${planNames[kind]} plan`)
 
@@ -19,4 +19,4 @@ export const howText = (account: Described) => {
   return account.kind === 'server' ? 'Server' : 'API key'
 }
 
-export const readyChip = (online: boolean) => (online ? badge('success', dot('success'), 'Ready') : badge('neutral', dot('neutral'), 'Offline'))
+export const readyChip = ({ badge, dot }: Kit, online: boolean) => (online ? badge('success', dot('success'), 'Ready') : badge('neutral', dot('neutral'), 'Offline'))

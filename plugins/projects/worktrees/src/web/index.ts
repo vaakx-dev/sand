@@ -1,7 +1,7 @@
 import { removedType, type Worktrees } from '../contract'
 import type {} from '@sand/commands/contract'
-import { owned, pulse } from '@sand/dom'
 import { joinDisposers } from '@sand/kit'
+import { owned, pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { createChoices } from './chip/choices'
 import { createChip, mountChip } from './chip/view'
@@ -19,7 +19,7 @@ import { createStates } from './states'
 export default definePlugin({
   name: 'worktrees-web',
   description: 'Local or worktree choice in the composer, the Move to worktree sheet, setup progress, worktree marks for threads, and cleanup after a merged PR',
-  inject: ['threads', 'wire'],
+  inject: ['threads', 'wire', 'kit'],
   uses: {
     composer: 'no Local or worktree choice in the composer and no setup progress above it',
     commands: 'no /worktree command, so the thread menu has no Move to worktree item',

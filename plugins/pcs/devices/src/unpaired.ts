@@ -1,6 +1,7 @@
 import type { WireState } from '@sand/web-client/contract'
-import { errorText, keys, note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, show, sig, textInput } from '@sand/dom'
 import { parsePairLink } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { keys, show, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { overlaySlot } from './overlay-slot'
 
@@ -12,7 +13,8 @@ const follow = (text: string) => {
   return true
 }
 
-const unpairedView = () => {
+const unpairedView = (kit: Kit) => {
+  const { errorText, note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, textInput } = kit
   const link = sig('')
   const wrong = sig(false)
   const submit = () => {
@@ -42,11 +44,11 @@ const unpairedView = () => {
   )
 }
 
-export const unpairedOverlay = (ctx: Context<'wire'>) => {
+export const unpairedOverlay = (ctx: Context<'wire' | 'kit'>) => {
   const slot = overlaySlot(ctx, 200)
   const sync = (state: WireState) => {
     if (state !== 'unpaired') return slot.close()
-    if (!slot.isOpen()) slot.open(unpairedView)
+    if (!slot.isOpen()) slot.open(() => unpairedView(ctx.kit))
   }
   ctx.on('wire.state', sync)
   sync(ctx.wire.state())

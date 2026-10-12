@@ -1,4 +1,4 @@
-import { collectScope, disposeAll } from '@sand/dom'
+import { collectScope, disposeAll } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { swipeGesture } from './integrations/touch'
 

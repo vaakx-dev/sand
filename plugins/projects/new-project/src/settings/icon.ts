@@ -1,6 +1,7 @@
 import type { ProjectIcon } from '@sand/host-projects/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, duneIcon, dynamicChild, icon, img, plainButton, popover, quietButton, show, span, type Sig } from '@sand/dom'
+import { div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 import { reportError, type ProjectsContext } from '../context'
 import type { Entry } from './actions'
 
@@ -17,7 +18,7 @@ const iconOf = (shape: number, hue?: number): ProjectIcon | null => {
   return { ...(shape ? { shape } : {}), ...(hue === undefined ? {} : { hue }) }
 }
 
-const duneChoice = (src: string, size: string, chosen: boolean, label: string, onClick: () => void) =>
+const duneChoice = ({ plainButton, projectIcon }: Kit, group: ProjectGroup, look: ProjectIcon, size: number, chosen: boolean, label: string, onClick: () => void) =>
   plainButton(
     {
       class: ['flex shrink-0 rounded-full p-px', chosen ? 'ring-2 ring-neutral-100' : 'hover:ring-2 hover:ring-neutral-600'],
@@ -26,10 +27,11 @@ const duneChoice = (src: string, size: string, chosen: boolean, label: string, o
       'aria-pressed': String(chosen),
       onClick,
     },
-    img({ src, alt: '', draggable: false, class: size }),
+    projectIcon(group.name, look, size),
   )
 
 const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) => {
+  const { icon, popover, quietButton } = ctx.kit
   const shape = group.icon?.shape ?? 0
   const hue = group.icon?.hue
   const save = (next: ProjectIcon | null) => ctx.projects.setIcon(group, next).catch(error => reportError(ctx, error))
@@ -38,7 +40,7 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
     div(
       { class: 'flex flex-wrap gap-2' },
       ...shapesOn(page).map(option =>
-        duneChoice(duneIcon(group.name, { shape: option, hue }), 'h-8 w-8', option === shape, option ? `Dunes ${option}` : 'Default dunes', () => save(iconOf(option, hue))),
+        duneChoice(ctx.kit, group, { shape: option, hue }, 32, option === shape, option ? `Dunes ${option}` : 'Default dunes', () => save(iconOf(option, hue))),
       ),
     )
   return popover(
@@ -58,7 +60,7 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
       span({ class: 'text-xs text-neutral-500' }, 'Colour'),
       div(
         { class: 'flex flex-wrap gap-1' },
-        ...hues.map(option => duneChoice(duneIcon(group.name, { shape, hue: option.hue }), 'h-4 w-4', option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
+        ...hues.map(option => duneChoice(ctx.kit, group, { shape, hue: option.hue }, 16, option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
       ),
       quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 14), 'Reset to default'),
     ),
@@ -66,7 +68,8 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
 }
 
 export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>): Entry[] => {
-  if (ctx.projects.iconFile(group)) return []
+  const look = ctx.projects.groupIcon(group)
+  if (look?.file || look?.app) return []
   const run = () => picking.set({ project: group.id, page: Math.floor((group.icon?.shape ?? 0) / shapesPerPage) })
   return [{ label: 'Change icon…', icon: 'sparkles', run }]
 }

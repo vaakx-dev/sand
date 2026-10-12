@@ -1,4 +1,4 @@
-import { derive, effect, onTimeout, registerInScope, sig } from '@sand/dom'
+import { derive, effect, onTimeout, registerInScope, sig } from '@vaakx-dev/vrui'
 import type { GithubFound } from '../../contract'
 import type { GithubControl } from '../state'
 

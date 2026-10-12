@@ -1,4 +1,5 @@
-import { copyWithNotice, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { ModelMenuInput } from './contract'
 
 export const modelMenu = ({ model, subtitle, notify, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {

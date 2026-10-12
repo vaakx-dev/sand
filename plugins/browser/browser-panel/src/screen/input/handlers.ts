@@ -1,5 +1,5 @@
 import type { Point, UserInput } from '@sand/browser-engine/contract'
-import { untrack, type Sig } from '@sand/dom'
+import { untrack, type Sig } from '@vaakx-dev/vrui'
 import type { TabModel } from '../../tab/model'
 import type { Screen } from '../screen'
 import { perFrame } from './frame'

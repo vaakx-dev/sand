@@ -1,4 +1,4 @@
-import { effect, onTimeout, sig, type Sig } from '@sand/dom'
+import { effect, onTimeout, sig, type Sig } from '@vaakx-dev/vrui'
 import type { SignInKind } from '../../contract'
 import { whileBusy } from '../parts'
 import type { LoginControl } from '../state'

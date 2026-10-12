@@ -1,5 +1,6 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
-import type { MenuSpec, NavAction, Sig } from '@sand/dom'
+import type { MenuSpec, NavAction } from '@sand/protocol'
+import type { Sig } from '@vaakx-dev/vrui'
 import { originLabels } from './filter'
 import type { RowActions } from './row'
 

@@ -1,4 +1,4 @@
-import { sig, stored } from '@sand/dom'
+import { sig, stored } from '@vaakx-dev/vrui'
 
 export interface Selection {
   key: string

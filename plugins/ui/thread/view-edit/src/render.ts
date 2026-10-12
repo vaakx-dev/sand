@@ -1,9 +1,9 @@
 import type { ToolRenderer, ToolView } from '@sand/transcript-parts/contract'
-import { diffRow, div, fold, secondaryAction } from '@sand/dom'
 import { diffCounts, diffLines, type DiffLine } from '@sand/kit'
+import { div } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
-type Ctx = Context<'toolViews'>
+type Ctx = Context<'toolViews' | 'kit'>
 
 const shownLines = 160
 
@@ -18,12 +18,14 @@ const lines = ({ toolViews: { field } }: Ctx, tool: ToolView): DiffLine[] => {
 }
 
 const opener = (ctx: Ctx, tool: ToolView) => {
+  const { secondaryAction } = ctx.kit
   const { commands } = ctx
   if (!commands?.get('changes') || tool.result?.isError) return undefined
   return secondaryAction({ size: 'sm', class: 'mt-2', onClick: () => void commands.run('changes', path(ctx, tool)) }, 'Open in Edits')
 }
 
 const body = (ctx: Ctx) => (tool: ToolView) => {
+  const { diffRow, fold } = ctx.kit
   const views = ctx.toolViews
   const all = lines(ctx, tool)
   const shown = all.slice(0, shownLines)

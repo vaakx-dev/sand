@@ -1,6 +1,8 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { badge, tildeHome, type Child, type MenuSpec } from '@sand/dom'
-import { byCost, emptyTotals, folderName, grouped, periodTitle } from '@sand/kit'
+import { byCost, emptyTotals, folderName, grouped, periodTitle, tildeHome } from '@sand/kit'
+import type { MenuSpec } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import type { Child } from '@vaakx-dev/vrui'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { muted } from '../parts'
@@ -22,6 +24,7 @@ export interface Row {
 }
 
 export interface RowSource {
+  kit: Kit
   usage: Merged
   nameOf(id: string): string
   openThread?: (id: string) => void
@@ -31,7 +34,10 @@ export interface RowSource {
 
 const maxRows = 10
 
-const pcChips = (ids: string[], { usage, nameOf }: RowSource) => (usage.pcs.length > 1 ? ids.map(id => badge('neutral', nameOf(id))) : [])
+const pcChips = (ids: string[], { kit, usage, nameOf }: RowSource) => {
+  const { badge } = kit
+  return usage.pcs.length > 1 ? ids.map(id => badge('neutral', nameOf(id))) : []
+}
 
 const projectRows = (source: RowSource): Row[] =>
   source.usage.projects.map(project => ({ key: project.name, name: project.name, extra: pcChips(project.machines, source), accounts: project.accounts, totals: project }))

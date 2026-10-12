@@ -1,5 +1,5 @@
 import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, effect, sig, untrack } from '@sand/dom'
+import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { Catalog } from './catalog'
 
 export type Mode = 'shown' | 'all'

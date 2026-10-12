@@ -10,6 +10,12 @@ export interface ProjectIcon {
   hue?: number
 }
 
+export interface ProjectLook extends ProjectIcon {
+  file?: string
+  app?: boolean
+  quick?: boolean
+}
+
 export interface Project {
   id: string
   name: string

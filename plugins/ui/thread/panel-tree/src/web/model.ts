@@ -1,6 +1,7 @@
 import type { Entry } from '@sand/messages'
+import { listbox } from '@sand/kit/web'
 import type { Thread } from '@sand/web-client/contract'
-import { batch, derive, effect, listbox, sig, untrack } from '@sand/dom'
+import { batch, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { Filter } from '../tree/filter'
 import { nodesOf, type TreeNode } from '../tree/forest'
 import { treeFrame, type TreeState } from '../tree/frame'

@@ -1,5 +1,7 @@
-import { derive, dynamicChild, hint, openTab, overlay, quietButton, sheet, sheetHead, show } from '@sand/dom'
 import { plural } from '@sand/kit'
+import { openTab } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Fleet } from '../fleet/model'
 import { chooseBody } from './choose'
 import { progressBody } from './progress'
@@ -20,7 +22,8 @@ const runTitle = (fleet: Fleet) => {
   return `${done} of ${plural(run.keys.length, 'PC')} updated`
 }
 
-export const updateSheet = (fleet: Fleet, close: () => void) => {
+export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
+  const { hint, overlay, quietButton, sheet, sheetHead } = kit
   const mode = derive(() => modeOf(fleet))
   const title = () => (mode.get() === 'run' ? runTitle(fleet) : (fleet.target.get()?.name ?? 'Updates'))
   const notes = () => fleet.target.get()?.notesUrl
@@ -37,8 +40,8 @@ export const updateSheet = (fleet: Fleet, close: () => void) => {
         ),
       }),
       dynamicChild(mode, current => {
-        if (current === 'run') return progressBody(fleet, close)
-        if (current === 'choose') return chooseBody(fleet, close)
+        if (current === 'run') return progressBody(kit, fleet, close)
+        if (current === 'choose') return chooseBody(kit, fleet, close)
         return hint('Looking for a newer sand…')
       }),
     ),

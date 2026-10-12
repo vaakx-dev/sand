@@ -1,7 +1,8 @@
-import { bannerTitle, div, icon, quietButton, span, statusBanner } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, span } from '@vaakx-dev/vrui'
 import type { SafeSource } from './source'
 
-export const bannerView = (source: SafeSource) =>
+export const bannerView = ({ bannerTitle, icon, quietButton, statusBanner }: Kit, source: SafeSource) =>
   div(
     { class: 'w-full px-3 pt-2' },
     statusBanner(

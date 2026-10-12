@@ -1,8 +1,9 @@
-import { div, segmented, span, toggleSwitch } from '@sand/dom'
-import type { PickerContext } from '../kit'
+import { div, span } from '@vaakx-dev/vrui'
+import type { PickerContext } from '../deps'
 import type { Scene } from './scene'
 
 export const effortBar = (ctx: PickerContext, { shown, target }: Scene, flash: boolean) => {
+  const { segmented } = ctx.kit
   const model = ctx.models.info(shown.model)
   return segmented(
     ctx.models.levels().map(level => ({
@@ -17,7 +18,8 @@ export const effortBar = (ctx: PickerContext, { shown, target }: Scene, flash: b
   )
 }
 
-export const fastRow = ({ shown, target }: Scene) => {
+export const fastRow = ({ kit, shown, target }: Scene) => {
+  const { toggleSwitch } = kit
   const on = shown.speed === 'fast'
   return div(
     { class: 'mx-1 mt-1 flex items-center gap-3 rounded-lg px-3 py-2' },

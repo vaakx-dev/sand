@@ -1,4 +1,4 @@
-import { div, read, SPACE, type Child, type MaybeReactive, type Props } from '@sand/dom'
+import { div, read, SPACE, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 
 type Tint = 'plain' | 'accent' | 'warning' | 'danger'
 

@@ -1,4 +1,5 @@
-import { secondaryAction, type NavAction } from '@sand/dom'
+import type { NavAction } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { Fleet, PcView } from './fleet/model'
 import type { RunStatus } from './fleet/run'
 
@@ -24,4 +25,4 @@ export const fleetAction = (fleet: Fleet, key: string, kind: ActionKind): NavAct
   return { id: 'restart', label: 'Restart now', icon: 'reload', run: () => fleet.restartNow(key) }
 }
 
-export const actionButton = ({ label, run }: NavAction) => secondaryAction({ size: 'sm', onClick: () => void run() }, label)
+export const actionButton = ({ secondaryAction }: Kit, { label, run }: NavAction) => secondaryAction({ size: 'sm', onClick: () => void run() }, label)

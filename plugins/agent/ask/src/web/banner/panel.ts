@@ -1,4 +1,5 @@
-import { div, dynamicChild, show, SPACE } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, SPACE } from '@vaakx-dev/vrui'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 import { askHeader } from './header'
@@ -6,7 +7,7 @@ import { questionView } from './question'
 
 const tuck = SPACE['4']
 
-export const askBanner = (state: AskState, actions: AskActions) =>
+export const askBanner = (kit: Kit, state: AskState, actions: AskActions) =>
   div(
     {
       role: 'group',
@@ -17,11 +18,11 @@ export const askBanner = (state: AskState, actions: AskActions) =>
       ],
       style: { marginBottom: `calc(-1 * ${tuck})` },
     },
-    askHeader(state, actions),
+    askHeader(kit, state, actions),
     show(state.open, () =>
       div(
         { class: 'max-h-96 overflow-auto pt-1 pb-2' },
-        dynamicChild(state.current, index => questionView(state, actions, state.questions[index]!)),
+        dynamicChild(state.current, index => questionView(kit, state, actions, state.questions[index]!)),
       ),
     ),
   )

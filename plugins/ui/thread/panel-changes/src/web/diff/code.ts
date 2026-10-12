@@ -1,4 +1,4 @@
-import { span } from '@sand/dom'
+import { span } from '@vaakx-dev/vrui'
 import type { Line } from './rows'
 
 export type Highlight = (code: string) => (Node | string)[]

@@ -1,0 +1,22 @@
+{
+  "name": "@sand/ui-theme",
+  "version": "0.0.0",
+  "description": "Page colors and light or dark mode for the web UI",
+  "type": "module",
+  "exports": {
+    "./palette": "./src/palette.ts",
+    "./sand": "./src/sand.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Sand",
+    "summary": "Sand's colors on a dark page",
+    "provides": [
+      "theme"
+    ]
+  },
+  "dependencies": {
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

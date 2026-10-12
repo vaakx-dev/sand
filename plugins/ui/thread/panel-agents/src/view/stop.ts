@@ -1,6 +1,7 @@
-import { controlButton, sig, stopThen } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { sig, stopThen } from '@vaakx-dev/vrui'
 
-export const stopButton = (stop: () => Promise<boolean>) => {
+export const stopButton = ({ controlButton }: Kit, stop: () => Promise<boolean>) => {
   const stopping = sig(false)
   const press = () => {
     stopping.set(true)

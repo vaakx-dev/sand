@@ -1,5 +1,7 @@
 import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
-import { derive, score, sig, type Choice } from '@sand/dom'
+import { score } from '@sand/kit'
+import type { Choice } from '@sand/ui-kit/contract'
+import { derive, sig } from '@vaakx-dev/vrui'
 import type { LibrarySource } from '../../library/source'
 
 type OriginFilter = 'all' | PluginOrigin
@@ -14,6 +16,7 @@ const areas: [string, string][] = [
   ['yours', 'Your plugins'],
   ['core', 'Core'],
   ['agent', 'Agent'],
+  ['ui/look', 'Look'],
   ['ui/layout', 'Layout'],
   ['ui/thread', 'Thread'],
   ['ui/shared', 'Shared interface'],

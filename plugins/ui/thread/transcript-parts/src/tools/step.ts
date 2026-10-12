@@ -1,5 +1,7 @@
 import type { MenuKit, ToolBadge, ToolStepOptions, ToolView } from '../contract'
-import { badge, contextMenu, copyButton, derive, div, dynamicChild, icon, shine, span, toolBody, toolCard, untrack, type MenuSpec, type Sig } from '@sand/dom'
+import type { MenuSpec } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, span, untrack, type Sig } from '@vaakx-dev/vrui'
 
 const countTone = (part: string) => {
   if (/^[+]\d+$/.test(part)) return 'text-success-400'
@@ -13,11 +15,11 @@ const counts = (text: string) =>
     return tone ? span({ class: tone }, part) : part
   })
 
-const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
-
 const metaView = (text: string) => span({ class: 'shrink-0 text-xs text-neutral-500' }, counts(text))
 
-export const toolStep = (tool: Sig<ToolView>, { renderer, version, open, toggle, menu }: ToolStepOptions, menus: MenuKit) => {
+export const toolStep = (kit: Kit, tool: Sig<ToolView>, { renderer, version, open, toggle, menu }: ToolStepOptions, menus: MenuKit) => {
+  const { badge, contextMenu, copyButton, icon, shine, toolBody, toolCard } = kit
+  const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
   const current = () => renderer(tool.get().call.name)
   const signature = derive(() => {
     const { status, result, call } = tool.get()

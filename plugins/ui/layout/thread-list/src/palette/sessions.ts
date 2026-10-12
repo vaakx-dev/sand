@@ -1,6 +1,6 @@
 import type { PaletteItem } from '@sand/palette/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { ago } from '@sand/dom'
+import { ago } from '@sand/kit'
 import type { Context } from 'drydock'
 import { visibleThreads } from '../nav/items'
 import { projectLookup, type ProjectLookup } from '../project-lookup'

@@ -1,6 +1,7 @@
 import type { PcList } from '@sand/host-remotes/contract'
 import type { LoginState } from '@sand/llm-accounts/contract'
-import { clock, derive, hintRow, rowList, settingsSection, show } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { clock, derive, show } from '@vaakx-dev/vrui'
 import type { PcHealthStore } from '../health/state'
 import type { DeviceSource } from '../source'
 import { healthPanel } from './health'
@@ -16,7 +17,8 @@ const rows = (list: PcList, login: LoginState | undefined): PcRow[] => [
   ...list.pcs.map(pc => ({ pc, self: false, shares: sharesOf(login, pc.id) })),
 ]
 
-export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgain: () => void) => {
+export const pcsSection = (kit: Kit, source: DeviceSource, health: PcHealthStore, pairAgain: () => void) => {
+  const { hintRow, rowList, settingsSection } = kit
   const now = clock(60_000)
   const all = derive(() => {
     const current = source.pcs.get()
@@ -34,8 +36,8 @@ export const pcsSection = (source: DeviceSource, health: PcHealthStore, pairAgai
       row => {
         const { id, name } = row.get().pc
         const self = row.get().self
-        return pcRow(row, now, {
-          health: () => healthPanel({ id, name, local: self, online: row.get().pc.online }, health),
+        return pcRow(kit, row, now, {
+          health: () => healthPanel(kit, { id, name, local: self, online: row.get().pc.online }, health),
           remove: () => void source.removePc(id).catch(source.fail),
           pairAgain,
           check: () => health.refresh(id, self),

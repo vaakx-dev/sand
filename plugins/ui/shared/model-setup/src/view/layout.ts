@@ -1,7 +1,8 @@
-import { errorText, progressSteps, setupScreen, show, type Child } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { show, type Child } from '@vaakx-dev/vrui'
 
 const setupSteps = 3
 
-export const screen = (reached: number, ...children: Child[]) => setupScreen(progressSteps(setupSteps, reached), ...children)
+export const screen = ({ progressSteps, setupScreen }: Kit, reached: number, ...children: Child[]) => setupScreen(progressSteps(setupSteps, reached), ...children)
 
-export const problem = (text: () => string) => show(() => !!text(), () => errorText(text))
+export const problem = ({ errorText }: Kit, text: () => string) => show(() => !!text(), () => errorText(text))

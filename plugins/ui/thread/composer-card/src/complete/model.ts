@@ -1,4 +1,6 @@
-import { derive, listbox, listen, sig, type IconName, type KeyMap } from '@sand/dom'
+import { listbox } from '@sand/kit/web'
+import type { IconName } from '@sand/ui-kit/contract'
+import { derive, listen, sig, type KeyMap } from '@vaakx-dev/vrui'
 
 export interface Suggestion {
   value: string

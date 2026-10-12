@@ -1,4 +1,4 @@
-import { owned, place, pulse } from '@sand/dom'
+import { owned, place, pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { createSlots } from './slots'
 import { headerView } from './view'
@@ -6,6 +6,7 @@ import { headerView } from './view'
 export default definePlugin({
   name: 'header',
   description: 'Breadcrumb bar: project / title with a thread menu, slots for other controls, and buttons for the side drawer and the right panel',
+  inject: ['kit'],
   uses: {
     threads: 'shows just "sand"',
     layout: 'no drawer or panel buttons',

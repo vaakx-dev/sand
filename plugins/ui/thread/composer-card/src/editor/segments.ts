@@ -1,4 +1,4 @@
-import { batch, derive, effect, sig, untrack, type Sig } from '@sand/dom'
+import { batch, derive, effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { quoteBlocks, quotedText, type QuoteBlock } from '@sand/kit'
 
 export interface TextSegment {

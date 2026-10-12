@@ -1,6 +1,6 @@
 import type { WorktreeState } from '../../contract'
+import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget, Thread } from '@sand/web-client/contract'
-import type { IconName } from '@sand/dom'
 import type { WebContext } from '../client'
 import type { States } from '../states'
 import type { Choice, Choices } from './choices'

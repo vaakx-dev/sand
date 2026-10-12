@@ -1,4 +1,5 @@
-import { derive, dynamicChild, sheetStep, sig, untrack } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, dynamicChild, sig, untrack } from '@vaakx-dev/vrui'
 import type { ServerDraft } from '../../contract'
 import { planNames } from '../names'
 import type { LoginControl } from '../state'
@@ -53,18 +54,19 @@ export const addFlow = (control: LoginControl, done: (text?: string) => void) =>
     return `sign-in:${current.account}:${phaseOf(found)}:${found?.pending?.url ?? ''}`
   })
 
-  const body = () => {
+  const body = (kit: Kit) => {
+    const { sheetStep } = kit
     const current = untrack(() => step.get())
-    if (current.kind === 'choose') return sheetStep(chooseStep(untrack(() => control.state.get()), go))
-    if (current.kind === 'key') return keyStep(control, current.account, () => done(`Saved the ${keyNames[current.account]} API key`))
+    if (current.kind === 'choose') return sheetStep(chooseStep(kit, untrack(() => control.state.get()), go))
+    if (current.kind === 'key') return keyStep(kit, control, current.account, () => done(`Saved the ${keyNames[current.account]} API key`))
     if (current.kind === 'detect')
-      return detectStep(control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))
-    if (current.kind === 'server') return serverStep(control, current.draft, name => done(current.draft.id ? `Saved ${name}` : `Added ${name}`))
+      return detectStep(kit, control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))
+    if (current.kind === 'server') return serverStep(kit, control, current.draft, name => done(current.draft.id ? `Saved ${name}` : `Added ${name}`))
     const phase = phaseOf(untrack(() => control.account(current.account)))
-    return signInView(current.account, phase, control, flow.actionsFor(current.account), flow.busy)
+    return signInView(kit, current.account, phase, control, flow.actionsFor(current.account), flow.busy)
   }
 
-  return { step, title, go, back, cancel: flow.cancel, view: () => dynamicChild(bodyKey, body) }
+  return { step, title, go, back, cancel: flow.cancel, view: (kit: Kit) => dynamicChild(bodyKey, () => body(kit)) }
 }
 
 export type AddFlow = ReturnType<typeof addFlow>

@@ -37,7 +37,6 @@
     "@sand/host-remotes": "workspace:*",
     "@sand/agents": "workspace:*",
     "@sand/compaction": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/files": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
@@ -52,6 +51,7 @@
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",
     "@sand/sync": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

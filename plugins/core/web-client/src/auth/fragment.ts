@@ -1,4 +1,4 @@
-import { listen } from '@sand/dom'
+import { listen } from '@vaakx-dev/vrui'
 import { pairSecret } from '@sand/kit'
 
 const takeFromHash = () => {

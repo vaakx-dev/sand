@@ -1,4 +1,4 @@
-import { el, span } from '@sand/dom'
+import { el, span } from '@vaakx-dev/vrui'
 import katex from 'katex'
 import 'katex/contrib/mhchem'
 

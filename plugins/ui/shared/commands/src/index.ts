@@ -1,4 +1,4 @@
-import { collectScope, onTimeout } from '@sand/dom'
+import { collectScope, onTimeout } from '@vaakx-dev/vrui'
 import type { Commands, WebCommand } from './contract'
 import { definePlugin } from 'drydock'
 

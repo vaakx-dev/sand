@@ -1,4 +1,5 @@
 import type { FolderListing, ProjectFolder, ProjectIcon, ProjectPlace } from '@sand/host-projects/contract'
+import type { ProjectLook } from '@sand/protocol'
 
 export interface ProjectEntry {
   project: string
@@ -29,9 +30,8 @@ export interface Projects {
   group(path: string, device?: string): ProjectGroup | undefined
   name(path: string, device?: string): string
   quick(path: string, device?: string): boolean
-  icon(path: string, device?: string): string | undefined
-  groupIcon(group: ProjectGroup): string | undefined
-  iconFile(group: ProjectGroup): string | undefined
+  icon(path: string, device?: string): ProjectLook | undefined
+  groupIcon(group: ProjectGroup): ProjectLook | undefined
   place(device?: string): ProjectPlace
   browse(path: string, device?: string): Promise<FolderListing>
   mkdir(path: string, device?: string): Promise<void>

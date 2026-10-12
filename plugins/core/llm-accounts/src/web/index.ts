@@ -1,4 +1,5 @@
-import { errorMessage, owned, place } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { owned, place } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { addAccount } from './add/sheet'
 import { accountsPage } from './page'
@@ -9,7 +10,7 @@ import { welcomeView } from './welcome/view'
 export default definePlugin({
   name: 'llm-accounts-web',
   description: 'Accounts page in settings and the first-run welcome: sign in with Claude and ChatGPT plans, add API keys or local servers, or use accounts from another PC',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     settings: 'no Accounts page',
     modelSetup: 'after signing in, the welcome ends with Start a thread instead of picking models',
@@ -25,8 +26,8 @@ export default definePlugin({
     const add = addAccount(ctx, control)
     ctx.on('wire.hello', () => void control.load())
     if (ctx.wire.state() === 'open') void control.load()
-    ctx.watch('settings', settings => settings?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', order: 25, render: () => accountsPage(control, add) }))
+    ctx.watch('settings', settings => settings?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
-    place(ctx, 'main', () => welcomeView(welcome, control), 0.5)
+    place(ctx, 'main', () => welcomeView(ctx.kit, welcome, control), 0.5)
   },
 })

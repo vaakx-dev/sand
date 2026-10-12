@@ -1,5 +1,7 @@
 import { folderName } from '@sand/kit'
-import { div, isMac, p, rowButton, span, type Child } from '@sand/dom'
+import { isMac } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, p, span, type Child } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 const keycap = (label: string) =>
@@ -8,7 +10,7 @@ const keycap = (label: string) =>
     label,
   )
 
-const hint = (keys: string[], label: Child, run: () => void) =>
+const hint = ({ rowButton }: Kit, keys: string[], label: Child, run: () => void) =>
   rowButton(
     { class: 'pointer-events-auto gap-3 rounded-lg px-2 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200', onClick: run },
     span({ class: 'flex w-16 shrink-0 justify-end gap-1' }, ...keys.map(keycap)),
@@ -20,16 +22,15 @@ const projectName = (ctx: Context<'threads'>) => {
   return (cwd && (ctx.projects?.name(cwd, ctx.threads.device()) ?? folderName(cwd))) || 'sand'
 }
 
-export const idleHints = (ctx: Context<'threads'>) => {
-  const palette = ctx.palette
-  const composer = ctx.composer
+export const idleHints = (ctx: Context<'kit' | 'threads'>) => {
+  const { kit, palette, composer } = ctx
   return div(
     { class: 'mt-6 flex flex-col items-center gap-2' },
     p({ class: 'text-sm text-neutral-200' }, 'No thread open'),
     div(
       { class: 'mt-2 flex flex-col items-stretch' },
-      palette && hint([isMac() ? '⌘' : 'Ctrl', 'K'], 'Search threads, projects and commands', () => palette.open()),
-      composer && hint(['Type'], `Start a thread in ${projectName(ctx)}`, () => composer.focus()),
+      palette && hint(kit, [isMac() ? '⌘' : 'Ctrl', 'K'], 'Search threads, projects and commands', () => palette.open()),
+      composer && hint(kit, ['Type'], `Start a thread in ${projectName(ctx)}`, () => composer.focus()),
     ),
   )
 }

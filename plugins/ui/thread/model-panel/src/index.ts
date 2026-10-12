@@ -1,6 +1,7 @@
 import type {} from '@sand/model-picker/contract'
-import { owned, sig } from '@sand/dom'
 import { joinDisposers } from '@sand/kit'
+import { owned } from '@sand/kit/web'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { createActions } from './actions'
 import { modelChanges } from './changes'
@@ -12,7 +13,7 @@ import { composerTarget } from './target'
 export default definePlugin({
   name: 'model-panel',
   description: 'One pill in the composer that opens the model picker. Also adds palette rows and the Models settings page.',
-  inject: ['models', 'modelPicker', 'threads'],
+  inject: ['kit', 'models', 'modelPicker', 'threads'],
   uses: {
     composer: 'no pill; /model and /effort open the server sheet',
     palette: 'no model rows in the palette',

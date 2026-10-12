@@ -1,10 +1,10 @@
-import { place } from '@sand/dom'
+import { place } from '@sand/kit/web'
 import type { Context, Dispose } from 'drydock'
 import type { GithubControl } from '../state'
 import { signInModel } from './model'
 import { signInSheet } from './view'
 
-export const signInOpener = (ctx: Context, control: GithubControl) => {
+export const signInOpener = (ctx: Context<'kit'>, control: GithubControl) => {
   let unplace: Dispose | undefined
   const close = () => {
     void unplace?.()
@@ -15,7 +15,7 @@ export const signInOpener = (ctx: Context, control: GithubControl) => {
       close()
       if (text) ctx.notify?.push(text)
     })
-    return signInSheet(model, () => {
+    return signInSheet(ctx.kit, model, () => {
       model.cancel()
       close()
     })

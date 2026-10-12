@@ -1,5 +1,5 @@
-import { effect, sig, untrack } from '@sand/dom'
 import type { InstallProgress, InstallTicket } from '@sand/host-dist/contract'
+import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { renewBeforeExpiry } from '../renew'
 

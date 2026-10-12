@@ -1,4 +1,5 @@
-import { effect, form, keys, preventThen, sig, textInput, untrack } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { effect, form, keys, preventThen, sig, untrack } from '@vaakx-dev/vrui'
 
 export interface UrlParts {
   url: () => string
@@ -6,7 +7,8 @@ export interface UrlParts {
   open(url: string): void
 }
 
-export const urlField = ({ url, title, open }: UrlParts) => {
+export const urlField = (kit: Kit, { url, title, open }: UrlParts) => {
+  const { textInput } = kit
   const draft = sig('')
   const editing = sig(false)
 

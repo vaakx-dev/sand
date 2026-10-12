@@ -1,5 +1,5 @@
-import { div, span } from '@sand/dom'
 import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
+import { div, span } from '@vaakx-dev/vrui'
 import { copyOn, groupOf } from '../group'
 import { machineList, machineRow, offlineNote, sideNote } from '../rows'
 import type { PickerContext } from '../target'
@@ -23,7 +23,7 @@ export const continueMenu = (ctx: PickerContext & ContinueContext, thread: Threa
   const group = groupOf(ctx.projects, thread.info.cwd, thread.device, thread.info.project)
   const rows = ctx.machines.list().map(machine => {
     const here = machine.id === home?.id
-    return machineRow(machine, {
+    return machineRow(ctx.kit, machine, {
       selected: here,
       disabled: here || Boolean(reason) || !machine.online,
       label: machineLines(machine, here ? undefined : destination(group, machine)),
@@ -34,5 +34,5 @@ export const continueMenu = (ctx: PickerContext & ContinueContext, thread: Threa
       },
     })
   })
-  return machineList('Continue this thread on', rows, reason ? div({ class: 'px-3 pb-2 text-xs text-neutral-500' }, reason) : null)
+  return machineList(ctx.kit, 'Continue this thread on', rows, reason ? div({ class: 'px-3 pb-2 text-xs text-neutral-500' }, reason) : null)
 }

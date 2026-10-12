@@ -1,4 +1,5 @@
-import { div, dynamicChild, icon, iconButton, quietButton, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 
@@ -18,7 +19,7 @@ const dots = (state: AskState) =>
     ),
   )
 
-const stepper = (state: AskState, actions: AskActions) =>
+const stepper = ({ icon, iconButton }: Kit, state: AskState, actions: AskActions) =>
   span(
     { class: 'flex shrink-0 items-center' },
     iconButton(
@@ -37,11 +38,12 @@ const stepper = (state: AskState, actions: AskActions) =>
     ),
   )
 
-export const askHeader = (state: AskState, actions: AskActions) => {
+export const askHeader = (kit: Kit, state: AskState, actions: AskActions) => {
+  const { icon, iconButton, quietButton } = kit
   const several = state.questions.length > 1
   return div(
     { class: 'flex min-h-8 items-center gap-1 text-neutral-400' },
-    several ? stepper(state, actions) : span({ class: 'inline-flex shrink-0 px-1 text-accent-400' }, icon('help', 14)),
+    several ? stepper(kit, state, actions) : span({ class: 'inline-flex shrink-0 px-1 text-accent-400' }, icon('help', 14)),
     span({ class: 'ml-1 min-w-0 truncate text-sm font-medium text-neutral-100' }, () => state.question.get().name),
     span({ class: 'min-w-2 flex-1' }),
     several ? dots(state) : '',

@@ -1,4 +1,4 @@
-import { collectScope, disposeAll, listen } from '@sand/dom'
+import { collectScope, disposeAll, listen } from '@vaakx-dev/vrui'
 import type { Saved } from '../drafts/store'
 
 let database: Promise<IDBDatabase> | undefined
