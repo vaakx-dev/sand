@@ -1,6 +1,7 @@
-import type { Models, Wire } from '../contract'
+import type { Wire } from '../contract'
 import type { Context } from 'drydock'
 import type { JobService } from '../data/jobs'
+import type { DeviceModels } from '../data/models'
 import type { ProjectService } from '../data/projects'
 import { isRelayEvent, relayEvents } from '../relay/events'
 import { applyEvent } from '../threads/events'
@@ -14,7 +15,7 @@ interface Bridged {
   threads: ThreadService
   projects: ProjectService
   jobs: JobService
-  models: Models
+  models: DeviceModels
 }
 
 export const bridgeRemotes = (ctx: Context, store: Store, { wire, threads, projects, jobs, models }: Bridged): LinkHandlers => {
@@ -22,12 +23,14 @@ export const bridgeRemotes = (ctx: Context, store: Store, { wire, threads, proje
     for (const thread of [...store.threads.values()]) if (thread.device === device) store.remove(thread.id)
     store.synced.delete(device)
     projects.forget(device)
+    models.forget(device)
   }
 
   return {
     since: device => store.synced.get(device),
     hello(device, hello) {
       applyHello(store, hello, device)
+      models.hello(device, hello)
       void projects.refresh(device)
       jobs.hello(device, hello)
       const current = threads.current()
@@ -35,6 +38,7 @@ export const bridgeRemotes = (ctx: Context, store: Store, { wire, threads, proje
     },
     event(device, event) {
       applyEvent(store, event, id => void threads.load(id), device)
+      models.event(device, event)
       projects.event(device, event)
       jobs.event(device, event)
       if (isRelayEvent(event)) relayEvents(ctx, wire, threads, models, device)(event)

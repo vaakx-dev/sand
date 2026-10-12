@@ -15,7 +15,7 @@ const offeredOf = (entry: Json): Offered[] => {
   const cli = typeof entry.resolvedModel === 'string' && entry.resolvedModel ? entry.resolvedModel : entry.value
   if (typeof cli !== 'string' || !cli || entry.value === 'default') return []
   const levels = Array.isArray(entry.supportedEffortLevels) ? efforts.filter(effort => (entry.supportedEffortLevels as unknown[]).includes(effort)) : []
-  const model: PlanModel = { name: cli.replace(variant, ''), ...(typeof entry.displayName === 'string' && { label: entry.displayName }), ...(levels.length && { efforts: levels }), images: true }
+  const model: PlanModel = { name: cli.replace(variant, ''), ...(levels.length && { efforts: levels }), images: true }
   return [{ model, cli }]
 }
 

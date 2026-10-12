@@ -25,7 +25,7 @@ export interface Scene {
 }
 
 const send = (ctx: PickerContext, request: WireRequest) =>
-  void ctx.wire?.call(request).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+  void ctx.wire?.call(request, ctx.models.device()).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
 
 export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
   const shown = target.shown()
