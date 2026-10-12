@@ -1,4 +1,4 @@
-import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span, type IconName, type Tone } from '@sand/dom'
+import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span, statusBadge, type IconName, type RunStatus } from '@sand/dom'
 import { capital } from '@sand/kit'
 import { row, type RowContext } from './row'
 
@@ -12,14 +12,19 @@ export interface Card {
   failed?: boolean
 }
 
-const tones: Record<string, Tone> = { done: 'success', completed: 'success', failed: 'danger', cancelled: 'neutral' }
+const statuses: Record<string, RunStatus> = { done: 'done', completed: 'done', failed: 'failed', cancelled: 'cancelled', stopped: 'stopped', running: 'running' }
+
+const statusView = (status: string) => {
+  const known = statuses[status]
+  return known ? statusBadge(known) : badge('neutral', capital(status))
+}
 
 const summary = (text: string) => oneLine(text.split('\n').find(line => line.trim())?.replace(/^[#>*\-\s`]+|[*`]+/g, '') ?? '', 140)
 
 const markdown = (text: string, context: RowContext) => div(context.markdown.nodes(text, context.images()))
 
 const whole = (text: string, context: RowContext) =>
-  fold({ lines: text.split('\n').length, chars: text.length, copy: () => text, copyLabel: 'Copy' }, markdown(text, context))
+  fold({ lines: text.split('\n').length, chars: text.length, copy: () => text }, markdown(text, context))
 
 const section = (text: string, key: string, context: RowContext, held: () => boolean) => {
   const { open, toggle } = context.states.get(key)
@@ -48,20 +53,20 @@ export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {
     const sections = context.parts.sections(card.text)
     const { menus } = context.parts
-    const press = menus.text(context.menu, () => ({ title: card.kind, subtitle: card.name, actions: [menus.copy('copy', 'Copy result', () => card.text, 'result')] }))
+    const press = menus.text(context.menu, () => ({ title: card.kind, subtitle: card.name, actions: [menus.copy('copy', 'Copy', () => card.text, 'result')] }))
     return div(
       {
         class: ['mt-2 mb-4 flex gap-3 rounded-xl p-3 text-sm text-neutral-300', card.failed ? 'bg-danger-950' : 'bg-accent-950'],
         ...(card.text ? press.props : {}),
       },
-      span({ class: 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent-900 text-accent-400' }, icon(card.icon, 15)),
+      span({ class: 'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent-900 text-accent-400' }, icon(card.icon, 14)),
       div(
         { class: 'min-w-0 flex-1' },
         div(
           { class: ['flex min-h-6 items-center gap-2 text-xs', card.text && 'mb-2'] },
           span({ class: 'shrink-0 font-medium text-neutral-100' }, card.kind),
           span({ class: 'min-w-0 truncate text-neutral-400', title: card.name }, card.name),
-          card.status && badge(tones[card.status] ?? 'neutral', capital(card.status)),
+          card.status && statusView(card.status),
           sections.length > 1 && span({ class: 'shrink-0 text-neutral-500' }, `${sections.length} results`),
         ),
         results(card, sections, context, press.held),

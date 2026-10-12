@@ -1,7 +1,7 @@
-import { derive, doneMark, dynamicChild, keys, primaryAction, quietButton, settingsSection, setupColumn, setupFooter, setupHeading, setupScreen, sig, textInput } from '@sand/dom'
+import { derive, doneMark, dynamicChild, keys, note, primaryAction, quietButton, settingsSection, setupColumn, setupFooter, setupHeading, setupScreen, sig, textInput } from '@sand/dom'
 import type { Remote } from '@sand/host-remotes/contract'
 import type { LoginState } from '../../contract'
-import { note, problem } from '../parts'
+import { problem } from '../parts'
 import { remoteRow } from '../remote'
 import type { LoginControl } from '../state'
 import type { WelcomeModel } from './model'
@@ -13,7 +13,7 @@ export const joinView = (model: WelcomeModel) => {
   return setupScreen(
     setupHeading('Connect to your other PC'),
     setupColumn(
-      note('On that PC, open Settings → Your devices → Add a PC → It already has sand, copy its link and paste it here.'),
+      note('On that PC, open Settings → Devices → Add a PC → It already has sand, copy its link and paste it here.'),
       textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Pairing link', bindValue: link, onKeyDown: keys({ Enter: connect }), onMount: node => node.focus() }),
       problem(() => model.error.get()),
     ),

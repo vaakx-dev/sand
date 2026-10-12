@@ -1,4 +1,4 @@
-import { badge, div, dynamicChild, p, quietButton, secondaryAction, span, type Tone } from '@sand/dom'
+import { badge, div, dynamicChild, errorText, secondaryAction, span, type Tone } from '@sand/dom'
 import { healthDetails } from '../health/details'
 import type { PcHealthState, PcHealthStatus, PcHealthStore } from '../health/state'
 
@@ -22,7 +22,7 @@ const report = (state: PcHealthState) =>
     { class: 'flex flex-col gap-3' },
     div({ class: 'flex' }, badge(...badges[state.status])),
     state.health ? healthDetails(state.health) : null,
-    state.error ? p({ class: 'text-xs whitespace-pre-wrap wrap-anywhere text-warning-400' }, state.error) : null,
+    state.error ? errorText(state.error) : null,
   )
 
 export const healthPanel = (target: HealthTarget, health: PcHealthStore) => {
@@ -39,7 +39,7 @@ export const healthPanel = (target: HealthTarget, health: PcHealthStore) => {
     dynamicChild(state, report),
     div(
       { class: 'flex flex-wrap items-center gap-3' },
-      quietButton({ size: 'sm', disabled: busy, onClick: () => health.refresh(target.id, target.local) }, 'Check again'),
+      secondaryAction({ size: 'sm', disabled: busy, onClick: () => health.refresh(target.id, target.local) }, 'Check now'),
       ...repair,
     ),
   )

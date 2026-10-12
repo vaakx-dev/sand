@@ -1,4 +1,4 @@
-import { ago, clock, derive, div, dynamicChild, exactTime, openTab, p, primaryAction, secondaryAction, settingsRow, settingsSection, show } from '@sand/dom'
+import { ago, clock, derive, div, dynamicChild, errorRow, exactTime, openTab, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection, show } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet } from '../fleet/model'
@@ -21,9 +21,6 @@ const latestLabel = (fleet: Fleet) => {
   if (target) return target.name
   return localState(fleet)?.checking ? 'Checking GitHub…' : 'No release found yet'
 }
-
-const errorText = (text: () => string) =>
-  div({ class: 'bg-neutral-900 px-4 py-3' }, p({ class: 'text-xs wrap-anywhere whitespace-pre-wrap text-danger-400' }, text))
 
 export const latestSection = (fleet: Fleet, open: () => void) => {
   const now = clock(30_000)
@@ -57,8 +54,8 @@ export const latestSection = (fleet: Fleet, open: () => void) => {
     ),
     dynamicChild(
       changes.map(list => list.map(change => change.commit).join()),
-      () => (changes.get().length ? div({ class: 'bg-neutral-900 px-4 py-3' }, changeList(changes.get())) : null),
+      () => (changes.get().length ? sectionRow({}, div({ class: 'min-w-0 flex-1' }, changeList(changes.get()))) : null),
     ),
-    show(() => !!checkError(), () => errorText(checkError)),
+    show(() => !!checkError(), () => errorRow(checkError)),
   )
 }

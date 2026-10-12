@@ -1,8 +1,8 @@
 import { div, p, span, type Child } from '@vaakx-dev/vrui'
-import { icon } from '../../icons/lucide'
 import type { NavAction } from '../../shell/nav/types'
-import { controlButton, rowButton, secondaryAction } from '../button'
+import { dangerAction, secondaryAction } from '../button'
 import { menuSeparator } from '../menu'
+import { menuIcon, menuItem, menuSizes } from '../menu-item'
 import { askView } from './ask'
 import { choiceChips, type ChipHandlers } from './chips'
 
@@ -42,33 +42,19 @@ export const chipHandlers = (control: MenuControl, action: NavAction): ChipHandl
   },
 })
 
-const rowSize = (size: ItemSize) => (size === 'sm' ? 'min-h-8 px-2 text-xs' : 'min-h-12 px-3 text-sm')
-
-const label = (action: NavAction, size: ItemSize) => [
-  icon(action.icon ?? 'right', size === 'sm' ? 14 : 16),
-  span({ class: 'min-w-0 flex-1 truncate' }, action.label),
-]
+const label = (action: NavAction) => span({ class: 'min-w-0 flex-1 truncate' }, action.label)
 
 const item = (action: NavAction, control: MenuControl, size: ItemSize) =>
-  rowButton(
-    {
-      role: 'menuitem',
-      class: [
-        'gap-3 rounded-lg',
-        rowSize(size),
-        action.danger
-          ? 'text-danger-400 hover:bg-danger-950 hover:text-danger-300 focus-visible:bg-danger-950'
-          : 'text-neutral-300 hover:bg-neutral-700 hover:text-neutral-100 focus-visible:bg-neutral-700',
-      ],
-      onClick: choose(control, action),
-    },
-    ...label(action, size),
+  menuItem(
+    { role: 'menuitem', size, tone: action.danger ? 'danger' : undefined, icon: action.icon ?? 'right', onClick: choose(control, action) },
+    label(action),
   )
 
 const choiceRow = (action: NavAction, control: MenuControl, size: ItemSize) =>
   div(
-    { class: ['flex items-center gap-3 rounded-lg text-neutral-300', rowSize(size)] },
-    ...label(action, size),
+    { class: ['flex items-center gap-3 rounded-lg text-neutral-300', menuSizes[size]] },
+    menuIcon(action.icon ?? 'right', size),
+    label(action),
     choiceChips(action, chipHandlers(control, action), 'sm'),
   )
 
@@ -85,7 +71,7 @@ const confirmView = (action: NavAction, control: MenuControl, back: () => void, 
     div(
       { class: 'flex justify-end gap-2' },
       secondaryAction({ size, onClick: back, onMount: node => node.focus() }, 'Cancel'),
-      controlButton('font-medium bg-danger-500 text-white hover:bg-danger-600', { size, onClick: () => finish(control, () => action.run()) }, action.label),
+      dangerAction({ size, onClick: () => finish(control, () => action.run()) }, action.label),
     ),
   )
 

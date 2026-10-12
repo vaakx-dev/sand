@@ -9,12 +9,12 @@ import { unpairedOverlay } from './unpaired'
 
 export default definePlugin({
   name: 'devices',
-  description: 'Your devices: add and pair other PCs, pair phones and browsers, and reach sand away from home',
+  description: 'Devices: add and pair other PCs, pair phones and browsers, and reach sand away from home',
   inject: ['wire'],
   uses: {
     commands: 'opens the pair dialog from a Devices button in the sidebar instead of /devices',
     nav: 'no sidebar button when there is no /devices command',
-    settings: 'no Your devices settings page',
+    settings: 'no Devices settings page',
     notify: 'no message when a device pairs or a request fails',
     picker: 'no Rename on phones and browsers',
   },
@@ -46,7 +46,7 @@ export default definePlugin({
     const health = pcHealthStore(ctx)
     const actions = { pair, addPc: () => addPc(), pairAgain: () => addPc('join') }
     ctx.watch('settings', settings =>
-      settings?.page({ id: 'devices', label: 'Your devices', icon: 'laptop', order: 27, render: () => pcsPage(ctx, source, health, actions) }),
+      settings?.page({ id: 'devices', label: 'Devices', icon: 'laptop', order: 27, render: () => pcsPage(ctx, source, health, actions) }),
     )
     ctx.watch('commands', commands => commands?.add({ name: 'add-pc', description: 'Add another PC running sand', run: () => addPc() }))
     ctx.watch('commands', commands => {

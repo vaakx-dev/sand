@@ -79,7 +79,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      span({ class: 'inline-flex -ml-2' }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 18))),
+      span({ class: 'inline-flex -ml-2' }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 16))),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),

@@ -1,5 +1,5 @@
 import type { StartPoint, WorktreeEntry, WorktreeState } from '../../contract'
-import { div, groupLabel, icon, menuItem, menuSeparator, okMark, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
+import { choiceItem, div, groupLabel, menuSeparator, span, tildeHome, type Child, type ContextMenu, type IconName, type MenuSpec } from '@sand/dom'
 import { plural, uuid } from '@sand/kit'
 import type { WebContext } from '../client'
 import type { Choice, Choices } from './choices'
@@ -21,21 +21,19 @@ export interface EntryMenus {
 }
 
 const row = ({ glyph, title, line, selected, choose, end, menu }: Row, context?: ContextMenu) =>
-  menuItem(
+  choiceItem(
     {
-      role: 'menuitemradio',
-      'aria-checked': String(selected),
-      active: selected,
-      class: 'py-2 hover:bg-neutral-700',
+      selected,
+      icon: glyph,
+      class: 'py-2',
       ...(menu && context ? context.target(menu, choose) : { onClick: choose }),
     },
-    span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(glyph, 16)),
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
       span({ class: 'truncate font-medium' }, title),
       line ? span({ class: 'truncate text-xs text-neutral-500', title: line }, line) : null,
     ),
-    end ?? (selected ? okMark() : null),
+    end ?? null,
   )
 
 const changes = (entry: WorktreeEntry) => (entry.changed ? span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, `●${entry.changed}`) : undefined)
@@ -116,7 +114,7 @@ export const draftMenu = (ctx: WebContext, choices: Choices, target: ChipTarget,
   const mode = state.worktree ? undefined : choice.mode
   const base = mode === 'new' && choice.mode === 'new' ? choice.base : undefined
   return div(
-    { class: 'flex flex-col gap-1 p-1' },
+    { class: 'flex flex-col gap-1' },
     row({ glyph: 'folder', title: 'Local', line: `${tildeHome(state.main)}${home ? ` on ${home}` : ''}`, selected: mode === 'local', choose: () => pick({ mode: 'local' }) }),
     row({
       glyph: 'folder-git',

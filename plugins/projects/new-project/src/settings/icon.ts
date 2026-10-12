@@ -49,7 +49,7 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
       div(
         { class: 'flex items-center justify-between gap-2' },
         span({ class: 'text-xs text-neutral-500' }, 'Shape'),
-        quietButton({ size: 'sm', onClick: moreIdeas }, icon('reload', 12), 'New ideas'),
+        quietButton({ size: 'sm', onClick: moreIdeas }, icon('reload', 14), 'New ideas'),
       ),
       dynamicChild(
         picking.map(value => value?.page ?? 0),
@@ -60,7 +60,7 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
         { class: 'flex flex-wrap gap-1' },
         ...hues.map(option => duneChoice(duneIcon(group.name, { shape, hue: option.hue }), 'h-4 w-4', option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
       ),
-      quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 12), 'Reset to default'),
+      quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 14), 'Reset to default'),
     ),
   )
 }
@@ -68,7 +68,7 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
 export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>): Entry[] => {
   if (ctx.projects.iconFile(group)) return []
   const run = () => picking.set({ project: group.id, page: Math.floor((group.icon?.shape ?? 0) / shapesPerPage) })
-  return [{ label: 'Change icon', icon: 'sparkles', run }]
+  return [{ label: 'Change icon…', icon: 'sparkles', run }]
 }
 
 export const iconPopover = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) =>

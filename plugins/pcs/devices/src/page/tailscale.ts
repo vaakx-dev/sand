@@ -1,5 +1,5 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
-import { copyButton, div, dot, dynamicChild, p, settingsRow, settingsSection, show, sig, span, toggleSwitch, type Tone } from '@sand/dom'
+import { copyButton, div, dot, dynamicChild, errorRow, settingsRow, settingsSection, show, sig, span, toggleSwitch, type Tone } from '@sand/dom'
 import { linkText } from '../components'
 import type { DeviceSource } from '../source'
 
@@ -13,8 +13,6 @@ const statusRow = (state: TailscaleState) => {
 
 const servingRow = (url: string) =>
   div({ class: 'flex items-center gap-2 bg-neutral-900 px-4 py-2' }, linkText(url), copyButton({ text: () => url, label: 'Copy' }))
-
-const errorRow = (error: string) => div({ class: 'bg-neutral-900 px-4 py-3' }, p({ class: 'text-xs wrap-anywhere whitespace-pre-wrap text-danger-400' }, error))
 
 const helpText = (name?: string) =>
   `Runs tailscale serve so phones can open sand at ${name ? `https://${name}` : 'an https address'} and install it as an app. This changes this PC’s Tailscale serve settings.`

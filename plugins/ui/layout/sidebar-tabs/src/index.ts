@@ -1,4 +1,4 @@
-import { div, el, icon, list, navEntries, navHost, owned, place } from '@sand/dom'
+import { appIcon, div, el, list, navEntries, navHost, owned, paneHead, place, span } from '@sand/dom'
 import { definePlugin } from 'drydock'
 import { actionIcon, tabButton } from './tab'
 
@@ -11,13 +11,10 @@ export default definePlugin({
     const { entries, drag } = owned(ctx, () => navEntries(host, { axis: 'x' }))
 
     const view = () =>
-      div(
-        { class: 'flex h-12 min-w-0 shrink-0 items-center gap-1 bg-neutral-950 px-3' },
-        div(
-          { class: 'flex shrink-0 items-center gap-2 pl-1 pr-2 text-sm font-semibold text-neutral-300' },
-          icon('logo', 15),
-          el('b', { class: 'hidden md:inline' }, 'sand'),
-        ),
+      paneHead(
+        { led: true, class: 'min-w-0 bg-neutral-950' },
+        span({ class: 'flex h-8 w-8 shrink-0 items-center justify-center' }, appIcon(20)),
+        el('b', { class: 'hidden shrink-0 pr-2 text-sm font-semibold text-neutral-300 md:inline', style: { textBox: 'trim-both cap alphabetic' } }, 'Sand'),
         list(entries, entry => entry.key, entry => tabButton(entry, drag), div({ class: 'flex min-w-0 flex-1 items-center gap-1 overflow-auto scrollbar-none' })),
         list(host.actions, action => action.id, action => actionIcon(action, host), div({ class: 'flex shrink-0 items-center gap-1 pl-2' })),
       )

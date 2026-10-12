@@ -1,4 +1,4 @@
-import { badge, div, groupLabel, icon, menuItem, span, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
+import { badge, choiceItem, div, groupLabel, icon, span, type Child, type ContextMenu, type MenuSpec } from '@sand/dom'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { rowMenu } from './row-menu'
 import { statusOf } from './status'
@@ -13,26 +13,25 @@ interface MachineRow {
   menu?: { context: ContextMenu; spec: () => MenuSpec }
 }
 
-export const machineIcon = (machine?: Machine, size = 16) => icon(machine?.local === false ? 'monitor' : 'laptop', size)
+const machineGlyph = (machine?: Machine) => (machine?.local === false ? 'monitor' : 'laptop')
+
+export const machineIcon = (machine?: Machine, size = 16) => icon(machineGlyph(machine), size)
 
 export const sideNote = (text: string) => span({ class: 'shrink-0 text-xs text-neutral-500' }, text)
 
 export const offlineNote = (machine: Machine) => (machine.online ? null : sideNote('Offline'))
 
-export const machineList = (title: string, rows: HTMLElement[], notice?: Child) =>
-  div({ class: 'flex flex-col pb-1' }, groupLabel(title), notice, div({ class: 'flex flex-col gap-1 px-1' }, ...rows))
+export const machineList = (title: string, rows: HTMLElement[], notice?: Child) => div({ class: 'flex flex-col' }, groupLabel(title), notice, ...rows)
 
 export const machineRow = (machine: Machine, { selected, disabled = !machine.online, label, end, choose, menu }: MachineRow) =>
-  menuItem(
+  choiceItem(
     {
-      role: 'menuitemradio',
-      'aria-checked': String(selected),
-      active: selected,
+      selected,
+      icon: machineGlyph(machine),
       disabled,
-      class: 'py-2 hover:bg-neutral-700',
+      class: 'py-2',
       ...(menu ? menu.context.target(menu.spec, choose) : { onClick: choose }),
     },
-    span({ class: 'inline-flex shrink-0 text-neutral-400' }, machineIcon(machine)),
     label ?? span({ class: 'min-w-0 flex-1 truncate font-medium' }, machine.name),
     end,
   )

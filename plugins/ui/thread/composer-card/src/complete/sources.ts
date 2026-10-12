@@ -17,14 +17,14 @@ const commandSource = (ctx: Context): CompletionSource => ({
   trigger: '/',
   pattern: /^\/([\w-]*)$/,
   items: query => [...skills(ctx, query, '$'), ...commands(ctx, query)],
-  hint: () => (ctx.commands ? 'No commands match' : undefined),
+  hint: () => (ctx.commands ? 'No matches' : undefined),
 })
 
 const skillSource = (ctx: Context): CompletionSource => ({
   trigger: '$',
   pattern: /(?:^|\s)\$([\w.-]*)$/,
   items: query => skills(ctx, query),
-  hint: () => (ctx.skillIndex ? 'No skills match' : undefined),
+  hint: () => (ctx.skillIndex ? 'No matches' : undefined),
 })
 
 export const builtinSources = (ctx: Context<'threads'>) => [commandSource(ctx), skillSource(ctx), fileSource(ctx)]

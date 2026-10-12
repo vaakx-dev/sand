@@ -27,6 +27,6 @@ export const rootPage = (sources: () => PaletteSource[]): PalettePage => ({
   id: 'root',
   title: 'Search',
   placeholder: 'Search threads, projects and commands…',
-  empty: 'No matching threads, projects or commands.',
+  empty: 'No matches',
   items: query => merged(sources().filter(source => !source.page), query),
 })

@@ -24,6 +24,8 @@ export const copyButton = ({ text, label, ...props }: CopyProps) => {
   }
   const glyph = (size: number) => dynamicChild(state, value => icon(value === 'copied' ? 'check' : 'copy', size))
   const word = (fallback: string) => () => words[state.get()] || fallback
-  if (label) return quietButton({ size: 'sm', ...props, onClick: () => void copy() }, glyph(12), word(label))
-  return iconButton({ size: 'sm', title: word('Copy'), 'aria-label': word('Copy'), ...props, onClick: () => void copy() }, glyph(13))
+  const size = props.size === 'md' ? 'md' : 'sm'
+  const px = size === 'md' ? 16 : 14
+  if (label) return quietButton({ ...props, size, onClick: () => void copy() }, glyph(px), word(label))
+  return iconButton({ title: word('Copy'), 'aria-label': word('Copy'), ...props, size, onClick: () => void copy() }, glyph(px))
 }

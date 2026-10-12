@@ -1,14 +1,9 @@
 import type { EffectiveSettings } from '@sand/model/contract'
 import type { Picked, PickerTarget } from '@sand/model-picker/contract'
-import { badge, div, icon, primaryAction, secondaryAction, span, type IconName, type Pulse, type Sig } from '@sand/dom'
+import { badge, callout, div, primaryAction, secondaryAction, span, type CalloutLook, type Pulse, type Sig } from '@sand/dom'
 import type { Actions, PanelContext } from './actions'
 
-const banner = (glyph: IconName, text: string) =>
-  div(
-    { class: 'mx-1 mt-2 flex items-start gap-2 rounded-lg bg-warning-950 px-3 py-2 text-xs text-warning-400' },
-    span({ class: 'inline-flex shrink-0 pt-px' }, icon(glyph, 14)),
-    span(text),
-  )
+const banner = (look: CalloutLook, text: string) => div({ class: 'mx-1 mt-2' }, callout(look, span(text)))
 
 const usesDefaults = (shown: EffectiveSettings, defaults: Picked) =>
   shown.model === defaults.model && shown.effort === defaults.effort && shown.speed === defaults.speed
@@ -34,8 +29,8 @@ export const composerTarget = (ctx: PanelContext, actions: Actions, changes: Pul
     extra: () => {
       const settings = shown()
       return [
-        ctx.threads.current()?.running && banner('clock', 'A turn is running. Changes apply when it finishes.'),
-        problem.get() && banner('alert', problem.get()),
+        ctx.threads.current()?.running && banner({ tone: 'warning', icon: 'clock' }, 'A turn is running. Changes apply when it finishes.'),
+        problem.get() && banner('danger', problem.get()),
         settings && !usesDefaults(settings, ctx.modelPicker.resolve(ctx.models.defaults())) && footer(settings, actions),
       ]
     },

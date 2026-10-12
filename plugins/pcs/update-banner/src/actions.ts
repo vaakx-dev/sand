@@ -20,7 +20,7 @@ export const runActionKind = (status: RunStatus): ActionKind | undefined => {
 
 export const fleetAction = (fleet: Fleet, key: string, kind: ActionKind): NavAction => {
   if (kind === 'update') return { id: 'update', label: 'Update', icon: 'up', run: () => fleet.update([key]) }
-  if (kind === 'retry') return { id: 'retry', label: 'Try again', icon: 'retry', run: () => fleet.retry(key) }
+  if (kind === 'retry') return { id: 'retry', label: 'Retry', icon: 'retry', run: () => fleet.retry(key) }
   return { id: 'restart', label: 'Restart now', icon: 'reload', run: () => fleet.restartNow(key) }
 }
 

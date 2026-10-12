@@ -4,7 +4,7 @@ import type { RowActions, TreeItem } from './row'
 
 const goActions = ({ row, head }: TreeItem, actions: RowActions): NavAction[] => [
   ...(head ? [] : [{ id: 'go', group: 'go', label: 'Go here', icon: 'pin', quick: true, run: () => actions.jump(row.id) } satisfies NavAction]),
-  { id: 'fork', group: 'go', label: 'Fork from here', icon: 'fork', quick: true, run: () => actions.fork(row.id) },
+  { id: 'fork', group: 'go', label: 'Fork', icon: 'fork', quick: true, run: () => actions.fork(row.id) },
 ]
 
 const labelActions = ({ row, tree }: TreeItem, actions: RowActions): NavAction[] => [

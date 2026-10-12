@@ -1,5 +1,5 @@
 import type { ReportRow } from '@sand/server/contract'
-import { div, overlay, p, sheet, sheetHead, span } from '@sand/dom'
+import { div, overlay, p, sheet, sheetBody, sheetHead, span } from '@sand/dom'
 
 export interface Report {
   title: string
@@ -29,8 +29,8 @@ export const reportView = ({ title, rows }: Report, close: () => void) =>
   overlay(
     close,
     sheet(
-      { 'aria-label': title, class: 'max-w-lg' },
-      sheetHead(title, close),
-      div({ class: 'min-h-0 overflow-auto px-5 pt-2 pb-5' }, rows.map(rowView)),
+      { 'aria-label': title, size: 'md' },
+      sheetHead({ title, close }),
+      sheetBody({}, div({}, rows.map(rowView))),
     ),
   )

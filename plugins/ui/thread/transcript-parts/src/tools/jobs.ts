@@ -1,6 +1,6 @@
 import type { ToolBadge, ToolView, ToolViews } from '../contract'
 import type { Jobs, JobState } from '@sand/web-client/contract'
-import { effect, errorMessage, onInterval, owned, pulse, sig, type NavAction } from '@sand/dom'
+import { effect, errorMessage, onInterval, owned, pulse, sig, statusLabel, type NavAction } from '@sand/dom'
 import { duration } from '@sand/kit'
 import type { Context } from 'drydock'
 import { resolveRenderer } from './resolve'
@@ -8,9 +8,9 @@ import { resolveRenderer } from './resolve'
 const refresh = 5000
 
 const outcomes: Record<Exclude<JobState['status'], 'running'>, ToolBadge> = {
-  done: { text: 'done', tone: 'success' },
-  failed: { text: 'failed', tone: 'danger' },
-  cancelled: { text: 'stopped', tone: 'neutral' },
+  done: { text: statusLabel('done'), tone: 'success' },
+  failed: { text: statusLabel('failed'), tone: 'danger' },
+  cancelled: { text: statusLabel('cancelled'), tone: 'neutral' },
 }
 
 const snapshot = (jobs?: Jobs) =>
@@ -43,6 +43,7 @@ export const backgroundJobs = (ctx: Context): ToolViews['backgroundJobs'] => {
     icon: 'stop',
     group: 'run',
     danger: true,
+    tile: true,
     run: () => ctx.jobs?.cancel(job.id).catch(error => ctx.notify?.push(`Could not stop: ${errorMessage(error)}`, { level: 'error' })),
   })
 

@@ -16,11 +16,11 @@ export interface LinkRow {
 
 export const linkRow = ({ mark, title, detail, end = [], onClick }: LinkRow) =>
   rowButton(
-    { class: 'min-h-12 gap-3 bg-neutral-900 px-4 py-3 hover:bg-neutral-800', onClick },
+    { class: 'min-h-12 gap-3 bg-neutral-900 px-4 py-2 hover:bg-neutral-800', onClick },
     mark,
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
-      span({ class: 'truncate text-sm text-neutral-100' }, title),
+      span({ class: 'truncate text-sm font-medium text-neutral-100' }, title),
       detail ? span({ class: 'truncate text-xs text-neutral-500' }, detail) : null,
     ),
     ...end,

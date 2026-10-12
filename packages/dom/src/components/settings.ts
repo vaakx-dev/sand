@@ -1,6 +1,7 @@
 import { div, h2, option, read, section, select, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { quietButton } from './button'
+import { rowFrame, rowLabel } from './rows'
 
 export interface SectionProps {
   title?: Child
@@ -25,15 +26,7 @@ export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[
   )
 
 export const settingsRow = (label: Child, control?: Child, detail?: Child) =>
-  div(
-    { class: 'flex min-h-12 flex-wrap items-center gap-x-6 gap-y-2 bg-neutral-900 px-4 py-2' },
-    div(
-      { class: 'flex min-w-24 flex-1 flex-col' },
-      span({ class: 'text-sm text-neutral-100' }, label),
-      detail ? span({ class: 'text-xs text-neutral-500' }, detail) : null,
-    ),
-    control ? div({ class: 'flex shrink-0 items-center gap-2' }, control) : null,
-  )
+  div({ class: rowFrame }, rowLabel(label, detail), control ? div({ class: 'flex shrink-0 items-center gap-2' }, control) : null)
 
 export interface SegmentedOptions {
   label?: string

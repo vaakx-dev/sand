@@ -4,11 +4,9 @@ import type { MenuRequest } from './card/menu'
 import { choiceName, projectChoices } from './project/choices'
 import { projectFilter } from './project/filter'
 import { chipMenu, choiceMenu } from './project/menu'
-import { buildRows, cardsIn, openByDefault } from './rows/build'
+import { buildRows, cardsIn, openByDefault, pageSize, pageStep } from './rows/build'
 import { sectionState } from './rows/sections'
 import { sidebarView } from './view'
-
-const pageSize = 25
 
 export default definePlugin({
   name: 'sidebar-cards',
@@ -69,7 +67,7 @@ export default definePlugin({
         busy: host.busy,
         pick: row => row.list.select(row.item.id),
         toggle: row => sections.toggle(row.key, openByDefault(row.name)),
-        more: row => limits.update(current => ({ ...current, [row.section]: (current[row.section] ?? pageSize) + pageSize * 2 })),
+        more: row => limits.update(current => ({ ...current, [row.section]: (current[row.section] ?? pageSize) + pageStep })),
       })
     ctx.provide('nav', host.nav)
     ctx.watch('nav', nav => (nav === host.nav ? place(ctx, 'side', view) : undefined))

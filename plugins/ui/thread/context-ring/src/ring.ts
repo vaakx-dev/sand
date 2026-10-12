@@ -45,7 +45,7 @@ const details = (ctx: Context<'threads'>, usage: Usage, done: () => void) => {
   return div(
     { class: 'flex flex-col gap-2 p-2' },
     div({ class: 'px-1 text-sm text-neutral-300' }, usageLine(usage)),
-    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: compact }, icon('compact', 13), 'Compact now'),
+    secondaryAction({ size: 'sm', disabled: usage.map(value => Boolean(value?.compacting)), onClick: compact }, icon('compact', 14), 'Compact now'),
   )
 }
 

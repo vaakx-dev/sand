@@ -1,6 +1,7 @@
-import { derive, div, input, keys, sig, span } from '@vaakx-dev/vrui'
+import { derive, div, keys, sig, span } from '@vaakx-dev/vrui'
 import type { NavAsk } from '../../shell/nav/types'
 import { primaryAction } from '../button'
+import { textInput } from '../field'
 
 export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
   const text = sig('')
@@ -13,19 +14,16 @@ export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
   }
   return div(
     { class: 'flex flex-col gap-2 p-1' },
-    input({
-      autocomplete: 'off',
-      spellcheck: false,
-      placeholder: ask.placeholder,
-      'aria-label': ask.tip,
-      class: [
-        'w-full min-w-0 rounded-lg bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 placeholder:text-neutral-500 ring-neutral-700 focus:ring-accent-500',
-        size === 'sm' ? 'h-8 text-sm' : 'h-12 text-base',
-      ],
-      bindValue: text,
-      onKeyDown: keys({ Enter: submit }),
-      onMount: node => node.focus(),
-    }),
+    textInput(
+      {
+        placeholder: ask.placeholder,
+        'aria-label': ask.tip,
+        bindValue: text,
+        onKeyDown: keys({ Enter: submit }),
+        onMount: node => node.focus(),
+      },
+      size,
+    ),
     div(
       { class: 'flex items-center gap-2' },
       span(

@@ -7,7 +7,7 @@ import { actionRow, row, type RowContext, type RowMaker } from './row'
 const chip = (name: string, iconName: IconName, tone: string, iconTone?: string) =>
   span(
     { class: ['inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs', tone], title: name },
-    span({ class: ['shrink-0', iconTone] }, icon(iconName, 13)),
+    span({ class: ['shrink-0', iconTone] }, icon(iconName, 14)),
     span({ class: 'min-w-0 truncate' }, name),
   )
 
@@ -57,7 +57,7 @@ export const userRow: RowMaker<'user'> = (item, context) =>
     })
     const press = menus.text(context.menu, spec)
     return message(
-      item.steer && div({ class: 'px-1 text-xs text-neutral-500' }, 'steered'),
+      item.steer && div({ class: 'px-1 text-xs text-neutral-500' }, 'Steered'),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
       actionRow('-mt-1', menus.more(context.menu, spec)),

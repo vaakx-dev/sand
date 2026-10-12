@@ -1,4 +1,4 @@
-import { contextMenu, div, dynamicChild, icon, rowList, secondaryAction, settingsSection, span, tile, type Sig } from '@sand/dom'
+import { contextMenu, dynamicChild, icon, itemRow, rowList, secondaryAction, settingsSection, tile, type Sig } from '@sand/dom'
 import { actionButton, fleetAction, pcActionKind } from '../actions'
 import type { Fleet, PcView } from '../fleet/model'
 import { channelNames, versionText } from '../fleet/text'
@@ -19,16 +19,13 @@ const pcRow = (row: Sig<PcView>, fleet: Fleet) => {
     if (kind === 'channel') return channelButton(fleet)
     return kind ? actionButton(fleetAction(fleet, row.get().key, kind)) : null
   }
-  return div(
-    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 px-4 py-3', ...menu.target(() => pcMenu(row.get(), fleet)) },
-    menu.view(),
+  return itemRow(
+    menu.target(() => pcMenu(row.get(), fleet)),
     tile(icon('laptop', 16)),
-    div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().name),
-      pcStatusLine(row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
-    ),
+    () => row.get().name,
+    pcStatusLine(row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
     dynamicChild(row.map(controlKind), control),
+    menu.view(),
   )
 }
 

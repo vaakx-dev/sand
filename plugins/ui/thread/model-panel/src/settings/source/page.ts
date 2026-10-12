@@ -13,7 +13,7 @@ const body = (kit: Kit, first: SourceInfo, latest: () => SourceInfo) => {
   return div({ class: 'flex flex-col gap-6' }, modelsSection(first, catalog, filter), optionsSection(kit, latest))
 }
 
-const gone = () => settingsSection({}, hintRow('This account is no longer signed in.'))
+const gone = () => settingsSection({}, hintRow('This account is no longer signed in'))
 
 const title = (source: SourceInfo | undefined, id: string) => {
   if (!source) return id

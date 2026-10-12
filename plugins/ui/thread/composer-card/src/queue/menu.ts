@@ -22,7 +22,7 @@ export const queueMenu = (ctx: Context<'threads' | 'turns'>, model: Model, act: 
   const text = split(item.prompt).text || item.label
   const actions: NavAction[] = [
     ...(steer ? [] : sendActions(ctx, model, act, item)),
-    { id: 'copy', label: 'Copy text', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, text, 'message') },
+    { id: 'copy', label: 'Copy message', icon: 'copy', group: 'copy', tile: true, run: () => copyWithNotice(ctx.notify, text, 'message') },
     { id: 'remove', label: 'Remove', icon: 'x', group: 'remove', danger: true, run: () => act(thread => ctx.turns.withdraw(thread, item.id)) },
   ]
   return { title: steer ? 'Next step' : 'Queued follow-up', subtitle: oneLine(item.label, 60), actions }

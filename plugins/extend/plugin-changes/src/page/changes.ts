@@ -1,5 +1,5 @@
 import type { PluginChangeKind, PluginOffer } from '@sand/host-plugin-sync/contract'
-import { badge, derive, div, hintRow, icon, p, primaryAction, quietButton, rowList, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
+import { badge, derive, div, hintRow, icon, itemRow, p, primaryAction, quietButton, rowList, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { groupOffers, offerSummary, type OfferGroup } from '../offers'
 import type { PluginSource } from '../source'
@@ -36,10 +36,11 @@ const groupSection = (source: PluginSource, group: Sig<OfferGroup>, busy: () => 
   const names = () => group.get().offers.map(offer => offer.plugin)
   return settingsSection(
     {},
-    div(
-      { class: 'flex min-h-12 flex-wrap items-center gap-3 bg-neutral-900 px-4 py-2' },
-      span({ class: 'shrink-0 text-accent-400' }, icon('puzzle', 15)),
-      span({ class: 'min-w-0 flex-1 text-sm text-neutral-100' }, () => offerSummary(group.get())),
+    itemRow(
+      {},
+      span({ class: 'inline-flex shrink-0 text-accent-400' }, icon('puzzle', 16)),
+      () => offerSummary(group.get()),
+      null,
       quietButton({ size: 'sm', disabled: busy, onClick: () => void source.skip(group.get().peer, names()) }, 'Skip'),
       primaryAction({ size: 'sm', disabled: busy, onClick: () => void source.apply(group.get().peer, names()) }, 'Apply all'),
     ),
@@ -63,7 +64,7 @@ export const changesSection = (source: PluginSource) => {
     ),
     show(
       () => source.state.get()?.offers.length === 0,
-      () => settingsSection({}, hintRow('Plugins match your other PCs.')),
+      () => settingsSection({}, hintRow('Plugins match your other PCs')),
     ),
   )
 }

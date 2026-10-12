@@ -6,7 +6,7 @@ import { threadItems } from './thread/items'
 import { field, resultText } from './thread/results'
 import { resultSections } from './thread/sections'
 import { backgroundJobs } from './tools/jobs'
-import { errorBody, truncatedNote } from './tools/notes'
+import { errorBody, outputText, truncatedNote } from './tools/notes'
 import { toolStep } from './tools/step'
 import { openStates } from './transcript/open'
 import { rendererRegistry } from './transcript/registry'
@@ -33,6 +33,6 @@ export default definePlugin({
       image,
       toolStep: (tool, options) => toolStep(tool, options, menus),
     })
-    ctx.provide('toolViews', { field, resultText, errorBody, truncatedNote, image, backgroundJobs: backgroundJobs(ctx) })
+    ctx.provide('toolViews', { field, resultText, errorBody, outputText, truncatedNote, image, backgroundJobs: backgroundJobs(ctx) })
   },
 })

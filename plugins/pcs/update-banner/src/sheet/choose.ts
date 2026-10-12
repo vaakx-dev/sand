@@ -1,4 +1,4 @@
-import { checkMark, derive, div, dynamicChild, exactTime, h3, primaryAction, quietButton, rowButton, rowList, settingsSection, sheetBody, sheetFoot, sig, span, untrack, type Sig } from '@sand/dom'
+import { checkMark, derive, div, dynamicChild, exactTime, h3, primaryAction, rowButton, secondaryAction, rowList, settingsSection, sheetBody, sheetFoot, sig, span, untrack, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeList } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'
@@ -24,7 +24,7 @@ const pcChoice = (row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<string>>) =>
       onClick: toggle,
     },
     checkMark(checked, () => (pickable() ? '' : 'opacity-0')),
-    div({ class: 'flex min-w-0 flex-1 flex-col' }, span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().name), pcStatusLine(row, fleet)),
+    div({ class: 'flex min-w-0 flex-1 flex-col' }, span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().name), pcStatusLine(row, fleet)),
   )
 }
 
@@ -43,7 +43,7 @@ export const chooseBody = (fleet: Fleet, close: () => void) => {
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
     sheetBody(
-      { class: 'gap-5' },
+      {},
       span({ class: 'px-1 text-xs text-neutral-500' }, () => {
         const target = fleet.target.get()
         return target ? `Published ${exactTime(target.publishedAt)}` : ''
@@ -55,7 +55,7 @@ export const chooseBody = (fleet: Fleet, close: () => void) => {
       settingsSection({ title: 'PCs' }, rowList(fleet.pcs, pc => pc.key, row => pcChoice(row, fleet, selected))),
     ),
     sheetFoot(
-      quietButton({ onClick: later }, 'Later'),
+      secondaryAction({ onClick: later }, 'Later'),
       primaryAction({ disabled: () => !chosen.get().length, onClick: () => void fleet.update(chosen.get().map(pc => pc.key)) }, () =>
         chosen.get().length ? `Update ${plural(chosen.get().length, 'PC')}` : 'Choose a PC',
       ),

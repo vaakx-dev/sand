@@ -15,7 +15,7 @@ export const branchInput = (value: Sig<string>, submit: () => void) =>
   div(
     { class: 'flex w-full min-w-0 items-center gap-2 text-neutral-500' },
     icon('branch', 14),
-    textInput({ bindValue: value, 'aria-label': 'Branch', class: 'flex-1 bg-neutral-900 ring-1 ring-neutral-700', onKeyDown: keys({ Enter: submit }) }),
+    textInput({ bindValue: value, 'aria-label': 'Branch', class: 'flex-1', onKeyDown: keys({ Enter: submit }) }),
   )
 
 export const field = (label: string, control: Child) =>

@@ -1,4 +1,4 @@
-import { div, dropdown, icon, iconButton, popoverItem, secondaryAction, segmented, show, span, type Derive } from '@sand/dom'
+import { chipButton, choiceItem, div, dropdown, icon, iconButton, popoverItem, segmented, show, span, type Derive } from '@sand/dom'
 import type { FileChange } from '../changes/collect'
 import { totals } from '../changes/lines'
 import { counts } from './counts'
@@ -8,29 +8,27 @@ import type { ChangesState } from './view'
 
 const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns' : `Turn ${turn}`)
 
-const downMark = () => span({ class: 'inline-flex text-neutral-400' }, icon('down', 12))
-
 const turnPicker = (state: ChangesState) =>
   dropdown({
-    trigger: press => secondaryAction({ size: 'sm', ...press }, () => turnName(state.turn.get()), downMark()),
+    trigger: (press, open) => chipButton({ active: open, menu: true, ...press }, () => turnName(state.turn.get())),
     items: close =>
       [undefined, ...(state.changes.get()?.turns ?? [])].map(turn =>
-        popoverItem(
+        choiceItem(
           {
-            active: () => state.turn.get() === turn,
+            selected: () => state.turn.get() === turn,
             onClick: () => {
               close()
               state.turn.set(turn)
             },
           },
-          turnName(turn),
+          span({ class: 'min-w-0 flex-1' }, turnName(turn)),
         ),
       ),
   })
 
 const filesPicker = (files: Derive<FileChange[]>, state: ChangesState) =>
   dropdown({
-    trigger: press => secondaryAction({ size: 'sm', ...press }, 'Files', downMark()),
+    trigger: (press, open) => chipButton({ active: open, menu: true, ...press }, 'Files'),
     menuClass: 'max-w-xs',
     items: close =>
       files.get().map(file =>

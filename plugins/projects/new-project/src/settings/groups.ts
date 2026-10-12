@@ -1,6 +1,6 @@
 import { plural } from '@sand/kit'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, icon, quietButton, secondaryAction, settingsRow, settingsSection, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, hintRow, icon, quietButton, secondaryAction, settingsSection, sig, type ContextMenu, type Pulse, type Sig } from '@sand/dom'
 import type { ProjectsContext } from '../context'
 import { sourcesPage } from '../flow/sources'
 import type { Picking } from './icon'
@@ -25,7 +25,7 @@ const refreshStates = (ctx: ProjectsContext, groups: ProjectGroup[], done: Set<s
 
 const addButton = (ctx: ProjectsContext) => {
   const palette = ctx.palette
-  return palette ? secondaryAction({ size: 'sm', onClick: () => palette.open(sourcesPage(ctx)) }, icon('plus', 12), 'Add project') : null
+  return palette ? secondaryAction({ size: 'sm', onClick: () => palette.open(sourcesPage(ctx)) }, icon('plus', 14), 'Add a project') : null
 }
 
 const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) =>
@@ -48,7 +48,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
     refreshStates(ctx, groups, refreshed)
     return settingsSection(
       { title: heading(groups), action: div({ class: 'flex items-center gap-2' }, hiddenToggle(ctx, showHidden), addButton(ctx)) },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open, picking)) : [settingsRow('No saved projects')]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, open, picking)) : [hintRow('No projects yet')]),
     )
   })
 }

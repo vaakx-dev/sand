@@ -1,11 +1,11 @@
-import { derive, div, dynamicChild, effect } from '@sand/dom'
+import { derive, div, dynamicChild, effect, hint } from '@sand/dom'
 import type { PanelOptions, PickerTarget } from '../contract'
 import type { PickerKit } from '../kit'
 import { effortBar, fastRow } from './effort'
 import { modelList } from './list'
 import { rail } from './rail'
 import { readScene } from './scene'
-import { findModels, searchField } from './search'
+import { findModels, modelSearch } from './search'
 import { openView, type View } from './view'
 
 const markSeen = ({ ctx }: PickerKit, view: View) =>
@@ -24,7 +24,7 @@ const refocus = (view: View, node: HTMLElement) => {
 
 const body = (kit: PickerKit, target: PickerTarget, view: View, close: () => void, flash: boolean) => {
   const scene = readScene(kit, target, view, close)
-  if (!scene) return div({ class: 'px-3 py-4 text-xs text-neutral-500' }, 'Loading the models…')
+  if (!scene) return hint('Loading…')
   return div(
     {
       class: 'flex min-h-0 flex-col pb-1',
@@ -50,7 +50,7 @@ export const modelPanel = (kit: PickerKit, target: PickerTarget, close: () => vo
     if (first) scene.pick(first)
   }
   return [
-    searchField(view, pickFirst),
+    modelSearch(view, pickFirst),
     dynamicChild(
       derive(() => `${kit.changes.version.get()}:${kit.pcs.key()}:${JSON.stringify(target.shown())}:${target.key?.() ?? ''}`),
       () => body(kit, target, view, close, flash),

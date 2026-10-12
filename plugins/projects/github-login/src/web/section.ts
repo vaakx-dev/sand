@@ -1,4 +1,4 @@
-import { copyButton, derive, div, dynamicChild, icon, itemRow, rowAction, secondaryAction, settingsSection, span, type Child } from '@sand/dom'
+import { callout, copyButton, derive, div, dynamicChild, itemRow, rowAction, secondaryAction, settingsSection, span, type Child } from '@sand/dom'
 import type { GithubCli, GithubState } from '../contract'
 import { githubTile } from './mark'
 import type { GithubControl } from './state'
@@ -25,12 +25,14 @@ const warningText = (gh: GithubCli) =>
 const warning = (gh: GithubCli) => {
   const { command } = gh
   if (!command) return null
-  return div(
-    { class: 'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-warning-950 px-4 py-2 text-xs text-warning-400' },
-    icon('alert', 14),
-    span({ class: 'min-w-48 flex-1' }, warningText(gh)),
-    span({ class: 'font-mono text-neutral-300' }, command),
-    copyButton({ text: () => command, label: gh.installed ? 'Copy update command' : 'Copy install command' }),
+  return callout(
+    'warning',
+    div(
+      { class: 'flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2' },
+      span({ class: 'min-w-48 flex-1' }, warningText(gh)),
+      span({ class: 'font-mono text-neutral-300' }, command),
+      copyButton({ text: () => command, label: 'Copy' }),
+    ),
   )
 }
 

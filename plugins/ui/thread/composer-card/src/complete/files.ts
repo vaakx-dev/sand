@@ -38,5 +38,5 @@ export const fileSource = (ctx: Context<'threads'>): CompletionSource => ({
       .slice(0, 10)
       .map(entry => ({ value: quote(entry, quoted), group: 'Files', icon: entry.directory ? 'folder' : 'file', ...(entry.directory && { partial: true }) }))
   },
-  hint: () => (ctx.fileIndex ? 'No files match' : undefined),
+  hint: () => (ctx.fileIndex ? 'No matches' : undefined),
 })

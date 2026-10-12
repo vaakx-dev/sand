@@ -1,23 +1,15 @@
 import type { Picture } from '../gallery'
 import type { ViewerModel } from './model'
-import { disposeAll, dismissible, div, dynamicChild, icon, keys, layer, onWindow, plainButton, returnFocus, type Derive } from '@sand/dom'
+import { disposeAll, dismissible, div, dynamicChild, floatButton, icon, keys, layer, onWindow, returnFocus, type Derive } from '@sand/dom'
 import { viewerHead } from './head'
 import { viewerStage } from './stage'
 import { viewerStrip } from './strip'
 import { zoomState } from './zoom'
 
 const flipButton = (side: 'left' | 'right', title: string, disabled: Derive<boolean>, onClick: () => void) =>
-  plainButton(
-    {
-      title,
-      disabled,
-      onClick,
-      class: [
-        'absolute top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 shadow-lg ring-1 ring-neutral-700 hover:bg-neutral-700 md:flex',
-        side === 'left' ? 'left-3' : 'right-3',
-      ],
-    },
-    icon(side, 18),
+  div(
+    { class: ['absolute top-1/2 hidden -translate-y-1/2 md:block', side === 'left' ? 'left-3' : 'right-3'] },
+    floatButton({ size: 'md', title, 'aria-label': title, disabled, onClick }, icon(side, 16)),
   )
 
 const imageView = (model: ViewerModel, index: number, picture: Picture, close: () => void) => {

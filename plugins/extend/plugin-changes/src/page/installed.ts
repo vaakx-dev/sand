@@ -31,7 +31,7 @@ export const installedSection = (source: PluginSource) => {
     ),
     show(
       () => source.state.get()?.plugins.length === 0,
-      () => hintRow('No plugins in ~/.sand/plugins yet.'),
+      () => hintRow('No plugins in ~/.sand/plugins yet'),
     ),
   )
 }

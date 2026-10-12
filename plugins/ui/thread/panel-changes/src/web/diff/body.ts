@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, iconButton, rowButton, secondaryAction, span } from '@sand/dom'
+import { closeButton, derive, div, dynamicChild, icon, rowButton, secondaryAction, span } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { FileChange } from '../../changes/collect'
 import { blocksOf, selectionKey } from './blocks'
@@ -17,7 +17,7 @@ const foldText = ({ id, count }: Fold) => (id === restId ? `Show ${plural(count,
 const foldRow = (row: Fold, view: DiffView) =>
   rowButton(
     { class: 'h-8 gap-2 bg-neutral-900 px-3 font-sans text-accent-400 hover:bg-neutral-800', onClick: () => view.expand(row.id) },
-    icon('unfold', 13),
+    icon('unfold', 14),
     foldText(row),
   )
 
@@ -25,8 +25,8 @@ const quoteBar = (view: DiffView) =>
   div(
     { class: 'flex items-center gap-2 border-t border-b border-neutral-800 bg-neutral-900 px-3 py-1.5 font-sans' },
     span({ class: 'min-w-0 flex-1 truncate text-neutral-400' }, view.selected()?.label ?? ''),
-    secondaryAction({ size: 'sm', onClick: view.quote }, icon('reply', 13), 'Quote in reply'),
-    iconButton({ size: 'sm', title: 'Clear selection', onClick: view.clear }, icon('x', 13)),
+    secondaryAction({ size: 'sm', onClick: view.quote }, icon('reply', 14), 'Quote in reply'),
+    closeButton({ size: 'sm', title: 'Clear selection', onClick: view.clear }),
   )
 
 const withQuote = (row: HTMLElement, lines: (Line | undefined)[], view: DiffView) =>

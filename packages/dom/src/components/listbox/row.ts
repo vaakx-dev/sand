@@ -22,8 +22,8 @@ export const listboxRow = (box: Listbox, index: MaybeReactive<number>, { class: 
       ...optionProps(box, index),
       ...props,
       class: [
-        'flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-sm cursor-pointer',
-        () => (box.isSelected(read(index)) ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-300'),
+        'flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-sm cursor-pointer',
+        () => (box.isSelected(read(index)) ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-300 hover:bg-neutral-700 hover:text-neutral-100'),
         extra,
       ],
     },

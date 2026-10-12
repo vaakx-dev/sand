@@ -1,24 +1,12 @@
 import type { OpenState, Step } from '@sand/transcript-parts/contract'
-import { div, dynamicChild, icon, list, shine, show, span, toolBody, toolCard, untrack, type Sig } from '@sand/dom'
-import { oneLine } from '@sand/kit'
+import { div, list, untrack, type Sig } from '@sand/dom'
 import { row, type RowContext, type RowMaker } from './row'
+import { thinkingCard } from './thinking'
 
 type ThinkingStep = Extract<Step, { kind: 'thinking' }>
 
-const thinkingView = (step: Sig<ThinkingStep>, { open, toggle }: OpenState) => {
-  const streaming = step.map(value => value.streaming)
-  const text = step.map(value => oneLine(value.text))
-  return toolCard(
-    {
-      icon: icon('message', 14),
-      verb: () => (streaming.get() ? 'Thinking' : 'Thought'),
-      target: dynamicChild(streaming, live => (live ? shine(text) : span(text))),
-      targetClass: 'italic text-neutral-500',
-      onToggle: toggle,
-    },
-    show(open, () => toolBody(div({ class: 'whitespace-pre-wrap text-neutral-400' }, step.map(value => value.text)))),
-  )
-}
+const thinkingView = (step: Sig<ThinkingStep>, state: OpenState) =>
+  thinkingCard({ streaming: step.map(value => value.streaming), text: step.map(value => value.text), ...state })
 
 const stepView = (step: Sig<Step>, context: RowContext) => {
   const first = untrack(() => step.get())

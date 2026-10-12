@@ -1,4 +1,4 @@
-import { badge, checkMark, chevron, div, layer, quietButton, rowButton, show, span, type ContextMenu, type Sig } from '@sand/dom'
+import { badge, checkMark, chevron, div, layer, paneRow, quietButton, show, span, type ContextMenu, type Sig } from '@sand/dom'
 import type { FileChange } from '../../changes/collect'
 import { counts, diffstat } from '../counts'
 import type { Display } from '../display'
@@ -20,17 +20,18 @@ const viewedToggle = (file: Sig<FileChange>, state: ChangesState, display: Displ
 
 export const fileHeader = (file: Sig<FileChange>, state: ChangesState, display: Display, menu: ContextMenu) =>
   div(
-    { class: [layer.sticky, 'sticky top-0 flex h-10 items-center gap-2 border-b border-neutral-800 bg-neutral-950 pr-2 text-xs'] },
-    rowButton(
+    { class: [layer.sticky, 'sticky top-0 flex h-10 items-center gap-2 border-b border-neutral-800 bg-neutral-950 px-2 text-xs'] },
+    paneRow(
       {
-        class: 'h-full min-w-0 flex-1 gap-2 pl-4 text-neutral-400 hover:text-neutral-100',
+        class: 'flex-1',
         title: file.map(value => value.path),
+        'aria-expanded': () => String(!state.isClosed(file.get())),
         ...menu.target(
           () => fileMenu(file.get(), state),
           () => state.toggle(file.get()),
         ),
       },
-      chevron(() => !state.isClosed(file.get())),
+      span({ class: 'inline-flex shrink-0 text-neutral-500' }, chevron(() => !state.isClosed(file.get()), 14)),
       pathLabel(() => file.get().path),
     ),
     show(

@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, div, dynamicChild, hintRow, p, quietButton, rowList, segmented, settingsSection, show, textInput, type Choice } from '@sand/dom'
+import { derive, div, dynamicChild, errorRow, hintRow, quietButton, rowList, searchField, segmented, settingsSection, show, type Choice } from '@sand/dom'
 import { addRow } from './add'
 import type { Catalog } from './catalog'
 import type { Filter, Mode } from './filter'
@@ -16,8 +16,7 @@ const toolbar = (catalog: Catalog, filter: Filter) => {
     { class: 'flex flex-wrap items-center gap-2' },
     div(
       { class: 'flex min-w-48 flex-1' },
-      textInput({
-        type: 'search',
+      searchField({
         placeholder: () => (total.get() ? `Search ${total.get()} models` : 'Search models'),
         'aria-label': 'Search models',
         bindValue: filter.query,
@@ -31,8 +30,8 @@ const toolbar = (catalog: Catalog, filter: Filter) => {
 }
 
 const emptyText = (catalog: Catalog, filter: Filter) => {
-  if (filter.query.get().trim()) return `No models match "${filter.query.get().trim()}"`
-  if (filter.mode.get() === 'shown' && catalog.models.get()?.length) return 'None shown yet. Pick some under All.'
+  if (filter.query.get().trim()) return 'No matches'
+  if (filter.mode.get() === 'shown' && catalog.models.get()?.length) return 'None shown yet. Pick some under All'
   return 'No models yet'
 }
 
@@ -43,18 +42,11 @@ const statusOf = (catalog: Catalog, filter: Filter): Status => {
   return filter.found.get().length ? 'rows' : 'empty'
 }
 
-const errorRow = (catalog: Catalog) =>
-  div(
-    { class: 'flex flex-wrap items-center gap-3 bg-neutral-900 px-4 py-3' },
-    p({ class: 'min-w-0 flex-1 text-xs wrap-anywhere text-danger-400' }, () => catalog.error.get()),
-    quietButton({ size: 'sm', onClick: () => void catalog.reload() }, 'Try again'),
-  )
-
 const status = (catalog: Catalog, filter: Filter) =>
   dynamicChild(
     derive(() => statusOf(catalog, filter)),
     state => {
-      if (state === 'error') return errorRow(catalog)
+      if (state === 'error') return errorRow(() => catalog.error.get(), () => void catalog.reload())
       if (state === 'rows') return null
       return hintRow(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter)))
     },
@@ -70,7 +62,7 @@ export const modelsSection = (source: SourceInfo, catalog: Catalog, filter: Filt
       rowList(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep)),
       show(
         filter.more.map(more => more > 0),
-        () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show more (${filter.more.get()})`)),
+        () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show ${filter.more.get()} more`)),
       ),
       source.slugs ? addRow(catalog, model => filter.keep(model.id)) : null,
     ),

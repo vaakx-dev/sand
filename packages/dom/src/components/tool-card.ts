@@ -19,7 +19,6 @@ export interface FoldProps {
   lines: MaybeReactive<number>
   chars?: MaybeReactive<number>
   copy?: () => string
-  copyLabel?: string
 }
 
 export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', meta, actions, failed = false, onToggle, headProps }: ToolCardProps, ...body: Child[]) =>
@@ -45,7 +44,7 @@ const limit = 12
 const lineWidth = 120
 const fade = 'linear-gradient(#000 55%, transparent)'
 
-export const fold = ({ lines, chars = 0, copy, copyLabel = 'Copy output' }: FoldProps, ...content: Child[]) => {
+export const fold = ({ lines, chars = 0, copy }: FoldProps, ...content: Child[]) => {
   const long = derive(() => read(lines) > limit || read(chars) > limit * lineWidth)
   const open = sig(false)
   const clipped = () => long.get() && !open.get()
@@ -67,7 +66,7 @@ export const fold = ({ lines, chars = 0, copy, copyLabel = 'Copy output' }: Fold
         div(
           { class: 'mt-1 flex items-center gap-1' },
           show(long, () => quietButton({ size: 'sm', onClick: open.toggle() }, moreLabel)),
-          copy && copyButton({ text: copy, label: copyLabel }),
+          copy && copyButton({ text: copy, label: 'Copy' }),
         ),
     ),
   )

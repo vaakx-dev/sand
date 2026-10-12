@@ -41,7 +41,7 @@ const sourceEntry = (scene: Scene, source: SourceInfo): Entry => {
   return {
     id: source.id,
     title: sourceTitle(source, offline),
-    glyph: modelLogo(source.provider),
+    glyph: modelLogo(source.provider, 16),
     dim: offline,
     fresh: source.fresh > 0,
     key: source.billing === 'api',
@@ -68,7 +68,7 @@ const arrows = keys({
 export const rail = (scene: Scene, view: View) => {
   const local = scene.sources.filter(source => !source.via)
   const remote = scene.sources.filter(source => source.via)
-  const favourites: Entry = { id: FAVOURITES, title: 'Favourites', glyph: span({ class: 'inline-flex text-warning-400' }, icon('star')) }
+  const favourites: Entry = { id: FAVOURITES, title: 'Favourites', glyph: span({ class: 'inline-flex text-warning-400' }, icon('star', 16)) }
   const unselected = () => Boolean(view.query.get()) || !scene.sources.some(source => source.id === view.at.get())
   return div(
     {

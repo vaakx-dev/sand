@@ -1,4 +1,4 @@
-import { derive, dynamicChild, hintRow, itemRow, settingsSection } from '@sand/dom'
+import { derive, dynamicChild, errorRow, itemRow, settingsSection } from '@sand/dom'
 import type { LoginRemoteAccount, LoginState } from '../contract'
 import { accountLogo, howText, readyChip } from './names'
 import type { LoginControl } from './state'
@@ -27,7 +27,7 @@ export const remoteSection = (control: LoginControl) =>
       return settingsSection(
         { title: 'From your PCs' },
         state.remote.map(account => remoteRow(state, account)),
-        problems(state).map(problem => hintRow(problem)),
+        problems(state).map(problem => errorRow(problem)),
       )
     },
   )
