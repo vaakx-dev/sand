@@ -8,11 +8,13 @@ import { card, type Card } from './dock/card'
 import { dock } from './dock/dock'
 import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
+import { createHandoff } from './handoff'
 import { createModel } from './model'
+import { createSendMenu } from './send/menu'
 
 export default definePlugin({
   name: 'composer-card',
-  description: 'Floating prompt card: send, follow-up queue, completion, attachments, context, unsent drafts, slots for other controls',
+  description: 'Floating prompt card: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls',
   inject: ['threads', 'turns', 'kit'],
   uses: {
     layout: 'lands loose on the stage',
@@ -23,11 +25,12 @@ export default definePlugin({
     wire: 'no offline state; sends fail when the connection drops',
     jobs: 'no still-working agents chip',
     panels: 'the still-working agents chip is not clickable',
-    media: 'queued images stored on the server show no thumbnail',
+    media: 'pending message images stored on the server show no thumbnail',
     notify: 'failed stops and copies are not reported',
   },
   apply(ctx) {
     const slots = createSlots()
+    const menu = createSendMenu()
     let current: Card | undefined
     const { model, dropping, session } = owned(ctx, () => {
       const model = createModel(ctx)
@@ -54,9 +57,11 @@ export default definePlugin({
       attach: content => model.files.attach(content),
       slot: (where, view, order) => slots.add(where, view, order),
       capture: entry => model.addCapture(entry),
+      ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
+      sendMenu: menu.add,
     }
 
-    const parts = { ctx, model, slots, dropping }
+    const parts = { ctx, model, slots, menu, dropping }
     session.start()
     place(
       ctx,

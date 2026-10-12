@@ -1,7 +1,7 @@
 {
   "name": "@sand/composer-card",
   "version": "0.0.0",
-  "description": "Floating prompt card: send, follow-up queue, completion, attachments, context, unsent drafts, slots for other controls",
+  "description": "Floating prompt card: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Composer",
-    "summary": "Where you write messages: attachments, follow-up queue, context, drafts and slots for other controls",
+    "summary": "Where you write messages: attachments, pending messages, context, drafts and slots for other controls",
     "provides": [
       "composer",
       "drafts"
@@ -23,7 +23,7 @@
       "wire": "no offline state; sends fail when the connection drops",
       "jobs": "no still-working agents chip",
       "panels": "the still-working agents chip is not clickable",
-      "media": "queued images stored on the server show no thumbnail",
+      "media": "pending message images stored on the server show no thumbnail",
       "notify": "failed stops and copies are not reported"
     }
   },
