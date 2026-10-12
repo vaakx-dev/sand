@@ -1,11 +1,13 @@
+import { joinDisposers } from '@sand/kit'
 import { every } from '../detached'
 import type { Connection } from '../integrations/socket'
-import { TimedOut } from './timeout'
 
 const beatEvery = 30_000
 const reprobeEvery = 60_000
-export const beatWait = 8000
-const wakeWait = 4000
+const recent = 10_000
+const silentLimit = 20_000
+export const beatWait = 15_000
+const wakeWait = 10_000
 const wakeGap = 3000
 
 interface Watched {
@@ -17,46 +19,41 @@ interface Watched {
 }
 
 export const watchHealth = (pc: Watched) => {
-  let stopBeat: (() => void) | undefined
-  let stopReprobe: (() => void) | undefined
+  let stopTimers: (() => void) | undefined
   let lastCheck = 0
 
-  const answers = async (connection: Connection, wait: number) => {
-    try {
-      await pc.ask(connection, wait)
-      return connection === pc.current()
-    } catch (failure) {
-      if (failure instanceof TimedOut) pc.lose(connection)
-      return false
-    }
+  const quietFor = (connection: Connection) => Date.now() - connection.heardAt()
+
+  const probe = async (connection: Connection, wait: number) => {
+    if (quietFor(connection) < recent) return
+    await pc.ask(connection, wait).catch(() => {})
+    if (connection === pc.current() && quietFor(connection) >= silentLimit) pc.lose(connection)
   }
 
   const beat = () => {
     const connection = pc.current()
-    if (connection && document.visibilityState === 'visible') void answers(connection, beatWait)
+    if (connection && document.visibilityState === 'visible') void probe(connection, beatWait)
   }
 
-  const stopReprobing = () => {
-    stopReprobe?.()
-    stopReprobe = undefined
+  const reprobeIfSlower = () => {
+    if (pc.slower()) pc.reprobe()
   }
 
   return {
     plan() {
-      if (!pc.current()) {
-        stopBeat?.()
-        stopBeat = undefined
-        return stopReprobing()
+      if (pc.current()) {
+        stopTimers ??= joinDisposers(every(beatEvery, beat), every(reprobeEvery, reprobeIfSlower))
+        return
       }
-      stopBeat ??= every(beatEvery, beat)
-      if (pc.slower()) stopReprobe ??= every(reprobeEvery, pc.reprobe)
-      else stopReprobing()
+      stopTimers?.()
+      stopTimers = undefined
     },
     async check() {
       const connection = pc.current()
       if (!connection || Date.now() - lastCheck < wakeGap) return
       lastCheck = Date.now()
-      if ((await answers(connection, wakeWait)) && pc.slower()) pc.reprobe()
+      await probe(connection, wakeWait)
+      if (connection === pc.current()) reprobeIfSlower()
     },
   }
 }

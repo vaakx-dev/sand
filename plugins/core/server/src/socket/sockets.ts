@@ -13,7 +13,11 @@ export interface SocketHandlers {
   malformed(error: unknown): void
 }
 
-const send = (socket: Socket, payload: ServerMessage) => socket.send(JSON.stringify(payload))
+export const deliver = (socket: Socket, payload: string) => {
+  if (socket.send(payload) === 0) socket.terminate()
+}
+
+const send = (socket: Socket, payload: ServerMessage) => deliver(socket, JSON.stringify(payload))
 
 const parse = (raw: string) => {
   const request = JSON.parse(raw) as ClientMessage
@@ -43,11 +47,11 @@ export const createSockets = (handlers: SocketHandlers) => {
 
   const broadcast = (name: string, args: unknown[]) => {
     const payload = JSON.stringify({ type: 'event', name, args: args.map(serialize) } satisfies ServerMessage)
-    for (const client of clients) client.send(payload)
+    for (const client of clients) deliver(client, payload)
   }
 
   const publish = (payload: string, to: (socket: Socket) => boolean) => {
-    for (const client of clients) if (to(client)) client.send(payload)
+    for (const client of clients) if (to(client)) deliver(client, payload)
   }
 
   const websocket: WebSocketHandler<unknown> = {

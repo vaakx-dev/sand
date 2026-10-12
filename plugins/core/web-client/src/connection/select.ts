@@ -12,7 +12,7 @@ export interface Route {
   identity: HostIdentity
 }
 
-const probeTimeout = 4000
+const probeTimeout = 8000
 const settle = 250
 const unreachable = 'No known way to reach this PC'
 

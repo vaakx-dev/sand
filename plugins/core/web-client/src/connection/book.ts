@@ -9,6 +9,7 @@ export interface StoredRoute {
   latency?: number
   seen?: number
   failed?: number
+  misses?: number
 }
 
 type Book = Record<string, StoredRoute[]>
@@ -67,7 +68,7 @@ export const succeeded = (host: string, url: string, latency: number) => {
 export const failed = (host: string, url: string) => {
   const origin = originOf(url)
   if (!origin || !entry(routes(host), origin)) return
-  update(host, list => list.map(route => (route.url === origin ? { ...route, failed: Date.now() } : route)))
+  update(host, list => list.map(route => (route.url === origin ? { ...route, failed: Date.now(), misses: (route.misses ?? 0) + 1 } : route)))
 }
 
 export const homeHost = () => loadText(homeKey)
