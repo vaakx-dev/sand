@@ -1,9 +1,14 @@
-import type { UsageSummary } from '@sand/usage/contract'
+import type { UsageQuery, UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/web-client/contract'
-import { errorMessage, usageQuery, type UsageRange } from '@sand/kit'
-import { derive, sig, type Sig } from '@vaakx-dev/vrui'
+import { errorMessage } from '@sand/kit'
+import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
+
+export interface FleetView {
+  key: string
+  query: UsageQuery
+}
 
 interface PcState {
   at: number
@@ -16,7 +21,7 @@ const placeholderId = 'local'
 
 const idle = (cached?: Cached): PcState => ({ at: cached?.at ?? 0, summary: cached?.summary, failure: '', busy: false })
 
-export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>) => {
+export const fleetLoader = (wire: Wire, pcs: () => Pc[], view: () => FleetView) => {
   const states = sig(new Map<string, PcState>())
   const asked = new Set<string>()
   let generation = 0
@@ -27,22 +32,22 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>)
     states.set(next)
   }
 
-  const seed = (pc: Pc) => put(pc.id, idle(readCache(pc.id, range.get())))
+  const seed = (pc: Pc) => put(pc.id, idle(readCache(pc.id, view().key)))
 
   const idOf = (pc: Pc) => (pc.local ? (pcs().find(other => other.local)?.id ?? pc.id) : pc.id)
 
   const ask = (pc: Pc) => {
-    const current = range.get()
+    const { key, query } = view()
     const run = generation
     asked.add(pc.id)
     put(pc.id, { busy: true })
     wire
-      .call<UsageSummary>({ type: 'usage.summary', ...usageQuery(current) }, pc.local ? undefined : pc.id)
+      .call<UsageSummary>({ type: 'usage.summary', ...query }, pc.local ? undefined : pc.id)
       .then(result => {
         if (run !== generation) return
         const id = idOf(pc)
         const cached = { at: Date.now(), summary: result }
-        writeCache(id, current, cached)
+        writeCache(id, key, cached)
         put(id, { ...cached, failure: '', busy: false })
       })
       .catch(error => {
@@ -54,7 +59,9 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], range: Sig<UsageRange>)
     const placeholder = states.get().get(placeholderId)
     if (!pc.local || pc.id === placeholderId || !placeholder || !asked.delete(placeholderId)) return
     asked.add(pc.id)
-    put(pc.id, placeholder)
+    const next = new Map(states.get())
+    next.delete(placeholderId)
+    states.set(next.set(pc.id, placeholder))
   }
 
   const sync = () => {

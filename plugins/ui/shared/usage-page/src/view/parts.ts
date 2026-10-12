@@ -19,12 +19,4 @@ export const card = ({ sectionRow }: Kit, title: string, meta: Child, ...body: C
     ),
   )
 
-export const stat = (label: string, value: Child, note?: Child) =>
-  div(
-    { class: 'flex flex-col gap-1' },
-    muted(label),
-    span({ class: 'text-lg font-semibold text-neutral-100 tabular-nums' }, value),
-    note ? muted(note) : null,
-  )
-
 export const stats = (...children: Child[]) => div({ class: 'flex flex-wrap items-center gap-x-8 gap-y-4' }, ...children)

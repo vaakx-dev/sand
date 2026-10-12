@@ -24,8 +24,4 @@ export const providerOf = (source: string) => sources[source]?.provider ?? 'unkn
 
 export const isSubscription = (account: Pick<AccountUsage, 'billing'>) => account.billing === 'plan'
 
-export const isLocal = (account: Pick<AccountUsage, 'billing'>) => account.billing === 'local'
-
-export const shortName = (account: AccountUsage) => (account.billing === 'api' && account.provider in brands ? 'API key' : account.label)
-
 export const listText = (names: string[]) => (names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`)

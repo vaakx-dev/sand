@@ -1,4 +1,3 @@
-import type { UsageRange } from '@sand/kit'
 import type { UsageSummary } from '@sand/usage/contract'
 import { isSummary } from '../data/valid'
 
@@ -7,11 +6,11 @@ export interface Cached {
   summary: UsageSummary
 }
 
-const keyOf = (pc: string, range: UsageRange) => `sand.usage.summary.${pc}.${range}`
+const keyOf = (pc: string, view: string) => `sand.usage.summary.${pc}.${view}`
 
-export const readCache = (pc: string, range: UsageRange): Cached | undefined => {
+export const readCache = (pc: string, view: string): Cached | undefined => {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(keyOf(pc, range)) ?? 'null')
+    const saved: unknown = JSON.parse(localStorage.getItem(keyOf(pc, view)) ?? 'null')
     if (!saved || typeof saved !== 'object' || !('at' in saved) || !('summary' in saved)) return undefined
     const { at, summary } = saved
     return typeof at === 'number' && isSummary(summary) ? { at, summary } : undefined
@@ -20,8 +19,8 @@ export const readCache = (pc: string, range: UsageRange): Cached | undefined => 
   }
 }
 
-export const writeCache = (pc: string, range: UsageRange, cached: Cached) => {
+export const writeCache = (pc: string, view: string, cached: Cached) => {
   try {
-    localStorage.setItem(keyOf(pc, range), JSON.stringify(cached))
+    localStorage.setItem(keyOf(pc, view), JSON.stringify(cached))
   } catch {}
 }

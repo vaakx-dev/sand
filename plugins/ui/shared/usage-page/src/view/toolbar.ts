@@ -1,11 +1,15 @@
-import { usageRanges } from '@sand/kit'
 import { delayed } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Pc } from '../data/types'
 import type { UsageModel } from '../model'
-import { allPcs } from '../prefs'
-import { rangeLabel } from '../range'
+import { allPcs, type Tab } from '../prefs'
+
+const tabChoices: { value: Tab; label: string }[] = [
+  { value: 'usage', label: 'Usage' },
+  { value: 'cost', label: 'Cost' },
+  { value: 'tokens', label: 'Tokens' },
+]
 
 const pcChoice = ({ dot }: Kit, pc: Pc) => ({ value: pc.id, label: pc.name, title: pc.online ? 'Online' : 'Offline', mark: dot(pc.online ? 'success' : 'neutral') })
 
@@ -28,14 +32,9 @@ export const toolbar = (kit: Kit, model: UsageModel) => {
   const { segmented } = kit
   return div(
     { class: 'flex flex-wrap items-center gap-2' },
-    pcFilter(kit, model),
+    segmented(tabChoices, model.tab, value => model.tab.set(value), { label: 'View' }),
     span({ class: 'flex-1' }),
-    segmented(
-      usageRanges.map(value => ({ value, label: rangeLabel(value) })),
-      model.range,
-      value => model.range.set(value),
-      { label: 'Period' },
-    ),
+    pcFilter(kit, model),
     reloadButton(kit, model),
   )
 }

@@ -17,9 +17,10 @@ export const onPlanOf = (totals: UsageTotals) => Math.max(0, totals.cost - total
 
 const some = (value: number) => value > 0.005
 
-export const billedText = (totals: UsageTotals) => (some(totals.billed) ? dollars(totals.billed) : '–')
-
-export const planText = (totals: UsageTotals) => (some(onPlanOf(totals)) ? `≈${dollars(onPlanOf(totals))}` : '–')
+export const costText = (totals: UsageTotals) => {
+  if (some(onPlanOf(totals))) return `≈${dollars(totals.cost)}`
+  return some(totals.billed) ? dollars(totals.billed) : '–'
+}
 
 export const agoText = (at: number) => {
   const since = ago(at)
