@@ -1,19 +1,19 @@
+import { oneLine } from '@sand/kit'
 import { delayed } from '@sand/kit/web'
+import type { MenuSpec } from '@sand/protocol'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
-import type { FollowUpMode } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
+import type { SendMenu } from './menu'
 
-type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
+type Look = 'off' | 'send' | 'steer' | 'stop' | 'busy' | 'capture'
 
-const icons: Record<Exclude<Look, 'busy' | 'capture'>, IconName> = { off: 'up', send: 'up', queue: 'queue', steer: 'steer', save: 'check', stop: 'stop' }
+const icons: Record<Exclude<Look, 'busy' | 'capture'>, IconName> = { off: 'up', send: 'up', steer: 'steer', stop: 'stop' }
 
 const titles: Record<Exclude<Look, 'capture'>, string> = {
   off: 'Send',
   send: 'Send',
-  queue: 'Send after this turn',
   steer: 'Add to the running turn',
-  save: 'Save changes',
   stop: 'Stop',
   busy: 'Sending',
 }
@@ -29,8 +29,7 @@ const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
   if (!model.online.get() || model.blocked.get()) return 'off'
   if (model.capture.get()) return 'capture'
-  if (model.editing.get()) return model.empty.get() ? 'off' : 'save'
-  if (model.running.get()) return model.empty.get() ? 'stop' : model.mode.get()
+  if (model.running.get()) return model.empty.get() ? 'stop' : 'steer'
   return model.empty.get() ? 'off' : 'send'
 }
 
@@ -50,47 +49,32 @@ const glyphOf = (model: Model, look: Look): IconName | 'busy' => {
   return look === 'capture' ? (model.capture.get()?.icon() ?? 'up') : icons[look]
 }
 
-const option = ({ choiceItem }: Kit, model: Model, close: () => void, value: FollowUpMode) =>
-  choiceItem(
-    {
-      icon: icons[value],
-      selected: () => model.mode.get() === value,
-      onClick: () => {
-        model.mode.set(value)
-        close()
-      },
-    },
-    span({ class: 'min-w-0 flex-1' }, titles[value]),
-  )
-
-const modeMenu = (kit: Kit, model: Model) => {
-  const { dropdown, icon, iconButton } = kit
-  return dropdown({
-    placement: 'above-right',
-    keepFocus: true,
-    menuClass: 'w-64',
-    trigger: (press, open) => iconButton({ size: 'sm', title: 'Send options', active: open, ...press }, icon('down', 14)),
-    items: close => [option(kit, model, close, 'queue'), option(kit, model, close, 'steer')],
-  })
+const menuOf = (model: Model, menu: SendMenu): MenuSpec | undefined => {
+  const actions = menu.actions.get()
+  if (!actions.length || model.empty.get() || model.capture.get() || model.sending.get()) return undefined
+  return { title: oneLine(model.text.get(), 60) || 'Message', actions }
 }
 
-export const sendControl = (kit: Kit, model: Model) => {
-  const { icon, plainButton, spinner } = kit
+export const sendControl = (kit: Kit, model: Model, menu: SendMenu) => {
+  const { contextMenu, icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
   const glyph = derive(() => glyphOf(model, look.get()))
-  const split = derive(() => model.running.get() && !model.empty.get() && !model.editing.get() && !model.capture.get())
-  return div(
-    { class: 'ml-1 flex shrink-0 items-center gap-1' },
-    show(split, () => modeMenu(kit, model)),
+  const context = contextMenu()
+  return span(
+    { class: 'ml-1 inline-flex shrink-0' },
     plainButton(
       {
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
-        onClick: () => void model.send(),
+        ...context.target(
+          () => menuOf(model, menu),
+          () => void model.send(),
+        ),
       },
       dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),
     ),
+    context.view(),
   )
 }

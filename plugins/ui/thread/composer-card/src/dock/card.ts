@@ -11,6 +11,7 @@ import { builtinSources } from '../complete/sources'
 import { createEditor } from '../editor/view'
 import type { Model } from '../model'
 import { sendControl } from '../send/button'
+import type { SendMenu } from '../send/menu'
 import { interrupt } from '../send/submit'
 import { glassPanel } from './glass'
 import type { Slots } from './slots'
@@ -19,19 +20,18 @@ export interface CardParts {
   ctx: Context<'threads' | 'turns' | 'kit'>
   model: Model
   slots: Slots
+  menu: SendMenu
   dropping: Sig<boolean>
 }
 
 const placeholder = (model: Model) => () => {
   const capture = model.capture.get()
   if (capture) return capture.placeholder()
-  if (model.editing.get()) return 'Edit the queued message'
   if (model.idle.get()) return 'Start a new thread'
-  if (!model.running.get()) return 'Ask sand anything'
-  return model.mode.get() === 'queue' ? 'Queue a follow-up' : 'Add to the running turn'
+  return model.running.get() ? 'Add to the running turn' : 'Ask sand anything'
 }
 
-export const card = ({ ctx, model, slots, dropping }: CardParts) => {
+export const card = ({ ctx, model, slots, menu, dropping }: CardParts) => {
   const { icon, iconButton } = ctx.kit
   const coarse = media('(pointer: coarse)')
 
@@ -40,10 +40,6 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     if (completion.keydown(event)) return event.preventDefault()
     if (model.capture.get()?.keydown?.(event)) return event.preventDefault()
     if (event.key === 'Escape' && hasOpenLayer()) return
-    if (event.key === 'Escape' && model.editing.get()) {
-      event.preventDefault()
-      return model.cancelEdit()
-    }
     if (event.key === 'Escape' && model.running.get()) {
       event.preventDefault()
       return void interrupt(ctx).catch(error => model.fail(errorMessage(error)))
@@ -87,7 +83,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
-      sendControl(ctx.kit, model),
+      sendControl(ctx.kit, model, menu),
     ),
     picker,
   )

@@ -26,11 +26,10 @@ export const createTurns = (wire: Wire, store: Store): Turns => {
   }
 
   return {
-    async send(id, prompt, label, mode = 'queue') {
+    async send(id, prompt, label) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
       const short = promptLabel(label ?? prompt)
-      if (thread.running && mode === 'queue') return call({ type: 'queue.add', session: id, prompt, label: short })
       if (thread.running && (await wire.call<string | null>({ type: 'loop.steer', session: id, prompt, label: short }))) return
       await run(id, prompt)
     },
@@ -39,8 +38,5 @@ export const createTurns = (wire: Wire, store: Store): Turns => {
       const steer = store.threads.get(id)?.queued.some(entry => entry.id === item)
       return call(steer ? { type: 'loop.unsteer', session: id, item } : { type: 'queue.remove', session: id, item })
     },
-    edit: (id, item, prompt, label) => call({ type: 'queue.edit', session: id, item, prompt, label: promptLabel(label ?? prompt) }),
-    move: (id, item, index) => call({ type: 'queue.move', session: id, item, index }),
-    promote: (id, item) => call({ type: 'queue.send', session: id, item }),
   }
 }

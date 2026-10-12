@@ -70,7 +70,6 @@ export const draftSession = (ctx: Context<'threads'>, model: Model, switched: ()
       key = next
       return
     }
-    model.cancelEdit()
     keep(true)
     key = next
     ready = false

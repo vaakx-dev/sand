@@ -1,14 +1,12 @@
-import type { FollowUpMode } from '@sand/web-client/contract'
 import type { ComposerCapture } from './contract'
 import { errorMessage } from '@sand/kit'
 import { pulse } from '@sand/kit/web'
-import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
+import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { createWorking } from './agents/working'
-import { compose } from './attachments/content'
 import { createFiles } from './attachments/files'
+import type { Saved } from './drafts/store'
 import { createSegments } from './editor/segments'
-import { createEditing } from './queue/editing'
 import { chooseModel, modelMissing, retry, sendDevice, submit } from './send/submit'
 
 type Ctx = Context<'threads' | 'turns'>
@@ -17,8 +15,6 @@ interface Typed {
   text: string
   ids: string
 }
-
-const isMode = (value: unknown) => value === 'queue' || value === 'steer'
 
 const commandLike = /^\/[a-z]/
 
@@ -39,7 +35,6 @@ export const createModel = (ctx: Ctx) => {
   const files = createFiles(ctx)
   const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
   const sending = sig(false)
-  const mode = stored<FollowUpMode>('sand.follow-up-mode', 'queue', isMode)
   const dismissed = sig(new Set<string>())
   const changes = pulse(ctx, ['thread.select', 'commands.change', 'wire.state', 'models.change'], ['commands', 'wire'])
   ctx.on('thread.change', id => {
@@ -50,13 +45,11 @@ export const createModel = (ctx: Ctx) => {
   const idle = changes.read(() => ctx.threads.idle())
   const online = changes.read(() => !ctx.wire || ctx.wire.state() === 'open')
   const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
-  const edits = createEditing(ctx, text, files, changes)
-  const { editing } = edits
   const empty = derive(() => !text.get().trim() && !files.items.get().length)
   const loading = derive(() => files.loading())
   const blocked = derive(() => Boolean(files.rejected()) || files.loading())
   const captures = sig<ComposerCapture[]>([])
-  const capture = derive(() => (editing.get() || files.items.get().length ? undefined : captures.get().at(-1)))
+  const capture = derive(() => (files.items.get().length ? undefined : captures.get().at(-1)))
   effect(() => {
     const active = capture.get()
     const value = text.get()
@@ -71,7 +64,6 @@ export const createModel = (ctx: Ctx) => {
   const clear = () => {
     text.set('')
     files.set([])
-    edits.reset()
   }
 
   const fail = (message: string) => failure.set({ text: message, retry: false })
@@ -119,23 +111,11 @@ export const createModel = (ctx: Ctx) => {
     })
   }
 
-  const saveEdit = (id: string, value: string) => {
-    const thread = ctx.threads.current()
-    if (!thread || !edits.queued(id)) return edits.vanish()
-    const before = typed()
-    const task = async () => {
-      const items = await files.upload(thread.device)
-      await ctx.turns.edit(thread.id, id, items.length ? compose(value, items) : value)
-      if (unchanged(before) && editing.get() === id) edits.leave()
-    }
-    return attempt(true, task, couldNotSend)
-  }
-
   const sendPrompt = (value: string) => {
     const before = typed()
     const task = async () => {
       const items = await files.upload(sendDevice(ctx))
-      await submit(ctx, value, items, running.get() ? mode.get() : undefined)
+      await submit(ctx, value, items)
       if (unchanged(before)) clear()
     }
     return attempt(true, task, couldNotSend)
@@ -146,8 +126,6 @@ export const createModel = (ctx: Ctx) => {
     const value = text.get().trim()
     const active = capture.get()
     if (active && !commandLike.test(value)) return answer(active, value)
-    const id = editing.get()
-    if (id) return empty.get() ? undefined : saveEdit(id, value)
     const attached = files.items.get().length > 0
     if (!attached && commandLike.test(value)) return runCommand(value)
     if ((value || attached) && modelMissing(ctx)) return attempt(false, () => chooseModel(ctx), error => fail(errorMessage(error)))
@@ -159,9 +137,7 @@ export const createModel = (ctx: Ctx) => {
     segments,
     files,
     failure,
-    editing,
     sending,
-    mode,
     running,
     idle,
     online,
@@ -176,9 +152,7 @@ export const createModel = (ctx: Ctx) => {
     clear,
     fail,
     addCapture,
-    edit: edits.begin,
-    draft: edits.draft,
-    cancelEdit: edits.leave,
+    draft: (): Saved => ({ text: text.get(), items: files.held() }),
     retryTurn: () => void retry(ctx).catch(error => fail(errorMessage(error))),
     dismiss: (key: string) => dismissed.update(keys => new Set([...keys, key])),
   }

@@ -1,5 +1,4 @@
 import type { Message, Prompt, UserContent } from '@sand/messages'
-import type { FollowUpMode } from '@sand/web-client/contract'
 import { feedbackOnly, hasToolResult, parseCommand } from '@sand/kit'
 import type { Context } from 'drydock'
 import { compose, contentName } from '../attachments/content'
@@ -30,7 +29,7 @@ export const interrupt = async (ctx: Context<'threads' | 'turns'>) => {
   if (current?.running) await ctx.turns.interrupt(current.id)
 }
 
-export const submit = async (ctx: Context<'threads' | 'turns'>, text: string, attachments: UserContent[], mode?: FollowUpMode) => {
+export const submit = async (ctx: Context<'threads' | 'turns'>, text: string, attachments: UserContent[]) => {
   if (!text && !attachments.length) return interrupt(ctx)
   const command = attachments.length ? undefined : parseCommand(text)
   if (command) return runCommand(ctx, command.name, command.args)
@@ -40,7 +39,7 @@ export const submit = async (ctx: Context<'threads' | 'turns'>, text: string, at
     ctx.models?.prepare()
     await ctx.threads.select(thread.id, { replace: true })
   }
-  await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments), mode)
+  await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments))
 }
 
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
