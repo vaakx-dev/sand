@@ -1,4 +1,4 @@
-import { onMount, resizeObserver } from '@sand/dom'
+import { onMount, resizeObserver } from '@vaakx-dev/vrui'
 
 const root = () => document.documentElement.style
 

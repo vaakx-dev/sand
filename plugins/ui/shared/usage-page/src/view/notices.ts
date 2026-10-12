@@ -1,6 +1,7 @@
 import type { UnpricedModel } from '@sand/usage/contract'
-import { callout, div, note, span, type Sig } from '@sand/dom'
 import { tokens } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, span, type Sig } from '@vaakx-dev/vrui'
 import { agoText } from '../format'
 import type { Notice } from '../model'
 
@@ -16,10 +17,10 @@ const noticeText = (notice: Notice, now: Sig<number>) => {
   })
 }
 
-export const offlineNotices = (notices: Notice[], now: Sig<number>) =>
+export const offlineNotices = ({ callout }: Kit, notices: Notice[], now: Sig<number>) =>
   notices.length ? div({ class: 'flex flex-col gap-2' }, notices.map(notice => callout('neutral', noticeText(notice, now)))) : null
 
-export const unpricedNotes = (unpriced: UnpricedModel[]) =>
+export const unpricedNotes = ({ note }: Kit, unpriced: UnpricedModel[]) =>
   unpriced.length
     ? div(
         { class: 'flex flex-col gap-1 px-1' },

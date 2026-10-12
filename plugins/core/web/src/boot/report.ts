@@ -1,4 +1,5 @@
-import { collectScope, errorMessage, onTimeout } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { collectScope, onTimeout } from '@vaakx-dev/vrui'
 import type { Context, ScopeView } from 'drydock'
 import type { BrowserState, Extensions } from '../contract'
 

@@ -1,4 +1,6 @@
-import { closeButton, derive, div, dismissible, dynamicChild, headTitle, paneHead, show, showSideButton, type Sig } from '@sand/dom'
+import { dismissible } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { SettingsPage } from './contract'
 import type { PageStore } from './pages'
 
@@ -9,7 +11,8 @@ export interface PageParts {
   close(): void
 }
 
-export const pageView = ({ store, narrow, showPages, close }: PageParts) => {
+export const pageView = (kit: Kit, { store, narrow, showPages, close }: PageParts) => {
+  const { closeButton, headTitle, paneHead, showSideButton } = kit
   const page = derive(() => store.pages.get().find(candidate => candidate.id === store.current.get()))
   const sections = (above: boolean) =>
     dynamicChild(

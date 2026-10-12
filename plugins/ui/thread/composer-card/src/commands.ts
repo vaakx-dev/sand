@@ -1,5 +1,4 @@
-import { errorMessage } from '@sand/dom'
-import { joinDisposers } from '@sand/kit'
+import { errorMessage, joinDisposers } from '@sand/kit'
 import type { Context } from 'drydock'
 import { interrupt } from './send/submit'
 

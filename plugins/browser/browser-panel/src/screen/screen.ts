@@ -1,5 +1,5 @@
 import type { Point, Viewport } from '@sand/browser-engine/contract'
-import { sig, untrack } from '@sand/dom'
+import { sig, untrack } from '@vaakx-dev/vrui'
 import { fitRect, sameSize, type Size } from './fit'
 
 export const screenState = () => {

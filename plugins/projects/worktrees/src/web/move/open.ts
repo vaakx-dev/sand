@@ -1,6 +1,6 @@
 import type { WorktreeState } from '../../contract'
-import { place } from '@sand/dom'
 import { promptText } from '@sand/kit'
+import { place } from '@sand/kit/web'
 import type { Message } from '@sand/messages'
 import type { Thread } from '@sand/web-client/contract'
 import type { Dispose } from 'drydock'

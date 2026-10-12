@@ -1,5 +1,6 @@
-import { listen, type Swipe } from '@sand/dom'
-import { canScrollToward, direction, editing, follow, selecting, type Drag } from '@sand/dom/gesture'
+import type { Swipe } from '@sand/protocol'
+import { canScrollToward, direction, editing, follow, selecting, type Drag } from '@sand/kit/web'
+import { listen } from '@vaakx-dev/vrui'
 import { swipeEnd, swipeMove, swipeStart } from '../page/protocol'
 import { post } from './post'
 

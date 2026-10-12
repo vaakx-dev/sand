@@ -18,11 +18,13 @@
     }
   },
   "dependencies": {
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

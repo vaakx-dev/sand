@@ -1,4 +1,4 @@
-import { effect, onTimeout, resizeObserver, untrack, type Sig } from '@sand/dom'
+import { effect, onTimeout, resizeObserver, untrack, type Sig } from '@vaakx-dev/vrui'
 import { framePainter } from '../integrations/canvas'
 import { streamFrames } from '../integrations/frames'
 import type { TabModel } from '../tab/model'

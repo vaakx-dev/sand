@@ -1,6 +1,8 @@
 import type { ExtensionInfo } from '@sand/web/contract'
-import { contextMenu, div, dot, errorText, shrinkBadge, span, toggleSwitch, type Child, type MenuSpec, type NavAction, type Tone } from '@sand/dom'
 import { capital } from '@sand/kit'
+import type { MenuSpec, NavAction } from '@sand/protocol'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { div, span, type Child } from '@vaakx-dev/vrui'
 import type { Roles } from './roles'
 
 const statusText: Record<string, string> = { off: 'Off', pending: 'Waiting', starting: 'Starting', active: 'Active', failed: 'Failed', disposed: 'Off' }
@@ -59,23 +61,25 @@ const toggleTitle = ({ extension, locked }: CardModel) => {
   return extension.configured ? 'Turn off' : 'Turn on'
 }
 
-const roleChip = (tone: Tone, title: string | undefined, ...children: Child[]) => span({ class: 'inline-flex min-w-0 max-w-full', title }, shrinkBadge(tone, ...children))
+const roleChip = ({ shrinkBadge }: Kit, tone: Tone, title: string | undefined, ...children: Child[]) => span({ class: 'inline-flex min-w-0 max-w-full', title }, shrinkBadge(tone, ...children))
 
 const status = (extension: ExtensionInfo) =>
   extension.configured && !extension.bundled
     ? span({ class: 'ml-auto shrink-0 text-xs text-danger-400', title: 'The build failed; the server log has the error' }, 'Not built')
     : span({ class: ['ml-auto shrink-0 text-xs', statusTone[extension.status] ?? 'text-neutral-500'] }, statusText[extension.status] ?? capital(extension.status))
 
-const roleChips = ({ provides, needs }: CardModel) => {
+const roleChips = (kit: Kit, { provides, needs }: CardModel) => {
+  const { dot } = kit
   if (!provides.length && !needs.length) return null
   return div(
     { class: 'mt-2 flex flex-wrap gap-1' },
-    provides.map(role => roleChip('accent', undefined, span({ class: 'font-mono' }, `provides ${role}`))),
-    needs.map(need => roleChip('neutral', need.tip, dot(need.tone), span({ class: 'font-mono' }, need.role), span({ class: 'min-w-0 truncate text-neutral-500' }, need.note))),
+    provides.map(role => roleChip(kit, 'accent', undefined, span({ class: 'font-mono' }, `provides ${role}`))),
+    needs.map(need => roleChip(kit, 'neutral', need.tip, dot(need.tone), span({ class: 'font-mono' }, need.role), span({ class: 'min-w-0 truncate text-neutral-500' }, need.note))),
   )
 }
 
-export const extensionCard = (model: CardModel, toggle: () => void, copyId: () => void) => {
+export const extensionCard = (kit: Kit, model: CardModel, toggle: () => void, copyId: () => void) => {
+  const { contextMenu, errorText, toggleSwitch } = kit
   const { extension, locked } = model
   const menu = contextMenu()
   return div(
@@ -91,7 +95,7 @@ export const extensionCard = (model: CardModel, toggle: () => void, copyId: () =
       ),
       status(extension),
     ),
-    roleChips(model),
+    roleChips(kit, model),
     extension.error && div({ class: 'mt-2 font-mono' }, errorText(extension.error)),
   )
 }

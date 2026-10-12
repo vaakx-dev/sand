@@ -1,7 +1,7 @@
 import type { ReleaseInfo, UpdateChannel, UpdatePhase } from '@sand/host-updates/contract'
-import type { Tone } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { BuildInfo } from '@sand/protocol'
+import type { Tone } from '@sand/ui-kit/contract'
 import type { RunStatus } from './run'
 import { isFar, type PcStatus } from './status'
 

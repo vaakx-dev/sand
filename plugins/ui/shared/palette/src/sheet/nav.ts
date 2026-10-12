@@ -1,5 +1,5 @@
 import type { PalettePage } from '../contract'
-import type { Sig } from '@sand/dom'
+import type { Sig } from '@vaakx-dev/vrui'
 
 export interface PageMemory {
   text?: Sig<string>

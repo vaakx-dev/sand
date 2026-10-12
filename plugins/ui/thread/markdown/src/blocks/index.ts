@@ -16,7 +16,7 @@ type Parser = (lines: string[], start: number, scope: Scope) => Block | undefine
 
 const titled = (level: number, content: string, scope: Scope) => heading(level, inline(content, scope))
 
-const fenced: Parser = (lines, start) => {
+const fenced: Parser = (lines, start, { kit }) => {
   const open = fence.exec(lines[start]!)
   if (!open) return undefined
   const [, indent = '', marker = ''] = open
@@ -29,7 +29,7 @@ const fenced: Parser = (lines, start) => {
   }
   const code = body.join('\n')
   const language = open[3] ?? ''
-  return { node: language === 'math' ? displayMath(code) : codeBlock(code, language), next: index + 1 }
+  return { node: language === 'math' ? displayMath(kit, code) : codeBlock(kit, code, language), next: index + 1 }
 }
 
 const atxHeading: Parser = (lines, start, scope) => {
@@ -60,13 +60,13 @@ const quoted: Parser = (lines, start, scope) => {
   return { node: blockquote(parseBlocks(body, scope)), next: index }
 }
 
-const indentedCode: Parser = (lines, start) => {
+const indentedCode: Parser = (lines, start, { kit }) => {
   if (indentOf(lines[start]!) < 4) return undefined
   const body: string[] = []
   let index = start
   while (index < lines.length && (!lines[index]!.trim() || indentOf(lines[index]!) >= 4)) body.push(lines[index++]!.slice(4))
   while (body.at(-1) === '') body.pop()
-  return { node: codeBlock(body.join('\n'), ''), next: index }
+  return { node: codeBlock(kit, body.join('\n'), ''), next: index }
 }
 
 const plain: Parser = (lines, start, scope) => {

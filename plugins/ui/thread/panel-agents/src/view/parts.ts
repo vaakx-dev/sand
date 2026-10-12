@@ -1,4 +1,7 @@
-import { div, duration, keys, show, span, type Child, type ClassValue, type ContextMenu, type MenuSpec, type Sig } from '@sand/dom'
+import { duration } from '@sand/kit'
+import type { MenuSpec } from '@sand/protocol'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import { div, keys, show, span, type Child, type ClassValue, type Sig } from '@vaakx-dev/vrui'
 import type { Run } from '../runs/runs'
 
 export interface Actions {
@@ -10,6 +13,7 @@ export interface Actions {
 
 export interface Rows extends Actions {
   menu: ContextMenu
+  kit: Kit
 }
 
 interface Press {

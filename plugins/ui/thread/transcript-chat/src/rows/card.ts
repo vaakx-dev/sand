@@ -1,5 +1,6 @@
-import { badge, chevron, copyButton, div, fold, icon, oneLine, rowButton, show, span, statusBadge, type IconName, type RunStatus } from '@sand/dom'
-import { capital } from '@sand/kit'
+import { capital, oneLine } from '@sand/kit'
+import type { IconName, Kit, RunStatus } from '@sand/ui-kit/contract'
+import { div, show, span } from '@vaakx-dev/vrui'
 import { row, type RowContext } from './row'
 
 export interface Card {
@@ -14,7 +15,7 @@ export interface Card {
 
 const statuses: Record<string, RunStatus> = { done: 'done', completed: 'done', failed: 'failed', cancelled: 'cancelled', stopped: 'stopped', running: 'running' }
 
-const statusView = (status: string) => {
+const statusView = ({ badge, statusBadge }: Kit, status: string) => {
   const known = statuses[status]
   return known ? statusBadge(known) : badge('neutral', capital(status))
 }
@@ -23,10 +24,13 @@ const summary = (text: string) => oneLine(text.split('\n').find(line => line.tri
 
 const markdown = (text: string, context: RowContext) => div(context.markdown.nodes(text, context.images()))
 
-const whole = (text: string, context: RowContext) =>
-  fold({ lines: text.split('\n').length, chars: text.length, copy: () => text }, markdown(text, context))
+const whole = (text: string, context: RowContext) => {
+  const { fold } = context.kit
+  return fold({ lines: text.split('\n').length, chars: text.length, copy: () => text }, markdown(text, context))
+}
 
 const section = (text: string, key: string, context: RowContext, held: () => boolean) => {
+  const { chevron, copyButton, rowButton } = context.kit
   const { open, toggle } = context.states.get(key)
   return div(
     { class: 'rounded-lg bg-neutral-900' },
@@ -51,6 +55,7 @@ const results = (card: Card, sections: string[], context: RowContext, held: () =
 
 export const cardRow = (card: Card, context: RowContext) =>
   row(card.key, card.text, () => {
+    const { icon } = context.kit
     const sections = context.parts.sections(card.text)
     const { menus } = context.parts
     const press = menus.text(context.menu, () => ({ title: card.kind, subtitle: card.name, actions: [menus.copy('copy', 'Copy', () => card.text, 'result')] }))
@@ -66,7 +71,7 @@ export const cardRow = (card: Card, context: RowContext) =>
           { class: ['flex min-h-6 items-center gap-2 text-xs', card.text && 'mb-2'] },
           span({ class: 'shrink-0 font-medium text-neutral-100' }, card.kind),
           span({ class: 'min-w-0 truncate text-neutral-400', title: card.name }, card.name),
-          card.status && statusView(card.status),
+          card.status && statusView(context.kit, card.status),
           sections.length > 1 && span({ class: 'shrink-0 text-neutral-500' }, `${sections.length} results`),
         ),
         results(card, sections, context, press.held),

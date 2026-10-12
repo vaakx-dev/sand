@@ -1,7 +1,7 @@
-import type { IconName } from '@sand/dom'
 import type { ImageBlock } from '@sand/messages'
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, el } from '@sand/dom'
+import type { IconName } from '@sand/ui-kit/contract'
+import { div, el } from '@vaakx-dev/vrui'
 
 interface Look {
   icon: IconName

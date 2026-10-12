@@ -1,4 +1,7 @@
-import { div, errorMessage, hasOpenLayer, icon, iconButton, input, media, span, type Sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { hasOpenLayer } from '@sand/kit/web'
+import type {} from '@sand/ui-kit/contract'
+import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { agentsChip } from '../agents/chip'
 import { fromPaste, pasteLimit } from '../attachments/content'
@@ -13,7 +16,7 @@ import { glassPanel } from './glass'
 import type { Slots } from './slots'
 
 export interface CardParts {
-  ctx: Context<'threads' | 'turns'>
+  ctx: Context<'threads' | 'turns' | 'kit'>
   model: Model
   slots: Slots
   dropping: Sig<boolean>
@@ -29,6 +32,7 @@ const placeholder = (model: Model) => () => {
 }
 
 export const card = ({ ctx, model, slots, dropping }: CardParts) => {
+  const { icon, iconButton } = ctx.kit
   const coarse = media('(pointer: coarse)')
 
   const keydown = (event: KeyboardEvent) => {
@@ -57,7 +61,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     model.files.attach([fromPaste(pasted)])
   }
 
-  const editor = createEditor(model.segments, { placeholder: placeholder(model), keydown, paste })
+  const editor = createEditor(ctx.kit, model.segments, { placeholder: placeholder(model), keydown, paste })
   const completion = createCompletion(editor.node, editor.active, builtinSources(ctx), () => void model.send())
 
   const picker = input({
@@ -75,7 +79,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
     { tint: () => (dropping.get() ? 'accent' : 'plain'), class: 'relative rounded-2xl px-3 pt-3' },
     slots.host('above', 'mb-2 flex flex-col gap-1'),
     shelf(ctx, model.files),
-    agentsChip(model.working),
+    agentsChip(ctx.kit, model.working),
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
@@ -83,7 +87,7 @@ export const card = ({ ctx, model, slots, dropping }: CardParts) => {
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
-      sendControl(model),
+      sendControl(ctx.kit, model),
     ),
     picker,
   )

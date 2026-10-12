@@ -1,4 +1,4 @@
-import { collectScope, onInterval, onRaf, onTimeout } from '@sand/dom'
+import { collectScope, onInterval, onRaf, onTimeout } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 export const after = (ms: number, run: () => void) => collectScope(() => onTimeout(run, ms)).value

@@ -1,6 +1,8 @@
 import type { Keys, Shortcut } from './contract'
-import { chorded, errorMessage, keyName, listen, normalKey } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
+import { chorded, keyName, normalKey } from './names'
 
 interface Bound {
   shortcut: Shortcut

@@ -1,5 +1,7 @@
-import { closeButton, contextMenu, copyWithNotice, derive, div, errorMessage, icon, show, span, statusBanner, type Derive, type MenuSpec, type NavAction } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { errorMessage, plural } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
+import { derive, div, show, span, type Derive } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { GoalView } from './slot'
 
@@ -16,7 +18,8 @@ const bannerMenu = (ctx: Context, objective: string): MenuSpec => ({
   ],
 })
 
-export const goalBanner = (ctx: Context, view: Derive<GoalView | null>, hasCommands: Derive<boolean>) => {
+export const goalBanner = (ctx: Context<'kit'>, view: Derive<GoalView | null>, hasCommands: Derive<boolean>) => {
+  const { closeButton, contextMenu, icon, statusBanner } = ctx.kit
   const goal = () => view.get()?.goal
   const reason = derive(() => goal()?.reason ?? '')
   const menu = contextMenu()

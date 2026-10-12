@@ -1,5 +1,7 @@
-import { chevron, plainButton, untrack, type Reorder, type Sig } from '@sand/dom'
-import type { MenuRequest } from '../card/menu'
+import type { Reorder } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { untrack, type Sig } from '@vaakx-dev/vrui'
+import type { CardMenu } from '../card/menu'
 import { card } from '../card/view'
 import { pageStep, type CardRow, type HeadRow, type MoreRow, type Row } from './build'
 
@@ -11,10 +13,10 @@ export interface RowHandlers {
   pick(row: CardRow): void
   toggle(row: HeadRow): void
   more(row: MoreRow): void
-  menu(request: MenuRequest): void
+  menu(request: CardMenu): void
 }
 
-const head = (row: Sig<HeadRow>, handlers: RowHandlers) =>
+const head = ({ chevron, plainButton }: Kit, row: Sig<HeadRow>, handlers: RowHandlers) =>
   plainButton(
     {
       class: [quietRow, 'mt-2 font-medium'],
@@ -24,7 +26,7 @@ const head = (row: Sig<HeadRow>, handlers: RowHandlers) =>
     () => `${row.get().name} (${row.get().count})`,
   )
 
-const more = (row: Sig<MoreRow>, handlers: RowHandlers) =>
+const more = ({ plainButton }: Kit, row: Sig<MoreRow>, handlers: RowHandlers) =>
   plainButton(
     {
       class: quietRow,
@@ -33,9 +35,9 @@ const more = (row: Sig<MoreRow>, handlers: RowHandlers) =>
     () => `Show ${Math.min(row.get().hidden, pageStep)} more`,
   )
 
-export const rowView = (row: Sig<Row>, handlers: RowHandlers) => {
+export const rowView = (kit: Kit, row: Sig<Row>, handlers: RowHandlers) => {
   const first = untrack(() => row.get())
-  if (first.kind === 'head') return head(row.map(value => (value.kind === 'head' ? value : first)), handlers)
-  if (first.kind === 'more') return more(row.map(value => (value.kind === 'more' ? value : first)), handlers)
-  return card(row.map(value => (value.kind === 'card' ? value : first)), handlers.minute, handlers.pick, handlers.drag, handlers.menu)
+  if (first.kind === 'head') return head(kit, row.map(value => (value.kind === 'head' ? value : first)), handlers)
+  if (first.kind === 'more') return more(kit, row.map(value => (value.kind === 'more' ? value : first)), handlers)
+  return card(kit, row.map(value => (value.kind === 'card' ? value : first)), handlers.minute, handlers.pick, handlers.drag, handlers.menu)
 }

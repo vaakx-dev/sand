@@ -1,4 +1,4 @@
-import { derive, sig } from '@sand/dom'
+import { derive, sig } from '@vaakx-dev/vrui'
 
 const fit = 1
 const most = 4

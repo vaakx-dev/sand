@@ -1,5 +1,6 @@
-import { copyWithNotice, shownPanel, sig } from '@sand/dom'
 import { errorMessage, toolCalls } from '@sand/kit'
+import { copyWithNotice, shownPanel } from '@sand/kit/web'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { runningAgents } from './runs/counts'
 import { modelsUnlike } from './runs/models'
@@ -11,7 +12,7 @@ import { agentsView, type ParentLink } from './view/view'
 export default definePlugin({
   name: 'panel-agents',
   description: 'Background jobs, sub-agents and workflows of the current thread, with durations and cancel',
-  inject: ['threads', 'jobs'],
+  inject: ['threads', 'jobs', 'kit'],
   uses: {
     panels: 'draws its own plain panel',
     turns: 'running foreground sub-agents cannot be stopped',
@@ -86,7 +87,7 @@ export default definePlugin({
     const control = shownPanel(
       ctx,
       { id: 'agents', title: 'Agents', icon: 'bot', order: 20 },
-      () => agentsView({ runs, parent, empty, now: clock.now }, actions),
+      () => agentsView(ctx.kit, { runs, parent, empty, now: clock.now }, actions),
       paint,
     )
     paint()

@@ -1,9 +1,10 @@
 import type { InstalledPlugin } from '@sand/host-plugin-sync/contract'
-import { derive, hintRow, rowList, settingsRow, settingsSection, show, span, toggleSwitch, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { PluginSource } from '../source'
 
-const pluginRow = (source: PluginSource, plugin: Sig<InstalledPlugin>) => {
+const pluginRow = ({ settingsRow, toggleSwitch }: Kit, source: PluginSource, plugin: Sig<InstalledPlugin>) => {
   const local = () => plugin.get().local
   return settingsRow(
     span({ class: 'truncate' }, () => plugin.get().name),
@@ -20,11 +21,12 @@ const pluginRow = (source: PluginSource, plugin: Sig<InstalledPlugin>) => {
   )
 }
 
-export const installedSection = (source: PluginSource) => {
+export const installedSection = (kit: Kit, source: PluginSource) => {
+  const { hintRow, rowList, settingsSection } = kit
   const plugins = derive(() => source.state.get()?.plugins ?? [])
   return settingsSection(
     { title: 'Sharing with your other PCs' },
-    rowList(plugins, plugin => plugin.name, plugin => pluginRow(source, plugin)),
+    rowList(plugins, plugin => plugin.name, plugin => pluginRow(kit, source, plugin)),
     show(
       () => source.state.get() === undefined,
       () => hintRow('Loading…'),

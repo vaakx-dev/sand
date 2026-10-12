@@ -1,5 +1,6 @@
-import { derive, effect, untrack, type Pulse } from '@sand/dom'
 import type { Composer } from '@sand/composer-card/contract'
+import type { Pulse } from '@sand/kit/web'
+import { derive, effect, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { activeGoal, type Goal } from '../goal'
 

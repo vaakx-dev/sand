@@ -1,5 +1,6 @@
 import type { Threads, Wire } from '@sand/web-client/contract'
-import { errorMessage, img } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { img } from '@vaakx-dev/vrui'
 import type { ReplyImage, ReplyImages } from '../contract'
 import { imagePath } from '../path'
 import { dataUrlOf } from './integrations/data-url'

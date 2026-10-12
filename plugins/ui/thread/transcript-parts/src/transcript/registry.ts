@@ -1,9 +1,10 @@
 import type { RenderEntry, RendererRegistry, RenderTool, ToolRenderer } from '../contract'
-import { sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { resolveRenderer } from '../tools/resolve'
 
-export const rendererRegistry = (changed: () => void): RendererRegistry => {
+export const rendererRegistry = (kit: Kit, changed: () => void): RendererRegistry => {
   const tools = new Map<string, RenderTool | ToolRenderer>()
   const entries = new Map<string, RenderEntry>()
   const resolved = new Map<string, Required<ToolRenderer>>()
@@ -25,7 +26,7 @@ export const rendererRegistry = (changed: () => void): RendererRegistry => {
   }
 
   const toolRenderer = (name: string) => {
-    const found = resolved.get(name) ?? resolveRenderer(name, tools.get(name))
+    const found = resolved.get(name) ?? resolveRenderer(kit, name, tools.get(name))
     resolved.set(name, found)
     return found
   }

@@ -1,6 +1,6 @@
 import type { PcList } from '@sand/host-remotes/contract'
 import type { TurnResult } from '@sand/loops/contract'
-import { effect, onTimeout, sig } from '@sand/dom'
+import { effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 const recheck = 60_000

@@ -1,4 +1,4 @@
-import { neutral } from '@sand/dom/palette'
+import { background } from './first-paint'
 
 const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
@@ -8,7 +8,7 @@ export const page = (build: string, enabled: Record<string, boolean>) => `<!doct
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="${neutral['900']}">
+  <meta name="theme-color" content="${background}">
   <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">

@@ -1,4 +1,7 @@
-import type { ClassValue, ContextMenu, IconName, MenuSpec, NavAction, pressMenu, Sig } from '@sand/dom'
+import type { pressMenu } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
+import type { ContextMenu } from '@sand/ui-kit/contract'
+import type { ClassValue, Sig } from '@vaakx-dev/vrui'
 import type { Entry, ImageBlock, Notification, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Thread } from '@sand/web-client/contract'
@@ -21,7 +24,7 @@ export interface ToolBadge {
 }
 
 export interface ToolRenderer {
-  icon?: IconName
+  icon?: string
   verb?: string
   activeVerb?: string
   label?(tool: ToolView): string

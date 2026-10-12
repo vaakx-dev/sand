@@ -1,7 +1,9 @@
-import { sandPalette } from '@sand/dom/palette'
-import { mono, sans } from '@sand/dom/tokens'
-
 type Shade = readonly [role: string, shade: string]
+
+type Colors = Readonly<Record<string, Readonly<Partial<Record<string, string>>>>>
+
+const sans = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif'
+const mono = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace'
 
 interface Group {
   use: string
@@ -37,13 +39,16 @@ const groups: Group[] = [
   { use: "the app's fonts", values: { '--font-sans': sans, '--font-mono': mono } },
 ]
 
-export const themeVariables = (): Record<string, string> =>
-  Object.fromEntries(
-    groups.flatMap(group => [
-      ...Object.entries(group.colors ?? {}).map(([name, [role, shade]]) => [name, sandPalette[role]?.[shade] ?? 'currentColor']),
-      ...Object.entries(group.values ?? {}),
-    ]),
-  )
+const themeVariables = (colors: Colors): [string, string][] =>
+  groups.flatMap(group => [
+    ...Object.entries(group.colors ?? {}).map(([name, [role, shade]]): [string, string] => [name, colors[role]?.[shade] ?? 'currentColor']),
+    ...Object.entries(group.values ?? {}),
+  ])
+
+export const rootRule = (selector: string, colors: Colors, mode: string) =>
+  `${selector}{color-scheme:${mode};${themeVariables(colors)
+    .map(([name, value]) => `${name}:${value};`)
+    .join('')}}`
 
 const names = (group: Group) => [...Object.keys(group.colors ?? {}), ...Object.keys(group.values ?? {})]
 

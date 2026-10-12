@@ -2,7 +2,6 @@ import { oneLine } from '@sand/kit'
 import type { PaletteItem, PaletteItemAction, PalettePage } from '@sand/palette/contract'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { quickThreadIcon } from '@sand/dom'
 import { openDraft } from '../draft'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
 
@@ -71,7 +70,7 @@ const quickThreadItem = (ctx: Context<'threads'>): PaletteItem => ({
   id: 'quick-thread',
   label: 'Quick thread',
   avatar: 'Quick thread',
-  avatarIcon: quickThreadIcon,
+  avatarIcon: { quick: true },
   detail: 'No project, in its own scratch folder',
   search: 'quick thread scratch no project',
   run: () => openDraft(ctx, '', ctx.threads.device()),

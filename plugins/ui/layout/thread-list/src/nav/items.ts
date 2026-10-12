@@ -1,5 +1,5 @@
 import type { ThreadDraft } from '@sand/composer-card/contract'
-import type { NavItem } from '@sand/dom'
+import type { NavItem } from '@sand/protocol'
 import type { Thread } from '@sand/web-client/contract'
 import { plural } from '@sand/kit'
 import type { ProjectLookup } from '../project-lookup'

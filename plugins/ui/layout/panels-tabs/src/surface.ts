@@ -1,4 +1,6 @@
-import { place, sig, type Layout } from '@sand/dom'
+import { place } from '@sand/kit/web'
+import type { Layout } from '@sand/protocol'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context, Dispose } from 'drydock'
 
 export interface Surface {

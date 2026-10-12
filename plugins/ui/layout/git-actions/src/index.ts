@@ -1,4 +1,5 @@
-import { derive, effect, owned, untrack } from '@sand/dom'
+import { owned } from '@sand/kit/web'
+import { derive, effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { createModel } from './model'
 import { refreshOnTurns } from './refresh'
@@ -8,7 +9,7 @@ export default definePlugin({
   name: 'git-actions',
   description:
     'Git status under the composer: the branch or PR, changed files and a dot when main has moved on, with a menu to catch up with main, view edits, open the PR, move to a worktree or rename the worktree',
-  inject: ['composer', 'threads', 'gitStatus'],
+  inject: ['composer', 'threads', 'gitStatus', 'kit'],
   uses: {
     pulls: 'no PR status or Open PR item',
     worktrees: 'no Move to a worktree or Regenerate name items',

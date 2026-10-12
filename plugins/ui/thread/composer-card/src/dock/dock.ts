@@ -1,4 +1,5 @@
-import { div, onPressOutside } from '@sand/dom'
+import { onPressOutside } from '@sand/kit/web'
+import { div } from '@vaakx-dev/vrui'
 import { chatDrop } from '../attachments/drop'
 import { completionView } from '../complete/view'
 import { errorBanners } from '../errors/banners'
@@ -10,7 +11,7 @@ import { tray } from './tray'
 
 export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => {
   const completing = () => card.completion.visible.get()
-  const completions = completionPopup(() => !completing(), ...completionView(card.completion))
+  const completions = completionPopup(() => !completing(), ...completionView(ctx.kit, card.completion))
   const view = div(
     { class: 'pointer-events-none relative z-10 shrink-0 px-3 pt-12 pb-3 md:px-4', style: { marginTop: 'calc(-1 * var(--dock-h, 0px))' } },
     div(
@@ -23,7 +24,7 @@ export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => 
       ),
       tray(slots),
     ),
-    chatDrop(dropping, () => parentRect(view)),
+    chatDrop(ctx.kit, dropping, () => parentRect(view)),
   )
   publishHeight(view, '--dock-h')
   return view

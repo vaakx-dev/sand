@@ -1,5 +1,7 @@
 import type { Version, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { copyWithNotice, derive, errorMessage, exactTime, sig } from '@sand/dom'
+import { errorMessage, exactTime } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import { derive, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { whenShown } from '../shown'
 

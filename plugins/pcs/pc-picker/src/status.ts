@@ -1,6 +1,6 @@
 import type { SyncRelation } from '@sand/sync/contract'
 import type { Machine, ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import type { Tone } from '@sand/dom'
+import type { Tone } from '@sand/ui-kit/contract'
 import { relationLabel } from '@sand/sync/flows'
 import { copyOn } from './group'
 import { refOf, type PickerContext } from './target'

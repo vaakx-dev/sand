@@ -1,4 +1,5 @@
-import { derive, div, dynamicChild, p, primaryAction, rowList, secondaryAction, sectionRow, settingsSection, sheetBody, sheetFoot, show, span, stepMark, type Sig, type StepState } from '@sand/dom'
+import type { Kit, StepState } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, p, show, span, type Sig } from '@vaakx-dev/vrui'
 import { actionButton, fleetAction, runActionKind } from '../actions'
 import type { Fleet, RunRow } from '../fleet/model'
 import type { RunStatus } from '../fleet/run'
@@ -11,8 +12,9 @@ const stepState = (status: RunStatus): StepState => {
   return 'running'
 }
 
-const runRow = (row: Sig<RunRow>, fleet: Fleet) =>
-  sectionRow(
+const runRow = (kit: Kit, row: Sig<RunRow>, fleet: Fleet) => {
+  const { sectionRow, stepMark } = kit
+  return sectionRow(
     {},
     div(
       { class: 'flex min-w-0 flex-1 items-start gap-2' },
@@ -28,11 +30,13 @@ const runRow = (row: Sig<RunRow>, fleet: Fleet) =>
     ),
     dynamicChild(
       row.map(current => runActionKind(current.status)),
-      kind => (kind ? actionButton(fleetAction(fleet, row.get().key, kind)) : null),
+      kind => (kind ? actionButton(kit, fleetAction(fleet, row.get().key, kind)) : null),
     ),
   )
+}
 
-export const progressBody = (fleet: Fleet, close: () => void) => {
+export const progressBody = (kit: Kit, fleet: Fleet, close: () => void) => {
+  const { primaryAction, rowList, secondaryAction, settingsSection, sheetBody, sheetFoot } = kit
   const localName = derive(() => (fleet.runFinished.get() ? '' : (fleet.runRows.get().find(row => row.pc?.local)?.pc?.name ?? '')))
   const done = () => {
     fleet.finish()
@@ -42,7 +46,7 @@ export const progressBody = (fleet: Fleet, close: () => void) => {
     { class: 'flex min-h-0 flex-1 flex-col' },
     sheetBody(
       {},
-      settingsSection({}, rowList(fleet.runRows, row => row.key, row => runRow(row, fleet))),
+      settingsSection({}, rowList(fleet.runRows, row => row.key, row => runRow(kit, row, fleet))),
       show(localName.map(Boolean), () => p({ class: 'px-1 text-xs text-neutral-500' }, () => `This page reconnects by itself when ${localName.get()} is back.`)),
     ),
     sheetFoot(

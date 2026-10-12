@@ -1,5 +1,6 @@
 import type { AskKind, AskQuestion } from '../../contract'
-import { div, el, icon, show, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, el, show, span } from '@vaakx-dev/vrui'
 import type { AskActions } from '../answering'
 import type { AskState } from '../state'
 import { choicesView } from './choices'
@@ -8,7 +9,7 @@ import { rankView } from './rank'
 
 const hints: Partial<Record<AskKind, string>> = { multi: 'Pick any', rank: 'Drag to order' }
 
-const own = (state: AskState) =>
+const own = ({ icon }: Kit, state: AskState) =>
   div(
     { class: 'flex items-start gap-3 rounded-xl border border-dashed border-accent-500 bg-accent-950 px-3 py-2 text-sm' },
     span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-accent-500 text-neutral-950' }, icon('pencil', 12)),
@@ -19,14 +20,14 @@ const own = (state: AskState) =>
     ),
   )
 
-const options = (state: AskState, actions: AskActions, question: AskQuestion) => {
+const options = (kit: Kit, state: AskState, actions: AskActions, question: AskQuestion) => {
   if (question.type === 'text') return ''
-  if (question.type === 'confirm') return confirmView(state, actions, question)
-  if (question.type === 'rank') return rankView(state, actions, question)
-  return choicesView(state, actions, question)
+  if (question.type === 'confirm') return confirmView(kit, state, actions, question)
+  if (question.type === 'rank') return rankView(kit, state, actions, question)
+  return choicesView(kit, state, actions, question)
 }
 
-export const questionView = (state: AskState, actions: AskActions, question: AskQuestion) => {
+export const questionView = (kit: Kit, state: AskState, actions: AskActions, question: AskQuestion) => {
   const hint = hints[question.type]
   return div(
     { class: 'flex flex-col gap-2' },
@@ -38,7 +39,7 @@ export const questionView = (state: AskState, actions: AskActions, question: Ask
     question.detail
       ? el('pre', { class: 'max-h-40 overflow-auto rounded-lg bg-neutral-950 px-3 py-2 font-mono text-xs whitespace-pre-wrap wrap-anywhere text-neutral-300' }, question.detail)
       : '',
-    options(state, actions, question),
-    show(() => question.type !== 'text' && Boolean(state.typed.get()), () => own(state)),
+    options(kit, state, actions, question),
+    show(() => question.type !== 'text' && Boolean(state.typed.get()), () => own(kit, state)),
   )
 }

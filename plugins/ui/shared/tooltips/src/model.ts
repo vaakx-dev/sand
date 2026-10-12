@@ -1,4 +1,4 @@
-import { onRaf, onTimeout, sig, untrack } from '@sand/dom'
+import { onRaf, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { elementAt } from './integrations/spot'
 import { adoptTitles, tipOf } from './integrations/titles'
 

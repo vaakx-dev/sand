@@ -1,4 +1,4 @@
-import { effect, onMount, type Sig } from '@sand/dom'
+import { effect, onMount, type Sig } from '@vaakx-dev/vrui'
 
 export const autosize = (field: HTMLTextAreaElement, value: Sig<string>) => {
   const fit = () => {

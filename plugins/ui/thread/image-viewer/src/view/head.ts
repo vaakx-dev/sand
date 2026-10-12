@@ -1,14 +1,15 @@
 import type { ImageBlock } from '@sand/messages'
 import type { ThreadImage } from '../gallery'
 import type { Zoom } from './zoom'
-import { closeButton, div, headTitle, icon, iconButton, paneHead, quietButton, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, span } from '@vaakx-dev/vrui'
 import { senderNames } from '../gallery'
 
 const dimensions = (block: ImageBlock) => (typeof block.data !== 'string' && block.width && block.height ? `${block.width}×${block.height}` : undefined)
 
 const details = ({ block, sender }: ThreadImage) => [senderNames[sender], dimensions(block)].filter(Boolean).join(' · ')
 
-const zoomControls = (zoom: Zoom) =>
+const zoomControls = ({ icon, iconButton, quietButton }: Kit, zoom: Zoom) =>
   div(
     { class: 'flex items-center' },
     iconButton({ title: 'Zoom out', disabled: () => !zoom.zoomed.get(), onClick: zoom.zoomOut }, icon('zoom-out', 16)),
@@ -16,8 +17,9 @@ const zoomControls = (zoom: Zoom) =>
     iconButton({ title: 'Zoom in', onClick: zoom.zoomIn }, icon('zoom-in', 16)),
   )
 
-export const viewerHead = (shown: ThreadImage, count: string, zoom: Zoom, close: () => void) =>
-  paneHead(
+export const viewerHead = (kit: Kit, shown: ThreadImage, count: string, zoom: Zoom, close: () => void) => {
+  const { closeButton, headTitle, paneHead } = kit
+  return paneHead(
     {},
     div(
       { class: 'flex min-w-0 flex-1 flex-col' },
@@ -25,6 +27,7 @@ export const viewerHead = (shown: ThreadImage, count: string, zoom: Zoom, close:
       span({ class: 'truncate text-xs text-neutral-500' }, details(shown)),
     ),
     span({ class: 'hidden text-xs tabular-nums text-neutral-500 md:inline' }, count),
-    zoomControls(zoom),
+    zoomControls(kit, zoom),
     closeButton({ onClick: close }),
   )
+}

@@ -1,6 +1,6 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import type { MenuSpec } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import type { MenuSpec } from '@sand/protocol'
 import type { DeviceSource } from '../source'
 
 export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: boolean): MenuSpec => ({

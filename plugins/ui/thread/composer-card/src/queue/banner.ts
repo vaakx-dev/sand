@@ -1,13 +1,16 @@
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { badge, chevron, closeButton, contextMenu, derive, div, dynamicChild, errorMessage, icon, iconButton, list, quietButton, reorder, show, sig, span, type Sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { reorder } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../dock/glass'
 import type { Model } from '../model'
 import { queueMenu, type Act } from './menu'
 import { imageOf, queueThumb } from './thumb'
 
-type Ctx = Context<'threads' | 'turns'>
+type Ctx = Context<'threads' | 'turns' | 'kit'>
 
 interface Row {
   item: Pending
@@ -19,13 +22,13 @@ const groupOf = (row: Row) => (row.steer ? 'steer' : 'queued')
 const rowsOf = (thread?: Thread): Row[] =>
   thread ? [...thread.queued.map(item => ({ item, steer: true })), ...thread.followUps.map(item => ({ item, steer: false }))] : []
 
-const dragHandle = (steer: Sig<boolean>) =>
+const dragHandle = ({ icon }: Kit, steer: Sig<boolean>) =>
   span(
     { class: ['inline-flex w-6 shrink-0 justify-center text-neutral-500', { 'cursor-grab': steer.map(value => !value) }], title: () => (steer.get() ? '' : 'Drag to reorder') },
     dynamicChild(steer, value => span({ class: 'inline-flex' }, icon(value ? 'steer' : 'grip', 14))),
   )
 
-const header = (count: () => number, open: Sig<boolean>) =>
+const header = ({ chevron, icon, iconButton }: Kit, count: () => number, open: Sig<boolean>) =>
   div(
     { class: 'flex min-h-6 items-center gap-2 text-neutral-400' },
     icon('queued', 14),
@@ -39,6 +42,7 @@ const header = (count: () => number, open: Sig<boolean>) =>
   )
 
 export const queueBanner = (ctx: Ctx, model: Model) => {
+  const { badge, closeButton, contextMenu, icon, iconButton, quietButton } = ctx.kit
   const rows = model.changes.read(() => rowsOf(ctx.threads.current()))
   const open = sig(true)
   const menu = contextMenu()
@@ -70,7 +74,7 @@ export const queueBanner = (ctx: Ctx, model: Model) => {
         ...drag(() => ({ id: item().id, group: groupOf(entry.get()), movable: queued.get() })),
         draggable: queued,
       },
-      dragHandle(steer),
+      dragHandle(ctx.kit, steer),
       show(() => Boolean(imageOf(item().prompt)), () => queueThumb(ctx, item().prompt)),
       span({ class: 'min-w-0 flex-1 truncate' }, () => item().label),
       show(steer, () => badge('neutral', 'Next step')),
@@ -85,7 +89,7 @@ export const queueBanner = (ctx: Ctx, model: Model) => {
     () =>
       bannerPanel(
         'plain',
-        header(() => rows.get().length, open),
+        header(ctx.kit, () => rows.get().length, open),
         show(open, () => list(rows, entry => entry.item.id, row, div({ class: 'mt-1 flex flex-col' }))),
         menu.view(),
       ),

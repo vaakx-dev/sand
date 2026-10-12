@@ -1,6 +1,8 @@
-import { plural, remoteKey } from '@sand/kit'
+import { ago, plural, remoteKey } from '@sand/kit'
+import { popupTrigger } from '@sand/kit/web'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { ago, div, iconButton, icon, popupTrigger, projectIcon, sectionRow, show, span, statusLine, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import { div, show, span, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import { iconEntries, iconPopover, type Picking } from './icon'
 import { locationLine, noCopyLine } from './location'
@@ -14,7 +16,7 @@ const summary = (group: ProjectGroup) => {
   return [plural(group.threads, 'thread'), when, group.hidden && 'hidden'].filter(Boolean).join(' · ')
 }
 
-const remoteLine = (remote?: string) =>
+const remoteLine = ({ icon, statusLine }: Kit, remote?: string) =>
   remote ? statusLine({ mark: span({ class: 'inline-flex shrink-0' }, icon('folder-git', 12)), text: remoteKey(remote) || remote, title: remote }) : null
 
 const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
@@ -22,10 +24,10 @@ const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
   if (!flows) return []
   return withoutCopy(ctx, group)
     .filter(machine => machine.online)
-    .map(machine => noCopyLine(flows, group, machine))
+    .map(machine => noCopyLine(ctx.kit, flows, group, machine))
 }
 
-const menuButton = (group: ProjectGroup, open: Sig<string | undefined>, opened: Derive<boolean>) =>
+const menuButton = ({ icon, iconButton }: Kit, group: ProjectGroup, open: Sig<string | undefined>, opened: Derive<boolean>) =>
   iconButton(
     {
       size: 'sm',
@@ -39,6 +41,7 @@ const menuButton = (group: ProjectGroup, open: Sig<string | undefined>, opened: 
   )
 
 export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, open: Sig<string | undefined>, picking: Sig<Picking>) => {
+  const { projectIcon, sectionRow } = ctx.kit
   const locations = byRecent(group.locations)
   const primary = locations.length > 1 ? locations[0] : undefined
   const opened = open.map(id => id === group.id)
@@ -52,13 +55,13 @@ export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: Project
         span({ class: 'min-w-0 truncate text-sm font-medium text-neutral-100' }, group.name),
         span({ class: 'shrink-0 text-xs text-neutral-500' }, summary(group)),
       ),
-      remoteLine(group.remote),
+      remoteLine(ctx.kit, group.remote),
       ...locations.map(entry => locationLine(ctx, menu, entry, primary)),
       ...noCopyLines(ctx, group),
     ),
     div(
       { class: 'relative shrink-0' },
-      menuButton(group, open, opened),
+      menuButton(ctx.kit, group, open, opened),
       show(opened, () => rowMenu(ctx, group, () => open.set(undefined), iconEntries(ctx, group, picking))),
       iconPopover(ctx, group, picking),
     ),

@@ -1,4 +1,5 @@
-import { scoped, shownPanel } from '@sand/dom'
+import { shownPanel } from '@sand/kit/web'
+import { scoped } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { treeSource } from './source'
 import { createTreeView, type TreeView } from './view'
@@ -6,7 +7,7 @@ import { createTreeView, type TreeView } from './view'
 export default definePlugin({
   name: 'panel-tree',
   description: 'Thread tree (/tree): jump to any point, fork from it, and label entries',
-  inject: ['threads', 'wire'],
+  inject: ['threads', 'wire', 'kit'],
   uses: { panels: 'draws its own plain panel', commands: 'no /tree command', composer: 'prompts are not put back for editing', notify: 'silent' },
   apply(ctx) {
     const source = treeSource(ctx)
@@ -20,7 +21,7 @@ export default definePlugin({
       for (const view of views) view.sync()
     }
     const view = () => {
-      const tree = createTreeView(source)
+      const tree = createTreeView(ctx.kit, source)
       views.add(tree)
       scoped(() => views.delete(tree))
       return tree.root

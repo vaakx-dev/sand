@@ -1,4 +1,4 @@
-import { neutral } from '@sand/dom/palette'
+import { background } from '../page/first-paint'
 
 const icon = (size: number) => ({ src: `/icons/${size}x${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' })
 
@@ -9,8 +9,8 @@ const manifest = JSON.stringify({
   start_url: '/',
   scope: '/',
   display: 'standalone',
-  background_color: neutral['900'],
-  theme_color: neutral['900'],
+  background_color: background,
+  theme_color: background,
   icons: [icon(192), icon(512)],
 })
 

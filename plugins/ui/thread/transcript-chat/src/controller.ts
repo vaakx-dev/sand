@@ -1,6 +1,7 @@
 import type { OpenStates, RendererRegistry } from '@sand/transcript-parts/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { contextMenu, div, jumpButton, listen, nearEnd, sig, toEnd, untrack } from '@sand/dom'
+import { nearEnd, toEnd } from '@sand/kit/web'
+import { div, listen, sig, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { findQuote, quoteFlash } from './integrations/quote-jump'
@@ -14,13 +15,14 @@ import { shownRows } from './turns/rows'
 import { threadViews, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
 
-export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
+export const chatController = (ctx: Context<'kit' | 'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
+  const { contextMenu, jumpButton } = ctx.kit
   const parts = ctx.transcriptParts
   const cache = parts.itemCache()
   const jumpShown = sig(false)
   const slot = slotHost()
   const menu = contextMenu()
-  const views = threadViews()
+  const views = threadViews(ctx.kit)
   const empty = hero(ctx)
   let shown: ThreadView | undefined
   let pinned = true
@@ -84,6 +86,7 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
 
   const paint = (thread: Thread, view: ThreadView, grow = 0) => {
     const context: RowContext = {
+      kit: ctx.kit,
       registry,
       states,
       thread: thread.id,
@@ -127,8 +130,8 @@ export const chatController = (ctx: Context<'threads' | 'transcriptParts' | 'mar
     if (!thread || (thread.loaded && !thread.entries.size && !thread.live.length)) return showSlot('empty', () => empty)
     if (!thread.loaded && !thread.entries.size) {
       const problem = thread.failed
-      if (!problem) return showSlot('loading', loading)
-      return showSlot(`failed:${thread.id}:${problem}`, () => failed(problem, () => void ctx.threads.load(thread.id)))
+      if (!problem) return showSlot('loading', () => loading(ctx.kit))
+      return showSlot(`failed:${thread.id}:${problem}`, () => failed(ctx.kit, problem, () => void ctx.threads.load(thread.id)))
     }
     const switching = shown?.id !== thread.id
     const view = showThread(thread.id)

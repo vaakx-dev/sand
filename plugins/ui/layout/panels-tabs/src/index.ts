@@ -1,5 +1,5 @@
 import type { Panels } from './contract'
-import { sig } from '@sand/dom'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { createSurface } from './surface'
 import { panelsView, selectedPage, type Page } from './view'
@@ -9,6 +9,7 @@ const byOrder = (pages: Page[]) => [...pages].sort((a, b) => (a.spec.order ?? 0)
 export default definePlugin({
   name: 'panels-tabs',
   description: 'Tabbed host for the right-hand panels: edits, agents, tree',
+  inject: ['kit'],
   uses: { layout: 'opens as a drawer over the page' },
   apply(ctx) {
     const pages = sig<Page[]>([])
@@ -46,7 +47,7 @@ export default definePlugin({
 
     const surface = createSurface(
       ctx,
-      () => panelsView({ pages, selected, surface, show: panels.show, hide: panels.hide }),
+      () => panelsView({ kit: ctx.kit, pages, selected, surface, show: panels.show, hide: panels.hide }),
       () => ctx.emit('panels.change', panels.current()),
     )
 

@@ -1,7 +1,8 @@
 import type { Markdown } from '@sand/markdown/contract'
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, el, fold } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, el } from '@vaakx-dev/vrui'
 
 const shownLines = 120
 const numbered = /^\s*(\d+)\t(.*)$/
@@ -27,7 +28,7 @@ const language = (path: string) => /\.(\w+)$/.exec(path)?.[1] ?? ''
 
 const media = (tool: ToolView) => tool.result?.content.find(block => block.type !== 'text')
 
-const code = (tool: ToolView, views: ToolViews, highlight: Markdown['highlight'] | undefined) => {
+const code = ({ fold }: Kit, tool: ToolView, views: ToolViews, highlight: Markdown['highlight'] | undefined) => {
   const { lines, tail } = parse(tool, views)
   const shown = lines.slice(0, shownLines)
   const text = shown.map(line => line.text).join('\n')
@@ -45,7 +46,7 @@ const code = (tool: ToolView, views: ToolViews, highlight: Markdown['highlight']
   )
 }
 
-export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'] | undefined): ToolRenderer => ({
+export const readRenderer = (kit: Kit, views: ToolViews, highlight: Markdown['highlight'] | undefined): ToolRenderer => ({
   icon: 'file-text',
   verb: 'Read',
   activeVerb: 'Reading',
@@ -67,6 +68,6 @@ export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'] 
     const found = media(tool)
     if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
     if (found) return div({ class: 'font-mono text-xs text-neutral-300' }, found.name ?? 'document')
-    return code(tool, views, highlight)
+    return code(kit, tool, views, highlight)
   },
 })

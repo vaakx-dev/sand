@@ -1,4 +1,4 @@
-import { derive, dynamicChild, sig } from '@sand/dom'
+import { derive, dynamicChild, sig } from '@vaakx-dev/vrui'
 
 interface Slotted {
   key: string

@@ -1,9 +1,10 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { badge, choiceItem, div, modelLogo, span } from '@sand/dom'
 import { sourceName, tokens } from '@sand/kit'
+import { div, span } from '@vaakx-dev/vrui'
 import type { Scene } from './scene'
 
 export const modelRow = (model: ModelInfo, scene: Scene, withSource = false) => {
+  const { badge, choiceItem, modelLogo } = scene.kit
   const on = model.id === scene.shown.model
   const source = scene.source(model)
   return choiceItem(

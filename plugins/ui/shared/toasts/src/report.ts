@@ -1,5 +1,6 @@
 import type { ReportRow } from '@sand/server/contract'
-import { div, overlay, p, sheet, sheetBody, sheetHead, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, p, span } from '@vaakx-dev/vrui'
 
 export interface Report {
   title: string
@@ -25,7 +26,7 @@ const rowView = (row: ReportRow) => {
   return p({ class: ['mt-3 text-xs text-neutral-400', row.mono ? 'whitespace-pre font-mono' : 'whitespace-pre-wrap'] }, row.text)
 }
 
-export const reportView = ({ title, rows }: Report, close: () => void) =>
+export const reportView = ({ overlay, sheet, sheetBody, sheetHead }: Kit, { title, rows }: Report, close: () => void) =>
   overlay(
     close,
     sheet(

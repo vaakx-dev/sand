@@ -1,4 +1,5 @@
-import { el, listen, type Props, type Swipe } from '@sand/dom'
+import type { Swipe } from '@sand/protocol'
+import { el, listen, type Props } from '@vaakx-dev/vrui'
 import { openLink, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
 
 interface Message {

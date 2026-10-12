@@ -1,6 +1,6 @@
 import type { ToolView, TruncatedAt } from '../contract'
-import { div, el } from '@sand/dom'
 import { plural } from '@sand/kit'
+import { div, el } from '@vaakx-dev/vrui'
 import { resultText } from '../thread/results'
 
 export const outputText = (text: string, error: boolean) =>

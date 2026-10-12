@@ -1,4 +1,4 @@
-import type { Handle, PanelSpec } from '@sand/dom'
+import type { Handle, PanelSpec } from '@sand/protocol'
 
 export interface Panels {
   panel(panel: PanelSpec): Handle<Omit<PanelSpec, 'id' | 'render'>>

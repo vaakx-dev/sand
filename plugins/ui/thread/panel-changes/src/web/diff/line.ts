@@ -1,4 +1,4 @@
-import { span } from '@sand/dom'
+import { span } from '@vaakx-dev/vrui'
 import type { DiffKind } from '@sand/kit'
 import { codeText } from './code'
 import type { Line } from './rows'

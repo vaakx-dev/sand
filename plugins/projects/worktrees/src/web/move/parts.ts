@@ -1,5 +1,6 @@
 import type { WorktreeSetup } from '../../contract'
-import { checkMark, div, icon, keys, rowButton, span, textInput, type Child, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, keys, span, type Child, type Sig } from '@vaakx-dev/vrui'
 
 const mono = (text: string) => span({ class: 'font-mono text-neutral-400' }, text)
 
@@ -11,7 +12,7 @@ export const setupLine = (setup: WorktreeSetup): Child[] => {
   return [...copy, ...run, ', as set in ', mono('.sand/worktree.toml')]
 }
 
-export const branchInput = (value: Sig<string>, submit: () => void) =>
+export const branchInput = ({ icon, textInput }: Kit, value: Sig<string>, submit: () => void) =>
   div(
     { class: 'flex w-full min-w-0 items-center gap-2 text-neutral-500' },
     icon('branch', 14),
@@ -21,7 +22,7 @@ export const branchInput = (value: Sig<string>, submit: () => void) =>
 export const field = (label: string, control: Child) =>
   div({ class: 'flex items-center gap-3' }, span({ class: 'w-20 shrink-0 text-xs text-neutral-500' }, label), div({ class: 'flex min-w-0 flex-1' }, control))
 
-export const checkRow = (checked: Sig<boolean>, title: Child, ...detail: Child[]) =>
+export const checkRow = ({ checkMark, rowButton }: Kit, checked: Sig<boolean>, title: Child, ...detail: Child[]) =>
   rowButton(
     { role: 'checkbox', 'aria-checked': () => String(checked.get()), class: 'items-start gap-3 rounded-xl bg-neutral-900 px-4 py-3', onClick: checked.toggle() },
     checkMark(() => checked.get(), 'mt-px'),

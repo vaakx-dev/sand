@@ -1,4 +1,6 @@
-import { badge, div, dynamicChild, effect, exactTime, icon, iconButton, plainButton, primaryAction, secondaryAction, show, span, stopThen, type ContextMenu, type Derive, type Sig } from '@sand/dom'
+import { exactTime } from '@sand/kit'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, effect, show, span, stopThen, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { TreeNode } from '../tree/forest'
 import type { Row } from '../tree/layout'
 import { rowMenu } from './menu'
@@ -24,7 +26,7 @@ const time = (at: number) => new Date(at).toLocaleTimeString([], { hour: '2-digi
 
 const glyphClass = 'flex h-5 w-4 shrink-0 items-center justify-center font-mono text-xs text-neutral-500'
 
-const foldToggle = (row: Row, actions: RowActions) => {
+const foldToggle = ({ plainButton }: Kit, row: Row, actions: RowActions) => {
   const name = row.fold === 'closed' ? 'Expand branch' : 'Collapse branch'
   return plainButton(
     { class: [glyphClass, 'hover:text-neutral-100'], title: name, 'aria-label': name, 'aria-expanded': row.fold === 'open', onClick: stopThen(() => actions.fold(row.id)) },
@@ -32,8 +34,8 @@ const foldToggle = (row: Row, actions: RowActions) => {
   )
 }
 
-const glyph = (row: Row, actions: RowActions) => {
-  if (row.fold) return foldToggle(row, actions)
+const glyph = (kit: Kit, row: Row, actions: RowActions) => {
+  if (row.fold) return foldToggle(kit, row, actions)
   return row.glyph && span({ class: glyphClass }, row.glyph)
 }
 
@@ -46,7 +48,7 @@ const textClass = (item: TreeItem) => {
   return item.head || item.selected || item.active ? 'text-neutral-100' : 'text-neutral-400'
 }
 
-const details = (item: Sig<TreeItem>, actions: RowActions) => {
+const details = ({ icon, iconButton, primaryAction, secondaryAction }: Kit, item: Sig<TreeItem>, actions: RowActions) => {
   const { row, tree, head } = item.get()
   return div(
     { class: 'flex min-w-0 flex-col gap-2 pt-2 pb-1' },
@@ -61,13 +63,14 @@ const details = (item: Sig<TreeItem>, actions: RowActions) => {
   )
 }
 
-const content = (item: Sig<TreeItem>, actions: RowActions) => {
+const content = (kit: Kit, item: Sig<TreeItem>, actions: RowActions) => {
+  const { badge } = kit
   const { row, tree, head } = item.get()
   const { described, label, entry } = tree
   return div(
     { class: 'flex min-w-0 items-start gap-2' },
     row.prefix && span({ class: 'flex h-5 shrink-0 items-center whitespace-pre font-mono text-xs text-neutral-500' }, row.prefix),
-    glyph(row, actions),
+    glyph(kit, row, actions),
     span({ class: 'flex h-5 w-4 shrink-0 items-center justify-center' }, span({ class: () => ['h-2 w-2 rounded-full', dotClass(item.get())] })),
     div(
       { class: 'min-w-0 flex-1' },
@@ -83,7 +86,7 @@ const content = (item: Sig<TreeItem>, actions: RowActions) => {
       ),
       show(
         item.map(value => value.selected),
-        () => details(item, actions),
+        () => details(kit, item, actions),
       ),
     ),
   )
@@ -98,7 +101,7 @@ const revealWhenSelected = (selected: Derive<boolean>) => (node: Element) =>
     if (selected.get()) node.scrollIntoView({ block: 'nearest' })
   })
 
-export const rowView = (item: Sig<TreeItem>, actions: RowActions, menu: ContextMenu) => {
+export const rowView = (kit: Kit, item: Sig<TreeItem>, actions: RowActions, menu: ContextMenu) => {
   const selected = item.map(value => value.selected)
   return div(
     {
@@ -111,6 +114,6 @@ export const rowView = (item: Sig<TreeItem>, actions: RowActions, menu: ContextM
       ),
       onMount: revealWhenSelected(selected),
     },
-    dynamicChild(item.map(signature), () => content(item, actions)),
+    dynamicChild(item.map(signature), () => content(kit, item, actions)),
   )
 }

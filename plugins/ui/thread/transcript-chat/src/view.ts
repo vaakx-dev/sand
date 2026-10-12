@@ -1,4 +1,5 @@
-import { div, dockFade, list, sig, untrack, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, list, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Row } from './rows/row'
 
 export interface ThreadView {
@@ -32,14 +33,14 @@ const rowNode = (view: ThreadView, row: Sig<Row>) => {
   return view.animate ? div({ class: 'animate-fade' }, node) : node
 }
 
-const column = (view: ThreadView) =>
+const column = ({ dockFade }: Kit, view: ThreadView) =>
   div(
     { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', hidden: view.visible.map(value => !value) },
     list(view.rows, row => row.key, row => rowNode(view, row), view.rowList),
     dockFade(),
   )
 
-export const threadViews = () => {
+export const threadViews = (kit: Kit) => {
   const recent = new Map<string, ThreadView>()
   const mounted = sig<ThreadView[]>([])
 
@@ -60,7 +61,7 @@ export const threadViews = () => {
   const node = list(
     mounted,
     view => view.id,
-    view => column(untrack(() => view.get())),
+    view => column(kit, untrack(() => view.get())),
   )
 
   return { node, get, drop, ids: () => [...recent.keys()] }

@@ -1,5 +1,5 @@
 import type { ConsoleEntry, LogLevel, NetworkEntry } from '@sand/browser-engine/contract'
-import { div, span, type Child, type ClassValue } from '@sand/dom'
+import { div, span, type Child, type ClassValue } from '@vaakx-dev/vrui'
 
 const levelTones: Record<LogLevel, string> = {
   log: 'text-neutral-300',

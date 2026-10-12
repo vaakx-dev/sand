@@ -8,7 +8,8 @@
     "label": "Thread list",
     "summary": "Your threads and unsent drafts in the sidebar, and threads and projects in the palette",
     "uses": {
-      "nav": "shows a plain thread switcher at the top",
+      "nav": "threads are not listed in a sidebar",
+      "sidebar": "shows a plain thread switcher at the top",
       "composer": "new thread does not focus the prompt",
       "palette": "threads and projects are not searchable, and New thread starts in the current folder",
       "projects": "only the current folder is offered for a new thread, and projects cannot be renamed or hidden",
@@ -27,10 +28,13 @@
   },
   "dependencies": {
     "@sand/composer-card": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

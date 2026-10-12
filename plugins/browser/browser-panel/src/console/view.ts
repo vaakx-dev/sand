@@ -1,5 +1,7 @@
 import type { Logs } from '@sand/browser-engine/contract'
-import { closeButton, derive, div, dynamicChild, effect, hint, icon, iconButton, segmented, sig, toEnd, untrack } from '@sand/dom'
+import { toEnd } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { TabModel } from '../tab/model'
 import { consoleRow, networkRow } from './rows'
 
@@ -9,7 +11,7 @@ const shownEntries = 500
 
 const noLogs: Logs = { console: [], network: [] }
 
-const entries = (which: LogTab, logs: Logs) => {
+const entries = ({ hint }: Kit, which: LogTab, logs: Logs) => {
   const rows = which === 'console' ? logs.console.slice(-shownEntries).map(consoleRow) : logs.network.slice(-shownEntries).map(networkRow)
   return div(
     { class: 'min-h-0 flex-1 overflow-auto', onMount: node => toEnd(node as HTMLElement) },
@@ -17,7 +19,8 @@ const entries = (which: LogTab, logs: Logs) => {
   )
 }
 
-export const consoleDrawer = (tab: TabModel, close: () => void) => {
+export const consoleDrawer = (kit: Kit, tab: TabModel, close: () => void) => {
+  const { closeButton, icon, iconButton, segmented } = kit
   const which = sig<LogTab>('console')
   const logs = sig<Logs>(noLogs)
   const errors = tab.state.map(state => state?.errors ?? 0)
@@ -52,7 +55,7 @@ export const consoleDrawer = (tab: TabModel, close: () => void) => {
     ),
     dynamicChild(
       derive(() => ({ shown: which.get(), all: logs.get() })),
-      ({ shown, all }) => entries(shown, all),
+      ({ shown, all }) => entries(kit, shown, all),
     ),
   )
 }

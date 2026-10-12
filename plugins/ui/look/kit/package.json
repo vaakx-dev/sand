@@ -1,0 +1,25 @@
+{
+  "name": "@sand/ui-kit",
+  "version": "0.0.0",
+  "description": "Sand's buttons, menus, sheets, rows, marks and icons for other extensions to draw with",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts",
+    "./kit": "./src/kit.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Sand",
+    "summary": "The buttons, menus, sheets and icons the rest of the page is drawn with",
+    "provides": [
+      "kit"
+    ]
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "lucide": "^1.52.0"
+  }
+}

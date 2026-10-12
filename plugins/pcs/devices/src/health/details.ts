@@ -1,6 +1,7 @@
-import { copyButton, div, el, p, span } from '@sand/dom'
 import type { HostHealth } from '@sand/host-health/contract'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, el, p, span } from '@vaakx-dev/vrui'
 
 const healthSummary = (health: HostHealth) => {
   if (health.healthy) return 'sand runs normally'
@@ -19,7 +20,7 @@ const failedPlugin = (id: string, error: string) =>
     el('pre', { class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, error),
   )
 
-const logTail = (health: HostHealth) => [
+const logTail = ({ copyButton }: Kit, health: HostHealth) => [
   div(
     { class: 'flex items-center justify-between gap-2' },
     span({ class: 'text-neutral-500' }, 'Last lines of server.log'),
@@ -32,12 +33,12 @@ const logTail = (health: HostHealth) => [
   ),
 ]
 
-export const healthDetails = (health: HostHealth) =>
+export const healthDetails = (kit: Kit, health: HostHealth) =>
   div(
     { class: 'flex flex-col gap-3 text-xs' },
     p({ class: ['text-sm', health.healthy ? 'text-neutral-300' : 'text-danger-400'] }, healthSummary(health)),
     health.error ? div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, health.error) : null,
     health.webError ? div({ class: 'text-neutral-400' }, `Web page: ${health.webError}`) : null,
     ...health.failedPlugins.map(plugin => failedPlugin(plugin.id, plugin.error)),
-    ...(health.log.length ? logTail(health) : []),
+    ...(health.log.length ? logTail(kit, health) : []),
   )

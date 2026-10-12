@@ -1,13 +1,14 @@
 import type { ModelPicker } from '@sand/model-picker/contract'
 import type { TitlePatch, TitleSettings } from '../contract'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { titlesSection } from './section'
 
 export default definePlugin({
   name: 'titles-web',
   description: 'Text generation section on the Models settings page: turn automatic naming on or off and pick the text gen model',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     settings: 'no Text generation section',
     modelPicker: 'no text gen model picker',
@@ -30,6 +31,6 @@ export default definePlugin({
       if (event.name === 'titles.change') state.set(event.args[0])
     })
     ctx.watch('modelPicker', value => picker.set(value))
-    ctx.watch('settings', settings => settings?.section({ page: 'models', id: 'titles', order: 10, render: () => titlesSection(state, picker, save) }))
+    ctx.watch('settings', settings => settings?.section({ page: 'models', id: 'titles', order: 10, render: () => titlesSection(ctx.kit, state, picker, save) }))
   },
 })

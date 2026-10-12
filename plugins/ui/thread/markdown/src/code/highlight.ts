@@ -1,4 +1,4 @@
-import { span } from '@sand/dom'
+import { span } from '@vaakx-dev/vrui'
 import type { Inline } from '../nodes'
 
 type Kind = 'keyword' | 'string' | 'number' | 'comment' | 'add' | 'del' | 'hunk'

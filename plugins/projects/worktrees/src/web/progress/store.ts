@@ -1,5 +1,5 @@
 import type { WorktreeProgress } from '../../contract'
-import { onTimeout, sig } from '@sand/dom'
+import { onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { onWorktreeEvent } from '../events'
 

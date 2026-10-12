@@ -1,6 +1,7 @@
-import type { NavItem } from '@sand/dom'
-import { ago, derive, dot, dynamicChild, elapsed, exactTime, icon, navStatus, show, span, stateMark, working, type Sig } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { ago, exactTime, navStatus, plural } from '@sand/kit'
+import type { NavItem } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
 
 const busy = new Set(['running', 'background', 'waiting', 'draft'])
 
@@ -18,7 +19,7 @@ const backgroundLabel = ({ jobs, workflow }: NavItem) => {
   return workflow.total ? `Workflow ${workflow.done}/${workflow.total}` : 'Workflow'
 }
 
-const extraAgents = (item: Sig<NavItem>) =>
+const extraAgents = ({ stateMark }: Kit, item: Sig<NavItem>) =>
   show(
     item.map(value => Boolean(value.jobs)),
     () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, item.map(value => `+${value.jobs}`), stateMark('agent')),
@@ -37,7 +38,8 @@ const ticking = (minute: Sig<number>, read: () => string) =>
     return read()
   })
 
-const runningStatus = (item: Sig<NavItem>) => {
+const runningStatus = (kit: Kit, item: Sig<NavItem>) => {
+  const { elapsed, working } = kit
   const title = item.map(value => [startedTitle(value.started), value.jobs ? navStatus(value) : ''].filter(Boolean).join(' · '))
   return span(
     { class: 'inline-flex items-center gap-2', title },
@@ -47,11 +49,11 @@ const runningStatus = (item: Sig<NavItem>) => {
       'Working',
       span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
     ),
-    extraAgents(item),
+    extraAgents(kit, item),
   )
 }
 
-const backgroundStatus = (item: Sig<NavItem>) =>
+const backgroundStatus = ({ elapsed, icon, stateMark }: Kit, item: Sig<NavItem>) =>
   span(
     { class: 'inline-flex items-center gap-1 font-medium text-sky-400', title: item.map(navStatus) },
     dynamicChild(
@@ -62,12 +64,13 @@ const backgroundStatus = (item: Sig<NavItem>) =>
     span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
   )
 
-export const status = (item: Sig<NavItem>, minute: Sig<number>) =>
-  dynamicChild(item.map(kindOf), kind => {
-    if (kind === 'running') return runningStatus(item)
-    if (kind === 'background') return backgroundStatus(item)
-    if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, dot('warning'), span({ class: 'font-medium text-warning-400' }, 'Needs you'))
-    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, stateMark('draft'), 'Draft')
+export const status = (kit: Kit, item: Sig<NavItem>, minute: Sig<number>) => {
+  const { icon, navMark } = kit
+  return dynamicChild(item.map(kindOf), kind => {
+    if (kind === 'running') return runningStatus(kit, item)
+    if (kind === 'background') return backgroundStatus(kit, item)
+    if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, navMark(item.get()), span({ class: 'font-medium text-warning-400' }, 'Needs you'))
+    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, navMark(item.get()), 'Draft')
     if (kind === 'snoozed')
       return span(
         { class: 'inline-flex items-center gap-1 tabular-nums text-neutral-500', title: () => `Back ${exactTime(item.get().snoozed)}` },
@@ -75,6 +78,7 @@ export const status = (item: Sig<NavItem>, minute: Sig<number>) =>
         ticking(minute, () => left(item.get().snoozed ?? Date.now())),
       )
     if (kind === 'back') return span({ class: 'inline-flex items-center gap-1 font-medium text-accent-400', title: 'Back from snooze' }, icon('snooze', 12), 'Back')
-    if (kind === 'unread') return span({ class: 'inline-flex', title: navStatus(item.get()) }, stateMark('unread'))
+    if (kind === 'unread') return span({ class: 'inline-flex', title: navStatus(item.get()) }, navMark(item.get()))
     return span({ class: 'tabular-nums text-neutral-500', title: () => exactTime(item.get().updated) }, ticking(minute, () => ago(item.get().updated)))
   })
+}

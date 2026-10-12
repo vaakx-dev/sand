@@ -1,4 +1,4 @@
-import { tildeHome } from '@sand/dom'
+import { tildeHome } from '@sand/kit'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
 

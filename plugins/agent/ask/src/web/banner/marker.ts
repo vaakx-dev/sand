@@ -1,6 +1,7 @@
-import { derive, dynamicChild, icon, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, dynamicChild, span } from '@vaakx-dev/vrui'
 
-export const marker = (round: boolean, label: string, on: () => boolean) => {
+export const marker = ({ icon }: Kit, round: boolean, label: string, on: () => boolean) => {
   const checked = derive(on)
   return span(
     {

@@ -1,14 +1,18 @@
 import type { Models } from '@sand/web-client/contract'
-import { div, modelLogo, primaryAction, quietButton, settingsSection, setupColumn, setupFooter, setupHeading, setupNote, span, type Pulse } from '@sand/dom'
+import type { Pulse } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, span } from '@vaakx-dev/vrui'
 import type { ModelSetupState } from '../setup'
 import { problem, screen } from './layout'
 import { choiceRow, modelList } from './models'
 
-const sameAsThreads = (setup: ModelSetupState, models: Models, id: string) => {
+const sameAsThreads = (kit: Kit, setup: ModelSetupState, models: Models, id: string) => {
+  const { modelLogo, settingsSection } = kit
   const model = models.info(id)
   return settingsSection(
     {},
     choiceRow(
+      kit,
       setup.namer,
       id,
       span({ class: 'flex-1 text-sm font-medium text-neutral-100' }, 'Same as new threads'),
@@ -17,19 +21,21 @@ const sameAsThreads = (setup: ModelSetupState, models: Models, id: string) => {
   )
 }
 
-export const namesStep = (setup: ModelSetupState, models: Models, changes: Pulse) => {
+export const namesStep = (kit: Kit, setup: ModelSetupState, models: Models, changes: Pulse) => {
+  const { primaryAction, quietButton, setupColumn, setupFooter, setupHeading, setupNote } = kit
   const threads = setup.model.get()
   return screen(
+    kit,
     3,
     setupHeading('Pick a model to name threads'),
     setupNote('It writes thread and branch names. A small, fast model is enough.'),
     setupColumn(
-      modelList(models, changes, setup.namer, {
+      modelList(kit, models, changes, setup.namer, {
         label: 'Model that names threads',
         left: threads,
-        ...(threads && { lead: () => sameAsThreads(setup, models, threads) }),
+        ...(threads && { lead: () => sameAsThreads(kit, setup, models, threads) }),
       }),
-      problem(() => setup.error.get()),
+      problem(kit, () => setup.error.get()),
     ),
     setupFooter(
       quietButton({ disabled: setup.busy, onClick: setup.namesOff }, "Don't name threads"),

@@ -1,4 +1,4 @@
-import type { NavItem, NavList } from '@sand/dom'
+import type { NavItem, NavList } from '@sand/protocol'
 import { inProject } from '../project/choices'
 
 export type HeadRow = { kind: 'head'; key: string; list: NavList; name: string; count: number; open: boolean }

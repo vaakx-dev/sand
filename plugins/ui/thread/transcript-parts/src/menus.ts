@@ -1,4 +1,6 @@
-import { copyWithNotice, icon, iconButton, pressMenu, type ContextMenu, type MenuSpec } from '@sand/dom'
+import { copyWithNotice, pressMenu } from '@sand/kit/web'
+import type { MenuSpec } from '@sand/protocol'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import type { Context } from 'drydock'
 import type { MenuKit } from './contract'
 import { selectingIn } from './integrations/select'
@@ -23,7 +25,7 @@ const textMenu = (menu: ContextMenu, spec: () => MenuSpec | undefined) => {
   return { props, held: press.held }
 }
 
-const moreButton = (menu: ContextMenu, spec: () => MenuSpec | undefined) =>
+const moreButton = ({ icon, iconButton }: Kit, menu: ContextMenu, spec: () => MenuSpec | undefined) =>
   iconButton(
     {
       size: 'sm',
@@ -41,8 +43,8 @@ const moreButton = (menu: ContextMenu, spec: () => MenuSpec | undefined) =>
     icon('more', 14),
   )
 
-export const menuKit = (ctx: Context): MenuKit => ({
+export const menuKit = (ctx: Context<'kit'>): MenuKit => ({
   text: textMenu,
-  more: moreButton,
+  more: (menu, spec) => moreButton(ctx.kit, menu, spec),
   copy: (id, label, text, what) => ({ id, label, icon: 'copy', tile: true, run: () => copyWithNotice(ctx.notify, text(), what) }),
 })

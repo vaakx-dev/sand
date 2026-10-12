@@ -1,6 +1,6 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { ago, clock, contextMenu, derive, hintRow, icon, itemRow, rowAction, rowList, secondaryAction, settingsSection, show, tile, type Sig } from '@sand/dom'
-import { oneLine } from '@sand/kit'
+import { ago, oneLine } from '@sand/kit'
+import { clock, derive, show, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 import { phoneMenu } from './phone-menu'
@@ -15,7 +15,8 @@ const rename = async (ctx: Context, source: DeviceSource, device: PairedDevice) 
   if (name && name !== device.name) await source.rename(device.id, name).catch(source.fail)
 }
 
-const phoneRow = (ctx: Context, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
+const phoneRow = (ctx: Context<'kit'>, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
+  const { contextMenu, icon, itemRow, rowAction, secondaryAction, tile } = ctx.kit
   const { id, kind } = device.get()
   const detail = () => {
     now.get()
@@ -33,7 +34,8 @@ const phoneRow = (ctx: Context, source: DeviceSource, device: Sig<PairedDevice>,
   )
 }
 
-export const phonesSection = (ctx: Context<'wire'>, source: DeviceSource, pair: () => void) => {
+export const phonesSection = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, pair: () => void) => {
+  const { hintRow, icon, rowList, secondaryAction, settingsSection } = ctx.kit
   const self = ctx.wire.pairing()?.device
   const now = clock(60_000)
   const devices = derive(() => [...(source.pcs.get()?.devices ?? [])].sort((a, b) => Number(b.id === self) - Number(a.id === self)))

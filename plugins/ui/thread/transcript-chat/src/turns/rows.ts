@@ -1,4 +1,4 @@
-import { div } from '@sand/dom'
+import { div } from '@vaakx-dev/vrui'
 import { itemRows } from '../rows'
 import { row, type Row, type RowContext } from '../rows/row'
 import type { Shown } from './fold'

@@ -1,7 +1,10 @@
-import { dynamicChild, menuLayer, portal, tildeHome, type PressAt, type Sig } from '@sand/dom'
+import { tildeHome } from '@sand/kit'
+import type { PressAt } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { dynamicChild, portal, type Sig } from '@vaakx-dev/vrui'
 import type { CardRow } from '../rows/build'
 
-export interface MenuRequest extends PressAt {
+export interface CardMenu extends PressAt {
   row: CardRow
   ask?: string
   expand?: string
@@ -9,7 +12,7 @@ export interface MenuRequest extends PressAt {
 
 const subtitleOf = ({ item }: CardRow) => [item.project, tildeHome(item.path ?? '')].filter(Boolean).join(' · ')
 
-export const actionMenu = (request: Sig<MenuRequest | undefined>, close: () => void) =>
+export const actionMenu = ({ menuLayer }: Kit, request: Sig<CardMenu | undefined>, close: () => void) =>
   dynamicChild(request, opened => {
     const actions = opened?.row.list.menu?.(opened.row.item.id) ?? []
     if (!opened || !actions.length) return null

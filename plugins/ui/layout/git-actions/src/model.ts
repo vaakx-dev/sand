@@ -1,9 +1,10 @@
 import type { PrSummary } from '@sand/github/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
-import { pulse, sig } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
-export type GitContext = Context<'composer' | 'threads' | 'gitStatus'>
+export type GitContext = Context<'composer' | 'threads' | 'gitStatus' | 'kit'>
 
 export type Pr = PrSummary | null | undefined
 

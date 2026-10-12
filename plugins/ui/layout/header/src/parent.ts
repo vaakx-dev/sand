@@ -1,4 +1,4 @@
-import { icon, quietButton, show, span, type Sig } from '@sand/dom'
+import { show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 export interface ParentLink {
@@ -12,8 +12,9 @@ export const parentOf = (ctx: Context): ParentLink | undefined => {
   return { id: info.parent, title: ctx.threads?.get(info.parent)?.info.title ?? 'Untitled thread' }
 }
 
-export const parentCrumb = (ctx: Context, parent: Sig<ParentLink | undefined>) =>
-  show(parent.map(Boolean), () =>
+export const parentCrumb = (ctx: Context<'kit'>, parent: Sig<ParentLink | undefined>) => {
+  const { icon, quietButton } = ctx.kit
+  return show(parent.map(Boolean), () =>
     quietButton(
       {
         size: 'sm',
@@ -29,3 +30,4 @@ export const parentCrumb = (ctx: Context, parent: Sig<ParentLink | undefined>) =
       span({ class: 'hidden min-w-0 truncate md:inline' }, () => `Sub-agent of ${parent.get()?.title ?? ''}`),
     ),
   )
+}

@@ -1,5 +1,6 @@
 import type { PluginOffer } from '@sand/host-plugin-sync/contract'
-import { effect, owned, untrack } from '@sand/dom'
+import { owned } from '@sand/kit/web'
+import { effect, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { groupOffers, offerSummary } from './offers'
 import { page } from './shown'

@@ -1,4 +1,4 @@
-import { div, dot, type Sig } from '@sand/dom'
+import { div, type Sig } from '@vaakx-dev/vrui'
 import type { Run } from '../runs/runs'
 import { agentMenu } from './menu'
 import { headline, markSlot, noteLine, pressable, since, subline, type Rows } from './parts'
@@ -10,8 +10,9 @@ const openSession = (run: Run, rows: Rows) => {
   if (run.session) rows.open(run.session)
 }
 
-export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
-  pressable(
+export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) => {
+  const { dot } = rows.kit
+  return pressable(
     {
       class: 'flex items-start gap-2 px-2 py-2',
       press: () => openSession(run.get(), rows),
@@ -28,5 +29,6 @@ export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
         'text-accent-400',
       ),
     ),
-    markSlot(stopButton(() => rows.cancel(run.get()))),
+    markSlot(stopButton(rows.kit, () => rows.cancel(run.get()))),
   )
+}

@@ -1,5 +1,6 @@
-import { div, dynamicChild, icon, shine, show, span, toolBody, toolCard, type Derive, type Sig } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, span, type Derive, type Sig } from '@vaakx-dev/vrui'
 
 export interface ThinkingProps {
   streaming: Sig<boolean> | Derive<boolean>
@@ -8,7 +9,7 @@ export interface ThinkingProps {
   toggle: () => void
 }
 
-export const thinkingCard = ({ streaming, text, open, toggle }: ThinkingProps) => {
+export const thinkingCard = ({ icon, shine, toolBody, toolCard }: Kit, { streaming, text, open, toggle }: ThinkingProps) => {
   const line = text.map(oneLine)
   return toolCard(
     {

@@ -13,17 +13,20 @@
     "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the thread",
     "uses": {
       "transcript": "renders are not shown",
-      "layout": "swiping over a page does not move the sidebar"
+      "layout": "swiping over a page does not move the sidebar",
+      "theme": "pages keep sand's built-in colors"
     }
   },
   "dependencies": {
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-theme": "workspace:*",
     "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

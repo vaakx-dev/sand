@@ -12,10 +12,10 @@
     "summary": "Builds the page from the web extensions"
   },
   "dependencies": {
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

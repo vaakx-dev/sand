@@ -1,4 +1,4 @@
-import type { ContextMenu } from '@sand/dom'
+import type { ContextMenu } from '@sand/ui-kit/contract'
 import type { Machine } from '@sand/web-client/contract'
 import { choosePc } from './choose'
 import { machineList, machineRow, offlineNote, pcRow } from './rows'
@@ -18,9 +18,9 @@ const quickMenu = (ctx: PickerContext, cwd: string, device: string | undefined, 
       close()
       if (!here) void startQuick(ctx, machine)
     }
-    return machineRow(machine, { selected: here, end: offlineNote(machine), choose })
+    return machineRow(ctx.kit, machine, { selected: here, end: offlineNote(machine), choose })
   })
-  return machineList(inFolder ? 'Run on' : 'Start a quick thread on', rows)
+  return machineList(ctx.kit, inFolder ? 'Run on' : 'Start a quick thread on', rows)
 }
 
 export const pcMenu = (ctx: PickerContext, close: () => void, context: ContextMenu) => {
@@ -33,5 +33,5 @@ export const pcMenu = (ctx: PickerContext, close: () => void, context: ContextMe
     }
     return pcRow(ctx, group, machine, machine.device === device, choose, context)
   })
-  return machineList(`Run ${group.name} on`, rows)
+  return machineList(ctx.kit, `Run ${group.name} on`, rows)
 }

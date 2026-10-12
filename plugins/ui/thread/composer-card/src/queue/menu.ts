@@ -1,5 +1,7 @@
 import type { Pending } from '@sand/steering/contract'
-import { copyWithNotice, oneLine, type MenuSpec, type NavAction } from '@sand/dom'
+import { oneLine } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { Context } from 'drydock'
 import { split } from '../attachments/content'
 import type { Model } from '../model'

@@ -1,4 +1,4 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { entryType } from '../goal'
 import { goalBanner } from './banner'
@@ -8,7 +8,7 @@ import { goalState, mountGoal } from './slot'
 export default definePlugin({
   name: 'goal-view',
   description: 'Shows the thread goal above the composer and goal changes in the transcript',
-  inject: ['threads'],
+  inject: ['threads', 'kit'],
   uses: {
     composer: 'no goal row above the composer',
     transcript: 'goal changes are not shown in the thread',
@@ -20,6 +20,6 @@ export default definePlugin({
     const hasCommands = pulse(ctx, [], ['commands']).read(() => Boolean(ctx.commands))
     const banner = () => goalBanner(ctx, state.view, hasCommands)
     ctx.watch('composer', composer => (composer ? mountGoal(composer, state, banner) : undefined))
-    ctx.watch('transcript', transcript => transcript?.entry(entryType, goalRow))
+    ctx.watch('transcript', transcript => transcript?.entry(entryType, entry => goalRow(ctx.kit, entry)))
   },
 })

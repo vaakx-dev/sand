@@ -1,5 +1,5 @@
 import type { ThreadImage } from '../gallery'
-import { derive, sig } from '@sand/dom'
+import { derive, sig } from '@vaakx-dev/vrui'
 
 export const viewerModel = (images: ThreadImage[], start: number) => {
   const current = sig(start)
