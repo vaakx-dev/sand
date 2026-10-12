@@ -13,6 +13,8 @@ const keyOf = (date: Date, bucket: UsageBucket) => {
   return bucket === 'day' ? day : `${day} ${pad(date.getHours())}`
 }
 
+export const hourKey = (at: number) => keyOf(new Date(at), 'hour')
+
 export const periodKeys = (since: number, until: number, bucket: UsageBucket) => {
   const keys: string[] = []
   const date = new Date(since)
