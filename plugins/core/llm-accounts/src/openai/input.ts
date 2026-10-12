@@ -51,7 +51,7 @@ const assistantItem = (block: Block): Item | undefined => {
   }
 }
 
-export const codexInput = (messages: Message[], images: boolean): Item[] =>
+export const openaiInput = (messages: Message[], images: boolean): Item[] =>
   pair(messages).flatMap(message =>
     message.role === 'user' ? userItems(message.content, images) : message.content.flatMap<Item>(block => assistantItem(block) ?? []),
   )

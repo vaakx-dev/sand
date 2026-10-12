@@ -1,68 +1,73 @@
-import type { DetectedServer, KeyKind, ServerDraft, SignInKind } from '../contract'
+import type { DetectedServer, KeyKind, PlanSignIn, PlanTokens, ServerDraft } from '../contract'
 import { trimSlash } from '@sand/kit'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
-import { authorizeClaude, exchangeClaude, type ClaudeFlow } from './anthropic'
-import { deviceTimeout, deviceUrl, pollDevice, startDevice } from './openai'
+import type { PlanRegistry } from './plans'
 import { checkServer, serverEntry } from './servers'
+
+type Paste = Extract<PlanSignIn, { kind: 'paste' }>
 
 export type Login = ReturnType<typeof createLogin>
 
-export const createLogin = (accounts: Accounts) => {
-  let claude: ClaudeFlow | undefined
-  let device: AbortController | undefined
+export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
+  const running = new Map<string, AbortController>()
+  const pastes = new Map<string, Paste['finish']>()
 
-  const stopDevice = () => {
-    device?.abort()
-    device = undefined
+  const stop = (account: string) => {
+    running.get(account)?.abort()
+    running.delete(account)
+    pastes.delete(account)
   }
 
-  const startCodex = async () => {
-    stopDevice()
-    const controller = new AbortController()
-    device = controller
-    const started = await startDevice(controller.signal)
-    const expires = Date.now() + deviceTimeout
-    accounts.pend('codex', { kind: 'device', url: deviceUrl, code: started.code, expires })
-    pollDevice(started, expires, controller.signal)
-      .then(tokens => (controller.signal.aborted ? undefined : accounts.signIn('codex', tokens)))
+  const wait = (account: string, controller: AbortController, tokens: Promise<PlanTokens>) =>
+    tokens
+      .then(found => (controller.signal.aborted ? undefined : accounts.signIn(account, found)))
       .catch(error => {
         if (controller.signal.aborted) return
-        accounts.pend('codex', undefined)
-        accounts.fail('codex', error)
+        accounts.pend(account, undefined)
+        accounts.fail(account, error)
       })
       .finally(() => {
-        if (device === controller) device = undefined
+        if (running.get(account) === controller) running.delete(account)
       })
+
+  const begin = async (account: string) => {
+    const plan = plans.get(account)
+    if (!plan) throw new Error(`Unknown account "${account}"`)
+    stop(account)
+    const controller = new AbortController()
+    running.set(account, controller)
+    const started = await plan.signIn(controller.signal)
+    if (controller.signal.aborted) return
+    if (started.kind === 'paste') {
+      pastes.set(account, started.finish)
+      return accounts.pend(account, { kind: 'paste', url: started.url })
+    }
+    accounts.pend(account, { kind: 'device', url: started.url, code: started.code, expires: started.expires })
+    void wait(account, controller, started.wait())
   }
 
-  const startClaude = async () => {
-    claude = await authorizeClaude()
-    accounts.pend('claude', { kind: 'paste', url: claude.url })
-  }
-
-  const start = async (account: SignInKind) => {
+  const start = async (account: string) => {
     try {
-      await (account === 'codex' ? startCodex() : startClaude())
+      await begin(account)
     } catch (error) {
       accounts.fail(account, error)
     }
   }
 
-  const finish = async (account: SignInKind, code: string) => {
-    if (account !== 'claude') return
-    if (!claude) return accounts.fail(account, 'Start signing in first')
+  const finish = async (account: string, code: string) => {
+    const paste = pastes.get(account)
+    if (!paste) return accounts.fail(account, 'Start signing in first')
     try {
-      await accounts.signIn(account, await exchangeClaude(code, claude))
-      claude = undefined
+      await accounts.signIn(account, await paste(code))
+      stop(account)
     } catch (error) {
       accounts.fail(account, error)
     }
   }
 
   const cancel = (account: string) => {
-    if (account === 'codex') stopDevice()
-    if (account === 'claude') claude = undefined
+    stop(account)
     accounts.pend(account, undefined)
   }
 
@@ -75,7 +80,7 @@ export const createLogin = (accounts: Accounts) => {
 
   const server = async (draft: ServerDraft) => {
     await accounts.ready
-    const entry = serverEntry(draft, accounts.servers())
+    const entry = serverEntry(draft, accounts.servers(), accounts.known)
     await accounts.saveServer(entry, await checkServer(entry))
   }
 
@@ -90,5 +95,7 @@ export const createLogin = (accounts: Accounts) => {
     await accounts.signOut(account)
   }
 
-  return { start, finish, key, server, detect, cancel, logout, dispose: stopDevice }
+  const dispose = () => [...running.keys()].forEach(stop)
+
+  return { start, finish, key, server, detect, cancel, logout, dispose }
 }

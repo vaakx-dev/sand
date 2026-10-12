@@ -1,6 +1,7 @@
-import type { ModelInfo, ModelPrice } from '../contract'
+import type { AccountKind, ModelInfo, ModelPrice } from '../contract'
 import type { Accounts } from '../auth/accounts'
-import { isFixed, newModelsDefaults } from '../auth/kinds'
+import { newModelsOf } from '../auth/kinds'
+import type { PlanRegistry } from '../auth/plans'
 import { rawMessage } from '../errors'
 import { builtinNames } from './builtin'
 import { decorate, modelOf, split } from './build'
@@ -14,6 +15,7 @@ import type { Entry, ModelCache, Prefs, SourceMeta } from './types'
 interface CatalogOptions {
   home: string
   accounts: Accounts
+  plans: PlanRegistry
   prices: PriceList
   changed(): void
   report(error: unknown): void
@@ -21,22 +23,22 @@ interface CatalogOptions {
 
 export type Catalog = ReturnType<typeof createCatalog>
 
-export const createCatalog = ({ home, accounts, prices, changed, report }: CatalogOptions) => {
+export const createCatalog = ({ home, accounts, plans, prices, changed, report }: CatalogOptions) => {
   const prefsStore = prefsFile(home, report)
   const cacheStore = cacheFile(home)
   let prefs = emptyPrefs()
   let cache: ModelCache = {}
   const running = new Map<string, Promise<void>>()
-  const prints = new Map<string, string>()
+  const prints = new Map<string, { print: string; kind: AccountKind }>()
 
   const ready = Promise.all([prefsStore.read(), cacheStore.read()]).then(([readPrefs, readCache]) => {
     prefs = readPrefs
     cache = readCache
   })
 
-  const mode = (meta: SourceMeta) => prefs.newModels[meta.id] ?? newModelsDefaults[meta.kind]
+  const mode = (meta: SourceMeta) => prefs.newModels[meta.id] ?? newModelsOf(meta.kind)
 
-  const bases = (meta: SourceMeta) => (cache[meta.id]?.models ?? builtinNames(meta.kind).map(name => ({ name }))).map(found => modelOf(meta, found))
+  const bases = (meta: SourceMeta) => (cache[meta.id]?.models ?? builtinNames(meta.api).map(name => ({ name }))).map(found => modelOf(meta, found))
 
   const entry = (meta: SourceMeta, models: ModelInfo[]): Entry => {
     const checked = meta.via ? undefined : cache[meta.id]
@@ -63,7 +65,7 @@ export const createCatalog = ({ home, accounts, prices, changed, report }: Catal
 
   const run = async (meta: SourceMeta) => {
     try {
-      const models = await discover(accounts, meta)
+      const models = await discover(accounts, plans, meta)
       if (!accounts.ids().includes(meta.id)) return
       store(meta.id, { checked: Date.now(), models })
       prefs = noticed(prefs, meta.id, models.map(model => model.name), mode(meta))
@@ -90,8 +92,9 @@ export const createCatalog = ({ home, accounts, prices, changed, report }: Catal
   }
 
   const forget = (id: string) => {
+    const server = prints.get(id)?.kind === 'server'
     prints.delete(id)
-    if (isFixed(id)) return
+    if (!server) return
     prefs = forgotten(prefs, id)
     void prefsStore.write(prefs)
   }
@@ -110,8 +113,8 @@ export const createCatalog = ({ home, accounts, prices, changed, report }: Catal
     prune(ids)
     for (const meta of metas) {
       const print = accounts.fingerprint(meta.id)
-      if (prints.get(meta.id) === print) continue
-      prints.set(meta.id, print)
+      if (prints.get(meta.id)?.print === print) continue
+      prints.set(meta.id, { print, kind: meta.kind })
       void refreshOne(meta)
     }
   }

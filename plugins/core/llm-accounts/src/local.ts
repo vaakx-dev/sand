@@ -1,14 +1,16 @@
-import type { EffortLevel, Limits, LLMEvent, LLMRequest, ModelInfo, ModelPrice } from './contract'
+import type { EffortLevel, LLMEvent, LLMRequest, ModelInfo, ModelPrice } from './contract'
 import type { Accounts } from './auth/accounts'
 import { signInError } from './auth/kinds'
+import type { PlanRegistry } from './auth/plans'
 import type { Catalog } from './catalog'
 import { sourceRef } from './catalog/sources'
 import type { SourceMeta } from './catalog/types'
 import { viewOf } from './catalog/view'
 import type { Claude } from './claude/client'
-import type { Codex } from './codex/client'
 import type { Compat } from './compat/client'
 import type { CompatTarget } from './compat/target'
+import type { LimitStore } from './limits'
+import type { OpenAI } from './openai/client'
 
 const levels: EffortLevel[] = [
   { id: 'low', label: 'Low' },
@@ -22,18 +24,21 @@ const openRouterBase = 'https://openrouter.ai/api/v1'
 
 interface LocalOptions {
   accounts: Accounts
+  plans: PlanRegistry
   catalog: Catalog
   claude: Claude
-  codex: Codex
+  openai: OpenAI
   compat: Compat
-  limits(): Record<string, Limits>
+  limits: LimitStore
 }
 
 export type LocalLLM = ReturnType<typeof createLocal>
 
-export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }: LocalOptions) => {
+export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, limits }: LocalOptions) => {
   const view = viewOf(catalog.entries)
-  const ownLimits = (source = 'claude'): Limits | undefined => (accounts.signedIn(source) ? limits()[source] : undefined)
+  const signedInPlans = () => plans.list().filter(plan => accounts.signedIn(plan.id))
+  const allLimits = () => Object.values(limits.all()).filter(found => accounts.signedIn(found.source))
+  const firstLimits = () => signedInPlans().flatMap(plan => limits.all()[plan.id] ?? [])[0]
 
   const target = async (meta: SourceMeta, model: ModelInfo, name: string): Promise<CompatTarget> => {
     const common = { model: name, name: meta.label, reasoning: model.efforts.length > 0, images: !!model.images }
@@ -50,9 +55,17 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
   const route = async function* (meta: SourceMeta, model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const name = model.name ?? model.id
     const sent = { ...request, model: name }
-    if (meta.kind === 'claude' || meta.kind === 'anthropic') yield* claude.stream(meta.id, sent, signal)
-    else if (meta.kind === 'codex' || meta.kind === 'openai') yield* codex.stream(meta.id, sent, signal)
+    if (meta.api === 'anthropic') yield* claude.stream(meta.id, sent, signal)
+    else if (meta.api === 'openai') yield* openai.stream(meta.id, sent, signal)
     else yield* compat.stream(await target(meta, model, name), sent, signal)
+  }
+
+  const checkUsage = async () => {
+    for (const plan of signedInPlans()) {
+      if (!plan.usage) continue
+      const credential = await accounts.auth(plan.id)
+      if (credential.type === 'oauth') limits.save(plan.id, await plan.usage(credential))
+    }
   }
 
   return {
@@ -70,13 +83,13 @@ export const createLocal = ({ accounts, catalog, claude, codex, compat, limits }
         else yield event.type === 'done' ? { ...event, source } : event
       }
     },
-    limits: ownLimits,
-    allLimits: () => Object.values(limits()).filter(found => accounts.signedIn(found.source)),
+    limits: firstLimits,
+    allLimits,
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),
     async refreshLimits() {
       await accounts.ready
-      if (accounts.signedIn('claude')) await claude.checkLimits()
-      return ownLimits()
+      await checkUsage()
+      return firstLimits()
     },
   }
 }

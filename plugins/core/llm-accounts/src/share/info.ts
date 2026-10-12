@@ -38,6 +38,6 @@ export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
     }),
   )
   const list = accounts.list().flatMap(found => (shared.has(found.id) ? shareable(found) : []))
-  const limits = shared.has('claude') ? local.limits() : undefined
+  const limits = local.allLimits().find(found => shared.has(found.source))
   return { accounts: list, models, levels: local.levels(), prices, ...(limits && { limits }) }
 }
