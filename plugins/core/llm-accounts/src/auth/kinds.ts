@@ -12,7 +12,7 @@ export const keyApis: Partial<Record<KeyKind, PlanApi>> = { anthropic: 'anthropi
 
 export const kindOrder: AccountKind[] = [...keyKinds, 'server']
 
-const billings: Record<LoginMethod, Billing> = { oauth: 'plan', api_key: 'api', server: 'local' }
+const billings: Record<LoginMethod, Billing> = { oauth: 'plan', app: 'plan', api_key: 'api', server: 'local' }
 
 export const billingOf = (method: LoginMethod) => billings[method]
 

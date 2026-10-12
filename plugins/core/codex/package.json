@@ -1,0 +1,23 @@
+{
+  "name": "@sand/codex",
+  "version": "0.0.0",
+  "description": "Use the Codex app's own sign-in: sand runs codex app-server on this PC and gives it sand's tools",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Codex",
+    "summary": "Use your ChatGPT plan through the Codex app on this PC",
+    "uses": {
+      "llmPlans": "nothing happens: there's no accounts service to add Codex to"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

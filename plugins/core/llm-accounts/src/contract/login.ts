@@ -2,11 +2,19 @@ export type KeyKind = 'anthropic' | 'openai' | 'openrouter'
 
 export type AccountKind = string
 
-export type LoginMethod = 'oauth' | 'api_key' | 'server'
+export type LoginMethod = 'oauth' | 'api_key' | 'server' | 'app'
 
 export type LoginPending =
   | { kind: 'paste'; url: string }
   | { kind: 'device'; url: string; code: string; expires: number }
+  | { kind: 'browser'; url: string }
+
+export interface LoginApp {
+  name: string
+  installed: boolean
+  install: string
+  problem?: string
+}
 
 export interface LoginConflict {
   device: string
@@ -26,6 +34,7 @@ export interface LoginAccount {
   signedIn: boolean
   shared: boolean
   signIn?: LoginSignIn
+  app?: LoginApp
   method?: LoginMethod
   env?: string
   email?: string

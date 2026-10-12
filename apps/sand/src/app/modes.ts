@@ -5,6 +5,8 @@ const core = [
   'paths',
   'watch',
   'llm-accounts',
+  'claude-code',
+  'codex',
   'transfers',
   'attachments',
   'tools',

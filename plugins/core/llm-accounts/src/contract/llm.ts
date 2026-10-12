@@ -46,6 +46,7 @@ export interface LLMRequest {
   model?: string
   effort?: Effort
   speed?: Speed
+  session?: string
 }
 
 export type LLMEvent =

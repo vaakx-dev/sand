@@ -39,6 +39,7 @@ export { executableList, safeRelative, unsharedName, validPluginName } from './p
 export { exists, isLink, removeQuietly, renameBlocked, stagingFolder } from './plugins/staging'
 export { scanPlugin, scanPlugins, type PluginScan } from './plugins/tree'
 export { pluginFiles } from './plugins/walk'
+export { spawnJsonLines, type JsonLines, type JsonLinesOptions } from './process/json-lines'
 export { safeEnv, safeFromEnv, withSafe } from './safe'
 export { adminSocketUrl, readServerInfo, serverInfoFile } from './server-info'
 export { isChannel, loadUpdateStore, type UpdateStore } from './updates/store'

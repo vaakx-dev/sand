@@ -1,4 +1,5 @@
 import type { EffortLevel, LLMEvent, LLMRequest, ModelInfo, ModelPrice } from './contract'
+import type { Bridges } from './apps/bridges'
 import type { Accounts } from './auth/accounts'
 import { signInError } from './auth/kinds'
 import type { PlanRegistry } from './auth/plans'
@@ -29,12 +30,13 @@ interface LocalOptions {
   claude: Claude
   openai: OpenAI
   compat: Compat
+  bridges: Bridges
   limits: LimitStore
 }
 
 export type LocalLLM = ReturnType<typeof createLocal>
 
-export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, limits }: LocalOptions) => {
+export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, bridges, limits }: LocalOptions) => {
   const view = viewOf(catalog.entries)
   const signedInPlans = () => plans.list().filter(plan => accounts.signedIn(plan.id))
   const allLimits = () => Object.values(limits.all()).filter(found => accounts.signedIn(found.source))
@@ -55,16 +57,26 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
   const route = async function* (meta: SourceMeta, model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
     const name = model.name ?? model.id
     const sent = { ...request, model: name }
-    if (meta.api === 'anthropic') yield* claude.stream(meta.id, sent, signal)
+    const app = plans.app(meta.id)
+    if (app) yield* bridges.stream(app, sent, signal)
+    else if (meta.api === 'anthropic') yield* claude.stream(meta.id, sent, signal)
     else if (meta.api === 'openai') yield* openai.stream(meta.id, sent, signal)
     else yield* compat.stream(await target(meta, model, name), sent, signal)
   }
 
+  const planUsage = async (id: string) => {
+    const app = plans.app(id)
+    if (app) return app.usage?.()
+    const plan = plans.api(id)
+    if (!plan?.usage) return undefined
+    const credential = await accounts.auth(id)
+    return credential.type === 'oauth' ? plan.usage(credential) : undefined
+  }
+
   const checkUsage = async () => {
     for (const plan of signedInPlans()) {
-      if (!plan.usage) continue
-      const credential = await accounts.auth(plan.id)
-      if (credential.type === 'oauth') limits.save(plan.id, await plan.usage(credential))
+      const found = await planUsage(plan.id)
+      if (found) limits.save(plan.id, found)
     }
   }
 

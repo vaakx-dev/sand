@@ -10,7 +10,9 @@ const keyOf = async (accounts: Accounts, id: string) => {
 }
 
 const discoverPlan = async (accounts: Accounts, plans: PlanRegistry, meta: SourceMeta) => {
-  const plan = plans.get(meta.id)
+  const app = plans.app(meta.id)
+  if (app) return app.models()
+  const plan = plans.api(meta.id)
   const credential = await accounts.auth(meta.id)
   if (!plan || credential.type !== 'oauth') throw new Error(`${meta.label} needs a sign-in`)
   return plan.models(credential)

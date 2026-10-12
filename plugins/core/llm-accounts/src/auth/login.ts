@@ -1,17 +1,22 @@
-import type { DetectedServer, KeyKind, PlanSignIn, PlanTokens, ServerDraft } from '../contract'
+import type { DetectedServer, KeyKind, LoginPending, PlanTokens, ServerDraft, SignInFlow } from '../contract'
 import { trimSlash } from '@sand/kit'
 import { detectServers } from '../discover'
 import type { Accounts } from './accounts'
 import type { PlanRegistry } from './plans'
 import { checkServer, serverEntry } from './servers'
 
-type Paste = Extract<PlanSignIn, { kind: 'paste' }>
+type Flow = SignInFlow<PlanTokens | void>
+
+const pendingOf = (started: Flow): LoginPending => {
+  if (started.kind === 'device') return { kind: 'device', url: started.url, code: started.code, expires: started.expires }
+  return { kind: started.kind, url: started.url }
+}
 
 export type Login = ReturnType<typeof createLogin>
 
 export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
   const running = new Map<string, AbortController>()
-  const pastes = new Map<string, Paste['finish']>()
+  const pastes = new Map<string, (code: string) => Promise<PlanTokens | void>>()
 
   const stop = (account: string) => {
     running.get(account)?.abort()
@@ -19,9 +24,15 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
     pastes.delete(account)
   }
 
-  const wait = (account: string, controller: AbortController, tokens: Promise<PlanTokens>) =>
+  const complete = async (account: string, tokens: PlanTokens | void) => {
+    if (tokens) return accounts.signIn(account, tokens)
+    await plans.refresh(account)
+    accounts.pend(account, undefined)
+  }
+
+  const wait = (account: string, controller: AbortController, tokens: Promise<PlanTokens | void>) =>
     tokens
-      .then(found => (controller.signal.aborted ? undefined : accounts.signIn(account, found)))
+      .then(found => (controller.signal.aborted ? undefined : complete(account, found)))
       .catch(error => {
         if (controller.signal.aborted) return
         accounts.pend(account, undefined)
@@ -37,14 +48,11 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
     stop(account)
     const controller = new AbortController()
     running.set(account, controller)
-    const started = await plan.signIn(controller.signal)
+    const started: Flow = await plan.signIn(controller.signal)
     if (controller.signal.aborted) return
-    if (started.kind === 'paste') {
-      pastes.set(account, started.finish)
-      return accounts.pend(account, { kind: 'paste', url: started.url })
-    }
-    accounts.pend(account, { kind: 'device', url: started.url, code: started.code, expires: started.expires })
-    void wait(account, controller, started.wait())
+    accounts.pend(account, pendingOf(started))
+    if (started.kind === 'paste') pastes.set(account, started.finish)
+    if (started.wait) void wait(account, controller, started.wait())
   }
 
   const start = async (account: string) => {
@@ -59,7 +67,7 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
     const paste = pastes.get(account)
     if (!paste) return accounts.fail(account, 'Start signing in first')
     try {
-      await accounts.signIn(account, await paste(code))
+      await complete(account, await paste(code))
       stop(account)
     } catch (error) {
       accounts.fail(account, error)
@@ -92,7 +100,10 @@ export const createLogin = (accounts: Accounts, plans: PlanRegistry) => {
 
   const logout = async (account: string) => {
     cancel(account)
-    await accounts.signOut(account)
+    const app = plans.app(account)
+    if (!app) return accounts.signOut(account)
+    await app.signOut()
+    await plans.refresh(account)
   }
 
   const dispose = () => [...running.keys()].forEach(stop)
