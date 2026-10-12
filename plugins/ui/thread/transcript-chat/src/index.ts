@@ -6,7 +6,7 @@ import { css } from './style'
 export default definePlugin({
   name: 'transcript-chat',
   description: 'Chat transcript: bubbles, markdown, "Worked for" tool groups, agent reports, streamed in place',
-  inject: ['kit', 'threads', 'transcriptParts', 'markdown'],
+  inject: ['kit', 'threads', 'turns', 'transcriptParts', 'markdown'],
   uses: {
     layout: 'lands loose on the stage',
     composer: 'the empty-state hint does not focus a composer, and messages offer no Quote in reply',
