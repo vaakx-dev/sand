@@ -7,7 +7,7 @@ import type { LiveTracker } from './live'
 import { createWatchers } from './watch'
 import { eventFrame, liveEvent, sessionRef } from './wire'
 
-const coalesceMs = 50
+const overdueMs = 1500
 
 type Publish = (payload: string, to: (socket: Socket) => boolean) => void
 
@@ -17,7 +17,7 @@ export const createStream = (ctx: ServerContext, publish: Publish, tracker: Live
   const send = (event: LLMEvent, session: Session) =>
     publish(eventFrame({ name: 'llm.event', args: [liveEvent(event), sessionRef(session)] }), socket => watchers.sees(socket, session.id))
 
-  const coalescer = createCoalescer(send, coalesceMs)
+  const coalescer = createCoalescer(send, overdueMs)
   ctx.on('llm.event', coalescer.push)
   ctx.effect(() => coalescer.stop)
 
