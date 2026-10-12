@@ -12,6 +12,7 @@ export default definePlugin({
         summary: 'list paired devices and show a one-time QR code and link to pair a phone',
         usage: [
           'sand devices                    list this PC and its paired devices, and show a one-time QR code and link to pair a phone',
+          'sand devices link               print a one-time link that opens sand on this PC already paired',
           'sand devices remove <name>      unpair a device; it has to pair again to use sand',
           'sand devices lan [on | off]     show or change whether sand listens on the home network (on by default)',
         ].join('\n'),

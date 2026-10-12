@@ -1,9 +1,10 @@
 import type { Daemon, DeviceInfo } from '@sand/protocol'
 import { findDevice, listDevices, printDevices } from './list'
 import { network } from './network'
-import { printPairing } from './pair'
+import { printLocalLink, printPairing } from './pair'
 
-const usage = 'usage: sand devices [remove <name> | lan [on | off]]'
+const usage = 'usage: sand devices [link | remove <name> | lan [on | off]]'
+const actions = ['link', 'remove', 'lan']
 
 const removeDevice = async (daemon: Daemon, value: string) => {
   const device = findDevice(await listDevices(daemon), value)
@@ -12,9 +13,10 @@ const removeDevice = async (daemon: Daemon, value: string) => {
 }
 
 export const devices = async (daemon: Daemon, [action, value]: string[]) => {
-  if (action && action !== 'remove' && action !== 'lan') throw new Error(usage)
+  if (action && !actions.includes(action)) throw new Error(usage)
   if (action === 'remove' && !value) throw new Error(usage)
   const info = await daemon.require()
+  if (action === 'link') return printLocalLink(info)
   if (action === 'lan') return network(daemon, value)
   if (action === 'remove' && value) return removeDevice(daemon, value)
   const [self, paired] = await Promise.all([daemon.request<DeviceInfo>({ type: 'device.info' }), listDevices(daemon)])
