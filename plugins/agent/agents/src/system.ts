@@ -6,17 +6,12 @@ const preamble = `You are a sand subagent doing one task for another agent. You 
 
 Finish the task. Your final message is all the other agent sees. Put in what you found or did, with sources, such as file paths or links, and results.`
 
-export const compose = async (
-  definition: AgentDefinition,
-  { cwd, project }: Pick<Session, 'cwd' | 'project'>,
-  sections?: Instructions,
-  model?: string,
-) => {
-  const instructions = await sections?.project(cwd, project)
+export const compose = async (definition: AgentDefinition, session: Session, sections?: Instructions, model?: string) => {
+  const instructions = await sections?.project(session.cwd, session.project)
   return [
     preamble,
     definition.prompt && `# Your role\n\n${definition.prompt}`,
-    sections?.environment(cwd, model),
+    sections?.environment(session, model),
     instructions && `# Project instructions\n\n${instructions}`,
   ]
     .filter(Boolean)

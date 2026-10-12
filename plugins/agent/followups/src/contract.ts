@@ -1,10 +1,10 @@
 import type { Prompt } from '@sand/messages'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Session, ThreadLink } from '@sand/sessions-sqlite/contract'
 import type { Pending } from '@sand/steering/contract'
 
 export interface FollowUps {
   list(session: Session): Pending[]
-  add(session: Session, prompt: Prompt, label?: string): Pending
+  add(session: Session, prompt: Prompt, label?: string, from?: ThreadLink): Pending
   remove(session: Session, id: string): boolean
   edit(session: Session, id: string, prompt: Prompt, label?: string): boolean
   move(session: Session, id: string, index: number): boolean
@@ -19,7 +19,7 @@ declare module 'drydock' {
 
 declare module '@sand/protocol/wire' {
   interface WireRequests {
-    'queue.add': { session: string; prompt: Prompt; label?: string }
+    'queue.add': { session: string; prompt: Prompt; label?: string; from?: ThreadLink }
     'queue.remove': { session: string; item: string }
     'queue.edit': { session: string; item: string; prompt: Prompt; label?: string }
     'queue.move': { session: string; item: string; index: number }

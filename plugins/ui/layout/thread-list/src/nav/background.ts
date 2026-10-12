@@ -3,7 +3,8 @@ import type { AgentRun } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 
 export interface Background {
-  count: number
+  agents: number
+  shells: number
   since?: number
   workflow?: NavItem['workflow']
 }
@@ -19,9 +20,10 @@ export const backgroundOf =
   thread => {
     const running = ctx.jobs?.running(thread) ?? []
     const [first, ...others] = running
-    if (!first) return { count: 0 }
+    if (!first) return { agents: 0, shells: 0 }
     return {
-      count: running.reduce((sum, run) => sum + busy(run), 0),
+      agents: running.filter(run => run.kind !== 'shell').reduce((sum, run) => sum + busy(run), 0),
+      shells: running.filter(run => run.kind === 'shell').length,
       since: Math.min(...running.map(run => run.started)),
       workflow: !others.length && first.kind === 'workflow' ? progress(first) : undefined,
     }

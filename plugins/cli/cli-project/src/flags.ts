@@ -6,6 +6,7 @@ export interface ProjectFlags {
   to?: string
   on?: string
   path?: string
+  project?: string
   setup?: boolean
   ours?: boolean
   theirs?: boolean
@@ -21,6 +22,7 @@ export const projectFlags = (values: CliValues): ProjectFlags => ({
   to: text(values.to),
   on: text(values.on),
   path: text(values.path),
+  project: text(values.project),
   setup: flag(values.setup),
   ours: flag(values.ours),
   theirs: flag(values.theirs),

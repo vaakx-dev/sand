@@ -6,7 +6,7 @@ import { reviewPage } from './review'
 import type { Choice } from './types'
 
 const copyItem = (ctx: ProjectsContext, choice: Choice, group: ProjectGroup): PaletteItem => {
-  const here = group.locations.find(location => location.device === choice.machine.device)
+  const here = group.locations.find(location => location.device === choice.machine.id)
   return {
     id: `match:${group.id}`,
     icon: 'link',
@@ -39,7 +39,8 @@ export const suggestPage = async (ctx: ProjectsContext, choice: Choice): Promise
   if (choice.project) return reviewPage(ctx, choice)
   if (choice.how === 'clone') return offerMatches(ctx, choice, sameRemote(ctx, choice.repo.url))
   if (choice.how !== 'add') return reviewPage(ctx, choice)
-  const folder = await ctx.projects.inspect(choice.path, choice.machine.device).catch(() => undefined)
+  const folder = await ctx.projects.inspect(choice.path, choice.machine.id).catch(() => undefined)
   if (folder?.project) return reviewPage(ctx, { ...choice, existing: folder.project })
+  if (folder?.restores) return reviewPage(ctx, { ...choice, project: folder.restores })
   return offerMatches(ctx, choice, folder?.matches.flatMap(id => ctx.projects.get(id) ?? []) ?? [])
 }

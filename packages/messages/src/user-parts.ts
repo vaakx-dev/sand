@@ -5,8 +5,11 @@ export interface Feedback {
   text: string
 }
 
+export type JobKind = 'agent' | 'workflow' | 'shell'
+
 export interface Notification {
   job: string
+  kind: JobKind
   label: string
   status: string
   result: string

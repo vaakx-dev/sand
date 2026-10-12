@@ -11,7 +11,7 @@ const actionLabel = (cloning: boolean, exists: boolean) => {
 }
 
 export const folderPage = (ctx: ProjectsContext, machine: Machine, next: Next, repo?: Repo): PalettePage => {
-  const { device } = machine
+  const device = machine.id
   const place = ctx.projects.place(device)
   const { sep } = place
   const root = short(place.root, place)

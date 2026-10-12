@@ -1,8 +1,8 @@
-import type { Job } from '@sand/agents/contract'
 import type { Tool } from '@sand/tools/contract'
 import type { Context } from 'drydock'
 import { z } from 'zod'
 import { execute } from './execute'
+import { readAgents } from './read'
 import { createRun, resumeRun } from './store'
 
 const input = z.object({
@@ -40,16 +40,23 @@ const openRun = (root: string, script: string | undefined, resume: string | unde
   throw new Error('Provide a script, or a run id to resume')
 }
 
-export const workflowTool = (ctx: Context<'agents'>, root: string): Tool<typeof input> => ({
+export const workflowTool = (ctx: Context<'agents' | 'backgroundJobs' | 'loop' | 'sessions'>, root: string): Tool<typeof input> => ({
   name: 'workflow',
   description,
+  group: 'agents',
   input,
   async run({ script, resume, args, label, background }, { session, call, signal }) {
     const run = await openRun(root, script, resume, args)
     const execution = { run, label: label ?? run.id, parent: session, origin: call.id, args: args ?? run.args, resumed: Boolean(resume) }
     if (background === false) return execute(ctx, execution, signal)
-    const work = (jobSignal: AbortSignal, job: Job) => execute(ctx, { ...execution, job: job.id }, jobSignal)
-    const job = ctx.agents.background(session, `workflow ${execution.label}`, work, call.id)
+    const job = ctx.backgroundJobs.start({
+      kind: 'workflow',
+      parent: session,
+      label: `workflow ${execution.label}`,
+      origin: call.id,
+      work: (jobSignal, started) => execute(ctx, { ...execution, job: started.id }, jobSignal),
+      read: () => readAgents(ctx, session, call.id),
+    })
     return `Started workflow ${run.id} as background job ${job.id}. Its result arrives as a <task-notification>. To rerun with cached agent results, call workflow with resume: "${run.id}". Keep working or end your turn; it will wake you. Don't sleep or poll.`
   },
 })

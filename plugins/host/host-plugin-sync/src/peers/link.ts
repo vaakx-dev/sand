@@ -1,8 +1,8 @@
-import { callPeer, remoteStore } from '@sand/kit/host'
+import { callPeer, remoteStore, type WireSocket } from '@sand/kit/host'
 import type { PeerLink } from '../types'
 
 export const createLink = (home: string): PeerLink & { stop(): void } => {
-  const sockets = new Set<WebSocket>()
+  const sockets = new Set<WireSocket>()
   return {
     list: async () => (await remoteStore(home)).list(),
     call: (record, request, timeout) => callPeer(record, request, sockets, timeout),

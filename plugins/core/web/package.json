@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@sand/kit": "workspace:*",
+    "@sand/pc-link": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",

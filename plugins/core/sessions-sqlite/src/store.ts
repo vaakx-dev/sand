@@ -4,13 +4,14 @@ import type { CreateSession, Session, SessionInfo, Sessions } from './contract'
 import { remover, summaries } from './list'
 import { createPaging } from './paging'
 import { parseRow, type Row } from './paging/rows'
+import { creatorText, withCreator, type SessionRow } from './row'
 import { createSession, type SessionHooks } from './session'
 import { syncedSummaries } from './sync/summaries'
 
 const loadedLimit = 20
 
 const insertSql =
-  'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $created, $created)'
+  'insert into sessions (id, created, cwd, project, title, head, parent, origin, kind, creator, seen, position) values ($id, $created, $cwd, $project, $title, $head, $parent, $origin, $kind, $creator, $created, $created)'
 
 export interface StoreOptions {
   hooks: SessionHooks & { remove(session: Session): void }
@@ -24,7 +25,7 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
   const cache = createEntryCache(loadedLimit, running)
   const paging = createPaging(db)
   const insert = db.query(insertSql)
-  const find = db.query<SessionInfo, { id: string }>('select * from sessions where id = $id')
+  const find = db.query<SessionRow, { id: string }>('select * from sessions where id = $id')
   const ofType = db.query<Row, { type: string }>('select * from entries where type = $type order by at')
   const sync = syncedSummaries(db)
   const removeAll = remover(db)
@@ -47,7 +48,7 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
 
   const sessions: Sessions = {
     create(options) {
-      const { id = Bun.randomUUIDv7(), cwd, title, parent, origin, kind } = options
+      const { id = Bun.randomUUIDv7(), cwd, title, parent, origin, kind, creator } = options
       const info: SessionInfo = {
         id,
         created: Date.now(),
@@ -58,8 +59,9 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
         parent: parent ?? null,
         origin: origin ?? null,
         kind: kind ?? 'main',
+        ...(creator && { creator }),
       }
-      insert.run({ ...info })
+      insert.run({ ...info, creator: creatorText(creator) })
       const session = remember(info)
       hooks.update(session)
       return session
@@ -67,9 +69,9 @@ export const createStore = (db: Database, { hooks, running, scratchFolder, proje
     open(id) {
       const cached = opened.get(id)
       if (cached) return cached
-      const info = find.get({ id })
-      if (!info) return undefined
-      return remember(info)
+      const row = find.get({ id })
+      if (!row) return undefined
+      return remember(withCreator(row))
     },
     require(id) {
       const session = sessions.open(id)

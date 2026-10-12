@@ -11,8 +11,8 @@ import { ownModel, type ModelLookup } from './models'
 import { createCompactionLines } from './compaction'
 import { createTracker } from './tracker'
 
-export const createFollower = (root: () => string | undefined, printer: Printer, models?: ModelLookup) => {
-  const tracker = createTracker(root)
+export const createFollower = (root: () => string | undefined, queued: () => number, printer: Printer, models?: ModelLookup) => {
+  const tracker = createTracker(root, queued)
   const compaction = createCompactionLines(tracker.has)
   const summary: Summary = { usage: emptyUsage() }
   const mine = (session: string) => session === root()

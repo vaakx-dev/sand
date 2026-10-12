@@ -10,7 +10,7 @@ import type { CopyPlan, CopyTarget } from './plan'
 
 export const destinationPage = (ctx: ProjectsContext, sync: Sync, target: CopyTarget, from: ProjectRef, machine: Machine, then?: CopyDone): PalettePage => {
   const { name } = target
-  const { device } = machine
+  const device = machine.id
   const place = ctx.projects.place(device)
   const suggested = join(place.root, name, place.sep)
   const inspected = sync.inspect(from)

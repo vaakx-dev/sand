@@ -22,6 +22,7 @@ export const createIntents = (ops: Ops) => {
       const session = openSession(ops, id)
       if (session.head) throw new Error('This thread has already started')
       if (intent.mode === 'existing') return useExisting(session, String(intent.path))
+      if (!(await repoOf(session.cwd))) throw new Error(`${session.cwd} isn't in a git repository`)
       waiting.set(session.id, intent.base)
     },
     async apply(content: UserContent[], session: Session) {

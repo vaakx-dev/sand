@@ -1,10 +1,10 @@
-import { callPeer, parseHealth, PeerError, remoteStore } from '@sand/kit/host'
+import { callPeer, parseHealth, PeerError, remoteStore, type WireSocket } from '@sand/kit/host'
 import type { HostHealth } from './contract'
 
 const timeout = 20_000
 
 export const createPeerHealth = (home: string) => {
-  const sockets = new Set<WebSocket>()
+  const sockets = new Set<WireSocket>()
   return {
     async health(device: string): Promise<HostHealth> {
       const record = (await remoteStore(home)).get(device)

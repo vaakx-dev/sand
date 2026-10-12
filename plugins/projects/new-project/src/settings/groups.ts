@@ -9,7 +9,7 @@ import type { Picking } from './icon'
 import { groupRow } from './row'
 
 const heading = (groups: ProjectGroup[]) => {
-  const pcs = new Set(groups.flatMap(group => group.locations.map(entry => entry.device ?? ''))).size
+  const pcs = new Set(groups.flatMap(group => group.locations.map(entry => entry.device))).size
   return groups.length ? `${plural(groups.length, 'project')} on ${plural(pcs, 'PC')}` : 'Projects'
 }
 
@@ -18,7 +18,7 @@ const refreshStates = (ctx: ProjectsContext, groups: ProjectGroup[], done: Set<s
   if (!sync) return
   const entries = groups.filter(group => group.locations.length > 1).flatMap(group => group.locations)
   for (const entry of entries) {
-    const key = `${entry.device ?? ''}\0${entry.path}`
+    const key = `${entry.device}\0${entry.path}`
     if (done.has(key) || entry.missing || !ctx.machines.online(entry.device)) continue
     done.add(key)
     sync.refresh(entry).catch(() => undefined)

@@ -1,4 +1,4 @@
-import type { Daemon } from '@sand/protocol'
+import type { Daemon, DeviceInfo } from '@sand/protocol'
 import { findDevice, listDevices, printDevices } from './list'
 import { network } from './network'
 import { printPairing } from './pair'
@@ -17,7 +17,9 @@ export const devices = async (daemon: Daemon, [action, value]: string[]) => {
   const info = await daemon.require()
   if (action === 'lan') return network(daemon, value)
   if (action === 'remove' && value) return removeDevice(daemon, value)
-  printDevices(await listDevices(daemon))
+  const [self, paired] = await Promise.all([daemon.request<DeviceInfo>({ type: 'device.info' }), listDevices(daemon)])
+  console.log(`this PC: ${self.name}  (${self.id})`)
+  printDevices(paired)
   console.log('')
   await printPairing(info)
 }

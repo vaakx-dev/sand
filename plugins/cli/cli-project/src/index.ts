@@ -13,7 +13,8 @@ export default definePlugin({
         summary: 'list projects and their copies on every PC',
         usage: [
           'sand project [list] [--all]     list projects and their copies on every PC, with git remote and missing folders',
-          'sand project add <path> | rename <name> <new name> | hide <name> | show <name>',
+          'sand project add <path> [--on <pc>] [--project <name>]   save a folder as a project, or as the copy of an existing one',
+          'sand project rename <name> <new name> | hide <name> | show <name>',
           'sand project remove <name|path> [--on <pc>]   delete the project on every PC, or with --on forget that PC copy;',
           '                                folders stay on disk',
           'sand project root [path] [--on <pc>]    print or set the folder new projects go in',
@@ -26,6 +27,7 @@ export default definePlugin({
           '  --on <pc>   the PC a project command acts on',
           '  --from <pc> --to <pc>   the PCs a project is copied or synced between ("this" is the PC you are on)',
           '  --path <dir>            where copy puts the project (default: the project folder of the target PC)',
+          '  --project <name>        the existing project add saves the folder as a copy of',
           '  --setup                 run the project setup command (install dependencies) after copy',
           '  --all                   include hidden projects in the list',
           '  --ours | --theirs       keep the receiving PC version or the incoming one when resolving',

@@ -1,4 +1,4 @@
-import type { Job, WireJob } from '@sand/agents/contract'
+import type { Job, WireJob } from '@sand/jobs/contract'
 import type { Session, SessionInfo } from '@sand/sessions-sqlite/contract'
 
 export const isSession = (value: object): value is Session =>
@@ -16,6 +16,7 @@ export const info = (session: Session): SessionInfo => ({
   parent: session.parent,
   origin: session.origin,
   kind: session.kind,
+  ...(session.creator && { creator: session.creator }),
 })
 
 const jobData = ({ cancel, ...job }: Job): WireJob => job

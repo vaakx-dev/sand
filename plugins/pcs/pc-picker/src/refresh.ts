@@ -8,8 +8,8 @@ export const refreshGroup = (ctx: PickerContext, group?: ProjectGroup) => {
 
 const groupKey = (ctx: PickerContext) => {
   const { cwd, device, group } = currentTarget(ctx)
-  const places = group?.locations.map(entry => `${entry.device ?? ''}:${entry.path}:${ctx.machines.online(entry.device)}`) ?? []
-  return [cwd, device ?? '', ...places].join('|')
+  const places = group?.locations.map(entry => `${entry.device}:${entry.path}:${ctx.machines.online(entry.device)}`) ?? []
+  return [cwd, device, ...places].join('|')
 }
 
 export const refreshOnProjectChange = (ctx: PickerContext) => {

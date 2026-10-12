@@ -38,6 +38,7 @@
     "@sand/agents": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/files": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/loops": "workspace:*",

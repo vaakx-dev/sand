@@ -1,5 +1,5 @@
 const name = 'sand-cache'
-const version = 1
+const version = 2
 const stores = ['meta', 'threads', 'tails', 'entries'] as const
 
 export type PickStore = (store: (typeof stores)[number]) => IDBObjectStore
@@ -7,6 +7,7 @@ export type PickStore = (store: (typeof stores)[number]) => IDBObjectStore
 let database: Promise<IDBDatabase> | undefined
 
 const createStores = (db: IDBDatabase) => {
+  for (const store of [...db.objectStoreNames]) db.deleteObjectStore(store)
   for (const store of stores) db.createObjectStore(store)
 }
 

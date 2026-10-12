@@ -7,7 +7,7 @@ export type PickerContext = Context<'composer' | 'threads' | 'projects' | 'machi
 
 export interface Target {
   cwd: string
-  device?: string
+  device: string
   thread?: Thread
   group?: ProjectGroup
 }

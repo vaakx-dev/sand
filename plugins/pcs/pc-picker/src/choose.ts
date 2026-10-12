@@ -21,10 +21,9 @@ const sendFirst = async (ctx: PickerContext, group: ProjectGroup, machine: Machi
 
 export const choosePc = async (ctx: PickerContext, group: ProjectGroup, machine: Machine) => {
   if (!machine.online) return
-  const { device } = machine
-  const location = copyOn(group, device)
+  const location = copyOn(group, machine.id)
   if (!location) {
-    if (ctx.syncFlows) return ctx.syncFlows.copy(group, device)
+    if (ctx.syncFlows) return ctx.syncFlows.copy(group, machine.id)
     return ctx.notify?.push(`${group.name} isn't on ${machine.name} yet`)
   }
   if (!(await sendFirst(ctx, group, machine, location))) return

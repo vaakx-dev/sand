@@ -17,7 +17,7 @@ export interface Execution {
   job?: string
 }
 
-const perform = async (ctx: Context<'agents'>, execution: Execution, signal: AbortSignal) => {
+const perform = async (ctx: Context<'agents' | 'loop'>, execution: Execution, signal: AbortSignal) => {
   const file = join(execution.run.dir, `script.${Date.now()}.ts`)
   await Bun.write(file, execution.run.script)
   const module = await import(file).finally(() => Bun.file(file).delete().catch(() => {}))
@@ -37,7 +37,7 @@ const perform = async (ctx: Context<'agents'>, execution: Execution, signal: Abo
   }
 }
 
-export const execute = async (ctx: Context<'agents'>, execution: Execution, signal: AbortSignal) => {
+export const execute = async (ctx: Context<'agents' | 'loop'>, execution: Execution, signal: AbortSignal) => {
   const { run, origin, parent, resumed, job } = execution
   const info: WorkflowRun = { run: run.id, origin, parent, resumed, background: Boolean(job) }
   ctx.emit('workflow.start', info)

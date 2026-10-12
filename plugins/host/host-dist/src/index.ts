@@ -16,6 +16,7 @@ export default definePlugin({
     const { home, device } = ctx.hostOptions
     const build: HostBuild = { info: () => buildInfo(ctx.hostApp.root()) }
     ctx.provide('hostBuild', build)
+    build.info().catch(error => ctx.report(error))
     const installs = createInstallKeys(progress => ctx.hub.broadcast({ name: 'install.progress', args: [progress] }))
     const shared = async () => (await ctx.hostPluginSync?.shared()) ?? []
     const routes = [

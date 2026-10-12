@@ -14,7 +14,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
   const hidden = changes.read(() => ctx.machines.list().length < 2)
   const started = changes.read(() => hasMessages(currentTarget(ctx).thread))
   const machine = changes.read(() => ctx.machines.get(currentTarget(ctx).device))
-  const name = () => machine.get()?.name ?? 'This PC'
+  const name = () => machine.get()?.name ?? 'Unknown PC'
 
   const toggle = () => {
     if (open.get()) return close()

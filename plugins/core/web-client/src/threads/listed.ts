@@ -12,6 +12,7 @@ export const listKey = ({ info, device, running, started, unread, entries }: Thr
     info.kind,
     info.parent,
     info.origin,
+    info.creator?.session,
     info.named,
     info.messages,
     info.cwd,

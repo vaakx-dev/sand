@@ -14,7 +14,7 @@ import { trackSeen } from './seen'
 import type { Store } from './store'
 
 export interface ThreadService extends Threads {
-  adopt(opened: OpenedSession, device?: string): Thread
+  adopt(opened: OpenedSession, device: string): Thread
   restored(): void
 }
 
@@ -34,12 +34,12 @@ export const createThreads = (
   const pages = threadPages(wire, store)
   let greeted = false
 
-  const missing = (path: string) => projects.list().some(project => !project.device && project.path === path && project.missing)
+  const missing = (path: string) => projects.list().some(project => project.device === store.here() && project.path === path && project.missing)
 
   const recentFolder = () => {
     const scratch = wire.hello()?.scratch ?? ''
     const usable = ({ device, info }: Thread) =>
-      !device && info.kind !== 'agent' && info.cwd && !isInside(info.cwd, scratch) && !missing(info.cwd)
+      device === store.here() && info.kind !== 'agent' && info.cwd && !isInside(info.cwd, scratch) && !missing(info.cwd)
     return [...store.threads.values()].filter(usable).sort((a, b) => b.info.updated - a.info.updated)[0]?.info.cwd
   }
 
@@ -51,7 +51,7 @@ export const createThreads = (
     const from = place()
     store.idle = !id && idle
     store.current = id
-    store.draft = id ? undefined : (draft ?? store.draft ?? { id: uuid(), cwd: cwd() })
+    store.draft = id ? undefined : (draft ?? store.draft ?? { id: uuid(), cwd: cwd(), device: store.here() })
     const thread = id ? store.threads.get(id) : undefined
     if (thread) thread.unread = false
     recordPlace(from, place(), visit)
@@ -71,7 +71,13 @@ export const createThreads = (
   const openRequested = async () => {
     const { session, draft } = requestedPlace()
     if (session && !store.threads.has(session)) await load(session)
-    await open(session && store.threads.has(session) ? session : undefined, 'replace', { idle: true, draft })
+    if (session && !store.threads.has(session)) return open(undefined, 'restore', { idle: true, draft })
+    await open(session, 'replace', { idle: true, draft })
+  }
+
+  const openWhenListed = () => {
+    const asked = requestedSession()
+    if (greeted && asked && !store.current && store.threads.has(asked)) void open(asked, 'replace')
   }
 
   const revisit = async () => {
@@ -87,11 +93,12 @@ export const createThreads = (
   }
 
   ctx.on('wire.hello', hello => {
-    applyHello(store, hello)
+    applyHello(store, hello, store.here())
     if (greeted) return void open(store.current, 'replace', { idle: store.idle })
     greeted = true
     void openRequested()
   })
+  ctx.on('threads.change', openWhenListed)
   ctx.effect(() => onAddressChange(() => void revisit()))
   trackSeen(ctx, wire, store)
 
@@ -118,7 +125,7 @@ export const createThreads = (
     },
     load,
     async create(options: NewThread = {}) {
-      const device = options.cwd ? options.device : store.device()
+      const device = options.device ?? (options.cwd ? store.here() : store.device())
       const folder = options.cwd ?? cwd()
       const info = await wire.call<SessionInfo>(
         {
@@ -156,7 +163,7 @@ export const createThreads = (
     },
     async branch(id, at) {
       const info = await wire.call<SessionInfo>({ type: 'sessions.branch', session: id, into: uuid(), at })
-      const device = store.threads.get(id)?.device
+      const device = store.deviceOf(id)
       store.upsert(info, device)
       return (await load(info.id)) ?? store.upsert(info, device)
     },

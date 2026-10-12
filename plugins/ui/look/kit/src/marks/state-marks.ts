@@ -2,16 +2,17 @@ import { span } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { dot, okMark, spinner } from './marks'
 
-export type StateMark = 'unread' | 'draft' | 'agent'
+export type StateMark = 'unread' | 'draft' | 'agent' | 'shell'
 
 export type StepState = 'done' | 'failed' | 'running' | 'waiting'
 
-const skyMark = (name: 'pencil' | 'bot') => span({ class: 'inline-flex shrink-0 text-sky-400' }, icon(name, 12))
+const skyMark = (name: 'pencil' | 'bot' | 'term') => span({ class: 'inline-flex shrink-0 text-sky-400' }, icon(name, 12))
 
 const stateMarks: Record<StateMark, () => HTMLElement> = {
   unread: () => dot('orange'),
   draft: () => skyMark('pencil'),
   agent: () => skyMark('bot'),
+  shell: () => skyMark('term'),
 }
 
 const stepMarks: Record<StepState, () => HTMLElement> = {

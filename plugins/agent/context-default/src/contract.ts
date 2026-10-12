@@ -6,7 +6,7 @@ export interface ContextBuilder {
 }
 
 export interface Instructions {
-  environment(cwd: string, model?: string): string
+  environment(session: Session, model?: string): string
   project(cwd: string, project?: string | null): Promise<string>
 }
 

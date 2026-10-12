@@ -8,6 +8,7 @@ export interface Card {
   icon: IconName
   kind: string
   name: string
+  mono?: boolean
   text: string
   status?: string
   failed?: boolean
@@ -70,7 +71,7 @@ export const cardRow = (card: Card, context: RowContext) =>
         div(
           { class: ['flex min-h-6 items-center gap-2 text-xs', card.text && 'mb-2'] },
           span({ class: 'shrink-0 font-medium text-neutral-100' }, card.kind),
-          span({ class: 'min-w-0 truncate text-neutral-400', title: card.name }, card.name),
+          span({ class: ['min-w-0 truncate text-neutral-400', card.mono && 'font-mono'], title: card.name }, card.name),
           card.status && statusView(context.kit, card.status),
           sections.length > 1 && span({ class: 'shrink-0 text-neutral-500' }, `${sections.length} results`),
         ),

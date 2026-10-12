@@ -3,18 +3,17 @@ import type { ProjectLook, WireEvent, WireRequest } from '@sand/protocol'
 import type { Machines, ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
 import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
-import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
-import { buildGroups, copyEntry, groupAt, type Lists, realDevice, sameDevice } from './groups'
+import { buildGroups, copyEntry, groupAt, type Lists } from './groups'
 import { projectIcons } from './icons'
 import { keptLists } from './kept'
 
-const fallback = { device: '', home: '~', sep: '/', root: '~', scratch: '' }
+const fallback = { home: '~', sep: '/', root: '~', scratch: '' }
 
 export const createProjects = (ctx: Context, wire: Wire, store: Store, machines: Machines) => {
   const lists: Lists = new Map()
   const progress = new Map<string, (text: string) => void>()
-  const call = <T>(request: WireRequest, device?: string) => wire.call<T>(request, device || thisDevice)
+  const call = <T>(request: WireRequest, device: string) => wire.call<T>(request, device)
   let view: ProjectGroup[] | undefined
   let shown = ''
 
@@ -31,7 +30,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
     changed()
   }
 
-  const refresh = (device = thisDevice) =>
+  const refresh = (device: string) =>
     call<ProjectList>({ type: 'projects.list' }, device).then(
       list => set(device, list),
       () => {},
@@ -49,13 +48,15 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
   }
 
   const restore = (saved: unknown, devices: Set<string>) => {
-    const missing = keptLists(saved).filter(([device]) => !lists.has(device) && (device === thisDevice || devices.has(device)))
+    const missing = keptLists(saved).filter(([device]) => !lists.has(device) && (device === store.here() || devices.has(device)))
     for (const [device, list] of missing) lists.set(device, list)
     if (missing.length) changed()
   }
 
-  ctx.on('wire.hello', () => void refresh())
-  ctx.on('wire.event', wireEvent => event(thisDevice, wireEvent))
+  const refreshHere = () => refresh(store.here())
+
+  ctx.on('wire.hello', () => void refreshHere())
+  ctx.on('wire.event', wireEvent => event(store.here(), wireEvent))
   ctx.on('threads.change', () => {
     view = undefined
     if (JSON.stringify(all()) !== shown) changed()
@@ -63,14 +64,14 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
 
   const get = (id: string) => all().find(group => group.id === id)
 
-  const place = (device?: string) => lists.get(device || thisDevice) ?? fallback
+  const place = (device: string) => lists.get(device) ?? { ...fallback, device }
 
-  const inScratch = (path: string, device?: string) => {
+  const inScratch = (path: string, device: string) => {
     const { scratch } = place(device)
     return Boolean(scratch) && isInside(path, scratch)
   }
 
-  const group = (path: string, device?: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
+  const group = (path: string, device: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
 
   const icons = projectIcons(ctx, wire, machines)
   ctx.on('wire.hello', icons.clear)
@@ -82,24 +83,23 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
     return file ? { file } : found.icon
   }
 
-  const entryFor = (project: Project, device?: string): ProjectEntry => {
-    const found = get(project.id)?.locations.find(location => sameDevice(location.device, device))
+  const entryFor = (project: Project, device: string): ProjectEntry => {
+    const found = get(project.id)?.locations.find(location => location.device === device)
     if (found) return found
-    const id = realDevice(lists, device)
-    const copy = id ? project.copies[id] : undefined
-    if (!id || !copy) throw new Error(`${project.name} has no copy on that PC`)
-    return copyEntry(lists, project, id, copy)
+    const copy = project.copies[device]
+    if (!copy) throw new Error(`${project.name} has no copy on that PC`)
+    return copyEntry(lists, project, device, copy)
   }
 
-  const registered = async (request: WireRequest, device?: string) => {
+  const registered = async (request: WireRequest, device: string) => {
     const project = await call<Project>(request, device)
     await refresh(device)
     return entryFor(project, device)
   }
 
   const update = async (target: ProjectGroup, patch: ProjectPatch) => {
-    await call<Project>({ type: 'projects.update', project: target.id, patch })
-    await refresh()
+    await call<Project>({ type: 'projects.update', project: target.id, patch }, store.here())
+    await refreshHere()
   }
 
   const projects: Projects = {
@@ -123,17 +123,15 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
     hide: (target, hidden) => update(target, { hidden }),
     setIcon: (target, icon) => update(target, { icon }),
     async remove(target) {
-      await call<void>({ type: 'projects.remove', project: target.id })
-      await refresh()
+      await call<void>({ type: 'projects.remove', project: target.id }, store.here())
+      await refreshHere()
     },
     async removeCopy(entry) {
-      const device = realDevice(lists, entry.device)
-      if (!device) throw new Error('This PC is not connected yet')
-      await call<void>({ type: 'projects.remove', project: entry.project, device })
-      await refresh()
+      await call<void>({ type: 'projects.remove', project: entry.project, device: entry.device }, store.here())
+      await refreshHere()
     },
     async setRoot(root, device) {
-      set(device || thisDevice, await call<ProjectList>({ type: 'projects.root', root }, device))
+      set(device, await call<ProjectList>({ type: 'projects.root', root }, device))
     },
     create: (name, device) => registered({ type: 'projects.create', name }, device),
     async clone(url, into, device, onProgress, project) {

@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import { expandHome } from '@sand/kit/fs'
 import type {} from '@sand/paths/contract'
 import type {} from '@sand/project-files/contract'
@@ -7,6 +8,9 @@ import { z } from 'zod'
 import { open } from './db'
 import { serveMeta, sessionMeta } from './meta'
 import { assignProjects } from './projects'
+import { searchBackfill } from './search/backfill'
+import { backfillLater } from './search/later'
+import { sessionSearch } from './search/query'
 import { createStore } from './store'
 
 export default definePlugin({
@@ -36,7 +40,11 @@ export default definePlugin({
     ctx.on('runtime.release', ids => ids.forEach(forget))
 
     const meta = sessionMeta(db)
-    ctx.watch('server', server => (server ? serveMeta(server, meta) : undefined))
+    const search = sessionSearch(db)
+    ctx.effect(() => backfillLater(ctx, searchBackfill(db)))
+    ctx.watch('server', server =>
+      server ? joinDisposers(serveMeta(server, meta), server.handle('sessions.search', ({ query, limit }) => search(String(query), limit))) : undefined,
+    )
 
     assignProjects(db, projectFiles)
     ctx.effect(() =>

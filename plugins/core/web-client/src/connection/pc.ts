@@ -25,7 +25,6 @@ interface PcOptions {
   hello(hello: Hello): void
   since?(): string | undefined
   changed(): void
-  identified?(id: string): void
   kept?: HelloKeep
 }
 
@@ -156,7 +155,6 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
     const next = await selectRoute(candidates(options.seeds(), expected), expected, options.trusted?.())
     const id = next.identity.deviceId
     hostId = id
-    options.identified?.(id)
     return openRoute(next, id, options.ticket, handlers)
   }
 

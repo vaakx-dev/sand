@@ -38,7 +38,7 @@ const openActions = (ctx: Ctx, thread: Thread) => {
     actions.push({ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(ctx.notify, 'Could not rename', () => rename(ctx, thread)) })
   if (ctx.wire && thread.info.messages)
     actions.push({ id: 'retitle', group: 'open', label: 'Regenerate name', icon: 'sparkles', run: () => attempt(ctx.notify, 'Could not rename', () => retitle(ctx, thread)) })
-  if (!thread.device && thread.info.messages)
+  if (thread.info.messages)
     actions.push({ id: 'branch', group: 'open', label: 'Branch', icon: 'branch', run: () => attempt(ctx.notify, 'Could not branch', () => branch(ctx, thread)) })
   return actions
 }

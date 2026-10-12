@@ -44,7 +44,7 @@ const user = (message: Message, calls: Map<string, ToolCallBlock>): Described =>
   const text = promptText(message)
   const parts = userParts(message)
   const task = parts.flatMap(part => (part.kind === 'notification' ? [part.notification] : []))[0]
-  if (task && !text.trim()) return described('notification', 'Agent', `${task.label} — ${task.status}`)
+  if (task && !text.trim()) return described('notification', capital(task.kind), `${task.label} — ${task.status}`)
   const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))[0]
   if (feedback && !text.trim()) return described('notification', capital(feedback.source), feedbackLine(feedback), feedback.text)
   const shown = [text, ...attachments(message)]

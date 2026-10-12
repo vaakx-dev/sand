@@ -13,7 +13,7 @@ export interface ToolProgress {
 
 export interface Thread {
   id: string
-  device?: string
+  device: string
   info: SessionSummary
   entries: Map<string, Entry>
   carried?: Entry[]
@@ -46,13 +46,13 @@ export interface NewThread {
 export interface DraftTarget {
   id: string
   cwd: string
-  device?: string
+  device: string
 }
 
 export interface Threads {
   cwd(): string
-  device(): string | undefined
-  draft(cwd: string, device?: string, id?: string): Promise<void>
+  device(): string
+  draft(cwd: string, device: string, id?: string): Promise<void>
   drafting(): DraftTarget | undefined
   idle(): boolean
   list(): Thread[]

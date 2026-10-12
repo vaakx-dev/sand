@@ -4,6 +4,7 @@ import type { NavAction, NavItem } from '@sand/protocol'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, dynamicChild, keys, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { CardRow } from '../rows/build'
+import { creatorBadge } from './creator'
 import type { CardMenu } from './menu'
 import { status } from './status'
 import { actionStrip, type StripParts } from './strip'
@@ -45,6 +46,7 @@ const fullBody = (parts: CardParts) => {
       { class: 'flex h-5 items-center gap-1.5 text-xs text-neutral-400' },
       avatar(parts),
       span({ class: 'min-w-0 flex-1 truncate', title: project }, project),
+      creatorBadge(kit, item),
       show(
         item.map(value => Boolean(value.pinned)),
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
@@ -75,6 +77,7 @@ const compactBody = (parts: CardParts) =>
     { class: 'flex h-5 items-center gap-1.5', title: parts.item.map(compactTitle) },
     span({ class: 'inline-flex shrink-0' }, avatar(parts)),
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => titleClass(parts)] }, parts.item.map(value => value.title)),
+    creatorBadge(parts.kit, parts.item),
     statusSlot(parts, 'text-xs'),
     actionStrip(parts.kit, parts.strip, [onHover, () => onTouchCurrent(parts)], true),
   )

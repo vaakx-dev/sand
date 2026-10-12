@@ -2,7 +2,7 @@ import type { Database } from 'bun:sqlite'
 import type { SyncedSummaries } from '../contract'
 import { toSummary, type SummaryRow } from '../list'
 
-const columns = `s.*,
+export const columns = `s.*,
   coalesce((select max(at) from entries e where e.session = s.id), s.created) as updated,
   (select count(*) from entries e where e.session = s.id and e.type = 'message') as messages`
 

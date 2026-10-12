@@ -4,6 +4,7 @@ export interface AgentMeta {
   name: string
   depth: number
   system: string
+  tools?: string[]
 }
 
 export type Meta = (session: Session) => AgentMeta | undefined

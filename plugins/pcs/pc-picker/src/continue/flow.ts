@@ -1,10 +1,10 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
 import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
 import { errorMessage } from '@sand/kit'
+import { moveThread, type ThreadMove } from '@sand/sessions-ui/move'
 import type { Context } from 'drydock'
 import { copyOn } from '../group'
 import { offerSend } from './changes'
-import { moveThread, type MoveOptions } from './move'
 import { foldersFor, planDestination } from './place'
 
 export type ContinueContext = Context<'threads' | 'machines' | 'wire' | 'projects'>
@@ -31,16 +31,13 @@ const refusal = (thread: Thread, target: Machine, source?: Machine) => {
   return undefined
 }
 
-const askFolder = (ctx: ContinueContext, target: Machine) => async (missing: string) => {
-  if (ctx.picker) return ctx.picker.input(`Folder for this thread on ${target.name}`, missing)
-  ctx.notify?.push(`${missing} doesn't exist on ${target.name}`, { level: 'error' })
-  return undefined
-}
+const askFolder = (ctx: ContinueContext, target: Machine) => async (missing: string) => ctx.picker?.input(`Folder for this thread on ${target.name}`, missing)
+
+type MoveOptions = Pick<ThreadMove, 'project' | 'ask'>
 
 const move = async (ctx: ContinueContext, thread: Thread, source: Machine, target: Machine, folders: string[], options?: MoveOptions) => {
   ctx.notify?.push(`Moving this thread to ${target.name}…`)
-  const moved = await moveThread(ctx.wire, thread, source, target, folders, options)
-  if (!moved) return
+  const moved = await moveThread(ctx.wire.call, { thread: thread.id, named: thread.info.named, source, target, folders, ...options })
   await ctx.threads.select(moved.session)
   ctx.notify?.push(`Continued on ${target.name}`)
   if (!moved.linked) ctx.notify?.push(`Couldn't mark the original thread on ${source.name}`, { level: 'error' })
@@ -81,7 +78,7 @@ const moveTo = async (ctx: ContinueContext, thread: Thread, source: Machine, tar
   }
   if (plan.kind === 'nocopy' && ctx.syncFlows) {
     ctx.notify?.push(`${plan.group.name} isn't on ${target.name} yet`)
-    return ctx.syncFlows.copy(plan.group, target.device, afterCopy(ctx, thread, target, plan.group))
+    return ctx.syncFlows.copy(plan.group, target.id, afterCopy(ctx, thread, target, plan.group))
   }
   return move(ctx, thread, source, target, [thread.info.cwd], { ask: askFolder(ctx, target) })
 }

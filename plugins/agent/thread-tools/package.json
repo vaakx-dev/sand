@@ -1,0 +1,39 @@
+{
+  "name": "@sand/thread-tools",
+  "version": "0.0.0",
+  "description": "Tools for the agent to list, search, read, start, message, stop, rename, fork, pin, archive and move threads, and to list and remove their worktrees, on this PC and paired PCs",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Thread tools",
+    "summary": "The agent manages threads on every paired PC, and the page shows which messages an agent sent",
+    "uses": {
+      "transcript": "messages sent by an agent look like your own"
+    }
+  },
+  "dependencies": {
+    "@sand/followups": "workspace:*",
+    "@sand/host-projects": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/loops": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/pc-link": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/sessions-ui": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/sync": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript-parts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@sand/worktrees": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

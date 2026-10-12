@@ -21,7 +21,7 @@ export default definePlugin({
     ctx.provide('context', {
       build: async session => {
         const messages = session.messages()
-        return { system: await systemPrompt(session), messages, tools: ctx.tools.specs(messages) }
+        return { system: await systemPrompt(session), messages, tools: ctx.tools.specs(messages, session) }
       },
     })
   },

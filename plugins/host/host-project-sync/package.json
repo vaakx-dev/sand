@@ -9,7 +9,10 @@
   },
   "sand": {
     "label": "Project sync",
-    "summary": "Shares the project registry with paired PCs"
+    "summary": "Shares the project registry with paired PCs",
+    "provides": [
+      "projectPeers"
+    ]
   },
   "dependencies": {
     "@sand/host-projects": "workspace:*",

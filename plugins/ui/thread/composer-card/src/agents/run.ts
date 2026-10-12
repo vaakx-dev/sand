@@ -15,18 +15,20 @@ export const runButton = ({ chipButton }: Kit, state: Working, props: Props<HTML
     ...children,
   )
 
-const title = (run: Sig<AgentRun>) => span({ class: 'min-w-0 truncate' }, run.map(value => value.title))
+const title = (run: Sig<AgentRun>, font?: string) => span({ class: ['min-w-0 truncate', font] }, run.map(value => value.title))
 
-const workflowParts = ({ icon }: Kit, run: Sig<AgentRun>) => [span({ class: 'inline-flex shrink-0 text-sky-400' }, icon('workflow', 12)), title(run), progress(run)]
+const since = ({ elapsed }: Kit, run: Sig<AgentRun>) => span({ class: 'shrink-0' }, '· ', elapsed(run.map(value => value.started)))
 
-const agentParts = ({ elapsed, working }: Kit, run: Sig<AgentRun>) => [working(12), title(run), span({ class: 'shrink-0' }, '· ', elapsed(run.map(value => value.started)))]
+const parts: Record<AgentRun['kind'], (kit: Kit, run: Sig<AgentRun>) => Child[]> = {
+  workflow: ({ icon }, run) => [span({ class: 'inline-flex shrink-0 text-sky-400' }, icon('workflow', 12)), title(run), progress(run)],
+  agent: (kit, run) => [kit.working(12), title(run), since(kit, run)],
+  shell: (kit, run) => [kit.stateMark('shell'), title(run, 'font-mono'), since(kit, run)],
+}
 
-export const runChip = (kit: Kit, run: Sig<AgentRun>, state: Working, menu: ContextMenu) => {
-  const workflow = run.get().kind === 'workflow'
-  return runButton(
+export const runChip = (kit: Kit, run: Sig<AgentRun>, state: Working, menu: ContextMenu) =>
+  runButton(
     kit,
     state,
     { class: 'max-w-full', title: run.map(value => value.title), ...menu.target(() => state.menu(run.get()), state.open) },
-    ...(workflow ? workflowParts(kit, run) : agentParts(kit, run)),
+    ...parts[run.get().kind](kit, run),
   )
-}

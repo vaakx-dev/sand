@@ -4,6 +4,7 @@ import { openDraft } from '../draft'
 import { projectLookup } from '../project-lookup'
 import { backgroundOf } from './background'
 import { itemCache } from './cache'
+import { creatorOf } from './creator'
 import { draftItem, draftNavId, navItems, type Places } from './items'
 import { draftMenu, threadMenu } from './menu'
 import { moveThread } from './order'
@@ -14,20 +15,24 @@ const draftOf = (ctx: Context, id: string) => ctx.drafts?.list().find(draft => d
 
 export const threadNavList = (ctx: Context<'threads'>, epoch: () => number): NavList => {
   const places: Places = {
-    machine: device => ctx.machines?.get(device)?.name,
+    machine: device => {
+      const machine = ctx.machines?.get(device)
+      return machine && !machine.local ? machine.name : undefined
+    },
     branch: (cwd, device) => ctx.branches?.of(cwd, device),
     worktree: (cwd, device) => Boolean(ctx.worktrees?.of(cwd, device)),
   }
   const lookup = projectLookup(ctx)
   const background = backgroundOf(ctx)
   const cache = itemCache(epoch)
+  const creator = creatorOf(ctx.threads)
   return {
     id: 'sessions',
     title: 'Threads',
     order: 10,
     items: () => [
       ...(ctx.drafts?.list() ?? []).map(draft => draftItem(draft, lookup, places)),
-      ...navItems(ctx.threads.list(), lookup, places, background, cache),
+      ...navItems(ctx.threads.list(), lookup, places, background, cache, creator),
     ],
     selected() {
       const drafting = ctx.threads.drafting()

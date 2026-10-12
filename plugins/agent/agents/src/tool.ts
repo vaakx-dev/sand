@@ -1,10 +1,14 @@
+import type { Job } from '@sand/jobs/contract'
 import type { Effort, LLM } from '@sand/llm-accounts/contract'
 import type { TurnResult } from '@sand/loops/contract'
 import type { Tool } from '@sand/tools/contract'
-import type { AgentDefinition, Agents } from './contract'
+import type { Context } from 'drydock'
+import type { AgentDefinition, AgentRequest } from './contract'
 import { z } from 'zod'
 import { describeAgents } from './catalog'
+import type { OpenedAgent } from './run'
 import { agentTitle } from './title'
+import { readThread } from './transcript'
 
 const effortInput = (llm: LLM | undefined) => {
   const [first, ...rest] = llm?.levels?.().map(level => level.id) ?? []
@@ -29,25 +33,43 @@ const report = (result: TurnResult) => {
   return result.text || 'The subagent finished without a final report.'
 }
 
+export type OpenAgent = (request: AgentRequest) => Promise<OpenedAgent>
+
+const messenger =
+  (ctx: Context<'backgroundJobs'>, agent: OpenedAgent) =>
+  (message: string, job: Job) => {
+    if (job.status === 'running') {
+      if (!ctx.steering?.steer(agent.session, message)) throw new Error(`${job.id} can't take messages right now`)
+      return `Sent to ${job.id}.`
+    }
+    ctx.backgroundJobs.resume(job, signal => agent.follow(message, signal).then(report))
+    return `${job.id} is working on your follow-up in thread ${agent.session.id}. Its report arrives as a <task-notification>.`
+  }
+
 export const agentTool = (
-  agents: Agents,
+  ctx: Context<'backgroundJobs'>,
+  open: OpenAgent,
   list: AgentDefinition[],
-  llm: LLM | undefined,
 ): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
-  description: describeAgents(list, llm),
-  input: inputSchema(llm),
+  description: describeAgents(list, ctx.llm),
+  input: inputSchema(ctx.llm),
   async run({ label, task, agent, model, effort, background }, { session, signal, call }) {
     const request = { parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id }
-    if (background) {
-      const job = agents.background(
-        session,
-        `${agent ?? 'general'}: ${agentTitle(label, task)}`,
-        jobSignal => agents.run({ ...request, signal: jobSignal }).then(report),
-        call.id,
-      )
-      return `Started background agent ${job.id}. Its report arrives as a <task-notification>. Keep working or end your turn; it will wake you. Don't sleep or poll.`
+    if (!background) {
+      const opened = await open({ ...request, signal })
+      return `${report(await opened.run(signal))}\n\n[thread ${opened.session.id}]`
     }
-    return report(await agents.run({ ...request, signal }))
+    const opened = await open(request)
+    const job = ctx.backgroundJobs.start({
+      kind: 'agent',
+      parent: session,
+      label: `${agent ?? 'general'}: ${agentTitle(label, task)}`,
+      origin: call.id,
+      work: jobSignal => opened.run(jobSignal).then(report),
+      read: cursor => readThread(opened.session, cursor),
+      send: messenger(ctx, opened),
+    })
+    return `Started background agent ${job.id} in thread ${opened.session.id}. Its report arrives as a <task-notification>. Keep working or end your turn; it will wake you. Don't sleep or poll.`
   },
 })

@@ -51,5 +51,5 @@ export const moveSession = async (ops: Ops, request: MoveRequest): Promise<MoveR
   const outcome = await runSteps(session.id, [...core, ...setup], ops.publish)
   ops.changed(repo.main)
   if (outcome.failed !== undefined && outcome.failed < core.length) throw new Error(outcome.error)
-  return { path, branch }
+  return { path, branch, ...(outcome.error && { setupError: outcome.error }) }
 }

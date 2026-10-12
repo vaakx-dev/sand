@@ -1,24 +1,14 @@
-import { bearer, fetchHostIdentity, trimSlash } from '@sand/kit'
-import { remoteStore, remoteUrls, type RemoteStore } from '@sand/kit/host'
+import { bearer, trimSlash } from '@sand/kit'
+import { peerUrl, remoteStore, type RemoteStore } from '@sand/kit/host'
 import { recordOf, timeOf } from '../store'
 import { sharePath, type ShareSide } from './route'
 
 type RemoteRecord = ReturnType<RemoteStore['list']>[number]
 
-const identityWait = 3_000
 const requestWait = 8_000
 
-const reach = async (remote: RemoteRecord) => {
-  for (const url of remoteUrls(remote)) {
-    const identity = await fetchHostIdentity(url, identityWait).catch(() => undefined)
-    if (identity?.deviceId === remote.id) return trimSlash(url)
-  }
-  return undefined
-}
-
 const syncOne = async (remote: RemoteRecord, side: ShareSide) => {
-  const base = await reach(remote)
-  if (!base) return
+  const base = trimSlash(await peerUrl(remote))
   const headers = bearer(remote.key)
   const response = await fetch(`${base}${sharePath}`, { headers, signal: AbortSignal.timeout(requestWait) })
   if (!response.ok) return

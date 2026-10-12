@@ -17,14 +17,14 @@ const listing = (found: Candidate[]): ToolResultContent[] => [
   ...found.map(({ tool }): ToolResultContent => ({ type: 'tool_reference', name: tool.name })),
 ]
 
-export const findTool = (onDemand: () => GroupState[], candidates: () => Candidate[]): Tool<typeof input> => ({
-  name: 'find_tools',
-  get description() {
-    return describe(onDemand())
-  },
+export const findName = 'find_tools'
+
+export const findTool = (groups: GroupState[], candidates: Candidate[]): Tool<typeof input> => ({
+  name: findName,
+  description: describe(groups),
   input,
   run({ query }) {
-    const found = search(candidates(), query)
+    const found = search(candidates, query)
     return found.length ? listing(found) : `No tools match "${query}". Try other words or a group name.`
   },
 })

@@ -1,0 +1,35 @@
+{
+  "name": "@sand/schedules",
+  "version": "0.0.0",
+  "description": "Scheduled runs and wake-ups: a prompt runs in a thread at a time, after a delay or repeating",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "label": "Schedules",
+    "summary": "Runs a prompt in a thread later, once or repeating, and shows a thread's upcoming runs above the composer",
+    "uses": {
+      "server": "the page cannot list or cancel schedules",
+      "composer": "a thread does not show its upcoming runs",
+      "notify": "failed cancels are not reported"
+    }
+  },
+  "dependencies": {
+    "@sand/composer-card": "workspace:*",
+    "@sand/followups": "workspace:*",
+    "@sand/kit": "workspace:*",
+    "@sand/pc-link": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

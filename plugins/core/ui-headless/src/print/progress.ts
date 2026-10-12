@@ -1,4 +1,4 @@
-import type { JobStatus } from '@sand/agents/contract'
+import type { JobStatus } from '@sand/jobs/contract'
 import type { TurnResult } from '@sand/loops/contract'
 import type { SessionInfo } from '@sand/sessions-sqlite/contract'
 import { duration, oneLine } from '@sand/kit'

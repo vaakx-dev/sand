@@ -52,6 +52,6 @@ export const noCopyLine = (kit: Kit, flows: SyncFlows, group: ProjectGroup, mach
   const { icon, quietButton } = kit
   return line([
     div({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark(kit, 'neutral', 12), span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`)),
-    quietButton({ size: 'sm', onClick: () => flows.copy(group, machine.device) }, icon('down', 14), 'Get a copy'),
+    quietButton({ size: 'sm', onClick: () => flows.copy(group, machine.id) }, icon('down', 14), 'Get a copy'),
   ])
 }

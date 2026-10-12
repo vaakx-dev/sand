@@ -11,7 +11,7 @@ const openSession = (run: Run, rows: Rows) => {
 }
 
 export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) => {
-  const { dot } = rows.kit
+  const { dot, stateMark } = rows.kit
   return pressable(
     {
       class: 'flex items-start gap-2 px-2 py-2',
@@ -19,7 +19,7 @@ export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) => {
       enabled: () => Boolean(run.get().session),
       menu: { on: rows.menu, spec: () => agentMenu(rows, { title: run.get().title, session: run.get().session, stop: () => rows.cancel(run.get()) }) },
     },
-    markSlot(dot('accent')),
+    markSlot(run.get().kind === 'shell' ? stateMark('shell') : dot('accent')),
     div(
       { class: 'min-w-0 flex-1' },
       headline(run),

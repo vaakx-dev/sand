@@ -54,6 +54,18 @@ self.addEventListener('fetch', event => {
   if (request.mode === 'navigate') return event.respondWith(navigate(request))
   if (isScript(new URL(request.url))) event.respondWith(script(request))
 })
+
+const openAlert = async ({ session, url }) => {
+  const [page] = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+  if (!page) return self.clients.openWindow(url || '/')
+  page.postMessage({ open: session })
+  return page.focus()
+}
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close()
+  event.waitUntil(openAlert(event.notification.data || {}))
+})
 `
 
 export const workerRoute = () =>

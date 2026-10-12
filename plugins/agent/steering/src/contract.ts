@@ -1,11 +1,12 @@
 import type { Prompt, UserContent } from '@sand/messages'
-import type { Session, WireSession } from '@sand/sessions-sqlite/contract'
+import type { Session, ThreadLink, WireSession } from '@sand/sessions-sqlite/contract'
 
 export interface Pending {
   id: string
   label: string
   prompt: Prompt
   at: number
+  from?: ThreadLink
 }
 
 export interface QueueState {
@@ -14,7 +15,7 @@ export interface QueueState {
 }
 
 export interface Steering {
-  steer(session: Session, prompt: Prompt, label?: string): string | undefined
+  steer(session: Session, prompt: Prompt, label?: string, from?: ThreadLink): string | undefined
   unsteer(session: Session, id: string): boolean
   list(session: Session): Pending[]
 }
@@ -33,7 +34,7 @@ declare module 'drydock' {
 
 declare module '@sand/protocol/wire' {
   interface WireRequests {
-    'loop.steer': { session: string; prompt: Prompt; label?: string }
+    'loop.steer': { session: string; prompt: Prompt; label?: string; from?: ThreadLink }
     'loop.unsteer': { session: string; item: string }
   }
 

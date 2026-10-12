@@ -6,14 +6,14 @@ import { currentTarget, type PickerContext } from './target'
 
 const startQuick = async (ctx: PickerContext, machine: Machine) => {
   if (!machine.online) return
-  await ctx.threads.draft('', machine.device, ctx.threads.drafting()?.id)
+  await ctx.threads.draft('', machine.id, ctx.threads.drafting()?.id)
   ctx.composer.focus()
 }
 
-const quickMenu = (ctx: PickerContext, cwd: string, device: string | undefined, close: () => void) => {
+const quickMenu = (ctx: PickerContext, cwd: string, device: string, close: () => void) => {
   const inFolder = Boolean(cwd) && !ctx.projects.quick(cwd, device)
   const rows = ctx.machines.list().map(machine => {
-    const here = machine.device === device
+    const here = machine.id === device
     const choose = () => {
       close()
       if (!here) void startQuick(ctx, machine)
@@ -31,7 +31,7 @@ export const pcMenu = (ctx: PickerContext, close: () => void, context: ContextMe
       close()
       void choosePc(ctx, group, machine)
     }
-    return pcRow(ctx, group, machine, machine.device === device, choose, context)
+    return pcRow(ctx, group, machine, machine.id === device, choose, context)
   })
   return machineList(ctx.kit, `Run ${group.name} on`, rows)
 }

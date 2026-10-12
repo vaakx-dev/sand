@@ -14,6 +14,7 @@
     ],
     "uses": {
       "llm": "no plan limits in the summary",
+      "backgroundJobs": "may exit before background results that wait for the turn to end arrive",
       "modelSettings": "ignores --model, --effort and --fast"
     }
   },
@@ -21,6 +22,7 @@
     "@sand/agents": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/html-render": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/loops": "workspace:*",

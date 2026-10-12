@@ -12,7 +12,7 @@
     "summary": "/goal keeps the agent working until a separate check confirms the goal is met",
     "uses": {
       "ui": "there is no /goal command and goal changes are not announced",
-      "agents": "the goal is checked even while background agents are still running",
+      "backgroundJobs": "the goal is checked even while background jobs are still running",
       "modelSettings": "a thread started by /goal ignores the model chosen before it existed",
       "composer": "no goal row above the composer",
       "transcript": "goal changes are not shown in the thread",

@@ -1,8 +1,7 @@
-import type { JobNote, WireJob } from '@sand/agents/contract'
+import type { JobNote, WireJob } from '@sand/jobs/contract'
 import type { Hello, WireEvent } from '@sand/protocol'
 import type { Jobs, JobState, Wire } from '../contract'
 import type { Context } from 'drydock'
-import { thisDevice } from '../remotes/route'
 import type { Store } from '../threads/store'
 import { createRuns } from './runs'
 
@@ -46,8 +45,8 @@ export const createJobs = (ctx: Context, wire: Wire, store: Store) => {
     if (devices.delete(device)) changed()
   }
 
-  ctx.on('wire.hello', received => hello(thisDevice, received))
-  ctx.on('wire.event', received => event(thisDevice, received))
+  ctx.on('wire.hello', received => hello(store.here(), received))
+  ctx.on('wire.event', received => event(store.here(), received))
 
   const list = (parent?: string) => [...devices.values()].flatMap(known => [...known.values()]).filter(job => !parent || job.parent === parent)
   const runs = createRuns(ctx, store, list)

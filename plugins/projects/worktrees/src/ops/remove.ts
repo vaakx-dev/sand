@@ -1,6 +1,6 @@
 import type { Session } from '@sand/sessions-sqlite/contract'
 import { removedType, type RemovedEntry, type SettleResult } from '../contract'
-import { changedCount, headOf, repoOf, unpushedCount, within, type Repo } from '../git/repo'
+import { changedCount, headOf, lostCommitCount, repoOf, within, type Repo } from '../git/repo'
 import { removeWorktree } from '../git/worktree'
 import { readSetup } from '../setup/file'
 import { idleIn, openSession, sessionsIn, type Ops } from './context'
@@ -27,7 +27,7 @@ export const removeSessionWorktree = async (ops: Ops, id: unknown, options: Remo
   if (!repo?.linked) return { settled: false, reason: 'local' }
   if (options.branch && repo.branch !== options.branch) return { settled: false, reason: 'branch' }
   if (options.auto && !(await readSetup([repo.main], ops.config.auto_settle)).autoSettle) return { settled: false, reason: 'off' }
-  const [changed, ahead] = await Promise.all([changedCount(repo.root), unpushedCount(repo.root)])
+  const [changed, ahead] = await Promise.all([changedCount(repo.root), lostCommitCount(repo.root, repo.branch)])
   if (!options.force && (changed || ahead)) return { settled: false, reason: changed ? 'changed' : 'unpushed', changed, ahead }
   const head = await headOf(repo.root)
   await removeWorktree(repo.main, repo.root, repo.branch, options.force)

@@ -7,8 +7,9 @@ import type { Context } from 'drydock'
 import { nextFrame } from '../detached'
 import { listKey } from './listed'
 
-const blank = (info: SessionSummary): Thread => ({
+const blank = (info: SessionSummary, device: string): Thread => ({
   id: info.id,
+  device,
   info,
   entries: new Map(),
   loaded: false,
@@ -40,31 +41,41 @@ export class Store {
   private keys = new WeakMap<Thread, string>()
   private frame: (() => void) | undefined
 
-  constructor(private ctx: Context) {}
+  constructor(
+    private ctx: Context,
+    private home: string,
+  ) {}
 
   currentThread() {
     return this.current ? this.threads.get(this.current) : undefined
   }
 
+  here() {
+    return this.home
+  }
+
   device() {
-    return this.current ? this.currentThread()?.device : this.draft?.device
+    return (this.current ? this.currentThread()?.device : this.draft?.device) ?? this.here()
+  }
+
+  deviceOf(id: string) {
+    return this.threads.get(id)?.device ?? this.here()
   }
 
   devices() {
-    return new Set([...this.threads.values()].flatMap(thread => (thread.device ? [thread.device] : [])))
+    return new Set([...this.threads.values()].map(thread => thread.device))
   }
 
-  upsert(info: SessionInfo & Partial<SessionSummary>, device?: string) {
+  upsert(info: SessionInfo & Partial<SessionSummary>, device: string) {
     const existing = this.threads.get(info.id)
     if (existing) {
-      const differs = Object.entries(info).some(([key, value]) => existing.info[key as keyof SessionSummary] !== value)
+      const differs = Object.entries(info).some(([key, value]) => JSON.stringify(existing.info[key as keyof SessionSummary]) !== JSON.stringify(value))
       if (!differs) return existing
       existing.info = { ...existing.info, ...info }
       this.changed(info.id)
       return existing
     }
-    const thread = blank({ updated: info.created, messages: 0, named: false, ...info })
-    if (device) thread.device = device
+    const thread = blank({ updated: info.created, messages: 0, named: false, ...info }, device)
     this.threads.set(info.id, thread)
     this.changed(info.id, true)
     return thread

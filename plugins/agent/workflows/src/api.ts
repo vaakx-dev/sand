@@ -22,7 +22,7 @@ const handled = <T>(promise: Promise<T>) => {
   return promise
 }
 
-export const createApi = (ctx: Context<'agents'>, execution: Execution, signal: AbortSignal) => {
+export const createApi = (ctx: Context<'agents' | 'loop'>, execution: Execution, signal: AbortSignal) => {
   const { run, parent, origin } = execution
   const seen = new Map<string, number>()
 
@@ -38,7 +38,7 @@ export const createApi = (ctx: Context<'agents'>, execution: Execution, signal: 
     }
     if (!options.schema) return result.text
     let parsed = parseOutput(options.schema, result.text)
-    if (!parsed.ok && ctx.loop) {
+    if (!parsed.ok) {
       const fix = `Your final JSON did not match the schema: ${parsed.error}\nReply with only the corrected JSON code block.`
       parsed = parseOutput(options.schema, (await ctx.loop.run(result.session, fix, signal)).text)
     }

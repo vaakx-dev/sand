@@ -1,16 +1,23 @@
 import type { ShellEnv } from './contract'
 
+interface Variable {
+  name: string
+  value: string
+  session?: string
+}
+
 export const shellEnv = () => {
-  const entries = new Set<{ name: string; value: string }>()
+  const variables = new Set<Variable>()
   const service: ShellEnv = {
-    set(name, value) {
-      const entry = { name, value }
-      entries.add(entry)
+    set(name, value, session) {
+      const variable = { name, value, session }
+      variables.add(variable)
       return () => {
-        entries.delete(entry)
+        variables.delete(variable)
       }
     },
   }
-  const values = () => Object.fromEntries([...entries].map(({ name, value }) => [name, value]))
+  const values = (session: string) =>
+    Object.fromEntries([...variables].filter(variable => !variable.session || variable.session === session).map(({ name, value }) => [name, value]))
   return { service, values }
 }

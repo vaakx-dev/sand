@@ -1,7 +1,7 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { SenderEntries, Session } from '@sand/sessions-sqlite/contract'
 import type { Pending } from '@sand/steering/contract'
 import type { FollowUps } from './contract'
-import { errorMessage, promptLabel } from '@sand/kit'
+import { errorMessage, promptLabel, sentContent } from '@sand/kit'
 import { definePlugin } from 'drydock'
 import { serveQueue } from './serve'
 import { createStore } from './store'
@@ -18,10 +18,12 @@ export default definePlugin({
   async apply(ctx) {
     const store = await createStore(ctx.cli.home)
     let live = true
-    let draining = false
     ctx.effect(() => () => {
       live = false
     })
+
+    const owns = (session: Session) => ctx.runtime?.owns(session.id) ?? true
+    const beforePromote = new Set<string>()
 
     const save = (id: string, items: Pending[]) =>
       void store.set(id, items).catch(error => ctx.ui?.notify(`Follow-ups not saved: ${errorMessage(error)}`, 'error'))
@@ -38,21 +40,24 @@ export default definePlugin({
       return found
     }
 
-    const start = (session: Session, item: Pending) =>
-      void ctx.loop.run(session, item.prompt).catch(error => ctx.ui?.notify(errorMessage(error), 'error'))
+    const start = (session: Session, item: Pending) => {
+      if (item.from) session.append('sent-by', item.from satisfies SenderEntries['sent-by'])
+      void ctx.loop.run(session, sentContent(item.prompt, item.from)).catch(error => ctx.ui?.notify(errorMessage(error), 'error'))
+    }
 
     const next = (session: Session) => {
-      if (!live || draining || ctx.loop.active(session)) return
+      if (!live || !owns(session) || ctx.loop.active(session)) return
       const [first] = store.get(session.id)
       if (first && take(session, first.id)) start(session, first)
     }
 
     const followUps: FollowUps = {
       list: session => store.get(session.id),
-      add(session, prompt, label) {
-        const item: Pending = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt, at: Date.now() }
+      add(session, prompt, label, from) {
+        const item: Pending = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt, at: Date.now(), ...(from && { from }) }
         change(session, [...store.get(session.id), item])
-        if (!draining && !ctx.loop.active(session)) queueMicrotask(() => next(session))
+        if (!owns(session)) beforePromote.add(session.id)
+        else if (!ctx.loop.active(session)) queueMicrotask(() => next(session))
         return item
       },
       remove: (session, id) => Boolean(take(session, id)),
@@ -74,12 +79,12 @@ export default definePlugin({
       send(session, id) {
         const item = store.get(session.id).find(item => item.id === id)
         if (!item) return false
-        if (draining) {
-          if (ctx.steering?.steer(session, item.prompt, item.label)) take(session, id)
+        if (!owns(session)) {
+          if (ctx.steering?.steer(session, item.prompt, item.label, item.from)) take(session, id)
           return true
         }
         take(session, id)
-        if (!ctx.steering?.steer(session, item.prompt, item.label)) start(session, item)
+        if (!ctx.steering?.steer(session, item.prompt, item.label, item.from)) start(session, item)
         return true
       },
     }
@@ -89,8 +94,12 @@ export default definePlugin({
       queueMicrotask(() => next(session))
     })
     ctx.on('session.remove', session => save(session.id, []))
-    ctx.on('runtime.drain', () => {
-      draining = true
+    ctx.on('runtime.promote', () => {
+      for (const id of beforePromote) {
+        const session = ctx.sessions.open(id)
+        if (session) next(session)
+      }
+      beforePromote.clear()
     })
     ctx.on('runtime.release', async ids => {
       for (const id of ids) {

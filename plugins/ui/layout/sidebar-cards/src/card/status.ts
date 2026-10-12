@@ -1,4 +1,4 @@
-import { ago, exactTime, navStatus, plural } from '@sand/kit'
+import { ago, exactTime, navJobs, navStatus } from '@sand/kit'
 import type { NavItem } from '@sand/protocol'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
@@ -14,16 +14,19 @@ const kindOf = (value: NavItem) => {
 
 const startedTitle = (at?: number) => (at ? `Started ${exactTime(at)}` : 'Working')
 
-const backgroundLabel = ({ jobs, workflow }: NavItem) => {
-  if (!workflow) return plural(jobs ?? 1, 'agent')
+const backgroundLabel = (item: NavItem) => {
+  const { workflow } = item
+  if (!workflow) return navJobs(item)
   return workflow.total ? `Workflow ${workflow.done}/${workflow.total}` : 'Workflow'
 }
 
-const extraAgents = ({ stateMark }: Kit, item: Sig<NavItem>) =>
-  show(
-    item.map(value => Boolean(value.jobs)),
-    () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, item.map(value => `+${value.jobs}`), stateMark('agent')),
-  )
+const backgroundMark = ({ agents, workflow }: NavItem) => {
+  if (workflow) return 'workflow'
+  return agents ? 'agent' : 'shell'
+}
+
+const extra = ({ stateMark }: Kit, count: Sig<number | undefined>, mark: 'agent' | 'shell') =>
+  show(count.map(Boolean), () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, count.map(value => `+${value}`), stateMark(mark)))
 
 const left = (until: number) => {
   const minutes = Math.max(1, Math.ceil((until - Date.now()) / 60_000))
@@ -40,7 +43,7 @@ const ticking = (minute: Sig<number>, read: () => string) =>
 
 const runningStatus = (kit: Kit, item: Sig<NavItem>) => {
   const { elapsed, working } = kit
-  const title = item.map(value => [startedTitle(value.started), value.jobs ? navStatus(value) : ''].filter(Boolean).join(' · '))
+  const title = item.map(value => [startedTitle(value.started), navJobs(value) && navStatus(value)].filter(Boolean).join(' · '))
   return span(
     { class: 'inline-flex items-center gap-2', title },
     span(
@@ -49,17 +52,15 @@ const runningStatus = (kit: Kit, item: Sig<NavItem>) => {
       'Working',
       span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
     ),
-    extraAgents(kit, item),
+    extra(kit, item.map(value => value.agents), 'agent'),
+    extra(kit, item.map(value => value.shells), 'shell'),
   )
 }
 
 const backgroundStatus = ({ elapsed, icon, stateMark }: Kit, item: Sig<NavItem>) =>
   span(
     { class: 'inline-flex items-center gap-1 font-medium text-sky-400', title: item.map(navStatus) },
-    dynamicChild(
-      item.map(value => Boolean(value.workflow)),
-      workflow => (workflow ? icon('workflow', 12) : stateMark('agent')),
-    ),
+    dynamicChild(item.map(backgroundMark), mark => (mark === 'workflow' ? icon('workflow', 12) : stateMark(mark))),
     item.map(backgroundLabel),
     span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
   )

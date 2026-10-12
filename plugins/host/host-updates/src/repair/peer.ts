@@ -1,6 +1,6 @@
 import type { HostHealth } from '@sand/host-health/contract'
 import { errorMessage, isRecord } from '@sand/kit'
-import { callPeer, healthText, parseHealth, remoteStore, waitHealthy, type HealthOutcome } from '@sand/kit/host'
+import { callPeer, healthText, parseHealth, remoteStore, waitHealthy, type HealthOutcome, type WireSocket } from '@sand/kit/host'
 import type { DeviceInfo, WireRequest } from '@sand/protocol'
 import type { PcRepairResult } from '../contract'
 
@@ -72,7 +72,7 @@ export const repairPeer = async (deps: RepairDeps, device: string): Promise<PcRe
   if (device === deps.self.id) throw new Error('This PC cannot repair itself; use Repair on another PC')
   const record = (await remoteStore(deps.home)).get(device)
   if (!record) throw new Error('Unknown PC')
-  const sockets = new Set<WebSocket>()
+  const sockets = new Set<WireSocket>()
   const ask: Ask = (request, timeout) => callPeer(record, request, sockets, timeout)
   try {
     let started: unknown

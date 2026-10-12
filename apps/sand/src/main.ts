@@ -24,6 +24,7 @@ const {
     from: { type: 'string' },
     to: { type: 'string' },
     path: { type: 'string' },
+    project: { type: 'string' },
     all: { type: 'boolean' },
     setup: { type: 'boolean' },
     ours: { type: 'boolean' },

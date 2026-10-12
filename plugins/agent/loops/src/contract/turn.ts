@@ -11,8 +11,11 @@ export interface TurnResult {
   detail?: string
 }
 
+export type TurnEnding = Pick<TurnResult, 'stopReason' | 'error'>
+
 export interface Loop {
   run(session: Session, prompt: Prompt, signal?: AbortSignal): Promise<TurnResult>
   interrupt(session: Session): boolean
   active(session: Session): boolean
+  started(session: Session): boolean
 }

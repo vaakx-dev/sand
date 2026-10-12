@@ -8,7 +8,7 @@ import type { Next } from './types'
 const plain = (name: string) => Boolean(name) && name !== '.' && name !== '..' && !/[\\/]/.test(name)
 
 export const emptyPage = (ctx: ProjectsContext, machine: Machine, next: Next): PalettePage => {
-  const { device } = machine
+  const device = machine.id
   const place = ctx.projects.place(device)
   const root = short(place.root, place)
   const folders = listings(ctx, device)

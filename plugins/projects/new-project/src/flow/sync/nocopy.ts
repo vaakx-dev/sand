@@ -9,7 +9,7 @@ import { destinationPage } from './destination'
 
 const asCopy = (ctx: ProjectsContext, group: ProjectGroup, then?: CopyDone) => (choice: Choice) => reviewPage(ctx, { ...choice, project: group.id, done: then })
 
-const copySources = (ctx: ProjectsContext, group: ProjectGroup, target?: string) =>
+const copySources = (ctx: ProjectsContext, group: ProjectGroup, target: string) =>
   group.locations
     .filter(location => !location.missing && location.device !== target && ctx.machines.get(location.device)?.online)
     .sort((a, b) => b.updated - a.updated)
@@ -31,8 +31,8 @@ const cloneItem = (ctx: ProjectsContext, group: ProjectGroup, machine: Machine, 
 const syncItems = (ctx: ProjectsContext, group: ProjectGroup, machine: Machine, then?: CopyDone): PaletteItem[] => {
   const sync = ctx.sync
   if (!sync) return []
-  return copySources(ctx, group, machine.device).map(location => ({
-    id: `no-copy:sync:${location.device ?? ''}`,
+  return copySources(ctx, group, machine.id).map(location => ({
+    id: `no-copy:sync:${location.device}`,
     icon: 'copy',
     label: `Sync from ${ctx.machines.name(location.device)}`,
     detail: location.path,

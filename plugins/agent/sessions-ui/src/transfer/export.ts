@@ -24,7 +24,7 @@ export const exportThread =
     const session = ctx.sessions.open(request.session)
     if (!session) throw new Error('No such thread')
     if (session.kind === 'agent') throw new Error("Agent threads can't be continued on another PC")
-    if (ctx.loop?.active(session)) throw new Error('Wait for the current turn to finish')
+    if (ctx.loop?.started(session)) throw new Error('Wait for the current turn to finish')
     const entries = session.path().filter(entry => !skipped.has(entry.type))
     return {
       title: session.title,

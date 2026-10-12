@@ -21,7 +21,7 @@ export interface Sync {
 export type CopyDone = (to: ProjectRef) => void | Promise<void>
 
 export interface SyncFlows {
-  copy(group: ProjectGroup, device?: string, then?: CopyDone): void
+  copy(group: ProjectGroup, device: string, then?: CopyDone): void
   add(group: ProjectGroup): void
   send(from: ProjectRef, to: ProjectRef): void
   resolve(ref: ProjectRef): void

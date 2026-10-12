@@ -1,6 +1,7 @@
 import type { ServerInfo } from '@sand/protocol'
 import { bearer, hostPaths } from '@sand/kit'
-import { isAlive, readInfo } from './info'
+import { readServerInfo } from '@sand/kit/host'
+import { isAlive } from './info'
 
 const waitForExit = async (pid: number) => {
   for (let tries = 0; tries < 100 && isAlive(pid); tries++) await Bun.sleep(100)
@@ -27,7 +28,7 @@ const stopPosix = async (info: ServerInfo) => {
 }
 
 export const stop = async (home: string) => {
-  const info = await readInfo(home)
+  const info = await readServerInfo(home)
   if (!info || !isAlive(info.pid)) return console.log('sand is not running')
   await (process.platform === 'win32' ? stopWindows(info) : stopPosix(info))
   console.log(`stopped sand (pid ${info.pid})`)

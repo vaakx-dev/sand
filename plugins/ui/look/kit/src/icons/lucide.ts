@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  Bell,
   Bot,
   Camera,
   ChartColumn,
@@ -183,6 +184,7 @@ const nodes = {
   reply: Reply,
   wrap: TextWrap,
   unfold: UnfoldVertical,
+  bell: Bell,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes | (string & {})

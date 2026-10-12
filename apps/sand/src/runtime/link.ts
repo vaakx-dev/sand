@@ -5,13 +5,16 @@ import { createActivity } from './activity'
 import { createDrain } from './drain'
 import { createFailures } from './failures'
 import { guardCrashes } from './guard'
+import { createOwnership } from './ownership'
+
+const id = process.env[runtimeEnv.id]
+const secret = process.env[runtimeEnv.secret]
+delete process.env[runtimeEnv.secret]
 
 export const runtimeLink = definePlugin({
   name: 'runtime-link',
   inject: ['cli'],
   apply(ctx) {
-    const id = process.env[runtimeEnv.id]
-    const secret = process.env[runtimeEnv.secret]
     if (!id || !secret || !process.send) return
 
     guardCrashes(ctx)
@@ -36,9 +39,15 @@ export const runtimeLink = definePlugin({
     })
     const drain = createDrain(ctx, { idle: activity.idle, pending: activity.pending, send })
 
+    const ownership = createOwnership(ctx)
+
     const onHostMessage = (message: HostMessage) => {
-      if (message.type === 'drain') drain.start()
-      if (message.type === 'release') ctx.emit('runtime.release', message.sessions)
+      if (message.type === 'promote') ownership.promote(message.held)
+      if (message.type === 'drain') {
+        ownership.drain()
+        drain.start()
+      }
+      if (message.type === 'release') ownership.release(message.sessions)
     }
     const onDisconnect = () => ctx.cli.exit(0)
 
@@ -66,6 +75,7 @@ export const runtimeLink = definePlugin({
         })
       },
       swap: () => send({ type: 'swap' }),
+      owns: ownership.owns,
     }
     ctx.provide('runtime', runtime)
   },
