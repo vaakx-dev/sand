@@ -1,6 +1,11 @@
 import type { ServerInfo } from '@sand/protocol'
-import { createInvite, routeKind } from '@sand/kit'
+import { createInvite, pairLink, routeKind } from '@sand/kit'
 import { terminalQr } from './qr'
+
+export const printLocalLink = async (info: ServerInfo) => {
+  const invite = await createInvite(info.url, info.key)
+  console.log(pairLink(info.url, invite.secret))
+}
 
 export const printPairing = async (info: ServerInfo) => {
   const invite = await createInvite(info.url, info.key)
