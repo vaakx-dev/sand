@@ -1,3 +1,6 @@
+import { formulaAt } from '../math/inline'
+import type { Scope } from '../scope'
+
 export const escapable = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/
 
 export const matchAt = (pattern: RegExp, source: string, index: number) => {
@@ -20,15 +23,20 @@ export const codeSpanAt = (source: string, start: number): { content?: string; e
   return { end: start + fence.length }
 }
 
-export const closingBracket = (source: string, start: number) => {
+const spanEnd = (source: string, index: number, scope: Scope) => {
+  const char = source[index]
+  if (char === '`') return codeSpanAt(source, index).end
+  return char === '$' || char === '\\' ? formulaAt(source, index, scope)?.end : undefined
+}
+
+export const closingBracket = (source: string, start: number, scope: Scope) => {
   let depth = 0
   for (let index = start; index < source.length; index++) {
     const char = source[index]
-    if (char === '\\') index++
-    else if (char === '`') {
-      const span = codeSpanAt(source, index)
-      index = span.end - 1
-    } else if (char === '[') depth++
+    const end = spanEnd(source, index, scope)
+    if (end !== undefined) index = end - 1
+    else if (char === '\\') index++
+    else if (char === '[') depth++
     else if (char === ']' && --depth === 0) return index
   }
   return -1

@@ -17,7 +17,7 @@ const failed = (tex: string, error: unknown, display: boolean) =>
 export const typeset = (tex: string, displayMode: boolean) => {
   const node = span({ class: displayMode && [block, 'overflow-x-auto overflow-y-hidden p-1'] })
   try {
-    katex.render(tex, node, { displayMode, throwOnError: true, strict: 'ignore', trust: false })
+    katex.render(tex, node, { displayMode, throwOnError: true, strict: 'ignore', trust: false, macros: { '\\label': { tokens: [], numArgs: 1 } } })
   } catch (error) {
     return failed(tex, error, displayMode)
   }

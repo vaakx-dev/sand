@@ -41,7 +41,7 @@ const trimUrl = (url: string) => {
 export const bracketed = (source: string, start: number, scope: Scope, parse: Parse) => {
   const image = source[start] === '!'
   const open = image ? start + 1 : start
-  const close = closingBracket(source, open)
+  const close = closingBracket(source, open, scope)
   if (close < 0) return undefined
   const inner = source.slice(open + 1, close)
   const build = (url: string, end: number, title?: string) => ({

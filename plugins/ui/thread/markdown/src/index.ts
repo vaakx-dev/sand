@@ -1,6 +1,5 @@
 import { definePlugin } from 'drydock'
 import { highlight } from './code/highlight'
-import { useMath } from './math/renderer'
 import { markdownInline, markdownNodes } from './render'
 import { settleMarkdown } from './settle'
 
@@ -10,7 +9,9 @@ export default definePlugin({
   inject: ['kit'],
   uses: { math: 'formulas show as written' },
   apply(ctx) {
-    ctx.watch('math', useMath)
-    ctx.provide('markdown', { nodes: markdownNodes(ctx.kit), settle: settleMarkdown(ctx.kit), inline: markdownInline(ctx.kit), highlight })
+    ctx.watch('math', math => {
+      const renderers = { kit: ctx.kit, math }
+      return ctx.provide('markdown', { nodes: markdownNodes(renderers), settle: settleMarkdown(renderers), inline: markdownInline(renderers), highlight })
+    })
   },
 })

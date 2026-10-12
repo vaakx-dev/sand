@@ -4,7 +4,7 @@ import { indentOf, listMarker, sameList, startsBlock, type ListMarker } from './
 
 type Parse = (lines: string[], scope: Scope) => Node[]
 
-const collectItem = (lines: string[], start: number, marker: ListMarker) => {
+const collectItem = (lines: string[], start: number, marker: ListMarker, scope: Scope) => {
   const body = [marker.text]
   let index = start + 1
   let blank = false
@@ -15,7 +15,7 @@ const collectItem = (lines: string[], start: number, marker: ListMarker) => {
     if (!line.trim()) body.push('')
     else if (indent >= marker.content) body.push(line.slice(marker.content))
     else if (nested && indent > marker.indent) body.push(line.slice(indent))
-    else if (!blank && !nested && !startsBlock(line)) body.push(line.trimStart())
+    else if (!blank && !nested && !startsBlock(line, scope)) body.push(line.trimStart())
     else break
     blank = !line.trim()
     index++
@@ -54,7 +54,7 @@ export const parseList = (lines: string[], start: number, scope: Scope, parse: P
   let loose = false
   let index = start
   while (sameList(listMarker(lines[index] ?? ''), first)) {
-    const item = collectItem(lines, index, listMarker(lines[index]!)!)
+    const item = collectItem(lines, index, listMarker(lines[index]!)!, scope)
     items.push(item.body)
     loose ||= looseInside(item.body)
     index = item.next
