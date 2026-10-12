@@ -1,5 +1,5 @@
 import { plural } from '../text/plural'
-import { lcsLines, type DiffLine } from './lcs'
+import { lcsLines, type DiffKind, type DiffLine } from './lcs'
 
 const maxCells = 1_000_000
 
@@ -23,7 +23,11 @@ const lineDiff = (before: string[], after: string[]) => {
   return [...before.slice(0, head).map(unchanged), ...middle, ...before.slice(before.length - tail).map(unchanged)]
 }
 
-const nearChanges = (lines: DiffLine[], context: number) => {
+interface Kinded {
+  kind: DiffKind
+}
+
+const nearChanges = (lines: Kinded[], context: number) => {
   const near = new Uint8Array(lines.length)
   lines.forEach((line, index) => {
     if (line.kind === 'ctx') return
@@ -32,29 +36,29 @@ const nearChanges = (lines: DiffLine[], context: number) => {
   return near
 }
 
-const trim = (lines: DiffLine[], context: number) => {
+export const foldContext = <T extends Kinded>(lines: T[], context: number) => {
   const near = nearChanges(lines, context)
-  const out: DiffLine[] = []
-  let skipped = 0
-  const flush = () => {
-    if (skipped) out.push({ kind: 'gap', text: plural(skipped, 'unmodified line') })
-    skipped = 0
-  }
+  const out: (T | T[])[] = []
+  let hidden: T[] = []
   lines.forEach((line, index) => {
     if (!near[index]) {
-      skipped++
+      hidden.push(line)
       return
     }
-    flush()
+    if (hidden.length) out.push(hidden)
+    hidden = []
     out.push(line)
   })
-  flush()
+  if (hidden.length) out.push(hidden)
   return out
 }
 
+export const trimContext = (lines: DiffLine[], context: number) =>
+  foldContext(lines, context).map((item): DiffLine => (Array.isArray(item) ? { kind: 'gap', text: plural(item.length, 'unmodified line') } : item))
+
 export const diffLines = (before: string, after: string, { context = Infinity }: { context?: number } = {}) => {
   const lines = lineDiff(split(before), split(after))
-  return Number.isFinite(context) ? trim(lines, context) : lines
+  return Number.isFinite(context) ? trimContext(lines, context) : lines
 }
 
 export const diffCounts = (lines: DiffLine[]) => ({
