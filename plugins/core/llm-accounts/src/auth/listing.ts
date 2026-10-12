@@ -1,4 +1,4 @@
-import type { LoginAccount, LoginConflict, LoginPending, LoginSignIn } from '../contract'
+import type { AppPlan, AppStatus, LoginAccount, LoginConflict, LoginPending, LoginSignIn } from '../contract'
 import { envNames } from './env'
 import type { Credential, ServerEntry } from './store'
 
@@ -39,6 +39,21 @@ export const ownAccount = ({ id, label, provider, signIn }: OwnInfo, { credentia
     ...status,
   }
 }
+
+export const appAccount = ({ id, label, provider, signIn }: OwnInfo, plan: AppPlan, found: AppStatus, status: Status): LoginAccount => ({
+  id,
+  kind: id,
+  provider,
+  label,
+  signedIn: found.signedIn,
+  shared: false,
+  ...(signIn && { signIn }),
+  app: { name: plan.app, installed: found.installed, install: plan.install, ...(found.problem && { problem: found.problem }) },
+  ...(found.signedIn && { method: 'app' as const }),
+  ...(found.email && { email: found.email }),
+  ...(found.plan && { plan: found.plan }),
+  ...status,
+})
 
 export const serverAccount = (entry: ServerEntry, status: Status): LoginAccount => ({
   id: entry.id,

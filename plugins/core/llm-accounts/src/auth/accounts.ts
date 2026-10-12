@@ -1,8 +1,8 @@
-import type { AccountKind, KeyKind, LoginAccount, LoginConflict, LoginMethod, LoginPending, LoginSignIn, PlanApi, PlanTokens } from '../contract'
+import type { AccountKind, AnyPlan, KeyKind, LoginAccount, LoginConflict, LoginMethod, LoginPending, LoginSignIn, PlanApi, PlanTokens } from '../contract'
 import { errorMessage } from '@sand/kit'
 import { envKey, envNames } from './env'
 import { isKeyKind, keyApis, keyKinds, keyLabels, signInError } from './kinds'
-import { ownAccount, serverAccount, type Status } from './listing'
+import { appAccount, ownAccount, serverAccount, type Status } from './listing'
 import type { PlanRegistry } from './plans'
 import { authStore, credentialOf, serversOf, type Credential, type OAuth, type Saved, type ServerEntry } from './store'
 
@@ -24,8 +24,9 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
 
   const owned = (id: string) => isKeyKind(id) || !!plans.get(id)
   const ownIds = () => [...plans.list().map(plan => plan.id), ...keyKinds]
-  const stored = (id: string) => (owned(id) ? credentialOf(saved, id) : undefined)
+  const stored = (id: string) => (isKeyKind(id) || plans.api(id) ? credentialOf(saved, id) : undefined)
   const credential = (id: string): Credential | undefined => stored(id) ?? envKey(id)
+  const viaApp = (id: string) => !!plans.app(id) && plans.status(id).signedIn
   const servers = () => serversOf(saved)
   const server = (id: string) => servers().find(found => found.id === id)
 
@@ -96,7 +97,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
       saved = { ...saved, [id]: current }
       return current
     }
-    const plan = plans.get(id)
+    const plan = plans.api(id)
     if (!plan) throw signInError(label(id))
     try {
       const next: OAuth = { ...(await plan.refresh(current)), type: 'oauth', ...(current.shared !== undefined && { shared: current.shared }) }
@@ -117,6 +118,13 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
       { credential: credential(id), fromEnv: !stored(id), shared: shared(id), status: status(id) },
     )
 
+  const planListing = (plan: AnyPlan) => {
+    const signIn = { name: plan.name, detail: plan.detail }
+    const app = plans.app(plan.id)
+    if (!app) return ownListing(plan.id, signIn)
+    return appAccount({ id: app.id, label: app.label, provider: app.logo, signIn }, app, plans.status(app.id), status(app.id))
+  }
+
   return {
     ready,
     servers,
@@ -125,26 +133,31 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     shared,
     provider,
     list: (): LoginAccount[] => [
-      ...plans.list().map(plan => ownListing(plan.id, { name: plan.name, detail: plan.detail })),
+      ...plans.list().map(planListing),
       ...keyKinds.map(id => ownListing(id)),
       ...servers().map(entry => serverAccount(entry, status(entry.id))),
     ],
-    ids: () => [...ownIds().filter(id => !!credential(id)), ...servers().map(found => found.id)],
-    signedIn: (id: string) => !!credential(id) || !!server(id),
+    ids: () => [...ownIds().filter(id => !!credential(id) || viaApp(id)), ...servers().map(found => found.id)],
+    signedIn: (id: string) => !!credential(id) || !!server(id) || viaApp(id),
     known: (id: string) => owned(id) || !!server(id),
     kind(id: string): AccountKind | undefined {
       if (owned(id)) return id
       return server(id) ? 'server' : undefined
     },
-    method: (id: string): LoginMethod | undefined => (server(id) ? 'server' : credential(id)?.type),
-    api: (id: string): PlanApi | undefined => plans.get(id)?.api ?? (isKeyKind(id) ? keyApis[id] : undefined),
+    method(id: string): LoginMethod | undefined {
+      if (server(id)) return 'server'
+      return viaApp(id) ? 'app' : credential(id)?.type
+    },
+    api: (id: string): PlanApi | undefined => plans.api(id)?.api ?? plans.app(id)?.family ?? (isKeyKind(id) ? keyApis[id] : undefined),
     plan(id: string) {
+      if (viaApp(id)) return plans.status(id).plan
       const found = credential(id)
       return found?.type === 'oauth' ? found.plan : undefined
     },
     fingerprint(id: string) {
       const entry = server(id)
       if (entry) return `server:${entry.url}:${entry.key ?? ''}`
+      if (viaApp(id)) return `app:${plans.status(id).email ?? ''}:${plans.status(id).plan ?? ''}`
       const found = credential(id)
       if (found?.type === 'oauth') return `oauth:${found.accountId ?? found.email ?? ''}`
       return found ? `key:${found.key}:${found.base_url ?? ''}` : ''
@@ -152,6 +165,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
     async setShared(id: string, value: boolean) {
       await ready
       if (server(id)) return saveServers(servers().map(found => (found.id === id ? { ...found, shared: value } : found)))
+      if (plans.app(id)) throw new Error(`${label(id)} runs through the app on this PC, so it stays on this PC`)
       const found = stored(id)
       if (!found) throw new Error(credential(id) ? `This key comes from ${envNames[id]}, so it stays on this PC` : signInError(label(id)).message)
       await save({ [id]: { ...found, shared: value } })

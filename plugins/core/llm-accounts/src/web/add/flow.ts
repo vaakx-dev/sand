@@ -29,7 +29,7 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: (text?:
     const found = current.kind === 'sign-in' ? control.account(current.account) : undefined
     if (!found) return
     if (found.pending) waited = true
-    else if (waited && found.signedIn && found.method === 'oauth') onTimeout(() => done(`Signed in to ${found.label}`))
+    else if (waited && found.signedIn && (found.method === 'oauth' || found.method === 'app')) onTimeout(() => done(`Signed in to ${found.label}`))
   })
 
   const actionsFor = (account: string): SignInActions => ({

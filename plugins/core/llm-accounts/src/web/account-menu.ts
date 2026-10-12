@@ -1,30 +1,39 @@
-import type { MenuSpec } from '@sand/protocol'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { LoginAccount } from '../contract'
+import { removeLabel } from './names'
 import type { LoginControl } from './state'
+
+const shareAction = (account: LoginAccount, control: LoginControl): NavAction[] =>
+  account.app
+    ? []
+    : [
+        {
+          id: 'share',
+          group: 'use',
+          label: 'Share with my PCs',
+          icon: 'monitor',
+          active: account.shared,
+          run: () => control.run({ type: 'login.shared', account: account.id, shared: !account.shared }),
+        },
+      ]
 
 export const accountSpec = (account: LoginAccount, control: LoginControl, fix: (account: LoginAccount) => void): MenuSpec | undefined => {
   if (account.env) return undefined
   const server = account.kind === 'server'
+  const remove = removeLabel(account)
   return {
     title: account.label,
     subtitle: account.email ?? account.url,
     actions: [
-      {
-        id: 'share',
-        group: 'use',
-        label: 'Share with my PCs',
-        icon: 'monitor',
-        active: account.shared,
-        run: () => control.run({ type: 'login.shared', account: account.id, shared: !account.shared }),
-      },
+      ...shareAction(account, control),
       { id: 'fix', group: 'use', label: server ? 'Edit' : 'Sign in again', icon: server ? 'pencil' : 'key', run: () => fix(account) },
       {
         id: 'remove',
         group: 'danger',
-        label: server ? 'Remove' : 'Sign out',
+        label: remove,
         icon: 'trash',
         danger: true,
-        confirm: server ? `Remove ${account.label}?` : `Sign out of ${account.label}?`,
+        confirm: server ? `Remove ${account.label}?` : `${remove}?`,
         run: () => control.run({ type: 'login.logout', account: account.id }),
       },
     ],
