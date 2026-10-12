@@ -1,6 +1,5 @@
 import type { Machines, ProjectEntry, ProjectGroup, Wire } from '../contract'
 import type { Context } from 'drydock'
-import { thisDevice } from '../remotes/route'
 
 interface Icon {
   url?: string
@@ -8,17 +7,17 @@ interface Icon {
 
 const iconPath = (project: string, version: number) => `/project-icon?${new URLSearchParams({ project, v: String(version) })}`
 
-const localFirst = (a: ProjectEntry, b: ProjectEntry) => Number(Boolean(a.device)) - Number(Boolean(b.device))
-
 export const projectIcons = (ctx: Context, wire: Wire, machines: Machines) => {
   const icons = new Map<string, Icon>()
   let generation = 0
 
-  const source = (group: ProjectGroup) =>
-    [...group.locations].sort(localFirst).find(location => !location.missing && machines.online(location.device))
+  const source = (group: ProjectGroup) => {
+    const usable = group.locations.filter(location => !location.missing && machines.online(location.device))
+    return usable.find(location => location.device === machines.here().id) ?? usable[0]
+  }
 
   const load = async (project: string, location: ProjectEntry, from: number) => {
-    const device = location.device || thisDevice
+    const { device } = location
     const version = await wire.call<number | null>({ type: 'projects.icon', project }, device)
     if (from !== generation || version === null) return
     const response = await wire.fetch(iconPath(project, version), undefined, device)

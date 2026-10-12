@@ -5,7 +5,7 @@ import { copyOn } from './group'
 import { refOf, type PickerContext } from './target'
 
 export const rowMenu = (ctx: PickerContext, group: ProjectGroup, machine: Machine, choose: () => void): MenuSpec => {
-  const location = copyOn(group, machine.device)
+  const location = copyOn(group, machine.id)
   const sync = ctx.sync
   const list: (NavAction | false | undefined)[] = [
     machine.online && { id: 'run', label: 'Run here', icon: 'laptop', group: 'run', run: choose },

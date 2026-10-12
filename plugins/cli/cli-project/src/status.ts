@@ -31,7 +31,7 @@ export const projectStatus = async (pcs: Pcs, [value]: string[]) => {
   const group = findGroup(groups, value)
   const online = group.locations.filter(location => location.online)
   const copies = await Promise.all(
-    online.map(async location => ({ location, state: await pcs.call<SyncState>({ type: 'sync.state', path: location.path }, location.pc.device) })),
+    online.map(async location => ({ location, state: await pcs.call<SyncState>({ type: 'sync.state', path: location.path }, location.pc.id) })),
   )
   console.log(group.name)
   if (copies.length) printCopies(copies)

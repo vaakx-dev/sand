@@ -27,7 +27,10 @@ export const run = async ({ mode, home, args, flags, values = {}, prompt, safe }
     if (ctx.ui) ctx.ui.notify(text, 'error')
     else console.error(text)
   })
-  if (mode === 'serve') process.on('SIGINT', () => exit(0))
+  if (mode === 'serve') {
+    process.on('SIGINT', () => exit(0))
+    process.on('SIGTERM', () => exit(0))
+  }
   ctx.plugin(inspector)
   ctx.provide('cli', { mode, cwd: process.cwd(), home, builtins, args, flags, prompt, safe, exit })
   if (mode === 'serve') ctx.plugin(runtimeLink)

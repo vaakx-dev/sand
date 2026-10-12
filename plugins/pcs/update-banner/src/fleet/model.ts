@@ -7,8 +7,6 @@ import type { Context } from 'drydock'
 import { isSettled, runStatus, type Run, type RunStatus } from './run'
 import { canUpdate, pcStatus, pickTarget, type Pc, type PcStatus } from './status'
 
-const local = ''
-
 export interface PcView extends Pc {
   status: PcStatus
 }
@@ -36,8 +34,8 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const run = sig<Run | undefined>(undefined)
   const busy = sig(false)
 
-  const call = <T>(key: string, request: WireRequest) => ctx.wire.call<T>(request, key || undefined)
-  const keyOf = (machine: { local: boolean; id: string }) => (machine.local ? local : machine.id)
+  const call = <T>(key: string, request: WireRequest) => ctx.wire.call<T>(request, key)
+  const here = () => ctx.machines.here().id
   const notify = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
   const store = (key: string, state: unknown) => {
@@ -50,14 +48,14 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
     const known = states.get()
     const failed = failures.get()
     return ctx.machines.list().map(machine => {
-      const key = keyOf(machine)
+      const key = machine.id
       return { key, name: machine.name, local: machine.local, online: machine.online, state: known.get(key), failure: failed.get(key) }
     })
   })
 
   const channel = derive<UpdateChannel | undefined>(() => {
     const known = states.get()
-    return known.get(local)?.channel ?? [...known.values()][0]?.channel
+    return known.get(here())?.channel ?? [...known.values()][0]?.channel
   })
 
   const target = derive<ReleaseInfo | undefined>(() => {
@@ -94,10 +92,10 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   }
 
   ctx.on('wire.hello', () => {
-    seen.add(local)
-    void load(local)
+    seen.add(here())
+    void load(here())
   })
-  ctx.on('wire.event', event => onEvent(local, event))
+  ctx.on('wire.event', event => onEvent(here(), event))
   ctx.on('machines.event', onEvent)
   ctx.on('machines.change', refresh)
   onTimeout(refresh)
@@ -141,6 +139,7 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const update = async (keys: string[]) => {
     const release = target.get()
     if (!release || !keys.length) return
+    const local = here()
     const remote = keys.filter(key => key !== local)
     const ordered = keys.includes(local) ? [...remote, local] : remote
     run.set({ build: release.build.id, name: release.name, keys: ordered })

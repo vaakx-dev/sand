@@ -64,7 +64,7 @@ export const createFiles = (ctx: Context) => {
       return next
     })
 
-  const send = async ({ id, file }: Attached, device: string | undefined) => {
+  const send = async ({ id, file }: Attached, device: string) => {
     if (!file) return
     change(id, { error: undefined })
     track(id, 0)
@@ -90,7 +90,7 @@ export const createFiles = (ctx: Context) => {
       items.update(list => [...list, ...picked.map(({ entry }) => entry)])
       await Promise.all(picked.map(async ({ file, entry }) => fill(await read(file, entry))))
     },
-    async upload(device: string | undefined) {
+    async upload(device: string) {
       await Promise.all(items.get().map(item => send(item, device)))
       if (rejected()) throw new Error('a file could not be uploaded')
       return contentsOf(items.get())

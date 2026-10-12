@@ -25,6 +25,7 @@
     "@sand/compaction": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
+    "@sand/loops": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/protocol": "workspace:*",

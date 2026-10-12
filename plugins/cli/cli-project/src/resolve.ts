@@ -19,12 +19,12 @@ export const resolveConflicts = async (pcs: Pcs, [value, ...files]: string[], { 
   const location = locationOn(group, pc)
   if (!location) throw new Error(`${group.name} is not on ${pc.name}`)
   const { path } = location
-  const state = await pcs.call<SyncState>({ type: 'sync.state', path }, pc.device)
+  const state = await pcs.call<SyncState>({ type: 'sync.state', path }, pc.id)
   const targets = files.length ? files : state.conflicts
   if (!targets.length) return console.log(`${group.name} has no conflicts on ${pc.name}`)
   const pick: SyncPick = ours ? 'ours' : 'theirs'
   const picks = Object.fromEntries(targets.map(file => [file, pick]))
-  const resolved = await pcs.call<SyncResolved>({ type: 'sync.resolve', path, picks }, pc.device)
+  const resolved = await pcs.call<SyncResolved>({ type: 'sync.resolve', path, picks }, pc.id)
   console.log(`${ours ? 'kept the local version' : 'took the incoming version'} of ${plural(targets.length, 'file')} on ${pc.name}`)
   printRemaining(resolved.remaining)
 }

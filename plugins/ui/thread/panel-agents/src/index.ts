@@ -2,7 +2,7 @@ import { errorMessage, toolCalls } from '@sand/kit'
 import { copyWithNotice, shownPanel } from '@sand/kit/web'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { runningAgents } from './runs/counts'
+import { runningCounts } from './runs/counts'
 import { modelsUnlike } from './runs/models'
 import { toRuns, type Run } from './runs/runs'
 import { ticker } from './ticker'
@@ -51,7 +51,8 @@ export default definePlugin({
       fetchChildren()
       compute()
       clock.set(runs.get().some(run => run.status === 'running'))
-      const count = runningAgents(runs.get())
+      const { agent, shell } = runningCounts(runs.get())
+      const count = agent + shell
       if (count === badge) return
       badge = count
       control.update({ badge: count || undefined })

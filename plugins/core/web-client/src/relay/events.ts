@@ -9,7 +9,7 @@ import { promptPicker } from './fallback'
 
 export const isRelayEvent = (event: WireEvent): event is RelayEvent => event.name.startsWith('ui.')
 
-export const relayEvents = (ctx: Context, wire: Wire, threads: ThreadService, models: Models, device?: string) => {
+export const relayEvents = (ctx: Context, wire: Wire, threads: ThreadService, models: Models, device: string) => {
   const call = (request: WireRequest) => wire.call(request, device)
   const picker = () => ctx.picker ?? promptPicker
 
@@ -60,13 +60,12 @@ export const relayEvents = (ctx: Context, wire: Wire, threads: ThreadService, mo
   }
 }
 
-export const bridgeRelay = (ctx: Context, wire: Wire, threads: ThreadService, models: Models) => {
+export const bridgeRelay = (ctx: Context, wire: Wire, threads: ThreadService, models: Models, here: () => string) => {
   const advertise = relayContributions(ctx, wire, threads, models)
-  const relay = relayEvents(ctx, wire, threads, models)
   ctx.on('wire.hello', hello => advertise(hello.relay))
   ctx.on('wire.event', event => {
     if (!isRelayEvent(event)) return
     if (event.name === 'ui.relay') advertise(event.args[0])
-    else relay(event)
+    else relayEvents(ctx, wire, threads, models, here())(event)
   })
 }

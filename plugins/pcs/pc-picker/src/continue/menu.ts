@@ -7,7 +7,7 @@ import { blockedReason, continueOn, type ContinueContext } from './flow'
 
 const destination = (group: ProjectGroup | undefined, machine: Machine) => {
   if (!group) return undefined
-  return copyOn(group, machine.device)?.path ?? 'No copy yet, clone or sync first'
+  return copyOn(group, machine.id)?.path ?? 'No copy yet, clone or sync first'
 }
 
 const machineLines = (machine: Machine, line?: string) =>

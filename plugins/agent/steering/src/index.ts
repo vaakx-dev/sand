@@ -1,3 +1,5 @@
+import { sentContent } from '@sand/kit'
+import type { SenderEntries } from '@sand/sessions-sqlite/contract'
 import { definePlugin } from 'drydock'
 import type { Steering } from './contract'
 import { createQueues } from './queue'
@@ -15,7 +17,7 @@ export default definePlugin({
     const queues = createQueues(session => ctx.emit('turn.queue', session))
 
     const steering: Steering = {
-      steer: (session, prompt, label) => (ctx.loop.active(session) ? queues.add(session, prompt, label) : undefined),
+      steer: (session, prompt, label, from) => (ctx.loop.active(session) ? queues.add(session, prompt, label, from) : undefined),
       unsteer(session, id) {
         const removed = queues.remove(session, id)
         if (removed) ctx.emit('turn.unsteer', session, id)
@@ -29,7 +31,8 @@ export default definePlugin({
       if (!taken.length) return content
       const drained = [...content]
       for (const steer of taken) {
-        const expanded = await ctx.waterfall('turn.prompt', steer.prompt, session)
+        if (steer.from) session.append('sent-by', steer.from satisfies SenderEntries['sent-by'])
+        const expanded = await ctx.waterfall('turn.prompt', sentContent(steer.prompt, steer.from), session)
         ctx.emit('turn.steer', session, expanded, steer.id)
         drained.push(...expanded)
       }

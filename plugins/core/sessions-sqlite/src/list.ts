@@ -1,9 +1,10 @@
-import type { SessionInfo, SessionSummary } from './contract'
+import type { SessionSummary } from './contract'
 import type { Database } from 'bun:sqlite'
+import { withCreator, type SessionRow } from './row'
 
-export type SummaryRow = SessionInfo & { updated: number; messages: number; named: number; pinned: number; settled: number | null; snoozed: number | null; seen: number; position: number }
+export type SummaryRow = SessionRow & { updated: number; messages: number; named: number; pinned: number; settled: number | null; snoozed: number | null; seen: number; position: number }
 
-export const toSummary = (row: SummaryRow): SessionSummary => ({ ...row, named: Boolean(row.named), pinned: Boolean(row.pinned) })
+export const toSummary = (row: SummaryRow): SessionSummary => ({ ...withCreator(row), named: Boolean(row.named), pinned: Boolean(row.pinned) })
 
 export const summaries = (db: Database) => {
   const query = db.query<SummaryRow, []>(

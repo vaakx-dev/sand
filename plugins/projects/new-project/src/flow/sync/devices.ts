@@ -3,7 +3,7 @@ import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../../context'
 import { machineItem } from '../where'
 
-const hasCopy = (group: ProjectGroup, device?: string) => group.locations.some(location => location.device === device && !location.missing)
+const hasCopy = (group: ProjectGroup, device: string) => group.locations.some(location => location.device === device && !location.missing)
 
 export const devicesPage = (ctx: ProjectsContext, group: ProjectGroup, next: (machine: Machine) => PalettePage): PalettePage => ({
   id: 'add-device',
@@ -13,6 +13,6 @@ export const devicesPage = (ctx: ProjectsContext, group: ProjectGroup, next: (ma
   items: () =>
     ctx.machines
       .list()
-      .filter(machine => machine.online && !hasCopy(group, machine.device))
+      .filter(machine => machine.online && !hasCopy(group, machine.id))
       .map(machine => machineItem(machine, next)),
 })

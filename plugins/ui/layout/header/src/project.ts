@@ -4,19 +4,29 @@ import type { Context } from 'drydock'
 
 export const quickName = 'Quick thread'
 
-export const isQuick = (ctx: Context, cwd: string | undefined) => cwd !== undefined && Boolean(ctx.projects?.quick(cwd, ctx.threads?.device()))
-
-const homeOf = (ctx: Context, cwd: string) => ctx.worktrees?.of(cwd, ctx.threads?.device())?.main ?? cwd
-
-export const projectName = (ctx: Context, cwd: string | undefined) => {
-  if (isQuick(ctx, cwd)) return quickName
-  if (!cwd) return ''
-  const home = homeOf(ctx, cwd)
-  return ctx.projects?.name(home, ctx.threads?.device()) ?? folderName(home)
+export interface Place {
+  cwd: string
+  device: string
 }
 
-export const projectLook = (ctx: Context, cwd: string | undefined): ProjectLook | undefined => {
-  if (isQuick(ctx, cwd)) return { quick: true }
-  if (!cwd) return undefined
-  return ctx.projects?.icon(homeOf(ctx, cwd), ctx.threads?.device())
+export const currentPlace = (ctx: Context): Place | undefined => {
+  const threads = ctx.threads
+  return threads && { cwd: threads.current()?.info.cwd ?? threads.cwd(), device: threads.device() }
+}
+
+export const isQuick = (ctx: Context, place: Place | undefined) => Boolean(place && ctx.projects?.quick(place.cwd, place.device))
+
+const homeOf = (ctx: Context, { cwd, device }: Place) => ctx.worktrees?.of(cwd, device)?.main ?? cwd
+
+export const projectName = (ctx: Context, place: Place | undefined) => {
+  if (isQuick(ctx, place)) return quickName
+  if (!place?.cwd) return ''
+  const home = homeOf(ctx, place)
+  return ctx.projects?.name(home, place.device) ?? folderName(home)
+}
+
+export const projectLook = (ctx: Context, place: Place | undefined): ProjectLook | undefined => {
+  if (isQuick(ctx, place)) return { quick: true }
+  if (!place?.cwd) return undefined
+  return ctx.projects?.icon(homeOf(ctx, place), place.device)
 }

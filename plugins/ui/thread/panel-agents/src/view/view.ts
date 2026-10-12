@@ -1,7 +1,7 @@
-import { plural } from '@sand/kit'
+import { plurals } from '@sand/kit'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
-import { collapseRepeats, runningAgents } from '../runs/counts'
+import { collapseRepeats, runningCounts } from '../runs/counts'
 import type { Run } from '../runs/runs'
 import { agentRow } from './agent-row'
 import { finishedRow } from './finished'
@@ -44,7 +44,7 @@ const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) => {
     runs.map(items => items.length > 0),
     () =>
       div(
-        groupLabel(() => `Running · ${plural(runningAgents(runs.get()), 'agent')}`),
+        groupLabel(() => `Running · ${plurals(runningCounts(runs.get()))}`),
         list(
           runs,
           run => run.id,

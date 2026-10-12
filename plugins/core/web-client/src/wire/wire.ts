@@ -5,16 +5,14 @@ import { pairFragment } from '../auth/fragment'
 import { createHostAuth } from '../auth/host'
 import { hostKeys } from '../auth/keys'
 import type { Cache } from '../cache/service'
-import { homeHost, setHomeHost } from '../connection/book'
 import { createPcConnection } from '../connection/pc'
 import { coalesced } from '../detached'
 
 export interface HomeWire extends Wire {
   info(): ConnectionInfo
-  nudge(): void
 }
 
-export const startWire = (ctx: Context, cache: Cache, since: () => string | undefined): HomeWire => {
+export const startWire = (ctx: Context, cache: Cache, here: string, since: () => string | undefined): HomeWire => {
   const fragment = pairFragment()
   const machinesChanged = coalesced(ctx, () => ctx.emit('machines.change'))
   let hello: Hello | undefined
@@ -29,7 +27,7 @@ export const startWire = (ctx: Context, cache: Cache, since: () => string | unde
   })
   const home = createPcConnection({
     seeds: () => [location.origin],
-    expected: homeHost,
+    expected: () => here,
     trusted: () => location.origin,
     ticket: (base, host) => cache.gate(host).then(() => auth.socketUrl(base, host)),
     offline: 'Not connected to the sand server',
@@ -47,7 +45,6 @@ export const startWire = (ctx: Context, cache: Cache, since: () => string | unde
       }
       machinesChanged()
     },
-    identified: setHomeHost,
     kept: { load: () => cache.saved('hello'), save: saved => cache.keep('hello', saved) },
   })
   ctx.effect(() => () => home.close())
@@ -70,6 +67,5 @@ export const startWire = (ctx: Context, cache: Cache, since: () => string | unde
     call: home.call,
     fetch: auth.fetch,
     info: home.info,
-    nudge: home.nudge,
   }
 }

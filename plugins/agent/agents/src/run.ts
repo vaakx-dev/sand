@@ -1,9 +1,10 @@
+import type { Session } from '@sand/sessions-sqlite/contract'
 import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
 import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { AgentMeta, Meta } from './meta'
 import { childSettings } from './settings'
-import { slots } from './slots'
+import { slots, type Release } from './slots'
 import { compose } from './system'
 import { agentTitle } from './title'
 
@@ -12,6 +13,17 @@ export interface RunOptions {
   meta: Meta
   maxDepth: number
   maxAgents: number
+}
+
+export interface OpenedAgent {
+  session: Session
+  run(signal?: AbortSignal): Promise<AgentResult>
+  follow(task: string, signal: AbortSignal): Promise<AgentResult>
+}
+
+const narrowed = (inherited: string[] | undefined, own: string[] | undefined) => {
+  if (!inherited) return own
+  return own ? own.filter(tool => inherited.includes(tool)) : inherited
 }
 
 export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, maxDepth, maxAgents }: RunOptions) => {
@@ -24,11 +36,10 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
     return definition
   }
 
-  const open = async (request: AgentRequest, definition: AgentDefinition, depth: number) => {
+  const create = async (request: AgentRequest, definition: AgentDefinition, parentMeta: AgentMeta | undefined) => {
     const { parent, task, label, origin } = request
     const settings = childSettings(request, definition, ctx.llm)
     const model = ctx.modelSettings?.resolve(settings ?? {}).model
-    const system = await compose(definition, parent, ctx.instructions, model)
     const session = ctx.sessions.create({
       cwd: parent.cwd,
       project: parent.project,
@@ -37,24 +48,43 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
       origin,
       kind: 'agent',
     })
-    session.append('agent', { name: definition.name, depth, system } satisfies AgentMeta)
+    const tools = narrowed(parentMeta?.tools, definition.tools)
+    const depth = (parentMeta?.depth ?? 0) + 1
+    const system = await compose(definition, session, ctx.instructions, model)
+    session.append('agent', { name: definition.name, depth, system, ...(tools && { tools }) } satisfies AgentMeta)
     if (settings) session.append('settings', settings)
     return session
   }
 
-  return async (request: AgentRequest): Promise<AgentResult> => {
-    const definition = await definitionOf(request.agent ?? 'general', request.parent)
-    const depth = (meta(request.parent)?.depth ?? 0) + 1
-    if (depth > maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
-    const release = await take(request.wait ?? false, request.signal)
+  const drive = async (session: Session, request: AgentRequest, release: Release, signal?: AbortSignal): Promise<AgentResult> => {
     try {
-      const session = await open(request, definition, depth)
       ctx.emit('agent.start', session, request)
-      const result = { ...(await ctx.loop.run(session, request.task, request.signal)), session }
+      const result = { ...(await ctx.loop.run(session, request.task, signal)), session }
       ctx.emit('agent.end', session, result)
       return result
     } finally {
       release()
     }
+  }
+
+  const open = async (request: AgentRequest): Promise<OpenedAgent> => {
+    const definition = await definitionOf(request.agent ?? 'general', request.parent)
+    const parentMeta = meta(request.parent)
+    if ((parentMeta?.depth ?? 0) >= maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
+    const release = await take(request.wait ?? false, request.signal)
+    const session = await create(request, definition, parentMeta).catch(error => {
+      release()
+      throw error
+    })
+    return {
+      session,
+      run: signal => drive(session, request, release, signal),
+      follow: async (task, signal) => drive(session, { ...request, task }, await take(false), signal),
+    }
+  }
+
+  return {
+    open,
+    run: async (request: AgentRequest) => (await open(request)).run(request.signal),
   }
 }

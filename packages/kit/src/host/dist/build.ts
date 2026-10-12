@@ -78,15 +78,25 @@ const readBuildInfo = async (root: string): Promise<BuildInfo> => {
   return { id: hash, time: latest }
 }
 
-const cache = new Map<string, { at: number; build: Promise<BuildInfo> }>()
+const known = new Map<string, { at: number; build: BuildInfo }>()
+const reading = new Map<string, Promise<BuildInfo>>()
 
-export const buildInfo = (root: string): Promise<BuildInfo> => {
-  const cached = cache.get(root)
-  if (cached && Date.now() - cached.at < cacheTime) return cached.build
-  const entry = { at: Date.now(), build: readBuildInfo(root) }
-  cache.set(root, entry)
-  entry.build.catch(() => {
-    if (cache.get(root) === entry) cache.delete(root)
-  })
-  return entry.build
+const read = (root: string) => {
+  const pending =
+    reading.get(root) ??
+    readBuildInfo(root)
+      .then(build => {
+        known.set(root, { at: Date.now(), build })
+        return build
+      })
+      .finally(() => reading.delete(root))
+  reading.set(root, pending)
+  return pending
+}
+
+export const buildInfo = async (root: string): Promise<BuildInfo> => {
+  const last = known.get(root)
+  if (!last) return read(root)
+  if (Date.now() - last.at > cacheTime) read(root).catch(() => {})
+  return last.build
 }

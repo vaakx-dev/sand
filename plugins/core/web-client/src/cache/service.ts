@@ -20,7 +20,7 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
   let settled = false
 
   const restore = async () => {
-    const scope = savedScope()
+    const scope = savedScope(store.here())
     if (!scope) return
     const asked = requestedSession()
     const cached = await readScope(scope.key, asked)

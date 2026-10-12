@@ -13,8 +13,8 @@ export interface PlaceCacheOptions<T> {
 }
 
 export interface PlaceCache<T> {
-  of(cwd: string, device?: string): T | undefined
-  refresh(cwd: string, device?: string): Promise<T | undefined>
+  of(cwd: string, device: string): T | undefined
+  refresh(cwd: string, device: string): Promise<T | undefined>
   forget(): void
 }
 
@@ -70,13 +70,13 @@ export const placeCache = <T>(owner: PlaceOwner, { load, changed, freshMs = Infi
   }
 
   return {
-    of(cwd, device = '') {
+    of(cwd, device) {
       if (!cwd) return undefined
       const entry = known.get(keyOf(cwd, device))
       if ((!entry || Date.now() - entry.at > freshMs) && ready()) void fetch(cwd, device)
       return entry?.value
     },
-    async refresh(cwd, device = '') {
+    async refresh(cwd, device) {
       const key = keyOf(cwd, device)
       if (!cwd || !ready()) return known.get(key)?.value
       if (loading.has(key)) again.add(key)

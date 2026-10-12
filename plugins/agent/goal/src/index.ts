@@ -10,7 +10,7 @@ export default definePlugin({
   inject: ['llm', 'context', 'loop', 'sessions'],
   uses: {
     ui: 'there is no /goal command and goal changes are not announced',
-    agents: 'the goal is checked even while background agents are still running',
+    backgroundJobs: 'the goal is checked even while background jobs are still running',
     modelSettings: 'a thread started by /goal ignores the model chosen before it existed',
   },
   apply(ctx) {

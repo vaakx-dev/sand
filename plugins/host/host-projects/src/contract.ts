@@ -27,12 +27,17 @@ export interface ProjectFolder {
   setup?: string
   remote?: string
   project?: string
+  restores?: string
   matches: string[]
 }
 
 export interface HostProjects {
   all(): Project[]
   merge(incoming: Project[]): Promise<boolean>
+}
+
+export interface ProjectPeers {
+  pull(): Promise<void>
 }
 
 export interface FolderListing {
@@ -68,6 +73,7 @@ declare module '@sand/protocol/wire' {
 declare module 'drydock' {
   interface Services {
     hostProjects: HostProjects
+    projectPeers: ProjectPeers
   }
 
   interface Events {

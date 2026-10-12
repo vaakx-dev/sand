@@ -1,16 +1,7 @@
 import type { HostStatus, ServerInfo } from '@sand/protocol'
 import { bearer, hostPaths } from '@sand/kit'
+import { readServerInfo } from '@sand/kit/host'
 import { join } from 'node:path'
-
-const infoFile = (home: string) => join(home, 'server.json')
-
-export const readInfo = async (home: string): Promise<ServerInfo | undefined> => {
-  try {
-    return (await Bun.file(infoFile(home)).json()) as ServerInfo
-  } catch {
-    return undefined
-  }
-}
 
 export const isAlive = (pid: number) => {
   if (!Number.isInteger(pid) || pid <= 0) return false
@@ -54,7 +45,7 @@ export const waitForRuntime = async (info: ServerInfo, home: string, timeout = 6
 }
 
 export const running = async (home: string) => {
-  const info = await readInfo(home)
+  const info = await readServerInfo(home)
   return info && isAlive(info.pid) && (await answers(info)) ? info : undefined
 }
 

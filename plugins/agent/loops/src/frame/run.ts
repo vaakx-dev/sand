@@ -2,7 +2,7 @@ import { emptyUsage, promptContent, textOf } from '@sand/kit'
 import type { Entry, Message, Prompt } from '@sand/messages'
 import type { Session } from '@sand/sessions-sqlite/contract'
 import type { LoopsContext } from '../context'
-import type { LoopImpl, TurnHooks, TurnResult } from '../contract'
+import type { LoopImpl, TurnEnding, TurnHooks, TurnResult } from '../contract'
 import type { Faults } from '../faults'
 import { isFault } from './fault'
 import { createHooks } from './hooks'
@@ -25,10 +25,12 @@ const appendLeftovers = async (session: Session, hooks: TurnHooks) => {
 
 export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => LoopImpl, faults: Faults) => {
   const active = new Map<string, AbortController>()
+  const started = new Set<string>()
 
   const open = async (session: Session, prompt: Prompt, signal: AbortSignal, state: TurnState) => {
     await ctx.waterfall('turn.prepare', session, signal)
     const user: Message = { role: 'user', content: await ctx.waterfall('turn.prompt', promptContent(prompt), session) }
+    started.add(session.id)
     const opening = session.append('message', user)
     ctx.emit('turn.start', session, user)
     state.choice = await ctx.bail('model.choose', session, user)
@@ -61,10 +63,12 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
       if (chosen && failure && isFault(failure.error, signal)) faults.fault(session, chosen.impl, failure.error, chosen.opening)
     } finally {
       active.delete(session.id)
+      started.delete(session.id)
       release()
     }
     record(session, state, ctx.llm)
     const result = resultOf(state, failure)
+    if (result.stopReason !== 'end_turn') session.append('turn-ending', { stopReason: result.stopReason, ...(result.error && { error: result.error }) } satisfies TurnEnding)
     ctx.emit('turn.end', session, result)
     if (failure) throw failure.error
     return result
@@ -78,5 +82,6 @@ export const createFrame = (ctx: LoopsContext, resolve: (session: Session) => Lo
       return Boolean(controller)
     },
     active: (session: Session) => active.has(session.id),
+    started: (session: Session) => started.has(session.id),
   }
 }

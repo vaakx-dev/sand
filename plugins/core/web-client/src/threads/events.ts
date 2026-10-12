@@ -4,7 +4,7 @@ import { applyLiveEvent } from '@sand/kit'
 import { catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
-export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device?: string) => {
+export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device: string) => {
   const thread = ({ $session }: WireSession) => store.upsert($session, device)
   const known = (id: string) => store.threads.get(id)
   switch (event.name) {

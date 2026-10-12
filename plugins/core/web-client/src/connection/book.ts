@@ -1,6 +1,6 @@
 import type { HostRoute, RouteKind } from '@sand/host-gateway/contract'
 import { isRecord, routeKind } from '@sand/kit'
-import { loadRecord, loadText, saveJson, saveText } from '../integrations/storage'
+import { loadRecord, saveJson } from '../integrations/storage'
 import { originOf } from './url'
 
 export interface StoredRoute {
@@ -15,7 +15,6 @@ export interface StoredRoute {
 type Book = Record<string, StoredRoute[]>
 
 const routesKey = 'sand.routes'
-const homeKey = 'sand.home'
 const limit = 16
 const stale = 30 * 24 * 60 * 60 * 1000
 
@@ -70,7 +69,3 @@ export const failed = (host: string, url: string) => {
   if (!origin || !entry(routes(host), origin)) return
   update(host, list => list.map(route => (route.url === origin ? { ...route, failed: Date.now(), misses: (route.misses ?? 0) + 1 } : route)))
 }
-
-export const homeHost = () => loadText(homeKey)
-
-export const setHomeHost = (id: string) => saveText(homeKey, id)

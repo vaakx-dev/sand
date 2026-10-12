@@ -25,7 +25,7 @@ export type RuntimeMessage =
   | { type: 'swap' }
   | { type: 'drained' }
 
-export type HostMessage = { type: 'drain' } | { type: 'release'; sessions: string[] }
+export type HostMessage = { type: 'promote'; held: string[] } | { type: 'drain' } | { type: 'release'; sessions: string[] }
 
 export interface Runtime {
   id: string
@@ -33,6 +33,7 @@ export interface Runtime {
   caller(request: Request): RouteCaller | undefined
   listening(url: string): void
   swap(): void
+  owns(session: string): boolean
 }
 
 declare module './wire' {
@@ -47,6 +48,7 @@ declare module 'drydock' {
   }
 
   interface Events {
+    'runtime.promote': () => void
     'runtime.drain': () => void
     'runtime.release': (sessions: string[]) => void
   }

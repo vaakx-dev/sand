@@ -36,12 +36,16 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
 
   const handover = new Set<string>()
 
+  const held = () => new Set([...draining].flatMap(child => child.activity.sessions))
+
   const release = (sessions: string[]) => {
+    const still = held()
+    const free = sessions.filter(id => !still.has(id))
     if (!current) {
-      for (const id of sessions) handover.add(id)
+      for (const id of free) handover.add(id)
       return
     }
-    if (sessions.length) sendTo(current, { type: 'release', sessions })
+    if (free.length) sendTo(current, { type: 'release', sessions: free })
   }
 
   const receive = (child: Child, message: RuntimeMessage) => {
@@ -104,6 +108,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
     backoff.healthy()
     void child.proc.exited.then(code => exited(child, code))
     if (old) drain(old)
+    sendTo(child, { type: 'promote', held: [...held()] })
     release([...handover])
     handover.clear()
     events.runtimes()

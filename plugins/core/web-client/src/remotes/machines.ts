@@ -1,34 +1,44 @@
 import type { Remote } from '@sand/host-remotes/contract'
 import type { DeviceInfo } from '@sand/protocol'
-import type { ConnectionInfo, Machine, Machines, Wire } from '../contract'
+import type { ConnectionInfo, Machine, Machines } from '../contract'
 import type { Context } from 'drydock'
 import { hostOf } from '../connection/url'
 import type { HomeWire } from '../wire/wire'
+import { keptRemotes } from './kept'
 import type { Links } from './links'
-import { thisDevice } from './route'
 
 const addressOf = (url: string | undefined) => (url ? hostOf(url) : undefined)
 
 const online = (connection: ConnectionInfo) => connection.status === 'connected'
 
-export const createMachines = (ctx: Context, wire: Wire, home: HomeWire, links: Links): Machines => {
+export const createMachines = (ctx: Context, home: HomeWire, links: Links, hereId: string, keep: (remotes: Remote[]) => void) => {
   let self: DeviceInfo | undefined
+  let listed = false
+
+  const sync = (remotes: Remote[]) => {
+    listed = true
+    links.sync(remotes)
+    keep(remotes)
+  }
 
   const refresh = async () => {
-    self = await wire.call<DeviceInfo>({ type: 'device.info' }, thisDevice).catch(() => undefined)
-    const remotes = await wire.call<Remote[]>({ type: 'remotes.list' }, thisDevice).catch(() => undefined)
-    if (remotes) links.sync(remotes)
+    const [info, remotes] = await Promise.all([
+      home.call<DeviceInfo>({ type: 'device.info' }).catch(() => undefined),
+      home.call<Remote[]>({ type: 'remotes.list' }).catch(() => undefined),
+    ])
+    self = info
+    if (remotes) sync(remotes)
   }
 
   ctx.on('wire.hello', () => void refresh())
   ctx.on('wire.event', event => {
-    if (event.name === 'remotes.change') links.sync(event.args[0])
+    if (event.name === 'remotes.change') sync(event.args[0])
   })
 
-  const localMachine = (): Machine => {
+  const here = (): Machine => {
     const connection = home.info()
     return {
-      id: self?.id ?? 'local',
+      id: hereId,
       name: self?.name ?? 'This PC',
       local: true,
       online: online(connection),
@@ -41,7 +51,6 @@ export const createMachines = (ctx: Context, wire: Wire, home: HomeWire, links: 
 
   const remoteMachine = (remote: Remote, connection: ConnectionInfo): Machine => ({
     id: remote.id,
-    device: remote.id,
     name: remote.name,
     local: false,
     online: online(connection),
@@ -51,26 +60,30 @@ export const createMachines = (ctx: Context, wire: Wire, home: HomeWire, links: 
     connection,
   })
 
-  const list = () => [localMachine(), ...links.list().map(link => remoteMachine(link.remote, link.info()))]
+  const list = () => [here(), ...links.list().map(link => remoteMachine(link.remote, link.info()))]
 
-  const get = (id?: string) => list().find(machine => (id ? machine.id === id : machine.local))
+  const get = (id: string) => list().find(machine => machine.id === id)
 
-  return {
+  const machines: Machines = {
     list,
+    here,
     get,
-    name: device => get(device)?.name ?? 'Unknown PC',
-    online: device => get(device)?.online ?? false,
+    name: id => get(id)?.name ?? 'Unknown PC',
+    online: id => get(id)?.online ?? false,
     async add(link) {
-      const remote = await wire.call<Remote>({ type: 'remotes.add', link }, thisDevice)
+      const remote = await home.call<Remote>({ type: 'remotes.add', link })
       await refresh()
       const machine = get(remote.id)
       if (!machine) throw new Error(`${remote.name} was added, but this page could not load it. Reload to see it.`)
       return machine
     },
-    remove: id => wire.call({ type: 'remotes.remove', remote: id }, thisDevice).then(() => undefined),
-    retry(id) {
-      if (!id || id === localMachine().id) home.nudge()
-      else links.get(id)?.nudge()
+    remove: id => home.call({ type: 'remotes.remove', remote: id }).then(() => undefined),
+  }
+
+  return {
+    machines,
+    restore(saved: unknown) {
+      if (!listed) links.sync(keptRemotes(saved))
     },
   }
 }

@@ -3,27 +3,26 @@ import type { Wire } from '../contract'
 import type { Store } from '../threads/store'
 import type { Links } from './links'
 
-export const thisDevice = ''
-
 const placed = new Set<WireRequest['type']>(['ui.command', 'ui.focus', 'settings.get', 'skills.list'])
 
-const deviceFor = (store: Store, request: WireRequest) => {
-  if ('session' in request && typeof request.session === 'string') return store.threads.get(request.session)?.device
+const pcFor = (store: Store, request: WireRequest) => {
+  if ('session' in request && typeof request.session === 'string') return store.deviceOf(request.session)
   if ('cwd' in request || placed.has(request.type)) return store.device()
+  return store.here()
 }
 
 const unknownPc = () => new Error('That PC is no longer paired with this sand')
 
-export const routeWire = (wire: Wire, links: Links, store: Store): Wire => ({
-  ...wire,
-  call<T>(request: WireRequest, device = deviceFor(store, request)) {
-    if (!device) return wire.call<T>(request)
-    const link = links.get(device)
-    return link ? link.call<T>(request) : Promise.reject(unknownPc())
-  },
-  fetch(path, init, device) {
-    if (!device) return wire.fetch(path, init)
-    const link = links.get(device)
-    return link ? link.fetch(path, init) : Promise.reject(unknownPc())
-  },
-})
+export const routeWire = (wire: Wire, links: Links, store: Store): Wire => {
+  const linkTo = (pc: string) => {
+    if (pc === store.here()) return wire
+    const link = links.get(pc)
+    if (!link) throw unknownPc()
+    return link
+  }
+  return {
+    ...wire,
+    call: async <T>(request: WireRequest, pc = pcFor(store, request)) => linkTo(pc).call<T>(request),
+    fetch: async (path, init, pc = store.here()) => linkTo(pc).fetch(path, init),
+  }
+}

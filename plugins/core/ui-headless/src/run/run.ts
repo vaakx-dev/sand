@@ -34,7 +34,11 @@ const whenAborted = (signal: AbortSignal, stop: () => void) => {
 }
 
 export const runPrompt = async (ctx: Context<'cli' | 'loop' | 'sessions'>, { printer, ui, prompt, signal }: Run) => {
-  const follower = createFollower(ui.thread, printer, localModels(ctx))
+  const queued = () => {
+    const thread = ui.thread()
+    return thread ? (ctx.backgroundJobs?.queued(thread) ?? 0) : 0
+  }
+  const follower = createFollower(ui.thread, queued, printer, localModels(ctx))
   follower.limits(ctx.llm?.limits?.())
   followLocal(ctx, follower)
   const focus = <T extends Session | undefined>(session: T) => {

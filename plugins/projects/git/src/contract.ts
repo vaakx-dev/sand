@@ -1,5 +1,5 @@
 export interface Branches {
-  of(cwd: string, device?: string): string | undefined
+  of(cwd: string, device: string): string | undefined
 }
 
 export interface GitStatus {
@@ -14,8 +14,8 @@ export interface GitStatus {
 }
 
 export interface GitStatuses {
-  of(cwd: string, device?: string): GitStatus | undefined
-  refresh(cwd: string, device?: string): void
+  of(cwd: string, device: string): GitStatus | undefined
+  refresh(cwd: string, device: string): void
 }
 
 declare module 'drydock' {

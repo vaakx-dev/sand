@@ -62,6 +62,7 @@ export interface MoveRequest {
 export interface MoveResult {
   path: string
   branch: string
+  setupError?: string
 }
 
 export interface RemovedEntry {
@@ -85,7 +86,7 @@ export const isUnnamed = (branch: string | null | undefined) => Boolean(branch &
 export interface Worktrees {
   openMove(): void
   rename(): void
-  of(cwd: string, device?: string): WorktreeMark | null | undefined
+  of(cwd: string, device: string): WorktreeMark | null | undefined
 }
 
 declare module 'drydock' {

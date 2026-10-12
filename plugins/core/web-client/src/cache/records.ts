@@ -9,7 +9,7 @@ export interface Meta {
 }
 
 export interface SummaryRecord {
-  device: string | null
+  device: string
   info: SessionSummary
 }
 
@@ -27,7 +27,7 @@ export interface CachedThread {
 
 export const emptyMeta = (): Meta => ({ synced: {}, opened: {}, bytes: {} })
 
-export const summaryOf = (thread: Thread): SummaryRecord => ({ device: thread.device ?? null, info: thread.info })
+export const summaryOf = (thread: Thread): SummaryRecord => ({ device: thread.device, info: thread.info })
 
 export const summaryKey = (thread: Thread) => JSON.stringify(summaryOf(thread))
 

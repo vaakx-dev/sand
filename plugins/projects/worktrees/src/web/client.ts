@@ -5,16 +5,16 @@ import type { Context } from 'drydock'
 export type WebContext = Context<'threads' | 'wire' | 'kit'>
 
 export const worktreeClient = ({ wire }: WebContext) => ({
-  list: (cwd: string, device?: string) => wire.call<WorktreeState | null>({ type: 'worktrees.list', cwd }, device),
-  marks: (cwds: string[], device?: string) => wire.call<Record<string, WorktreeMark | null>>({ type: 'worktrees.of', cwds }, device),
+  list: (cwd: string, device: string) => wire.call<WorktreeState | null>({ type: 'worktrees.list', cwd }, device),
+  marks: (cwds: string[], device: string) => wire.call<Record<string, WorktreeMark | null>>({ type: 'worktrees.of', cwds }, device),
   intend: (session: string, intent: WorktreeIntent) => wire.call<void>({ type: 'worktrees.intend', session, intent }),
   move: (request: MoveRequest) => wire.call<MoveResult>({ type: 'worktrees.move', ...request }),
   forceRemove: (session: string) => wire.call<SettleResult>({ type: 'worktrees.remove', session, force: true }),
   settle: (session: string, branch: string, pr: number) => wire.call<SettleResult>({ type: 'worktrees.settle', session, branch, pr }),
   restore: (session: string, entry: string) => wire.call<MoveResult>({ type: 'worktrees.restore', session, entry }),
   rename: (session: string) => wire.call<void>({ type: 'worktrees.rename', session }),
-  nameAt: (path: string, name: string | undefined, device?: string) => wire.call<void>({ type: 'worktrees.name', path, ...(name && { name }) }, device),
-  drop: (path: string, device?: string) => wire.call<void>({ type: 'worktrees.drop', path }, device),
+  nameAt: (path: string, name: string | undefined, device: string) => wire.call<void>({ type: 'worktrees.name', path, ...(name && { name }) }, device),
+  drop: (path: string, device: string) => wire.call<void>({ type: 'worktrees.drop', path }, device),
 })
 
 export type WorktreeClient = ReturnType<typeof worktreeClient>

@@ -13,7 +13,7 @@ const runSetup = async (ctx: ProjectsContext, sync: Sync, ref: ProjectRef, comma
   }
 }
 
-export const offerSetup = async (ctx: ProjectsContext, path: string, device?: string) => {
+export const offerSetup = async (ctx: ProjectsContext, path: string, device: string) => {
   const sync = ctx.sync
   if (!sync || !ctx.notify) return
   const folder = await ctx.projects.inspect(path, device).catch(() => undefined)

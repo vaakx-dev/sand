@@ -23,6 +23,7 @@
     "@sand/kit": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
+    "@sand/sessions-ui": "workspace:*",
     "@sand/sync": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
     "@sand/ui-kit": "workspace:*",

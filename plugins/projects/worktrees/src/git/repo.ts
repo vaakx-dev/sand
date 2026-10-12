@@ -43,7 +43,10 @@ export const within = (root: string, cwd: string, target: string) => {
 
 export const changedCount = async (path: string) => (await gitMaybe(path, ['--no-optional-locks', 'status', '--porcelain']))?.split('\n').filter(Boolean).length ?? 0
 
-export const unpushedCount = async (path: string) => Number(await gitMaybe(path, ['rev-list', '--count', 'HEAD', '--not', '--remotes'])) || 0
+export const lostCommitCount = async (path: string, branch: string | null) => {
+  const others = [...(branch ? [`--exclude=${branch}`] : []), '--branches', '--remotes', '--tags']
+  return Number(await gitMaybe(path, ['rev-list', '--count', 'HEAD', '--not', ...others])) || 0
+}
 
 export const localBranches = async (path: string) =>
   ((await gitMaybe(path, ['for-each-ref', '--sort=-committerdate', '--format=%(refname:short)', 'refs/heads'])) ?? '')

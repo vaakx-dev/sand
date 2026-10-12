@@ -1,18 +1,24 @@
+import type { JobKind } from '@sand/messages'
+import { capital } from '@sand/kit'
+import type { IconName } from '@sand/ui-kit/contract'
 import { span } from '@vaakx-dev/vrui'
-import { cardRow, type Card } from './card'
+import { cardRow } from './card'
 import { row, type RowMaker } from './row'
 
 const workflowPrefix = 'workflow '
 
-const source = (label: string): Pick<Card, 'icon' | 'kind' | 'name'> => {
-  if (label.startsWith(workflowPrefix)) return { icon: 'workflow', kind: 'Workflow', name: label.slice(workflowPrefix.length) }
+const icons: Record<JobKind, IconName> = { agent: 'bot', workflow: 'workflow', shell: 'term' }
+
+const taskName = (label: string) => {
+  if (label.startsWith(workflowPrefix)) return label.slice(workflowPrefix.length)
   const at = label.indexOf(': ')
-  return { icon: 'bot', kind: 'Agent', name: at > 0 ? label.slice(at + 2) : label }
+  return at > 0 ? label.slice(at + 2) : label
 }
 
 export const notificationRow: RowMaker<'notification'> = (item, context) => {
-  const { label, status, result } = item.notification
-  return cardRow({ key: `note:${item.key}`, ...source(label), text: result, status, failed: status === 'failed' }, context)
+  const { kind, label, status, result } = item.notification
+  const card = { key: `note:${item.key}`, icon: icons[kind], kind: capital(kind), name: taskName(label), mono: kind === 'shell' }
+  return cardRow({ ...card, text: result, status, failed: status === 'failed' }, context)
 }
 
 export const reportRow: RowMaker<'report'> = (item, context) =>

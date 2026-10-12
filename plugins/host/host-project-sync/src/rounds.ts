@@ -1,7 +1,7 @@
 import type { HostProjects } from '@sand/host-projects/contract'
 import type { RemoteRecord } from '@sand/host-remotes/contract'
 import { errorMessage } from '@sand/kit'
-import { remoteStore } from '@sand/kit/host'
+import { remoteStore, type WireSocket } from '@sand/kit/host'
 import { fingerprint } from './clean'
 import { exchange } from './exchange'
 import { createStatus } from './status'
@@ -16,7 +16,7 @@ interface Peer {
 
 export const createRounds = (home: string, projects: HostProjects) => {
   const peers = new Map<string, Peer>()
-  const sockets = new Set<WebSocket>()
+  const sockets = new Set<WireSocket>()
   const report = createStatus()
   let stopped = false
 
@@ -61,7 +61,14 @@ export const createRounds = (home: string, projects: HostProjects) => {
     for (const record of records) trigger(record, force)
   }
 
+  const pull = async () => {
+    const records = (await remoteStore(home)).list()
+    const outcomes = await Promise.all(records.map(record => exchange(record, projects.all(), sockets)))
+    for (const outcome of outcomes) if (outcome.state === 'ok') await projects.merge(outcome.projects)
+  }
+
   return {
+    pull,
     round(force: boolean) {
       if (!stopped) void round(force).catch(error => console.error(`project sync: ${errorMessage(error)}`))
     },

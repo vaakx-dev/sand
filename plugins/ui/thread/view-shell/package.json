@@ -1,7 +1,7 @@
 {
   "name": "@sand/view-shell",
   "version": "0.0.0",
-  "description": "Shows shell calls as a command with its output and exit code",
+  "description": "Shows shell calls as a command with its output and exit code, and background commands with their state",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",

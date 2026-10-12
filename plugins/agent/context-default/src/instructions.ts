@@ -26,6 +26,6 @@ const project = async (root: string) => {
 }
 
 export const createInstructions = (tools: Tools, paths: Paths): Instructions => ({
-  environment: (cwd, model) => environment(cwd, tools.notes(), model),
+  environment: (session, model) => environment(session.cwd, tools.notes(session), model),
   project: (cwd, projectName) => project(paths.projectFolder(cwd, projectName)),
 })

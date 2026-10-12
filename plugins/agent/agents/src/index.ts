@@ -1,24 +1,21 @@
 import type { AgentDefinition, Agents } from './contract'
 import { definePlugin, type Dispose } from 'drydock'
 import { z } from 'zod'
-import { agentsUI } from './command'
-import { createJobs } from './jobs'
 import { agentLayers } from './layers'
 import { createMeta } from './meta'
+import { group, modelsTool } from './models'
 import { restrictContext } from './restrict'
 import { createRun } from './run'
-import { serveJobs } from './serve'
 import { agentTool } from './tool'
 
 export default definePlugin({
   name: 'agents',
-  inject: ['loop', 'paths', 'sessions', 'tools', 'watcher'],
+  inject: ['loop', 'paths', 'sessions', 'tools', 'watcher', 'backgroundJobs'],
   uses: {
     llm: 'agent definitions cannot set an effort level',
     instructions: 'sub-agents get no environment or project instructions in their prompt',
     modelSettings: 'sub-agents get no model name in their prompt',
-    ui: 'background results that cannot be delivered fail silently',
-    steering: 'background results start a new turn instead of joining the running one',
+    steering: 'running background agents cannot take messages',
   },
   config: z.object({
     max_depth: z.number().int().min(0).default(6),
@@ -27,7 +24,6 @@ export default definePlugin({
   apply(ctx, config) {
     const defined = new Map<string, AgentDefinition>()
     const meta = createMeta()
-    const jobs = createJobs(ctx)
     let unregister: Dispose | undefined
     let generation = 0
     const refresh = async () => {
@@ -35,11 +31,12 @@ export default definePlugin({
       const list = [...(await resolve()).values()]
       if (current !== generation) return
       void unregister?.()
-      unregister = ctx.tools.register(agentTool(agents, list, ctx.llm))
+      unregister = ctx.tools.register(agentTool(ctx, run.open, list))
     }
 
     const efforts = ctx.llm?.levels?.().map(level => level.id) ?? []
     const resolve = agentLayers(ctx, defined, efforts, () => void refresh())
+    const run = createRun(ctx, { resolve, meta, maxDepth: config.max_depth, maxAgents: config.max_agents })
 
     const agents: Agents = {
       define(definition) {
@@ -51,15 +48,14 @@ export default definePlugin({
         }
       },
       definitions: async (cwd, project) => [...(await resolve(cwd, project)).values()],
-      run: createRun(ctx, { resolve, meta, maxDepth: config.max_depth, maxAgents: config.max_agents }),
-      background: jobs.start,
-      jobs: jobs.list,
+      run: run.run,
     }
 
     ctx.provide('agents', agents)
-    ctx.on('turn.stop', (session, _result, signal) => (session.kind === 'agent' ? jobs.idle(session, signal).then(() => undefined) : undefined))
-    serveJobs(ctx, agents)
-    ctx.plugin(agentsUI)
+    ctx.effect(() =>
+      ctx.tools.group({ name: group, label: 'Agents', summary: 'run workflows of many subagents, and list the models agents can use', load: 'on-demand' }),
+    )
+    ctx.effect(() => ctx.tools.register(modelsTool(ctx)))
     ctx.watch('llm', () => void refresh())
     ctx.on('llm.models', () => void refresh())
     ctx.effect(() => () => {

@@ -2,7 +2,7 @@ import { div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Repeated } from '../runs/counts'
 import { memberRows } from './members'
 import { agentMenu } from './menu'
-import { meta, pressable, since, type Rows } from './parts'
+import { meta, pressable, since, titleFont, type Rows } from './parts'
 
 export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, rows: Rows) => {
   const { badge, statusBadge } = rows.kit
@@ -22,7 +22,7 @@ export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, rows: Rows) =
         enabled: () => Boolean(run.get().session) || foldable(),
         menu: { on: rows.menu, spec: () => agentMenu(rows, { title: run.get().title, session: run.get().session }) },
       },
-      span({ class: 'min-w-0 flex-1 truncate', title: run.map(value => value.title) }, run.map(value => value.title)),
+      span({ class: ['min-w-0 flex-1 truncate', titleFont(run.get())], title: run.map(value => value.title) }, run.map(value => value.title)),
       show(
         item.map(value => value.count > 1),
         () => badge('neutral', () => `×${item.get().count}`),

@@ -20,6 +20,7 @@ export default definePlugin({
       }),
     )
     const rounds = createRounds(home, projects)
+    ctx.provide('projectPeers', { pull: rounds.pull })
     let timer: Timer | undefined
     ctx.on('host.projects', () => {
       clearTimeout(timer)

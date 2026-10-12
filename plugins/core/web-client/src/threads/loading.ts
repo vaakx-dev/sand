@@ -37,7 +37,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     return thread
   }
 
-  const install = (opened: OpenedSession, device?: string) => {
+  const install = (opened: OpenedSession, device = store.deviceOf(opened.info.id)) => {
     const thread = store.upsert(opened.info, device)
     thread.complete = !opened.partial
     thread.carried = opened.carried ?? []
@@ -45,7 +45,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     return apply(thread, opened)
   }
 
-  const reconnecting = (id: string) => !store.threads.get(id)?.device && wire.state() !== 'open'
+  const reconnecting = (id: string) => store.deviceOf(id) === store.here() && wire.state() !== 'open'
 
   const fail = (id: string, error: unknown) => {
     const thread = store.threads.get(id)
@@ -59,7 +59,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     if (!thread?.cursor || !thread.entries.size) return {}
     try {
       const delta = await wire.call<OpenedSession | null>({ type: 'session.since', session: id, after: thread.cursor })
-      return delta ? { thread: apply(store.upsert(delta.info), delta) } : { replace: true }
+      return delta ? { thread: apply(store.upsert(delta.info, thread.device), delta) } : { replace: true }
     } catch {
       return {}
     }

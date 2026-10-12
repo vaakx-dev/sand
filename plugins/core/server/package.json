@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@sand/agents": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/messages": "workspace:*",

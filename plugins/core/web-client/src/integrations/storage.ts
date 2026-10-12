@@ -17,20 +17,6 @@ export const saveJson = (key: string, value: unknown) => {
   } catch {}
 }
 
-export const loadText = (key: string) => {
-  try {
-    return localStorage.getItem(key) ?? undefined
-  } catch {
-    return undefined
-  }
-}
-
-export const saveText = (key: string, value: string) => {
-  try {
-    localStorage.setItem(key, value)
-  } catch {}
-}
-
 export const askPersistence = () => {
   try {
     if (localStorage.getItem(persistAsked)) return
