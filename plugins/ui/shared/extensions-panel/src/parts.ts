@@ -34,7 +34,8 @@ export const partsSection = (ctx: Context<'extensions'>, changes: Pulse) => {
       ),
     ),
     div(
-      quietButton({ size: 'sm', 'aria-expanded': open, onClick: open.toggle() }, chevron(() => open.get(), 12), 'Details for plugin authors'),
+      { class: 'flex flex-col items-start gap-4' },
+      quietButton({ size: 'sm', 'aria-expanded': open, onClick: open.toggle() }, chevron(() => open.get(), 14), 'Details for plugin authors'),
       show(open, () => details(ctx, state, toggle)),
     ),
   )

@@ -1,7 +1,7 @@
 import type { GitStatus } from '@sand/git/contract'
 import type { PrSummary } from '@sand/github/contract'
 import { isUnnamed } from '@sand/worktrees/contract'
-import { chipButton, derive, div, dynamicChild, icon, popover, popupTrigger, shine, show, sig, span, type IconName } from '@sand/dom'
+import { chipButton, chipPopover, derive, div, dynamicChild, icon, popupTrigger, shine, show, sig, span, type IconName } from '@sand/dom'
 import { plural } from '@sand/kit'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
@@ -33,7 +33,7 @@ const chipTitle = (git: GitStatus | undefined) => {
 const branchLabel = (model: Model) => {
   const git = model.status.get()
   const branch = git?.branch ?? ''
-  if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-box-trim' }, 'naming…'))]
+  if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-box-trim' }, 'Naming…'))]
   return [glyph(git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-box-trim' }, branch.replace(/^sand\//, ''))]
 }
 
@@ -74,6 +74,7 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
         title: () => chipTitle(model.status.get()),
         ...popupTrigger(open),
         active: open,
+        menu: true,
         onClick: toggle,
       },
       ...(pr ? [prLabel(pr, isBehind(model.status.get()))] : branchLabel(model)),
@@ -83,6 +84,6 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
   return div(
     { class: 'flex min-w-0 items-center' },
     dynamicChild(key, trigger),
-    show(open, () => popover(close, { class: 'bottom-full right-0 mb-2 w-80 max-w-full' }, ...gitMenu(ctx, model, close))),
+    show(open, () => chipPopover(close, { class: 'right-0' }, ...gitMenu(ctx, model, close))),
   )
 }

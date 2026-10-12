@@ -1,6 +1,5 @@
-import { derive, div, dynamicChild, effect, errorMessage, keys, p, secondaryAction, sig, textInput } from '@sand/dom'
+import { derive, div, dynamicChild, effect, errorMessage, errorText, keys, note, secondaryAction, show, sig, textInput } from '@sand/dom'
 import type { Context } from 'drydock'
-import { note } from '../components'
 import { pairInvite } from '../pair/invite'
 import { inviteBody } from '../pair/links'
 import type { DeviceSource } from '../source'
@@ -26,10 +25,10 @@ const pasteRow = (source: DeviceSource, joined: (name: string) => void) => {
     note('Or paste a link from the other PC'),
     div(
       { class: 'flex items-center gap-2' },
-      textInput({ class: 'bg-neutral-900', placeholder: 'Link from the other PC', 'aria-label': 'Link from the other PC', bindValue: link, onKeyDown: keys({ Enter: () => void connect() }) }),
+      textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Link from the other PC', bindValue: link, onKeyDown: keys({ Enter: () => void connect() }) }),
       secondaryAction({ disabled: () => busy.get() || !link.get().trim(), onClick: () => void connect() }, () => (busy.get() ? 'Connecting…' : 'Connect')),
     ),
-    p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !error.get() }, error),
+    show(() => !!error.get(), () => errorText(error)),
   )
 }
 
@@ -45,10 +44,10 @@ export const joinStep = (ctx: Context<'wire'>, source: DeviceSource, joined: (na
   const body = derive(() => ({ current: invite.get(), failure: error.get() }))
   return div(
     { class: 'flex flex-col gap-4' },
-    note('On the other PC, open Settings → Your devices → Add a PC → It already has sand, and paste this link there.'),
+    note('On the other PC, open Settings → Devices → Add a PC → It already has sand, and paste this link there.'),
     dynamicChild(body, ({ current, failure }) => {
       if (current) return inviteBody(current, source.listenOnLan, 'pc')
-      return note(failure ? `Couldn't create a link: ${errorMessage(failure)}` : 'Creating a link…')
+      return failure ? errorText(`Couldn't create a link: ${errorMessage(failure)}`) : note('Creating a link…')
     }),
     pasteRow(source, joined),
   )

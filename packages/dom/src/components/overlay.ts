@@ -1,8 +1,23 @@
-import { div, event, type Child, type Props } from '@vaakx-dev/vrui'
+import { div, event, read, show, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { layer, modal } from '../shell/layers'
 import { iconButton } from './button'
-import { headTitle } from './page-head'
+import { closeButton } from './close'
+import { headTitle, paneHead } from './page-head'
+
+export type SheetSize = 'sm' | 'md' | 'lg'
+
+export type SheetProps = Props<HTMLDivElement> & { size?: SheetSize }
+
+export interface SheetHeadProps {
+  title: Child
+  close?: () => void
+  back?: () => void
+  backShown?: MaybeReactive<boolean>
+  actions?: Child
+}
+
+const sheetWidths: Record<SheetSize, string> = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-xl' }
 
 export const overlay = (close: () => void, ...children: Child[]) => {
   const previous = document.activeElement
@@ -16,46 +31,32 @@ export const overlay = (close: () => void, ...children: Child[]) => {
   )
 }
 
-export const sheet = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
+export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...children: Child[]) =>
   div(
     {
       role: 'dialog',
       ...props,
-      class: ['flex max-h-full w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-neutral-800 shadow-xl ring-1 ring-neutral-700 animate-pop', extra],
+      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-neutral-800 shadow-xl ring-1 ring-neutral-700 animate-pop', sheetWidths[size], extra],
     },
     ...children,
   )
 
-export const sheetHead = (title: Child, close: () => void, ...extra: Child[]) =>
-  div(
-    { class: 'flex shrink-0 items-center gap-3 pt-3 pr-3 pb-1 pl-5' },
+export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
+  const led = () => Boolean(back) && read(backShown)
+  return paneHead(
+    { led },
+    back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', onClick: back }, icon('back', 16))) : null,
     headTitle(2, title),
-    ...extra,
-    iconButton({ title: 'Close', onClick: close }, icon('x')),
-  )
-
-export const sheetBody = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
-  div({ ...props, class: ['flex min-h-0 flex-col overflow-auto px-5 pt-1 pb-5', extra] }, ...children)
-
-export const sheetFoot = (...children: Child[]) =>
-  div({ class: 'flex shrink-0 items-center justify-end gap-2 border-t border-neutral-700 px-5 py-3' }, ...children)
-
-export const drawer = (close: () => void, { class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) => {
-  const previous = document.activeElement
-  return div(
-    {
-      class: [layer.drawer, 'fixed inset-0 flex justify-end bg-black/50 animate-fade'],
-      onMouseDown: event(close, { self: true }),
-      onMount: node => modal(node, close, previous),
-    },
-    div(
-      {
-        role: 'dialog',
-        ...props,
-        class: ['flex h-full w-full max-w-lg flex-col bg-neutral-900 shadow-xl animate-slide', extra],
-        style: { padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) 0' },
-      },
-      ...children,
-    ),
+    actions ?? null,
+    close ? closeButton({ onClick: close }) : null,
   )
 }
+
+export const sheetBody = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
+  div({ ...props, class: ['flex min-h-0 flex-col gap-4 overflow-auto px-4 pt-1 pb-4', extra] }, ...children)
+
+export const sheetFoot = (...children: Child[]) =>
+  div({ class: 'flex shrink-0 items-center justify-end gap-2 border-t border-neutral-700 px-4 py-3' }, ...children)
+
+export const sheetStep = (body: Child, ...foot: Child[]) =>
+  div({ class: 'flex min-h-0 flex-1 flex-col' }, sheetBody({}, body), foot.length ? sheetFoot(...foot) : null)

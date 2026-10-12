@@ -1,5 +1,21 @@
 import type { FollowUpMode } from '@sand/web-client/contract'
-import { delayed, derive, div, dropdown, dynamicChild, icon, iconButton, plainButton, popoverItem, show, span, spinner, type IconName, type Sig } from '@sand/dom'
+import {
+  actionTones,
+  choiceItem,
+  delayed,
+  derive,
+  div,
+  dropdown,
+  dynamicChild,
+  icon,
+  iconButton,
+  plainButton,
+  show,
+  span,
+  spinner,
+  type IconName,
+  type Sig,
+} from '@sand/dom'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'queue' | 'steer' | 'save' | 'stop' | 'busy' | 'capture'
@@ -19,8 +35,7 @@ const titles: Record<Exclude<Look, 'capture'>, string> = {
 const tone = (look: Look) => {
   if (look === 'busy') return 'cursor-default bg-neutral-700 text-neutral-500'
   if (look === 'off') return 'cursor-default bg-accent-950 text-accent-400'
-  if (look === 'stop') return 'bg-danger-500 text-white hover:bg-danger-600'
-  return 'bg-accent-500 text-neutral-950 hover:bg-accent-600'
+  return look === 'stop' ? actionTones.danger : actionTones.primary
 }
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
@@ -49,21 +64,16 @@ const glyphOf = (model: Model, look: Look): IconName | 'busy' => {
 }
 
 const option = (model: Model, close: () => void, value: FollowUpMode) =>
-  popoverItem(
+  choiceItem(
     {
-      active: () => model.mode.get() === value,
-      class: 'py-1',
+      icon: icons[value],
+      selected: () => model.mode.get() === value,
       onClick: () => {
         model.mode.set(value)
         close()
       },
     },
-    span({ class: 'inline-flex text-neutral-500' }, icon(icons[value], 16)),
-    span({ class: 'min-w-0 flex-1 text-sm text-neutral-100' }, titles[value]),
-    show(
-      () => model.mode.get() === value,
-      () => span({ class: 'inline-flex text-accent-400' }, icon('check', 14)),
-    ),
+    span({ class: 'min-w-0 flex-1' }, titles[value]),
   )
 
 const modeMenu = (model: Model) =>

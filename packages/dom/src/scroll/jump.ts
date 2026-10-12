@@ -1,5 +1,5 @@
 import { div, type Sig } from '@vaakx-dev/vrui'
-import { plainButton } from '../components/button'
+import { floatButton } from '../components/float'
 import { icon } from '../icons/lucide'
 import { layer } from '../shell/layers'
 
@@ -10,12 +10,5 @@ export const jumpButton = (shown: Sig<boolean>, jump: () => void) =>
       style: { bottom: 'var(--dock-h, 0px)' },
       hidden: shown.map(value => !value),
     },
-    plainButton(
-      {
-        title: 'Jump to latest',
-        class: 'pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-neutral-800 text-neutral-300 shadow-lg ring-1 ring-neutral-700 hover:bg-neutral-700 hover:text-neutral-100',
-        onClick: jump,
-      },
-      icon('down', 15),
-    ),
+    floatButton({ size: 'sm', title: 'Jump to latest', 'aria-label': 'Jump to latest', class: 'pointer-events-auto', onClick: jump }, icon('down', 16)),
   )

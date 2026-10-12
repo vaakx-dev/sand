@@ -1,4 +1,4 @@
-import { appIcon, derive, div, dropdown, dynamicChild, icon, iconButton, layer, plainButton, projectAvatar, show, sidebarToggle, span, tildeHome, type Pulse, type Sig } from '@sand/dom'
+import { div, dot, dropdown, icon, iconButton, layer, navButton, paneHead, projectAvatar, show, showSideButton, sideHidden, span, tildeHome, type Pulse, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { renameSession, sessionMenu } from './menu'
 import { parentCrumb, parentOf } from './parent'
@@ -8,14 +8,9 @@ import type { Slots } from './slots'
 const agentsWorking = (ctx: Context) =>
   Boolean(ctx.jobs?.list().some(job => job.status === 'running') || ctx.threads?.list().some(thread => thread.info.kind === 'agent' && thread.running))
 
-const sidebarButton = (narrow: Sig<boolean>, onClick: () => void) =>
-  dynamicChild(narrow, value =>
-    value ? iconButton({ title: 'Threads', 'aria-label': 'Threads', onClick }, appIcon(20)) : sidebarToggle({ title: 'Show the sidebar', 'aria-label': 'Show the sidebar', onClick }),
-  )
-
 const projectCrumb = (ctx: Context, changes: Pulse, cwd: Sig<string | undefined>, name: Sig<string>) =>
   span(
-    { class: 'hidden max-w-48 shrink-0 items-center gap-2 text-neutral-400 md:flex', title: cwd.map(path => tildeHome(path ?? '')) },
+    { class: 'hidden max-w-48 shrink-0 items-center gap-1.5 text-neutral-400 md:flex', title: cwd.map(path => tildeHome(path ?? '')) },
     projectAvatar(name, changes.read(() => projectIconUrl(ctx, cwd.get()))),
     span({ class: 'truncate' }, name),
   )
@@ -23,9 +18,9 @@ const projectCrumb = (ctx: Context, changes: Pulse, cwd: Sig<string | undefined>
 const titleMenu = (ctx: Context, title: Sig<string>) =>
   dropdown({
     trigger: (press, open) =>
-      plainButton(
+      navButton(
         {
-          class: ['flex h-8 min-w-0 items-center gap-1 rounded-lg px-2 hover:bg-neutral-800', () => (open.get() ? 'bg-neutral-800' : '')],
+          active: open,
           title,
           ...press,
           onDblClick: () => void renameSession(ctx),
@@ -40,7 +35,7 @@ const panelButton = (ctx: Context, changes: Pulse, hidden: Sig<boolean>) =>
   iconButton(
     { class: 'relative', hidden, title: 'Show the panel', 'aria-label': 'Show the panel', onClick: () => ctx.layout?.toggle('aside', true) },
     icon('panel'),
-    show(changes.read(() => agentsWorking(ctx)), () => span({ class: 'absolute right-1 top-1 h-2 w-2 rounded-full bg-accent-400', title: 'Agents running' })),
+    show(changes.read(() => agentsWorking(ctx)), () => span({ class: 'absolute right-1 top-1 flex', title: 'Agents running' }, dot('accent'))),
   )
 
 export const headerView = (ctx: Context, changes: Pulse, slots: Slots) => {
@@ -60,11 +55,11 @@ export const headerView = (ctx: Context, changes: Pulse, slots: Slots) => {
   })
   const layout = changes.read(() => ctx.layout?.state())
   const narrow = layout.map(state => state?.narrow ?? false)
-  const sideHidden = derive(() => Boolean(layout.get()?.filled.side) && (narrow.get() || !layout.get()?.open.side))
+  const led = layout.map(sideHidden)
 
-  return div(
-    { class: [layer.sticky, 'relative flex h-12 min-w-0 shrink-0 items-center gap-2 pr-3', () => (sideHidden.get() ? 'pl-2' : 'pl-4')] },
-    show(sideHidden, () => sidebarButton(narrow, () => ctx.layout?.toggle('side'))),
+  return paneHead(
+    { led, class: [layer.sticky, 'relative min-w-0'] },
+    show(led, () => showSideButton(narrow, 'Threads', () => ctx.layout?.toggle('side'))),
     div(
       { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm' },
       show(name.map(Boolean), () => projectCrumb(ctx, changes, cwd, name)),

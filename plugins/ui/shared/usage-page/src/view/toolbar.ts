@@ -1,10 +1,9 @@
-import { delayed, div, dot, dynamicChild, icon, iconButton, segmented, spinner } from '@sand/dom'
+import { delayed, div, dot, dynamicChild, icon, iconButton, segmented, span, spinner } from '@sand/dom'
 import { usageRanges } from '@sand/kit'
 import type { Pc } from '../data/types'
 import type { UsageModel } from '../model'
 import { allPcs } from '../prefs'
 import { rangeLabel } from '../range'
-import { spacer } from './parts'
 
 const pcChoice = (pc: Pc) => ({ value: pc.id, label: pc.name, title: pc.online ? 'Online' : 'Offline', mark: dot(pc.online ? 'success' : 'neutral') })
 
@@ -16,14 +15,14 @@ const pcFilter = (model: UsageModel) =>
 const reloadButton = (model: UsageModel) =>
   iconButton(
     { size: 'sm', title: 'Reload usage', onClick: model.refresh, disabled: model.busy },
-    dynamicChild(delayed(model.busy), waiting => (waiting ? spinner() : icon('reload', 13))),
+    dynamicChild(delayed(model.busy), waiting => (waiting ? spinner() : icon('reload', 14))),
   )
 
 export const toolbar = (model: UsageModel) =>
   div(
     { class: 'flex flex-wrap items-center gap-2' },
     pcFilter(model),
-    spacer(),
+    span({ class: 'flex-1' }),
     segmented(
       usageRanges.map(value => ({ value, label: rangeLabel(value) })),
       model.range,

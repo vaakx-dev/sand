@@ -1,4 +1,4 @@
-import { div, keys, label, primaryAction, sig, textInput, toggleSwitch } from '@sand/dom'
+import { keys, label, primaryAction, sheetStep, sig, textInput, toggleSwitch } from '@sand/dom'
 import type { KeyKind } from '../../contract'
 import { problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
@@ -31,25 +31,20 @@ export const keyStep = (control: LoginControl, kind: KeyKind, saved: () => void)
     if (ready()) void save()
   }
 
-  return div(
-    { class: 'flex flex-col gap-4' },
-    textInput({
-      class: 'bg-neutral-900',
-      type: 'password',
-      placeholder: placeholders[kind],
-      'aria-label': `${keyNames[kind]} API key`,
-      bindValue: key,
-      onKeyDown: keys({ Enter: submit }),
-      onMount: node => node.focus(),
-    }),
-    takesBaseUrl(kind)
-      ? textInput({ class: 'bg-neutral-900', type: 'url', placeholder: 'Base URL (optional)', 'aria-label': 'Base URL', bindValue: baseUrl, onKeyDown: keys({ Enter: submit }) })
-      : null,
-    problem(() => error.get()),
-    div(
-      { class: 'flex flex-wrap items-center justify-between gap-3' },
+  return sheetStep(
+    [
+      textInput({
+        type: 'password',
+        placeholder: placeholders[kind],
+        'aria-label': `${keyNames[kind]} API key`,
+        bindValue: key,
+        onKeyDown: keys({ Enter: submit }),
+        onMount: node => node.focus(),
+      }),
+      takesBaseUrl(kind) ? textInput({ type: 'url', placeholder: 'Base URL (optional)', 'aria-label': 'Base URL', bindValue: baseUrl, onKeyDown: keys({ Enter: submit }) }) : null,
+      problem(() => error.get()),
       label({ class: 'flex items-center gap-2 text-xs text-neutral-400' }, toggleSwitch({ on: share, 'aria-label': 'Share with my PCs', onClick: share.toggle() }), 'Share with my PCs'),
-      primaryAction({ disabled: () => !ready(), onClick: submit }, 'Save'),
-    ),
+    ],
+    primaryAction({ disabled: () => !ready(), onClick: submit }, 'Save'),
   )
 }

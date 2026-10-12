@@ -12,7 +12,7 @@ export default definePlugin({
   uses: {
     pulls: 'no PR status or Open PR item',
     worktrees: 'no Move to a worktree or Regenerate name items',
-    panels: 'no View edits item',
+    panels: 'no Open in Edits item',
     turns: 'no Catch up with main item',
     notify: 'a failed Catch up with main is not reported',
   },

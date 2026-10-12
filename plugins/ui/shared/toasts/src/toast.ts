@@ -1,5 +1,5 @@
 import type { NotifyAction } from './contract'
-import { copyButton, div, effect, icon, iconButton, onTimeout, primaryAction, sig, span, untrack, type Sig } from '@sand/dom'
+import { closeButton, copyButton, div, effect, icon, onTimeout, primaryAction, sig, span, untrack, type Sig } from '@sand/dom'
 
 export interface Toast {
   id: number
@@ -39,7 +39,7 @@ export const toastView = (entry: Sig<Toast>, close: (toast: Toast) => void) => {
       onMouseEnter: () => hovered.set(true),
       onMouseLeave: () => hovered.set(false),
     },
-    error && span({ class: 'mt-1 flex h-5 shrink-0 items-center text-danger-400' }, icon('alert', 15)),
+    error && span({ class: 'mt-1 flex h-5 shrink-0 items-center text-danger-400' }, icon('alert', 14)),
     div(
       { class: 'min-w-0 flex-1 py-1' },
       span({ class: 'block max-h-48 overflow-auto whitespace-pre-wrap wrap-anywhere' }, toast.text),
@@ -47,9 +47,9 @@ export const toastView = (entry: Sig<Toast>, close: (toast: Toast) => void) => {
         div(
           { class: 'mt-2 flex items-center gap-1' },
           toast.action && actionButton(toast.action, () => close(toast)),
-          error && copyButton({ text: () => toast.text, label: 'Copy error' }),
+          error && copyButton({ text: () => toast.text, label: 'Copy' }),
         ),
     ),
-    iconButton({ size: 'sm', title: 'Dismiss', onClick: () => close(toast) }, icon('x', 13)),
+    closeButton({ title: 'Dismiss', size: 'sm', onClick: () => close(toast) }),
   )
 }

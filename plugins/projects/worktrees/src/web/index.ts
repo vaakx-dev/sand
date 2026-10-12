@@ -50,7 +50,7 @@ export default definePlugin({
     ctx.watch('commands', commands =>
       commands?.add({
         name: 'worktree',
-        title: 'Move to worktree',
+        title: 'Move to a worktree…',
         description: 'Move this thread into its own git worktree and branch, taking its changes with it',
         source: 'local',
         run: worktrees.openMove,

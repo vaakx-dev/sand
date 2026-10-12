@@ -1,4 +1,4 @@
-import { div, form, keys, preventThen, primaryAction, secondaryAction, sig, textInput } from '@sand/dom'
+import { form, keys, preventThen, primaryAction, secondaryAction, sheetBody, sheetFoot, sig, textInput } from '@sand/dom'
 import { openSheet } from './overlay'
 
 export const ask = (cancels: Set<() => void>, title: string, value = '') =>
@@ -12,14 +12,13 @@ export const ask = (cancels: Set<() => void>, title: string, value = '') =>
     const cancel = () => finish()
     cancels.add(cancel)
     const close = openSheet(
-      title,
-      cancel,
-      keys({ Escape: cancel }, { stop: true }),
+      { title, size: 'md', close: cancel, keydown: keys({ Escape: cancel }, { stop: true }) },
       form(
-        { class: 'flex flex-col', onSubmit: preventThen(() => finish(text.get())) },
-        div(
-          { class: 'px-4 pt-2 pb-1' },
+        { class: 'flex min-h-0 flex-col', onSubmit: preventThen(() => finish(text.get())) },
+        sheetBody(
+          {},
           textInput({
+            'aria-label': title,
             bindValue: text,
             onMount: node => {
               node.focus()
@@ -27,7 +26,7 @@ export const ask = (cancels: Set<() => void>, title: string, value = '') =>
             },
           }),
         ),
-        div({ class: 'flex justify-end gap-2 px-4 pt-3 pb-4' }, secondaryAction({ onClick: cancel }, 'Cancel'), primaryAction({ type: 'submit' }, 'Save')),
+        sheetFoot(secondaryAction({ onClick: cancel }, 'Cancel'), primaryAction({ type: 'submit' }, 'Save')),
       ),
     )
   })

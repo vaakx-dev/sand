@@ -28,7 +28,7 @@ export const runMenu = (ctx: Ctx, open: () => void, run: AgentRun): MenuSpec => 
   const actions: NavAction[] = [
     ...(ctx.panels ? [openAction(open)] : []),
     ...(stop ? [stopAction(ctx, stop)] : []),
-    { id: 'copy-title', label: 'Copy title', icon: 'copy', group: 'copy', run: () => copyWithNotice(ctx.notify, run.title, 'title') },
+    { id: 'copy-title', label: 'Copy title', icon: 'copy', group: 'copy', tile: true, run: () => copyWithNotice(ctx.notify, run.title, 'title') },
   ]
   return { title: run.title, subtitle: run.kind === 'workflow' ? 'Workflow' : 'Agent', actions }
 }

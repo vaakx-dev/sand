@@ -1,9 +1,9 @@
 import { contextMenu, derive, div, list, show } from '@sand/dom'
-import { chipButton, runChip } from './run'
+import { runButton, runChip } from './run'
 import type { Working } from './working'
 
 const moreChip = (working: Working) =>
-  chipButton(working, { class: 'shrink-0 text-neutral-400', title: derive(() => `${working.more.get()} more running`) }, derive(() => `+${working.more.get()} more`))
+  runButton(working, { title: derive(() => `${working.more.get()} more running`) }, derive(() => `+${working.more.get()} more`))
 
 export const agentsChip = (working: Working) => {
   const menu = contextMenu()

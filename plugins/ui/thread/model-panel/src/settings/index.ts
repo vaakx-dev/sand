@@ -1,4 +1,4 @@
-import { div, dynamicChild, p, show, type Pulse } from '@sand/dom'
+import { div, dynamicChild, errorText, show, type Pulse } from '@sand/dom'
 import type { PanelContext } from '../actions'
 import { defaultsSection } from './defaults'
 import { favouritesPage } from './favourites'
@@ -26,7 +26,7 @@ export const modelsPage = (ctx: PanelContext, changes: Pulse) => {
   const kit = createKit(ctx, changes)
   return div(
     { class: 'flex flex-col gap-6' },
-    show(kit.problem.map(Boolean), () => p({ class: 'px-1 text-xs wrap-anywhere text-danger-400' }, kit.problem)),
+    show(kit.problem.map(Boolean), () => div({ class: 'px-1' }, errorText(kit.problem))),
     dynamicChild(kit.view.map(viewKey), () => subpage(kit)),
   )
 }

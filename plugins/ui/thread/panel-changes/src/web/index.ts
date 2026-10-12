@@ -88,7 +88,7 @@ export default definePlugin({
 
     const paint = () => {
       const thread = ctx.threads.current()
-      empty.set(thread ? 'No edits yet.' : 'No thread selected.')
+      empty.set(thread ? 'No edits yet' : 'No thread selected')
       const family = thread ? familyOf(ctx, thread) : []
       const members = familyKey(family)
       const open = control.shown()

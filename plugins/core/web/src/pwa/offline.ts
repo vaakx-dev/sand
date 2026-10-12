@@ -20,7 +20,7 @@ a{display:inline-block;padding:8px 16px;border:1px solid ${neutral['600']};borde
 <main>
 <h1>sand can't reach this PC right now</h1>
 <p>Check that the PC is on and that this device is on its network.</p>
-<a href="/">Try again</a>
+<a href="/">Retry</a>
 </main>
 </body>
 </html>`

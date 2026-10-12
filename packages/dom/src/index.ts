@@ -33,16 +33,39 @@ export { addressParam, addressParams, addressState, onAddressChange, pushAddress
 export { nearEnd, toEnd } from './scroll/end'
 export { dockFade } from './scroll/fade'
 export { jumpButton } from './scroll/jump'
-export { controlButton, iconButton, navButton, plainButton, primaryAction, quietButton, rowButton, secondaryAction } from './components/button'
-export { appIcon, appIconUrl, sidebarToggle } from './components/app-icon'
-export { searchInput, searchRow, textInput } from './components/field'
-export { badge, checkMark, chevron, doneMark, dot, elapsed, hint, okMark, progressSteps, radioMark, spinner, statusLine, working, type Tone } from './components/marks'
+export {
+  actionTones,
+  controlButton,
+  dangerAction,
+  iconButton,
+  linkButton,
+  navButton,
+  plainButton,
+  primaryAction,
+  quietButton,
+  rowButton,
+  secondaryAction,
+  type ButtonProps,
+  type ToggleProps,
+} from './components/button'
+export { closeButton, type CloseProps } from './components/close'
+export { floatButton, type FloatProps } from './components/float'
+export { appIcon, appIconUrl, showSideButton, sideHead, sideHidden, sidebarToggle } from './components/app-icon'
+export { searchField, searchInput, searchRow, textInput } from './components/field'
+export { badge, checkMark, chevron, doneMark, dot, elapsed, hint, okMark, progressSteps, radioMark, shrinkBadge, spinner, statusLine, working, type Tone } from './components/marks'
+export { stateMark, stepMark, type StateMark, type StepState } from './components/state-marks'
+export { statusBadge, statusLabel, type RunStatus } from './components/status'
+export { markerLine, type MarkerProps } from './components/marker'
+export { callout, errorText, note, type CalloutLook, type CalloutTone } from './components/notes'
 export { shine } from './components/shine'
-export { groupLabel, menuItem, menuSeparator, popover, popoverItem } from './components/menu'
-export { chipButton, chipPopover, pressOpens } from './components/chip'
-export { statusBanner } from './components/banner'
+export { groupLabel, menuSeparator, popover } from './components/menu'
+export { choiceItem, menuItem, popoverItem, type ChoiceItemProps, type MenuItemProps, type MenuSize } from './components/menu-item'
+export { chipButton, chipPopover, pressOpens, type ChipProps } from './components/chip'
+export { bannerTitle, statusBanner, type BannerProps, type BannerTone } from './components/banner'
 export { textRule } from './components/rule'
-export { hintRow, itemRow, rowList, rowWarning, sectionRow } from './components/rows'
+export { errorRow, hintRow, itemRow, rowList, rowWarning, sectionRow } from './components/rows'
+export { deviceCode, waitingLine } from './components/device-code'
+export { paneRow, type PaneRowProps } from './components/pane-row'
 export { contextMenu, menuLayer, type ContextMenu } from './components/context-menu/menu'
 export { pressMenu, type PressAt } from './components/context-menu/press'
 export { choiceChips } from './components/context-menu/chips'
@@ -50,7 +73,7 @@ export type { MenuRequest, MenuSpec } from './components/context-menu/request'
 export { dropdown } from './components/dropdown'
 export { listbox, type Listbox } from './components/listbox/model'
 export { listboxRow, optionProps } from './components/listbox/row'
-export { drawer, overlay, sheet, sheetBody, sheetFoot, sheetHead } from './components/overlay'
+export { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep, type SheetHeadProps, type SheetProps, type SheetSize } from './components/overlay'
 export { toggleSwitch } from './components/toggle'
 export { segmented, selectMenu, settingsRow, settingsSection, type Choice } from './components/settings'
 export { copyButton } from './components/copy'

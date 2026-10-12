@@ -39,14 +39,14 @@ const partText = (part: UserPart) => {
 
 export const emptyLine = (): Line => note('empty', 'new thread · type below to start')
 
-export const loadingLine = (): Line => note('loading', 'loading…')
+export const loadingLine = (): Line => note('loading', 'Loading…')
 
 export const failedLine = (message: string, retry: () => void): Line => ({
   key: 'failed',
   tag: 'error',
   tone: 'error',
   text: '',
-  node: span(`couldn't load this thread: ${message} · `, plainButton({ class: 'underline hover:text-neutral-200', onClick: retry }, 'retry')),
+  node: span(`couldn't load this thread: ${message} · `, plainButton({ class: 'underline hover:text-neutral-200', onClick: retry }, 'Retry')),
 })
 
 export const itemLines = (item: Item, registry: RendererRegistry, thread: string, sections: Sections): Line[] => {

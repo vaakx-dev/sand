@@ -16,7 +16,7 @@ const draftOf = (page: PalettePage, memory: PageMemory, initial: string) => {
 const emptyText = (page: PalettePage, query: string) => {
   if (typeof page.empty === 'function') return page.empty(query)
   if (page.empty !== undefined) return page.empty
-  return page.field || page.review ? '' : 'No matches.'
+  return page.field || page.review ? '' : 'No matches'
 }
 
 export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {

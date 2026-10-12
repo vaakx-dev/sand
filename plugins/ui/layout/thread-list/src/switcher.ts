@@ -1,44 +1,50 @@
 import type { NavItem, NavList } from '@sand/dom'
-import { div, effect, list, navItems, option, select, sig, type Pulse } from '@sand/dom'
+import { choiceItem, dropdown, icon, navButton, navItems, paneHead, span, stateMark, working, type Pulse } from '@sand/dom'
 
 const mark = (item: NavItem) => {
-  if (item.state === 'draft') return 'Draft · '
-  if (item.state === 'running' || item.state === 'background') return '◌ '
-  return item.unread ? '✦ ' : ''
+  if (item.state === 'draft') return stateMark('draft')
+  if (item.state === 'running') return working()
+  if (item.state === 'background') return stateMark('agent')
+  return item.unread ? stateMark('unread') : null
 }
 
-const choices = (nav: NavList) => [{ id: '', label: 'New thread' }, ...navItems(nav).map(item => ({ id: item.id, label: `${mark(item)}${item.title}` }))]
+const titleOf = (nav: NavList, id: string) => navItems(nav).find(item => item.id === id)?.title ?? 'New thread'
 
 export const switcher = (nav: NavList, changes: Pulse, create: () => void) => {
-  const items = changes.read(() => choices(nav))
   const current = changes.read(() => {
     const selected = nav.selected?.() ?? ''
-    return items.get().some(item => item.id === selected) ? selected : ''
+    return navItems(nav).some(item => item.id === selected) ? selected : ''
   })
-  const choice = sig(current.get())
-  effect(() => choice.set(current.get()))
+  const label = changes.read(() => titleOf(nav, current.get()))
+  const row = (id: string, close: () => void, ...children: (HTMLElement | string | null)[]) =>
+    choiceItem(
+      {
+        icon: id ? undefined : 'compose',
+        selected: () => current.get() === id,
+        onClick: () => {
+          close()
+          if (id) nav.select(id)
+          else create()
+        },
+      },
+      ...children,
+    )
 
-  const showCurrent = () => {
-    choice.set('')
-    choice.set(current.get())
-  }
-
-  const pick = () => {
-    if (field.value) return nav.select(field.value)
-    showCurrent()
-    create()
-  }
-
-  const field = select({ class: 'max-w-sm rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-100', 'aria-label': 'Thread', bindValue: choice, onChange: pick })
-
-  return div(
-    { class: 'flex h-10 items-center gap-2 bg-neutral-950 px-4 text-xs text-neutral-400' },
-    'Thread',
-    list(
-      items,
-      item => item.id,
-      item => option({ value: item.get().id, selected: () => item.get().id === choice.get() }, item.map(entry => entry.label)),
-      field,
-    ),
+  return paneHead(
+    { class: 'bg-neutral-950' },
+    span({ class: 'shrink-0 text-xs text-neutral-400' }, 'Thread'),
+    dropdown({
+      menuClass: 'w-80 max-w-full max-h-96 overflow-auto',
+      trigger: (press, open) =>
+        navButton(
+          { active: open, class: 'max-w-sm', 'aria-label': 'Thread', ...press },
+          span({ class: 'min-w-0 truncate text-neutral-100' }, label),
+          span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
+        ),
+      items: close => [
+        row('', close, span({ class: 'min-w-0 flex-1 truncate' }, 'New thread')),
+        ...navItems(nav).map(item => row(item.id, close, mark(item), span({ class: 'min-w-0 flex-1 truncate' }, item.title))),
+      ],
+    }),
   )
 }

@@ -9,9 +9,9 @@ export const labelEditor = (value: string, done: (label: string | undefined) => 
     onKeyDown: stopThen(keys({ Enter: () => done(field.value), Escape: () => done(undefined) })),
   })
   return div(
-    { class: 'flex shrink-0 gap-2 px-3 pt-2 pb-3' },
+    { class: 'flex shrink-0 gap-2 px-2 pt-2 pb-3' },
     field,
-    primaryAction({ onClick: () => done(field.value) }, 'Save'),
     secondaryAction({ onClick: () => done(undefined) }, 'Cancel'),
+    primaryAction({ onClick: () => done(field.value) }, 'Save'),
   )
 }

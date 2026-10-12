@@ -1,5 +1,4 @@
-import { dynamicChild, segmented, type Sig } from '@sand/dom'
-import { block, heading, spacer } from '../parts'
+import { dynamicChild, segmented, settingsSection, type Sig } from '@sand/dom'
 import { breakdownList } from './list'
 import { breakdowns, rowsOf, type Breakdown, type RowSource } from './rows'
 
@@ -14,8 +13,8 @@ const labels = (hourly: boolean): Record<Breakdown, string> => ({
 export const breakdownView = (source: RowSource, view: Sig<Breakdown>) => {
   const names = labels(source.usage.bucket === 'hour')
   const choices = breakdowns.map(value => ({ value, label: names[value] }))
-  return block(
-    [heading('Breakdown'), spacer(), segmented(choices, view, value => view.set(value), { label: 'Breakdown' })],
+  return settingsSection(
+    { title: 'Breakdown', action: segmented(choices, view, value => view.set(value), { label: 'Breakdown' }) },
     dynamicChild(view, current => breakdownList(rowsOf(source, current), source.usage.accounts)),
   )
 }

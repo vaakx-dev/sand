@@ -18,7 +18,8 @@ export default definePlugin({
   },
   apply(ctx) {
     const store = pageStore()
-    const narrow = pulse(ctx, ['layout.change'], ['layout']).read(() => ctx.layout?.state().narrow ?? false)
+    const layout = pulse(ctx, ['layout.change'], ['layout'])
+    const narrow = layout.read(() => ctx.layout?.state().narrow ?? false)
     let uncover: Dispose | undefined
 
     const hide = () => {
@@ -33,9 +34,10 @@ export default definePlugin({
     const render = () => {
       hide()
       if (!store.current.get()) return
+      const shell = ctx.layout
       uncover = cover(
-        ctx.layout,
-        () => sideView({ store, narrow, choose, back: close }),
+        shell,
+        () => sideView({ store, narrow, choose, back: close, hide: shell && (() => shell.toggle('side', false)) }),
         () => pageView({ store, narrow, showPages, close }),
       )
     }
@@ -80,7 +82,7 @@ export default definePlugin({
         document.body,
         secondaryAction(
           { size: 'sm', class: [layer.drawer, 'fixed bottom-3 left-3 opacity-75'], onClick: toggle },
-          icon('gear', 12),
+          icon('gear', 14),
           'Settings',
         ),
       )

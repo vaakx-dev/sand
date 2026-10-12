@@ -24,7 +24,7 @@ const command = (ctx: Context, name: string) => () => void ctx.commands?.run(nam
 
 export const sessionActions = (ctx: Context<'threads'>, thread: Thread) => {
   const group = 'This thread'
-  const items: PaletteItem[] = [{ id: 'command:name', group, icon: 'pencil', label: 'Rename thread', detail: thread.info.title ?? 'Untitled thread', page: () => renamePage(ctx, thread) }]
+  const items: PaletteItem[] = [{ id: 'command:name', group, icon: 'pencil', label: 'Rename…', detail: thread.info.title ?? 'Untitled thread', search: 'rename thread title', page: () => renamePage(ctx, thread) }]
   if (ctx.commands?.get('fork')) items.push({ id: 'command:fork', group, icon: 'fork', label: 'Fork from an earlier message', run: command(ctx, 'fork') })
   if (ctx.commands?.get('model')) items.push({ id: 'command:model', group, icon: 'bot', label: 'Switch model', detail: ctx.models?.describe(thread.id), run: command(ctx, 'model') })
   items.push({

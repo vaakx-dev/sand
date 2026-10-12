@@ -27,4 +27,10 @@ export const startView = (model: WelcomeModel, control: LoginControl) =>
   )
 
 export const addView = (model: WelcomeModel) =>
-  setupScreen(setupHeading(() => model.add.title.get()), setupColumn(model.add.view(), div({ class: 'flex' }, quietButton({ onClick: model.back }, 'Back'))))
+  setupScreen(
+    setupHeading(() => model.add.title.get()),
+    setupColumn(
+      div({ class: 'flex flex-col overflow-hidden rounded-2xl bg-neutral-800 pt-3 ring-1 ring-neutral-700' }, model.add.view()),
+      div({ class: 'flex' }, quietButton({ onClick: model.back }, 'Back')),
+    ),
+  )

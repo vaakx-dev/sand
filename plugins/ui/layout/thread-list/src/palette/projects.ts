@@ -25,7 +25,7 @@ const hideAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
 })
 
 const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
-  label: 'Rename',
+  label: 'Rename…',
   icon: 'pencil',
   returnAfter: true,
   async run() {
@@ -81,7 +81,7 @@ export const newThreadPage = (ctx: Context<'threads'>): PalettePage => ({
   id: 'new-thread',
   title: 'New thread in…',
   placeholder: 'Search projects…',
-  empty: 'No matching projects.',
+  empty: 'No matches',
   items(query) {
     const projects = projectItems(ctx).map(item => ({ ...item, group: undefined }))
     return [...projects.slice(0, 1), quickThreadItem(ctx), ...(ctx.palette?.items('new-thread', query) ?? []), ...projects.slice(1)]

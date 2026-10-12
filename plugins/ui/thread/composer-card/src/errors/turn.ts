@@ -1,4 +1,4 @@
-import { chevron, copyButton, derive, div, dynamicChild, el, icon, iconButton, p, primaryAction, quietButton, secondaryAction, show, sig, span, type Sig } from '@sand/dom'
+import { chevron, closeButton, copyButton, derive, div, dynamicChild, el, icon, note, primaryAction, quietButton, secondaryAction, show, sig, span, type Sig } from '@sand/dom'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../dock/glass'
 import type { Model, TurnError } from '../model'
@@ -15,7 +15,7 @@ const pcHint = ({ via, text }: TurnError) => {
 }
 
 const detailsToggle = (open: Sig<boolean>) =>
-  quietButton({ size: 'sm', 'aria-expanded': () => String(open.get()), onClick: open.toggle() }, chevron(() => open.get(), 12), 'Details')
+  quietButton({ size: 'sm', 'aria-expanded': () => String(open.get()), onClick: open.toggle() }, chevron(() => open.get(), 14), 'Details')
 
 const detailsBlock = (text: string) =>
   div(
@@ -39,14 +39,14 @@ const banner = (ctx: Context, model: Model, error: TurnError) => {
       { class: 'flex flex-col gap-2 pb-1' },
       div(
         { class: 'flex min-h-6 items-center gap-2' },
-        span({ class: ['inline-flex shrink-0', hint ? 'text-warning-400' : ''] }, icon('alert', 13)),
+        span({ class: ['inline-flex shrink-0', hint ? 'text-warning-400' : ''] }, icon('alert', 14)),
         span({ class: ['min-w-0 flex-1 font-medium', hint ? 'text-neutral-100' : ''] }, error.text),
-        iconButton({ size: 'sm', title: 'Dismiss', onClick: () => model.dismiss(error.key) }, icon('x', 13)),
+        closeButton({ title: 'Dismiss', size: 'sm', onClick: () => model.dismiss(error.key) }),
       ),
-      hint && p({ class: 'text-neutral-400' }, hint),
+      hint && note(hint),
       div(
         { class: 'flex flex-wrap items-center gap-2' },
-        hint ? primaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 13), 'Try again') : secondaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 13), 'Retry'),
+        hint ? primaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 14), 'Retry') : secondaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 14), 'Retry'),
         pick && secondaryAction({ size: 'sm', onClick: () => void ctx.commands?.run('model') }, 'Use a model on this PC'),
         more?.toggle,
       ),

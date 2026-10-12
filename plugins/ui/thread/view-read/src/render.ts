@@ -34,7 +34,7 @@ const code = (tool: ToolView, views: ToolViews, highlight: Markdown['highlight']
   return div(
     { class: 'text-xs text-neutral-400' },
     fold(
-      { lines: shown.length, copy: () => text, copyLabel: 'Copy text' },
+      { lines: shown.length, copy: () => text },
       div(
         { class: 'flex gap-3 overflow-auto font-mono' },
         el('pre', { class: 'shrink-0 select-none text-right text-neutral-500 opacity-75' }, shown.map(line => line.number).join('\n')),
@@ -66,7 +66,7 @@ export const readRenderer = (views: ToolViews, highlight: Markdown['highlight'] 
     if (tool.result.isError) return views.errorBody(tool)
     const found = media(tool)
     if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
-    if (found) return div({ class: 'font-mono text-xs text-neutral-400' }, found.name ?? 'document')
+    if (found) return div({ class: 'font-mono text-xs text-neutral-300' }, found.name ?? 'document')
     return code(tool, views, highlight)
   },
 })

@@ -1,5 +1,5 @@
 import type { NavItem } from '@sand/dom'
-import { ago, derive, dot, dynamicChild, elapsed, exactTime, icon, navStatus, show, span, working, type Sig } from '@sand/dom'
+import { ago, derive, dot, dynamicChild, elapsed, exactTime, icon, navStatus, show, span, stateMark, working, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
 
 const busy = new Set(['running', 'background', 'waiting', 'draft'])
@@ -21,7 +21,7 @@ const backgroundLabel = ({ jobs, workflow }: NavItem) => {
 const extraAgents = (item: Sig<NavItem>) =>
   show(
     item.map(value => Boolean(value.jobs)),
-    () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, item.map(value => `+${value.jobs}`), icon('bot', 13)),
+    () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, item.map(value => `+${value.jobs}`), stateMark('agent')),
   )
 
 const left = (until: number) => {
@@ -55,8 +55,8 @@ const backgroundStatus = (item: Sig<NavItem>) =>
   span(
     { class: 'inline-flex items-center gap-1 font-medium text-sky-400', title: item.map(navStatus) },
     dynamicChild(
-      item.map(value => (value.workflow ? 'workflow' : 'bot')),
-      name => icon(name, 14),
+      item.map(value => Boolean(value.workflow)),
+      workflow => (workflow ? icon('workflow', 12) : stateMark('agent')),
     ),
     item.map(backgroundLabel),
     span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
@@ -67,14 +67,14 @@ export const status = (item: Sig<NavItem>, minute: Sig<number>) =>
     if (kind === 'running') return runningStatus(item)
     if (kind === 'background') return backgroundStatus(item)
     if (kind === 'waiting') return span({ class: 'inline-flex items-center gap-1' }, dot('warning'), span({ class: 'font-medium text-warning-400' }, 'Needs you'))
-    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, icon('pencil', 11), 'Draft')
+    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, stateMark('draft'), 'Draft')
     if (kind === 'snoozed')
       return span(
         { class: 'inline-flex items-center gap-1 tabular-nums text-neutral-500', title: () => `Back ${exactTime(item.get().snoozed)}` },
         icon('snooze', 12),
         ticking(minute, () => left(item.get().snoozed ?? Date.now())),
       )
-    if (kind === 'back') return span({ class: 'inline-flex items-center gap-1 font-medium text-accent-400', title: 'Back from snooze' }, icon('snooze', 12), 'back')
-    if (kind === 'unread') return span({ class: 'text-orange-400', title: navStatus(item.get()) }, '✦ new')
+    if (kind === 'back') return span({ class: 'inline-flex items-center gap-1 font-medium text-accent-400', title: 'Back from snooze' }, icon('snooze', 12), 'Back')
+    if (kind === 'unread') return span({ class: 'inline-flex', title: navStatus(item.get()) }, stateMark('unread'))
     return span({ class: 'tabular-nums text-neutral-500', title: () => exactTime(item.get().updated) }, ticking(minute, () => ago(item.get().updated)))
   })

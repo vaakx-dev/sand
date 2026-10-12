@@ -1,5 +1,5 @@
 import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
-import { contextMenu, div, keys, list, quietButton, searchInput, searchRow, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
+import { contextMenu, div, hint, keys, list, quietButton, searchRow, show, span, untrack, type ContextMenu, type Sig } from '@sand/dom'
 import { openSheet } from '../overlay'
 import { pickModel, type PickModel } from './model'
 import { row } from './row'
@@ -16,7 +16,7 @@ const footer = <T>({ listActions, act }: PickModel<T>, options: PickOptions) => 
   const note = [options.status, options.hint].filter(Boolean).join(' · ')
   if (!note && !listActions.length) return null
   return div(
-    { class: 'flex shrink-0 flex-wrap items-center gap-2 border-t border-neutral-700 px-5 py-2 text-xs text-neutral-500' },
+    { class: 'flex shrink-0 flex-wrap items-center gap-2 border-t border-neutral-700 px-4 py-2 text-xs text-neutral-500' },
     note && span({ class: 'min-w-0 flex-1 whitespace-pre-wrap' }, note),
     listActions.map(action => quietButton({ size: 'sm', onClick: () => act(action.id) }, action.label)),
   )
@@ -33,8 +33,7 @@ export const choose = <T>(cancels: Set<() => void>, fine: Sig<boolean>, title: s
     const menu = contextMenu()
     cancels.add(model.cancel)
 
-    const field = searchInput({
-      type: 'search',
+    const search = searchRow({
       placeholder: 'Search…',
       bindValue: model.filter,
       onMount: node => {
@@ -43,15 +42,13 @@ export const choose = <T>(cancels: Set<() => void>, fine: Sig<boolean>, title: s
     })
 
     const close = openSheet(
-      title,
-      model.cancel,
-      keys({ ...model.box.keyMap, Escape: model.cancel }, { stop: true }),
-      searchRow(field),
+      { title, size: 'lg', close: model.cancel, keydown: keys({ ...model.box.keyMap, Escape: model.cancel }, { stop: true }) },
+      search,
       results(model, fine, menu),
       menu.view(),
       show(
         model.shown.map(found => !found.length),
-        () => div({ class: 'p-6 text-center text-sm text-neutral-500' }, items.length ? 'Nothing matches' : (options.empty ?? 'Nothing here')),
+        () => hint(items.length ? 'No matches' : (options.empty ?? 'No items yet')),
       ),
       footer(model, options),
     )

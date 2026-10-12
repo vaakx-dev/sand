@@ -28,7 +28,7 @@ export default definePlugin({
 
     const compute = () => {
       const current = ctx.threads.current()
-      empty.set(current ? 'No agents yet.' : 'No thread selected.')
+      empty.set(current ? 'No agents yet' : 'No thread selected')
       if (!current) {
         runs.set([])
         parent.set(undefined)

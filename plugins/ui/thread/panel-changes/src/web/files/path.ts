@@ -8,7 +8,7 @@ export const nameOf = (path: string) => path.slice(cut(path))
 
 export const pathLabel = (path: () => string) =>
   span(
-    { class: 'flex min-w-0 font-mono' },
+    { class: 'flex min-w-0 font-mono text-xs' },
     span({ class: 'min-w-0 truncate text-neutral-500' }, () => folderOf(path())),
     span({ class: 'max-w-full shrink-0 truncate text-neutral-100' }, () => nameOf(path())),
   )

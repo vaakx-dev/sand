@@ -1,6 +1,6 @@
 import type { Picker } from '@sand/picker/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { icon, menuSeparator, popover, popoverItem, sig, span } from '@sand/dom'
+import { menuSeparator, popover, popoverItem, sig } from '@sand/dom'
 import { reportError, type ProjectsContext } from '../context'
 import { copyEntries, projectEntries, visibilityEntry, type Entry } from './actions'
 
@@ -24,24 +24,20 @@ const deleteItem = (ctx: ProjectsContext, group: ProjectGroup, close: () => void
     close()
     remove().catch(error => reportError(ctx, error))
   }
-  return popoverItem(
-    { class: 'text-danger-400', onClick },
-    span({ class: 'inline-flex' }, icon('alert', 14)),
-    armed.map(on => (on ? 'Click again to delete' : 'Delete project')),
-  )
+  return popoverItem({ tone: 'danger', icon: 'trash', onClick }, armed.map(on => (on ? 'Delete project?' : 'Delete project')))
 }
 
 export const rowMenu = (ctx: ProjectsContext, group: ProjectGroup, close: () => void, looks: Entry[]) => {
   const item = (entry: Entry) =>
     popoverItem(
       {
+        icon: entry.icon,
         disabled: entry.disabled,
         onClick: () => {
           close()
           Promise.resolve(entry.run()).catch(error => reportError(ctx, error))
         },
       },
-      span({ class: 'inline-flex text-neutral-500' }, icon(entry.icon, 14)),
       entry.label,
     )
   const copies = copyEntries(ctx, group)

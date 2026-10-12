@@ -1,6 +1,6 @@
-import { div, keys, label, primaryAction, sig, textInput, type Sig } from '@sand/dom'
+import { keys, label, primaryAction, sheetStep, sig, textInput, type Sig } from '@sand/dom'
 import type { LoginAccount, ServerDraft } from '../../contract'
-import { actions, problem, whileBusy } from '../parts'
+import { problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 
 const ids = (control: LoginControl) => new Set(control.state.get()?.accounts.map(account => account.id))
@@ -45,14 +45,15 @@ export const serverStep = (control: LoginControl, draft: ServerDraft, saved: (na
   }
 
   const field = (value: Sig<string>, placeholder: string, title: string, type = 'text') =>
-    label({ class: 'flex flex-col gap-1 text-xs text-neutral-400' }, title, textInput({ class: 'bg-neutral-900', type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) }))
+    label({ class: 'flex flex-col gap-1 text-xs text-neutral-400' }, title, textInput({ type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) }))
 
-  return div(
-    { class: 'flex flex-col gap-4' },
-    field(name, 'My box', 'Name'),
-    field(url, 'http://localhost:8080/v1', 'URL', 'url'),
-    field(key, 'Only if the server asks for one', 'API key (optional)', 'password'),
-    problem(() => error.get()),
-    actions(primaryAction({ disabled: () => !ready(), onClick: submit }, () => (busy.get() ? 'Checking…' : idleLabel))),
+  return sheetStep(
+    [
+      field(name, 'My box', 'Name'),
+      field(url, 'http://localhost:8080/v1', 'URL', 'url'),
+      field(key, 'Only if the server asks for one', 'API key (optional)', 'password'),
+      problem(() => error.get()),
+    ],
+    primaryAction({ disabled: () => !ready(), onClick: submit }, () => (busy.get() ? 'Checking…' : idleLabel)),
   )
 }

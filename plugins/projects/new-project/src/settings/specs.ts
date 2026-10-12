@@ -26,7 +26,7 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup): MenuSpec =
       id: 'delete',
       group: 'danger',
       label: 'Delete project',
-      icon: 'alert',
+      icon: 'trash',
       danger: true,
       confirm: `Delete ${group.name}? It is removed from sand on every PC. The folders stay.`,
       run: attempt(ctx, () => ctx.projects.remove(group)),

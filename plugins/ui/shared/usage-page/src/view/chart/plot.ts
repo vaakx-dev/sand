@@ -16,9 +16,8 @@ const hoverAt = ({ currentTarget, clientX, clientY }: PointerEvent, count: numbe
   if (!(currentTarget instanceof Element)) return undefined
   const box = currentTarget.getBoundingClientRect()
   const x = Math.min(box.width, Math.max(0, clientX - box.left))
-  const y = Math.min(box.height, Math.max(0, clientY - box.top))
   const index = count > 1 ? Math.round((x / box.width) * (count - 1)) : 0
-  return { index, x: count > 1 ? (index / (count - 1)) * box.width : x, y, width: box.width, height: box.height }
+  return { index, x: box.left + (count > 1 ? (index / (count - 1)) * box.width : x), y: clientY }
 }
 
 const axisLabel = (text: string, top: string) =>

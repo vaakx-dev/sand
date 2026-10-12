@@ -1,9 +1,8 @@
-import { copyButton, derive, div, dynamicChild, effect, errorMessage, onTimeout, p, segmented, show, sig, span, untrack, type Child, type Choice, type Sig } from '@sand/dom'
+import { copyButton, derive, div, dynamicChild, effect, errorMessage, errorText, note, onTimeout, segmented, show, sig, span, untrack, type Child, type Choice, type Sig } from '@sand/dom'
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { HostRoute } from '@sand/host-gateway/contract'
 import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
 import type { Context } from 'drydock'
-import { note } from '../components'
 import { healthDetails } from '../health/details'
 import { listenBox } from '../pair/listen'
 import type { DeviceSource } from '../source'
@@ -42,9 +41,9 @@ const failedBlock = (list: InstallProgress[]) => {
   const last = list.at(-1)
   return div(
     { class: 'flex flex-col gap-3 rounded-xl bg-neutral-900 p-3' },
-    p({ class: 'text-sm text-neutral-100' }, last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
+    errorText(last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
     last?.health ? healthDetails(last.health) : null,
-    note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Your devices.'),
+    note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Devices.'),
   )
 }
 
@@ -109,7 +108,10 @@ export const installStep = (ctx: Context<'wire'>, source: DeviceSource, ready: (
       note(() => (os.get() === 'win' ? 'Open PowerShell on it and paste:' : 'Open a terminal on it and paste:')),
       div(
         { class: 'flex items-start gap-2 rounded-lg bg-neutral-950 py-2 pr-2 pl-3' },
-        span({ class: 'min-w-0 flex-1 py-1 font-mono text-xs text-neutral-200 wrap-anywhere' }, () => command.get() ?? pending()),
+        span(
+          { class: ['min-w-0 flex-1 py-1 font-mono text-xs wrap-anywhere', () => (!command.get() && ticket.error.get() !== undefined ? 'text-danger-400' : 'text-neutral-200')] },
+          () => command.get() ?? pending(),
+        ),
         copyButton({ text: () => command.get() ?? '', label: 'Copy', disabled: () => !command.get() }),
       ),
     )

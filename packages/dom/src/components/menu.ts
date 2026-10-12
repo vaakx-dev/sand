@@ -1,21 +1,6 @@
-import { disposeAll, div, read, type Child, type Props } from '@vaakx-dev/vrui'
+import { disposeAll, div, type Child, type Props } from '@vaakx-dev/vrui'
 import { dismissible, layer } from '../shell/layers'
 import { onPressOutside } from '../shell/press-outside'
-import { rowButton, type ToggleProps } from './button'
-
-export const menuItem = ({ size = 'md', active = false, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
-  rowButton(
-    {
-      ...props,
-      class: [
-        'gap-3 rounded-lg',
-        size === 'sm' ? 'min-h-8 px-2 text-xs' : 'min-h-10 px-3 text-sm',
-        () => (read(active) ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-300'),
-        extra,
-      ],
-    },
-    ...children,
-  )
 
 export const menuSeparator = () => div({ role: 'separator', class: 'mx-2 my-1 h-px bg-neutral-700' })
 
@@ -34,6 +19,3 @@ export const popover = (close: () => void, { class: extra, ...props }: Props<HTM
     },
     ...children,
   )
-
-export const popoverItem = (props: ToggleProps, ...children: Child[]) =>
-  menuItem({ size: 'sm', ...props, class: ['hover:bg-neutral-700 hover:text-neutral-100', props.class] }, ...children)

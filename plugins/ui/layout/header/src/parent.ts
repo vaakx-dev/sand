@@ -25,7 +25,7 @@ export const parentCrumb = (ctx: Context, parent: Sig<ParentLink | undefined>) =
           if (link) void ctx.threads?.back(link.id)
         },
       },
-      icon('up', 13),
+      icon('up', 14),
       span({ class: 'hidden min-w-0 truncate md:inline' }, () => `Sub-agent of ${parent.get()?.title ?? ''}`),
     ),
   )

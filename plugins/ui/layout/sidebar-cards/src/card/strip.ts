@@ -22,7 +22,7 @@ const quickButton = (action: NavAction, parts: StripParts, inline: boolean) =>
         else void action.run()
       }),
     },
-    icon(action.icon ?? 'right', 13),
+    icon(action.icon ?? 'right', 14),
   )
 
 const chips = (action: NavAction, parts: StripParts) => {

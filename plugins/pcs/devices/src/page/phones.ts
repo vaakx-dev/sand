@@ -1,5 +1,5 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { ago, clock, contextMenu, derive, div, hintRow, icon, rowAction, rowList, secondaryAction, settingsRow, settingsSection, show, span, tile, type Sig } from '@sand/dom'
+import { ago, clock, contextMenu, derive, hintRow, icon, itemRow, rowAction, rowList, secondaryAction, settingsSection, show, tile, type Sig } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
@@ -17,25 +17,19 @@ const rename = async (ctx: Context, source: DeviceSource, device: PairedDevice) 
 
 const phoneRow = (ctx: Context, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
   const { id, kind } = device.get()
-  const label = span(
-    { class: 'flex min-w-0 items-center gap-2' },
-    tile(icon(kind === 'phone' ? 'smartphone' : 'monitor', 16)),
-    span({ class: 'truncate' }, () => device.get().name),
-  )
   const detail = () => {
     now.get()
     return id === self ? 'This browser · removing it unpairs it' : used(device.get().lastSeen)
   }
-  const actions = div(
-    { class: 'flex shrink-0 items-center gap-2' },
-    ctx.picker ? rowAction({ label: 'Rename', run: () => void rename(ctx, source, device.get()) }) : null,
-    rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(source.fail) }),
-  )
   const menu = contextMenu()
-  return div(
-    { class: 'flex flex-col', ...menu.target(() => phoneMenu(source, device.get(), id === self)) },
+  return itemRow(
+    menu.target(() => phoneMenu(source, device.get(), id === self)),
+    tile(icon(kind === 'phone' ? 'smartphone' : 'monitor', 16)),
+    () => device.get().name,
+    detail,
+    ctx.picker ? secondaryAction({ size: 'sm', onClick: () => void rename(ctx, source, device.get()) }, 'Rename…') : null,
+    rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(source.fail) }),
     menu.view(),
-    settingsRow(label, actions, detail),
   )
 }
 
@@ -44,11 +38,11 @@ export const phonesSection = (ctx: Context<'wire'>, source: DeviceSource, pair: 
   const now = clock(60_000)
   const devices = derive(() => [...(source.pcs.get()?.devices ?? [])].sort((a, b) => Number(b.id === self) - Number(a.id === self)))
   return settingsSection(
-    { title: 'Phones and browsers', action: secondaryAction({ size: 'sm', onClick: pair }, 'Add a phone') },
+    { title: 'Phones and browsers', action: secondaryAction({ size: 'sm', onClick: pair }, icon('plus', 14), 'Add a phone') },
     rowList(devices, device => device.id, device => phoneRow(ctx, source, device, self, now)),
     show(
       devices.map(current => current.length === 0),
-      () => hintRow('None yet.'),
+      () => hintRow('No phones yet'),
     ),
   )
 }

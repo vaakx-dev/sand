@@ -1,4 +1,4 @@
-import { derive, dynamicChild, sig, untrack } from '@sand/dom'
+import { derive, dynamicChild, sheetStep, sig, untrack } from '@sand/dom'
 import type { ServerDraft } from '../../contract'
 import { planNames } from '../names'
 import type { LoginControl } from '../state'
@@ -18,7 +18,7 @@ const serverTitle = ({ id, name }: ServerDraft) => {
 }
 
 const titleOf = (step: Step, conflict: boolean) => {
-  if (step.kind === 'choose') return 'Add account'
+  if (step.kind === 'choose') return 'Add an account'
   if (step.kind === 'key') return `Add an ${keyNames[step.account]} API key`
   if (step.kind === 'detect') return 'Ollama or LM Studio'
   if (step.kind === 'server') return serverTitle(step.draft)
@@ -55,7 +55,7 @@ export const addFlow = (control: LoginControl, done: (text?: string) => void) =>
 
   const body = () => {
     const current = untrack(() => step.get())
-    if (current.kind === 'choose') return chooseStep(untrack(() => control.state.get()), go)
+    if (current.kind === 'choose') return sheetStep(chooseStep(untrack(() => control.state.get()), go))
     if (current.kind === 'key') return keyStep(control, current.account, () => done(`Saved the ${keyNames[current.account]} API key`))
     if (current.kind === 'detect')
       return detectStep(control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))

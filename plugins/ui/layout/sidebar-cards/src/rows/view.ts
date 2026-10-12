@@ -1,7 +1,9 @@
 import { chevron, plainButton, untrack, type Reorder, type Sig } from '@sand/dom'
 import type { MenuRequest } from '../card/menu'
 import { card } from '../card/view'
-import type { CardRow, HeadRow, MoreRow, Row } from './build'
+import { pageStep, type CardRow, type HeadRow, type MoreRow, type Row } from './build'
+
+const quietRow = 'flex h-6 w-full items-center gap-2 rounded-md px-3 text-xs text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-100'
 
 export interface RowHandlers {
   minute: Sig<number>
@@ -15,7 +17,7 @@ export interface RowHandlers {
 const head = (row: Sig<HeadRow>, handlers: RowHandlers) =>
   plainButton(
     {
-      class: 'mt-2 flex h-6 w-full items-center gap-2 rounded-lg px-3 text-xs font-medium text-neutral-500 hover:text-neutral-400',
+      class: [quietRow, 'mt-2 font-medium'],
       onClick: () => handlers.toggle(row.get()),
     },
     chevron(() => row.get().open, 12),
@@ -25,10 +27,10 @@ const head = (row: Sig<HeadRow>, handlers: RowHandlers) =>
 const more = (row: Sig<MoreRow>, handlers: RowHandlers) =>
   plainButton(
     {
-      class: 'block w-full rounded-lg px-3 py-2 text-left text-xs text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300',
+      class: quietRow,
       onClick: () => handlers.more(row.get()),
     },
-    () => `Show more (${row.get().hidden})`,
+    () => `Show ${Math.min(row.get().hidden, pageStep)} more`,
   )
 
 export const rowView = (row: Sig<Row>, handlers: RowHandlers) => {

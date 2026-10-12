@@ -13,7 +13,7 @@ export const sendBackView = (ctx: PickerContext, found: SendBack) => {
   const there = ctx.machines.get(found.to.device)
   return statusBanner(
     {},
-    span({ class: 'inline-flex shrink-0 text-neutral-400' }, machineIcon(here)),
+    span({ class: 'inline-flex shrink-0 text-neutral-400' }, machineIcon(here, 14)),
     span({ class: 'min-w-0 flex-1 truncate' }, `Done on ${here?.name ?? 'this PC'}`),
     primaryAction({ size: 'sm', onClick: () => send(ctx, found) }, `Send to ${there?.name ?? 'the other PC'}`),
   )

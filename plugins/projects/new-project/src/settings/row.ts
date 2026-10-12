@@ -15,7 +15,7 @@ const summary = (group: ProjectGroup) => {
 }
 
 const remoteLine = (remote?: string) =>
-  remote ? statusLine({ mark: span({ class: 'inline-flex shrink-0' }, icon('folder-git', 13)), text: remoteKey(remote) || remote, title: remote }) : null
+  remote ? statusLine({ mark: span({ class: 'inline-flex shrink-0' }, icon('folder-git', 12)), text: remoteKey(remote) || remote, title: remote }) : null
 
 const noCopyLines = (ctx: ProjectsContext, group: ProjectGroup) => {
   const flows = ctx.syncFlows
@@ -35,7 +35,7 @@ const menuButton = (group: ProjectGroup, open: Sig<string | undefined>, opened: 
       active: opened,
       onClick: () => open.set(opened.get() ? undefined : group.id),
     },
-    icon('more', 16),
+    icon('more', 14),
   )
 
 export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, open: Sig<string | undefined>, picking: Sig<Picking>) => {
@@ -49,7 +49,7 @@ export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: Project
       div(
         { class: 'flex min-w-0 items-center gap-2' },
         projectIcon(group.name, ctx.projects.groupIcon(group)),
-        span({ class: 'min-w-0 truncate text-sm text-neutral-100' }, group.name),
+        span({ class: 'min-w-0 truncate text-sm font-medium text-neutral-100' }, group.name),
         span({ class: 'shrink-0 text-xs text-neutral-500' }, summary(group)),
       ),
       remoteLine(group.remote),

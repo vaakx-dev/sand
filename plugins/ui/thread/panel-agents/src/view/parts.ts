@@ -1,4 +1,4 @@
-import { div, duration, keys, show, type Child, type ClassValue, type ContextMenu, type MenuSpec, type Sig } from '@sand/dom'
+import { div, duration, keys, show, span, type Child, type ClassValue, type ContextMenu, type MenuSpec, type Sig } from '@sand/dom'
 import type { Run } from '../runs/runs'
 
 export interface Actions {
@@ -12,12 +12,24 @@ export interface Rows extends Actions {
   menu: ContextMenu
 }
 
-interface Pressable {
-  class: ClassValue
+interface Press {
   press(): void
   enabled?: () => boolean
   menu?: { on: ContextMenu; spec: () => MenuSpec | undefined }
 }
+
+interface Pressable extends Press {
+  class: ClassValue
+}
+
+export const pressProps = ({ press, enabled = () => true, menu }: Press) => {
+  const run = () => {
+    if (enabled()) press()
+  }
+  return menu ? menu.on.target(menu.spec, run) : { onClick: run }
+}
+
+export const meta = (...children: Child[]) => span({ class: 'shrink-0 text-xs tabular-nums text-neutral-500' }, ...children)
 
 export const since = (started: number, ended: number | undefined, now: number) => duration(Math.max(0, (ended ?? now) - started))
 
@@ -40,7 +52,7 @@ export const pressable = ({ class: extra, press, enabled = () => true, menu }: P
   }
   return div(
     {
-      ...(menu ? menu.on.target(menu.spec, run) : { onClick: run }),
+      ...pressProps({ press, enabled, menu }),
       role: () => (enabled() ? 'button' : undefined),
       tabIndex: () => (enabled() ? 0 : -1),
       class: [

@@ -27,15 +27,15 @@ export const updateSheet = (fleet: Fleet, close: () => void) => {
   return overlay(
     close,
     sheet(
-      { 'aria-label': 'Update sand', class: 'max-w-lg' },
-      sheetHead(
+      { 'aria-label': 'Update sand', size: 'md' },
+      sheetHead({
         title,
         close,
-        show(
+        actions: show(
           () => mode.get() === 'choose' && !!notes(),
           () => quietButton({ onClick: () => openTab(notes() ?? '') }, 'Release notes'),
         ),
-      ),
+      }),
       dynamicChild(mode, current => {
         if (current === 'run') return progressBody(fleet, close)
         if (current === 'choose') return chooseBody(fleet, close)

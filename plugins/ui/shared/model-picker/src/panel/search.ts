@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { div, finePointer, icon, returnFocus, searchInput } from '@sand/dom'
+import { div, finePointer, returnFocus, searchField } from '@sand/dom'
 import type { Scene } from './scene'
 import type { View } from './view'
 
@@ -11,13 +11,11 @@ export const findModels = (scene: Scene, query: string): ModelInfo[] => {
   })
 }
 
-export const searchField = (view: View, pickFirst: () => void) => {
+export const modelSearch = (view: View, pickFirst: () => void) => {
   const fine = finePointer()
   return div(
-    { class: 'mx-1 mt-1 mb-2 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-neutral-900 px-3 text-neutral-500' },
-    icon('search', 15),
-    searchInput({
-      type: 'search',
+    { class: 'mx-1 mt-1 mb-2 flex shrink-0' },
+    searchField({
       placeholder: 'Search all models',
       'aria-label': 'Search all models',
       bindValue: view.query,

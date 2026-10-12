@@ -1,17 +1,12 @@
 import type { Entry } from '@sand/messages'
-import { div, icon, span, type IconName } from '@sand/dom'
+import { markerLine, span, type MarkerProps } from '@sand/dom'
 import type { Goal } from '../goal'
 
-const line = (tone: string, symbol: IconName, text: string) =>
-  div(
-    { class: ['mt-2 mb-4 flex items-center justify-center gap-2 text-xs', tone] },
-    span({ class: 'inline-flex shrink-0' }, icon(symbol, 13)),
-    span({ class: 'min-w-0 truncate', title: text }, text),
-  )
+const line = (props: MarkerProps, text: string) => markerLine(props, span({ class: 'min-w-0 truncate', title: text }, text))
 
 export const goalRow = (entry: Entry) => {
   const goal = entry.data as Goal
-  if (goal.status === 'met') return line('text-success-400', 'check', `Goal met: ${goal.objective}`)
-  if (goal.status === 'cleared') return line('text-neutral-500', 'x', `Goal cleared: ${goal.objective}`)
-  return goal.checks ? undefined : line('text-neutral-400', 'goal', `Goal set: ${goal.objective}`)
+  if (goal.status === 'met') return line({ icon: 'check', tone: 'success' }, `Goal met: ${goal.objective}`)
+  if (goal.status === 'cleared') return line({ icon: 'x' }, `Goal cleared: ${goal.objective}`)
+  return goal.checks ? undefined : line({ icon: 'goal', tone: 'accent' }, `Goal set: ${goal.objective}`)
 }

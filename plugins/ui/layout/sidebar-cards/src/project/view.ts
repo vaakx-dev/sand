@@ -1,5 +1,5 @@
 import type { ContextMenu, MenuSpec } from '@sand/dom'
-import { div, dynamicChild, icon, iconButton, list, popover, popoverItem, popupTrigger, projectIcon, show, span, type Sig } from '@sand/dom'
+import { choiceItem, closeButton, div, dynamicChild, icon, iconButton, list, popover, popupTrigger, projectIcon, show, span, type Sig } from '@sand/dom'
 import type { ProjectChoice } from './choices'
 
 export interface FilterParts {
@@ -24,9 +24,9 @@ export const filterButton = (parts: FilterParts, open: Sig<boolean>) =>
   )
 
 const choiceRow = (choice: Sig<ProjectChoice>, parts: FilterParts, context: ContextMenu, choose: (project: string) => void, close: () => void) =>
-  popoverItem(
+  choiceItem(
     {
-      active: () => parts.project.get() === choice.get().key,
+      selected: () => parts.project.get() === choice.get().key,
       ...context.target(
         () => parts.choiceMenu(choice.get(), close),
         () => choose(choice.get().key),
@@ -50,7 +50,7 @@ export const filterMenu = (parts: FilterParts, open: Sig<boolean>, context: Cont
     popover(
       close,
       { class: 'top-full left-2 right-2 max-h-80 overflow-auto' },
-      popoverItem({ active: () => !parts.project.get(), onClick: () => choose(undefined) }, 'All projects'),
+      choiceItem({ selected: () => !parts.project.get(), onClick: () => choose(undefined) }, span({ class: 'min-w-0 flex-1 truncate' }, 'All projects')),
       list(
         parts.projects,
         choice => choice.key,
@@ -70,6 +70,6 @@ export const filterChip = (parts: FilterParts, context: ContextMenu) =>
       },
       dynamicChild(parts.label, name => projectIcon(name, parts.projects.get().find(choice => choice.key === parts.project.get())?.icon)),
       span({ class: 'min-w-0 flex-1 truncate' }, parts.label),
-      iconButton({ size: 'sm', title: 'Show all projects', onClick: () => parts.filter(undefined) }, icon('x', 14)),
+      closeButton({ size: 'sm', title: 'Show all projects', onClick: () => parts.filter(undefined) }),
     ),
   )

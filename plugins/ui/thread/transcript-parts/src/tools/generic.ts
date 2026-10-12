@@ -1,5 +1,5 @@
 import type { ToolBadge, ToolRenderer, ToolView } from '../contract'
-import { div, fold } from '@sand/dom'
+import { div, fold, statusLabel } from '@sand/dom'
 import { resultText } from '../thread/results'
 import { toolLabel } from './label'
 import { outputText } from './notes'
@@ -7,7 +7,7 @@ import { outputText } from './notes'
 const clipAt = 8000
 
 const preview = (tool: ToolView) => {
-  if (tool.status === 'running') return 'running'
+  if (tool.status === 'running') return statusLabel('running')
   if (!tool.result) return tool.call.malformed ? 'malformed input' : ''
   if (tool.result.isError) return ''
   const lines = resultText(tool.result).split('\n')
@@ -26,7 +26,7 @@ const inputText = (input: unknown) => {
     .join('\n')
 }
 
-const failedBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: 'failed', tone: 'danger' } : undefined)
+const failedBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: statusLabel('failed'), tone: 'danger' } : undefined)
 
 const clip = (value: string) => (value.length > clipAt ? `${value.slice(0, clipAt)}\n… ${value.length - clipAt} more characters` : value)
 
@@ -34,14 +34,14 @@ const section = (title: string, body: string, error = false) => {
   const text = clip(body)
   return div(
     div({ class: 'mb-1 text-xs font-medium text-neutral-500' }, title),
-    fold({ lines: text.split('\n').length, chars: text.length, copy: () => body, copyLabel: `Copy ${title.toLowerCase()}` }, outputText(text, error)),
+    fold({ lines: text.split('\n').length, chars: text.length, copy: () => body }, outputText(text, error)),
   )
 }
 
 const resultSection = (tool: ToolView) => {
   if (!tool.result) return undefined
   const error = Boolean(tool.result.isError)
-  return section(error ? 'Error' : 'Output', resultText(tool.result) || 'no output', error)
+  return section(error ? 'Error' : 'Output', resultText(tool.result) || 'No output', error)
 }
 
 export const genericRenderer = (name: string): Required<ToolRenderer> => ({

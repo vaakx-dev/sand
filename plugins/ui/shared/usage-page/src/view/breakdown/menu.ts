@@ -8,7 +8,7 @@ export const threadMenu = (thread: Thread, { openThread, copy }: RowSource) => {
   const { cwd } = thread
   const actions: NavAction[] = []
   if (openThread) actions.push({ id: 'open', label: 'Open thread', icon: 'message', group: 'open', run: () => openThread(thread.id) })
-  if (cwd) actions.push({ id: 'copy-path', label: 'Copy folder path', icon: 'folder', group: 'copy', run: () => copy(cwd, 'folder path') })
+  if (cwd) actions.push({ id: 'copy-path', label: 'Copy path', icon: 'folder', group: 'copy', run: () => copy(cwd, 'folder path') })
   return specOf(thread.title ?? 'Untitled', cwd && tildeHome(cwd), actions)
 }
 

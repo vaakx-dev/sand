@@ -1,14 +1,9 @@
 import type { SetupStep, WorktreeProgress } from '../../contract'
-import { clock, derive, div, dynamicChild, icon, iconButton, list, okMark, show, span, spinner, type Sig } from '@sand/dom'
+import { bannerTitle, clock, closeButton, derive, div, dynamicChild, errorText, icon, list, show, span, statusBanner, stepMark, type Sig, type StepState } from '@sand/dom'
 
 const seconds = (ms: number) => (ms < 10_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`)
 
-const mark = (state: SetupStep['state']) => {
-  if (state === 'ok') return okMark()
-  if (state === 'fail') return span({ class: 'inline-flex shrink-0 text-danger-400' }, icon('x', 14))
-  if (state === 'run') return span({ class: 'inline-flex shrink-0 text-accent-400' }, spinner())
-  return span({ class: 'mx-px inline-flex h-3 w-3 shrink-0 rounded-full ring-1 ring-neutral-600' })
-}
+const steps: Record<SetupStep['state'], StepState> = { ok: 'done', fail: 'failed', run: 'running', wait: 'waiting' }
 
 const timing = (step: SetupStep, now: number) => {
   if (step.state === 'run' && step.started) return seconds(Math.max(0, now - step.started))
@@ -19,8 +14,8 @@ const stepRow = (step: Sig<SetupStep>, now: Sig<number>) =>
   div(
     { class: ['flex min-h-6 items-center gap-2', () => (step.get().state === 'wait' ? 'text-neutral-500' : 'text-neutral-300')] },
     dynamicChild(
-      step.map(current => current.state),
-      mark,
+      step.map(current => steps[current.state]),
+      stepMark,
     ),
     span({ class: 'min-w-0 flex-1 truncate', title: () => step.get().label }, () => step.get().label),
     span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => timing(step.get(), now.get())),
@@ -28,23 +23,26 @@ const stepRow = (step: Sig<SetupStep>, now: Sig<number>) =>
 
 export const progressBanner = (progress: () => WorktreeProgress | undefined, dismiss: () => void) => {
   const now = clock(100)
-  const steps = derive(() => progress()?.steps ?? [])
+  const all = derive(() => progress()?.steps ?? [])
   const error = derive(() => progress()?.error ?? '')
-  return div(
-    { role: 'status', class: 'flex w-full flex-col gap-1 rounded-lg bg-neutral-800 px-3 py-2 text-sm animate-fade' },
+  return statusBanner(
+    {},
     div(
-      { class: 'flex min-h-6 items-center gap-2' },
-      span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon('folder-git', 14)),
-      span({ class: 'min-w-0 flex-1 truncate text-xs font-medium text-neutral-400' }, () => (error.get() ? 'Worktree setup stopped' : 'Setting up the worktree')),
-      show(
-        () => Boolean(progress()?.done),
-        () => iconButton({ size: 'sm', title: 'Dismiss', onClick: dismiss }, icon('x', 13)),
+      { class: 'flex min-w-0 flex-1 flex-col gap-1' },
+      div(
+        { class: 'flex min-h-6 items-center gap-2' },
+        span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon('folder-git', 14)),
+        div({ class: 'min-w-0 flex-1' }, bannerTitle(() => (error.get() ? 'Worktree setup stopped' : 'Setting up the worktree'))),
+        show(
+          () => Boolean(progress()?.done),
+          () => closeButton({ title: 'Dismiss', size: 'sm', onClick: dismiss }),
+        ),
       ),
-    ),
-    list(steps, step => step.label, step => stepRow(step, now), div({ class: 'flex flex-col' })),
-    show(
-      () => Boolean(error.get()),
-      () => div({ class: 'text-xs whitespace-pre-wrap wrap-anywhere text-danger-400' }, () => error.get()),
+      list(all, step => step.label, step => stepRow(step, now), div({ class: 'flex flex-col' })),
+      show(
+        () => Boolean(error.get()),
+        () => errorText(() => error.get()),
+      ),
     ),
   )
 }

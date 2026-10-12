@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { div, errorMessage, keys, p, secondaryAction, sig, textInput } from '@sand/dom'
+import { div, errorMessage, errorText, keys, secondaryAction, show, sig, textInput } from '@sand/dom'
 import type { Catalog } from './catalog'
 
 export const addRow = (catalog: Catalog, added: (model: ModelInfo) => void) => {
@@ -35,6 +35,9 @@ export const addRow = (catalog: Catalog, added: (model: ModelInfo) => void) => {
       }),
       secondaryAction({ disabled: () => !ready(), onClick: () => void add() }, 'Add'),
     ),
-    p({ class: 'text-xs wrap-anywhere text-danger-400', hidden: () => !error.get() }, () => error.get()),
+    show(
+      () => !!error.get(),
+      () => errorText(() => error.get()),
+    ),
   )
 }

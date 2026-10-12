@@ -55,16 +55,16 @@ const box = (tool: ToolView, content: Child, views: ToolViews) => {
   const { rows, stop } = output(tool, views)
   const hidden = rows.length - shownRows
   return div(
-    fold({ lines: Math.min(rows.length, shownRows), copy: () => views.resultText(tool.result) }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-400' }, content)),
+    fold({ lines: Math.min(rows.length, shownRows), copy: () => views.resultText(tool.result) }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-300' }, content)),
     hidden > 0 && views.truncatedNote(hidden, 'after'),
     stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
   )
 }
 
-const body = (tool: ToolView, content: () => Child, views: ToolViews) => {
+const body = (tool: ToolView, content: () => Child, none: string, views: ToolViews) => {
   if (!tool.result) return undefined
   if (tool.result.isError) return views.errorBody(tool)
-  return box(tool, empty(tool, views) ? views.resultText(tool.result) : content(), views)
+  return box(tool, empty(tool, views) ? none : content(), views)
 }
 
 export const grepRenderer = (views: ToolViews): ToolRenderer => ({
@@ -83,7 +83,7 @@ export const grepRenderer = (views: ToolViews): ToolRenderer => ({
     return count === 1 ? '1 match' : `${count} matches`
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => matches(tool, views), views),
+  body: tool => body(tool, () => matches(tool, views), 'No matches', views),
 })
 
 export const globRenderer = (views: ToolViews): ToolRenderer => ({
@@ -97,5 +97,5 @@ export const globRenderer = (views: ToolViews): ToolRenderer => ({
     return plural(output(tool, views).rows.length, 'file')
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), views),
+  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), 'No files', views),
 })

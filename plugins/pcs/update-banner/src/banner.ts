@@ -1,4 +1,4 @@
-import { derive, div, dynamicChild, icon, okMark, primaryAction, quietButton, span, spinner, type Child } from '@sand/dom'
+import { bannerTitle, derive, div, dynamicChild, icon, okMark, primaryAction, quietButton, span, spinner, statusBanner, type Child } from '@sand/dom'
 import { plural } from '@sand/kit'
 import { changeLine, isNotable } from './changes'
 import type { Fleet } from './fleet/model'
@@ -21,7 +21,7 @@ export const bannerKind = (fleet: Fleet) =>
 const text = (title: () => string, subtitle?: () => string, warn?: () => boolean) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col' },
-    span({ class: 'truncate text-neutral-100' }, title),
+    bannerTitle(title),
     subtitle ? span({ class: ['truncate text-xs', () => (warn?.() ? 'text-warning-400' : 'text-neutral-400')], title: subtitle }, subtitle) : null,
   )
 
@@ -89,11 +89,8 @@ const content = (fleet: Fleet, kind: BannerKind, open: () => void): Child[] => {
 export const bannerView = (fleet: Fleet, kind: () => BannerKind | undefined, open: () => void) =>
   div(
     { class: 'w-full px-3 pt-2' },
-    div(
-      {
-        role: 'status',
-        class: 'flex w-full items-center gap-3 rounded-lg border border-accent-800 bg-accent-950 px-3 py-2 text-sm animate-fade',
-      },
+    statusBanner(
+      { tone: 'accent' },
       dynamicChild(derive(() => kind() ?? 'ready'), current => div({ class: 'flex min-w-0 flex-1 items-center gap-3' }, ...content(fleet, current, open))),
     ),
   )

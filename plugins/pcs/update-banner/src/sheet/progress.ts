@@ -1,27 +1,29 @@
-import { derive, div, dynamicChild, icon, okMark, p, primaryAction, rowList, secondaryAction, sectionRow, settingsSection, sheetBody, sheetFoot, show, span, spinner, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, p, primaryAction, rowList, secondaryAction, sectionRow, settingsSection, sheetBody, sheetFoot, show, span, stepMark, type Sig, type StepState } from '@sand/dom'
 import { actionButton, fleetAction, runActionKind } from '../actions'
 import type { Fleet, RunRow } from '../fleet/model'
 import type { RunStatus } from '../fleet/run'
 import { runText } from '../fleet/text'
-import { statusMark } from '../mark'
 
-const statusIcon = (status: RunStatus) => {
-  if (status.kind === 'done') return okMark(16)
-  if (status.kind === 'failed') return statusMark('text-danger-400', icon('x', 16))
-  if (status.kind === 'working' && status.phase === 'waiting') return statusMark('text-warning-400', icon('clock', 16))
-  return statusMark('text-accent-400', spinner(16))
+const stepState = (status: RunStatus): StepState => {
+  if (status.kind === 'done') return 'done'
+  if (status.kind === 'failed') return 'failed'
+  if (status.kind === 'working' && status.phase === 'waiting') return 'waiting'
+  return 'running'
 }
 
 const runRow = (row: Sig<RunRow>, fleet: Fleet) =>
   sectionRow(
     {},
-    div({ class: 'flex h-5 shrink-0 items-center' }, dynamicChild(row.map(current => current.status), statusIcon)),
     div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().pc?.name ?? 'PC'),
-      span(
-        { class: () => (row.get().status.kind === 'failed' ? 'text-xs wrap-anywhere text-danger-400' : 'text-xs text-neutral-500') },
-        () => runText(row.get().status),
+      { class: 'flex min-w-0 flex-1 items-start gap-2' },
+      div({ class: 'flex h-5 shrink-0 items-center' }, dynamicChild(row.map(current => stepState(current.status)), stepMark)),
+      div(
+        { class: 'flex min-w-0 flex-1 flex-col' },
+        span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().pc?.name ?? 'PC'),
+        span(
+          { class: () => (row.get().status.kind === 'failed' ? 'text-xs wrap-anywhere text-danger-400' : 'text-xs text-neutral-500') },
+          () => runText(row.get().status),
+        ),
       ),
     ),
     dynamicChild(
@@ -39,7 +41,7 @@ export const progressBody = (fleet: Fleet, close: () => void) => {
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
     sheetBody(
-      { class: 'gap-3' },
+      {},
       settingsSection({}, rowList(fleet.runRows, row => row.key, row => runRow(row, fleet))),
       show(localName.map(Boolean), () => p({ class: 'px-1 text-xs text-neutral-500' }, () => `This page reconnects by itself when ${localName.get()} is back.`)),
     ),

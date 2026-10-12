@@ -1,4 +1,4 @@
-import { copyWithNotice, icon, menuSeparator, popoverItem, span, type Child, type IconName } from '@sand/dom'
+import { copyWithNotice, menuSeparator, popoverItem, type Child, type IconName } from '@sand/dom'
 import { oneLine } from '@sand/kit'
 import type { Context } from 'drydock'
 
@@ -11,12 +11,12 @@ interface Entry {
 const entryView = (entry: Entry, close: () => void) =>
   popoverItem(
     {
+      icon: entry.icon,
       onClick: () => {
         close()
         entry.run()
       },
     },
-    span({ class: 'inline-flex text-neutral-500' }, icon(entry.icon, 14)),
     entry.label,
   )
 
@@ -39,7 +39,7 @@ const threadEntries = (ctx: Context, agent: boolean) => {
       ...command(ctx, 'fork', 'Fork from an earlier message', 'fork'),
       ...command(ctx, 'clone', 'Duplicate thread', 'duplicate'),
       ...command(ctx, 'continue', 'Continue on another PC…', 'monitor'),
-      ...command(ctx, 'worktree', 'Move to worktree…', 'folder-git'),
+      ...command(ctx, 'worktree', 'Move to a worktree…', 'folder-git'),
     )
   entries.push({ label: 'Copy link', icon: 'link', run: () => copyWithNotice(ctx.notify, location.href, 'link') })
   return entries

@@ -85,7 +85,7 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
     span({ class: 'min-w-0 flex-1 truncate text-left' }, text),
     show(
       shown.map(value => value?.speed === 'fast'),
-      () => span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('zap', 13)),
+      () => span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('zap', 14)),
     ),
     span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
     show(open, () => portal(document.body, panel())),

@@ -1,5 +1,5 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { contextMenu, derive, div, hintRow, rowList, settingsSection, show, sig, span, untrack, type Sig } from '@sand/dom'
+import { contextMenu, derive, div, hintRow, itemRow, rowList, settingsSection, show, sig, untrack, type Sig } from '@sand/dom'
 import { favouritesOf } from '@sand/kit'
 import type { Kit } from './kit'
 import { settingsMenu } from './menu'
@@ -20,17 +20,11 @@ const menuOf = (kit: Kit, model: ModelInfo, unstar: (model: ModelInfo) => void) 
 
 const favouriteRow = (kit: Kit, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) => {
   const menu = contextMenu()
-  return div(
-    { class: 'flex min-h-12 items-center gap-3 bg-neutral-900 py-2 pr-3 pl-4' },
-    div(
-      { class: 'flex min-w-0 flex-1 items-center gap-3', ...menu.target(() => menuOf(kit, row.get(), unstar)) },
-      logo(untrack(() => row.get().provider)),
-      div(
-        { class: 'flex min-w-0 flex-1 flex-col' },
-        span({ class: 'truncate text-sm text-neutral-100' }, () => row.get().label),
-        span({ class: 'truncate text-xs text-neutral-500' }, () => sourceText(kit, row.get())),
-      ),
-    ),
+  return itemRow(
+    menu.target(() => menuOf(kit, row.get(), unstar)),
+    logo(untrack(() => row.get().provider)),
+    () => row.get().label,
+    () => sourceText(kit, row.get()),
     starButton(untrack(() => row.get().label), true, () => unstar(row.get())),
     menu.view(),
   )
@@ -57,7 +51,7 @@ export const favouritesPage = (kit: Kit) => {
       {},
       show(
         models.map(found => !found.length),
-        () => hintRow('No favourites yet. Star a model in one of your accounts to keep it at the top of the picker.'),
+        () => hintRow('No favourites yet. Star a model in one of your accounts to keep it at the top of the picker'),
       ),
       rowList(models, model => model.id, row => favouriteRow(kit, row, unstar)),
     ),

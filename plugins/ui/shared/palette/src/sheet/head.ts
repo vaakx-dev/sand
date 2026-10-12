@@ -1,4 +1,22 @@
-import { delayed, div, effect, icon, iconButton, primaryAction, searchInput, show, span, spinner, untrack } from '@sand/dom'
+import {
+  badge,
+  delayed,
+  effect,
+  headTitle,
+  icon,
+  iconButton,
+  paneHead,
+  primaryAction,
+  searchField,
+  searchRow,
+  show,
+  span,
+  spinner,
+  SPACE,
+  textInput,
+  untrack,
+  type Props,
+} from '@sand/dom'
 import type { PageModel } from './model'
 
 const atEnd = (input: HTMLInputElement) => {
@@ -6,25 +24,21 @@ const atEnd = (input: HTMLInputElement) => {
   input.setSelectionRange(input.value.length, input.value.length)
 }
 
-const lead = (model: PageModel) =>
-  model.nested
-    ? iconButton({ size: 'sm', title: 'Back', 'aria-label': 'Back', onClick: () => model.nav.back() }, icon('back', 16))
-    : span({ class: 'inline-flex' }, icon('search', 17))
+const backButton = (model: PageModel) =>
+  model.nested ? iconButton({ title: 'Back', 'aria-label': 'Back', onClick: () => model.nav.back() }, icon('back', 16)) : null
 
-const entry = ({ page, text, fills }: PageModel) => {
-  const field = page.field
-  if (page.review) return span({ class: 'min-w-0 flex-1 truncate text-base text-neutral-200' }, page.title)
-  return searchInput({
-    placeholder: field?.placeholder ?? page.placeholder ?? 'Search…',
-    bindValue: text,
-    class: field && field.kind !== 'text' && 'font-mono text-sm',
-    onMount: node =>
-      effect(() => {
-        fills.get()
-        untrack(() => atEnd(node))
-      }),
-  })
-}
+const titleBadge = ({ page }: PageModel) => badge('neutral', span({ class: 'truncate', style: { maxWidth: SPACE['40'] }, title: page.title }, page.title))
+
+const fieldProps = ({ page, text, fills }: PageModel): Props<HTMLInputElement> => ({
+  placeholder: page.field?.placeholder ?? page.placeholder ?? 'Search…',
+  bindValue: text,
+  class: page.field && page.field.kind !== 'text' && 'font-mono',
+  onMount: node =>
+    effect(() => {
+      fills.get()
+      untrack(() => atEnd(node))
+    }),
+})
 
 const submitButton = ({ busy, action, submit }: PageModel) =>
   primaryAction(
@@ -36,11 +50,9 @@ const submitButton = ({ busy, action, submit }: PageModel) =>
 export const paletteHead = (model: PageModel) => {
   const { page, nested } = model
   const titled = (!nested && page.id !== 'root') || page.field?.kind === 'text'
-  return div(
-    { class: 'flex h-12 shrink-0 items-center gap-3 pr-3 pl-5 text-neutral-400' },
-    lead(model),
-    titled ? span({ class: 'truncate rounded-md bg-neutral-700 px-2 text-xs text-neutral-300', style: { maxWidth: '40%' }, title: page.title }, page.title) : null,
-    entry(model),
-    page.field ? submitButton(model) : null,
-  )
+  const back = backButton(model)
+  const title = titled ? titleBadge(model) : null
+  if (page.review) return paneHead({ led: nested }, back, title, headTitle(2, page.title))
+  if (page.field) return paneHead({ led: nested }, back, title, textInput(fieldProps(model)), submitButton(model))
+  return title ? paneHead({ led: nested }, back, title, searchField(fieldProps(model))) : searchRow(fieldProps(model), back ?? undefined)
 }

@@ -1,5 +1,5 @@
 import type { PanelSpec } from '@sand/dom'
-import { badge, derive, div, dynamicChild, icon, iconButton, keep, layer, list, paneHead, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
+import { badge, closeButton, derive, div, dynamicChild, icon, iconButton, keep, layer, list, paneHead, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
 import type { Surface } from './surface'
 
 export interface Page {
@@ -22,7 +22,7 @@ const tabView = (page: Sig<Page>, parts: PanelsParts) =>
     { active: () => parts.selected.get() === page.get().spec.id, onClick: () => parts.show(page.get().spec.id) },
     dynamicChild(
       page.map(value => value.spec.icon),
-      name => (name ? icon(name, 14) : null),
+      name => (name ? icon(name) : null),
     ),
     page.map(value => value.spec.title),
     show(
@@ -49,13 +49,14 @@ const hostClass = (surface: Surface) => {
 
 const hideButton = (floating: boolean, hide: () => void) =>
   floating
-    ? iconButton({ title: 'Close panel', 'aria-label': 'Close panel', onClick: hide }, icon('x', 15))
+    ? closeButton({ title: 'Hide the panel', onClick: hide })
     : iconButton({ title: 'Hide the panel', 'aria-label': 'Hide the panel', active: true, onClick: hide }, icon('panel'))
 
 export const panelsView = (parts: PanelsParts) =>
   div(
     { class: () => hostClass(parts.surface) },
     paneHead(
+      {},
       div(
         { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
         list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),

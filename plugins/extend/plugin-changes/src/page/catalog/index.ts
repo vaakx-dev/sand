@@ -1,5 +1,5 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
-import { derive, div, dynamicChild, hintRow, list, p, rowList, segmented, settingsSection, show, textInput, type Sig } from '@sand/dom'
+import { derive, div, dynamicChild, hintRow, list, p, rowList, searchField, segmented, settingsSection, show, type Sig } from '@sand/dom'
 import type { LibrarySource } from '../../library/source'
 import { type AreaGroup, pluginFilter, type PluginFilter } from './filter'
 import { pluginRow, type RowActions } from './row'
@@ -21,7 +21,7 @@ const toolbar = (filter: PluginFilter) =>
     { class: 'flex flex-wrap items-center gap-3' },
     div(
       { class: 'flex min-w-48 flex-1' },
-      textInput({ type: 'search', placeholder: 'Search plugins', 'aria-label': 'Search plugins', bindValue: filter.query }),
+      searchField({ placeholder: 'Search plugins', 'aria-label': 'Search plugins', bindValue: filter.query }),
     ),
     dynamicChild(filter.choices, choices => segmented(choices, filter.origin, value => filter.origin.set(value), { label: 'Show' })),
   )
@@ -36,7 +36,7 @@ export const catalogSection = (source: LibrarySource, actions: RowActions) => {
     show(filter.loading, () => settingsSection({}, hintRow('Loading…'))),
     show(
       () => !filter.loading.get() && filter.groups.get().length === 0,
-      () => settingsSection({}, hintRow('No plugins match.')),
+      () => settingsSection({}, hintRow('No matches')),
     ),
   )
 }

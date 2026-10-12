@@ -6,7 +6,7 @@ import type { PageModel } from './model'
 const lead = (item: PaletteItem) => {
   if (item.busy) return working(16)
   if (item.avatar) return projectIcon(item.avatar, item.avatarIcon)
-  return icon(item.icon ?? 'right', 16)
+  return null
 }
 
 const withMore = (row: HTMLElement, item: PaletteItem, active: () => boolean, more: (item: PaletteItem) => void) =>
@@ -37,13 +37,15 @@ export const rowView = (item: PaletteItem, position: MaybeReactive<number>, mode
       ...(hasActions ? menu.target(() => actionsMenu(item, model.runAction), onClick) : { onClick }),
       ...(item.disabled ? {} : { onMouseMove }),
       active,
+      ...(item.danger && { tone: 'danger' as const }),
+      ...(!item.busy && !item.avatar && { icon: item.icon ?? 'right' }),
       'aria-disabled': item.disabled,
       class: ['py-1', item.disabled && 'cursor-default opacity-50'],
     },
-    span({ class: 'inline-flex w-5 shrink-0 justify-center text-neutral-400' }, lead(item)),
+    lead(item),
     span(
       { class: 'flex min-w-0 flex-1 flex-col' },
-      span({ class: ['truncate', item.danger && 'text-danger-400'], title: item.label }, item.label),
+      span({ class: 'truncate', title: item.label }, item.label),
       item.detail ? span({ class: 'truncate text-xs text-neutral-500', title: item.detail }, item.detail) : null,
     ),
     item.meta ? span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, item.meta) : null,

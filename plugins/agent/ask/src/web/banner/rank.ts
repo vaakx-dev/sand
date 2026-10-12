@@ -29,7 +29,7 @@ export const rankView = (state: AskState, actions: AskActions, question: AskQues
       span({ class: 'hidden min-w-0 truncate text-xs text-neutral-400 sm:inline' }, () => option().description ?? ''),
       iconButton(
         { size: 'sm', title: 'Move up', disabled: () => position.get() === 0, onClick: () => actions.move(position.get(), position.get() - 1) },
-        icon('up', 13),
+        icon('up', 14),
       ),
     )
   }

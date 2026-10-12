@@ -1,5 +1,5 @@
 import type { PalettePage } from '../contract'
-import { contextMenu, derive, div, dynamicChild, groupLabel, keys, list, show, untrack, type ContextMenu } from '@sand/dom'
+import { contextMenu, derive, div, dynamicChild, errorText, groupLabel, hint, keys, list, show, untrack, type ContextMenu } from '@sand/dom'
 import { cardView, reviewView } from './card'
 import { crumbs } from './crumbs'
 import { paletteHead } from './head'
@@ -37,7 +37,7 @@ const keyHandler = (model: PageModel) => {
 const failureLine = (model: PageModel, onReview: boolean, spacing: string) =>
   show(
     derive(() => Boolean(model.failure.get()) && Boolean(model.page.review) === onReview),
-    () => div({ class: ['px-5 text-xs text-danger-400', spacing] }, () => model.failure.get()),
+    () => div({ class: ['px-4', spacing] }, errorText(() => model.failure.get())),
   )
 
 const results = (model: PageModel, menu: ContextMenu) =>
@@ -75,7 +75,7 @@ export const pageView = (page: PalettePage, nav: PageNav, initial = '') => {
     menu.view(),
     show(
       model.empty.map(Boolean),
-      () => div({ class: 'px-6 pt-4 pb-8 text-center text-sm text-neutral-500' }, () => model.empty.get()),
+      () => hint(() => model.empty.get()),
     ),
   )
 }

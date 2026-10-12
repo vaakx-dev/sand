@@ -35,10 +35,10 @@ export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: Pro
     [
       div(
         { class: ['flex min-w-0 items-center gap-2', !online || entry.missing ? 'opacity-50' : ''] },
-        ...machineMark(online ? 'success' : 'neutral', 13),
+        ...machineMark(online ? 'success' : 'neutral', 12),
         span({ class: 'shrink-0 text-neutral-300' }, ctx.machines.name(entry.device)),
         span({ class: 'min-w-0 truncate text-neutral-500', title: entry.path }, shorten(ctx, entry.path, entry.device)),
-        entry.missing ? span({ class: 'shrink-0 text-warning-400' }, 'missing') : null,
+        entry.missing ? span({ class: 'shrink-0 text-warning-400' }, 'Missing') : null,
       ),
       primary && primary !== entry ? relationTag(ctx, entry, primary) : null,
     ],
@@ -48,6 +48,6 @@ export const locationLine = (ctx: ProjectsContext, menu: ContextMenu, entry: Pro
 
 export const noCopyLine = (flows: SyncFlows, group: ProjectGroup, machine: Machine) =>
   line([
-    div({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark('neutral', 13), span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`)),
-    quietButton({ size: 'sm', onClick: () => flows.copy(group, machine.device) }, icon('down', 12), 'Get a copy'),
+    div({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark('neutral', 12), span({ class: 'min-w-0 truncate text-neutral-500' }, `No copy on ${machine.name}`)),
+    quietButton({ size: 'sm', onClick: () => flows.copy(group, machine.device) }, icon('down', 14), 'Get a copy'),
   ])

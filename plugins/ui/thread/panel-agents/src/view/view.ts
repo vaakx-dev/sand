@@ -32,7 +32,7 @@ const parentLink = (parent: Sig<ParentLink | undefined>, open: (id: string) => v
           if (above) open(above.id)
         },
       },
-      icon('up', 13),
+      icon('up', 14),
       span({ class: 'min-w-0 flex-1 truncate text-left' }, () => `Sub-agent of ${parent.get()?.title ?? ''}`),
     ),
   )

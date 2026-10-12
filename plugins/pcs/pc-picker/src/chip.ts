@@ -1,4 +1,4 @@
-import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, pressOpens, show, sig, span, type Pulse } from '@sand/dom'
+import { chipButton, chipPopover, contextMenu, derive, div, dynamicChild, pressOpens, show, sig, SPACE, span, type Pulse } from '@sand/dom'
 import type { ContinueContext } from './continue/flow'
 import { continueMenu } from './continue/menu'
 import { pcMenu } from './menu'
@@ -31,7 +31,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
 
   const chip = () =>
     chipButton(
-      { title, active: open, ...pressOpens(open, toggle) },
+      { title, active: open, menu: true, ...pressOpens(open, toggle) },
       span({ class: 'inline-flex shrink-0' }, machineIcon(machine.get(), 12)),
       span({ class: 'min-w-0 truncate py-1 text-box-trim' }, name),
       machine.get()?.online === false ? span({ class: 'shrink-0 text-neutral-600 text-box-trim' }, '· Offline') : null,
@@ -43,7 +43,7 @@ export const createChip = (ctx: PickerContext & ContinueContext, changes: Pulse)
       context.view(),
       dynamicChild(derive(() => `${machine.get()?.id}:${machine.get()?.online}`), chip),
       show(open, () =>
-        chipPopover(close, { class: 'left-0 w-96' }, dynamicChild(changes.version, menu)),
+        chipPopover(close, { class: 'left-0', width: SPACE['96'] }, dynamicChild(changes.version, menu)),
       ),
     )
 

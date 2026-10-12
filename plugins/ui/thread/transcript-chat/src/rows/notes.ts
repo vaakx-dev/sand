@@ -1,4 +1,4 @@
-import { div, span, textRule } from '@sand/dom'
+import { errorText, markerLine, span, textRule } from '@sand/dom'
 import { cardRow, type Card } from './card'
 import { row, type RowMaker } from './row'
 
@@ -23,5 +23,6 @@ export const reportRow: RowMaker<'report'> = (item, context) =>
 export const noticeRow: RowMaker<'notice'> = item =>
   row(`notice:${item.key}`, item, () => {
     if (item.tone === 'rule') return rule(item.text)
-    return div({ class: ['mt-2 mb-4 text-center text-xs', item.tone === 'error' ? 'text-danger-400' : 'text-neutral-500'] }, item.text)
+    if (item.tone === 'error') return markerLine({ icon: 'alert', tone: 'danger' }, errorText(item.text))
+    return markerLine({}, item.text)
   })

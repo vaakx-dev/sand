@@ -1,5 +1,5 @@
 import type { Logs } from '@sand/browser-engine/contract'
-import { derive, div, dynamicChild, effect, hint, icon, iconButton, segmented, sig, toEnd, untrack } from '@sand/dom'
+import { closeButton, derive, div, dynamicChild, effect, hint, icon, iconButton, segmented, sig, toEnd, untrack } from '@sand/dom'
 import type { TabModel } from '../tab/model'
 import { consoleRow, networkRow } from './rows'
 
@@ -13,7 +13,7 @@ const entries = (which: LogTab, logs: Logs) => {
   const rows = which === 'console' ? logs.console.slice(-shownEntries).map(consoleRow) : logs.network.slice(-shownEntries).map(networkRow)
   return div(
     { class: 'min-h-0 flex-1 overflow-auto', onMount: node => toEnd(node as HTMLElement) },
-    rows.length ? rows : hint(which === 'console' ? 'No console messages.' : 'No requests yet.'),
+    rows.length ? rows : hint(which === 'console' ? 'No console messages yet' : 'No requests yet'),
   )
 }
 
@@ -47,8 +47,8 @@ export const consoleDrawer = (tab: TabModel, close: () => void) => {
         { label: 'Log' },
       ),
       div({ class: 'flex-1' }),
-      iconButton({ size: 'sm', title: 'Refresh', 'aria-label': 'Refresh', onClick: load }, icon('reload', 13)),
-      iconButton({ size: 'sm', title: 'Close the console', 'aria-label': 'Close the console', onClick: close }, icon('x', 14)),
+      iconButton({ size: 'sm', title: 'Refresh', 'aria-label': 'Refresh', onClick: load }, icon('reload', 14)),
+      closeButton({ title: 'Close', size: 'sm', onClick: close }),
     ),
     dynamicChild(
       derive(() => ({ shown: which.get(), all: logs.get() })),
