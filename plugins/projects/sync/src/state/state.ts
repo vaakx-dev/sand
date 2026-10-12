@@ -1,34 +1,43 @@
 import { isFolder } from '@sand/kit/fs'
 import type { SyncState } from '../contract'
 import { settle } from '../conflicts/settle'
-import { hiddenLine, hiddenOut, type Hidden } from '../folder/hidden'
+import type { FolderState } from '../folder/state'
 import { isGitFolder } from '../folder/stat'
+import type { SyncedFolder } from '../folder/synced'
+import { lineage } from '../snapshot/lineage'
 import { snapshot } from '../snapshot/snapshot'
-import { treeOf, treeSizes } from '../snapshot/tree'
+import { readSnapshot } from '../store/snapshots'
+import { treeSizes } from '../store/visit'
 
 const absent = (path: string): SyncState => ({ path, exists: false, git: false, head: null, tree: null, lineage: [], files: 0, bytes: 0, conflicts: [], updated: 0 })
 
-export const folderState = async (hidden: Hidden): Promise<SyncState> => {
-  if (!(await isFolder(hidden.folder))) return absent(hidden.folder)
-  const settled = await settle(hidden)
-  const head = settled.pending ? settled.head : await snapshot(hidden)
-  const git = await isGitFolder(hidden.folder)
-  if (!head) return { ...absent(hidden.folder), exists: true, git, conflicts: settled.conflicts }
-  const tree = await treeOf(hidden, head)
-  const [lineage, sizes, time] = await Promise.all([
-    hiddenOut(hidden, ['rev-list', '-n', '100', head]),
-    treeSizes(hidden, tree),
-    hiddenLine(hidden, ['show', '-s', '--format=%ct', head]),
-  ])
+const currentHead = async (synced: SyncedFolder, settled: FolderState) => {
+  if (!settled.pending) {
+    const { head, scan } = await snapshot(synced)
+    return { head, files: scan.files, bytes: scan.bytes }
+  }
+  if (!settled.head) return undefined
+  const { tree } = await readSnapshot(synced.store, settled.head)
+  return { head: settled.head, ...(await treeSizes(synced.store, tree)) }
+}
+
+export const folderState = async (synced: SyncedFolder): Promise<SyncState> => {
+  if (!(await isFolder(synced.folder))) return absent(synced.folder)
+  const settled = await settle(synced)
+  const git = await isGitFolder(synced.folder)
+  const current = await currentHead(synced, settled)
+  if (!current) return { ...absent(synced.folder), exists: true, git, conflicts: settled.conflicts }
+  const [head, history] = await Promise.all([readSnapshot(synced.store, current.head), lineage(synced.store, current.head)])
   return {
-    path: hidden.folder,
+    path: synced.folder,
     exists: true,
     git,
-    head,
-    tree,
-    lineage: lineage.split('\n').filter(Boolean),
-    ...sizes,
+    head: current.head,
+    tree: head.tree,
+    lineage: history,
+    files: current.files,
+    bytes: current.bytes,
     conflicts: settled.conflicts,
-    updated: Number(time) * 1000,
+    updated: head.time,
   }
 }

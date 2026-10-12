@@ -7,6 +7,7 @@
     "./fs": "./src/fs/index.ts",
     "./git": "./src/git/index.ts",
     "./host": "./src/host/index.ts",
+    "./transfers": "./src/transfers/index.ts",
     "./web": "./src/web/index.ts"
   },
   "dependencies": {

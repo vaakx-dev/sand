@@ -1,4 +1,4 @@
-import { bytes } from '@sand/kit'
+import { bytes, isArchiveName } from '@sand/kit'
 import { copyWithNotice } from '@sand/kit/web'
 import type { MenuSpec } from '@sand/protocol'
 import type { ContextMenu } from '@sand/ui-kit/contract'
@@ -35,27 +35,44 @@ const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =
   )
 }
 
-const kindOf = (item: Attached) => {
-  if (item.loading) return 'loading'
-  return item.content?.type === 'document' && item.content.mediaType === 'application/pdf' ? 'pdf' : 'file'
+const kindOf = (item: Attached, sent?: number) => {
+  if (item.loading || sent !== undefined) return 'loading'
+  if (item.content?.type === 'document' && item.content.mediaType === 'application/pdf') return 'pdf'
+  return isArchiveName(item.name) ? 'archive' : 'file'
 }
+
+const icons = { pdf: 'file-text', archive: 'file-archive', file: 'file' } as const
+
+const percent = (sent: number, total: number) => Math.floor((sent / Math.max(1, total)) * 100)
+
+const status = (item: Attached, sent?: number) => {
+  if (item.error) return item.error
+  if (item.loading) return 'Reading…'
+  if (sent !== undefined) return `Uploading ${percent(sent, item.bytes)}%`
+  return bytes(item.bytes)
+}
+
+const progressBar = (item: Sig<Attached>, sent: () => number | undefined) =>
+  span(
+    { class: 'absolute inset-x-0 bottom-0 h-px overflow-hidden rounded-full bg-neutral-700', hidden: () => sent() === undefined },
+    span({ class: 'block h-full bg-accent-500 transition-all', style: { width: () => `${percent(sent() ?? 0, item.get().bytes)}%` } }),
+  )
 
 const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) => {
   const { closeButton, icon, spinner } = ctx.kit
   const failed = () => Boolean(item.get().error)
-  const kind = derive(() => kindOf(item.get()))
+  const sent = () => files.sent.get().get(item.get().id)
+  const kind = derive(() => kindOf(item.get(), sent()))
   return div(
-    { class: 'flex min-h-8 items-center gap-2 text-sm text-neutral-300', ...menuOf(ctx, files, menu, item) },
+    { class: 'relative flex min-h-8 items-center gap-2 text-sm text-neutral-300', ...menuOf(ctx, files, menu, item) },
     span(
       { class: ['inline-flex shrink-0', () => (failed() || kind.get() === 'pdf' ? 'text-danger-400' : 'text-neutral-400')] },
-      dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(value === 'pdf' ? 'file-text' : 'file', 14)))),
+      dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(icons[value], 14)))),
     ),
     span({ class: ['min-w-0 flex-1 truncate', () => (failed() ? 'text-danger-300' : '')] }, () => item.get().name),
-    span(
-      { class: ['max-w-1/2 shrink-0 truncate text-xs', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] },
-      () => item.get().error ?? (item.get().loading ? 'Reading…' : bytes(item.get().bytes)),
-    ),
+    span({ class: ['max-w-1/2 shrink-0 truncate text-xs tabular-nums', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] }, () => status(item.get(), sent())),
     closeButton({ title: 'Remove', size: 'sm', onClick: () => files.remove(item.get().id) }),
+    progressBar(item, sent),
   )
 }
 

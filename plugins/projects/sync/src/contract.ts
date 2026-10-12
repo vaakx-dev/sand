@@ -50,13 +50,10 @@ export interface SyncExport {
   remotes?: Record<string, string>
 }
 
-export interface SyncChunk {
-  data: string
-}
-
 export interface SyncImported {
   path: string
   commit?: string
+  missing?: number
 }
 
 export interface SyncApplied {
@@ -90,9 +87,7 @@ declare module '@sand/protocol/wire' {
     'sync.state': { path: string }
     'sync.inspect': { path: string }
     'sync.export': { path: string; kind: SyncKind; have?: string[] }
-    'sync.pull': { transfer: string; index: number }
-    'sync.push': { transfer: string; index: number; data: string }
-    'sync.import': { transfer: string; kind: SyncKind; path: string; chunks: number; commit?: string; branch?: string; remotes?: Record<string, string> }
+    'sync.import': { transfer: string; kind: SyncKind; path: string; chunks: number; size: number; commit?: string; branch?: string; remotes?: Record<string, string> }
     'sync.apply': { path: string; commit: string; mode?: SyncMode }
     'sync.resolve': { path: string; picks: Record<string, SyncPick> }
     'sync.setup': { path: string; command: string }

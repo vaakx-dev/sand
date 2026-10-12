@@ -1,4 +1,4 @@
-import { textOf } from '@sand/kit'
+import { fileText, isUserContent, textOf } from '@sand/kit'
 import type { Block, DocumentBlock, Message, ToolResultBlock, UserContent } from '@sand/messages'
 import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
@@ -24,6 +24,8 @@ const part = (block: UserContent, images: boolean): Part => {
       return images ? { type: 'image_url', image_url: { url: `data:${block.mediaType};base64,${block.data}` } } : { type: 'text', text: imageNote }
     case 'document':
       return { type: 'text', text: documentText(block) }
+    case 'file':
+      return { type: 'text', text: fileText(block) }
   }
 }
 
@@ -33,6 +35,7 @@ const contentOf = (parts: Part[]) =>
 const resultPart = (block: UserContent) => {
   if (block.type === 'text') return block.text
   if (block.type === 'image') return toolImageNote
+  if (block.type === 'file') return fileText(block)
   return documentText(block)
 }
 
@@ -40,7 +43,7 @@ const resultText = (result: ToolResultBlock) => withoutReferences(result.content
 
 const userMessages = (content: Block[], images: boolean): ChatMessage[] => {
   const results = content.flatMap(block => (block.type === 'tool_result' ? [{ role: 'tool', tool_call_id: block.callId, content: resultText(block) }] : []))
-  const parts = content.flatMap(block => (block.type === 'text' || block.type === 'image' || block.type === 'document' ? [part(block, images)] : []))
+  const parts = content.flatMap(block => (isUserContent(block) ? [part(block, images)] : []))
   return [...results, ...(parts.length ? [{ role: 'user', content: contentOf(parts) }] : [])]
 }
 

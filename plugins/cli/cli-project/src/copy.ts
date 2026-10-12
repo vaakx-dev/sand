@@ -52,6 +52,6 @@ export const copyToPc = async (pcs: Pcs, [value]: string[], flags: ProjectFlags)
   describe(inspected).forEach(line => console.log(line))
   if (flags.setup && !inspected.setup) console.log('  no setup command found')
   const run = { setup: flags.setup ? inspected.setup : undefined, project: group.id }
-  await copyProject(pcs.call, { path: source.path, device: source.pc.device }, { path, device: target.device }, run, progressPrinter())
+  await copyProject(pcs, { path: source.path, device: source.pc.device }, { path, device: target.device }, run, progressPrinter())
   console.log(`copied ${group.name} to ${target.name}  ${path}`)
 }
