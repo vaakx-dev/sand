@@ -1,10 +1,11 @@
-import { dynamicChild, effect, onTimeout, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, show } from '@sand/dom'
+import { dynamicChild, effect, onTimeout, show } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { DeviceSource } from '../source'
 import { pairInvite } from './invite'
 import { inviteBody } from './links'
 
-export const pairDialog = (ctx: Context<'wire'>, source: DeviceSource, shown: Set<number>, close: () => void) => {
+export const pairDialog = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, shown: Set<number>, close: () => void) => {
+  const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ctx.kit
   const { invite, error } = pairInvite(ctx, source.epoch, shown)
   effect(() => {
     const failure = error.get()
@@ -20,7 +21,7 @@ export const pairDialog = (ctx: Context<'wire'>, source: DeviceSource, shown: Se
       sheet(
         { 'aria-label': 'Pair a new device', size: 'md' },
         sheetHead({ title: 'Pair a new device', close }),
-        sheetBody({}, dynamicChild(invite, current => current && inviteBody(current, source.listenOnLan))),
+        sheetBody({}, dynamicChild(invite, current => current && inviteBody(ctx.kit, current, source.listenOnLan))),
         sheetFoot(primaryAction({ onClick: close }, 'Done')),
       ),
     ),

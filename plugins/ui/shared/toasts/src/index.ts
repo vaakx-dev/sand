@@ -1,5 +1,6 @@
 import type { Notify } from './contract'
-import { div, dynamicChild, floating, layer, list, place, sig } from '@sand/dom'
+import { floating, place } from '@sand/kit/web'
+import { div, dynamicChild, list, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { reportView, type Report } from './report'
 import { toastView, type Toast } from './toast'
@@ -16,7 +17,10 @@ export default definePlugin({
   name: 'toasts',
   description: 'Shows notices as toasts at the top right of the conversation, and reports in a sheet that stays until closed',
   uses: { layout: 'toasts sit loose on the stage instead of over the conversation' },
+  inject: ['kit'],
   apply(ctx) {
+    const { kit } = ctx
+    const { layer } = kit
     const toasts = sig<Toast[]>([])
     const report = sig<Report | undefined>(undefined)
     let next = 0
@@ -28,13 +32,13 @@ export default definePlugin({
         list(
           toasts,
           toast => toast.id,
-          toast => toastView(toast, close),
+          toast => toastView(kit, toast, close),
           div({ class: 'mt-2 flex w-full max-w-sm flex-col gap-2', 'aria-live': 'polite' }),
         ),
       ),
     )
 
-    floating(ctx, () => dynamicChild(report, shown => (shown ? reportView(shown, () => report.set(undefined)) : null)))
+    floating(ctx, () => dynamicChild(report, shown => (shown ? reportView(kit, shown, () => report.set(undefined)) : null)))
 
     const notify: Notify = {
       push(text, { level = 'info', action, timeout } = {}) {

@@ -1,5 +1,5 @@
-import type { MenuSpec, NavAction } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { RowActions, TreeItem } from './row'
 
 const goActions = ({ row, head }: TreeItem, actions: RowActions): NavAction[] => [

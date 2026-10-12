@@ -1,4 +1,4 @@
-import { effect, onTimeout, sig, type Sig } from '@sand/dom'
+import { effect, onTimeout, sig, type Sig } from '@vaakx-dev/vrui'
 import type { SeenAction } from './model'
 
 export const recent = (action: Sig<SeenAction | undefined>, ms: number) => {

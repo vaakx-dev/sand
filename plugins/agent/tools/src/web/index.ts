@@ -1,7 +1,8 @@
 import type {} from '@sand/settings/contract'
 import type {} from '@sand/transcript-parts/contract'
 import type { GroupState, ToolLoad } from '../contract'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { foundRenderer } from './found'
 import { toolsPage } from './page'
@@ -9,7 +10,7 @@ import { toolsPage } from './page'
 export default definePlugin({
   name: 'tools-web',
   description: 'Tools settings page: choose per group whether tools always load, load on demand or stay off. Shows find_tools calls in the thread.',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     settings: 'no Tools settings page',
     transcript: 'find_tools calls use the generic tool view',
@@ -31,7 +32,7 @@ export default definePlugin({
     ctx.on('wire.event', event => {
       if (event.name === 'tools.change') groups.set(event.args[0])
     })
-    ctx.watch('settings', settings => settings?.page({ id: 'tools', label: 'Tools', icon: 'wrench', order: 22, render: () => toolsPage(groups, choose) }))
+    ctx.watch('settings', settings => settings?.page({ id: 'tools', label: 'Tools', icon: 'wrench', order: 22, render: () => toolsPage(ctx.kit, groups, choose) }))
     ctx.watch('toolViews', views => views && ctx.watch('transcript', transcript => transcript?.tool('find_tools', foundRenderer(views))))
   },
 })

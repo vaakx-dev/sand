@@ -1,4 +1,4 @@
-import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/dom'
+import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/kit/web'
 
 const key = 'settings'
 const opened = 'settingsOpened'

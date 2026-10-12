@@ -1,4 +1,5 @@
-import { copyWithNotice, type MenuSpec, type NavAction } from '@sand/dom'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { Machine, ProjectGroup } from '@sand/web-client/contract'
 import { copyOn } from './group'
 import { refOf, type PickerContext } from './target'

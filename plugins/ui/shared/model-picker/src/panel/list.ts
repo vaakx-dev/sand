@@ -1,21 +1,25 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, div, dynamicChild, effect, errorText, groupLabel, hint, linkButton, span } from '@sand/dom'
 import { favouritesOf } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, effect, span } from '@vaakx-dev/vrui'
 import { modelRow } from './rows'
 import type { Scene } from './scene'
 import { findModels } from './search'
 import { sourceDetail } from './source'
 import { FAVOURITES, type View } from './view'
 
-const heading = (label: string, detail?: string) => groupLabel(span({ class: 'text-neutral-200' }, label), detail ? ` · ${detail}` : '')
+const heading = ({ groupLabel }: Kit, label: string, detail?: string) => groupLabel(span({ class: 'text-neutral-200' }, label), detail ? ` · ${detail}` : '')
 
-const settingsHint = (scene: Scene, text: string, link: string) =>
-  hint(text, scene.openSettings && [' · ', linkButton({ onClick: scene.openSettings }, link)])
+const settingsHint = ({ kit, openSettings }: Scene, text: string, link: string) => {
+  const { hint, linkButton } = kit
+  return hint(text, openSettings && [' · ', linkButton({ onClick: openSettings }, link)])
+}
 
 const sourceList = (scene: Scene, source: SourceInfo) => {
+  const { errorText, hint } = scene.kit
   const models = scene.models.filter(model => model.source === source.id)
   return [
-    heading(source.label, sourceDetail(source)),
+    heading(scene.kit, source.label, sourceDetail(source)),
     models.map(model => modelRow(model, scene)),
     scene.offline(source) && hint(`${source.via} is offline. Its models come back when it does.`),
     source.error && div({ class: 'px-4 py-3' }, errorText(`Could not list the models: ${source.error}`)),
@@ -26,13 +30,14 @@ const sourceList = (scene: Scene, source: SourceInfo) => {
 const favouriteList = (scene: Scene) => {
   const favourites = favouritesOf(scene.models)
   return [
-    heading('Favourites'),
+    heading(scene.kit, 'Favourites'),
     favourites.map(model => modelRow(model, scene, true)),
     !favourites.length && settingsHint(scene, 'No favourites yet', 'Star models in Settings'),
   ]
 }
 
 const searchList = (scene: Scene, query: string) => {
+  const { hint } = scene.kit
   const found = findModels(scene, query)
   return found.length ? found.map(model => modelRow(model, scene, true)) : hint('No matches')
 }

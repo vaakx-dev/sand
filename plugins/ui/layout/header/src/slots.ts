@@ -1,4 +1,4 @@
-import { div, list, sig } from '@sand/dom'
+import { div, list, sig } from '@vaakx-dev/vrui'
 import type { HeaderView } from './contract'
 
 interface Entry {

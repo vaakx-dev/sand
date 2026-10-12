@@ -1,48 +1,56 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { badge, itemRow, secondaryAction, settingsSection, span, tile } from '@sand/dom'
 import { favouritesOf } from '@sand/kit'
-import type { Kit } from './kit'
+import { span } from '@vaakx-dev/vrui'
+import type { Page } from './page'
 import { linkRow, logo, whereText } from './parts'
 import { starIcon } from './star'
 
-export const sourcesKey = (kit: Kit) =>
-  JSON.stringify([kit.ctx.models.sources(), favouritesOf(kit.ctx.models.list()).map(model => model.label)])
+export const sourcesKey = (page: Page) =>
+  JSON.stringify([page.ctx.models.sources(), favouritesOf(page.ctx.models.list()).map(model => model.label)])
 
-const favouritesRow = (kit: Kit) => {
-  const names = favouritesOf(kit.ctx.models.list()).map(model => model.label)
-  return linkRow({
+const favouritesRow = (page: Page) => {
+  const { kit } = page.ctx
+  const { tile } = kit
+  const names = favouritesOf(page.ctx.models.list()).map(model => model.label)
+  return linkRow(kit, {
     mark: tile(starIcon(true, 16)),
     title: 'Favourites',
     detail: names.length ? names.join(', ') : 'Star models to keep them at the top',
-    onClick: () => kit.go({ kind: 'favourites' }),
+    onClick: () => page.go({ kind: 'favourites' }),
   })
 }
 
-const sourceRow = (kit: Kit, source: SourceInfo) =>
-  linkRow({
-    mark: logo(source.provider),
+const sourceRow = (page: Page, source: SourceInfo) => {
+  const { kit } = page.ctx
+  const { badge } = kit
+  return linkRow(kit, {
+    mark: logo(kit, source.provider),
     title: source.label,
     detail: whereText(source),
     end: [
       source.fresh > 0 ? badge('accent', `${source.fresh} new`) : null,
       span({ class: 'shrink-0 text-xs text-neutral-500' }, `${source.shown} of ${source.total} shown`),
     ],
-    onClick: () => kit.go({ kind: 'source', id: source.id }),
+    onClick: () => page.go({ kind: 'source', id: source.id }),
   })
+}
 
-const emptyRow = (kit: Kit) =>
-  itemRow(
+const emptyRow = (page: Page) => {
+  const { itemRow, secondaryAction } = page.ctx.kit
+  return itemRow(
     {},
     null,
     'No accounts yet',
     'Add one to choose models',
-    secondaryAction({ size: 'sm', onClick: () => kit.ctx.settings?.open('accounts') }, 'Open Accounts'),
+    secondaryAction({ size: 'sm', onClick: () => page.ctx.settings?.open('accounts') }, 'Open Accounts'),
   )
+}
 
-export const sourcesSection = (kit: Kit) => {
-  const sources = kit.ctx.models.sources()
+export const sourcesSection = (page: Page) => {
+  const { settingsSection } = page.ctx.kit
+  const sources = page.ctx.models.sources()
   return settingsSection(
     { title: 'In the picker' },
-    ...(sources.length ? [favouritesRow(kit), ...sources.map(source => sourceRow(kit, source))] : [emptyRow(kit)]),
+    ...(sources.length ? [favouritesRow(page), ...sources.map(source => sourceRow(page, source))] : [emptyRow(page)]),
   )
 }

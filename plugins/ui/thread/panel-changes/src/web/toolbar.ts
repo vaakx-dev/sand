@@ -1,4 +1,5 @@
-import { chipButton, choiceItem, div, dropdown, icon, iconButton, popoverItem, segmented, show, span, type Derive } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, show, span, type Derive } from '@vaakx-dev/vrui'
 import type { FileChange } from '../changes/collect'
 import { totals } from '../changes/lines'
 import { counts } from './counts'
@@ -8,7 +9,7 @@ import type { ChangesState } from './view'
 
 const turnName = (turn: number | undefined) => (turn === undefined ? 'All turns' : `Turn ${turn}`)
 
-const turnPicker = (state: ChangesState) =>
+const turnPicker = ({ chipButton, choiceItem, dropdown }: Kit, state: ChangesState) =>
   dropdown({
     trigger: (press, open) => chipButton({ active: open, menu: true, ...press }, () => turnName(state.turn.get())),
     items: close =>
@@ -26,8 +27,9 @@ const turnPicker = (state: ChangesState) =>
       ),
   })
 
-const filesPicker = (files: Derive<FileChange[]>, state: ChangesState) =>
-  dropdown({
+const filesPicker = (kit: Kit, files: Derive<FileChange[]>, state: ChangesState) => {
+  const { chipButton, dropdown, popoverItem } = kit
+  return dropdown({
     trigger: (press, open) => chipButton({ active: open, menu: true, ...press }, 'Files'),
     menuClass: 'max-w-xs',
     items: close =>
@@ -39,10 +41,11 @@ const filesPicker = (files: Derive<FileChange[]>, state: ChangesState) =>
               state.reveal(file)
             },
           },
-          fileEntry(file.path, () => state.viewed.has(file)),
+          fileEntry(kit, file.path, () => state.viewed.has(file)),
         ),
       ),
   })
+}
 
 const layouts = [
   { value: false, label: 'Unified' },
@@ -59,14 +62,15 @@ const progress = (done: () => number, total: () => number) =>
     ),
   )
 
-export const toolbar = (state: ChangesState, display: Display, files: Derive<FileChange[]>) => {
+export const toolbar = (kit: Kit, state: ChangesState, display: Display, files: Derive<FileChange[]>) => {
+  const { icon, iconButton, segmented } = kit
   const sum = () => totals(files.get())
   return div(
     { class: 'flex h-10 shrink-0 items-center gap-2 border-b border-neutral-800 px-3 text-xs text-neutral-400', hidden: () => !state.changes.get()?.turns.length },
-    turnPicker(state),
+    turnPicker(kit, state),
     show(
       () => !display.wide(),
-      () => filesPicker(files, state),
+      () => filesPicker(kit, files, state),
     ),
     show(
       () => !display.compact(),

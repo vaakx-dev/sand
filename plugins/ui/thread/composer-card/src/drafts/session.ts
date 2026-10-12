@@ -1,6 +1,6 @@
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Drafts } from '../contract'
-import { effect, onTimeout, untrack } from '@sand/dom'
+import { effect, onTimeout, untrack } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { Model } from '../model'
 import { createListed } from './listed'

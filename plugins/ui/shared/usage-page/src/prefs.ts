@@ -1,5 +1,5 @@
-import { stored } from '@sand/dom'
 import { usageRanges, type UsageRange } from '@sand/kit'
+import { stored } from '@vaakx-dev/vrui'
 
 export const allPcs = ''
 

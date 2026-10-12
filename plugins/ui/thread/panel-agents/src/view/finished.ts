@@ -1,10 +1,11 @@
-import { badge, div, dynamicChild, show, sig, span, statusBadge, type Sig } from '@sand/dom'
+import { div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Repeated } from '../runs/counts'
 import { memberRows } from './members'
 import { agentMenu } from './menu'
 import { meta, pressable, since, type Rows } from './parts'
 
 export const finishedRow = (item: Sig<Repeated>, now: Sig<number>, rows: Rows) => {
+  const { badge, statusBadge } = rows.kit
   const run = item.map(value => value.run)
   const open = sig(false)
   const foldable = () => run.get().kind === 'workflow' && run.get().members.length > 0

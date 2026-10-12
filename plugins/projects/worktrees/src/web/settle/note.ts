@@ -1,6 +1,8 @@
 import type { RemovedEntry } from '../../contract'
 import type { RenderEntry } from '@sand/transcript-parts/contract'
-import { div, errorMessage, okMark, secondaryAction, show, sig, span, type Pulse, type Sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import type { Pulse } from '@sand/kit/web'
+import { div, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { WebContext, WorktreeClient } from '../client'
 
 const samePlace = (a: string, b: string) => a.replace(/[\\/]+$/, '').toLowerCase() === b.replace(/[\\/]+$/, '').toLowerCase()
@@ -20,6 +22,7 @@ const restore = async (ctx: WebContext, client: WorktreeClient, thread: string, 
 export const removedNote =
   (ctx: WebContext, client: WorktreeClient, changes: Pulse): RenderEntry =>
   (entry, thread) => {
+    const { okMark, secondaryAction } = ctx.kit
     const removed = entry.data as RemovedEntry
     const busy = sig(false)
     const back = changes.read(() => samePlace(ctx.threads.get(thread)?.info.cwd ?? '', removed.cwd))

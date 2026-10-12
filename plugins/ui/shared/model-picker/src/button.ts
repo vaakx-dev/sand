@@ -1,6 +1,7 @@
-import { derive, div, dynamicChild, icon, modelLogo, onDocument, onWindow, plainButton, popover, portal, pressOpens, show, sig, span, type StyleMap } from '@sand/dom'
+import { pressOpens } from '@sand/kit/web'
+import { derive, div, dynamicChild, onDocument, onWindow, portal, show, sig, span, type StyleMap } from '@vaakx-dev/vrui'
 import type { PickerTarget } from './contract'
-import type { PickerKit } from './kit'
+import type { Picker } from './deps'
 import { modelPanel } from './panel/panel'
 
 const gap = 8
@@ -29,7 +30,9 @@ const closeOnScroll = (inner: HTMLElement, close: () => void) =>
     { capture: true, passive: true },
   )
 
-export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string) => {
+export const pickerButton = (picker: Picker, target: PickerTarget, label: string) => {
+  const { ctx, changes } = picker
+  const { icon, modelLogo, plainButton, popover } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const place = sig<StyleMap>({})
@@ -38,10 +41,10 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
     if (anchor) place.set(placeNear(anchor.getBoundingClientRect()))
   }
 
-  const shown = kit.changes.read(() => target.shown())
-  const model = derive(() => kit.ctx.models.info(shown.get()?.model))
+  const shown = changes.read(() => target.shown())
+  const model = derive(() => ctx.models.info(shown.get()?.model))
   const text = () => {
-    const effort = kit.ctx.models.levels().find(level => level.id === shown.get()?.effort)?.label
+    const effort = ctx.models.levels().find(level => level.id === shown.get()?.effort)?.label
     return [model.get()?.label ?? shown.get()?.model ?? 'Choose a model', effort].filter(Boolean).join(' · ')
   }
   const toggle = () => {
@@ -61,7 +64,7 @@ export const pickerButton = (kit: PickerKit, target: PickerTarget, label: string
             onWindow(inner, 'resize', placePanel)
           },
         },
-        modelPanel(kit, target, close),
+        modelPanel(picker, target, close),
       ),
     )
 

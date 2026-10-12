@@ -1,6 +1,7 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, el, fold, span, type Child } from '@sand/dom'
 import { grouped, plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, el, span, type Child } from '@vaakx-dev/vrui'
 
 const shownRows = 200
 const match = /^(.*?):(\d+): (.*)$/
@@ -51,7 +52,7 @@ const matches = (tool: ToolView, views: ToolViews) => {
 
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
 
-const box = (tool: ToolView, content: Child, views: ToolViews) => {
+const box = ({ fold }: Kit, tool: ToolView, content: Child, views: ToolViews) => {
   const { rows, stop } = output(tool, views)
   const hidden = rows.length - shownRows
   return div(
@@ -61,13 +62,13 @@ const box = (tool: ToolView, content: Child, views: ToolViews) => {
   )
 }
 
-const body = (tool: ToolView, content: () => Child, none: string, views: ToolViews) => {
+const body = (kit: Kit, tool: ToolView, content: () => Child, none: string, views: ToolViews) => {
   if (!tool.result) return undefined
   if (tool.result.isError) return views.errorBody(tool)
-  return box(tool, empty(tool, views) ? none : content(), views)
+  return box(kit, tool, empty(tool, views) ? none : content(), views)
 }
 
-export const grepRenderer = (views: ToolViews): ToolRenderer => ({
+export const grepRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
   icon: 'grep',
   verb: 'Searched',
   activeVerb: 'Searching',
@@ -83,10 +84,10 @@ export const grepRenderer = (views: ToolViews): ToolRenderer => ({
     return count === 1 ? '1 match' : `${count} matches`
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => matches(tool, views), 'No matches', views),
+  body: tool => body(kit, tool, () => matches(tool, views), 'No matches', views),
 })
 
-export const globRenderer = (views: ToolViews): ToolRenderer => ({
+export const globRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
   icon: 'search',
   verb: 'Listed',
   activeVerb: 'Listing',
@@ -97,5 +98,5 @@ export const globRenderer = (views: ToolViews): ToolRenderer => ({
     return plural(output(tool, views).rows.length, 'file')
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), 'No files', views),
+  body: tool => body(kit, tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), 'No files', views),
 })

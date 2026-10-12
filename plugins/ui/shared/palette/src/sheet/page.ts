@@ -1,5 +1,6 @@
 import type { PalettePage } from '../contract'
-import { contextMenu, derive, div, dynamicChild, errorText, groupLabel, hint, keys, list, show, untrack, type ContextMenu } from '@sand/dom'
+import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, keys, list, show, untrack } from '@vaakx-dev/vrui'
 import { cardView, reviewView } from './card'
 import { crumbs } from './crumbs'
 import { paletteHead } from './head'
@@ -34,26 +35,29 @@ const keyHandler = (model: PageModel) => {
   }
 }
 
-const failureLine = (model: PageModel, onReview: boolean, spacing: string) =>
+const failureLine = ({ errorText }: Kit, model: PageModel, onReview: boolean, spacing: string) =>
   show(
     derive(() => Boolean(model.failure.get()) && Boolean(model.page.review) === onReview),
     () => div({ class: ['px-4', spacing] }, errorText(() => model.failure.get())),
   )
 
-const results = (model: PageModel, menu: ContextMenu) =>
-  list(
+const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
+  const { groupLabel } = kit
+  return list(
     model.rows,
     entry => entry.key,
     entry => {
       const first = untrack(() => entry.get())
       if ('group' in first) return groupLabel(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
-      return rowView(first.item, position, model, menu)
+      return rowView(kit, first.item, position, model, menu)
     },
     div({ class: 'max-h-96 overflow-auto overscroll-contain px-2 pb-2' }),
   )
+}
 
-export const pageView = (page: PalettePage, nav: PageNav, initial = '') => {
+export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = '') => {
+  const { contextMenu, hint } = kit
   const model = pageModel(page, nav, initial)
   const menu = contextMenu()
   return div(
@@ -65,13 +69,13 @@ export const pageView = (page: PalettePage, nav: PageNav, initial = '') => {
         if (page.review) node.focus()
       },
     },
-    crumbs(nav),
-    paletteHead(model),
-    failureLine(model, false, 'pb-2'),
-    dynamicChild(model.card, found => (found ? cardView(found) : null)),
-    page.review ? reviewView(page.review, model.busy, model.progress, () => void model.confirm()) : null,
-    failureLine(model, true, 'pb-3'),
-    results(model, menu),
+    crumbs(kit, nav),
+    paletteHead(kit, model),
+    failureLine(kit, model, false, 'pb-2'),
+    dynamicChild(model.card, found => (found ? cardView(kit, found) : null)),
+    page.review ? reviewView(kit, page.review, model.busy, model.progress, () => void model.confirm()) : null,
+    failureLine(kit, model, true, 'pb-3'),
+    results(kit, model, menu),
     menu.view(),
     show(
       model.empty.map(Boolean),

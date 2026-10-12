@@ -1,5 +1,6 @@
 import type { TitlePatch, TitleSettings } from '@sand/titles/contract'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 export type SetupStep = 'model' | 'names' | 'done'

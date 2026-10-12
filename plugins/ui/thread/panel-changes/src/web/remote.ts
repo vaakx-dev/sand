@@ -1,5 +1,5 @@
 import type { Thread } from '@sand/web-client/contract'
-import { collectScope, onTimeout } from '@sand/dom'
+import { collectScope, onTimeout } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type {} from '../contract'
 

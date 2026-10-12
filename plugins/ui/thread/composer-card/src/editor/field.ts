@@ -1,4 +1,4 @@
-import { textarea } from '@sand/dom'
+import { textarea } from '@vaakx-dev/vrui'
 import { autosize } from '../integrations/autosize'
 import type { TextSegment } from './segments'
 

@@ -1,11 +1,12 @@
 import type { PalettePage } from '../contract'
-import { dynamicChild, overlay, sheet, type Sig } from '@sand/dom'
+import { dynamicChild, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { reportFailure } from '../failure'
 import type { PageMemory, PageNav } from './nav'
 import { pageView } from './page'
 
-export const paletteSheet = (ctx: Context, stack: Sig<PalettePage[]>, query: () => string) => {
+export const paletteSheet = (ctx: Context<'kit'>, stack: Sig<PalettePage[]>, query: () => string) => {
+  const { overlay, sheet } = ctx.kit
   const held = new Set<PalettePage>()
   const memories = new WeakMap<PalettePage, PageMemory>()
   const top = () => stack.get().at(-1)
@@ -45,7 +46,7 @@ export const paletteSheet = (ctx: Context, stack: Sig<PalettePage[]>, query: () 
     if (!page) return null
     const initial = opening ? query() : ''
     opening = false
-    return pageView(page, nav, initial)
+    return pageView(ctx.kit, page, nav, initial)
   }
   return overlay(dismiss, sheet({ 'aria-label': 'Command palette' }, dynamicChild(stack, view)))
 }

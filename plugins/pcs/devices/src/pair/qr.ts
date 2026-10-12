@@ -1,4 +1,4 @@
-import { div, path, rect, svg } from '@sand/dom'
+import { div, path, rect, svg } from '@vaakx-dev/vrui'
 import { encode } from 'uqr'
 
 export const qrCode = (text: string) => {

@@ -17,13 +17,14 @@
   "dependencies": {
     "@sand/agents": "workspace:*",
     "@sand/browser-engine": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
     "zod": "^4.6.5"
   }

@@ -1,16 +1,13 @@
-import type { NavItem, NavList } from '@sand/dom'
-import { choiceItem, dropdown, icon, navButton, navItems, paneHead, span, stateMark, working, type Pulse } from '@sand/dom'
-
-const mark = (item: NavItem) => {
-  if (item.state === 'draft') return stateMark('draft')
-  if (item.state === 'running') return working()
-  if (item.state === 'background') return stateMark('agent')
-  return item.unread ? stateMark('unread') : null
-}
+import { navItems } from '@sand/kit'
+import type { Pulse } from '@sand/kit/web'
+import type { NavList } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { span } from '@vaakx-dev/vrui'
 
 const titleOf = (nav: NavList, id: string) => navItems(nav).find(item => item.id === id)?.title ?? 'New thread'
 
-export const switcher = (nav: NavList, changes: Pulse, create: () => void) => {
+export const switcher = (kit: Kit, nav: NavList, changes: Pulse, create: () => void) => {
+  const { choiceItem, dropdown, icon, navButton, navMark, paneHead } = kit
   const current = changes.read(() => {
     const selected = nav.selected?.() ?? ''
     return navItems(nav).some(item => item.id === selected) ? selected : ''
@@ -43,7 +40,7 @@ export const switcher = (nav: NavList, changes: Pulse, create: () => void) => {
         ),
       items: close => [
         row('', close, span({ class: 'min-w-0 flex-1 truncate' }, 'New thread')),
-        ...navItems(nav).map(item => row(item.id, close, mark(item), span({ class: 'min-w-0 flex-1 truncate' }, item.title))),
+        ...navItems(nav).map(item => row(item.id, close, navMark(item), span({ class: 'min-w-0 flex-1 truncate' }, item.title))),
       ],
     }),
   )

@@ -1,13 +1,15 @@
 import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { WireRequest } from '@sand/protocol'
-import { errorMessage, type MenuSpec } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import type { MenuSpec, WireRequest } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { Picked, PickerTarget } from '../contract'
-import type { PickerContext, PickerKit } from '../kit'
+import type { Picker, PickerContext } from '../deps'
 import { modelMenu } from '../model-menu'
 import type { View } from './view'
 
 export interface Scene {
+  kit: Kit
   shown: Picked
   defaults: SessionSettings
   target: PickerTarget
@@ -25,7 +27,7 @@ export interface Scene {
 const send = (ctx: PickerContext, request: WireRequest) =>
   void ctx.wire?.call(request).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
 
-export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
+export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
   const shown = target.shown()
   if (!shown) return undefined
   const sources = ctx.models.sources()
@@ -36,6 +38,7 @@ export const readScene = ({ ctx, pcs }: PickerKit, target: PickerTarget, view: V
   }
   const sourceOf = (model: ModelInfo) => sources.find(source => source.id === model.source)
   return {
+    kit: ctx.kit,
     shown,
     defaults: ctx.models.defaults(),
     target,

@@ -1,5 +1,6 @@
-import type { PanelSpec } from '@sand/dom'
-import { badge, closeButton, derive, div, dynamicChild, icon, iconButton, keep, layer, list, paneHead, quietButton, scoped, show, untrack, type Sig } from '@sand/dom'
+import type { PanelSpec } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, keep, list, scoped, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Surface } from './surface'
 
 export interface Page {
@@ -8,6 +9,7 @@ export interface Page {
 }
 
 export interface PanelsParts {
+  kit: Kit
   pages: Sig<Page[]>
   selected: Sig<string | undefined>
   surface: Surface
@@ -17,8 +19,9 @@ export interface PanelsParts {
 
 const hasBadge = (spec: PanelSpec) => spec.badge !== undefined && spec.badge !== ''
 
-const tabView = (page: Sig<Page>, parts: PanelsParts) =>
-  quietButton(
+const tabView = (page: Sig<Page>, parts: PanelsParts) => {
+  const { badge, icon, quietButton } = parts.kit
+  return quietButton(
     { active: () => parts.selected.get() === page.get().spec.id, onClick: () => parts.show(page.get().spec.id) },
     dynamicChild(
       page.map(value => value.spec.icon),
@@ -30,6 +33,7 @@ const tabView = (page: Sig<Page>, parts: PanelsParts) =>
       () => badge('accent', page.map(value => String(value.spec.badge ?? ''))),
     ),
   )
+}
 
 const pageView = (page: Sig<Page>, parts: PanelsParts) => {
   const { spec } = untrack(() => page.get())
@@ -41,30 +45,32 @@ const pageView = (page: Sig<Page>, parts: PanelsParts) => {
   })
 }
 
-const hostClass = (surface: Surface) => {
+const hostClass = ({ layer }: Kit, surface: Surface) => {
   if (!surface.floating()) return 'flex h-full min-h-0 min-w-0 flex-1 flex-col bg-neutral-950'
   if (!surface.drawerOpen()) return 'hidden'
   return [layer.drawer, 'fixed inset-y-0 right-0 flex w-full max-w-lg flex-col bg-neutral-950 shadow-xl animate-slide']
 }
 
-const hideButton = (floating: boolean, hide: () => void) =>
+const hideButton = ({ closeButton, icon, iconButton }: Kit, floating: boolean, hide: () => void) =>
   floating
     ? closeButton({ title: 'Hide the panel', onClick: hide })
     : iconButton({ title: 'Hide the panel', 'aria-label': 'Hide the panel', active: true, onClick: hide }, icon('panel'))
 
-export const panelsView = (parts: PanelsParts) =>
-  div(
-    { class: () => hostClass(parts.surface) },
+export const panelsView = (parts: PanelsParts) => {
+  const { paneHead } = parts.kit
+  return div(
+    { class: () => hostClass(parts.kit, parts.surface) },
     paneHead(
       {},
       div(
         { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
         list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),
       ),
-      dynamicChild(parts.surface.floating, floating => hideButton(floating, parts.hide)),
+      dynamicChild(parts.surface.floating, floating => hideButton(parts.kit, floating, parts.hide)),
     ),
     list(parts.pages, page => page.key, page => pageView(page, parts), div({ class: 'relative min-h-0 flex-1' })),
   )
+}
 
 export const selectedPage = (pages: Sig<Page[]>, wanted: Sig<string | undefined>) =>
   derive(() => {

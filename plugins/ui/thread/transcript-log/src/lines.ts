@@ -1,5 +1,7 @@
 import type { Item, RendererRegistry, Step, ToolView } from '@sand/transcript-parts/contract'
-import { oneLine, plainButton, span } from '@sand/dom'
+import { oneLine } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { span } from '@vaakx-dev/vrui'
 
 type UserPart = Extract<Item, { kind: 'user' }>['parts'][number]
 
@@ -41,7 +43,7 @@ export const emptyLine = (): Line => note('empty', 'new thread · type below to 
 
 export const loadingLine = (): Line => note('loading', 'Loading…')
 
-export const failedLine = (message: string, retry: () => void): Line => ({
+export const failedLine = ({ plainButton }: Kit, message: string, retry: () => void): Line => ({
   key: 'failed',
   tag: 'error',
   tone: 'error',

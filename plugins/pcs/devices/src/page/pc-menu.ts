@@ -1,4 +1,4 @@
-import type { MenuSpec, NavAction } from '@sand/dom'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { PcRow, PcRowActions } from './pc-row'
 
 export const pcMenu = ({ pc, self, shares }: PcRow, actions: PcRowActions): MenuSpec => {

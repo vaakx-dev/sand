@@ -1,9 +1,10 @@
 import type { Entry } from '@sand/messages'
-import { errorMessage, linkButton, markerLine, span } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { LoopChoice } from '../contract'
 
-type ViewContext = Context<'wire' | 'threads'>
+type ViewContext = Context<'wire' | 'threads' | 'kit'>
 
 const nameOf = (entry: Entry | undefined) => (entry?.data as LoopChoice | undefined)?.name ?? null
 
@@ -22,6 +23,7 @@ const switchTo = (ctx: ViewContext, thread: string, loop: string | null) =>
     .catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
 
 export const loopRow = (ctx: ViewContext) => (entry: Entry, thread: string) => {
+  const { linkButton, markerLine } = ctx.kit
   const choice = entry.data as LoopChoice
   const previous = previousName(ctx, entry, thread)
   const text = `Loop: ${labelOf(ctx, choice.name)}${choice.reason ? ` (${choice.reason})` : ''}`

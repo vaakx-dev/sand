@@ -1,6 +1,6 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
 import type { Machine } from '@sand/web-client/contract'
-import { errorMessage } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import { refOf } from '../target'
 import type { ContinueContext } from './flow'
 

@@ -1,5 +1,5 @@
 import type { SettingsPage, SettingsSection } from './contract'
-import { sig } from '@sand/dom'
+import { sig } from '@vaakx-dev/vrui'
 
 const byOrder = (a: { order?: number }, b: { order?: number }) => (a.order ?? 0) - (b.order ?? 0)
 

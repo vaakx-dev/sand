@@ -1,5 +1,5 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { div, span } from '@sand/dom'
+import { div, span } from '@vaakx-dev/vrui'
 import { ownPrefix, skippedAnswer, skippedReply } from '../reply'
 import { questionsOf } from './pending'
 

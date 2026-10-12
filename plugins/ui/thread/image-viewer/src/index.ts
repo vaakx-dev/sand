@@ -1,6 +1,6 @@
 import type { ImageViewer } from './contract'
 import type { Picture } from './gallery'
-import { img, mount } from '@sand/dom'
+import { img, mount } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { indexOfImage, threadImages } from './gallery'
 import { viewerDialog } from './view/dialog'
@@ -9,7 +9,7 @@ import { viewerModel } from './view/model'
 export default definePlugin({
   name: 'image-viewer',
   description: "Opens a thread's images full screen to zoom, pan and flip through",
-  inject: ['threads', 'media'],
+  inject: ['threads', 'media', 'kit'],
   apply(ctx) {
     let closeOpen: (() => void) | undefined
 
@@ -24,7 +24,7 @@ export default definePlugin({
           unmount()
           closeOpen = undefined
         }
-        const unmount = mount(document.body, viewerDialog(viewerModel(images, start), picture, close))
+        const unmount = mount(document.body, viewerDialog(ctx.kit, viewerModel(images, start), picture, close))
         closeOpen = close
       },
     }

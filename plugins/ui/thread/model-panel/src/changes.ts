@@ -1,4 +1,4 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import type { PanelContext } from './actions'
 
 export const modelChanges = (ctx: PanelContext) => {

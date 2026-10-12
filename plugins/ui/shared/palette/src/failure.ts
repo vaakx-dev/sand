@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'
 
 export const reportFailure = (ctx: Context, error: unknown) => {

@@ -1,5 +1,5 @@
 import type { Wire } from '../contract'
-import { listen } from '@sand/dom'
+import { listen } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { Store } from './store'
 

@@ -1,8 +1,10 @@
 import type { GitStatus } from '@sand/git/contract'
 import type { PrSummary } from '@sand/github/contract'
 import { isUnnamed } from '@sand/worktrees/contract'
-import { chipButton, chipPopover, derive, div, dynamicChild, icon, popupTrigger, shine, show, sig, span, type IconName } from '@sand/dom'
 import { plural } from '@sand/kit'
+import { popupTrigger } from '@sand/kit/web'
+import type { IconName, Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import type { GitContext, Model } from '../model'
 import { pillState, type PillTone } from '../state/pill'
 import { gitMenu } from './menu'
@@ -17,7 +19,7 @@ const tones: Record<PillTone, string> = {
 
 const isBehind = (git: GitStatus | undefined) => Boolean(git?.base && git.behindBase)
 
-const glyph = (name: IconName, behind: boolean) =>
+const glyph = ({ icon }: Kit, name: IconName, behind: boolean) =>
   span(
     { class: 'relative inline-flex shrink-0' },
     icon(name, 12),
@@ -30,18 +32,19 @@ const chipTitle = (git: GitStatus | undefined) => {
   return `${git.branch}\n${git.base} has ${plural(git.behindBase, 'new commit')}`
 }
 
-const branchLabel = (model: Model) => {
+const branchLabel = (kit: Kit, model: Model) => {
+  const { icon, shine } = kit
   const git = model.status.get()
   const branch = git?.branch ?? ''
   if (isUnnamed(branch)) return [icon('folder-git', 12), shine(span({ class: 'text-box-trim' }, 'Naming…'))]
-  return [glyph(git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-box-trim' }, branch.replace(/^sand\//, ''))]
+  return [glyph(kit, git?.worktree ? 'folder-git' : 'branch', isBehind(git)), span({ class: 'min-w-0 truncate py-1 text-box-trim' }, branch.replace(/^sand\//, ''))]
 }
 
-const prLabel = (pr: PrSummary, behind: boolean) => {
+const prLabel = (kit: Kit, pr: PrSummary, behind: boolean) => {
   const state = pillState(pr)
   return span(
     { class: ['inline-flex shrink-0 items-center gap-1.5', tones[state.tone]], title: `#${pr.number} ${pr.title} · ${state.label}` },
-    glyph('compare', behind),
+    glyph(kit, 'compare', behind),
     span({ class: 'text-box-trim' }, `PR #${pr.number}`),
   )
 }
@@ -55,6 +58,7 @@ const changedCount = (model: Model) => {
 }
 
 export const gitWidget = (ctx: GitContext, model: Model) => {
+  const { chipButton, chipPopover } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const toggle = () => {
@@ -77,7 +81,7 @@ export const gitWidget = (ctx: GitContext, model: Model) => {
         menu: true,
         onClick: toggle,
       },
-      ...(pr ? [prLabel(pr, isBehind(model.status.get()))] : branchLabel(model)),
+      ...(pr ? [prLabel(ctx.kit, pr, isBehind(model.status.get()))] : branchLabel(ctx.kit, model)),
       changedCount(model),
     )
   }

@@ -1,10 +1,13 @@
-import { closeButton, contextMenu, copyWithNotice, derive, div, dynamicChild, icon, img, list, span, spinner, type ContextMenu, type MenuSpec, type Sig } from '@sand/dom'
 import { bytes } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec } from '@sand/protocol'
+import type { ContextMenu } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, img, list, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { preview } from './content'
 import type { Attached, Files } from './files'
 
-type Ctx = Context<'threads'>
+type Ctx = Context<'threads' | 'kit'>
 
 const isImage = (item: Attached) => item.content?.type === 'image'
 
@@ -19,8 +22,9 @@ const attachmentMenu = (ctx: Ctx, files: Files, item: Attached): MenuSpec => ({
 
 const menuOf = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) => menu.target(() => attachmentMenu(ctx, files, item.get()))
 
-const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =>
-  span(
+const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) => {
+  const { closeButton } = ctx.kit
+  return span(
     {
       class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-neutral-600 animate-rise',
       title: () => `${item.get().name} · ${bytes(item.get().bytes)}`,
@@ -29,6 +33,7 @@ const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =
     img({ class: 'h-full w-full object-cover', src: preview(item.get().content) ?? '', alt: item.get().name }),
     closeButton({ title: 'Remove', size: 'sm', class: 'absolute top-1 right-1 bg-black/50', onClick: () => files.remove(item.get().id) }),
   )
+}
 
 const kindOf = (item: Attached) => {
   if (item.loading) return 'loading'
@@ -36,6 +41,7 @@ const kindOf = (item: Attached) => {
 }
 
 const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) => {
+  const { closeButton, icon, spinner } = ctx.kit
   const failed = () => Boolean(item.get().error)
   const kind = derive(() => kindOf(item.get()))
   return div(
@@ -54,6 +60,7 @@ const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>)
 }
 
 export const shelf = (ctx: Ctx, files: Files) => {
+  const { contextMenu } = ctx.kit
   const menu = contextMenu()
   return div(
     { class: 'flex flex-col', hidden: files.items.map(items => !items.length) },

@@ -1,5 +1,5 @@
 import type { PairInvite } from '@sand/host-devices/contract'
-import { effect, sig, untrack, type Sig } from '@sand/dom'
+import { effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { renewBeforeExpiry } from '../renew'
 

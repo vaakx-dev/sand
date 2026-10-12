@@ -2,7 +2,8 @@ import type { HostRoute } from '@sand/host-gateway/contract'
 import type { PcList, Remote } from '@sand/host-remotes/contract'
 import type { TailscaleState } from '@sand/host-tailscale/contract'
 import type { LoginState } from '@sand/llm-accounts/contract'
-import { errorMessage, sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 const linkChanges = new Set(['network.change', 'tailscale.change', 'routes.change', 'pair.used'])

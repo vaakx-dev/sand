@@ -1,7 +1,9 @@
-import { collectScope, disposeAll, div, layer, mount, type Layout } from '@sand/dom'
+import type { Layout } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { collectScope, disposeAll, div, mount } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 
-export const cover = (layout: Layout | undefined, side: () => HTMLElement, main: () => HTMLElement): Dispose => {
+export const cover = ({ layer }: Kit, layout: Layout | undefined, side: () => HTMLElement, main: () => HTMLElement): Dispose => {
   const nav = collectScope(side)
   const page = collectScope(main)
   const stops = layout

@@ -1,4 +1,4 @@
-import { stored } from '@sand/dom'
+import { stored } from '@vaakx-dev/vrui'
 
 export const projectFilter = () => {
   const project = stored('sand.sidebar-cards.project', '')

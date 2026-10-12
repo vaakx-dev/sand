@@ -1,5 +1,6 @@
 import type { Composer } from '@sand/composer-card/contract'
-import { effect, pulse, untrack, type Derive } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
+import { effect, untrack, type Derive } from '@vaakx-dev/vrui'
 import { definePlugin, type Context } from 'drydock'
 import { toolName } from '../reply'
 import { openAsk } from './answering'
@@ -7,7 +8,7 @@ import { serverAsks } from './asks'
 import { pendingAsk, type PendingAsk } from './pending'
 import { askRenderer } from './row'
 
-const mountAsk = (ctx: Context<'wire'>, composer: Composer, pending: Derive<PendingAsk | undefined>) =>
+const mountAsk = (ctx: Context<'wire' | 'kit'>, composer: Composer, pending: Derive<PendingAsk | undefined>) =>
   effect(() => {
     const ask = pending.get()
     if (!ask) return
@@ -17,7 +18,7 @@ const mountAsk = (ctx: Context<'wire'>, composer: Composer, pending: Derive<Pend
 export default definePlugin({
   name: 'ask-view',
   description: "Shows the agent's questions above the composer and the answers in the thread",
-  inject: ['threads', 'wire'],
+  inject: ['threads', 'wire', 'kit'],
   uses: {
     composer: "questions can't be answered, only skipped by stopping the turn",
     transcript: 'asked questions and their answers are not shown in the thread',

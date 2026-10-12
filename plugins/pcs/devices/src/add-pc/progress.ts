@@ -1,5 +1,6 @@
-import { div, dynamicChild, span, stepMark, type Sig, type StepState } from '@sand/dom'
 import type { InstallProgress, InstallStage } from '@sand/host-dist/contract'
+import type { Kit, StepState } from '@sand/ui-kit/contract'
+import { div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 
 const stages: InstallStage[] = ['installing', 'joining', 'sharing']
 
@@ -22,7 +23,8 @@ const markOf = (index: number, at: number, failed: boolean): StepState => {
   return failed ? 'failed' : 'running'
 }
 
-const rows = (list: InstallProgress[]) => {
+const rows = (kit: Kit, list: InstallProgress[]) => {
+  const { stepMark } = kit
   const at = Math.min(reached(list), 3)
   const failed = list.at(-1)?.stage === 'failed'
   return labels(installedName(list)).map((text, index) => {
@@ -31,8 +33,8 @@ const rows = (list: InstallProgress[]) => {
   })
 }
 
-export const progressList = (progress: Sig<InstallProgress[]>) =>
+export const progressList = (kit: Kit, progress: Sig<InstallProgress[]>) =>
   div(
     { role: 'status', 'aria-live': 'polite' },
-    dynamicChild(progress, list => div({ class: 'flex flex-col gap-2' }, rows(list))),
+    dynamicChild(progress, list => div({ class: 'flex flex-col gap-2' }, rows(kit, list))),
   )

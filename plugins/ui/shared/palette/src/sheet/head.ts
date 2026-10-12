@@ -1,22 +1,6 @@
-import {
-  badge,
-  delayed,
-  effect,
-  headTitle,
-  icon,
-  iconButton,
-  paneHead,
-  primaryAction,
-  searchField,
-  searchRow,
-  show,
-  span,
-  spinner,
-  SPACE,
-  textInput,
-  untrack,
-  type Props,
-} from '@sand/dom'
+import { delayed } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { effect, show, span, SPACE, untrack, type Props } from '@vaakx-dev/vrui'
 import type { PageModel } from './model'
 
 const atEnd = (input: HTMLInputElement) => {
@@ -24,10 +8,10 @@ const atEnd = (input: HTMLInputElement) => {
   input.setSelectionRange(input.value.length, input.value.length)
 }
 
-const backButton = (model: PageModel) =>
+const backButton = ({ icon, iconButton }: Kit, model: PageModel) =>
   model.nested ? iconButton({ title: 'Back', 'aria-label': 'Back', onClick: () => model.nav.back() }, icon('back', 16)) : null
 
-const titleBadge = ({ page }: PageModel) => badge('neutral', span({ class: 'truncate', style: { maxWidth: SPACE['40'] }, title: page.title }, page.title))
+const titleBadge = ({ badge }: Kit, { page }: PageModel) => badge('neutral', span({ class: 'truncate', style: { maxWidth: SPACE['40'] }, title: page.title }, page.title))
 
 const fieldProps = ({ page, text, fills }: PageModel): Props<HTMLInputElement> => ({
   placeholder: page.field?.placeholder ?? page.placeholder ?? 'Search…',
@@ -40,19 +24,20 @@ const fieldProps = ({ page, text, fills }: PageModel): Props<HTMLInputElement> =
     }),
 })
 
-const submitButton = ({ busy, action, submit }: PageModel) =>
+const submitButton = ({ primaryAction, spinner }: Kit, { busy, action, submit }: PageModel) =>
   primaryAction(
     { disabled: () => busy.get() || !action.get()?.enabled, onClick: () => void submit() },
     show(delayed(busy), () => spinner()),
     () => action.get()?.label ?? '',
   )
 
-export const paletteHead = (model: PageModel) => {
+export const paletteHead = (kit: Kit, model: PageModel) => {
+  const { headTitle, paneHead, searchField, searchRow, textInput } = kit
   const { page, nested } = model
   const titled = (!nested && page.id !== 'root') || page.field?.kind === 'text'
-  const back = backButton(model)
-  const title = titled ? titleBadge(model) : null
+  const back = backButton(kit, model)
+  const title = titled ? titleBadge(kit, model) : null
   if (page.review) return paneHead({ led: nested }, back, title, headTitle(2, page.title))
-  if (page.field) return paneHead({ led: nested }, back, title, textInput(fieldProps(model)), submitButton(model))
+  if (page.field) return paneHead({ led: nested }, back, title, textInput(fieldProps(model)), submitButton(kit, model))
   return title ? paneHead({ led: nested }, back, title, searchField(fieldProps(model))) : searchRow(fieldProps(model), back ?? undefined)
 }

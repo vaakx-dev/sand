@@ -1,5 +1,6 @@
-import { contextMenu, derive, div, groupLabel, hint, icon, list, quietButton, show, sig, span, type Sig } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { collapseRepeats, runningAgents } from '../runs/counts'
 import type { Run } from '../runs/runs'
 import { agentRow } from './agent-row'
@@ -21,7 +22,7 @@ export interface AgentsState {
 
 const folded = 5
 
-const parentLink = (parent: Sig<ParentLink | undefined>, open: (id: string) => void) =>
+const parentLink = ({ icon, quietButton }: Kit, parent: Sig<ParentLink | undefined>, open: (id: string) => void) =>
   show(parent.map(Boolean), () =>
     quietButton(
       {
@@ -37,8 +38,9 @@ const parentLink = (parent: Sig<ParentLink | undefined>, open: (id: string) => v
     ),
   )
 
-const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) =>
-  show(
+const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) => {
+  const { groupLabel } = rows.kit
+  return show(
     runs.map(items => items.length > 0),
     () =>
       div(
@@ -50,8 +52,10 @@ const runningSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) =>
         ),
       ),
   )
+}
 
 const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) => {
+  const { groupLabel, quietButton } = rows.kit
   const expanded = sig(false)
   const groups = runs.map(collapseRepeats)
   const shown = derive(() => (expanded.get() ? groups.get() : groups.get().slice(0, folded)))
@@ -70,11 +74,12 @@ const finishedSection = (runs: Sig<Run[]>, now: Sig<number>, rows: Rows) => {
   )
 }
 
-export const agentsView = (state: AgentsState, actions: Actions) => {
-  const rows: Rows = { ...actions, menu: contextMenu() }
+export const agentsView = (kit: Kit, state: AgentsState, actions: Actions) => {
+  const { contextMenu, hint } = kit
+  const rows: Rows = { ...actions, menu: contextMenu(), kit }
   return div(
     { class: 'px-2 pb-4' },
-    parentLink(state.parent, actions.open),
+    parentLink(kit, state.parent, actions.open),
     runningSection(
       state.runs.map(runs => runs.filter(run => run.status === 'running')),
       state.now,

@@ -1,7 +1,10 @@
-import type { NavAction, NavItem } from '@sand/dom'
-import { colorVar, div, dynamicChild, icon, intent, keys, pressMenu, projectAvatar, show, sig, span, tildeHome, type Reorder, type Sig } from '@sand/dom'
+import { tildeHome } from '@sand/kit'
+import { intent, pressMenu, type Reorder } from '@sand/kit/web'
+import type { NavAction, NavItem } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { colorVar, div, dynamicChild, keys, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { CardRow } from '../rows/build'
-import type { MenuRequest } from './menu'
+import type { CardMenu } from './menu'
 import { status } from './status'
 import { actionStrip, type StripParts } from './strip'
 
@@ -10,6 +13,7 @@ const draftEdge = () => span({ class: 'pointer-events-none absolute inset-0 roun
 const slotOf = ({ group, list, item }: CardRow) => ({ id: item.id, group, movable: Boolean(list.move && item.movable) })
 
 interface CardParts {
+  kit: Kit
   item: Sig<NavItem>
   selected: Sig<boolean>
   project: Sig<string>
@@ -21,7 +25,7 @@ const strong = ({ item, selected }: CardParts) => selected.get() || item.get().u
 
 const titleClass = (parts: CardParts) => (strong(parts) ? 'font-semibold text-neutral-100' : 'text-neutral-400')
 
-const avatar = ({ item, project }: CardParts) => projectAvatar(project, item.map(value => value.icon))
+const avatar = ({ kit: { projectAvatar }, item, project }: CardParts) => projectAvatar(project, item.map(value => value.icon))
 
 const onHover = 'group-hover:flex group-focus-visible-within:flex'
 
@@ -30,11 +34,12 @@ const onTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:fle
 const statusSlot = (parts: CardParts, extra = '') =>
   span(
     { class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden group-focus-visible-within:hidden', extra]) },
-    status(parts.item, parts.minute),
+    status(parts.kit, parts.item, parts.minute),
   )
 
 const fullBody = (parts: CardParts) => {
-  const { item, project } = parts
+  const { kit, item, project } = parts
+  const { icon } = kit
   return div(
     div(
       { class: 'flex h-5 items-center gap-1.5 text-xs text-neutral-400' },
@@ -45,7 +50,7 @@ const fullBody = (parts: CardParts) => {
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
       ),
       statusSlot(parts),
-      actionStrip(parts.strip, onHover, true),
+      actionStrip(kit, parts.strip, onHover, true),
     ),
     div({ class: ['truncate text-sm', () => titleClass(parts)], title: item.map(value => value.title) }, item.map(value => value.title)),
     div(
@@ -58,7 +63,7 @@ const fullBody = (parts: CardParts) => {
         ),
         span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
       ),
-      actionStrip(parts.strip, () => onTouchCurrent(parts), false),
+      actionStrip(kit, parts.strip, () => onTouchCurrent(parts), false),
     ),
   )
 }
@@ -71,7 +76,7 @@ const compactBody = (parts: CardParts) =>
     span({ class: 'inline-flex shrink-0' }, avatar(parts)),
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => titleClass(parts)] }, parts.item.map(value => value.title)),
     statusSlot(parts, 'text-xs'),
-    actionStrip(parts.strip, [onHover, () => onTouchCurrent(parts)], true),
+    actionStrip(parts.kit, parts.strip, [onHover, () => onTouchCurrent(parts)], true),
   )
 
 const pointBelow = (event: MouseEvent) => {
@@ -82,7 +87,7 @@ const pointBelow = (event: MouseEvent) => {
 
 const touched = (event: MouseEvent) => event instanceof PointerEvent && event.pointerType === 'touch'
 
-export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow) => void, drag: Reorder, openMenu: (request: MenuRequest) => void) => {
+export const card = (kit: Kit, row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow) => void, drag: Reorder, openMenu: (request: CardMenu) => void) => {
   const item = row.map(value => value.item)
   const selected = row.map(value => value.selected)
   const compact = item.map(value => Boolean(value.settled || value.snoozed))
@@ -100,7 +105,7 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       openMenu({ ...pointBelow(event), touch: touched(event), row: row.get(), ask: action.id })
     },
   }
-  const parts: CardParts = { item, selected, project: item.map(value => value.project ?? value.subtitle ?? ''), minute, strip }
+  const parts: CardParts = { kit, item, selected, project: item.map(value => value.project ?? value.subtitle ?? ''), minute, strip }
   const press = pressMenu(at => {
     if (menu.get().length) openMenu({ ...at, row: row.get() })
   })
@@ -124,7 +129,6 @@ export const card = (row: Sig<CardRow>, minute: Sig<number>, pick: (row: CardRow
       ...hover,
       ...dragging,
       ...press.props,
-      style: dragging.style,
     },
     show(
       item.map(value => value.state === 'draft'),

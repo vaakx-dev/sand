@@ -1,6 +1,6 @@
 import type { ProjectRef } from '@sand/host-projects/contract'
 import type { Machine, ProjectGroup, Thread } from '@sand/web-client/contract'
-import { errorMessage } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
 import type { Context } from 'drydock'
 import { copyOn } from '../group'
 import { offerSend } from './changes'

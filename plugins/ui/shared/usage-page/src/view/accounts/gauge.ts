@@ -1,13 +1,14 @@
 import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { badge, circle, colorVar, div, exactTime, show, span, svg, type Sig } from '@sand/dom'
-import { coarseDuration, leftOf, percent } from '@sand/kit'
+import { coarseDuration, exactTime, leftOf, percent } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { circle, colorVar, div, show, span, svg, type Sig } from '@vaakx-dev/vrui'
 
 const size = 48
 const radius = 20
 const length = 2 * Math.PI * radius
 const paceMargin = 0.05
 
-const statusBadge = (status?: string) => {
+const statusBadge = ({ badge }: Kit, status?: string) => {
   if (!status || status === 'allowed') return null
   if (status === 'rejected') return badge('danger', 'Limit reached')
   return badge('warning', 'Near limit')
@@ -50,14 +51,14 @@ const resetLine = (window: LimitWindow, now: Sig<number>) => {
   )
 }
 
-export const gauge = (window: LimitWindow, stroke: string, now: Sig<number>) => {
+export const gauge = (kit: Kit, window: LimitWindow, stroke: string, now: Sig<number>) => {
   const left = leftOf(window)
   return div(
     { class: 'flex items-center gap-3', title: window.resetsAt ? `${percent(left)} left · resets ${exactTime(window.resetsAt)}` : `${percent(left)} left` },
     ring(left, stroke, window.label),
     div(
       { class: 'flex flex-col text-xs' },
-      span({ class: 'flex items-center gap-2 text-neutral-500' }, window.label, statusBadge(window.status)),
+      span({ class: 'flex items-center gap-2 text-neutral-500' }, window.label, statusBadge(kit, window.status)),
       span({ class: 'text-lg font-semibold text-neutral-100 tabular-nums' }, `${percent(left)} left`),
       resetLine(window, now),
     ),

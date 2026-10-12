@@ -1,7 +1,10 @@
 import type { ContextUsage } from '@sand/compaction/contract'
-import { circle, div, dropdown, errorMessage, icon, iconButton, secondaryAction, show, svg, type Derive } from '@sand/dom'
-import { percent, tokens } from '@sand/kit'
+import { errorMessage, percent, tokens } from '@sand/kit'
+import type {} from '@sand/ui-kit/contract'
+import { circle, div, show, svg, type Derive } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
+
+type RingContext = Context<'threads' | 'kit'>
 
 type Usage = Derive<ContextUsage | undefined>
 
@@ -37,7 +40,8 @@ const usageLine = (usage: Usage) => () => {
   return value.compacting ? `Compacting · ${line}` : line
 }
 
-const details = (ctx: Context<'threads'>, usage: Usage, done: () => void) => {
+const details = (ctx: RingContext, usage: Usage, done: () => void) => {
+  const { icon, secondaryAction } = ctx.kit
   const compact = () => {
     done()
     ctx.threads.command('compact').catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
@@ -49,8 +53,9 @@ const details = (ctx: Context<'threads'>, usage: Usage, done: () => void) => {
   )
 }
 
-export const contextRing = (ctx: Context<'threads'>, usage: Usage) =>
-  show(usage.map(Boolean), () =>
+export const contextRing = (ctx: RingContext, usage: Usage) => {
+  const { dropdown, iconButton } = ctx.kit
+  return show(usage.map(Boolean), () =>
     dropdown({
       placement: 'above-right',
       keepFocus: true,
@@ -59,3 +64,4 @@ export const contextRing = (ctx: Context<'threads'>, usage: Usage) =>
       items: close => [details(ctx, usage, close)],
     }),
   )
+}

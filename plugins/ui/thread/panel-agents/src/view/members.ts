@@ -1,4 +1,4 @@
-import { chevron, div, dot, dynamicChild, list, paneRow, show, sig, span, type Sig } from '@sand/dom'
+import { div, dynamicChild, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Member } from '../runs/runs'
 import { agentMenu } from './menu'
 import { meta, pressProps, since, type Rows } from './parts'
@@ -7,8 +7,9 @@ import { stopButton } from './stop'
 const memberMenu = (member: Member, rows: Rows) =>
   agentMenu(rows, { title: member.title, session: member.id, stop: member.running ? () => rows.interrupt(member.id) : undefined })
 
-const memberRow = (member: Sig<Member>, now: Sig<number>, rows: Rows) =>
-  div(
+const memberRow = (member: Sig<Member>, now: Sig<number>, rows: Rows) => {
+  const { dot, paneRow } = rows.kit
+  return div(
     { class: 'flex items-center gap-1' },
     paneRow(
       pressProps({ press: () => rows.open(member.get().id), menu: { on: rows.menu, spec: () => memberMenu(member.get(), rows) } }),
@@ -24,14 +25,16 @@ const memberRow = (member: Sig<Member>, now: Sig<number>, rows: Rows) =>
     ),
     show(
       member.map(value => value.running),
-      () => stopButton(() => rows.interrupt(member.get().id)),
+      () => stopButton(rows.kit, () => rows.interrupt(member.get().id)),
     ),
   )
+}
 
 export const memberRows = (members: Sig<Member[]>, now: Sig<number>, rows: Rows) =>
   list(members, member => member.id, member => memberRow(member, now, rows), div({ class: 'flex flex-col' }))
 
 export const memberList = (members: Sig<Member[]>, now: Sig<number>, rows: Rows) => {
+  const { chevron, dot, paneRow } = rows.kit
   const running = members.map(all => all.filter(member => member.running))
   const done = members.map(all => all.filter(member => !member.running))
   const open = sig(false)

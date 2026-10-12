@@ -1,4 +1,4 @@
-import { placeCache } from '@sand/dom'
+import { placeCache } from '@sand/kit/web'
 import type { Context } from 'drydock'
 import type { GitStatus, GitStatuses } from '../contract'
 

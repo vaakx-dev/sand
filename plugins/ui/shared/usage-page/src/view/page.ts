@@ -1,4 +1,6 @@
-import { delayed, derive, div, dynamicChild, hintRow, settingsSection, show } from '@sand/dom'
+import { delayed } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Merged } from '../data/types'
 import { usageModel, type UsageDeps, type UsageModel } from '../model'
 import { accountsView } from './accounts'
@@ -10,22 +12,22 @@ import { toolbar } from './toolbar'
 
 type BodyState = Merged | 'waiting' | 'empty' | 'missing'
 
-const noUsage = () => settingsSection({}, hintRow('No usage in this range'))
+const noUsage = ({ hintRow, settingsSection }: Kit) => settingsSection({}, hintRow('No usage in this range'))
 
-const pending = () => show(delayed(true), () => settingsSection({}, hintRow('Loading…')))
+const pending = ({ hintRow, settingsSection }: Kit) => show(delayed(true), () => settingsSection({}, hintRow('Loading…')))
 
-const content = (usage: Merged, model: UsageModel) => {
-  const accounts = accountsView(usage.accounts, { now: model.now, nameOf: model.nameOf, checking: model.checking, check: model.checkLimits })
-  if (!usage.total.turns) return div({ class: 'flex flex-col gap-6' }, accounts, noUsage())
+const content = (kit: Kit, usage: Merged, model: UsageModel) => {
+  const accounts = accountsView(usage.accounts, { kit, now: model.now, nameOf: model.nameOf, checking: model.checking, check: model.checkLimits })
+  if (!usage.total.turns) return div({ class: 'flex flex-col gap-6' }, accounts, noUsage(kit))
   return div(
     { class: 'flex flex-col gap-6' },
     headline(usage),
     accounts,
-    chartView(usage, model.metric),
+    chartView(kit, usage, model.metric),
     div(
       { class: 'flex flex-col gap-2' },
-      breakdownView({ usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }, model.breakdown),
-      unpricedNotes(usage.unpriced),
+      breakdownView({ kit, usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }, model.breakdown),
+      unpricedNotes(kit, usage.unpriced),
     ),
   )
 }
@@ -37,23 +39,23 @@ const stateOf = (model: UsageModel): BodyState => {
   return model.notices.get().length ? 'missing' : 'empty'
 }
 
-const bodyOf = (state: BodyState, model: UsageModel) => {
-  if (typeof state === 'object') return content(state, model)
-  if (state === 'waiting') return pending()
-  return state === 'empty' ? noUsage() : null
+const bodyOf = (kit: Kit, state: BodyState, model: UsageModel) => {
+  if (typeof state === 'object') return content(kit, state, model)
+  if (state === 'waiting') return pending(kit)
+  return state === 'empty' ? noUsage(kit) : null
 }
 
-export const usagePage = (deps: UsageDeps) => {
+export const usagePage = (kit: Kit, deps: UsageDeps) => {
   const model = usageModel(deps)
   return div(
     { class: 'flex w-full flex-col gap-6' },
-    toolbar(model),
-    dynamicChild(model.notices, notices => offlineNotices(notices, model.now)),
+    toolbar(kit, model),
+    dynamicChild(model.notices, notices => offlineNotices(kit, notices, model.now)),
     div(
       { class: ['transition', () => (model.busy.get() && model.usage.get() ? 'opacity-75' : '')] },
       dynamicChild(
         derive(() => stateOf(model)),
-        state => bodyOf(state, model),
+        state => bodyOf(kit, state, model),
       ),
     ),
   )

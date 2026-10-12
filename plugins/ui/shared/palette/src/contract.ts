@@ -1,4 +1,4 @@
-import type { IconName } from '@sand/dom'
+import type { ProjectLook } from '@sand/protocol'
 import type { Dispose } from 'drydock'
 
 export interface PaletteItem {
@@ -7,9 +7,9 @@ export interface PaletteItem {
   label: string
   detail?: string
   meta?: string
-  icon?: IconName
+  icon?: string
   avatar?: string
-  avatarIcon?: string
+  avatarIcon?: ProjectLook
   busy?: boolean
   search?: string
   disabled?: boolean
@@ -23,7 +23,7 @@ export interface PaletteItem {
 
 export interface PaletteItemAction {
   label: string
-  icon?: IconName
+  icon?: string
   danger?: boolean
   returnAfter?: boolean
   run(): void | Promise<void>
@@ -31,7 +31,7 @@ export interface PaletteItemAction {
 
 export interface PaletteCard {
   label?: string
-  icon?: IconName
+  icon?: string
   title: string
   detail?: string
   mono?: boolean

@@ -1,4 +1,4 @@
-import { pulse } from '@sand/dom'
+import { pulse } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import { sourcesPage } from './flow/sources'
 import { createSyncFlows } from './flow/sync/service'
@@ -8,7 +8,7 @@ import { newThreadSource, projectSource } from './source'
 export default definePlugin({
   name: 'new-project',
   description: 'New project in the palette: add a folder, clone a Git URL or start an empty project, on this PC or another one',
-  inject: ['projects', 'machines', 'threads'],
+  inject: ['projects', 'machines', 'threads', 'kit'],
   uses: {
     palette: 'nothing is shown',
     notify: 'no message after a project is added',

@@ -1,4 +1,5 @@
-import { keys, label, primaryAction, sheetStep, sig, textInput, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { keys, label, sig, type Sig } from '@vaakx-dev/vrui'
 import type { LoginAccount, ServerDraft } from '../../contract'
 import { problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
@@ -10,7 +11,8 @@ const added = (control: LoginControl, before: Set<string>, url: string): LoginAc
   return servers.find(account => !before.has(account.id)) ?? servers.find(account => account.url === url)
 }
 
-export const serverStep = (control: LoginControl, draft: ServerDraft, saved: (name: string) => void) => {
+export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, saved: (name: string) => void) => {
+  const { primaryAction, sheetStep, textInput } = kit
   const name = sig(draft.name)
   const url = sig(draft.url)
   const key = sig('')
@@ -52,7 +54,7 @@ export const serverStep = (control: LoginControl, draft: ServerDraft, saved: (na
       field(name, 'My box', 'Name'),
       field(url, 'http://localhost:8080/v1', 'URL', 'url'),
       field(key, 'Only if the server asks for one', 'API key (optional)', 'password'),
-      problem(() => error.get()),
+      problem(kit, () => error.get()),
     ],
     primaryAction({ disabled: () => !ready(), onClick: submit }, () => (busy.get() ? 'Checking…' : idleLabel)),
   )

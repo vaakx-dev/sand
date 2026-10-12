@@ -1,6 +1,6 @@
-import { batch, contextMenu, sig } from '@sand/dom'
+import { batch, sig } from '@vaakx-dev/vrui'
 import type { PickerTarget } from '../contract'
-import type { PickerContext } from '../kit'
+import type { PickerContext } from '../deps'
 
 export const FAVOURITES = ':favourites'
 
@@ -9,21 +9,24 @@ const startAt = (ctx: PickerContext, target: PickerTarget) => {
   return source && ctx.models.sources().some(known => known.id === source) ? source : FAVOURITES
 }
 
-export const openView = (ctx: PickerContext, target: PickerTarget) => ({
-  at: sig(startAt(ctx, target)),
-  query: sig(''),
-  fresh: new Set(
-    ctx.models
-      .list()
-      .filter(model => model.fresh)
-      .map(model => model.id),
-  ),
-  seen: new Set<string>(),
-  place: '',
-  scroll: 0,
-  focus: '',
-  menu: contextMenu(),
-})
+export const openView = (ctx: PickerContext, target: PickerTarget) => {
+  const { contextMenu } = ctx.kit
+  return {
+    at: sig(startAt(ctx, target)),
+    query: sig(''),
+    fresh: new Set(
+      ctx.models
+        .list()
+        .filter(model => model.fresh)
+        .map(model => model.id),
+    ),
+    seen: new Set<string>(),
+    place: '',
+    scroll: 0,
+    focus: '',
+    menu: contextMenu(),
+  }
+}
 
 export type View = ReturnType<typeof openView>
 

@@ -1,4 +1,5 @@
-import { badge, div, dynamicChild, errorText, secondaryAction, span, type Tone } from '@sand/dom'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import { healthDetails } from '../health/details'
 import type { PcHealthState, PcHealthStatus, PcHealthStore } from '../health/state'
 
@@ -17,15 +18,18 @@ const badges: Record<PcHealthStatus, [Tone, string]> = {
   repairing: ['accent', 'Repairing…'],
 }
 
-const report = (state: PcHealthState) =>
-  div(
+const report = (kit: Kit, state: PcHealthState) => {
+  const { badge, errorText } = kit
+  return div(
     { class: 'flex flex-col gap-3' },
     div({ class: 'flex' }, badge(...badges[state.status])),
-    state.health ? healthDetails(state.health) : null,
+    state.health ? healthDetails(kit, state.health) : null,
     state.error ? errorText(state.error) : null,
   )
+}
 
-export const healthPanel = (target: HealthTarget, health: PcHealthStore) => {
+export const healthPanel = (kit: Kit, target: HealthTarget, health: PcHealthStore) => {
+  const { secondaryAction } = kit
   const state = health.state(target.id, target.local, target.online)
   const busy = () => ['checking', 'repairing'].includes(state.get().status)
   const repair = target.local
@@ -36,7 +40,7 @@ export const healthPanel = (target: HealthTarget, health: PcHealthStore) => {
       ]
   return div(
     { class: 'flex flex-col gap-3 px-4 pb-3' },
-    dynamicChild(state, report),
+    dynamicChild(state, current => report(kit, current)),
     div(
       { class: 'flex flex-wrap items-center gap-3' },
       secondaryAction({ size: 'sm', disabled: busy, onClick: () => health.refresh(target.id, target.local) }, 'Check now'),

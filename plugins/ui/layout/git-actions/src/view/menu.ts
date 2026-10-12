@@ -1,8 +1,10 @@
 import type { GitStatus } from '@sand/git/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { errorMessage, groupLabel, icon, menuSeparator, openTab, popoverItem, span, type Child, type IconName } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { errorMessage, plural } from '@sand/kit'
+import { openTab } from '@sand/kit/web'
+import type { IconName, Kit } from '@sand/ui-kit/contract'
+import { span, type Child } from '@vaakx-dev/vrui'
 import type { GitContext, Model, Pr } from '../model'
 
 interface Entry {
@@ -13,7 +15,7 @@ interface Entry {
   blocked?: string
 }
 
-const entryView = ({ label, glyph, run, note, blocked }: Entry, close: () => void) =>
+const entryView = ({ popoverItem }: Kit, { label, glyph, run, note, blocked }: Entry, close: () => void) =>
   popoverItem(
     {
       icon: glyph,
@@ -65,11 +67,12 @@ const placeEntries = (git: GitStatus | undefined, worktrees: Worktrees | undefin
 }
 
 export const gitMenu = (ctx: GitContext, model: Model, close: () => void): Child[] => {
+  const { groupLabel, icon, menuSeparator } = ctx.kit
   const git = model.status.get()
   const pr = model.pr.get()
   const groups = [syncEntries(ctx, git), viewEntries(ctx, pr), placeEntries(git, model.worktrees.get(), pr)].filter(group => group.length)
   return [
     groupLabel(span({ class: 'flex min-w-0 items-center gap-2 font-mono' }, icon('branch', 12), span({ class: 'truncate' }, git?.branch ?? ''))),
-    ...groups.flatMap((group, index) => [index ? menuSeparator() : null, ...group.map(entry => entryView(entry, close))]),
+    ...groups.flatMap((group, index) => [index ? menuSeparator() : null, ...group.map(entry => entryView(ctx.kit, entry, close))]),
   ]
 }

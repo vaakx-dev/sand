@@ -1,5 +1,6 @@
 import type { SetupStep, WorktreeProgress } from '../../contract'
-import { bannerTitle, clock, closeButton, derive, div, dynamicChild, errorText, icon, list, show, span, statusBanner, stepMark, type Sig, type StepState } from '@sand/dom'
+import type { Kit, StepState } from '@sand/ui-kit/contract'
+import { clock, derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 
 const seconds = (ms: number) => (ms < 10_000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms / 1000)}s`)
 
@@ -10,7 +11,7 @@ const timing = (step: SetupStep, now: number) => {
   return step.ms === undefined ? '' : seconds(step.ms)
 }
 
-const stepRow = (step: Sig<SetupStep>, now: Sig<number>) =>
+const stepRow = ({ stepMark }: Kit, step: Sig<SetupStep>, now: Sig<number>) =>
   div(
     { class: ['flex min-h-6 items-center gap-2', () => (step.get().state === 'wait' ? 'text-neutral-500' : 'text-neutral-300')] },
     dynamicChild(
@@ -21,7 +22,8 @@ const stepRow = (step: Sig<SetupStep>, now: Sig<number>) =>
     span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => timing(step.get(), now.get())),
   )
 
-export const progressBanner = (progress: () => WorktreeProgress | undefined, dismiss: () => void) => {
+export const progressBanner = (kit: Kit, progress: () => WorktreeProgress | undefined, dismiss: () => void) => {
+  const { bannerTitle, closeButton, errorText, icon, statusBanner } = kit
   const now = clock(100)
   const all = derive(() => progress()?.steps ?? [])
   const error = derive(() => progress()?.error ?? '')
@@ -38,7 +40,7 @@ export const progressBanner = (progress: () => WorktreeProgress | undefined, dis
           () => closeButton({ title: 'Dismiss', size: 'sm', onClick: dismiss }),
         ),
       ),
-      list(all, step => step.label, step => stepRow(step, now), div({ class: 'flex flex-col' })),
+      list(all, step => step.label, step => stepRow(kit, step, now), div({ class: 'flex flex-col' })),
       show(
         () => Boolean(error.get()),
         () => errorText(() => error.get()),

@@ -1,6 +1,6 @@
 import type { ImageBlock, UserContent } from '@sand/messages'
 import type { Media, Wire } from '../contract'
-import { intersectionObserver, listen } from '@sand/dom'
+import { intersectionObserver, listen } from '@vaakx-dev/vrui'
 import { base64Of } from '../integrations/base64'
 import type { Store } from '../threads/store'
 

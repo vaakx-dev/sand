@@ -1,6 +1,7 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { ago, clock, div, errorText, icon, quietButton, settingsRow, settingsSection, sig, span, toggleSwitch } from '@sand/dom'
-import type { Kit } from '../kit'
+import { ago } from '@sand/kit'
+import { clock, div, sig, span } from '@vaakx-dev/vrui'
+import type { Page } from '../page'
 
 const checkedText = (at: number | undefined, now: number) => {
   if (!at) return 'Not checked yet'
@@ -8,12 +9,13 @@ const checkedText = (at: number | undefined, now: number) => {
   return since === 'now' ? 'Checked just now' : `Checked ${since} ago`
 }
 
-const refreshLine = (kit: Kit, source: () => SourceInfo) => {
+const refreshLine = (page: Page, source: () => SourceInfo) => {
+  const { errorText, icon, quietButton } = page.ctx.kit
   const busy = sig(false)
   const now = clock(30_000)
   const refresh = async () => {
     busy.set(true)
-    await kit.run({ type: 'models.refresh', source: source().id })
+    await page.run({ type: 'models.refresh', source: source().id })
     busy.set(false)
   }
   return div(
@@ -24,7 +26,8 @@ const refreshLine = (kit: Kit, source: () => SourceInfo) => {
   )
 }
 
-export const optionsSection = (kit: Kit, source: () => SourceInfo) => {
+export const optionsSection = (page: Page, source: () => SourceInfo) => {
+  const { settingsRow, settingsSection, toggleSwitch } = page.ctx.kit
   const show = () => source().newModels === 'show'
   return div(
     { class: 'flex flex-col gap-2' },
@@ -35,11 +38,11 @@ export const optionsSection = (kit: Kit, source: () => SourceInfo) => {
         toggleSwitch({
           on: show,
           'aria-label': 'Show new models automatically',
-          onClick: () => void kit.run({ type: 'models.newModels', source: source().id, mode: show() ? 'hide' : 'show' }),
+          onClick: () => void page.run({ type: 'models.newModels', source: source().id, mode: show() ? 'hide' : 'show' }),
         }),
         () => (show() ? 'New models appear in the picker as soon as they are found' : 'New models wait here, marked New'),
       ),
     ),
-    refreshLine(kit, source),
+    refreshLine(page, source),
   )
 }

@@ -12,7 +12,7 @@ import { pluginSource } from './source'
 export default definePlugin({
   name: 'plugin-changes',
   description: 'Lists built-in and user plugins, lets you customise built-ins, and shows plugin changes from your other PCs',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     settings: 'no Plugins settings page',
     notify: 'no message when another PC changes a plugin',
@@ -28,7 +28,7 @@ export default definePlugin({
     offerNotice(ctx, source)
     const actions: RowActions = {
       busy: () => library.busy.get() !== undefined,
-      history: (key, open) => historyToggle(versions, key, open),
+      history: (key, open) => historyToggle(ctx.kit, versions, key, open),
       hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),
       copy: versions.copy,
       customise: plugin => void library.customise(plugin.name),
@@ -40,7 +40,7 @@ export default definePlugin({
       },
     }
     ctx.watch('settings', settings =>
-      settings?.page({ id: page, label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(source, library, versions, actions) }),
+      settings?.page({ id: page, label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(ctx.kit, source, library, versions, actions) }),
     )
   },
 })

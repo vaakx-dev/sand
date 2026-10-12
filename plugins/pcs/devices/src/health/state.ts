@@ -1,6 +1,7 @@
 import type { HostHealth } from '@sand/host-health/contract'
 import type { PcRepairResult } from '@sand/host-updates/contract'
-import { errorMessage, onTimeout, sig, untrack, type Sig } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 export type PcHealthStatus = 'checking' | 'healthy' | 'problem' | 'unknown' | 'repairing'

@@ -1,7 +1,8 @@
 import type { ModelInfo } from '@sand/llm-accounts/contract'
 import type { EffectiveSettings, SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { Notify } from '@sand/toasts/contract'
-import type { Child, MenuSpec } from '@sand/dom'
+import type { MenuSpec } from '@sand/protocol'
+import type { Child } from '@vaakx-dev/vrui'
 
 export type Picked = Omit<EffectiveSettings, 'chosen' | 'source'>
 

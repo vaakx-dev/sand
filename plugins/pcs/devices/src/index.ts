@@ -10,7 +10,7 @@ import { unpairedOverlay } from './unpaired'
 export default definePlugin({
   name: 'devices',
   description: 'Devices: add and pair other PCs, pair phones and browsers, and reach sand away from home',
-  inject: ['wire'],
+  inject: ['wire', 'kit'],
   uses: {
     commands: 'opens the pair dialog from a Devices button in the sidebar instead of /devices',
     nav: 'no sidebar button when there is no /devices command',

@@ -1,5 +1,6 @@
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
-import { copyWithNotice, type MenuSpec, type NavAction } from '@sand/dom'
 import { reportError, type ProjectsContext } from '../context'
 import { copyEntries, projectEntries, startable, startAt, visibilityEntry, type Entry } from './actions'
 import { shorten } from './places'

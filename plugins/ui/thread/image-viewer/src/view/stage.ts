@@ -1,6 +1,6 @@
 import type { Picture, ThreadImage } from '../gallery'
 import type { Zoom } from './zoom'
-import { div, event, preventThen } from '@sand/dom'
+import { div, event, preventThen } from '@vaakx-dev/vrui'
 
 const swipeDistance = 60
 

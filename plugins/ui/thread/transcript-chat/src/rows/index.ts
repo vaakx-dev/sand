@@ -1,5 +1,5 @@
 import type { Item } from '@sand/transcript-parts/contract'
-import { div } from '@sand/dom'
+import { div } from '@vaakx-dev/vrui'
 import { noticeRow, notificationRow, reportRow } from './notes'
 import { textRow, thinkingRow } from './prose'
 import { row, type Row, type RowContext } from './row'

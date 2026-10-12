@@ -1,4 +1,6 @@
-import { copyWithNotice, errorMessage, type MenuSpec, type NavAction } from '@sand/dom'
+import { errorMessage } from '@sand/kit'
+import { copyWithNotice } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { AgentRun } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 

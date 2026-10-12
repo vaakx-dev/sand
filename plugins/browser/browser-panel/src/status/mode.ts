@@ -1,4 +1,4 @@
-import { derive } from '@sand/dom'
+import { derive } from '@vaakx-dev/vrui'
 import type { TabModel } from '../tab/model'
 import { recent } from '../tab/recent'
 

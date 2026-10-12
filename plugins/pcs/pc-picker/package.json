@@ -20,12 +20,14 @@
     "@sand/host-projects": "workspace:*",
     "@sand/commands": "workspace:*",
     "@sand/composer-card": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/protocol": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/sync": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

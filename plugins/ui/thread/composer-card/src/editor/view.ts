@@ -1,4 +1,5 @@
-import { div, list, onDisconnect, sig, untrack } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, list, onDisconnect, sig, untrack } from '@vaakx-dev/vrui'
 import { segmentField } from './field'
 import { quoteRow } from './quote'
 import type { Caret, Segment, Segments, TextSegment } from './segments'
@@ -11,7 +12,7 @@ export interface EditorOptions {
 
 const caretOf = (id: number, field: HTMLTextAreaElement): Caret => ({ id, start: field.selectionStart, end: field.selectionEnd })
 
-export const createEditor = (segments: Segments, options: EditorOptions) => {
+export const createEditor = (kit: Kit, segments: Segments, options: EditorOptions) => {
   const fields = new Map<number, HTMLTextAreaElement>()
   const focused = sig<number | undefined>(undefined)
   let caret: Caret | undefined
@@ -78,7 +79,7 @@ export const createEditor = (segments: Segments, options: EditorOptions) => {
   }
 
   const row = (part: Segment) =>
-    part.kind === 'text' ? textRow(part) : quoteRow(part, { reply: () => place(segments.startAfter(part.id)), remove: () => place(segments.unquote(part.id)) })
+    part.kind === 'text' ? textRow(part) : quoteRow(kit, part, { reply: () => place(segments.startAfter(part.id)), remove: () => place(segments.unquote(part.id)) })
 
   const node = list(
     segments.segments,

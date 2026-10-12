@@ -1,5 +1,6 @@
-import { attempt, type MenuSpec, type NavAction } from '@sand/dom'
 import { oneLine } from '@sand/kit'
+import { attempt } from '@sand/kit/web'
+import type { MenuSpec, NavAction } from '@sand/protocol'
 import type { Context } from 'drydock'
 import type { ProjectChoice } from './choices'
 

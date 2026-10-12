@@ -1,4 +1,4 @@
-import { style } from '@sand/dom'
+import { style } from '@sand/kit/web'
 import { definePlugin } from 'drydock'
 import type { MathRenderer } from '../contract'
 import { mathCss } from './style'

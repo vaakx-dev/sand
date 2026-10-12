@@ -1,5 +1,8 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import { badge, chevron, contextMenu, derive, div, exactTime, list, quietButton, secondaryAction, show, sig, span, type MenuSpec, type NavAction, type Sig } from '@sand/dom'
+import { exactTime } from '@sand/kit'
+import type { MenuSpec, NavAction } from '@sand/protocol'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { VersionsSource } from './source'
 
 const sources: Record<VersionSource, string> = {
@@ -11,7 +14,8 @@ const sources: Record<VersionSource, string> = {
   'auto-restore': 'Brought back after a failed start',
 }
 
-const versionRow = (source: VersionsSource, target: () => VersionTarget | undefined, version: Sig<Version>) => {
+const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarget | undefined, version: Sig<Version>) => {
+  const { badge, contextMenu, secondaryAction } = kit
   const current = derive(() => target()?.current === version.get().id)
   const good = derive(() => target()?.good === version.get().id)
   const busy = () => source.busy.get() !== undefined
@@ -45,7 +49,8 @@ const versionRow = (source: VersionsSource, target: () => VersionTarget | undefi
   )
 }
 
-export const historyToggle = (source: VersionsSource, key: string, open: Sig<boolean> = sig(false)) => {
+export const historyToggle = (kit: Kit, source: VersionsSource, key: string, open: Sig<boolean> = sig(false)) => {
+  const { chevron, quietButton } = kit
   const target = source.target(key)
   const versions = derive(() => target.get()?.versions ?? [])
   return show(
@@ -64,7 +69,7 @@ export const historyToggle = (source: VersionsSource, key: string, open: Sig<boo
           list(
             versions,
             version => version.id,
-            version => versionRow(source, () => target.get(), version),
+            version => versionRow(kit, source, () => target.get(), version),
             div({ class: 'flex flex-col' }),
           ),
         ),

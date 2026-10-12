@@ -14,9 +14,10 @@
   },
   "dependencies": {
     "@sand/commands": "workspace:*",
-    "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/transcript-parts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
   }
 }

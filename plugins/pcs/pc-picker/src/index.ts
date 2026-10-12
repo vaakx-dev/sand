@@ -1,4 +1,5 @@
-import { effect, owned, pulse, sig, untrack } from '@sand/dom'
+import { owned, pulse } from '@sand/kit/web'
+import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { mountSendBack } from './banner/slot'
 import { watchTurnEnds } from './banner/turns'
@@ -11,7 +12,7 @@ export default definePlugin({
   name: 'pc-picker',
   description:
     'Pick which PC a new thread runs on from the composer, continue a started thread on another PC, see whether each copy of the project is up to date, and send finished work to the other PCs',
-  inject: ['composer', 'threads', 'projects', 'machines', 'wire'],
+  inject: ['composer', 'threads', 'projects', 'machines', 'wire', 'kit'],
   uses: {
     sync: 'no up-to-date status and no offer to send changes before continuing',
     syncFlows: "a PC without a copy of the project can't get one when starting or continuing a thread",

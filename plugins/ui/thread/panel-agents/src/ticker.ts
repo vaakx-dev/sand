@@ -1,4 +1,4 @@
-import { onInterval, sig } from '@sand/dom'
+import { onInterval, sig } from '@vaakx-dev/vrui'
 
 export const ticker = () => {
   const now = sig(Date.now())

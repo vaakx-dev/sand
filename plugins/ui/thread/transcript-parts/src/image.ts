@@ -1,5 +1,5 @@
 import type { ImageBlock } from '@sand/messages'
-import { img } from '@sand/dom'
+import { img } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import type { ImageOptions, MediaImage } from './contract'
 

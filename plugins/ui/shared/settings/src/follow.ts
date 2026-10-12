@@ -1,5 +1,5 @@
 import type { SettingsPage } from './contract'
-import { onAddressChange } from '@sand/dom'
+import { onAddressChange } from '@sand/kit/web'
 import type { Context } from 'drydock'
 import { requestedPage } from './address'
 

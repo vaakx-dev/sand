@@ -1,4 +1,4 @@
-import { sig } from '@sand/dom'
+import { sig } from '@vaakx-dev/vrui'
 import type { FileChange } from '../../changes/collect'
 
 export type ViewedMarks = Record<string, Record<string, string>>

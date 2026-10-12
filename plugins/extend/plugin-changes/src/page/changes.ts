@@ -1,6 +1,7 @@
 import type { PluginChangeKind, PluginOffer } from '@sand/host-plugin-sync/contract'
-import { badge, derive, div, hintRow, icon, itemRow, p, primaryAction, quietButton, rowList, secondaryAction, settingsRow, settingsSection, show, span, type Sig, type Tone } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { derive, div, p, show, span, type Sig } from '@vaakx-dev/vrui'
 import { groupOffers, offerSummary, type OfferGroup } from '../offers'
 import type { PluginSource } from '../source'
 
@@ -14,7 +15,7 @@ const detail = (offer: PluginOffer) => {
   return `${files}${offer.both ? ' · also changed on this PC' : ''}`
 }
 
-const offerRow = (source: PluginSource, offer: Sig<PluginOffer>, busy: () => boolean) =>
+const offerRow = ({ badge, secondaryAction, settingsRow }: Kit, source: PluginSource, offer: Sig<PluginOffer>, busy: () => boolean) =>
   settingsRow(
     span(
       { class: 'flex min-w-0 items-center gap-2' },
@@ -32,7 +33,8 @@ const offerRow = (source: PluginSource, offer: Sig<PluginOffer>, busy: () => boo
     () => detail(offer.get()),
   )
 
-const groupSection = (source: PluginSource, group: Sig<OfferGroup>, busy: () => boolean) => {
+const groupSection = (kit: Kit, source: PluginSource, group: Sig<OfferGroup>, busy: () => boolean) => {
+  const { icon, itemRow, primaryAction, quietButton, rowList, settingsSection } = kit
   const names = () => group.get().offers.map(offer => offer.plugin)
   return settingsSection(
     {},
@@ -47,17 +49,18 @@ const groupSection = (source: PluginSource, group: Sig<OfferGroup>, busy: () => 
     rowList(
       derive(() => group.get().offers),
       offer => `${offer.plugin}:${offer.kind}`,
-      offer => offerRow(source, offer, busy),
+      offer => offerRow(kit, source, offer, busy),
     ),
   )
 }
 
-export const changesSection = (source: PluginSource) => {
+export const changesSection = (kit: Kit, source: PluginSource) => {
+  const { hintRow, rowList, settingsSection } = kit
   const busy = () => source.busy.get() !== undefined
   const groups = derive(() => groupOffers(source.state.get()?.offers ?? []))
   return div(
     { class: 'flex flex-col gap-3' },
-    rowList(groups, group => group.peer, group => groupSection(source, group, busy)),
+    rowList(groups, group => group.peer, group => groupSection(kit, source, group, busy)),
     show(
       () => Boolean(source.state.get()?.offers.length),
       () => p({ class: 'px-1 text-xs text-neutral-500' }, 'Applying restarts the runtime; running threads keep going.'),

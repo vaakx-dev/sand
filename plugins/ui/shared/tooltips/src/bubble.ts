@@ -1,10 +1,11 @@
-import { derive, div, dynamicChild, layer, resizeObserver, sig, untrack, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, resizeObserver, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { spotFor, type Spot } from './integrations/spot'
 import type { Tip } from './model'
 
 const px = (value: number | undefined) => (value === undefined ? null : `${value}px`)
 
-const card = (tip: Sig<Tip | undefined>) => {
+const card = ({ layer }: Kit, tip: Sig<Tip | undefined>) => {
   const spot = sig<Spot | undefined>(undefined)
   const place = (node: Element) => {
     const anchor = untrack(() => tip.get()?.anchor)
@@ -28,8 +29,8 @@ const card = (tip: Sig<Tip | undefined>) => {
   )
 }
 
-export const bubble = (tip: Sig<Tip | undefined>) =>
+export const bubble = (kit: Kit, tip: Sig<Tip | undefined>) =>
   dynamicChild(
     derive(() => tip.get()?.round),
-    round => (round === undefined ? null : card(tip)),
+    round => (round === undefined ? null : card(kit, tip)),
   )

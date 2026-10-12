@@ -1,6 +1,6 @@
 import type { ImageBlock, Message, ToolResultContent } from '@sand/messages'
-import type { Props } from '@sand/dom'
 import type { Threads } from '@sand/web-client/contract'
+import type { Props } from '@vaakx-dev/vrui'
 
 export type Sender = 'you' | 'sand'
 

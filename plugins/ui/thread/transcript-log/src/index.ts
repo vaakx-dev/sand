@@ -1,4 +1,5 @@
-import { div, dockFade, jumpButton, list, nearEnd, owned, place, sig, toEnd } from '@sand/dom'
+import { nearEnd, owned, place, toEnd } from '@sand/kit/web'
+import { div, list, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { lineView, type LineContext } from './line'
 import { emptyLine, failedLine, itemLines, loadingLine, type Line } from './lines'
@@ -8,9 +9,10 @@ const revealDistance = 400
 export default definePlugin({
   name: 'transcript-log',
   description: 'Dense terminal-style log: one line per message or tool call; tool lines open to show their output',
-  inject: ['threads', 'transcriptParts', 'markdown'],
+  inject: ['kit', 'threads', 'transcriptParts', 'markdown'],
   uses: { layout: 'lands loose on the stage', models: 'model switches show the raw model id' },
   apply(ctx) {
+    const { dockFade, jumpButton } = ctx.kit
     const parts = ctx.transcriptParts
     const registry = parts.registry(() => render())
     const states = parts.openStates()
@@ -38,7 +40,7 @@ export default definePlugin({
       if (!thread) return [emptyLine()]
       const head: Line = { key: 'session', tag: 'thread', tone: 'dim', text: `${thread.info.title ?? 'untitled'} · ${thread.info.cwd}` }
       const items = parts.items(thread, ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
-      const failure = thread.failed && !thread.loaded && !thread.entries.size ? [failedLine(thread.failed, () => void ctx.threads.load(thread.id))] : []
+      const failure = thread.failed && !thread.loaded && !thread.entries.size ? [failedLine(ctx.kit, thread.failed, () => void ctx.threads.load(thread.id))] : []
       const loading = !thread.loaded && !thread.failed ? [loadingLine()] : []
       return [head, ...failure, ...loading, ...items.flatMap(item => itemLines(item, registry, thread.id, parts.sections))]
     }

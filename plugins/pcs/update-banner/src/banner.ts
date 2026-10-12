@@ -1,5 +1,6 @@
-import { bannerTitle, derive, div, dynamicChild, icon, okMark, primaryAction, quietButton, span, spinner, statusBanner, type Child } from '@sand/dom'
 import { plural } from '@sand/kit'
+import type { Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, span, type Child } from '@vaakx-dev/vrui'
 import { changeLine, isNotable } from './changes'
 import type { Fleet } from './fleet/model'
 import { changesFor, isFar } from './fleet/status'
@@ -18,7 +19,7 @@ export const bannerKind = (fleet: Fleet) =>
     return pending.some(pc => !pc.state?.later) ? 'ready' : undefined
   })
 
-const text = (title: () => string, subtitle?: () => string, warn?: () => boolean) =>
+const text = ({ bannerTitle }: Kit, title: () => string, subtitle?: () => string, warn?: () => boolean) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col' },
     bannerTitle(title),
@@ -51,31 +52,33 @@ const failedNames = (fleet: Fleet) =>
     .map(row => row.pc?.name)
     .join(', ')
 
-const content = (fleet: Fleet, kind: BannerKind, open: () => void): Child[] => {
+const content = (kit: Kit, fleet: Fleet, kind: BannerKind, open: () => void): Child[] => {
+  const { icon, okMark, primaryAction, quietButton, spinner } = kit
   const count = () => plural(fleet.run.get()?.keys.length ?? 0, 'PC')
   switch (kind) {
     case 'running':
       return [
         statusMark('text-accent-400', spinner()),
-        text(() => `Updating ${count()} to ${runName(fleet)}`),
+        text(kit, () => `Updating ${count()} to ${runName(fleet)}`),
         quietButton({ size: 'sm', onClick: open }, 'See'),
       ]
     case 'done':
       return [
         okMark(),
-        text(() => `${count()} updated to ${runName(fleet)}`),
+        text(kit, () => `${count()} updated to ${runName(fleet)}`),
         primaryAction({ size: 'sm', onClick: fleet.finish }, 'Done'),
       ]
     case 'failed':
       return [
         statusMark('text-danger-400', icon('alert', 14)),
-        text(() => `Could not update ${failedNames(fleet)}`),
+        text(kit, () => `Could not update ${failedNames(fleet)}`),
         primaryAction({ size: 'sm', onClick: open }, 'See'),
       ]
     case 'ready':
       return [
         statusMark('text-accent-400', icon('reload', 14)),
         text(
+          kit,
           () => readyTitle(fleet),
           () => readySubtitle(fleet),
           () => !!farPc(fleet),
@@ -86,11 +89,13 @@ const content = (fleet: Fleet, kind: BannerKind, open: () => void): Child[] => {
   }
 }
 
-export const bannerView = (fleet: Fleet, kind: () => BannerKind | undefined, open: () => void) =>
-  div(
+export const bannerView = (kit: Kit, fleet: Fleet, kind: () => BannerKind | undefined, open: () => void) => {
+  const { statusBanner } = kit
+  return div(
     { class: 'w-full px-3 pt-2' },
     statusBanner(
       { tone: 'accent' },
-      dynamicChild(derive(() => kind() ?? 'ready'), current => div({ class: 'flex min-w-0 flex-1 items-center gap-3' }, ...content(fleet, current, open))),
+      dynamicChild(derive(() => kind() ?? 'ready'), current => div({ class: 'flex min-w-0 flex-1 items-center gap-3' }, ...content(kit, fleet, current, open))),
     ),
   )
+}

@@ -1,11 +1,13 @@
 import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { derive, div, dynamicChild, errorRow, hintRow, quietButton, rowList, searchField, segmented, settingsSection, show, type Choice } from '@sand/dom'
+import type { Choice, Kit } from '@sand/ui-kit/contract'
+import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import { addRow } from './add'
 import type { Catalog } from './catalog'
 import type { Filter, Mode } from './filter'
 import { modelRow } from './row'
 
-const toolbar = (catalog: Catalog, filter: Filter) => {
+const toolbar = (kit: Kit, catalog: Catalog, filter: Filter) => {
+  const { searchField, segmented } = kit
   const total = derive(() => catalog.models.get()?.length ?? 0)
   const shown = derive(() => catalog.models.get()?.filter(model => !model.hidden).length ?? 0)
   const choices = (): Choice<Mode>[] => [
@@ -42,7 +44,7 @@ const statusOf = (catalog: Catalog, filter: Filter): Status => {
   return filter.found.get().length ? 'rows' : 'empty'
 }
 
-const status = (catalog: Catalog, filter: Filter) =>
+const status = ({ errorRow, hintRow }: Kit, catalog: Catalog, filter: Filter) =>
   dynamicChild(
     derive(() => statusOf(catalog, filter)),
     state => {
@@ -52,18 +54,20 @@ const status = (catalog: Catalog, filter: Filter) =>
     },
   )
 
-export const modelsSection = (source: SourceInfo, catalog: Catalog, filter: Filter) =>
-  div(
+export const modelsSection = (kit: Kit, source: SourceInfo, catalog: Catalog, filter: Filter) => {
+  const { quietButton, rowList, settingsSection } = kit
+  return div(
     { class: 'flex flex-col gap-2' },
-    source.search ? toolbar(catalog, filter) : null,
+    source.search ? toolbar(kit, catalog, filter) : null,
     settingsSection(
       {},
-      status(catalog, filter),
-      rowList(filter.rows, model => model.id, row => modelRow(row, catalog, filter.keep)),
+      status(kit, catalog, filter),
+      rowList(filter.rows, model => model.id, row => modelRow(kit, row, catalog, filter.keep)),
       show(
         filter.more.map(more => more > 0),
         () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show ${filter.more.get()} more`)),
       ),
-      source.slugs ? addRow(catalog, model => filter.keep(model.id)) : null,
+      source.slugs ? addRow(kit, catalog, model => filter.keep(model.id)) : null,
     ),
   )
+}

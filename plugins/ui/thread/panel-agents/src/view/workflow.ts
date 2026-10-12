@@ -1,4 +1,4 @@
-import { div, dot, show, type Sig } from '@sand/dom'
+import { div, show, type Sig } from '@vaakx-dev/vrui'
 import type { Run } from '../runs/runs'
 import { memberList } from './members'
 import { agentMenu } from './menu'
@@ -13,8 +13,9 @@ const progress = (run: Run, now: number) => {
 const workflowMenu = (run: Run, rows: Rows) =>
   agentMenu(rows, { title: run.title, session: run.session, stop: run.job ? () => rows.cancel(run) : undefined })
 
-export const workflowBlock = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
-  div(
+export const workflowBlock = (run: Sig<Run>, now: Sig<number>, rows: Rows) => {
+  const { dot } = rows.kit
+  return div(
     { class: 'my-1 rounded-xl bg-neutral-900 p-2' },
     div(
       { class: 'flex items-start gap-3 px-2', ...rows.menu.target(() => workflowMenu(run.get(), rows)) },
@@ -30,7 +31,7 @@ export const workflowBlock = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
       ),
       show(
         run.map(value => Boolean(value.job)),
-        () => markSlot(stopButton(() => rows.cancel(run.get()))),
+        () => markSlot(stopButton(rows.kit, () => rows.cancel(run.get()))),
       ),
     ),
     show(
@@ -38,3 +39,4 @@ export const workflowBlock = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
       () => div({ class: 'mt-2 border-t border-neutral-800 pt-1' }, memberList(run.map(value => value.members), now, rows)),
     ),
   )
+}

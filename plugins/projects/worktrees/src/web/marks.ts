@@ -1,5 +1,5 @@
 import type { WorktreeMark } from '../contract'
-import { gathered, placeCache } from '@sand/dom'
+import { gathered, placeCache } from '@sand/kit/web'
 import type { WebContext, WorktreeClient } from './client'
 
 export const createMarks = (ctx: WebContext, client: WorktreeClient) => {

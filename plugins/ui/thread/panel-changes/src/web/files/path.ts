@@ -1,4 +1,4 @@
-import { span } from '@sand/dom'
+import { span } from '@vaakx-dev/vrui'
 
 const cut = (path: string) => path.lastIndexOf('/') + 1
 

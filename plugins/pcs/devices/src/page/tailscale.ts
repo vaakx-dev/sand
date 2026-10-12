@@ -1,23 +1,26 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
-import { copyButton, div, dot, dynamicChild, errorRow, settingsRow, settingsSection, show, sig, span, toggleSwitch, type Tone } from '@sand/dom'
+import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import { linkText } from '../components'
 import type { DeviceSource } from '../source'
 
-const status = (tone: Tone, label: string) => span({ class: 'flex min-w-0 items-center gap-2' }, dot(tone), span({ class: 'truncate' }, label))
+const status = ({ dot }: Kit, tone: Tone, label: string) => span({ class: 'flex min-w-0 items-center gap-2' }, dot(tone), span({ class: 'truncate' }, label))
 
-const statusRow = (state: TailscaleState) => {
-  if (!state.installed) return settingsRow(status('neutral', 'Not installed'), null, 'Install Tailscale to reach sand away from home')
-  if (!state.running) return settingsRow(status('warning', 'Not connected'), null, 'Open Tailscale on this PC and sign in')
-  return settingsRow(status('success', state.name ? `Connected as ${state.name}` : 'Connected'), null, state.ip)
+const statusRow = (kit: Kit, state: TailscaleState) => {
+  const { settingsRow } = kit
+  if (!state.installed) return settingsRow(status(kit, 'neutral', 'Not installed'), null, 'Install Tailscale to reach sand away from home')
+  if (!state.running) return settingsRow(status(kit, 'warning', 'Not connected'), null, 'Open Tailscale on this PC and sign in')
+  return settingsRow(status(kit, 'success', state.name ? `Connected as ${state.name}` : 'Connected'), null, state.ip)
 }
 
-const servingRow = (url: string) =>
+const servingRow = ({ copyButton }: Kit, url: string) =>
   div({ class: 'flex items-center gap-2 bg-neutral-900 px-4 py-2' }, linkText(url), copyButton({ text: () => url, label: 'Copy' }))
 
 const helpText = (name?: string) =>
   `Runs tailscale serve so phones can open sand at ${name ? `https://${name}` : 'an https address'} and install it as an app. This changes this PC’s Tailscale serve settings.`
 
-export const tailscaleSection = (source: DeviceSource) => {
+export const tailscaleSection = (kit: Kit, source: DeviceSource) => {
+  const { errorRow, settingsRow, settingsSection, toggleSwitch } = kit
   const busy = sig(false)
   const state = source.tailscale
   const https = () => state.get()?.https ?? false
@@ -31,7 +34,7 @@ export const tailscaleSection = (source: DeviceSource) => {
   return show(state.map(Boolean), () =>
     settingsSection(
       { title: 'Tailscale' },
-      dynamicChild(state, current => current && statusRow(current)),
+      dynamicChild(state, current => current && statusRow(kit, current)),
       settingsRow(
         'HTTPS through Tailscale',
         toggleSwitch({
@@ -44,7 +47,7 @@ export const tailscaleSection = (source: DeviceSource) => {
       ),
       dynamicChild(
         state.map(current => (current?.serving && current.httpsUrl) || ''),
-        url => (url ? servingRow(url) : null),
+        url => (url ? servingRow(kit, url) : null),
       ),
       dynamicChild(
         state.map(current => current?.error ?? ''),

@@ -1,4 +1,5 @@
-import { colorsOf } from '../../data/providers'
+import type { Kit } from '@sand/ui-kit/contract'
+import { colorsOf } from '../colors'
 import type { Account, Merged } from '../../data/types'
 import { metricValue, type Metric } from '../../format'
 import { isSubscription } from '../../names'
@@ -19,12 +20,12 @@ const labelsOf = (accounts: Account[]) => {
   return (account: Account) => ((counts.get(account.label) ?? 0) > 1 && account.pcName ? `${account.label} · ${account.pcName}` : account.label)
 }
 
-export const seriesOf = (usage: Merged, metric: Metric) => {
+export const seriesOf = (kit: Kit, usage: Merged, metric: Metric) => {
   const keys = periodKeys(usage.since, usage.until, usage.bucket)
   const byKey = new Map(usage.periods.map(period => [period.key, period]))
   const used = usage.accounts.filter(account => account.turns)
   const labelOf = labelsOf(used)
-  const colorOf = colorsOf(usage.accounts)
+  const colorOf = colorsOf(kit, usage.accounts)
   const series: Series[] = used.map(account => {
     const values = keys.map(key => metricValue(byKey.get(key)?.accounts[account.key], metric))
     return {

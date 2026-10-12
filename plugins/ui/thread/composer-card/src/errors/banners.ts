@@ -1,10 +1,11 @@
-import { closeButton, div, icon, secondaryAction, show, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, show, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { bannerPanel } from '../dock/glass'
 import type { Model } from '../model'
 import { turnErrorBanner } from './turn'
 
-const failureBanner = (model: Model) =>
+const failureBanner = ({ closeButton, icon, secondaryAction }: Kit, model: Model) =>
   bannerPanel(
     'danger',
     div(
@@ -19,10 +20,10 @@ const failureBanner = (model: Model) =>
     ),
   )
 
-export const errorBanners = (ctx: Context, model: Model) => [
+export const errorBanners = (ctx: Context<'kit'>, model: Model) => [
   show(
     () => Boolean(model.failure.get()),
-    () => failureBanner(model),
+    () => failureBanner(ctx.kit, model),
   ),
   turnErrorBanner(ctx, model),
 ]

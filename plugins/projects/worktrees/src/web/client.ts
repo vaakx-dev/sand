@@ -1,7 +1,8 @@
 import type { MoveRequest, MoveResult, SettleResult, WorktreeIntent, WorktreeMark, WorktreeState } from '../contract'
+import type {} from '@sand/ui-kit/contract'
 import type { Context } from 'drydock'
 
-export type WebContext = Context<'threads' | 'wire'>
+export type WebContext = Context<'threads' | 'wire' | 'kit'>
 
 export const worktreeClient = ({ wire }: WebContext) => ({
   list: (cwd: string, device?: string) => wire.call<WorktreeState | null>({ type: 'worktrees.list', cwd }, device),

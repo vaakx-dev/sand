@@ -1,6 +1,7 @@
 import type { Picture, Sender, ThreadImage } from '../gallery'
 import type { ViewerModel } from './model'
-import { div, effect, plainButton, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, effect, span } from '@vaakx-dev/vrui'
 import { senderNames } from '../gallery'
 
 interface Numbered {
@@ -21,7 +22,8 @@ const runsOf = (images: ThreadImage[]) =>
     return runs
   }, [])
 
-const thumb = ({ image, index }: Numbered, model: ViewerModel, picture: Picture) => {
+const thumb = (kit: Kit, { image, index }: Numbered, model: ViewerModel, picture: Picture) => {
+  const { plainButton } = kit
   const active = () => model.current.get() === index
   return plainButton(
     {
@@ -37,15 +39,15 @@ const thumb = ({ image, index }: Numbered, model: ViewerModel, picture: Picture)
   )
 }
 
-const runView = (run: Run, model: ViewerModel, picture: Picture) =>
+const runView = (kit: Kit, run: Run, model: ViewerModel, picture: Picture) =>
   div(
     { class: 'flex shrink-0 flex-col gap-1' },
     span({ class: 'px-1 text-xs text-neutral-500' }, senderNames[run.sender]),
-    div({ class: 'flex gap-2 p-1' }, run.members.map(member => thumb(member, model, picture))),
+    div({ class: 'flex gap-2 p-1' }, run.members.map(member => thumb(kit, member, model, picture))),
   )
 
-export const viewerStrip = (model: ViewerModel, picture: Picture) =>
+export const viewerStrip = (kit: Kit, model: ViewerModel, picture: Picture) =>
   div(
     { class: 'shrink-0 overflow-x-auto px-5 pt-2 pb-4' },
-    div({ class: 'mx-auto flex w-max gap-4' }, runsOf(model.images).map(run => runView(run, model, picture))),
+    div({ class: 'mx-auto flex w-max gap-4' }, runsOf(model.images).map(run => runView(kit, run, model, picture))),
   )

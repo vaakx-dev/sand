@@ -1,6 +1,7 @@
 import type { Point } from '@sand/browser-engine/contract'
-import { div, effect, show, sig, untrack, type Sig } from '@sand/dom'
 import type { UserContent } from '@sand/messages'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, effect, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { pickedContent, screenshotContent } from './attach/content'
 import { consoleDrawer } from './console/view'
 import { screenState } from './screen/screen'
@@ -18,7 +19,7 @@ export interface PanelParts {
   guard(failed: string, work: () => Promise<unknown>): void
 }
 
-export const browserPanel = ({ tab, visible, attach, tell, guard }: PanelParts) => {
+export const browserPanel = (kit: Kit, { tab, visible, attach, tell, guard }: PanelParts) => {
   const screen = screenState()
   const picking = sig(false)
   const consoleOpen = sig(false)
@@ -58,7 +59,7 @@ export const browserPanel = ({ tab, visible, attach, tell, guard }: PanelParts) 
         leavePick()
       },
     },
-    toolbar({
+    toolbar(kit, {
       tab,
       picking,
       consoleOpen,
@@ -68,12 +69,13 @@ export const browserPanel = ({ tab, visible, attach, tell, guard }: PanelParts) 
       togglePick: () => (picking.get() ? leavePick() : picking.set(true)),
     }),
     screenView(
+      kit,
       { tab, screen, visible, picking, driving: () => mode.get() === 'agent', pickAt },
       show(
         () => consoleOpen.get() && tab.open.get(),
-        () => consoleDrawer(tab, () => consoleOpen.set(false)),
+        () => consoleDrawer(kit, tab, () => consoleOpen.set(false)),
       ),
     ),
-    statusBar(tab, mode, driver => guard('Could not switch control', () => tab.control(driver))),
+    statusBar(kit, tab, mode, driver => guard('Could not switch control', () => tab.control(driver))),
   )
 }

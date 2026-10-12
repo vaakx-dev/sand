@@ -8,6 +8,7 @@ import { initialWanted, type Wanted } from './wanted'
 export const provideExtensions = (ctx: Context, build: string, bundled: BundledExtension[]) => {
   const mounted = new Map<string, Scope>()
   const pending = new Map<string, boolean | null>()
+  const builtinsFirst = [...bundled.filter(extension => extension.builtin), ...bundled.filter(extension => !extension.builtin)]
   let wanted = initialWanted(bundled)
   let resetting = false
 
@@ -24,10 +25,11 @@ export const provideExtensions = (ctx: Context, build: string, bundled: BundledE
 
   const apply = (next: Wanted) => {
     wanted = { ...wanted, ...next }
-    for (const { id } of bundled) {
-      if (wanted[id]) mount(id)
-      else unmount(id)
-    }
+    const added = builtinsFirst.filter(({ id, builtin, plugin }) => builtin && plugin && wanted[id] && !mounted.has(id))
+    const retaken = new Set(added.flatMap(extension => extension.provides))
+    const shadowed = ({ builtin, provides }: BundledExtension) => !builtin && provides.some(role => retaken.has(role))
+    for (const extension of builtinsFirst) if (!wanted[extension.id] || shadowed(extension)) unmount(extension.id)
+    for (const { id } of builtinsFirst) if (wanted[id]) mount(id)
     ctx.emit('extensions.change')
   }
 

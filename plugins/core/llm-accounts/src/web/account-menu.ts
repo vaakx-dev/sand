@@ -1,4 +1,4 @@
-import type { MenuSpec } from '@sand/dom'
+import type { MenuSpec } from '@sand/protocol'
 import type { LoginAccount } from '../contract'
 import type { LoginControl } from './state'
 

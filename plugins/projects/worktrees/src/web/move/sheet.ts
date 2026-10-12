@@ -1,7 +1,7 @@
 import type { WorktreeState } from '../../contract'
-import { div, errorMessage, overlay, primaryAction, secondaryAction, selectMenu, sheet, sheetBody, sheetFoot, sheetHead, sig } from '@sand/dom'
-import { plural } from '@sand/kit'
+import { errorMessage, plural } from '@sand/kit'
 import type { Thread } from '@sand/web-client/contract'
+import { div, sig } from '@vaakx-dev/vrui'
 import type { WebContext, WorktreeClient } from '../client'
 import { branchInput, checkRow, field, setupLine } from './parts'
 
@@ -26,6 +26,7 @@ const move = async (ctx: WebContext, client: WorktreeClient, form: MoveForm, req
 }
 
 export const moveSheet = (ctx: WebContext, client: WorktreeClient, form: MoveForm, close: () => void) => {
+  const { overlay, primaryAction, secondaryAction, selectMenu, sheet, sheetBody, sheetFoot, sheetHead } = ctx.kit
   const { state } = form
   const branch = sig(form.branch)
   const base = sig(state.branch ?? state.branches[0] ?? 'HEAD')
@@ -45,10 +46,10 @@ export const moveSheet = (ctx: WebContext, client: WorktreeClient, form: MoveFor
       sheetHead({ title: 'Move this thread to a worktree', close }),
       sheetBody(
         {},
-        field('Branch', branchInput(branch, submit)),
+        field('Branch', branchInput(ctx.kit, branch, submit)),
         field('Based on', div({ class: 'flex rounded-lg ring-1 ring-neutral-700' }, selectMenu(baseChoices(state), base, value => base.set(value)))),
-        state.changed > 0 ? checkRow(carry, `Take the ${plural(state.changed, 'changed file')} with it`, `Your folder goes back to a clean ${state.branch ?? 'checkout'}`) : null,
-        hasSetup ? checkRow(setup, 'Set it up', ...setupLine(state.setup)) : null,
+        state.changed > 0 ? checkRow(ctx.kit, carry, `Take the ${plural(state.changed, 'changed file')} with it`, `Your folder goes back to a clean ${state.branch ?? 'checkout'}`) : null,
+        hasSetup ? checkRow(ctx.kit, setup, 'Set it up', ...setupLine(state.setup)) : null,
       ),
       sheetFoot(
         secondaryAction({ onClick: close }, 'Cancel'),

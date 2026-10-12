@@ -1,5 +1,6 @@
 import type { Entry } from '@sand/messages'
-import { chevron, div, rowButton, show, sig, span } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, show, sig, span } from '@vaakx-dev/vrui'
 import type { HookOutcome, HookRecord, HookTrace } from '../contract'
 import { summary } from './summary'
 
@@ -19,7 +20,8 @@ const recordRow = (record: HookRecord) =>
     span({ class: 'shrink-0 tabular-nums text-neutral-600' }, `${record.ms} ms`),
   )
 
-export const hooksEntry = (entry: Entry) => {
+export const hooksEntry = (kit: Kit) => (entry: Entry) => {
+  const { chevron, rowButton } = kit
   const trace = entry.data as HookTrace
   if (!trace?.records?.length) return undefined
   const open = sig(false)

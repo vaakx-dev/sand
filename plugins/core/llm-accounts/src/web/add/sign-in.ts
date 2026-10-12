@@ -1,4 +1,5 @@
-import { callout, clock, copyButton, deviceCode, div, errorText, keys, note, primaryAction, secondaryAction, sheetStep, sig, span, textInput, untrack, waitingLine, type Child, type Sig } from '@sand/dom'
+import type { Kit } from '@sand/ui-kit/contract'
+import { clock, div, keys, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { LoginAccount, LoginPending, SignInKind } from '../../contract'
 import { planNames } from '../names'
 import { hostOf, openLink, problem, whileBusy } from '../parts'
@@ -30,7 +31,7 @@ const step = (number: string, text: string, ...extra: Child[]) =>
     ...extra,
   )
 
-const conflictView = (kind: SignInKind, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
+const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Kit, kind: SignInKind, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
   const pc = account.conflict?.pc ?? 'Another PC'
   return sheetStep(
     callout(
@@ -45,7 +46,8 @@ const conflictView = (kind: SignInKind, account: LoginAccount, actionsFor: SignI
   )
 }
 
-const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
+const pasteView = (kit: Kit, kind: SignInKind, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
+  const { copyButton, primaryAction, sheetStep, textInput } = kit
   const code = sig('')
   const ready = () => !busy.get() && !!code.get().trim()
   const submit = () => {
@@ -53,7 +55,7 @@ const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pe
   }
   return sheetStep(
     [
-      step('1', 'Approve sand in your browser', openLink(pending.url)),
+      step('1', 'Approve sand in your browser', openLink(kit, pending.url)),
       step('2', 'Paste the code it shows'),
       textInput({
         placeholder: `Code from ${hostOf(pending.url)}`,
@@ -61,7 +63,7 @@ const pasteView = (kind: SignInKind, account: () => LoginAccount | undefined, pe
         bindValue: code,
         onKeyDown: keys({ Enter: submit }),
       }),
-      problem(() => account()?.error ?? ''),
+      problem(kit, () => account()?.error ?? ''),
     ],
     copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }),
     primaryAction({ disabled: () => !ready(), onClick: submit }, 'Sign in'),
@@ -77,22 +79,25 @@ const countdown = (expires: number) => {
   }
 }
 
-const deviceView = (pending: Device) =>
-  sheetStep([
+const deviceView = (kit: Kit, pending: Device) => {
+  const { deviceCode, note, sheetStep, waitingLine } = kit
+  return sheetStep([
     note('Open the link on any device and enter this code.'),
     deviceCode(pending.code),
-    div({ class: 'flex flex-wrap items-center justify-between gap-3' }, openLink(pending.url), waitingLine(countdown(pending.expires))),
+    div({ class: 'flex flex-wrap items-center justify-between gap-3' }, openLink(kit, pending.url), waitingLine(countdown(pending.expires))),
   ])
+}
 
-const errorView = (account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
+const errorView = ({ errorText, primaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
   sheetStep(errorText(account.error ?? 'Sign-in failed'), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
 
-export const signInView = (kind: SignInKind, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
+export const signInView = (kit: Kit, kind: SignInKind, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
+  const { note, sheetStep } = kit
   const account = () => control.account(kind)
   const current = untrack(account)
-  if (phase === 'conflict' && current) return conflictView(kind, current, actionsFor, busy)
-  if (current?.pending?.kind === 'paste') return pasteView(kind, account, current.pending, control, busy)
-  if (current?.pending?.kind === 'device') return deviceView(current.pending)
-  if (phase === 'error' && current) return errorView(current, actionsFor, busy)
+  if (phase === 'conflict' && current) return conflictView(kit, kind, current, actionsFor, busy)
+  if (current?.pending?.kind === 'paste') return pasteView(kit, kind, account, current.pending, control, busy)
+  if (current?.pending?.kind === 'device') return deviceView(kit, current.pending)
+  if (phase === 'error' && current) return errorView(kit, current, actionsFor, busy)
   return sheetStep(note('Starting…'))
 }

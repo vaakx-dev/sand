@@ -1,4 +1,4 @@
-import { derive } from '@sand/dom'
+import { derive } from '@vaakx-dev/vrui'
 import type { FileChange } from '../../changes/collect'
 import { quoteText, selectedLines, selectionLabel } from '../diff/quote'
 import type { DiffView } from '../diff/view'
