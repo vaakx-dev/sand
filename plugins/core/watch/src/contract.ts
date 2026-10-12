@@ -7,7 +7,7 @@ export interface WatchedFolders<T> {
 }
 
 export interface Watcher {
-  debounced(dir: string, options: WatchOptions, onChange: () => void): Dispose
+  debounced(dir: string, options: WatchOptions, onChange: () => void, ms?: number): Dispose
   folders<T>(load: (dir: string) => Promise<T>, empty: T, changed?: (dir: string) => void): WatchedFolders<T>
 }
 

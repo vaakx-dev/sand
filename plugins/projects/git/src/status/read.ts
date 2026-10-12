@@ -1,6 +1,6 @@
 import type { GitStatus } from '../contract'
 import { existsSync } from 'node:fs'
-import { fetchOrigin, gitMaybe } from '@sand/kit/git'
+import { gitMaybe } from '@sand/kit/git'
 import { isLinkedWorktree, parsePorcelain } from './parse'
 
 const remoteHead = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'origin/HEAD'])) || undefined
@@ -9,9 +9,8 @@ const commitsIn = async (cwd: string, range: string) => Number(await gitMaybe(cw
 
 export const readStatus = async (cwd: string): Promise<GitStatus | null> => {
   if (!cwd || !existsSync(cwd)) return null
-  void fetchOrigin(cwd)
   const [porcelain, dirs, originHead] = await Promise.all([
-    gitMaybe(cwd, ['status', '--porcelain=v2', '--branch']),
+    gitMaybe(cwd, ['--no-optional-locks', 'status', '--porcelain=v2', '--branch']),
     gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-dir', '--git-common-dir']),
     remoteHead(cwd),
   ])

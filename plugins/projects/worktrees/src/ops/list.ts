@@ -1,4 +1,5 @@
 import type { StartPoint, WorktreeState } from '../contract'
+import { limited } from '@sand/kit'
 import { samePath } from '@sand/kit/fs'
 import { fetchOrigin } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
@@ -7,6 +8,7 @@ import { readSetup } from '../setup/file'
 import type { Ops } from './context'
 
 const most = 30
+const gitSlot = limited(8)
 
 const changedAt = async (path: string, repo: Repo, rootChanged: number) => {
   if (samePath(path, repo.root)) return rootChanged
@@ -25,7 +27,7 @@ export const listState = async (ops: Ops, cwd: string): Promise<WorktreeState | 
   if (!cwd || !existsSync(cwd)) return null
   const repo = await repoOf(cwd)
   if (!repo) return null
-  void fetchOrigin(repo.root)
+  void fetchOrigin(repo.root).then(moved => moved && ops.changed(repo.main))
   const [changed, branches, setup, startPoint] = await Promise.all([
     changedCount(repo.root),
     localBranches(repo.root),
@@ -34,7 +36,7 @@ export const listState = async (ops: Ops, cwd: string): Promise<WorktreeState | 
   ])
   const worktrees = await Promise.all(
     repo.checkouts.slice(0, most).map(async checkout => {
-      const count = await changedAt(checkout.path, repo, changed)
+      const count = await gitSlot(() => changedAt(checkout.path, repo, changed))
       return { ...checkout, main: samePath(checkout.path, repo.main), ...(count !== undefined && { changed: count }) }
     }),
   )

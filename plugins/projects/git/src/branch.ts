@@ -1,4 +1,4 @@
-import { uniqueStrings } from '@sand/kit'
+import { limited, uniqueStrings } from '@sand/kit'
 import { gitMaybe } from '@sand/kit/git'
 import { existsSync } from 'node:fs'
 
@@ -6,8 +6,9 @@ const freshMs = 5000
 const most = 500
 
 const cache = new Map<string, { at: number; branch?: string }>()
+const gitSlot = limited(8)
 
-const read = async (cwd: string) => (await gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])) || undefined
+const read = async (cwd: string) => (await gitSlot(() => gitMaybe(cwd, ['rev-parse', '--abbrev-ref', 'HEAD']))) || undefined
 
 const branch = async (cwd: string) => {
   if (!cwd || !existsSync(cwd)) return undefined

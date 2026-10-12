@@ -41,7 +41,7 @@ export const within = (root: string, cwd: string, target: string) => {
   return rest && !rest.startsWith('..') ? join(target, rest) : target
 }
 
-export const changedCount = async (path: string) => (await gitMaybe(path, ['status', '--porcelain']))?.split('\n').filter(Boolean).length ?? 0
+export const changedCount = async (path: string) => (await gitMaybe(path, ['--no-optional-locks', 'status', '--porcelain']))?.split('\n').filter(Boolean).length ?? 0
 
 export const unpushedCount = async (path: string) => Number(await gitMaybe(path, ['rev-list', '--count', 'HEAD', '--not', '--remotes'])) || 0
 
