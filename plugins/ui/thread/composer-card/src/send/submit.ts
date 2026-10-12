@@ -18,6 +18,11 @@ export const modelMissing = (ctx: Context) => {
   return Boolean(current && !current.model)
 }
 
+export const sendDevice = (ctx: Context<'threads'>) => {
+  const current = ctx.threads.current()
+  return current ? current.device : ctx.threads.device()
+}
+
 export const chooseModel = (ctx: Context<'threads'>) => runCommand(ctx, 'model', '')
 
 export const interrupt = async (ctx: Context<'threads' | 'turns'>) => {

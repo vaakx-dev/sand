@@ -2,7 +2,7 @@ import type { ProjectRef } from '@sand/host-projects/contract'
 import type { Sync } from '@sand/new-project/contract'
 import type { SyncApplied, SyncInspect, SyncPick, SyncResolved, SyncSetup, SyncState } from '@sand/sync/contract'
 import type { Wire } from '../contract'
-import { copyProject, relationOf, sendProject, type SyncCall } from '@sand/sync/flows'
+import { copyProject, relationOf, sendProject, type SyncWire } from '@sand/sync/flows'
 import type { Context } from 'drydock'
 import { thisDevice } from '../remotes/route'
 import { entryKey } from './groups'
@@ -10,7 +10,8 @@ import type { ProjectService } from './projects'
 
 export const createSync = (ctx: Context, wire: Wire, projects: ProjectService): Sync => {
   const states = new Map<string, SyncState>()
-  const call: SyncCall = (request, device) => wire.call(request, device ?? thisDevice)
+  const call: SyncWire['call'] = (request, device) => wire.call(request, device ?? thisDevice)
+  const pcs: SyncWire = { call, fetch: wire.fetch }
   const keyOf = (ref: ProjectRef) => entryKey(ref.path, ref.device)
 
   const refresh = async (ref: ProjectRef) => {
@@ -40,12 +41,12 @@ export const createSync = (ctx: Context, wire: Wire, projects: ProjectService): 
     },
     inspect: ref => call<SyncInspect>({ type: 'sync.inspect', path: ref.path }, ref.device),
     async copy(from, to, options, progress) {
-      await copyProject(call, from, to, { setup: options?.setup, project: options?.project }, progress)
+      await copyProject(pcs, from, to, { setup: options?.setup, project: options?.project }, progress)
       await refreshLists([from, to])
       await refreshAll([from, to])
     },
     async send(from, to, progress): Promise<SyncApplied> {
-      const applied = await sendProject(call, from, to, progress)
+      const applied = await sendProject(pcs, from, to, progress)
       await refreshAll([from, to])
       return applied
     },

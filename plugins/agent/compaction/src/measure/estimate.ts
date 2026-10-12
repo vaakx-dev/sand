@@ -1,3 +1,4 @@
+import { fileText } from '@sand/kit'
 import type { LLMRequest } from '@sand/llm-accounts/contract'
 import type { Block, DocumentBlock, Message, ToolReferenceBlock } from '@sand/messages'
 
@@ -23,6 +24,8 @@ const charsOf = (block: Block | ToolReferenceBlock): number => {
       return imageChars
     case 'document':
       return block.mediaType === 'application/pdf' ? Math.ceil(dataLength(block) / 50) : dataLength(block)
+    case 'file':
+      return fileText(block).length
   }
 }
 

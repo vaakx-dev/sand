@@ -1,45 +1,81 @@
-import { rm, rmdir } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { hiddenOut, type Hidden } from '../folder/hidden'
+import { chmod, lstat, mkdir, rm, rmdir, symlink } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { inside } from '../folder/paths'
+import type { SyncedFolder } from '../folder/synced'
+import { mapLimit } from '../io/pool'
+import { readStatCache, writeStatCache, type FileStamp } from '../snapshot/statCache'
+import type { Store } from '../store/store'
+import type { TreeEntry } from '../store/tree'
 
-const pruneEmpty = async (folder: string, start: string) => {
-  let dir = dirname(start)
-  while (dir !== folder && dir.startsWith(folder)) {
-    if (!(await rmdir(dir).then(() => true, () => false))) return
-    dir = dirname(dir)
-  }
+export interface FileWrite {
+  path: string
+  entry: TreeEntry
+  before?: TreeEntry
 }
 
-export const removeFiles = async (hidden: Hidden, paths: string[]) => {
-  for (const path of paths) {
-    const target = inside(hidden.folder, path)
-    if (!target) continue
-    await rm(target, { force: true })
-    await pruneEmpty(hidden.folder, target)
-  }
+const writers = 32
+
+const isPosix = process.platform !== 'win32'
+
+const ancestors = (folder: string, target: string) => {
+  const found: string[] = []
+  for (let dir = dirname(target); dir !== folder && dir.startsWith(folder); dir = dirname(dir)) found.push(dir)
+  return found
 }
 
-export const checkoutPaths = async (hidden: Hidden, tree: string, paths: string[]) => {
-  if (paths.length === 0) return
-  const index = join(hidden.dir, `checkout-${Bun.randomUUIDv7()}.index`)
-  const env = { GIT_INDEX_FILE: index }
-  try {
-    await hiddenOut(hidden, ['read-tree', tree], { env })
-    await hiddenOut(hidden, ['checkout-index', '-f', '-z', '--stdin'], { env, input: `${paths.join('\0')}\0` })
-  } finally {
-    await rm(index, { force: true })
-  }
+const pruneEmpty = async (folder: string, targets: string[]) => {
+  const dirs = [...new Set(targets.flatMap(target => ancestors(folder, target)))].sort((a, b) => b.length - a.length)
+  for (const dir of dirs) await rmdir(dir).catch(() => {})
 }
 
-export const writeDiff = async (hidden: Hidden, fromTree: string, toTree: string) => {
-  const listing = await hiddenOut(hidden, ['diff-tree', '-r', '-z', '--name-status', '--no-renames', fromTree, toTree])
-  const items = listing.split('\0')
-  const paths = items.filter((_, index) => index % 2 === 1)
-  const deleted = (index: number) => items[index * 2] === 'D'
-  const removed = paths.filter((_, index) => deleted(index))
-  const written = paths.filter((_, index) => !deleted(index))
-  await removeFiles(hidden, removed)
-  await checkoutPaths(hidden, toTree, written)
-  return removed.length + written.length
+export const removeFiles = async (synced: SyncedFolder, paths: string[]) => {
+  const targets = paths.flatMap(path => inside(synced.folder, path) ?? [])
+  await mapLimit(targets, writers, target => rm(target, { force: true }))
+  await pruneEmpty(synced.folder, targets)
+}
+
+type Stamped = [string, FileStamp] | undefined
+
+const stampOf = async (path: string, target: string, entry: TreeEntry): Promise<Stamped> => {
+  const info = await lstat(target)
+  return [path, { size: info.size, mtime: info.mtimeMs, id: entry.id, kind: entry.kind }]
+}
+
+const writeLink = async (store: Store, path: string, entry: TreeEntry, target: string) => {
+  const pointsTo = new TextDecoder().decode(await store.read(entry.id))
+  await rm(target, { force: true })
+  const linked = await symlink(pointsTo, target).then(
+    () => true,
+    () => false,
+  )
+  if (linked) return undefined
+  await Bun.write(target, pointsTo)
+  return stampOf(path, target, entry)
+}
+
+const writeOne = async (synced: SyncedFolder, { path, entry, before }: FileWrite): Promise<Stamped> => {
+  const target = inside(synced.folder, path)
+  if (!target) return undefined
+  if (entry.kind === 'link') return writeLink(synced.store, path, entry, target)
+  if (before?.kind === 'link') await rm(target, { force: true })
+  await synced.store.writeTo(entry.id, target)
+  if (isPosix && (entry.kind === 'exec' || before?.kind === 'exec')) await chmod(target, entry.kind === 'exec' ? 0o755 : 0o644)
+  return stampOf(path, target, entry)
+}
+
+const recordStamps = async (synced: SyncedFolder, stamps: [string, FileStamp][]) => {
+  if (stamps.length === 0) return
+  const cache = await readStatCache(synced.dir)
+  for (const [path, stamp] of stamps) cache.set(path, stamp)
+  await writeStatCache(synced.dir, cache)
+}
+
+export const writeFiles = async (synced: SyncedFolder, files: FileWrite[]) => {
+  const dirs = [...new Set(files.flatMap(({ path }) => inside(synced.folder, path) ?? []).map(target => dirname(target)))]
+  await mapLimit(dirs, writers, dir => mkdir(dir, { recursive: true }))
+  const stamps = await mapLimit(files, writers, file => writeOne(synced, file))
+  await recordStamps(
+    synced,
+    stamps.filter(stamp => stamp !== undefined),
+  )
 }

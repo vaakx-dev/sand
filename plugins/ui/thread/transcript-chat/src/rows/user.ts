@@ -1,21 +1,26 @@
-import type { UserPart } from '@sand/messages'
+import type { FileBlock, UserPart } from '@sand/messages'
 import type { TextMenu } from '@sand/transcript-parts/contract'
-import { oneLine, quoteBlocks } from '@sand/kit'
+import { bytes, isArchiveName, oneLine, quoteBlocks } from '@sand/kit'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { div, span, type Child } from '@vaakx-dev/vrui'
 import { actionRow, row, type RowContext, type RowMaker } from './row'
 
-const chip = ({ icon }: Kit, name: string, iconName: IconName, tone: string, iconTone?: string) =>
+const chip = ({ icon }: Kit, name: string, iconName: IconName, tone: string, iconTone?: string, size?: number) =>
   span(
     { class: ['inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs', tone], title: name },
-    span({ class: ['shrink-0', iconTone] }, icon(iconName, 14)),
+    span({ class: ['inline-flex shrink-0', iconTone] }, icon(iconName, 13)),
     span({ class: 'min-w-0 truncate' }, name),
+    size !== undefined && span({ class: 'shrink-0 text-neutral-500' }, bytes(size)),
   )
+
+const fileChip = (kit: Kit, block: FileBlock) =>
+  chip(kit, block.name, isArchiveName(block.name) ? 'file-archive' : 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500', block.size)
 
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
     return context.parts.image(part.block, context.thread, { class: 'block max-h-32 max-w-48 rounded-lg bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
   if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500')
+  if (part.kind === 'file') return fileChip(context.kit, part.block)
   if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles', 'bg-accent-950 text-accent-400')
   return null
 }

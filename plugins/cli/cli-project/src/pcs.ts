@@ -1,6 +1,7 @@
+import { bearer } from '@sand/kit'
 import { remoteStore } from '@sand/kit/host'
 import type { Daemon, DeviceInfo } from '@sand/protocol'
-import type { SyncCall } from '@sand/sync/flows'
+import type { SyncWire } from '@sand/sync/flows'
 
 const syncTimeout = 10 * 60_000
 
@@ -13,10 +14,9 @@ export interface Pc {
   key: string
 }
 
-export interface Pcs {
+export interface Pcs extends SyncWire {
   all: Pc[]
   local: Pc
-  call: SyncCall
   named(name: string): Pc
 }
 
@@ -26,10 +26,19 @@ export const connectPcs = async (daemon: Daemon, home: string): Promise<Pcs> => 
   const local: Pc = { name: device.name, url: info.url, key: info.key }
   const all = [local, ...store.list().map(({ id, name, url, key }): Pc => ({ device: id, name, url, key }))]
 
-  const call: SyncCall = (request, device) => {
+  const pcOf = (device?: string) => {
     const pc = all.find(candidate => candidate.device === device)
     if (!pc) throw new Error(`unknown PC ${device}`)
-    return daemon.request(request, { to: pc, timeout: request.type.startsWith('sync.') ? syncTimeout : undefined })
+    return pc
+  }
+
+  const slow = (type: string) => type.startsWith('sync.') || type === 'transfers.pull'
+
+  const call: SyncWire['call'] = (request, device) => daemon.request(request, { to: pcOf(device), timeout: slow(request.type) ? syncTimeout : undefined })
+
+  const fetchFrom: SyncWire['fetch'] = async (path, init, device) => {
+    const { url, key } = pcOf(device)
+    return fetch(new URL(path, url), { ...init, headers: bearer(key) })
   }
 
   const named = (name: string) => {
@@ -40,5 +49,5 @@ export const connectPcs = async (daemon: Daemon, home: string): Promise<Pcs> => 
     return found
   }
 
-  return { all, local, call, named }
+  return { all, local, call, fetch: fetchFrom, named }
 }

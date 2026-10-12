@@ -1,6 +1,6 @@
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { isSecret, junkPatterns } from '../folder/exclude'
+import { isSecret, junkPatterns } from '../ignore/builtin'
 
 const maxDepth = 3
 const maxEntries = 3000

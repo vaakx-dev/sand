@@ -4,7 +4,7 @@ import { oneLine, promptText, userParts } from '@sand/kit'
 const maxLength = 50
 
 const fileNames = (message: Message) =>
-  userParts(message).flatMap(part => (part.kind === 'image' || part.kind === 'document' ? [part.block.name ?? part.block.type] : []))
+  userParts(message).flatMap(part => (part.kind === 'image' || part.kind === 'document' || part.kind === 'file' ? [part.block.name ?? part.block.type] : []))
 
 const promptWords = (message: Message) => oneLine([promptText(message, ' '), ...fileNames(message)].join(' '))
 
