@@ -21,7 +21,7 @@ export interface Bundle extends HostBundle {
   stamp: BuildStamp
 }
 
-const cacheTime = 5000
+const cacheTime = 30_000
 const buildId = /^[0-9a-f]{6,64}$/
 
 const isLinkMap = (links: unknown): links is Record<string, string> =>
@@ -71,12 +71,19 @@ export const readBuild = async (root: string) => {
   return { build, hash, files, stamp }
 }
 
+const readBuildInfo = async (root: string): Promise<BuildInfo> => {
+  const stamp = await readStamp(root)
+  if (stamp) return stampBuild(stamp)
+  const { hash, latest } = await hashApp(root)
+  return { id: hash, time: latest }
+}
+
 const cache = new Map<string, { at: number; build: Promise<BuildInfo> }>()
 
 export const buildInfo = (root: string): Promise<BuildInfo> => {
   const cached = cache.get(root)
   if (cached && Date.now() - cached.at < cacheTime) return cached.build
-  const entry = { at: Date.now(), build: readBuild(root).then(found => found.build) }
+  const entry = { at: Date.now(), build: readBuildInfo(root) }
   cache.set(root, entry)
   entry.build.catch(() => {
     if (cache.get(root) === entry) cache.delete(root)

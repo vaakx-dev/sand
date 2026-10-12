@@ -24,7 +24,7 @@ export const createClient = (socket: HubSocket, device: string): Client => ({
 })
 
 export const send = (client: Client, raw: string) => {
-  if (client.open) client.socket.send(raw)
+  if (client.open && client.socket.send(raw) === 0) client.socket.terminate()
 }
 
 export const answer = (client: Client, id: number, outcome: { result?: unknown; error?: string }) =>

@@ -3,7 +3,7 @@ import { trimSlash } from '../text/url'
 import { parseBuildInfo } from './build'
 import { hostPaths } from './pairing'
 
-const timeout = 5000
+const timeout = 10_000
 
 export const bearer = (key: string) => ({ authorization: `Bearer ${key}` })
 

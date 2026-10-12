@@ -16,6 +16,18 @@ export const candidates = (seeds: string[], host: string | undefined): string[] 
   return [...new Set(urls)].filter(url => routeUsable(url))
 }
 
+const restBase = 60_000
+const restMax = 60 * 60_000
+
+const resting = (route: StoredRoute, now: number) =>
+  route.misses !== undefined && route.failed !== undefined && now - route.failed < Math.min(restMax, restBase * 2 ** (route.misses - 1))
+
+export const worthProbing = (urls: string[], host: string, current: string) => {
+  const now = Date.now()
+  const down = new Set(routes(host).filter(route => route.url !== current && resting(route, now)).map(route => route.url))
+  return urls.filter(url => !down.has(url))
+}
+
 export const onSlowerRoute = (current: Route, urls: string[], host: string) => {
   if (urls.some(url => url !== current.url && routeRank(routeKind(url)) < routeRank(current.kind))) return true
   const known = routes(host).filter(route => urls.includes(route.url) && healthy(route))
