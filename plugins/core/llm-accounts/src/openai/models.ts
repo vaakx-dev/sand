@@ -4,7 +4,7 @@ import { capital } from '@sand/kit'
 const upToMax: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 const upToXhigh: Effort[] = ['low', 'medium', 'high', 'xhigh']
 
-export const codexModels = [
+export const openaiModels = [
   'gpt-6.1-sol',
   'gpt-6-sol',
   'gpt-6-astra',
@@ -27,7 +27,7 @@ const label = (id: string) =>
 
 const effortsOf = (id: string) => (/^gpt-(6|5\.6)/.test(id) ? upToMax : upToXhigh)
 
-export const describeCodex = (id: string): ModelInfo => ({
+export const describeOpenAI = (id: string): ModelInfo => ({
   id,
   provider: 'openai',
   label: label(id),

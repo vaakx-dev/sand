@@ -1,6 +1,6 @@
 import type { ApiKey } from '../auth/store'
 import { bearer, isRecord, trimSlash } from '@sand/kit'
-import { describeCodex, takesImages } from '../codex/models'
+import { describeOpenAI, takesImages } from '../openai/models'
 import { listIn } from './fields'
 import { getJson } from './http'
 import type { Discovered } from './types'
@@ -16,7 +16,7 @@ const chatModel = (entry: unknown) => {
 }
 
 const describe = (id: string): Discovered => {
-  const { label, efforts, defaultEffort, context } = describeCodex(id)
+  const { label, efforts, defaultEffort, context } = describeOpenAI(id)
   return { name: id, label, efforts, defaultEffort, context, images: takesImages(id) }
 }
 

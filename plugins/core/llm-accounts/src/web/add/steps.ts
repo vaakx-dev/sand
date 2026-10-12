@@ -1,9 +1,9 @@
-import type { KeyKind, LoginAccount, ServerDraft, SignInKind } from '../../contract'
-import { isServerProvider, isSignInKind } from '../../auth/kinds'
+import type { KeyKind, LoginAccount, ServerDraft } from '../../contract'
+import { isKeyKind, isServerProvider } from '../../auth/kinds'
 
 export type Step =
   | { kind: 'choose' }
-  | { kind: 'sign-in'; account: SignInKind }
+  | { kind: 'sign-in'; account: string }
   | { kind: 'key'; account: KeyKind }
   | { kind: 'detect' }
   | { kind: 'server'; draft: ServerDraft }
@@ -18,7 +18,7 @@ const draftOf = ({ id, label, url, provider }: LoginAccount): ServerDraft => ({
 })
 
 export const stepFor = (account: LoginAccount): Step => {
-  if (isSignInKind(account.kind)) return { kind: 'sign-in', account: account.kind }
   if (account.kind === 'server') return { kind: 'server', draft: draftOf(account) }
-  return { kind: 'key', account: account.kind }
+  if (isKeyKind(account.kind)) return { kind: 'key', account: account.kind }
+  return { kind: 'sign-in', account: account.id }
 }

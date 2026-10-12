@@ -11,7 +11,7 @@ export const split = (id: string) => {
 }
 
 export const modelOf = (meta: SourceMeta, found: Discovered): ModelInfo => ({
-  ...describe(meta.kind, found),
+  ...describe(meta.api, found),
   id: qualify(meta.id, found.name),
   source: meta.id,
   name: found.name,
@@ -21,11 +21,11 @@ export const modelOf = (meta: SourceMeta, found: Discovered): ModelInfo => ({
 
 const shownByDefault = (meta: SourceMeta, name: string) => {
   if (meta.via || meta.kind === 'server') return true
-  return builtinNames(meta.kind).includes(name)
+  return builtinNames(meta.api).includes(name)
 }
 
 const order = (meta: SourceMeta) => (a: ModelInfo, b: ModelInfo) =>
-  builtinRank(meta.kind, a.name ?? a.id) - builtinRank(meta.kind, b.name ?? b.id) || a.label.localeCompare(b.label)
+  builtinRank(meta.api, a.name ?? a.id) - builtinRank(meta.api, b.name ?? b.id) || a.label.localeCompare(b.label)
 
 const strip = ({ hidden: _, favourite: __, fresh: ___, added: ____, ...model }: ModelInfo): ModelInfo => model
 

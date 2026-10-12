@@ -1,8 +1,6 @@
-export type AccountKind = 'claude' | 'codex' | 'anthropic' | 'openai' | 'openrouter' | 'server'
-
-export type SignInKind = 'claude' | 'codex'
-
 export type KeyKind = 'anthropic' | 'openai' | 'openrouter'
+
+export type AccountKind = string
 
 export type LoginMethod = 'oauth' | 'api_key' | 'server'
 
@@ -15,6 +13,11 @@ export interface LoginConflict {
   pc: string
 }
 
+export interface LoginSignIn {
+  name: string
+  detail: string
+}
+
 export interface LoginAccount {
   id: string
   kind: AccountKind
@@ -22,6 +25,7 @@ export interface LoginAccount {
   label: string
   signedIn: boolean
   shared: boolean
+  signIn?: LoginSignIn
   method?: LoginMethod
   env?: string
   email?: string

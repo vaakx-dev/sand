@@ -1,6 +1,5 @@
 export type { Discovered } from './types'
 export { discoverAnthropic } from './anthropic'
-export { discoverCodex } from './codex'
 export { discoverOpenAI } from './openai'
 export { discoverOpenRouter } from './openrouter'
 export { discoverServer } from './server'
