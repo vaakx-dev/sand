@@ -1,9 +1,12 @@
 import type { FileBlock, UserPart } from '@sand/messages'
-import type { TextMenu } from '@sand/transcript-parts/contract'
+import type { Item, TextMenu } from '@sand/transcript-parts/contract'
+import type { NavAction } from '@sand/protocol'
 import { bytes, isArchiveName, oneLine, quoteBlocks } from '@sand/kit'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { div, span, type Child } from '@vaakx-dev/vrui'
 import { actionRow, row, type RowContext, type RowMaker } from './row'
+
+type UserItem = Extract<Item, { kind: 'user' }>
 
 const chip = ({ icon }: Kit, name: string, iconName: IconName, tone: string, iconTone?: string, size?: number) =>
   span(
@@ -53,7 +56,7 @@ const bubble = (text: string, press: TextMenu, context: RowContext) =>
 const message = (...children: Child[]) =>
   div({ class: 'group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
-export const userRow: RowMaker<'user'> = (item, context) =>
+export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[]) =>
   row(`user:${item.key}`, item, () => {
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
@@ -61,13 +64,15 @@ export const userRow: RowMaker<'user'> = (item, context) =>
     const spec = () => ({
       title: 'Message',
       subtitle: oneLine(text).slice(0, 80),
-      actions: [menus.copy('copy', 'Copy message', () => text, 'message'), ...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))],
+      actions: [menus.copy('copy', 'Copy message', () => text, 'message'), ...actions(text)],
     })
     const press = menus.text(context.menu, spec)
     return message(
-      item.steer && div({ class: 'px-1 text-xs text-neutral-500' }, 'Steered'),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
       actionRow('-mt-1', menus.more(context.menu, spec)),
     )
   })
+
+export const userRow: RowMaker<'user'> = (item, context) =>
+  userMessage(item, context, text => [...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))])

@@ -6,6 +6,7 @@ import type { Context } from 'drydock'
 import { failed, hero, loading } from './hero'
 import { findQuote, quoteFlash } from './integrations/quote-jump'
 import { fill, keepAnchor, scrollTo } from './integrations/scroll'
+import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import type { RowContext } from './rows/row'
@@ -15,7 +16,7 @@ import { shownRows } from './turns/rows'
 import { threadViews, type ThreadView } from './view'
 import { pageSize, windowed } from './window'
 
-export const chatController = (ctx: Context<'kit' | 'threads' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
+export const chatController = (ctx: Context<'kit' | 'threads' | 'turns' | 'transcriptParts' | 'markdown'>, registry: RendererRegistry, states: OpenStates) => {
   const { contextMenu, jumpButton } = ctx.kit
   const parts = ctx.transcriptParts
   const cache = parts.itemCache()
@@ -106,7 +107,7 @@ export const chatController = (ctx: Context<'kit' | 'threads' | 'transcriptParts
       started: thread.started,
       open: key => untrack(() => states.get(key).open.get()),
     })
-    view.rows.set(windowed(view, folded, grow).flatMap(entry => shownRows(entry, context)))
+    view.rows.set([...windowed(view, folded, grow).flatMap(entry => shownRows(entry, context)), ...pendingRows(ctx, thread, context)])
   }
 
   const reveal = () => {
