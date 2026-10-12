@@ -36,7 +36,7 @@ export const describe = (api: PlanApi | undefined, found: Discovered): Described
   if (!api) return { ...plain, ...defined(found) }
   const family = families[api]
   const own = family.describe(found.name)
-  return family.known(found.name) ? { ...defined(found), ...own } : { ...own, ...defined(found) }
+  return family.known(found.name) ? { ...defined(found), ...own } : { ...own, ...defined(found), label: own.label }
 }
 
 export const builtinRank = (api: PlanApi | undefined, name: string) => {

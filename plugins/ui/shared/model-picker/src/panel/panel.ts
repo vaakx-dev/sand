@@ -14,7 +14,7 @@ const markSeen = (ctx: PickerContext, view: View) =>
     if (view.query.get() || view.seen.has(at)) return
     if (!ctx.models.sources().find(source => source.id === at)?.fresh) return
     view.seen.add(at)
-    void ctx.wire?.call({ type: 'models.seen', source: at }).catch(() => undefined)
+    void ctx.wire?.call({ type: 'models.seen', source: at }, ctx.models.device()).catch(() => undefined)
   })
 
 const refocus = (view: View, node: HTMLElement) => {

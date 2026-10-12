@@ -29,7 +29,8 @@ export const modelCommand = (tools: Tools): Command => ({
     if (first === 'reset') return applyChoice(tools, { model: null, effort: null, speed: null }, { quiet })
     if (first === 'save') return saveChoices(tools, quiet)
     if (first === 'default') return applyChoice(tools, { model: null }, { quiet })
-    const model = matchModel(first, tools.ctx.llm?.models?.() ?? [])
+    const { llm } = tools.ctx
+    const model = matchModel(first, llm?.models?.() ?? [], llm?.find)
     await applyChoice(tools, { model, ...extras(tools, rest) }, { asDefault, quiet })
   },
 })

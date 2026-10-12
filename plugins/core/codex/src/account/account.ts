@@ -21,7 +21,6 @@ const modelOf = (entry: Json): PlanModel[] => {
   return [
     {
       name,
-      ...(typeof entry.displayName === 'string' && { label: entry.displayName }),
       ...(supported.length && { efforts: supported }),
       images: Array.isArray(entry.inputModalities) && entry.inputModalities.includes('image'),
     },

@@ -1,4 +1,5 @@
 import type { ModelInfo } from '../contract'
+import { canonicalModel } from '@sand/kit'
 import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
 import { modelOf, split } from './build'
 import { cached } from './cached'
@@ -30,14 +31,17 @@ export const viewOf = (entries: () => Entry[]) => {
   const models = () => [...index.get().shown]
   const entry = (source: string) => index.get().sources.get(source)
 
-  const find = (id: string) => {
+  const lookup = (id: string) => {
     const { ids, shown } = index.get()
     return ids.get(id) ?? shown.find(model => model.name === id)
   }
 
-  const resolve = (id?: string): ModelInfo | undefined => {
-    if (!id) return undefined
-    const found = find(id) ?? index.get().all.find(model => model.name === id)
+  const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id))
+
+  const resolve = (wanted?: string): ModelInfo | undefined => {
+    if (!wanted) return undefined
+    const id = canonicalModel(wanted)
+    const found = find(wanted) ?? index.get().all.find(model => model.name === wanted || model.name === id)
     if (found) return found
     const parts = split(id)
     if (!parts) return undefined

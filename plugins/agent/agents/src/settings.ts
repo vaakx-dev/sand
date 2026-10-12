@@ -9,9 +9,9 @@ export const parseEffort = (value: unknown, efforts: Effort[]) => {
   return String(value) as Effort
 }
 
-const resolveModel = (query: string | undefined, models: ModelInfo[]) => {
+const resolveModel = (query: string | undefined, models: ModelInfo[], llm: LLM | undefined) => {
   if (!query || !models.length) return query
-  return matchModel(query, models)
+  return matchModel(query, models, llm?.find)
 }
 
 const supportedEffort = (effort: Effort | undefined, model: ModelInfo | undefined) =>
@@ -24,7 +24,7 @@ export const childSettings = (
 ): SessionSettings | undefined => {
   const inherited = request.parent.path().findLast(entry => entry.type === 'settings')?.data as SessionSettings | undefined
   const models = llm?.models?.() ?? []
-  const model = resolveModel(request.model ?? definition.model, models) ?? inherited?.model
+  const model = resolveModel(request.model ?? definition.model, models, llm) ?? inherited?.model
   const effort = supportedEffort(
     request.effort ?? definition.effort ?? inherited?.effort,
     models.find(candidate => candidate.id === model),

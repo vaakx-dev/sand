@@ -15,7 +15,11 @@ const known: Record<string, Omit<ModelInfo, 'id'>> = {
 const fastModels = new Set(['claude-opus-5', 'claude-opus-4-8'])
 
 const label = (id: string) => {
-  const [family = id, ...version] = id.replace(/^claude-/, '').split('-')
+  const bare = id
+    .replace(/\[[^\]]*\]$/, '')
+    .replace(/-\d{8}$/, '')
+    .replace(/^claude-/, '')
+  const [family = bare, ...version] = bare.split('-')
   return [capital(family), version.join('.')].filter(Boolean).join(' ')
 }
 
