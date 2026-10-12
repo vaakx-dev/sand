@@ -32,12 +32,17 @@ const requireFreshFolder = async (folder: string) => {
 
 const firstBranch = (folder: string) => gitOk(folder, ['for-each-ref', '--format=%(refname:short)', '--count=1', 'refs/heads'])
 
+const checkoutBeforeSnapshot = async (folder: string, branch: string) => {
+  await gitOk(folder, ['checkout', '--quiet', '-f', branch])
+  await gitOk(folder, ['read-tree', 'HEAD'])
+}
+
 const restoreHistory = async (folder: string, bundle: string | undefined, branch: string | undefined, remotes: Record<string, string>) => {
   await gitOk(folder, ['init', '--quiet'])
   if (bundle) {
     await gitOk(folder, ['fetch', '--quiet', '--update-head-ok', bundle, '+refs/heads/*:refs/heads/*', '+refs/tags/*:refs/tags/*'])
     const target = branch ?? (await firstBranch(folder))
-    if (target) await gitOk(folder, ['checkout', '--quiet', '-f', target])
+    if (target) await checkoutBeforeSnapshot(folder, target)
   } else if (branch) {
     await gitOk(folder, ['symbolic-ref', 'HEAD', `refs/heads/${branch}`])
   }
