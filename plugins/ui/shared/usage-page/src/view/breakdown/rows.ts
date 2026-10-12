@@ -1,22 +1,21 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { byCost, emptyTotals, folderName, grouped, periodTitle, tildeHome } from '@sand/kit'
+import { emptyTotals, folderName, grouped, periodTitle, tildeHome } from '@sand/kit'
 import type { MenuSpec } from '@sand/protocol'
 import type { Kit } from '@sand/ui-kit/contract'
-import type { Child } from '@vaakx-dev/vrui'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
-import { muted } from '../parts'
+import { metricValue, type Metric } from '../../format'
 import { pcMenu, threadMenu } from './menu'
 
-export const breakdowns = ['projects', 'models', 'threads', 'pcs', 'periods'] as const
+export const breakdowns = ['projects', 'models', 'threads', 'accounts', 'pcs', 'periods'] as const
 
 export type Breakdown = (typeof breakdowns)[number]
 
 export interface Row {
   key: string
   name: string
+  note?: string
   hint?: string
-  extra: Child[]
   accounts: string[]
   totals: UsageTotals
   open?: () => void
@@ -32,20 +31,15 @@ export interface RowSource {
   showOnly(pc: string): void
 }
 
-const maxRows = 10
+const countText = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
-const pcChips = (ids: string[], { kit, usage, nameOf }: RowSource) => {
-  const { badge } = kit
-  return usage.pcs.length > 1 ? ids.map(id => badge('neutral', nameOf(id))) : []
-}
-
-const projectRows = (source: RowSource): Row[] =>
-  source.usage.projects.map(project => ({ key: project.name, name: project.name, extra: pcChips(project.machines, source), accounts: project.accounts, totals: project }))
+const projectRows = ({ usage }: RowSource): Row[] =>
+  usage.projects.map(project => ({ key: project.name, name: project.name, note: countText(project.threads, 'thread'), accounts: project.accounts, totals: project }))
 
 const modelRows = ({ usage }: RowSource): Row[] => {
   const byModel = new Map<string, Row>()
   for (const model of usage.models) {
-    const row = grouped(byModel, model.name, (): Row => ({ key: model.name, name: model.label, hint: model.name, extra: [], accounts: [], totals: emptyTotals() }))
+    const row = grouped(byModel, model.name, (): Row => ({ key: model.name, name: model.label, hint: model.name, accounts: [], totals: emptyTotals() }))
     addTotals(row.totals, model)
     including(row.accounts, [model.account])
   }
@@ -57,8 +51,8 @@ const threadRows = (source: RowSource): Row[] => {
   return source.usage.threads.map(thread => ({
     key: thread.id,
     name: thread.title ?? 'Untitled',
+    note: thread.cwd ? folderName(thread.cwd) : undefined,
     hint: [thread.title, thread.cwd && tildeHome(thread.cwd)].filter(Boolean).join('\n'),
-    extra: [thread.cwd ? muted(folderName(thread.cwd)) : null, ...pcChips([thread.machine], source)],
     accounts: thread.accounts,
     totals: thread,
     open: openThread && (() => openThread(thread.id)),
@@ -66,8 +60,13 @@ const threadRows = (source: RowSource): Row[] => {
   }))
 }
 
+const accountRows = ({ usage }: RowSource): Row[] =>
+  usage.accounts
+    .filter(account => account.turns)
+    .map(account => ({ key: account.key, name: account.label, note: account.pcName, accounts: [account.key], totals: account }))
+
 const pcRows = (source: RowSource): Row[] =>
-  source.usage.pcs.map(pc => ({ key: pc.id, name: pc.name, extra: [], accounts: pc.accounts, totals: pc, menu: pcMenu(pc, source) }))
+  source.usage.pcs.map(pc => ({ key: pc.id, name: pc.name, accounts: pc.accounts, totals: pc, menu: pcMenu(pc, source) }))
 
 const periodRows = ({ usage }: RowSource): Row[] =>
   usage.periods
@@ -76,7 +75,6 @@ const periodRows = ({ usage }: RowSource): Row[] =>
     .map(period => ({
       key: period.key,
       name: periodTitle(period.key, usage.bucket),
-      extra: [],
       accounts: Object.keys(period.accounts).filter(key => period.accounts[key]?.turns),
       totals: period,
     }))
@@ -85,12 +83,12 @@ const builders: Record<Breakdown, (source: RowSource) => Row[]> = {
   projects: projectRows,
   models: modelRows,
   threads: threadRows,
+  accounts: accountRows,
   pcs: pcRows,
   periods: periodRows,
 }
 
-export const rowsOf = (source: RowSource, view: Breakdown) => {
+export const rowsOf = (source: RowSource, view: Breakdown, metric: Metric) => {
   const rows = builders[view](source)
-  const sorted = view === 'periods' ? rows : rows.sort((a, b) => byCost(a.totals, b.totals))
-  return sorted.slice(0, maxRows)
+  return view === 'periods' ? rows : rows.sort((a, b) => metricValue(b.totals, metric) - metricValue(a.totals, metric))
 }
