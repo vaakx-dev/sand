@@ -6,7 +6,7 @@
       "name": "sand-workspace",
       "devDependencies": {
         "@types/bun": "^1.4.2",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.5",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
         "typescript": "^7.0.2",
       },
     },
@@ -101,7 +101,7 @@
       "dependencies": {
         "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.5",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
         "lucide": "^1.52.0",
       },
@@ -1379,8 +1379,10 @@
       "name": "@sand/panel-changes",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/composer-card": "workspace:*",
         "@sand/dom": "workspace:*",
         "@sand/kit": "workspace:*",
+        "@sand/markdown": "workspace:*",
         "@sand/messages": "workspace:*",
         "@sand/protocol": "workspace:*",
         "@sand/server": "workspace:*",
@@ -1785,7 +1787,7 @@
 
     "@typescript/typescript-win32-x64": ["@typescript/typescript-win32-x64@7.0.2", "", { "os": "win32", "cpu": "x64" }, "sha512-0BQ3HkAHHlKLSp1qRvf3SUhGpGsDuhB/jgFw75guyqbxJqEaS0Cw/VFO8i2nHglJUzQCRtMMR/IBAKE3ETMC4g=="],
 
-    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#b9476cd", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-b9476cd", "sha512-OHq3zIwaZ4ckfuUtuyheyPeBwoqx8vXmUzimaz+Sk1brgVJv8IdT4/e0/Ej/x2hUM3FnqQXc62Bzw0yr6SEShA=="],
+    "@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
     "bun-types": ["bun-types@1.4.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-bxV1FgK7yBIzjRe5zBozIM4Bem11ZJcCXSrjWRG3YWLt8yFDePu4cLjpebO8OvPeIE9trbyPF4fuj3Cia4Fj3w=="],
 

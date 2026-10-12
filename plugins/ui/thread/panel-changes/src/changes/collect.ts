@@ -1,5 +1,10 @@
-import type { Entry, Message, ToolCallBlock } from '@sand/messages'
-import { callsOf, diffCounts, type DiffLine, diffLines, hasToolResult, isInside, isRecord, tildeHome, userParts } from '@sand/kit'
+import type { Entry, Message, ToolCallBlock, ToolResultBlock } from '@sand/messages'
+import { callsOf, diffCounts, type DiffLine, diffLines, grouped, hasToolResult, isInside, isRecord, readAtLine, textOf, tildeHome, userParts } from '@sand/kit'
+
+export interface Hunk {
+  lines: DiffLine[]
+  start?: number
+}
 
 export interface FileChange {
   key: string
@@ -8,7 +13,7 @@ export interface FileChange {
   outside: boolean
   add: number
   del: number
-  hunks: DiffLine[][]
+  hunks: Hunk[]
   turns: Set<number>
 }
 
@@ -20,7 +25,7 @@ export interface Changes {
 export interface CollectOptions {
   cwd: string
   turn?: number
-  failing?: Iterable<string>
+  results?: ToolResultBlock[]
   id?: string
   agent?: string
   fixedTurn?: number
@@ -34,7 +39,7 @@ export interface Collected extends Changes {
 
 interface Edit {
   path: string
-  hunk: DiffLine[]
+  lines: DiffLine[]
   add: number
   del: number
 }
@@ -45,10 +50,10 @@ const inputOf = (call: ToolCallBlock) => (isRecord(call.input) ? call.input : {}
 
 const editedPath = (call: ToolCallBlock) => (call.name === 'edit' || call.name === 'write' ? text(inputOf(call).path) : '')
 
-const hunkOf = (call: ToolCallBlock) => {
+const linesOf = (call: ToolCallBlock) => {
   const input = inputOf(call)
-  if (call.name === 'edit') return diffLines(text(input.old_string), text(input.new_string), { context: 3 })
-  return diffLines('', text(input.content), { context: 3 })
+  if (call.name === 'edit') return diffLines(text(input.old_string), text(input.new_string))
+  return diffLines('', text(input.content))
 }
 
 const edits = new WeakMap<ToolCallBlock, Edit>()
@@ -58,15 +63,27 @@ const editOf = (call: ToolCallBlock) => {
   if (!path) return
   const cached = edits.get(call)
   if (cached) return cached
-  const hunk = hunkOf(call)
-  const edit = { path, hunk, ...diffCounts(hunk) }
+  const lines = linesOf(call)
+  const edit = { path, lines, ...diffCounts(lines) }
   edits.set(call, edit)
   return edit
 }
 
 const nameOf = (call: ToolCallBlock): Edit | undefined => {
   const path = editedPath(call)
-  return path ? { path, hunk: [], add: 0, del: 0 } : undefined
+  return path ? { path, lines: [], add: 0, del: 0 } : undefined
+}
+
+const starts = new WeakMap<ToolResultBlock, number | undefined>()
+
+const startIn = (result: ToolResultBlock) => {
+  if (!starts.has(result)) starts.set(result, readAtLine(textOf(result.content)))
+  return starts.get(result)
+}
+
+const startOf = (call: ToolCallBlock, result: ToolResultBlock | undefined) => {
+  if (call.name === 'write') return 1
+  return result && startIn(result)
 }
 
 const absolute = (path: string) => path.startsWith('/') || path.startsWith('~') || path.startsWith('\\\\') || /^[A-Za-z]:[\\/]/.test(path)
@@ -78,44 +95,46 @@ const shown = (path: string, cwd: string) => {
   return absolute(path) ? tildeHome(path) : path
 }
 
-const failedCalls = (entries: Entry[], failing: Iterable<string>) => {
-  const failed = new Set(failing)
+const resultsOf = (entries: Entry[], live: ToolResultBlock[]) => {
+  const results = new Map(live.map(result => [result.callId, result]))
   for (const entry of entries) {
     if (entry.type !== 'message') continue
-    for (const block of (entry.data as Message).content) if (block.type === 'tool_result' && block.isError) failed.add(block.callId)
+    for (const block of (entry.data as Message).content) if (block.type === 'tool_result') results.set(block.callId, block)
   }
-  return failed
+  return results
 }
 
 const isPrompt = (message: Message) =>
   message.role === 'user' && !hasToolResult(message) && userParts(message).some(part => part.kind !== 'feedback') && message.content.some(block => block.type === 'text')
 
-const addEdit = (file: FileChange, edit: Edit, turn: number) => {
-  file.hunks.push(edit.hunk)
+const addEdit = (file: FileChange, edit: Edit, start: number | undefined, turn: number) => {
+  file.hunks.push({ lines: edit.lines, start })
   file.add += edit.add
   file.del += edit.del
   file.turns.add(turn)
 }
 
-export const collectChanges = (entries: Entry[], { cwd, turn, failing = [], id, agent, fixedTurn, diffs = true }: CollectOptions): Collected => {
+export const collectChanges = (entries: Entry[], { cwd, turn, results: live = [], id, agent, fixedTurn, diffs = true }: CollectOptions): Collected => {
   const read = diffs ? editOf : nameOf
-  const failed = failedCalls(entries, failing)
+  const results = resultsOf(entries, live)
   const files = new Map<string, FileChange>()
   const turns = new Set<number>()
   const callTurns = new Map<string, number>()
+  const names = new Map<string, string>()
   let current = fixedTurn ?? 0
 
   const record = (call: ToolCallBlock) => {
     callTurns.set(call.id, current)
-    if (failed.has(call.id)) return
+    const result = results.get(call.id)
+    if (result?.isError) return
     const edit = read(call)
     if (!edit) return
     turns.add(current)
     if (turn !== undefined && turn !== current) return
-    const name = shown(edit.path, cwd)
+    const name = grouped(names, edit.path, () => shown(edit.path, cwd))
     const key = id ? `${id}:${name}` : name
     const file = files.get(key) ?? { key, path: name, agent, outside: !inside(edit.path, cwd), add: 0, del: 0, hunks: [], turns: new Set<number>() }
-    addEdit(file, edit, current)
+    addEdit(file, edit, startOf(call, result), current)
     files.set(key, file)
   }
 

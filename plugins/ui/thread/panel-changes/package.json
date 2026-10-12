@@ -14,12 +14,16 @@
       "panels": "draws its own plain panel",
       "commands": "no /changes command",
       "wire": "the hidden Edits badge counts only the loaded part of the thread",
-      "notify": "copying a file path from the file menu is not confirmed"
+      "notify": "copying a file path from the file menu is not confirmed",
+      "markdown": "diffs show without syntax colours",
+      "composer": "Quote in reply copies the selected lines instead"
     }
   },
   "dependencies": {
+    "@sand/composer-card": "workspace:*",
     "@sand/dom": "workspace:*",
     "@sand/kit": "workspace:*",
+    "@sand/markdown": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",

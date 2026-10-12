@@ -30,7 +30,7 @@ const body = (ctx: Ctx) => (tool: ToolView) => {
   return div(
     { class: 'font-mono text-xs' },
     tool.result?.isError && div({ class: 'mb-2' }, views.errorBody(tool)),
-    fold({ lines: shown.length }, div({ class: 'overflow-auto rounded-md bg-neutral-950 py-1' }, shown.map(line => diffRow(line, { compact: true })))),
+    fold({ lines: shown.length }, div({ class: 'overflow-auto rounded-md bg-neutral-950 py-1' }, shown.map(line => diffRow(line)))),
     all.length > shownLines && views.truncatedNote(all.length - shownLines, 'after'),
     opener(ctx, tool),
   )

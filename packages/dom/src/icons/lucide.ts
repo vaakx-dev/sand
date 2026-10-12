@@ -78,9 +78,11 @@ import {
   Star,
   Tag,
   TextSearch,
+  TextWrap,
   Trash2,
   TrendingDown,
   TrendingUp,
+  UnfoldVertical,
   Workflow,
   Wrench,
   X,
@@ -177,6 +179,8 @@ const nodes = {
   'zoom-in': ZoomIn,
   'zoom-out': ZoomOut,
   reply: Reply,
+  wrap: TextWrap,
+  unfold: UnfoldVertical,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes
