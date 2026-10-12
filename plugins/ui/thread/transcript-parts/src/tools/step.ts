@@ -15,7 +15,7 @@ const counts = (text: string) =>
     return tone ? span({ class: tone }, part) : part
   })
 
-const metaView = (text: string) => span({ class: 'shrink-0 text-xs text-neutral-500' }, counts(text))
+const metaView = (text: string) => span({ class: 'max-w-1/2 shrink-0 truncate text-xs text-neutral-500', title: text }, counts(text))
 
 export const toolStep = (kit: Kit, tool: Sig<ToolView>, { renderer, version, open, toggle, menu }: ToolStepOptions, menus: MenuKit) => {
   const { badge, contextMenu, copyButton, icon, shine, toolBody, toolCard } = kit
