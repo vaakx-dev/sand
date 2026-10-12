@@ -1,4 +1,5 @@
 import { mathOpener } from '../math/delimiters'
+import type { Scope } from '../scope'
 
 export const fence = /^( {0,3})(`{3,}|~{3,})[ \t]*([^\s`]*)[^`]*$/
 export const heading = /^ {0,3}(#{1,6})(?=[ \t]|$)[ \t]*(.*?)(?:[ \t]+#+)?[ \t]*$/
@@ -41,8 +42,8 @@ export const sameList = (marker: ListMarker | undefined, first: ListMarker) =>
 
 export const indentOf = (line: string) => line.length - line.trimStart().length
 
-export const startsBlock = (line: string) => {
-  if (fence.test(line) || heading.test(line) || rule.test(line) || quote.test(line) || mathOpener(line)) return true
+export const startsBlock = (line: string, scope: Scope) => {
+  if (fence.test(line) || heading.test(line) || rule.test(line) || quote.test(line) || mathOpener(line, scope)) return true
   const marker = listMarker(line)
   return !!marker && marker.indent < 4 && !!marker.text.trim() && (!marker.ordered || marker.start === 1)
 }

@@ -10,13 +10,14 @@ import { isTableStart, parseTable } from './table'
 interface Block {
   node: Node
   next: number
+  rest?: string
 }
 
 type Parser = (lines: string[], start: number, scope: Scope) => Block | undefined
 
 const titled = (level: number, content: string, scope: Scope) => heading(level, inline(content, scope))
 
-const fenced: Parser = (lines, start, { kit }) => {
+const fenced: Parser = (lines, start, scope) => {
   const open = fence.exec(lines[start]!)
   if (!open) return undefined
   const [, indent = '', marker = ''] = open
@@ -29,7 +30,7 @@ const fenced: Parser = (lines, start, { kit }) => {
   }
   const code = body.join('\n')
   const language = open[3] ?? ''
-  return { node: language === 'math' ? displayMath(kit, code) : codeBlock(kit, code, language), next: index + 1 }
+  return { node: language === 'math' ? displayMath(scope, code) : codeBlock(scope.kit, code, language), next: index + 1 }
 }
 
 const atxHeading: Parser = (lines, start, scope) => {
@@ -39,7 +40,7 @@ const atxHeading: Parser = (lines, start, scope) => {
 
 const ruled: Parser = (lines, start) => (rule.test(lines[start]!) ? { node: thematicBreak(), next: start + 1 } : undefined)
 
-const table: Parser = (lines, start, scope) => (isTableStart(lines, start) ? parseTable(lines, start, scope) : undefined)
+const table: Parser = (lines, start, scope) => (isTableStart(lines, start, scope) ? parseTable(lines, start, scope) : undefined)
 
 const list: Parser = (lines, start, scope) => {
   const marker = listMarker(lines[start]!)
@@ -53,7 +54,7 @@ const quoted: Parser = (lines, start, scope) => {
   while (index < lines.length) {
     const line = lines[index]!
     if (quote.test(line)) body.push(line.replace(quote, ''))
-    else if (line.trim() && body.at(-1)?.trim() && !startsBlock(line)) body.push(line)
+    else if (line.trim() && body.at(-1)?.trim() && !startsBlock(line, scope)) body.push(line)
     else break
     index++
   }
@@ -77,7 +78,7 @@ const plain: Parser = (lines, start, scope) => {
     if (!line.trim()) break
     const underline = setext.exec(line)
     if (underline) return { node: titled(underline[1]!.startsWith('=') ? 1 : 2, body.join('\n').trim(), scope), next: index + 1 }
-    if (startsBlock(line) || isTableStart(lines, index)) break
+    if (startsBlock(line, scope) || isTableStart(lines, index, scope)) break
     body.push(line.trimStart())
     index++
   }
@@ -91,8 +92,9 @@ export interface Span {
   start: number
 }
 
-export const blockSpans = (lines: string[], scope: Scope): Span[] => {
+export const blockSpans = (source: string[], scope: Scope): Span[] => {
   const spans: Span[] = []
+  let lines = source
   let index = 0
   while (index < lines.length) {
     if (!lines[index]!.trim()) {
@@ -103,6 +105,7 @@ export const blockSpans = (lines: string[], scope: Scope): Span[] => {
       const block = parser(lines, index, scope)
       if (!block) continue
       spans.push({ node: block.node, start: index })
+      if (block.rest) lines = lines.with(block.next, block.rest)
       index = block.next
       break
     }
