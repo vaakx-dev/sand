@@ -30,6 +30,8 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     for await (const event of peers.stream(source.account, sent, signal, source.pc)) yield event.type === 'start' ? { ...event, model: model.id } : event
   }
 
+  const borrowed = () => peers.limits().filter(found => !accounts.signedIn(found.source))
+
   const provider = (model?: string): ProviderInfo => {
     const found = view.resolve(model)
     const meta = found?.source ? view.entry(found.source)?.meta : undefined
@@ -49,15 +51,13 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       else yield* local.stream({ ...request, model: model.id }, signal)
     },
     provider,
-    limits: () => (accounts.signedIn('claude') ? local.limits() : peers.limits()) ?? local.limits('codex'),
-    sourceLimits: () => {
-      const borrowed = accounts.signedIn('claude') ? undefined : peers.limits()
-      return [...local.allLimits(), ...(borrowed ? [borrowed] : [])]
-    },
+    limits: () => local.limits() ?? borrowed()[0],
+    sourceLimits: () => [...local.allLimits(), ...borrowed()],
     refreshLimits: async () => {
-      if (accounts.signedIn('claude')) return local.refreshLimits()
+      const own = await local.refreshLimits()
+      if (own) return own
       await peers.refresh(true)
-      return peers.limits()
+      return borrowed()[0]
     },
     price: model => {
       const id = view.find(model)?.id ?? model

@@ -1,63 +1,54 @@
-import type { Limits, LLMEvent, LLMRequest } from '../contract'
+import type { LLMEvent, LLMRequest, Payload, PlanCall } from '../contract'
 import type { Accounts } from '../auth/accounts'
+import type { PlanRegistry } from '../auth/plans'
 import { send } from '../http/send'
 import { restoreNames } from '../http/tool-names'
 import { reaching } from '../reach'
-import type { ClaudeSettings } from './body'
-import { claudeCall, type ClaudeCall, type Payload } from './call'
-import { parseLimits } from './limits'
+import { claudeBody, type ClaudeSettings } from './body'
+import { keyCall } from './call'
 import { read } from './reader'
 import { events } from './sse'
-import { fetchClaudeLimits } from './usage'
 
 interface ClaudeOptions {
   accounts: Accounts
+  plans: PlanRegistry
   maxTokens: number
   retries: number
-  onLimits(limits: Limits): void
+  inspect(account: string): ((response: Response) => void) | undefined
   notify(text: string): void
 }
 
 export type Claude = ReturnType<typeof createClaude>
 
-export const createClaude = ({ accounts, maxTokens, retries, onLimits, notify }: ClaudeOptions) => {
-  const prepare = async (account: string, request: LLMRequest, chosen: ClaudeSettings) => ({
-    ...claudeCall(await accounts.auth(account), request, chosen),
-    name: accounts.label(account),
-  })
+export const createClaude = ({ accounts, plans, maxTokens, retries, inspect, notify }: ClaudeOptions) => {
+  const prepare = async (account: string, request: LLMRequest, settings: ClaudeSettings) => {
+    const credential = await accounts.auth(account)
+    if (credential.type === 'api_key') return keyCall(credential, request, settings)
+    return plans.call(account, credential, claudeBody(request, settings, true))
+  }
 
-  const init = (call: ClaudeCall, payload: Payload): RequestInit => ({
+  const init = (call: PlanCall, payload: Payload): RequestInit => ({
     method: 'POST',
     headers: call.headers(payload.speed === 'fast'),
     body: JSON.stringify(payload),
   })
 
-  const atNormalSpeed = (call: ClaudeCall) => () => {
+  const atNormalSpeed = (call: PlanCall) => () => {
     notify('Fast mode is rate limited right now, so this reply runs at normal speed.')
     const { speed: _, ...payload } = call.payload
     return init(call, payload)
-  }
-
-  const inspect = (account: string) => (response: Response) => {
-    if (account !== 'claude') return
-    const parsed = parseLimits(response.headers)
-    if (parsed) onLimits(parsed)
   }
 
   return {
     async *stream(account: string, request: LLMRequest & { model: string }, signal?: AbortSignal): AsyncIterable<LLMEvent> {
       const call = await prepare(account, request, { model: request.model, maxTokens })
       const limited = 'speed' in call.payload ? atNormalSpeed(call) : undefined
-      const response = await reaching(call.url, call.name, signal, () =>
+      const response = await reaching(call.url, accounts.label(account), signal, () =>
         send(call.url, init(call, call.payload), { retries, signal, inspect: inspect(account), limited }),
       )
       if (!response.body) throw new Error('Empty response body')
-      yield* restoreNames(read(events(response.body)), call.original)
-    },
-    async checkLimits() {
-      const credential = await accounts.auth('claude')
-      if (credential.type !== 'oauth') return
-      onLimits(await fetchClaudeLimits(credential.access, accounts.label('claude'), retries))
+      const replies = read(events(response.body))
+      yield* call.original ? restoreNames(replies, call.original) : replies
     },
   }
 }

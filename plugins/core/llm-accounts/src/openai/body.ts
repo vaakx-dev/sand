@@ -2,11 +2,11 @@ import type { Message } from '@sand/messages'
 import type { Effort, LLMRequest } from '../contract'
 import { createHash } from 'node:crypto'
 import { loadedTools } from '../http/deferred'
-import { codexInput } from './input'
-import { describeCodex, takesImages } from './models'
+import { openaiInput } from './input'
+import { describeOpenAI, takesImages } from './models'
 
 const effortOf = (model: string, wanted: Effort | undefined): Effort => {
-  const info = describeCodex(model)
+  const info = describeOpenAI(model)
   return wanted && info.efforts.includes(wanted) ? wanted : (info.defaultEffort ?? 'medium')
 }
 
@@ -24,10 +24,10 @@ const functions = (request: LLMRequest) =>
     strict: false,
   }))
 
-export const codexBody = (request: LLMRequest, model: string) => ({
+export const openaiBody = (request: LLMRequest, model: string) => ({
   model,
   instructions: request.system,
-  input: codexInput(request.messages, takesImages(model)),
+  input: openaiInput(request.messages, takesImages(model)),
   ...(loadedTools(request.tools).length && { tools: functions(request) }),
   tool_choice: 'auto',
   parallel_tool_calls: true,

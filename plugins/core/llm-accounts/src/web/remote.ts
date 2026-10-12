@@ -7,8 +7,10 @@ import type { LoginControl } from './state'
 const ownHere = (state: LoginState, account: LoginRemoteAccount) =>
   account.kind !== 'server' && state.accounts.some(local => local.id === account.id && local.signedIn)
 
+const signInOf = (state: LoginState, account: LoginRemoteAccount) => state.accounts.find(local => local.id === account.id)?.signIn
+
 const detail = (state: LoginState, account: LoginRemoteAccount) =>
-  [howText(account), `on ${account.pc}`, ownHere(state, account) && 'this PC uses its own'].filter(Boolean).join(' · ')
+  [howText({ ...account, signIn: signInOf(state, account) }), `on ${account.pc}`, ownHere(state, account) && 'this PC uses its own'].filter(Boolean).join(' · ')
 
 export const remoteRow = (kit: Kit, state: LoginState, account: LoginRemoteAccount) => {
   const { itemRow } = kit

@@ -1,7 +1,7 @@
 {
   "name": "@sand/llm-accounts",
   "version": "0.0.0",
-  "description": "Use Claude and ChatGPT subscriptions or Anthropic and OpenAI API keys, all at once",
+  "description": "Use Anthropic, OpenAI and OpenRouter API keys, local servers, and sign-in plans that other plugins add, all at once",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -9,7 +9,7 @@
   },
   "sand": {
     "label": "Accounts",
-    "summary": "Sign in with subscriptions or API keys for Anthropic and OpenAI",
+    "summary": "API keys, local servers and sign-in plans from other plugins",
     "provides": [
       "llm"
     ],

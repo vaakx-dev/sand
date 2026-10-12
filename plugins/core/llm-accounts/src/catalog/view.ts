@@ -1,5 +1,5 @@
 import type { ModelInfo } from '../contract'
-import { fixedLabels, isFixed, signInError } from '../auth/kinds'
+import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
 import { modelOf, split } from './build'
 import { cached } from './cached'
 import { sourceInfo } from './sources'
@@ -47,7 +47,7 @@ export const viewOf = (entries: () => Entry[]) => {
 
   const missing = (id?: string) => {
     const source = id ? split(id)?.source : undefined
-    if (source && isFixed(source)) return signInError(fixedLabels[source])
+    if (source && isKeyKind(source)) return signInError(keyLabels[source])
     if (!index.get().entries.length) return signInError()
     return id ? new Error(`Unknown model "${id}"`) : new Error(noModel)
   }

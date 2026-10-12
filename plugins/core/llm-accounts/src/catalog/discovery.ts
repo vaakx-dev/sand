@@ -1,5 +1,6 @@
 import type { Accounts } from '../auth/accounts'
-import { discoverAnthropic, discoverCodex, discoverOpenAI, discoverOpenRouter, discoverServer, type Discovered } from '../discover'
+import type { PlanRegistry } from '../auth/plans'
+import { discoverAnthropic, discoverOpenAI, discoverOpenRouter, discoverServer, type Discovered } from '../discover'
 import type { SourceMeta } from './types'
 
 const keyOf = async (accounts: Accounts, id: string) => {
@@ -8,16 +9,17 @@ const keyOf = async (accounts: Accounts, id: string) => {
   return credential
 }
 
-export const discover = async (accounts: Accounts, meta: SourceMeta): Promise<Discovered[]> => {
+const discoverPlan = async (accounts: Accounts, plans: PlanRegistry, meta: SourceMeta) => {
+  const plan = plans.get(meta.id)
+  const credential = await accounts.auth(meta.id)
+  if (!plan || credential.type !== 'oauth') throw new Error(`${meta.label} needs a sign-in`)
+  return plan.models(credential)
+}
+
+export const discover = async (accounts: Accounts, plans: PlanRegistry, meta: SourceMeta): Promise<Discovered[]> => {
   switch (meta.kind) {
-    case 'claude':
     case 'anthropic':
-      return discoverAnthropic(await accounts.auth(meta.id))
-    case 'codex': {
-      const credential = await accounts.auth(meta.id)
-      if (credential.type !== 'oauth') throw new Error('Codex needs a ChatGPT sign-in')
-      return discoverCodex(credential)
-    }
+      return discoverAnthropic(await keyOf(accounts, meta.id))
     case 'openai':
       return discoverOpenAI(await keyOf(accounts, meta.id))
     case 'openrouter':
@@ -27,5 +29,7 @@ export const discover = async (accounts: Accounts, meta: SourceMeta): Promise<Di
       if (!server) throw new Error(`${meta.label} was removed`)
       return discoverServer(server.url, server.key)
     }
+    default:
+      return discoverPlan(accounts, plans, meta)
   }
 }

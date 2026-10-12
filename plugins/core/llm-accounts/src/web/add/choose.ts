@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
-import type { LoginState } from '../../contract'
+import type { LoginAccount, LoginState } from '../../contract'
 import { accountLogo } from '../names'
 import { customServer, type Step } from './steps'
 
@@ -11,14 +11,12 @@ interface Option {
   detail: string
 }
 
-const groups: { label: string; options: Option[] }[] = [
-  {
-    label: 'Plans',
-    options: [
-      { step: { kind: 'sign-in', account: 'claude' }, logo: 'anthropic', title: 'Claude Code', detail: 'Sign in with your Claude Pro or Max plan' },
-      { step: { kind: 'sign-in', account: 'codex' }, logo: 'openai', title: 'Codex', detail: 'Sign in with your ChatGPT plan' },
-    ],
-  },
+interface Group {
+  label: string
+  options: Option[]
+}
+
+const groups: Group[] = [
   {
     label: 'API keys',
     options: [
@@ -36,6 +34,14 @@ const groups: { label: string; options: Option[] }[] = [
   },
 ]
 
+const planOption = ({ id, provider, label, signIn }: LoginAccount): Option[] =>
+  signIn ? [{ step: { kind: 'sign-in', account: id }, logo: provider, title: label, detail: signIn.detail }] : []
+
+const groupsFor = (state: LoginState | undefined): Group[] => {
+  const plans = state?.accounts.flatMap(planOption) ?? []
+  return plans.length ? [{ label: 'Plans', options: plans }, ...groups] : groups
+}
+
 const accountOf = (step: Step) => (step.kind === 'sign-in' || step.kind === 'key' ? step.account : undefined)
 
 const chipFor = ({ badge }: Kit, state: LoginState | undefined, step: Step) => {
@@ -50,7 +56,7 @@ export const chooseStep = (kit: Kit, state: LoginState | undefined, go: (step: S
   const { choiceButton, choiceList, groupLabel } = kit
   return div(
     { class: 'flex flex-col' },
-    groups.map(group =>
+    groupsFor(state).map(group =>
       div(
         { class: 'flex flex-col' },
         groupLabel(group.label),

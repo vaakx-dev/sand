@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, dynamicChild, sig, untrack } from '@vaakx-dev/vrui'
-import type { ServerDraft } from '../../contract'
-import { planNames } from '../names'
+import type { LoginAccount, ServerDraft } from '../../contract'
+import { planName } from '../names'
 import type { LoginControl } from '../state'
 import { chooseStep } from './choose'
 import { detectStep } from './detect'
@@ -18,12 +18,12 @@ const serverTitle = ({ id, name }: ServerDraft) => {
   return name ? `Add ${name}` : 'Add a server'
 }
 
-const titleOf = (step: Step, conflict: boolean) => {
+const titleOf = (step: Step, account: LoginAccount | undefined) => {
   if (step.kind === 'choose') return 'Add an account'
   if (step.kind === 'key') return `Add an ${keyNames[step.account]} API key`
   if (step.kind === 'detect') return 'Ollama or LM Studio'
   if (step.kind === 'server') return serverTitle(step.draft)
-  return conflict ? planNames[step.account] : `Sign in to ${planNames[step.account]}`
+  return account?.conflict ? planName(account) : `Sign in to ${planName(account)}`
 }
 
 export const addFlow = (control: LoginControl, done: (text?: string) => void) => {
@@ -42,7 +42,7 @@ export const addFlow = (control: LoginControl, done: (text?: string) => void) =>
 
   const title = derive(() => {
     const current = step.get()
-    return titleOf(current, current.kind === 'sign-in' && !!control.account(current.account)?.conflict)
+    return titleOf(current, current.kind === 'sign-in' ? control.account(current.account) : undefined)
   })
 
   const bodyKey = derive(() => {

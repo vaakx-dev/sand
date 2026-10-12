@@ -1,12 +1,6 @@
-import type { Effort, ModelPrice } from '../contract'
+import type { ModelPrice, PlanModel } from '../contract'
 
-export interface Discovered {
-  name: string
-  label?: string
-  context?: number
-  efforts?: Effort[]
-  defaultEffort?: Effort
-  images?: boolean
+export interface Discovered extends PlanModel {
   fast?: boolean
   price?: ModelPrice
 }

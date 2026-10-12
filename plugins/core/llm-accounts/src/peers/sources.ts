@@ -1,6 +1,6 @@
 import type { ModelInfo, ModelPrice } from '../contract'
 import type { Accounts } from '../auth/accounts'
-import { billings, kindOrder } from '../auth/kinds'
+import { billingOf, kindOrder } from '../auth/kinds'
 import { qualify, split } from '../catalog/build'
 import type { SourceMeta } from '../catalog/types'
 import type { SharedAccount } from '../share/info'
@@ -31,7 +31,7 @@ const sourceOf = (peer: PeerState, account: SharedAccount, id: string, pinned: b
     kind: account.kind,
     label: account.label,
     provider: account.provider,
-    billing: billings[account.kind] ?? 'api',
+    billing: billingOf(account.method),
     ...(account.plan && { plan: account.plan }),
     via,
     online: peer.online && !peer.refused,

@@ -1,19 +1,10 @@
-import type { ServerProvider } from '../contract'
+import type { PlanTokens, ServerProvider } from '../contract'
 import { serial } from '@sand/kit'
 import { writePrivateJson } from '@sand/kit/fs'
 import { fieldsOf, isText } from './json'
 import { isServerProvider } from './kinds'
 
-export interface Tokens {
-  access: string
-  refresh: string
-  expires: number
-  email?: string
-  plan?: string
-  accountId?: string
-}
-
-export type OAuth = Tokens & { type: 'oauth'; shared?: boolean }
+export type OAuth = PlanTokens & { type: 'oauth'; shared?: boolean }
 
 export interface ApiKey {
   type: 'api_key'

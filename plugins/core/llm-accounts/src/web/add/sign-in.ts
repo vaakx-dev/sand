@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { clock, div, keys, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
-import type { LoginAccount, LoginPending, SignInKind } from '../../contract'
-import { planNames } from '../names'
+import type { LoginAccount, LoginPending } from '../../contract'
+import { planName } from '../names'
 import { hostOf, openLink, problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 
@@ -31,14 +31,14 @@ const step = (number: string, text: string, ...extra: Child[]) =>
     ...extra,
   )
 
-const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Kit, kind: SignInKind, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
+const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
   const pc = account.conflict?.pc ?? 'Another PC'
   return sheetStep(
     callout(
       'warning',
       span(
         { class: 'min-w-0 flex-1' },
-        `${pc} already shares a ${planNames[kind]} account with this PC. A second sign-in to the same account would keep logging the other one out.`,
+        `${pc} already shares a ${planName(account)} account with this PC. A second sign-in to the same account would keep logging the other one out.`,
       ),
     ),
     secondaryAction({ disabled: busy, onClick: actionsFor.anyway }, 'Sign in here anyway'),
@@ -46,7 +46,7 @@ const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Ki
   )
 }
 
-const pasteView = (kit: Kit, kind: SignInKind, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
+const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
   const { copyButton, primaryAction, sheetStep, textInput } = kit
   const code = sig('')
   const ready = () => !busy.get() && !!code.get().trim()
@@ -91,11 +91,11 @@ const deviceView = (kit: Kit, pending: Device) => {
 const errorView = ({ errorText, primaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
   sheetStep(errorText(account.error ?? 'Sign-in failed'), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
 
-export const signInView = (kit: Kit, kind: SignInKind, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
+export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
   const { note, sheetStep } = kit
   const account = () => control.account(kind)
   const current = untrack(account)
-  if (phase === 'conflict' && current) return conflictView(kit, kind, current, actionsFor, busy)
+  if (phase === 'conflict' && current) return conflictView(kit, current, actionsFor, busy)
   if (current?.pending?.kind === 'paste') return pasteView(kit, kind, account, current.pending, control, busy)
   if (current?.pending?.kind === 'device') return deviceView(kit, current.pending)
   if (phase === 'error' && current) return errorView(kit, current, actionsFor, busy)

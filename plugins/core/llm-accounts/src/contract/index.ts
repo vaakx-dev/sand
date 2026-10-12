@@ -1,9 +1,10 @@
 import type { Session, WireSessionRef } from '@sand/sessions-sqlite/contract'
 import type { LiveEvent, LLM, LLMEvent, Limits, NewModels } from './llm'
-import type { KeyKind, LoginState, ServerDraft, SignInKind } from './login'
+import type { KeyKind, LoginState, ServerDraft } from './login'
 
 export type * from './llm'
 export type * from './login'
+export type * from './plans'
 export type * from './setup'
 
 declare module 'drydock' {
@@ -22,8 +23,8 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'limits.refresh': {}
     'login.status': {}
-    'login.start': { account: SignInKind; anyway?: boolean }
-    'login.finish': { account: SignInKind; code: string }
+    'login.start': { account: string; anyway?: boolean }
+    'login.finish': { account: string; code: string }
     'login.key': { account: KeyKind; key: string; baseUrl?: string }
     'login.server': ServerDraft
     'login.detect': {}

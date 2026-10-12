@@ -1,5 +1,5 @@
 import type { Limits, LLMEvent, LLMRequest } from '../contract'
-import { isFixed, fixedLabels } from '../auth/kinds'
+import { isKeyKind, keyLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
 import type { ShareInfo } from '../share/info'
 import { peerCache, type CachedInfo, type PeerCache } from './cache'
@@ -131,7 +131,7 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
   const account = (peer: PeerState, id: string) => peer.info?.accounts.find(found => found.id === id)
   const candidates = (id: string) => list().filter(peer => account(peer, id)).sort((a, b) => rank(a) - rank(b))
   const source = (id: string) => candidates(id).find(peer => !peer.refused)
-  const nameOf = (id: string) => (isFixed(id) ? fixedLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
+  const nameOf = (id: string) => (isKeyKind(id) ? keyLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
   async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pc?: string): AsyncGenerator<LLMEvent> {
     await first
@@ -166,6 +166,6 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
     account,
     source,
     stream,
-    limits: () => source('claude')?.limits,
+    limits: () => list().flatMap(peer => (peer.limits && source(peer.limits.source) === peer ? [peer.limits] : [])),
   }
 }

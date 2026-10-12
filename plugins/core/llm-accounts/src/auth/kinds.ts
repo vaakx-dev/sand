@@ -1,54 +1,26 @@
-import type { AccountKind, Billing, KeyKind, NewModels, ServerProvider, SignInKind } from '../contract'
-
-export type FixedId = Exclude<AccountKind, 'server'>
-
-export const fixedIds: FixedId[] = ['claude', 'codex', 'anthropic', 'openai', 'openrouter']
-
-export const signInKinds: SignInKind[] = ['claude', 'codex']
+import type { AccountKind, Billing, KeyKind, LoginMethod, NewModels, PlanApi, ServerProvider } from '../contract'
 
 export const keyKinds: KeyKind[] = ['anthropic', 'openai', 'openrouter']
 
-export const kindOrder: AccountKind[] = [...fixedIds, 'server']
-
-export const fixedLabels: Record<FixedId, string> = {
-  claude: 'Claude Code',
-  codex: 'Codex',
+export const keyLabels: Record<KeyKind, string> = {
   anthropic: 'Anthropic API',
   openai: 'OpenAI API',
   openrouter: 'OpenRouter',
 }
 
-export const logos: Record<FixedId, string> = {
-  claude: 'anthropic',
-  codex: 'openai',
-  anthropic: 'anthropic',
-  openai: 'openai',
-  openrouter: 'openrouter',
-}
+export const keyApis: Partial<Record<KeyKind, PlanApi>> = { anthropic: 'anthropic', openai: 'openai' }
 
-export const billings: Record<AccountKind, Billing> = {
-  claude: 'plan',
-  codex: 'plan',
-  anthropic: 'api',
-  openai: 'api',
-  openrouter: 'api',
-  server: 'local',
-}
+export const kindOrder: AccountKind[] = [...keyKinds, 'server']
 
-export const newModelsDefaults: Record<AccountKind, NewModels> = {
-  claude: 'show',
-  codex: 'show',
-  anthropic: 'show',
-  openai: 'hide',
-  openrouter: 'hide',
-  server: 'show',
-}
+const billings: Record<LoginMethod, Billing> = { oauth: 'plan', api_key: 'api', server: 'local' }
+
+export const billingOf = (method: LoginMethod) => billings[method]
+
+const hiddenNew = new Set<AccountKind>(['openai', 'openrouter'])
+
+export const newModelsOf = (kind: AccountKind): NewModels => (hiddenNew.has(kind) ? 'hide' : 'show')
 
 const serverProviders: ServerProvider[] = ['ollama', 'lmstudio', 'server']
-
-export const isFixed = (id: string): id is FixedId => fixedIds.some(fixed => fixed === id)
-
-export const isSignInKind = (id: unknown): id is SignInKind => signInKinds.some(kind => kind === id)
 
 export const isKeyKind = (id: unknown): id is KeyKind => keyKinds.some(kind => kind === id)
 

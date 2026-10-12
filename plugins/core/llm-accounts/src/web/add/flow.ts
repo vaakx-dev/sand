@@ -1,5 +1,4 @@
 import { effect, onTimeout, sig, type Sig } from '@vaakx-dev/vrui'
-import type { SignInKind } from '../../contract'
 import { whileBusy } from '../parts'
 import type { LoginControl } from '../state'
 import type { SignInActions } from './sign-in'
@@ -7,10 +6,10 @@ import type { Step } from './steps'
 
 export const signInFlow = (control: LoginControl, step: Sig<Step>, done: (text?: string) => void) => {
   const busy = sig(false)
-  const touched = new Set<SignInKind>()
+  const touched = new Set<string>()
   let waited = false
 
-  const start = (account: SignInKind, anyway = false) => {
+  const start = (account: string, anyway = false) => {
     touched.add(account)
     waited = false
     step.set({ kind: 'sign-in', account })
@@ -33,7 +32,7 @@ export const signInFlow = (control: LoginControl, step: Sig<Step>, done: (text?:
     else if (waited && found.signedIn && found.method === 'oauth') onTimeout(() => done(`Signed in to ${found.label}`))
   })
 
-  const actionsFor = (account: SignInKind): SignInActions => ({
+  const actionsFor = (account: string): SignInActions => ({
     keep: () => void whileBusy(busy, () => control.run({ type: 'login.cancel', account })).then(() => done()),
     anyway: () => void start(account, true),
     retry: () => void start(account),

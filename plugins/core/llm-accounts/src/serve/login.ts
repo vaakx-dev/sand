@@ -1,21 +1,18 @@
 import type { Server } from '@sand/server/contract'
-import type { KeyKind, LoginConflict, LoginState, ServerDraft, SignInKind } from '../contract'
+import type { KeyKind, LoginConflict, LoginState, ServerDraft } from '../contract'
 import type { Accounts } from '../auth/accounts'
-import { isKeyKind, isSignInKind } from '../auth/kinds'
+import { isKeyKind } from '../auth/kinds'
 import type { Login } from '../auth/login'
+import type { PlanRegistry } from '../auth/plans'
 
 interface LoginExtras {
+  plans: PlanRegistry
   state(): LoginState
   load(): Promise<void>
-  conflict(account: SignInKind): LoginConflict | undefined
+  conflict(account: string): LoginConflict | undefined
 }
 
 const unknown = (account: unknown) => new Error(`Unknown account "${String(account)}"`)
-
-const signInKind = (account: unknown): SignInKind => {
-  if (!isSignInKind(account)) throw unknown(account)
-  return account
-}
 
 const keyKind = (account: unknown): KeyKind => {
   if (!isKeyKind(account)) throw unknown(account)
@@ -37,6 +34,11 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
     return account
   }
 
+  const planId = (account: unknown) => {
+    if (typeof account !== 'string' || !extras.plans.get(account)) throw unknown(account)
+    return account
+  }
+
   const withState =
     <T>(run: (request: T) => Promise<unknown>) =>
     async (request: T) => {
@@ -44,7 +46,7 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
       return extras.state()
     }
 
-  const start = async (account: SignInKind, anyway: boolean) => {
+  const start = async (account: string, anyway: boolean) => {
     const conflict = anyway ? undefined : extras.conflict(account)
     if (conflict) return accounts.conflict(account, conflict)
     await login.start(account)
@@ -55,8 +57,8 @@ export const serveLogin = (server: Server, accounts: Accounts, login: Login, ext
       await accounts.ready
       await extras.load()
     }),
-    'login.start': withState(({ account, anyway }) => start(signInKind(account), anyway === true)),
-    'login.finish': withState(({ account, code }) => login.finish(signInKind(account), String(code ?? ''))),
+    'login.start': withState(({ account, anyway }) => start(planId(account), anyway === true)),
+    'login.finish': withState(({ account, code }) => login.finish(planId(account), String(code ?? ''))),
     'login.key': withState(({ account, key, baseUrl }) => login.key(keyKind(account), String(key ?? '').trim(), String(baseUrl ?? '').trim())),
     'login.server': withState(request => login.server(draftOf(request))),
     'login.detect': () => login.detect(),

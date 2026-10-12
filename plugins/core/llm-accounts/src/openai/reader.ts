@@ -2,7 +2,7 @@ import type { Block, StopReason, Usage } from '@sand/messages'
 import type { LLMEvent } from '../contract'
 import { parseToolInput } from '../http/tool-input'
 import { encodeReasoning } from '../reasoning'
-import type { CodexEvent, CodexItem, CodexResponse, CodexUsage } from './events'
+import type { OpenAIEvent, OpenAIItem, OpenAIResponse, OpenAIUsage } from './events'
 
 interface Slot {
   index: number
@@ -10,7 +10,7 @@ interface Slot {
   json: string
 }
 
-const blockOf = (item: CodexItem | undefined): Block | undefined => {
+const blockOf = (item: OpenAIItem | undefined): Block | undefined => {
   switch (item?.type) {
     case 'reasoning':
       return { type: 'thinking', thinking: '' }
@@ -23,12 +23,12 @@ const blockOf = (item: CodexItem | undefined): Block | undefined => {
 
 const texts = (parts: { text?: string }[] | undefined) => (parts ?? []).map(part => part?.text ?? '').join('\n\n')
 
-const usageOf = (raw: CodexUsage | undefined): Usage => {
+const usageOf = (raw: OpenAIUsage | undefined): Usage => {
   const cached = raw?.input_tokens_details?.cached_tokens ?? 0
   return { input: Math.max(0, (raw?.input_tokens ?? 0) - cached), output: raw?.output_tokens ?? 0, cacheRead: cached, cacheWrite: 0 }
 }
 
-const stopOf = (response: CodexResponse | undefined, calls: boolean): StopReason => {
+const stopOf = (response: OpenAIResponse | undefined, calls: boolean): StopReason => {
   if (response?.status !== 'incomplete') return calls ? 'tool_use' : 'end_turn'
   const reason = response.incomplete_details?.reason
   if (reason === 'max_output_tokens') return 'max_tokens'
@@ -36,18 +36,18 @@ const stopOf = (response: CodexResponse | undefined, calls: boolean): StopReason
   return reason ?? 'incomplete'
 }
 
-const failure = (event: CodexEvent) => {
+const failure = (event: OpenAIEvent) => {
   const error = event.response?.error ?? event.error ?? event
-  return new Error(`ChatGPT error: ${error?.message ?? error?.code ?? JSON.stringify(event)}`)
+  return new Error(`OpenAI error: ${error?.message ?? error?.code ?? JSON.stringify(event)}`)
 }
 
-export async function* readCodex(stream: AsyncIterable<CodexEvent>, model: string): AsyncIterable<LLMEvent> {
+export async function* readOpenAI(stream: AsyncIterable<OpenAIEvent>, model: string): AsyncIterable<LLMEvent> {
   const slots = new Map<number | undefined, Slot>()
   const blocks: Block[] = []
-  const reasoning = new Map<string, { block: Block; item: CodexItem }>()
+  const reasoning = new Map<string, { block: Block; item: OpenAIItem }>()
   let started = false
 
-  const open = (outputIndex: number | undefined, item: CodexItem | undefined) => {
+  const open = (outputIndex: number | undefined, item: OpenAIItem | undefined) => {
     const existing = slots.get(outputIndex)
     if (existing) return { slot: existing, fresh: false }
     const block = blockOf(item)
@@ -143,5 +143,5 @@ export async function* readCodex(stream: AsyncIterable<CodexEvent>, model: strin
         throw failure(event)
     }
   }
-  throw new Error('ChatGPT stream ended before the response finished')
+  throw new Error('OpenAI stream ended before the response finished')
 }

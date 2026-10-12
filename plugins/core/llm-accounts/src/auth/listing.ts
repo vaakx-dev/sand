@@ -1,6 +1,5 @@
-import type { LoginAccount, LoginConflict, LoginPending } from '../contract'
+import type { LoginAccount, LoginConflict, LoginPending, LoginSignIn } from '../contract'
 import { envNames } from './env'
-import { fixedLabels, logos, type FixedId } from './kinds'
 import type { Credential, ServerEntry } from './store'
 
 export interface Status {
@@ -9,22 +8,30 @@ export interface Status {
   error?: string
 }
 
-interface FixedState {
+interface OwnInfo {
+  id: string
+  label: string
+  provider: string
+  signIn?: LoginSignIn
+}
+
+interface OwnState {
   credential?: Credential
   fromEnv: boolean
   shared: boolean
   status: Status
 }
 
-export const fixedAccount = (id: FixedId, { credential, fromEnv, shared, status }: FixedState): LoginAccount => {
+export const ownAccount = ({ id, label, provider, signIn }: OwnInfo, { credential, fromEnv, shared, status }: OwnState): LoginAccount => {
   const oauth = credential?.type === 'oauth' ? credential : undefined
   return {
     id,
     kind: id,
-    provider: logos[id],
-    label: fixedLabels[id],
+    provider,
+    label,
     signedIn: !!credential,
     shared,
+    ...(signIn && { signIn }),
     ...(credential && { method: credential.type }),
     ...(credential && fromEnv && { env: envNames[id] }),
     ...(oauth?.email && { email: oauth.email }),
