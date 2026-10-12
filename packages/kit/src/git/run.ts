@@ -7,6 +7,7 @@ export interface GitResult {
 export interface GitOptions {
   env?: Record<string, string | undefined>
   input?: string
+  timeoutMs?: number
 }
 
 const quiet = {
@@ -23,10 +24,11 @@ const reason = ({ err, out }: GitResult) => {
   return found || lines.find(Boolean)
 }
 
-export const git = async (cwd: string, args: string[], { env = { ...process.env, ...quiet }, input }: GitOptions = {}): Promise<GitResult> => {
+export const git = async (cwd: string, args: string[], { env = { ...process.env, ...quiet }, input, timeoutMs }: GitOptions = {}): Promise<GitResult> => {
   const child = Bun.spawn(['git', '-c', 'core.quotepath=off', '-c', 'core.longpaths=true', ...args], {
     cwd,
     env,
+    timeout: timeoutMs,
     stdin: input === undefined ? 'ignore' : new Blob([input]),
     stdout: 'pipe',
     stderr: 'pipe',

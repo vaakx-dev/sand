@@ -1,3 +1,4 @@
+import type { GitStatus } from '@sand/git/contract'
 import type { PrSummary } from '@sand/github/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
 import { pulse } from '@sand/kit/web'
@@ -7,6 +8,8 @@ import type { Context } from 'drydock'
 export type GitContext = Context<'composer' | 'threads' | 'gitStatus' | 'kit'>
 
 export type Pr = PrSummary | null | undefined
+
+export const onFeatureBranch = (git: GitStatus) => git.branch !== 'HEAD' && git.branch !== git.base
 
 export const createModel = (ctx: GitContext) => {
   const changes = pulse(ctx, ['gitStatus.change', 'pulls.change', 'thread.select', 'threads.change', 'wire.state'], ['gitStatus', 'pulls'])
@@ -21,7 +24,7 @@ export const createModel = (ctx: GitContext) => {
   })
   const pr = changes.read((): Pr => {
     const git = status.get()
-    if (!git || git.branch === 'HEAD' || git.branch === git.base) return git ? null : undefined
+    if (!git || !onFeatureBranch(git)) return git ? null : undefined
     const { cwd, device } = target()
     return ctx.pulls?.of(cwd, device)
   })

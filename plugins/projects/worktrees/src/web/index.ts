@@ -38,10 +38,12 @@ export default definePlugin({
     const rename = renamer(ctx, client)
     const chip = owned(ctx, () => createChip(ctx, client, states, choices, changes))
 
-    onWorktreeEvent(ctx, 'worktrees.change', () => {
+    const forget = () => {
       states.forget()
       marks.forget()
-    })
+    }
+    onWorktreeEvent(ctx, 'worktrees.change', forget)
+    onWorktreeEvent(ctx, 'git.change', forget)
 
     const worktrees: Worktrees = { openMove: () => void openMove(), rename: () => void rename(), of: marks.of }
     ctx.provide('worktrees', worktrees)
