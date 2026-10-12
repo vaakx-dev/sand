@@ -2,8 +2,6 @@ import type { Thread } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import type { Source } from '../changes/tree'
 
-const failingCalls = (thread: Thread) => [...thread.tools.results].flatMap(([id, result]) => (result.isError ? [id] : []))
-
 const childrenOf = (ctx: Context<'threads'>, thread: Thread) =>
   ctx.threads.list().filter(other => other.info.kind === 'agent' && other.info.parent === thread.id)
 
@@ -13,7 +11,7 @@ export const sourceOf = (ctx: Context<'threads'>, thread: Thread, root = true, s
     id: thread.id,
     cwd: thread.info.cwd,
     entries: ctx.threads.path(thread.id),
-    failing: failingCalls(thread),
+    results: [...thread.tools.results.values()],
     label: root ? undefined : (thread.info.title ?? undefined),
     origin: thread.info.origin,
     children: childrenOf(ctx, thread)
