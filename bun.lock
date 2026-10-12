@@ -82,6 +82,7 @@
         "@sand/sessions-sqlite": "workspace:*",
         "@sand/sessions-ui": "workspace:*",
         "@sand/skills": "workspace:*",
+        "@sand/stash": "workspace:*",
         "@sand/steering": "workspace:*",
         "@sand/sync": "workspace:*",
         "@sand/telemetry": "workspace:*",
@@ -392,6 +393,22 @@
         "@sand/watch": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
         "zod": "^4.6.5",
+      },
+    },
+    "plugins/agent/stash": {
+      "name": "@sand/stash",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/composer-card": "workspace:*",
+        "@sand/kit": "workspace:*",
+        "@sand/messages": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
     "plugins/agent/steering": {
@@ -1949,6 +1966,8 @@
     "@sand/sidebar-tabs": ["@sand/sidebar-tabs@workspace:plugins/ui/layout/sidebar-tabs"],
 
     "@sand/skills": ["@sand/skills@workspace:plugins/agent/skills"],
+
+    "@sand/stash": ["@sand/stash@workspace:plugins/agent/stash"],
 
     "@sand/steering": ["@sand/steering@workspace:plugins/agent/steering"],
 

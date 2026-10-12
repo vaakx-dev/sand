@@ -1,8 +1,14 @@
 import type { UserContent } from '@sand/messages'
+import type { NavAction } from '@sand/protocol'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Dispose } from 'drydock'
 
-export type ComposerSlot = 'start' | 'end' | 'above' | 'banner' | 'tray-start' | 'tray-end'
+export type ComposerSlot = 'start' | 'end' | 'above' | 'banner' | 'tab' | 'tray-start' | 'tray-end'
+
+export interface ComposerContent {
+  text: string
+  content: UserContent[]
+}
 
 export type SlotView = HTMLElement | (() => HTMLElement)
 
@@ -24,6 +30,10 @@ export interface Composer {
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
   capture(capture: ComposerCapture): Dispose
+  snapshot(): Promise<ComposerContent | undefined>
+  restore(saved: ComposerContent): void
+  clear(): void
+  sendMenu(action: NavAction): Dispose
 }
 
 export interface ThreadDraft extends DraftTarget {

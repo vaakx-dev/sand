@@ -2,6 +2,8 @@ import { icon as lucideIcon, type IconNode } from '@vaakx-dev/vrui'
 import {
   AlarmClock,
   AlarmClockOff,
+  Archive,
+  ArchiveRestore,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
@@ -163,6 +165,8 @@ const nodes = {
   link: Link,
   external: ExternalLink,
   trash: Trash2,
+  stash: Archive,
+  unstash: ArchiveRestore,
   snooze: AlarmClock,
   wake: AlarmClockOff,
   'folder-plus': FolderPlus,

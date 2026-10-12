@@ -37,7 +37,7 @@ const core = [
 
 const commands = ['sessions-ui', 'session-info', 'usage', 'panel-tree', 'panel-changes']
 
-const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups', 'schedules', 'ask', 'user-tools', 'worktrees', 'math', 'reply-images', 'pc-link', 'thread-tools', 'project-tools']
+const interactive = ['files', 'git', 'folders', 'projects', 'sync', 'followups', 'schedules', 'ask', 'stash', 'user-tools', 'worktrees', 'math', 'reply-images', 'pc-link', 'thread-tools', 'project-tools']
 
 const cli = ['cli-launch', 'cli-devices', 'cli-remotes', 'cli-project', 'cli-usage', 'cli-install', 'cli-release']
 

@@ -34,7 +34,7 @@ const catchUpPrompt = (base: string) =>
 const catchUp = (ctx: GitContext, thread: Thread, base: string) => {
   const label = `Catch up with ${base}`
   ctx.turns
-    ?.send(thread.id, catchUpPrompt(base), label, thread.running ? 'queue' : undefined)
+    ?.send(thread.id, catchUpPrompt(base), label)
     .catch(error => ctx.notify?.push(`Could not ask the agent to catch up: ${errorMessage(error)}`, { level: 'error' }))
 }
 

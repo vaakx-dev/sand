@@ -71,6 +71,7 @@
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/sessions-ui": "workspace:*",
     "@sand/skills": "workspace:*",
+    "@sand/stash": "workspace:*",
     "@sand/steering": "workspace:*",
     "@sand/sync": "workspace:*",
     "@sand/telemetry": "workspace:*",
