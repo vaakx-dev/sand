@@ -1,27 +1,31 @@
 import type { AppPlan, PlanLimits } from '@sand/llm-accounts/contract'
 import { definePlugin } from 'drydock'
-import { listModels, readUsage } from './account/probe'
+import { modelCatalog } from './account/models'
+import { readUsage } from './account/probe'
 import { signInClaude } from './account/sign-in'
 import { readStatus, signOutClaude } from './account/status'
 import { installUrl } from './cli/binary'
 import { openSession } from './session/session'
 
-const claudePlan = (report: (limits: PlanLimits) => void): AppPlan => ({
-  id: 'claude',
-  label: 'Claude Code',
-  name: 'Claude',
-  detail: 'Uses your sign-in from the Claude Code app on this PC',
-  logo: 'anthropic',
-  app: 'Claude Code',
-  install: installUrl,
-  family: 'anthropic',
-  status: readStatus,
-  signIn: signInClaude,
-  signOut: signOutClaude,
-  models: listModels,
-  usage: readUsage,
-  open: (setup, output) => openSession(setup, output, report),
-})
+const claudePlan = (report: (limits: PlanLimits) => void): AppPlan => {
+  const models = modelCatalog()
+  return {
+    id: 'claude',
+    label: 'Claude Code',
+    name: 'Claude',
+    detail: 'Uses your sign-in from the Claude Code app on this PC',
+    logo: 'anthropic',
+    app: 'Claude Code',
+    install: installUrl,
+    family: 'anthropic',
+    status: readStatus,
+    signIn: signInClaude,
+    signOut: signOutClaude,
+    models: models.list,
+    usage: readUsage,
+    open: async (setup, output) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, report),
+  }
+}
 
 export default definePlugin({
   name: 'claude-code',
