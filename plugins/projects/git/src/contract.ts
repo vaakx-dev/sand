@@ -34,4 +34,8 @@ declare module '@sand/protocol/wire' {
   interface WireRequests {
     'git.status': { cwd: string }
   }
+
+  interface WireEvents {
+    'git.change': []
+  }
 }

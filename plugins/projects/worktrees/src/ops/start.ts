@@ -13,7 +13,9 @@ const fetchWaitMs = 15_000
 
 const fetchStep = (root: string, base: string) => ({
   label: `Fetch ${base}`,
-  run: () => Promise.race([fetchOrigin(root, 0), Bun.sleep(fetchWaitMs)]),
+  run: async () => {
+    await Promise.race([fetchOrigin(root, 0), Bun.sleep(fetchWaitMs)])
+  },
 })
 
 export const startInWorktree = async (ops: Ops, session: Session, base?: string) => {

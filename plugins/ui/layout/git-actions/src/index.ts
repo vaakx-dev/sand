@@ -3,6 +3,7 @@ import { derive, effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { createModel } from './model'
 import { refreshOnTurns } from './refresh'
+import { refreshWhileShown } from './shown'
 import { gitWidget } from './view/widget'
 
 export default definePlugin({
@@ -20,6 +21,7 @@ export default definePlugin({
   apply(ctx) {
     const model = owned(ctx, () => createModel(ctx))
     refreshOnTurns(ctx, model)
+    refreshWhileShown(ctx, model)
     const shown = derive(() => Boolean(model.status.get()) && model.started.get())
     ctx.effect(() =>
       effect(() => {

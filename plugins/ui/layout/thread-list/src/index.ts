@@ -12,7 +12,7 @@ import { switcher } from './switcher'
 
 type Ctx = Context<'threads' | 'kit'>
 
-const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change', 'worktrees.change'] as const
+const events = ['threads.change', 'thread.select', 'drafts.change', 'machines.change', 'projects.change', 'jobs.change', 'branches.change', 'worktrees.change', 'wire.hello'] as const
 const roles = ['drafts', 'jobs', 'branches', 'worktrees'] as const
 
 const switcherBar = (ctx: Ctx, epoch: () => number, create: () => void) => {

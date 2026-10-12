@@ -17,7 +17,7 @@ export default definePlugin({
     }
 
     const watcher: Watcher = {
-      debounced: (dir, options, onChange) => track(debouncedWatch(dir, options, onChange)),
+      debounced: (dir, options, onChange, ms) => track(debouncedWatch(dir, options, onChange, ms)),
       folders(load, empty, changed) {
         const folders = watchedFolders(error => ctx.report(error), load, empty, changed)
         return { get: folders.get, close: track(folders.close) }

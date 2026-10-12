@@ -1,4 +1,5 @@
 export { untilAborted } from './abort/until'
+export { limited } from './async/limited'
 export { keyedSerial, serial } from './async/serial'
 export { grouped } from './collections/grouped'
 export { atLine, readAtLine } from './diff/at-line'
