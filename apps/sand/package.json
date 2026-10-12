@@ -51,6 +51,8 @@
     "@sand/jobs": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
+    "@sand/claude-code": "workspace:*",
+    "@sand/codex": "workspace:*",
     "@sand/hooks": "workspace:*",
     "@sand/loop-plan": "workspace:*",
     "@sand/loop-react": "workspace:*",

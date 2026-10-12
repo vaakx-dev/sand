@@ -9,7 +9,7 @@ type Paste = Extract<LoginPending, { kind: 'paste' }>
 type Device = Extract<LoginPending, { kind: 'device' }>
 type Busy = Sig<boolean>
 
-type Phase = 'starting' | 'conflict' | 'paste' | 'device' | 'error'
+type Phase = 'starting' | 'conflict' | 'paste' | 'device' | 'browser' | 'error'
 
 export interface SignInActions {
   keep(): void
@@ -88,6 +88,14 @@ const deviceView = (kit: Kit, pending: Device) => {
   ])
 }
 
+const browserView = (kit: Kit, account: LoginAccount, url: string) => {
+  const { note, sheetStep, waitingLine } = kit
+  return sheetStep([
+    note(`Finish signing in to ${account.app?.name ?? planName(account)} in your browser. This page updates by itself when you're done.`),
+    div({ class: 'flex flex-wrap items-center justify-between gap-3' }, openLink(kit, url), waitingLine('Waiting…')),
+  ])
+}
+
 const errorView = ({ errorText, primaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
   sheetStep(errorText(account.error ?? 'Sign-in failed'), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
 
@@ -98,6 +106,7 @@ export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginC
   if (phase === 'conflict' && current) return conflictView(kit, current, actionsFor, busy)
   if (current?.pending?.kind === 'paste') return pasteView(kit, kind, account, current.pending, control, busy)
   if (current?.pending?.kind === 'device') return deviceView(kit, current.pending)
+  if (current?.pending?.kind === 'browser') return browserView(kit, current, current.pending.url)
   if (phase === 'error' && current) return errorView(kit, current, actionsFor, busy)
   return sheetStep(note('Starting…'))
 }

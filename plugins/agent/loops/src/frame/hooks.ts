@@ -24,7 +24,7 @@ const unchanged = (request: LLMRequest) => request
 export const createHooks = (ctx: LoopsContext, session: Session, signal: AbortSignal, state: TurnState): TurnHooks => {
   const build = outside(async () => {
     const request = await ctx.waterfall('context.build', await ctx.context.build(session), session, signal)
-    return applyChoice(request, state.choice)
+    return { ...applyChoice(request, state.choice), session: session.id }
   })
 
   const overflow = outside(async (error: unknown) => !signal.aborted && Boolean(await ctx.bail('context.overflow', session, error, signal)))

@@ -47,7 +47,9 @@ const accountOf = (step: Step) => (step.kind === 'sign-in' || step.kind === 'key
 const chipFor = ({ badge }: Kit, state: LoginState | undefined, step: Step) => {
   const id = accountOf(step)
   if (!id) return null
-  if (state?.accounts.some(account => account.id === id && account.signedIn)) return badge('success', 'On this PC')
+  const own = state?.accounts.find(account => account.id === id)
+  if (own?.signedIn) return badge('success', 'On this PC')
+  if (own?.app && !own.app.installed) return badge('neutral', 'Not installed')
   const shared = state?.remote.find(account => account.id === id)
   return shared ? badge('accent', `On ${shared.pc}`) : null
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@sand/claude-code",
+  "version": "0.0.0",
+  "description": "Use the Claude Code app's own sign-in: sand runs the claude CLI on this PC and gives it sand's tools",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "label": "Claude Code",
+    "summary": "Use your Claude plan through the Claude Code app on this PC",
+    "uses": {
+      "llmPlans": "nothing happens: there's no accounts service to add Claude Code to"
+    }
+  },
+  "dependencies": {
+    "@sand/kit": "workspace:*",
+    "@sand/llm-accounts": "workspace:*",
+    "@sand/messages": "workspace:*",
+    "@sand/protocol": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+  }
+}

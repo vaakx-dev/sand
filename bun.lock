@@ -22,6 +22,7 @@
         "@sand/attachments": "workspace:*",
         "@sand/browser-engine": "workspace:*",
         "@sand/browser-tools": "workspace:*",
+        "@sand/claude-code": "workspace:*",
         "@sand/cli-devices": "workspace:*",
         "@sand/cli-install": "workspace:*",
         "@sand/cli-launch": "workspace:*",
@@ -29,6 +30,7 @@
         "@sand/cli-release": "workspace:*",
         "@sand/cli-remotes": "workspace:*",
         "@sand/cli-usage": "workspace:*",
+        "@sand/codex": "workspace:*",
         "@sand/compaction": "workspace:*",
         "@sand/config-toml": "workspace:*",
         "@sand/context-default": "workspace:*",
@@ -678,6 +680,28 @@
         "@sand/kit": "workspace:*",
         "@sand/protocol": "workspace:*",
         "@sand/usage": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+      },
+    },
+    "plugins/core/claude-code": {
+      "name": "@sand/claude-code",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/kit": "workspace:*",
+        "@sand/llm-accounts": "workspace:*",
+        "@sand/messages": "workspace:*",
+        "@sand/protocol": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+      },
+    },
+    "plugins/core/codex": {
+      "name": "@sand/codex",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/kit": "workspace:*",
+        "@sand/llm-accounts": "workspace:*",
+        "@sand/messages": "workspace:*",
+        "@sand/protocol": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
       },
     },
@@ -1786,6 +1810,8 @@
 
     "@sand/browser-tools": ["@sand/browser-tools@workspace:plugins/browser/browser-tools"],
 
+    "@sand/claude-code": ["@sand/claude-code@workspace:plugins/core/claude-code"],
+
     "@sand/cli-devices": ["@sand/cli-devices@workspace:plugins/cli/cli-devices"],
 
     "@sand/cli-install": ["@sand/cli-install@workspace:plugins/cli/cli-install"],
@@ -1799,6 +1825,8 @@
     "@sand/cli-remotes": ["@sand/cli-remotes@workspace:plugins/cli/cli-remotes"],
 
     "@sand/cli-usage": ["@sand/cli-usage@workspace:plugins/cli/cli-usage"],
+
+    "@sand/codex": ["@sand/codex@workspace:plugins/core/codex"],
 
     "@sand/commands": ["@sand/commands@workspace:plugins/ui/shared/commands"],
 
@@ -2168,7 +2196,7 @@
 
     "@sand/panels-tabs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
-    "@sand/pc-picker/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
+    "@sand/pc-picker/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/picker/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
@@ -2191,6 +2219,8 @@
     "@sand/sidebar-rail/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 
     "@sand/sidebar-tabs/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
+
+    "@sand/stash/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
     "@sand/thread-list/drydock": ["drydock@github:vaakx-dev/drydock#0242b2a", {}, "vaakx-dev-drydock-0242b2a", "sha512-pHE8eUKZniiIJS3zboeEVxCx8tBcBLFTETTY89y7Cw3OKJKrBrC4QHiKgsL2agb0I6V4iGoGeFYCkZu6mu7Mxg=="],
 

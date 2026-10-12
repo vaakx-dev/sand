@@ -1,4 +1,6 @@
+import type { StopReason, ToolResultBlock, Usage, UserContent } from '@sand/messages'
 import type { Effort, LimitWindow } from '@sand/protocol'
+import type { ToolSpec } from './llm'
 
 export interface PlanTokens {
   access: string
@@ -9,9 +11,12 @@ export interface PlanTokens {
   accountId?: string
 }
 
-export type PlanSignIn =
-  | { kind: 'paste'; url: string; finish(code: string): Promise<PlanTokens> }
-  | { kind: 'device'; url: string; code: string; expires: number; wait(): Promise<PlanTokens> }
+export type SignInFlow<T> =
+  | { kind: 'paste'; url: string; finish(code: string): Promise<T>; wait?(): Promise<T> }
+  | { kind: 'device'; url: string; code: string; expires: number; wait(): Promise<T> }
+  | { kind: 'browser'; url: string; wait(): Promise<T> }
+
+export type PlanSignIn = SignInFlow<PlanTokens>
 
 export type Payload = Record<string, unknown>
 
@@ -38,12 +43,15 @@ export interface PlanLimits {
 
 export type PlanApi = 'anthropic' | 'openai'
 
-export interface Plan {
+interface PlanInfo {
   id: string
   label: string
   name: string
   detail: string
   logo: string
+}
+
+export interface Plan extends PlanInfo {
   api: PlanApi
   signIn(signal: AbortSignal): Promise<PlanSignIn>
   refresh(tokens: PlanTokens): Promise<PlanTokens>
@@ -53,8 +61,64 @@ export interface Plan {
   usage?(tokens: PlanTokens): Promise<PlanLimits>
 }
 
+export interface AppStatus {
+  installed: boolean
+  signedIn: boolean
+  email?: string
+  plan?: string
+  problem?: string
+}
+
+export interface AppSetup {
+  model: string
+  effort?: Effort
+  system: string
+  tools: ToolSpec[]
+  history: string
+  cwd: string
+}
+
+export interface AppCall {
+  id: string
+  name: string
+  input: Record<string, unknown>
+}
+
+export interface AppOutput {
+  text(text: string): void
+  thinking(text: string): void
+  call(call: AppCall): void
+  usage(usage: Partial<Usage>): void
+  pause(): void
+  finish(stopReason?: StopReason): void
+  fail(error: unknown): void
+}
+
+export interface AppSession {
+  send(content: UserContent[]): void
+  steer?(content: UserContent[]): void
+  answer(id: string, result: ToolResultBlock): void
+  interrupt(): void
+  close(): void
+}
+
+export interface AppPlan extends PlanInfo {
+  app: string
+  install: string
+  family?: PlanApi
+  status(): Promise<AppStatus>
+  signIn(signal: AbortSignal): Promise<SignInFlow<void>>
+  signOut(): Promise<void>
+  models(): Promise<PlanModel[]>
+  usage?(): Promise<PlanLimits | undefined>
+  open(setup: AppSetup, output: AppOutput): Promise<AppSession>
+}
+
+export type AnyPlan = Plan | AppPlan
+
 export interface Plans {
-  register(plan: Plan): () => void
+  register(plan: AnyPlan): () => void
+  limits(id: string, limits: PlanLimits): void
 }
 
 declare module 'drydock' {
