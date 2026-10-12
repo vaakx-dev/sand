@@ -37,8 +37,10 @@ export const meta = (...children: Child[]) => span({ class: 'shrink-0 text-xs ta
 
 export const since = (started: number, ended: number | undefined, now: number) => duration(Math.max(0, (ended ?? now) - started))
 
+export const titleFont = (run: Run) => (run.kind === 'shell' ? 'font-mono' : undefined)
+
 export const headline = (run: Sig<Run>) =>
-  div({ class: 'truncate text-sm text-neutral-100', title: run.map(value => value.title) }, run.map(value => value.title))
+  div({ class: ['truncate text-sm text-neutral-100', titleFont(run.get())], title: run.map(value => value.title) }, run.map(value => value.title))
 
 export const subline = (text: () => string) => div({ class: 'truncate text-xs tabular-nums text-neutral-500' }, text)
 

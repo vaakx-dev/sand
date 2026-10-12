@@ -29,6 +29,7 @@ export interface ToolGroup {
   label: string
   summary: string
   load: Exclude<ToolLoad, 'off'>
+  mainOnly?: boolean
 }
 
 export interface GroupState extends ToolGroup {
@@ -41,8 +42,8 @@ export interface Tools {
   group(group: ToolGroup): Dispose
   groups(): GroupState[]
   choose(group: string, load: ToolLoad): Promise<void>
-  specs(messages: Message[]): ToolSpec[]
-  notes(): string[]
+  specs(messages: Message[], session: Session): ToolSpec[]
+  notes(session: Session): string[]
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>
 }
 

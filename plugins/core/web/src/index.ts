@@ -1,4 +1,5 @@
 import { expandHome } from '@sand/kit/fs'
+import type {} from '@sand/pc-link/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -15,7 +16,7 @@ import { workerRoute } from './pwa/worker'
 export default definePlugin({
   name: 'web',
   description: 'Serves the browser UI: bundles the web extensions and hands them to the page',
-  inject: ['server', 'cli'],
+  inject: ['server', 'cli', 'pcs'],
   config: z.object({
     extensions: z.record(z.string(), z.boolean()).default({}),
     paths: z.array(z.string()).default([]),
@@ -36,7 +37,7 @@ export default definePlugin({
     const states = createStates(site)
     ctx.provide('webExtensions', { list: states.list })
     const routes = {
-      '/': () => new Response(page(site.current().id, site.enabled()), { headers: headers('text/html') }),
+      '/': async () => new Response(page(site.current().id, site.enabled(), (await ctx.pcs.here()).id), { headers: headers('text/html') }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,

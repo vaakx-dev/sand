@@ -45,7 +45,7 @@ export const bridgeRemotes = (ctx: Context, store: Store, { wire, threads, proje
       jobs.forget(device)
     },
     keep(devices) {
-      for (const device of store.devices()) if (!devices.has(device)) forget(device)
+      for (const device of store.devices()) if (device !== store.here() && !devices.has(device)) forget(device)
     },
     state: () => ctx.emit('machines.change'),
   }

@@ -15,7 +15,7 @@ export const serveSteering = (ctx: Context<'sessions'>, steering: Steering) => {
     return joinDisposers(
       ctx.on('turn.queue', thread => server.broadcast('queue.change', [thread.id, queueState(ctx, steering, thread)])),
       server.handle({
-        'loop.steer': request => steering.steer(sessions.require(request.session), request.prompt, request.label) ?? null,
+        'loop.steer': request => steering.steer(sessions.require(request.session), request.prompt, request.label, request.from) ?? null,
         'loop.unsteer': request => steering.unsteer(sessions.require(request.session), request.item),
       }),
     )

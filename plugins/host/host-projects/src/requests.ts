@@ -29,7 +29,7 @@ export const projectRequests = ({ hub, registry, root, list, placeChanged }: Pro
   () => hub.handle('projects.create', async ({ name }) => registry.add(await createFolder(root.get(), name))),
   () =>
     hub.handle('projects.clone', async ({ url, into, job, project }) => {
-      if (project) registry.known(project)
+      if (project) await registry.fetched(project)
       const progress = (text: string) => {
         if (job) hub.broadcast({ name: 'projects.progress', args: [{ job, text }] })
       }

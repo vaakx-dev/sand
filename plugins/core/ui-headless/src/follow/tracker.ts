@@ -1,6 +1,6 @@
 import type { JobView } from '../print/progress'
 
-export const createTracker = (root: () => string | undefined) => {
+export const createTracker = (root: () => string | undefined, queued: () => number) => {
   const family = new Set<string>()
   const inFamily = (session: string) => session === root() || family.has(session)
   const running = new Set<string>()
@@ -9,7 +9,7 @@ export const createTracker = (root: () => string | undefined) => {
   let undelivered = 0
   let settle: (() => void) | undefined
 
-  const idle = () => !turning && !running.size && !undelivered
+  const idle = () => !turning && !running.size && !undelivered && !queued()
   const check = () => {
     if (!settle || !idle()) return
     settle()

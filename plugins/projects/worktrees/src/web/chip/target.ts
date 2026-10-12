@@ -9,7 +9,7 @@ export interface ChipTarget {
   thread?: Thread
   draft?: DraftTarget
   cwd: string
-  device?: string
+  device: string
   state?: WorktreeState | null
   choice: Choice
 }
@@ -21,7 +21,7 @@ export const chipTarget = (ctx: WebContext, states: States, choices: Choices): C
   const thread = current && started(current) ? current : undefined
   const draft = current ? undefined : ctx.threads.drafting()
   const cwd = current?.info.cwd ?? draft?.cwd ?? ''
-  const device = current?.device ?? draft?.device
+  const device = ctx.threads.device()
   return { thread, draft, cwd, device, state: current && !thread ? null : states.of(cwd, device), choice: choices.of(draft?.id) }
 }
 

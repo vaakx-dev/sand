@@ -1,9 +1,10 @@
 import type { CompactionRecord } from '@sand/compaction/contract'
+import type { TurnEnding } from '@sand/loops/contract'
 import type { Entry, Message, ToolCallBlock, UserPart } from '@sand/messages'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { DescribeSettings, Item, ToolGroup } from '../contract'
-import { feedbackLine, hasToolResult, tokens, userParts } from '@sand/kit'
+import type { DescribeSettings, Item, NoticeTone, ToolGroup } from '../contract'
+import { feedbackLine, hasToolResult, senderSource, tokens, userParts } from '@sand/kit'
 import { itemCollector } from './collect'
 import { toolResults, toolStatus } from './results'
 
@@ -11,6 +12,13 @@ export interface Settled {
   items: Item[]
   group: ToolGroup | undefined
   last: number
+}
+
+const endings: Record<string, { text: string; tone: NoticeTone }> = {
+  interrupted: { text: 'Interrupted', tone: 'dim' },
+  error: { text: 'The turn failed', tone: 'error' },
+  refusal: { text: 'The model declined to continue', tone: 'error' },
+  max_tokens: { text: 'Stopped at the output token limit', tone: 'error' },
 }
 
 const settingsText = (settings: SessionSettings) =>
@@ -22,7 +30,7 @@ const compactedText = ({ before, after }: CompactionRecord) =>
 const userItems = (entry: Entry, parts: UserPart[], steer: boolean): Item[] => {
   const shown = parts.filter(part => part.kind !== 'notification' && part.kind !== 'feedback')
   const notes = parts.flatMap(part => (part.kind === 'notification' ? [part.notification] : []))
-  const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))
+  const feedback = parts.flatMap(part => (part.kind === 'feedback' && part.feedback.source !== senderSource ? [part.feedback] : []))
   const asked: Item[] = shown.length ? [{ kind: 'user', key: entry.id, parts: shown, steer, at: entry.at }] : []
   return [
     ...asked,
@@ -62,10 +70,17 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
     list.items.push({ kind: 'notice', key: `settings:${entry.id}`, text: `${talked ? 'Switched to' : 'Using'} ${text}`, tone: 'rule' })
   }
 
+  const ending = (entry: Entry) => {
+    const { stopReason, error } = entry.data as TurnEnding
+    const known = endings[stopReason]
+    if (known) list.emit({ kind: 'notice', key: entry.id, text: error ? `${known.text}: ${error}` : known.text, tone: known.tone })
+  }
+
   for (const entry of path) {
     if (custom(entry.type)) list.emit({ kind: 'custom', key: entry.id, entry })
     else if (entry.type === 'compaction') list.emit({ kind: 'notice', key: entry.id, text: compactedText(entry.data as CompactionRecord), tone: 'dim' })
     else if (entry.type === 'settings') settings(entry)
+    else if (entry.type === 'turn-ending') ending(entry)
     else if (entry.type === 'message') {
       const message = entry.data as Message
       talked = true

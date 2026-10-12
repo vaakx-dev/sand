@@ -40,7 +40,7 @@ export const threadPages = (wire: Wire, store: Store) => {
 
   const children = (id: string) =>
     once(`children:${id}`, async () => {
-      const device = store.threads.get(id)?.device
+      const device = store.deviceOf(id)
       const found = await wire.call<SessionSummary[]>({ type: 'sessions.children', parent: id }, device)
       for (const info of found) store.upsert(info, device)
     })

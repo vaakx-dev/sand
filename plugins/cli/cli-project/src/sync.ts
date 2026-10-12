@@ -16,7 +16,7 @@ export const syncProject = async (pcs: Pcs, [value]: string[], { from, to }: Pro
   const there = locationOn(group, target)
   if (!here) throw new Error(`${group.name} is not on ${source.name}`)
   if (!there) throw new Error(`${group.name} is not on ${target.name}; sand project copy puts it there`)
-  const applied = await sendProject(pcs, { path: here.path, device: source.device }, { path: there.path, device: target.device }, progressPrinter())
+  const applied = await sendProject(pcs, { path: here.path, device: source.id }, { path: there.path, device: target.id }, progressPrinter())
   if (applied.result === 'current') return console.log(`${group.name} is already up to date`)
   if (applied.result === 'applied') return console.log(`applied ${plural(applied.changed, 'file')} on ${target.name}`)
   if (applied.result === 'merged') return console.log(`merged ${group.name}; both ${source.name} and ${target.name} now have the combined work`)

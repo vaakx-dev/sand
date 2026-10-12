@@ -34,7 +34,7 @@ const pursue = async (ctx: GoalContext, session: Session, signal: AbortSignal): 
   return undefined
 }
 
-const working = (ctx: GoalContext, session: Session) => Boolean(ctx.agents?.jobs(session).some(job => job.status === 'running'))
+const working = (ctx: GoalContext, session: Session) => Boolean(ctx.backgroundJobs?.list(session).some(job => job.status === 'running'))
 
 export const checkOnStop = (ctx: GoalContext) => async (session: Session, result: TurnResult, signal: AbortSignal) => {
   if (result.stopReason !== 'end_turn' || !activeGoal(session.path()) || working(ctx, session)) return undefined

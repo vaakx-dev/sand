@@ -17,8 +17,8 @@ const moves = (from: Place, to: Place) => placeId(from) !== placeId(to) && Boole
 
 const requestedDraft = (): DraftTarget | undefined => {
   const { draft } = addressState()
-  if (!isRecord(draft) || typeof draft.id !== 'string' || typeof draft.cwd !== 'string') return undefined
-  return { id: draft.id, cwd: draft.cwd, ...(typeof draft.device === 'string' && { device: draft.device }) }
+  if (!isRecord(draft) || typeof draft.id !== 'string' || typeof draft.cwd !== 'string' || typeof draft.device !== 'string') return undefined
+  return { id: draft.id, cwd: draft.cwd, device: draft.device }
 }
 
 export const requestedSession = () => addressParam(key)

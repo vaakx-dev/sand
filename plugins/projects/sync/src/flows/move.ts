@@ -1,25 +1,20 @@
-import type { DeviceInfo, ProjectRef, WireRequest } from '@sand/protocol'
+import type { ProjectRef, WireRequest } from '@sand/protocol'
 import { pullTransfer, relayTransfer } from '@sand/kit/transfers'
 import type { SyncExport, SyncProgress } from '../contract'
 
 export interface SyncWire {
-  call<T = unknown>(request: WireRequest, device?: string): Promise<T>
-  fetch(path: string, init?: RequestInit, device?: string): Promise<Response>
+  call<T = unknown>(request: WireRequest, device: string): Promise<T>
+  fetch(path: string, init: RequestInit | undefined, device: string): Promise<Response>
 }
 
 export type Report = (progress: SyncProgress) => void
 
 type Sent = (sent: number) => void
 
-const sourceSeenFrom = async (wire: SyncWire, from: ProjectRef, to: ProjectRef) => {
-  const pc = (ref: ProjectRef) => wire.call<DeviceInfo>({ type: 'device.info' }, ref.device)
-  const [source, target] = await Promise.all([pc(from), pc(to)])
-  return source.id === target.id ? undefined : source.id
-}
-
 const pulled = async (wire: SyncWire, from: ProjectRef, to: ProjectRef, exported: SyncExport, sent: Sent) => {
+  const source = from.device === to.device ? undefined : from.device
   try {
-    await pullTransfer(<T,>(request: WireRequest) => wire.call<T>(request, to.device), await sourceSeenFrom(wire, from, to), exported, sent)
+    await pullTransfer(<T,>(request: WireRequest) => wire.call<T>(request, to.device), source, exported, sent)
     return true
   } catch {
     return false

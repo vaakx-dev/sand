@@ -7,13 +7,12 @@ import { usagePage } from './view/page'
 export default definePlugin({
   name: 'usage-page',
   description: 'Usage page in settings: plan limits, billed cost and tokens per account, across your PCs',
-  inject: ['wire', 'kit'],
+  inject: ['wire', 'kit', 'machines'],
   uses: {
     settings: 'no Usage page; /usage shows the server report',
     commands: 'no /usage shortcut to the page',
     limits: 'limits only update when the page reloads',
     threads: 'thread rows do not open the thread',
-    machines: "only this PC's usage",
     notify: 'failures and copies are not reported',
     nav: 'no Usage button in the sidebar',
   },

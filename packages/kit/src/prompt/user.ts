@@ -1,4 +1,4 @@
-import type { Block, Message, Notification, UserPart } from '@sand/messages'
+import type { Block, JobKind, Message, Notification, UserPart } from '@sand/messages'
 import { readFeedback } from './feedback'
 import { isImageLabel } from './image'
 
@@ -10,8 +10,11 @@ const outer = (source: string, name: string) => {
   return start < 0 || end < start ? '' : source.slice(start + name.length + 2, end).trim()
 }
 
+const jobKinds: JobKind[] = ['agent', 'workflow', 'shell']
+
 const notification = (text: string): Notification => ({
   job: tag(text, 'job'),
+  kind: jobKinds.find(kind => kind === tag(text, 'kind')) ?? 'agent',
   label: tag(text, 'label') || 'task',
   status: tag(text, 'status') || 'done',
   result: outer(text, 'result'),

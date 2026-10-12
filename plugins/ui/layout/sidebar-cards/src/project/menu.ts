@@ -38,7 +38,7 @@ const newThread = (ctx: Context, group: ProjectGroup, hooks: ProjectMenuHooks): 
   const threads = ctx.threads
   if (!threads) return []
   const device = threads.device()
-  const here = group.locations.find(location => (location.device || undefined) === (device || undefined) && !location.missing)
+  const here = group.locations.find(location => location.device === device && !location.missing)
   if (!here) return []
   const start = async () => {
     hooks.done()

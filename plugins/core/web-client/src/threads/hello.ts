@@ -15,7 +15,7 @@ const unlisted = (store: Store, hello: Hello, owned: () => Thread[]) => {
   for (const thread of owned()) if (!known.has(thread.id) && !store.threads.has(thread.info.parent ?? '')) store.remove(thread.id)
 }
 
-export const applyHello = (store: Store, hello: Hello, device?: string) => {
+export const applyHello = (store: Store, hello: Hello, device: string) => {
   const owned = () => [...store.threads.values()].filter(thread => thread.device === device)
   for (const thread of owned()) stale(thread)
   if (hello.delta) {
@@ -29,6 +29,6 @@ export const applyHello = (store: Store, hello: Hello, device?: string) => {
     else thread.started ??= hello.started?.[thread.id]
     store.changed(thread.id)
   }
-  if (hello.sync) store.synced.set(device ?? '', hello.sync)
-  else store.synced.delete(device ?? '')
+  if (hello.sync) store.synced.set(device, hello.sync)
+  else store.synced.delete(device)
 }

@@ -1,6 +1,6 @@
 export const usage = [
   'usage: sand project [list] [--all]',
-  '       sand project add <path>',
+  '       sand project add <path> [--on <pc>] [--project <name|id>]',
   '       sand project remove <name|path|id>            delete the project on every PC (folders stay)',
   '       sand project remove <name|path|id> --on <pc>  forget the copy on that PC (the folder stays)',
   '       sand project rename <name> <new name>',

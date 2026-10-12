@@ -15,7 +15,8 @@ export interface NavItem {
   updated?: number
   started?: number
   state: NavItemState
-  jobs?: number
+  agents?: number
+  shells?: number
   workflow?: { done: number; total: number }
   unread?: boolean
   pinned?: boolean
@@ -24,6 +25,12 @@ export interface NavItem {
   back?: boolean
   movable?: boolean
   meta?: string
+  creator?: NavCreator
+}
+
+export interface NavCreator {
+  label: string
+  open?(): void
 }
 
 export interface NavList {

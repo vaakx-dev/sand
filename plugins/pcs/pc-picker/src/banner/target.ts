@@ -23,4 +23,4 @@ export const sendBackFor = (ctx: PickerContext, armed: string | undefined): Send
 }
 
 export const sendBackKey = (found: SendBack | undefined) =>
-  found ? `${found.from.device ?? ''}:${found.from.path}>${found.to.device ?? ''}:${found.to.path}` : ''
+  found ? `${found.from.device}:${found.from.path}>${found.to.device}:${found.to.path}` : ''

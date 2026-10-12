@@ -47,3 +47,14 @@ export const mergeProjects = (local: Project[], incoming: Project[]): Project[] 
   }
   return [...merged.values()].sort((a, b) => compare(a.id, b.id))
 }
+
+const liveCopies = (project: Project): Project => ({
+  ...project,
+  copies: Object.fromEntries(Object.entries(project.copies).filter(([, copy]) => !copy.removed)),
+})
+
+export const liveProjects = (lists: { projects: Project[] }[]) =>
+  lists
+    .reduce<Project[]>((all, list) => mergeProjects(all, list.projects), [])
+    .filter(project => !project.deleted)
+    .map(liveCopies)

@@ -1,14 +1,15 @@
-import type { Agents, Job, WireJob } from './contract'
+import type { Job, WireJob } from './contract'
 import type { Context } from 'drydock'
+import type { Store } from './store'
 
 const wireJob = ({ cancel: _, ...job }: Job): WireJob => job
 
-export const serveJobs = (ctx: Context, agents: Agents) => {
-  ctx.on('server.hello', hello => ({ ...hello, jobs: agents.jobs().map(wireJob) }))
+export const serveJobs = (ctx: Context, store: Store) => {
+  ctx.on('server.hello', hello => ({ ...hello, jobs: store.list().map(wireJob) }))
   ctx.watch('server', server =>
     server?.handle('job.cancel', ({ job }) => {
-      agents
-        .jobs()
+      store
+        .list()
         .find(candidate => candidate.id === job)
         ?.cancel()
       return true

@@ -6,7 +6,7 @@ import type { WebContext, WorktreeClient } from './client'
 export const createStates = (ctx: WebContext, client: WorktreeClient) => {
   const version = sig(0)
   const cache = placeCache<WorktreeState | null>(ctx, {
-    load: (cwd, device) => client.list(cwd, device || undefined),
+    load: (cwd, device) => client.list(cwd, device),
     changed: () => version.update(value => value + 1),
     freshMs: 15_000,
   })

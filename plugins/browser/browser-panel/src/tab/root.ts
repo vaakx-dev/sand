@@ -2,13 +2,13 @@ import type { Thread, Threads } from '@sand/web-client/contract'
 
 export interface TabKey {
   thread: string
-  device?: string
+  device: string
 }
 
 export const rootKey = (threads: Threads): TabKey | undefined => {
   const current = threads.current()
   if (!current) return undefined
-  const device = current.device ?? threads.device()
+  const { device } = current
   let id = current.id
   let thread: Thread | undefined = current
   while (thread?.info.kind === 'agent' && thread.info.parent) {

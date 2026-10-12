@@ -1,5 +1,5 @@
 import type { RemoteRecord } from '@sand/host-remotes/contract'
-import { callPeer, PeerError, remoteStore } from '@sand/kit/host'
+import { callPeer, PeerError, remoteStore, type WireSocket } from '@sand/kit/host'
 import type { Context } from 'drydock'
 import type { Capture } from '../capture'
 import { isId, personId, savePersonId } from '../identity'
@@ -8,7 +8,7 @@ const checkEvery = 30 * 60_000
 const timeout = 10_000
 
 export const watchPcs = (ctx: Context, capture: Capture, home: string, install: string) => {
-  const sockets = new Set<WebSocket>()
+  const sockets = new Set<WireSocket>()
   let reported = ''
 
   ctx.watch('hub', hub => hub?.handle('telemetry.person', () => personId(home, install)))

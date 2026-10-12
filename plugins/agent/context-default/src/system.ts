@@ -26,16 +26,11 @@ Anything a person reads, like replies, PRs, commits and docs, stays plain and fo
 
 Before sending, try deleting each sentence. Keep it deleted if the reader loses nothing.`
 
-export const compose = async (
-  instructions: Instructions,
-  { cwd, project }: Pick<Session, 'cwd' | 'project'>,
-  model?: string,
-  extra?: string,
-) => {
-  const projectInstructions = await instructions.project(cwd, project)
+export const compose = async (instructions: Instructions, session: Session, model?: string, extra?: string) => {
+  const projectInstructions = await instructions.project(session.cwd, session.project)
   return [
     base,
-    instructions.environment(cwd, model),
+    instructions.environment(session, model),
     projectInstructions && `# Project instructions\n\n${projectInstructions}`,
     extra && `# Additional instructions\n\n${extra}`,
   ]

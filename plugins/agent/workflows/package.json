@@ -13,12 +13,12 @@
     "summary": "Lets the agent run many sub-agents from one script",
     "uses": {
       "ui": "workflow progress is not shown",
-      "loop": "agent output that does not match its schema is not retried",
       "transcript": "workflow calls use the generic tool view"
     }
   },
   "dependencies": {
     "@sand/agents": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/kit": "workspace:*",
     "@sand/llm-accounts": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",

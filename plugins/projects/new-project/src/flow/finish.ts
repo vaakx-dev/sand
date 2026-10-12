@@ -14,7 +14,7 @@ const added = (choice: Choice, entry: { name: string; path: string }): Made => (
   note: choice.project ? `Added a copy of ${entry.name}` : `${entry.name} added`,
 })
 
-const addFolder = async (ctx: ProjectsContext, choice: Choice, device?: string): Promise<Made> => {
+const addFolder = async (ctx: ProjectsContext, choice: Choice, device: string): Promise<Made> => {
   if (!choice.project) {
     const folder = await ctx.projects.inspect(choice.path, device)
     if (folder.project) {
@@ -26,7 +26,7 @@ const addFolder = async (ctx: ProjectsContext, choice: Choice, device?: string):
 }
 
 const make = async (ctx: ProjectsContext, choice: Choice, progress: (text: string) => void): Promise<Made> => {
-  const { device } = choice.machine
+  const device = choice.machine.id
   const { projects } = ctx
   if (choice.how === 'create') return added(choice, await projects.create(choice.name, device))
   if (choice.how === 'clone') return added(choice, await projects.clone(choice.repo.url, choice.path, device, progress, choice.project))
@@ -35,7 +35,7 @@ const make = async (ctx: ProjectsContext, choice: Choice, progress: (text: strin
 }
 
 const open = async (ctx: ProjectsContext, choice: Choice, path: string) => {
-  const { device } = choice.machine
+  const device = choice.machine.id
   if (choice.done) return void choice.done({ path, device })
   await ctx.threads.draft(path, device)
   ctx.composer?.focus()
@@ -46,5 +46,5 @@ export const finish = async (ctx: ProjectsContext, choice: Choice, progress: (te
   const made = await make(ctx, choice, progress)
   await open(ctx, choice, made.path)
   ctx.notify?.push(made.note)
-  if ((choice.how === 'clone' || choice.how === 'add') && !made.existing) void offerSetup(ctx, made.path, choice.machine.device)
+  if ((choice.how === 'clone' || choice.how === 'add') && !made.existing) void offerSetup(ctx, made.path, choice.machine.id)
 }

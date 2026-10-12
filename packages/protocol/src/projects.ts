@@ -29,5 +29,5 @@ export interface Project {
 
 export interface ProjectRef {
   path: string
-  device?: string
+  device: string
 }

@@ -26,8 +26,8 @@ export const askSand = async (ctx: Context<'wire'>, root: string, plugin: Plugin
   const threads = ctx.threads
   if (!threads) throw new Error('Threads are not available')
   const prompt = askPrompt(plugin)
-  if (ctx.composer) {
-    await threads.draft(root)
+  if (ctx.composer && ctx.machines) {
+    await threads.draft(root, ctx.machines.here().id)
     ctx.settings?.close()
     ctx.composer.set(prompt)
     ctx.composer.focus()

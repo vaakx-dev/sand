@@ -49,6 +49,6 @@ export const importThread =
     if (request.title && request.named) session.rename(request.title, true)
     session.appendMany(copies(entries))
     session.append('continued-from', request.from satisfies ThreadLinkEntries['continued-from'])
-    session.append('message', { role: 'user', content: [moveNote(request.from.name, request.pc, session.cwd, ctx.tools?.notes() ?? [])] })
+    session.append('message', { role: 'user', content: [moveNote(request.from.name, request.pc, session.cwd, ctx.tools?.notes(session) ?? [])] })
     return { session: session.id }
   }

@@ -6,6 +6,8 @@ import type { Context } from 'drydock'
 
 type Ctx = Context<'threads' | 'turns'>
 
+const kinds: Record<AgentRun['kind'], string> = { agent: 'Agent', workflow: 'Workflow', shell: 'Background command' }
+
 const stopper = (ctx: Ctx, { job, session }: AgentRun) => {
   const { jobs } = ctx
   if (job && jobs) return () => jobs.cancel(job)
@@ -32,5 +34,5 @@ export const runMenu = (ctx: Ctx, open: () => void, run: AgentRun): MenuSpec => 
     ...(stop ? [stopAction(ctx, stop)] : []),
     { id: 'copy-title', label: 'Copy title', icon: 'copy', group: 'copy', tile: true, run: () => copyWithNotice(ctx.notify, run.title, 'title') },
   ]
-  return { title: run.title, subtitle: run.kind === 'workflow' ? 'Workflow' : 'Agent', actions }
+  return { title: run.title, subtitle: kinds[run.kind], actions }
 }

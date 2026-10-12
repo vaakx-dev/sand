@@ -10,10 +10,10 @@ const agentName = (thread: Thread) => {
 
 const workflowPrefix = 'workflow '
 
-const splitLabel = (label: string) => {
-  if (label.startsWith(workflowPrefix)) return { name: 'workflow', task: label.slice(workflowPrefix.length), workflow: true }
+const splitLabel = ({ kind, label }: JobState) => {
+  if (kind === 'workflow') return { name: kind, task: label.slice(workflowPrefix.length) }
   const at = label.indexOf(': ')
-  return at > 0 ? { name: label.slice(0, at), task: label.slice(at + 2), workflow: false } : { name: 'job', task: label, workflow: false }
+  return at > 0 ? { name: label.slice(0, at), task: label.slice(at + 2) } : { name: kind, task: label }
 }
 
 const callLabel = (parent: Thread | undefined, origin: string) => {
@@ -31,13 +31,13 @@ const lastEnd = (agents: Thread[]) => Math.max(...agents.map(agent => agent.info
 const finished = (agents: Thread[]) => agents.filter(agent => !agent.running).length
 
 const jobRun = (job: JobState, agents: Thread[]): AgentRun => {
-  const { name, task, workflow } = splitLabel(job.label)
-  const single = workflow ? undefined : agents[0]
+  const { name, task } = splitLabel(job)
+  const single = job.kind === 'agent' ? agents[0] : undefined
   return {
     id: job.id,
-    kind: workflow ? 'workflow' : 'agent',
+    kind: job.kind,
     name,
-    title: agentTitle(single?.info.title ?? task),
+    title: job.kind === 'shell' ? task : agentTitle(single?.info.title ?? task),
     status: job.status,
     started: job.started,
     ...(job.ended && { ended: job.ended }),

@@ -16,8 +16,8 @@ export interface PrSummary {
 }
 
 export interface Pulls {
-  of(cwd: string, device?: string): PrSummary | null | undefined
-  refresh(cwd: string, device?: string): void
+  of(cwd: string, device: string): PrSummary | null | undefined
+  refresh(cwd: string, device: string): void
 }
 
 declare module 'drydock' {

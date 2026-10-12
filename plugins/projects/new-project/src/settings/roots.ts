@@ -7,7 +7,7 @@ import { expand, shorten } from './places'
 
 const rootField = (ctx: ProjectsContext, machine: Machine) => {
   const { textInput } = ctx.kit
-  const { device } = machine
+  const device = machine.id
   let saved = shorten(ctx, ctx.projects.place(device).root, device)
   const text = sig(saved)
   const commit = () => {

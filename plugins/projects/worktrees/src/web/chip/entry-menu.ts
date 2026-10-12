@@ -9,7 +9,7 @@ const lost = (entry: WorktreeEntry) => {
   return `Deletes ${tildeHome(entry.path)}${entry.branch ? ` and the branch ${entry.branch}` : ''}. Threads there move back to the project folder, and ${changes} and unpushed commits are lost.`
 }
 
-export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: WorktreeEntry, device: string | undefined, use: () => void): MenuSpec => {
+export const entryMenu = (ctx: WebContext, client: WorktreeClient, entry: WorktreeEntry, device: string, use: () => void): MenuSpec => {
   const fail = (what: string) => (error: unknown) => ctx.notify?.push(`Could not ${what}: ${errorMessage(error)}`, { level: 'error' })
   const copy = (text: string, what: string) => () => copyWithNotice(ctx.notify, text, what)
   const branch = entry.branch ?? ''

@@ -24,7 +24,7 @@ const whenNearView = (element: Element, run: () => void) => {
 
 export const createMedia = (wire: Wire, store: Store): Media => {
   const fetchBlob = async (hash: string, thread?: string) => {
-    const device = thread ? store.threads.get(thread)?.device : undefined
+    const device = thread ? store.deviceOf(thread) : undefined
     const response = await wire.fetch(blobPath(hash, thread), undefined, device)
     if (!response.ok) throw new Error(`Could not load an attachment (${response.status})`)
     return response.blob()

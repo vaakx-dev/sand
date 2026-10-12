@@ -13,6 +13,7 @@ export interface SessionInfo {
   parent: string | null
   origin: string | null
   kind: SessionKind
+  creator?: ThreadLink
 }
 
 export interface SessionMeta {
@@ -27,6 +28,10 @@ export interface SessionSummary extends SessionInfo, Partial<SessionMeta> {
   updated: number
   messages: number
   named: boolean
+}
+
+export interface SessionMatch extends SessionSummary {
+  match: string
 }
 
 export interface PageSize {
@@ -71,6 +76,10 @@ export interface ThreadLinkEntries {
   'continued-to': ThreadLink
 }
 
+export interface SenderEntries {
+  'sent-by': ThreadLink
+}
+
 export interface ThreadExportPage {
   title: string | null
   cwd: string
@@ -90,6 +99,7 @@ export interface CreateSession {
   origin?: string
   kind?: SessionKind
   settings?: SessionSettings
+  creator?: ThreadLink
 }
 
 export interface Sessions {
@@ -133,6 +143,7 @@ declare module '@sand/protocol/wire' {
     'session.snooze': { session: string; until: number | null }
     'session.seen': { session: string; at: number }
     'session.move': { session: string; position: number }
+    'sessions.search': { query: string; limit?: number }
   }
 
   interface WireEvents {

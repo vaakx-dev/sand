@@ -1,16 +1,21 @@
 import type { NavItem } from '@sand/protocol'
 import { tildeHome } from '../text/paths'
+import { plurals } from '../text/plural'
 
 const marks: Partial<Record<NavItem['state'], string>> = { running: 'Working', background: 'Background agents running', waiting: 'Needs you', draft: 'Draft' }
 
-const agents = (count: number) => `${count} agent${count === 1 ? '' : 's'}`
+export const navJobs = ({ agents = 0, shells = 0 }: NavItem) => plurals({ agent: agents, shell: shells })
 
-const backgroundStatus = ({ jobs = 1, workflow }: NavItem) => {
-  if (!workflow) return `${agents(jobs)} running in the background`
+const backgroundStatus = (item: NavItem) => {
+  const { workflow } = item
+  if (!workflow) return `${navJobs(item)} running in the background`
   return workflow.total ? `Workflow running, ${workflow.done} of ${workflow.total} agents finished` : 'Workflow running'
 }
 
-const runningStatus = ({ jobs }: NavItem) => (jobs ? `Working, with ${agents(jobs)} running` : 'Working')
+const runningStatus = (item: NavItem) => {
+  const jobs = navJobs(item)
+  return jobs ? `Working, with ${jobs} running` : 'Working'
+}
 
 export const navStatus = (item: NavItem) => {
   if (item.state === 'background') return backgroundStatus(item)

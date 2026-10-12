@@ -5,8 +5,15 @@ export interface Repeated {
   count: number
 }
 
-export const runningAgents = (runs: Run[]) =>
-  runs.filter(run => run.status === 'running').reduce((sum, run) => sum + Math.max(1, run.members.filter(member => member.running).length), 0)
+export const runningCounts = (runs: Run[]) => {
+  const counts = { agent: 0, shell: 0 }
+  for (const run of runs) {
+    if (run.status !== 'running') continue
+    if (run.kind === 'shell') counts.shell++
+    else counts.agent += Math.max(1, run.members.filter(member => member.running).length)
+  }
+  return counts
+}
 
 export const collapseRepeats = (runs: Run[]): Repeated[] => {
   const groups = new Map<string, Repeated>()

@@ -1,5 +1,5 @@
 import type { Prompt, UserContent } from '@sand/messages'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Session, ThreadLink } from '@sand/sessions-sqlite/contract'
 import type { Pending } from './contract'
 import { promptContent, promptLabel } from '@sand/kit'
 
@@ -15,8 +15,8 @@ export const createQueues = (changed: (session: Session) => void) => {
   }
   return {
     list,
-    add(session: Session, prompt: Prompt, label?: string) {
-      const steer: Steer = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt: promptContent(prompt), at: Date.now() }
+    add(session: Session, prompt: Prompt, label?: string, from?: ThreadLink) {
+      const steer: Steer = { id: Bun.randomUUIDv7(), label: label ?? promptLabel(prompt), prompt: promptContent(prompt), at: Date.now(), ...(from && { from }) }
       set(session, [...list(session), steer])
       return steer.id
     },

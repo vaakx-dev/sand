@@ -40,7 +40,7 @@ export const newerSource = (ctx: PickerContext, group: ProjectGroup, location: P
 
 export const statusOf = (ctx: PickerContext, group: ProjectGroup, machine: Machine): RowStatus | undefined => {
   if (!machine.online) return { tone: 'neutral', text: 'Offline', muted: true }
-  const location = copyOn(group, machine.device)
+  const location = copyOn(group, machine.id)
   if (!location) return { tone: 'neutral', text: 'Copy here…' }
   const found = neighbours(ctx, group, location)
   for (const relation of priority) {
