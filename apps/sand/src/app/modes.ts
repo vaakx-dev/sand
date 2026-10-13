@@ -24,6 +24,7 @@ const core = [
   'goal',
   'titles',
   'jobs',
+  'worker-model',
   'agents',
   'skills',
   'workflows',
