@@ -1,42 +1,40 @@
-import type { Machines, ProjectEntry, ProjectGroup, Wire } from '../contract'
+import type { ProjectGroup, Wire } from '../contract'
 import type { Context } from 'drydock'
 
 interface Icon {
+  hash: string
   url?: string
+  missed?: boolean
 }
 
-const iconPath = (project: string, version: number) => `/project-icon?${new URLSearchParams({ project, v: String(version) })}`
+const iconPath = (project: string, hash: string) => `/project-icon?${new URLSearchParams({ project, v: hash })}`
 
-export const projectIcons = (ctx: Context, wire: Wire, machines: Machines) => {
+export const projectIcons = (ctx: Context, wire: Wire) => {
   const icons = new Map<string, Icon>()
   let generation = 0
 
-  const source = (group: ProjectGroup) => {
-    const usable = group.locations.filter(location => !location.missing && machines.online(location.device))
-    return usable.find(location => location.device === machines.here().id) ?? usable[0]
-  }
-
-  const load = async (project: string, location: ProjectEntry, from: number) => {
-    const { device } = location
-    const version = await wire.call<number | null>({ type: 'projects.icon', project }, device)
-    if (from !== generation || version === null) return
-    const response = await wire.fetch(iconPath(project, version), undefined, device)
-    if (!response.ok) return
-    const blob = await response.blob()
-    if (from !== generation) return
-    icons.set(project, { url: URL.createObjectURL(blob) })
-    ctx.emit('projects.change')
+  const load = async (project: string, hash: string, from: number) => {
+    const response = await wire.fetch(iconPath(project, hash)).catch(() => undefined)
+    const blob = response?.ok ? await response.blob() : undefined
+    if (from !== generation || icons.get(project)?.hash !== hash) return
+    icons.set(project, blob ? { hash, url: URL.createObjectURL(blob) } : { hash, missed: true })
+    if (blob) ctx.emit('projects.change')
   }
 
   return {
-    get(group: ProjectGroup) {
-      if (!icons.has(group.id)) {
-        const location = source(group)
-        if (!location) return undefined
-        icons.set(group.id, {})
-        load(group.id, location, generation).catch(() => {})
-      }
-      return icons.get(group.id)?.url
+    get({ id, iconFile }: ProjectGroup) {
+      if (!iconFile) return undefined
+      const icon = icons.get(id)
+      if (icon?.hash === iconFile.hash) return icon.url
+      if (icon?.url) URL.revokeObjectURL(icon.url)
+      icons.set(id, { hash: iconFile.hash })
+      void load(id, iconFile.hash, generation)
+      return undefined
+    },
+    retryMissed() {
+      const missed = [...icons].filter(([, icon]) => icon.missed)
+      for (const [id] of missed) icons.delete(id)
+      if (missed.length) ctx.emit('projects.change')
     },
     clear() {
       generation++

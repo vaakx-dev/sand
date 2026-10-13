@@ -1,6 +1,6 @@
 import type { Project, ProjectIcon } from '@sand/protocol'
 
-export type { Project, ProjectCopy, ProjectIcon, ProjectRef } from '@sand/protocol'
+export type { Project, ProjectCopy, ProjectIcon, ProjectIconFile, ProjectRef } from '@sand/protocol'
 
 export interface ProjectPatch {
   name?: string
@@ -61,7 +61,6 @@ declare module '@sand/protocol/wire' {
     'projects.root': { root: string }
     'projects.create': { name: string }
     'projects.clone': { url: string; into: string; job?: string; project?: string }
-    'projects.icon': { project: string }
   }
 
   interface WireEvents {

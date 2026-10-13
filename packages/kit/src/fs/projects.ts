@@ -1,6 +1,7 @@
-import type { Project, ProjectCopy, ProjectIcon } from '@sand/protocol'
+import type { Project, ProjectCopy, ProjectIcon, ProjectIconFile } from '@sand/protocol'
 import { join } from 'node:path'
 import { isRecord } from '../json/record'
+import { isIconHash, isIconType } from './project-icons'
 import { writeAtomic } from './replace'
 
 const isTime = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
@@ -31,16 +32,23 @@ const parseIcon = (value: unknown): ProjectIcon | undefined => {
   return Object.keys(icon).length ? icon : undefined
 }
 
+const parseIconFile = (value: unknown): ProjectIconFile | undefined => {
+  if (!isRecord(value) || !isIconHash(value.hash) || !isIconType(value.type) || !isTime(value.updated)) return undefined
+  return { hash: value.hash, type: value.type, updated: value.updated }
+}
+
 export const parseProject = (value: unknown): Project | undefined => {
   if (!isRecord(value) || typeof value.id !== 'string' || !value.id || typeof value.name !== 'string') return undefined
   if (!isTime(value.updated) || !isRecord(value.copies)) return undefined
   if (value.remote !== undefined && typeof value.remote !== 'string') return undefined
   const icon = parseIcon(value.icon)
+  const iconFile = parseIconFile(value.iconFile)
   return {
     id: value.id,
     name: value.name,
     ...(typeof value.remote === 'string' ? { remote: value.remote } : {}),
     ...(icon ? { icon } : {}),
+    ...(iconFile ? { iconFile } : {}),
     copies: parseCopies(value.copies),
     updated: value.updated,
     ...(value.hidden === true ? { hidden: true } : {}),
