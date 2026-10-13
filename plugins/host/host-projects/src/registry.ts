@@ -1,5 +1,5 @@
 import { isInside, mergeProjects, remoteKey } from '@sand/kit'
-import type { Project, ProjectFolder, ProjectPatch } from './contract'
+import type { Project, ProjectFolder, ProjectIconFile, ProjectPatch } from './contract'
 import { gitRemote } from './folder/git'
 import { inspectFolder } from './folder/inspect'
 import { localCopy, projectAt, removedCopyAt } from './list'
@@ -95,6 +95,11 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     return commit(next)
   }
 
+  const setIconFile = (id: string, iconFile: ProjectIconFile) => {
+    const project = known(id)
+    return commit({ ...project, iconFile, updated: nextStamp(project.updated) })
+  }
+
   const remove = async (id: string, from?: string) => {
     const project = store.get(id)
     if (!project || project.deleted) return
@@ -115,7 +120,7 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     return true
   }
 
-  return { all: () => store.all(), inspect, add, update, remove, merge, fetched, refresh }
+  return { all: () => store.all(), inspect, add, update, setIconFile, remove, merge, fetched, refresh }
 }
 
 export type Registry = ReturnType<typeof createRegistry>

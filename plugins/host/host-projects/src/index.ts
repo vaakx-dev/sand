@@ -3,6 +3,7 @@ import { homedir } from 'node:os'
 import { join, sep } from 'node:path'
 import type { ProjectPeers } from './contract'
 import { seedSandHome } from './home'
+import { iconSync } from './icons/sync'
 import { projectList } from './list'
 import { createRegistry } from './registry'
 import { projectRequests } from './requests'
@@ -38,5 +39,9 @@ export default definePlugin({
     ctx.provide('hostProjects', { all: registry.all, merge: registry.merge })
     for (const setup of projectRequests({ hub: ctx.hub, registry, root, list, placeChanged })) ctx.effect(setup)
     registry.refresh().catch(error => ctx.report(error))
+    const icons = iconSync(registry, device.id, home, error => ctx.report(error))
+    ctx.effect(() => icons.close)
+    ctx.on('host.projects', icons.changed)
+    icons.changed()
   },
 })

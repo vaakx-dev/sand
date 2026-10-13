@@ -41,7 +41,7 @@ export default definePlugin({
     ctx.effect(() => () => links.close())
     const wire = routeWire(local, links, store)
     const machines = createMachines(ctx, local, links, here, remotes => cache.keep('remotes', remotes))
-    const projects = createProjects(ctx, wire, store, machines.machines)
+    const projects = createProjects(ctx, wire, store)
     const threads = createThreads(ctx, wire, store, projects.projects, cache.hydrate)
     void cache.ready.then(() => {
       machines.restore(cache.saved('remotes'))
