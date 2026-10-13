@@ -102,6 +102,7 @@ export const chatController = (ctx: Context<'kit' | 'threads' | 'turns' | 'trans
     }
     const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.models?.summary(settings))
     const folded = foldTurns(items, {
+      older: ctx.threads.older(thread.id),
       running: thread.running,
       streaming: thread.live.length > 0,
       started: thread.started,
@@ -139,7 +140,8 @@ export const chatController = (ctx: Context<'kit' | 'threads' | 'turns' | 'trans
     const saved = switching ? view.scroll : undefined
     const tail = switching ? saved === undefined : nearEnd(scroller)
     if (tail && (switching || view.size > 2 * pageSize)) view.first = undefined
-    paint(thread, view)
+    if (switching || tail) paint(thread, view)
+    else keepAnchor(scroller, view.rowList, () => paint(thread, view))
     view.animate = true
     if (saved !== undefined) scrollTo(scroller, saved)
     else if (tail) toEnd(scroller)

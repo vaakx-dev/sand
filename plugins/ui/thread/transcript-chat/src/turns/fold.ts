@@ -19,6 +19,7 @@ export interface ShownItem {
 export type Shown = ShownItem | TurnHead
 
 export interface FoldOptions {
+  older: boolean
   running: boolean
   streaming: boolean
   started: number | undefined
@@ -85,8 +86,9 @@ const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] 
   const from = visibleFrom(turn.body, running)
   const isWork = (item: Item, index: number) => index < from && !pinned(item)
   const work = turn.body.filter(isWork)
-  const head = running || work.length ? headOf(turn, work, running, options.started) : undefined
-  const expanded = head !== undefined && (running || options.open(head.key))
+  const cut = !turn.head && options.older
+  const head = !cut && (running || work.length) ? headOf(turn, work, running, options.started) : undefined
+  const expanded = running || (head !== undefined && options.open(head.key))
   const shown: Shown[] = []
   if (turn.head) shown.push({ kind: 'item', key: turn.head.key, item: turn.head, rail: false })
   if (head) shown.push(head)
