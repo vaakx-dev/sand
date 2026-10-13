@@ -16,6 +16,7 @@ export default definePlugin({
     instructions: 'sub-agents get no environment or project instructions in their prompt',
     modelSettings: 'sub-agents get no model name in their prompt',
     steering: 'running background agents cannot take messages',
+    workerModel: 'worker agents like browser and web cannot start',
   },
   config: z.object({
     max_depth: z.number().int().min(0).default(6),
