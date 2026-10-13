@@ -1,6 +1,7 @@
 import type { Effort, LLM, ModelInfo } from '@sand/llm-accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { AgentDefinition, AgentRequest } from './contract'
+import type { Session } from '@sand/sessions-sqlite/contract'
+import type { AgentRequest } from './contract'
 import { matchModel } from '@sand/kit'
 
 export const parseEffort = (value: unknown, efforts: Effort[]) => {
@@ -17,19 +18,21 @@ const resolveModel = (query: string | undefined, models: ModelInfo[], llm: LLM |
 const supportedEffort = (effort: Effort | undefined, model: ModelInfo | undefined) =>
   effort && model && !model.efforts.includes(effort) ? undefined : effort
 
+export const parentSettings = (parent: Session) => parent.path().findLast(entry => entry.type === 'settings')?.data as SessionSettings | undefined
+
 export const childSettings = (
   request: AgentRequest,
-  definition: AgentDefinition,
+  preset: SessionSettings,
+  inherited: SessionSettings | undefined,
   llm: LLM | undefined,
 ): SessionSettings | undefined => {
-  const inherited = request.parent.path().findLast(entry => entry.type === 'settings')?.data as SessionSettings | undefined
   const models = llm?.models?.() ?? []
-  const model = resolveModel(request.model ?? definition.model, models, llm) ?? inherited?.model
+  const model = resolveModel(request.model ?? preset.model, models, llm) ?? inherited?.model
   const effort = supportedEffort(
-    request.effort ?? definition.effort ?? inherited?.effort,
+    request.effort ?? preset.effort ?? inherited?.effort,
     models.find(candidate => candidate.id === model),
   )
-  const { model: _, effort: __, ...rest } = inherited ?? {}
-  const settings: SessionSettings = { ...rest, ...(model && { model }), ...(effort && { effort }) }
+  const speed = preset.speed ?? inherited?.speed
+  const settings: SessionSettings = { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
   return Object.keys(settings).length ? settings : undefined
 }

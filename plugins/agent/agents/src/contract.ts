@@ -10,6 +10,7 @@ export interface AgentDefinition {
   tools?: string[]
   model?: string
   effort?: Effort
+  worker?: boolean
 }
 
 export interface AgentRequest {

@@ -24,6 +24,7 @@ const core = [
   'goal',
   'titles',
   'jobs',
+  'worker-model',
   'agents',
   'skills',
   'workflows',
@@ -33,6 +34,7 @@ const core = [
   'html-preview',
   'browser-engine',
   'browser-tools',
+  'web-search',
   'github',
   'github-login',
 ]

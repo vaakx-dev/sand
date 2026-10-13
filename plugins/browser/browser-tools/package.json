@@ -18,7 +18,6 @@
     "@sand/agents": "workspace:*",
     "@sand/browser-engine": "workspace:*",
     "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
     "@sand/messages": "workspace:*",
     "@sand/sessions-sqlite": "workspace:*",
     "@sand/tools": "workspace:*",

@@ -1,9 +1,10 @@
 import type { Session } from '@sand/sessions-sqlite/contract'
+import type {} from '@sand/worker-model/contract'
 import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
 import type { Context } from 'drydock'
 import type { Resolve } from './layers'
 import type { AgentMeta, Meta } from './meta'
-import { childSettings } from './settings'
+import { childSettings, parentSettings } from './settings'
 import { slots, type Release } from './slots'
 import { compose } from './system'
 import { agentTitle } from './title'
@@ -36,9 +37,17 @@ export const createRun = (ctx: Context<'loop' | 'sessions'>, { resolve, meta, ma
     return definition
   }
 
+  const presetOf = (request: AgentRequest, definition: AgentDefinition) => {
+    if (!definition.worker) return definition
+    const worker = ctx.workerModel?.get() ?? {}
+    if (!worker.model && !request.model) throw new Error(`The ${definition.name} agent runs on the worker model. Pick one under Settings → Models → Workers.`)
+    return worker
+  }
+
   const create = async (request: AgentRequest, definition: AgentDefinition, parentMeta: AgentMeta | undefined) => {
     const { parent, task, label, origin } = request
-    const settings = childSettings(request, definition, ctx.llm)
+    const inherited = definition.worker ? undefined : parentSettings(parent)
+    const settings = childSettings(request, presetOf(request, definition), inherited, ctx.llm)
     const model = ctx.modelSettings?.resolve(settings ?? {}).model
     const session = ctx.sessions.create({
       cwd: parent.cwd,
