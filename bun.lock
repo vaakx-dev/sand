@@ -1225,6 +1225,7 @@
         "@sand/host-projects": "workspace:*",
         "@sand/kit": "workspace:*",
         "@sand/project-files": "workspace:*",
+        "@sand/protocol": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/sessions-sqlite": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",

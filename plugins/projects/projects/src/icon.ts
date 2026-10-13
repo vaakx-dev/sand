@@ -1,35 +1,41 @@
-import { joinDisposers } from '@sand/kit'
+import { bearer, joinDisposers } from '@sand/kit'
+import { isIconHash, projectIconPath } from '@sand/kit/fs'
+import { fileHash, peerUrl, remoteStore } from '@sand/kit/host'
 import type { ProjectFiles } from '@sand/project-files/contract'
+import type { RemoteRecord } from '@sand/protocol'
 import type { RouteHandler, Server } from '@sand/server/contract'
-import { stat } from 'node:fs/promises'
-import { join } from 'node:path'
 
-const types: Record<string, string> = {
-  svg: 'image/svg+xml',
-  png: 'image/png',
-  webp: 'image/webp',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  ico: 'image/x-icon',
+const storedPath = '/project-icon-file'
+
+const notFound = () => new Response('not found', { status: 404 })
+
+const fromPeer = async (record: RemoteRecord, hash: string) => {
+  const url = new URL(`${storedPath}?${new URLSearchParams({ hash })}`, await peerUrl(record))
+  const response = await fetch(url, { headers: bearer(record.key) })
+  if (!response.ok) throw new Error(`${record.name} does not have this icon`)
+  const bytes = await response.bytes()
+  if (fileHash(bytes) !== hash) throw new Error(`${record.name} sent a different icon`)
+  return bytes
 }
 
-const find = async (files: ProjectFiles, project: string) => {
-  const copy = project ? files.copies().find(copy => copy.project === project)?.path : undefined
-  if (!copy) return undefined
-  for (const [extension, type] of Object.entries(types)) {
-    const path = join(copy, '.sand', `icon.${extension}`)
-    const found = await stat(path).catch(() => undefined)
-    if (found?.isFile()) return { path, type, version: Math.round(found.mtimeMs) }
-  }
-  return undefined
+const storedIcon = async (home: string, hash: string) => {
+  const path = projectIconPath(home, hash)
+  if (await Bun.file(path).exists()) return Bun.file(path)
+  const peers = (await remoteStore(home)).list()
+  const bytes = await Promise.any(peers.map(record => fromPeer(record, hash))).catch(() => undefined)
+  if (!bytes) return undefined
+  await Bun.write(path, bytes)
+  return Bun.file(path)
 }
 
 const iconRoute =
-  (files: ProjectFiles): RouteHandler =>
+  (home: string, files: ProjectFiles): RouteHandler =>
   async request => {
-    const icon = await find(files, new URL(request.url).searchParams.get('project') ?? '')
-    if (!icon) return new Response('not found', { status: 404 })
-    return new Response(Bun.file(icon.path), {
+    const project = new URL(request.url).searchParams.get('project')
+    const icon = files.local().projects.find(found => found.id === project)?.iconFile
+    const file = icon && (await storedIcon(home, icon.hash))
+    if (!icon || !file) return notFound()
+    return new Response(file, {
       headers: {
         'content-type': icon.type,
         'cache-control': 'max-age=31536000, immutable',
@@ -39,8 +45,14 @@ const iconRoute =
     })
   }
 
-export const serveIcons = (server: Server, files: ProjectFiles) =>
-  joinDisposers(
-    server.handle('projects.icon', async ({ project }) => (await find(files, project))?.version ?? null),
-    server.route('/project-icon', iconRoute(files)),
-  )
+const storedRoute =
+  (home: string): RouteHandler =>
+  async request => {
+    const hash = new URL(request.url).searchParams.get('hash')
+    if (!isIconHash(hash)) return notFound()
+    const file = Bun.file(projectIconPath(home, hash))
+    return (await file.exists()) ? new Response(file, { headers: { 'content-type': 'application/octet-stream' } }) : notFound()
+  }
+
+export const serveIcons = (server: Server, home: string, files: ProjectFiles) =>
+  joinDisposers(server.route('/project-icon', iconRoute(home, files)), server.route(storedPath, storedRoute(home)))

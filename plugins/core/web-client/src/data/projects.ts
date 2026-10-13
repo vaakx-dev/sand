@@ -1,6 +1,6 @@
 import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
 import type { ProjectLook, WireEvent, WireRequest } from '@sand/protocol'
-import type { Machines, ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
+import type { ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
 import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
 import type { Context } from 'drydock'
 import type { Store } from '../threads/store'
@@ -10,7 +10,7 @@ import { keptLists } from './kept'
 
 const fallback = { home: '~', sep: '/', root: '~', scratch: '' }
 
-export const createProjects = (ctx: Context, wire: Wire, store: Store, machines: Machines) => {
+export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
   const lists: Lists = new Map()
   const progress = new Map<string, (text: string) => void>()
   const call = <T>(request: WireRequest, device: string) => wire.call<T>(request, device)
@@ -73,8 +73,9 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store, machines:
 
   const group = (path: string, device: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
 
-  const icons = projectIcons(ctx, wire, machines)
+  const icons = projectIcons(ctx, wire)
   ctx.on('wire.hello', icons.clear)
+  ctx.on('machines.change', icons.retryMissed)
   ctx.effect(() => icons.clear)
 
   const groupIcon = (found: ProjectGroup): ProjectLook | undefined => {

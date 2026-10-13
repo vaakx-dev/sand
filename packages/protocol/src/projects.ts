@@ -10,6 +10,12 @@ export interface ProjectIcon {
   hue?: number
 }
 
+export interface ProjectIconFile {
+  hash: string
+  type: string
+  updated: number
+}
+
 export interface ProjectLook extends ProjectIcon {
   file?: string
   app?: boolean
@@ -21,6 +27,7 @@ export interface Project {
   name: string
   remote?: string
   icon?: ProjectIcon
+  iconFile?: ProjectIconFile
   copies: Record<string, ProjectCopy>
   updated: number
   hidden?: boolean

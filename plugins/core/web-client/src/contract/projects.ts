@@ -1,4 +1,4 @@
-import type { FolderListing, ProjectFolder, ProjectIcon, ProjectPlace } from '@sand/host-projects/contract'
+import type { FolderListing, ProjectFolder, ProjectIcon, ProjectIconFile, ProjectPlace } from '@sand/host-projects/contract'
 import type { ProjectLook } from '@sand/protocol'
 
 export interface ProjectEntry {
@@ -17,6 +17,7 @@ export interface ProjectGroup {
   name: string
   remote?: string
   icon?: ProjectIcon
+  iconFile?: ProjectIconFile
   hidden: boolean
   threads: number
   updated: number
