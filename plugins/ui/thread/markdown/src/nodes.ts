@@ -40,11 +40,18 @@ export const listItem = (children: Node[]) => li({ class: 'my-1 marker:text-neut
 export const taskItem = (done: boolean, children: Node[]) =>
   li({ class: 'my-1 list-none' }, span({ class: 'mr-2 text-accent-400' }, done ? '☑' : '☐'), children)
 
+const cellText = (children: Inline[]) => children.map(child => (typeof child === 'string' ? child : child.textContent)).join('')
+
+const cellWidth = (children: Inline[]) => (cellText(children).length <= 32 ? 'whitespace-nowrap' : 'min-w-64')
+
 export const tableCell = (head: boolean, align: Align | undefined, children: Inline[]) =>
-  (head ? th : td)({ class: ['border-b border-neutral-800 px-3 py-2 align-top', alignments[align ?? 'left'], head && 'font-semibold text-neutral-100'] }, children)
+  (head ? th : td)(
+    { class: ['border-b border-neutral-800 px-3 py-2 align-top', cellWidth(children), alignments[align ?? 'left'], head && 'font-semibold text-neutral-100'] },
+    children,
+  )
 
 export const tableBlock = (head: HTMLElement[], rows: HTMLElement[][]) =>
-  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse text-xs' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
+  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse break-words text-xs' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
 
 export const inlineCode = (value: string) => el('code', { class: 'rounded-md bg-neutral-700 px-1 py-px font-mono text-xs text-neutral-100' }, value)
 
