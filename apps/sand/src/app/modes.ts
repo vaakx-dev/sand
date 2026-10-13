@@ -34,6 +34,7 @@ const core = [
   'html-preview',
   'browser-engine',
   'browser-tools',
+  'web-search',
   'github',
   'github-login',
 ]

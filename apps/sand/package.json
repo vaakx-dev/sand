@@ -88,6 +88,8 @@
     "@sand/user-tools": "workspace:*",
     "@sand/watch": "workspace:*",
     "@sand/web": "workspace:*",
+    "@sand/web-search": "workspace:*",
+    "@sand/worker-model": "workspace:*",
     "@sand/worktrees": "workspace:*",
     "@sand/workflows": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
