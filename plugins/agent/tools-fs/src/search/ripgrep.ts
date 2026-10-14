@@ -4,7 +4,7 @@ const nothingSearched = /No files were searched/
 
 const separator = process.platform === 'win32' ? ['--path-separator', '/'] : []
 
-const everything = ['--follow', '--no-messages', '--no-ignore', '--hidden', '--glob', '!.git']
+const everything = ['--no-messages', '--no-ignore', '--hidden', '--glob', '!.git']
 
 const tracked = ['--hidden', '--no-require-git', '--glob', '!.git', '--glob', '!node_modules']
 
@@ -20,6 +20,7 @@ export async function* lines(binary: string, args: string[], cwd: string, signal
       rest = parts.pop() ?? ''
       yield* parts
     }
+    signal?.throwIfAborted()
     if (rest) yield rest
     if ((await child.exited) < 2) return
     const error = (await new Response(child.stderr).text()).trim()

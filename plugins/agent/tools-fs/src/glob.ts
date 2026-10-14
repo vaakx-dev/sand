@@ -1,6 +1,7 @@
 import type { Tool } from '@sand/tools/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
+import { timedOut, timeoutNote, withDeadline } from './search/deadline'
 import { walk } from './search/walk'
 
 const limit = 1000
@@ -17,9 +18,14 @@ export const glob: Tool<typeof input> = {
   input,
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []
-    for await (const file of walk(pattern, resolve(cwd, path), include_ignored, signal)) {
-      files.push(file)
-      if (files.length >= limit) break
+    try {
+      for await (const file of walk(pattern, resolve(cwd, path), include_ignored, withDeadline(signal))) {
+        files.push(file)
+        if (files.length >= limit) break
+      }
+    } catch (error) {
+      if (!timedOut(error)) throw error
+      return [...files.sort(), timeoutNote].join('\n')
     }
     if (!files.length) return 'No files found'
     return files.sort().join('\n') + (files.length >= limit ? `\n… stopped at ${limit} files` : '')
