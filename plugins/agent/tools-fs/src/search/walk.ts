@@ -10,7 +10,7 @@ const maxListed = 200_000
 const listed = (cwd: string, includeIgnored?: boolean, signal?: AbortSignal) =>
   ripgrep
     ? lines(ripgrep, ['--files', ...scope(includeIgnored)], cwd, signal)
-    : new Bun.Glob('**/*').scan({ cwd, onlyFiles: true, dot: true, followSymlinks: includeIgnored })
+    : new Bun.Glob('**/*').scan({ cwd, onlyFiles: true, dot: true })
 
 const slashes = (path: string) => (process.platform === 'win32' ? path.replaceAll('\\', '/') : path)
 
