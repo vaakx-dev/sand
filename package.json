@@ -25,6 +25,9 @@
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
     "typescript": "^7.0.2"
   },
+  "overrides": {
+    "htmlparser2": "^12.0.0"
+  },
   "vrui": {
     "check": [
       "apps",
