@@ -20,6 +20,7 @@ export default definePlugin({
     imageViewer: 'images do not open full screen',
     notify: 'copying is not confirmed and a failed Stop is not reported',
     jobs: 'agent and workflow calls do not show their background run',
+    threads: 'tool calls show full paths instead of paths inside the thread folder',
   },
   apply(ctx) {
     const image = mediaImage(ctx)
@@ -32,7 +33,7 @@ export default definePlugin({
       openStates,
       menus,
       image,
-      toolStep: (tool, options) => toolStep(ctx.kit, tool, options, menus),
+      toolStep: (tool, options) => toolStep(ctx.kit, tool, options, menus, thread => ctx.threads?.get(thread)?.info.cwd),
     })
     ctx.provide('toolViews', { field, resultText, errorBody, outputText, truncatedNote, image, backgroundJobs: backgroundJobs(ctx) })
   },
