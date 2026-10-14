@@ -24,15 +24,25 @@ const opener = (ctx: Ctx, tool: ToolView) => {
   return secondaryAction({ size: 'sm', class: 'mt-2', onClick: () => void commands.run('changes', path(ctx, tool)) }, 'Open in Edits')
 }
 
+const highlighter = (ctx: Ctx, tool: ToolView) => {
+  const highlight = ctx.markdown?.highlight
+  const language = /\.(\w+)$/.exec(path(ctx, tool))?.[1] ?? ''
+  return highlight && ((code: string) => highlight(code, language))
+}
+
 const body = (ctx: Ctx) => (tool: ToolView) => {
   const { diffRow, fold } = ctx.kit
   const views = ctx.toolViews
   const all = lines(ctx, tool)
   const shown = all.slice(0, shownLines)
+  const highlight = highlighter(ctx, tool)
   return div(
-    { class: 'font-mono text-xs' },
+    { class: 'font-mono text-xs leading-5' },
     tool.result?.isError && div({ class: 'mb-2' }, views.errorBody(tool)),
-    fold({ lines: shown.length }, div({ class: 'overflow-auto rounded-md bg-neutral-950 py-1' }, shown.map(line => diffRow(line)))),
+    fold(
+      { lines: shown.length },
+      div({ class: 'overflow-auto rounded-md bg-neutral-950 py-1' }, div({ class: 'min-w-max' }, shown.map(line => diffRow(line, highlight)))),
+    ),
     all.length > shownLines && views.truncatedNote(all.length - shownLines, 'after'),
     opener(ctx, tool),
   )

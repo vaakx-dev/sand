@@ -3,14 +3,22 @@ import { div, span } from '@vaakx-dev/vrui'
 
 type Kind = DiffLine['kind']
 
+export type Highlight = (code: string) => (Node | string)[]
+
 const marks: Record<Kind, string> = { add: '+', del: '−', ctx: ' ', gap: '⋯' }
 
-const tones: Record<Kind, string> = {
-  add: 'bg-success-950 text-success-300',
-  del: 'bg-danger-950 text-danger-300',
-  ctx: 'text-neutral-400',
-  gap: 'text-neutral-500',
+const tones: Record<Kind, { code: string; gutter: string }> = {
+  add: { code: 'bg-success-500/10', gutter: 'bg-success-500/15 text-success-400/70' },
+  del: { code: 'bg-danger-500/10', gutter: 'bg-danger-500/15 text-danger-400/70' },
+  ctx: { code: '', gutter: 'text-neutral-600' },
+  gap: { code: 'text-neutral-500', gutter: 'text-neutral-600' },
 }
 
-export const diffRow = (line: DiffLine) =>
-  div({ class: ['flex min-w-max whitespace-pre pr-3', tones[line.kind]] }, span({ class: 'w-6 shrink-0 select-none text-center' }, marks[line.kind]), span(line.text || ' '))
+const plain: Highlight = code => [code]
+
+export const diffRow = (line: DiffLine, highlight = plain) =>
+  div(
+    { class: 'flex whitespace-pre text-neutral-300' },
+    span({ class: ['w-6 shrink-0 select-none text-center', tones[line.kind].gutter] }, marks[line.kind]),
+    span({ class: ['flex-1 pr-3', tones[line.kind].code] }, line.kind === 'gap' ? line.text || ' ' : highlight(line.text || ' ')),
+  )
