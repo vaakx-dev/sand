@@ -6,7 +6,7 @@ export default definePlugin({
   name: 'view-edit',
   description: 'Shows edit and write calls as small diffs with added and removed line counts',
   inject: ['toolViews', 'kit'],
-  uses: { transcript: 'does nothing: edits use the generic view', commands: 'no "Open in Edits" button' },
+  uses: { transcript: 'does nothing: edits use the generic view', commands: 'no "Open in Edits" button', markdown: 'code is shown without highlighting' },
   apply(ctx) {
     ctx.watch('transcript', transcript => transcript && joinDisposers(transcript.tool('edit', editRenderer(ctx)), transcript.tool('write', writeRenderer(ctx))))
   },

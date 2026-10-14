@@ -9,7 +9,8 @@
     "summary": "Shows file edits as small diffs",
     "uses": {
       "transcript": "does nothing: edits use the generic view",
-      "commands": "no \"Open in changes\" button"
+      "commands": "no \"Open in changes\" button",
+      "markdown": "code is shown without highlighting"
     }
   },
   "dependencies": {
