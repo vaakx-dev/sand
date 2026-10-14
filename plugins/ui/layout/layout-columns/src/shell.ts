@@ -37,14 +37,14 @@ const placed = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
 export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
   const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const showSide = () => open.side.get() || (!narrow.get() && covered.get().side)
-  const dragging = () => narrow.get() && shift.get() !== undefined
+  const dragged = () => (narrow.get() ? shift.get()?.shown : undefined)
   const sideSized = () => !narrow.get() && Boolean(widths.get().side)
   const fill = (shown: () => boolean) => div({ class: () => (shown() ? ['contents', sideSized() && '*:w-full'] : 'hidden') })
 
   const side: HTMLElement = div(
     {
       class: () => {
-        if (!filled.get().side || !(showSide() || dragging())) return 'hidden'
+        if (!filled.get().side || !(showSide() || dragged()?.side)) return 'hidden'
         return narrow.get()
           ? [layer.drawer, 'fixed inset-y-0 left-0 flex w-80 flex-col bg-neutral-950 shadow-xl', swiped.get() ? null : 'animate-drawer']
           : 'relative flex min-h-0 shrink-0 flex-col border-r border-neutral-800 bg-neutral-950'
@@ -65,7 +65,7 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   const aside: HTMLElement = div(
     {
       class: () => {
-        if (!filled.get().aside || !(open.aside.get() || dragging()) || covered.get().main) return 'hidden'
+        if (!filled.get().aside || !(open.aside.get() || dragged()?.aside) || covered.get().main) return 'hidden'
         return narrow.get()
           ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950']
           : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-96 xl:w-full xl:max-w-lg'

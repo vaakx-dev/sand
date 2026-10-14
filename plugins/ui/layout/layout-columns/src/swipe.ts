@@ -32,7 +32,12 @@ export const swiper = ({ open, shift, swiped, owner, commit }: SwipeState) => {
     const width = document.documentElement.clientWidth
     const side = drawerWidth(width)
     const base = restingAt(open, side, width)
-    const follow = (px: number, settle = false) => shift.set({ px, settling: settle })
+    const shown = { side: false, aside: false }
+    const follow = (px: number, settle = false) => {
+      if (px > 0) shown.side = true
+      if (px < 0) shown.aside = true
+      shift.set({ px, drawer: side, settling: settle, shown: { ...shown } })
+    }
     let px = base
     batch(() => {
       swiped.set(true)

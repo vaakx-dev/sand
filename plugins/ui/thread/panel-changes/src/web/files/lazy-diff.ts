@@ -20,6 +20,7 @@ export const lazyDiff = ({ key, closed, guess, draw, scroller }: LazyBody) => {
   }
 
   const changed: IntersectionObserverCallback = records => {
+    if (!scroller().checkVisibility()) return
     const next = records.at(-1)?.isIntersecting ?? false
     if (next === near.get()) return
     if (!next) remember()

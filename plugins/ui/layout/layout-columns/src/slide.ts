@@ -1,6 +1,8 @@
 export interface Shift {
   px: number
+  drawer: number
   settling: boolean
+  shown: Record<'side' | 'aside', boolean>
 }
 
 export const settleMs = 250
@@ -19,6 +21,5 @@ export const slideAside = (shift: Shift | undefined) =>
 
 export const backdropOpacity = (shift: Shift | undefined) => {
   if (!shift) return null
-  const viewport = document.documentElement.clientWidth
-  return { opacity: String(Math.min(Math.max(shift.px / drawerWidth(viewport), 0), 1)), ...follow('opacity', shift) }
+  return { opacity: String(Math.min(Math.max(shift.px / shift.drawer, 0), 1)), ...follow('opacity', shift) }
 }
