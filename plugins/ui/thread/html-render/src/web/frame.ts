@@ -1,3 +1,4 @@
+import { joinDisposers } from '@sand/kit'
 import { openTab } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { HtmlRenderEntry } from '../contract'
@@ -34,12 +35,18 @@ export const htmlFrame = (ctx: Context<'kit' | 'wire'>, thread: string, data: Ht
   const frame = sandboxedFrame({
     title: data.title,
     src: hostPath,
-    class: 'block h-full w-full border-0',
+    class: () => (failed.get() ? 'hidden' : 'block h-full w-full border-0'),
     onLoad: () => {
       if (page.data.get() === undefined && !page.loading.get()) page.refetch()
       loads.update(count => count + 1)
     },
   })
+
+  const retry = () => {
+    if (!failed.get()) return
+    frame.src = hostPath
+    page.refetch()
+  }
 
   effect(() => {
     const html = page.data.get()
@@ -52,9 +59,13 @@ export const htmlFrame = (ctx: Context<'kit' | 'wire'>, thread: string, data: Ht
     {
       class: 'relative mb-4 w-full',
       style: { height: () => `${height.get()}px` },
-      onMount: () => listenToFrame(frame, { resize, open: openTab, swipe: () => ctx.layout?.swipe() }),
+      onMount: () =>
+        joinDisposers(
+          listenToFrame(frame, { resize, open: openTab, swipe: () => ctx.layout?.swipe() }),
+          ctx.on('machines.change', retry),
+        ),
     },
-    show(() => !failed.get(), () => frame),
+    frame,
     show(() => !failed.get() && page.data.get() === undefined, () => loadingNote(kit)),
     show(failed, () => failure(kit, data.title)),
   )
