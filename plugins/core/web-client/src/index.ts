@@ -65,6 +65,6 @@ export default definePlugin({
     ctx.provide('projects', projects.projects)
     ctx.provide('sync', createSync(ctx, wire, projects))
     ctx.provide('machines', machines.machines)
-    ctx.provide('media', createMedia(wire, store))
+    ctx.provide('media', createMedia(ctx, wire, store, machines.machines))
   },
 })
