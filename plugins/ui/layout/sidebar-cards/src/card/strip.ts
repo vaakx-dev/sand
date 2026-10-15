@@ -7,20 +7,20 @@ export interface StripParts {
   menu: Sig<NavAction[]>
   menuKey: Sig<string>
   choosing: Sig<string | undefined>
-  expand(action: NavAction, event: MouseEvent, inline: boolean): void
+  expand(action: NavAction, event: MouseEvent): void
   ask(action: NavAction, event: MouseEvent): void
 }
 
 const quickOf = (parts: StripParts) => parts.menu.get().filter(action => action.quick)
 
-const quickButton = ({ icon, iconButton }: Kit, action: NavAction, parts: StripParts, inline: boolean) =>
+const quickButton = ({ icon, iconButton }: Kit, action: NavAction, parts: StripParts) =>
   iconButton(
     {
       size: 'sm',
       title: action.label,
       'aria-label': action.label,
       onClick: stopThen((event: MouseEvent) => {
-        if (action.choices) parts.expand(action, event, inline)
+        if (action.choices) parts.expand(action, event)
         else void action.run()
       }),
     },
@@ -50,15 +50,15 @@ const chips = ({ choiceChips }: Kit, action: NavAction, parts: StripParts) => {
   )
 }
 
-export const actionStrip = (kit: Kit, parts: StripParts, reveal: ClassValue, inline: boolean) => {
-  const chosen = () => (inline ? quickOf(parts).find(action => action.id === parts.choosing.get() && action.choices) : undefined)
+export const actionStrip = (kit: Kit, parts: StripParts, reveal: ClassValue) => {
+  const chosen = () => quickOf(parts).find(action => action.id === parts.choosing.get() && action.choices)
   return span(
     { class: () => (chosen() ? 'flex items-center' : ['hidden items-center gap-1', reveal]) },
     dynamicChild(
       derive(() => `${parts.menuKey.get()}#${chosen()?.id ?? ''}`),
       () => {
         const action = chosen()
-        return action ? chips(kit, action, parts) : span({ class: 'flex items-center gap-1' }, ...quickOf(parts).map(quick => quickButton(kit, quick, parts, inline)))
+        return action ? chips(kit, action, parts) : span({ class: 'flex items-center gap-1' }, ...quickOf(parts).map(quick => quickButton(kit, quick, parts)))
       },
     ),
   )

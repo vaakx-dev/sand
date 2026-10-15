@@ -2,7 +2,7 @@ import type { ThreadDraft } from '@sand/composer-card/contract'
 import type { NavItem } from '@sand/protocol'
 import type { Thread } from '@sand/web-client/contract'
 import { plural } from '@sand/kit'
-import type { ProjectLookup } from '../project-lookup'
+import type { ProjectInfo, ProjectLookup } from '../project-lookup'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import type { Background, BackgroundOf } from './background'
 import type { ItemCache } from './cache'
@@ -24,12 +24,15 @@ const subtitleIcon = (worktree: boolean, branch: string | undefined) => {
   return branch ? 'branch' : 'folder'
 }
 
-const where = (cwd: string, device: string, places: Places, quick?: boolean): Pick<NavItem, 'subtitle' | 'subtitleIcon'> => {
-  const branch = quick ? undefined : places.branch(cwd, device)
-  const at = quick ? '' : (branch ?? place(cwd))
+const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<NavItem, 'project' | 'subtitle' | 'subtitleIcon'> => {
   const pc = places.machine(device)
-  const worktree = !quick && places.worktree(cwd, device)
-  return { subtitle: [pc, at].filter(Boolean).join(' · '), subtitleIcon: subtitleIcon(worktree, branch) }
+  if (project.quick) return { project: [project.name, pc].filter(Boolean).join(' · ') }
+  const branch = places.branch(cwd, device)
+  return {
+    project: project.name,
+    subtitle: [pc, branch ?? place(cwd)].filter(Boolean).join(' · '),
+    subtitleIcon: subtitleIcon(places.worktree(cwd, device), branch),
+  }
 }
 
 const stateOf = (thread: Thread, jobs: number): NavItem['state'] => {
@@ -39,15 +42,14 @@ const stateOf = (thread: Thread, jobs: number): NavItem['state'] => {
 
 const navItem = (thread: Thread, { agents, shells, since, workflow }: Background, lookup: ProjectLookup, places: Places, creator: CreatorOf): NavItem => {
   const project = lookup(thread.info.cwd, thread.device, thread.info.project)
-  const at = where(thread.info.cwd, thread.device, places, project.quick)
+  const at = where(project, thread.info.cwd, thread.device, places)
   return {
     id: thread.id,
     title: thread.info.title ?? 'Untitled thread',
-    project: project.name,
     projectKey: project.key,
     icon: project.icon,
-    subtitle: thread.info.kind === 'branch' ? ['branch', at.subtitle].filter(Boolean).join(' · ') : at.subtitle,
-    subtitleIcon: at.subtitleIcon,
+    ...at,
+    subtitle: thread.info.kind === 'branch' && !project.quick ? ['branch', at.subtitle].filter(Boolean).join(' · ') : at.subtitle,
     path: thread.info.cwd,
     updated: thread.info.updated,
     started: thread.running ? thread.started : since,
@@ -80,10 +82,9 @@ export const draftItem = (draft: ThreadDraft, lookup: ProjectLookup, places: Pla
   return {
     id: draftNavId(draft.id),
     title: draftTitle(draft),
-    project: project.name,
     projectKey: project.key,
     icon: project.icon,
-    ...where(draft.cwd, draft.device, places, project.quick),
+    ...where(project, draft.cwd, draft.device, places),
     path: draft.cwd,
     updated: draft.updated,
     state: 'draft',
