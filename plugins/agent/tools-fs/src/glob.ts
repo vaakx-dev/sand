@@ -15,6 +15,7 @@ const input = z.object({
 export const glob: Tool<typeof input> = {
   name: 'glob',
   description: 'Find files by glob pattern. Skips gitignored files, node_modules and .git unless include_ignored is set.',
+  parallel: true,
   input,
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []

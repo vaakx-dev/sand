@@ -17,6 +17,7 @@ export const searchTool = (browser: SearchBrowser): Tool<typeof input> => {
     name: 'web_search',
     description:
       'Search the web with DuckDuckGo. Returns numbered results with title, URL and a snippet. site:example.com limits results to one domain; site: with a path finds nothing. Snippets can be partial or stale, so read the pages that matter with web_fetch.',
+    parallel: true,
     input,
     run: async ({ query, count }, { signal }) => hitsText(await search(query, count, AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]))),
   }

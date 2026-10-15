@@ -22,6 +22,7 @@ export const findName = 'find_tools'
 export const findTool = (groups: GroupState[], candidates: Candidate[]): Tool<typeof input> => ({
   name: findName,
   description: describe(groups),
+  parallel: true,
   input,
   run({ query }) {
     const found = search(candidates, query)

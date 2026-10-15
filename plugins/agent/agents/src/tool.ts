@@ -53,6 +53,7 @@ export const agentTool = (
 ): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
   description: describeAgents(list, ctx.llm),
+  parallel: true,
   input: inputSchema(ctx.llm),
   async run({ label, task, agent, model, effort, background }, { session, signal, call }) {
     const request = { parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id }
