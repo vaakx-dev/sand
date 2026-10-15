@@ -32,6 +32,8 @@ const onHover = 'group-hover:flex group-focus-visible-within:flex'
 
 const onTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:flex' : '')
 
+const hasSubtitle = ({ item }: CardParts) => Boolean(item.get().subtitle)
+
 const statusSlot = (parts: CardParts, extra = '') =>
   span(
     { class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden group-focus-visible-within:hidden', extra]) },
@@ -52,11 +54,11 @@ const fullBody = (parts: CardParts) => {
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
       ),
       statusSlot(parts),
-      actionStrip(kit, parts.strip, onHover, true),
+      actionStrip(kit, parts.strip, [onHover, () => (hasSubtitle(parts) ? '' : onTouchCurrent(parts))], true),
     ),
     div({ class: ['truncate text-sm', () => titleClass(parts)], title: item.map(value => value.title) }, item.map(value => value.title)),
     div(
-      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (item.get().subtitle ? 'flex' : ['hidden', onTouchCurrent(parts)])] },
+      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (hasSubtitle(parts) ? 'flex' : 'hidden')] },
       span(
         { class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) },
         dynamicChild(
