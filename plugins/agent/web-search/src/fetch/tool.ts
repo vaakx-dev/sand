@@ -32,6 +32,7 @@ export const fetchTool = (): Tool<typeof input> => {
   return {
     name: 'web_fetch',
     description: 'Read a web page as markdown, without ads and navigation where possible. Long pages come in parts; the end of each part says which offset to read next.',
+    parallel: true,
     input,
     run: async ({ url, offset }, { signal }) => pageText(await load(url, signal), offset),
   }
