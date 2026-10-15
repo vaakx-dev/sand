@@ -1,4 +1,5 @@
 import type { WireRequest } from '@sand/protocol'
+import { uuid } from '../ids/uuid'
 import { checked, chunkBytes, chunkCount, chunkUrl, eachChunk, fetchChunk, type ChunkedFile, type PcFetch } from './chunks'
 
 type PcCall = <T = unknown>(request: WireRequest) => Promise<T>
@@ -15,7 +16,7 @@ const sendChunks = async (to: PcFetch, file: ChunkedFile, partOf: (index: number
 }
 
 export const uploadBlob = async (to: PcFetch, blob: Blob, progress?: (bytes: number) => void): Promise<ChunkedFile> => {
-  const file = { transfer: crypto.randomUUID(), size: blob.size, chunks: chunkCount(blob.size) }
+  const file = { transfer: uuid(), size: blob.size, chunks: chunkCount(blob.size) }
   const partOf = async (index: number) => blob.slice(index * chunkBytes, (index + 1) * chunkBytes)
   await sendChunks(to, file, partOf, sent => progress?.(Math.min(sent * chunkBytes, blob.size)))
   return file
