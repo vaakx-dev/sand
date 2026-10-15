@@ -32,13 +32,18 @@ const onHover = 'group-hover:flex group-focus-visible-within:flex'
 
 const onTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:flex' : '')
 
-const hasSubtitle = ({ item }: CardParts) => Boolean(item.get().subtitle)
+const offTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:hidden' : '')
 
 const statusSlot = (parts: CardParts, extra = '') =>
   span(
-    { class: () => (parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden group-focus-visible-within:hidden', extra]) },
+    {
+      class: () =>
+        parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center group-hover:hidden group-focus-visible-within:hidden', offTouchCurrent(parts), extra],
+    },
     status(parts.kit, parts.item, parts.minute),
   )
+
+const actions = (parts: CardParts) => actionStrip(parts.kit, parts.strip, [onHover, () => onTouchCurrent(parts)])
 
 const fullBody = (parts: CardParts) => {
   const { kit, item, project } = parts
@@ -54,20 +59,20 @@ const fullBody = (parts: CardParts) => {
         () => span({ class: 'inline-flex text-neutral-500', title: 'Pinned' }, icon('pin', 12)),
       ),
       statusSlot(parts),
-      actionStrip(kit, parts.strip, [onHover, () => (hasSubtitle(parts) ? '' : onTouchCurrent(parts))], true),
+      actions(parts),
     ),
     div({ class: ['truncate text-sm', () => titleClass(parts)], title: item.map(value => value.title) }, item.map(value => value.title)),
-    div(
-      { class: ['h-5 items-center gap-2 text-xs text-neutral-500', () => (hasSubtitle(parts) ? 'flex' : 'hidden')] },
-      span(
-        { class: 'flex min-w-0 flex-1 items-center gap-1', title: item.map(value => tildeHome(value.path ?? '')) },
-        dynamicChild(
-          item.map(value => value.subtitleIcon ?? 'folder'),
-          name => icon(name, 12),
+    show(
+      item.map(value => Boolean(value.subtitle)),
+      () =>
+        div(
+          { class: 'flex h-5 items-center gap-1 text-xs text-neutral-500', title: item.map(value => tildeHome(value.path ?? '')) },
+          dynamicChild(
+            item.map(value => value.subtitleIcon ?? 'folder'),
+            name => icon(name, 12),
+          ),
+          span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
         ),
-        span({ class: 'truncate' }, item.map(value => value.subtitle ?? '')),
-      ),
-      actionStrip(kit, parts.strip, () => onTouchCurrent(parts), false),
     ),
   )
 }
@@ -81,7 +86,7 @@ const compactBody = (parts: CardParts) =>
     span({ class: ['min-w-0 flex-1 truncate text-sm', () => titleClass(parts)] }, parts.item.map(value => value.title)),
     creatorBadge(parts.kit, parts.item),
     statusSlot(parts, 'text-xs'),
-    actionStrip(parts.kit, parts.strip, [onHover, () => onTouchCurrent(parts)], true),
+    actions(parts),
   )
 
 const pointBelow = (event: MouseEvent) => {
@@ -102,8 +107,8 @@ export const card = (kit: Kit, row: Sig<CardRow>, minute: Sig<number>, pick: (ro
     menu,
     menuKey: menu.map(actions => actions.map(action => `${action.id}:${action.label}:${action.icon}`).join('|')),
     choosing,
-    expand(action: NavAction, event: MouseEvent, inline: boolean) {
-      if (inline && !touched(event)) return choosing.set(action.id)
+    expand(action: NavAction, event: MouseEvent) {
+      if (!touched(event)) return choosing.set(action.id)
       openMenu({ ...pointBelow(event), touch: true, row: row.get(), expand: action.id })
     },
     ask(action: NavAction, event: MouseEvent) {
