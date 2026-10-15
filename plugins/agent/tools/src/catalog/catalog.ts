@@ -92,6 +92,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     },
     specs,
     notes: session => [...tools.values()].flatMap(tool => (tool.environment && loadOf(tool) !== 'off' && usable(tool, session) ? [tool.environment] : [])),
+    parallel: (call, session) => resolve(call.name, session)?.parallel === true,
     run: (call, context) => run(resolve(call.name, context.session), call, context),
   }
   return service
