@@ -1,4 +1,4 @@
-import type { ImageBlock } from '@sand/messages'
+import type { ImageBlock } from '@sand/chats/contract'
 import type { AttachmentLimits } from './contract'
 
 interface Encoding {

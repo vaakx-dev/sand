@@ -1,4 +1,4 @@
-import { usageRanges } from '@sand/kit'
+import { usageRanges } from '@sand/usage/records'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
@@ -23,7 +23,7 @@ export const spendView = (kit: Kit, usage: Merged, model: UsageModel, metric: Me
   const { hintRow, settingsSection } = kit
   const head = { title: `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric}`, action: periodPicker(kit, model) }
   if (!usage.total.turns) return settingsSection(head, hintRow('No usage in this range'))
-  const source = { kit, usage, nameOf: model.nameOf, openThread: model.openThread, copy: model.copy, showOnly: model.showOnly }
+  const source = { kit, usage, nameOf: model.nameOf, showOnly: model.showOnly }
   return div(
     { class: 'flex flex-col gap-6' },
     settingsSection(head, block(kit, figures(usage, metric), chartView(kit, usage, metric))),

@@ -189,7 +189,7 @@ function Install-Sand {
     } finally {
       Remove-Item Env:SAND_BUNDLE, Env:SAND_DIR -ErrorAction SilentlyContinue
     }
-    Invoke-Quiet 'Checking the download' $bun @((Join-Path $dir 'packages\kit\src\host\dist\release\ready.ts'), $dir)
+    Invoke-Quiet 'Checking the download' $bun @((Join-Path $dir 'packages\util\src\boot\release\ready.ts'), $dir)
     Write-Done 'Sand downloaded' $dir
   } catch {
     $failure = $_

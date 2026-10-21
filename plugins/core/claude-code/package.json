@@ -7,17 +7,15 @@
     ".": "./src/index.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Claude Code",
-    "summary": "Use your Claude plan through the Claude Code app on this PC",
-    "uses": {
-      "llmPlans": "nothing happens: there's no accounts service to add Claude Code to"
-    }
+    "summary": "Use your Claude plan through the Claude Code app on this PC"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

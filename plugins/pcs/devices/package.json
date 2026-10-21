@@ -6,30 +6,27 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Your devices",
-    "summary": "Add another PC with one command or a pairing link, pair a phone with a QR code, and remove paired devices",
-    "uses": {
-      "commands": "opens the pair dialog from a Devices button in the sidebar instead of /devices",
-      "nav": "no sidebar button when there is no /devices command",
-      "settings": "no Your devices settings page",
-      "notify": "no message when a device pairs or a request fails",
-      "picker": "no Rename on phones and browsers"
-    }
+    "summary": "Add another PC with one command or a pairing link, pair a phone with a QR code, and remove paired devices"
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
     "@sand/host-devices": "workspace:*",
     "@sand/host-dist": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-health": "workspace:*",
     "@sand/host-remotes": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
     "@sand/host-tailscale": "workspace:*",
     "@sand/host-updates": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "uqr": "^0.1.3"
   }
 }

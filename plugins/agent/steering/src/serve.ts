@@ -1,23 +1,19 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
-import { joinDisposers } from '@sand/kit'
+import type { Session, sessions } from '@sand/chats/contract'
+import { server } from '@sand/server/contract'
+import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
-import type { QueueState, Steering } from './contract'
+import { loopSteer, loopUnsteer, queueChange, turnQueue, type QueueState, type Steering } from './contract'
 
-export const queueState = (ctx: Context, steering: Steering, session: Session): QueueState => ({
-  steers: steering.list(session),
-  followUps: ctx.followUps?.list(session) ?? [],
-})
+export const queueState = (steering: Steering, session: Session): QueueState => ({ steers: steering.list(session) })
 
-export const serveSteering = (ctx: Context<'sessions'>, steering: Steering) => {
-  const { sessions } = ctx
-  ctx.watch('server', server => {
-    if (!server) return
+export const serveSteering = (ctx: Context<{ sessions: typeof sessions }>, steering: Steering) => {
+  const session = (id: string) => ctx.sessions.require(id)
+  ctx.watch(server, found => {
+    if (!found) return
     return joinDisposers(
-      ctx.on('turn.queue', thread => server.broadcast('queue.change', [thread.id, queueState(ctx, steering, thread)])),
-      server.handle({
-        'loop.steer': request => steering.steer(sessions.require(request.session), request.prompt, request.label, request.from) ?? null,
-        'loop.unsteer': request => steering.unsteer(sessions.require(request.session), request.item),
-      }),
+      ctx.on(turnQueue, thread => found.broadcast(queueChange, [thread.id, queueState(steering, thread)])),
+      found.handle(loopSteer, request => steering.steer(session(request.session), request.prompt, request.label) ?? null),
+      found.handle(loopUnsteer, request => steering.unsteer(session(request.session), request.item)),
     )
   })
 }

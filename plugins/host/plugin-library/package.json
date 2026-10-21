@@ -1,0 +1,26 @@
+{
+  "name": "@sand/host-plugin-library",
+  "version": "0.0.0",
+  "description": "Lists built-in and user plugins, and lets a user copy of a built-in replace it",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts",
+    "./files": "./src/files/index.ts"
+  },
+  "sand": {
+    "host": "./src/index.ts",
+    "label": "Plugin library",
+    "summary": "Built-in and user plugins"
+  },
+  "dependencies": {
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-plugin-sync": "workspace:*",
+    "@sand/host-plugin-versions": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

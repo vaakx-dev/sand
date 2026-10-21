@@ -1,4 +1,5 @@
-import { dollars, tokens, tokensOf } from '@sand/kit'
+import { tokensOf } from '@sand/usage/records'
+import { dollars, tokens } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import { onPlanOf, type Metric } from '../../format'

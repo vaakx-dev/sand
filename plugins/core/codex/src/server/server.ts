@@ -26,7 +26,7 @@ export const createServer = (folder: string, version: string) => {
   const onRequest = async (method: string, params: Json) => {
     if (method === 'item/tool/call') {
       const thread = threads.get(String(params.threadId))
-      if (!thread) throw new Error('This thread is no longer open in sand')
+      if (!thread) throw new Error('This chat is no longer open in sand')
       return thread.call(params)
     }
     if (approvals.test(method)) return { decision: 'decline' }

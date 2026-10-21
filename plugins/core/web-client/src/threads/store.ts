@@ -1,11 +1,29 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { SettingsState } from '@sand/model/contract'
-import type { SessionInfo, SessionMetaUpdate, SessionSummary } from '@sand/sessions-sqlite/contract'
+import type { SessionInfo, SessionSummary } from '@sand/chats/contract'
 import type { QueueState } from '@sand/steering/contract'
-import type { DraftTarget, Thread } from '../contract'
+import { type DraftTarget, type Thread, threadChange, threadsChange } from '../contract'
 import type { Context } from 'drydock'
 import { nextFrame } from '../detached'
-import { listKey } from './listed'
+
+const listKey = ({ info, device, running, started }: Thread) =>
+  JSON.stringify([
+    running ? 0 : info.updated,
+    info.project,
+    info.title,
+    info.messages,
+    info.cwd,
+    info.kind,
+    info.parent,
+    info.seen,
+    info.pinned,
+    info.settled,
+    info.snoozed,
+    info.position,
+    device,
+    running,
+    started,
+  ])
 
 const blank = (info: SessionSummary, device: string): Thread => ({
   id: info.id,
@@ -14,11 +32,9 @@ const blank = (info: SessionSummary, device: string): Thread => ({
   entries: new Map(),
   loaded: false,
   running: false,
-  unread: false,
   live: [],
-  tools: { running: new Set(), results: new Map() },
+  tools: { running: new Set(), results: new Map(), logs: new Map() },
   queued: [],
-  followUps: [],
   version: 0,
 })
 
@@ -32,7 +48,6 @@ export class Store {
   private watchers = new Set<StoreWatcher>()
   current: string | undefined
   draft: DraftTarget | undefined
-  idle = false
   readonly settings = new Map<string, SettingsState>()
   readonly synced = new Map<string, string>()
   private starts = new Map<string, (() => void)[]>()
@@ -75,17 +90,16 @@ export class Store {
       this.changed(info.id)
       return existing
     }
-    const thread = blank({ updated: info.created, messages: 0, named: false, ...info }, device)
+    const thread = blank({ updated: info.created, messages: 0, ...info }, device)
     this.threads.set(info.id, thread)
     this.changed(info.id, true)
     return thread
   }
 
-  queue(id: string, { steers, followUps }: QueueState) {
+  queue(id: string, { steers }: QueueState) {
     const thread = this.threads.get(id)
     if (!thread) return
     thread.queued = steers
-    thread.followUps = followUps
     this.changed(id)
   }
 
@@ -105,13 +119,6 @@ export class Store {
     this.starts.delete(id)
   }
 
-  meta({ id, ...meta }: SessionMetaUpdate) {
-    const thread = this.threads.get(id)
-    if (!thread) return
-    thread.info = { ...thread.info, ...meta }
-    this.changed(id)
-  }
-
   watch(watcher: StoreWatcher) {
     this.watchers.add(watcher)
     return () => void this.watchers.delete(watcher)
@@ -127,7 +134,6 @@ export class Store {
   changed(id?: string, list = false) {
     const thread = id ? this.threads.get(id) : undefined
     if (thread) {
-      thread.unread = thread.id !== this.current && thread.info.updated > (thread.info.seen ?? thread.info.created)
       thread.version++
       this.dirty.add(thread.id)
       for (const watcher of this.watchers) watcher.changed(thread.id)
@@ -155,7 +161,7 @@ export class Store {
     const listed = ids.map(id => this.relisted(id)).includes(true) || this.listed
     this.dirty.clear()
     this.listed = false
-    for (const id of ids) this.ctx.emit('thread.change', id)
-    if (listed) this.ctx.emit('threads.change')
+    for (const id of ids) this.ctx.emit(threadChange, id)
+    if (listed) this.ctx.emit(threadsChange)
   }
 }

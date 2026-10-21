@@ -1,6 +1,7 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
-import { errorMessage } from '@sand/kit'
-import type { Context } from 'drydock'
+import type { Session } from '@sand/chats/contract'
+import { turnEnd } from '@sand/loop/contract'
+import { steering, turnSteer, turnUnsteer } from '@sand/steering/contract'
+import type { JobsContext } from './context'
 
 interface Notice {
   job: string
@@ -9,7 +10,7 @@ interface Notice {
   steer?: string
 }
 
-export const createDelivery = (ctx: Context<'loop'>) => {
+export const createDelivery = (ctx: JobsContext) => {
   const notices = new Map<string, Notice>()
   const timers = new Set<Timer>()
 
@@ -23,7 +24,7 @@ export const createDelivery = (ctx: Context<'loop'>) => {
         session,
         due.map(notice => ({ type: 'text', text: notice.text })),
       )
-      .catch(error => ctx.ui?.notify(`Could not deliver a background result: ${errorMessage(error)}`, 'error'))
+      .catch(error => ctx.report(error))
   }
 
   const later = (session: Session) => {
@@ -38,10 +39,10 @@ export const createDelivery = (ctx: Context<'loop'>) => {
     for (const notice of notices.values()) if (notice.steer === steer) notices.delete(notice.job)
   }
 
-  ctx.on('turn.steer', (_session, _content, id) => forget(id))
-  ctx.on('turn.unsteer', (_session, id) => forget(id))
+  ctx.on(turnSteer, (_session, _content, id) => forget(id))
+  ctx.on(turnUnsteer, (_session, id) => forget(id))
 
-  ctx.on('turn.end', session => {
+  ctx.on(turnEnd, session => {
     const own = [...notices.values()].filter(notice => notice.session.id === session.id)
     for (const notice of own) delete notice.steer
     if (own.length) later(session)
@@ -55,7 +56,7 @@ export const createDelivery = (ctx: Context<'loop'>) => {
 
   return {
     post(job: string, session: Session, text: string) {
-      const steer = session.kind === 'agent' ? ctx.steering?.steer(session, text) : undefined
+      const steer = session.kind === 'agent' ? ctx.get(steering)?.steer(session, text) : undefined
       notices.set(job, { job, session, text, ...(steer && { steer }) })
       if (!steer) flush(session)
     },
@@ -66,10 +67,9 @@ export const createDelivery = (ctx: Context<'loop'>) => {
       const notice = notices.get(job)
       if (!notice) return
       notices.delete(job)
-      if (notice.steer) ctx.steering?.unsteer(notice.session, notice.steer)
+      if (notice.steer) ctx.get(steering)?.unsteer(notice.session, notice.steer)
     },
     isNotice: (steer: string) => [...notices.values()].some(notice => notice.steer === steer),
-    queued: (parent: string) => [...notices.values()].filter(notice => notice.session.id === parent).length,
   }
 }
 

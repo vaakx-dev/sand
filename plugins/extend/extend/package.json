@@ -7,18 +7,17 @@
     ".": "./src/index.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Extend",
-    "summary": "Lets the agent list plugins and learn to write new ones",
-    "uses": {
-      "skills": "the agent gets no guide to writing plugins",
-      "inspector": "plugin details list no services or hooks",
-      "webExtensions": "the plugin tool shows no web extensions"
-    }
+    "summary": "Lets the agent list plugins and learn to write new ones"
   },
   "dependencies": {
-    "@sand/protocol": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/skills": "workspace:*",
     "@sand/tools": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/web": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@sand/palette",
   "version": "0.0.0",
-  "description": "Command palette (mod+k): threads, projects and commands, with pages you step through and go back from",
+  "description": "Command palette (mod+k): threads, projects, models and other actions, with pages you step through and go back from",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,23 +9,16 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Command palette",
-    "summary": "Find threads, projects and commands in one place",
-    "provides": [
-      "palette"
-    ],
-    "uses": {
-      "commands": "commands are not listed",
-      "keys": "no mod+k shortcut; use the Search action",
-      "nav": "no Search action",
-      "notify": "errors from palette actions go to the console"
-    }
+    "summary": "Find threads, projects, models and actions in one place"
   },
   "dependencies": {
-    "@sand/commands": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/keys": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/project": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

@@ -1,0 +1,30 @@
+{
+  "name": "@sand/orrin",
+  "version": "0.0.0",
+  "description": "Orrin on this PC: finds, installs, updates and starts it, signs calls with its local key and follows its events",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "sand": {
+    "host": "./src/host.ts",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Orrin",
+    "summary": "Installs and starts Orrin, and talks to its daemon on this PC"
+  },
+  "dependencies": {
+    "@sand/connections": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

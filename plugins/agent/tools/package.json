@@ -8,31 +8,25 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Tools",
-    "summary": "The Tools settings page, and the tools the agent found in a thread",
-    "provides": [
-      "tools"
-    ],
-    "uses": {
-      "settings": "no Tools settings page",
-      "transcript": "find_tools calls use the generic tool view",
-      "notify": "failed changes are not reported"
-    }
+    "summary": "The Tools settings page, and the tools the agent found in the chat"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/messages": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/chat": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/paths": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
     "@sand/settings": "workspace:*",
-    "@sand/transcript-parts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

@@ -1,5 +1,3 @@
-import { isMac } from '@sand/kit/web'
-
 const named: Record<string, string> = {
   ArrowUp: 'up',
   ArrowDown: 'down',
@@ -27,8 +25,8 @@ const base = (event: KeyboardEvent) => {
   return event.key.length === 1 ? event.key.toLowerCase() : undefined
 }
 
-const modifierName = (part: string) => {
-  if (part === 'mod') return isMac() ? 'meta' : 'ctrl'
+const modifierName = (part: string, mac: boolean) => {
+  if (part === 'mod') return mac ? 'meta' : 'ctrl'
   return part === 'cmd' ? 'meta' : part
 }
 
@@ -39,10 +37,10 @@ export const keyName = (event: KeyboardEvent) => {
   return [...modifiers.filter((_, index) => held[index]), key].join('+')
 }
 
-export const normalKey = (key: string) => {
+export const normalKey = (key: string, mac: boolean) => {
   const parts = key.toLowerCase().split('+')
   const last = parts.pop() || '+'
-  const held = parts.map(modifierName)
+  const held = parts.map(part => modifierName(part, mac))
   return [...modifiers.filter(modifier => held.includes(modifier)), last].join('+')
 }
 

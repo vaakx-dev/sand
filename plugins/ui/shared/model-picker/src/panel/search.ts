@@ -1,5 +1,4 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
-import { returnFocus } from '@sand/kit/web'
+import type { ModelInfo } from '@sand/accounts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, media } from '@vaakx-dev/vrui'
 import type { Scene } from './scene'
@@ -13,7 +12,7 @@ export const findModels = (scene: Scene, query: string): ModelInfo[] => {
   })
 }
 
-export const modelSearch = ({ searchField }: Kit, view: View, pickFirst: () => void) => {
+export const modelSearch = ({ returnFocus, searchField }: Kit, view: View, pickFirst: () => void) => {
   const fine = media('(pointer: fine)')
   return div(
     { class: 'mx-1 mt-1 mb-2 flex shrink-0' },

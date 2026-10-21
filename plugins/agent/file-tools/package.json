@@ -1,0 +1,22 @@
+{
+  "name": "@sand/file-tools",
+  "version": "0.0.0",
+  "description": "File tools: read, write, edit, glob and grep",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "File tools",
+    "summary": "read, write, edit, glob and grep"
+  },
+  "dependencies": {
+    "@sand/attachments": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

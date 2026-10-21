@@ -1,4 +1,3 @@
-import { delayed } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Merged } from '../data/types'
@@ -13,7 +12,7 @@ type BodyState = Merged | 'waiting' | 'empty' | 'missing'
 
 const noUsage = ({ hintRow, settingsSection }: Kit) => settingsSection({}, hintRow('No usage in this range'))
 
-const pending = ({ hintRow, settingsSection }: Kit) => show(delayed(true), () => settingsSection({}, hintRow('Loading…')))
+const pending = ({ delayed, hintRow, settingsSection }: Kit) => show(delayed(true), () => settingsSection({}, hintRow('Loading…')))
 
 const limits = (kit: Kit, usage: Merged, model: UsageModel) =>
   div(

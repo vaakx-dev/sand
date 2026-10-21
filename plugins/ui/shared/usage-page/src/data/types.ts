@@ -1,4 +1,4 @@
-import type { AccountUsage, ModelUsage, PeriodUsage, ThreadUsage, UnpricedModel, UsageBucket, UsageSummary, UsageTotals } from '@sand/usage/contract'
+import type { AccountUsage, ModelUsage, PeriodUsage, UnpricedModel, UsageBucket, UsageSummary, UsageTotals } from '@sand/usage/contract'
 
 export interface Pc {
   id: string
@@ -16,13 +16,8 @@ export interface Account extends AccountUsage {
   machines: string[]
 }
 
-export interface Thread extends ThreadUsage {
-  machine: string
-}
-
 export interface Project extends UsageTotals {
   name: string
-  threads: number
   accounts: string[]
   machines: string[]
 }
@@ -37,11 +32,10 @@ export interface Merged {
   since: number
   until: number
   bucket: UsageBucket
-  total: UsageTotals & { threads: number }
+  total: UsageTotals
   accounts: Account[]
   models: ModelUsage[]
   periods: PeriodUsage[]
-  threads: Thread[]
   projects: Project[]
   pcs: PcUsage[]
   unpriced: UnpricedModel[]

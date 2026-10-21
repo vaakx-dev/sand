@@ -1,5 +1,5 @@
 import type { RouteKind } from '@sand/host-gateway/contract'
-import type { BuildInfo } from '@sand/protocol'
+import type { BuildInfo } from '@sand/host-dist/contract'
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'offline' | 'unpaired'
 

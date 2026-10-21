@@ -1,4 +1,4 @@
-import type { Effort, PlanModel } from '@sand/llm-accounts/contract'
+import type { Effort, PlanModel } from '@sand/accounts/contract'
 import { fieldsOf, type Json } from '../cli/connection'
 import { probe } from './probe'
 
@@ -15,7 +15,9 @@ const offeredOf = (entry: Json): Offered[] => {
   const cli = typeof entry.resolvedModel === 'string' && entry.resolvedModel ? entry.resolvedModel : entry.value
   if (typeof cli !== 'string' || !cli || entry.value === 'default') return []
   const levels = Array.isArray(entry.supportedEffortLevels) ? efforts.filter(effort => (entry.supportedEffortLevels as unknown[]).includes(effort)) : []
-  const model: PlanModel = { name: cli.replace(variant, ''), ...(levels.length && { efforts: levels }), images: true }
+  const name = cli.replace(variant, '')
+  const label = typeof entry.displayName === 'string' && entry.displayName ? entry.displayName : name
+  const model: PlanModel = { name, label, ...(levels.length && { efforts: levels }), images: true }
   return [{ model, cli }]
 }
 

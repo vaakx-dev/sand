@@ -1,4 +1,4 @@
-import type { LLMEvent } from '@sand/llm-accounts/contract'
+import type { LLMEvent } from '@sand/accounts/contract'
 
 type Delta = Extract<LLMEvent, { type: 'text' | 'thinking' | 'tool_input' }>
 

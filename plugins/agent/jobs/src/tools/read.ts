@@ -10,8 +10,7 @@ const input = z.object({
 
 export const readTool = (store: Store): Tool<typeof input> => ({
   name: 'job_read',
-  description:
-    "Read a background job's progress. Agent: its thread's messages. Workflow: its agents with status and latest output. Shell: output since the cursor.",
+  description: "Read a background agent's progress: its thread's messages since the cursor.",
   group,
   input,
   async run({ job, cursor }, { session }) {

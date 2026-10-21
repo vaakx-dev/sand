@@ -1,32 +1,19 @@
-import type { Project, ProjectCopy, ProjectList } from '@sand/host-projects/contract'
+import type { Project, ProjectCopy, ProjectList } from '@sand/project/contract'
+import { liveProjects } from '@sand/project/projects'
+import { isInside } from '@sand/util'
 import type { ProjectEntry, ProjectGroup, Thread } from '../contract'
-import { isInside, liveProjects } from '@sand/kit'
 
 export type Lists = Map<string, ProjectList>
 
-interface Stat {
-  threads: number
-  updated: number
-}
-
 export const entryKey = (path: string, device: string) => `${device}\0${path}`
 
-const threadStats = (threads: Iterable<Thread>) => {
-  const stats = new Map<string, Stat>()
-  for (const thread of threads) {
-    const { project, kind, updated } = thread.info
-    if (!project || kind === 'agent') continue
-    const key = entryKey(project, thread.device)
-    const stat = stats.get(key) ?? { threads: 0, updated: 0 }
-    stat.threads++
-    stat.updated = Math.max(stat.updated, updated)
-    stats.set(key, stat)
-  }
-  return stats
+const chatTimes = (threads: Iterable<Thread>) => {
+  const times = new Map<string, number>()
+  for (const { info, device } of threads) if (info.project) times.set(entryKey(info.project, device), info.updated)
+  return times
 }
 
-export const copyEntry = (lists: Lists, project: Project, device: string, copy: ProjectCopy, stats?: Map<string, Stat>): ProjectEntry => {
-  const stat = stats?.get(entryKey(project.id, device))
+export const copyEntry = (lists: Lists, project: Project, device: string, copy: ProjectCopy, times?: Map<string, number>): ProjectEntry => {
   const missing = lists.get(device)?.missing.includes(project.id)
   return {
     project: project.id,
@@ -35,14 +22,13 @@ export const copyEntry = (lists: Lists, project: Project, device: string, copy: 
     device,
     added: copy.added,
     ...(missing ? { missing } : {}),
-    threads: stat?.threads ?? 0,
-    updated: stat?.updated || copy.added,
+    updated: times?.get(entryKey(project.id, device)) || copy.added,
   }
 }
 
-const groupOf = (lists: Lists, project: Project, stats: Map<string, Stat>): ProjectGroup => {
+const groupOf = (lists: Lists, project: Project, times: Map<string, number>): ProjectGroup => {
   const locations = Object.entries(project.copies)
-    .map(([id, copy]) => copyEntry(lists, project, id, copy, stats))
+    .map(([id, copy]) => copyEntry(lists, project, id, copy, times))
     .sort((a, b) => b.updated - a.updated)
   return {
     id: project.id,
@@ -51,16 +37,15 @@ const groupOf = (lists: Lists, project: Project, stats: Map<string, Stat>): Proj
     ...(project.icon ? { icon: project.icon } : {}),
     ...(project.iconFile ? { iconFile: project.iconFile } : {}),
     hidden: Boolean(project.hidden),
-    threads: locations.reduce((total, location) => total + location.threads, 0),
     updated: locations[0]?.updated ?? 0,
     locations,
   }
 }
 
 export const buildGroups = (lists: Lists, threads: Iterable<Thread>): ProjectGroup[] => {
-  const stats = threadStats(threads)
+  const times = chatTimes(threads)
   return liveProjects([...lists.values()])
-    .map(project => groupOf(lists, project, stats))
+    .map(project => groupOf(lists, project, times))
     .sort((a, b) => b.updated - a.updated)
 }
 

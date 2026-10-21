@@ -1,4 +1,4 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
+import type { LimitWindow } from '@sand/accounts/contract'
 import { hourKey } from '../../range'
 import { day, hour, spentBetween, startOfHour, type Hourly, type Pattern } from './hours'
 

@@ -1,5 +1,5 @@
 import type { AccountUsage, UsageSummary, UsageTotals } from '@sand/usage/contract'
-import { accountKey } from '@sand/kit'
+import { accountKey } from '@sand/usage/records'
 import { ownsLimits } from './limits'
 import { addRecord } from './totals'
 import type { Pc } from './types'
@@ -36,7 +36,6 @@ export const normalise = (summary: UsageSummary, pc: Pc, nameOf: (id: string) =>
     accounts,
     models: summary.models.map(model => ({ ...model, account: remap(model.account) })),
     periods: summary.periods.map(period => ({ ...period, accounts: remapRecord(period.accounts) })),
-    threads: summary.threads.map(thread => ({ ...thread, accounts: remapAll(thread.accounts) })),
     projects: summary.projects.map(project => ({ ...project, accounts: remapAll(project.accounts) })),
   }
 }

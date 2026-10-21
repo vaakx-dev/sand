@@ -1,9 +1,10 @@
 # sand
 
-sand is a coding agent that runs on your own PCs. Every part of it is a plugin, from the chat to the tools. Ask sand to change any part of itself, and it reloads the change without closing your thread.
+sand is a coding agent that runs on your own PCs. Every part of it is a plugin, from the chat to the tools. Ask sand to change any part of itself, and it reloads the change without closing your chat.
 
-- The browser is only a window. Threads keep running when you close the tab, and you can open them on your phone, or anywhere through Tailscale.
-- You can pair several PCs. A thread runs on the PC that has the project, and you can move it to another one.
+- Your projects are in the sidebar. Each project opens one chat with the agent, in that project's folder.
+- The browser is only a window. A chat keeps running when you close the tab, and you can open it on your phone, or anywhere through Tailscale.
+- You can pair several PCs. A project's chat runs on the PC that has the project.
 - sand works with a Claude or ChatGPT plan, the Claude Code or Codex apps, or API keys.
 
 ## Install

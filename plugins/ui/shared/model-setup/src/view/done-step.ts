@@ -3,24 +3,10 @@ import type { Kit } from '@sand/ui-kit/contract'
 import type { ModelSetupState } from '../setup'
 import { screen } from './layout'
 
-const labelOf = (models: Models, id: string) => models.info(id)?.label ?? id
-
-const threadsLine = (models: Models, id?: string) => (id ? `New threads use ${labelOf(models, id)}.` : 'You pick a model when you start a thread.')
-
-const namesLine = (setup: ModelSetupState, models: Models) => {
-  if (!setup.naming.get()) return 'Threads keep their first message as a name.'
-  const id = setup.namer.get()
-  return id ? `${labelOf(models, id)} names them.` : ''
-}
+const modelLine = (models: Models, id?: string) =>
+  id ? `Chats use ${models.info(id)?.label ?? id}. Change it in Settings → Models.` : 'Pick a model in Settings → Models.'
 
 export const doneStep = (kit: Kit, setup: ModelSetupState, models: Models) => {
   const { doneMark, primaryAction, setupHeading, setupNote } = kit
-  return screen(
-    kit,
-    3,
-    doneMark(),
-    setupHeading("You're set"),
-    setupNote([threadsLine(models, setup.model.get()), namesLine(setup, models), 'Change either in Settings → Models.'].filter(Boolean).join(' ')),
-    primaryAction({ onClick: setup.close }, 'Start a thread'),
-  )
+  return screen(kit, 2, doneMark(), setupHeading("You're set"), setupNote(modelLine(models, setup.model.get())), primaryAction({ onClick: setup.close }, 'Start chatting'))
 }

@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/util'
 import type { RouteHandler } from '@sand/server/contract'
 import type { TransferStore } from './transfers'
 

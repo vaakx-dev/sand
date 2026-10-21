@@ -1,0 +1,19 @@
+{
+  "name": "@sand/cli-commands",
+  "version": "0.0.0",
+  "description": "Runs the sand command you typed with its options, and prints the help the commands give",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "cli": "./src/index.ts",
+    "label": "Commands",
+    "summary": "Runs sand commands and prints their help"
+  },
+  "dependencies": {
+    "@sand/config": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

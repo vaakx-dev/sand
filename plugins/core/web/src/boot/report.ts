@@ -1,11 +1,13 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/util'
+import { wire, wireState } from '@sand/web-client/contract'
 import { collectScope, onTimeout } from '@vaakx-dev/vrui'
-import type { Context, ScopeView } from 'drydock'
-import type { BrowserState, Extensions } from '../contract'
+import { type Context, scopeError, type ScopeView, scopeStatus } from 'drydock'
+import type { BundledExtension } from 'sand:extensions'
+import { type BrowserState, webExtensionsReport } from '../contract'
 
 const reportDelay = 500
 
-export const reportStates = (ctx: Context, extensions: Extensions, mounted: ReadonlyMap<string, ScopeView>) => {
+export const reportStates = (ctx: Context, bundled: BundledExtension[], mounted: ReadonlyMap<string, ScopeView>) => {
   const errors = new Map<string, string>()
   let sent = ''
   let cancel: (() => void) | undefined
@@ -18,21 +20,22 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
     return undefined
   }
 
-  const state = (id: string, status: BrowserState['status'], error: string | undefined, inject: string[]): BrowserState => {
+  const state = ({ id, plugin }: BundledExtension): BrowserState => {
     const scope = mounted.get(id)
-    const missing = scope?.status === 'pending' ? scope.missing().map(String) : []
-    const last = error ?? errors.get(id)
-    return { id, status, inject, ...(last !== undefined && { error: last }), ...(missing.length && { missing }) }
+    const missing = scope?.status === 'pending' ? scope.missing() : []
+    const last = scope?.error === undefined ? errors.get(id) : errorMessage(scope.error)
+    const inject = Object.values(plugin?.inject ?? {}).map(token => token.id)
+    return { id, status: scope?.status ?? 'off', inject, ...(last !== undefined && { error: last }), ...(missing.length && { missing }) }
   }
 
   const send = async () => {
     cancel = undefined
-    const wire = ctx.wire
-    if (!wire || wire.state() !== 'open') return
-    const states = extensions.list().map(info => state(info.id, info.status, info.error, info.inject))
+    const connected = ctx.get(wire)
+    if (!connected || connected.state() !== 'open') return
+    const states = bundled.map(state)
     const text = JSON.stringify(states)
     if (text === sent) return
-    await wire.call({ type: 'web.extensions.report', states })
+    await connected.call(webExtensionsReport, { states })
     sent = text
   }
 
@@ -42,18 +45,14 @@ export const reportStates = (ctx: Context, extensions: Extensions, mounted: Read
 
   ctx.effect(() => () => cancel?.())
 
-  ctx.on('drydock.error', (scope, error) => {
+  ctx.on(scopeError, (scope, error) => {
     const id = owner(scope)
     if (id === undefined) return
     errors.set(id, errorMessage(error))
     schedule()
   })
-  ctx.on('drydock.status', schedule)
-  ctx.on('extensions.change', () => {
-    for (const id of errors.keys()) if (!mounted.has(id)) errors.delete(id)
-    schedule()
-  })
-  ctx.on('wire.state', state => {
+  ctx.on(scopeStatus, schedule)
+  ctx.on(wireState, state => {
     if (state !== 'open') return
     sent = ''
     schedule()

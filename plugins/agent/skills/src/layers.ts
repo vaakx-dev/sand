@@ -1,6 +1,6 @@
 import type { Skill } from './contract'
-import type {} from '@sand/paths/contract'
-import type {} from '@sand/watch/contract'
+import type { paths } from '@sand/paths/contract'
+import type { watcher } from '@sand/watch/contract'
 import type { Context } from 'drydock'
 import { join } from 'node:path'
 import { discover } from './discover'
@@ -11,7 +11,7 @@ export const merge = (global: Skill[], project: Skill[]) => {
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name))
 }
 
-export const projectSkills = (ctx: Context<'paths' | 'watcher'>, globalRoots: string[], changed: () => void) => {
+export const projectSkills = (ctx: Context<{ paths: typeof paths; watcher: typeof watcher }>, globalRoots: string[], changed: () => void) => {
   const none: Skill[] = []
   const folders = ctx.watcher.folders(dir => discover(new Map(), [dir], error => ctx.report(error)), none, changed)
   ctx.effect(() => folders.close)

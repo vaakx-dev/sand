@@ -1,4 +1,4 @@
-import { exactTime } from '@sand/kit'
+import { exactTime } from '@sand/util'
 import { span, type Sig } from '@vaakx-dev/vrui'
 import { providersOf, type Provider } from '../../data/providers'
 import { colorsOf } from '../colors'

@@ -1,5 +1,5 @@
 import { listen } from '@vaakx-dev/vrui'
-import { joinDisposers } from '@sand/kit'
+import { joinDisposers } from '@sand/util'
 
 export const onWake = (nudge: (online: boolean) => void, offline: () => void) => {
   const wake = () => nudge(false)

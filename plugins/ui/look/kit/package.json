@@ -5,21 +5,21 @@
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts",
+    "./gesture": "./src/gesture/index.ts",
     "./kit": "./src/kit.ts"
   },
   "sand": {
     "web": "./src/index.ts",
     "label": "Sand",
-    "summary": "The buttons, menus, sheets and icons the rest of the page is drawn with",
-    "provides": [
-      "kit"
-    ]
+    "summary": "The buttons, menus, sheets and icons the rest of the page is drawn with"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "lucide": "^1.52.0"
   }
 }

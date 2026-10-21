@@ -1,32 +1,31 @@
-import type { Job, WireJob } from '@sand/jobs/contract'
-import type { Session, SessionInfo } from '@sand/sessions-sqlite/contract'
+import type { Session, SessionInfo } from '@sand/chats/contract'
 
 export const isSession = (value: object): value is Session =>
   'path' in value && typeof value.path === 'function' && 'append' in value && typeof value.append === 'function'
-
-const isJob = (value: object): value is Job => 'cancel' in value && typeof value.cancel === 'function' && 'status' in value
 
 export const info = (session: Session): SessionInfo => ({
   id: session.id,
   created: session.created,
   cwd: session.cwd,
   project: session.project,
-  title: session.title,
   head: session.head,
+  kind: session.kind,
   parent: session.parent,
   origin: session.origin,
-  kind: session.kind,
-  ...(session.creator && { creator: session.creator }),
+  title: session.title,
+  seen: session.seen,
+  orrinView: session.orrinView,
+  pinned: session.pinned,
+  settled: session.settled,
+  snoozed: session.snoozed,
+  position: session.position,
 })
-
-const jobData = ({ cancel, ...job }: Job): WireJob => job
 
 export const serialize = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(serialize)
   if (value instanceof AbortSignal) return undefined
   if (!value || typeof value !== 'object') return value
   if (isSession(value)) return { $session: info(value) }
-  if (isJob(value)) return { $job: jobData(value) }
   return Object.fromEntries(
     Object.entries(value)
       .filter(([, entry]) => typeof entry !== 'function')

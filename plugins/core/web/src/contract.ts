@@ -1,32 +1,8 @@
-import type { Status } from 'drydock'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { service, type Status } from 'drydock'
+import { z } from 'zod'
 
 export type ExtensionStatus = 'off' | Status
-
-export interface ExtensionInfo {
-  id: string
-  name?: string
-  description?: string
-  label?: string
-  summary?: string
-  builtin: boolean
-  enabled: boolean
-  configured: boolean
-  bundled: boolean
-  status: ExtensionStatus
-  error?: string
-  provides: string[]
-  inject: string[]
-  uses: Record<string, string>
-  scope?: number
-}
-
-export interface Extensions {
-  list(): ExtensionInfo[]
-  enable(id: string): void
-  disable(id: string): void
-  reset(): void
-  build(): string
-}
 
 export interface BrowserState {
   id: string
@@ -42,9 +18,7 @@ export interface WebExtensionState {
   label?: string
   summary?: string
   builtin: boolean
-  enabled: boolean
   bundled: boolean
-  provides: string[]
   problem?: string
   browser?: BrowserState & { at: number }
 }
@@ -53,27 +27,16 @@ export interface WebExtensions {
   list(): WebExtensionState[]
 }
 
-declare module 'drydock' {
-  interface Services {
-    extensions: Extensions
-    webExtensions: WebExtensions
-  }
+export const webExtensions = service<WebExtensions>('webExtensions')
 
-  interface Events {
-    'extensions.change': () => void
-  }
-}
+const browserState = z.object({
+  id: z.string(),
+  status: z.enum(['off', 'pending', 'starting', 'active', 'failed', 'disposed']),
+  error: z.string().optional(),
+  missing: z.array(z.string()).optional(),
+  inject: z.array(z.string()),
+})
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'web.extensions': {}
-    'web.extensions.set': { extension: string; enabled: boolean | null }
-    'web.extensions.reset': {}
-    'web.extensions.report': { states: BrowserState[] }
-  }
+export const webExtensionsReport = request('web.extensions.report', { input: z.object({ states: z.array(browserState) }), output: type<void>() })
 
-  interface WireEvents {
-    'web.build': [build: string]
-    'web.extensions': [enabled: Record<string, boolean>]
-  }
-}
+export const webBuild = wireEvent<string>('web.build')

@@ -1,7 +1,7 @@
-import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
+import type { ModelInfo, SourceInfo } from '@sand/accounts/contract'
 import type { Models } from '@sand/web-client/contract'
-import { sourceName, tokens } from '@sand/kit'
-import type { Pulse } from '@sand/kit/web'
+import type { Pulse } from '@sand/web-client/reactive'
+import { tokens } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, p, span, type Child, type Sig } from '@vaakx-dev/vrui'
 
@@ -66,8 +66,6 @@ const modelChoice = (kit: Kit, picked: Picked, model: ModelInfo) => {
   )
 }
 
-const groupTitle = ({ providerIcon }: Kit, source: SourceInfo) => span({ class: 'flex items-center gap-2' }, providerIcon(source.provider, 12), sourceName(source))
-
 const empty = () => p({ class: 'text-sm text-neutral-400' }, 'No models yet. They show up here once your account lists them.')
 
 export const modelList = (kit: Kit, models: Models, changes: Pulse, picked: Picked, { label, left, lead }: ListOptions) => {
@@ -80,7 +78,7 @@ export const modelList = (kit: Kit, models: Models, changes: Pulse, picked: Pick
         { role: 'radiogroup', 'aria-label': label, class: 'flex flex-col gap-4', onKeyDown: moveChoice },
         lead?.(),
         groupsOf(models, left).map(group =>
-          settingsSection({ title: groupTitle(kit, group.source) }, group.models.map(model => modelChoice(kit, picked, model))),
+          settingsSection({}, group.models.map(model => modelChoice(kit, picked, model))),
         ),
       )
     },

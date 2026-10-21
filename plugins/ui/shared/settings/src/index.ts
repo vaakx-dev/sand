@@ -1,9 +1,12 @@
-import type {} from '@sand/nav/contract'
-import type { Settings } from './contract'
-import { pulse, running } from '@sand/kit/web'
+import { layout, layoutChange } from '@sand/layout/contract'
+import { running } from '@sand/layout/place'
+import { nav, sidebar } from '@sand/nav/contract'
+import { kit } from '@sand/ui-kit/contract'
+import { pulse } from '@sand/web-client/reactive'
 import { mount } from '@vaakx-dev/vrui'
 import { definePlugin, type Dispose } from 'drydock'
 import { leavePage, openPage, switchPage } from './address'
+import { settings, settingsChange, type Settings } from './contract'
 import { cover } from './cover'
 import { followAddress } from './follow'
 import { pageView } from './page'
@@ -13,18 +16,11 @@ import { sideView } from './side'
 export default definePlugin({
   name: 'settings',
   description: 'Settings: the sidebar lists the settings pages and the main column shows the chosen one',
-  inject: ['kit'],
-  uses: {
-    layout: 'settings cover the whole window',
-    nav: 'no Settings button in the sidebar',
-    sidebar: 'a floating Settings button shows when there is no /settings command either',
-    commands: 'no /settings command',
-  },
+  inject: { kit },
   apply(ctx) {
-    const { kit } = ctx
     const store = pageStore()
-    const layout = pulse(ctx, ['layout.change'], ['layout'])
-    const narrow = layout.read(() => ctx.layout?.state().narrow ?? false)
+    const shell = pulse(ctx, [layoutChange], [layout])
+    const narrow = shell.read(() => ctx.get(layout)?.state().narrow ?? false)
     let uncover: Dispose | undefined
 
     const hide = () => {
@@ -32,19 +28,19 @@ export default definePlugin({
       uncover = undefined
     }
 
-    const choose = (id: string) => settings.open(id)
-    const close = () => settings.close()
-    const showPages = () => ctx.layout?.toggle('side', true)
+    const choose = (id: string) => host.open(id)
+    const close = () => host.close()
+    const showPages = () => ctx.get(layout)?.toggle('side', true)
 
     const render = () => {
       hide()
       if (!store.current.get() || !running(ctx)) return
-      const shell = ctx.layout
+      const found = ctx.get(layout)
       uncover = cover(
-        kit,
-        shell,
-        () => sideView(kit, { store, narrow, choose, back: close, hide: shell && (() => shell.toggle('side', false)) }),
-        () => pageView(kit, { store, narrow, showPages, close }),
+        ctx.kit,
+        found,
+        () => sideView(ctx.kit, { store, narrow, choose, back: close, hide: found && (() => found.toggle('side', false)) }),
+        () => pageView(ctx.kit, { store, narrow, showPages, choose, close }),
       )
     }
 
@@ -53,7 +49,7 @@ export default definePlugin({
       if (before === id) return
       store.show(id)
       if (!before || !id) render()
-      ctx.emit('settings.change', id)
+      ctx.emit(settingsChange, id)
     }
 
     const go = (id: string | undefined) => {
@@ -65,7 +61,7 @@ export default definePlugin({
       show(id)
     }
 
-    const settings: Settings = {
+    const host: Settings = {
       page(page) {
         const remove = store.add(page)
         restore()
@@ -81,25 +77,22 @@ export default definePlugin({
       current: () => store.current.get(),
     }
 
-    const restore = followAddress(ctx, settings.pages, show)
-    const toggle = () => (store.current.get() ? settings.close() : settings.open())
+    const restore = followAddress(ctx, host.pages, show)
+    const toggle = () => (store.current.get() ? host.close() : host.open())
     const floatingButton = () => {
-      const { icon, layer, secondaryAction } = kit
+      const { icon, layer, secondaryAction } = ctx.kit
       return mount(
         document.body,
         secondaryAction({ size: 'sm', class: [layer.drawer, 'fixed bottom-3 left-3 opacity-75'], onClick: toggle }, icon('gear', 14), 'Settings'),
       )
     }
 
-    ctx.provide('settings', settings)
-    ctx.watch('layout', () => {
+    ctx.provide(settings, host)
+    ctx.watch(layout, () => {
       render()
       return hide
     })
-    ctx.watch('nav', nav => nav?.action({ id: 'settings', label: 'Settings', icon: 'gear', place: 'footer', order: 100, run: toggle }))
-    ctx.watch('sidebar', sidebar => (sidebar ? undefined : ctx.watch('commands', commands => (commands ? undefined : floatingButton()))))
-    ctx.watch('commands', commands =>
-      commands?.add({ name: 'settings', description: 'Open settings', args: '[page]', run: args => settings.open(args.trim() || undefined) }),
-    )
+    ctx.watch(nav, found => found?.action({ id: 'settings', label: 'Settings', icon: 'gear', place: 'footer', order: 100, run: toggle }))
+    ctx.watch(sidebar, found => (found ? undefined : floatingButton()))
   },
 })

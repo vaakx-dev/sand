@@ -1,5 +1,5 @@
-import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/llm-accounts/contract'
-import type { ToolResultBlock, UserContent } from '@sand/messages'
+import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
+import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
 import { claudeArgs, claudeEnv } from '../cli/args'
 import { connect, fieldsOf, type Json } from '../cli/connection'
 import { usageLimits } from '../account/usage'

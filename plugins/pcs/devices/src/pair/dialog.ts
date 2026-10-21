@@ -1,19 +1,16 @@
 import { dynamicChild, effect, onTimeout, show } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { DevicesContext } from '../inject'
 import type { DeviceSource } from '../source'
 import { pairInvite } from './invite'
 import { inviteBody } from './links'
 
-export const pairDialog = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, shown: Set<number>, close: () => void) => {
+export const pairDialog = (ctx: DevicesContext, source: DeviceSource, shown: Set<number>, close: () => void) => {
   const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ctx.kit
   const { invite, error } = pairInvite(ctx, source.epoch, shown)
   effect(() => {
     const failure = error.get()
     if (!failure) return
-    onTimeout(() => {
-      source.fail(failure)
-      close()
-    })
+    onTimeout(close)
   })
   return show(invite.map(Boolean), () =>
     overlay(

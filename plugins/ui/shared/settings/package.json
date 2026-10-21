@@ -9,23 +9,14 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Settings",
-    "summary": "The settings pages",
-    "provides": [
-      "settings"
-    ],
-    "uses": {
-      "layout": "settings cover the whole window",
-      "nav": "no Settings button in the sidebar",
-      "sidebar": "a floating Settings button shows when there is no /settings command either",
-      "commands": "no /settings command"
-    }
+    "summary": "The settings pages"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
+    "@sand/layout": "workspace:*",
     "@sand/nav": "workspace:*",
-    "@sand/protocol": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

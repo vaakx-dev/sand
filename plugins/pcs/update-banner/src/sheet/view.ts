@@ -1,6 +1,5 @@
-import { plural } from '@sand/kit'
-import { openTab } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
+import { plural } from '@sand/util'
 import { derive, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { Fleet } from '../fleet/model'
 import { chooseBody } from './choose'
@@ -23,7 +22,7 @@ const runTitle = (fleet: Fleet) => {
 }
 
 export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
-  const { hint, overlay, quietButton, sheet, sheetHead } = kit
+  const { hint, openTab, overlay, quietButton, sheet, sheetHead } = kit
   const mode = derive(() => modeOf(fleet))
   const title = () => (mode.get() === 'run' ? runTitle(fleet) : (fleet.target.get()?.name ?? 'Updates'))
   const notes = () => fleet.target.get()?.notesUrl

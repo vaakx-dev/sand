@@ -1,6 +1,6 @@
-import { debouncedWatch } from '@sand/kit/fs'
+import { debouncedWatch } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
-import type { Watcher } from './contract'
+import { type Watcher, watcher } from './contract'
 import { watchedFolders } from './folders'
 
 export default definePlugin({
@@ -16,7 +16,7 @@ export default definePlugin({
       return once
     }
 
-    const watcher: Watcher = {
+    const service: Watcher = {
       debounced: (dir, options, onChange, ms) => track(debouncedWatch(dir, options, onChange, ms)),
       folders(load, empty, changed) {
         const folders = watchedFolders(error => ctx.report(error), load, empty, changed)
@@ -27,6 +27,6 @@ export default definePlugin({
     ctx.effect(() => () => {
       for (const close of [...open]) close()
     })
-    ctx.provide('watcher', watcher)
+    ctx.provide(watcher, service)
   },
 })

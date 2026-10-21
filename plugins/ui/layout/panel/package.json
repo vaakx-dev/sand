@@ -1,0 +1,22 @@
+{
+  "name": "@sand/panel",
+  "version": "0.0.0",
+  "description": "Tabbed host for the right-hand panels that other extensions add",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Panel",
+    "summary": "Tabs for the right-hand panels"
+  },
+  "dependencies": {
+    "@sand/header": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

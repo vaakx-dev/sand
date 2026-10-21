@@ -1,0 +1,33 @@
+{
+  "name": "@sand/chat",
+  "version": "0.0.0",
+  "description": "Chat transcript: bubbles, markdown, tool groups under each reply, streamed in place, plus the pieces tool views build on",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/parts/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Chat",
+    "summary": "Messages with markdown, and tool steps grouped under each reply"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/compaction": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/images": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

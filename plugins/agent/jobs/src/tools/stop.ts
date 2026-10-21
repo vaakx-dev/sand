@@ -7,7 +7,7 @@ const input = z.object({ job: z.string().describe('Job id') })
 
 export const stopTool = (store: Store): Tool<typeof input> => ({
   name: 'job_stop',
-  description: 'Stop a background job. No notice comes back for it.',
+  description: 'Stop a background agent. No notice comes back for it.',
   group,
   input,
   run({ job }, { session }) {

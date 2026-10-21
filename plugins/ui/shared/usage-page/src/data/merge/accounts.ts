@@ -1,5 +1,5 @@
 import type { AccountUsage } from '@sand/usage/contract'
-import { byCost } from '@sand/kit'
+import { byCost } from '@sand/usage/records'
 import { newest } from '../limits'
 import { addTotals, including } from '../totals'
 import type { Account, PcSummary } from '../types'
@@ -17,7 +17,6 @@ export const mergeAccounts = (parts: PcSummary[]): Account[] => {
         continue
       }
       addTotals(found, account)
-      found.threads += account.threads
       if (account.pc === pc.id) Object.assign(found, identityOf(account))
       found.limits = newest(found.limits, account.limits)
       including(found.machines, used)

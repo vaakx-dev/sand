@@ -1,0 +1,17 @@
+{
+  "name": "@sand/gesture",
+  "version": "0.0.0",
+  "description": "Drag across the screen on a phone to open or close the sidebar and the right panel",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Swipe",
+    "summary": "On a phone, drag anywhere sideways to pull the sidebar or the right panel open or shut"
+  },
+  "dependencies": {
+    "@sand/layout": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "@sand/composer",
+  "version": "0.0.0",
+  "description": "Floating prompt card: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Composer",
+    "summary": "Where you write messages: attachments, pending messages, context, drafts and slots for other controls"
+  },
+  "dependencies": {
+    "@sand/attachments": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/model-panel": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/reload": "workspace:*",
+    "@sand/transfers": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

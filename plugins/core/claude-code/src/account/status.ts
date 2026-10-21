@@ -1,5 +1,5 @@
-import type { AppStatus } from '@sand/llm-accounts/contract'
-import { capital } from '@sand/kit'
+import type { AppStatus } from '@sand/accounts/contract'
+import { capital } from '@sand/util'
 import { findClaude } from '../cli/binary'
 import { claudeEnv } from '../cli/args'
 import { fieldsOf } from '../cli/connection'

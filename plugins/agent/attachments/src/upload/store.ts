@@ -1,6 +1,7 @@
-import type { FileBlock } from '@sand/messages'
-import type { WireRequests } from '@sand/protocol'
+import type { FileBlock } from '@sand/chats/contract'
+import type { InputOf } from '@sand/host-hub/contract'
 import type { Transfers } from '@sand/transfers/contract'
+import type { attachmentsFinish } from '../contract'
 import { mkdir, rename } from 'node:fs/promises'
 import { join } from 'node:path'
 import { unpack } from '../unpack'
@@ -25,7 +26,7 @@ const storeUpload = async (uploads: string, received: string, name: string): Pro
   return { type: 'file', name: saved, path, size, ...(mediaType && { mediaType }), ...(unpacked && { unpacked }) }
 }
 
-export const finishUpload = async (transfers: Transfers, uploads: string, limit: number, { transfer, name, chunks, size }: WireRequests['attachments.finish']) => {
+export const finishUpload = async (transfers: Transfers, uploads: string, limit: number, { transfer, name, chunks, size }: InputOf<typeof attachmentsFinish>) => {
   if (size > limit) throw new Error(`Uploads are limited to ${Math.round(limit / 1024 ** 2)} MB`)
   try {
     const received = await transfers.received(transfer, chunks, size)

@@ -1,4 +1,4 @@
-import type { ProjectLook } from '@sand/protocol'
+import type { ProjectLook } from '@sand/project/contract'
 import { circle, derive, dynamicChild, img, read, svg, type ReactiveValue } from '@vaakx-dev/vrui'
 import { appIcon } from '../heads/app-icon'
 import { duneIcon } from './dunes'

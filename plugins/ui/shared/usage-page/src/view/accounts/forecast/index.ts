@@ -1,4 +1,4 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
+import type { LimitWindow } from '@sand/accounts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import type { Forecast } from '../../../data/forecast/project'

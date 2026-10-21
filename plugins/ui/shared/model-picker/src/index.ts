@@ -1,8 +1,9 @@
-import type { ModelPicker } from './contract'
-import { owned, pulse } from '@sand/kit/web'
+import { models, modelsChange } from '@sand/web-client/contract'
+import { owned, pulse } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
 import { pickerButton } from './button'
-import type { Picker } from './deps'
+import { modelPicker, type ModelPicker } from './contract'
+import { inject, type Picker } from './deps'
 import { modelMenu } from './model-menu'
 import { modelPanel } from './panel/panel'
 import { pcStatus } from './pcs'
@@ -11,17 +12,11 @@ import { resolve } from './resolve'
 export default definePlugin({
   name: 'model-picker',
   description: 'The model picker: search, model sources, effort and fast mode in one panel, for the composer and settings',
-  inject: ['models', 'kit'],
-  uses: {
-    wire: 'no favourite, hide or make default actions, and models from another PC show no online dot',
-    settings: 'no link to the Models settings page',
-    notify: 'failed model actions are not reported',
-    threads: 'Make default runs without the current folder',
-  },
+  inject,
   apply(ctx) {
     const picker: Picker = {
       ctx,
-      changes: pulse(ctx, ['models.change'], ['models']),
+      changes: pulse(ctx, [modelsChange], [models]),
       pcs: owned(ctx, () => pcStatus(ctx)),
     }
     const service: ModelPicker = {
@@ -29,8 +24,8 @@ export default definePlugin({
       button: (target, label) => pickerButton(picker, target, label),
       resolve: settings => resolve(ctx, settings),
       online: pc => picker.pcs.online(pc),
-      menu: modelMenu,
+      menu: input => modelMenu(ctx.kit, input),
     }
-    ctx.provide('modelPicker', service)
+    ctx.provide(modelPicker, service)
   },
 })

@@ -1,0 +1,25 @@
+{
+  "name": "@sand/util",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./boot": "./src/boot/index.ts",
+    "./boot/release": "./src/boot/release/index.ts",
+    "./boot/wire": "./src/boot/wire/index.ts",
+    "./fs": "./src/fs/index.ts",
+    "./git": "./src/git/index.ts",
+    "./host": "./src/host/index.ts",
+    "./wire": "./src/wire/index.ts"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/usage": "workspace:*"
+  }
+}

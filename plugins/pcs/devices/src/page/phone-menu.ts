@@ -1,6 +1,6 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { oneLine } from '@sand/kit'
-import type { MenuSpec } from '@sand/protocol'
+import type { MenuSpec } from '@sand/ui-kit/contract'
+import { oneLine } from '@sand/util'
 import type { DeviceSource } from '../source'
 
 export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: boolean): MenuSpec => ({
@@ -17,7 +17,7 @@ export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: bool
         tip: 'New device name',
         submit: 'Rename',
         preview: text => (oneLine(text) && oneLine(text) !== device.name ? `Rename to ${oneLine(text)}` : undefined),
-        run: text => source.rename(device.id, oneLine(text)).catch(source.fail),
+        run: text => source.rename(device.id, oneLine(text)).catch(() => {}),
       },
       run: () => {},
     },
@@ -28,7 +28,7 @@ export const phoneMenu = (source: DeviceSource, device: PairedDevice, self: bool
       group: 'remove',
       danger: true,
       confirm: self ? 'This is the browser you are using. Removing it unpairs it.' : undefined,
-      run: () => source.remove(device.id).catch(source.fail),
+      run: () => source.remove(device.id).catch(() => {}),
     },
   ],
 })

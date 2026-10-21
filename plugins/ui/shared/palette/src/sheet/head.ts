@@ -1,4 +1,3 @@
-import { delayed } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import { effect, show, span, SPACE, untrack, type Props } from '@vaakx-dev/vrui'
 import type { PageModel } from './model'
@@ -24,7 +23,7 @@ const fieldProps = ({ page, text, fills }: PageModel): Props<HTMLInputElement> =
     }),
 })
 
-const submitButton = ({ primaryAction, spinner }: Kit, { busy, action, submit }: PageModel) =>
+const submitButton = ({ delayed, primaryAction, spinner }: Kit, { busy, action, submit }: PageModel) =>
   primaryAction(
     { disabled: () => busy.get() || !action.get()?.enabled, onClick: () => void submit() },
     show(delayed(busy), () => spinner()),

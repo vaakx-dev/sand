@@ -1,7 +1,12 @@
-import type { WireHandlers } from '@sand/protocol'
-import type { Session } from '@sand/sessions-sqlite/contract'
-import type { Context } from 'drydock'
-import type { OpenedSession } from '../contract'
+import type { Session } from '@sand/chats/contract'
+import type { WireHost } from '@sand/host-hub/contract'
+import { sessionOpened } from '@sand/loop/contract'
+import { modelSettings } from '@sand/model/contract'
+import { joinDisposers } from '@sand/util'
+import type { ContextCore } from 'drydock'
+import { sessionCarry } from '../contract'
+import type { OpenedSession } from '../contract/relay'
+import { sessionEntries, sessionOpen, sessionPage, sessionSince } from '../contract/requests'
 import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
 import type { LiveTracker } from '../stream/live'
@@ -9,35 +14,35 @@ import type { LiveTracker } from '../stream/live'
 const pageLimit = 200
 const baseCarried = ['settings']
 
-export const tailOf = async (ctx: Context, session: Session) => {
+const tailOf = async (ctx: ContextCore, session: Session) => {
   const { entries, more } = session.page()
   const oldest = entries[0]
-  const carried = more && oldest ? session.carried(oldest.id, await ctx.waterfall('session.carry', baseCarried)) : []
+  const carried = more && oldest ? session.carried(oldest.id, await ctx.waterfall(sessionCarry, baseCarried)) : []
   return { entries, partial: true, ...(carried.length && { carried }) }
 }
 
-export const pagingRequests = (ctx: ServerContext, live: LiveTracker): WireHandlers => {
+export const pagingRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle'>, live: LiveTracker) => {
   const session = (id: string) => ctx.sessions.require(id)
   const opened = (found: Session, rest: Pick<OpenedSession, 'entries' | 'partial' | 'carried'>) => {
-    const base: OpenedSession = { info: info(found), ...rest, settings: ctx.modelSettings?.state(found), ...live.snapshot(found.id) }
-    return ctx.waterfall('session.opened', base, found)
+    const settings = ctx.get(modelSettings)?.state(found)
+    const base: OpenedSession = { info: info(found), ...rest, settings, ...live.snapshot(found.id) }
+    return ctx.waterfall(sessionOpened, base, found)
   }
-  return {
-    'session.open': async request => {
+  return joinDisposers(
+    wire.handle(sessionOpen, async request => {
       const found = session(request.session)
       return opened(found, await tailOf(ctx, found))
-    },
-    'session.page': request => {
+    }),
+    wire.handle(sessionPage, request => {
       const limit = Math.floor(Number(request.limit))
       const size = limit > 0 ? { entries: Math.min(pageLimit, limit) } : {}
       return session(request.session).page(request.before, size)
-    },
-    'session.since': request => {
+    }),
+    wire.handle(sessionSince, request => {
       const found = session(request.session)
       const entries = found.since(request.after)
       return entries ? opened(found, { entries }) : null
-    },
-    'session.entries': request => session(request.session).entries(),
-    'sessions.children': request => ctx.sessions.children(request.parent),
-  }
+    }),
+    wire.handle(sessionEntries, request => session(request.session).entries()),
+  )
 }

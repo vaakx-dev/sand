@@ -1,6 +1,6 @@
-import type { ImageBlock, UserContent } from '@sand/messages'
+import type { ImageBlock, UserContent } from '@sand/chats/contract'
 import type { Context } from 'drydock'
-import type { Machines, Media, Wire } from '../contract'
+import { type Machines, machinesChange, type Media, type Wire } from '../contract'
 import { intersectionObserver, listen } from '@vaakx-dev/vrui'
 import { base64Of } from '../integrations/base64'
 import type { Store } from '../threads/store'
@@ -34,7 +34,7 @@ export const createMedia = (ctx: Context, wire: Wire, store: Store, machines: Ma
   const online = (device: string) =>
     new Promise<void>(resolve => {
       if (machines.online(device)) return resolve()
-      const stop = ctx.on('machines.change', () => {
+      const stop = ctx.on(machinesChange, () => {
         if (!machines.online(device)) return
         stop()
         resolve()

@@ -1,0 +1,21 @@
+{
+  "name": "@sand/connections",
+  "version": "0.0.0",
+  "description": "Connections page in settings: outside services and tools that plugins add, with their status and actions",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Connections",
+    "summary": "Settings page for outside services and tools, such as Orrin"
+  },
+  "dependencies": {
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

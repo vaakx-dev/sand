@@ -1,8 +1,10 @@
-import type { HostHealth } from '@sand/host-health/contract'
-import type { PcRepairResult } from '@sand/host-updates/contract'
-import { errorMessage } from '@sand/kit'
+import { pcHealth, type HostHealth } from '@sand/host-health/contract'
+import { runtimeChanged, runtimeFailed } from '@sand/host-runtimes/contract'
+import { pcRepair, type PcRepairResult } from '@sand/host-updates/contract'
+import { errorMessage } from '@sand/util'
+import { wireHello } from '@sand/web-client/contract'
 import { onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { WireContext } from '../inject'
 
 export type PcHealthStatus = 'checking' | 'healthy' | 'problem' | 'unknown' | 'repairing'
 
@@ -29,7 +31,7 @@ const answered = (health: HostHealth): PcHealthState => ({ status: health.health
 const fallback = (health: HostHealth | undefined, error: string): PcHealthState =>
   health ? { ...answered(health), error } : { status: 'unknown', error }
 
-export const pcHealthStore = (ctx: Context<'wire'>) => {
+export const pcHealthStore = (ctx: WireContext) => {
   const entries = new Map<string, Entry>()
   const timers = new Set<() => void>()
   let alive = true
@@ -54,8 +56,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     for (const cancel of timers) cancel()
   })
 
-  const ask = (device: string, local: boolean) =>
-    ctx.wire.call<HostHealth>(local ? { type: 'pc.health' } : { type: 'pc.health', device })
+  const ask = (device: string, local: boolean) => ctx.wire.call(pcHealth, local ? {} : { device })
 
   const current = (entry: Entry) => untrack(() => entry.sig.get())
 
@@ -107,12 +108,11 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     }, settleDelay)
   }
 
-  ctx.on('wire.hello', () => {
+  ctx.on(wireHello, () => {
     for (const [device, entry] of entries) check(device, entry)
   })
-  ctx.on('wire.event', event => {
-    if (event.name === 'runtime.changed' || event.name === 'runtime.failed') refreshLocal()
-  })
+  ctx.effect(() => ctx.wire.on(runtimeChanged, refreshLocal))
+  ctx.effect(() => ctx.wire.on(runtimeFailed, refreshLocal))
 
   const poll = async (device: string, entry: Entry, first = pollEvery) => {
     const deadline = Date.now() + pollFor
@@ -134,7 +134,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     while (alive && Date.now() < deadline) {
       if (ctx.wire.state() === 'open') {
         try {
-          return await ctx.wire.call<PcRepairResult>({ type: 'pc.repair', device, resume: true })
+          return await ctx.wire.call(pcRepair, { device, resume: true })
         } catch {
           if (ctx.wire.state() === 'open') break
         }
@@ -146,7 +146,7 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
 
   const callRepair = async (device: string) => {
     try {
-      return await ctx.wire.call<PcRepairResult>({ type: 'pc.repair', device })
+      return await ctx.wire.call(pcRepair, { device })
     } catch (error) {
       return await resumeRepair(device, error)
     }
@@ -160,7 +160,6 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     const fail = (message: string, health = previous) => {
       entry.request++
       entry.sig.set(fallback(health, message))
-      ctx.notify?.push(message, { level: 'error' })
     }
     let result: PcRepairResult
     try {
@@ -179,13 +178,10 @@ export const pcHealthStore = (ctx: Context<'wire'>) => {
     if (!alive) return
     entry.request++
     if (!health) {
-      const message = `${name} did not answer after the repair`
-      entry.sig.set({ status: 'unknown', health: previous, error: message })
-      ctx.notify?.push(message, { level: 'error' })
+      entry.sig.set({ status: 'unknown', health: previous, error: `${name} did not answer after the repair` })
       return
     }
     entry.sig.set(answered(health))
-    ctx.notify?.push(health.healthy ? `${name} repaired` : `${name} still has problems`, health.healthy ? undefined : { level: 'error' })
   }
 
   const busy = (device: string) => {

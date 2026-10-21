@@ -1,4 +1,4 @@
-import type { AppPlan, PlanLimits } from '@sand/llm-accounts/contract'
+import { llmPlans, type AppPlan, type PlanLimits } from '@sand/accounts/contract'
 import { definePlugin } from 'drydock'
 import { modelCatalog } from './account/models'
 import { readUsage } from './account/probe'
@@ -31,6 +31,6 @@ export default definePlugin({
   name: 'claude-code',
   description: 'Adds Claude Code to Settings → Accounts using the Claude Code app on this PC: sand runs the claude CLI with sand’s own tools and prompt, and the app keeps its own sign-in',
   apply(ctx) {
-    ctx.watch('llmPlans', plans => plans?.register(claudePlan(limits => plans.limits('claude', limits))))
+    ctx.watch(llmPlans, plans => plans?.register(claudePlan(limits => plans.limits('claude', limits))))
   },
 })

@@ -1,4 +1,3 @@
-import { delayed } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Pc } from '../data/types'
@@ -22,7 +21,7 @@ const pcFilter = (kit: Kit, model: UsageModel) => {
   )
 }
 
-const reloadButton = ({ icon, iconButton, spinner }: Kit, model: UsageModel) =>
+const reloadButton = ({ delayed, icon, iconButton, spinner }: Kit, model: UsageModel) =>
   iconButton(
     { size: 'sm', title: 'Reload usage', onClick: model.refresh, disabled: model.busy },
     dynamicChild(delayed(model.busy), waiting => (waiting ? spinner() : icon('reload', 14))),

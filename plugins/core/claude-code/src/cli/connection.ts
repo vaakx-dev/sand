@@ -1,5 +1,5 @@
-import { errorMessage, isRecord } from '@sand/kit'
-import { spawnJsonLines } from '@sand/kit/host'
+import { errorMessage, isRecord } from '@sand/util'
+import { spawnJsonLines } from '@sand/util/host'
 import { requireClaude } from './binary'
 
 export type Json = Record<string, unknown>

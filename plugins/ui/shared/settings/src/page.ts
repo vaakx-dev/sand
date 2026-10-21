@@ -1,4 +1,3 @@
-import { dismissible } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { SettingsPage } from './contract'
@@ -8,11 +7,15 @@ export interface PageParts {
   store: PageStore
   narrow: Sig<boolean>
   showPages(): void
+  choose(id: string): void
   close(): void
 }
 
-export const pageView = (kit: Kit, { store, narrow, showPages, close }: PageParts) => {
-  const { closeButton, headTitle, paneHead, showSideButton } = kit
+const backButton = ({ icon, iconButton }: Kit, parent: string, choose: (id: string) => void) =>
+  iconButton({ title: 'Back', 'aria-label': 'Back', onClick: () => choose(parent) }, icon('back', 16))
+
+export const pageView = (kit: Kit, { store, narrow, showPages, choose, close }: PageParts) => {
+  const { closeButton, dismissible, headTitle, paneHead, showSideButton } = kit
   const page = derive(() => store.pages.get().find(candidate => candidate.id === store.current.get()))
   const sections = (above: boolean) =>
     dynamicChild(
@@ -29,6 +32,10 @@ export const pageView = (kit: Kit, { store, narrow, showPages, close }: PagePart
     paneHead(
       { led: narrow },
       show(narrow, () => showSideButton(narrow, 'Settings', showPages)),
+      dynamicChild(
+        page.map(shown => shown?.parent),
+        parent => (parent ? backButton(kit, parent, choose) : null),
+      ),
       headTitle(1, () => page.get()?.label ?? ''),
       show(narrow, () => closeButton({ title: 'Close', onClick: close })),
     ),

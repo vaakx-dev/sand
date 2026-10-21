@@ -1,4 +1,4 @@
-import type { ThemePalette } from '@sand/protocol'
+import type { ThemePalette } from './contract'
 
 const neutral = {
   '50': '#fafafa',

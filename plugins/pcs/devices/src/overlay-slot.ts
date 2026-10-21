@@ -1,4 +1,4 @@
-import { place } from '@sand/kit/web'
+import { place } from '@sand/layout/place'
 import type { Context, Dispose } from 'drydock'
 
 export const overlaySlot = (ctx: Context, order = 100) => {

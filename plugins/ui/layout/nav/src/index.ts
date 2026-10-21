@@ -1,13 +1,14 @@
-import { owned } from '@sand/kit/web'
+import { owned } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
+import { nav } from './contract'
 import { navHost } from './host'
 
 export default definePlugin({
   name: 'nav',
-  description: 'Thread lists and actions that sidebars draw',
+  description: 'Actions that sidebars draw',
   apply(ctx) {
     ctx.provide(
-      'nav',
+      nav,
       owned(ctx, () => navHost(ctx)),
     )
   },

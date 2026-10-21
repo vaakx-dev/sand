@@ -1,7 +1,8 @@
-import { errorMessage } from '@sand/kit'
+import { pairUsed } from '@sand/host-devices/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, keys, show, sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { DevicesContext } from '../inject'
 import { pairInvite } from '../pair/invite'
 import { inviteBody } from '../pair/links'
 import type { DeviceSource } from '../source'
@@ -35,14 +36,14 @@ const pasteRow = (kit: Kit, source: DeviceSource, joined: (name: string) => void
   )
 }
 
-export const joinStep = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, joined: (name: string) => void) => {
+export const joinStep = (ctx: DevicesContext, source: DeviceSource, joined: (name: string) => void) => {
   const { kit } = ctx
   const { errorText, note } = kit
   const shown = new Set<number>()
   const { invite, error } = pairInvite(ctx, source.epoch, shown)
   effect(() => {
-    const off = ctx.on('wire.event', event => {
-      if (event.name === 'pair.used' && event.args[0].kind === 'pc' && shown.has(event.args[1])) joined(event.args[0].name)
+    const off = ctx.wire.on(pairUsed, ({ device, expires }) => {
+      if (device.kind === 'pc' && shown.has(expires)) joined(device.name)
     })
     return () => void off()
   })

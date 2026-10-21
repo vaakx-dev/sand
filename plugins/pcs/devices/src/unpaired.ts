@@ -1,8 +1,8 @@
-import type { WireState } from '@sand/web-client/contract'
-import { parsePairLink } from '@sand/kit'
+import { parsePairLink } from '@sand/host-remotes/pairing'
 import type { Kit } from '@sand/ui-kit/contract'
+import { wireState, type WireState } from '@sand/web-client/contract'
 import { keys, show, sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { DevicesContext } from './inject'
 import { overlaySlot } from './overlay-slot'
 
 const follow = (text: string) => {
@@ -44,12 +44,12 @@ const unpairedView = (kit: Kit) => {
   )
 }
 
-export const unpairedOverlay = (ctx: Context<'wire' | 'kit'>) => {
+export const unpairedOverlay = (ctx: DevicesContext) => {
   const slot = overlaySlot(ctx, 200)
   const sync = (state: WireState) => {
     if (state !== 'unpaired') return slot.close()
     if (!slot.isOpen()) slot.open(() => unpairedView(ctx.kit))
   }
-  ctx.on('wire.state', sync)
+  ctx.on(wireState, sync)
   sync(ctx.wire.state())
 }

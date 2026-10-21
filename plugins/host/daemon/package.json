@@ -1,0 +1,27 @@
+{
+  "name": "@sand/host-daemon",
+  "version": "0.0.0",
+  "description": "Starts, stops and restarts sand in the background, and reads the [host] settings",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/host/index.ts",
+    "cli": "./src/cli/index.ts",
+    "label": "Background sand",
+    "summary": "Starts, stops and restarts sand in the background"
+  },
+  "dependencies": {
+    "@sand/cli-commands": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

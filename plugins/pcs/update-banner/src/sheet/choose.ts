@@ -1,5 +1,5 @@
-import { exactTime, plural } from '@sand/kit'
 import type { Kit } from '@sand/ui-kit/contract'
+import { exactTime, plural } from '@sand/util'
 import { derive, div, dynamicChild, h3, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { changeList } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'

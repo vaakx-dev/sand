@@ -7,17 +7,16 @@
     ".": "./src/index.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Codex",
-    "summary": "Use your ChatGPT plan through the Codex app on this PC",
-    "uses": {
-      "llmPlans": "nothing happens: there's no accounts service to add Codex to"
-    }
+    "summary": "Use your ChatGPT plan through the Codex app on this PC"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

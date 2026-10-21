@@ -1,5 +1,5 @@
 import type { Remote } from '@sand/host-remotes/contract'
-import { isRecord } from '@sand/kit'
+import { isRecord } from '@sand/util'
 
 const isRemote = (value: unknown): value is Remote =>
   isRecord(value) &&

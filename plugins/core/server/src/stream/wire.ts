@@ -1,6 +1,5 @@
-import type { LiveEvent, LLMEvent } from '@sand/llm-accounts/contract'
-import type { WireEvent } from '@sand/protocol'
-import type { WireSessionRef } from '@sand/sessions-sqlite/contract'
+import type { LiveEvent, LLMEvent } from '@sand/accounts/contract'
+import type { WireSessionRef } from '@sand/chats/contract'
 
 export const sessionRef = (session: { id: string }): WireSessionRef => ({ $session: { id: session.id } })
 
@@ -9,5 +8,3 @@ export const liveEvent = (event: LLMEvent): LiveEvent => {
   if (event.type === 'done') return { type: 'done' }
   return event
 }
-
-export const eventFrame = (event: WireEvent) => JSON.stringify({ type: 'event', ...event })

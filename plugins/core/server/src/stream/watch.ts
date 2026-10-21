@@ -26,5 +26,7 @@ export const createWatchers = <S>() => {
 
   const forget = (socket: S) => void watches.delete(socket)
 
-  return { focus, sees, forget }
+  const focused = (session: string) => [...watches.values()].some(watch => watch.focus === session)
+
+  return { focus, sees, forget, focused }
 }

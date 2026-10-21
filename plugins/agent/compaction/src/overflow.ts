@@ -1,4 +1,4 @@
-import { errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/util'
 
 const patterns = [
   /prompt (?:is )?too long/i,

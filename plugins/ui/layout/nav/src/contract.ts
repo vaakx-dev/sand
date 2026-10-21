@@ -1,19 +1,46 @@
-import type { Handle, NavAction, NavList } from '@sand/protocol'
 import type { Derive } from '@vaakx-dev/vrui'
-import type { Dispose } from 'drydock'
+import { service, type Dispose } from 'drydock'
+
+export interface NavAction {
+  id: string
+  label: string
+  icon?: string
+  order?: number
+  wide?: boolean
+  place?: 'footer'
+  end?: boolean
+  group?: string
+  quick?: boolean
+  tile?: boolean
+  active?: boolean
+  danger?: boolean
+  confirm?: string
+  choices?: NavChoice[]
+  ask?: NavAsk
+  run(): void | Promise<unknown>
+}
+
+export interface NavChoice {
+  id: string
+  label: string
+  tip?(): string
+  run(): void | Promise<unknown>
+}
+
+export interface NavAsk {
+  placeholder: string
+  tip: string
+  submit: string
+  preview(text: string): string | undefined
+  run(text: string): void | Promise<unknown>
+}
 
 export interface NavHost {
-  list(list: NavList): Handle<NavList>
   action(action: NavAction): Dispose
-  lists: Derive<NavList[]>
   actions: Derive<NavAction[]>
   busy(id: string): boolean
   run(action: NavAction): void
 }
 
-declare module 'drydock' {
-  interface Services {
-    nav: NavHost
-    sidebar: object
-  }
-}
+export const nav = service<NavHost>('nav')
+export const sidebar = service<object>('sidebar')

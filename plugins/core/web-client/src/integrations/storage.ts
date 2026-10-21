@@ -1,4 +1,4 @@
-import { isRecord } from '@sand/kit'
+import { isRecord } from '@sand/util'
 
 const persistAsked = 'sand.persist'
 

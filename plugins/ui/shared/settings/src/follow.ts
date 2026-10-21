@@ -1,5 +1,6 @@
 import type { SettingsPage } from './contract'
-import { onAddressChange } from '@sand/kit/web'
+import { onAddressChange } from '@sand/web-client/address'
+import { threadSelect } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { requestedPage } from './address'
 
@@ -19,7 +20,7 @@ export const followAddress = (ctx: Context, pages: () => SettingsPage[], show: (
     restore()
   }
 
-  ctx.on('thread.select', () => {
+  ctx.on(threadSelect, () => {
     greeted = true
     sync()
   })

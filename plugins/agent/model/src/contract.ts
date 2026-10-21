@@ -1,5 +1,9 @@
-import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/llm-accounts/contract'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/accounts/contract'
+import type { Session } from '@sand/chats/contract'
+import type { CliFlags } from '@sand/config/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { event, service } from 'drydock'
+import { z } from 'zod'
 
 export interface SessionSettings {
   model?: string
@@ -32,7 +36,7 @@ export interface ModelSettings {
   state(session?: Session): SettingsState
   defaults(): SessionSettings
   update(session: Session, patch: SessionSettings): SessionSettings
-  flags(): SessionSettings | undefined
+  flags(flags: CliFlags): SessionSettings | undefined
 }
 
 export interface ModelsUpdate {
@@ -42,31 +46,27 @@ export interface ModelsUpdate {
   defaults: SessionSettings
 }
 
-declare module 'drydock' {
-  interface Services {
-    modelSettings: ModelSettings
-  }
+export const modelSettings = service<ModelSettings>('modelSettings')
 
-  interface Events {
-    'modelSettings.change': (session: Session) => void
-    'modelSettings.defaults': () => void
-  }
-}
+export const modelSettingsChange = event<(session: Session) => void>('modelSettings.change')
+export const modelSettingsDefaults = event<() => void>('modelSettings.defaults')
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'settings.get': { session?: string; settings?: SessionSettings }
-  }
+export const settingsChange = wireEvent<[session: string, state: SettingsState]>('settings.change')
+export const modelsChange = wireEvent<ModelsUpdate>('models.change')
 
-  interface WireEvents {
-    'settings.change': [session: string, state: SettingsState]
-    'models.change': [update: ModelsUpdate]
-  }
+export const helloModels = helloField<ModelInfo[]>('models')
+export const helloSources = helloField<SourceInfo[]>('sources')
+export const helloDefaults = helloField<SessionSettings>('defaults')
+export const helloLevels = helloField<EffortLevel[]>('levels')
 
-  interface HelloFields {
-    models?: ModelInfo[]
-    sources?: SourceInfo[]
-    defaults?: SessionSettings
-    levels?: EffortLevel[]
-  }
-}
+const effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
+const speed = z.enum(['normal', 'fast'])
+const settings = z.object({ model: z.string().optional(), effort: effort.optional(), speed: speed.optional() })
+const patch = z.object({ model: z.string().nullish(), effort: effort.nullish(), speed: speed.nullish() })
+
+export const settingsGet = request('settings.get', {
+  input: z.object({ session: z.string().optional(), settings: settings.optional() }),
+  output: type<SettingsState>(),
+})
+export const settingsSet = request('settings.set', { input: z.object({ session: z.string().optional(), patch }), output: type<void>() })
+export const settingsSave = request('settings.save', { input: z.object({ session: z.string() }), output: type<void>() })

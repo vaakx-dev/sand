@@ -1,6 +1,7 @@
 import type { PairInvite } from '@sand/host-devices/contract'
-import { routeKind, routeLabel } from '@sand/kit'
+import { routeKind } from '@sand/host-remotes/pairing'
 import type { Kit } from '@sand/ui-kit/contract'
+import { routeLabel } from '@sand/web-client/pairing'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import { linkText } from '../components'
 import { listenBox } from './listen'

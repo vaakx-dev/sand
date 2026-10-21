@@ -1,34 +1,48 @@
-import type { EffectiveSettings, ModelsUpdate, SessionSettings, SettingsState } from '@sand/model/contract'
-import type { Hello, WireEvent } from '@sand/protocol'
-import type { Models, Threads, Wire } from '../contract'
+import {
+  type EffectiveSettings,
+  helloDefaults,
+  helloLevels,
+  helloModels,
+  helloSources,
+  type ModelsUpdate,
+  modelsChange as modelsUpdate,
+  type SessionSettings,
+  settingsChange,
+  settingsGet,
+  type SettingsState,
+} from '@sand/model/contract'
 import type { Context } from 'drydock'
+import { type Models, modelsChange, type Threads, type Wire, wireHello } from '../contract'
 import type { Store } from '../threads/store'
-
-const clean = (settings: Record<string, unknown>) =>
-  Object.fromEntries(Object.entries(settings).filter(([, value]) => value !== undefined && value !== null)) as SessionSettings
+import type { HelloRead } from '../wire/hellos'
 
 const empty: ModelsUpdate = { models: [], sources: [], levels: [], defaults: {} }
 
-const fromHello = (hello: Hello): ModelsUpdate => ({ models: hello.models ?? [], sources: hello.sources ?? [], levels: hello.levels ?? [], defaults: hello.defaults ?? {} })
+const fromHello = (read: HelloRead): ModelsUpdate => ({
+  models: read(helloModels) ?? [],
+  sources: read(helloSources) ?? [],
+  levels: read(helloLevels) ?? [],
+  defaults: read(helloDefaults) ?? {},
+})
+
+const everyPc = { remotes: true }
 
 export interface DeviceModels extends Models {
-  hello(device: string, hello: Hello): void
-  event(device: string, event: WireEvent): void
+  hello(device: string, read: HelloRead): void
   forget(device: string): void
 }
 
 export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: Store): DeviceModels => {
   const catalogs = new Map<string, ModelsUpdate>()
-  let draft: SessionSettings = {}
-  let draftState: SettingsState | undefined
+  let defaultState: SettingsState | undefined
   const asking = new Set<string>()
-  const changed = () => ctx.emit('models.change')
+  const changed = () => ctx.emit(modelsChange)
 
   const catalogOf = (device = store.device()) => catalogs.get(device) ?? catalogs.get(store.here()) ?? empty
 
-  const refreshDraft = () =>
-    void wire.call<SettingsState>({ type: 'settings.get', settings: draft }).then(state => {
-      draftState = state
+  const refreshDefaults = () =>
+    void wire.call(settingsGet, { settings: {} }).then(state => {
+      defaultState = state
       changed()
     }, () => {})
 
@@ -36,7 +50,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
     if (asking.has(thread)) return
     asking.add(thread)
     void wire
-      .call<SettingsState>({ type: 'settings.get', session: thread })
+      .call(settingsGet, { session: thread })
       .then(state => {
         store.settings.set(thread, state)
         changed()
@@ -47,25 +61,27 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
   const useCatalog = (device: string, next: ModelsUpdate) => {
     catalogs.set(device, next)
     for (const thread of [...store.settings.keys()]) if (store.deviceOf(thread) === device) store.settings.delete(thread)
-    if (device === store.device()) refreshDraft()
+    if (device === store.device()) refreshDefaults()
     changed()
   }
 
-  const fromEvent = (device: string, event: WireEvent) => {
-    if (event.name === 'models.change') useCatalog(device, { ...event.args[0], sources: event.args[0].sources ?? [] })
-    if (event.name === 'settings.change') {
-      store.settings.set(...event.args)
-      changed()
-    }
-  }
-
-  ctx.on('wire.hello', hello => useCatalog(store.here(), fromHello(hello)))
-  ctx.on('wire.event', event => fromEvent(store.here(), event))
+  ctx.on(wireHello, () => useCatalog(store.here(), fromHello(field => wire.hello(field))))
+  ctx.effect(() => wire.on(modelsUpdate, (update, device) => useCatalog(device, { ...update, sources: update.sources ?? [] }), everyPc))
+  ctx.effect(() =>
+    wire.on(
+      settingsChange,
+      ([thread, state]) => {
+        store.settings.set(thread, state)
+        changed()
+      },
+      everyPc,
+    ),
+  )
 
   const infoOn = (device: string, id?: string) => catalogOf(device).models.find(model => model.id === id)
 
   const state = (thread = threads.current()?.id) => {
-    if (!thread) return draftState
+    if (!thread) return defaultState
     const known = store.settings.get(thread)
     if (!known) askSettings(thread)
     return known
@@ -105,14 +121,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
       const current = state(thread)?.current
       return current && labelOn(thread ? store.deviceOf(thread) : store.device(), current)
     },
-    draft: () => draft,
-    prepare(patch) {
-      draft = patch ? clean({ ...draft, ...patch }) : {}
-      refreshDraft()
-      changed()
-    },
-    hello: (device, hello) => useCatalog(device, fromHello(hello)),
-    event: fromEvent,
+    hello: (device, read) => useCatalog(device, fromHello(read)),
     forget(device) {
       if (!catalogs.delete(device)) return
       changed()

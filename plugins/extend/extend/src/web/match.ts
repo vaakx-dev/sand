@@ -1,7 +1,8 @@
-import type { Context, ScopeView, Services } from 'drydock'
+import { type WebExtensionState, webExtensions } from '@sand/web/contract'
+import type { Context, ScopeView } from 'drydock'
 import { resolve, sep } from 'node:path'
 
-export type WebState = ReturnType<Services['webExtensions']['list']>[number]
+export type WebState = WebExtensionState
 
 const normal = (path: string) => (process.platform === 'win32' ? resolve(path).toLowerCase() : resolve(path))
 
@@ -11,7 +12,7 @@ const inside = (dir: string, parent: string) => {
   return child === root || child.startsWith(root + sep)
 }
 
-export const webStates = (ctx: Context): WebState[] => ctx.webExtensions?.list() ?? []
+export const webStates = (ctx: Context): WebState[] => ctx.get(webExtensions)?.list() ?? []
 
 export const webOf = (scope: ScopeView, states: WebState[]) => {
   const dir = scope.source?.dir

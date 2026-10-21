@@ -1,7 +1,19 @@
-import type { ReleaseInfo, UpdateChannel, UpdateState } from '@sand/host-updates/contract'
-import { errorMessage } from '@sand/kit'
-import { pulse } from '@sand/kit/web'
-import type { WireEvent, WireRequest } from '@sand/protocol'
+import type { Request } from '@sand/host-hub/contract'
+import {
+  updatesApply,
+  updatesChange,
+  updatesChannel,
+  updatesCheck,
+  updatesLater,
+  updatesRestart,
+  updatesState,
+  type ReleaseInfo,
+  type UpdateChannel,
+  type UpdateState,
+} from '@sand/host-updates/contract'
+import { errorMessage } from '@sand/util'
+import { machinesChange, wireHello, wireState, type machines, type wire } from '@sand/web-client/contract'
+import { pulse } from '@sand/web-client/reactive'
 import { derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { isSettled, runStatus, type Run, type RunStatus } from './run'
@@ -27,24 +39,23 @@ const withEntry = <T>(map: Map<string, T>, key: string, value: T) => new Map(map
 
 const isState = (value: unknown): value is UpdateState => typeof value === 'object' && value !== null && 'phase' in value
 
-export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
-  const machines = pulse(ctx, ['machines.change', 'wire.hello', 'wire.state'])
+export const createFleet = (ctx: Context<{ wire: typeof wire; machines: typeof machines }>) => {
+  const changes = pulse(ctx, [machinesChange, wireHello, wireState])
   const states = sig(new Map<string, UpdateState>())
   const failures = sig(new Map<string, string>())
   const run = sig<Run | undefined>(undefined)
   const busy = sig(false)
 
-  const call = <T>(key: string, request: WireRequest) => ctx.wire.call<T>(request, key)
+  const call = <I, O>(key: string, request: Request<I, O>, input: I) => ctx.wire.call(request, input, key)
   const here = () => ctx.machines.here().id
-  const notify = (error: unknown) => ctx.notify?.push(errorMessage(error), { level: 'error' })
 
   const store = (key: string, state: unknown) => {
     if (isState(state)) states.set(withEntry(states.get(), key, state))
   }
 
-  const load = (key: string) => call<UpdateState>(key, { type: 'updates.state' }).then(state => store(key, state), () => {})
+  const load = (key: string) => call(key, updatesState, {}).then(state => store(key, state), () => {})
 
-  const pcs = machines.read<Pc[]>(() => {
+  const pcs = changes.read<Pc[]>(() => {
     const known = states.get()
     const failed = failures.get()
     return ctx.machines.list().map(machine => {
@@ -87,28 +98,23 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
     }
   }
 
-  const onEvent = (key: string, event: WireEvent) => {
-    if (event.name === 'updates.change') store(key, event.args[0])
-  }
-
-  ctx.on('wire.hello', () => {
+  ctx.on(wireHello, () => {
     seen.add(here())
     void load(here())
   })
-  ctx.on('wire.event', event => onEvent(here(), event))
-  ctx.on('machines.event', onEvent)
-  ctx.on('machines.change', refresh)
+  ctx.effect(() => ctx.wire.on(updatesChange, (state, key) => store(key, state), { remotes: true }))
+  ctx.on(machinesChange, refresh)
   onTimeout(refresh)
 
-  const everyOnline = (request: WireRequest) =>
+  const everyOnline = <I>(request: Request<I, UpdateState>, input: I) =>
     Promise.all(
       pcs
         .get()
         .filter(pc => pc.online && pc.state)
         .map(pc =>
-          call<unknown>(pc.key, request).then(
+          call(pc.key, request, input).then(
             state => store(pc.key, state),
-            error => notify(`${pc.name}: ${errorMessage(error)}`),
+            () => {},
           ),
         ),
     )
@@ -116,21 +122,16 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   const guarded = async (work: () => Promise<unknown>) => {
     if (busy.get()) return
     busy.set(true)
-    try {
-      await work()
-    } catch (error) {
-      notify(error)
-    } finally {
-      busy.set(false)
-    }
+    await work().catch(() => {})
+    busy.set(false)
   }
 
   const applyOn = async (key: string, build: string) => {
     failures.set(without(failures.get(), key))
     try {
       const wanted = channel.get()
-      if (wanted && states.get().get(key)?.channel !== wanted) store(key, await call<UpdateState>(key, { type: 'updates.channel', channel: wanted }))
-      store(key, await call<UpdateState>(key, { type: 'updates.apply', build }))
+      if (wanted && states.get().get(key)?.channel !== wanted) store(key, await call(key, updatesChannel, { channel: wanted }))
+      store(key, await call(key, updatesApply, { build }))
     } catch (error) {
       failures.set(withEntry(failures.get(), key, errorMessage(error)))
     }
@@ -157,9 +158,9 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
   }
 
   const restartNow = (key: string) =>
-    call<UpdateState>(key, { type: 'updates.restart' }).then(
+    call(key, updatesRestart, {}).then(
       state => store(key, state),
-      error => notify(error),
+      () => {},
     )
 
   const finish = () => {
@@ -180,9 +181,9 @@ export const createFleet = (ctx: Context<'wire' | 'machines'>) => {
     retry,
     restartNow,
     finish,
-    check: () => guarded(() => everyOnline({ type: 'updates.check' })),
-    later: () => guarded(() => everyOnline({ type: 'updates.later' })),
-    setChannel: (next: UpdateChannel) => guarded(() => everyOnline({ type: 'updates.channel', channel: next })),
+    check: () => guarded(() => everyOnline(updatesCheck, {})),
+    later: () => guarded(() => everyOnline(updatesLater, {})),
+    setChannel: (next: UpdateChannel) => guarded(() => everyOnline(updatesChannel, { channel: next })),
   }
 }
 

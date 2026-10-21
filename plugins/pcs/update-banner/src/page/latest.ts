@@ -1,6 +1,5 @@
-import { ago, exactTime, plural } from '@sand/kit'
-import { openTab } from '@sand/kit/web'
 import type { Kit } from '@sand/ui-kit/contract'
+import { ago, exactTime, plural } from '@sand/util'
 import { clock, derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import { changeList } from '../changes'
 import type { Fleet } from '../fleet/model'
@@ -25,7 +24,7 @@ const latestLabel = (fleet: Fleet) => {
 }
 
 export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
-  const { errorRow, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection } = kit
+  const { errorRow, openTab, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection } = kit
   const now = clock(30_000)
   const pending = fleet.pending
   const changes = derive(() => {

@@ -1,5 +1,4 @@
 import type { PaletteItem } from '../contract'
-import { optionProps } from '@sand/kit/web'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import { div, read, span, stopThen, type MaybeReactive } from '@vaakx-dev/vrui'
 import { actionsMenu } from './actions'
@@ -30,7 +29,7 @@ const withMore = ({ icon, iconButton }: Kit, row: HTMLElement, item: PaletteItem
   )
 
 export const rowView = (kit: Kit, item: PaletteItem, position: MaybeReactive<number>, model: PageModel, menu: ContextMenu) => {
-  const { icon, menuItem } = kit
+  const { icon, menuItem, optionProps } = kit
   const hasActions = Boolean(item.actions?.length)
   const active = () => model.box.isSelected(read(position))
   const { onMouseMove, onClick, ...option } = optionProps(model.box, position)

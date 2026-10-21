@@ -14,8 +14,7 @@ Passing checks only shows the code builds. Run the changed thing the way a perso
    - A server or API: start a throwaway instance on a free port and call it.
    - A UI: open it in a headless browser at desktop and phone sizes, click through the changed flow and take screenshots.
 4. For a bug, reproduce it before you fix it, then show it working after.
-5. For a big change, also give the task and the diff to a fresh subagent and ask it to break the change.
-6. Stop anything you started.
+5. Stop anything you started.
 
 Keep fixing until the checks and the real run pass.
 

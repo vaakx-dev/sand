@@ -1,0 +1,25 @@
+{
+  "name": "@sand/plugins",
+  "version": "0.0.0",
+  "description": "Plugins settings page: every built-in and user plugin, load errors, customised copies, past versions and plugin changes from your other PCs",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Plugins page",
+    "summary": "Browse and customise plugins, see which failed to load, restore past versions and review plugin changes from your other PCs"
+  },
+  "dependencies": {
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-plugin-library": "workspace:*",
+    "@sand/host-plugin-sync": "workspace:*",
+    "@sand/host-plugin-versions": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

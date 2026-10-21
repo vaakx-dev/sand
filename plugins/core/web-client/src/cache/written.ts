@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/messages'
+import type { Entry } from '@sand/chats/contract'
 import type { Thread } from '../contract'
 import { under, type PickStore } from '../integrations/indexed-db'
 import { entrySize, summaryKey, summaryOf, tailKey, tailOf } from './records'

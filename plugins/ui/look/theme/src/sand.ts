@@ -1,4 +1,4 @@
-import type { Theme } from '@sand/protocol'
+import type { Theme } from './contract'
 import { sandPalette } from './palette'
 
 export const sand: Theme = {

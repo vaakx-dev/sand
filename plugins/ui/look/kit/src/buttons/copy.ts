@@ -1,4 +1,4 @@
-import { copyText } from '@sand/kit/web'
+import { copyText } from '../page/clipboard'
 import { dynamicChild, effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 import { iconButton, quietButton, type ButtonProps } from './button'

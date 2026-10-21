@@ -1,4 +1,4 @@
-import type { ProjectIcon } from '@sand/protocol'
+import type { ProjectIcon } from '@sand/project/contract'
 
 const layers = [
   { base: 7.2, height: 2.2, lightness: 0.8, chroma: 0.09 },

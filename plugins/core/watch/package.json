@@ -8,14 +8,13 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Folder watching",
-    "summary": "Watches folders for changes on behalf of other plugins",
-    "provides": [
-      "watcher"
-    ]
+    "summary": "Watches folders for changes on behalf of other plugins"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

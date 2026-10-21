@@ -1,10 +1,13 @@
-import type { HostRoute } from '@sand/host-gateway/contract'
-import type { BuildInfo, DeviceInfo, Hello, WireEvent } from '@sand/protocol'
-import { errorMessage } from '@sand/kit'
+import { type DeviceInfo, deviceInfo } from '@sand/host-devices/contract'
+import type { BuildInfo } from '@sand/host-dist/contract'
+import { type HostRoute, hostRoutes, routesChange } from '@sand/host-gateway/contract'
+import { hello, type HelloValues } from '@sand/host-hub/contract'
+import { runtimeChanged } from '@sand/host-runtimes/contract'
+import { errorMessage } from '@sand/util'
 import type { ConnectionInfo, ConnectionStatus, WireState } from '../contract'
 import { Unpaired } from '../auth/unpaired'
 import { after } from '../detached'
-import type { Call, Connection } from '../integrations/socket'
+import type { Call, Connection, Heard } from '../integrations/socket'
 import { learn } from './book'
 import { beatWait, watchHealth } from './health'
 import { helloMemory, type HelloKeep } from './hello'
@@ -21,8 +24,8 @@ interface PcOptions {
   trusted?(): string | undefined
   ticket(base: string, host: string): Promise<string>
   offline: string
-  event(event: WireEvent): void
-  hello(hello: Hello): void
+  event(heard: Heard): void
+  hello(values: HelloValues): void
   since?(): string | undefined
   changed(): void
   kept?: HelloKeep
@@ -70,6 +73,15 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
     retry.schedule()
   }
 
+  const ticket = async (base: string, host: string) => {
+    const url = await options.ticket(base, host)
+    if (unpaired) {
+      unpaired = false
+      options.changed()
+    }
+    return url
+  }
+
   const alternatives = (id: string, from: Route) => worthProbing(candidates(options.seeds(), id), id, from.url)
 
   const slower = () => current !== undefined && route !== undefined && hostId !== undefined && onSlowerRoute(route, alternatives(hostId, route), hostId)
@@ -96,7 +108,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
   }
 
   const askDevice = async (connection: Connection, wait: number) => {
-    const info = await within(connection.call<DeviceInfo>({ type: 'device.info' }), wait, 'The PC stopped answering')
+    const info = await within(connection.call(deviceInfo, {}), wait, 'The PC stopped answering')
     noteBuild(connection, info)
     return info
   }
@@ -106,8 +118,8 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
   const greeting = () => hellos.greeting(options.since?.() ?? null)
 
   const resync = (connection: Connection) => {
-    void connection.call<Hello>(greeting()).then(
-      hello => connection === current && options.hello(hellos.take(hello)),
+    void connection.call(hello, greeting()).then(
+      greeted => connection === current && options.hello(hellos.take(greeted)),
       () => {},
     )
     void askDevice(connection, beatWait).catch(() => {})
@@ -115,17 +127,17 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
 
   const handlers: ConnectionHandlers = {
     greeting,
-    event(connection, event) {
+    event(connection, heard) {
       if (connection !== current) return
-      options.event(event)
-      if (event.name === 'routes.change' && hostId) learn(hostId, event.args[0])
-      if (event.name === 'runtime.changed') resync(connection)
+      options.event(heard)
+      if (heard.name === routesChange.id && hostId) learn(hostId, heard.payload as HostRoute[])
+      if (heard.name === runtimeChanged.id) resync(connection)
     },
     close: drop,
   }
 
   const learnRoutes = (connection: Connection, id: string) =>
-    void connection.call<HostRoute[]>({ type: 'host.routes' }).then(
+    void connection.call(hostRoutes, {}).then(
       list => {
         if (Array.isArray(list)) learn(id, list)
       },
@@ -155,7 +167,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
     const next = await selectRoute(candidates(options.seeds(), expected), expected, options.trusted?.())
     const id = next.identity.deviceId
     hostId = id
-    return openRoute(next, id, options.ticket, handlers)
+    return openRoute(next, id, ticket, handlers)
   }
 
   const reprobe = async () => {
@@ -167,7 +179,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
       options.changed()
       return
     }
-    const opened = await openRoute(next, id, options.ticket, handlers)
+    const opened = await openRoute(next, id, ticket, handlers)
     if (switchable()) return opened
     opened.connection.close()
   }
@@ -229,7 +241,7 @@ export const createPcConnection = (options: PcOptions): PcConnection => {
       failedAt,
       build: build ?? route?.identity.build,
     }),
-    call: request => (current ? current.call(request) : Promise.reject(new Error(options.offline))),
+    call: (request, input) => (current ? current.call(request, input) : Promise.reject(new Error(options.offline))),
     base: () => (current ? route?.url : undefined),
     nudge,
     close() {

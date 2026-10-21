@@ -1,5 +1,5 @@
 import type { PcList } from '@sand/host-remotes/contract'
-import type { LoginState } from '@sand/llm-accounts/contract'
+import type { LoginState } from '@sand/accounts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { clock, derive, show } from '@vaakx-dev/vrui'
 import type { PcHealthStore } from '../health/state'
@@ -38,7 +38,7 @@ export const pcsSection = (kit: Kit, source: DeviceSource, health: PcHealthStore
         const self = row.get().self
         return pcRow(kit, row, now, {
           health: () => healthPanel(kit, { id, name, local: self, online: row.get().pc.online }, health),
-          remove: () => void source.removePc(id).catch(source.fail),
+          remove: () => void source.removePc(id).catch(() => {}),
           pairAgain,
           check: () => health.refresh(id, self),
           repair: () => void health.repair(id, name),

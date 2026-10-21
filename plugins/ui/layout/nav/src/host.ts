@@ -1,6 +1,5 @@
-import type { NavHost } from './contract'
-import { pulse } from '@sand/kit/web'
-import type { NavAction, NavList } from '@sand/protocol'
+import type { NavAction, NavHost } from './contract'
+import { pulse } from '@sand/web-client/reactive'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
@@ -28,26 +27,11 @@ const pendingActions = () => {
 }
 
 export const navHost = (ctx: Context): NavHost => {
-  const lists = new Set<NavList>()
   const actions = new Set<NavAction>()
   const changes = pulse(ctx)
   const pending = pendingActions()
 
   return {
-    list(list) {
-      lists.add(list)
-      changes.schedule()
-      return {
-        update(patch) {
-          Object.assign(list, patch)
-          changes.schedule()
-        },
-        dispose() {
-          lists.delete(list)
-          changes.schedule()
-        },
-      }
-    },
     action(action) {
       actions.add(action)
       changes.schedule()
@@ -56,7 +40,6 @@ export const navHost = (ctx: Context): NavHost => {
         changes.schedule()
       }
     },
-    lists: changes.read(() => byOrder([...lists])),
     actions: changes.read(() => byOrder([...actions])),
     busy: pending.busy,
     run: pending.run,

@@ -1,5 +1,5 @@
-import type { Hello, WireEvent } from '@sand/protocol'
-import type { FileIndex, Jobs, LimitsFeed, Models, SkillIndex } from './data'
+import { event, service } from 'drydock'
+import type { FileIndex, LimitsFeed, Models, SkillIndex } from './data'
 import type { Machines } from './machines'
 import type { Media } from './media'
 import type { Projects } from './projects'
@@ -15,34 +15,24 @@ export type * from './threads'
 export type * from './turns'
 export type * from './wire'
 
-declare module 'drydock' {
-  interface Services {
-    wire: Wire
-    threads: Threads
-    turns: Turns
-    jobs: Jobs
-    models: Models
-    limits: LimitsFeed
-    fileIndex: FileIndex
-    skillIndex: SkillIndex
-    projects: Projects
-    machines: Machines
-    media: Media
-  }
+export const wire = service<Wire>('wire')
+export const threads = service<Threads>('threads')
+export const turns = service<Turns>('turns')
+export const models = service<Models>('models')
+export const limits = service<LimitsFeed>('limits')
+export const fileIndex = service<FileIndex>('fileIndex')
+export const skillIndex = service<SkillIndex>('skillIndex')
+export const projects = service<Projects>('projects')
+export const machines = service<Machines>('machines')
+export const media = service<Media>('media')
 
-  interface Events {
-    'wire.state': (state: WireState) => void
-    'wire.hello': (hello: Hello) => void
-    'wire.event': (event: WireEvent) => void
-    'threads.change': () => void
-    'thread.change': (id: string) => void
-    'thread.select': (id: string | undefined) => void
-    'jobs.change': () => void
-    'models.change': () => void
-    'limits.change': () => void
-    'skills.change': () => void
-    'projects.change': () => void
-    'machines.change': () => void
-    'machines.event': (device: string, event: WireEvent) => void
-  }
-}
+export const wireState = event<(state: WireState) => void>('wire.state')
+export const wireHello = event<() => void>('wire.hello')
+export const threadsChange = event<() => void>('threads.change')
+export const threadChange = event<(id: string) => void>('thread.change')
+export const threadSelect = event<(id: string | undefined) => void>('thread.select')
+export const modelsChange = event<() => void>('models.change')
+export const limitsChange = event<() => void>('limits.change')
+export const skillsChange = event<() => void>('skills.change')
+export const projectsChange = event<() => void>('projects.change')
+export const machinesChange = event<() => void>('machines.change')

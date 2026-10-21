@@ -1,6 +1,6 @@
 import type { Skill } from './contract'
-import { scanFolder } from '@sand/kit/fs'
-import { errorMessage, parseFrontmatter } from '@sand/kit'
+import { errorMessage, parseFrontmatter } from '@sand/util'
+import { scanFolder } from '@sand/util/fs'
 import { basename, dirname, join } from 'node:path'
 
 const placeholder = /\{\{(\w+)\}\}/g

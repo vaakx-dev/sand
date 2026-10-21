@@ -1,8 +1,8 @@
-import type { ModelInfo } from '@sand/llm-accounts/contract'
+import type { ModelInfo } from '@sand/accounts/contract'
 import type { EffectiveSettings, SessionSettings, SettingsPatch } from '@sand/model/contract'
-import type { Notify } from '@sand/toasts/contract'
-import type { MenuSpec } from '@sand/protocol'
+import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { Child } from '@vaakx-dev/vrui'
+import { service } from 'drydock'
 
 export type Picked = Omit<EffectiveSettings, 'chosen' | 'source'>
 
@@ -29,7 +29,6 @@ export interface ModelPicker {
 export interface ModelMenuInput {
   model: ModelInfo
   subtitle?: string
-  notify?: Notify
   use?: () => void
   makeDefault?: () => void
   toggleFavourite?: () => void
@@ -37,8 +36,4 @@ export interface ModelMenuInput {
   remove?: () => void
 }
 
-declare module 'drydock' {
-  interface Services {
-    modelPicker: ModelPicker
-  }
-}
+export const modelPicker = service<ModelPicker>('modelPicker')

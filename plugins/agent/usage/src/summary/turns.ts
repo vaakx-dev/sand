@@ -1,5 +1,5 @@
-import type { UsageRecord } from '@sand/loops/contract'
-import type { Entry } from '@sand/messages'
+import type { UsageRecord } from '@sand/accounts/contract'
+import type { Entry } from '@sand/chats/contract'
 
 export interface Turn extends Omit<UsageRecord, 'id' | 'model'> {
   at: number

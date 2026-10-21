@@ -11,7 +11,7 @@ const input = z.object({
 export const sendTool = (store: Store): Tool<typeof input> => ({
   name: 'job_send',
   description:
-    'Message a background job. Running agent: steer it. Finished agent: give it a follow-up task in the same thread; its report comes back as a new <task-notification>. Shell: write a line to its stdin.',
+    'Message a background agent. Running: steer it. Finished: give it a follow-up task in the same thread; its report comes back as a new <task-notification>.',
   group,
   input,
   async run({ job, message }, { session }) {

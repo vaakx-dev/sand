@@ -1,5 +1,5 @@
-import type { ProjectGroup, Wire } from '../contract'
 import type { Context } from 'drydock'
+import { type ProjectGroup, projectsChange, type Wire } from '../contract'
 
 interface Icon {
   hash: string
@@ -18,7 +18,7 @@ export const projectIcons = (ctx: Context, wire: Wire) => {
     const blob = response?.ok ? await response.blob() : undefined
     if (from !== generation || icons.get(project)?.hash !== hash) return
     icons.set(project, blob ? { hash, url: URL.createObjectURL(blob) } : { hash, missed: true })
-    if (blob) ctx.emit('projects.change')
+    if (blob) ctx.emit(projectsChange)
   }
 
   return {
@@ -34,7 +34,7 @@ export const projectIcons = (ctx: Context, wire: Wire) => {
     retryMissed() {
       const missed = [...icons].filter(([, icon]) => icon.missed)
       for (const [id] of missed) icons.delete(id)
-      if (missed.length) ctx.emit('projects.change')
+      if (missed.length) ctx.emit(projectsChange)
     },
     clear() {
       generation++

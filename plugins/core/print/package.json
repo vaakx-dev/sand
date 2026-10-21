@@ -1,0 +1,26 @@
+{
+  "name": "@sand/print",
+  "version": "0.0.0",
+  "description": "sand -p: a minimal test runner that runs one prompt without a server and prints the reply",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "print": "./src/index.ts",
+    "label": "Headless",
+    "summary": "Test runner: one prompt, printed in the terminal"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/compaction": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/html": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

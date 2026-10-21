@@ -1,4 +1,4 @@
-import { writeAtomic } from '@sand/kit/fs'
+import { writeAtomic } from '@sand/util/fs'
 import { readdir, rm, stat, utimes } from 'node:fs/promises'
 import { join } from 'node:path'
 

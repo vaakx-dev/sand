@@ -1,6 +1,6 @@
 import type { HostHealth } from '@sand/host-health/contract'
-import { plural } from '@sand/kit'
 import type { Kit } from '@sand/ui-kit/contract'
+import { plural } from '@sand/util'
 import { div, el, p, span } from '@vaakx-dev/vrui'
 
 const healthSummary = (health: HostHealth) => {

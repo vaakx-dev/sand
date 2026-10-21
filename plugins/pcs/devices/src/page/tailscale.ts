@@ -28,7 +28,7 @@ export const tailscaleSection = (kit: Kit, source: DeviceSource) => {
     busy.set(true)
     source
       .setHttps(!https())
-      .catch(source.fail)
+      .catch(() => {})
       .finally(() => busy.set(false))
   }
   return show(state.map(Boolean), () =>

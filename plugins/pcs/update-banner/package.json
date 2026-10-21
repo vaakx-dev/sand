@@ -6,19 +6,19 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Sand updates",
-    "summary": "Shows what a newer sand changes and updates every PC, with an Updates page in Settings",
-    "uses": {
-      "layout": "the update notice sits loose above the app",
-      "notify": "no message when an update request fails",
-      "settings": "no Updates settings page"
-    }
+    "summary": "Shows what a newer sand changes and updates every PC, with an Updates page in Settings"
   },
   "dependencies": {
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/host-updates": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

@@ -1,12 +1,11 @@
-import type { ClientMessage, ServerMessage } from '@sand/protocol'
-import { errorMessage } from '@sand/kit'
+import type { Caller, ClientMessage, ServerMessage } from '@sand/host-hub/contract'
+import { errorMessage } from '@sand/util'
 import type { ServerWebSocket, WebSocketHandler } from 'bun'
 import { serialize } from './serialize'
 
-export type Socket = ServerWebSocket<unknown>
+export type Socket = ServerWebSocket<Caller>
 
 export interface SocketHandlers {
-  join(socket: Socket): void
   leave(socket: Socket): void
   answer(socket: Socket, request: ClientMessage): Promise<unknown>
   settle(): void
@@ -18,6 +17,8 @@ export const deliver = (socket: Socket, payload: string) => {
 }
 
 const send = (socket: Socket, payload: ServerMessage) => deliver(socket, JSON.stringify(payload))
+
+export const eventFrame = (name: string, payload: unknown) => JSON.stringify({ type: 'event', name, payload: serialize(payload) } satisfies ServerMessage)
 
 const parse = (raw: string) => {
   const request = JSON.parse(raw) as ClientMessage
@@ -45,20 +46,19 @@ export const createSockets = (handlers: SocketHandlers) => {
     send(socket, message)
   }
 
-  const broadcast = (name: string, args: unknown[]) => {
-    const payload = JSON.stringify({ type: 'event', name, args: args.map(serialize) } satisfies ServerMessage)
-    for (const client of clients) deliver(client, payload)
+  const broadcast = (name: string, payload: unknown) => {
+    const frame = eventFrame(name, payload)
+    for (const client of clients) deliver(client, frame)
   }
 
-  const publish = (payload: string, to: (socket: Socket) => boolean) => {
-    for (const client of clients) if (to(client)) deliver(client, payload)
+  const publish = (frame: string, to: (socket: Socket) => boolean) => {
+    for (const client of clients) if (to(client)) deliver(client, frame)
   }
 
-  const websocket: WebSocketHandler<unknown> = {
+  const websocket: WebSocketHandler<Caller> = {
     maxPayloadLength: 64 * 1024 * 1024,
     open(socket) {
       clients.add(socket)
-      handlers.join(socket)
     },
     close(socket) {
       clients.delete(socket)

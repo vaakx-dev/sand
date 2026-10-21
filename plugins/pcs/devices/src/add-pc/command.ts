@@ -1,5 +1,5 @@
-import { installLink } from '@sand/kit'
 import type { HostRoute } from '@sand/host-gateway/contract'
+import { installLink } from '@sand/host-remotes/pairing'
 import type { UpdateChannel } from '@sand/host-updates/contract'
 
 export type InstallSystem = 'win' | 'linux' | 'mac'

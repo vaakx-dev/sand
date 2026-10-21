@@ -1,5 +1,5 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { percent } from '@sand/kit'
+import type { LimitWindow } from '@sand/accounts/contract'
+import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, dynamicChild, line, path, rect, sig, span, svg } from '@vaakx-dev/vrui'
 import type { Forecast, Point } from '../../../data/forecast/project'

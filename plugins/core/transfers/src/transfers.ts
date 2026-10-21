@@ -1,6 +1,6 @@
 import { mkdir, open, readdir, rm, stat, statfs, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
-import { chunkBytes, chunkCount, chunkFits, type ChunkedFile } from '@sand/kit/transfers'
+import { chunkBytes, chunkCount, chunkFits, type ChunkedFile } from './chunks'
 
 const lifetime = 15 * 60_000
 

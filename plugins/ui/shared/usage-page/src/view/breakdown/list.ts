@@ -1,4 +1,5 @@
-import { tokens, tokensOf } from '@sand/kit'
+import { tokensOf } from '@sand/usage/records'
+import { tokens } from '@sand/util'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import { colorsOf } from '../colors'

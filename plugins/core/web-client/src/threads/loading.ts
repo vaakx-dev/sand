@@ -1,8 +1,8 @@
-import type { ContextUsage } from '@sand/compaction/contract'
-import type { OpenedSession } from '@sand/server/contract'
-import type { Thread, Wire } from '../contract'
-import { errorMessage } from '@sand/kit'
+import { contextGet } from '@sand/compaction/contract'
+import { type OpenedSession, sessionOpen, sessionSince } from '@sand/server/contract'
+import { errorMessage } from '@sand/util'
 import type { Context } from 'drydock'
+import { modelsChange, type Thread, threadChange, type Wire } from '../contract'
 import { after } from '../detached'
 import { catchUp } from './live'
 import { merge, turnStart } from './path'
@@ -31,9 +31,9 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     if (thread.running) thread.started ??= turnStart(thread)
     if (opened.queue) store.queue(thread.id, opened.queue)
     if (opened.settings) store.settings.set(thread.id, opened.settings)
-    void wire.call<ContextUsage | undefined>({ type: 'context.get', session: thread.id }).then(usage => store.context(thread.id, usage), () => {})
+    void wire.call(contextGet, { session: thread.id }).then(usage => store.context(thread.id, usage), () => {})
     store.changed(thread.id, true)
-    ctx.emit('models.change')
+    ctx.emit(modelsChange)
     return thread
   }
 
@@ -58,7 +58,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     const thread = store.threads.get(id)
     if (!thread?.cursor || !thread.entries.size) return {}
     try {
-      const delta = await wire.call<OpenedSession | null>({ type: 'session.since', session: id, after: thread.cursor })
+      const delta = await wire.call(sessionSince, { session: id, after: thread.cursor })
       return delta ? { thread: apply(store.upsert(delta.info, thread.device), delta) } : { replace: true }
     } catch {
       return {}
@@ -66,7 +66,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
   }
 
   const open = async (id: string, replace = false) => {
-    const request = () => wire.call<OpenedSession>({ type: 'session.open', session: id })
+    const request = () => wire.call(sessionOpen, { session: id })
     const opened = await request().catch(error => (reconnecting(id) ? Promise.reject(error) : wait(retryDelay).then(request)))
     const known = store.threads.get(id)
     if (replace && known) known.entries = new Map()
@@ -94,7 +94,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     return request
   }
 
-  ctx.on('thread.change', id => {
+  ctx.on(threadChange, id => {
     const thread = id === store.current ? store.threads.get(id) : undefined
     const head = thread?.info.head
     if (thread?.loaded && head && !thread.entries.has(head)) void load(id)

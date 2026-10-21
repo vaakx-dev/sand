@@ -4,55 +4,36 @@
   "description": "Connects the page to sand and its paired PCs with this browser's own keys",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract/index.ts"
+    "./address": "./src/integrations/address.ts",
+    "./contract": "./src/contract/index.ts",
+    "./pairing": "./src/pairing/routes.ts",
+    "./reactive": "./src/reactive/index.ts"
   },
   "sand": {
     "web": "./src/index.ts",
     "label": "Connection",
-    "summary": "Connects the page to sand and your other PCs",
-    "provides": [
-      "wire",
-      "threads",
-      "turns",
-      "jobs",
-      "models",
-      "limits",
-      "fileIndex",
-      "skillIndex",
-      "projects",
-      "sync",
-      "machines",
-      "media"
-    ],
-    "uses": {
-      "notify": "server notices go to the console",
-      "picker": "server picks and inputs use the browser prompt",
-      "commands": "server commands are not listed",
-      "composer": "drafts and attachments from the server are dropped"
-    }
+    "summary": "Connects the page to sand and your other PCs"
   },
   "dependencies": {
-    "@sand/host-gateway": "workspace:*",
-    "@sand/host-projects": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
-    "@sand/agents": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
-    "@sand/files": "workspace:*",
-    "@sand/jobs": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/loops": "workspace:*",
-    "@sand/messages": "workspace:*",
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/html": "workspace:*",
+    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/new-project": "workspace:*",
-    "@sand/picker": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/reload": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",
-    "@sand/sync": "workspace:*",
+    "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

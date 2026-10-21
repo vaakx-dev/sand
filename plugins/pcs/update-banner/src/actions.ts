@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/protocol'
+import type { NavAction } from '@sand/nav/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Fleet, PcView } from './fleet/model'
 import type { RunStatus } from './fleet/run'

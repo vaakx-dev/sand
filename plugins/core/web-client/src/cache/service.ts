@@ -1,5 +1,5 @@
-import type { WirePairing } from '../contract'
 import type { Context } from 'drydock'
+import { threadSelect, type WirePairing, wireHello, wireState } from '../contract'
 import { after } from '../detached'
 import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
@@ -62,18 +62,18 @@ export const createCache = (ctx: Context, store: Store, pairing: () => WirePairi
     store.changed(id, true)
   }
 
-  ctx.on('thread.select', id => {
+  ctx.on(threadSelect, id => {
     if (id) writer.touch(id)
   })
 
-  ctx.on('wire.hello', () => {
+  ctx.on(wireHello, () => {
     const paired = pairing()
     if (paired) writer.use(scopeOf(paired).key)
     kept.flush()
     schedule()
   })
 
-  ctx.on('wire.state', state => {
+  ctx.on(wireState, state => {
     if (state === 'unpaired') forget()
   })
 

@@ -1,5 +1,5 @@
-import type { Entry } from '@sand/messages'
-import type { EntryPage, SessionSummary } from '@sand/sessions-sqlite/contract'
+import type { Entry } from '@sand/chats/contract'
+import { sessionEntries, sessionPage } from '@sand/server/contract'
 import type { Wire } from '../contract'
 import { hasOlder, loadedPath, merge } from './path'
 import type { Store } from './store'
@@ -23,7 +23,7 @@ export const threadPages = (wire: Wire, store: Store) => {
       const path = thread ? loadedPath(thread) : []
       const oldest = path[0]
       if (!thread || !oldest || !hasOlder(thread, path)) return
-      const result = await wire.call<EntryPage>({ type: 'session.page', session: id, before: oldest.id })
+      const result = await wire.call(sessionPage, { session: id, before: oldest.id })
       merge(thread, result.entries)
       if (!result.entries.length) thread.floor = oldest.id
       store.changed(id)
@@ -33,16 +33,9 @@ export const threadPages = (wire: Wire, store: Store) => {
     once(`full:${id}`, async () => {
       const thread = store.threads.get(id)
       if (!thread || thread.complete) return
-      merge(thread, await wire.call<Entry[]>({ type: 'session.entries', session: id }))
+      merge(thread, await wire.call(sessionEntries, { session: id }))
       thread.complete = true
       store.changed(id)
-    })
-
-  const children = (id: string) =>
-    once(`children:${id}`, async () => {
-      const device = store.deviceOf(id)
-      const found = await wire.call<SessionSummary[]>({ type: 'sessions.children', parent: id }, device)
-      for (const info of found) store.upsert(info, device)
     })
 
   const findLast = async (id: string, test: (entry: Entry) => boolean) => {
@@ -56,5 +49,5 @@ export const threadPages = (wire: Wire, store: Store) => {
     }
   }
 
-  return { page, full, children, findLast }
+  return { page, full, findLast }
 }

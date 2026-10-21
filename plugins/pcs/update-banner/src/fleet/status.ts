@@ -1,5 +1,5 @@
+import type { BuildInfo } from '@sand/host-dist/contract'
 import type { ReleaseInfo, UpdateChannel, UpdatePhase, UpdateState } from '@sand/host-updates/contract'
-import type { BuildInfo } from '@sand/protocol'
 
 export interface Pc {
   key: string

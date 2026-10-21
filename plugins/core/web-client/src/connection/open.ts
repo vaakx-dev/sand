@@ -1,5 +1,5 @@
-import type { Hello, WireEvent, WireRequestOf } from '@sand/protocol'
-import { connect, type Connection } from '../integrations/socket'
+import { type Hello, hello, type InputOf } from '@sand/host-hub/contract'
+import { connect, type Connection, type Heard } from '../integrations/socket'
 import type { Route } from './select'
 import { within } from './timeout'
 
@@ -11,9 +11,9 @@ export interface Opened {
 }
 
 export interface ConnectionHandlers {
-  event(connection: Connection, event: WireEvent): void
+  event(connection: Connection, heard: Heard): void
   close(connection: Connection): void
-  greeting(): WireRequestOf<'hello'>
+  greeting(): InputOf<typeof hello>
 }
 
 const openWait = 15_000
@@ -38,8 +38,8 @@ export const openRoute = async (
   )
   opened = connection
   try {
-    const hello = await within(connection.call<Hello>(handlers.greeting()), helloWait, `${route.url} did not say hello`)
-    return { connection, hello, route, id }
+    const greeted = await within(connection.call(hello, handlers.greeting()), helloWait, `${route.url} did not say hello`)
+    return { connection, hello: greeted, route, id }
   } catch (error) {
     connection.close()
     throw error

@@ -1,6 +1,6 @@
 import type { PaletteItem, PaletteItemAction, PalettePage } from '../contract'
-import { errorMessage } from '@sand/kit'
-import { listbox } from '@sand/kit/web'
+import type { Kit } from '@sand/ui-kit/contract'
+import { errorMessage } from '@sand/util'
 import { batch, derive, effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
@@ -21,7 +21,7 @@ const emptyText = (page: PalettePage, query: string) => {
   return page.field || page.review ? '' : 'No matches'
 }
 
-export const pageModel = (page: PalettePage, nav: PageNav, initial = '') => {
+export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, initial = '') => {
   const field = page.field
   const memory = nav.memory(page)
   const text = draftOf(page, memory, initial)

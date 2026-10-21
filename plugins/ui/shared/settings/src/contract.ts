@@ -1,10 +1,11 @@
-import type { Dispose } from 'drydock'
+import { event, service, type Dispose } from 'drydock'
 
 export interface SettingsPage {
   id: string
   label: string
   icon?: string
   order?: number
+  parent?: string
   render(): HTMLElement
 }
 
@@ -24,12 +25,5 @@ export interface Settings {
   current(): string | undefined
 }
 
-declare module 'drydock' {
-  interface Services {
-    settings: Settings
-  }
-
-  interface Events {
-    'settings.change': (page: string | undefined) => void
-  }
-}
+export const settings = service<Settings>('settings')
+export const settingsChange = event<(page: string | undefined) => void>('settings.change')

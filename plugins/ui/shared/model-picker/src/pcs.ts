@@ -1,5 +1,6 @@
-import type { PcList } from '@sand/host-remotes/contract'
-import type { TurnResult } from '@sand/loops/contract'
+import { pcsChange, pcsList, type PcList } from '@sand/host-remotes/contract'
+import { turnEndWire, type TurnResult } from '@sand/loop/contract'
+import { wire, wireHello } from '@sand/web-client/contract'
 import { effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
@@ -9,7 +10,7 @@ export const pcStatus = (ctx: Context) => {
   const online = sig<Record<string, boolean>>({})
   const down = sig(new Set<string>())
   const apply = (list: PcList) => online.set(Object.fromEntries(list.pcs.filter(pc => pc.checked).map(pc => [pc.name, pc.online && pc.pairing !== 'refused'])))
-  const load = () => void ctx.wire?.call<PcList>({ type: 'pcs.list' }).then(apply, () => undefined)
+  const load = () => void ctx.get(wire)?.call(pcsList, {}).then(apply, () => undefined)
   const recover = () => {
     down.set(new Set())
     load()
@@ -23,18 +24,24 @@ export const pcStatus = (ctx: Context) => {
     if (name) down.update(names => new Set([...names, name]))
     load()
   }
-  ctx.on('wire.event', event => {
-    if (event.name === 'pcs.change') {
-      down.set(new Set())
-      apply(event.args[0])
+  ctx.watch(wire, found => {
+    if (!found) return
+    const stops = [
+      found.on(pcsChange, list => {
+        down.set(new Set())
+        apply(list)
+      }),
+      found.on(turnEndWire, ([, result]) => ended(result)),
+    ]
+    if (found.state() === 'open') load()
+    return () => {
+      for (const stop of stops) void stop()
     }
-    if (event.name === 'turn.end') ended(event.args[1])
   })
   effect(() => {
     if (down.get().size) return onTimeout(recover, recheck)
   })
-  ctx.on('wire.hello', load)
-  if (ctx.wire?.state() === 'open') load()
+  ctx.on(wireHello, load)
   const status = (name: string): boolean | undefined => (down.get().has(name) ? false : online.get()[name])
   return {
     online: status,

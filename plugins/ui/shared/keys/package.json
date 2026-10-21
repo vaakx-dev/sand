@@ -9,17 +9,11 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Keyboard shortcuts",
-    "summary": "Lets keys run actions, such as opening the palette",
-    "provides": [
-      "keys"
-    ],
-    "uses": {
-      "notify": "shortcut errors go to the console"
-    }
+    "summary": "Lets keys run actions, such as opening the palette"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

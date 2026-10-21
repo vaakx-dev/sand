@@ -1,4 +1,3 @@
-import { pressOpens } from '@sand/kit/web'
 import { derive, div, dynamicChild, onDocument, onWindow, portal, show, sig, span, type StyleMap } from '@vaakx-dev/vrui'
 import type { PickerTarget } from './contract'
 import type { Picker } from './deps'
@@ -32,7 +31,7 @@ const closeOnScroll = (inner: HTMLElement, close: () => void) =>
 
 export const pickerButton = (picker: Picker, target: PickerTarget, label: string) => {
   const { ctx, changes } = picker
-  const { icon, modelLogo, plainButton, popover } = ctx.kit
+  const { icon, modelLogo, plainButton, popover, pressOpens } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const place = sig<StyleMap>({})

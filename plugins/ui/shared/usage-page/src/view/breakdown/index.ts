@@ -8,7 +8,6 @@ const shortList = 5
 const labels = (hourly: boolean): Record<Breakdown, string> => ({
   projects: 'Project',
   models: 'Model',
-  threads: 'Thread',
   accounts: 'Account',
   pcs: 'PC',
   periods: hourly ? 'Hour' : 'Day',
@@ -17,7 +16,6 @@ const labels = (hourly: boolean): Record<Breakdown, string> => ({
 const units: Record<Breakdown, string> = {
   projects: 'projects',
   models: 'models',
-  threads: 'threads',
   accounts: 'accounts',
   pcs: 'PCs',
   periods: 'rows',

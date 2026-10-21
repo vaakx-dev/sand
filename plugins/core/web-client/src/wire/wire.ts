@@ -1,21 +1,34 @@
-import type { Hello } from '@sand/protocol'
-import type { ConnectionInfo, Wire, WireState } from '../contract'
 import type { Context } from 'drydock'
+import { type ConnectionInfo, machinesChange, type WirePairing, type WireState, wireHello, wireState } from '../contract'
 import { pairFragment } from '../auth/fragment'
 import { createHostAuth } from '../auth/host'
 import { hostKeys } from '../auth/keys'
 import type { Cache } from '../cache/service'
 import { createPcConnection } from '../connection/pc'
 import { coalesced } from '../detached'
+import type { Call } from '../integrations/socket'
+import type { Hellos } from './hellos'
+import type { Listeners } from './listeners'
 
-export interface HomeWire extends Wire {
+export interface HomeWire {
+  state(): WireState
+  pairing(): WirePairing | undefined
+  call: Call
+  fetch(path: string, init?: RequestInit): Promise<Response>
   info(): ConnectionInfo
 }
 
-export const startWire = (ctx: Context, cache: Cache, here: string, since: () => string | undefined): HomeWire => {
+interface HomeParts {
+  cache: Cache
+  here: string
+  since(): string | undefined
+  listeners: Listeners
+  hellos: Hellos
+}
+
+export const startWire = (ctx: Context, { cache, here, since, listeners, hellos }: HomeParts): HomeWire => {
   const fragment = pairFragment()
-  const machinesChanged = coalesced(ctx, () => ctx.emit('machines.change'))
-  let hello: Hello | undefined
+  const machinesChanged = coalesced(ctx, () => ctx.emit(machinesChange))
   let state: WireState = 'connecting'
   const auth = createHostAuth({
     base: () => home.base() ?? location.origin,
@@ -31,17 +44,17 @@ export const startWire = (ctx: Context, cache: Cache, here: string, since: () =>
     trusted: () => location.origin,
     ticket: (base, host) => cache.gate(host).then(() => auth.socketUrl(base, host)),
     offline: 'Not connected to the sand server',
-    event: event => ctx.emit('wire.event', event),
+    event: heard => listeners.dispatch(heard, here, false),
     since,
-    hello(next) {
-      hello = next
-      ctx.emit('wire.hello', next)
+    hello(values) {
+      hellos.set(here, values)
+      ctx.emit(wireHello)
     },
     changed() {
       const next = home.state()
       if (next !== state) {
         state = next
-        ctx.emit('wire.state', next)
+        ctx.emit(wireState, next)
       }
       machinesChanged()
     },
@@ -62,7 +75,6 @@ export const startWire = (ctx: Context, cache: Cache, here: string, since: () =>
 
   return {
     state: home.state,
-    hello: () => hello,
     pairing: auth.pairing,
     call: home.call,
     fetch: auth.fetch,

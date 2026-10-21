@@ -1,0 +1,22 @@
+{
+  "name": "@sand/agents-panel",
+  "version": "0.0.0",
+  "description": "Agents tab in the right panel: the current thread's background jobs and sub-agents, with durations and stop",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Agents panel",
+    "summary": "Background jobs and sub-agents of this thread"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

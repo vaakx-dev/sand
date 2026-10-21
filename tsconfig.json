@@ -16,6 +16,5 @@
     "noUnusedParameters": true,
     "types": ["bun"]
   },
-  "files": ["packages/protocol/src/cli.ts"],
   "include": ["packages", "apps", "plugins"]
 }

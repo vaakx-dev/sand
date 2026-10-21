@@ -1,0 +1,43 @@
+import type { BuildInfo } from '@sand/host-dist/contract'
+import { resolve } from 'node:path'
+import { errorMessage } from '../../text/error'
+import { validVersion, writeBuildBun } from '../bun'
+import { createLinks } from './link'
+import { hashModules, releaseDamaged } from './manifest'
+import { checkResolution } from './resolve'
+import { type BuildStamp, hashApp, readStamp } from './stamp'
+
+const releaseStamp = async (root: string): Promise<BuildStamp> => {
+  const stamp = await readStamp(root)
+  if (!stamp || !validVersion.test(stamp.bun)) throw new Error(releaseDamaged)
+  return stamp
+}
+
+const verifyFiles = async (root: string, stamp: BuildStamp) => {
+  const [app, modules] = await Promise.all([
+    hashApp(root),
+    hashModules(root, new Set(Object.keys(stamp.links))).catch(() => undefined),
+  ])
+  if (app.hash !== stamp.hash || modules !== stamp.modules) throw new Error(releaseDamaged)
+}
+
+export const readyRelease = async (dir: string): Promise<{ build: BuildInfo; bun: string }> => {
+  const root = resolve(dir)
+  const stamp = await releaseStamp(root)
+  await verifyFiles(root, stamp)
+  await createLinks(root, stamp.links)
+  await checkResolution(root)
+  await writeBuildBun(root, stamp.bun)
+  return { build: { id: stamp.id, time: stamp.time }, bun: stamp.bun }
+}
+
+if (import.meta.main) {
+  try {
+    const dir = process.argv[2]
+    if (!dir) throw new Error('usage: bun ready.ts <sand folder>')
+    await readyRelease(dir)
+  } catch (error) {
+    console.error(errorMessage(error))
+    process.exit(1)
+  }
+}

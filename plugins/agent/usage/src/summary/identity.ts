@@ -1,6 +1,6 @@
-import type { Billing, LLM } from '@sand/llm-accounts/contract'
+import type { Billing, LLM } from '@sand/accounts/contract'
 import type { Turn } from './turns'
-import { accountKey } from '@sand/kit'
+import { accountKey } from '../records'
 import { factsOf, unknownSource } from './labels'
 
 export interface AccountId {

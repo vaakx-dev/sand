@@ -1,5 +1,5 @@
-import type { AppOutput } from '@sand/llm-accounts/contract'
-import type { StopReason } from '@sand/messages'
+import type { AppOutput } from '@sand/accounts/contract'
+import type { StopReason } from '@sand/chats/contract'
 import { fieldsOf, type Json } from '../cli/connection'
 
 const prefix = /^mcp__sand__/

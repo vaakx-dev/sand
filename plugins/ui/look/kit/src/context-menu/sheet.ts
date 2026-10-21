@@ -1,5 +1,6 @@
-import { modal } from '@sand/kit/web'
-import type { MenuRequest, NavAction } from '@sand/protocol'
+import { modal } from '../layers/stack'
+import type { NavAction } from '@sand/nav/contract'
+import type { MenuRequest } from '../contract'
 import { div, dynamicChild, event, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { plainButton } from '../buttons/button'
 import { icon } from '../icons/lucide'

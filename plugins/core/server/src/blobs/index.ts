@@ -1,4 +1,5 @@
-import type { WireRequest } from '@sand/protocol'
+import type { ClientMessage } from '@sand/host-hub/contract'
+import { isRecord } from '@sand/util'
 import { join } from 'node:path'
 import { createInbound } from './inbound'
 import { createOutbound } from './outbound'
@@ -8,7 +9,7 @@ import { scheduleSweep } from './sweep'
 
 type Entries = (session: string) => unknown
 
-const sessionOf = (request: WireRequest) => ('session' in request && typeof request.session === 'string' ? request.session : undefined)
+const sessionOf = (input: unknown) => (isRecord(input) && typeof input.session === 'string' ? input.session : undefined)
 
 export const createBlobs = (home: string, entries: Entries, report: (error: unknown) => void) => {
   const folder = join(home, 'blobs')
@@ -45,8 +46,8 @@ export const createBlobs = (home: string, entries: Entries, report: (error: unkn
       inline.add(type)
       return () => void inline.delete(type)
     },
-    async answer(request: WireRequest, run: (request: WireRequest) => Promise<unknown>) {
-      const result = await run(await inbound(request, sessionOf(request)))
+    async answer(request: ClientMessage, run: (input: unknown) => Promise<unknown>) {
+      const result = await run(await inbound(request.input, sessionOf(request.input)))
       return inline.has(request.type) ? result : outbound(result)
     },
   }

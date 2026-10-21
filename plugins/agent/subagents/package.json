@@ -1,0 +1,37 @@
+{
+  "name": "@sand/subagents",
+  "version": "0.0.0",
+  "description": "Sub-agents: the agent tool, agent definitions, tool limits and the models tool",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Agents",
+    "summary": "Sub-agents the agent can start, in the foreground or as background jobs"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chat": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/watch": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

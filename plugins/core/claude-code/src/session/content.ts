@@ -1,5 +1,5 @@
-import type { ToolResultBlock, ToolResultContent, UserContent } from '@sand/messages'
-import { fileText } from '@sand/kit'
+import type { ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
+import { fileText } from '@sand/chats/prompt'
 
 const base64 = (mediaType: string, data: string) => ({ type: 'base64', media_type: mediaType, data })
 

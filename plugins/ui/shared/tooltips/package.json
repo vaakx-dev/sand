@@ -9,9 +9,9 @@
     "summary": "Short hints when you hover or tab to a control, in place of the browser's own"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

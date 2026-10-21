@@ -1,45 +1,36 @@
-import type { Prompt, UserContent } from '@sand/messages'
-import type { Session, ThreadLink, WireSession } from '@sand/sessions-sqlite/contract'
+import { promptInput, type Prompt, type Session, type UserContent, type WireSession } from '@sand/chats/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { event, service } from 'drydock'
+import { z } from 'zod'
 
 export interface Pending {
   id: string
   label: string
   prompt: Prompt
   at: number
-  from?: ThreadLink
 }
 
 export interface QueueState {
   steers: Pending[]
-  followUps: Pending[]
 }
 
 export interface Steering {
-  steer(session: Session, prompt: Prompt, label?: string, from?: ThreadLink): string | undefined
+  steer(session: Session, prompt: Prompt, label?: string): string | undefined
   unsteer(session: Session, id: string): boolean
   list(session: Session): Pending[]
 }
 
-declare module 'drydock' {
-  interface Services {
-    steering: Steering
-  }
+export const steering = service<Steering>('steering')
 
-  interface Events {
-    'turn.steer': (session: Session, content: UserContent[], id: string) => void
-    'turn.queue': (session: Session) => void
-    'turn.unsteer': (session: Session, id: string) => void
-  }
-}
+export const turnSteer = event<(session: Session, content: UserContent[], id: string) => void>('turn.steer')
+export const turnQueue = event<(session: Session) => void>('turn.queue')
+export const turnUnsteer = event<(session: Session, id: string) => void>('turn.unsteer')
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'loop.steer': { session: string; prompt: Prompt; label?: string; from?: ThreadLink }
-    'loop.unsteer': { session: string; item: string }
-  }
+export const turnSteerWire = wireEvent<[session: WireSession, content: UserContent[], id: string]>('turn.steer')
+export const queueChange = wireEvent<[session: string, state: QueueState]>('queue.change')
 
-  interface WireEvents {
-    'turn.steer': [session: WireSession, content: UserContent[], id: string]
-    'queue.change': [session: string, state: QueueState]
-  }
-}
+export const loopSteer = request('loop.steer', {
+  input: z.object({ session: z.string(), prompt: promptInput, label: z.string().optional() }),
+  output: type<string | null>(),
+})
+export const loopUnsteer = request('loop.unsteer', { input: z.object({ session: z.string(), item: z.string() }), output: type<boolean>() })

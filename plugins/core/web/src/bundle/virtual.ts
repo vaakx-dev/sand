@@ -1,7 +1,7 @@
 import type { BunPlugin } from 'bun'
 import type { Extension } from '../extensions/discover'
 
-const describe = ({ id, builtin, enabled, provides, label, summary }: Extension) => ({ id, builtin, enabled, provides, label, summary })
+const describe = ({ id, builtin, label, summary }: Extension) => ({ id, builtin, label, summary })
 
 export const manifestSource = (build: string, extensions: Extension[], bundled: Extension[], problems: string[]) =>
   [

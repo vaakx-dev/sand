@@ -58,7 +58,7 @@ const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
 
 export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = '') => {
   const { contextMenu, hint } = kit
-  const model = pageModel(page, nav, initial)
+  const model = pageModel(kit, page, nav, initial)
   const menu = contextMenu()
   return div(
     {

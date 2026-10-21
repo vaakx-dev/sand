@@ -1,7 +1,7 @@
-import type { Keys, Shortcut } from './contract'
-import { errorMessage } from '@sand/kit'
+import { kit } from '@sand/ui-kit/contract'
 import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
+import { keys, type Keys, type Shortcut } from './contract'
 import { chorded, keyName, normalKey } from './names'
 
 interface Bound {
@@ -15,12 +15,14 @@ const typing = (target: EventTarget | null) =>
 export default definePlugin({
   name: 'keys',
   description: 'Keybinding host: one window listener runs shortcuts',
-  uses: { notify: 'shortcut errors go to the console' },
+  inject: { kit },
   apply(ctx) {
     let bindings: Bound[] = []
 
-    const find = (key: string, event: KeyboardEvent) =>
-      bindings.findLast(bound => bound.key === key && (bound.shortcut.global || chorded(key) || !typing(event.target)))
+    const allowed = ({ shortcut }: Bound, key: string, event: KeyboardEvent) =>
+      (shortcut.global || chorded(key) || !typing(event.target)) && (shortcut.when?.(event) ?? true)
+
+    const find = (key: string, event: KeyboardEvent) => bindings.findLast(bound => bound.key === key && allowed(bound, key, event))
 
     const press = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return
@@ -31,14 +33,13 @@ export default definePlugin({
       try {
         hit.shortcut.run()
       } catch (error) {
-        if (ctx.notify) ctx.notify.push(errorMessage(error), { level: 'error' })
-        else console.error(error)
+        console.error(error)
       }
     }
 
-    const keys: Keys = {
+    const host: Keys = {
       bind(shortcut) {
-        const bound = { shortcut, key: normalKey(shortcut.key) }
+        const bound = { shortcut, key: normalKey(shortcut.key, ctx.kit.isMac()) }
         bindings = [...bindings, bound]
         return () => {
           bindings = bindings.filter(candidate => candidate !== bound)
@@ -47,6 +48,6 @@ export default definePlugin({
     }
 
     ctx.effect(() => listen<KeyboardEvent>(window, 'keydown', press))
-    ctx.provide('keys', keys)
+    ctx.provide(keys, host)
   },
 })
