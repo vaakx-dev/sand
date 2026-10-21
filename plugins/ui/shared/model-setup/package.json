@@ -1,30 +1,22 @@
 {
   "name": "@sand/model-setup",
   "version": "0.0.0",
-  "description": "After the first sign-in, pick the model for new threads and the model that names threads",
+  "description": "After the first sign-in, pick the default model",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
     "label": "Model setup",
-    "summary": "Asks for a default model and a text gen model after the first sign-in",
-    "provides": [
-      "modelSetup"
-    ],
-    "uses": {
-      "layout": "the setup lands loose on the stage",
-      "threads": "the default is saved without the current folder",
-      "composer": "Start a thread does not focus the composer"
-    }
+    "summary": "Asks for a default model after the first sign-in"
   },
   "dependencies": {
-    "@sand/composer-card": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/server": "workspace:*",
-    "@sand/titles": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/model": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

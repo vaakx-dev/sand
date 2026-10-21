@@ -1,9 +1,8 @@
-import type { ProjectList } from '@sand/host-projects/contract'
-import { isRecord } from '@sand/kit'
+import type { ProjectList } from '@sand/project/contract'
+import { isRecord } from '@sand/util'
 
 const isList = (value: unknown): value is ProjectList =>
   isRecord(value) &&
-  typeof value.scratch === 'string' &&
   typeof value.home === 'string' &&
   Array.isArray(value.projects) &&
   Array.isArray(value.missing)

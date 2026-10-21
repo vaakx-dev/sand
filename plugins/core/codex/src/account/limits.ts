@@ -1,4 +1,4 @@
-import type { LimitWindow, PlanLimits } from '@sand/llm-accounts/contract'
+import type { LimitWindow, PlanLimits } from '@sand/accounts/contract'
 import { fieldsOf, type Json } from '../server/rpc'
 
 const minute = 60_000

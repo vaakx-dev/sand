@@ -1,28 +1,24 @@
-import type { Palette, PalettePage, PaletteSource } from './contract'
-import { floating } from '@sand/kit/web'
+import { keys } from '@sand/keys/contract'
+import { floating } from '@sand/layout/place'
+import { nav } from '@sand/nav/contract'
+import { kit } from '@sand/ui-kit/contract'
 import { show, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { commandSource } from './commands'
+import { palette, type Palette, type PalettePage, type PaletteSource } from './contract'
 import { merged, rootPage } from './root'
 import { paletteSheet } from './sheet/sheet'
 
 export default definePlugin({
   name: 'palette',
-  description: 'Command palette (mod+k): threads, projects and commands, with pages you step through and go back from',
-  inject: ['kit'],
-  uses: {
-    commands: 'commands are not listed',
-    keys: 'no mod+k shortcut; use the Search action',
-    nav: 'no Search action',
-    notify: 'errors from palette actions go to the console',
-  },
+  description: 'Command palette (mod+k): threads, projects, models and other actions, with pages you step through and go back from',
+  inject: { kit },
   apply(ctx) {
-    const sources = new Set<PaletteSource>([commandSource(ctx)])
+    const sources = new Set<PaletteSource>()
     const root = rootPage(() => [...sources])
     const stack = sig<PalettePage[]>([])
     let query = ''
 
-    const palette: Palette = {
+    const host: Palette = {
       open(start = '') {
         query = typeof start === 'string' ? start : ''
         stack.set([typeof start === 'string' ? root : start])
@@ -37,9 +33,9 @@ export default definePlugin({
 
     const isOpen = stack.map(pages => pages.length > 0)
     floating(ctx, () => show(isOpen, () => paletteSheet(ctx, stack, () => query)))
-    const toggle = () => (isOpen.get() ? palette.close() : palette.open())
-    ctx.provide('palette', palette)
-    ctx.watch('keys', keys => keys?.bind({ key: 'mod+k', global: true, run: toggle }))
-    ctx.watch('nav', nav => nav?.action({ id: 'search', label: 'Search', icon: 'search', order: 0, wide: true, run: () => palette.open() }))
+    const toggle = () => (isOpen.get() ? host.close() : host.open())
+    ctx.provide(palette, host)
+    ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, run: toggle }))
+    ctx.watch(nav, found => found?.action({ id: 'search', label: 'Search', icon: 'search', order: 0, wide: true, run: () => host.open() }))
   },
 })

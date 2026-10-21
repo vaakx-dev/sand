@@ -1,5 +1,5 @@
 import type { UsageBucket } from '@sand/usage/contract'
-import { periodTitle } from '@sand/kit'
+import { periodTitle } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, portal, span, type Child } from '@vaakx-dev/vrui'
 import { metricText, type Metric } from '../../format'

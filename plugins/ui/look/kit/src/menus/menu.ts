@@ -1,4 +1,5 @@
-import { dismissible, onPressOutside } from '@sand/kit/web'
+import { onPressOutside } from '../layers/outside'
+import { dismissible } from '../layers/stack'
 import { disposeAll, div, type Child, type Props } from '@vaakx-dev/vrui'
 import { layer } from '../layer'
 

@@ -1,0 +1,25 @@
+{
+  "name": "@sand/sidebar",
+  "version": "0.0.0",
+  "description": "Card sidebar: search, project filter and actions, then Pinned, Active, Snoozed and Settled threads, and threads and projects in the palette",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Sidebar",
+    "summary": "Threads as cards, sorted into Pinned, Active, Snoozed and Settled"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

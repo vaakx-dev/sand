@@ -1,4 +1,5 @@
-import { owned } from '@sand/kit/web'
+import { kit } from '@sand/ui-kit/contract'
+import { owned } from '@sand/web-client/reactive'
 import { portal, registerInScope } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { bubble } from './bubble'
@@ -9,7 +10,7 @@ import { tooltipModel } from './model'
 export default definePlugin({
   name: 'tooltips',
   description: "Shows sand's own tooltip for every title, on hover or keyboard focus, and keeps the browser's tooltip from showing",
-  inject: ['kit'],
+  inject: { kit },
   apply(ctx) {
     owned(ctx, () => {
       const model = tooltipModel()

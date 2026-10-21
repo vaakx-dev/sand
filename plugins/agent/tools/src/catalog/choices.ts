@@ -1,4 +1,4 @@
-import { isRecord, serial } from '@sand/kit'
+import { isRecord, serial } from '@sand/util'
 import { join } from 'node:path'
 import type { ToolLoad } from '../contract'
 

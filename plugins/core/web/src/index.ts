@@ -1,8 +1,11 @@
-import { expandHome } from '@sand/kit/fs'
-import type {} from '@sand/pc-link/contract'
+import { cli } from '@sand/config/contract'
+import { server } from '@sand/server/contract'
+import { readDeviceId } from '@sand/util/boot'
+import { expandHome, pluginContracts } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { webBuild, webExtensions, webExtensionsReport } from './contract'
 import { discover } from './extensions/discover'
 import { createSite } from './extensions/site'
 import { createStates } from './extensions/states'
@@ -16,9 +19,8 @@ import { workerRoute } from './pwa/worker'
 export default definePlugin({
   name: 'web',
   description: 'Serves the browser UI: bundles the web extensions and hands them to the page',
-  inject: ['server', 'cli', 'pcs'],
+  inject: { server, cli },
   config: z.object({
-    extensions: z.record(z.string(), z.boolean()).default({}),
     paths: z.array(z.string()).default([]),
   }),
   async apply(ctx, config) {
@@ -27,17 +29,15 @@ export default definePlugin({
     const folders = safe ? builtins : [...builtins, { dir: join(home, 'plugins'), builtin: false }]
     const extra = safe ? [] : config.paths.map(path => ({ dir: expandHome(path, home), builtin: false }))
     const site = await createSite({
-      home,
-      safe,
-      configured: config.extensions,
-      find: enabled => discover(folders, extra, enabled),
+      find: () => discover(folders, extra),
+      contracts: await pluginContracts(ctx.cli.builtins),
       report: problem => ctx.report(new Error(problem)),
-      broadcast: (name, args) => ctx.server.broadcast(name, args),
     })
     const states = createStates(site)
-    ctx.provide('webExtensions', { list: states.list })
+    ctx.provide(webExtensions, { list: states.list })
+    const device = await readDeviceId(home)
     const routes = {
-      '/': async () => new Response(page(site.current().id, site.enabled(), (await ctx.pcs.here()).id), { headers: headers('text/html') }),
+      '/': () => new Response(page(site.current().id, device), { headers: headers('text/html') }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,
@@ -45,14 +45,7 @@ export default definePlugin({
       ...iconRoutes,
     }
     for (const [path, handler] of Object.entries(routes)) ctx.effect(() => ctx.server.route(path, handler, { public: true }))
-    ctx.effect(() =>
-      ctx.server.handle({
-        'web.extensions': () => site.enabled(),
-        'web.extensions.set': ({ extension, enabled }) => site.set(extension, enabled),
-        'web.extensions.reset': () => site.reset(),
-        'web.extensions.report': request => states.report(request.states),
-      }),
-    )
-    ctx.server.broadcast('web.build', [site.current().id])
+    ctx.effect(() => ctx.server.handle(webExtensionsReport, request => states.report(request.states)))
+    ctx.server.broadcast(webBuild, site.current().id)
   },
 })

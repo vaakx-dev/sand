@@ -1,0 +1,25 @@
+{
+  "name": "@sand/orrin-views",
+  "version": "0.0.0",
+  "description": "Gives every project thread its own Orrin view, which its sub-agents share; land and pull tools; settling closes the view",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Orrin views",
+    "summary": "One Orrin view per thread, with land and pull"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/orrin": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

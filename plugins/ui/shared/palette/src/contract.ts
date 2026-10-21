@@ -1,5 +1,5 @@
-import type { ProjectLook } from '@sand/protocol'
-import type { Dispose } from 'drydock'
+import type { ProjectLook } from '@sand/project/contract'
+import { service, type Dispose } from 'drydock'
 
 export interface PaletteItem {
   id: string
@@ -90,8 +90,4 @@ export interface Palette {
   items(page: string, query: string): PaletteItem[]
 }
 
-declare module 'drydock' {
-  interface Services {
-    palette: Palette
-  }
-}
+export const palette = service<Palette>('palette')

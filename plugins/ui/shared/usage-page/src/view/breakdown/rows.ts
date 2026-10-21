@@ -1,13 +1,13 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { emptyTotals, folderName, grouped, periodTitle, tildeHome } from '@sand/kit'
-import type { MenuSpec } from '@sand/protocol'
-import type { Kit } from '@sand/ui-kit/contract'
+import { emptyTotals } from '@sand/usage/records'
+import { grouped, periodTitle } from '@sand/util'
+import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { metricValue, type Metric } from '../../format'
-import { pcMenu, threadMenu } from './menu'
+import { pcMenu } from './menu'
 
-export const breakdowns = ['projects', 'models', 'threads', 'accounts', 'pcs', 'periods'] as const
+export const breakdowns = ['projects', 'models', 'accounts', 'pcs', 'periods'] as const
 
 export type Breakdown = (typeof breakdowns)[number]
 
@@ -26,15 +26,11 @@ export interface RowSource {
   kit: Kit
   usage: Merged
   nameOf(id: string): string
-  openThread?: (id: string) => void
-  copy(text: string, what: string): void
   showOnly(pc: string): void
 }
 
-const countText = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
-
 const projectRows = ({ usage }: RowSource): Row[] =>
-  usage.projects.map(project => ({ key: project.name, name: project.name, note: countText(project.threads, 'thread'), accounts: project.accounts, totals: project }))
+  usage.projects.map(project => ({ key: project.name, name: project.name, accounts: project.accounts, totals: project }))
 
 const modelRows = ({ usage }: RowSource): Row[] => {
   const byModel = new Map<string, Row>()
@@ -44,20 +40,6 @@ const modelRows = ({ usage }: RowSource): Row[] => {
     including(row.accounts, [model.account])
   }
   return [...byModel.values()]
-}
-
-const threadRows = (source: RowSource): Row[] => {
-  const { openThread } = source
-  return source.usage.threads.map(thread => ({
-    key: thread.id,
-    name: thread.title ?? 'Untitled',
-    note: thread.cwd ? folderName(thread.cwd) : undefined,
-    hint: [thread.title, thread.cwd && tildeHome(thread.cwd)].filter(Boolean).join('\n'),
-    accounts: thread.accounts,
-    totals: thread,
-    open: openThread && (() => openThread(thread.id)),
-    menu: threadMenu(thread, source),
-  }))
 }
 
 const accountRows = ({ usage }: RowSource): Row[] =>
@@ -82,7 +64,6 @@ const periodRows = ({ usage }: RowSource): Row[] =>
 const builders: Record<Breakdown, (source: RowSource) => Row[]> = {
   projects: projectRows,
   models: modelRows,
-  threads: threadRows,
   accounts: accountRows,
   pcs: pcRows,
   periods: periodRows,

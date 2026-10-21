@@ -1,5 +1,5 @@
-import { plural } from '@sand/kit'
 import type { Kit } from '@sand/ui-kit/contract'
+import { plural } from '@sand/util'
 import { derive, div, dynamicChild, span, type Child } from '@vaakx-dev/vrui'
 import { changeLine, isNotable } from './changes'
 import type { Fleet } from './fleet/model'

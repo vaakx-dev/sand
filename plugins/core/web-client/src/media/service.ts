@@ -1,4 +1,4 @@
-import type { ImageBlock, UserContent } from '@sand/messages'
+import type { ImageBlock, UserContent } from '@sand/chats/contract'
 import type { Media, Wire } from '../contract'
 import { intersectionObserver, listen } from '@vaakx-dev/vrui'
 import { base64Of } from '../integrations/base64'

@@ -1,6 +1,6 @@
-import type { ToolCallBlock, ToolResultBlock } from '@sand/messages'
+import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
 import type { Tool, ToolContext } from './contract'
-import { errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/util'
 import { z } from 'zod'
 
 const result = (call: ToolCallBlock, text: string, isError?: boolean): ToolResultBlock => ({

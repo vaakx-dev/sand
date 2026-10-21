@@ -1,17 +1,13 @@
-import type { WireHandler } from '@sand/protocol'
-import type { UsageQuery } from '../contract'
+import { llm } from '@sand/accounts/contract'
+import { sessions } from '@sand/chats/contract'
 import type { Context } from 'drydock'
+import type { UsageQuery } from '../contract'
 import { summarize } from './summarize'
 
-const queryOf = (request: UsageQuery): UsageQuery => ({
-  since: Number(request.since) || 0,
-  bucket: request.bucket === 'hour' ? 'hour' : 'day',
-  zone: typeof request.zone === 'string' && request.zone ? request.zone : Intl.DateTimeFormat().resolvedOptions().timeZone,
-})
+const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
 
-export const summaryHandler =
-  (ctx: Context): WireHandler<'usage.summary'> =>
-  request => {
-    if (!ctx.sessions) throw new Error('No thread store is loaded')
-    return summarize({ sessions: ctx.sessions, llm: ctx.llm }, queryOf(request))
-  }
+export const summaryHandler = (ctx: Context) => (query: UsageQuery) => {
+  const store = ctx.get(sessions)
+  if (!store) throw new Error('No chat store is loaded')
+  return summarize({ sessions: store, llm: ctx.get(llm) }, { ...query, zone: query.zone || localZone() })
+}

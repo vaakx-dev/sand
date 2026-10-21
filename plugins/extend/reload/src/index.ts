@@ -1,21 +1,13 @@
+import { runtime } from '@sand/host-runtimes/contract'
+import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
-import { pluginsCommand, reloadCommand } from './commands'
-
-const reloadUI = definePlugin({
-  name: 'reload-ui',
-  inject: ['ui', 'runtime'],
-  uses: { inspector: '/plugins cannot show the plugin tree' },
-  apply(ctx) {
-    for (const command of [reloadCommand(ctx), pluginsCommand(ctx)]) ctx.effect(() => ctx.ui.command(command))
-  },
-})
+import { pluginsReload } from './contract'
 
 export default definePlugin({
   name: 'reload',
-  description: 'Restarts the sand plugins when you ask, with /reload or the sidebar button',
-  inject: ['cli'],
+  description: 'Starts a fresh runtime with every plugin reloaded from disk when the page asks',
+  inject: { server, runtime },
   apply(ctx) {
-    if (ctx.cli.mode === 'print') return
-    ctx.plugin(reloadUI)
+    ctx.effect(() => ctx.server.handle(pluginsReload, () => ctx.runtime.swap()))
   },
 })

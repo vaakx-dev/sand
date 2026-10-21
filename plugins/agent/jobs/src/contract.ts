@@ -1,7 +1,9 @@
-import type { JobKind } from '@sand/messages'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Session } from '@sand/chats/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { event, service } from 'drydock'
+import { z } from 'zod'
 
-export type { JobKind }
+export type JobKind = 'agent'
 
 export type JobStatus = 'running' | 'done' | 'failed' | 'cancelled'
 
@@ -34,14 +36,9 @@ export interface BackgroundJobs {
   start(spec: JobSpec): Job
   resume(job: Job, work: JobWork): void
   list(parent?: Session): Job[]
-  queued(parent: string): number
 }
 
 export type WireJob = Omit<Job, 'cancel'>
-
-export interface WireJobRef {
-  $job: WireJob
-}
 
 export interface JobNote {
   id: string
@@ -49,36 +46,28 @@ export interface JobNote {
   text: string
 }
 
-declare module 'drydock' {
-  interface Services {
-    backgroundJobs: BackgroundJobs
-  }
+export const backgroundJobs = service<BackgroundJobs>('backgroundJobs')
 
-  interface Events {
-    'job.start': (job: Job) => void
-    'job.end': (job: Job, output: string) => void
-    'job.note': (note: JobNote) => void
-  }
+export const jobStart = event<(job: Job) => void>('job.start')
+export const jobEnd = event<(job: Job, output: string) => void>('job.end')
+export const jobNote = event<(note: JobNote) => void>('job.note')
+
+export const jobStartWire = wireEvent<WireJob>('job.start')
+export const jobEndWire = wireEvent<[job: WireJob, output: string]>('job.end')
+export const jobNoteWire = wireEvent<JobNote>('job.note')
+
+export const helloJobs = helloField<WireJob[]>('jobs')
+
+export const jobCancel = request('job.cancel', { input: z.object({ job: z.string() }), output: type<boolean>() })
+
+export interface JobState extends WireJob {
+  notes: string[]
 }
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'job.cancel': { job: string }
-  }
-
-  interface WireEvents {
-    'job.start': [job: WireJobRef]
-    'job.end': [job: WireJobRef, output: string]
-    'job.note': [note: JobNote]
-  }
-
-  interface HelloFields {
-    jobs: WireJob[]
-  }
+export interface Jobs {
+  list(parent?: string): JobState[]
+  cancel(id: string): Promise<void>
 }
 
-declare module '@sand/protocol' {
-  interface RuntimeActivity {
-    jobs: WireJob[]
-  }
-}
+export const jobs = service<Jobs>('jobs')
+export const jobsChange = event<() => void>('jobs.change')

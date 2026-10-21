@@ -1,45 +1,20 @@
-import type { Limits } from '@sand/llm-accounts/contract'
+import { limitsRefresh, llm } from '@sand/accounts/contract'
+import { server } from '@sand/server/contract'
+import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { report } from './format'
-import { limitsOf } from './limits'
+import { usageSummary } from './contract'
 import { summaryHandler } from './summary/serve'
-
-const stale = 60_000
-
-const outdated = (limits: Limits[]) => !limits.length || limits.some(found => Date.now() - found.updated > stale)
 
 export default definePlugin({
   name: 'usage',
-  description: 'Plan limits in /usage, plus token and cost totals for the usage page and sand usage',
-  inject: ['ui'],
+  description: 'Token and cost totals and plan limits for the usage page and sand usage',
   apply(ctx) {
-    const nameOf = (limits: Limits) => {
-      const source = ctx.llm?.sources?.().find(found => found.id === limits.source)
-      const label = source?.label ?? limits.source ?? 'Claude Code'
-      return limits.pcName ? `${label} on ${limits.pcName}` : label
+    const refreshLimits = () => {
+      const current = ctx.get(llm)
+      return current?.refreshLimits?.() ?? current?.limits?.()
     }
-
-    ctx.watch('server', server =>
-      server?.handle({
-        'usage.summary': summaryHandler(ctx),
-        'limits.refresh': () => ctx.llm?.refreshLimits?.() ?? ctx.llm?.limits?.(),
-      }),
-    )
-    ctx.effect(() =>
-      ctx.ui.command({
-        name: 'usage',
-        description: 'Show how much of your plan limits is left',
-        async run() {
-          let limits = limitsOf(ctx.llm)
-          if (outdated(limits) && ctx.llm?.refreshLimits) {
-            ctx.ui.notify('Checking usage…')
-            await ctx.llm.refreshLimits()
-            limits = limitsOf(ctx.llm)
-          }
-          if (!limits.length) return ctx.ui.notify('None of your accounts report plan limits')
-          ctx.ui.report('Usage', report(limits, nameOf))
-        },
-      }),
+    ctx.watch(server, found =>
+      found ? joinDisposers(found.handle(usageSummary, summaryHandler(ctx)), found.handle(limitsRefresh, refreshLimits)) : undefined,
     )
   },
 })

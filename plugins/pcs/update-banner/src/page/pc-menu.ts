@@ -1,4 +1,4 @@
-import type { MenuSpec } from '@sand/protocol'
+import type { MenuSpec } from '@sand/ui-kit/contract'
 import { fleetAction, pcActionKind } from '../actions'
 import type { Fleet, PcView } from '../fleet/model'
 import { versionText } from '../fleet/text'

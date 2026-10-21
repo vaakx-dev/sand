@@ -1,0 +1,34 @@
+{
+  "name": "@sand/html",
+  "version": "0.0.0",
+  "description": "html_render tool: the agent shows self-contained HTML pages inline in the chat, in the app theme",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "HTML renders",
+    "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the chat"
+  },
+  "dependencies": {
+    "@sand/chat": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/skills": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-theme": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

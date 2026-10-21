@@ -1,6 +1,6 @@
-import type { Limits } from '@sand/llm-accounts/contract'
+import type { Limits } from '@sand/accounts/contract'
 import type { Wire } from '@sand/web-client/contract'
-import { usageQuery } from '@sand/kit'
+import { usageQuery } from '@sand/usage/records'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader } from './data/fleet'
 import type { History } from './data/forecast'
@@ -18,8 +18,6 @@ export interface UsageDeps {
   pcs(): Pc[]
   limits(): Limits[]
   refreshLimits(): Promise<void>
-  openThread?(id: string): void
-  copy(text: string, what: string): void
 }
 
 export interface Notice {
@@ -135,8 +133,6 @@ export const usageModel = (deps: UsageDeps) => {
     nameOf: (id: string) => nameOf(id) ?? id,
     refresh,
     checkLimits: () => checkWith(refresh),
-    openThread: deps.openThread,
-    copy: deps.copy,
     showOnly: (id: string) => pc.set(id),
     setOpen: (account: string, open: boolean) => opened.set(new Map(opened.get()).set(account, open)),
     setWindow: (account: string, window: string) => windows.set(new Map(windows.get()).set(account, window)),

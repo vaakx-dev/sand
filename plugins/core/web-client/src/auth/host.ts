@@ -1,5 +1,6 @@
 import type { WirePairing } from '../contract'
-import { bearer, redeemPairing, requestTicket, ticketSocketUrl } from '@sand/kit'
+import { redeemPairing } from '@sand/host-remotes/pairing'
+import { bearer, requestTicket, ticketSocketUrl } from '@sand/util/boot/wire'
 import { learn } from '../connection/book'
 import { clientKind, clientName } from './client'
 import { hostKeys } from './keys'

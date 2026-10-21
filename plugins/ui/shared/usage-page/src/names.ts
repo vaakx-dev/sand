@@ -1,4 +1,4 @@
-import { capital } from '@sand/kit'
+import { capital } from '@sand/util'
 import type { AccountUsage } from '@sand/usage/contract'
 
 const brands: Record<string, string> = {

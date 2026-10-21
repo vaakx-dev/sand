@@ -1,5 +1,6 @@
 import type { HostRoute, RouteKind } from '@sand/host-gateway/contract'
-import { isRecord, routeKind } from '@sand/kit'
+import { routeKind } from '@sand/host-remotes/pairing'
+import { isRecord } from '@sand/util'
 import { loadRecord, saveJson } from '../integrations/storage'
 import { originOf } from './url'
 

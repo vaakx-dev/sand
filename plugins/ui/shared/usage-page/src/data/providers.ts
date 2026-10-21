@@ -1,4 +1,4 @@
-import { grouped } from '@sand/kit'
+import { grouped } from '@sand/util'
 import type { Account } from './types'
 
 export interface Provider {

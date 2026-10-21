@@ -2,7 +2,7 @@ import { background } from './first-paint'
 
 const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
-export const page = (build: string, enabled: Record<string, boolean>, host: string) => `<!doctype html>
+export const page = (build: string, host: string) => `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -14,7 +14,6 @@ export const page = (build: string, enabled: Record<string, boolean>, host: stri
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="sand">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="sand-extensions" content="${attribute(JSON.stringify(enabled))}">
   <meta name="sand-host" content="${attribute(host)}">
   <title>sand</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/32x32.png">

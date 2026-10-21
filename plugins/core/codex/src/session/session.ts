@@ -1,5 +1,5 @@
-import type { AppOutput, AppSession, AppSetup } from '@sand/llm-accounts/contract'
-import type { ToolResultBlock, UserContent } from '@sand/messages'
+import type { AppOutput, AppSession, AppSetup } from '@sand/accounts/contract'
+import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
 import { fieldsOf, type Json } from '../server/rpc'
 import type { CodexServer } from '../server/server'
 import { inputItem, toolOutput } from './content'

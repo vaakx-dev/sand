@@ -1,0 +1,51 @@
+import type { DeviceKind } from '@sand/host-gateway/contract'
+import { isRecord, serial } from '@sand/util'
+import { writePrivateJson } from '@sand/util/fs'
+import { join } from 'node:path'
+import type { PairedDevice } from './contract'
+
+export interface DeviceRecord extends PairedDevice {
+  keyHash: string
+}
+
+const deviceKinds = new Set<unknown>(['pc', 'phone', 'browser'] satisfies DeviceKind[])
+
+export const isDeviceKind = (value: unknown): value is DeviceKind => deviceKinds.has(value)
+
+const isDevice = (value: unknown): value is DeviceRecord =>
+  isRecord(value) &&
+  typeof value.id === 'string' &&
+  typeof value.name === 'string' &&
+  isDeviceKind(value.kind) &&
+  typeof value.keyHash === 'string' &&
+  typeof value.added === 'number' &&
+  typeof value.lastSeen === 'number'
+
+const pick = ({ id, name, kind, keyHash, added, lastSeen }: DeviceRecord): DeviceRecord => ({ id, name, kind, keyHash, added, lastSeen })
+
+const read = async (file: string) => {
+  try {
+    const saved = await Bun.file(file).json()
+    return Array.isArray(saved) ? saved.filter(isDevice).map(pick) : []
+  } catch {
+    return []
+  }
+}
+
+export const loadDeviceStore = async (home: string) => {
+  const file = join(home, 'devices.json')
+  const records = await read(file)
+  const queue = serial()
+  return {
+    records: () => records,
+    add: (record: DeviceRecord) => records.push(record),
+    delete(id: string) {
+      const index = records.findIndex(record => record.id === id)
+      if (index >= 0) records.splice(index, 1)
+      return index >= 0
+    },
+    save: () => queue(() => writePrivateJson(file, records)),
+  }
+}
+
+export type DeviceStore = Awaited<ReturnType<typeof loadDeviceStore>>

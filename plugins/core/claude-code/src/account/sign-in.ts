@@ -1,4 +1,4 @@
-import type { SignInFlow } from '@sand/llm-accounts/contract'
+import type { SignInFlow } from '@sand/accounts/contract'
 import { claudeEnv } from '../cli/args'
 import { requireClaude } from '../cli/binary'
 import { readStatus } from './status'

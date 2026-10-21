@@ -1,6 +1,6 @@
-import type { Limits } from '@sand/llm-accounts/contract'
+import type { Limits } from '@sand/accounts/contract'
 import type { AccountUsage } from '@sand/usage/contract'
-import { accountKey, emptyTotals } from '@sand/kit'
+import { accountKey, emptyTotals } from '@sand/usage/records'
 import { providerOf, sourceName } from '../names'
 import type { Account, Pc } from './types'
 
@@ -24,7 +24,6 @@ const unusedAccount = (limits: Limits, home: Pc): Account => {
     billing: 'plan',
     pc,
     pcName: limits.pcName ?? home.name,
-    threads: 0,
     limits,
     machines: [],
   }

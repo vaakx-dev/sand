@@ -1,4 +1,4 @@
-import { usageRanges, type UsageRange } from '@sand/kit'
+import { usageRanges, type UsageRange } from '@sand/usage/records'
 import { stored } from '@vaakx-dev/vrui'
 
 export const allPcs = ''

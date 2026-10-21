@@ -4,34 +4,26 @@
   "description": "The model picker: search, model sources, effort and fast mode in one panel, for the composer and settings",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract.ts",
+    "./models": "./src/models/index.ts"
   },
   "sand": {
     "web": "./src/index.ts",
     "label": "Model picker",
-    "summary": "One panel to pick a model, effort and fast mode, used by the composer and settings",
-    "provides": [
-      "modelPicker"
-    ],
-    "uses": {
-      "wire": "no favourite, hide or make default actions, and models from another PC show no online dot",
-      "settings": "no link to the Models settings page",
-      "notify": "failed model actions are not reported",
-      "threads": "Make default runs without the current folder"
-    }
+    "summary": "One panel to pick a model, effort and fast mode, used by the composer and settings"
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/host-remotes": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/loops": "workspace:*",
+    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/nav": "workspace:*",
     "@sand/settings": "workspace:*",
-    "@sand/toasts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

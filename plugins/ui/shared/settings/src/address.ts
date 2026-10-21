@@ -1,4 +1,4 @@
-import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/kit/web'
+import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/address'
 
 const key = 'settings'
 const opened = 'settingsOpened'

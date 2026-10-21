@@ -1,7 +1,8 @@
 import type { PairedDevice } from '@sand/host-devices/contract'
-import { ago, oneLine } from '@sand/kit'
+import { picker, type Picker } from '@sand/picker/contract'
+import { ago, oneLine } from '@sand/util'
 import { clock, derive, show, type Sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { DevicesContext, KitContext } from '../inject'
 import type { DeviceSource } from '../source'
 import { phoneMenu } from './phone-menu'
 
@@ -10,12 +11,12 @@ const used = (at: number) => {
   return since === 'now' ? 'Used just now' : `Used ${since} ago`
 }
 
-const rename = async (ctx: Context, source: DeviceSource, device: PairedDevice) => {
-  const name = oneLine((await ctx.picker?.input('Rename device', device.name)) ?? '')
-  if (name && name !== device.name) await source.rename(device.id, name).catch(source.fail)
+const rename = async (input: Picker, source: DeviceSource, device: PairedDevice) => {
+  const name = oneLine((await input.input('Rename device', device.name)) ?? '')
+  if (name && name !== device.name) await source.rename(device.id, name).catch(() => {})
 }
 
-const phoneRow = (ctx: Context<'kit'>, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
+const phoneRow = (ctx: KitContext, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
   const { contextMenu, icon, itemRow, rowAction, secondaryAction, tile } = ctx.kit
   const { id, kind } = device.get()
   const detail = () => {
@@ -23,18 +24,19 @@ const phoneRow = (ctx: Context<'kit'>, source: DeviceSource, device: Sig<PairedD
     return id === self ? 'This browser · removing it unpairs it' : used(device.get().lastSeen)
   }
   const menu = contextMenu()
+  const input = ctx.get(picker)
   return itemRow(
     menu.target(() => phoneMenu(source, device.get(), id === self)),
     tile(icon(kind === 'phone' ? 'smartphone' : 'monitor', 16)),
     () => device.get().name,
     detail,
-    ctx.picker ? secondaryAction({ size: 'sm', onClick: () => void rename(ctx, source, device.get()) }, 'Rename…') : null,
-    rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(source.fail) }),
+    input ? secondaryAction({ size: 'sm', onClick: () => void rename(input, source, device.get()) }, 'Rename…') : null,
+    rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(() => {}) }),
     menu.view(),
   )
 }
 
-export const phonesSection = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, pair: () => void) => {
+export const phonesSection = (ctx: DevicesContext, source: DeviceSource, pair: () => void) => {
   const { hintRow, icon, rowList, secondaryAction, settingsSection } = ctx.kit
   const self = ctx.wire.pairing()?.device
   const now = clock(60_000)

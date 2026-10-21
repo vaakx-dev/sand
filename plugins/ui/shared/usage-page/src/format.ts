@@ -1,5 +1,6 @@
 import type { UsageTotals } from '@sand/usage/contract'
-import { ago, dollars, tokens, tokensOf } from '@sand/kit'
+import { tokensOf } from '@sand/usage/records'
+import { ago, dollars, tokens } from '@sand/util'
 
 export type Metric = 'cost' | 'tokens'
 

@@ -1,4 +1,4 @@
-import type { Layout } from '@sand/protocol'
+import type { Layout } from '@sand/layout/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { collectScope, disposeAll, div, mount } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'

@@ -1,6 +1,6 @@
-import type { UsageQuery, UsageSummary } from '@sand/usage/contract'
+import { usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/web-client/contract'
-import { errorMessage } from '@sand/kit'
+import { errorMessage } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
 import type { Pc } from './types'
@@ -38,7 +38,7 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], view: () => FleetView) 
     asked.add(pc.id)
     put(pc.id, { busy: true })
     wire
-      .call<UsageSummary>({ type: 'usage.summary', ...query }, pc.id)
+      .call(usageSummary, query, pc.id)
       .then(result => {
         if (run !== generation) return
         const cached = { at: Date.now(), summary: result }

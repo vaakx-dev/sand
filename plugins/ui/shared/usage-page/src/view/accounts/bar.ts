@@ -1,5 +1,5 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { coarseDuration, exactTime, leftOf, percent } from '@sand/kit'
+import type { LimitWindow } from '@sand/accounts/contract'
+import { coarseDuration, exactTime, leftOf, percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 

@@ -1,0 +1,27 @@
+{
+  "name": "@sand/chats",
+  "version": "0.0.0",
+  "description": "Stores each project's threads, their sub-agents and quick task chats, in SQLite",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts",
+    "./prompt": "./src/prompt/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Chat store",
+    "summary": "Keeps each project's chat in a SQLite database"
+  },
+  "dependencies": {
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

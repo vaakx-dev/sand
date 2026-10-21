@@ -1,11 +1,11 @@
 import type { PalettePage } from '../contract'
+import type { kit } from '@sand/ui-kit/contract'
 import { dynamicChild, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { reportFailure } from '../failure'
 import type { PageMemory, PageNav } from './nav'
 import { pageView } from './page'
 
-export const paletteSheet = (ctx: Context<'kit'>, stack: Sig<PalettePage[]>, query: () => string) => {
+export const paletteSheet = (ctx: Context<{ kit: typeof kit }>, stack: Sig<PalettePage[]>, query: () => string) => {
   const { overlay, sheet } = ctx.kit
   const held = new Set<PalettePage>()
   const memories = new WeakMap<PalettePage, PageMemory>()
@@ -28,7 +28,7 @@ export const paletteSheet = (ctx: Context<'kit'>, stack: Sig<PalettePage[]>, que
     },
     close,
     dismiss,
-    fail: error => reportFailure(ctx, error),
+    fail: error => console.error(error),
     isTop: page => top() === page,
     hold(page) {
       held.add(page)

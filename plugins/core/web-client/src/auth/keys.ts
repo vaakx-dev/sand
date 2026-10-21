@@ -1,5 +1,5 @@
 import { listen } from '@vaakx-dev/vrui'
-import { isRecord } from '@sand/kit'
+import { isRecord } from '@sand/util'
 import { loadRecord, saveJson } from '../integrations/storage'
 
 interface HostKey {

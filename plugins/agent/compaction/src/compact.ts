@@ -1,8 +1,7 @@
-import type { LLMRequest } from '@sand/llm-accounts/contract'
-import type { Entry } from '@sand/messages'
-import type { Session } from '@sand/sessions-sqlite/contract'
-import type { CompactionReason, CompactionRecord } from './contract'
-import { usageRecord } from '@sand/kit'
+import type { llm, LLMRequest } from '@sand/accounts/contract'
+import type { Entry, Session } from '@sand/chats/contract'
+import { contextUsage, type CompactionReason, type CompactionRecord } from './contract'
+import { usageRecord } from '@sand/usage/records'
 import type { Context } from 'drydock'
 import { budgetOf, usageOf, type Budget } from './budget'
 import type { CompactionConfig } from './config'
@@ -13,9 +12,10 @@ import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
 
+export type CompactionContext = Context<{ llm: typeof llm }>
+
 export interface CompactOptions {
   reason: CompactionReason
-  extra?: string
   signal?: AbortSignal
 }
 
@@ -28,23 +28,22 @@ const draft = (session: Session, record: CompactionRecord): Entry => ({
   data: record,
 })
 
-export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, tracker: Tracker) => {
+export const createCompactor = (ctx: CompactionContext, config: CompactionConfig, tracker: Tracker) => {
   const running = new Map<string, Promise<number>>()
 
-  const run = async (session: Session, request: LLMRequest, budget: Budget, { reason, extra, signal }: CompactOptions) => {
+  const run = async (session: Session, request: LLMRequest, budget: Budget, { reason, signal }: CompactOptions) => {
     const path = session.path()
     const cut = plan(path, budget.keep) ?? (reason === 'threshold' ? undefined : plan(path, 0))
     if (!cut) throw new Error('Nothing to compact yet')
     const before = tracker.project(session.id, request)
-    ctx.emit('context.usage', session, usageOf(budget, before, true))
+    ctx.emit(contextUsage, session, usageOf(budget, before, true))
     let after = before
     try {
-      const instructions = [config.instructions, extra].filter(Boolean).join('\n\n') || undefined
       const { summary, usage, source } = await summarize(ctx.llm, {
         model: request.model,
         messages: cut.dropped,
         previous: cut.previous?.summary,
-        instructions,
+        instructions: config.instructions,
         limit: budget.limit,
         signal,
       })
@@ -63,7 +62,7 @@ export const createCompactor = (ctx: Context<'llm'>, config: CompactionConfig, t
       tracker.reset(session.id)
       return after
     } finally {
-      ctx.emit('context.usage', session, usageOf(budget, after))
+      ctx.emit(contextUsage, session, usageOf(budget, after))
     }
   }
 

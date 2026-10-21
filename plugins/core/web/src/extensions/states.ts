@@ -11,7 +11,7 @@ export const createStates = (site: StateSource) => {
   let reported = new Map<string, BrowserState>()
   let at = 0
 
-  const state = ({ id, dir, label, summary, builtin, enabled, provides }: Extension): WebExtensionState => {
+  const state = ({ id, dir, label, summary, builtin }: Extension): WebExtensionState => {
     const built = site.current()
     const browser = reported.get(id)
     return {
@@ -20,8 +20,6 @@ export const createStates = (site: StateSource) => {
       label,
       summary,
       builtin,
-      enabled,
-      provides,
       bundled: built.bundled.includes(id),
       problem: built.failed[id],
       browser: browser && { ...browser, at },

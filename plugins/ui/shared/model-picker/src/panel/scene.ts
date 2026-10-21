@@ -1,8 +1,9 @@
-import type { ModelInfo, SourceInfo } from '@sand/llm-accounts/contract'
-import type { SessionSettings } from '@sand/model/contract'
-import { errorMessage } from '@sand/kit'
-import type { MenuSpec, WireRequest } from '@sand/protocol'
-import type { Kit } from '@sand/ui-kit/contract'
+import { modelsPref, type ModelInfo, type SourceInfo } from '@sand/accounts/contract'
+import type { Request } from '@sand/host-hub/contract'
+import { settingsSet, type SessionSettings } from '@sand/model/contract'
+import { settings as settingsPages } from '@sand/settings/contract'
+import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
+import { wire } from '@sand/web-client/contract'
 import type { Picked, PickerTarget } from '../contract'
 import type { Picker, PickerContext } from '../deps'
 import { modelMenu } from '../model-menu'
@@ -24,14 +25,14 @@ export interface Scene {
   openSettings?: () => void
 }
 
-const send = (ctx: PickerContext, request: WireRequest) =>
-  void ctx.wire?.call(request, ctx.models.device()).catch(error => ctx.notify?.push(errorMessage(error), { level: 'error' }))
+const send = <I>(ctx: PickerContext, request: Request<I, unknown>, input: I) =>
+  void ctx.get(wire)?.call(request, input, ctx.models.device()).catch(() => {})
 
 export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View, close: () => void): Scene | undefined => {
   const shown = target.shown()
   if (!shown) return undefined
   const sources = ctx.models.sources()
-  const settings = ctx.settings
+  const settings = ctx.get(settingsPages)
   const pick = (model: ModelInfo) => {
     target.set({ model: model.id })
     close()
@@ -50,15 +51,13 @@ export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View
     pick,
     menu: view.menu,
     menuOf: model =>
-      modelMenu({
+      modelMenu(ctx.kit, {
         model,
-        subtitle: sourceOf(model)?.label,
-        notify: ctx.notify,
         use: () => pick(model),
-        ...(ctx.wire && {
-          makeDefault: () => send(ctx, { type: 'ui.command', name: 'model', args: `${model.id} --default --quiet`, cwd: ctx.threads?.cwd() }),
-          toggleFavourite: () => send(ctx, { type: 'models.pref', model: model.id, favourite: model.favourite === undefined }),
-          toggleHidden: () => send(ctx, { type: 'models.pref', model: model.id, hidden: !model.hidden }),
+        ...(ctx.get(wire) && {
+          makeDefault: () => send(ctx, settingsSet, { patch: { model: model.id } }),
+          toggleFavourite: () => send(ctx, modelsPref, { model: model.id, favourite: model.favourite === undefined }),
+          toggleHidden: () => send(ctx, modelsPref, { model: model.id, hidden: !model.hidden }),
         }),
       }),
     ...(settings && {

@@ -1,4 +1,4 @@
-import { joinDisposers } from '@sand/kit'
+import { joinDisposers } from '@sand/util'
 import { every } from '../detached'
 import type { Connection } from '../integrations/socket'
 

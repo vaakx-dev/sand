@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/protocol'
+import type { NavAction } from '@sand/nav/contract'
 import { div, p, span, type Child } from '@vaakx-dev/vrui'
 import { dangerAction, secondaryAction } from '../buttons/button'
 import { menuSeparator } from '../menus/menu'

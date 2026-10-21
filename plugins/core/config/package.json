@@ -1,0 +1,18 @@
+{
+  "name": "@sand/config",
+  "version": "0.0.0",
+  "description": "Reads sand.toml and loads every plugin that declares an entry for the current place, from the built-in plugins and ~/.sand/plugins",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "label": "Config",
+    "summary": "Loads plugins and their settings from sand.toml"
+  },
+  "dependencies": {
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

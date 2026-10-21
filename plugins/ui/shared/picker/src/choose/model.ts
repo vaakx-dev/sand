@@ -1,35 +1,32 @@
-import type { Picked, PickItem, PickOptions } from '@sand/server/contract'
-import { matching } from '@sand/kit'
-import { listbox } from '@sand/kit/web'
+import type { Picked, PickItem } from '../contract'
+import type { Kit } from '@sand/ui-kit/contract'
+import { matching } from '@sand/util'
 import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 
-const searchText = (item: PickItem<unknown>) => [item.label, item.detail, item.search].filter(Boolean).join(' ')
+const searchText = (item: PickItem<unknown>) => [item.label, item.detail].filter(Boolean).join(' ')
 
 export type PickModel<T> = ReturnType<typeof pickModel<T>>
 
-export const pickModel = <T>(items: PickItem<T>[], options: PickOptions, finish: (picked?: Picked<T>) => void) => {
+export const pickModel = <T>({ listbox }: Kit, items: PickItem<T>[], finish: (picked?: Picked<T>) => void) => {
   const texts = items.map(searchText)
-  const filter = sig(options.query ?? '')
-  const shown = derive(() => matching(texts, filter.get(), options.rank))
-  const valueAt = (position: number) => items[shown.get()[position] ?? -1]?.value
-  const take = (position: number) => finish({ value: valueAt(position), query: filter.get() })
+  const filter = sig('')
+  const shown = derive(() => matching(texts, filter.get()))
+  const take = (position: number) => {
+    const item = items[shown.get()[position] ?? -1]
+    finish(item && { value: item.value })
+  }
   const box = listbox({ count: () => shown.get().length, choose: take })
 
   effect(() => {
     filter.get()
     untrack(box.first)
   })
-  box.select(Math.max(0, shown.get().indexOf(options.selected ?? 0)))
 
   return {
     items,
     filter,
     shown,
     box,
-    tree: derive(() => !filter.get().trim()),
-    rowActions: (options.actions ?? []).filter(action => action.row),
-    listActions: (options.actions ?? []).filter(action => !action.row),
-    act: (action: string, position = box.selected.get()) => finish({ value: valueAt(position), action, query: filter.get() }),
     cancel: () => finish(),
   }
 }

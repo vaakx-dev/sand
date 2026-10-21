@@ -8,26 +8,22 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Compaction",
-    "summary": "Summarizes long conversations and agents before their context fills up, and /compact",
-    "uses": {
-      "loop": "conversations are never compacted automatically",
-      "context": "the page cannot measure a thread that has not run yet",
-      "server": "the page gets no context usage",
-      "ui": "compaction runs without notices and there is no /compact command",
-      "modelSettings": "context limits use the default model",
-      "sessions": "the page cannot ask for the context usage of a thread"
-    }
+    "summary": "Summarizes a long chat before their context fills up"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/loops": "workspace:*",
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

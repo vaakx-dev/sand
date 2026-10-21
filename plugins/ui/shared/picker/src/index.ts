@@ -1,14 +1,15 @@
-import type { Picker } from './contract'
-import { owned } from '@sand/kit/web'
+import { kit } from '@sand/ui-kit/contract'
+import { owned } from '@sand/web-client/reactive'
 import { media } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { choose } from './choose/view'
+import { picker, type Picker } from './contract'
 import { ask } from './input'
 
 export default definePlugin({
   name: 'picker',
-  description: 'Pick and input sheets for server and local prompts: fuzzy, "phrase" and re: search, tree prefixes, extra keys as buttons',
-  inject: ['kit'],
+  description: 'Pick and input sheets for page prompts, with fuzzy search',
+  inject: { kit },
   apply(ctx) {
     let queue: Promise<unknown> = Promise.resolve()
     const cancels = new Set<() => void>()
@@ -21,8 +22,8 @@ export default definePlugin({
       return next
     }
 
-    const picker: Picker = {
-      choose: (title, items, options) => turn(() => choose(ctx.kit, cancels, fine, title, items, options)),
+    const host: Picker = {
+      choose: (title, items) => turn(() => choose(ctx.kit, cancels, fine, title, items)),
       input: (title, value) => turn(() => ask(ctx.kit, cancels, title, value)),
     }
 
@@ -30,6 +31,6 @@ export default definePlugin({
       closed = true
       for (const cancel of [...cancels]) cancel()
     })
-    ctx.provide('picker', picker)
+    ctx.provide(picker, host)
   },
 })

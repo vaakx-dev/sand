@@ -1,4 +1,4 @@
-import { modal } from '@sand/kit/web'
+import { modal } from '../layers/stack'
 import { div, event, read, show, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'

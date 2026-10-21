@@ -8,16 +8,20 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
     "label": "Web",
     "summary": "Builds the page from the web extensions"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/pc-link": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
     "@sand/server": "workspace:*",
+    "@sand/ui-theme": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

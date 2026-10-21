@@ -1,5 +1,5 @@
 import { listen } from '@vaakx-dev/vrui'
-import { pairSecret } from '@sand/kit'
+import { pairSecret } from '@sand/host-remotes/pairing'
 
 const takeFromHash = () => {
   const secret = pairSecret(location.hash)

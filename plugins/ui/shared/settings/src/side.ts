@@ -11,10 +11,15 @@ export interface SideParts {
   hide?: () => void
 }
 
+const topPages = (store: PageStore) => store.pages.map(pages => pages.filter(page => !page.parent))
+
 const label = (text: Child) => span({ class: 'min-w-0 flex-1 truncate text-left' }, text)
 
 const pageButton = ({ icon, navButton }: Kit, page: Sig<SettingsPage>, store: PageStore, choose: (id: string) => void) => {
-  const active = () => store.current.get() === page.get().id
+  const active = () => {
+    const current = store.current.get()
+    return current === page.get().id || store.pages.get().some(other => other.id === current && other.parent === page.get().id)
+  }
   return navButton(
     {
       active,
@@ -35,7 +40,7 @@ export const sideView = (kit: Kit, { store, narrow, choose, back, hide }: SidePa
   return nav(
     { 'aria-label': 'Settings', class: () => ['flex h-full min-h-0 flex-col bg-neutral-950', narrow.get() ? 'w-full' : 'w-64'] },
     dynamicChild(narrow, drawer => sideHead('Settings', drawer ? hide : undefined)),
-    list(store.pages, page => page.id, page => pageButton(kit, page, store, choose), div({ class: 'flex min-h-0 flex-1 flex-col gap-1 overflow-auto px-2' })),
+    list(topPages(store), page => page.id, page => pageButton(kit, page, store, choose), div({ class: 'flex min-h-0 flex-1 flex-col gap-1 overflow-auto px-2' })),
     div({ class: 'shrink-0 px-2 pt-1 pb-2' }, navButton({ class: 'w-full', onClick: back }, icon('back'), label('Back'))),
   )
 }

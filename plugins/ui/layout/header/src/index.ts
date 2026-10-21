@@ -1,31 +1,22 @@
-import { owned, place, pulse } from '@sand/kit/web'
+import { layout, layoutChange } from '@sand/layout/contract'
+import { place } from '@sand/layout/place'
+import { kit } from '@sand/ui-kit/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange, wire, wireState } from '@sand/web-client/contract'
+import { owned, pulse } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
+import { header } from './contract'
 import { createSlots } from './slots'
 import { headerView } from './view'
 
 export default definePlugin({
   name: 'header',
-  description: 'Breadcrumb bar: project / title with a thread menu, slots for other controls, and buttons for the side drawer and the right panel',
-  inject: ['kit'],
-  uses: {
-    threads: 'shows just "sand"',
-    layout: 'no drawer or panel buttons',
-    commands: 'the thread menu only renames and copies the link',
-    picker: 'no rename',
-    jobs: 'no working dot on the panel button',
-    projects: 'the project name and icon come from the folder alone',
-    worktrees: 'a thread in a worktree shows the worktree folder as its project',
-    notify: 'copying the link is not confirmed',
-  },
+  description: 'Breadcrumb bar: project / thread title with a thread menu, slots for other controls and a button for the side drawer',
+  inject: { kit },
   apply(ctx) {
-    const changes = pulse(
-      ctx,
-      ['threads.change', 'thread.select', 'layout.change', 'wire.state', 'projects.change', 'jobs.change', 'worktrees.change'],
-      ['threads', 'layout', 'wire', 'projects', 'jobs', 'worktrees'],
-    )
+    const changes = pulse(ctx, [threadsChange, threadSelect, layoutChange, wireState, projectsChange], [threads, layout, wire, projects])
     const slots = owned(ctx, createSlots)
     const view = owned(ctx, () => headerView(ctx, changes, slots))
     place(ctx, 'main', view, 0)
-    ctx.provide('header', { slot: (view, order) => slots.add(view, order) })
+    ctx.provide(header, { slot: (view, order, side) => slots.add(view, order, side) })
   },
 })

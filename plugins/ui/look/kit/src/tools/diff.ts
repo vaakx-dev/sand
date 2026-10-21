@@ -1,4 +1,4 @@
-import type { DiffLine } from '@sand/kit'
+import type { DiffLine } from './lcs'
 import { div, span } from '@vaakx-dev/vrui'
 
 type Kind = DiffLine['kind']

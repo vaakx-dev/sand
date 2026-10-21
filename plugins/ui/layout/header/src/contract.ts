@@ -1,13 +1,11 @@
-import type { Dispose } from 'drydock'
+import { service, type Dispose } from 'drydock'
 
 export type HeaderView = HTMLElement | (() => HTMLElement)
 
+export type HeaderSide = 'start' | 'end'
+
 export interface Header {
-  slot(view: HeaderView, order?: number): Dispose
+  slot(view: HeaderView, order?: number, side?: HeaderSide): Dispose
 }
 
-declare module 'drydock' {
-  interface Services {
-    header: Header
-  }
-}
+export const header = service<Header>('header')

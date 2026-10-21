@@ -8,17 +8,19 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Attachments",
-    "summary": "Files, documents, images and clipboard content attached to prompts",
-    "provides": [
-      "attachments"
-    ]
+    "summary": "Files, documents, images and clipboard content attached to prompts"
   },
   "dependencies": {
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
     "@sand/transfers": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

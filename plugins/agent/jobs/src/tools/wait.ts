@@ -1,8 +1,10 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Session } from '@sand/chats/contract'
+import { steering, turnQueue } from '@sand/steering/contract'
 import type { Tool } from '@sand/tools/contract'
-import { duration } from '@sand/kit'
-import type { Context } from 'drydock'
+import { duration } from '@sand/util'
 import { z } from 'zod'
+import type { JobsContext } from '../context'
+import { jobEnd } from '../contract'
 import type { Delivery } from '../deliver'
 import { clip } from '../notice'
 import type { Entry, Store } from '../store'
@@ -20,9 +22,9 @@ const userSpoke = 'The user sent a message; running jobs keep running.'
 
 const finished = (entries: Entry[]) => entries.every(({ job }) => job.status !== 'running')
 
-const settle = (ctx: Context, delivery: Delivery, entries: Entry[], session: Session, timeout: number, signal: AbortSignal) =>
+const settle = (ctx: JobsContext, delivery: Delivery, entries: Entry[], session: Session, timeout: number, signal: AbortSignal) =>
   new Promise<string>(resolve => {
-    const spoke = () => Boolean(ctx.steering?.list(session).some(item => !delivery.isNotice(item.id)))
+    const spoke = () => Boolean(ctx.get(steering)?.list(session).some(item => !delivery.isNotice(item.id)))
     const finish = (reason: string) => {
       clearTimeout(timer)
       for (const stop of stops) void stop()
@@ -32,10 +34,10 @@ const settle = (ctx: Context, delivery: Delivery, entries: Entry[], session: Ses
     const abort = () => finish('Interrupted.')
     const timer = setTimeout(() => finish(`Timed out after ${duration(timeout)}; running jobs keep running.`), timeout)
     const stops = [
-      ctx.on('job.end', () => {
+      ctx.on(jobEnd, () => {
         if (finished(entries)) finish(allDone)
       }),
-      ctx.on('turn.queue', queued => {
+      ctx.on(turnQueue, queued => {
         if (queued.id === session.id) queueMicrotask(() => spoke() && finish(userSpoke))
       }),
     ]
@@ -44,10 +46,10 @@ const settle = (ctx: Context, delivery: Delivery, entries: Entry[], session: Ses
     else if (spoke()) finish(userSpoke)
   })
 
-export const waitTool = (ctx: Context<'sessions'>, store: Store, delivery: Delivery): Tool<typeof input> => ({
+export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    'Wait for background jobs to finish and get their results. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.',
+    'Wait for background agents to finish and get their results. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.',
   group,
   input,
   async run({ jobs, timeout_ms = defaultTimeout }, { session, signal }) {
@@ -55,9 +57,9 @@ export const waitTool = (ctx: Context<'sessions'>, store: Store, delivery: Deliv
     const reason = await settle(ctx, delivery, entries, session, timeout_ms, signal)
     signal.throwIfAborted()
     const reports = entries.map(({ job, output }) => {
-      if (job.status === 'running') return jobLine(ctx, job)
+      if (job.status === 'running') return jobLine(ctx.sessions, job)
       delivery.withdraw(job.id)
-      return `${jobLine(ctx, job)}\n${clip(output ?? '')}`
+      return `${jobLine(ctx.sessions, job)}\n${clip(output ?? '')}`
     })
     return [reason, ...reports].join('\n\n')
   },

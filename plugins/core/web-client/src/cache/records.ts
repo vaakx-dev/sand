@@ -1,5 +1,5 @@
-import type { Entry } from '@sand/messages'
-import type { SessionSummary } from '@sand/sessions-sqlite/contract'
+import type { Entry } from '@sand/chats/contract'
+import type { SessionSummary } from '@sand/chats/contract'
 import type { Thread } from '../contract'
 
 export interface Meta {

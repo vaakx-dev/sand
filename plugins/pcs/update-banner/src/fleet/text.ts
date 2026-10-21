@@ -1,7 +1,7 @@
+import type { BuildInfo } from '@sand/host-dist/contract'
 import type { ReleaseInfo, UpdateChannel, UpdatePhase } from '@sand/host-updates/contract'
-import { plural } from '@sand/kit'
-import type { BuildInfo } from '@sand/protocol'
 import type { Tone } from '@sand/ui-kit/contract'
+import { plural } from '@sand/util'
 import type { RunStatus } from './run'
 import { isFar, type PcStatus } from './status'
 
@@ -22,7 +22,7 @@ const phaseText = (phase: UpdatePhase, running = 0) => {
     case 'switching':
       return 'Switching over…'
     case 'waiting':
-      return running ? `Restarts when ${plural(running, 'running thread')} finish${running === 1 ? 'es' : ''}` : 'Restarting soon…'
+      return running ? `Restarts when ${plural(running, 'running chat')} finish${running === 1 ? 'es' : ''}` : 'Restarting soon…'
     default:
       return 'Restarting…'
   }

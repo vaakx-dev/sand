@@ -1,4 +1,4 @@
-import type { DeviceKind } from '@sand/protocol'
+import type { DeviceKind } from '@sand/host-gateway/contract'
 
 const browsers: [RegExp, string][] = [
   [/Edg\//, 'Edge'],

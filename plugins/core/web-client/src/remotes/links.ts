@@ -1,24 +1,25 @@
+import type { HelloValues } from '@sand/host-hub/contract'
 import type { Remote, RemoteInvite } from '@sand/host-remotes/contract'
-import type { Hello, WireEvent, WireRequest } from '@sand/protocol'
 import type { ConnectionInfo, WireState } from '../contract'
 import { createHostAuth } from '../auth/host'
 import { learn } from '../connection/book'
 import { createPcConnection } from '../connection/pc'
+import type { Call, Heard } from '../integrations/socket'
 
 interface Link {
   remote: Remote
   state(): WireState
   info(): ConnectionInfo
-  call<T = unknown>(request: WireRequest): Promise<T>
+  call: Call
   fetch(path: string, init?: RequestInit): Promise<Response>
   nudge(): void
   close(): void
 }
 
 export interface LinkHandlers {
-  hello(device: string, hello: Hello): void
+  hello(device: string, values: HelloValues): void
   since(device: string): string | undefined
-  event(device: string, event: WireEvent): void
+  event(device: string, heard: Heard): void
   drop(device: string): void
   keep(devices: Set<string>): void
   state(): void
@@ -39,8 +40,8 @@ const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers):
     expected: () => link.remote.id,
     ticket: auth.socketUrl,
     offline: `${remote.name} is offline`,
-    event: event => handlers().event(link.remote.id, event),
-    hello: hello => handlers().hello(link.remote.id, hello),
+    event: heard => handlers().event(link.remote.id, heard),
+    hello: values => handlers().hello(link.remote.id, values),
     since: () => handlers().since(link.remote.id),
     changed: () => handlers().state(),
   })

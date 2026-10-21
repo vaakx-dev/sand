@@ -1,17 +1,14 @@
 import type { Server } from '@sand/server/contract'
+import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
-import type { Tools } from './contract'
-import { joinDisposers } from '@sand/kit'
-import { z } from 'zod'
-
-const load = z.enum(['always', 'on-demand', 'off'])
+import { toolsChange, toolsChangeWire, toolsChoose, toolsGroups, type Tools } from './contract'
 
 export const serveTools = (ctx: Context, server: Server, tools: Tools) =>
   joinDisposers(
-    server.handle('tools.groups', () => tools.groups()),
-    server.handle('tools.choose', async ({ group, load: chosen }) => {
-      await tools.choose(group, load.parse(chosen))
+    server.handle(toolsGroups, () => tools.groups()),
+    server.handle(toolsChoose, async ({ group, load }) => {
+      await tools.choose(group, load)
       return tools.groups()
     }),
-    ctx.on('tools.change', () => server.broadcast('tools.change', [tools.groups()])),
+    ctx.on(toolsChange, () => server.broadcast(toolsChangeWire, tools.groups())),
   )

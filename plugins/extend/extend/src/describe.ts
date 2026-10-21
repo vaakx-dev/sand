@@ -1,4 +1,4 @@
-import type { Context, ScopeView } from 'drydock'
+import { type Context, inspector, type ScopeView } from 'drydock'
 
 const errorText = (error: unknown) =>
   error instanceof Error ? (error.stack ?? error.message).split('\n').slice(0, 8).join('\n') : String(error)
@@ -17,12 +17,13 @@ const scopeTree = (scope: ScopeView, depth: number): string[] => [
 ]
 
 export const describe = (ctx: Context, scope: ScopeView) => {
-  const services = ctx.inspector?.services().filter(service => service.provider === scope.name && service.active) ?? []
-  const hooks = ctx.inspector?.hooks().filter(hook => hook.handlers.some(handler => handler.plugin === scope.name)) ?? []
+  const found = ctx.get(inspector)
+  const services = found?.services().filter(service => service.provider === scope.name && service.active) ?? []
+  const hooks = found?.hooks().filter(hook => hook.handlers.some(handler => handler.plugin === scope.name)) ?? []
   return [
     ...scopeTree(scope, 0),
-    services.length ? `provides: ${services.map(service => service.key).join(', ')}` : '',
-    hooks.length ? `hooks: ${hooks.map(hook => hook.name).join(', ')}` : '',
+    services.length ? `provides: ${services.map(service => service.id).join(', ')}` : '',
+    hooks.length ? `hooks: ${hooks.map(hook => hook.id).join(', ')}` : '',
   ]
     .filter(Boolean)
     .join('\n')

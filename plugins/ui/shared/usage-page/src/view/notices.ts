@@ -1,5 +1,5 @@
 import type { UnpricedModel } from '@sand/usage/contract'
-import { tokens } from '@sand/kit'
+import { tokens } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, span, type Sig } from '@vaakx-dev/vrui'
 import { agoText } from '../format'
@@ -25,7 +25,7 @@ export const unpricedNotes = ({ note }: Kit, unpriced: UnpricedModel[]) =>
     ? div(
         { class: 'flex flex-col gap-1 px-1' },
         unpriced.map(item =>
-          note(`${item.model} has no price, so ${tokens(item.tokens)} tokens are left out of cost. Add it under [plugins.llm-accounts.prices] in sand.toml.`),
+          note(`${item.model} has no price, so ${tokens(item.tokens)} tokens are left out of cost. Add it under [plugins.accounts.prices] in sand.toml.`),
         ),
       )
     : null

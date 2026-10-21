@@ -1,0 +1,30 @@
+{
+  "name": "@sand/web-tools",
+  "version": "0.0.0",
+  "description": "web_search and web_fetch tools, and their views in the chat",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Web tools",
+    "summary": "Searches the web with DuckDuckGo and reads pages as markdown"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "@sand/chat": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "linkedom": "^0.18.13",
+    "turndown": "^7.2.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/turndown": "^5.0.6"
+  }
+}

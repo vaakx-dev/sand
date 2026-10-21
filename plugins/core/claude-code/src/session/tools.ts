@@ -1,5 +1,5 @@
-import type { ToolSpec } from '@sand/llm-accounts/contract'
-import type { ToolResultBlock } from '@sand/messages'
+import type { ToolSpec } from '@sand/accounts/contract'
+import type { ToolResultBlock } from '@sand/chats/contract'
 import { fieldsOf, type Json } from '../cli/connection'
 import { toolResult } from './content'
 

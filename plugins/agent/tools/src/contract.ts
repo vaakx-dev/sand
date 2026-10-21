@@ -1,14 +1,15 @@
-import type { Dispose } from 'drydock'
-import type { output, ZodType } from 'zod'
-import type { ToolSpec } from '@sand/llm-accounts/contract'
-import type { Message, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/messages'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { ToolSpec } from '@sand/accounts/contract'
+import type { Message, Session, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { event, service, type Dispose } from 'drydock'
+import { z, type output, type ZodType } from 'zod'
 
 export interface ToolContext {
   cwd: string
   signal: AbortSignal
   session: Session
   call: ToolCallBlock
+  progress(text: string): void
 }
 
 export type ToolOutput = string | ToolResultContent[]
@@ -19,6 +20,8 @@ export interface Tool<S extends ZodType = ZodType> {
   environment?: string
   group?: string
   input: S
+  active?(session: Session): boolean
+  replaces?: string[]
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
 }
 
@@ -29,7 +32,6 @@ export interface ToolGroup {
   label: string
   summary: string
   load: Exclude<ToolLoad, 'off'>
-  mainOnly?: boolean
 }
 
 export interface GroupState extends ToolGroup {
@@ -47,23 +49,16 @@ export interface Tools {
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>
 }
 
-declare module 'drydock' {
-  interface Services {
-    tools: Tools
-  }
+export const tools = service<Tools>('tools')
 
-  interface Events {
-    'tools.change': () => void
-  }
-}
+export const toolsChange = event<() => void>('tools.change')
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'tools.groups': {}
-    'tools.choose': { group: string; load: ToolLoad }
-  }
+export const toolFolder = event<(cwd: string, session: Session) => string | undefined | Promise<string | undefined>>('tool.folder')
 
-  interface WireEvents {
-    'tools.change': [groups: GroupState[]]
-  }
-}
+export const toolsChangeWire = wireEvent<GroupState[]>('tools.change')
+
+export const toolsGroups = request('tools.groups', { input: z.object({}), output: type<GroupState[]>() })
+export const toolsChoose = request('tools.choose', {
+  input: z.object({ group: z.string(), load: z.enum(['always', 'on-demand', 'off']) }),
+  output: type<GroupState[]>(),
+})

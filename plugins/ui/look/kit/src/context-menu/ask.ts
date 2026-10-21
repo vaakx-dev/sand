@@ -1,4 +1,4 @@
-import type { NavAsk } from '@sand/protocol'
+import type { NavAsk } from '@sand/nav/contract'
 import { derive, div, keys, sig, span } from '@vaakx-dev/vrui'
 import { primaryAction } from '../buttons/button'
 import { textInput } from '../fields/field'

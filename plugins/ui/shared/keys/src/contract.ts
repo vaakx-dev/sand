@@ -1,8 +1,9 @@
-import type { Dispose } from 'drydock'
+import { service, type Dispose } from 'drydock'
 
 export interface Shortcut {
   key: string
   global?: boolean
+  when?(event: KeyboardEvent): boolean
   run(): void
 }
 
@@ -10,8 +11,4 @@ export interface Keys {
   bind(binding: Shortcut): Dispose
 }
 
-declare module 'drydock' {
-  interface Services {
-    keys: Keys
-  }
-}
+export const keys = service<Keys>('keys')

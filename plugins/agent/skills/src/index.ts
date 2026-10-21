@@ -1,8 +1,12 @@
-import type { Skill, Skills } from './contract'
+import { paths } from '@sand/paths/contract'
+import { server } from '@sand/server/contract'
+import { tools } from '@sand/tools/contract'
+import { expandHome } from '@sand/util/fs'
+import { watcher } from '@sand/watch/contract'
 import { definePlugin } from 'drydock'
-import { expandHome } from '@sand/kit/fs'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { skills as skillsService, skillsChange, type Skill, type Skills } from './contract'
 import { describePerThread } from './describe'
 import { discover } from './discover'
 import { expandMentions } from './expand'
@@ -13,13 +17,13 @@ import { watchRoot } from './watch'
 
 export default definePlugin({
   name: 'skills',
-  inject: ['paths', 'tools', 'watcher'],
+  inject: { paths, tools, watcher },
   config: z.object({ paths: z.array(z.string()).default([]) }),
   async apply(ctx, config) {
     const { home } = ctx.paths
     const roots = [join(import.meta.dir, '..', 'skills'), join(home, 'skills'), ...config.paths.map(path => expandHome(path, home))]
     const contributed = new Map<string, Record<string, string>>()
-    const changed = () => ctx.server?.broadcast('skills.change', [])
+    const changed = () => ctx.get(server)?.broadcast(skillsChange, undefined)
     const project = projectSkills(ctx, roots, changed)
     let global: Skill[] = []
     let live = true
@@ -48,7 +52,7 @@ export default definePlugin({
       live = false
     })
     await refresh()
-    ctx.provide('skills', skills)
+    ctx.provide(skillsService, skills)
     ctx.effect(() => ctx.tools.register(skillTool(skills, global)))
     serveSkills(ctx, skills)
     for (const root of roots) ctx.effect(() => watchRoot(ctx.watcher, root, () => void refresh()))

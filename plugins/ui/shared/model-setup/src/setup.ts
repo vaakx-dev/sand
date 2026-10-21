@@ -1,31 +1,40 @@
-import type { TitlePatch, TitleSettings } from '@sand/titles/contract'
-import { errorMessage } from '@sand/kit'
+import { composer } from '@sand/composer/contract'
+import { settingsSet } from '@sand/model/contract'
+import { errorMessage } from '@sand/util'
+import type { models, wire } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
-export type SetupStep = 'model' | 'names' | 'done'
+export type SetupStep = 'model' | 'done'
 
-type SetupContext = Context<'models' | 'wire'>
+type SetupContext = Context<{ models: typeof models; wire: typeof wire }>
 
-const readTitles = (ctx: SetupContext) => ctx.wire.call<TitleSettings>({ type: 'titles.get' }).catch(() => undefined)
-
-const wantsNamer = (titles: TitleSettings | undefined) => !!titles?.auto && !titles.model
-
-export const modelSetup = (ctx: SetupContext) => {
+export const setupState = (ctx: SetupContext) => {
   const step = sig<SetupStep | undefined>(undefined)
   const model = sig<string | undefined>(undefined)
-  const namer = sig<string | undefined>(undefined)
-  const naming = sig(true)
   const busy = sig(false)
   const error = sig('')
-  let askNamer = false
 
-  const save = async (work: () => Promise<unknown>, next: SetupStep) => {
+  const close = () => {
+    step.set(undefined)
+    ctx.get(composer)?.focus()
+  }
+
+  const start = () => {
+    model.set(ctx.models.defaults().model)
+    error.set('')
+    if (!model.get()) return step.set('model')
+    close()
+  }
+
+  const saveModel = async () => {
+    const id = model.get()
+    if (!id) return
     busy.set(true)
     error.set('')
     try {
-      await work()
-      step.set(next)
+      await ctx.wire.call(settingsSet, { patch: { model: id } })
+      step.set('done')
     } catch (failure) {
       error.set(errorMessage(failure))
     } finally {
@@ -33,64 +42,19 @@ export const modelSetup = (ctx: SetupContext) => {
     }
   }
 
-  const afterModel = (): SetupStep => (askNamer ? 'names' : 'done')
-
-  const close = () => {
-    step.set(undefined)
-    ctx.composer?.focus()
-  }
-
-  const start = async () => {
-    askNamer = wantsNamer(await readTitles(ctx))
-    model.set(ctx.models.defaults().model)
-    namer.set(undefined)
-    naming.set(true)
-    error.set('')
-    if (!model.get()) return step.set('model')
-    if (askNamer) return step.set('names')
-    close()
-  }
-
-  const saveModel = () => {
-    const id = model.get()
-    if (!id) return
-    void save(() => ctx.wire.call({ type: 'ui.command', name: 'model', args: `${id} --default --quiet`, cwd: ctx.threads?.cwd() }), afterModel())
-  }
-
-  const saveTitles = (patch: TitlePatch) => ctx.wire.call({ type: 'titles.save', ...patch })
-
-  const saveNamer = () => {
-    const id = namer.get()
-    if (id) void save(() => saveTitles({ model: id }), 'done')
-  }
-
-  const namesOff = () =>
-    void save(async () => {
-      await saveTitles({ auto: false })
-      naming.set(false)
-    }, 'done')
-
   return {
     step,
     model,
-    namer,
-    naming,
     busy,
     error,
     start,
-    saveModel,
+    saveModel: () => void saveModel(),
     skipModel: () => {
       model.set(undefined)
-      step.set(afterModel())
-    },
-    saveNamer,
-    skipNamer: () => {
-      namer.set(undefined)
       step.set('done')
     },
-    namesOff,
     close,
   }
 }
 
-export type ModelSetupState = ReturnType<typeof modelSetup>
+export type ModelSetupState = ReturnType<typeof setupState>

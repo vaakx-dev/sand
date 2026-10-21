@@ -1,4 +1,4 @@
-import type { UnpackedFolder } from '@sand/messages'
+import type { UnpackedFolder } from '@sand/chats/contract'
 import { basename, dirname, join } from 'node:path'
 import { createBudget, type Budget } from './budget'
 import { untar } from './tar'

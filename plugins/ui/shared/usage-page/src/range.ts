@@ -1,5 +1,5 @@
 import type { UsageBucket } from '@sand/usage/contract'
-import type { UsageRange } from '@sand/kit'
+import type { UsageRange } from '@sand/usage/records'
 
 const monthName = () => new Date().toLocaleDateString('en', { month: 'long' })
 

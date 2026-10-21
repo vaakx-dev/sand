@@ -1,4 +1,4 @@
-import type { LimitWindow, PlanLimits } from '@sand/llm-accounts/contract'
+import type { LimitWindow, PlanLimits } from '@sand/accounts/contract'
 import { fieldsOf, type Json } from '../cli/connection'
 
 const hour = 3_600_000

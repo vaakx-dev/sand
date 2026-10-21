@@ -1,5 +1,5 @@
-import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { sourceName } from '@sand/kit'
+import type { SourceInfo } from '@sand/accounts/contract'
+import { sourceName } from '../models'
 
 export const sourceDetail = (source: SourceInfo) => {
   if (source.via) return `On ${source.via}`

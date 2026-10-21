@@ -1,4 +1,4 @@
-import type { MediaRef } from '@sand/messages'
+import type { MediaRef } from '@sand/chats/contract'
 
 export interface Media {
   type: 'image' | 'document'

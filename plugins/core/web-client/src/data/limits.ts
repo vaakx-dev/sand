@@ -1,6 +1,6 @@
-import type { Limits } from '@sand/llm-accounts/contract'
-import type { LimitsFeed, Wire } from '../contract'
+import { helloLimits, type Limits, limitsRefresh, llmLimitsWire } from '@sand/accounts/contract'
 import type { Context } from 'drydock'
+import { type LimitsFeed, limitsChange, type Wire, wireHello } from '../contract'
 
 const keyOf = (limits: Limits) => `${limits.source}|${limits.pc ?? ''}`
 
@@ -10,15 +10,13 @@ export const createLimits = (ctx: Context, wire: Wire): LimitsFeed => {
   const set = (next: Limits | undefined) => {
     if (next) known.set(keyOf(next), next)
     limits = next ?? limits
-    ctx.emit('limits.change')
+    ctx.emit(limitsChange)
   }
-  ctx.on('wire.hello', hello => set(hello.limits))
-  ctx.on('wire.event', event => {
-    if (event.name === 'llm.limits') set(event.args[0])
-  })
+  ctx.on(wireHello, () => set(wire.hello(helloLimits)))
+  ctx.effect(() => wire.on(llmLimitsWire, set))
   return {
     current: () => limits,
     all: () => [...known.values()],
-    refresh: async () => set(await wire.call<Limits | undefined>({ type: 'limits.refresh' })),
+    refresh: async () => set(await wire.call(limitsRefresh, {})),
   }
 }
