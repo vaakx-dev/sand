@@ -1,7 +1,7 @@
 {
   "name": "@sand/update-banner",
   "version": "0.0.0",
-  "description": "Tells you what a newer sand changes and updates all your PCs to it when you click Update",
+  "description": "Marks Settings with a dot when a newer sand is ready and updates all your PCs to it when you click Update",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",

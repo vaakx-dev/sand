@@ -15,7 +15,7 @@ const topPages = (store: PageStore) => store.pages.map(pages => pages.filter(pag
 
 const label = (text: Child) => span({ class: 'min-w-0 flex-1 truncate text-left' }, text)
 
-const pageButton = ({ icon, navButton }: Kit, page: Sig<SettingsPage>, store: PageStore, choose: (id: string) => void) => {
+const pageButton = ({ icon, navButton, withDot }: Kit, page: Sig<SettingsPage>, store: PageStore, choose: (id: string) => void) => {
   const active = () => {
     const current = store.current.get()
     return current === page.get().id || store.pages.get().some(other => other.id === current && other.parent === page.get().id)
@@ -27,9 +27,12 @@ const pageButton = ({ icon, navButton }: Kit, page: Sig<SettingsPage>, store: Pa
       class: 'w-full shrink-0',
       onClick: () => choose(page.get().id),
     },
-    dynamicChild(
-      page.map(value => value.icon ?? 'right'),
-      name => icon(name),
+    withDot(
+      dynamicChild(
+        page.map(value => value.icon ?? 'right'),
+        name => icon(name),
+      ),
+      () => page.get().dot?.() ?? false,
     ),
     label(page.map(value => value.label)),
   )

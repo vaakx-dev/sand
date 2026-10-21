@@ -37,7 +37,7 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
     {
       role: 'dialog',
       ...props,
-      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-neutral-800 shadow-xl ring-1 ring-neutral-700 animate-pop', sheetWidths[size], extra],
+      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-neutral-800 shadow-xl animate-pop', sheetWidths[size], extra],
     },
     ...children,
   )

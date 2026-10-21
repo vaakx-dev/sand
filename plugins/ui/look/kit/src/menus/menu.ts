@@ -12,7 +12,7 @@ export const popover = (close: () => void, { class: extra, ...props }: Props<HTM
     {
       role: 'menu',
       ...props,
-      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-xl bg-neutral-800 p-1 shadow-xl ring-1 ring-neutral-700 animate-pop', extra],
+      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-xl bg-neutral-800 p-1 shadow-xl animate-pop', extra],
       onMount: node => {
         const stops = [dismissible(node, close), onPressOutside(node, close)]
         return () => disposeAll(stops)

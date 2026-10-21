@@ -18,9 +18,7 @@ const other: Kind = { label: 'Other', tone: 'neutral' }
 
 const scopeName = (scope: string) => capital(scope.replace(/[-_]/g, ' '))
 
-export const isNotable = (change: BuildChange) => change.type in kinds
-
-export const changeLine = (change: BuildChange) => (change.scope ? `${scopeName(change.scope)}: ${change.summary}` : capital(change.summary))
+const isNotable = (change: BuildChange) => change.type in kinds
 
 const changeRow = (kit: Kit, change: BuildChange) => {
   const { badge } = kit

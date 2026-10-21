@@ -14,6 +14,7 @@ export interface NavAction {
   tile?: boolean
   active?: boolean
   danger?: boolean
+  dot?: () => boolean
   confirm?: string
   choices?: NavChoice[]
   ask?: NavAsk

@@ -86,7 +86,7 @@ export const menuSheet = (request: MenuRequest, close: () => void) => {
       {
         role: 'menu',
         'aria-label': request.title,
-        class: 'w-full rounded-t-2xl bg-neutral-800 px-2 pt-2 ring-1 ring-neutral-700 animate-rise',
+        class: 'w-full rounded-t-2xl bg-neutral-800 px-2 pt-2 animate-rise',
         style: { paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' },
         onPointerDown: () => {
           pressed = true

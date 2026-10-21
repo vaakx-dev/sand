@@ -1,5 +1,5 @@
 import { duration } from '@sand/util'
-import { clock, div, read, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { clock, div, read, show, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 
 export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'orange' | 'sky'
@@ -31,6 +31,9 @@ export const badge = (tone: Tone, ...children: Child[]) => span({ class: [badgeL
 export const shrinkBadge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'min-w-0 max-w-full', badgeTones[tone]] }, ...children)
 
 export const dot = (tone: Tone) => span({ class: ['h-2 w-2 shrink-0 rounded-full', dotTones[tone]] })
+
+export const withDot = (glyph: Child, on: () => boolean) =>
+  span({ class: 'relative inline-flex shrink-0' }, glyph, show(on, () => span({ class: 'absolute -top-1 -right-1 flex' }, dot('accent'))))
 
 export const spinner = (size: 14 | 16 = 14) =>
   span(
