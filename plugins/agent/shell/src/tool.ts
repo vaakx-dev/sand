@@ -8,13 +8,20 @@ const input = z.object({
   timeout_ms: z.number().int().positive().optional().describe('Kill the command after this many milliseconds'),
 })
 
+export interface Limits {
+  timeout_ms: number
+  max_output: number
+}
+
 const truncate = (text: string, max: number) =>
   text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted …\n${text.slice(-max / 2)}`
 
-export const shellTool = (shell: Shell, timeout: number, maxOutput: number): Tool<typeof input> => ({
-  name: 'shell',
-  description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
-  environment: `Shell: ${shell.name}`,
+export const shellTool = (
+  spec: Pick<Tool, 'name' | 'description' | 'environment'>,
+  shell: Shell,
+  { timeout_ms: timeout, max_output: maxOutput }: Limits,
+): Tool<typeof input> => ({
+  ...spec,
   input,
   async run({ command, timeout_ms = timeout }, context) {
     const options = { cwd: context.cwd, verbatim: shell.verbatim }
