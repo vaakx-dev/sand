@@ -1,7 +1,7 @@
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
-import { detect } from './detect'
+import { detect, sidePowerShell } from './detect'
 import { shellTool } from './tool'
 
 export default definePlugin({
@@ -13,6 +13,34 @@ export default definePlugin({
     max_output: z.number().int().positive().default(30_000),
   }),
   apply(ctx, config) {
-    ctx.effect(() => ctx.tools.register(shellTool(detect(config.shell), config.timeout_ms, config.max_output)))
+    const shell = detect(config.shell)
+    ctx.effect(() =>
+      ctx.tools.register(
+        shellTool(
+          {
+            name: 'shell',
+            description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
+            environment: `Shell: ${shell.name}`,
+          },
+          shell,
+          config,
+        ),
+      ),
+    )
+    const powerShell = sidePowerShell(shell)
+    if (!powerShell) return
+    ctx.effect(() =>
+      ctx.tools.register(
+        shellTool(
+          {
+            name: 'powershell',
+            description:
+              'Run PowerShell commands from the working directory. Use this for PowerShell instead of calling powershell through shell. Returns combined output and the exit code. Each call is a fresh process.',
+          },
+          powerShell,
+          config,
+        ),
+      ),
+    )
   },
 })

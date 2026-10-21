@@ -23,6 +23,7 @@ export default definePlugin({
             transcript.tool('grep', grepRenderer(kit, toolViews)),
             transcript.tool('glob', globRenderer(kit, toolViews)),
             transcript.tool('shell', shellRenderer(kit, toolViews)),
+            transcript.tool('powershell', shellRenderer(kit, toolViews)),
           ),
       ),
     )

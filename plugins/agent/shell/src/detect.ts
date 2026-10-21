@@ -29,16 +29,24 @@ const gitBash = () =>
     .map(root => win32.join(root, 'bin', 'bash.exe'))
     .find(path => !isSystem32(path) && existsSync(path))
 
+const powerShellPath = () => Bun.which('pwsh') ?? 'powershell'
+
 const fallback = () => {
   if (process.platform !== 'win32') return process.env.SHELL ?? '/bin/bash'
-  return gitBash() ?? Bun.which('pwsh') ?? 'powershell'
+  return gitBash() ?? powerShellPath()
 }
+
+const powerShell = (path: string): Shell => ({
+  name: 'PowerShell',
+  argv: command => [path, '-NoProfile', '-NonInteractive', '-Command', utf8 + command],
+})
+
+export const sidePowerShell = (main: Shell) =>
+  process.platform === 'win32' && main.name !== 'PowerShell' ? powerShell(powerShellPath()) : undefined
 
 export const detect = (configured?: string): Shell => {
   const path = configured ?? fallback()
-  if (/powershell|pwsh/i.test(path)) {
-    return { name: 'PowerShell', argv: command => [path, '-NoProfile', '-NonInteractive', '-Command', utf8 + command] }
-  }
+  if (/powershell|pwsh/i.test(path)) return powerShell(path)
   if (/(^|[\\/])cmd(\.exe)?$/i.test(path)) {
     return { name: 'cmd', verbatim: true, argv: command => [path, '/d', '/s', '/c', `"chcp 65001 >nul & ${command}"`] }
   }
