@@ -1,7 +1,8 @@
 import { layout } from '@sand/layout/contract'
 import { theme } from '@sand/ui-theme/contract'
 import type { kit as kitService, Kit } from '@sand/ui-kit/contract'
-import type { wire as wireService } from '@sand/web-client/contract'
+import { joinDisposers } from '@sand/util'
+import { machinesChange, type wire as wireService } from '@sand/web-client/contract'
 import { htmlPage, type HtmlRenderEntry } from '../contract'
 import { div, effect, resource, show, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
@@ -36,12 +37,18 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
   const frame = sandboxedFrame({
     title: data.title,
     src: hostPath,
-    class: 'block h-full w-full border-0',
+    class: () => (failed.get() ? 'hidden' : 'block h-full w-full border-0'),
     onLoad: () => {
       if (page.data.get() === undefined && !page.loading.get()) page.refetch()
       loads.update(count => count + 1)
     },
   })
+
+  const retry = () => {
+    if (!failed.get()) return
+    frame.src = hostPath
+    page.refetch()
+  }
 
   effect(() => {
     const html = page.data.get()
@@ -54,9 +61,13 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
     {
       class: 'relative mb-4 w-full',
       style: { height: () => `${height.get()}px` },
-      onMount: () => listenToFrame(frame, { resize, open: kit.openTab, swipe: () => ctx.get(layout)?.swipe() }),
+      onMount: () =>
+        joinDisposers(
+          listenToFrame(frame, { resize, open: kit.openTab, swipe: () => ctx.get(layout)?.swipe() }),
+          ctx.on(machinesChange, retry),
+        ),
     },
-    show(() => !failed.get(), () => frame),
+    frame,
     show(() => !failed.get() && page.data.get() === undefined, () => loadingNote(kit)),
     show(failed, () => failure(kit, data.title)),
   )

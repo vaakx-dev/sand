@@ -48,6 +48,7 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
   get description() {
     return describeAgents(builtins, ctx.get(llm))
   },
+  parallel: true,
   get input() {
     return inputSchema(ctx)
   },

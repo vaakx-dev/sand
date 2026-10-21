@@ -69,6 +69,6 @@ export default definePlugin({
     ctx.provide(skillIndex, createSkillIndex(ctx, wire, threads))
     ctx.provide(projectsService, projects.projects)
     ctx.provide(machinesService, machines.machines)
-    ctx.provide(media, createMedia(wire, store))
+    ctx.provide(media, createMedia(ctx, wire, store, machines.machines))
   },
 })

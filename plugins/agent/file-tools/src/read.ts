@@ -17,6 +17,7 @@ export const readTool = (attachments: () => Attachments): Tool<typeof input> => 
   name: 'read',
   description:
     'Read a file. Text is returned with line numbers. Images and PDFs are returned as images and documents you can see. Use offset and limit for large text files.',
+  parallel: true,
   input,
   async run({ path, offset = 1, limit = 2000 }, { cwd }) {
     const full = resolve(cwd, path)

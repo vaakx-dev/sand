@@ -11,6 +11,7 @@ import {
   sessionsQuick,
   uiFocus,
 } from '@sand/server/contract'
+import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { type DraftTarget, type Thread, type Threads, threadSelect, type Wire, wireHello } from '../contract'
 import { onAddressChange } from '../integrations/address'
@@ -43,7 +44,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
   const show = (id: string | undefined, visit: Visit, draft?: DraftTarget) => {
     const from = place()
     store.current = id
-    store.draft = id ? undefined : (draft ?? store.draft ?? { id: crypto.randomUUID(), cwd: cwd(), device: store.here() })
+    store.draft = id ? undefined : (draft ?? store.draft ?? { id: uuid(), cwd: cwd(), device: store.here() })
     recordPlace(from, place(), visit)
     ctx.emit(threadSelect, id)
     store.changed(id, true)
@@ -94,7 +95,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
     },
     cwd,
     device: () => store.device(),
-    draft: (folder, device, id = crypto.randomUUID()) => open(undefined, 'push', { id, cwd: folder, device }),
+    draft: (folder, device, id = uuid()) => open(undefined, 'push', { id, cwd: folder, device }),
     drafting: () => (store.current ? undefined : store.draft),
     list: () => [...store.threads.values()],
     get: id => store.threads.get(id),

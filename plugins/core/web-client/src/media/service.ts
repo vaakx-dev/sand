@@ -1,10 +1,13 @@
 import type { ImageBlock, UserContent } from '@sand/chats/contract'
-import type { Media, Wire } from '../contract'
+import type { Context } from 'drydock'
+import { type Machines, machinesChange, type Media, type Wire } from '../contract'
 import { intersectionObserver, listen } from '@vaakx-dev/vrui'
 import { base64Of } from '../integrations/base64'
 import type { Store } from '../threads/store'
 
 const nearView = '800px'
+
+const skeleton = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
 
 const blobPath = (hash: string, session?: string) => `/blob?${new URLSearchParams(session ? { hash, session } : { hash })}`
 
@@ -22,9 +25,25 @@ const whenNearView = (element: Element, run: () => void) => {
   )
 }
 
-export const createMedia = (wire: Wire, store: Store): Media => {
+const broken = (image: HTMLImageElement) => {
+  image.src = ''
+  image.title ||= 'This image could not be loaded'
+}
+
+export const createMedia = (ctx: Context, wire: Wire, store: Store, machines: Machines): Media => {
+  const online = (device: string) =>
+    new Promise<void>(resolve => {
+      if (machines.online(device)) return resolve()
+      const stop = ctx.on(machinesChange, () => {
+        if (!machines.online(device)) return
+        stop()
+        resolve()
+      })
+    })
+
   const fetchBlob = async (hash: string, thread?: string) => {
-    const device = thread ? store.deviceOf(thread) : undefined
+    const device = thread ? store.deviceOf(thread) : store.here()
+    await online(device)
     const response = await wire.fetch(blobPath(hash, thread), undefined, device)
     if (!response.ok) throw new Error(`Could not load an attachment (${response.status})`)
     return response.blob()
@@ -50,8 +69,12 @@ export const createMedia = (wire: Wire, store: Store): Media => {
     show(image, block, thread) {
       image.decoding = 'async'
       image.loading = 'lazy'
-      if (typeof block.data === 'string') image.src = dataUrl(block)
-      else whenNearView(image, () => void load(image, block.blob, thread).catch(() => void (image.title ||= 'This image could not be loaded')))
+      if (typeof block.data === 'string') {
+        image.src = dataUrl(block)
+        return image
+      }
+      image.src = skeleton
+      whenNearView(image, () => void load(image, block.blob, thread).catch(() => broken(image)))
       return image
     },
     inline: (content, thread) => Promise.all(content.map(block => restore(block, thread))),

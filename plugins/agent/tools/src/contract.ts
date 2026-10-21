@@ -19,6 +19,7 @@ export interface Tool<S extends ZodType = ZodType> {
   description: string
   environment?: string
   group?: string
+  parallel?: boolean
   input: S
   active?(session: Session): boolean
   replaces?: string[]
@@ -46,6 +47,7 @@ export interface Tools {
   choose(group: string, load: ToolLoad): Promise<void>
   specs(messages: Message[], session: Session): ToolSpec[]
   notes(session: Session): string[]
+  parallel(call: ToolCallBlock, session: Session): boolean
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>
 }
 
