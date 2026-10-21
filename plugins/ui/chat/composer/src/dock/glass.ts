@@ -5,16 +5,16 @@ type Tint = 'plain' | 'accent' | 'warning' | 'danger'
 type GlassProps = Props<HTMLDivElement> & { tint?: MaybeReactive<Tint> }
 
 const tints: Record<Tint, string> = {
-  plain: 'bg-neutral-800/90 backdrop-blur-md ring-neutral-700',
-  accent: 'bg-accent-950 ring-accent-500',
-  warning: 'bg-warning-950 text-neutral-300 ring-warning-900',
-  danger: 'bg-danger-950 text-danger-300 ring-danger-900',
+  plain: 'bg-neutral-800/90 backdrop-blur-md',
+  accent: 'bg-accent-950 ring-1 ring-accent-500',
+  warning: 'bg-warning-950 text-neutral-300',
+  danger: 'bg-danger-950 text-danger-300',
 }
 
 const tuck = SPACE['4']
 
 export const glassPanel = ({ tint = 'plain', class: extra, ...props }: GlassProps, ...children: Child[]) =>
-  div({ ...props, class: ['ring-1 transition', () => tints[read(tint)], extra] }, ...children)
+  div({ ...props, class: ['transition', () => tints[read(tint)], extra] }, ...children)
 
 const tuckedPanel = ({ class: extra, ...props }: GlassProps, ...children: Child[]) =>
   glassPanel({ ...props, class: ['mx-6 rounded-2xl pt-2 pb-6 animate-rise', extra] }, ...children)

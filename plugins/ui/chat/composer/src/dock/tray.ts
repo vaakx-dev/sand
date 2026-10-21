@@ -6,7 +6,7 @@ const tuck = SPACE['4']
 export const tray = (slots: Slots) =>
   div(
     {
-      class: 'relative mx-4 flex min-w-0 items-center gap-2 rounded-b-2xl bg-neutral-900 px-1 pb-1 text-xs text-neutral-500 ring-1 ring-neutral-800 animate-fade',
+      class: 'relative mx-4 flex min-w-0 items-center gap-2 rounded-b-2xl bg-neutral-900 px-1 pb-1 text-xs text-neutral-500 animate-fade',
       style: { marginTop: `calc(-1 * ${tuck})`, paddingTop: `calc(${tuck} + ${SPACE['1']})` },
       hidden: slots.empty('tray-start', 'tray-end'),
     },

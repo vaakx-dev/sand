@@ -92,7 +92,8 @@ export default definePlugin({
       render()
       return hide
     })
-    ctx.watch(nav, found => found?.action({ id: 'settings', label: 'Settings', icon: 'gear', place: 'footer', order: 100, run: toggle }))
+    const dot = () => store.pages.get().some(page => page.dot?.())
+    ctx.watch(nav, found => found?.action({ id: 'settings', label: 'Settings', icon: 'gear', place: 'footer', order: 100, dot, run: toggle }))
     ctx.watch(sidebar, found => (found ? undefined : floatingButton()))
   },
 })
