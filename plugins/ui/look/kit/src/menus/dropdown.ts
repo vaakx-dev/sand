@@ -1,4 +1,4 @@
-import { popupTrigger } from '@sand/kit/web'
+import { popupTrigger } from '../layers/outside'
 import { div, preventThen, show, sig, type Child, type ClassValue, type Sig } from '@vaakx-dev/vrui'
 import { popover } from './menu'
 

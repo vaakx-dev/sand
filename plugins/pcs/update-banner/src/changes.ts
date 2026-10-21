@@ -1,6 +1,6 @@
-import { capital, plural } from '@sand/kit'
-import type { BuildChange } from '@sand/protocol'
+import type { BuildChange } from '@sand/host-dist/contract'
 import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { capital, plural } from '@sand/util'
 import { div, p, show, sig, span } from '@vaakx-dev/vrui'
 
 interface Kind {

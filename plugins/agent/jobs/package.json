@@ -1,31 +1,29 @@
 {
   "name": "@sand/jobs",
   "version": "0.0.0",
-  "description": "Background jobs: agents, workflows and shell commands that run on after the tool call returns",
+  "description": "Background jobs: sub-agents that run on after the tool call returns",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
     "label": "Background jobs",
-    "summary": "Tracks background agents, workflows and shell commands, tells the agent when they finish, and lets it read, message, wait for and stop them",
-    "provides": [
-      "backgroundJobs"
-    ],
-    "uses": {
-      "ui": "there is no /agents command and results that cannot be delivered fail silently",
-      "steering": "results for subagents start a new turn instead of joining the running one",
-      "server": "the page cannot list or stop background jobs"
-    }
+    "summary": "Tracks background agents, tells the agent when they finish, and lets it read, message, wait for and stop them"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/steering": "workspace:*",
     "@sand/tools": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }
 }

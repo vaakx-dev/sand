@@ -1,57 +1,78 @@
+import { type ClientMessage, hello } from '@sand/host-hub/contract'
+import { sessionUpdate } from '@sand/chats/contract'
+import { createHandlers, parseInput } from '@sand/util/wire'
 import { definePlugin } from 'drydock'
 import { createBlobs } from './blobs'
-import type { Server } from './contract'
-import { createRelay } from './relay/relay'
-import { helloRequest } from './requests/hello'
+import { helloSafe, type Server, server as serverService, uiFocus } from './contract'
+import { inject } from './context'
+import { createHello } from './requests/hello'
 import { pagingRequests } from './requests/paging'
-import { createRequests } from './requests/registry'
 import { sessionRequests } from './requests/sessions'
 import { createRoutes } from './routes'
 import { forwardEvents } from './socket/forward'
-import { createSockets } from './socket/sockets'
+import { createSockets, type Socket } from './socket/sockets'
 import { createLiveTracker } from './stream/live'
 import { createStream } from './stream/stream'
 
 export default definePlugin({
   name: 'server',
-  inject: ['cli', 'sessions', 'loop', 'runtime'],
+  inject,
   apply(ctx) {
-    if (ctx.cli.mode !== 'serve') return
     const routes = createRoutes(ctx.runtime)
     const blobs = createBlobs(ctx.cli.home, id => ctx.sessions.open(id)?.entries(), error => ctx.report(error))
     routes.route('/blob', blobs.route)
     ctx.effect(blobs.sweep)
-    const requests = createRequests()
-    const relay = createRelay(ctx)
+    const handlers = createHandlers()
+    const hellos = createHello(ctx)
     const live = createLiveTracker(ctx)
+
+    const markSeen = (session: string) => {
+      if (ctx.sessions.open(session)?.seen === false) ctx.sessions.update(session, { seen: true })
+    }
+
+    const focus = async (socket: Socket, request: ClientMessage) => {
+      const { session } = await parseInput(uiFocus, request.input)
+      stream.focus(socket, session)
+      if (session) markSeen(session)
+      return true
+    }
+
+    ctx.on(sessionUpdate, session => {
+      if (!session.seen && stream.focused(session.id)) markSeen(session.id)
+    })
+
     const sockets = createSockets({
-      join: relay.join,
-      leave(socket) {
-        relay.leave(socket)
-        stream.forget(socket)
-      },
+      leave: socket => stream.forget(socket),
       answer(socket, request) {
-        if (request.type === 'ui.focus') stream.focus(socket, request.session)
-        return blobs.answer(request, resolved => relay.answer(socket, resolved, () => requests.answer(resolved)))
+        if (request.type === uiFocus.id) return focus(socket, request)
+        return blobs.answer(request, input => handlers.answer(request.type, input, socket.data))
       },
       settle: () => stream.flush(),
       malformed: error => ctx.report(error),
     })
     const stream = createStream(ctx, sockets.publish, live)
-    const broadcast = (name: string, args: unknown[]) => {
+    const broadcast = (name: string, payload: unknown) => {
       stream.flush()
-      sockets.broadcast(name, blobs.outbound(args) as unknown[])
+      sockets.broadcast(name, blobs.outbound(payload))
     }
-    const server = Bun.serve({ hostname: '127.0.0.1', port: 0, websocket: sockets.websocket, fetch: routes.respond })
-    ctx.effect(() => () => void server.stop(true))
+    const listener = Bun.serve({ hostname: '127.0.0.1', port: 0, websocket: sockets.websocket, fetch: routes.respond })
+    ctx.effect(() => () => void listener.stop(true))
 
-    forwardEvents(ctx, broadcast)
-    ctx.effect(() => requests.handle({ hello: helloRequest(ctx), ...sessionRequests(ctx), ...pagingRequests(ctx, live) }))
+    forwardEvents(ctx, (event, payload) => broadcast(event.id, payload))
+    ctx.effect(() => handlers.handle(hello, hellos.answer))
+    ctx.effect(() => hellos.register(helloSafe, () => ctx.cli.safe))
+    ctx.effect(() => sessionRequests(ctx, handlers))
+    ctx.effect(() => pagingRequests(ctx, handlers, live))
 
-    const service: Server = { route: routes.route, handle: requests.handle, broadcast, inlineMedia: blobs.inline }
-    ctx.provide('server', service)
-    ctx.provide('ui', relay.ui)
-    ctx.runtime.listening(`http://127.0.0.1:${server.port}`)
-    console.log(`runtime ${ctx.runtime.id} listening on 127.0.0.1:${server.port}`)
+    const server: Server = {
+      route: routes.route,
+      handle: handlers.handle,
+      broadcast: (event, payload) => broadcast(event.id, payload),
+      hello: hellos.register,
+      inlineMedia: blobs.inline,
+    }
+    ctx.provide(serverService, server)
+    ctx.runtime.listening(`http://127.0.0.1:${listener.port}`)
+    console.log(`runtime ${ctx.runtime.id} listening on 127.0.0.1:${listener.port}`)
   },
 })

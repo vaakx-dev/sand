@@ -1,0 +1,27 @@
+{
+  "name": "@sand/host-plugin-sync",
+  "version": "0.0.0",
+  "description": "Shares ~/.sand/plugins with paired PCs, asking before applying changes",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/index.ts",
+    "label": "Plugin sync",
+    "summary": "Shares your plugins with paired PCs"
+  },
+  "dependencies": {
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-devices": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-plugin-library": "workspace:*",
+    "@sand/host-plugin-versions": "workspace:*",
+    "@sand/host-remotes": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

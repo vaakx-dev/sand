@@ -1,19 +1,32 @@
-import type { FolderListing, Project, ProjectFolder, ProjectList, ProjectPatch } from '@sand/host-projects/contract'
-import type { ProjectLook, WireEvent, WireRequest } from '@sand/protocol'
-import type { ProjectEntry, ProjectGroup, Projects, Wire } from '../contract'
-import { folderName, isInside, sandHomeProject, uuid } from '@sand/kit'
+import {
+  fsBrowse,
+  fsMkdir,
+  type Project,
+  projectsAdd,
+  projectsChange as projectsUpdate,
+  projectsCreate,
+  projectsInspect,
+  type ProjectList,
+  projectsList,
+  type ProjectLook,
+  type ProjectPatch,
+  projectsRemove,
+  projectsRoot,
+  projectsUpdate as projectsPatch,
+} from '@sand/project/contract'
+import { sandHomeProject } from '@sand/project/projects'
+import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
+import { machinesChange, type ProjectEntry, type ProjectGroup, type Projects, projectsChange, threadsChange, type Wire, wireHello } from '../contract'
 import type { Store } from '../threads/store'
 import { buildGroups, copyEntry, groupAt, type Lists } from './groups'
 import { projectIcons } from './icons'
 import { keptLists } from './kept'
 
-const fallback = { home: '~', sep: '/', root: '~', scratch: '' }
+const fallback = { home: '~', sep: '/', root: '~' }
 
 export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
   const lists: Lists = new Map()
-  const progress = new Map<string, (text: string) => void>()
-  const call = <T>(request: WireRequest, device: string) => wire.call<T>(request, device)
   let view: ProjectGroup[] | undefined
   let shown = ''
 
@@ -22,7 +35,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
   const changed = () => {
     view = undefined
     shown = JSON.stringify(all())
-    ctx.emit('projects.change')
+    ctx.emit(projectsChange)
   }
 
   const set = (device: string, list: ProjectList) => {
@@ -31,17 +44,10 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
   }
 
   const refresh = (device: string) =>
-    call<ProjectList>({ type: 'projects.list' }, device).then(
+    wire.call(projectsList, {}, device).then(
       list => set(device, list),
       () => {},
     )
-
-  const event = (device: string, event: WireEvent) => {
-    if (event.name === 'projects.change') set(device, event.args[0])
-    if (event.name !== 'projects.progress') return
-    const { job, text } = event.args[0]
-    progress.get(job)?.(text)
-  }
 
   const forget = (device: string) => {
     if (lists.delete(device)) changed()
@@ -55,9 +61,9 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const refreshHere = () => refresh(store.here())
 
-  ctx.on('wire.hello', () => void refreshHere())
-  ctx.on('wire.event', wireEvent => event(store.here(), wireEvent))
-  ctx.on('threads.change', () => {
+  ctx.on(wireHello, () => void refreshHere())
+  ctx.effect(() => wire.on(projectsUpdate, (list, device) => set(device, list), { remotes: true }))
+  ctx.on(threadsChange, () => {
     view = undefined
     if (JSON.stringify(all()) !== shown) changed()
   })
@@ -66,16 +72,11 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const place = (device: string) => lists.get(device) ?? { ...fallback, device }
 
-  const inScratch = (path: string, device: string) => {
-    const { scratch } = place(device)
-    return Boolean(scratch) && isInside(path, scratch)
-  }
-
-  const group = (path: string, device: string) => (inScratch(path, device) ? undefined : groupAt(all(), path, device, place(device).home))
+  const group = (path: string, device: string) => groupAt(all(), path, device, place(device).home)
 
   const icons = projectIcons(ctx, wire)
-  ctx.on('wire.hello', icons.clear)
-  ctx.on('machines.change', icons.retryMissed)
+  ctx.on(wireHello, icons.clear)
+  ctx.on(machinesChange, icons.retryMissed)
   ctx.effect(() => icons.clear)
 
   const groupIcon = (found: ProjectGroup): ProjectLook | undefined => {
@@ -92,14 +93,14 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     return copyEntry(lists, project, device, copy)
   }
 
-  const registered = async (request: WireRequest, device: string) => {
-    const project = await call<Project>(request, device)
+  const registered = async (asked: Promise<Project>, device: string) => {
+    const project = await asked
     await refresh(device)
     return entryFor(project, device)
   }
 
   const update = async (target: ProjectGroup, patch: ProjectPatch) => {
-    await call<Project>({ type: 'projects.update', project: target.id, patch }, store.here())
+    await wire.call(projectsPatch, { project: target.id, patch }, store.here())
     await refreshHere()
   }
 
@@ -109,44 +110,34 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
     get,
     group,
     name: (path, device) => group(path, device)?.name || folderName(path),
-    quick: (path, device) => !path || inScratch(path, device),
     icon(path, device) {
       const found = group(path, device)
       return found && groupIcon(found)
     },
     groupIcon,
     place,
-    browse: (path, device) => call<FolderListing>({ type: 'fs.browse', path }, device),
-    mkdir: (path, device) => call<void>({ type: 'fs.mkdir', path }, device),
-    inspect: (path, device) => call<ProjectFolder>({ type: 'projects.inspect', path }, device),
-    add: (path, device, project) => registered({ type: 'projects.add', path, ...(project ? { project } : {}) }, device),
+    browse: (path, device) => wire.call(fsBrowse, { path }, device),
+    mkdir: (path, device) => wire.call(fsMkdir, { path }, device),
+    inspect: (path, device) => wire.call(projectsInspect, { path }, device),
+    add: (path, device, project) => registered(wire.call(projectsAdd, { path, ...(project ? { project } : {}) }, device), device),
     rename: (target, name) => update(target, { name }),
     hide: (target, hidden) => update(target, { hidden }),
     setIcon: (target, icon) => update(target, { icon }),
     async remove(target) {
-      await call<void>({ type: 'projects.remove', project: target.id }, store.here())
+      await wire.call(projectsRemove, { project: target.id }, store.here())
       await refreshHere()
     },
     async removeCopy(entry) {
-      await call<void>({ type: 'projects.remove', project: entry.project, device: entry.device }, store.here())
+      await wire.call(projectsRemove, { project: entry.project, device: entry.device }, store.here())
       await refreshHere()
     },
     async setRoot(root, device) {
-      set(device, await call<ProjectList>({ type: 'projects.root', root }, device))
+      set(device, await wire.call(projectsRoot, { root }, device))
     },
-    create: (name, device) => registered({ type: 'projects.create', name }, device),
-    async clone(url, into, device, onProgress, project) {
-      const job = uuid()
-      if (onProgress) progress.set(job, onProgress)
-      try {
-        return await registered({ type: 'projects.clone', url, into, job, ...(project ? { project } : {}) }, device)
-      } finally {
-        progress.delete(job)
-      }
-    },
+    create: (name, device) => registered(wire.call(projectsCreate, { name }, device), device),
   }
 
-  return { projects, refresh, event, forget, restore, kept: () => Object.fromEntries(lists) }
+  return { projects, refresh, forget, restore, kept: () => Object.fromEntries(lists) }
 }
 
 export type ProjectService = ReturnType<typeof createProjects>

@@ -1,4 +1,5 @@
-import { routeKind, routeRank, routeUsable } from '@sand/kit'
+import { routeKind } from '@sand/host-remotes/pairing'
+import { routeRank, routeUsable } from '../pairing/routes'
 import { routes, type StoredRoute } from './book'
 import type { Route } from './select'
 import { originOf } from './url'

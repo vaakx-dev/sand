@@ -1,10 +1,10 @@
-import { copyWithNotice } from '@sand/kit/web'
-import type { MenuSpec, NavAction } from '@sand/protocol'
+import type { NavAction } from '@sand/nav/contract'
+import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ModelMenuInput } from './contract'
 
-export const modelMenu = ({ model, subtitle, notify, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {
+export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {
   const favourite = model.favourite !== undefined
-  const copy = () => copyWithNotice(notify, model.name ?? model.id, 'model id', 'Copied the model id')
+  const copy = () => copyText(model.name ?? model.id)
   const actions: (NavAction | false)[] = [
     use !== undefined && { id: 'use', label: 'Use this model', icon: 'check', group: 'use', quick: true, run: use },
     makeDefault !== undefined && { id: 'default', label: 'Make default', icon: 'pin', group: 'use', run: makeDefault },

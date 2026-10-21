@@ -1,8 +1,9 @@
-import type { Remote } from '@sand/host-remotes/contract'
-import type { DeviceInfo } from '@sand/protocol'
-import type { ConnectionInfo, Machine, Machines } from '../contract'
+import { type DeviceInfo, deviceInfo } from '@sand/host-devices/contract'
+import { type Remote, remotesAdd, remotesChange, remotesList, remotesRemove } from '@sand/host-remotes/contract'
 import type { Context } from 'drydock'
+import { type ConnectionInfo, type Machine, type Machines, wireHello } from '../contract'
 import { hostOf } from '../connection/url'
+import type { Listeners } from '../wire/listeners'
 import type { HomeWire } from '../wire/wire'
 import { keptRemotes } from './kept'
 import type { Links } from './links'
@@ -11,7 +12,15 @@ const addressOf = (url: string | undefined) => (url ? hostOf(url) : undefined)
 
 const online = (connection: ConnectionInfo) => connection.status === 'connected'
 
-export const createMachines = (ctx: Context, home: HomeWire, links: Links, hereId: string, keep: (remotes: Remote[]) => void) => {
+interface MachineParts {
+  home: HomeWire
+  on: Listeners['on']
+  links: Links
+  hereId: string
+  keep(remotes: Remote[]): void
+}
+
+export const createMachines = (ctx: Context, { home, on, links, hereId, keep }: MachineParts) => {
   let self: DeviceInfo | undefined
   let listed = false
 
@@ -23,17 +32,15 @@ export const createMachines = (ctx: Context, home: HomeWire, links: Links, hereI
 
   const refresh = async () => {
     const [info, remotes] = await Promise.all([
-      home.call<DeviceInfo>({ type: 'device.info' }).catch(() => undefined),
-      home.call<Remote[]>({ type: 'remotes.list' }).catch(() => undefined),
+      home.call(deviceInfo, {}).catch(() => undefined),
+      home.call(remotesList, {}).catch(() => undefined),
     ])
     self = info
     if (remotes) sync(remotes)
   }
 
-  ctx.on('wire.hello', () => void refresh())
-  ctx.on('wire.event', event => {
-    if (event.name === 'remotes.change') sync(event.args[0])
-  })
+  ctx.on(wireHello, () => void refresh())
+  ctx.effect(() => on(remotesChange, sync))
 
   const here = (): Machine => {
     const connection = home.info()
@@ -71,13 +78,13 @@ export const createMachines = (ctx: Context, home: HomeWire, links: Links, hereI
     name: id => get(id)?.name ?? 'Unknown PC',
     online: id => get(id)?.online ?? false,
     async add(link) {
-      const remote = await home.call<Remote>({ type: 'remotes.add', link })
+      const remote = await home.call(remotesAdd, { link })
       await refresh()
       const machine = get(remote.id)
       if (!machine) throw new Error(`${remote.name} was added, but this page could not load it. Reload to see it.`)
       return machine
     },
-    remove: id => home.call({ type: 'remotes.remove', remote: id }).then(() => undefined),
+    remove: id => home.call(remotesRemove, { remote: id }),
   }
 
   return {

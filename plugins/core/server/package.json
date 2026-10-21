@@ -6,31 +6,26 @@
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts",
-    "./thread": "./src/thread.ts"
+    "./live": "./src/stream/apply.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
     "label": "Server",
-    "summary": "Answers the sand host over a private socket: requests, events and page routes",
-    "provides": [
-      "server",
-      "ui"
-    ],
-    "uses": {
-      "llm": "the page gets no models or limits",
-      "attachments": "the page gets no attachment limits",
-      "modelSettings": "threads use the default model settings"
-    }
+    "summary": "Answers the sand host over a private socket: requests, events and page routes"
   },
   "dependencies": {
-    "@sand/agents": "workspace:*",
-    "@sand/jobs": "workspace:*",
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/messages": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/html": "workspace:*",
+    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/protocol": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
     "@sand/steering": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }

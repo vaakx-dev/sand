@@ -1,7 +1,7 @@
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, p, show, sig, untrack } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { DevicesContext } from '../inject'
 import type { DeviceSource } from '../source'
 import { installStep } from './install'
 import { installedName } from './progress'
@@ -32,7 +32,7 @@ const doneStep = ({ doneMark }: Kit, done: Done) =>
     p({ class: 'text-sm text-neutral-400' }, done.detail),
   )
 
-export const addPcDialog = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {
+export const addPcDialog = (ctx: DevicesContext, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {
   const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = ctx.kit
   source.load()
   const mode = sig<AddPcMode>(start)

@@ -1,0 +1,24 @@
+{
+  "name": "@sand/math",
+  "version": "0.0.0",
+  "description": "Typesets LaTeX math formulas in the chat with KaTeX",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Math",
+    "summary": "Typesets LaTeX formulas, from inline symbols to aligned equations, matrices and chemistry"
+  },
+  "dependencies": {
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "katex": "^0.19.0"
+  }
+}

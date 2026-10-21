@@ -1,4 +1,5 @@
-import type { Hello, WireRequest } from '@sand/protocol'
+import type { HelloField, Request, WireEvent } from '@sand/host-hub/contract'
+import type { Dispose } from 'drydock'
 
 export type WireState = 'connecting' | 'open' | 'closed' | 'unpaired'
 
@@ -7,10 +8,17 @@ export interface WirePairing {
   device: string
 }
 
+export interface WireListen {
+  remotes?: boolean
+}
+
+export type WireListener<P> = (payload: P, device: string) => void
+
 export interface Wire {
   state(): WireState
-  hello(): Hello | undefined
   pairing(): WirePairing | undefined
-  call<T = unknown>(request: WireRequest, device?: string): Promise<T>
+  call<I, O>(request: Request<I, O>, input: I, device?: string): Promise<O>
+  on<P>(event: WireEvent<P>, listener: WireListener<P>, options?: WireListen): Dispose
+  hello<T>(field: HelloField<T>, device?: string): T | undefined
   fetch(path: string, init?: RequestInit, device?: string): Promise<Response>
 }

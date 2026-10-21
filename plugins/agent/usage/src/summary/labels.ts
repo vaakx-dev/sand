@@ -1,4 +1,4 @@
-import type { Billing } from '@sand/llm-accounts/contract'
+import type { Billing } from '@sand/accounts/contract'
 
 interface SourceFacts {
   label: string

@@ -1,4 +1,4 @@
-import type { LLM } from '@sand/llm-accounts/contract'
+import type { LLM } from '@sand/accounts/contract'
 import type { ContextUsage } from './contract'
 import type { CompactionConfig } from './config'
 

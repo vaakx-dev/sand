@@ -4,8 +4,6 @@ declare module 'sand:extensions' {
   export interface BundledExtension {
     id: string
     builtin: boolean
-    enabled: boolean
-    provides: string[]
     label?: string
     summary?: string
     plugin?: AnyPlugin

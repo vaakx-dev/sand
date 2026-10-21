@@ -1,4 +1,4 @@
-import { debouncedWatch } from '@sand/kit/fs'
+import { debouncedWatch } from '@sand/util/fs'
 import { existsSync } from 'node:fs'
 import type { WatchedFolders } from './contract'
 

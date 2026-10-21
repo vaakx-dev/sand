@@ -1,4 +1,5 @@
-import type { AppPlan, PlanLimits } from '@sand/llm-accounts/contract'
+import { llmPlans, type AppPlan, type PlanLimits } from '@sand/accounts/contract'
+import { cli } from '@sand/config/contract'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -32,13 +33,13 @@ const reportLimits = (server: CodexServer, report: (limits: PlanLimits) => void)
 export default definePlugin({
   name: 'codex',
   description: 'Adds Codex to Settings → Accounts using the Codex app on this PC: sand runs codex app-server with sand’s own tools and prompt, and the app keeps its own sign-in',
-  inject: ['cli'],
+  inject: { cli },
   async apply(ctx) {
     const folder = join(ctx.cli.home, 'apps', 'codex')
     await mkdir(folder, { recursive: true })
     const server = createServer(folder, pkg.version)
     ctx.effect(() => () => server.close())
-    ctx.watch('llmPlans', plans => {
+    ctx.watch(llmPlans, plans => {
       if (!plans) return
       const stopLimits = reportLimits(server, limits => plans.limits('codex', limits))
       const unregister = plans.register(codexPlan(server))

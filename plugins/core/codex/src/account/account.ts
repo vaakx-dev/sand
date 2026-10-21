@@ -1,5 +1,5 @@
-import type { AppStatus, Effort, PlanModel, SignInFlow } from '@sand/llm-accounts/contract'
-import { capital } from '@sand/kit'
+import type { AppStatus, Effort, PlanModel, SignInFlow } from '@sand/accounts/contract'
+import { capital } from '@sand/util'
 import { findCodex } from '../server/binary'
 import { fieldsOf, type Json } from '../server/rpc'
 import type { CodexServer } from '../server/server'
@@ -18,10 +18,13 @@ const modelOf = (entry: Json): PlanModel[] => {
   if (typeof name !== 'string' || !name || entry.hidden === true) return []
   const levels = Array.isArray(entry.supportedReasoningEfforts) ? entry.supportedReasoningEfforts.map(level => fieldsOf(level).reasoningEffort) : []
   const supported = efforts.filter(effort => levels.includes(effort))
+  const defaultEffort = supported.find(effort => effort === entry.defaultReasoningEffort)
   return [
     {
       name,
+      label: typeof entry.displayName === 'string' && entry.displayName ? entry.displayName : name,
       ...(supported.length && { efforts: supported }),
+      ...(defaultEffort && { defaultEffort }),
       images: Array.isArray(entry.inputModalities) && entry.inputModalities.includes('image'),
     },
   ]

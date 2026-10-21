@@ -1,4 +1,4 @@
-import type { LLM, Limits } from '@sand/llm-accounts/contract'
+import type { LLM, Limits } from '@sand/accounts/contract'
 
 export const limitsOf = (llm?: LLM): Limits[] => {
   const listed = llm?.sourceLimits?.()

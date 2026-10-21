@@ -16,10 +16,9 @@ import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
 import { markerLine } from './marks/marker'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, hint, okMark, progressSteps, radioMark, shrinkBadge, spinner, statusLine, working } from './marks/marks'
-import { navMark } from './marks/nav-mark'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
-import { stateMark, stepMark } from './marks/state-marks'
+import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
 import { chipButton, chipPopover } from './menus/chip'
 import { dropdown } from './menus/dropdown'
@@ -40,6 +39,23 @@ import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScr
 import { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { diffRow } from './tools/diff'
 import { fold, toolBody, toolCard } from './tools/tool-card'
+import { editing, selecting } from './gesture/busy'
+import { direction } from './gesture/direction'
+import { follow } from './gesture/follow'
+import { canScrollToward } from './gesture/scroll'
+import { onPressOutside, popupTrigger, pressOpens } from './layers/outside'
+import { dismissible, hasOpenLayer, modal, returnFocus } from './layers/stack'
+import { listbox } from './listbox/model'
+import { optionProps } from './listbox/option'
+import { pressMenu } from './menus/press'
+import { copyText } from './page/clipboard'
+import { delayed } from './page/delayed'
+import { isMac } from './page/platform'
+import { style } from './page/style'
+import { openTab } from './page/tab'
+import { nearEnd, toEnd } from './scroll/end'
+
+const gesture = { canScrollToward, direction, editing, follow, selecting }
 
 export const kit = {
   actionTones,
@@ -59,8 +75,11 @@ export const kit = {
   contextMenu,
   controlButton,
   copyButton,
+  copyText,
+  delayed,
   deviceCode,
   diffRow,
+  dismissible,
   dockFade,
   doneMark,
   dot,
@@ -70,26 +89,34 @@ export const kit = {
   errorText,
   floatButton,
   fold,
+  gesture,
   groupLabel,
+  hasOpenLayer,
   headTitle,
   hint,
   hintRow,
   icon,
   iconButton,
+  isMac,
   itemRow,
   jumpButton,
   layer,
   linkButton,
+  listbox,
   markerLine,
   menuItem,
   menuLayer,
   menuSeparator,
+  modal,
   modelLogo,
   navActionIcon,
   navButton,
-  navMark,
+  nearEnd,
   note,
   okMark,
+  onPressOutside,
+  openTab,
+  optionProps,
   overlay,
   pageHead,
   paneHead,
@@ -97,6 +124,9 @@ export const kit = {
   plainButton,
   popover,
   popoverItem,
+  popupTrigger,
+  pressMenu,
+  pressOpens,
   primaryAction,
   progressSteps,
   projectAvatar,
@@ -106,6 +136,7 @@ export const kit = {
   quietButton,
   quoteButton,
   radioMark,
+  returnFocus,
   rowAction,
   rowButton,
   rowList,
@@ -134,15 +165,16 @@ export const kit = {
   shrinkBadge,
   sideHead,
   spinner,
-  stateMark,
   statusBadge,
   statusBanner,
   statusLabel,
   statusLine,
   stepMark,
+  style,
   textInput,
   textRule,
   tile,
+  toEnd,
   toggleSwitch,
   toolBody,
   toolCard,

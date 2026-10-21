@@ -1,5 +1,5 @@
-import type { LimitWindow } from '@sand/llm-accounts/contract'
-import { coarseDuration, percent } from '@sand/kit'
+import type { LimitWindow } from '@sand/accounts/contract'
+import { coarseDuration, percent } from '@sand/util'
 import { span } from '@vaakx-dev/vrui'
 import type { Forecast } from '../../../data/forecast/project'
 

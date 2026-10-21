@@ -1,7 +1,7 @@
 {
   "name": "@sand/nav",
   "version": "0.0.0",
-  "description": "Thread lists and actions that sidebars draw",
+  "description": "Actions that sidebars draw",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,15 +9,11 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Navigation",
-    "summary": "Keeps the thread lists and actions that the sidebar shows",
-    "provides": [
-      "nav"
-    ]
+    "summary": "Keeps the actions that the sidebar shows"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

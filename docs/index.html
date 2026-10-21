@@ -312,7 +312,7 @@
     <div>
       <div class="eyebrow">A coding agent · made of plugins</div>
       <h1>Every part of it<br>is a <em>plugin.</em><br>Even the parts<br>it writes itself.</h1>
-      <p class="lede">sand is a coding agent that runs on your own machines. The composer, the sidebar, the tools, the model: each one is a plugin. <b>Ask sand for a new one and load it mid-conversation with /reload.</b></p>
+      <p class="lede">sand is a coding agent that runs on your own machines. The composer, the sidebar, the tools, the model: each one is a plugin. <b>Ask sand for a new one and load it mid-conversation with the reload button.</b></p>
       <div class="actions">
         <a class="btn ink" href="https://github.com/vaakx-dev/sand#get-started">Get sand</a>
         <a class="btn" href="#plugins">See the plugin system</a>
@@ -320,14 +320,14 @@
       <div class="meta">
         <div><b>63</b>plugins, all replaceable</div>
         <div><b>3</b>surfaces: web, phone, paired PCs</div>
-        <div><b>1</b>thread, wherever you open it</div>
+        <div><b>1</b>chat per project, wherever you open it</div>
       </div>
     </div>
 
     <div class="scene" id="scene">
       <div class="float"><div class="stack" id="stack">
         <div class="plate" style="--i:0" data-layer="0">
-          <span class="tag">layout-columns · header</span>
+          <span class="tag">layout · header</span>
           <div class="wire" style="left:0;right:0;top:0;height:24px;border-radius:6px 6px 0 0"></div>
           <div class="dot" style="left:10px;top:9px;background:var(--wire)"></div><div class="dot" style="left:21px;top:9px;background:var(--wire)"></div><div class="dot" style="left:32px;top:9px;background:var(--wire)"></div>
           <div class="row" style="left:150px;top:10px;width:100px"></div>
@@ -335,7 +335,7 @@
           <div class="wire" style="right:0;top:24px;bottom:0;width:112px;border-radius:0 0 6px 0"></div>
         </div>
         <div class="plate" style="--i:1" data-layer="1">
-          <span class="tag">sidebar · thread-list · projects</span>
+          <span class="tag">sidebar · nav · projects</span>
           <div class="row" style="left:12px;top:40px;width:64px"></div>
           <div class="wire accent" style="left:8px;top:54px;width:76px;height:22px"></div>
           <div class="row" style="left:16px;top:86px;width:56px"></div>
@@ -347,7 +347,7 @@
           <div class="row" style="left:16px;top:196px;width:52px"></div>
         </div>
         <div class="plate" style="--i:2" data-layer="2">
-          <span class="tag">transcript-chat · tools · agents</span>
+          <span class="tag">chat · tools · loop</span>
           <div class="wire fill" style="left:110px;top:40px;width:140px;height:28px;border-radius:12px 12px 2px 12px"></div>
           <div class="row" style="left:110px;top:84px;width:150px"></div>
           <div class="row" style="left:110px;top:98px;width:120px"></div>
@@ -357,13 +357,13 @@
           <div class="row" style="left:110px;top:182px;width:96px"></div>
         </div>
         <div class="plate" style="--i:3" data-layer="3">
-          <span class="tag">composer · model · followups</span>
+          <span class="tag">composer · model · steering</span>
           <div class="wire sandy" style="left:104px;right:124px;bottom:14px;height:40px;border-radius:8px"></div>
           <div class="row" style="left:116px;bottom:32px;width:90px;background:var(--sand);opacity:.6"></div>
           <div class="wire fill" style="right:134px;bottom:24px;width:40px;height:20px;border-radius:10px"></div>
         </div>
         <div class="plate" style="--i:4" data-layer="4">
-          <span class="tag">panel-changes · panel-tree · usage</span>
+          <span class="tag">settings · usage-page · reload</span>
           <div class="row" style="right:12px;top:40px;width:88px"></div>
           <div class="wire" style="right:8px;top:56px;width:96px;height:52px"></div>
           <div class="row" style="right:16px;top:66px;width:60px;background:var(--green);opacity:.7"></div>
@@ -378,11 +378,11 @@
       <div class="below">
         <div class="legend" id="legend">
           <div class="head">five of 63 grains <button class="btn" id="assemble">assemble →</button></div>
-          <button data-layer="4"><i></i>panel-changes · panel-tree · usage</button>
-          <button data-layer="3"><i></i>composer · model · followups</button>
-          <button data-layer="2"><i></i>transcript-chat · tools · agents</button>
-          <button data-layer="1"><i></i>sidebar · thread-list · projects</button>
-          <button data-layer="0"><i></i>layout-columns · header</button>
+          <button data-layer="4"><i></i>settings · usage-page · reload</button>
+          <button data-layer="3"><i></i>composer · model · steering</button>
+          <button data-layer="2"><i></i>chat · tools · loop</button>
+          <button data-layer="1"><i></i>sidebar · nav · projects</button>
+          <button data-layer="0"><i></i>layout · header</button>
         </div>
       </div>
     </div>
@@ -400,7 +400,7 @@
         <div class="eyebrow">One agent, every surface</div>
         <h2 class="title">Start at the desk.<br><em>Pick it up anywhere.</em></h2>
       </div>
-      <p class="lede">One server on your machine. The browser, your phone and your other PCs are views onto the same thread.</p>
+      <p class="lede">One server on your machine. The browser, your phone and your other PCs are views onto the same chat.</p>
     </div>
     <div class="surfaces">
       <div class="card">
@@ -415,7 +415,7 @@
           </div>
         </div>
         <h3>The web UI</h3>
-        <p>Threads keep running after you close the tab.</p>
+        <p>Chats keep running after you close the tab.</p>
         <code>sand</code>
       </div>
       <div class="card">
@@ -470,7 +470,7 @@
             <div class="step"><b>write</b> plugins/panel-tests/package.json</div>
             <div class="step"><b>write</b> plugins/panel-tests/src/index.ts</div>
             <div class="step"><b>shell</b> bun test --reporter json</div>
-            <div class="step"><span class="ok">●</span> /reload · panel-tests <b>loaded</b></div>
+            <div class="step"><span class="ok">●</span> reload · panel-tests <b>loaded</b></div>
             <div class="msg">Done. A <b>Tests</b> tab is in the right panel. It re-runs on every change.</div>
           </div>
           <div class="mini" id="mini">
@@ -561,7 +561,7 @@
     });
     if (!reduced) { scene.classList.add('assembled'); setTimeout(function () { scene.classList.remove('assembled'); }, 900); }
 
-    var cmds = ['<b>composer-card</b> the box you type in', '<b>sidebar-rail</b> the left edge', '<b>tools-shell</b> runs commands', '<b>llm-anthropic</b> the model', '<b>panel-changes</b> per-file diffs', '<b>workflows</b> fan out to six agents', '<b>devices</b> your phone over Wi-Fi', '<b>remotes</b> other PCs', '<b>reload</b> swaps any of these with /reload', '<b>ui-headless</b> the sand -p test runner', '<b>followups</b> the queue', '<b>usage-page</b> what it cost'];
+    var cmds = ['<b>composer</b> the box you type in', '<b>sidebar</b> your projects', '<b>shell</b> runs commands', '<b>claude-code</b> the model', '<b>devices</b> your phone over Wi-Fi', '<b>remotes</b> other PCs', '<b>reload</b> swaps any of these with one button', '<b>print</b> the sand -p test runner', '<b>usage-page</b> what it cost'];
     document.getElementById('ticker').innerHTML = cmds.concat(cmds).map(function (c) { return '<span>' + c + '</span>'; }).join('');
 
 
@@ -583,10 +583,10 @@
     new IntersectionObserver(function (entries) { if (entries[0].isIntersecting && !played) { played = true; play(); } }, { threshold: .4 }).observe(document.getElementById('demo'));
 
     var groups = {
-      'Interface': ['composer-card', 'header', 'layout-columns', 'palette', 'picker', 'sidebar-cards', 'sidebar-rail', 'sidebar-tabs', 'thread-list', 'toasts', 'tooltips', 'transcript-chat', 'transcript-log', 'settings', 'keys'],
-      'Panels & files': ['panel-agents', 'panel-changes', 'panel-tree', 'panels-tabs', 'files', 'file-search', 'find-files', 'folders', 'view-edit', 'view-grep', 'view-read', 'view-shell', 'attachments'],
-      'Agent & tools': ['agents', 'workflows', 'loop-react', 'tools', 'tools-fs', 'tools-shell', 'commands', 'skills', 'followups', 'compaction', 'context-default', 'titles', 'llm-anthropic', 'model', 'model-panel', 'html-render', 'html-preview'],
-      'Machines & sessions': ['server', 'web', 'web-client', 'ui-headless', 'devices', 'remotes', 'projects', 'new-project', 'sessions-sqlite', 'sessions-ui', 'session-info', 'usage', 'usage-page', 'config-toml', 'extend', 'extensions-panel', 'reload']
+      'Interface': ['composer', 'header', 'layout', 'nav', 'palette', 'picker', 'sidebar', 'tooltips', 'chat', 'settings', 'keys'],
+      'Files & views': ['tool-views', 'attachments'],
+      'Agent & tools': ['loop', 'tools', 'file-tools', 'shell', 'skills', 'steering', 'compaction', 'prompt', 'claude-code', 'codex', 'model', 'model-panel', 'html'],
+      'Machines & chats': ['server', 'web', 'web-client', 'print', 'devices', 'host-remotes', 'project', 'chats', 'usage', 'usage-page', 'config', 'extend', 'reload']
     };
     var board = document.getElementById('groups');
     Object.keys(groups).forEach(function (name, gi) {

@@ -1,7 +1,8 @@
-import { bearer, fetchHostIdentity } from '@sand/kit'
-import { remoteStore, remoteUrls } from '@sand/kit/host'
-import type { RemoteRecord } from '@sand/protocol'
-import { eachChunk, fetchChunk, type ChunkedFile, type PcFetch } from '@sand/kit/transfers'
+import { fetchHostIdentity } from '@sand/host-remotes/pairing'
+import { remoteStore, remoteUrls } from '@sand/host-remotes/peers'
+import type { RemoteRecord } from '@sand/host-remotes/contract'
+import { bearer } from '@sand/util/boot/wire'
+import { eachChunk, fetchChunk, type ChunkedFile, type PcFetch } from './chunks'
 import type { TransferStore } from './transfers'
 
 const identityTimeout = 3000

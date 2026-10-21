@@ -1,5 +1,6 @@
 import type { PeriodUsage, UsageBucket } from '../contract'
-import { emptyTotals, grouped } from '@sand/kit'
+import { grouped } from '@sand/util'
+import { emptyTotals } from '../records'
 
 const formatter = (zone: string) => {
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }

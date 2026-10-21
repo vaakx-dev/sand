@@ -1,0 +1,28 @@
+{
+  "name": "@sand/host-runtimes",
+  "version": "0.0.0",
+  "description": "Starts sand runtimes, swaps in fresh ones and restarts them when they crash",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/index.ts",
+    "runtime": "./src/link/index.ts",
+    "label": "Runtimes",
+    "summary": "Starts and swaps sand runtimes"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-plugin-versions": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

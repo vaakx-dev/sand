@@ -1,13 +1,13 @@
-import type { Context } from 'drydock'
+import type { Sessions } from '@sand/chats/contract'
 import type { Job } from '../contract'
 
 export const group = 'jobs'
 
-const threads = (ctx: Context<'sessions'>, job: Job) =>
-  job.origin ? ctx.sessions.children(job.parent).flatMap(child => (child.origin === job.origin ? [child.id] : [])) : []
+const threads = (sessions: Sessions, job: Job) =>
+  job.origin ? sessions.children(job.parent).flatMap(child => (child.origin === job.origin ? [child.id] : [])) : []
 
-export const jobLine = (ctx: Context<'sessions'>, job: Job) => {
-  const children = threads(ctx, job)
+export const jobLine = (sessions: Sessions, job: Job) => {
+  const children = threads(sessions, job)
   return [
     job.id,
     job.kind,

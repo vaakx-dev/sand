@@ -1,4 +1,4 @@
-import { periodLabel } from '@sand/kit'
+import { periodLabel } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, dynamicChild, line, path, sig, span, svg } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'

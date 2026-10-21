@@ -1,4 +1,4 @@
-import type { SourceInfo } from '@sand/llm-accounts/contract'
+import type { SourceInfo } from '@sand/accounts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, keys, show, span, type Child } from '@vaakx-dev/vrui'
 import type { Scene } from './scene'

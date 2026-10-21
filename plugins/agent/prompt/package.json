@@ -1,0 +1,25 @@
+{
+  "name": "@sand/prompt",
+  "version": "0.0.0",
+  "description": "Builds the system prompt and request for each turn from the project instructions, environment and tools",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Context",
+    "summary": "The system prompt: project instructions, environment and tools"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

@@ -1,6 +1,11 @@
-import type { ServerMessage, WireEvent, WireRequest } from '@sand/protocol'
+import type { ClientMessage, Request, ServerMessage } from '@sand/host-hub/contract'
 
-export type Call = <T = unknown>(request: WireRequest) => Promise<T>
+export type Call = <I, O>(request: Request<I, O>, input: I) => Promise<O>
+
+export interface Heard {
+  name: string
+  payload: unknown
+}
 
 export interface Connection {
   call: Call
@@ -10,7 +15,7 @@ export interface Connection {
 }
 
 interface Handlers {
-  event(event: WireEvent): void
+  event(heard: Heard): void
   close(): void
 }
 
@@ -27,12 +32,12 @@ export const connect = (url: string, handlers: Handlers) =>
       pending.clear()
     }
 
-    const call: Call = request =>
-      new Promise((resolveCall, rejectCall) => {
+    const call: Call = <I, O>(request: Request<I, O>, input: I) =>
+      new Promise<O>((resolveCall, rejectCall) => {
         if (socket.readyState !== WebSocket.OPEN) return rejectCall(new Error('Not connected to the sand server'))
         const id = ++next
         pending.set(id, { resolve: resolveCall as (value: unknown) => void, reject: rejectCall })
-        socket.send(JSON.stringify({ ...request, id }))
+        socket.send(JSON.stringify({ type: request.id, id, input } satisfies ClientMessage))
       })
 
     const close = () => {
@@ -48,7 +53,7 @@ export const connect = (url: string, handlers: Handlers) =>
     socket.onmessage = event => {
       heardAt = Date.now()
       const message = JSON.parse(String(event.data)) as ServerMessage
-      if (message.type === 'event') return handlers.event({ name: message.name, args: message.args } as WireEvent)
+      if (message.type === 'event') return handlers.event({ name: message.name, payload: message.payload })
       const waiting = pending.get(message.id)
       pending.delete(message.id)
       if (message.error !== undefined) waiting?.reject(new Error(message.error))

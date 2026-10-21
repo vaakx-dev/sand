@@ -1,7 +1,7 @@
 {
   "name": "@sand/header",
   "version": "0.0.0",
-  "description": "Breadcrumb bar: project and thread title with a thread menu, slots for other controls, and buttons for the side drawer and the right panel",
+  "description": "Breadcrumb bar: project / thread title with a thread menu, slots for other controls and a button for the side drawer",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,26 +9,16 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Header",
-    "summary": "Thread title and menu and the panel button",
-    "provides": [
-      "header"
-    ],
-    "uses": {
-      "threads": "shows just \"sand\"",
-      "layout": "no drawer or panel buttons",
-      "commands": "the thread menu only renames and copies the link",
-      "picker": "no rename",
-      "jobs": "no working dot on the panel button",
-      "projects": "the project name and icon come from the folder alone",
-      "worktrees": "a thread in a worktree shows the worktree folder as its project",
-      "notify": "copying the link is not confirmed"
-    }
+    "summary": "Project and thread title, with a thread menu"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/project": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

@@ -1,0 +1,97 @@
+import type { DeviceInfo } from '@sand/host-devices/contract'
+import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
+import type { Request } from '@sand/host-hub/contract'
+import { callPeer, remoteStore } from '@sand/host-remotes/peers'
+import { errorMessage, isRecord } from '@sand/util'
+import { healthText, parseHealth, waitHealthy, type HealthOutcome, type WireSocket } from '@sand/util/boot'
+import { updatesRepair, updatesState, type PcRepairResult } from '../contract'
+
+export interface RepairDeps {
+  home: string
+  self: DeviceInfo
+}
+
+interface PeerState {
+  phase: string
+  error?: string
+  current?: string
+}
+
+type Ask = (request: Request<{}, unknown>, timeout: number) => Promise<unknown>
+
+const pollInterval = 3000
+const pollTimeout = 20 * 60_000
+const healthTimeout = 120_000
+
+const short = (id: string | undefined) => (id ?? 'unknown').slice(0, 6)
+
+const buildId = (value: unknown) => (isRecord(value) && typeof value.id === 'string' ? value.id : undefined)
+
+const parseState = (value: unknown): PeerState | undefined => {
+  if (!isRecord(value) || typeof value.phase !== 'string') return
+  return { phase: value.phase, error: typeof value.error === 'string' ? value.error : undefined, current: buildId(value.current) }
+}
+
+const targetOf = (value: unknown) => (isRecord(value) ? buildId(value.target) : undefined)
+
+const finished = (state: PeerState | undefined) => state?.phase === 'idle' || state?.phase === 'failed'
+
+const waitFinished = async (ask: Ask, first: PeerState | undefined) => {
+  const deadline = Date.now() + pollTimeout
+  let state = first
+  while (!finished(state) && Date.now() < deadline) {
+    await Bun.sleep(pollInterval)
+    try {
+      state = parseState(await ask(updatesState, 10_000)) ?? state
+    } catch {}
+  }
+  return state
+}
+
+const readHealth = async (ask: Ask, name: string): Promise<HostHealth> => {
+  const health = parseHealth(await ask(hostHealthRequest, 10_000))
+  if (!health) throw new Error(`${name} sent a health report this sand can't read`)
+  return health
+}
+
+const healthLines = (outcome: HealthOutcome) => {
+  const lines = healthText(outcome).split('\n')
+  const log = lines.indexOf('Last lines of server.log:')
+  return lines.slice(0, Math.min(3, log < 0 ? lines.length : log)).join('\n')
+}
+
+const runningBuild = (state: PeerState | undefined, outcome?: HealthOutcome) => outcome?.report?.build?.id ?? state?.current
+
+const repairError = (name: string, expected: string, state: PeerState | undefined, outcome?: HealthOutcome) => {
+  if (!finished(state)) return `${name} did not finish the repair in time`
+  if (state?.phase === 'failed') return state.error ?? `${name} could not finish the repair`
+  if (outcome && !outcome.ok) return healthLines(outcome) || `${name} is not healthy after the repair`
+  const build = runningBuild(state, outcome)
+  if (build !== expected) return `${name} went back to build ${short(build)}`
+}
+
+export const repairPeer = async (deps: RepairDeps, device: string): Promise<PcRepairResult> => {
+  if (device === deps.self.id) throw new Error('This PC cannot repair itself; use Repair on another PC')
+  const record = (await remoteStore(deps.home)).get(device)
+  if (!record) throw new Error('Unknown PC')
+  const sockets = new Set<WireSocket>()
+  const ask: Ask = (request, timeout) => callPeer(record, request, {}, sockets, timeout)
+  try {
+    let started: unknown
+    try {
+      started = await ask(updatesRepair, 60_000)
+    } catch (error) {
+      return { device, build: '', ok: false, error: errorMessage(error) }
+    }
+    const expected = targetOf(started)
+    if (!expected) return { device, build: '', ok: false, error: `${record.name} did not say which sand build it reinstalls` }
+    const state = await waitFinished(ask, parseState(started))
+    const outcome = state?.phase === 'idle' ? await waitHealthy(() => readHealth(ask, record.name), { timeout: healthTimeout }) : undefined
+    const build = runningBuild(state, outcome) ?? expected
+    const error = repairError(record.name, expected, state, outcome)
+    return error ? { device, build, ok: false, error } : { device, build, ok: true }
+  } finally {
+    for (const socket of sockets) socket.close()
+    sockets.clear()
+  }
+}

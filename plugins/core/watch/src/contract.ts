@@ -1,5 +1,5 @@
-import type { WatchOptions } from '@sand/kit/fs'
-import type { Dispose } from 'drydock'
+import type { WatchOptions } from '@sand/util/fs'
+import { type Dispose, service } from 'drydock'
 
 export interface WatchedFolders<T> {
   get(dir: string): Promise<T>
@@ -11,8 +11,4 @@ export interface Watcher {
   folders<T>(load: (dir: string) => Promise<T>, empty: T, changed?: (dir: string) => void): WatchedFolders<T>
 }
 
-declare module 'drydock' {
-  interface Services {
-    watcher: Watcher
-  }
-}
+export const watcher = service<Watcher>('watcher')

@@ -1,3 +1,5 @@
+import { modelsSeen } from '@sand/accounts/contract'
+import { wire } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, effect } from '@vaakx-dev/vrui'
 import type { PanelOptions, PickerTarget } from '../contract'
 import type { Picker, PickerContext } from '../deps'
@@ -14,7 +16,7 @@ const markSeen = (ctx: PickerContext, view: View) =>
     if (view.query.get() || view.seen.has(at)) return
     if (!ctx.models.sources().find(source => source.id === at)?.fresh) return
     view.seen.add(at)
-    void ctx.wire?.call({ type: 'models.seen', source: at }, ctx.models.device()).catch(() => undefined)
+    void ctx.get(wire)?.call(modelsSeen, { source: at }, ctx.models.device()).catch(() => undefined)
   })
 
 const refocus = (view: View, node: HTMLElement) => {

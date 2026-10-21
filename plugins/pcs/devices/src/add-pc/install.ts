@@ -1,11 +1,11 @@
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { HostRoute } from '@sand/host-gateway/contract'
-import type { UpdateChannel, UpdateState } from '@sand/host-updates/contract'
-import { errorMessage } from '@sand/kit'
+import { updatesState, type UpdateChannel } from '@sand/host-updates/contract'
 import type { Choice, Kit } from '@sand/ui-kit/contract'
+import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, onTimeout, show, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
 import { healthDetails } from '../health/details'
+import type { DevicesContext } from '../inject'
 import { listenBox } from '../pair/listen'
 import type { DeviceSource } from '../source'
 import { installCommand, routeFor, type InstallSystem, type InstallVia } from './command'
@@ -50,14 +50,14 @@ const failedBlock = (kit: Kit, list: InstallProgress[]) => {
   )
 }
 
-export const installStep = (ctx: Context<'wire' | 'kit'>, source: DeviceSource, ready: (list: InstallProgress[]) => void, running: Sig<boolean>) => {
+export const installStep = (ctx: DevicesContext, source: DeviceSource, ready: (list: InstallProgress[]) => void, running: Sig<boolean>) => {
   const { kit } = ctx
   const { copyButton, note, segmented } = kit
   const os = sig<InstallSystem>(guess(source))
   const via = sig<InstallVia>('lan')
   const ticket = installTicket(ctx)
   const channel = sig<UpdateChannel>('release')
-  ctx.wire.call<UpdateState>({ type: 'updates.state' }).then(
+  ctx.wire.call(updatesState, {}).then(
     state => channel.set(state.channel),
     () => {},
   )

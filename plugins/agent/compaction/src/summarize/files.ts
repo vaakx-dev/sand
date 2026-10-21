@@ -1,5 +1,5 @@
-import { isRecord } from '@sand/kit'
-import type { Message } from '@sand/messages'
+import type { Message } from '@sand/chats/contract'
+import { isRecord } from '@sand/util'
 import type { CompactedFiles } from '../contract'
 
 const readers = new Set(['read'])

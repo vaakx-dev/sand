@@ -1,5 +1,5 @@
-import { pressMenu } from '@sand/kit/web'
-import type { MenuRequest, MenuSpec } from '@sand/protocol'
+import { pressMenu } from '../menus/press'
+import type { MenuRequest, MenuSpec } from '../contract'
 import { dynamicChild, portal, sig } from '@vaakx-dev/vrui'
 import { menuPopup } from './popup'
 import { menuSheet } from './sheet'

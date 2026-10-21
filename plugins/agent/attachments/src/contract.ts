@@ -1,4 +1,7 @@
-import type { UserContent } from '@sand/messages'
+import type { FileBlock, UserContent } from '@sand/chats/contract'
+import { helloField, request, type } from '@sand/host-hub/contract'
+import { service } from 'drydock'
+import { z } from 'zod'
 
 export interface AttachmentLimits {
   imageEdge: number
@@ -10,21 +13,16 @@ export interface AttachmentLimits {
 
 export interface Attachments {
   limits: AttachmentLimits
+  isMedia(path: string): boolean
   fromFile(path: string): Promise<UserContent>
+  fromBytes(data: Uint8Array, name: string): Promise<UserContent>
 }
 
-declare module 'drydock' {
-  interface Services {
-    attachments: Attachments
-  }
-}
+export const attachments = service<Attachments>('attachments')
 
-declare module '@sand/protocol/wire' {
-  interface HelloFields {
-    attachments?: AttachmentLimits
-  }
+export const helloAttachments = helloField<AttachmentLimits>('attachments')
 
-  interface WireRequests {
-    'attachments.finish': { transfer: string; name: string; chunks: number; size: number }
-  }
-}
+export const attachmentsFinish = request('attachments.finish', {
+  input: z.object({ transfer: z.string(), name: z.string(), chunks: z.number().int(), size: z.number().int() }),
+  output: type<FileBlock>(),
+})

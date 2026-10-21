@@ -1,9 +1,10 @@
+import { contextBuild } from '@sand/loop/contract'
 import type { Skills } from './contract'
 import type { Context } from 'drydock'
 import { describeSkills } from './tool'
 
 export const describePerThread = (ctx: Context, skills: Skills) =>
-  ctx.on('context.build', async (request, session) => {
+  ctx.on(contextBuild, async (request, session) => {
     const list = await skills.list(session.cwd, session.project)
     return {
       ...request,

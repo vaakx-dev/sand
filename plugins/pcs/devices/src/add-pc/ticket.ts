@@ -1,6 +1,6 @@
-import type { InstallProgress, InstallTicket } from '@sand/host-dist/contract'
+import { installCancel, installCreate, installProgress, type InstallProgress, type InstallTicket } from '@sand/host-dist/contract'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { WireContext } from '../inject'
 import { renewBeforeExpiry } from '../renew'
 
 const merged = (list: InstallProgress[], next: InstallProgress) => {
@@ -12,7 +12,7 @@ const merged = (list: InstallProgress[], next: InstallProgress) => {
   return kept.map((entry, index) => (index === at ? next : entry))
 }
 
-export const installTicket = (ctx: Context<'wire'>) => {
+export const installTicket = (ctx: WireContext) => {
   const ticket = sig<InstallTicket | undefined>(undefined)
   const progress = sig<InstallProgress[]>([])
   const error = sig<unknown>(undefined)
@@ -20,7 +20,7 @@ export const installTicket = (ctx: Context<'wire'>) => {
 
   const started = () => untrack(() => progress.get().length > 0)
 
-  const drop = (id: string) => void ctx.wire.call({ type: 'install.cancel', install: id }).catch(() => {})
+  const drop = (id: string) => void ctx.wire.call(installCancel, { install: id }).catch(() => {})
 
   const cancelUnused = () => {
     const old = untrack(() => ticket.get())
@@ -34,7 +34,7 @@ export const installTicket = (ctx: Context<'wire'>) => {
     untrack(() => {
       cancelUnused()
       ticket.set(undefined)
-      ctx.wire.call<InstallTicket>({ type: 'install.create' }).then(
+      ctx.wire.call(installCreate, {}).then(
         next => {
           if (!current) return drop(next.id)
           error.set(undefined)
@@ -56,9 +56,8 @@ export const installTicket = (ctx: Context<'wire'>) => {
   })
 
   effect(() => {
-    const off = ctx.on('wire.event', event => {
-      if (event.name !== 'install.progress' || event.args[0].install !== ticket.get()?.id) return
-      progress.update(list => merged(list, event.args[0]))
+    const off = ctx.wire.on(installProgress, next => {
+      if (next.install === ticket.get()?.id) progress.update(list => merged(list, next))
     })
     return () => void off()
   })

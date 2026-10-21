@@ -1,5 +1,5 @@
-import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript-parts/contract'
-import { textOf } from '@sand/kit'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import { textOf } from '@sand/chats/prompt'
 import { el } from '@vaakx-dev/vrui'
 
 const references = (tool: ToolView) => tool.result?.content.flatMap(block => (block.type === 'tool_reference' ? [block.name] : [])) ?? []

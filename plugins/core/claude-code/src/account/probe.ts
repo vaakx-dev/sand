@@ -1,4 +1,4 @@
-import type { PlanLimits } from '@sand/llm-accounts/contract'
+import type { PlanLimits } from '@sand/accounts/contract'
 import { tmpdir } from 'node:os'
 import { claudeArgs, claudeEnv } from '../cli/args'
 import { connect, type Connection } from '../cli/connection'

@@ -1,6 +1,6 @@
-import type { Entry, Message } from '@sand/messages'
+import { hasToolResult } from '@sand/chats/prompt'
+import type { Entry, Message } from '@sand/chats/contract'
 import type { Thread } from '../contract'
-import { hasToolResult } from '@sand/kit'
 
 const walk = (entries: Map<string, Entry>, head: string | null) => {
   const path: Entry[] = []

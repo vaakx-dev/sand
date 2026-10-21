@@ -1,14 +1,13 @@
-import type { SourceInfo } from '@sand/llm-accounts/contract'
-import { favouritesOf } from '@sand/kit'
+import type { SourceInfo } from '@sand/accounts/contract'
+import { favouritesOf } from '../models'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, effect, span } from '@vaakx-dev/vrui'
 import { modelRow } from './rows'
 import type { Scene } from './scene'
 import { findModels } from './search'
-import { sourceDetail } from './source'
 import { FAVOURITES, type View } from './view'
 
-const heading = ({ groupLabel }: Kit, label: string, detail?: string) => groupLabel(span({ class: 'text-neutral-200' }, label), detail ? ` · ${detail}` : '')
+const heading = ({ groupLabel }: Kit, label: string) => groupLabel(span({ class: 'text-neutral-200' }, label))
 
 const settingsHint = ({ kit, openSettings }: Scene, text: string, link: string) => {
   const { hint, linkButton } = kit
@@ -19,7 +18,6 @@ const sourceList = (scene: Scene, source: SourceInfo) => {
   const { errorText, hint } = scene.kit
   const models = scene.models.filter(model => model.source === source.id)
   return [
-    heading(scene.kit, source.label, sourceDetail(source)),
     models.map(model => modelRow(model, scene)),
     scene.offline(source) && hint(`${source.via} is offline. Its models come back when it does.`),
     source.error && div({ class: 'px-4 py-3' }, errorText(`Could not list the models: ${source.error}`)),

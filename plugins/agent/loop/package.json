@@ -1,0 +1,27 @@
+{
+  "name": "@sand/loop",
+  "version": "0.0.0",
+  "description": "The agent loop: sends the conversation to the model, runs the tools it calls and repeats until it is done",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Agent loop",
+    "summary": "Runs each turn: the model replies, the tools it calls run, and it repeats until it is done"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

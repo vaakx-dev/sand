@@ -1,18 +1,15 @@
-import { byCost, emptyTotals, folderName, grouped } from '@sand/kit'
+import { byCost, emptyTotals } from '@sand/usage/records'
+import { folderName, grouped } from '@sand/util'
 import { addTotals, including } from '../totals'
-import type { PcSummary, PcUsage, Project, Thread } from '../types'
-
-export const mergeThreads = (parts: PcSummary[]): Thread[] =>
-  parts.flatMap(({ pc, summary }) => summary.threads.map(thread => ({ ...thread, machine: pc.id }))).sort(byCost)
+import type { PcSummary, PcUsage, Project } from '../types'
 
 export const mergeProjects = (parts: PcSummary[]) => {
   const byName = new Map<string, Project>()
   for (const { pc, summary } of parts)
     for (const project of summary.projects) {
       const name = project.cwd ? folderName(project.cwd) : 'No folder'
-      const into = grouped(byName, name, (): Project => ({ ...emptyTotals(), name, threads: 0, accounts: [], machines: [] }))
+      const into = grouped(byName, name, (): Project => ({ ...emptyTotals(), name, accounts: [], machines: [] }))
       addTotals(into, project)
-      into.threads += project.threads
       including(into.accounts, project.accounts)
       including(into.machines, [pc.id])
     }

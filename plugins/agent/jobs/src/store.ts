@@ -1,7 +1,8 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
-import type { Job, JobSpec, JobStatus, JobWork } from './contract'
-import { errorMessage, untilAborted } from '@sand/kit'
-import type { Context } from 'drydock'
+import type { Session } from '@sand/chats/contract'
+import { turnEnd } from '@sand/loop/contract'
+import { errorMessage, untilAborted } from '@sand/util'
+import type { JobsContext } from './context'
+import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus, type JobWork } from './contract'
 import type { Delivery } from './deliver'
 import { notification } from './notice'
 
@@ -15,27 +16,14 @@ export interface Entry {
   output?: string
 }
 
-export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
+export const createStore = (ctx: JobsContext, delivery: Delivery) => {
   const entries = new Map<string, Entry>()
   const silenced = new Set<string>()
-  const waiting = new Set<{ parent: string; resolve: () => void }>()
-  const busy = (parent: string) => [...entries.values()].some(({ job }) => job.parent === parent && job.status === 'running' && job.kind !== 'shell')
-  const wake = () => {
-    for (const waiter of waiting) {
-      if (busy(waiter.parent)) continue
-      waiting.delete(waiter)
-      waiter.resolve()
-    }
-  }
+
   const stop = (job: Job) => {
     if (job.status !== 'running') return
     silenced.add(job.id)
     job.cancel()
-  }
-
-  const stopForRestart = (stopped: Entry[]) => {
-    for (const { job } of stopped) stop(job)
-    for (const { job, spec } of stopped) delivery.record(spec.parent, notification({ ...job, status: 'cancelled' }, restarted))
   }
 
   const running = () => [...entries.values()].filter(({ job }) => job.status === 'running')
@@ -43,15 +31,14 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
   let disposing = false
   ctx.effect(() => () => {
     disposing = true
-    stopForRestart(running())
+    const stopped = running()
+    for (const { job } of stopped) stop(job)
+    for (const { job, spec } of stopped) delivery.record(spec.parent, notification({ ...job, status: 'cancelled' }, restarted))
   })
 
-  ctx.on('runtime.drain', () => stopForRestart(running().filter(({ job }) => job.kind === 'shell')))
-
-  ctx.on('turn.end', (session, result) => {
-    if (session.kind !== 'agent') return
-    const interrupted = result.stopReason === 'interrupted'
-    for (const { job } of entries.values()) if (job.parent === session.id && (interrupted || job.kind === 'shell')) stop(job)
+  ctx.on(turnEnd, (session, result) => {
+    if (result.stopReason !== 'interrupted') return
+    for (const { job } of entries.values()) if (job.parent === session.id) stop(job)
   })
 
   const prune = () => {
@@ -59,7 +46,7 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
     for (const { job } of finished.slice(0, -keptFinished)) entries.delete(job.id)
   }
 
-  ctx.on('job.note', ({ id, text }) => {
+  ctx.on(jobNote, ({ id, text }) => {
     const entry = entries.get(id)
     if (entry) entry.job.note = text
   })
@@ -78,14 +65,13 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
     job.cancel = () => controller.abort()
     delete job.ended
     delete entry.output
-    ctx.emit('job.start', job)
+    ctx.emit(jobStart, job)
     const finish = (status: JobStatus, output: string) => {
       job.status = status
       job.ended = Date.now()
       entry.output = output
       release()
-      ctx.emit('job.end', job, output)
-      wake()
+      ctx.emit(jobEnd, job, output)
       prune()
       if (!silenced.delete(job.id) && !disposing) deliver(job, spec.parent, output)
     }
@@ -94,7 +80,7 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
         output => finish(controller.signal.aborted ? 'cancelled' : 'done', output),
         error => finish(controller.signal.aborted ? 'cancelled' : 'failed', errorMessage(error)),
       )
-      .catch(error => ctx.ui?.notify(`Background job ${job.id} ended, but its result was not delivered: ${errorMessage(error)}`, 'error'))
+      .catch(error => ctx.report(error))
   }
 
   const start = (spec: JobSpec) => {
@@ -121,14 +107,6 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
     launch(entry, work)
   }
 
-  const idle = (parent: Session, signal: AbortSignal) =>
-    new Promise<void>(resolve => {
-      if (!busy(parent.id) || signal.aborted) return resolve()
-      const waiter = { parent: parent.id, resolve }
-      waiting.add(waiter)
-      signal.addEventListener('abort', () => waiting.delete(waiter) && resolve(), { once: true })
-    })
-
   const list = (parent?: Session) => [...entries.values()].map(({ job }) => job).filter(job => !parent || job.parent === parent.id)
 
   const own = (session: Session, id: string) => {
@@ -137,7 +115,7 @@ export const createStore = (ctx: Context<'loop'>, delivery: Delivery) => {
     return entry
   }
 
-  return { start, resume, idle, list, own, stop }
+  return { start, resume, list, own, stop }
 }
 
 export type Store = ReturnType<typeof createStore>

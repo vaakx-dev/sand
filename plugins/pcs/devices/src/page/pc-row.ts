@@ -1,6 +1,7 @@
 import type { PcInfo } from '@sand/host-remotes/contract'
-import { ago, routeKind } from '@sand/kit'
+import { routeKind } from '@sand/host-remotes/pairing'
 import type { Kit, Tone } from '@sand/ui-kit/contract'
+import { ago } from '@sand/util'
 import { div, dynamicChild, show, sig, type Sig } from '@vaakx-dev/vrui'
 import { pcMenu } from './pc-menu'
 

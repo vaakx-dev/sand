@@ -1,29 +1,27 @@
 {
   "name": "@sand/usage",
   "version": "0.0.0",
-  "description": "Plan limits in /usage, plus token and cost totals for the usage page and sand usage",
+  "description": "Token and cost totals and plan limits for the usage page and sand usage",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract.ts",
+    "./records": "./src/records/index.ts"
   },
   "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "label": "Usage",
-    "summary": "/usage, and the totals behind the usage page and sand usage",
-    "uses": {
-      "server": "the page and sand usage get no totals",
-      "sessions": "the usage page cannot count tokens or cost",
-      "llm": "no plan limits"
-    }
+    "summary": "The totals behind the usage page and sand usage"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/llm-accounts": "workspace:*",
-    "@sand/loops": "workspace:*",
-    "@sand/messages": "workspace:*",
-    "@sand/protocol": "workspace:*",
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/sessions-sqlite": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }

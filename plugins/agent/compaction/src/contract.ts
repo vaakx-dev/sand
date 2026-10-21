@@ -1,4 +1,7 @@
-import type { Session } from '@sand/sessions-sqlite/contract'
+import type { Session } from '@sand/chats/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { event } from 'drydock'
+import { z } from 'zod'
 
 export interface ContextUsage {
   used: number
@@ -7,7 +10,7 @@ export interface ContextUsage {
   compacting?: boolean
 }
 
-export type CompactionReason = 'manual' | 'threshold' | 'overflow'
+export type CompactionReason = 'threshold' | 'overflow'
 
 export interface CompactedFiles {
   read: string[]
@@ -24,18 +27,8 @@ export interface CompactionRecord {
   files?: CompactedFiles
 }
 
-declare module 'drydock' {
-  interface Events {
-    'context.usage': (session: Session, usage: ContextUsage) => void
-  }
-}
+export const contextUsage = event<(session: Session, usage: ContextUsage) => void>('context.usage')
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'context.get': { session: string }
-  }
+export const contextChange = wireEvent<[session: string, usage: ContextUsage]>('context.change')
 
-  interface WireEvents {
-    'context.change': [session: string, usage: ContextUsage]
-  }
-}
+export const contextGet = request('context.get', { input: z.object({ session: z.string() }), output: type<ContextUsage | undefined>() })

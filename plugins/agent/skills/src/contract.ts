@@ -1,4 +1,6 @@
-import type { Dispose } from 'drydock'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { service, type Dispose } from 'drydock'
+import { z } from 'zod'
 
 export interface Skill {
   name: string
@@ -14,22 +16,13 @@ export interface Skills {
   register(dir: string, values?: Record<string, string>): Dispose
 }
 
-declare module 'drydock' {
-  interface Services {
-    skills: Skills
-  }
-}
+export const skills = service<Skills>('skills')
 
-declare module '@sand/protocol/wire' {
-  interface WireRequests {
-    'skills.list': { session?: string; cwd?: string }
-  }
+export const skillsChange = wireEvent<void>('skills.change')
 
-  interface WireEvents {
-    'skills.change': []
-  }
+export const helloSkills = helloField<SkillSummary[]>('skills')
 
-  interface HelloFields {
-    skills: SkillSummary[]
-  }
-}
+export const skillsList = request('skills.list', {
+  input: z.object({ session: z.string().optional(), cwd: z.string().optional() }),
+  output: type<SkillSummary[]>(),
+})

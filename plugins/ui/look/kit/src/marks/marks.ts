@@ -1,4 +1,4 @@
-import { duration } from '@sand/kit'
+import { duration } from '@sand/util'
 import { clock, div, read, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
 

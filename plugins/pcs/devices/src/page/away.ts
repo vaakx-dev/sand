@@ -1,6 +1,6 @@
 import type { TailscaleState } from '@sand/host-tailscale/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import type { Context } from 'drydock'
+import type { KitContext } from '../inject'
 import { overlaySlot } from '../overlay-slot'
 import type { DeviceSource } from '../source'
 import { tailscaleSection } from './tailscale'
@@ -24,7 +24,7 @@ const awaySheet = (kit: Kit, source: DeviceSource, close: () => void) => {
   )
 }
 
-export const awaySection = (ctx: Context<'kit'>, source: DeviceSource) => {
+export const awaySection = (ctx: KitContext, source: DeviceSource) => {
   const { secondaryAction, settingsRow, settingsSection } = ctx.kit
   const slot = overlaySlot(ctx)
   return settingsSection(

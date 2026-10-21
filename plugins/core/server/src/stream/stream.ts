@@ -1,32 +1,33 @@
-import type { LLMEvent } from '@sand/llm-accounts/contract'
-import type { Session } from '@sand/sessions-sqlite/contract'
+import { llmEvent, type LLMEvent } from '@sand/accounts/contract'
+import type { Session } from '@sand/chats/contract'
+import { liveSnapshot, llmEventWire } from '../contract'
 import type { ServerContext } from '../context'
-import { deliver, type Socket } from '../socket/sockets'
+import { deliver, eventFrame, type Socket } from '../socket/sockets'
 import { createCoalescer } from './coalesce'
 import type { LiveTracker } from './live'
 import { createWatchers } from './watch'
-import { eventFrame, liveEvent, sessionRef } from './wire'
+import { liveEvent, sessionRef } from './wire'
 
 const overdueMs = 1500
 
-type Publish = (payload: string, to: (socket: Socket) => boolean) => void
+type Publish = (frame: string, to: (socket: Socket) => boolean) => void
 
 export const createStream = (ctx: ServerContext, publish: Publish, tracker: LiveTracker) => {
   const watchers = createWatchers<Socket>()
 
   const send = (event: LLMEvent, session: Session) =>
-    publish(eventFrame({ name: 'llm.event', args: [liveEvent(event), sessionRef(session)] }), socket => watchers.sees(socket, session.id))
+    publish(eventFrame(llmEventWire.id, [liveEvent(event), sessionRef(session)]), socket => watchers.sees(socket, session.id))
 
   const coalescer = createCoalescer(send, overdueMs)
-  ctx.on('llm.event', coalescer.push)
+  ctx.on(llmEvent, coalescer.push)
   ctx.effect(() => coalescer.stop)
 
   const focus = (socket: Socket, session: string | undefined) => {
     coalescer.flush()
     watchers.focus(socket, session)
     const snapshot = session && tracker.snapshot(session)
-    if (snapshot) deliver(socket, eventFrame({ name: 'live.snapshot', args: [session, snapshot] }))
+    if (snapshot) deliver(socket, eventFrame(liveSnapshot.id, [session, snapshot]))
   }
 
-  return { focus, forget: watchers.forget, flush: coalescer.flush }
+  return { focus, forget: watchers.forget, focused: watchers.focused, flush: coalescer.flush }
 }

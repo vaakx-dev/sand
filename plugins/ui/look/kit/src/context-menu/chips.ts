@@ -1,4 +1,4 @@
-import type { NavAction, NavChoice } from '@sand/protocol'
+import type { NavAction, NavChoice } from '@sand/nav/contract'
 import { span, stopThen } from '@vaakx-dev/vrui'
 import { plainButton } from '../buttons/button'
 

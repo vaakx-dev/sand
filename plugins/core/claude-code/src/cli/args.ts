@@ -1,4 +1,4 @@
-import type { Effort } from '@sand/protocol'
+import type { Effort } from '@sand/accounts/contract'
 
 interface RunOptions {
   model?: string

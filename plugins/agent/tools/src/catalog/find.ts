@@ -1,4 +1,4 @@
-import type { ToolResultContent } from '@sand/messages'
+import type { ToolResultContent } from '@sand/chats/contract'
 import type { GroupState, Tool } from '../contract'
 import { z } from 'zod'
 import { search, type Candidate } from './search'
@@ -10,7 +10,7 @@ const input = z.object({
 const groupLine = (group: GroupState) => `- ${group.name}: ${group.summary} (${group.tools.join(', ')})`
 
 const describe = (groups: GroupState[]) =>
-  `Load tools that aren't loaded yet. The tools you find stay available for the rest of this thread.\n\nGroups:\n${groups.map(groupLine).join('\n')}`
+  `Load tools that aren't loaded yet. The tools you find stay available for the rest of this chat.\n\nGroups:\n${groups.map(groupLine).join('\n')}`
 
 const listing = (found: Candidate[]): ToolResultContent[] => [
   { type: 'text', text: `Loaded:\n${found.map(({ tool }) => `- ${tool.name}: ${tool.description}`).join('\n')}` },

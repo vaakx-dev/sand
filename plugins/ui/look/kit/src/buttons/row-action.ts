@@ -1,4 +1,4 @@
-import { onPressOutside } from '@sand/kit/web'
+import { onPressOutside } from '../layers/outside'
 import { sig, stopThen } from '@vaakx-dev/vrui'
 import { controlButton } from './button'
 

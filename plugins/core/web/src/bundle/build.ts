@@ -7,7 +7,6 @@ export interface Bundle {
   id: string
   script: string
   encoded: Encoded
-  tried: string[]
   bundled: string[]
   problems: string[]
   failed: Record<string, string>
@@ -15,22 +14,23 @@ export interface Bundle {
 
 const placeholder = 'sand-build-id-placeholder'
 
-const shared = (extensions: Extension[]) => ({
+export type Contracts = Record<string, string>
+
+const shared = (extensions: Extension[], contracts: Contracts) => ({
   drydock: Bun.resolveSync('drydock/browser', import.meta.dir),
-  '@sand/kit': Bun.resolveSync('@sand/kit', import.meta.dir),
-  '@sand/kit/web': Bun.resolveSync('@sand/kit/web', import.meta.dir),
-  '@sand/protocol': Bun.resolveSync('@sand/protocol', import.meta.dir),
+  '@sand/util': Bun.resolveSync('@sand/util', import.meta.dir),
   '@vaakx-dev/vrui': Bun.resolveSync('@vaakx-dev/vrui', import.meta.dir),
+  ...contracts,
   ...Object.fromEntries([...extensions].sort((a, b) => Number(b.builtin) - Number(a.builtin)).flatMap(extension => Object.entries(extension.modules))),
 })
 
-const compile = async (extensions: Extension[], bundled: Extension[], problems: string[]) => {
+const compile = async (extensions: Extension[], bundled: Extension[], problems: string[], contracts: Contracts) => {
   const output = await Bun.build({
     entrypoints: [join(import.meta.dir, '..', 'boot', 'index.ts')],
     target: 'browser',
     conditions: ['browser'],
     minify: true,
-    plugins: [virtualModules(manifestSource(placeholder, extensions, bundled, problems), shared(extensions))],
+    plugins: [virtualModules(manifestSource(placeholder, extensions, bundled, problems), shared(extensions, contracts))],
     throw: false,
   })
   if (!output.success) return { error: output.logs.map(String).join('\n') }
@@ -43,10 +43,10 @@ const stamp = async (built: string) => {
   return { id, script, encoded: await compress(script) }
 }
 
-const withoutBroken = async (extensions: Extension[], wanted: Extension[], error: string | undefined): Promise<Bundle> => {
-  const alone = await Promise.all(wanted.map(extension => compile(extensions, [extension], [])))
+const withoutBroken = async (extensions: Extension[], contracts: Contracts, error: string | undefined): Promise<Bundle> => {
+  const alone = await Promise.all(extensions.map(extension => compile(extensions, [extension], [], contracts)))
   const failed: Record<string, string> = {}
-  wanted.forEach(({ id }, index) => {
+  extensions.forEach(({ id }, index) => {
     const result = alone[index]!
     if (!result.script) failed[id] = result.error ?? ''
   })
@@ -54,15 +54,14 @@ const withoutBroken = async (extensions: Extension[], wanted: Extension[], error
   const problems = broken.size
     ? [...broken].map(id => `Could not build the web extension ${id}:\n${failed[id]}`)
     : [`Could not build the web extensions:\n${error}`]
-  const kept = wanted.filter(extension => !broken.has(extension.id) && (broken.size > 0 || extension.builtin))
-  const safe = await compile(extensions, kept, problems)
+  const kept = extensions.filter(extension => !broken.has(extension.id) && (broken.size > 0 || extension.builtin))
+  const safe = await compile(extensions, kept, problems, contracts)
   if (!safe.script) throw new Error(`${problems.join('\n\n')}\n\nThe remaining extensions also failed:\n${safe.error}`)
-  return { ...(await stamp(safe.script)), tried: wanted.map(extension => extension.id), bundled: safe.bundled, problems, failed }
+  return { ...(await stamp(safe.script)), bundled: safe.bundled, problems, failed }
 }
 
-export const bundle = async (extensions: Extension[]): Promise<Bundle> => {
-  const wanted = extensions.filter(extension => extension.builtin || extension.enabled)
-  const full = await compile(extensions, wanted, [])
-  if (!full.script) return withoutBroken(extensions, wanted, full.error)
-  return { ...(await stamp(full.script)), tried: full.bundled, bundled: full.bundled, problems: [], failed: {} }
+export const bundle = async (extensions: Extension[], contracts: Contracts): Promise<Bundle> => {
+  const full = await compile(extensions, extensions, [], contracts)
+  if (!full.script) return withoutBroken(extensions, contracts, full.error)
+  return { ...(await stamp(full.script)), bundled: full.bundled, problems: [], failed: {} }
 }

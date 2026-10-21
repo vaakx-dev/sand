@@ -1,9 +1,10 @@
 import type { PairInvite } from '@sand/host-devices/contract'
+import { pairCreate } from '@sand/host-gateway/contract'
 import { effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import type { WireContext } from '../inject'
 import { renewBeforeExpiry } from '../renew'
 
-export const pairInvite = (ctx: Context<'wire'>, epoch: Sig<number>, shown: Set<number>) => {
+export const pairInvite = (ctx: WireContext, epoch: Sig<number>, shown: Set<number>) => {
   const invite = sig<PairInvite | undefined>(undefined)
   const error = sig<unknown>(undefined)
   const renew = sig(0)
@@ -12,7 +13,7 @@ export const pairInvite = (ctx: Context<'wire'>, epoch: Sig<number>, shown: Set<
     renew.get()
     let current = true
     untrack(() =>
-      ctx.wire.call<PairInvite>({ type: 'pair.create' }).then(
+      ctx.wire.call(pairCreate, {}).then(
         next => {
           if (!current) return
           shown.add(next.expires)

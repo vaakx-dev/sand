@@ -1,4 +1,4 @@
-import { isRecord } from '@sand/kit'
+import { isRecord } from '@sand/util'
 import { join } from 'node:path'
 import { codexHome } from './binary'
 

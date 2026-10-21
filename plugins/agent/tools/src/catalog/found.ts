@@ -1,4 +1,4 @@
-import type { Message } from '@sand/messages'
+import type { Message } from '@sand/chats/contract'
 
 export const foundIn = (messages: Message[]) =>
   new Set(

@@ -1,6 +1,6 @@
+import { isRecord } from '@sand/util'
 import type { DraftTarget } from '../contract'
-import { isRecord } from '@sand/kit'
-import { addressParam, addressState, pushAddress, updateAddress } from '@sand/kit/web'
+import { addressParam, addressState, pushAddress, updateAddress } from '../integrations/address'
 
 const key = 'session'
 
@@ -13,7 +13,7 @@ export type Visit = 'push' | 'replace' | 'restore'
 
 const placeId = ({ session, draft }: Place) => session ?? draft?.id
 
-const moves = (from: Place, to: Place) => placeId(from) !== placeId(to) && Boolean(from.session || to.session)
+const moves = (from: Place, to: Place) => placeId(from) !== placeId(to)
 
 const requestedDraft = (): DraftTarget | undefined => {
   const { draft } = addressState()
@@ -27,8 +27,6 @@ export const requestedPlace = (): Place => ({ session: requestedSession(), draft
 
 export const samePlace = (a: Place, b: Place) => placeId(a) === placeId(b)
 
-export const behindSession = () => addressState().behind
-
 export const sessionLink = (id: string) => {
   const url = new URL(location.href)
   url.hash = ''
@@ -38,6 +36,6 @@ export const sessionLink = (id: string) => {
 
 export const recordPlace = (from: Place, to: Place, visit: Visit) => {
   if (visit === 'restore') return
-  if (visit === 'push' && moves(from, to)) pushAddress({ [key]: to.session }, { draft: to.draft, behind: from.session })
+  if (visit === 'push' && moves(from, to)) pushAddress({ [key]: to.session }, { draft: to.draft })
   else updateAddress({ [key]: to.session }, { draft: to.draft })
 }

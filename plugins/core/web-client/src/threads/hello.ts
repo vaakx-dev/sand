@@ -1,5 +1,7 @@
-import type { Hello } from '@sand/protocol'
+import { helloActive } from '@sand/host-hub/contract'
+import { helloDelta, helloSessions, helloStarted, helloSync } from '@sand/server/contract'
 import type { Thread } from '../contract'
+import type { HelloRead } from '../wire/hellos'
 import { clearTurn } from './live'
 import type { Store } from './store'
 
@@ -8,27 +10,24 @@ const stale = (thread: Thread) => {
   thread.loaded = false
 }
 
-const unlisted = (store: Store, hello: Hello, owned: () => Thread[]) => {
-  const known = new Set(hello.sessions.map(info => info.id))
-  const main = owned().filter(thread => thread.info.kind !== 'agent')
-  for (const thread of main) if (!known.has(thread.id)) store.remove(thread.id)
-  for (const thread of owned()) if (!known.has(thread.id) && !store.threads.has(thread.info.parent ?? '')) store.remove(thread.id)
-}
-
-export const applyHello = (store: Store, hello: Hello, device: string) => {
+export const applyHello = (store: Store, read: HelloRead, device: string) => {
+  const sessions = read(helloSessions) ?? []
   const owned = () => [...store.threads.values()].filter(thread => thread.device === device)
   for (const thread of owned()) stale(thread)
-  if (hello.delta) {
-    for (const id of hello.removed ?? []) if (store.threads.get(id)?.device === device) store.remove(id)
-  } else unlisted(store, hello, owned)
-  for (const info of hello.sessions) store.upsert(info, device)
-  const active = new Set(hello.active)
+  if (!read(helloDelta)) {
+    const known = new Set(sessions.map(info => info.id))
+    for (const thread of owned()) if (!known.has(thread.id)) store.remove(thread.id)
+  }
+  for (const info of sessions) store.upsert(info, device)
+  const active = new Set(read(helloActive))
+  const started = read(helloStarted)
   for (const thread of owned()) {
     thread.running = active.has(thread.id)
     if (!thread.running) clearTurn(thread)
-    else thread.started ??= hello.started?.[thread.id]
+    else thread.started ??= started?.[thread.id]
     store.changed(thread.id)
   }
-  if (hello.sync) store.synced.set(device, hello.sync)
+  const sync = read(helloSync)
+  if (sync) store.synced.set(device, sync)
   else store.synced.delete(device)
 }

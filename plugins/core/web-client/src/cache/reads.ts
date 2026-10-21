@@ -1,4 +1,4 @@
-import type { Entry } from '@sand/messages'
+import type { Entry } from '@sand/chats/contract'
 import { transact, under, type PickStore } from '../integrations/indexed-db'
 import { emptyMeta, type CachedThread, type Meta, type SummaryRecord, type TailRecord } from './records'
 

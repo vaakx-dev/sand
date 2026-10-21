@@ -1,84 +1,126 @@
-import type { WireEvent } from '@sand/protocol'
-import type { WireSession } from '@sand/sessions-sqlite/contract'
-import { applyLiveEvent } from '@sand/kit'
-import { catchUp, clearTurn } from './live'
+import { sessionEntryWire, sessionRemoveWire, sessionUpdateWire, type WireSession } from '@sand/chats/contract'
+import { contextChange } from '@sand/compaction/contract'
+import { artifactSavedWire } from '@sand/html/contract'
+import { toolProgressWire, toolResultWire, toolStartWire, turnEndWire, turnStartWire } from '@sand/loop/contract'
+import { liveSnapshot, llmEventWire } from '@sand/server/contract'
+import { applyLiveEvent } from '@sand/server/live'
+import { queueChange, turnSteerWire } from '@sand/steering/contract'
+import { joinDisposers } from '@sand/util'
+import type { Wire } from '../contract'
+import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
-export const applyEvent = (store: Store, event: WireEvent, load: (id: string) => void, device: string) => {
-  const thread = ({ $session }: WireSession) => store.upsert($session, device)
+const everyPc = { remotes: true }
+
+export const listenThreads = (wire: Wire, store: Store, load: (id: string) => void) => {
+  const thread = ({ $session }: WireSession, device: string) => store.upsert($session, device)
   const known = (id: string) => store.threads.get(id)
-  switch (event.name) {
-    case 'session.meta':
-      return store.meta(event.args[0])
-    case 'queue.change':
-      return store.queue(...event.args)
-    case 'context.change':
-      return store.context(...event.args)
-    case 'session.remove':
-      return store.remove(event.args[0].$session.id)
-    case 'session.update':
-      return store.changed(thread(event.args[0]).id)
-    case 'session.entry': {
-      const [session, entry] = event.args
-      const found = thread(session)
-      const open = found.id === store.current
-      if (found.loaded || open) found.entries.set(entry.id, entry)
-      found.info = { ...found.info, head: entry.id, updated: Math.max(found.info.updated, entry.at) }
-      if (entry.type === 'message') found.live = []
-      if (!found.loaded && open) load(found.id)
-      return store.changed(found.id)
-    }
-    case 'turn.start': {
-      const found = thread(event.args[0])
-      found.running = true
-      found.started ??= Date.now()
-      found.ended = undefined
-      store.started(found.id)
-      return store.changed(found.id)
-    }
-    case 'turn.end': {
-      const found = thread(event.args[0])
-      found.running = false
-      clearTurn(found)
-      found.step = undefined
-      found.ended = event.args[1]
-      return store.changed(found.id)
-    }
-    case 'turn.steer': {
-      const found = thread(event.args[0])
-      found.queued = found.queued.filter(steer => steer.id !== event.args[2])
-      return store.changed(found.id)
-    }
-    case 'live.snapshot': {
-      const found = known(event.args[0])
-      if (!found) return
-      catchUp(found, event.args[1])
-      return store.changed(found.id)
-    }
-    case 'llm.event': {
-      const found = known(event.args[1].$session.id)
-      if (!found) return
-      found.live = applyLiveEvent(found.live, event.args[0])
-      return store.changed(found.id)
-    }
-    case 'tool.start': {
-      const found = known(event.args[1].$session.id)
-      if (!found) return
-      found.tools.running.add(event.args[0].id)
-      found.step = event.args[0]
-      return store.changed(found.id)
-    }
-    case 'tool.result': {
-      const [result, call, session] = event.args
-      const found = known(session.$session.id)
-      if (!found) return
-      found.tools.running.delete(call.id)
-      found.tools.results.set(call.id, result)
-      return store.changed(found.id)
-    }
-    case 'agent.start':
-    case 'agent.end':
-    case 'artifact.saved':
-      return store.changed(thread(event.args[0]).id)
-  }
+
+  return joinDisposers(
+    wire.on(queueChange, ([id, state]) => store.queue(id, state), everyPc),
+    wire.on(contextChange, ([id, usage]) => store.context(id, usage), everyPc),
+    wire.on(sessionUpdateWire, (session, device) => store.changed(thread(session, device).id), everyPc),
+    wire.on(sessionRemoveWire, id => store.remove(id), everyPc),
+    wire.on(
+      sessionEntryWire,
+      ([session, entry], device) => {
+        const found = thread(session, device)
+        const open = found.id === store.current
+        if (found.loaded || open) found.entries.set(entry.id, entry)
+        const updated = entry.type === 'system' ? found.info.updated : Math.max(found.info.updated, entry.at)
+        found.info = { ...found.info, head: entry.id, updated }
+        if (entry.type === 'message') found.live = []
+        if (!found.loaded && open) load(found.id)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      turnStartWire,
+      ([session], device) => {
+        const found = thread(session, device)
+        found.running = true
+        found.started ??= Date.now()
+        found.ended = undefined
+        store.started(found.id)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      turnEndWire,
+      ([session, result], device) => {
+        const found = thread(session, device)
+        found.running = false
+        clearTurn(found)
+        found.step = undefined
+        found.ended = result
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      turnSteerWire,
+      ([session, , id], device) => {
+        const found = thread(session, device)
+        found.queued = found.queued.filter(steer => steer.id !== id)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      liveSnapshot,
+      ([id, snapshot]) => {
+        const found = known(id)
+        if (!found) return
+        catchUp(found, snapshot)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      llmEventWire,
+      ([event, session]) => {
+        const found = known(session.$session.id)
+        if (!found) return
+        found.live = applyLiveEvent(found.live, event)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      toolStartWire,
+      ([call, session]) => {
+        const found = known(session.$session.id)
+        if (!found) return
+        found.tools.running.add(call.id)
+        found.step = call
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      toolProgressWire,
+      ([call, text, session]) => {
+        const found = known(session.$session.id)
+        if (!found) return
+        addLog(found, call.id, text)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      toolResultWire,
+      ([result, call, session]) => {
+        const found = known(session.$session.id)
+        if (!found) return
+        found.tools.running.delete(call.id)
+        found.tools.logs.delete(call.id)
+        found.tools.results.set(call.id, result)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(artifactSavedWire, ([session], device) => store.changed(thread(session, device).id), everyPc),
+  )
 }

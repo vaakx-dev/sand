@@ -1,7 +1,7 @@
 {
   "name": "@sand/picker",
   "version": "0.0.0",
-  "description": "Pick and input sheets for server and local prompts, with fuzzy search and keys as buttons",
+  "description": "Pick and input sheets for page prompts, with fuzzy search",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,16 +9,13 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Pickers",
-    "summary": "Lists to choose from and boxes to type in when sand asks you something",
-    "provides": [
-      "picker"
-    ]
+    "summary": "Lists to choose from and boxes to type in, for renaming and confirming"
   },
   "dependencies": {
-    "@sand/kit": "workspace:*",
-    "@sand/server": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-    "drydock": "github:vaakx-dev/drydock#v0.1.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

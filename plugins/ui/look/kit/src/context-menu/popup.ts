@@ -1,5 +1,5 @@
-import { returnFocus } from '@sand/kit/web'
-import type { MenuRequest } from '@sand/protocol'
+import { returnFocus } from '../layers/stack'
+import type { MenuRequest } from '../contract'
 import { disposeAll, div, dynamicChild, onWindow, sig } from '@vaakx-dev/vrui'
 import { layer } from '../layer'
 import { popover } from '../menus/menu'

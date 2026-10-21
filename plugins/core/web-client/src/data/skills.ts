@@ -1,14 +1,13 @@
-import type { WireRequest } from '@sand/protocol'
-import type { SkillSummary } from '@sand/skills/contract'
-import type { SkillIndex, Threads, Wire } from '../contract'
+import { helloSkills, type SkillSummary, skillsChange as skillsUpdate, skillsList } from '@sand/skills/contract'
 import type { Context } from 'drydock'
+import { type SkillIndex, skillsChange, threadSelect, type Threads, type Wire, wireHello } from '../contract'
 import { coalesced } from '../detached'
 
-const listRequest = (threads: Threads): WireRequest => {
+const listInput = (threads: Threads) => {
   const current = threads.current()
-  if (current) return { type: 'skills.list', session: current.id }
+  if (current) return { session: current.id }
   const cwd = threads.cwd()
-  return cwd ? { type: 'skills.list', cwd } : { type: 'skills.list' }
+  return cwd ? { cwd } : {}
 }
 
 export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): SkillIndex => {
@@ -16,22 +15,20 @@ export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): Sk
   let asked = 0
   const set = (next: SkillSummary[]) => {
     skills = next
-    ctx.emit('skills.change')
+    ctx.emit(skillsChange)
   }
   const refresh = coalesced(ctx, () => {
     const ticket = ++asked
-    wire.call<SkillSummary[]>(listRequest(threads)).then(
+    wire.call(skillsList, listInput(threads)).then(
       next => ticket === asked && set(next),
       () => {},
     )
   })
-  ctx.on('wire.hello', hello => {
-    set(hello.skills)
+  ctx.on(wireHello, () => {
+    set(wire.hello(helloSkills) ?? [])
     refresh()
   })
-  ctx.on('thread.select', refresh)
-  ctx.on('wire.event', event => {
-    if (event.name === 'skills.change') refresh()
-  })
+  ctx.on(threadSelect, refresh)
+  ctx.effect(() => wire.on(skillsUpdate, refresh))
   return { list: () => skills }
 }

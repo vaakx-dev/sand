@@ -5,10 +5,11 @@
 - Keep the root small.
 - Use TypeScript on Bun; prefer Bun APIs over Node ones.
 - Everything is a plugin. drydock stays agent-agnostic.
+- A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (`sand serve`), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins.
 - `packages/protocol` holds types only.
 - Register everything through `ctx` so unloading cleans it up.
 - The web UI is the only user surface; there is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI.
-- `sand -p` is a minimal test runner: it runs one prompt or /command in its own process, without a server, and prints the reply. Use it to check the agent loop and server-side features. Don't build or adapt features for it, and don't keep it in parity with the web UI.
+- `sand -p` is a minimal test runner: it runs one prompt in its own process, without a server, and prints the reply. Use it to check the agent loop and server-side features. Don't build or adapt features for it, and don't keep it in parity with the web UI.
 - Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
 - vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `node_modules/@vaakx-dev/vrui` and `packages/protocol/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
