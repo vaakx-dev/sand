@@ -24,7 +24,6 @@ const inputSchema = (ctx: AgentsContext) =>
     agent: z.string().optional().describe('Which agent to use (default: general)'),
     model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
     effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
-    background: z.boolean().optional().describe('Return now. The report arrives later as a <task-notification>.'),
   })
 
 const report = (result: TurnResult) => {
@@ -52,13 +51,8 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
   get input() {
     return inputSchema(ctx)
   },
-  async run({ label, task, agent, model, effort, background }, { session, signal, call }) {
-    const request = { parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id }
-    if (!background) {
-      const opened = await open({ ...request, signal })
-      return `${report(await opened.run(signal))}\n\n[thread ${opened.session.id}]`
-    }
-    const opened = await open(request)
+  async run({ label, task, agent, model, effort }, { session, call }) {
+    const opened = await open({ parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id })
     const job = ctx.backgroundJobs.start({
       kind: 'agent',
       parent: session,

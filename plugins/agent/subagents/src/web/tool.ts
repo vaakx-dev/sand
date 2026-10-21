@@ -19,10 +19,7 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
 
   const plainMeta = (tool: ToolView) => {
     if (tool.status === 'running') return kit.statusLabel('running')
-    if (!tool.result) return tool.call.malformed ? 'malformed input' : ''
-    if (tool.result.isError) return ''
-    const lines = views.resultText(tool.result).split('\n')
-    return lines.length > 1 ? `${lines.length} lines` : ''
+    return tool.call.malformed ? 'malformed input' : ''
   }
 
   const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)

@@ -21,9 +21,9 @@ export default definePlugin({
     const meta = createMeta()
     const efforts = () => ctx.get(llm)?.levels?.().map(level => level.id) ?? []
     const resolve = agentLayers(ctx, efforts)
-    const run = createRun(ctx, { resolve, meta, maxDepth: config.max_depth, maxAgents: config.max_agents })
+    const open = createRun(ctx, { resolve, meta, maxDepth: config.max_depth, maxAgents: config.max_agents })
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Agents', summary: 'list the models agents can use', load: 'on-demand' }))
-    ctx.effect(() => ctx.tools.register(agentTool(ctx, run.open)))
+    ctx.effect(() => ctx.tools.register(agentTool(ctx, open)))
     ctx.effect(() => ctx.tools.register(modelsTool(ctx)))
     restrictContext(ctx, resolve, meta, config.max_depth)
   },
