@@ -19,8 +19,6 @@ export interface AgentRequest {
   model?: string
   effort?: Effort
   origin?: string
-  signal?: AbortSignal
-  wait?: boolean
 }
 
 export interface AgentResult extends TurnResult {

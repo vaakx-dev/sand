@@ -12,7 +12,7 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Agents",
-    "summary": "Sub-agents the agent can start, in the foreground or as background jobs"
+    "summary": "Sub-agents the agent can start as background jobs"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

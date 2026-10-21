@@ -7,7 +7,7 @@ import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
 import type { Resolve } from './layers'
 import type { AgentMeta, Meta } from './meta'
 import { childSettings } from './settings'
-import { slots, type Release } from './slots'
+import { slots } from './slots'
 import { compose } from './system'
 import { agentTitle } from './title'
 
@@ -20,7 +20,7 @@ export interface RunOptions {
 
 export interface OpenedAgent {
   session: Session
-  run(signal?: AbortSignal): Promise<AgentResult>
+  run(signal: AbortSignal): Promise<AgentResult>
   follow(task: string, signal: AbortSignal): Promise<AgentResult>
 }
 
@@ -57,9 +57,10 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     return session
   }
 
-  const drive = async (session: Session, request: AgentRequest, release: Release, signal?: AbortSignal): Promise<AgentResult> => {
+  const drive = async (session: Session, task: string, signal: AbortSignal): Promise<AgentResult> => {
+    const release = await take(signal)
     try {
-      return { ...(await ctx.loop.run(session, request.task, signal)), session }
+      return { ...(await ctx.loop.run(session, task, signal)), session }
     } finally {
       release()
     }
@@ -69,20 +70,13 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     const definition = await definitionOf(request.agent ?? 'general', request.parent)
     const parentMeta = meta(request.parent)
     if ((parentMeta?.depth ?? 0) >= maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
-    const release = await take(request.wait ?? false, request.signal)
-    const session = await create(request, definition, parentMeta).catch(error => {
-      release()
-      throw error
-    })
+    const session = await create(request, definition, parentMeta)
     return {
       session,
-      run: signal => drive(session, request, release, signal),
-      follow: async (task, signal) => drive(session, { ...request, task }, await take(false), signal),
+      run: signal => drive(session, request.task, signal),
+      follow: (task, signal) => drive(session, task, signal),
     }
   }
 
-  return {
-    open,
-    run: async (request: AgentRequest) => (await open(request)).run(request.signal),
-  }
+  return open
 }
