@@ -28,7 +28,7 @@ const phaseText = (phase: UpdatePhase, running = 0) => {
   }
 }
 
-export const behindText = (status: Extract<PcStatus, { kind: 'behind' }>, target: ReleaseInfo | undefined) => {
+const behindText = (status: Extract<PcStatus, { kind: 'behind' }>, target: ReleaseInfo | undefined) => {
   if (status.count !== undefined) return `${plural(status.count, 'change')} behind`
   const listed = target?.changes?.length
   return status.beyond && listed ? `More than ${plural(listed, 'change')} behind` : 'Runs an older build'

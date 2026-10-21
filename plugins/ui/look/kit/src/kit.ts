@@ -15,7 +15,7 @@ import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
 import { markerLine } from './marks/marker'
-import { badge, checkMark, chevron, doneMark, dot, elapsed, hint, okMark, progressSteps, radioMark, shrinkBadge, spinner, statusLine, working } from './marks/marks'
+import { badge, checkMark, chevron, doneMark, dot, elapsed, hint, okMark, progressSteps, radioMark, shrinkBadge, spinner, statusLine, withDot, working } from './marks/marks'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
 import { stepMark } from './marks/state-marks'
@@ -179,5 +179,6 @@ export const kit = {
   toolBody,
   toolCard,
   waitingLine,
+  withDot,
   working,
 }

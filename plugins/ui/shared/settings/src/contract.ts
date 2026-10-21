@@ -6,6 +6,7 @@ export interface SettingsPage {
   icon?: string
   order?: number
   parent?: string
+  dot?: () => boolean
   render(): HTMLElement
 }
 
