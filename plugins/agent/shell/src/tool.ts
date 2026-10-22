@@ -14,7 +14,7 @@ export interface Limits {
 }
 
 const truncate = (text: string, max: number) =>
-  text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted …\n${text.slice(-max / 2)}`
+  text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${text.slice(-max / 2)}`
 
 export const shellTool = (
   spec: Pick<Tool, 'name' | 'description' | 'environment'>,

@@ -18,7 +18,7 @@
 - Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand --home "$(mktemp -d)" -p "<prompt>"` (flags before `-p`, which takes the next word as the prompt) instead of starting another server, so test threads stay out of the user's `~/.sand`; it borrows `~/.sand/auth.json` for the model sign-ins.
 - Never use `pkill -f`, `pgrep -f` or `killall`; they match your own shell. Kill by PID, and don't leave background processes running.
 - Ask before heavy or long commands (full builds, benchmarks, anything that loads this laptop). Give commands that might hang a `timeout_ms`.
-- Shell output over 30k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.
+- Shell output over 10k characters loses its middle. Filter with `grep`, `head` or `tail`, or write to a file, instead of rerunning.
 - Glob before you read; don't guess paths.
 - Edit source with the edit tool, one call per file at a time, never with sed, perl or python rewrites. If an edit fails, re-read the file before retrying.
 - Other agents may be editing this tree at the same time. Only touch files your task needs, don't revert or reformat changes you didn't make, don't run repo-wide formatters, and don't touch the git index (`add`, `reset`, `stash`, `checkout --`) unless asked.
