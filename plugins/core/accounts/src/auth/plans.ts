@@ -1,3 +1,4 @@
+import type { ChatKind } from '@sand/chats/contract'
 import type { AnyPlan, AppPlan, AppStatus, Payload, Plan, PlanTokens } from '../contract'
 import { errorMessage } from '@sand/util'
 import type { AppStatuses } from './app-status'
@@ -70,10 +71,10 @@ export const createPlans = ({ saved, save, changed, dropped }: PlansOptions) => 
       const apps = [...plans.values()].filter(isApp).filter(plan => !id || plan.id === id)
       await Promise.all(apps.map(check))
     },
-    call(id: string, tokens: PlanTokens, payload: Payload) {
+    call(id: string, tokens: PlanTokens, payload: Payload, sessionKind?: ChatKind) {
       const plan = api(id)
       if (!plan) throw signInError(id)
-      return plan.call(tokens, payload)
+      return plan.call(tokens, payload, sessionKind)
     },
   }
 }

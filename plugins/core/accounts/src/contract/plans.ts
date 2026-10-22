@@ -1,4 +1,4 @@
-import type { StopReason, ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { ChatKind, StopReason, ToolResultBlock, UserContent } from '@sand/chats/contract'
 import type { ToolSpec } from './llm'
 import type { Effort, LimitWindow, ModelPrice } from './models'
 import type { Usage } from './usage'
@@ -59,7 +59,7 @@ export interface Plan extends PlanInfo {
   api: PlanApi
   signIn(signal: AbortSignal): Promise<PlanSignIn>
   refresh(tokens: PlanTokens): Promise<PlanTokens>
-  call(tokens: PlanTokens, payload: Payload): PlanCall
+  call(tokens: PlanTokens, payload: Payload, sessionKind?: ChatKind): PlanCall
   models(tokens: PlanTokens): Promise<PlanModel[]>
   limits?(response: Response): PlanLimits | undefined | Promise<PlanLimits | undefined>
   usage?(tokens: PlanTokens): Promise<PlanLimits>
@@ -80,6 +80,7 @@ export interface AppSetup {
   tools: ToolSpec[]
   history: string
   cwd: string
+  sessionKind?: ChatKind
 }
 
 export interface AppCall {
