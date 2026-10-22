@@ -8,7 +8,7 @@ import { errorMessage } from '@sand/util'
 const maxShown = 6
 const maxShownBytes = 5_000_000
 const maxSaved = 40
-const maxSavedBytes = 25_000_000
+const maxSavedBytes = 5_000_000
 
 interface Plan {
   job: string
