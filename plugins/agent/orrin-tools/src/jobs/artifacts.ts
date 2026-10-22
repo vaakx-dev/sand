@@ -39,7 +39,7 @@ const skipReason = (artifact: Artifact, index: number) => {
 }
 
 const load = async (orrin: Orrin, attachments: Attachments, { job, artifact, skipped, show }: Plan, signal: AbortSignal): Promise<Loaded> => {
-  const base = `- ${artifact.path} (${artifact.size} bytes)`
+  const base = `${artifact.path} (${artifact.size} bytes)`
   if (skipped && !show) return { line: `${base}, not saved: ${skipped}`, images: [] }
   try {
     const { data } = await orrin.call('objects.get', { hash: artifact.hash }, signal)
@@ -59,6 +59,5 @@ export const keepArtifacts = async (orrin: Orrin, attachments: Attachments, job:
   const plans = artifacts.map((artifact, index): Plan => ({ job, artifact, skipped: skipReason(artifact, index), show: shown.has(artifact) }))
   const loaded: Loaded[] = []
   for (const plan of plans) loaded.push(await load(orrin, attachments, plan, signal))
-  const list = loaded.length ? `Artifacts:\n${loaded.map(({ line }) => line).join('\n')}` : ''
-  return { list, images: loaded.flatMap(({ images }) => images) }
+  return { lines: loaded.map(({ line }) => line), images: loaded.flatMap(({ images }) => images) }
 }

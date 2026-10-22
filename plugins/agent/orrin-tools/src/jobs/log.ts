@@ -6,8 +6,12 @@ const maxErrorLines = 60
 const maxErrorChars = 5_000
 const maxErrorLineChars = 500
 const errorPattern = /\berror\b|panic|exception|fatal|failed|traceback/i
+const ansi = /\x1b\[[0-9;]*m/g
 
-const display = ({ stream, text }: LogLine) => (stream === 'stderr' ? `! ${text}` : text)
+const display = ({ stream, text }: LogLine) => {
+  const plain = text.replace(ansi, '')
+  return stream === 'stderr' ? `! ${plain}` : plain
+}
 
 const omittedLines = (lines: LogLine[], omittedChars: number) => {
   let offset = 0
@@ -24,13 +28,43 @@ const errorLines = (lines: LogLine[]) => {
   const picked: string[] = []
   let chars = 0
   for (const line of lines) {
-    if (!errorPattern.test(line.text)) continue
+    if (!errorPattern.test(display(line))) continue
     const entry = `${line.n}: ${display(line).slice(0, maxErrorLineChars)}`
     if (picked.length === maxErrorLines || chars + entry.length > maxErrorChars) break
     picked.push(entry)
     chars += entry.length + 1
   }
   return picked
+}
+
+const linesAfterError = 3
+const lastLines = 10
+const maxFailureChars = 4_000
+
+const errorBlocks = (texts: string[]) => {
+  const picked = new Set<number>()
+  texts.forEach((text, index) => {
+    if (!errorPattern.test(text)) return
+    for (let next = index; next <= index + linesAfterError && next < texts.length; next++) picked.add(next)
+  })
+  return texts.filter((_, index) => picked.has(index))
+}
+
+const capped = (texts: string[]) => {
+  const kept: string[] = []
+  let chars = 0
+  for (const text of texts) {
+    if (chars + text.length > maxFailureChars) return [...kept, `… ${texts.length - kept.length} more lines`]
+    kept.push(text)
+    chars += text.length + 1
+  }
+  return kept
+}
+
+export const failureLines = (lines: LogLine[]) => {
+  const texts = lines.map(line => display(line).slice(0, maxErrorLineChars))
+  const errors = errorBlocks(texts)
+  return capped(errors.length ? errors : texts.slice(-lastLines))
 }
 
 export const logTail = (lines: LogLine[]) => {
