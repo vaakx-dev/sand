@@ -1,7 +1,7 @@
 {
   "name": "@sand/compaction",
   "version": "0.0.0",
-  "description": "Compacts a conversation into a summary when its context fills up, and reports context usage",
+  "description": "Compacts a conversation into a summary when its context fills up or an active thread sits idle until its prompt cache is about to expire, and reports context usage",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

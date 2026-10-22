@@ -40,12 +40,22 @@ const update = `The transcript in <conversation> tags above continues the conver
 
 ${format}`
 
+const inContext = `Stop the work here. Summarize this conversation so another agent can continue it without seeing it. If it starts with an earlier summary, keep everything in it that still matters. Leave out your system prompt; the next agent gets it too.
+
+Don't continue the conversation, answer it or call tools. Output only the summary.
+
+${format}`
+
+const focus = (instructions?: string) => instructions && `Additional focus: ${instructions}`
+
+export const inContextText = (instructions?: string) => [inContext, focus(instructions)].filter(Boolean).join('\n\n')
+
 export const promptText = (conversation: string, previous?: string, instructions?: string) =>
   [
     `<conversation>\n${conversation}\n</conversation>`,
     previous && `<previous-summary>\n${previous}\n</previous-summary>`,
     previous ? update : fresh,
-    instructions && `Additional focus: ${instructions}`,
+    focus(instructions),
   ]
     .filter(Boolean)
     .join('\n\n')
