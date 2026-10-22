@@ -11,6 +11,7 @@ import { createCompactor } from './compact'
 import { config } from './config'
 import { contextUsage } from './contract'
 import { rewrite } from './history/rewrite'
+import { idleCompact } from './idle'
 import { createTracker } from './measure/tracker'
 import { serveUsage } from './usage'
 
@@ -22,6 +23,7 @@ export default definePlugin({
     const tracker = createTracker()
     const compactor = createCompactor(ctx, config, tracker)
     autoCompact(ctx, compactor, tracker)
+    idleCompact(ctx, compactor, tracker)
     const budget = (session: Session) => budgetOf(ctx.llm, config, ctx.get(modelSettings)?.effective(session).model)
 
     ctx.on(llmEvent, (event, session) => {
