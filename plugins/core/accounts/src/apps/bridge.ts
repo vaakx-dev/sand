@@ -100,6 +100,7 @@ export const createBridge = (plan: AppPlan, cwd: string) => {
       tools: request.session ? request.tools : [],
       history: '',
       cwd,
+      ...(request.sessionKind && { sessionKind: request.sessionKind }),
     }
     const marks = request.messages.map(markOf)
     const entry = await entryFor(key, setup, request.messages, marks)

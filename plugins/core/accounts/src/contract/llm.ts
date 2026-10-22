@@ -1,4 +1,4 @@
-import type { Block, Message, StopReason } from '@sand/chats/contract'
+import type { Block, ChatKind, Message, StopReason } from '@sand/chats/contract'
 import type { LiveEvent } from './live'
 import type { AccountKind } from './login'
 import type { Billing, Effort, LimitWindow, ModelInfo, ModelPrice, ProviderInfo, SourceRef } from './models'
@@ -47,6 +47,7 @@ export interface LLMRequest {
   effort?: Effort
   speed?: Speed
   session?: string
+  sessionKind?: ChatKind
 }
 
 export type LLMEvent =

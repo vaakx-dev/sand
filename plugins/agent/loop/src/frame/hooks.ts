@@ -10,7 +10,7 @@ import { runTools } from './tools'
 export const createHooks = (ctx: LoopsContext, session: Session, signal: AbortSignal, state: TurnState): TurnHooks => {
   const build = async () => {
     const request = await ctx.waterfall(contextBuild, await ctx.context.build(session), session, signal)
-    return { ...request, session: session.id }
+    return { ...request, session: session.id, sessionKind: session.kind }
   }
 
   const overflow = async (error: unknown) => !signal.aborted && Boolean(await ctx.bail(contextOverflow, session, error, signal))

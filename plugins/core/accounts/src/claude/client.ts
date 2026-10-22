@@ -23,7 +23,7 @@ export const createClaude = ({ accounts, plans, maxTokens, retries, inspect }: C
   const prepare = async (account: string, request: LLMRequest, settings: ClaudeSettings) => {
     const credential = await accounts.auth(account)
     if (credential.type === 'api_key') return keyCall(credential, request, settings)
-    return plans.call(account, credential, claudeBody(request, settings, true))
+    return plans.call(account, credential, claudeBody(request, settings, true), request.sessionKind)
   }
 
   const init = (call: PlanCall, payload: Payload): RequestInit => ({
