@@ -13,7 +13,7 @@ export const findTool = (tool: MakeTool) =>
     input,
     replaces: ['glob'],
     environment:
-      'This project is in Orrin. Use find, search, read, outline and where to look at files instead of scanning the disk with shell (ls, dir, find, grep, rg). Change files with patch, write, move and delete. Use build, run, test, screenshot and export for the targets in orrin.toml. Keep shell for other commands.',
+      'This project is in Orrin. Use find, search, read, outline and where to look at files instead of scanning or printing files with shell (ls, dir, cat, head, find, grep, rg). Change files with patch, write, move and delete. Use build, run, test, screenshot and export for the targets in orrin.toml. Keep shell for other commands.',
     async run({ pattern, limit = 200 }, scope, { signal }) {
       const { files, truncated } = await scope.orrin.call('find', { project: scope.project, view: scope.view, pattern, limit }, signal)
       if (!files.length) return `No files match "${pattern}"`
