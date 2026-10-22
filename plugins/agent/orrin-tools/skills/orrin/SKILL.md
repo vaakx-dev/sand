@@ -11,7 +11,7 @@ Orrin owns this project's files, views, builds and history. Ask it instead of th
 
 - `find` for files by name, `search` for text, `outline` for the shape of any file (code, docs, slides, scenes), `where` for installed tools.
 - `read` a slice or an anchor from `outline` or `search`, not whole big files.
-- Never scan the disk with shell commands to find files or tools.
+- Never scan the disk or print files with shell (`ls`, `cat`, `head`, `find`, `grep`). One `read` slice beats dumping a folder.
 
 ## Change
 

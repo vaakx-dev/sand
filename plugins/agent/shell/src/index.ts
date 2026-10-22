@@ -10,7 +10,7 @@ export default definePlugin({
   config: z.object({
     shell: z.string().optional(),
     timeout_ms: z.number().int().positive().default(120_000),
-    max_output: z.number().int().positive().default(30_000),
+    max_output: z.number().int().positive().default(10_000),
   }),
   apply(ctx, config) {
     const shell = detect(config.shell)
