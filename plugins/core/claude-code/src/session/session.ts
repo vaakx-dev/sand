@@ -7,6 +7,8 @@ import { messageBlock } from './content'
 import { createReader } from './stream'
 import { serverName, toolServer } from './tools'
 
+const cacheTtl = (setup: AppSetup) => (setup.sessionKind === 'thread' ? '1h' : '5m')
+
 const earlier = (history: string) => `Earlier in this conversation (carried over from sand):\n\n${history}\n\n---\n\n`
 
 export const openSession = async (setup: AppSetup, output: AppOutput, report: (limits: PlanLimits) => void): Promise<AppSession> => {
@@ -45,7 +47,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, report: (l
 
   const connection = await connect({
     args: claudeArgs(setup),
-    env: claudeEnv(),
+    env: { ...claudeEnv(), CLAUDE_CODE_PROMPT_CACHE_TTL: cacheTtl(setup) },
     cwd: setup.cwd,
     handle,
     onMessage,
