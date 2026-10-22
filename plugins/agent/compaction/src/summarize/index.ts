@@ -1,7 +1,7 @@
-import type { LLM, SourceRef, Usage } from '@sand/accounts/contract'
+import type { LLM, LLMRequest, SourceRef, Usage } from '@sand/accounts/contract'
 import type { Message } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
 import { sumUsage } from '@sand/usage/records'
+import { ask } from './ask'
 import { promptText, system } from './prompt'
 import { serialize } from './serialize'
 
@@ -33,17 +33,12 @@ const chunks = (parts: string[], max: number) => {
   return [...groups, current]
 }
 
-const ask = async (llm: LLM, text: string, model?: string, signal?: AbortSignal) => {
-  const request = { system, messages: [{ role: 'user', content: [{ type: 'text', text }] } satisfies Message], tools: [], model }
-  for await (const event of llm.stream(request, signal)) {
-    if (event.type !== 'done') continue
-    if (event.stopReason === 'max_tokens') throw new Error('The summary hit the output token limit')
-    const summary = textOf(event.message.content).trim()
-    if (!summary) throw new Error('Compaction produced an empty summary')
-    return { summary, usage: event.usage, source: event.source }
-  }
-  throw new Error('The summary stream ended without a reply')
-}
+const transcriptRequest = (text: string, model?: string): LLMRequest => ({
+  system,
+  messages: [{ role: 'user', content: [{ type: 'text', text }] }],
+  tools: [],
+  model,
+})
 
 export const summarize = async (llm: LLM, { model, messages, previous, instructions, limit, signal }: SummaryInput) => {
   const parts = messages.map(serialize).filter(Boolean)
@@ -51,7 +46,7 @@ export const summarize = async (llm: LLM, { model, messages, previous, instructi
   let usage: Usage | undefined
   let source: SourceRef | undefined
   for (const chunk of chunks(parts, Math.floor(limit * chunkShare * charsPerToken))) {
-    const reply = await ask(llm, promptText(chunk.join('\n\n'), summary, instructions), model, signal)
+    const reply = await ask(llm, transcriptRequest(promptText(chunk.join('\n\n'), summary, instructions), model), signal)
     summary = reply.summary
     usage = usage ? sumUsage(usage, reply.usage) : reply.usage
     source = reply.source ?? source

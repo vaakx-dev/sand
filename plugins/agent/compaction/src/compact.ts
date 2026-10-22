@@ -11,6 +11,7 @@ import { requestTokens } from './measure/estimate'
 import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
+import { summarizeInContext } from './summarize/in-context'
 
 export type CompactionContext = Context<{ llm: typeof llm }>
 
@@ -33,20 +34,23 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
 
   const run = async (session: Session, request: LLMRequest, budget: Budget, { reason, signal }: CompactOptions) => {
     const path = session.path()
-    const cut = plan(path, budget.keep) ?? (reason === 'threshold' ? undefined : plan(path, 0))
+    const overflow = reason === 'overflow'
+    const cut = plan(path, budget.keep) ?? (overflow ? plan(path, 0) : undefined)
     if (!cut) throw new Error('Nothing to compact yet')
     const before = tracker.project(session.id, request)
     ctx.emit(contextUsage, session, usageOf(budget, before, true))
     let after = before
     try {
-      const { summary, usage, source } = await summarize(ctx.llm, {
-        model: request.model,
-        messages: cut.dropped,
-        previous: cut.previous?.summary,
-        instructions: config.instructions,
-        limit: budget.limit,
-        signal,
-      })
+      const { summary, usage, source } = overflow
+        ? await summarize(ctx.llm, {
+            model: request.model,
+            messages: cut.dropped,
+            previous: cut.previous?.summary,
+            instructions: config.instructions,
+            limit: budget.limit,
+            signal,
+          })
+        : await summarizeInContext(ctx.llm, { ...request, sessionKind: session.kind }, config.instructions, signal)
       signal?.throwIfAborted()
       const record: CompactionRecord = {
         summary,

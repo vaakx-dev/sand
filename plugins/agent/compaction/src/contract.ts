@@ -10,7 +10,7 @@ export interface ContextUsage {
   compacting?: boolean
 }
 
-export type CompactionReason = 'threshold' | 'overflow'
+export type CompactionReason = 'threshold' | 'overflow' | 'idle'
 
 export interface CompactedFiles {
   read: string[]
