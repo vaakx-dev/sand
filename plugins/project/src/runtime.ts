@@ -10,7 +10,7 @@ import { localCopies } from './local/copies'
 
 export default definePlugin({
   name: 'project',
-  description: 'Finds which project a folder belongs to, and lets the page list files, browse folders and show project icons',
+  description: 'Finds which project a folder belongs to, and lets the page list, read and see changes to files, browse folders and show project icons',
   inject: { cli },
   apply(ctx) {
     const { home } = ctx.cli
