@@ -5,15 +5,14 @@ import { chatOf, chatRows, type ChatRow } from './rows'
 const columnOf: Record<keyof ChatPatch, string> = {
   title: 'title',
   seen: 'seen',
-  orrinView: 'orrin_view',
   pinned: 'pinned',
   settled: 'settled',
   snoozed: 'snoozed',
   position: 'position',
 }
 
-const insertSql = `insert into chats (id, created, cwd, project, head, kind, parent, origin, title, seen, orrin_view, pinned, settled, snoozed, position)
-  values ($id, $created, $cwd, $project, $head, $kind, $parent, $origin, $title, $seen, $orrinView, $pinned, $settled, $snoozed, $position)`
+const insertSql = `insert into chats (id, created, cwd, project, head, kind, parent, origin, title, seen, pinned, settled, snoozed, position)
+  values ($id, $created, $cwd, $project, $head, $kind, $parent, $origin, $title, $seen, $pinned, $settled, $snoozed, $position)`
 
 export const chatRecords = (db: Database) => {
   const insert = db.query(insertSql)

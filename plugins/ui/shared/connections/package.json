@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Connections",
-    "summary": "Settings page for outside services and tools, such as Orrin"
+    "summary": "Settings page for outside services and tools that plugins add"
   },
   "dependencies": {
     "@sand/settings": "workspace:*",

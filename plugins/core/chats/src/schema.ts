@@ -12,7 +12,6 @@ const chats = `create table if not exists chats (
   origin text,
   title text not null default '',
   seen integer not null default 1,
-  orrin_view text,
   pinned integer not null default 0,
   settled integer,
   snoozed integer,

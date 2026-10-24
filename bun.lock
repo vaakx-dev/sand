@@ -125,34 +125,6 @@
         "zod": "^4.6.5",
       },
     },
-    "plugins/agent/orrin-tools": {
-      "name": "@sand/orrin-tools",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/attachments": "workspace:*",
-        "@sand/chats": "workspace:*",
-        "@sand/orrin": "workspace:*",
-        "@sand/skills": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "@sand/util": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
-      },
-    },
-    "plugins/agent/orrin-views": {
-      "name": "@sand/orrin-views",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/chats": "workspace:*",
-        "@sand/orrin": "workspace:*",
-        "@sand/prompt": "workspace:*",
-        "@sand/steering": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "@sand/util": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
-      },
-    },
     "plugins/agent/prompt": {
       "name": "@sand/prompt",
       "version": "0.0.0",
@@ -425,22 +397,6 @@
       "dependencies": {
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/core/orrin": {
-      "name": "@sand/orrin",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/connections": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/layout": "workspace:*",
-        "@sand/settings": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
       },
     },
     "plugins/core/paths": {
@@ -839,7 +795,6 @@
         "@sand/host-hub": "workspace:*",
         "@sand/host-remotes": "workspace:*",
         "@sand/nav": "workspace:*",
-        "@sand/orrin": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/server": "workspace:*",
@@ -1352,12 +1307,6 @@
 
     "@sand/nav": ["@sand/nav@workspace:plugins/ui/layout/nav"],
 
-    "@sand/orrin": ["@sand/orrin@workspace:plugins/core/orrin"],
-
-    "@sand/orrin-tools": ["@sand/orrin-tools@workspace:plugins/agent/orrin-tools"],
-
-    "@sand/orrin-views": ["@sand/orrin-views@workspace:plugins/agent/orrin-views"],
-
     "@sand/palette": ["@sand/palette@workspace:plugins/ui/shared/palette"],
 
     "@sand/panel": ["@sand/panel@workspace:plugins/ui/layout/panel"],
@@ -1544,7 +1493,7 @@
 
     "@sand/composer/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
-    "@sand/connections/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
+    "@sand/connections/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/devices/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
@@ -1552,11 +1501,11 @@
 
     "@sand/file-tools/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
-    "@sand/files-panel/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
+    "@sand/files-panel/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/gesture/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
-    "@sand/header/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
+    "@sand/header/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/host-updates/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
@@ -1584,15 +1533,9 @@
 
     "@sand/nav/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
-    "@sand/orrin/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
-
-    "@sand/orrin-tools/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
-
-    "@sand/orrin-views/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
-
     "@sand/palette/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 
-    "@sand/panel/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
+    "@sand/panel/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/picker/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#0926f70", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-0926f70", "sha512-A80sMey7NEZ7Vm7X0HB2L31dSc6+r78DO6Sor86Aa35PeO3om7P9rSvAdNEXIPdbgSjSgJyWvo1XVKMaWv0J+w=="],
 

@@ -14,14 +14,13 @@ export interface SessionInfo {
   origin: string | null
   title: string
   seen: boolean
-  orrinView: string | null
   pinned: boolean
   settled: number | null
   snoozed: number | null
   position: number | null
 }
 
-export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'orrinView' | 'pinned' | 'settled' | 'snoozed' | 'position'>>
+export type ChatPatch = Partial<Pick<SessionInfo, 'title' | 'seen' | 'pinned' | 'settled' | 'snoozed' | 'position'>>
 
 export interface NewAgent {
   parent: string

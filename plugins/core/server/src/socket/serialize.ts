@@ -14,7 +14,6 @@ export const info = (session: Session): SessionInfo => ({
   origin: session.origin,
   title: session.title,
   seen: session.seen,
-  orrinView: session.orrinView,
   pinned: session.pinned,
   settled: session.settled,
   snoozed: session.snoozed,
