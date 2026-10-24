@@ -5,7 +5,6 @@ import { homedir } from 'node:os'
 import { sep } from 'node:path'
 import { projectsChange } from './contract'
 import { iconSync } from './icons/sync'
-import { throughOrrin } from './orrin'
 import { seedSandHome } from './registry/home'
 import { projectList } from './registry/list'
 import { createRegistry } from './registry/registry'
@@ -27,7 +26,7 @@ export default definePlugin({
     const list = () => projectList(store.all(), { device: device.id, home: homedir(), sep, root: root.get() })
     const placeChanged = () => ctx.hub.broadcast(projectsChange, list())
 
-    const registry = throughOrrin(ctx, createRegistry(store, device.id, () => changed(), () => sync.pull()), device.id)
+    const registry = createRegistry(store, device.id, () => changed(), () => sync.pull())
     const icons = iconSync(registry, device.id, home, report)
     ctx.effect(() => icons.close)
     const sync = projectSync(ctx, home, registry)
