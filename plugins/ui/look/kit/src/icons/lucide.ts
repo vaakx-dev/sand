@@ -75,16 +75,7 @@ import {
   ZoomOut,
 } from 'lucide'
 
-const Orrin: IconNode = [
-  ['circle', { cx: '12', cy: '12', r: '2.6' }],
-  ['path', { d: 'M19.52 9.26A8 8 0 0 1 6.34 17.66' }],
-  ['path', { d: 'M4.03 11.3A8 8 0 0 1 14.74 4.48' }],
-  ['circle', { cx: '17.66', cy: '6.34', r: '1.8', fill: 'currentColor', stroke: 'none' }],
-  ['circle', { cx: '4.48', cy: '14.74', r: '1.8', fill: 'currentColor', stroke: 'none' }],
-]
-
 const nodes = {
-  orrin: Orrin,
   search: Search,
   folder: Folder,
   down: ChevronDown,

@@ -22,7 +22,6 @@
     "@sand/host-hub": "workspace:*",
     "@sand/host-remotes": "workspace:*",
     "@sand/nav": "workspace:*",
-    "@sand/orrin": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/server": "workspace:*",

@@ -3,7 +3,7 @@ import type { SessionInfo } from './contract'
 export type ChatRow<T extends SessionInfo = SessionInfo> = Omit<T, 'seen' | 'pinned'> & { seen: number; pinned: number }
 
 const columns =
-  'c.id, c.created, c.cwd, c.project, c.head, c.kind, c.parent, c.origin, c.title, c.seen, c.orrin_view as orrinView, c.pinned, c.settled, c.snoozed, c.position'
+  'c.id, c.created, c.cwd, c.project, c.head, c.kind, c.parent, c.origin, c.title, c.seen, c.pinned, c.settled, c.snoozed, c.position'
 
 export const chatRows = `select ${columns} from chats c`
 

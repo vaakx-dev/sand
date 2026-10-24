@@ -29,7 +29,6 @@ const blank = (chat: NewChat): SessionInfo => ({
   origin: null,
   title: '',
   seen: true,
-  orrinView: null,
   pinned: false,
   settled: null,
   snoozed: null,
