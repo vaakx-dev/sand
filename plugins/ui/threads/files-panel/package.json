@@ -1,0 +1,21 @@
+{
+  "name": "@sand/files-panel",
+  "version": "0.0.0",
+  "description": "Files tab in the right panel: browse the current thread's folder, see what changed and read its files",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Files panel",
+    "summary": "Browse and read the thread's files, with changed files marked"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
