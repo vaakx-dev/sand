@@ -8,11 +8,12 @@ import { overlaySlot } from './overlay-slot'
 import { pairDialog } from './pair/dialog'
 import { pcsPage } from './page'
 import { deviceSource } from './source'
+import { threadPc } from './thread-pc'
 import { unpairedOverlay } from './unpaired'
 
 export default definePlugin({
   name: 'devices',
-  description: 'Devices: add and pair other PCs, pair phones and browsers, and reach sand away from home',
+  description: 'Devices: add and pair other PCs, pair phones and browsers, reach sand away from home, and pick which PC a new thread runs on',
   inject,
   apply(ctx) {
     const dialog = overlaySlot(ctx)
@@ -38,6 +39,7 @@ export default definePlugin({
     }
 
     unpairedOverlay(ctx)
+    threadPc(ctx)
 
     const health = pcHealthStore(ctx)
     const actions = { pair, addPc: () => addPc(), pairAgain: () => addPc('join') }
