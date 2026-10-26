@@ -7,7 +7,7 @@ import type { TransferStore } from './transfers'
 
 const identityTimeout = 3000
 
-const reachableUrl = async (record: RemoteRecord) => {
+export const reachableUrl = async (record: RemoteRecord) => {
   for (const url of remoteUrls(record)) {
     const identity = await fetchHostIdentity(url, identityTimeout).catch(() => undefined)
     if (identity?.deviceId === record.id) return url

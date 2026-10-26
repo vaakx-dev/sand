@@ -43,7 +43,8 @@ export const createTransfers = (folder: string) => {
     const entry = held.get(transfer)
     if (!entry) return
     held.delete(transfer)
-    if ('handle' in entry) await entry.handle.then(handle => handle.close()).catch(() => undefined)
+    if (!('handle' in entry)) return
+    await entry.handle.then(handle => handle.close()).catch(() => undefined)
     await rm(entry.file, { force: true })
   }
 
