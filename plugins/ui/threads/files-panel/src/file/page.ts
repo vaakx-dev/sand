@@ -2,7 +2,7 @@ import type { Composer } from '@sand/composer/contract'
 import type { Markdown } from '@sand/markdown/contract'
 import type { FileContent } from '@sand/project/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { dynamicChild, show, sig, type Sig } from '@vaakx-dev/vrui'
+import { dynamicChild, effect, show, sig, type Sig } from '@vaakx-dev/vrui'
 import { message, type FilesModel } from '../model'
 import { bar, page, pathLine } from '../parts'
 import { fileName } from '../paths'
@@ -25,10 +25,15 @@ const mention = (writer: Composer, path: string) => {
 export const filePage = ({ kit, model, markdown, writer }: FileParts, path: string) => {
   const { copyButton, headTitle, hint, icon, iconButton } = kit
   const read = sig<Read>(undefined)
-  model.read(path).then(
-    content => read.set({ content }),
-    error => read.set({ error: message(error) }),
-  )
+  let latest = 0
+  effect(() => {
+    model.version.get()
+    const ticket = ++latest
+    model.read(path).then(
+      content => ticket === latest && read.set({ content }),
+      error => ticket === latest && read.set({ error: message(error) }),
+    )
+  })
   const text = () => {
     const value = read.get()
     return value && 'content' in value ? value.content.text : undefined
@@ -37,6 +42,7 @@ export const filePage = ({ kit, model, markdown, writer }: FileParts, path: stri
     bar(
       iconButton({ title: 'Back to files', onClick: () => model.opened.set(undefined) }, icon('back', 16)),
       headTitle(2, fileName(path)),
+      iconButton({ title: 'Reload file', onClick: model.reload }, icon('reload', 16)),
       show(
         () => text() !== undefined,
         () => copyButton({ text: () => text() ?? '', label: 'Copy' }),

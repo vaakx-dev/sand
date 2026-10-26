@@ -28,6 +28,7 @@ export const filesModel = (wire: Wire, threads: Threads) => {
   const opened = sig<string | undefined>(undefined)
   const query = sig('')
   const expanded = sig<ReadonlySet<string>>(new Set())
+  const version = sig(0)
   let started = false
   let latest = 0
 
@@ -40,6 +41,7 @@ export const filesModel = (wire: Wire, threads: Threads) => {
     const at = place.get()
     if (!started || !at.cwd) return
     const ticket = ++latest
+    version.update(value => value + 1)
     try {
       const listing = await fetchListing(at)
       if (ticket === latest) loaded.set({ listing })
@@ -54,6 +56,7 @@ export const filesModel = (wire: Wire, threads: Threads) => {
     opened,
     query,
     expanded,
+    version,
     refresh: () => void refresh(),
     start() {
       if (started) return
