@@ -16,6 +16,18 @@ export const builtins: AgentDefinition[] = [
     tools: ['read', 'glob', 'grep', 'find', 'search', 'outline', 'where', 'shell', 'powershell'],
     prompt: "Read-only. Don't create, change or delete files. Use shell and powershell only for commands that read, like git log, ls or cat.",
   },
+  {
+    name: 'writer',
+    description: 'Writes one focused change without building, running or testing it.',
+    prompt:
+      "Do the task yourself, without subagents. Don't build, run or test; another agent checks the work afterwards. Other agents may be editing the same tree, so re-read files before editing them and stay in your area. If something blocks you, stop and report it instead of working around it. Report in under 20 lines.",
+  },
+  {
+    name: 'verifier',
+    description: 'Builds the work, fixes what is broken properly, and runs it once.',
+    prompt:
+      'Do the task yourself, without subagents. Build and run the checks, fix every error properly where pieces of work overlap, then run the program once to confirm it starts. No further testing. Report what broke, what you fixed and anything you had to decide, in under 20 lines.',
+  },
 ]
 
 const list = (value: unknown) => {
