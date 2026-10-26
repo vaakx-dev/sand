@@ -18,3 +18,10 @@ const chunked = z.object({ transfer: z.string(), size: z.number().int().nonnegat
 
 export const transfersPull = request('transfers.pull', { input: chunked.extend({ from: z.string().optional() }), output: type<void>() })
 export const transfersStatus = request('transfers.status', { input: z.object({ transfer: z.string() }), output: type<number>() })
+
+const offered = chunked.extend({ folder: z.boolean() })
+
+export type OfferedPath = z.infer<typeof offered>
+
+export const transfersOffer = request('transfers.offer', { input: z.object({ path: z.string() }), output: type<OfferedPath>() })
+export const transfersSave = request('transfers.save', { input: offered.extend({ from: z.string().optional(), path: z.string() }), output: type<void>() })
