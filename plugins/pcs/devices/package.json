@@ -1,15 +1,16 @@
 {
   "name": "@sand/devices",
   "version": "0.0.0",
-  "description": "Your devices: add and pair other PCs, pair phones and browsers, and reach sand away from home",
+  "description": "Your devices: add and pair other PCs, pair phones and browsers, reach sand away from home, and pick which PC a new thread runs on",
   "type": "module",
   "sand": {
     "web": "./src/index.ts",
     "label": "Your devices",
-    "summary": "Add another PC with one command or a pairing link, pair a phone with a QR code, and remove paired devices"
+    "summary": "Add another PC with one command or a pairing link, pair a phone with a QR code, remove paired devices, and pick which PC a new thread runs on"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
+    "@sand/composer": "workspace:*",
     "@sand/host-devices": "workspace:*",
     "@sand/host-dist": "workspace:*",
     "@sand/host-gateway": "workspace:*",
