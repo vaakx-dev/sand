@@ -1,6 +1,6 @@
 import type { AttachmentLimits } from '@sand/attachments/contract'
 import type { Prompt, UserContent } from '@sand/chats/contract'
-import { imageLabel } from '@sand/chats/prompt'
+import { imageLabel, imageType } from '@sand/chats/prompt'
 import { fitImage } from '../integrations/resize'
 
 const fallback: AttachmentLimits = {
@@ -28,7 +28,8 @@ const sizeLabel = (bytes: number) => (bytes >= 1024 ** 3 ? `${Math.round(bytes /
 
 const image = async (file: File, limits: AttachmentLimits): Promise<UserContent> => {
   const blob = await fitImage(file, { edge: limits.imageEdge, bytes: limits.imageBytes })
-  return { type: 'image', mediaType: blob.type, data: toBase64(await blob.arrayBuffer()), name: file.name }
+  const data = toBase64(await blob.arrayBuffer())
+  return { type: 'image', mediaType: imageType(data, blob.type), data, name: file.name }
 }
 
 const isPdf = (file: File) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
