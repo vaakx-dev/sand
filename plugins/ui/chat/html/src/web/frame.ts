@@ -19,7 +19,7 @@ const clamp = (height: number, cap: number) => Math.min(cap, maxHeight, Math.max
 
 const loadingNote = ({ hint }: Kit) => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center' }, hint('Loading…'))
 
-const failure = ({ errorText }: Kit, title: string) => div({ class: 'flex h-full items-center justify-center' }, errorText(`Couldn't load ${title}`))
+const failure = ({ errorText }: Kit, title: string) => div({ class: 'absolute inset-0 flex items-center justify-center' }, errorText(`Couldn't load ${title}`))
 
 export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wireService }>, thread: string, data: HtmlRenderEntry) => {
   const { kit, wire } = ctx
@@ -37,7 +37,8 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
   const frame = sandboxedFrame({
     title: data.title,
     src: hostPath,
-    class: () => (failed.get() ? 'hidden' : 'block h-full w-full border-0'),
+    class: 'block h-full w-full border-0',
+    style: { visibility: () => (failed.get() ? 'hidden' : '') },
     onLoad: () => {
       if (page.data.get() === undefined && !page.loading.get()) page.refetch()
       loads.update(count => count + 1)
