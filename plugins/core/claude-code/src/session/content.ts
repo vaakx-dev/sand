@@ -1,5 +1,5 @@
 import type { ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
-import { fileText } from '@sand/chats/prompt'
+import { fileText, imageType } from '@sand/chats/prompt'
 
 const base64 = (mediaType: string, data: string) => ({ type: 'base64', media_type: mediaType, data })
 
@@ -8,7 +8,7 @@ export const messageBlock = (block: UserContent) => {
     case 'text':
       return { type: 'text', text: block.text }
     case 'image':
-      return block.data ? { type: 'image', source: base64(block.mediaType, block.data) } : { type: 'text', text: `(image ${block.name ?? ''} not available)` }
+      return block.data ? { type: 'image', source: base64(imageType(block.data, block.mediaType), block.data) } : { type: 'text', text: `(image ${block.name ?? ''} not available)` }
     case 'document':
       if (!block.data) return { type: 'text', text: `(document ${block.name ?? ''} not available)` }
       if (block.mediaType === 'application/pdf') return { type: 'document', source: base64(block.mediaType, block.data), ...(block.name && { title: block.name }) }
