@@ -4,7 +4,7 @@ import { rootRule } from './tokens'
 
 const baseCss =
   'html{background:var(--background);color:var(--foreground);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}' +
-  'body{margin:0}code,kbd,pre,samp{font-family:var(--font-mono)}'
+  'body{margin:0}code,kbd,pre,samp{font-family:var(--font-mono)}[hidden]{display:none!important}'
 
 export const bootstrap = async () =>
   [
