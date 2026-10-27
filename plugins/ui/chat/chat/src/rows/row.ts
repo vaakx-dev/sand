@@ -31,9 +31,4 @@ export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({
 
 export const actionRow = (extra: string, ...children: Child[]) => div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100', extra] }, ...children)
 
-export const worked = ({ chevron, plainButton }: Kit, toggle: () => void, open: Sig<boolean>, ...children: Child[]) =>
-  plainButton(
-    { class: 'inline-flex h-6 items-center gap-2 rounded-md px-1 text-sm text-neutral-400 hover:text-neutral-300', onClick: toggle },
-    ...children,
-    chevron(() => open.get()),
-  )
+export const workFrame = (...children: Child[]) => div({ class: '-mx-2 mb-2 flex flex-col' }, ...children)

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
 import type { Merged } from '../data/types'
 import { usageModel, type UsageDeps, type UsageModel } from '../model'
 import type { Tab } from '../prefs'
@@ -10,9 +10,9 @@ import { toolbar } from './toolbar'
 
 type BodyState = Merged | 'waiting' | 'empty' | 'missing'
 
-const noUsage = ({ hintRow, settingsSection }: Kit) => settingsSection({}, hintRow('No usage in this range'))
+const noUsage = ({ emptyState, settingsSection }: Kit) => settingsSection({}, emptyState({ surface: 'group', text: 'No usage yet' }))
 
-const pending = ({ delayed, hintRow, settingsSection }: Kit) => show(delayed(true), () => settingsSection({}, hintRow('Loading…')))
+const pending = ({ loadingState }: Kit) => loadingState()
 
 const limits = (kit: Kit, usage: Merged, model: UsageModel) =>
   div(
@@ -21,12 +21,9 @@ const limits = (kit: Kit, usage: Merged, model: UsageModel) =>
       kit,
       now: model.now,
       nameOf: model.nameOf,
-      checking: model.checking,
-      check: model.checkLimits,
       history: model.history,
-      opened: model.opened,
       windows: model.windows,
-      setOpen: model.setOpen,
+      openOf: model.openOf,
       setWindow: model.setWindow,
     }),
   )

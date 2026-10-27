@@ -5,7 +5,7 @@ import { div, keys, show, sig } from '@vaakx-dev/vrui'
 import type { Catalog } from './catalog'
 
 export const addRow = (kit: Kit, catalog: Catalog, added: (model: ModelInfo) => void) => {
-  const { errorText, secondaryAction, textInput } = kit
+  const { errorText, secondaryAction, sectionRow, textInput } = kit
   const name = sig('')
   const busy = sig(false)
   const error = sig('')
@@ -25,13 +25,13 @@ export const addRow = (kit: Kit, catalog: Catalog, added: (model: ModelInfo) => 
     }
   }
 
-  return div(
-    { class: 'flex flex-col gap-2 bg-neutral-900 px-4 py-3' },
+  return sectionRow(
+    { class: 'flex-col items-stretch py-3' },
     div(
       { class: 'flex items-center gap-2' },
       textInput({
         placeholder: 'Add by model id',
-        'aria-label': 'Model slug',
+        'aria-label': 'Model id',
         bindValue: name,
         onInput: () => error.set(''),
         onKeyDown: keys({ Enter: () => void add() }),

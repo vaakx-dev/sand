@@ -24,12 +24,13 @@ const resetLine = (window: LimitWindow, now: Sig<number>) => {
   const ahead = () => aheadOfPace(window, now.get())
   return span(
     { class: 'text-xs text-neutral-500 tabular-nums' },
-    () => `resets in ${coarseDuration(Math.max(0, resetsAt - now.get()))}`,
+    () => `Resets in ${coarseDuration(Math.max(0, resetsAt - now.get()))}`,
     show(ahead, () => span(' · ', span({ class: 'text-warning-400' }, 'ahead of pace'))),
   )
 }
 
-export const limitBar = (kit: Kit, window: LimitWindow, color: string, now: Sig<number>) => {
+const limitBar = (kit: Kit, window: LimitWindow, color: string, now: Sig<number>) => {
+  const { metaLine } = kit
   const left = leftOf(window)
   return div(
     {
@@ -37,15 +38,18 @@ export const limitBar = (kit: Kit, window: LimitWindow, color: string, now: Sig<
       title: window.resetsAt ? `${percent(left)} left · resets ${exactTime(window.resetsAt)}` : `${percent(left)} left`,
     },
     div(
-      { class: 'flex items-baseline gap-2' },
-      span({ class: 'min-w-0 truncate text-xs text-neutral-500' }, window.label),
+      { class: 'flex items-center gap-2' },
+      metaLine(window.label),
       statusBadge(kit, window.status),
-      span({ class: 'ml-auto shrink-0 text-base font-semibold whitespace-nowrap text-neutral-100 tabular-nums' }, `${percent(left)} left`),
+      span({ class: 'ml-auto shrink-0 text-sm font-medium whitespace-nowrap text-neutral-100 tabular-nums' }, `${percent(left)} left`),
     ),
     div(
-      { class: 'h-2 overflow-hidden rounded-full bg-neutral-800', role: 'meter', 'aria-label': window.label, 'aria-valuenow': Math.round(left * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 },
+      { class: 'h-2 overflow-hidden rounded-full bg-neutral-600', role: 'meter', 'aria-label': window.label, 'aria-valuenow': Math.round(left * 100), 'aria-valuemin': 0, 'aria-valuemax': 100 },
       div({ class: 'h-full rounded-full', style: { width: `${left * 100}%`, backgroundColor: color } }),
     ),
     resetLine(window, now),
   )
 }
+
+export const limitBars = (kit: Kit, windows: LimitWindow[], color: string, now: Sig<number>) =>
+  div({ class: 'flex flex-wrap items-center gap-x-8 gap-y-4' }, windows.map(window => limitBar(kit, window, color, now)))

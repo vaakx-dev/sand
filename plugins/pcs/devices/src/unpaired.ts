@@ -14,7 +14,7 @@ const follow = (text: string) => {
 }
 
 const unpairedView = (kit: Kit) => {
-  const { errorText, note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, textInput } = kit
+  const { errorText, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, sheetText, textInput } = kit
   const link = sig('')
   const wrong = sig(false)
   const submit = () => {
@@ -29,7 +29,7 @@ const unpairedView = (kit: Kit) => {
       sheetHead({ title: 'This browser isn’t paired with sand' }),
       sheetBody(
         {},
-        note('On a paired device open Settings → Devices → Add a phone, or run sand on this PC.'),
+        sheetText('On a paired device, open Settings → Devices → Add a phone and paste its link here. Or run sand on this PC.'),
         textInput({
           placeholder: 'Paste a pairing link',
           'aria-label': 'Pairing link',

@@ -1,5 +1,5 @@
 import type { PluginEntry, PluginOrigin } from '@sand/host-plugin-library/contract'
-import type { Choice } from '@sand/ui-kit/contract'
+import type { Choice, Kit } from '@sand/ui-kit/contract'
 import { score } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { LibrarySource } from './source'
@@ -37,7 +37,7 @@ const text = (plugin: PluginEntry) => [plugin.name, plugin.label, plugin.descrip
 
 export const originLabels: Record<PluginOrigin, string> = { builtin: 'Built-in', customised: 'Customised', yours: 'Yours' }
 
-export const pluginFilter = (source: LibrarySource) => {
+export const pluginFilter = (source: LibrarySource, { countMark }: Kit) => {
   const query = sig('')
   const origin = sig<OriginFilter>('all')
 
@@ -46,12 +46,21 @@ export const pluginFilter = (source: LibrarySource) => {
   const choices = derive((): Choice<OriginFilter>[] => {
     const count = (kind: OriginFilter) => all.get().filter(plugin => kind === 'all' || plugin.origin === kind).length
     const kinds: OriginFilter[] = ['all', 'builtin', 'customised', 'yours']
-    return kinds.map(kind => ({ value: kind, label: `${kind === 'all' ? 'All' : originLabels[kind]} ${count(kind)}` }))
+    const found = kinds.filter(kind => count(kind) > 0)
+    if (found.length <= 2) return []
+    return found.map(kind => ({ value: kind, label: kind === 'all' ? 'All' : originLabels[kind], mark: countMark(count(kind)) }))
   })
+
+  const active = derive(() => (choices.get().some(choice => choice.value === origin.get()) ? origin.get() : 'all'))
+
+  const clear = () => {
+    query.set('')
+    origin.set('all')
+  }
 
   const groups = derive((): AreaGroup[] => {
     const wanted = query.get().trim()
-    const kind = origin.get()
+    const kind = active.get()
     const shown = all.get().filter(plugin => (kind === 'all' || plugin.origin === kind) && (!wanted || score(wanted, text(plugin)) !== undefined))
     const byArea = new Map<string, PluginEntry[]>()
     for (const plugin of shown) byArea.set(plugin.area, [...(byArea.get(plugin.area) ?? []), plugin])
@@ -60,7 +69,7 @@ export const pluginFilter = (source: LibrarySource) => {
       .map(([area, plugins]) => ({ area, title: titles.get(area) ?? area, plugins }))
   })
 
-  return { query, origin, choices, groups, loading: derive(() => source.plugins.get() === undefined) }
+  return { query, origin, active, choices, groups, clear, loading: derive(() => source.plugins.get() === undefined) }
 }
 
 export type PluginFilter = ReturnType<typeof pluginFilter>

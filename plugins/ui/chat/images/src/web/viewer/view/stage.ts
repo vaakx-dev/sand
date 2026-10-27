@@ -20,9 +20,9 @@ export const viewerStage = (shown: ThreadImage, picture: Picture, zoom: Zoom, fl
   }
 
   const image = picture(shown.block, {
-    class: ['max-h-full max-w-full select-none rounded-md object-contain shadow-xl', () => (zoom.zoomed.get() ? 'cursor-grab' : null)],
+    class: ['max-h-full max-w-full touch-none select-none rounded-md object-contain', () => (zoom.zoomed.get() ? 'cursor-grab' : null)],
     draggable: false,
-    style: { transform: zoom.transform, touchAction: 'none' },
+    style: { transform: zoom.transform },
     onDblClick: zoom.toggle,
     onPointerDown: pointer => {
       if (pointer.button !== 0) return

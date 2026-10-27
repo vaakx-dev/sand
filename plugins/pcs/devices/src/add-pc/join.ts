@@ -8,7 +8,7 @@ import { inviteBody } from '../pair/links'
 import type { DeviceSource } from '../source'
 
 const pasteRow = (kit: Kit, source: DeviceSource, joined: (name: string) => void) => {
-  const { errorText, note, secondaryAction, textInput } = kit
+  const { errorText, secondaryAction, sheetText, textInput } = kit
   const link = sig('')
   const busy = sig(false)
   const error = sig('')
@@ -25,11 +25,11 @@ const pasteRow = (kit: Kit, source: DeviceSource, joined: (name: string) => void
     }
   }
   return div(
-    { class: 'flex flex-col gap-2 border-t border-solid border-neutral-700 pt-4' },
-    note('Or paste a link from the other PC'),
+    { class: 'flex flex-col gap-2' },
+    sheetText('Or paste a link from the other PC here.'),
     div(
       { class: 'flex items-center gap-2' },
-      textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Link from the other PC', bindValue: link, onKeyDown: keys({ Enter: () => void connect() }) }),
+      textInput({ placeholder: 'Pairing link', 'aria-label': 'Link from the other PC', bindValue: link, onKeyDown: keys({ Enter: () => void connect() }) }),
       secondaryAction({ disabled: () => busy.get() || !link.get().trim(), onClick: () => void connect() }, () => (busy.get() ? 'Connecting…' : 'Connect')),
     ),
     show(() => !!error.get(), () => errorText(error)),
@@ -38,7 +38,7 @@ const pasteRow = (kit: Kit, source: DeviceSource, joined: (name: string) => void
 
 export const joinStep = (ctx: DevicesContext, source: DeviceSource, joined: (name: string) => void) => {
   const { kit } = ctx
-  const { errorText, note } = kit
+  const { errorState, loadingState, sheetText } = kit
   const shown = new Set<number>()
   const { invite, error } = pairInvite(ctx, source.epoch, shown)
   effect(() => {
@@ -50,10 +50,11 @@ export const joinStep = (ctx: DevicesContext, source: DeviceSource, joined: (nam
   const body = derive(() => ({ current: invite.get(), failure: error.get() }))
   return div(
     { class: 'flex flex-col gap-4' },
-    note('On the other PC, open Settings → Devices → Add a PC → It already has sand, and paste this link there.'),
+    sheetText('On the other PC, open Settings → Devices → Add a PC → Connect a PC that has sand, and paste this link there.'),
     dynamicChild(body, ({ current, failure }) => {
       if (current) return inviteBody(kit, current, source.listenOnLan, 'pc')
-      return failure ? errorText(`Couldn't create a link: ${errorMessage(failure)}`) : note('Creating a link…')
+      if (failure) return errorState({ flush: true, text: `Couldn't create a link (${errorMessage(failure)}). Close this sheet and try again.` })
+      return loadingState({ flush: true, text: 'Creating a link…' })
     }),
     pasteRow(kit, source, joined),
   )

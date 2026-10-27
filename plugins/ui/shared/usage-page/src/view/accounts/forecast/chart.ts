@@ -1,8 +1,10 @@
 import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { colorVar, div, dynamicChild, line, path, rect, sig, span, svg } from '@vaakx-dev/vrui'
+import { colorVar, dynamicChild, line, path, rect, sig, span } from '@vaakx-dev/vrui'
 import type { Forecast, Point } from '../../../data/forecast/project'
+import { chartFrame, gridLine, guideLine } from '../../chart/frame'
+import { dash } from '../../chart/legend'
 import { cssPercent } from '../../chart/scale'
 import { tipBox, tipRow } from '../../chart/tooltip'
 import { ticksOf } from './ticks'
@@ -37,7 +39,6 @@ export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast,
     .join(' ')} Z`
   const at = (time: number) => cssPercent(toX(time) / width)
   const hover = sig<Hover | undefined>(undefined)
-  const guideX = () => toX(hover.get()?.at ?? start)
   const track = (event: PointerEvent) => {
     if (!(event.currentTarget instanceof Element)) return
     const box = event.currentTarget.getBoundingClientRect()
@@ -51,54 +52,32 @@ export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast,
   }
   const stroke = { fill: 'none', stroke: color, strokeWidth: 2, strokeLinejoin: 'round', vectorEffect: 'non-scaling-stroke' } as const
 
-  return div(
-    { class: 'flex flex-col gap-2' },
-    div(
-      { class: 'flex gap-2' },
-      div(
-        { class: 'relative h-48 w-12 shrink-0' },
-        levels.map(level =>
-          span(
-            { class: 'absolute right-0 -translate-y-1/2 text-xs text-neutral-500 tabular-nums', style: { top: cssPercent(toY(level) / height) } },
-            percent(level),
-          ),
-        ),
-      ),
-      div(
-        { class: 'relative h-48 min-w-0 flex-1 cursor-default', onPointerMove: track, onPointerLeave: () => hover.set(undefined) },
-        svg(
-          { viewBox: `0 0 ${width} ${height}`, preserveAspectRatio: 'none', width: '100%', height: '100%', role: 'img', 'aria-label': `${window.label} limit left, with forecast` },
-          levels.map(level => line({ x1: 0, x2: width, y1: toY(level), y2: toY(level), stroke: colorVar('neutral', 800), vectorEffect: 'non-scaling-stroke' })),
-          outAt ? rect({ x: toX(outAt), y: 0, width: toX(reset) - toX(outAt), height, fill: colorVar('danger', 500), fillOpacity: 0.12 }) : null,
-          path({ d: `${trace(forecast.past)} L${toX(now)},${height} L0,${height} Z`, fill: color, fillOpacity: 0.08 }),
-          path({ d: band, fill: color, fillOpacity: 0.08 }),
-          path({ d: trace(forecast.past), ...stroke }),
-          path({ d: trace(forecast.ahead), ...stroke, strokeDasharray: '5 4' }),
-          line({ x1: toX(now), x2: toX(now), y1: 0, y2: height, stroke: colorVar('neutral', 500), strokeDasharray: '2 3', vectorEffect: 'non-scaling-stroke' }),
-          line({ x1: toX(reset), x2: toX(reset), y1: 0, y2: height, stroke: colorVar('neutral', 700), vectorEffect: 'non-scaling-stroke' }),
-          line({
-            x1: guideX,
-            x2: guideX,
-            y1: top,
-            y2: height,
-            stroke: colorVar('neutral', 500),
-            vectorEffect: 'non-scaling-stroke',
-            visibility: () => (hover.get() ? 'visible' : 'hidden'),
-          }),
-        ),
-        tag('Now', at(now)),
-        tag('Reset', at(reset)),
-        outAt ? tag('Out', cssPercent((toX(outAt) + toX(reset)) / 2 / width), 'top-4 -translate-x-1/2 text-danger-400') : null,
-        dynamicChild(hover, current => (current ? tip(current) : null)),
-      ),
-    ),
-    div(
-      { class: 'flex gap-2 text-xs text-neutral-500' },
-      span({ class: 'w-12 shrink-0' }),
-      div(
-        { class: 'relative h-4 min-w-0 flex-1' },
-        ticksOf(start, end).map(tick => span({ class: 'absolute -translate-x-1/2 whitespace-nowrap', style: { left: at(tick.at) } }, tick.label)),
-      ),
-    ),
+  return chartFrame(
+    {
+      width,
+      height,
+      label: `${window.label} limit left, with forecast`,
+      axis: levels.map(level => ({ text: percent(level), top: cssPercent(toY(level) / height) })),
+      onPointerMove: track,
+      onPointerLeave: () => hover.set(undefined),
+    },
+    [
+      levels.map(level => gridLine(width, toY(level))),
+      outAt ? rect({ x: toX(outAt), y: 0, width: toX(reset) - toX(outAt), height, fill: colorVar('danger', 500), fillOpacity: 0.12 }) : null,
+      path({ d: `${trace(forecast.past)} L${toX(now)},${height} L0,${height} Z`, fill: color, fillOpacity: 0.08 }),
+      path({ d: band, fill: color, fillOpacity: 0.08 }),
+      path({ d: trace(forecast.past), ...stroke }),
+      path({ d: trace(forecast.ahead), ...stroke, strokeDasharray: dash }),
+      line({ x1: toX(now), x2: toX(now), y1: 0, y2: height, stroke: colorVar('neutral', 500), strokeDasharray: '2 3', vectorEffect: 'non-scaling-stroke' }),
+      line({ x1: toX(reset), x2: toX(reset), y1: 0, y2: height, stroke: colorVar('neutral', 500), vectorEffect: 'non-scaling-stroke' }),
+      guideLine(() => toX(hover.get()?.at ?? start), top, height, () => Boolean(hover.get())),
+    ],
+    [
+      tag('Now', at(now)),
+      tag('Reset', at(reset)),
+      outAt ? tag('Out', cssPercent((toX(outAt) + toX(reset)) / 2 / width), 'top-4 -translate-x-1/2 text-danger-400') : null,
+      dynamicChild(hover, current => (current ? tip(current) : null)),
+    ],
+    ticksOf(start, end).map(tick => span({ class: 'absolute -translate-x-1/2 whitespace-nowrap', style: { left: at(tick.at) } }, tick.label)),
   )
 }

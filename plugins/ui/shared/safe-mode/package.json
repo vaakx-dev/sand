@@ -14,7 +14,7 @@
     "@sand/server": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

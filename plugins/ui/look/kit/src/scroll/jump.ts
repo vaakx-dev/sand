@@ -10,5 +10,5 @@ export const jumpButton = (shown: Sig<boolean>, jump: () => void) =>
       style: { bottom: 'var(--dock-h, 0px)' },
       hidden: shown.map(value => !value),
     },
-    floatButton({ size: 'sm', title: 'Jump to latest', 'aria-label': 'Jump to latest', class: 'pointer-events-auto', onClick: jump }, icon('down', 16)),
+    floatButton({ size: 'sm', title: 'Jump to latest', 'aria-label': 'Jump to latest', class: 'pointer-events-auto', onClick: jump }, icon('down', 'md')),
   )

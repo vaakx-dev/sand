@@ -17,7 +17,7 @@ const rename = async (input: Picker, source: DeviceSource, device: PairedDevice)
 }
 
 const phoneRow = (ctx: KitContext, source: DeviceSource, device: Sig<PairedDevice>, self: string | undefined, now: Sig<number>) => {
-  const { contextMenu, icon, itemRow, rowAction, secondaryAction, tile } = ctx.kit
+  const { contextMenu, icon, quietButton, rowAction, settingsRow } = ctx.kit
   const { id, kind } = device.get()
   const detail = () => {
     now.get()
@@ -25,28 +25,30 @@ const phoneRow = (ctx: KitContext, source: DeviceSource, device: Sig<PairedDevic
   }
   const menu = contextMenu()
   const input = ctx.get(picker)
-  return itemRow(
-    menu.target(() => phoneMenu(source, device.get(), id === self)),
-    tile(icon(kind === 'phone' ? 'smartphone' : 'monitor', 16)),
-    () => device.get().name,
-    detail,
-    input ? secondaryAction({ size: 'sm', onClick: () => void rename(input, source, device.get()) }, 'Rename…') : null,
+  return settingsRow(
+    {
+      ...menu.target(() => phoneMenu(source, device.get(), id === self)),
+      lead: icon(kind === 'phone' ? 'smartphone' : 'monitor', 16),
+      title: () => device.get().name,
+      detail,
+    },
+    input ? quietButton({ size: 'sm', surface: 'group', onClick: () => void rename(input, source, device.get()) }, 'Rename…') : null,
     rowAction({ label: 'Remove', danger: true, run: () => void source.remove(id).catch(() => {}) }),
     menu.view(),
   )
 }
 
 export const phonesSection = (ctx: DevicesContext, source: DeviceSource, pair: () => void) => {
-  const { hintRow, icon, rowList, secondaryAction, settingsSection } = ctx.kit
+  const { emptyState, icon, quietButton, rowList, settingsSection } = ctx.kit
   const self = ctx.wire.pairing()?.device
   const now = clock(60_000)
   const devices = derive(() => [...(source.pcs.get()?.devices ?? [])].sort((a, b) => Number(b.id === self) - Number(a.id === self)))
   return settingsSection(
-    { title: 'Phones and browsers', action: secondaryAction({ size: 'sm', onClick: pair }, icon('plus', 14), 'Add a phone') },
+    { title: 'Phones and browsers', action: quietButton({ size: 'sm', onClick: pair }, icon('plus', 'sm'), 'Add a phone') },
     rowList(devices, device => device.id, device => phoneRow(ctx, source, device, self, now)),
     show(
       devices.map(current => current.length === 0),
-      () => hintRow('No phones yet'),
+      () => emptyState({ surface: 'group', text: 'No phones yet' }),
     ),
   )
 }

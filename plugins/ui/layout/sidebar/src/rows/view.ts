@@ -4,21 +4,23 @@ import type { CardHandlers } from '../card/view'
 import { card } from '../card/view'
 import { pageStep, type HeadRow, type MoreRow, type Row } from './build'
 
-const quietRow = 'flex h-6 w-full items-center gap-2 rounded-md px-3 text-xs text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-100'
+const quietRow = 'flex h-8 w-full items-center gap-2 rounded-md px-3 text-xs text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-100'
 
 export interface RowHandlers extends CardHandlers {
   toggle(row: HeadRow): void
   more(row: MoreRow): void
 }
 
-const head = ({ chevron, plainButton }: Kit, row: Sig<HeadRow>, handlers: RowHandlers) =>
+const head = ({ chevron, countMark, plainButton }: Kit, row: Sig<HeadRow>, handlers: RowHandlers) =>
   plainButton(
     {
       class: [quietRow, 'mt-2 font-medium'],
+      'aria-expanded': () => String(row.get().open),
       onClick: () => handlers.toggle(row.get()),
     },
-    chevron(() => row.get().open, 12),
-    () => `${row.get().name} (${row.get().count})`,
+    chevron(() => row.get().open, 14),
+    () => row.get().name,
+    countMark(() => row.get().count),
   )
 
 const more = ({ plainButton }: Kit, row: Sig<MoreRow>, handlers: RowHandlers) =>

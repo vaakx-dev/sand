@@ -27,7 +27,7 @@ export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
     div(
       { class: 'flex items-center gap-2' },
       span(
-        { class: () => ['min-w-0 flex-1 truncate text-xs', preview.get() ? 'text-accent-400' : 'text-neutral-500'] },
+        { class: () => ['min-w-0 flex-1 truncate text-xs', preview.get() ? 'text-neutral-400' : 'text-neutral-500'] },
         () => preview.get() ?? (text.get().trim() ? `Try ${ask.placeholder}` : ''),
       ),
       primaryAction({ size, disabled: () => !preview.get(), onClick: submit }, ask.submit),

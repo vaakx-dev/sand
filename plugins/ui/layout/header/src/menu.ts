@@ -28,7 +28,7 @@ const entries = (ctx: HeaderContext): Entry[] => {
 
 export const chatMenu = (ctx: HeaderContext, close: () => void): Child[] =>
   entries(ctx).map(entry =>
-    ctx.kit.popoverItem(
+    ctx.kit.menuItem(
       {
         icon: entry.icon,
         onClick: () => {

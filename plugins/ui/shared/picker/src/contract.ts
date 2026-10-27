@@ -1,6 +1,6 @@
 import { service } from 'drydock'
 
-export type PickTone = 'accent' | 'warning' | 'error'
+export type PickTone = 'error'
 
 export interface PickItem<T> {
   label: string

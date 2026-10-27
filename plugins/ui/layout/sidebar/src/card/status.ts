@@ -1,8 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago, exactTime } from '@sand/util'
-import { derive, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, show, span, type Child, type MaybeReactive, type Sig } from '@vaakx-dev/vrui'
 import type { ThreadItem } from '../items/item'
-import { agentCount, agentMark, draftMark, itemMark, itemStatus } from './marks'
+import { agentMark, draftMark, itemMark, itemStatus } from './marks'
 
 const busy = new Set(['running', 'background', 'draft'])
 
@@ -27,21 +27,18 @@ const ticking = (minute: Sig<number>, read: () => string) =>
     minute.get()
     return read()
   })
+const statusText = (tone: string, title: MaybeReactive<string>, ...children: Child[]) =>
+  span({ class: ['inline-flex items-center gap-1 tabular-nums', tone], title }, ...children)
 
 const extra = (kit: Kit, count: Sig<number | undefined>) =>
-  show(count.map(Boolean), () => span({ class: 'inline-flex items-center gap-px text-sky-400' }, count.map(value => `+${value}`), agentMark(kit)))
+  show(count.map(Boolean), () => statusText('text-neutral-400', 'Agents running', count.map(value => `+${value}`), agentMark(kit)))
 
 const runningStatus = (kit: Kit, item: Sig<ThreadItem>) => {
   const { elapsed, working } = kit
   const title = item.map(value => [startedTitle(value.started), value.agents && itemStatus(value)].filter(Boolean).join(' · '))
   return span(
     { class: 'inline-flex items-center gap-2', title },
-    span(
-      { class: 'inline-flex items-center gap-1 font-medium text-accent-400' },
-      working(14, title),
-      'Working',
-      span({ class: 'font-normal' }, elapsed(item.map(value => value.started))),
-    ),
+    statusText('text-accent-400', title, working(14, title), elapsed(item.map(value => value.started))),
     extra(
       kit,
       item.map(value => value.agents),
@@ -50,27 +47,23 @@ const runningStatus = (kit: Kit, item: Sig<ThreadItem>) => {
 }
 
 const backgroundStatus = (kit: Kit, item: Sig<ThreadItem>) =>
-  span(
-    { class: 'inline-flex items-center gap-1 font-medium text-sky-400', title: item.map(itemStatus) },
-    agentMark(kit),
-    item.map(agentCount),
-    span({ class: 'font-normal' }, kit.elapsed(item.map(value => value.started))),
-  )
+  statusText('text-neutral-400', item.map(itemStatus), agentMark(kit), kit.elapsed(item.map(value => value.started)))
 
 export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>) => {
   const { icon } = kit
   return dynamicChild(item.map(kindOf), kind => {
     if (kind === 'running') return runningStatus(kit, item)
     if (kind === 'background') return backgroundStatus(kit, item)
-    if (kind === 'draft') return span({ class: 'inline-flex items-center gap-1 font-medium text-sky-400' }, draftMark(kit), 'Draft')
+    if (kind === 'draft') return statusText('text-neutral-400', 'Draft', draftMark(kit), 'Draft')
     if (kind === 'snoozed')
-      return span(
-        { class: 'inline-flex items-center gap-1 tabular-nums text-neutral-500', title: () => `Back ${exactTime(item.get().snoozed ?? Date.now())}` },
-        icon('snooze', 12),
+      return statusText(
+        'text-neutral-500',
+        () => `Back ${exactTime(item.get().snoozed ?? Date.now())}`,
+        icon('snooze', 14),
         ticking(minute, () => left(item.get().snoozed ?? Date.now())),
       )
-    if (kind === 'back') return span({ class: 'inline-flex items-center gap-1 font-medium text-accent-400', title: 'Back from snooze' }, icon('snooze', 12), 'Back')
+    if (kind === 'back') return statusText('text-accent-400', 'Back from snooze', icon('snooze', 14), 'Back')
     if (kind === 'unread') return span({ class: 'inline-flex', title: itemStatus(item.get()) }, itemMark(kit, item.get()))
-    return span({ class: 'tabular-nums text-neutral-500', title: () => exactTime(item.get().updated) }, ticking(minute, () => ago(item.get().updated)))
+    return statusText('text-neutral-500', () => exactTime(item.get().updated), ticking(minute, () => ago(item.get().updated)))
   })
 }

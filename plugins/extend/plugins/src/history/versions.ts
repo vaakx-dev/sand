@@ -2,7 +2,7 @@ import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-ve
 import type { NavAction } from '@sand/nav/contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { exactTime } from '@sand/util'
-import { derive, div, list, show, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { VersionsSource } from './source'
 
 const sources: Record<VersionSource, string> = {
@@ -15,7 +15,7 @@ const sources: Record<VersionSource, string> = {
 }
 
 const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarget | undefined, version: Sig<Version>) => {
-  const { badge, contextMenu, secondaryAction } = kit
+  const { badge, choiceCheck, contextMenu, metaLine, quietButton } = kit
   const current = derive(() => target()?.current === version.get().id)
   const good = derive(() => target()?.good === version.get().id)
   const busy = () => source.busy.get() !== undefined
@@ -30,48 +30,48 @@ const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarge
     return {
       title: exactTime(at),
       subtitle: sources[from],
-      actions: [
-        ...(current.get() || busy() ? [] : [restoreAction]),
-        { id: 'copy-hash', label: 'Copy hash', icon: 'copy', group: 'copy', run: source.copy(hash) },
-      ],
+      actions: [...(current.get() || busy() ? [] : [restoreAction]), { id: 'copy-hash', label: 'Copy hash', icon: 'copy', group: 'copy', run: source.copy(hash) }],
     }
   }
   return div(
-    { class: 'flex min-h-8 flex-wrap items-center gap-3 px-2 text-xs', ...menu.target(spec) },
+    { class: 'flex min-h-8 items-center gap-3', ...menu.target(spec) },
     menu.view(),
-    span({ class: 'tabular-nums text-neutral-300' }, () => exactTime(version.get().at)),
-    span({ class: 'text-neutral-500' }, () => sources[version.get().source]),
-    span({ class: 'tabular-nums text-neutral-500', title: () => version.get().hash }, () => version.get().hash.slice(0, 7)),
-    show(current, () => badge('accent', 'Current')),
-    show(good, () => badge('success', 'Last good start')),
-    span({ class: 'flex-1' }),
-    secondaryAction({ size: 'sm', disabled: () => current.get() || busy(), onClick: restore }, 'Restore'),
+    div(
+      { class: 'flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2' },
+      span({ class: 'tabular-nums text-sm text-neutral-100' }, () => exactTime(version.get().at)),
+      metaLine(() => sources[version.get().source]),
+    ),
+    show(good, () => badge('neutral', 'Last good start')),
+    dynamicChild(current, isCurrent =>
+      isCurrent ? choiceCheck(true) : quietButton({ size: 'sm', surface: 'group', disabled: busy, onClick: restore }, 'Restore'),
+    ),
   )
 }
 
-export const historyToggle = (kit: Kit, source: VersionsSource, key: string, open: Sig<boolean> = sig(false)) => {
-  const { chevron, quietButton } = kit
+const versionsOf = (source: VersionsSource, key: string) => {
   const target = source.target(key)
-  const versions = derive(() => target.get()?.versions ?? [])
+  return { target, versions: derive(() => target.get()?.versions ?? []) }
+}
+
+export const historyToggle = (kit: Kit, source: VersionsSource, key: string, open: Sig<boolean>) => {
+  const { versions } = versionsOf(source, key)
   return show(
     () => versions.get().length > 0,
+    () => kit.expandToggle(open, ['History', kit.countMark(() => versions.get().length)]),
+  )
+}
+
+export const historyDetail = (kit: Kit, source: VersionsSource, key: string, open: Sig<boolean>) => {
+  const { target, versions } = versionsOf(source, key)
+  return show(
+    () => open.get() && versions.get().length > 0,
     () =>
-      div(
-        { class: 'flex flex-col px-2 pb-2' },
-        div(
-          quietButton(
-            { size: 'sm', 'aria-expanded': open, onClick: open.toggle() },
-            chevron(() => open.get(), 12),
-            () => `History · ${versions.get().length}`,
-          ),
-        ),
-        show(open, () =>
-          list(
-            versions,
-            version => version.id,
-            version => versionRow(kit, source, () => target.get(), version),
-            div({ class: 'flex flex-col' }),
-          ),
+      kit.rowDetail(
+        list(
+          versions,
+          version => version.id,
+          version => versionRow(kit, source, () => target.get(), version),
+          div({ class: 'flex flex-col' }),
         ),
       ),
   )

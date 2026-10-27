@@ -1,4 +1,4 @@
-import { modelsPref, type ModelInfo, type SourceInfo } from '@sand/accounts/contract'
+import { modelsPref, modelsRefresh, type ModelInfo, type SourceInfo } from '@sand/accounts/contract'
 import type { Request } from '@sand/host-hub/contract'
 import { settingsSet, type SessionSettings } from '@sand/model/contract'
 import { settings as settingsPages } from '@sand/settings/contract'
@@ -20,6 +20,7 @@ export interface Scene {
   source: (model: ModelInfo) => SourceInfo | undefined
   offline: (source?: SourceInfo) => boolean
   pick: (model: ModelInfo) => void
+  refresh: (source: SourceInfo) => void
   menu: View['menu']
   menuOf: (model: ModelInfo) => MenuSpec
   openSettings?: () => void
@@ -49,6 +50,7 @@ export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View
     source: sourceOf,
     offline: source => (source?.via ? (pcs.online(source.via) ?? source.online) === false : false),
     pick,
+    refresh: source => send(ctx, modelsRefresh, { source: source.id }),
     menu: view.menu,
     menuOf: model =>
       modelMenu(ctx.kit, {

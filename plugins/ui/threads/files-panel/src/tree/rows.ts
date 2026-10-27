@@ -18,37 +18,37 @@ const matchLimit = 200
 
 const marks: Record<FileChange, { letter: string; tone: string }> = {
   added: { letter: 'A', tone: 'text-success-400' },
-  modified: { letter: 'M', tone: 'text-warning-400' },
+  modified: { letter: 'M', tone: 'text-neutral-400' },
   deleted: { letter: 'D', tone: 'text-danger-400' },
 }
 
 const byName = (a: string, b: string) => a.localeCompare(b)
 
-const indent = (depth: number) => Array.from({ length: depth }, () => span({ class: 'w-4 shrink-0' }))
+const slot = (...children: Child[]) => span({ class: 'flex w-4 shrink-0 justify-center' }, ...children)
 
-const glyph = ({ icon }: Kit, name: string) => span({ class: 'flex shrink-0 text-neutral-400' }, icon(name, 14))
-
-const label = (...children: Child[]) => span({ class: 'min-w-0 truncate' }, ...children)
+const lead = (depth: number, ...children: Child[]) =>
+  span({ class: 'flex items-center gap-1' }, ...Array.from({ length: depth }, () => slot()), ...children)
 
 const changeMark = (change: FileChange | undefined) =>
-  change && span({ class: ['ml-auto shrink-0 pl-2 font-mono text-xs', marks[change].tone], title: change }, marks[change].letter)
+  change && span({ class: ['font-mono', marks[change].tone], title: change }, marks[change].letter)
 
-const row = ({ kit }: Rows, onClick: () => void, ...children: Child[]) =>
-  kit.rowButton({ class: 'h-8 gap-1.5 px-3 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100', onClick }, ...children)
+const fileRow = ({ kit, listing, open }: Rows, path: string, depth: number, meta?: string) =>
+  kit.listRow({
+    title: fileName(path),
+    meta,
+    lead: lead(depth + 1, kit.icon(fileIcon(path), 16)),
+    trail: changeMark(listing.changes[path]),
+    onClick: () => open(path),
+  })
 
-const fileRow = (rows: Rows, path: string, depth: number, ...name: Child[]) =>
-  row(rows, () => rows.open(path), ...indent(depth + 1), glyph(rows.kit, fileIcon(path)), label(...name), changeMark(rows.listing.changes[path]))
-
-const folderRow = (rows: Rows, folder: Folder, depth: number, open: boolean) =>
-  row(
-    rows,
-    () => rows.toggle(folder.path),
-    ...indent(depth),
-    glyph(rows.kit, open ? 'down' : 'right'),
-    glyph(rows.kit, open ? 'folder-open' : 'folder'),
-    label(folder.name),
-    rows.listing.changedFolders.has(folder.path) && span({ class: 'ml-auto flex pl-2', title: 'Has changes' }, rows.kit.dot('warning')),
-  )
+const folderRow = ({ kit, listing, toggle }: Rows, folder: Folder, depth: number, open: boolean) =>
+  kit.listRow({
+    title: folder.name,
+    expanded: open,
+    lead: lead(depth, slot(kit.icon(open ? 'down' : 'right', 14)), kit.icon(open ? 'folder-open' : 'folder', 16)),
+    trail: listing.changedFolders.has(folder.path) ? span({ class: 'flex', title: 'Has changes' }, kit.dot('neutral')) : null,
+    onClick: () => toggle(folder.path),
+  })
 
 export const treeRows = (rows: Rows, at: Folder, depth = 0): HTMLElement[] => [
   ...[...at.folders.values()]
@@ -58,16 +58,14 @@ export const treeRows = (rows: Rows, at: Folder, depth = 0): HTMLElement[] => [
       const head = folderRow(rows, inner, depth, open)
       return open ? [head, ...treeRows(rows, inner, depth + 1)] : [head]
     }),
-  ...[...at.files].sort(byName).map(path => fileRow(rows, path, depth, fileName(path))),
+  ...[...at.files].sort(byName).map(path => fileRow(rows, path, depth)),
 ]
 
 export const matchRows = (rows: Rows, query: string) => {
+  const { emptyState } = rows.kit
   const wanted = query.toLowerCase()
   const found = rows.listing.files.filter(path => path.toLowerCase().includes(wanted))
-  if (!found.length) return [rows.kit.hint('No files match')]
-  const shown = found.slice(0, matchLimit).map(path => {
-    const name = fileName(path)
-    return fileRow(rows, path, 0, name, span({ class: 'text-neutral-500' }, ` ${path.slice(0, -name.length)}`))
-  })
-  return found.length > matchLimit ? [...shown, rows.kit.hint(`Showing ${matchLimit} of ${found.length}. Type more to narrow it down.`)] : shown
+  if (!found.length) return [emptyState({ text: 'No files match.' })]
+  const shown = found.slice(0, matchLimit).map(path => fileRow(rows, path, -1, path.slice(0, -fileName(path).length) || undefined))
+  return found.length > matchLimit ? [...shown, emptyState({ text: `Showing ${matchLimit} of ${found.length}. Type more to narrow it down.` })] : shown
 }

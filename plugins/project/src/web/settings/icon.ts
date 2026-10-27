@@ -1,11 +1,18 @@
 import type { ProjectIcon } from '../../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, dynamicChild, show, span, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, portal, show, span, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import type { Entry } from './actions'
 
 export type Picking = { project: string; page: number } | undefined
+
+interface Tile {
+  look: ProjectIcon
+  chosen: boolean
+  label: string
+  pick(): void
+}
 
 const shapesPerPage = 6
 
@@ -18,51 +25,60 @@ const iconOf = (shape: number, hue?: number): ProjectIcon | null => {
   return { ...(shape ? { shape } : {}), ...(hue === undefined ? {} : { hue }) }
 }
 
-const duneChoice = ({ plainButton, projectIcon }: Kit, group: ProjectGroup, look: ProjectIcon, size: number, chosen: boolean, label: string, onClick: () => void) =>
-  plainButton(
-    {
-      class: ['flex shrink-0 rounded-full p-px', chosen ? 'ring-2 ring-neutral-100' : 'hover:ring-2 hover:ring-neutral-600'],
-      title: label,
-      'aria-label': label,
-      'aria-pressed': String(chosen),
-      onClick,
-    },
-    projectIcon(group.name, look, size),
-  )
+const pickedMark = ({ icon }: Kit) => span({ class: 'absolute -top-1 -right-1 inline-flex rounded-full bg-neutral-900 p-px text-neutral-100' }, icon('check', 'xs'))
+
+const tileProps = ({ chosen, label, pick }: Tile) => ({
+  surface: 'raised' as const,
+  active: chosen,
+  title: label,
+  'aria-label': label,
+  'aria-pressed': String(chosen),
+  onClick: pick,
+})
+
+const shapeTile = (kit: Kit, group: ProjectGroup, tile: Tile) =>
+  kit.quietButton({ size: 'lg', ...tileProps(tile), class: 'relative px-1' }, kit.projectIcon(group.name, tile.look, 32), tile.chosen ? pickedMark(kit) : null)
+
+const hueTile = (kit: Kit, group: ProjectGroup, tile: Tile) =>
+  kit.iconButton({ ...tileProps(tile), class: 'relative w-full' }, kit.projectIcon(group.name, tile.look, 20), tile.chosen ? pickedMark(kit) : null)
+
+const label = (text: string) => span({ class: 'text-xs text-neutral-500' }, text)
+
+const tiles = (...children: Child[]) => div({ class: 'grid grid-cols-6 gap-2' }, ...children)
 
 const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) => {
-  const { icon, popover, quietButton } = ctx.kit
+  const { kit } = ctx
   const shape = group.icon?.shape ?? 0
   const hue = group.icon?.hue
   const save = (next: ProjectIcon | null) => ctx.projects.setIcon(group, next).catch(() => {})
   const moreIdeas = () => picking.set({ project: group.id, page: (picking.get()?.page ?? 0) + 1 })
-  const shapeChoices = (page: number) =>
-    div(
-      { class: 'flex flex-wrap gap-2' },
+  const shapeTiles = (page: number) =>
+    tiles(
       ...shapesOn(page).map(option =>
-        duneChoice(ctx.kit, group, { shape: option, hue }, 32, option === shape, option ? `Dunes ${option}` : 'Default dunes', () => save(iconOf(option, hue))),
+        shapeTile(kit, group, { look: { shape: option, hue }, chosen: option === shape, label: option ? `Dunes ${option}` : 'Default dunes', pick: () => save(iconOf(option, hue)) }),
       ),
     )
-  return popover(
-    () => picking.set(undefined),
-    { role: 'group', 'aria-label': `Icon for ${group.name}`, class: 'top-full right-0 mt-1 w-80' },
-    div(
-      { class: 'flex flex-col gap-3 p-2' },
-      div(
-        { class: 'flex items-center justify-between gap-2' },
-        span({ class: 'text-xs text-neutral-500' }, 'Shape'),
-        quietButton({ size: 'sm', onClick: moreIdeas }, icon('reload', 14), 'New ideas'),
+  const close = () => picking.set(undefined)
+  return kit.overlay(
+    close,
+    kit.sheet(
+      { 'aria-label': `Icon for ${group.name}`, size: 'sm' },
+      kit.sheetHead({ title: `Icon for ${group.name}`, close }),
+      kit.sheetBody(
+        {},
+        div({ class: 'flex items-center justify-between gap-2' }, label('Shape'), kit.quietButton({ size: 'sm', surface: 'raised', onClick: moreIdeas }, 'More shapes')),
+        dynamicChild(
+          picking.map(value => value?.page ?? 0),
+          shapeTiles,
+        ),
+        label('Colour'),
+        tiles(
+          ...hues.map(option =>
+            hueTile(kit, group, { look: { shape, hue: option.hue }, chosen: option.hue === hue, label: option.name, pick: () => save(iconOf(shape, option.hue)) }),
+          ),
+        ),
+        kit.quietButton({ size: 'sm', surface: 'raised', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, 'Reset to default'),
       ),
-      dynamicChild(
-        picking.map(value => value?.page ?? 0),
-        shapeChoices,
-      ),
-      span({ class: 'text-xs text-neutral-500' }, 'Colour'),
-      div(
-        { class: 'flex flex-wrap gap-1' },
-        ...hues.map(option => duneChoice(ctx.kit, group, { shape, hue: option.hue }, 16, option.hue === hue, option.name, () => save(iconOf(shape, option.hue)))),
-      ),
-      quietButton({ size: 'sm', class: 'self-start', disabled: !group.icon, onClick: () => save(null) }, icon('retry', 14), 'Reset to default'),
     ),
   )
 }
@@ -74,8 +90,8 @@ export const iconEntries = (ctx: ProjectsContext, group: ProjectGroup, picking: 
   return [{ label: 'Change icon…', icon: 'sparkles', run }]
 }
 
-export const iconPopover = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) =>
+export const iconSheet = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Picking>) =>
   show(
     picking.map(value => value?.project === group.id),
-    () => iconPicker(ctx, group, picking),
+    () => portal(document.body, iconPicker(ctx, group, picking)),
   )

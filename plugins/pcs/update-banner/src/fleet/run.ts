@@ -19,7 +19,7 @@ export const runStatus = (pc: Pc | undefined, build: string): RunStatus => {
   if (pc?.failure) return { kind: 'failed', error: pc.failure }
   if (!pc?.online) return { kind: 'reconnecting' }
   if (state?.current?.id === build && !isBusy(state)) return { kind: 'done' }
-  if (state?.phase === 'failed') return { kind: 'failed', error: state.error ?? 'Could not update sand' }
+  if (state?.phase === 'failed') return { kind: 'failed', error: state.error ?? "Couldn't update sand" }
   if (state && isBusy(state)) return { kind: 'working', phase: state.phase, running: state.running ?? 0 }
   return { kind: 'starting' }
 }

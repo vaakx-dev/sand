@@ -6,18 +6,17 @@ import { localSection } from './local'
 import { remoteSection } from './remote'
 import type { LoginControl } from './state'
 
-const sections = (kit: Kit, control: LoginControl, add: AddAccount) => {
-  const { icon, pageHead, secondaryAction } = kit
-  return div(
+const sections = (kit: Kit, control: LoginControl, add: AddAccount) =>
+  div(
     { class: 'flex flex-col gap-6' },
-    pageHead('Every account this PC can use, wherever it lives.', secondaryAction({ size: 'sm', onClick: () => add.open() }, icon('plus', 14), 'Add an account')),
-    localSection(kit, control, account => add.open(stepFor(account))),
+    localSection(kit, control, () => add.open(), account => add.open(stepFor(account))),
     remoteSection(kit, control),
   )
-}
 
 export const accountsPage = (kit: Kit, control: LoginControl, add: AddAccount) => {
-  const { errorText } = kit
+  const { errorState } = kit
   void control.load()
-  return dynamicChild(control.unavailable, message => (message ? errorText(message) : sections(kit, control, add)))
+  return dynamicChild(control.unavailable, message =>
+    message ? errorState({ text: `Couldn't load your accounts: ${message}`, retry: () => void control.load() }) : sections(kit, control, add),
+  )
 }

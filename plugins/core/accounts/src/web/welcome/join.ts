@@ -9,13 +9,13 @@ import type { WelcomeModel } from './model'
 import { nextAction } from './next'
 
 export const joinView = (kit: Kit, model: WelcomeModel) => {
-  const { note, primaryAction, quietButton, setupColumn, setupFooter, setupHeading, setupScreen, textInput } = kit
+  const { primaryAction, quietButton, setupColumn, setupFooter, setupHeading, setupNote, setupScreen, textInput } = kit
   const link = sig('')
   const connect = () => void model.join(link.get())
   return setupScreen(
     setupHeading('Connect to your other PC'),
+    setupNote('On that PC, open Settings → Devices → Add a PC → Connect a PC that has sand, then copy its link.'),
     setupColumn(
-      note('On that PC, open Settings → Devices → Add a PC → It already has sand, copy its link and paste it here.'),
       textInput({ placeholder: 'Link from the other PC', 'aria-label': 'Pairing link', bindValue: link, onKeyDown: keys({ Enter: connect }), onMount: node => node.focus() }),
       problem(kit, () => model.error.get()),
     ),
@@ -27,11 +27,12 @@ export const joinView = (kit: Kit, model: WelcomeModel) => {
 }
 
 const sharedFrom = (kit: Kit, state: LoginState | undefined, pc: Remote) => {
-  const { note, settingsSection } = kit
+  const { emptyState, loadingState, settingsSection } = kit
   const accounts = state?.remote.filter(account => account.device === pc.id) ?? []
   if (state && accounts.length) return settingsSection({}, accounts.map(account => remoteRow(kit, state, account)))
   const checked = state?.pcs.find(found => found.device === pc.id)?.checked
-  return note(checked ? `${pc.name} doesn't share any accounts yet. Turn on "Share with my PCs" there, or sign in here.` : `Looking for ${pc.name}'s accounts…`)
+  if (!checked) return loadingState({ flush: true, text: `Looking for ${pc.name}'s accounts…` })
+  return emptyState({ flush: true, text: `${pc.name} doesn't share any accounts yet. Turn on "Share with my PCs" there, or sign in here.` })
 }
 
 export const joinedView = (kit: Kit, model: WelcomeModel, control: LoginControl, pc: Remote) => {

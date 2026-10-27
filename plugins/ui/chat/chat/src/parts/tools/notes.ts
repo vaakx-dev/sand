@@ -1,10 +1,10 @@
 import type { ToolView, TruncatedAt } from '../contract'
 import { plural } from '@sand/util'
-import { div, el } from '@vaakx-dev/vrui'
+import { div, el, type Child } from '@vaakx-dev/vrui'
 import { resultText } from '../thread/results'
 
-export const outputText = (text: string, error: boolean) =>
-  el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', error ? 'text-danger-400' : 'text-neutral-300'] }, text)
+export const outputText = (text: Child, error: boolean) =>
+  el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', error ? 'text-danger-400' : 'text-neutral-400'] }, text)
 
 export const errorBody = (tool: ToolView) => outputText(resultText(tool.result) || 'The tool failed without a message', true)
 

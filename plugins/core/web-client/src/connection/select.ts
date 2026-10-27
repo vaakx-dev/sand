@@ -70,7 +70,7 @@ export const selectRoute = (urls: string[], expected: string | undefined, truste
 
     for (const url of list)
       probe(url)
-        .then(reached, error => miss(url, new Error(`Could not reach ${hostOf(url)}: ${errorMessage(error)}`)))
+        .then(reached, error => miss(url, new Error(`Couldn't reach ${hostOf(url)}: ${errorMessage(error)}`)))
         .finally(() => {
           if (--waiting === 0) finish()
         })

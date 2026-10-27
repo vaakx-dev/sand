@@ -1,13 +1,10 @@
-import { div, SPACE, span } from '@vaakx-dev/vrui'
+import { div, span } from '@vaakx-dev/vrui'
 import type { Slots } from './slots'
-
-const tuck = SPACE['4']
 
 export const tray = (slots: Slots) =>
   div(
     {
-      class: 'relative mx-4 flex min-w-0 items-center gap-2 rounded-b-2xl bg-neutral-900 px-1 pb-1 text-xs text-neutral-500 animate-fade',
-      style: { marginTop: `calc(-1 * ${tuck})`, paddingTop: `calc(${tuck} + ${SPACE['1']})` },
+      class: 'relative mx-4 -mt-4 flex min-w-0 items-center gap-2 rounded-b-xl bg-neutral-900 px-1 pt-5 pb-1 text-xs text-neutral-500',
       hidden: slots.empty('tray-start', 'tray-end'),
     },
     slots.host('tray-start', 'flex min-w-0 items-center gap-1'),

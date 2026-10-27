@@ -46,7 +46,7 @@ export const forecastPanel = (kit: Kit, { windows, forecasts, chosen, choose, co
             windows.map(found => ({ value: found.id, label: found.label })),
             window.id,
             choose,
-            { label: 'Limit' },
+            { label: 'Limit', inset: true },
           )
         : null,
     ),

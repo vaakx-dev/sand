@@ -6,7 +6,7 @@ import { starButton } from '../star'
 import type { Catalog } from './catalog'
 
 export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: (id: string) => void) => {
-  const { badge, checkMark, contextMenu, rowAction, rowButton } = kit
+  const { badge, checkMark, contextMenu, listRow, rowAction } = kit
   const label = untrack(() => row.get().label)
   const shown = () => !row.get().hidden
   const added = row.map(model => !!model.added)
@@ -17,33 +17,29 @@ export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: 
   }
   const menu = contextMenu()
   return div(
-    { class: 'flex items-center gap-3 bg-neutral-900 pr-4' },
-    rowButton(
-      {
-        role: 'checkbox',
-        'aria-checked': () => String(shown()),
-        'aria-label': `Show ${label} in the picker`,
-        class: 'min-h-12 flex-1 gap-3 py-2 pl-4',
-        ...menu.target(() => catalog.menu(row.get(), keep), toggle),
-      },
-      checkMark(shown),
-      div(
-        { class: 'flex min-w-0 flex-1 flex-col' },
-        span(
-          { class: 'flex min-w-0 items-center gap-2' },
-          span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().label),
-          show(row.map(catalog.isNew), () => badge('accent', 'New')),
-          show(added, () => badge('neutral', 'Added')),
-        ),
-        span({ class: 'truncate font-mono text-xs text-neutral-500' }, () => row.get().name ?? row.get().id),
-      ),
-      span({ class: 'shrink-0 font-mono text-xs text-neutral-500' }, () => {
-        const context = row.get().context
-        return context ? tokens(context) : ''
-      }),
-    ),
-    show(added, () => rowAction({ label: 'Remove', danger: true, run: () => void catalog.remove(row.get()) })),
-    starButton(kit, label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
+    { class: 'contents' },
+    listRow({
+      surface: 'group',
+      role: 'checkbox',
+      'aria-checked': () => String(shown()),
+      'aria-label': `Show ${label} in the picker`,
+      lead: checkMark(shown),
+      title: () => row.get().label,
+      meta: span({ class: 'font-mono' }, () => row.get().name ?? row.get().id),
+      trail: [
+        show(row.map(catalog.isNew), () => badge('accent', 'New')),
+        show(added, () => badge('neutral', 'Added')),
+        span({ class: 'tabular-nums' }, () => {
+          const context = row.get().context
+          return context ? tokens(context) : ''
+        }),
+      ],
+      ...menu.target(() => catalog.menu(row.get(), keep), toggle),
+      actions: [
+        show(added, () => rowAction({ label: 'Remove', danger: true, run: () => void catalog.remove(row.get()) })),
+        starButton(kit, label, () => row.get().favourite !== undefined, () => void catalog.setFavourite(row.get(), row.get().favourite === undefined)),
+      ],
+    }),
     menu.view(),
   )
 }

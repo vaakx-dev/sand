@@ -4,7 +4,7 @@ import type { FileContent } from '@sand/project/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { dynamicChild, effect, show, sig, type Sig } from '@vaakx-dev/vrui'
 import { message, type FilesModel } from '../model'
-import { bar, page, pathLine } from '../parts'
+import { bar, failed, inset, page, pathLine } from '../parts'
 import { fileName } from '../paths'
 import { fileBody } from './body'
 
@@ -23,7 +23,7 @@ const mention = (writer: Composer, path: string) => {
 }
 
 export const filePage = ({ kit, model, markdown, writer }: FileParts, path: string) => {
-  const { copyButton, headTitle, hint, icon, iconButton } = kit
+  const { copyButton, errorState, headTitle, icon, iconButton, loadingState } = kit
   const read = sig<Read>(undefined)
   let latest = 0
   effect(() => {
@@ -40,19 +40,24 @@ export const filePage = ({ kit, model, markdown, writer }: FileParts, path: stri
   }
   return page(
     bar(
-      iconButton({ title: 'Back to files', onClick: () => model.opened.set(undefined) }, icon('back', 16)),
+      kit,
+      true,
+      iconButton({ title: 'Back to files', 'aria-label': 'Back to files', onClick: () => model.opened.set(undefined) }, icon('back', 16)),
       headTitle(2, fileName(path)),
-      iconButton({ title: 'Reload file', onClick: model.reload }, icon('reload', 16)),
+      iconButton({ title: 'Reload file', 'aria-label': 'Reload file', onClick: model.reload }, icon('reload', 16)),
       show(
         () => text() !== undefined,
         () => copyButton({ text: () => text() ?? '', label: 'Copy' }),
       ),
-      dynamicChild(writer, found => found && iconButton({ title: 'Mention in message', onClick: () => mention(found, path) }, icon('message', 16))),
+      dynamicChild(
+        writer,
+        found => found && iconButton({ title: 'Mention in message', 'aria-label': 'Mention in message', onClick: () => mention(found, path) }, icon('message', 16)),
+      ),
     ),
     pathLine(path),
     dynamicChild(read, value => {
-      if (!value) return hint('Loading…')
-      if ('error' in value) return hint(value.error)
+      if (!value) return inset(loadingState({ flush: true }))
+      if ('error' in value) return inset(errorState({ text: failed('open this file', value.error), retry: model.reload, flush: true }))
       return fileBody(kit, value.content, path, markdown())
     }),
   )

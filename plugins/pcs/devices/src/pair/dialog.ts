@@ -16,8 +16,8 @@ export const pairDialog = (ctx: DevicesContext, source: DeviceSource, shown: Set
     overlay(
       close,
       sheet(
-        { 'aria-label': 'Pair a new device', size: 'md' },
-        sheetHead({ title: 'Pair a new device', close }),
+        { 'aria-label': 'Add a phone', size: 'md' },
+        sheetHead({ title: 'Add a phone', close }),
         sheetBody({}, dynamicChild(invite, current => current && inviteBody(ctx.kit, current, source.listenOnLan))),
         sheetFoot(primaryAction({ onClick: close }, 'Done')),
       ),

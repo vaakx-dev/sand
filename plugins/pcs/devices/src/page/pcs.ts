@@ -5,6 +5,7 @@ import { clock, derive, show } from '@vaakx-dev/vrui'
 import type { PcHealthStore } from '../health/state'
 import type { DeviceSource } from '../source'
 import { healthPanel } from './health'
+import type { PageActions } from './index'
 import { pcRow, type PcRow } from './pc-row'
 
 const ownShares = (login: LoginState | undefined) =>
@@ -17,18 +18,18 @@ const rows = (list: PcList, login: LoginState | undefined): PcRow[] => [
   ...list.pcs.map(pc => ({ pc, self: false, shares: sharesOf(login, pc.id) })),
 ]
 
-export const pcsSection = (kit: Kit, source: DeviceSource, health: PcHealthStore, pairAgain: () => void) => {
-  const { hintRow, rowList, settingsSection } = kit
+export const pcsSection = (kit: Kit, source: DeviceSource, health: PcHealthStore, { addPc, pairAgain }: Pick<PageActions, 'addPc' | 'pairAgain'>) => {
+  const { icon, loadingState, quietButton, rowList, settingsSection } = kit
   const now = clock(60_000)
   const all = derive(() => {
     const current = source.pcs.get()
     return current ? rows(current, source.login.get()) : []
   })
   return settingsSection(
-    {},
+    { title: 'PCs', action: quietButton({ size: 'sm', onClick: addPc }, icon('plus', 'sm'), 'Add a PC') },
     show(
       () => !source.pcs.get(),
-      () => hintRow('Loading…'),
+      () => loadingState({ surface: 'group' }),
     ),
     rowList(
       all,

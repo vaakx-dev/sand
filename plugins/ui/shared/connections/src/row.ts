@@ -28,20 +28,17 @@ const statusText = (kit: Kit, state: Sig<ConnectionState>) => {
 }
 
 export const connectionRow = (kit: Kit, connection: Sig<Connection>) => {
-  const { errorRow, icon, itemRow, tile } = kit
+  const { errorState, icon, settingsRow } = kit
   const state = derive(() => connection.get().state())
   return div(
     { class: 'contents' },
-    itemRow(
-      {},
-      tile(icon(connection.get().icon, 16)),
-      () => connection.get().name,
-      statusText(kit, state),
+    settingsRow(
+      { lead: icon(connection.get().icon), title: () => connection.get().name, detail: statusText(kit, state) },
       dynamicChild(state.map(buttonsKey), () => actionButtons(kit, state)),
     ),
     show(
       () => !!state.get().error,
-      () => errorRow(() => state.get().error ?? ''),
+      () => errorState({ surface: 'group', text: () => state.get().error ?? '' }),
     ),
   )
 }

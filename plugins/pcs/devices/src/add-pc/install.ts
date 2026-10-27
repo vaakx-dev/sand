@@ -39,20 +39,18 @@ const guess = (source: DeviceSource) => {
   return (platform && platforms[platform]) || agentSystem()
 }
 
+const recover = 'Fix the problem and run the same command on the new PC again, or open Health on its row in Devices and click Repair.'
+
 const failedBlock = (kit: Kit, list: InstallProgress[]) => {
-  const { errorText, note } = kit
+  const { errorState } = kit
   const last = list.at(-1)
-  return div(
-    { class: 'flex flex-col gap-3 rounded-xl bg-neutral-900 p-3' },
-    errorText(last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} is not ready.`),
-    last?.health ? healthDetails(kit, last.health) : null,
-    note('Fix the problem and run the same command again on the new PC, or use Health → Repair in Settings → Devices.'),
-  )
+  const cause = last?.error ? `Install failed: ${last.error}` : `${installedName(list) ?? 'The new PC'} isn't ready.`
+  return div({ class: 'flex flex-col gap-3' }, errorState({ flush: true, text: `${cause} ${recover}` }), last?.health ? healthDetails(kit, last.health) : null)
 }
 
 export const installStep = (ctx: DevicesContext, source: DeviceSource, ready: (list: InstallProgress[]) => void, running: Sig<boolean>) => {
   const { kit } = ctx
-  const { copyButton, note, segmented } = kit
+  const { codeBlock, loadingState, segmented, sheetText } = kit
   const os = sig<InstallSystem>(guess(source))
   const via = sig<InstallVia>('lan')
   const ticket = installTicket(ctx)
@@ -94,11 +92,11 @@ export const installStep = (ctx: DevicesContext, source: DeviceSource, ready: (l
   })
 
   const reach = (key: string | undefined) => {
-    if (key === undefined) return note('Looking up the addresses of this PC…')
+    if (key === undefined) return loadingState({ flush: true, text: 'Looking up the addresses of this PC…' })
     if (!key) return listenBox(kit, 'sand only listens on this computer, so the new PC can’t reach it. Turn on network listening to install over your home wifi.', source.listenOnLan)
     if (!key.includes(' ')) return null
     const choices = allVias.filter(value => key.includes(value)).map(value => ({ value, label: viaLabels[value] }))
-    return field('Reach this PC via', segmented(choices, chosenVia, value => via.set(value), { label: 'Reach via' }))
+    return field('Reach this PC via', segmented(choices, chosenVia, value => via.set(value), { label: 'Reach via', inset: true }))
   }
 
   const pending = () => {
@@ -110,15 +108,10 @@ export const installStep = (ctx: DevicesContext, source: DeviceSource, ready: (l
   const commandBox = () =>
     div(
       { class: 'flex flex-col gap-2' },
-      note(() => (os.get() === 'win' ? 'Open PowerShell on it and paste:' : 'Open a terminal on it and paste:')),
-      div(
-        { class: 'flex items-start gap-2 rounded-lg bg-neutral-950 py-2 pr-2 pl-3' },
-        span(
-          { class: ['min-w-0 flex-1 py-1 font-mono text-xs wrap-anywhere', () => (!command.get() && ticket.error.get() !== undefined ? 'text-danger-400' : 'text-neutral-200')] },
-          () => command.get() ?? pending(),
-        ),
-        copyButton({ text: () => command.get() ?? '', label: 'Copy', disabled: () => !command.get() }),
+      sheetText(
+        () => `Paste this into ${os.get() === 'win' ? 'PowerShell' : 'a terminal'} on the new PC. It downloads sand from GitHub and pairs with this PC. The command works for 10 minutes.`,
       ),
+      codeBlock({ copy: () => command.get() ?? '', danger: () => !command.get() && ticket.error.get() !== undefined }, () => command.get() ?? pending()),
     )
 
   return div(
@@ -138,9 +131,5 @@ export const installStep = (ctx: DevicesContext, source: DeviceSource, ready: (l
       () => progressList(kit, ticket.progress),
     ),
     show(failed, () => dynamicChild(ticket.progress, list => failedBlock(kit, list))),
-    show(
-      () => !started.get() && Boolean(route.get()),
-      () => note('The new PC downloads sand from GitHub, then pairs with this one. The command works for 10 minutes.'),
-    ),
   )
 }

@@ -1,32 +1,19 @@
 import { div, type Sig } from '@vaakx-dev/vrui'
 import type { Run } from '../runs/runs'
 import { agentMenu } from './menu'
-import { headline, markSlot, noteLine, pressable, since, subline, type Rows } from './parts'
+import { runRow, since, type Rows } from './parts'
 import { stopButton } from './stop'
 
-const detail = (run: Run, now: number) => [run.name, run.model, since(run.started, run.ended, now)].filter(Boolean).join(' · ')
-
-const openSession = (run: Run, rows: Rows) => {
-  if (run.session) rows.open(run.session)
-}
+const detail = (run: Run) => run.step || [run.name, run.model].filter(Boolean).join(' · ')
 
 export const agentRow = (run: Sig<Run>, now: Sig<number>, rows: Rows) =>
-  pressable(
-    {
-      class: 'flex items-start gap-2 px-2 py-2',
-      press: () => openSession(run.get(), rows),
-      enabled: () => Boolean(run.get().session),
-      menu: { on: rows.menu, spec: () => agentMenu(rows, { title: run.get().title, session: run.get().session, stop: () => rows.cancel(run.get()) }) },
-    },
-    markSlot(rows.kit.dot('accent')),
-    div(
-      { class: 'min-w-0 flex-1' },
-      headline(run),
-      subline(() => detail(run.get(), now.get())),
-      noteLine(
-        run.map(value => value.step),
-        'text-accent-400',
-      ),
-    ),
-    markSlot(stopButton(rows.kit, () => rows.cancel(run.get()))),
+  div(
+    { class: 'flex items-center gap-2' },
+    runRow(rows, run, {
+      meta: () => detail(run.get()),
+      trail: () => since(run.get().started, run.get().ended, now.get()),
+      stoppable: true,
+      spec: () => agentMenu(rows, { title: run.get().title, session: run.get().session, stop: () => rows.cancel(run.get()) }),
+    }),
+    stopButton(rows.kit, () => rows.cancel(run.get())),
   )

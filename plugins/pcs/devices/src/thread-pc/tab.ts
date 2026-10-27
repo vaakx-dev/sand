@@ -1,16 +1,14 @@
 import { composer, draftsChange } from '@sand/composer/contract'
 import { machinesChange, projectsChange, threadSelect, threadsChange, type Machine } from '@sand/web-client/contract'
 import { pulse } from '@sand/web-client/reactive'
-import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import type { DevicesContext } from '../inject'
 import { pcChoices, type PcChoice } from './choices'
-
-const tuck = `calc(${SPACE['4']} + ${SPACE['1']})`
 
 const glyph = (machine: Machine) => (machine.local ? 'laptop' : 'monitor')
 
 export const pcTab = (ctx: DevicesContext) => {
-  const { chipPopover, choiceItem, icon, plainButton, pressOpens } = ctx.kit
+  const { chipPopover, choiceItem, icon, metaLine, plainButton, pressOpens } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const toggle = () => open.update(value => !value)
@@ -32,12 +30,10 @@ export const pcTab = (ctx: DevicesContext) => {
   }
 
   const row = (choice: PcChoice) =>
-    div(
-      { title: choice.blocked ?? '' },
-      choiceItem(
-        { selected: choice.machine.id === draft.get()?.device, icon: glyph(choice.machine), disabled: Boolean(choice.blocked), onClick: () => pick(choice) },
-        span({ class: 'min-w-0 flex-1 truncate' }, choice.machine.name),
-      ),
+    choiceItem(
+      { selected: choice.machine.id === draft.get()?.device, icon: glyph(choice.machine), disabled: Boolean(choice.blocked), onClick: () => pick(choice) },
+      span({ class: 'min-w-0 flex-1 truncate' }, choice.machine.name),
+      choice.blocked ? metaLine(choice.blocked) : null,
     )
 
   const view = () =>
@@ -46,20 +42,19 @@ export const pcTab = (ctx: DevicesContext) => {
       plainButton(
         {
           class: [
-            'flex min-w-0 items-center gap-1.5 rounded-b-xl bg-neutral-800/50 px-3 pb-1 text-xs transition-colors',
-            () => (open.get() ? 'text-neutral-100' : 'text-neutral-500 hover:text-neutral-300'),
+            '-mt-5 flex min-w-0 items-center gap-1.5 rounded-b-xl bg-neutral-800/50 px-3 pt-6 pb-1 text-xs transition-colors',
+            () => (open.get() ? 'text-neutral-100' : 'text-neutral-500 hover:text-neutral-100'),
           ],
-          style: { marginTop: `calc(-1 * ${tuck})`, paddingTop: `calc(${tuck} + ${SPACE['1']})` },
           title: 'Choose which PC runs this thread',
           ...pressOpens(open, toggle),
         },
-        dynamicChild(chosen, machine => icon(machine ? glyph(machine) : 'monitor', 12)),
+        dynamicChild(chosen, machine => icon(machine ? glyph(machine) : 'monitor', 'sm')),
         span({ class: 'min-w-0 truncate' }, () => chosen.get()?.name ?? ''),
       ),
       show(open, () =>
         chipPopover(
           close,
-          { class: 'left-0', width: SPACE['64'] },
+          { class: 'left-0 w-64' },
           dynamicChild(choices, list => div({ class: 'flex flex-col' }, ...list.map(row))),
         ),
       ),

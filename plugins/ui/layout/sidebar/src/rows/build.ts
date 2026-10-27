@@ -49,7 +49,9 @@ const sectionRows = (name: string, items: ThreadItem[], options: RowOptions): Ro
   return [head, ...cards, { kind: 'more', key: `${key}:more`, section: key, hidden }]
 }
 
-export const buildRows = (items: ThreadItem[], options: RowOptions): Row[] =>
-  sections(items.filter(item => !options.project || item.projectKey === options.project))
+export const buildRows = (items: ThreadItem[], options: RowOptions): Row[] => {
+  const shown = items.filter(item => !options.project || item.projectKey === options.project)
+  return sections(shown)
     .filter(([, found]) => found.length)
     .flatMap(([name, found]) => sectionRows(name, found, options))
+}

@@ -1,6 +1,6 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, list, p, show, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, show, type Sig } from '@vaakx-dev/vrui'
 import { type AreaGroup, pluginFilter, type PluginFilter } from './filter'
 import { pluginRow, type RowActions } from './row'
 import type { LibrarySource } from './source'
@@ -26,21 +26,20 @@ const toolbar = ({ searchField, segmented }: Kit, filter: PluginFilter) =>
       { class: 'flex min-w-48 flex-1' },
       searchField({ placeholder: 'Search plugins', 'aria-label': 'Search plugins', bindValue: filter.query }),
     ),
-    dynamicChild(filter.choices, choices => segmented(choices, filter.origin, value => filter.origin.set(value), { label: 'Show' })),
+    dynamicChild(filter.choices, choices => (choices.length ? segmented(choices, filter.active, value => filter.origin.set(value), { label: 'Show' }) : null)),
   )
 
 export const catalogSection = (kit: Kit, source: LibrarySource, actions: RowActions) => {
-  const { hintRow, settingsSection } = kit
-  const filter = pluginFilter(source)
+  const { emptyState, loadingState, quietButton } = kit
+  const filter = pluginFilter(source, kit)
   return div(
     { class: 'flex flex-col gap-4' },
     toolbar(kit, filter),
-    p({ class: 'px-1 text-xs text-neutral-500' }, 'Customise copies a built-in into ~/.sand/plugins, where your copy replaces it. Changes take effect after you press Reload plugins.'),
     list(filter.groups, group => group.area, group => areaSection(kit, group, actions), div({ class: 'flex flex-col gap-6' })),
-    show(filter.loading, () => settingsSection({}, hintRow('Loading…'))),
+    show(filter.loading, () => loadingState()),
     show(
       () => !filter.loading.get() && filter.groups.get().length === 0,
-      () => settingsSection({}, hintRow('No matches')),
+      () => emptyState({ text: 'No plugins match your search', action: quietButton({ size: 'sm', onClick: filter.clear }, 'Clear search') }),
     ),
   )
 }
