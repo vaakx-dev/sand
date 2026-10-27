@@ -1,7 +1,7 @@
 import type { ThreadItem } from '../items/item'
 
 export type HeadRow = { kind: 'head'; key: string; name: string; count: number; open: boolean }
-export type CardRow = { kind: 'card'; key: string; group: string; item: ThreadItem; selected: boolean; mixed: boolean }
+export type CardRow = { kind: 'card'; key: string; group: string; item: ThreadItem; selected: boolean }
 export type MoreRow = { kind: 'more'; key: string; section: string; hidden: number }
 export type Row = HeadRow | CardRow | MoreRow
 
@@ -36,14 +36,14 @@ const sections = (items: ThreadItem[]): [string, ThreadItem[]][] => {
 
 export const cardsIn = (rows: Row[], group: string) => rows.filter((row): row is CardRow => row.kind === 'card' && row.group === group)
 
-const sectionRows = (name: string, items: ThreadItem[], options: RowOptions, mixed: boolean): Row[] => {
+const sectionRows = (name: string, items: ThreadItem[], options: RowOptions): Row[] => {
   const key = `sessions:${name}`
   const open = options.isOpen(key, openByDefault(name))
   const head: HeadRow = { kind: 'head', key, name, count: items.length, open }
   if (!open) return [head]
   const limit = options.limit(key)
   const shown = items.filter((item, index) => index < limit || item.id === options.selected)
-  const cards = shown.map((item): CardRow => ({ kind: 'card', key: `sessions:${item.id}`, group: key, item, selected: item.id === options.selected, mixed }))
+  const cards = shown.map((item): CardRow => ({ kind: 'card', key: `sessions:${item.id}`, group: key, item, selected: item.id === options.selected }))
   const hidden = items.length - shown.length
   if (hidden <= 0) return [head, ...cards]
   return [head, ...cards, { kind: 'more', key: `${key}:more`, section: key, hidden }]
@@ -51,8 +51,7 @@ const sectionRows = (name: string, items: ThreadItem[], options: RowOptions, mix
 
 export const buildRows = (items: ThreadItem[], options: RowOptions): Row[] => {
   const shown = items.filter(item => !options.project || item.projectKey === options.project)
-  const mixed = new Set(shown.map(item => item.projectKey)).size > 1
   return sections(shown)
     .filter(([, found]) => found.length)
-    .flatMap(([name, found]) => sectionRows(name, found, options, mixed))
+    .flatMap(([name, found]) => sectionRows(name, found, options))
 }

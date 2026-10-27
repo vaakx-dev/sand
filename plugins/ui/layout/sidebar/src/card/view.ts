@@ -45,7 +45,7 @@ export const card = (kit: Kit, row: Sig<CardRow>, handlers: CardHandlers) => {
       handlers.menu({ ...pointBelow(event), touch: touched(event), row: row.get(), ask: action.id })
     },
   }
-  const parts: CardParts = { kit, item, selected, mixed: row.map(value => value.mixed), minute: handlers.minute, strip }
+  const parts: CardParts = { kit, item, selected, minute: handlers.minute, strip }
   const press = kit.pressMenu(at => {
     if (menu.get().length) handlers.menu({ ...at, row: row.get() })
   })
@@ -58,10 +58,8 @@ export const card = (kit: Kit, row: Sig<CardRow>, handlers: CardHandlers) => {
       tabIndex: 0,
       'aria-current': selected,
       'aria-haspopup': menu.map(found => (found.length ? 'menu' : undefined)),
-      class: [
-        'group relative block w-full cursor-pointer select-none callout-none rounded-md px-3 outline-none transition-colors hover:bg-neutral-800 aria-current:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-accent-500',
-        () => (compact.get() ? 'py-1.5' : 'mb-1 py-2'),
-      ],
+      class:
+        'group relative mb-1 block w-full cursor-pointer select-none callout-none rounded-md px-3 py-2 outline-none transition-colors hover:bg-neutral-800 aria-current:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-accent-500',
       onClick: () => press.held() || handlers.pick(row.get()),
       onKeyDown: keys({ Enter: () => handlers.pick(row.get()), ' ': () => handlers.pick(row.get()) }, { self: true, repeat: false }),
       ...hover,
