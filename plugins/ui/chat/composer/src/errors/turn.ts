@@ -1,10 +1,9 @@
 import { modelPill } from '@sand/model-panel/contract'
-import type { Kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, el, show, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import { bannerPanel } from '../dock/glass'
 import type { Model, TurnError } from '../model'
+import { errorBanner } from './banner'
 
 const hints: [string, (pc: string) => string][] = [
   [' is offline', pc => `The account for this model is on ${pc}. Turn ${pc} on or wake it up, then try again.`],
@@ -17,47 +16,19 @@ const pcHint = ({ via, text }: TurnError) => {
   return found ? found[1](via) : undefined
 }
 
-const detailsToggle = ({ chevron, quietButton }: Kit, open: Sig<boolean>) =>
-  quietButton({ size: 'sm', 'aria-expanded': () => String(open.get()), onClick: open.toggle() }, chevron(() => open.get(), 14), 'Details')
-
-const detailsBlock = ({ copyButton }: Kit, text: string) =>
-  div(
-    { class: 'flex items-start gap-1 rounded-lg bg-neutral-900 py-1 pr-1 pl-3 text-neutral-400' },
-    el('pre', { class: 'max-h-40 min-w-0 flex-1 overflow-auto py-1 font-mono whitespace-pre-wrap wrap-anywhere' }, text),
-    copyButton({ text: () => text }),
-  )
-
-const details = (kit: Kit, detail: string) => {
-  const open = sig(false)
-  return { toggle: div({ class: 'ml-auto' }, detailsToggle(kit, open)), block: show(open, () => detailsBlock(kit, detail)) }
-}
-
 const banner = (ctx: ComposerContext, model: Model, error: TurnError) => {
-  const { closeButton, icon, note, primaryAction, secondaryAction } = ctx.kit
+  const { secondaryAction } = ctx.kit
   const hint = pcHint(error)
   const pill = ctx.get(modelPill)
   const pick = hint && pill && ctx.get(models)?.list().some(model => !model.via)
-  const more = error.detail ? details(ctx.kit, error.detail) : undefined
-  return bannerPanel(
-    hint ? 'warning' : 'danger',
-    div(
-      { class: 'flex flex-col gap-2 pb-1' },
-      div(
-        { class: 'flex min-h-6 items-center gap-2' },
-        span({ class: ['inline-flex shrink-0', hint ? 'text-warning-400' : ''] }, icon('alert', 14)),
-        span({ class: ['min-w-0 flex-1 font-medium', hint ? 'text-neutral-100' : ''] }, error.text),
-        closeButton({ title: 'Dismiss', size: 'sm', onClick: () => model.dismiss(error.key) }),
-      ),
-      hint && note(hint),
-      div(
-        { class: 'flex flex-wrap items-center gap-2' },
-        hint ? primaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 14), 'Retry') : secondaryAction({ size: 'sm', onClick: model.retryTurn }, icon('retry', 14), 'Retry'),
-        pick && secondaryAction({ size: 'sm', onClick: () => pill.open() }, 'Use a model on this PC'),
-        more?.toggle,
-      ),
-      more?.block,
-    ),
-  )
+  return errorBanner(ctx.kit, {
+    text: error.text,
+    ...(hint && { hint }),
+    retry: model.retryTurn,
+    actions: pick ? [secondaryAction({ size: 'sm', onClick: () => pill.open() }, 'Use a model on this PC')] : [],
+    ...(error.detail && { detail: error.detail }),
+    dismiss: () => model.dismiss(error.key),
+  })
 }
 
 export const turnErrorBanner = (ctx: ComposerContext, model: Model) =>

@@ -14,16 +14,16 @@ const codeView = (text: string, language: string, markdown?: Markdown) => {
   return div(
     { class: 'flex pb-6 font-mono text-xs leading-relaxed' },
     el('pre', { class: 'sticky left-0 shrink-0 select-none bg-neutral-950 pr-3 pl-4 text-right text-neutral-500' }, numbers),
-    el('pre', { class: 'flex-1 pr-4 text-neutral-300' }, ...code),
+    el('pre', { class: 'flex-1 pr-4 text-neutral-100' }, ...code),
   )
 }
 
-export const fileBody = ({ hint }: Kit, content: FileContent, path: string, markdown?: Markdown) => {
-  if (content.skipped === 'large') return hint(`Too large to show (${sizeText(content.size)})`)
-  if (content.skipped === 'binary') return hint(`Binary file (${sizeText(content.size)})`)
+export const fileBody = ({ emptyState }: Kit, content: FileContent, path: string, markdown?: Markdown) => {
+  if (content.skipped === 'large') return emptyState({ text: `Too large to show here (${sizeText(content.size)}).` })
+  if (content.skipped === 'binary') return emptyState({ text: `Binary file (${sizeText(content.size)}), can't show it here.` })
   if (content.image) return div({ class: 'px-4 pb-6' }, img({ src: content.image, alt: fileName(path), class: 'block h-auto max-w-full' }))
   const text = content.text ?? ''
   const language = extension(path)
-  if (markdown && language === 'md') return div({ class: 'px-4 pb-6 text-sm text-neutral-300 wrap-anywhere' }, ...markdown.nodes(text))
+  if (markdown && language === 'md') return div({ class: 'px-4 pb-6 text-sm text-neutral-100 wrap-anywhere' }, ...markdown.nodes(text))
   return codeView(text, language, markdown)
 }

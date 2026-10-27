@@ -1,5 +1,5 @@
 import type { Kit, StepState } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, p, show, span, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import { actionButton, fleetAction, runActionKind } from '../actions'
 import type { Fleet, RunRow } from '../fleet/model'
 import type { RunStatus } from '../fleet/run'
@@ -12,22 +12,17 @@ const stepState = (status: RunStatus): StepState => {
   return 'running'
 }
 
+const runDetail = (row: Sig<RunRow>) =>
+  span({ class: ['wrap-anywhere', () => (row.get().status.kind === 'failed' ? 'text-danger-400' : '')] }, () => runText(row.get().status))
+
 const runRow = (kit: Kit, row: Sig<RunRow>, fleet: Fleet) => {
-  const { sectionRow, stepMark } = kit
-  return sectionRow(
-    {},
-    div(
-      { class: 'flex min-w-0 flex-1 items-start gap-2' },
-      div({ class: 'flex h-5 shrink-0 items-center' }, dynamicChild(row.map(current => stepState(current.status)), stepMark)),
-      div(
-        { class: 'flex min-w-0 flex-1 flex-col' },
-        span({ class: 'truncate text-sm font-medium text-neutral-100' }, () => row.get().pc?.name ?? 'PC'),
-        span(
-          { class: () => (row.get().status.kind === 'failed' ? 'text-xs wrap-anywhere text-danger-400' : 'text-xs text-neutral-500') },
-          () => runText(row.get().status),
-        ),
-      ),
-    ),
+  const { settingsRow, stepMark } = kit
+  return settingsRow(
+    {
+      lead: dynamicChild(row.map(current => stepState(current.status)), stepMark),
+      title: () => row.get().pc?.name ?? 'PC',
+      detail: runDetail(row),
+    },
     dynamicChild(
       row.map(current => runActionKind(current.status)),
       kind => (kind ? actionButton(kit, fleetAction(fleet, row.get().key, kind)) : null),
@@ -37,18 +32,13 @@ const runRow = (kit: Kit, row: Sig<RunRow>, fleet: Fleet) => {
 
 export const progressBody = (kit: Kit, fleet: Fleet, close: () => void) => {
   const { primaryAction, rowList, secondaryAction, settingsSection, sheetBody, sheetFoot } = kit
-  const localName = derive(() => (fleet.runFinished.get() ? '' : (fleet.runRows.get().find(row => row.pc?.local)?.pc?.name ?? '')))
   const done = () => {
     fleet.finish()
     close()
   }
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    sheetBody(
-      {},
-      settingsSection({}, rowList(fleet.runRows, row => row.key, row => runRow(kit, row, fleet))),
-      show(localName.map(Boolean), () => p({ class: 'px-1 text-xs text-neutral-500' }, () => `This page reconnects by itself when ${localName.get()} is back.`)),
-    ),
+    sheetBody({}, settingsSection({}, rowList(fleet.runRows, row => row.key, row => runRow(kit, row, fleet)))),
     sheetFoot(
       dynamicChild(fleet.runFinished, finished => (finished ? primaryAction({ onClick: done }, 'Done') : secondaryAction({ onClick: close }, 'Hide'))),
     ),

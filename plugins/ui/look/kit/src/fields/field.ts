@@ -9,13 +9,13 @@ export const textInput = ({ class: extra, ...props }: Props<HTMLInputElement>, s
     autocomplete: 'off',
     spellcheck: false,
     ...props,
-    class: ['w-full min-w-0 rounded-lg bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-600 placeholder:text-neutral-500 focus:ring-accent-500', inputSizes[size], extra],
+    class: ['w-full min-w-0 rounded-md bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-700 placeholder:text-neutral-500 focus-visible:ring-accent-500', inputSizes[size], extra],
   })
 
 export const searchField = ({ class: extra, ...props }: Props<HTMLInputElement>) =>
   label(
-    { class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-3 text-neutral-500 ring-1 ring-neutral-600 focus-within:ring-accent-500' },
-    icon('search', 16),
+    { class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-neutral-900 px-3 text-neutral-500 ring-1 ring-neutral-700 focus-visible-within:ring-accent-500' },
+    icon('search', 'md'),
     input({
       enterKeyHint: 'search',
       autocomplete: 'off',

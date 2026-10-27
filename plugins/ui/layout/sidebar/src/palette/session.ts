@@ -25,7 +25,6 @@ export const sessionActions = (kit: Kit, threads: Threads, thread: Thread): Pale
       group,
       icon: 'pencil',
       label: 'Rename…',
-      detail: thread.info.title || 'Untitled thread',
       search: 'rename thread title',
       page: () => renamePage(threads, thread),
     },

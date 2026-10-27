@@ -81,7 +81,7 @@ export const createMachines = (ctx: Context, { home, on, links, hereId, keep }: 
       const remote = await home.call(remotesAdd, { link })
       await refresh()
       const machine = get(remote.id)
-      if (!machine) throw new Error(`${remote.name} was added, but this page could not load it. Reload to see it.`)
+      if (!machine) throw new Error(`${remote.name} was added, but this page couldn't load it. Reload to see it.`)
       return machine
     },
     remove: id => home.call(remotesRemove, { remote: id }),

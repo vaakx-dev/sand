@@ -3,7 +3,7 @@ import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { fromPaste, pasteLimit } from '../attachments/content'
 import { shelf } from '../attachments/shelf'
-import { createCompletion } from '../complete/model'
+import { createCompletion, type CompletionSource } from '../complete/model'
 import { builtinSources } from '../complete/sources'
 import { createEditor } from '../editor/view'
 import type { Model } from '../model'
@@ -21,12 +21,13 @@ export interface CardParts {
   dropping: Sig<boolean>
 }
 
-const placeholder = (model: Model) => () => {
-  if (model.idle.get()) return 'Start a new thread'
-  return model.running.get() ? 'Add to the running turn' : 'Ask sand anything'
+const placeholder = (model: Model, sources: CompletionSource[]) => () => {
+  if (model.running.get()) return 'Add to the running turn'
+  const triggers = sources.filter(source => source.ready()).map(source => `${source.trigger} ${source.label}`)
+  return ['Ask anything', ...triggers].join(', ')
 }
 
-export const card = ({ ctx, model, slots, menu, dropping }: CardParts) => {
+export const card = ({ ctx, model, slots, menu }: CardParts) => {
   const { hasOpenLayer, icon, iconButton } = ctx.kit
   const coarse = media('(pointer: coarse)')
 
@@ -51,8 +52,9 @@ export const card = ({ ctx, model, slots, menu, dropping }: CardParts) => {
     model.files.attach([fromPaste(pasted)])
   }
 
-  const editor = createEditor(ctx.kit, model.segments, { placeholder: placeholder(model), keydown, paste })
-  const completion = createCompletion(ctx.kit, editor.node, editor.active, builtinSources(ctx))
+  const sources = builtinSources(ctx)
+  const editor = createEditor(ctx.kit, model.segments, { placeholder: placeholder(model, sources), keydown, paste })
+  const completion = createCompletion(ctx.kit, editor.node, editor.active, sources)
 
   const picker = input({
     type: 'file',
@@ -66,12 +68,12 @@ export const card = ({ ctx, model, slots, menu, dropping }: CardParts) => {
   const choose = () => picker.click()
 
   const node = glassPanel(
-    { tint: () => (dropping.get() ? 'accent' : 'plain'), class: 'relative rounded-2xl px-3 pt-3' },
+    { class: 'relative rounded-xl px-3 pt-3' },
     shelf(ctx, model.files),
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      span({ class: 'inline-flex -ml-2' }, iconButton({ title: 'Attach files', onClick: choose }, icon('plus', 16))),
+      iconButton({ surface: 'raised', title: 'Attach files', 'aria-label': 'Attach files', class: '-ml-2', onClick: choose }, icon('plus', 'md')),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),

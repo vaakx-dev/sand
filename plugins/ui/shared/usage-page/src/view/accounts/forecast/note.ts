@@ -5,8 +5,7 @@ import type { Forecast } from '../../../data/forecast/project'
 
 const tones = {
   warning: 'text-warning-400',
-  success: 'text-success-400',
-  neutral: 'text-neutral-500',
+  neutral: 'text-neutral-400',
 }
 
 const limitName = (label: string) => {
@@ -23,10 +22,10 @@ const noteOf = (window: LimitWindow, forecast?: Forecast): [keyof typeof tones, 
   if (!forecast) return ['neutral', `There isn't enough usage in sand yet to forecast the ${name}.`]
   if (forecast.outAt)
     return ['warning', `At your usual pace the ${name} runs out ${hourText(forecast.outAt)}, ${coarseDuration(forecast.reset - forecast.outAt)} before it resets.`]
-  return ['success', `At your usual pace about ${percent(forecast.leftAtReset)} of the ${name} is left when it resets.`]
+  return ['neutral', `At your usual pace about ${percent(forecast.leftAtReset)} of the ${name} is left when it resets.`]
 }
 
 export const forecastNote = (window: LimitWindow, forecast?: Forecast) => {
   const [tone, text] = noteOf(window, forecast)
-  return span({ class: ['text-xs', tones[tone]] }, text)
+  return span({ class: ['text-sm', tones[tone]] }, text)
 }

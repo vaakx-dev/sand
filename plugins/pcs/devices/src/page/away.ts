@@ -12,13 +12,13 @@ const detail = (state: TailscaleState | undefined) => {
 }
 
 const awaySheet = (kit: Kit, source: DeviceSource, close: () => void) => {
-  const { note, overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead } = kit
+  const { overlay, primaryAction, sheet, sheetBody, sheetFoot, sheetHead, sheetText } = kit
   return overlay(
     close,
     sheet(
       { 'aria-label': 'Use sand away from home', size: 'md' },
       sheetHead({ title: 'Use sand away from home', close }),
-      sheetBody({}, note('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(kit, source)),
+      sheetBody({}, sheetText('Tailscale links your PCs and phone over any network. Install it on each one and sign in to the same Tailscale account.'), tailscaleSection(kit, source)),
       sheetFoot(primaryAction({ onClick: close }, 'Done')),
     ),
   )
@@ -30,9 +30,8 @@ export const awaySection = (ctx: KitContext, source: DeviceSource) => {
   return settingsSection(
     {},
     settingsRow(
-      'Use sand away from home',
+      { title: 'Use sand away from home', detail: () => detail(source.tailscale.get()) },
       secondaryAction({ size: 'sm', onClick: () => slot.open(() => awaySheet(ctx.kit, source, slot.close)) }, () => (source.tailscale.get()?.serving ? 'Manage' : 'Set up')),
-      () => detail(source.tailscale.get()),
     ),
   )
 }

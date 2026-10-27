@@ -34,7 +34,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     }
     fill(scroller, reveal)
   }
-  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto', style: { overflowAnchor: 'none' }, onScroll }, slot.node, views.node)
+  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto anchor-none', onScroll }, slot.node, views.node)
   listen(
     scroller,
     'load',
@@ -117,11 +117,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       if (ctx.threads.older(thread.id)) void ctx.threads.page(thread.id)
       return false
     }
-    keepAnchor(scroller, view.rowList, () => {
-      view.animate = false
-      paint(thread, view, pageSize)
-      view.animate = true
-    })
+    keepAnchor(scroller, view.rowList, () => paint(thread, view, pageSize))
     return true
   }
 
@@ -140,7 +136,6 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     if (tail && (switching || view.size > 2 * pageSize)) view.first = undefined
     if (switching || tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
-    view.animate = true
     if (saved !== undefined) scrollTo(scroller, saved)
     else if (tail) toEnd(scroller)
     fill(scroller, reveal)

@@ -82,7 +82,7 @@ export const pcHealthStore = (ctx: WireContext) => {
     }
     ask(device, entry.local).then(
       health => settle(() => answered(health)),
-      error => settle(previous => ({ status: 'unknown', health: previous.health, error: errorMessage(error) })),
+      error => settle(previous => ({ status: 'unknown', health: previous.health, error: `Couldn't check: ${errorMessage(error)}` })),
     )
   }
 
@@ -178,7 +178,7 @@ export const pcHealthStore = (ctx: WireContext) => {
     if (!alive) return
     entry.request++
     if (!health) {
-      entry.sig.set({ status: 'unknown', health: previous, error: `${name} did not answer after the repair` })
+      entry.sig.set({ status: 'unknown', health: previous, error: `${name} didn't answer after the repair` })
       return
     }
     entry.sig.set(answered(health))

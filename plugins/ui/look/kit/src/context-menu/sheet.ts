@@ -2,7 +2,9 @@ import { modal } from '../layers/stack'
 import type { NavAction } from '@sand/nav/contract'
 import type { MenuRequest } from '../contract'
 import { div, dynamicChild, event, sig, span, type Sig } from '@vaakx-dev/vrui'
-import { plainButton } from '../buttons/button'
+import { actionTones, plainButton } from '../buttons/button'
+import { headTitle } from '../heads/page-head'
+import { metaLine } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { layer } from '../layer'
 import { chipButtons, choiceCount } from './chips'
@@ -16,28 +18,29 @@ const columns = (count: number) => ({ gridTemplateColumns: `repeat(${count}, min
 const head = ({ title, subtitle }: MenuRequest) =>
   div(
     { class: 'px-3 pt-1 pb-3' },
-    div({ class: 'truncate text-sm font-semibold text-neutral-100' }, title),
-    subtitle ? div({ class: 'truncate text-xs text-neutral-500' }, subtitle) : null,
+    div({ class: 'flex' }, headTitle(2, title)),
+    subtitle ? div({ class: 'flex' }, metaLine(subtitle)) : null,
   )
 
-const tileTone = (action: NavAction, open: boolean) => {
-  if (action.active || open) return 'bg-accent-950 text-accent-300'
-  return action.danger ? 'bg-danger-950 text-danger-400' : 'bg-neutral-700 text-neutral-300'
-}
+const tileText = (action: NavAction) => (action.danger ? 'text-danger-400' : 'text-neutral-100')
 
 const tile = (action: NavAction, control: MenuControl, expanded: Expanded) => {
   const open = () => expanded.get() === action.id
   return plainButton(
     {
       role: 'menuitem',
-      'aria-pressed': () => action.active || open(),
-      class: ['flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-3 text-xs transition-colors', () => tileTone(action, open())],
+      'aria-pressed': () => String(Boolean(action.active) || open()),
+      class: [
+        'flex min-w-0 flex-col items-center gap-1 rounded-md px-1 py-3 text-sm transition-colors aria-pressed:bg-neutral-700',
+        actionTones.secondary,
+        tileText(action),
+      ],
       onClick: (event: MouseEvent) => {
         if (!action.choices) return choose(control, action)(event)
         if (control.armed(event)) expanded.set(open() ? undefined : action.id)
       },
     },
-    icon(action.icon ?? 'right', 18),
+    action.icon ? icon(action.icon, 'lg') : null,
     span({ class: 'max-w-full truncate' }, action.label),
   )
 }
@@ -86,16 +89,16 @@ export const menuSheet = (request: MenuRequest, close: () => void) => {
       {
         role: 'menu',
         'aria-label': request.title,
-        class: 'w-full rounded-t-2xl bg-neutral-800 px-2 pt-2 animate-rise',
-        style: { paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.5rem)' },
+        class: 'w-full rounded-t-xl bg-neutral-800 px-2 pt-2 pb-safe',
         onPointerDown: () => {
           pressed = true
         },
         onKeyDown: arrowKeys,
       },
-      div({ class: 'mx-auto mb-2 h-1 w-8 rounded-full bg-neutral-600' }),
+      div({ class: 'mx-auto mb-2 h-1 w-8 rounded-full bg-neutral-700' }),
       head(request),
       dynamicChild(current, step => (step ? div(stepView(step, control, () => current.set(undefined), 'md')) : choices(actions, control, request.expand))),
+      div({ class: 'h-2' }),
     ),
   )
 }

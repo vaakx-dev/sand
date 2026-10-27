@@ -19,38 +19,38 @@ const pathLabel = (value: string, partial?: boolean) => {
 }
 
 const itemRow = (kit: Kit, completion: Completion, item: Suggestion, index: Sig<number>) => {
-  const { menuItem, optionProps } = kit
+  const { menuItem, metaLine, optionProps } = kit
   const isFile = item.icon === 'file' || item.icon === 'folder'
   return menuItem(
     {
       ...optionProps(completion.box, index),
       size: 'sm',
-      icon: item.icon,
+      ...(isFile && { icon: item.icon }),
       active: () => completion.box.isSelected(index.get()),
       onMouseDown: prevent,
     },
     span(
-      { class: 'min-w-0 max-w-64 shrink-0 truncate font-mono text-xs text-neutral-100' },
+      { class: 'min-w-0 max-w-64 shrink-0 truncate' },
       isFile ? pathLabel(item.value, item.partial) : [span({ class: 'text-neutral-500' }, completion.source.get()?.trigger ?? ''), item.value],
     ),
-    item.description && span({ class: 'min-w-0 truncate text-xs text-neutral-400' }, item.description),
+    item.description && metaLine(item.description),
   )
 }
 
 const rowView = (kit: Kit, completion: Completion, row: Sig<Row>) => {
-  const { groupLabel } = kit
+  const { sectionHeading } = kit
   const current = row.get()
-  if (current.kind === 'group') return groupLabel(current.title)
+  if (current.kind === 'group') return sectionHeading(current.title)
   return itemRow(kit, completion, current.item, row.map(value => (value.kind === 'item' ? value.index : -1)))
 }
 
 export const completionView = (kit: Kit, completion: Completion) => {
-  const { hint } = kit
+  const { emptyState } = kit
   return [
     list(completion.items.map(rowsOf), keyOf, row => rowView(kit, completion, row)),
     show(
       () => !completion.items.get().length && Boolean(completion.hint.get()),
-      () => hint(() => completion.hint.get() ?? ''),
+      () => emptyState({ surface: 'raised', text: () => completion.hint.get() ?? '' }),
     ),
   ]
 }

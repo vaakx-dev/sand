@@ -1,44 +1,34 @@
-import type { PluginChangeKind, PluginOffer } from '@sand/host-plugin-sync/contract'
-import type { Kit, Tone } from '@sand/ui-kit/contract'
+import type { PluginOffer } from '@sand/host-plugin-sync/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
-import { derive, div, p, show, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, show, type Sig } from '@vaakx-dev/vrui'
 import { groupOffers, offerSummary, type OfferGroup } from './offers'
 import type { SyncSource } from './source'
 
-const tags: Record<PluginChangeKind, Tone> = { changed: 'warning', new: 'accent', removed: 'neutral' }
-
-const labels: Record<PluginChangeKind, string> = { changed: 'Changed', new: 'New', removed: 'Removed' }
-
 const detail = (offer: PluginOffer) => {
-  if (offer.kind === 'removed') return `deleted on ${offer.peerName}`
-  const files = offer.kind === 'changed' ? `${plural(offer.files, 'file')} changed` : plural(offer.files, 'file')
+  if (offer.kind === 'removed') return `Deleted on ${offer.peerName}`
+  const files = offer.kind === 'changed' ? `${plural(offer.files, 'file')} changed` : `New · ${plural(offer.files, 'file')}`
   return `${files}${offer.both ? ' · also changed on this PC' : ''}`
 }
 
-const offerRow = ({ badge, secondaryAction, settingsRow }: Kit, source: SyncSource, offer: Sig<PluginOffer>, busy: () => boolean) =>
+const offerRow = ({ quietButton, settingsRow }: Kit, source: SyncSource, offer: Sig<PluginOffer>, busy: () => boolean) =>
   settingsRow(
-    span(
-      { class: 'flex min-w-0 items-center gap-2' },
-      span({ class: 'truncate' }, () => offer.get().plugin),
-      badge(tags[offer.get().kind], labels[offer.get().kind]),
-    ),
-    secondaryAction({ size: 'sm', disabled: busy, onClick: () => void source.apply(offer.get().peer, [offer.get().plugin]) }, 'Apply'),
-    () => detail(offer.get()),
+    { title: () => offer.get().plugin, detail: () => detail(offer.get()) },
+    quietButton({ size: 'sm', surface: 'group', disabled: busy, onClick: () => void source.apply(offer.get().peer, [offer.get().plugin]) }, 'Apply'),
   )
 
-const groupSection = (kit: Kit, source: SyncSource, group: Sig<OfferGroup>, busy: () => boolean) => {
-  const { icon, itemRow, primaryAction, quietButton, rowList, settingsSection } = kit
+const groupActions = ({ quietButton }: Kit, source: SyncSource, group: Sig<OfferGroup>, busy: () => boolean) => {
   const names = () => group.get().offers.map(offer => offer.plugin)
+  return [
+    quietButton({ size: 'sm', disabled: busy, onClick: () => void source.skip(group.get().peer, names()) }, 'Skip all'),
+    quietButton({ size: 'sm', disabled: busy, onClick: () => void source.apply(group.get().peer, names()) }, 'Apply all'),
+  ]
+}
+
+const groupSection = (kit: Kit, source: SyncSource, group: Sig<OfferGroup>, busy: () => boolean) => {
+  const { rowList, settingsSection } = kit
   return settingsSection(
-    {},
-    itemRow(
-      {},
-      span({ class: 'inline-flex shrink-0 text-accent-400' }, icon('puzzle', 16)),
-      () => offerSummary(group.get()),
-      null,
-      quietButton({ size: 'sm', disabled: busy, onClick: () => void source.skip(group.get().peer, names()) }, 'Skip'),
-      primaryAction({ size: 'sm', disabled: busy, onClick: () => void source.apply(group.get().peer, names()) }, 'Apply all'),
-    ),
+    { title: () => offerSummary(group.get()), action: groupActions(kit, source, group, busy) },
     rowList(
       derive(() => group.get().offers),
       offer => `${offer.plugin}:${offer.kind}`,
@@ -48,19 +38,16 @@ const groupSection = (kit: Kit, source: SyncSource, group: Sig<OfferGroup>, busy
 }
 
 export const changesSection = (kit: Kit, source: SyncSource) => {
-  const { hintRow, rowList, settingsSection } = kit
+  const { pageHead, rowList } = kit
   const busy = () => source.busy.get() !== undefined
   const groups = derive(() => groupOffers(source.state.get()?.offers ?? []))
-  return div(
-    { class: 'flex flex-col gap-3' },
-    rowList(groups, group => group.peer, group => groupSection(kit, source, group, busy)),
-    show(
-      () => Boolean(source.state.get()?.offers.length),
-      () => p({ class: 'px-1 text-xs text-neutral-500' }, 'Applying restarts the runtime; running chats keep going.'),
-    ),
-    show(
-      () => source.state.get()?.offers.length === 0,
-      () => settingsSection({}, hintRow('Plugins match your other PCs')),
-    ),
+  return show(
+    () => groups.get().length > 0,
+    () =>
+      div(
+        { class: 'flex flex-col gap-6' },
+        pageHead('Applying a change restarts the sand runtime. Running threads keep going.'),
+        rowList(groups, group => group.peer, group => groupSection(kit, source, group, busy)),
+      ),
   )
 }

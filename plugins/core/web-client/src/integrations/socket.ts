@@ -62,6 +62,6 @@ export const connect = (url: string, handlers: Handlers) =>
     socket.onclose = () => {
       abandon()
       if (opened) handlers.close()
-      else reject(new Error('Could not connect to the sand server'))
+      else reject(new Error("Couldn't connect to the sand server"))
     }
   })

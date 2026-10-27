@@ -12,7 +12,7 @@ const marked = (text: string, pattern: RegExp | undefined): Child[] => {
   let last = 0
   for (const found of text.matchAll(pattern)) {
     if (!found[0]) break
-    parts.push(text.slice(last, found.index), el('mark', { class: 'rounded-sm bg-warning-950 text-warning-400' }, found[0]))
+    parts.push(text.slice(last, found.index), el('mark', { class: 'bg-accent-500/25 text-neutral-100' }, found[0]))
     last = found.index + found[0].length
   }
   return [...parts, text.slice(last)]
@@ -47,7 +47,7 @@ const matches = (tool: ToolView, views: ToolViews) => {
     const [, file = '', line = '', text = ''] = found
     grouped(files, file, () => []).push(hitRow(line, text, pattern))
   }
-  return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-300 wrap-anywhere' }, file), hits)), ...loose]
+  return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-100 wrap-anywhere' }, file), hits)), ...loose]
 }
 
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
@@ -56,7 +56,7 @@ const box = ({ fold }: Kit, tool: ToolView, content: Child, views: ToolViews) =>
   const { rows, stop } = output(tool, views)
   const hidden = rows.length - shownRows
   return div(
-    fold({ lines: Math.min(rows.length, shownRows), copy: () => views.resultText(tool.result) }, div({ class: 'whitespace-pre-wrap font-mono text-xs text-neutral-300' }, content)),
+    fold({ lines: Math.min(rows.length, shownRows) }, views.outputText(content, false)),
     hidden > 0 && views.truncatedNote(hidden, 'after'),
     stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
   )
@@ -98,5 +98,5 @@ export const globRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({
     return plural(output(tool, views).rows.length, 'file')
   },
   copy: tool => views.field(tool.call.input, 'pattern'),
-  body: tool => body(kit, tool, () => el('pre', { class: 'whitespace-pre-wrap wrap-anywhere' }, output(tool, views).rows.slice(0, shownRows).join('\n')), 'No files', views),
+  body: tool => body(kit, tool, () => output(tool, views).rows.slice(0, shownRows).join('\n'), 'No files', views),
 })

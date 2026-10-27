@@ -1,4 +1,6 @@
+import { inlineCode } from '../nodes'
 import type { Scope } from '../scope'
+import { displayMath } from './block'
 
 interface Formula {
   tex: string
@@ -74,5 +76,7 @@ export const inlineMath = (source: string, index: number, scope: Scope) => {
   const { math } = scope
   const formula = math && formulaAt(source, index, scope)
   if (!formula) return undefined
-  return { item: formula.display ? math.display(formula.tex) : math.inline(formula.tex), end: formula.end }
+  if (formula.display) return { item: displayMath(scope, formula.tex), end: formula.end }
+  const shown = math.inline(formula.tex)
+  return { item: shown instanceof Node ? shown : inlineCode(formula.tex, shown.error), end: formula.end }
 }

@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago, exactTime, plural } from '@sand/util'
-import { clock, derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
-import { changeList } from '../changes'
+import { clock, derive, dynamicChild, show } from '@vaakx-dev/vrui'
+import { changesRow } from '../changes'
 import type { Fleet } from '../fleet/model'
 import { changesFor } from '../fleet/status'
 
@@ -24,7 +24,7 @@ const latestLabel = (fleet: Fleet) => {
 }
 
 export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
-  const { errorRow, openTab, primaryAction, secondaryAction, sectionRow, settingsRow, settingsSection } = kit
+  const { errorState, openTab, primaryAction, quietButton, secondaryAction, settingsRow, settingsSection } = kit
   const now = clock(30_000)
   const pending = fleet.pending
   const changes = derive(() => {
@@ -39,9 +39,9 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
     return [target ? `Published ${exactTime(target.publishedAt)}` : '', checkedText(fleet)].filter(Boolean).join(' · ')
   }
   return settingsSection(
-    { title: 'Latest' },
+    { title: 'Latest', action: quietButton({ size: 'sm', disabled: fleet.busy, onClick: () => void fleet.check() }, 'Check now') },
     settingsRow(
-      () => latestLabel(fleet),
+      { title: () => latestLabel(fleet), detail: published },
       [
         show(
           () => !!fleet.target.get(),
@@ -52,12 +52,11 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
           () => primaryAction({ size: 'sm', onClick: open }, () => `Update ${plural(pending.get().length, 'PC')}`),
         ),
       ],
-      published,
     ),
     dynamicChild(
       changes.map(list => list.map(change => change.commit).join()),
-      () => (changes.get().length ? sectionRow({}, div({ class: 'min-w-0 flex-1' }, changeList(kit, changes.get()))) : null),
+      () => (changes.get().length ? changesRow(kit, changes.get()) : null),
     ),
-    show(() => !!checkError(), () => errorRow(checkError)),
+    show(() => !!checkError(), () => errorState({ surface: 'group', text: checkError })),
   )
 }

@@ -34,8 +34,7 @@ export const viewerDialog = (kit: Kit, model: ViewerModel, picture: Picture, clo
       role: 'dialog',
       'aria-label': 'Image viewer',
       tabIndex: -1,
-      class: [layer.dialog, 'fixed inset-0 flex flex-col bg-neutral-950/90 outline-none backdrop-blur-md animate-fade'],
-      style: { padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' },
+      class: [layer.dialog, 'fixed inset-0 flex flex-col bg-neutral-950/90 px-safe py-safe outline-none backdrop-blur-md animate-fade'],
       onMount: node => {
         node.focus()
         onWindow<KeyboardEvent>(node, 'keydown', keys({ ArrowLeft: () => model.step(-1), ArrowRight: () => model.step(1) }))

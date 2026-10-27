@@ -27,7 +27,7 @@ const titleMenu = (ctx: HeaderContext, title: Sig<string>) => {
     trigger: (press, open) =>
       navButton(
         { active: open, title, ...press, onDblClick: () => void renameThread(ctx) },
-        span({ class: 'min-w-0 truncate font-semibold text-neutral-100' }, title),
+        span({ class: 'min-w-0 truncate font-medium text-neutral-100' }, title),
         span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
       ),
     items: close => chatMenu(ctx, close),

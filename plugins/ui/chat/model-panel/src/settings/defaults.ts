@@ -16,6 +16,6 @@ export const defaultsSection = (page: Page) => {
   const { settingsRow, settingsSection } = page.ctx.kit
   return settingsSection(
     { title: 'Defaults' },
-    settingsRow('Model', page.ctx.modelPicker.button(defaultsTarget(page), 'Default model'), 'With its effort and fast mode'),
+    settingsRow({ title: 'Model' }, page.ctx.modelPicker.button(defaultsTarget(page), 'Default model')),
   )
 }

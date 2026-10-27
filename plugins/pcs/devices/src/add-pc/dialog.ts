@@ -1,6 +1,6 @@
 import type { InstallProgress } from '@sand/host-dist/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, p, show, sig, untrack } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, sig, untrack } from '@vaakx-dev/vrui'
 import type { DevicesContext } from '../inject'
 import type { DeviceSource } from '../source'
 import { installStep } from './install'
@@ -18,18 +18,19 @@ const titles: Record<AddPcMode, string> = { choose: 'Add a PC', install: 'Instal
 
 const listed = (names: string[]) => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`)
 
-const chooseStep = ({ choiceButton, choiceList, icon, tile }: Kit, pick: (mode: AddPcMode) => void) =>
-  choiceList(
-    choiceButton({ mark: tile(icon('term', 16)), title: 'Install sand on it', detail: "For a PC that doesn't have sand yet", onClick: () => pick('install') }),
-    choiceButton({ mark: tile(icon('link', 16)), title: 'It already has sand', detail: 'Connect with a pairing link', onClick: () => pick('join') }),
+const chooseStep = ({ icon, listRow }: Kit, pick: (mode: AddPcMode) => void) =>
+  div(
+    { class: 'flex flex-col' },
+    listRow({ surface: 'raised', lead: icon('term', 'md'), title: titles.install, meta: "For a PC that doesn't have sand yet", onClick: () => pick('install') }),
+    listRow({ surface: 'raised', lead: icon('link', 'md'), title: titles.join, meta: 'Connect it with a pairing link', onClick: () => pick('join') }),
   )
 
-const doneStep = ({ doneMark }: Kit, done: Done) =>
+const doneStep = ({ doneMark, headTitle, sheetText }: Kit, done: Done) =>
   div(
     { class: 'flex flex-col items-center gap-2 py-2 text-center' },
     doneMark(),
-    p({ class: 'mt-1 text-base font-semibold text-neutral-100' }, done.title),
-    p({ class: 'text-sm text-neutral-400' }, done.detail),
+    headTitle(2, done.title),
+    sheetText(done.detail),
   )
 
 export const addPcDialog = (ctx: DevicesContext, source: DeviceSource, close: () => void, start: AddPcMode = 'choose') => {

@@ -3,7 +3,7 @@ import type { Models } from '@sand/web-client/contract'
 import type { Pulse } from '@sand/web-client/reactive'
 import { tokens } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, p, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, span, type Child, type Sig } from '@vaakx-dev/vrui'
 
 type Picked = Sig<string | undefined>
 
@@ -40,45 +40,34 @@ const groupsOf = (models: Models, left?: string): Group[] =>
 
 const groupsKey = (groups: Group[]) => JSON.stringify(groups.map(({ source, models }) => [source.id, models.map(model => model.id)]))
 
-export const choiceRow = ({ radioMark, rowButton }: Kit, picked: Picked, id: string, ...children: Child[]) => {
-  const on = () => picked.get() === id
-  return rowButton(
-    {
-      role: 'radio',
-      'aria-checked': () => String(on()),
-      tabIndex: () => (on() || !picked.get() ? 0 : -1),
-      class: ['gap-3 px-4 py-3 transition-colors', () => (on() ? 'bg-accent-950' : 'bg-neutral-900 hover:bg-neutral-800')],
-      onClick: () => picked.set(id),
-    },
-    radioMark(on),
-    ...children,
-  )
+const modelChoice = ({ listRow }: Kit, picked: Picked, model: ModelInfo) => {
+  const on = () => picked.get() === model.id
+  return listRow({
+    role: 'radio',
+    'aria-checked': () => String(on()),
+    tabIndex: () => (on() || !picked.get() ? 0 : -1),
+    surface: 'group',
+    selected: on,
+    title: model.label,
+    trail: span({ class: 'tabular-nums' }, model.context ? tokens(model.context) : ''),
+    onClick: () => picked.set(model.id),
+  })
 }
 
-const modelChoice = (kit: Kit, picked: Picked, model: ModelInfo) => {
-  const { modelLogo } = kit
-  return choiceRow(
-    kit,
-    picked,
-    model.id,
-    span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, modelLogo(model.provider, 14), span({ class: 'truncate text-sm font-medium text-neutral-100' }, model.label)),
-    span({ class: 'font-mono text-xs text-neutral-500' }, model.context ? tokens(model.context) : ''),
-  )
-}
-
-const empty = () => p({ class: 'text-sm text-neutral-400' }, 'No models yet. They show up here once your account lists them.')
+const groupTitle = ({ modelLogo }: Kit, { provider, label, via }: SourceInfo) =>
+  span({ class: 'inline-flex max-w-full items-center gap-2' }, modelLogo(provider, 14), span({ class: 'truncate' }, via ? `${label} on ${via}` : label))
 
 export const modelList = (kit: Kit, models: Models, changes: Pulse, picked: Picked, { label, left, lead }: ListOptions) => {
-  const { settingsSection } = kit
+  const { emptyState, settingsSection } = kit
   return dynamicChild(
     changes.read(() => groupsKey(groupsOf(models))),
     () => {
-      if (!models.list().length) return empty()
+      if (!models.list().length) return emptyState({ text: 'No models yet. They show up here once your account lists them.' })
       return div(
         { role: 'radiogroup', 'aria-label': label, class: 'flex flex-col gap-4', onKeyDown: moveChoice },
         lead?.(),
         groupsOf(models, left).map(group =>
-          settingsSection({}, group.models.map(model => modelChoice(kit, picked, model))),
+          settingsSection({ title: groupTitle(kit, group.source) }, group.models.map(model => modelChoice(kit, picked, model))),
         ),
       )
     },

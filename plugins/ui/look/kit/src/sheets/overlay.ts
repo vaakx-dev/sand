@@ -37,7 +37,7 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
     {
       role: 'dialog',
       ...props,
-      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-neutral-800 shadow-xl animate-pop', sheetWidths[size], extra],
+      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-xl bg-neutral-800 shadow-xl', sheetWidths[size], extra],
     },
     ...children,
   )
@@ -46,10 +46,10 @@ export const sheetHead = ({ title, close, back, backShown = true, actions }: She
   const led = () => Boolean(back) && read(backShown)
   return paneHead(
     { led },
-    back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', onClick: back }, icon('back', 16))) : null,
+    back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
     headTitle(2, title),
     actions ?? null,
-    close ? closeButton({ onClick: close }) : null,
+    close ? closeButton({ surface: 'raised', onClick: close }) : null,
   )
 }
 

@@ -25,8 +25,8 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
 
 const step = (number: string, text: string, ...extra: Child[]) =>
   div(
-    { class: 'flex items-center gap-3 text-sm text-neutral-200' },
-    span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-xs text-neutral-300' }, number),
+    { class: 'flex items-center gap-3 text-sm text-neutral-100' },
+    span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-xs text-neutral-400' }, number),
     span({ class: 'min-w-0 flex-1' }, text),
     ...extra,
   )
@@ -80,27 +80,27 @@ const countdown = (expires: number) => {
 }
 
 const deviceView = (kit: Kit, pending: Device) => {
-  const { deviceCode, note, sheetStep, waitingLine } = kit
+  const { deviceCode, sheetStep, sheetText, waitingLine } = kit
   return sheetStep([
-    note('Open the link on any device and enter this code.'),
+    sheetText('Open the link on any device and enter this code.'),
     deviceCode(pending.code),
     div({ class: 'flex flex-wrap items-center justify-between gap-3' }, openLink(kit, pending.url), waitingLine(countdown(pending.expires))),
   ])
 }
 
 const browserView = (kit: Kit, account: LoginAccount, url: string) => {
-  const { note, sheetStep, waitingLine } = kit
+  const { sheetStep, sheetText, waitingLine } = kit
   return sheetStep([
-    note(`Finish signing in to ${account.app?.name ?? planName(account)} in your browser. This page updates by itself when you're done.`),
+    sheetText(`Finish signing in to ${account.app?.name ?? planName(account)} in your browser. This page updates by itself when you're done.`),
     div({ class: 'flex flex-wrap items-center justify-between gap-3' }, openLink(kit, url), waitingLine('Waiting…')),
   ])
 }
 
 const errorView = ({ errorText, primaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
-  sheetStep(errorText(account.error ?? 'Sign-in failed'), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
+  sheetStep(errorText(account.error ?? "Couldn't sign in. Try again."), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
 
 export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
-  const { note, sheetStep } = kit
+  const { loadingState, sheetStep } = kit
   const account = () => control.account(kind)
   const current = untrack(account)
   if (phase === 'conflict' && current) return conflictView(kit, current, actionsFor, busy)
@@ -108,5 +108,5 @@ export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginC
   if (current?.pending?.kind === 'device') return deviceView(kit, current.pending)
   if (current?.pending?.kind === 'browser') return browserView(kit, current, current.pending.url)
   if (phase === 'error' && current) return errorView(kit, current, actionsFor, busy)
-  return sheetStep(note('Starting…'))
+  return sheetStep(loadingState({ flush: true, text: 'Starting…' }))
 }

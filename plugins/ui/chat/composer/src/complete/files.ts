@@ -29,6 +29,8 @@ const quote = (entry: FileEntry, quoted: boolean) => {
 
 export const fileSource = (ctx: ComposerContext): CompletionSource => ({
   trigger: '@',
+  label: 'files',
+  ready: () => Boolean(ctx.get(fileIndex)),
   pattern: /(?:^|\s)@("[^"]*|[^\s"]*)$/,
   async items(typed) {
     const index = ctx.get(fileIndex)
@@ -40,5 +42,5 @@ export const fileSource = (ctx: ComposerContext): CompletionSource => ({
       .slice(0, 10)
       .map(entry => ({ value: quote(entry, quoted), group: 'Files', icon: entry.directory ? 'folder' : 'file', ...(entry.directory && { partial: true }) }))
   },
-  hint: () => (ctx.get(fileIndex) ? 'No matches' : undefined),
+  hint: () => (ctx.get(fileIndex) ? 'No matching files.' : undefined),
 })

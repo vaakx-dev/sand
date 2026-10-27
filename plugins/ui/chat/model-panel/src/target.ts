@@ -6,14 +6,14 @@ import { div, span, type Sig } from '@vaakx-dev/vrui'
 import type { Actions } from './actions'
 import type { PanelContext } from './context'
 
-const banner = ({ callout }: Kit, look: CalloutLook, text: string) => div({ class: 'mx-1 mt-2' }, callout(look, span(text)))
+const banner = ({ callout }: Kit, look: CalloutLook, text: string) => div({ class: 'mt-1' }, callout(look, span(text)))
 
 const usesDefaults = (shown: EffectiveSettings, defaults: Picked) =>
   shown.model === defaults.model && shown.effort === defaults.effort && shown.speed === defaults.speed
 
 const footer = ({ primaryAction, secondaryAction }: Kit, shown: EffectiveSettings, actions: Actions) =>
   div(
-    { class: 'mx-1 mt-2 flex items-center justify-end gap-2 border-t border-solid border-neutral-700 px-2 pt-2 pb-1' },
+    { class: 'mt-1 flex items-center justify-end gap-2 p-1' },
     secondaryAction({ size: 'sm', onClick: actions.reset }, 'Reset'),
     primaryAction({ size: 'sm', onClick: () => actions.makeDefault(shown) }, 'Make default'),
   )
@@ -29,12 +29,12 @@ export const composerTarget = (ctx: PanelContext, actions: Actions, changes: Pul
     key: () => `${changes.version.get()}:${problem.get()}`,
     badge: model => {
       const now = state.get()
-      return now?.next && model.id === now.next.model && model.id !== now.current.model ? badge('warning', 'Next') : null
+      return now?.next && model.id === now.next.model && model.id !== now.current.model ? badge('neutral', 'Next') : null
     },
     extra: () => {
       const settings = shown()
       return [
-        ctx.threads.current()?.running && banner(kit, { tone: 'warning', icon: 'clock' }, 'A turn is running. Changes apply when it finishes.'),
+        ctx.threads.current()?.running && banner(kit, { tone: 'neutral', icon: 'clock' }, 'A turn is running. Changes apply when it finishes.'),
         problem.get() && banner(kit, 'danger', problem.get()),
         settings && !usesDefaults(settings, ctx.modelPicker.resolve(ctx.models.defaults())) && footer(kit, settings, actions),
       ]

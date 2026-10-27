@@ -1,7 +1,7 @@
 import type { HostHealth } from '@sand/host-health/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
-import { div, el, p, span } from '@vaakx-dev/vrui'
+import { div, p } from '@vaakx-dev/vrui'
 
 const healthSummary = (health: HostHealth) => {
   if (health.healthy) return 'sand runs normally'
@@ -9,36 +9,25 @@ const healthSummary = (health: HostHealth) => {
   if (health.runtime !== 'ready') parts.push(`the runtime is ${health.runtime}`)
   const failed = health.failedPlugins.length
   if (failed) parts.push(`${plural(failed, 'plugin')} failed to load`)
-  if (!health.web) parts.push('the web page is not served')
+  if (!health.web) parts.push("the web page isn't served")
   return parts.join(' · ')
 }
 
-const failedPlugin = (id: string, error: string) =>
-  div(
-    { class: 'flex flex-col gap-1' },
-    span({ class: 'font-medium text-neutral-100' }, id),
-    el('pre', { class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, error),
-  )
+const problemText = (health: HostHealth) =>
+  [health.error, health.webError && `Web page: ${health.webError}`, ...health.failedPlugins.map(plugin => `${plugin.id}: ${plugin.error}`)]
+    .filter(Boolean)
+    .join('\n\n')
 
-const logTail = ({ copyButton }: Kit, health: HostHealth) => [
-  div(
-    { class: 'flex items-center justify-between gap-2' },
-    span({ class: 'text-neutral-500' }, 'Last lines of server.log'),
-    copyButton({ text: () => health.log.join('\n'), label: 'Copy log' }),
-  ),
-  el(
-    'pre',
-    { class: 'max-h-64 overflow-auto rounded-lg bg-neutral-950 p-3 font-mono text-xs whitespace-pre-wrap wrap-anywhere text-neutral-300' },
-    health.log.join('\n'),
-  ),
-]
+const logTail = ({ codeBlock, metaLine }: Kit, log: string) => [metaLine('Last lines of server.log'), codeBlock({ copy: () => log, class: 'max-h-64' }, log)]
 
-export const healthDetails = (kit: Kit, health: HostHealth) =>
-  div(
-    { class: 'flex flex-col gap-3 text-xs' },
-    p({ class: ['text-sm', health.healthy ? 'text-neutral-300' : 'text-danger-400'] }, healthSummary(health)),
-    health.error ? div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, health.error) : null,
-    health.webError ? div({ class: 'text-neutral-400' }, `Web page: ${health.webError}`) : null,
-    ...health.failedPlugins.map(plugin => failedPlugin(plugin.id, plugin.error)),
-    ...(health.log.length ? logTail(kit, health) : []),
+export const healthDetails = (kit: Kit, health: HostHealth) => {
+  const { codeBlock } = kit
+  const problems = problemText(health)
+  const log = health.log.join('\n')
+  return div(
+    { class: 'flex flex-col gap-2' },
+    p({ class: ['text-sm', health.healthy ? 'text-neutral-100' : 'text-danger-400'] }, healthSummary(health)),
+    problems ? codeBlock({ copy: () => problems, danger: true }, problems) : null,
+    ...(log ? logTail(kit, log) : []),
   )
+}

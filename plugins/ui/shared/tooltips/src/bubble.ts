@@ -16,12 +16,11 @@ const card = ({ layer }: Kit, tip: Sig<Tip | undefined>) => {
       role: 'tooltip',
       class: [
         layer.tooltip,
-        'pointer-events-none fixed max-w-80 rounded-md bg-neutral-600 px-2 py-1 text-xs text-neutral-100 shadow-lg whitespace-pre-wrap wrap-anywhere animate-tip',
+        'pointer-events-none fixed max-w-80 rounded-md bg-neutral-700 px-2 py-1 text-xs text-neutral-100 shadow-lg whitespace-pre-wrap wrap-anywhere animate-fade',
       ],
       style: {
         top: () => px(spot.get()?.top),
         left: () => px(spot.get()?.left),
-        transformOrigin: () => (spot.get()?.above === false ? 'top center' : 'bottom center'),
       },
       onMount: node => void resizeObserver(node, () => place(node)),
     },

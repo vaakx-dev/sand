@@ -5,7 +5,7 @@ export interface ImageViewer {
   open(thread: string, block: ImageBlock): void
 }
 
-export type ReplyImage = (src: string, alt: string) => HTMLImageElement | undefined
+export type ReplyImage = (src: string, alt: string) => HTMLElement | undefined
 
 export interface ReplyImages {
   forReply(thread: string, at: number): ReplyImage

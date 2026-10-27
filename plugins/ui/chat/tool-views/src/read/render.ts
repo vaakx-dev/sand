@@ -35,11 +35,11 @@ const code = ({ fold }: Kit, tool: ToolView, views: ToolViews, highlight: Markdo
   return div(
     { class: 'text-xs text-neutral-400' },
     fold(
-      { lines: shown.length, copy: () => text },
+      { lines: shown.length },
       div(
         { class: 'flex gap-3 overflow-auto font-mono' },
-        el('pre', { class: 'shrink-0 select-none text-right text-neutral-500 opacity-75' }, shown.map(line => line.number).join('\n')),
-        el('pre', { class: 'text-neutral-300' }, highlight ? highlight(text, language(views.field(tool.call.input, 'path'))) : text),
+        el('pre', { class: 'shrink-0 select-none text-right text-neutral-500' }, shown.map(line => line.number).join('\n')),
+        el('pre', {}, highlight ? highlight(text, language(views.field(tool.call.input, 'path'))) : text),
       ),
     ),
     hiddenNote(lines.length - shownLines, tail, views),
@@ -67,7 +67,7 @@ export const readRenderer = (kit: Kit, views: ToolViews, highlight: Markdown['hi
     if (tool.result.isError) return views.errorBody(tool)
     const found = media(tool)
     if (found?.type === 'image') return div(views.image(found, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: 320 }))
-    if (found) return div({ class: 'font-mono text-xs text-neutral-300' }, found.name ?? 'document')
+    if (found) return views.outputText(found.name ?? 'document', false)
     return code(kit, tool, views, highlight)
   },
 })

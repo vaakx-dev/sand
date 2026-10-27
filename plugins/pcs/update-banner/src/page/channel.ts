@@ -23,9 +23,8 @@ export const channelSection = (kit: Kit, fleet: Fleet) => {
   return settingsSection(
     {},
     settingsRow(
-      'Updates from',
+      { title: 'Updates from', detail: () => channelDetail(fleet.channel.get()) },
       segmented(channels, fleet.channel, choose, { label: 'Updates from', inset: true }),
-      () => channelDetail(fleet.channel.get()),
     ),
   )
 }

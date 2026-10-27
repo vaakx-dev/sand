@@ -3,28 +3,27 @@ import type { Item, TextMenu } from '../parts/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { bytes, isArchiveName, oneLine, quoteBlocks } from '@sand/util'
-import { div, span, type Child } from '@vaakx-dev/vrui'
+import { div, show, span, type Child } from '@vaakx-dev/vrui'
 import { actionRow, row, type RowContext, type RowMaker } from './row'
 
 type UserItem = Extract<Item, { kind: 'user' }>
 
-const chip = ({ icon }: Kit, name: string, iconName: IconName, tone: string, iconTone?: string, size?: number) =>
+const chip = ({ icon }: Kit, name: string, iconName: IconName, size?: number) =>
   span(
-    { class: ['inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg px-3 text-xs', tone], title: name },
-    span({ class: ['inline-flex shrink-0', iconTone] }, icon(iconName, 13)),
+    { class: 'inline-flex h-8 min-w-0 max-w-full items-center gap-2 rounded-md bg-neutral-800 px-3 text-xs text-neutral-100', title: name },
+    span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(iconName, 'sm')),
     span({ class: 'min-w-0 truncate' }, name),
     size !== undefined && span({ class: 'shrink-0 text-neutral-500' }, bytes(size)),
   )
 
-const fileChip = (kit: Kit, block: FileBlock) =>
-  chip(kit, block.name, isArchiveName(block.name) ? 'file-archive' : 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500', block.size)
+const fileChip = (kit: Kit, block: FileBlock) => chip(kit, block.name, isArchiveName(block.name) ? 'file-archive' : 'file', block.size)
 
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
-    return context.parts.image(part.block, context.thread, { class: 'block max-h-32 max-w-48 rounded-lg bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
-  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file', 'bg-neutral-800 text-neutral-300', 'text-neutral-500')
+    return context.parts.image(part.block, context.thread, { class: 'block max-h-32 max-w-48 rounded-md bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
+  if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file')
   if (part.kind === 'file') return fileChip(context.kit, part.block)
-  if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles', 'bg-accent-950 text-accent-400')
+  if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles')
   return null
 }
 
@@ -61,16 +60,19 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
     const { menus } = context.parts
-    const spec = () => ({
-      title: 'Message',
-      subtitle: oneLine(text).slice(0, 80),
-      actions: [menus.copy('copy', 'Copy message', () => text), ...actions(text)],
-    })
+    const spec = () => ({ title: 'Message', subtitle: oneLine(text).slice(0, 80), actions: actions(text) })
     const press = menus.text(context.menu, spec)
     return message(
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
-      actionRow('-mt-1', menus.more(context.menu, spec)),
+      actionRow(
+        '-mt-1',
+        text && context.kit.copyButton({ text: () => text, size: 'sm' }),
+        show(
+          () => spec().actions.length > 0,
+          () => menus.more(context.menu, spec),
+        ),
+      ),
     )
   })
 

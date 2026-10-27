@@ -23,7 +23,7 @@ export const filterButton = ({ icon, iconButton, popupTrigger }: Kit, parts: Fil
     icon('folder'),
   )
 
-const choiceRow = ({ choiceItem, projectIcon }: Kit, choice: Sig<ProjectChoice>, parts: FilterParts, context: ContextMenu, choose: (project: string) => void, close: () => void) =>
+const choiceRow = ({ choiceItem, countMark, projectIcon }: Kit, choice: Sig<ProjectChoice>, parts: FilterParts, context: ContextMenu, choose: (project: string) => void, close: () => void) =>
   choiceItem(
     {
       selected: () => parts.project.get() === choice.get().key,
@@ -36,7 +36,7 @@ const choiceRow = ({ choiceItem, projectIcon }: Kit, choice: Sig<ProjectChoice>,
     span({ class: 'min-w-0 flex-1 truncate' }, choice.map(value => value.name)),
     show(
       () => choice.get().count > 0,
-      () => span({ class: 'shrink-0 text-xs tabular-nums text-neutral-500' }, choice.map(value => String(value.count))),
+      () => countMark(() => choice.get().count),
     ),
   )
 
@@ -66,11 +66,11 @@ export const filterChip = ({ closeButton, projectIcon }: Kit, parts: FilterParts
   show(parts.project.map(Boolean), () =>
     div(
       {
-        class: 'relative mx-2 mb-1 flex h-8 items-center gap-2 rounded-lg bg-neutral-900 pr-1 pl-3 text-xs text-neutral-300',
+        class: 'relative mx-2 mb-1 flex h-8 items-center gap-2 rounded-md bg-neutral-800 pr-1 pl-3 text-sm text-neutral-100',
         ...context.target(() => parts.chipMenu()),
       },
       dynamicChild(parts.label, name => projectIcon(name, parts.projects.get().find(choice => choice.key === parts.project.get())?.icon)),
       span({ class: 'min-w-0 flex-1 truncate' }, parts.label),
-      closeButton({ size: 'sm', title: 'Show all projects', onClick: () => parts.filter(undefined) }),
+      closeButton({ size: 'sm', surface: 'raised', title: 'Show all projects', onClick: () => parts.filter(undefined) }),
     ),
   )

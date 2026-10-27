@@ -1,9 +1,9 @@
 import type { PairInvite } from '@sand/host-devices/contract'
 import { routeKind } from '@sand/host-remotes/pairing'
 import type { Kit } from '@sand/ui-kit/contract'
+import { capital } from '@sand/util'
 import { routeLabel } from '@sand/web-client/pairing'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
-import { linkText } from '../components'
 import { listenBox } from './listen'
 import { qrCode } from './qr'
 
@@ -24,46 +24,47 @@ const phoneLink = (links: string[]) => {
   return links[0]
 }
 
+const routeTitle = (url: string) => (lan(url) ? 'Home wifi' : capital(routeLabel(routeKind(url), url)))
+
 const listenText: Record<InviteFor, string> = {
-  phone: 'sand only listens on this computer, so phones and other PCs can’t reach it. Turn on network listening to pair them over your home wifi.',
+  phone: 'sand only listens on this computer, so your phone can’t reach it. Turn on network listening to pair it over your home wifi.',
   pc: 'sand only listens on this computer, so the other PC can’t reach it. Turn on network listening to connect over your home wifi.',
 }
 
-const qrText: Record<InviteFor, string> = {
-  phone: 'Scan with your phone’s camera, or open the link on the other device.',
-  pc: 'Copy the link below and paste it on the other PC.',
+const expiry = 'Works once and expires in 10 minutes. Anyone with it can use this sand.'
+
+const phoneRow = ({ copyButton, listRow }: Kit, url: string, chosen: () => boolean, choose: () => void) =>
+  listRow({
+    surface: 'raised',
+    title: routeTitle(url),
+    meta: span({ class: 'font-mono' }, url),
+    disabled: local(url),
+    'aria-pressed': () => String(chosen()),
+    onClick: choose,
+    actions: copyButton({ text: () => url, surface: 'raised' }),
+  })
+
+const pcLink = ({ codeBlock, metaLine }: Kit, url: string) => div({ class: 'flex flex-col gap-1' }, metaLine(routeTitle(url)), codeBlock({ copy: () => url }, url))
+
+const phoneLinks = (kit: Kit, invite: PairInvite) => {
+  const reachable = invite.links.filter(link => !local(link))
+  const chosen = sig(phoneLink(reachable) ?? '')
+  return [
+    dynamicChild(chosen, link => (link ? div({ class: 'flex flex-col items-center gap-2' }, qrCode(link), kit.sheetText('Scan it with your phone’s camera, or open a link below on the phone.')) : null)),
+    div(
+      { class: 'flex flex-col' },
+      invite.links.map(link => phoneRow(kit, link, () => chosen.get() === link, () => chosen.set(link))),
+    ),
+  ]
 }
 
-const linkRow = ({ copyButton, rowButton }: Kit, url: string, chosen: () => boolean, choose: () => void) =>
-  div(
-    { class: ['flex items-center gap-3 rounded-lg py-2 pr-2 pl-3', () => (chosen() ? 'bg-neutral-700' : 'hover:bg-neutral-700')] },
-    rowButton(
-      { title: 'Show QR code', class: 'gap-3 rounded-md', 'aria-pressed': () => String(chosen()), onClick: choose },
-      span({ class: 'w-16 shrink-0 truncate text-xs text-neutral-500 sm:w-24' }, routeLabel(routeKind(url), url)),
-      linkText(url),
-    ),
-    copyButton({ text: () => url, label: 'Copy' }),
-  )
-
-const qrPanel = ({ note }: Kit, link: string, kind: InviteFor) => div({ class: 'flex flex-col items-center gap-2' }, qrCode(link), note(qrText[kind]))
-
 export const inviteBody = (kit: Kit, invite: PairInvite, listen: () => Promise<unknown>, kind: InviteFor = 'phone') => {
-  const { note } = kit
   const reachable = invite.links.filter(link => !local(link))
-  const shown = kind === 'pc' ? reachable : invite.links
-  const chosen = sig(phoneLink(reachable) ?? '')
-  const choose = (link: string) => {
-    if (!local(link)) chosen.set(link)
-  }
+  const shown = kind === 'phone' ? invite.links : reachable
   return div(
     { class: 'flex flex-col gap-4' },
-    reachable.length ? dynamicChild(chosen, link => qrPanel(kit, link, kind)) : listenBox(kit, listenText[kind], listen),
-    shown.length
-      ? div(
-          { class: 'flex flex-col gap-1' },
-          shown.map(link => linkRow(kit, link, () => chosen.get() === link, () => choose(link))),
-        )
-      : null,
-    shown.length ? note('Works once, expires in 10 minutes. Anyone with it can use this sand.') : null,
+    reachable.length ? null : listenBox(kit, listenText[kind], listen),
+    ...(kind === 'phone' ? phoneLinks(kit, invite) : reachable.map(link => pcLink(kit, link))),
+    shown.length ? kit.sheetText(expiry) : null,
   )
 }

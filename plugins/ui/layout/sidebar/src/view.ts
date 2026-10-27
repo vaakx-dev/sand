@@ -13,6 +13,7 @@ export interface SidebarParts extends FilterParts, Omit<RowHandlers, 'minute' | 
   rows: Sig<Row[]>
   menu: Sig<CardMenu | undefined>
   hide(): void
+  create(): void
   run(action: NavAction): void
   busy(id: string): boolean
 }
@@ -95,17 +96,21 @@ const threadRows = (kit: Kit, parts: SidebarParts) => {
     ),
     show(
       () => !parts.rows.get().length,
-      () => kit.hint(() => (parts.project.get() ? `No threads in ${parts.label.get()} yet` : 'No threads yet')),
+      () =>
+        kit.emptyState({
+          text: () => (parts.project.get() ? `No threads in ${parts.label.get()} yet.` : 'No threads yet.'),
+          action: kit.linkButton({ onClick: parts.create }, 'New thread'),
+        }),
     ),
   )
 }
 
 export const sidebarView = (kit: Kit, parts: SidebarParts) => {
-  const { contextMenu, sideHead } = kit
+  const { contextMenu, sideColumn, sideHead } = kit
   const context = contextMenu()
-  return div(
-    { class: () => ['relative flex h-full min-h-0 flex-col bg-neutral-950', parts.narrow.get() ? 'w-full' : 'w-64'] },
-    sideHead('Sand', parts.hide),
+  return sideColumn(
+    { narrow: parts.narrow, 'aria-label': 'Threads' },
+    sideHead('sand', parts.hide),
     topActions(kit, parts, context),
     filterChip(kit, parts, context),
     threadRows(kit, parts),

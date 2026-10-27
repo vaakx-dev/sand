@@ -17,7 +17,7 @@ const outcomes: Record<string, string> = {
 }
 
 const prose = ({ fold }: Kit, text: string) =>
-  fold({ lines: text.split('\n').length, chars: text.length, copy: () => text }, div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-300' }, text))
+  fold({ lines: text.split('\n').length, chars: text.length }, div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, text))
 
 export const notificationRenderer = (kit: Kit, watch: JobWatch, chats: () => Threads | undefined) => (entry: Entry, thread: string) => {
   const text = String(entry.data)
@@ -30,19 +30,20 @@ export const notificationRenderer = (kit: Kit, watch: JobWatch, chats: () => Thr
   const opener = () => {
     const origin = watch.find(job)?.origin
     const found = origin ? subAgentOf(chats(), thread, origin) : undefined
-    return found && kit.iconButton({ size: 'sm', title: 'Open sub-agent', 'aria-label': 'Open sub-agent', onClick: () => void chats()?.select(found.id) }, kit.icon('right', 14))
+    return found && kit.iconButton({ size: 'sm', title: 'Open sub-agent', 'aria-label': 'Open sub-agent', onClick: () => void chats()?.select(found.id) }, kit.icon('right', 'sm'))
   }
   return div(
-    { class: 'mb-3' },
+    { class: '-mx-2 mb-2' },
     kit.toolCard(
       {
-        icon: kit.icon('bot', 14),
+        icon: kit.icon('bot', 'sm'),
         verb: `${capital(kind)} ${outcomes[status] ?? status}`,
         target: label,
-        targetClass: 'text-neutral-200',
+        targetClass: 'text-neutral-400',
         targetTitle: label,
         failed: status === 'failed',
-        actions: opener(),
+        expanded: open,
+        actions: [result && kit.copyButton({ text: () => result }), opener()],
         onToggle: () => open.update(value => !value),
       },
       show(open, () => kit.toolBody(prose(kit, result || 'No reply'))),

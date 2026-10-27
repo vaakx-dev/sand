@@ -1,6 +1,6 @@
 import type { MenuKit, ToolBadge, ToolStepOptions, ToolView } from '../contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { relativeTo } from './relative'
 
 const countTone = (part: string) => {
@@ -60,7 +60,6 @@ export const toolStep = (
     subtitle: shown.get().label,
     actions: [
       ...current().actions(tool.get()),
-      menus.copy('copy', 'Copy', copy),
       { id: 'toggle', label: open.get() ? 'Collapse' : 'Expand', icon: open.get() ? 'up' : 'down', run: toggle },
     ],
   })
@@ -69,10 +68,11 @@ export const toolStep = (
     {
       icon: dynamicChild(
         shown.map(value => value.icon),
-        name => icon(name, 14),
+        name => icon(name, 'sm'),
       ),
       verb: () => (running.get() ? shown.get().activeVerb : shown.get().verb),
       target: dynamicChild(running, live => (live ? shine(label) : span(label))),
+      targetClass: 'font-mono text-neutral-400',
       targetTitle: label,
       meta: [
         dynamicChild(
@@ -85,7 +85,14 @@ export const toolStep = (
         ),
       ],
       failed: derive(() => tool.get().status === 'failed'),
-      actions: [copyButton({ text: copy }), menus.more(own, spec)],
+      expanded: open,
+      actions: [
+        copyButton({ text: copy }),
+        show(
+          () => current().actions(tool.get()).length > 0,
+          () => menus.more(own, spec),
+        ),
+      ],
       onToggle: () => {
         if (!press.held()) toggle()
       },

@@ -9,7 +9,7 @@ export interface QuoteActions {
 
 export const quoteRow = ({ closeButton, quoteButton }: Kit, part: QuoteSegment, actions: QuoteActions) =>
   div(
-    { class: 'flex items-start gap-1 py-1 pl-1 text-sm animate-rise' },
+    { class: 'flex items-start gap-1 py-1 pl-1 text-sm' },
     quoteButton({ class: 'flex-1', title: 'Reply below this quote', onMouseDown: prevent, onClick: actions.reply }, part.text),
-    closeButton({ title: 'Remove', size: 'sm', onMouseDown: prevent, onClick: actions.remove }),
+    closeButton({ title: 'Remove quote', size: 'sm', onMouseDown: prevent, onClick: actions.remove }),
   )

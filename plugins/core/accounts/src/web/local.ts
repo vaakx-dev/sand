@@ -35,47 +35,42 @@ const detail = (kit: Kit, account: LoginAccount) => {
 const fixLabel = (account: LoginAccount) => (account.kind === 'server' ? 'Edit' : 'Sign in again')
 
 const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix) => {
-  const { rowAction, secondaryAction } = kit
+  const { quietButton, rowAction } = kit
   if (account.env) return []
   const server = account.kind === 'server'
   return [
-    server && account.error ? secondaryAction({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
+    server && account.error ? quietButton({ size: 'sm', surface: 'group', onClick: () => fix(account) }, 'Edit') : null,
     account.app ? null : shareSwitch(kit, account, control),
     rowAction({ label: removeLabel(account), danger: true, run: () => void control.run(loginLogout, { account: account.id }) }),
   ]
 }
 
 const signedInRow = (kit: Kit, account: LoginAccount, control: LoginControl, fix: Fix, menu: ContextMenu) => {
-  const { itemRow } = kit
-  return itemRow(
-    menu.target(() => accountSpec(account, control, fix)),
-    accountLogo(kit, account.provider),
-    account.label,
-    detail(kit, account),
+  const { settingsRow } = kit
+  return settingsRow(
+    { ...menu.target(() => accountSpec(account, control, fix)), lead: accountLogo(kit, account.provider), title: account.label, detail: detail(kit, account) },
     ...rowControls(kit, account, control, fix),
   )
 }
 
 const brokenRow = (kit: Kit, account: LoginAccount, fix: Fix) => {
-  const { itemRow, secondaryAction } = kit
-  return itemRow(
-    {},
-    accountLogo(kit, account.provider),
-    account.label,
-    span({ class: 'text-danger-400' }, account.error ?? ''),
+  const { secondaryAction, settingsRow } = kit
+  return settingsRow(
+    { lead: accountLogo(kit, account.provider), title: account.label, detail: span({ class: 'text-danger-400' }, account.error ?? '') },
     secondaryAction({ size: 'sm', onClick: () => fix(account) }, fixLabel(account)),
   )
 }
 
 const shown = (state: LoginState) => state.accounts.filter(account => account.signedIn || (account.error && !account.pending))
 
-const emptyText = (state: LoginState) => (state.remote.length ? 'No accounts yet. Add one, or use the ones below' : 'No accounts yet. Add one to start using sand')
+const emptyText = (state: LoginState) =>
+  state.remote.length ? 'No accounts on this PC yet. The ones from your PCs below work too.' : 'No accounts on this PC yet. Add one to start using sand.'
 
-export const localSection = (kit: Kit, control: LoginControl, fix: Fix) => {
-  const { contextMenu, hintRow, settingsSection } = kit
+export const localSection = (kit: Kit, control: LoginControl, add: () => void, fix: Fix) => {
+  const { contextMenu, emptyState, icon, loadingState, quietButton, settingsSection } = kit
   const menu = contextMenu()
   return settingsSection(
-    { title: 'On this PC' },
+    { title: 'On this PC', action: quietButton({ size: 'sm', onClick: add }, icon('plus', 'sm'), 'Add an account') },
     menu.view(),
     dynamicChild(
       derive(() => {
@@ -84,9 +79,9 @@ export const localSection = (kit: Kit, control: LoginControl, fix: Fix) => {
       }),
       () => {
         const state = control.state.get()
-        if (!state) return hintRow('Loading…')
+        if (!state) return loadingState({ surface: 'group' })
         const list = shown(state)
-        if (!list.length) return hintRow(emptyText(state))
+        if (!list.length) return emptyState({ surface: 'group', text: emptyText(state) })
         return div(
           { class: 'contents' },
           list.map(account => (account.signedIn ? signedInRow(kit, account, control, fix, menu) : brokenRow(kit, account, fix))),

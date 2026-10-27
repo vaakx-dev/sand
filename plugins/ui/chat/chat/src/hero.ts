@@ -2,11 +2,11 @@ import { palette } from '@sand/palette/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { pulse, type Pulse } from '@sand/web-client/reactive'
-import { div, dynamicChild, show } from '@vaakx-dev/vrui'
+import { div, dynamicChild, type Child } from '@vaakx-dev/vrui'
 import type { ChatContext } from './context'
-import { idleHints } from './idle'
+import { searchHint } from './idle'
 
-const size = 96
+const size = 48
 
 const currentProject = (ctx: ChatContext) => {
   const cwd = ctx.threads.current()?.info.cwd ?? ctx.threads.cwd()
@@ -33,25 +33,20 @@ const mark = (ctx: ChatContext, changes: Pulse) => {
   )
 }
 
-
-
 export const hero = (ctx: ChatContext) => {
   const changes = pulse(ctx, [threadsChange, threadSelect, projectsChange], [threads, projects, palette])
   return div(
-    { class: 'pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-5 pb-32 text-center' },
-    div({ class: 'mx-auto flex opacity-25', style: { filter: 'grayscale(0.35)' } }, mark(ctx, changes)),
+    { class: 'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-6 px-5 pb-32 text-center' },
+    div({ class: 'flex' }, mark(ctx, changes)),
     dynamicChild(
       changes.read(() => !ctx.threads.current()),
-      idle => (idle ? idleHints(ctx) : null),
+      idle => (idle ? searchHint(ctx) : null),
     ),
   )
 }
 
-export const failed = ({ errorText, secondaryAction }: Kit, message: string, retry: () => void) =>
-  div(
-    { class: 'mt-3 mb-4 flex flex-col items-center gap-2 text-center' },
-    errorText(`Couldn't load this chat: ${message}`),
-    secondaryAction({ size: 'sm', onClick: retry }, 'Retry'),
-  )
+const stateFrame = (state: Child) => div({ class: 'flex justify-center pt-4' }, state)
 
-export const loading = ({ delayed, hint }: Kit) => div({ class: 'mt-3 mb-4 h-10 text-center' }, show(delayed(true), () => hint('Loading…')))
+export const failed = ({ errorState }: Kit, message: string, retry: () => void) => stateFrame(errorState({ text: `Couldn't load this thread: ${message}`, retry }))
+
+export const loading = ({ loadingState }: Kit) => stateFrame(loadingState())

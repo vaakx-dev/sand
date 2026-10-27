@@ -9,7 +9,7 @@ import { modelsUnlike } from './runs/models'
 import { toRuns, type Run } from './runs/runs'
 import { ticker } from './ticker'
 import type { Actions } from './view/parts'
-import { agentsView, type ParentLink } from './view/view'
+import { agentsView } from './view/view'
 
 export default definePlugin({
   name: 'agents-panel',
@@ -17,7 +17,6 @@ export default definePlugin({
   inject: { kit, threads, jobs },
   apply(ctx) {
     const runs = sig<Run[]>([])
-    const parent = sig<ParentLink | undefined>(undefined)
     const empty = sig('')
     const clock = ticker()
     let handle: PanelHandle | undefined
@@ -25,10 +24,9 @@ export default definePlugin({
 
     const compute = () => {
       const current = ctx.threads.current()
-      empty.set(current ? 'No agents yet' : 'No thread selected')
+      empty.set(current ? 'No agents in this thread yet.' : 'No thread open.')
       if (!current) {
         runs.set([])
-        parent.set(undefined)
         return
       }
       runs.set(
@@ -39,8 +37,6 @@ export default definePlugin({
           modelOf: modelsUnlike(ctx.get(models), current.id),
         }),
       )
-      const above = current.info.kind === 'agent' && current.info.parent ? ctx.threads.get(current.info.parent) : undefined
-      parent.set(above && { id: above.id, title: above.info.title || 'thread' })
     }
 
     const paint = () => {
@@ -76,7 +72,7 @@ export default definePlugin({
         icon: 'bot',
         order: 20,
         badge: badge || undefined,
-        render: body => mount(body, agentsView(ctx.kit, { runs, parent, empty, now: clock.now }, actions)),
+        render: body => mount(body, agentsView(ctx.kit, { runs, empty, now: clock.now }, actions)),
       })
       return () => {
         handle?.dispose()

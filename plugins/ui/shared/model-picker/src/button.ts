@@ -31,7 +31,7 @@ const closeOnScroll = (inner: HTMLElement, close: () => void) =>
 
 export const pickerButton = (picker: Picker, target: PickerTarget, label: string) => {
   const { ctx, changes } = picker
-  const { icon, modelLogo, plainButton, popover, pressOpens } = ctx.kit
+  const { actionTones, controlButton, icon, modelLogo, popover, pressOpens } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const place = sig<StyleMap>({})
@@ -67,14 +67,11 @@ export const pickerButton = (picker: Picker, target: PickerTarget, label: string
       ),
     )
 
-  return plainButton(
+  return controlButton(
+    actionTones.secondary,
     {
-      title: text,
       'aria-label': () => `${label}: ${text()}`,
-      class: [
-        'flex h-8 max-w-full min-w-40 items-center gap-2 rounded-lg pr-2 pl-3 text-sm text-neutral-100 hover:bg-neutral-700',
-        () => (open.get() ? 'bg-neutral-700' : 'bg-neutral-800'),
-      ],
+      class: ['max-w-full min-w-40 justify-start pr-2', () => (open.get() ? 'bg-neutral-700' : '')],
       ...pressOpens(open, toggle),
       onMount: node => {
         anchor = node
@@ -82,14 +79,14 @@ export const pickerButton = (picker: Picker, target: PickerTarget, label: string
     },
     dynamicChild(
       model.map(value => value?.provider),
-      provider => (provider ? span({ class: 'inline-flex shrink-0' }, modelLogo(provider, 14)) : null),
+      provider => (provider ? modelLogo(provider, 16) : null),
     ),
     span({ class: 'min-w-0 flex-1 truncate text-left' }, text),
     show(
       shown.map(value => value?.speed === 'fast'),
-      () => span({ class: 'inline-flex shrink-0 text-warning-400' }, icon('zap', 14)),
+      () => span({ class: 'inline-flex shrink-0 text-neutral-400', title: 'Fast mode' }, icon('zap', 'sm')),
     ),
-    span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
+    span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon('down', 'sm')),
     show(open, () => portal(document.body, panel())),
   )
 }

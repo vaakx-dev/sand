@@ -27,7 +27,7 @@ const whenNearView = (element: Element, run: () => void) => {
 
 const broken = (image: HTMLImageElement) => {
   image.src = ''
-  image.title ||= 'This image could not be loaded'
+  image.title ||= "This image couldn't be loaded"
 }
 
 export const createMedia = (ctx: Context, wire: Wire, store: Store, machines: Machines): Media => {
@@ -45,7 +45,7 @@ export const createMedia = (ctx: Context, wire: Wire, store: Store, machines: Ma
     const device = thread ? store.deviceOf(thread) : store.here()
     await online(device)
     const response = await wire.fetch(blobPath(hash, thread), undefined, device)
-    if (!response.ok) throw new Error(`Could not load an attachment (${response.status})`)
+    if (!response.ok) throw new Error(`Couldn't load an attachment (${response.status})`)
     return response.blob()
   }
 

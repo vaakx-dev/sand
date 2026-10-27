@@ -17,9 +17,10 @@ const lastHeights = new Map<string, number>()
 
 const clamp = (height: number, cap: number) => Math.min(cap, maxHeight, Math.max(minHeight, Math.round(height)))
 
-const loadingNote = ({ hint }: Kit) => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center' }, hint('Loading…'))
+const loadingNote = ({ loadingState }: Kit) => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center' }, loadingState())
 
-const failure = ({ errorText }: Kit, title: string) => div({ class: 'absolute inset-0 flex items-center justify-center' }, errorText(`Couldn't load ${title}`))
+const failure = ({ errorState }: Kit, title: string, retry: () => void) =>
+  div({ class: 'absolute inset-0 flex items-center justify-center' }, errorState({ text: `Couldn't load ${title}`, retry }))
 
 export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wireService }>, thread: string, data: HtmlRenderEntry) => {
   const { kit, wire } = ctx
@@ -60,7 +61,7 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
 
   return div(
     {
-      class: 'relative mb-4 w-full',
+      class: 'relative mb-3 w-full',
       style: { height: () => `${height.get()}px` },
       onMount: () =>
         joinDisposers(
@@ -70,6 +71,6 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
     },
     frame,
     show(() => !failed.get() && page.data.get() === undefined, () => loadingNote(kit)),
-    show(failed, () => failure(kit, data.title)),
+    show(failed, () => failure(kit, data.title, retry)),
   )
 }

@@ -52,8 +52,8 @@ const withoutBroken = async (extensions: Extension[], contracts: Contracts, erro
   })
   const broken = new Set(Object.keys(failed))
   const problems = broken.size
-    ? [...broken].map(id => `Could not build the web extension ${id}:\n${failed[id]}`)
-    : [`Could not build the web extensions:\n${error}`]
+    ? [...broken].map(id => `Couldn't build the web extension ${id}:\n${failed[id]}`)
+    : [`Couldn't build the web extensions:\n${error}`]
   const kept = extensions.filter(extension => !broken.has(extension.id) && (broken.size > 0 || extension.builtin))
   const safe = await compile(extensions, kept, problems, contracts)
   if (!safe.script) throw new Error(`${problems.join('\n\n')}\n\nThe remaining extensions also failed:\n${safe.error}`)

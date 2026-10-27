@@ -10,12 +10,9 @@ const parse = (text: string) => {
   return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, timedOut: Boolean(found?.[2]) }
 }
 
-const fullCommand = (command: string) =>
-  div({ class: 'mb-2 whitespace-pre-wrap wrap-anywhere font-mono text-xs text-neutral-300' }, span({ class: 'text-accent-400' }, '$ '), command)
-
 export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, outputText, resultText, truncatedNote }: ToolViews): ToolRenderer => {
   const command = (tool: ToolView) => field(tool.call.input, 'command')
-  const multiline = (tool: ToolView) => command(tool).includes('\n') && fullCommand(command(tool))
+  const multiline = (tool: ToolView) => command(tool).includes('\n') && div({ class: 'mb-2' }, outputText([span({ class: 'text-neutral-500' }, '$ '), command(tool)], false))
   return {
     icon: 'term',
     verb: 'Ran',
@@ -31,24 +28,20 @@ export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, ou
       if (tool.result.isError) return { text: statusLabel('failed'), tone: 'danger' }
       const { code, timedOut } = parse(resultText(tool.result))
       if (timedOut) return { text: 'Timed out', tone: 'danger' }
-      return code === undefined ? undefined : { text: `Exit ${code}`, tone: code === 0 ? 'success' : 'danger' }
+      return code === undefined || code === 0 ? undefined : { text: `Exit ${code}`, tone: 'danger' }
     },
     copy: command,
     body(tool) {
       if (!tool.result) return multiline(tool) || undefined
       if (tool.result.isError) return div(multiline(tool), errorBody(tool))
-      const { output, code } = parse(resultText(tool.result))
+      const { output } = parse(resultText(tool.result))
       const lines = output.split('\n')
       const hidden = Math.max(0, lines.length - shownLines)
       const shown = lines.slice(hidden).join('\n') || 'No output'
-      const failed = (code ?? 0) !== 0
       return div(
         multiline(tool),
         hidden > 0 && truncatedNote(hidden, 'before'),
-        fold(
-          { lines: lines.length - hidden, chars: shown.length, copy: () => output },
-          outputText(shown, failed),
-        ),
+        fold({ lines: lines.length - hidden, chars: shown.length }, outputText(shown, false)),
       )
     },
   }

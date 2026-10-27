@@ -1,6 +1,5 @@
 import { derive, div, read, show, sig, span, type Child, type ClassValue, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { quietButton, rowButton } from '../buttons/button'
-import { copyButton } from '../buttons/copy'
 
 export interface ToolCardProps {
   icon: Child
@@ -11,6 +10,7 @@ export interface ToolCardProps {
   meta?: Child
   actions?: Child
   failed?: MaybeReactive<boolean>
+  expanded?: MaybeReactive<boolean>
   onToggle?: () => void
   headProps?: Props<HTMLDivElement>
 }
@@ -18,22 +18,34 @@ export interface ToolCardProps {
 export interface FoldProps {
   lines: MaybeReactive<number>
   chars?: MaybeReactive<number>
-  copy?: () => string
 }
 
-export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', meta, actions, failed = false, onToggle, headProps }: ToolCardProps, ...body: Child[]) =>
+export const toolCard = ({ icon, verb, target, targetClass, targetTitle = '', meta, actions, failed = false, expanded, onToggle, headProps }: ToolCardProps, ...body: Child[]) =>
   div(
     { class: 'group' },
     div(
-      { ...headProps, class: 'flex min-h-8 items-center gap-1 rounded-lg pr-1 transition-colors hover:bg-neutral-800' },
+      { ...headProps, class: 'flex min-h-8 items-center gap-1 rounded-md pr-1 transition-colors hover:bg-neutral-800' },
       rowButton(
-        { class: 'min-h-8 flex-1 gap-2 rounded-lg px-2', onClick: () => onToggle?.() },
-        span({ class: ['inline-flex shrink-0', () => (read(failed) ? 'text-danger-400' : 'text-neutral-500')] }, icon),
-        span({ class: 'shrink-0 text-xs text-neutral-400' }, verb),
-        span({ class: ['min-w-0 flex-1 truncate text-xs', targetClass ?? 'font-mono text-neutral-200'], title: targetTitle }, target),
+        {
+          ...(expanded !== undefined && { 'aria-expanded': () => String(read(expanded)) }),
+          class: 'min-h-8 flex-1 gap-2 rounded-md px-2 text-sm',
+          onClick: () => onToggle?.(),
+        },
+        span({ class: ['inline-flex shrink-0', () => (read(failed) ? 'text-danger-400' : 'text-neutral-400')] }, icon),
+        span({ class: 'shrink-0 text-neutral-400' }, verb),
+        span({ class: ['min-w-0 flex-1 truncate', targetClass ?? 'font-mono text-neutral-100'], title: targetTitle }, target),
         meta,
       ),
-      actions && div({ class: 'flex shrink-0 items-center opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100' }, actions),
+      actions &&
+        div(
+          {
+            class: [
+              'flex shrink-0 items-center opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100',
+              () => (expanded === undefined || read(expanded) ? 'touch:opacity-100' : 'touch:hidden'),
+            ],
+          },
+          actions,
+        ),
     ),
     ...body,
   )
@@ -44,7 +56,7 @@ const limit = 12
 const lineWidth = 120
 const fade = 'linear-gradient(#000 55%, transparent)'
 
-export const fold = ({ lines, chars = 0, copy }: FoldProps, ...content: Child[]) => {
+export const fold = ({ lines, chars = 0 }: FoldProps, ...content: Child[]) => {
   const long = derive(() => read(lines) > limit || read(chars) > limit * lineWidth)
   const open = sig(false)
   const clipped = () => long.get() && !open.get()
@@ -60,14 +72,6 @@ export const fold = ({ lines, chars = 0, copy }: FoldProps, ...content: Child[])
       },
       ...content,
     ),
-    show(
-      () => long.get() || Boolean(copy),
-      () =>
-        div(
-          { class: 'mt-1 flex items-center gap-1' },
-          show(long, () => quietButton({ size: 'sm', onClick: open.toggle() }, moreLabel)),
-          copy && copyButton({ text: copy, label: 'Copy' }),
-        ),
-    ),
+    show(long, () => div({ class: 'mt-1 flex items-center gap-1' }, quietButton({ size: 'sm', onClick: open.toggle() }, moreLabel))),
   )
 }

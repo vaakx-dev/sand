@@ -34,13 +34,15 @@ export const optionsSection = (page: Page, source: () => SourceInfo) => {
     settingsSection(
       {},
       settingsRow(
-        'Show new models automatically',
+        {
+          title: 'Show new models automatically',
+          detail: 'When off, new models wait here, marked New',
+        },
         toggleSwitch({
           on: show,
           'aria-label': 'Show new models automatically',
           onClick: () => void page.run(modelsNewModels, { source: source().id, mode: show() ? 'hide' : 'show' }),
         }),
-        () => (show() ? 'New models appear in the picker as soon as they are found' : 'New models wait here, marked New'),
       ),
     ),
     refreshLine(page, source),

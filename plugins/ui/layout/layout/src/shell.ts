@@ -22,9 +22,7 @@ export interface ShellState {
   widths: Widths
 }
 
-const safeArea = 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
-const drawer = { maxWidth: '85vw', paddingTop: 'env(safe-area-inset-top)' }
-const sheet = { paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }
+const drawer = { maxWidth: '85vw' }
 
 const placed = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
   list(
@@ -46,8 +44,8 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
       class: () => {
         if (!filled.get().side || !(showSide() || dragged()?.side)) return 'hidden'
         return narrow.get()
-          ? [layer.drawer, 'fixed inset-y-0 left-0 flex w-80 flex-col bg-neutral-950 shadow-xl', swiped.get() ? null : 'animate-drawer']
-          : 'relative flex min-h-0 shrink-0 flex-col border-r border-neutral-800 bg-neutral-950'
+          ? [layer.drawer, 'fixed inset-y-0 left-0 flex w-80 flex-col bg-neutral-950 pt-safe shadow-xl', swiped.get() ? null : 'animate-drawer']
+          : 'relative flex min-h-0 shrink-0 flex-col bg-neutral-950'
       },
       style: () => (narrow.get() ? { ...drawer, ...slideSide(shift.get()) } : sizedStyle(widths, 'side')),
     },
@@ -57,7 +55,7 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   )
 
   const main = div(
-    { class: 'relative flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900', style: { isolation: 'isolate' } },
+    { class: 'relative isolate flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900' },
     placed(views.main, div({ class: 'contents' })),
     placed(covers.main, div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })),
   )
@@ -67,10 +65,10 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
       class: () => {
         if (!filled.get().aside || !(open.aside.get() || dragged()?.aside) || covered.get().main) return 'hidden'
         return narrow.get()
-          ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950']
-          : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-96 xl:w-full xl:max-w-lg'
+          ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950 py-safe']
+          : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col bg-neutral-950 lg:w-96 xl:w-full xl:max-w-lg'
       },
-      style: () => (narrow.get() ? { ...sheet, ...slideAside(shift.get()) } : sizedStyle(widths, 'aside')),
+      style: () => (narrow.get() ? slideAside(shift.get()) : sizedStyle(widths, 'aside')),
     },
     placed(views.aside, div({ class: 'contents' })),
     grip('aside', () => aside, () => side, widths, () => narrow.get()),
@@ -86,7 +84,7 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   })
 
   return div(
-    { class: 'absolute inset-0 flex flex-col bg-neutral-900', style: { padding: safeArea } },
+    { class: 'absolute inset-0 flex flex-col bg-neutral-900 px-safe py-safe' },
     strip('top'),
     backdrop,
     div({ class: 'flex min-h-0 min-w-0 flex-1' }, side, main, aside),

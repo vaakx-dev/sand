@@ -7,11 +7,10 @@ import { nextAction } from './next'
 
 const signedInKey = (control: LoginControl) => derive(() => JSON.stringify(control.state.get()?.accounts.map(account => [account.id, account.signedIn]) ?? []))
 
-const elsewhere = ({ choiceButton, choiceList, groupLabel, icon, tile }: Kit, model: WelcomeModel) =>
-  div(
-    { class: 'flex flex-col' },
-    groupLabel('Elsewhere'),
-    choiceList(choiceButton({ mark: tile(icon('link', 16)), title: 'I use sand on another PC', detail: 'Connect to it and use its accounts', onClick: () => model.go('join') })),
+const elsewhere = ({ icon, listRow, settingsSection }: Kit, model: WelcomeModel) =>
+  settingsSection(
+    { title: 'Elsewhere' },
+    listRow({ surface: 'group', lead: icon('link'), title: 'I use sand on another PC', meta: 'Connect to it and use its accounts', onClick: () => model.go('join') }),
   )
 
 export const startView = (kit: Kit, model: WelcomeModel, control: LoginControl) => {
@@ -34,7 +33,7 @@ export const addView = (kit: Kit, model: WelcomeModel) => {
   return setupScreen(
     setupHeading(() => model.add.title.get()),
     setupColumn(
-      div({ class: 'flex flex-col overflow-hidden rounded-2xl bg-neutral-800 pt-3 ring-1 ring-neutral-700' }, model.add.view(kit)),
+      div({ class: 'flex flex-col overflow-hidden rounded-xl bg-neutral-800 pt-3' }, model.add.view(kit)),
       div({ class: 'flex' }, quietButton({ onClick: model.back }, 'Back')),
     ),
   )

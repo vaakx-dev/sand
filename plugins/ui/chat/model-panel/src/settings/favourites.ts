@@ -4,7 +4,7 @@ import { derive, div, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { settingsMenu } from './menu'
 import type { Page } from './page'
 import { crumb, logo } from './parts'
-import { starButton, starIcon } from './star'
+import { starButton } from './star'
 
 const whereText = (model: ModelInfo) => (model.via ? `On ${model.via}` : '')
 
@@ -17,20 +17,22 @@ const menuOf = (page: Page, model: ModelInfo, unstar: (model: ModelInfo) => void
 
 const favouriteRow = (page: Page, row: Sig<ModelInfo>, unstar: (model: ModelInfo) => void) => {
   const { kit } = page.ctx
-  const { contextMenu, itemRow } = kit
+  const { contextMenu, settingsRow } = kit
   const menu = contextMenu()
-  return itemRow(
-    menu.target(() => menuOf(page, row.get(), unstar)),
-    logo(kit, untrack(() => row.get().provider)),
-    () => row.get().label,
-    () => whereText(row.get()),
+  return settingsRow(
+    {
+      ...menu.target(() => menuOf(page, row.get(), unstar)),
+      lead: logo(kit, untrack(() => row.get().provider)),
+      title: () => row.get().label,
+      detail: () => whereText(row.get()),
+    },
     starButton(kit, untrack(() => row.get().label), true, () => unstar(row.get())),
     menu.view(),
   )
 }
 
 export const favouritesPage = (page: Page) => {
-  const { hintRow, rowList, settingsSection } = page.ctx.kit
+  const { emptyState, rowList, secondaryAction, settingsSection, starMark } = page.ctx.kit
   const removed = sig(new Set<string>())
   const all = page.changes.read(() => page.ctx.models.list())
   const models = derive(() => {
@@ -46,12 +48,17 @@ export const favouritesPage = (page: Page) => {
   }
   return div(
     { class: 'flex flex-col gap-6' },
-    crumb(page, starIcon(true, 14), 'Favourites'),
+    crumb(page, starMark(true), 'Favourites'),
     settingsSection(
       {},
       show(
         models.map(found => !found.length),
-        () => hintRow('No favourites yet. Star a model in one of your accounts to keep it at the top of the picker'),
+        () =>
+          emptyState({
+            surface: 'group',
+            text: 'No favourites yet. Star models in an account to keep them at the top of the picker.',
+            action: secondaryAction({ size: 'sm', onClick: () => page.go({ kind: 'top' }) }, 'Choose an account'),
+          }),
       ),
       rowList(models, model => model.id, row => favouriteRow(page, row, unstar)),
     ),

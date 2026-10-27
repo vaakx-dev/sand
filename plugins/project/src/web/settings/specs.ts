@@ -10,11 +10,12 @@ const quietly = (work: () => void | Promise<unknown>) => () => (async () => work
 const fromEntries = (entries: Entry[], group: string): NavAction[] =>
   entries.filter(entry => !entry.disabled).map(entry => ({ id: `${group}:${entry.label}`, group, label: entry.label, icon: entry.icon, run: quietly(entry.run) }))
 
-export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup): MenuSpec => ({
+export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entry[] = []): MenuSpec => ({
   title: group.name,
   subtitle: group.remote,
   actions: [
     ...fromEntries(projectEntries(ctx, group), 'project'),
+    ...fromEntries(looks, 'look'),
     ...fromEntries(copyEntries(ctx, group), 'copies'),
     ...fromEntries([visibilityEntry(ctx, group)], 'manage'),
     {
@@ -23,14 +24,14 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup): MenuSpec =
       label: 'Delete project',
       icon: 'trash',
       danger: true,
-      confirm: `Delete ${group.name}? It is removed from sand on every PC. The folders stay.`,
+      confirm: `Delete ${group.name}? It's removed from sand on every PC. The folders stay.`,
       run: quietly(() => ctx.projects.remove(group)),
     },
   ],
 })
 
 const openChatHere = (ctx: ProjectsContext, entry: ProjectEntry): NavAction[] =>
-  startable(ctx, entry) ? [{ id: 'open-chat', group: 'use', label: 'Open chat here', icon: 'message', run: quietly(() => openAt(ctx, entry)) }] : []
+  startable(ctx, entry) ? [{ id: 'new-thread', group: 'use', label: 'New thread here', icon: 'message', run: quietly(() => openAt(ctx, entry)) }] : []
 
 export const copySpec = (ctx: ProjectsContext, entry: ProjectEntry): MenuSpec => ({
   title: ctx.machines.name(entry.device),

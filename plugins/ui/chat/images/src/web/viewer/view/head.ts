@@ -12,20 +12,16 @@ const details = ({ block, sender }: ThreadImage) => [senderNames[sender], dimens
 const zoomControls = ({ icon, iconButton, quietButton }: Kit, zoom: Zoom) =>
   div(
     { class: 'flex items-center' },
-    iconButton({ title: 'Zoom out', disabled: () => !zoom.zoomed.get(), onClick: zoom.zoomOut }, icon('zoom-out', 16)),
+    iconButton({ title: 'Zoom out', 'aria-label': 'Zoom out', disabled: () => !zoom.zoomed.get(), onClick: zoom.zoomOut }, icon('zoom-out', 'md')),
     quietButton({ title: 'Fit to screen', class: 'min-w-12 tabular-nums', onClick: zoom.fit }, zoom.label),
-    iconButton({ title: 'Zoom in', onClick: zoom.zoomIn }, icon('zoom-in', 16)),
+    iconButton({ title: 'Zoom in', 'aria-label': 'Zoom in', onClick: zoom.zoomIn }, icon('zoom-in', 'md')),
   )
 
 export const viewerHead = (kit: Kit, shown: ThreadImage, count: string, zoom: Zoom, close: () => void) => {
-  const { closeButton, headTitle, paneHead } = kit
+  const { closeButton, headTitle, metaLine, paneHead } = kit
   return paneHead(
     {},
-    div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      headTitle(2, shown.block.name ?? 'Image'),
-      span({ class: 'truncate text-xs text-neutral-500' }, details(shown)),
-    ),
+    div({ class: 'flex min-w-0 flex-1 flex-col' }, headTitle(2, shown.block.name ?? 'Image'), metaLine(details(shown))),
     span({ class: 'hidden text-xs tabular-nums text-neutral-500 md:inline' }, count),
     zoomControls(kit, zoom),
     closeButton({ onClick: close }),

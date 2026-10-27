@@ -22,9 +22,13 @@ const runTitle = (fleet: Fleet) => {
 }
 
 export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
-  const { hint, openTab, overlay, quietButton, sheet, sheetHead } = kit
+  const { loadingState, openTab, overlay, quietButton, sheet, sheetBody, sheetHead } = kit
   const mode = derive(() => modeOf(fleet))
-  const title = () => (mode.get() === 'run' ? runTitle(fleet) : (fleet.target.get()?.name ?? 'Updates'))
+  const chooseTitle = () => {
+    const target = fleet.target.get()
+    return target ? `Update to ${target.name}` : 'Update sand'
+  }
+  const title = () => (mode.get() === 'run' ? runTitle(fleet) : chooseTitle())
   const notes = () => fleet.target.get()?.notesUrl
   return overlay(
     close,
@@ -35,13 +39,13 @@ export const updateSheet = (kit: Kit, fleet: Fleet, close: () => void) => {
         close,
         actions: show(
           () => mode.get() === 'choose' && !!notes(),
-          () => quietButton({ onClick: () => openTab(notes() ?? '') }, 'Release notes'),
+          () => quietButton({ surface: 'raised', onClick: () => openTab(notes() ?? '') }, 'Release notes'),
         ),
       }),
       dynamicChild(mode, current => {
         if (current === 'run') return progressBody(kit, fleet, close)
         if (current === 'choose') return chooseBody(kit, fleet, close)
-        return hint('Looking for a newer sand…')
+        return sheetBody({}, loadingState({ flush: true, text: 'Looking for a newer sand…' }))
       }),
     ),
   )

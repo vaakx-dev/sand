@@ -19,7 +19,7 @@ const done = (tool: ToolView) => !!tool.result && !tool.result.isError
 const linkRow = ({ title, url }: Link) =>
   div(
     { class: 'min-w-0' },
-    a({ class: 'block truncate text-accent-400 no-underline hover:underline', href: url, target: '_blank', rel: 'noopener noreferrer', title: url }, title),
+    a({ class: 'block truncate text-neutral-100 no-underline hover:underline', href: url, target: '_blank', rel: 'noopener noreferrer' }, title),
     div({ class: 'truncate text-neutral-500' }, url),
   )
 

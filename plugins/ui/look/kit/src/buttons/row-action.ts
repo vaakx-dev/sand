@@ -1,5 +1,6 @@
 import { onPressOutside } from '../layers/outside'
-import { sig, stopThen } from '@vaakx-dev/vrui'
+import { placeLook } from '../surface'
+import { sig, stopThen, type Sig } from '@vaakx-dev/vrui'
 import { controlButton } from './button'
 
 export interface RowActionProps {
@@ -9,12 +10,12 @@ export interface RowActionProps {
   run(): void
 }
 
+const dangerLook = (armed: Sig<boolean>) => () => (armed.get() ? 'bg-danger-950 text-danger-400' : 'text-danger-400 hover:bg-neutral-700')
+
 export const rowAction = ({ label, danger, disabled, run }: RowActionProps) => {
   const armed = sig(false)
   return controlButton(
-    danger
-      ? 'font-medium bg-danger-950 text-danger-400 hover:bg-danger-900 hover:text-danger-300'
-      : 'font-medium bg-neutral-600 text-neutral-200 hover:bg-neutral-500 hover:text-neutral-100',
+    danger ? dangerLook(armed) : placeLook(false, 'group'),
     {
       size: 'sm',
       disabled,

@@ -8,5 +8,6 @@ import { seriesOf } from './series'
 
 export const chartView = (kit: Kit, usage: Merged, metric: Metric) => {
   const { keys, series } = seriesOf(kit, usage, metric)
+  if (series.every(line => !line.total)) return null
   return div({ class: 'flex flex-col gap-3' }, plot(kit, usage, keys, series, metric), legend(kit, series))
 }

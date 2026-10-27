@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, keep, list, scoped, show, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, keep, list, scoped, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { PanelSpec } from './contract'
 import type { Surface } from './surface'
 
@@ -21,13 +21,9 @@ export interface PanelsParts {
 const hasBadge = (spec: PanelSpec) => spec.badge !== undefined && spec.badge !== ''
 
 const tabView = (page: Sig<Page>, parts: PanelsParts) => {
-  const { badge, icon, quietButton } = parts.kit
+  const { badge, quietButton } = parts.kit
   return quietButton(
     { active: () => parts.selected.get() === page.get().spec.id, onClick: () => parts.show(page.get().spec.id) },
-    dynamicChild(
-      page.map(value => value.spec.icon),
-      name => (name ? icon(name) : null),
-    ),
     page.map(value => value.spec.title),
     show(
       page.map(value => hasBadge(value.spec)),

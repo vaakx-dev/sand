@@ -39,7 +39,7 @@ export const pcStatus = (pc: Pc, target: ReleaseInfo | undefined, channel: Updat
   if (!state) return { kind: 'loading' }
   if (!state.installed) return { kind: 'source' }
   if (isBusy(state)) return { kind: 'busy', phase: state.phase }
-  if (state.phase === 'failed') return { kind: 'failed', error: state.error ?? 'Could not update sand' }
+  if (state.phase === 'failed') return { kind: 'failed', error: state.error ?? "Couldn't update sand" }
   if (channel && state.channel !== channel) return { kind: 'channel', channel: state.channel }
   if (!target || !state.current) return { kind: 'current' }
   if (state.current.id !== target.build.id && state.current.time > target.build.time) return { kind: 'newer' }

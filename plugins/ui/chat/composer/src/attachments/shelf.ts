@@ -22,7 +22,7 @@ const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =
   const { closeButton } = ctx.kit
   return span(
     {
-      class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-neutral-600 animate-rise',
+      class: 'relative block h-16 w-16 shrink-0 overflow-hidden rounded-md ring-1 ring-neutral-700',
       title: () => `${item.get().name} · ${bytes(item.get().bytes)}`,
       ...menuOf(ctx.kit, files, menu, item),
     },
@@ -32,12 +32,13 @@ const thumb = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>) =
 }
 
 const kindOf = (item: Attached, sent?: number) => {
+  if (item.error) return 'failed'
   if (item.loading || sent !== undefined) return 'loading'
   if (item.content?.type === 'document' && item.content.mediaType === 'application/pdf') return 'pdf'
   return isArchiveName(item.name) ? 'archive' : 'file'
 }
 
-const icons = { pdf: 'file-text', archive: 'file-archive', file: 'file' } as const
+const icons = { failed: 'alert', pdf: 'file-text', archive: 'file-archive', file: 'file' } as const
 
 const percent = (sent: number, total: number) => Math.floor((sent / Math.max(1, total)) * 100)
 
@@ -60,14 +61,14 @@ const fileRow = (ctx: Ctx, files: Files, menu: ContextMenu, item: Sig<Attached>)
   const sent = () => files.sent.get().get(item.get().id)
   const kind = derive(() => kindOf(item.get(), sent()))
   return div(
-    { class: 'relative flex min-h-8 items-center gap-2 text-sm text-neutral-300', ...menuOf(ctx.kit, files, menu, item) },
+    { class: 'relative flex min-h-8 items-center gap-2 text-sm text-neutral-100', ...menuOf(ctx.kit, files, menu, item) },
     span(
-      { class: ['inline-flex shrink-0', () => (failed() || kind.get() === 'pdf' ? 'text-danger-400' : 'text-neutral-400')] },
-      dynamicChild(kind, value => (value === 'loading' ? spinner(14) : span({ class: 'inline-flex' }, icon(icons[value], 14)))),
+      { class: ['inline-flex shrink-0', () => (failed() ? 'text-danger-400' : 'text-neutral-400')] },
+      dynamicChild(kind, value => (value === 'loading' ? spinner('md') : icon(icons[value], 'md'))),
     ),
-    span({ class: ['min-w-0 flex-1 truncate', () => (failed() ? 'text-danger-300' : '')] }, () => item.get().name),
+    span({ class: 'min-w-0 flex-1 truncate' }, () => item.get().name),
     span({ class: ['max-w-1/2 shrink-0 truncate text-xs tabular-nums', () => (failed() ? 'text-danger-400' : 'text-neutral-500')] }, () => status(item.get(), sent())),
-    closeButton({ title: 'Remove', size: 'sm', onClick: () => files.remove(item.get().id) }),
+    closeButton({ title: 'Remove', size: 'sm', surface: 'raised', onClick: () => files.remove(item.get().id) }),
     progressBar(item, sent),
   )
 }

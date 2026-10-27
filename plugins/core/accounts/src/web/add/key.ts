@@ -24,7 +24,7 @@ export const keyStep = (kit: Kit, control: LoginControl, kind: KeyKind, saved: (
       error.set('')
       await control.run(loginKey, { account: kind, key: key.get().trim(), ...(takesBaseUrl(kind) && { baseUrl: baseUrl.get().trim() }) })
       const after = control.account(kind)
-      if (!after?.signedIn || after.method !== 'api_key') return error.set(after?.error ?? 'The key was not saved')
+      if (!after?.signedIn || after.method !== 'api_key') return error.set(after?.error ?? "Couldn't save the key. Check it and try again.")
       if (after.shared !== share.get()) await control.run(loginShared, { account: kind, shared: share.get() })
       saved()
     })

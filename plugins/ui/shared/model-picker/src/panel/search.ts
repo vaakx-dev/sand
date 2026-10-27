@@ -15,7 +15,7 @@ export const findModels = (scene: Scene, query: string): ModelInfo[] => {
 export const modelSearch = ({ returnFocus, searchField }: Kit, view: View, pickFirst: () => void) => {
   const fine = media('(pointer: fine)')
   return div(
-    { class: 'mx-1 mt-1 mb-2 flex shrink-0' },
+    { class: 'mb-1 flex shrink-0' },
     searchField({
       placeholder: 'Search all models',
       'aria-label': 'Search all models',

@@ -75,6 +75,7 @@ export default definePlugin({
           choiceMenu(ctx, ctx.threads, choice, filter.project.get() === choice.key, { filter: filter.set, done: close, leave: () => closeDrawer(ctx) }),
         chipMenu: () => chipMenu(ctx, filter.project.get(), label.get(), { filter: filter.set, done, leave: done }),
         hide: () => ctx.get(layout)?.toggle('side', false),
+        create,
         run(action) {
           ctx.nav.run(action)
           closeDrawer(ctx)

@@ -13,12 +13,10 @@ export interface PageActions {
 }
 
 export const pcsPage = (ctx: DevicesContext, source: DeviceSource, health: PcHealthStore, actions: PageActions) => {
-  const { icon, pageHead, secondaryAction } = ctx.kit
   source.load()
   return div(
     { class: 'flex flex-col gap-6' },
-    pageHead("PCs you pair can use each other's shared accounts.", secondaryAction({ size: 'sm', onClick: actions.addPc }, icon('plus', 14), 'Add a PC')),
-    pcsSection(ctx.kit, source, health, actions.pairAgain),
+    pcsSection(ctx.kit, source, health, actions),
     phonesSection(ctx, source, actions.pair),
     awaySection(ctx, source),
   )

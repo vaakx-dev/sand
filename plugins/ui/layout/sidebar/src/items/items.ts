@@ -19,7 +19,7 @@ export const visibleThreads = (threads: Thread[]) => threads.filter(thread => th
 const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<ThreadItem, 'project' | 'subtitle'> => {
   const pc = places.machine(device)
   if (project.quick) return { project: [project.name, pc].filter(Boolean).join(' · ') }
-  return { project: project.name, subtitle: [pc, place(cwd)].filter(Boolean).join(' · ') }
+  return { project: project.name, subtitle: [pc, !project.root && place(cwd)].filter(Boolean).join(' · ') || undefined }
 }
 
 const projectOf = (thread: Thread, lookup: ProjectLookup) =>

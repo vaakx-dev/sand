@@ -46,14 +46,14 @@ const label = (action: NavAction) => span({ class: 'min-w-0 flex-1 truncate' }, 
 
 const item = (action: NavAction, control: MenuControl, size: ItemSize) =>
   menuItem(
-    { role: 'menuitem', size, tone: action.danger ? 'danger' : undefined, icon: action.icon ?? 'right', onClick: choose(control, action) },
+    { role: 'menuitem', size, tone: action.danger ? 'danger' : undefined, icon: action.icon, onClick: choose(control, action) },
     label(action),
   )
 
 const choiceRow = (action: NavAction, control: MenuControl, size: ItemSize) =>
   div(
-    { class: ['flex items-center gap-3 rounded-lg text-neutral-300', menuSizes[size]] },
-    menuIcon(action.icon ?? 'right', size),
+    { class: ['flex items-center gap-3 rounded-md text-neutral-100', menuSizes[size]] },
+    action.icon ? menuIcon(action.icon) : null,
     label(action),
     choiceChips(action, chipHandlers(control, action), 'sm'),
   )
@@ -67,7 +67,7 @@ export const menuItems = (actions: NavAction[], control: MenuControl, size: Item
 const confirmView = (action: NavAction, control: MenuControl, back: () => void, size: ItemSize) =>
   div(
     { class: 'flex flex-col gap-3 p-2' },
-    p({ class: 'text-sm text-neutral-300' }, action.confirm),
+    p({ class: 'text-sm text-neutral-100' }, action.confirm),
     div(
       { class: 'flex justify-end gap-2' },
       secondaryAction({ size, onClick: back, onMount: node => node.focus() }, 'Cancel'),

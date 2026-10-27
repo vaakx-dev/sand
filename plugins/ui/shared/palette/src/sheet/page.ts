@@ -2,7 +2,6 @@ import type { PalettePage } from '../contract'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, keys, list, show, untrack } from '@vaakx-dev/vrui'
 import { cardView, reviewView } from './card'
-import { crumbs } from './crumbs'
 import { paletteHead } from './head'
 import { pageModel, type PageModel } from './model'
 import type { PageNav } from './nav'
@@ -35,20 +34,20 @@ const keyHandler = (model: PageModel) => {
   }
 }
 
-const failureLine = ({ errorText }: Kit, model: PageModel, onReview: boolean, spacing: string) =>
+const failureLine = ({ errorState }: Kit, model: PageModel, onReview: boolean) =>
   show(
     derive(() => Boolean(model.failure.get()) && Boolean(model.page.review) === onReview),
-    () => div({ class: ['px-4', spacing] }, errorText(() => model.failure.get())),
+    () => div({ class: 'px-2' }, errorState({ surface: 'raised', text: () => model.failure.get() })),
   )
 
 const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
-  const { groupLabel } = kit
+  const { sectionHeading } = kit
   return list(
     model.rows,
     entry => entry.key,
     entry => {
       const first = untrack(() => entry.get())
-      if ('group' in first) return groupLabel(first.group)
+      if ('group' in first) return sectionHeading(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
       return rowView(kit, first.item, position, model, menu)
     },
@@ -57,7 +56,7 @@ const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
 }
 
 export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = '') => {
-  const { contextMenu, hint } = kit
+  const { contextMenu, emptyState } = kit
   const model = pageModel(kit, page, nav, initial)
   const menu = contextMenu()
   return div(
@@ -69,17 +68,16 @@ export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = ''
         if (page.review) node.focus()
       },
     },
-    crumbs(kit, nav),
     paletteHead(kit, model),
-    failureLine(kit, model, false, 'pb-2'),
+    failureLine(kit, model, false),
     dynamicChild(model.card, found => (found ? cardView(kit, found) : null)),
     page.review ? reviewView(kit, page.review, model.busy, model.progress, () => void model.confirm()) : null,
-    failureLine(kit, model, true, 'pb-3'),
+    failureLine(kit, model, true),
     results(kit, model, menu),
     menu.view(),
     show(
       model.empty.map(Boolean),
-      () => hint(() => model.empty.get()),
+      () => div({ class: 'px-2' }, emptyState({ surface: 'raised', text: () => model.empty.get() })),
     ),
   )
 }

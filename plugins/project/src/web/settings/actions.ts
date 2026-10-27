@@ -27,7 +27,7 @@ export const openAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
   ctx.get(composer)?.focus()
 }
 
-const openChat = async (ctx: ProjectsContext, group: ProjectGroup) => {
+const openThread = async (ctx: ProjectsContext, group: ProjectGroup) => {
   const target = byRecent(group.locations).find(entry => startable(ctx, entry))
   if (target) await openAt(ctx, target)
 }
@@ -38,8 +38,8 @@ const renameEntry = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
 }
 
 export const projectEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => [
+  { label: 'New thread', icon: 'message', disabled: !group.locations.some(entry => startable(ctx, entry)), run: () => openThread(ctx, group) },
   ...renameEntry(ctx, group),
-  { label: 'Open chat', icon: 'message', disabled: !group.locations.some(entry => startable(ctx, entry)), run: () => openChat(ctx, group) },
 ]
 
 export const copyEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
@@ -50,7 +50,7 @@ export const copyEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] 
   }))
 
 export const visibilityEntry = (ctx: ProjectsContext, group: ProjectGroup): Entry => ({
-  label: group.hidden ? 'Restore' : 'Hide from sand',
+  label: group.hidden ? 'Show in sand' : 'Hide from sand',
   icon: 'eye',
   run: () => ctx.projects.hide(group, !group.hidden),
 })

@@ -25,18 +25,18 @@ const refocus = (view: View, node: HTMLElement) => {
 }
 
 const body = (picker: Picker, target: PickerTarget, view: View, close: () => void, flash: boolean) => {
-  const { hint } = picker.ctx.kit
+  const { loadingState } = picker.ctx.kit
   const scene = readScene(picker, target, view, close)
-  if (!scene) return hint('Loading…')
+  if (!scene) return loadingState({ surface: 'raised' })
   return div(
     {
-      class: 'flex min-h-0 flex-col pb-1',
+      class: 'flex min-h-0 flex-col',
       onFocusIn: ({ target: focused }) => {
         if (focused instanceof HTMLElement) view.focus = focused.dataset.focus ?? ''
       },
       onMount: node => refocus(view, node),
     },
-    div({ class: 'flex max-h-80 min-h-0 border-b border-solid border-neutral-700' }, rail(scene, view), modelList(scene, view)),
+    div({ class: 'flex max-h-80 min-h-0' }, rail(scene, view), modelList(scene, view)),
     effortBar(picker.ctx, scene, flash),
     fastRow(scene),
     target.extra?.(),

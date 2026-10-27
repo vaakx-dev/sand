@@ -1,6 +1,7 @@
 import type { NavAction, NavChoice } from '@sand/nav/contract'
 import { span, stopThen } from '@vaakx-dev/vrui'
-import { plainButton } from '../buttons/button'
+import { actionTones, controlButton } from '../buttons/button'
+import { placeLook, type Surface } from '../surface'
 
 export type ChipSize = 'sm' | 'lg'
 
@@ -9,18 +10,22 @@ export interface ChipHandlers {
   ask(event: MouseEvent): void
 }
 
+const menuSurface: Surface = 'raised'
+
+const chipTones: Record<ChipSize, ReturnType<typeof placeLook> | string> = {
+  sm: placeLook(false, menuSurface),
+  lg: actionTones.secondary,
+}
+
 const chip = (label: string, title: string, size: ChipSize, onClick: (event: MouseEvent) => void) =>
-  plainButton(
+  controlButton(
+    chipTones[size],
     {
+      size,
       role: 'menuitem',
       title,
       'aria-label': title ? `${label}, ${title}` : label,
-      class: [
-        'inline-flex items-center justify-center font-medium tabular-nums transition-colors',
-        size === 'sm'
-          ? 'h-6 min-w-6 rounded-md px-1 text-xs text-neutral-400 hover:bg-neutral-600 hover:text-neutral-100 focus-visible:bg-neutral-600'
-          : 'h-10 rounded-lg bg-neutral-700 text-sm text-neutral-200 hover:bg-neutral-600',
-      ],
+      class: ['tabular-nums', size === 'sm' && 'min-w-6 px-1'],
       onClick: stopThen(onClick),
     },
     label,

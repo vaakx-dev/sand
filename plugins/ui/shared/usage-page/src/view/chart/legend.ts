@@ -15,6 +15,6 @@ export const legendItem = (color: string, dashed: boolean, ...label: Child[]) =>
 export const legendRow = (...items: Child[]) => div({ class: 'flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500' }, ...items)
 
 export const seriesName = ({ providerIcon }: Kit, series: Series) =>
-  span({ class: 'inline-flex min-w-0 items-center gap-2' }, providerIcon(series.account.provider, 12), span({ class: 'truncate' }, series.label))
+  span({ class: 'inline-flex min-w-0 items-center gap-2' }, providerIcon(series.account.provider, 14), span({ class: 'truncate' }, series.label))
 
 export const legend = (kit: Kit, series: Series[]) => legendRow(series.map(item => legendItem(item.color, item.dashed, seriesName(kit, item))))

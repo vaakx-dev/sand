@@ -1,5 +1,6 @@
 import { capital } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
+import { span } from '@vaakx-dev/vrui'
 import type { AccountKind, LoginApp, LoginMethod, LoginSignIn } from '../contract'
 
 interface Described {
@@ -13,7 +14,7 @@ interface Described {
 
 export const planName = (account: { label: string; signIn?: LoginSignIn } | undefined) => account?.signIn?.name ?? account?.label ?? ''
 
-export const accountLogo = ({ icon, providerIcon, tile }: Kit, provider: string) => tile(providerIcon(provider, 18) ?? icon('lock', 16))
+export const accountLogo = ({ icon, providerIcon }: Kit, provider: string) => providerIcon(provider, 16) ?? icon('lock')
 
 const planText = (name: string, plan?: string) => (plan ? `${name} ${capital(plan)}` : `${name} plan`)
 
@@ -28,4 +29,5 @@ export const removeLabel = (account: { kind: AccountKind; app?: LoginApp }) => {
   return account.kind === 'server' ? 'Remove' : 'Sign out'
 }
 
-export const readyChip = ({ badge, dot }: Kit, online: boolean) => (online ? badge('success', dot('success'), 'Ready') : badge('neutral', dot('neutral'), 'Offline'))
+export const presence = ({ dot }: Kit, online: boolean) =>
+  span({ class: 'flex items-center gap-2 text-xs text-neutral-400' }, dot(online ? 'success' : 'neutral'), online ? 'Ready' : 'Offline')

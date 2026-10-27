@@ -1,4 +1,4 @@
-import { icon as lucideIcon, type IconNode } from '@vaakx-dev/vrui'
+import { icon as lucideIcon, type IconNode, type IconSize as AnyIconSize } from '@vaakx-dev/vrui'
 import {
   AlarmClock,
   AlarmClockOff,
@@ -153,6 +153,8 @@ const nodes = {
 
 export type IconName = keyof typeof nodes | (string & {})
 
+export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 12 | 14 | 16 | 20
+
 const lookup: Record<string, IconNode | undefined> = nodes
 
 const missing = new Set<string>()
@@ -166,4 +168,4 @@ const known = (name: string) => {
   return node ?? CircleHelp
 }
 
-export const icon = (name: IconName, size = 16) => lucideIcon(known(name), size, 1.8)
+export const icon = (name: IconName, size: AnyIconSize = 'md', fill = false) => lucideIcon(known(name), { size, strokeWidth: 1.8, fill })
