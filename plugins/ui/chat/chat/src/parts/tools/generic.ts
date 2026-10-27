@@ -31,18 +31,14 @@ const failedBadge = ({ statusLabel }: Kit, tool: ToolView): ToolBadge | undefine
 
 const clip = (value: string) => (value.length > clipAt ? `${value.slice(0, clipAt)}\n… ${value.length - clipAt} more characters` : value)
 
-const section = ({ fold }: Kit, title: string, body: string, error = false) => {
+const section = ({ fold }: Kit, body: string, error = false) => {
   const text = clip(body)
-  return div(
-    div({ class: 'mb-1 text-xs font-medium text-neutral-500' }, title),
-    fold({ lines: text.split('\n').length, chars: text.length, copy: () => body }, outputText(text, error)),
-  )
+  return fold({ lines: text.split('\n').length, chars: text.length }, outputText(text, error))
 }
 
 const resultSection = (kit: Kit, tool: ToolView) => {
   if (!tool.result) return undefined
-  const error = Boolean(tool.result.isError)
-  return section(kit, error ? 'Error' : 'Output', resultText(tool.result) || 'No output', error)
+  return section(kit, resultText(tool.result) || 'No output', Boolean(tool.result.isError))
 }
 
 export const genericRenderer = (kit: Kit, name: string): Required<ToolRenderer> => ({
@@ -53,6 +49,6 @@ export const genericRenderer = (kit: Kit, name: string): Required<ToolRenderer> 
   meta: tool => preview(kit, tool),
   badge: tool => failedBadge(kit, tool),
   copy: toolLabel,
-  body: tool => div({ class: 'flex flex-col gap-3' }, section(kit, 'Input', tool.call.malformed ?? inputText(tool.call.input)), resultSection(kit, tool)),
+  body: tool => div({ class: 'flex flex-col gap-3' }, section(kit, tool.call.malformed ?? inputText(tool.call.input)), resultSection(kit, tool)),
   actions: () => [],
 })

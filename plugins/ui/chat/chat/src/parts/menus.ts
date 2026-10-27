@@ -37,11 +37,10 @@ const moreButton = ({ icon, iconButton }: Kit, menu: ContextMenu, spec: () => Me
         menu.open({ x: box.left, y: box.bottom, touch, from, ...found })
       },
     },
-    icon('more', 14),
+    icon('more', 'sm'),
   )
 
 export const menuKit = (kit: Kit): MenuKit => ({
   text: (menu, spec) => textMenu(kit, menu, spec),
   more: (menu, spec) => moreButton(kit, menu, spec),
-  copy: (id, label, text) => ({ id, label, icon: 'copy', tile: true, run: () => kit.copyText(text()) }),
 })

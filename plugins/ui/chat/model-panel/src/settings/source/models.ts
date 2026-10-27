@@ -32,9 +32,9 @@ const toolbar = (kit: Kit, catalog: Catalog, filter: Filter) => {
 }
 
 const emptyText = (catalog: Catalog, filter: Filter) => {
-  if (filter.query.get().trim()) return 'No matches'
-  if (filter.mode.get() === 'shown' && catalog.models.get()?.length) return 'None shown yet. Pick some under All'
-  return 'No models yet'
+  if (filter.query.get().trim()) return 'No matches.'
+  if (filter.mode.get() === 'shown' && catalog.models.get()?.length) return 'None shown yet. Pick some under All.'
+  return 'No models yet.'
 }
 
 type Status = 'error' | 'loading' | 'rows' | 'empty'
@@ -44,18 +44,19 @@ const statusOf = (catalog: Catalog, filter: Filter): Status => {
   return filter.found.get().length ? 'rows' : 'empty'
 }
 
-const status = ({ errorRow, hintRow }: Kit, catalog: Catalog, filter: Filter) =>
+const status = ({ emptyState, errorState, loadingState }: Kit, catalog: Catalog, filter: Filter) =>
   dynamicChild(
     derive(() => statusOf(catalog, filter)),
     state => {
-      if (state === 'error') return errorRow(() => catalog.error.get(), () => void catalog.reload())
+      if (state === 'error') return errorState({ surface: 'group', text: () => catalog.error.get(), retry: () => void catalog.reload() })
       if (state === 'rows') return null
-      return hintRow(() => (state === 'loading' ? 'Loading…' : emptyText(catalog, filter)))
+      if (state === 'loading') return loadingState({ surface: 'group' })
+      return emptyState({ surface: 'group', text: () => emptyText(catalog, filter) })
     },
   )
 
 export const modelsSection = (kit: Kit, source: SourceInfo, catalog: Catalog, filter: Filter) => {
-  const { quietButton, rowList, settingsSection } = kit
+  const { listRow, rowList, settingsSection } = kit
   return div(
     { class: 'flex flex-col gap-2' },
     source.search ? toolbar(kit, catalog, filter) : null,
@@ -65,7 +66,7 @@ export const modelsSection = (kit: Kit, source: SourceInfo, catalog: Catalog, fi
       rowList(filter.rows, model => model.id, row => modelRow(kit, row, catalog, filter.keep)),
       show(
         filter.more.map(more => more > 0),
-        () => div({ class: 'bg-neutral-900 px-2 py-1' }, quietButton({ size: 'sm', onClick: filter.showMore }, () => `Show ${filter.more.get()} more`)),
+        () => listRow({ surface: 'group', title: () => `Show ${filter.more.get()} more`, onClick: filter.showMore }),
       ),
       source.slugs ? addRow(kit, catalog, model => filter.keep(model.id)) : null,
     ),

@@ -16,17 +16,18 @@ const channelButton = (kit: Kit, fleet: Fleet) => {
 const controlKind = (pc: PcView) => (pc.status.kind === 'channel' ? 'channel' : pcActionKind(pc))
 
 const pcRow = (kit: Kit, row: Sig<PcView>, fleet: Fleet) => {
-  const { contextMenu, icon, itemRow, tile } = kit
+  const { contextMenu, settingsRow } = kit
   const menu = contextMenu()
   const control = (kind: ReturnType<typeof controlKind>) => {
     if (kind === 'channel') return channelButton(kit, fleet)
     return kind ? actionButton(kit, fleetAction(fleet, row.get().key, kind)) : null
   }
-  return itemRow(
-    menu.target(() => pcMenu(row.get(), fleet)),
-    tile(icon('laptop', 16)),
-    () => row.get().name,
-    pcStatusLine(kit, row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
+  return settingsRow(
+    {
+      ...menu.target(() => pcMenu(row.get(), fleet)),
+      title: () => row.get().name,
+      detail: pcStatusLine(kit, row, fleet, () => versionText(row.get().state?.current, fleet.target.get())),
+    },
     dynamicChild(row.map(controlKind), control),
     menu.view(),
   )

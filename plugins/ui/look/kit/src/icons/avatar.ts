@@ -10,7 +10,7 @@ const quickMark = (size: number) =>
   )
 
 const picture = (src: string, size: number) =>
-  img({ src, alt: '', width: size, height: size, draggable: false, class: ['shrink-0', size > 32 ? 'rounded-2xl' : 'rounded-sm'], style: { width: `${size}px`, height: `${size}px` } })
+  img({ src, alt: '', width: size, height: size, draggable: false, class: ['shrink-0', size > 32 ? 'rounded-xl' : 'rounded-sm'], style: { width: `${size}px`, height: `${size}px` } })
 
 export const projectIcon = (name: string, look: ProjectLook = {}, size = 16) => {
   if (look.quick) return quickMark(size)

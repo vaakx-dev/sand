@@ -3,7 +3,7 @@ import type { SessionSettings } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { ContextMenu, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { ClassValue, Sig } from '@vaakx-dev/vrui'
+import type { Child, ClassValue, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
 export type ToolStatus = 'pending' | 'running' | 'done' | 'failed'
@@ -20,7 +20,7 @@ export type RenderTool = (tool: ToolView) => HTMLElement
 
 export interface ToolBadge {
   text: string
-  tone: 'success' | 'danger' | 'neutral'
+  tone: 'danger' | 'neutral'
 }
 
 export interface ToolRenderer {
@@ -99,7 +99,6 @@ export interface TextMenu {
 export interface MenuKit {
   text(menu: ContextMenu, spec: () => MenuSpec | undefined): TextMenu
   more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
-  copy(id: string, label: string, text: () => string): NavAction
 }
 
 export interface ItemCache {
@@ -133,7 +132,7 @@ export interface ToolViews {
   field(input: unknown, key: string): string
   resultText(result?: ToolResultBlock): string
   errorBody(tool: ToolView): HTMLElement
-  outputText(text: string, error: boolean): HTMLElement
+  outputText(text: Child, error: boolean): HTMLElement
   truncatedNote(count: number, position: TruncatedAt): HTMLElement
   image: MediaImage
 }

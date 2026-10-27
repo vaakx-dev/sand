@@ -1,11 +1,11 @@
 import { copyText } from '../page/clipboard'
 import { dynamicChild, effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import { icon } from '../icons/lucide'
-import { iconButton, quietButton, type ButtonProps } from './button'
+import { iconButton, quietButton, type ToggleProps } from './button'
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-export type CopyProps = ButtonProps & { text: () => string; label?: string }
+export type CopyProps = Omit<ToggleProps, 'active'> & { text: () => string; label?: string }
 
 const resetAfter = 1500
 

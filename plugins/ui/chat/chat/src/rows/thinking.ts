@@ -9,16 +9,32 @@ export interface ThinkingProps {
   toggle: () => void
 }
 
+const titled = /^\s*\*\*(.+?)\*\*[ \t]*(?:\n|$)/
+
+const unmarked = (text: string) => text.replace(/\*\*|__/g, '')
+
+const thought = (text: string) => {
+  const found = titled.exec(text)
+  if (found) return { title: oneLine(unmarked(found[1] ?? '')), body: unmarked(text.slice(found[0].length)).trim() }
+  return { title: oneLine(unmarked(text)), body: unmarked(text).trim() }
+}
+
 export const thinkingCard = ({ icon, shine, toolBody, toolCard }: Kit, { streaming, text, open, toggle }: ThinkingProps) => {
-  const line = text.map(oneLine)
+  const parts = text.map(thought)
+  const title = parts.map(value => value.title)
+  const body = parts.map(value => value.body)
   return toolCard(
     {
-      icon: icon('message', 14),
+      icon: icon('message', 'sm'),
       verb: () => (streaming.get() ? 'Thinking' : 'Thought'),
-      target: dynamicChild(streaming, live => (live ? shine(line) : span(line))),
-      targetClass: 'italic text-neutral-500',
+      target: dynamicChild(streaming, live => (live ? shine(title) : span(title))),
+      targetClass: 'text-neutral-500',
+      expanded: () => open.get() && Boolean(body.get()),
       onToggle: toggle,
     },
-    show(open, () => toolBody(div({ class: 'whitespace-pre-wrap text-neutral-400' }, text))),
+    show(
+      () => open.get() && Boolean(body.get()),
+      () => toolBody(div({ class: 'whitespace-pre-wrap text-neutral-400' }, body)),
+    ),
   )
 }

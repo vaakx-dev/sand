@@ -1,11 +1,10 @@
 import type { Machine } from '@sand/web-client/contract'
 import type { Pulse } from '@sand/web-client/reactive'
-import { dynamicChild, keys, sig, span } from '@vaakx-dev/vrui'
+import { dynamicChild, keys, sig, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
-import { machineMark } from './location'
 import { expand, shorten } from './places'
 
-const rootField = (ctx: ProjectsContext, machine: Machine) => {
+const rootField = (ctx: ProjectsContext, machine: Machine, failed: Sig<string | undefined>) => {
   const { textInput } = ctx.kit
   const device = machine.id
   let saved = shorten(ctx, ctx.projects.place(device).root, device)
@@ -15,9 +14,11 @@ const rootField = (ctx: ProjectsContext, machine: Machine) => {
     if (!value || value === saved) return text.set(saved)
     const previous = saved
     saved = value
+    failed.set(undefined)
     ctx.projects.setRoot(expand(ctx, value, device), device).catch(() => {
       saved = previous
       text.set(previous)
+      failed.set(`Couldn't use ${value}. Check that the folder exists and try again.`)
     })
   }
   return textInput({
@@ -30,12 +31,20 @@ const rootField = (ctx: ProjectsContext, machine: Machine) => {
   })
 }
 
-const rootRow = (ctx: ProjectsContext, machine: Machine) => {
-  const { settingsRow } = ctx.kit
+const rootRow = (ctx: ProjectsContext, machine: Machine, several: boolean) => {
+  const { dot, errorText, settingsRow } = ctx.kit
+  const failed = sig<string | undefined>(undefined)
   return settingsRow(
-    span({ class: 'flex min-w-0 items-center gap-2' }, ...machineMark(ctx.kit, machine.online ? 'success' : 'neutral', 14), span({ class: 'truncate' }, machine.name)),
-    rootField(ctx, machine),
-    machine.online ? undefined : 'offline',
+    {
+      lead: several ? dot(machine.online ? 'success' : 'neutral') : undefined,
+      title: machine.name,
+      detail: () => {
+        const error = failed.get()
+        if (error) return errorText(error)
+        return machine.online ? '' : 'Offline'
+      },
+    },
+    rootField(ctx, machine, failed),
   )
 }
 
@@ -43,6 +52,6 @@ export const rootsSection = (ctx: ProjectsContext, changes: Pulse) => {
   const { settingsSection } = ctx.kit
   return dynamicChild(changes.version, () => {
     const machines = [...ctx.machines.list()].sort((a, b) => Number(b.local) - Number(a.local))
-    return settingsSection({ title: 'Where new projects go' }, ...machines.map(machine => rootRow(ctx, machine)))
+    return settingsSection({ title: 'Where new projects go' }, ...machines.map(machine => rootRow(ctx, machine, machines.length > 1)))
   })
 }

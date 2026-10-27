@@ -1,39 +1,29 @@
 import type { VersionTarget } from '@sand/host-plugin-versions/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, show, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, show, sig, type Sig } from '@vaakx-dev/vrui'
 import type { VersionsSource } from './source'
-import { historyToggle } from './versions'
-
-const detail = (target: VersionTarget) => (target.exists ? '' : 'Deleted')
+import { historyDetail, historyToggle } from './versions'
 
 const targetRow = (kit: Kit, source: VersionsSource, target: Sig<VersionTarget>) => {
-  const { settingsRow } = kit
-  return div(
-    { class: 'flex flex-col bg-neutral-900' },
-    settingsRow(
-      span({ class: 'truncate', title: () => target.get().path }, () => target.get().name),
-      null,
-      () => detail(target.get()),
-    ),
-    historyToggle(kit, source, target.get().key),
+  const { expandRow, settingsRow } = kit
+  const open = sig(false)
+  const key = target.get().key
+  return expandRow(
+    {},
+    settingsRow({ title: () => target.get().name }, historyToggle(kit, source, key, open)),
+    historyDetail(kit, source, key, open),
   )
 }
 
-const targetSection = (kit: Kit, source: VersionsSource, title: string, wanted: (target: VersionTarget) => boolean) => {
+export const historySections = (kit: Kit, source: VersionsSource) => {
   const { rowList, settingsSection } = kit
-  const targets = derive(() => source.targets.get().filter(wanted))
+  const removed = derive(() => source.targets.get().filter(target => !target.exists))
   return show(
-    () => targets.get().length > 0,
+    () => removed.get().length > 0,
     () =>
       settingsSection(
-        { title },
-        rowList(targets, target => target.key, target => targetRow(kit, source, target)),
+        { title: 'Removed plugins' },
+        rowList(removed, target => target.key, target => targetRow(kit, source, target)),
       ),
   )
 }
-
-export const historySections = (kit: Kit, source: VersionsSource) =>
-  div(
-    { class: 'contents' },
-    targetSection(kit, source, 'Removed plugins', target => !target.exists),
-  )

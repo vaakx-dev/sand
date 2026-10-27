@@ -11,6 +11,8 @@ export interface Suggestion {
 
 export interface CompletionSource {
   trigger: string
+  label: string
+  ready(): boolean
   pattern: RegExp
   items(query: string): Suggestion[] | Promise<Suggestion[]>
   hint?(query: string): string | undefined

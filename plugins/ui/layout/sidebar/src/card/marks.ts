@@ -1,18 +1,18 @@
-import type { Kit } from '@sand/ui-kit/contract'
+import type { IconSize, Kit } from '@sand/ui-kit/contract'
 import { span } from '@vaakx-dev/vrui'
 import type { ThreadItem } from '../items/item'
 
-const skyMark = ({ icon }: Kit, name: 'pencil' | 'bot') => span({ class: 'inline-flex shrink-0 text-sky-400' }, icon(name, 12))
+const quietMark = ({ icon }: Kit, name: 'pencil' | 'bot') => span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(name, 14))
 
-export const draftMark = (kit: Kit) => skyMark(kit, 'pencil')
+export const draftMark = (kit: Kit) => quietMark(kit, 'pencil')
 
-export const agentMark = (kit: Kit) => skyMark(kit, 'bot')
+export const agentMark = (kit: Kit) => quietMark(kit, 'bot')
 
-export const itemMark = (kit: Kit, item: ThreadItem, size = 14) => {
+export const itemMark = (kit: Kit, item: ThreadItem, size: IconSize = 14) => {
   if (item.state === 'draft') return draftMark(kit)
   if (item.state === 'running') return kit.working(size)
   if (item.state === 'background') return agentMark(kit)
-  if (item.unread) return kit.dot('orange')
+  if (item.unread) return kit.dot('accent')
   return null
 }
 
@@ -24,5 +24,3 @@ export const itemStatus = (item: ThreadItem) => {
   if (item.state === 'draft') return 'Draft'
   return item.unread ? 'New since you last looked' : ''
 }
-
-export const agentCount = (item: ThreadItem) => (item.agents ? agentsLabel(item.agents) : '')

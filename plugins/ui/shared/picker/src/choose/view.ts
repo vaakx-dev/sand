@@ -15,7 +15,7 @@ const results = <T>(kit: Kit, model: PickModel<T>) =>
 
 export const choose = <T>(kit: Kit, cancels: Set<() => void>, fine: Sig<boolean>, title: string, items: PickItem<T>[]) =>
   new Promise<Picked<T> | undefined>(resolve => {
-    const { hint, searchRow } = kit
+    const { emptyState, searchRow } = kit
     const finish = (picked?: Picked<T>) => {
       cancels.delete(model.cancel)
       close()
@@ -39,7 +39,7 @@ export const choose = <T>(kit: Kit, cancels: Set<() => void>, fine: Sig<boolean>
       results(kit, model),
       show(
         model.shown.map(found => !found.length),
-        () => hint('No matches'),
+        () => emptyState({ surface: 'raised', text: 'Nothing matches.' }),
       ),
     )
   })

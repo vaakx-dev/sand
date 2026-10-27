@@ -31,7 +31,7 @@ export const grip = (edge: Edge, column: () => HTMLElement, other: () => HTMLEle
   const direction = edge === 'side' ? 1 : -1
   const dragging = sig<Drag | undefined>(undefined)
   const end = () => dragging.set(undefined)
-  const line = span({ class: ['absolute inset-y-0 left-1 w-px transition-colors group-hover:bg-accent-500', () => dragging.get() && 'bg-accent-500'] })
+  const line = span({ class: ['absolute inset-y-0 left-1 w-px transition-colors group-hover:bg-neutral-700', () => dragging.get() && 'bg-neutral-700'] })
   const handle: HTMLElement = div({
     title: 'Drag to resize, double-click to reset',
     class: () => (hidden() ? 'hidden' : ['group absolute inset-y-0 z-10 w-2 cursor-col-resize touch-none', placement[edge]]),

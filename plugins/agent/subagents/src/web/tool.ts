@@ -11,8 +11,9 @@ const firstSentence = (text: string) => oneLine(/^[^\n]*?[.!?](?=\s|$)/.exec(tex
 export const subAgentOf = (chats: Threads | undefined, thread: string, call: string) => chats?.children(thread).find(chat => chat.info.origin === call)
 
 export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined): ToolRenderer => {
-  const outcomes: Record<Exclude<JobState['status'], 'running'>, ToolBadge> = {
-    done: { text: kit.statusLabel('done'), tone: 'success' },
+  const outcomes: Record<JobState['status'], ToolBadge | undefined> = {
+    running: undefined,
+    done: undefined,
     failed: { text: kit.statusLabel('failed'), tone: 'danger' },
     cancelled: { text: kit.statusLabel('cancelled'), tone: 'neutral' },
   }
@@ -39,11 +40,13 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
     meta(tool) {
       watch.tick()
       const job = watch.of(tool.call.id)
-      return job ? `in background · ${duration((job.ended ?? Date.now()) - job.started)}` : plainMeta(tool)
+      if (!job) return plainMeta(tool)
+      const took = duration((job.ended ?? Date.now()) - job.started)
+      return job.status === 'running' ? `Running in background · ${took}` : `Ran in background · ${took}`
     },
     badge(tool) {
       const job = watch.of(tool.call.id)
-      return job && job.status !== 'running' ? outcomes[job.status] : plainBadge(tool)
+      return job ? outcomes[job.status] : plainBadge(tool)
     },
     actions(tool) {
       const job = watch.of(tool.call.id)

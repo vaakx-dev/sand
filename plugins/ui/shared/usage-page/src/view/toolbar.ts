@@ -1,11 +1,13 @@
+import { exactTime } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import type { Pc } from '../data/types'
+import { agoText } from '../format'
 import type { UsageModel } from '../model'
 import { allPcs, type Tab } from '../prefs'
 
 const tabChoices: { value: Tab; label: string }[] = [
-  { value: 'usage', label: 'Usage' },
+  { value: 'usage', label: 'Limits' },
   { value: 'cost', label: 'Cost' },
   { value: 'tokens', label: 'Tokens' },
 ]
@@ -21,11 +23,24 @@ const pcFilter = (kit: Kit, model: UsageModel) => {
   )
 }
 
-const reloadButton = ({ delayed, icon, iconButton, spinner }: Kit, model: UsageModel) =>
-  iconButton(
-    { size: 'sm', title: 'Reload usage', onClick: model.refresh, disabled: model.busy },
-    dynamicChild(delayed(model.busy), waiting => (waiting ? spinner() : icon('reload', 14))),
+const onLimits = (model: UsageModel) => model.tab.get() === 'usage'
+
+const checkedText = (model: UsageModel) => {
+  const updated = derive(() => Math.max(0, ...(model.usage.get()?.accounts ?? []).map(account => account.limits?.updated ?? 0)))
+  return span({ class: 'text-xs text-neutral-500 tabular-nums', title: () => (updated.get() ? exactTime(updated.get()) : '') }, () => {
+    model.now.get()
+    return updated.get() ? `Checked ${agoText(updated.get())}` : ''
+  })
+}
+
+const refreshButton = ({ delayed, icon, iconButton, spinner }: Kit, model: UsageModel) => {
+  const working = derive(() => model.busy.get() || model.checking.get())
+  const label = () => (onLimits(model) ? 'Check limits now' : 'Reload usage')
+  return iconButton(
+    { 'aria-label': label, title: label, disabled: working, onClick: () => (onLimits(model) ? model.checkLimits() : model.refresh()) },
+    dynamicChild(delayed(working), waiting => (waiting ? spinner('md') : icon('reload', 'md'))),
   )
+}
 
 export const toolbar = (kit: Kit, model: UsageModel) => {
   const { segmented } = kit
@@ -34,6 +49,7 @@ export const toolbar = (kit: Kit, model: UsageModel) => {
     segmented(tabChoices, model.tab, value => model.tab.set(value), { label: 'View' }),
     span({ class: 'flex-1' }),
     pcFilter(kit, model),
-    reloadButton(kit, model),
+    show(() => onLimits(model), () => checkedText(model)),
+    refreshButton(kit, model),
   )
 }

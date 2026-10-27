@@ -18,9 +18,8 @@ const titles: Record<Look, string> = {
 
 const tone = (kit: Kit, look: Look) => {
   const { actionTones } = kit
-  if (look === 'busy') return 'cursor-default bg-neutral-700 text-neutral-500'
-  if (look === 'off') return 'cursor-default bg-accent-950 text-accent-400'
-  return look === 'stop' ? actionTones.danger : actionTones.primary
+  if (look === 'busy' || look === 'off') return 'cursor-default bg-neutral-700/60 text-neutral-500'
+  return look === 'stop' ? actionTones.secondary : actionTones.primary
 }
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
@@ -58,13 +57,14 @@ export const sendControl = (kit: Kit, model: Model, menu: SendMenu) => {
       {
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
+        'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
         class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
         ...context.target(
           () => menuOf(model, menu),
           () => void model.send(),
         ),
       },
-      dynamicChild(glyph, value => (value === 'busy' ? spinner(16) : icon(value, value === 'stop' ? 12 : 16))),
+      dynamicChild(glyph, value => (value === 'busy' ? spinner('md') : icon(value, 'md', value === 'stop'))),
     ),
     context.view(),
   )

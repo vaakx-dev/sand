@@ -1,7 +1,7 @@
 import type { OpenState, Step } from '../parts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, list, untrack, type Sig } from '@vaakx-dev/vrui'
-import { row, type RowContext, type RowMaker } from './row'
+import { list, untrack, type Sig } from '@vaakx-dev/vrui'
+import { row, workFrame, type RowContext, type RowMaker } from './row'
 import { thinkingCard } from './thinking'
 
 type ThinkingStep = Extract<Step, { kind: 'thinking' }>
@@ -26,6 +26,6 @@ export const toolsRow: RowMaker<'tools'> = (item, context) =>
       data.map(value => value.steps),
       step => `${step.kind}:${step.key}`,
       step => stepView(step, context),
-      div({ class: 'mb-3 flex flex-col' }),
+      workFrame(),
     ),
   )

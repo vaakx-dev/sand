@@ -1,6 +1,5 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
 import { textOf } from '@sand/chats/prompt'
-import { el } from '@vaakx-dev/vrui'
 
 const references = (tool: ToolView) => tool.result?.content.flatMap(block => (block.type === 'tool_reference' ? [block.name] : [])) ?? []
 
@@ -13,6 +12,6 @@ export const foundRenderer = (views: ToolViews): ToolRenderer => ({
   body(tool) {
     if (!tool.result) return undefined
     if (tool.result.isError) return views.errorBody(tool)
-    return el('pre', { class: 'whitespace-pre-wrap wrap-anywhere font-mono text-xs text-neutral-400' }, textOf(tool.result.content))
+    return views.outputText(textOf(tool.result.content), false)
   },
 })

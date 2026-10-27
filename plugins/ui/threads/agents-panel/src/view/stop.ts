@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { sig, stopThen } from '@vaakx-dev/vrui'
 
-export const stopButton = ({ controlButton }: Kit, stop: () => Promise<boolean>) => {
+export const stopButton = ({ secondaryAction }: Kit, stop: () => Promise<boolean>) => {
   const stopping = sig(false)
   const press = () => {
     stopping.set(true)
@@ -9,9 +9,5 @@ export const stopButton = ({ controlButton }: Kit, stop: () => Promise<boolean>)
       if (!stopped) stopping.set(false)
     })
   }
-  return controlButton(
-    'bg-neutral-800 text-neutral-300 hover:bg-danger-950 hover:text-danger-400',
-    { size: 'sm', disabled: stopping, onClick: stopThen(press) },
-    () => (stopping.get() ? 'Stopping…' : 'Stop'),
-  )
+  return secondaryAction({ size: 'sm', disabled: stopping, onClick: stopThen(press) }, () => (stopping.get() ? 'Stopping…' : 'Stop'))
 }

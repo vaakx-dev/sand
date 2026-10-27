@@ -1,11 +1,10 @@
 import type { UsageTotals } from '@sand/usage/contract'
 import { emptyTotals } from '@sand/usage/records'
 import { grouped, periodTitle } from '@sand/util'
-import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
 import { metricValue, type Metric } from '../../format'
-import { pcMenu } from './menu'
 
 export const breakdowns = ['projects', 'models', 'accounts', 'pcs', 'periods'] as const
 
@@ -18,15 +17,11 @@ export interface Row {
   hint?: string
   accounts: string[]
   totals: UsageTotals
-  open?: () => void
-  menu?: () => MenuSpec
 }
 
 export interface RowSource {
   kit: Kit
   usage: Merged
-  nameOf(id: string): string
-  showOnly(pc: string): void
 }
 
 const projectRows = ({ usage }: RowSource): Row[] =>
@@ -47,8 +42,7 @@ const accountRows = ({ usage }: RowSource): Row[] =>
     .filter(account => account.turns)
     .map(account => ({ key: account.key, name: account.label, note: account.pcName, accounts: [account.key], totals: account }))
 
-const pcRows = (source: RowSource): Row[] =>
-  source.usage.pcs.map(pc => ({ key: pc.id, name: pc.name, accounts: pc.accounts, totals: pc, menu: pcMenu(pc, source) }))
+const pcRows = ({ usage }: RowSource): Row[] => usage.pcs.map(pc => ({ key: pc.id, name: pc.name, accounts: pc.accounts, totals: pc }))
 
 const periodRows = ({ usage }: RowSource): Row[] =>
   usage.periods

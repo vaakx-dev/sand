@@ -1,10 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, media, onDocument, onWindow, show, sig, span } from '@vaakx-dev/vrui'
 import { clearSelection, readSelection, type Picked } from './integrations/selection'
-import { fallbackWidth, spotFor, type Spot } from './place'
-
-const tail = (spot: () => Spot | undefined) =>
-  span({ class: ['absolute left-4 h-2 w-2 rotate-45 bg-neutral-800 group-hover:bg-neutral-700', () => (spot()?.under ? '-top-1' : '-bottom-1')] })
+import { fallbackWidth, spotFor } from './place'
 
 export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
   const { icon, layer, plainButton } = kit
@@ -36,10 +33,9 @@ export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
       {
         class: [
           layer.menu,
-          'group fixed inline-flex h-8 items-center gap-2 rounded-xl bg-neutral-800 px-3 text-sm text-neutral-100 shadow-lg ring-1 ring-neutral-700 hover:bg-neutral-700 animate-pop',
+          'fixed inline-flex h-8 items-center gap-2 rounded-xl bg-neutral-800 px-3 text-sm text-neutral-100 shadow-xl hover:bg-neutral-700 animate-fade',
         ],
         style: () => ({ left: `${spot.get()?.left ?? 0}px`, top: `${spot.get()?.top ?? 0}px` }),
-        title: 'Quote in reply',
         onMount: el => width.set(el.offsetWidth || fallbackWidth),
         onPointerDown: event => {
           pressing = true
@@ -53,8 +49,7 @@ export const replyBubble = (kit: Kit, quote: (text: string) => void) => {
         },
         onClick: reply,
       },
-      tail(() => spot.get()),
-      icon('reply', 16),
+      span({ class: 'inline-flex text-neutral-400' }, icon('reply', 'md')),
       'Quote in reply',
     )
 

@@ -44,28 +44,32 @@ const groupsFor = (state: LoginState | undefined): Group[] => {
 
 const accountOf = (step: Step) => (step.kind === 'sign-in' || step.kind === 'key' ? step.account : undefined)
 
-const chipFor = ({ badge }: Kit, state: LoginState | undefined, step: Step) => {
+const whereFound = (state: LoginState | undefined, step: Step) => {
   const id = accountOf(step)
   if (!id) return null
   const own = state?.accounts.find(account => account.id === id)
-  if (own?.signedIn) return badge('success', 'On this PC')
-  if (own?.app && !own.app.installed) return badge('neutral', 'Not installed')
+  if (own?.signedIn) return 'On this PC'
+  if (own?.app && !own.app.installed) return 'Not installed'
   const shared = state?.remote.find(account => account.id === id)
-  return shared ? badge('accent', `On ${shared.pc}`) : null
+  return shared ? `On ${shared.pc}` : null
 }
 
 export const chooseStep = (kit: Kit, state: LoginState | undefined, go: (step: Step) => void) => {
-  const { choiceButton, choiceList, groupLabel } = kit
+  const { listRow, settingsSection } = kit
   return div(
-    { class: 'flex flex-col' },
+    { class: 'flex flex-col gap-4' },
     groupsFor(state).map(group =>
-      div(
-        { class: 'flex flex-col' },
-        groupLabel(group.label),
-        choiceList(
-          ...group.options.map(option =>
-            choiceButton({ mark: accountLogo(kit, option.logo), title: option.title, detail: option.detail, chip: chipFor(kit, state, option.step), onClick: () => go(option.step) }),
-          ),
+      settingsSection(
+        { title: group.label },
+        ...group.options.map(option =>
+          listRow({
+            surface: 'group',
+            lead: accountLogo(kit, option.logo),
+            title: option.title,
+            meta: option.detail,
+            trail: whereFound(state, option.step),
+            onClick: () => go(option.step),
+          }),
         ),
       ),
     ),

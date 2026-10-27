@@ -14,7 +14,7 @@
     "summary": "Sand's colors on a dark page"
   },
   "dependencies": {
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.6",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.7",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

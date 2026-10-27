@@ -35,7 +35,7 @@ export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, 
         ...(draft.provider && { provider: draft.provider }),
       })
       const account = id ? control.account(id) : added(control, before, target)
-      if (!account) return error.set('The server was not added')
+      if (!account) return error.set("Couldn't add the server. Check the URL and try again.")
       id = account.id
       if (account.error) return error.set(account.error)
       saved()

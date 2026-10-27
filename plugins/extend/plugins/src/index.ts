@@ -2,7 +2,7 @@ import { settings } from '@sand/settings/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { versionsSource } from './history/source'
-import { historyToggle } from './history/versions'
+import { historyDetail, historyToggle } from './history/versions'
 import { failuresSource } from './library/failures'
 import type { RowActions } from './library/row'
 import { librarySource } from './library/source'
@@ -22,7 +22,8 @@ export default definePlugin({
     const actions: RowActions = {
       busy: () => library.busy.get() !== undefined,
       failure: failures.failure,
-      history: (key, open) => historyToggle(ctx.kit, versions, key, open),
+      historyToggle: (key, open) => historyToggle(ctx.kit, versions, key, open),
+      historyDetail: (key, open) => historyDetail(ctx.kit, versions, key, open),
       hasHistory: key => versions.targets.get().some(item => item.key === key && item.versions.length > 0),
       copy: versions.copy,
       customise: plugin => void library.customise(plugin.name),

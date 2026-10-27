@@ -7,10 +7,8 @@ import type { LoginControl } from '../state'
 import type { WelcomeModel } from './model'
 import { nextAction } from './next'
 
-const localRow = (kit: Kit, account: LoginAccount) => {
-  const { badge, itemRow } = kit
-  return itemRow({}, accountLogo(kit, account.provider), account.label, howText(account), badge('success', 'On this PC'))
-}
+const localRow = (kit: Kit, account: LoginAccount) =>
+  kit.settingsRow({ lead: accountLogo(kit, account.provider), title: account.label, detail: `${howText(account)} · on this PC` })
 
 const accounts = (kit: Kit, state: LoginState) => {
   const { settingsSection } = kit

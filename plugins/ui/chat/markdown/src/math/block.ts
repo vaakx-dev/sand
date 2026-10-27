@@ -1,10 +1,18 @@
+import { div } from '@vaakx-dev/vrui'
 import { codeBlock } from '../code/block'
 import type { Scope } from '../scope'
 import { closingIn, mathOpener } from './delimiters'
 
 const punctuation = /^[.,;:!?]*$/
 
-export const displayMath = ({ kit, math }: Scope, tex: string) => math?.display(tex) ?? codeBlock(kit, tex, 'math')
+const unreadable = ({ kit }: Scope, tex: string, error: string) =>
+  div({ class: 'mb-3 flex flex-col gap-1 last:mb-0' }, codeBlock(kit, tex, 'math'), kit.errorText(`Couldn't show this formula. ${error}`))
+
+export const displayMath = (scope: Scope, tex: string) => {
+  const shown = scope.math?.display(tex)
+  if (!shown) return codeBlock(scope.kit, tex, 'math')
+  return shown instanceof Node ? shown : unreadable(scope, tex, shown.error)
+}
 
 export const mathBlock = (lines: string[], start: number, scope: Scope) => {
   const delimiters = mathOpener(lines[start]!, scope)

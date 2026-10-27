@@ -1,7 +1,7 @@
 import type { Picture, Sender, ThreadImage } from '../gallery'
 import type { ViewerModel } from './model'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, effect, span } from '@vaakx-dev/vrui'
+import { div, effect } from '@vaakx-dev/vrui'
 import { senderNames } from '../gallery'
 
 interface Numbered {
@@ -27,8 +27,9 @@ const thumb = (kit: Kit, { image, index }: Numbered, model: ViewerModel, picture
   const active = () => model.current.get() === index
   return plainButton(
     {
-      title: image.block.name ?? `Image ${index + 1}`,
-      class: ['h-12 shrink-0 overflow-hidden rounded-md ring-2 transition-opacity', () => (active() ? 'ring-accent-500' : 'ring-transparent opacity-50 hover:opacity-80')],
+      'aria-label': image.block.name ?? `Image ${index + 1}`,
+      'aria-current': () => String(active()),
+      class: ['h-12 shrink-0 overflow-hidden rounded-md transition-opacity', () => (active() ? '' : 'opacity-50 hover:opacity-80')],
       onClick: () => model.go(index),
       onMount: node =>
         effect(() => {
@@ -42,7 +43,7 @@ const thumb = (kit: Kit, { image, index }: Numbered, model: ViewerModel, picture
 const runView = (kit: Kit, run: Run, model: ViewerModel, picture: Picture) =>
   div(
     { class: 'flex shrink-0 flex-col gap-1' },
-    span({ class: 'px-1 text-xs text-neutral-500' }, senderNames[run.sender]),
+    div({ class: 'flex px-1' }, kit.metaLine(senderNames[run.sender])),
     div({ class: 'flex gap-2 p-1' }, run.members.map(member => thumb(kit, member, model, picture))),
   )
 
