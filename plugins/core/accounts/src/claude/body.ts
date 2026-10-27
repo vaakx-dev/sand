@@ -1,4 +1,4 @@
-import { fileText } from '@sand/chats/prompt'
+import { fileText, imageType } from '@sand/chats/prompt'
 import type { Block, Message, ToolReferenceBlock, ToolResultContent } from '@sand/chats/contract'
 import type { Effort, LLMRequest, ToolSpec } from '../contract'
 import { loadedTools, withoutReferences } from '../http/deferred'
@@ -19,7 +19,7 @@ const block = (value: Block | ToolReferenceBlock): Record<string, unknown> => {
     case 'text':
       return { type: 'text', text: value.text }
     case 'image':
-      return { type: 'image', source: { type: 'base64', media_type: value.mediaType, data: value.data } }
+      return { type: 'image', source: { type: 'base64', media_type: imageType(value.data, value.mediaType), data: value.data } }
     case 'document':
       return {
         type: 'document',
