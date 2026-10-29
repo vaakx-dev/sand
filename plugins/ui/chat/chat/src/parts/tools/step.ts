@@ -18,6 +18,18 @@ const counts = (text: string) =>
 const progressTail = (lines: string[]) =>
   div({ class: 'font-mono text-xs text-neutral-500' }, lines.map(line => div({ class: 'truncate whitespace-pre' }, line || ' ')))
 
+const inputSize = () => {
+  let seen: unknown = Symbol()
+  let size = 0
+  return (input: unknown) => {
+    if (input !== seen) {
+      seen = input
+      size = JSON.stringify(input ?? null).length
+    }
+    return size
+  }
+}
+
 const metaView = (text: string) => span({ class: 'max-w-1/2 shrink-0 truncate text-xs text-neutral-500', title: text }, counts(text))
 
 export const toolStep = (
@@ -30,9 +42,10 @@ export const toolStep = (
   const { badge, contextMenu, copyButton, icon, shine, toolBody, toolCard } = kit
   const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
   const current = () => renderer(tool.get().call.name)
+  const sizeOf = inputSize()
   const signature = derive(() => {
     const { status, result, call } = tool.get()
-    return [status, result ? 1 : 0, JSON.stringify(call.input ?? null).length, version.get()].join(':')
+    return [status, result ? 1 : 0, sizeOf(call.input), version.get()].join(':')
   })
   const shown = derive(() => {
     signature.get()

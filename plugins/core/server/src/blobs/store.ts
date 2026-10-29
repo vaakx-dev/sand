@@ -4,6 +4,8 @@ import { join } from 'node:path'
 
 const blobHash = /^[a-f0-9]{64}$/
 
+const variant = /^[a-f0-9]{64}\.\d+$/
+
 const touchEvery = 86_400_000
 
 export interface BlobStore {
@@ -64,7 +66,7 @@ export const createBlobStore = (folder: string, report: (error: unknown) => void
     async sweep(cutoff) {
       const names = await readdir(folder).catch((): string[] => [])
       for (const name of names) {
-        if (name.endsWith('.tmp')) {
+        if (name.endsWith('.tmp') || variant.test(name)) {
           if (await expired(name, cutoff)) await remove(name)
           continue
         }

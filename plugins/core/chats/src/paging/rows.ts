@@ -3,7 +3,7 @@ import type { Database } from 'bun:sqlite'
 
 export type Row = Omit<Entry, 'data'> & { data: string }
 
-export const parseRow = (row: Row): Entry => ({ ...row, data: JSON.parse(row.data) })
+export const parseRow = ({ id, session, parent, at, type, data }: Row): Entry => ({ id, session, parent, at, type, data: JSON.parse(data) })
 
 export const rowsById = (db: Database) => {
   const query = db.query<Row, { ids: string }>('select * from entries where id in (select value from json_each($ids))')

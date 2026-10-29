@@ -33,5 +33,5 @@ export const mediaImage =
   (block, thread, options = {}) => {
     const image = img({ alt: block.name ?? 'image', ...viewable(ctx, block, thread, options) })
     const shown = ctx.get(media)
-    return shown ? shown.show(image, block, thread) : inline(image, block)
+    return shown ? shown.show(image, block, thread, { maxHeight: options.maxHeight }) : inline(image, block)
   }

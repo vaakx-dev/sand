@@ -47,7 +47,7 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
   let talked = Boolean(path[0]?.parent)
 
   const tool = (call: ToolCallBlock, at: number) =>
-    list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, thread, results), thread: thread.id, progress: thread.tools.logs.get(call.id) } }, last, at)
+    list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, thread, results), thread: thread.id } }, last, at)
 
   const user = (entry: Entry, message: Message) => {
     list.extend(entry.at)

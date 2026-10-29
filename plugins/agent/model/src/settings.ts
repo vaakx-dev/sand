@@ -9,7 +9,7 @@ export const clean = (settings: SettingsPatch): SessionSettings =>
 export const knownPatch = (patch: SettingsPatch): SettingsPatch => Object.fromEntries(keys.filter(key => key in patch).map(key => [key, patch[key]]))
 
 export const settingsOf = (session?: Session): SessionSettings =>
-  (session?.path().findLast(entry => entry.type === 'settings')?.data as SessionSettings | undefined) ?? {}
+  (session?.latest('settings')?.data as SessionSettings | undefined) ?? {}
 
 export const same = (a: SessionSettings, b: SessionSettings) => keys.every(key => a[key] === b[key])
 

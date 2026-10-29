@@ -34,6 +34,7 @@ export const bridgeRemotes = (ctx: Context, store: Store, { threads, projects, m
       applyHello(store, read, device)
       models.hello(device, read)
       void projects.refresh(device)
+      threads.refocus(device)
       const current = threads.current()
       if (current?.device === device) void threads.load(current.id)
     },

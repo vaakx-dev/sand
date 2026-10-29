@@ -67,10 +67,9 @@ export const relaySwipes = () => {
         press = undefined
         return
       }
-      if (event.cancelable) event.preventDefault()
       press.drag.move(touch.clientX, event.timeStamp)
     },
-    { passive: false },
+    { passive: true },
   )
 
   listen(window, 'touchend', release)

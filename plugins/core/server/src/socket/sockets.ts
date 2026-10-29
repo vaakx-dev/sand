@@ -5,6 +5,10 @@ import { serialize } from './serialize'
 
 export type Socket = ServerWebSocket<Caller>
 
+export type Audience = (socket: Socket) => boolean
+
+export const everyone: Audience = () => true
+
 export interface SocketHandlers {
   leave(socket: Socket): void
   answer(socket: Socket, request: ClientMessage): Promise<unknown>
@@ -46,13 +50,9 @@ export const createSockets = (handlers: SocketHandlers) => {
     send(socket, message)
   }
 
-  const broadcast = (name: string, payload: unknown) => {
-    const frame = eventFrame(name, payload)
-    for (const client of clients) deliver(client, frame)
-  }
-
-  const publish = (frame: string, to: (socket: Socket) => boolean) => {
-    for (const client of clients) if (to(client)) deliver(client, frame)
+  const publish = (frame: () => string, to: Audience) => {
+    let built: string | undefined
+    for (const client of clients) if (to(client)) deliver(client, (built ??= frame()))
   }
 
   const websocket: WebSocketHandler<Caller> = {
@@ -67,5 +67,5 @@ export const createSockets = (handlers: SocketHandlers) => {
     message: (socket, data) => void receive(socket, String(data)),
   }
 
-  return { broadcast, publish, websocket }
+  return { publish, websocket }
 }

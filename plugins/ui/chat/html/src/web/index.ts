@@ -5,6 +5,7 @@ import { wire } from '@sand/web-client/contract'
 import type { HtmlRenderEntry } from '../contract'
 import { definePlugin } from 'drydock'
 import { htmlFrame } from './frame'
+import { frameHeights } from './heights'
 
 const renderTool = ({ errorBody, field }: ToolViews): ToolRenderer => ({
   icon: 'chart',
@@ -20,13 +21,14 @@ export default definePlugin({
   description: 'Shows the pages the agent renders inline in the chat, in a sandboxed frame in the app theme',
   inject: { wire, toolViews, kit },
   apply(ctx) {
+    const heights = frameHeights()
     ctx.watch(
       transcriptService,
       transcript =>
         transcript &&
         joinDisposers(
           transcript.tool('html_render', renderTool(ctx.toolViews)),
-          transcript.entry('html-render', (entry, thread) => htmlFrame(ctx, thread, entry.data as HtmlRenderEntry)),
+          transcript.entry('html-render', (entry, thread) => htmlFrame(ctx, heights, thread, entry.data as HtmlRenderEntry)),
         ),
     )
   },

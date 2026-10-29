@@ -8,5 +8,9 @@ const fingerprint = (value: string) => {
   return `${value.length}:${(hash >>> 0).toString(36)}`
 }
 
+const notYet = () => ''
+
 export const codeBlock = (kit: Kit, code: string, language: string) =>
   kit.ownedByNode(() => div({ class: 'mb-3 last:mb-0', 'data-code': fingerprint(code) }, kit.codeBlock({ copy: () => code }, highlight(code, language))))
+
+export const streamingCodeBlock = (kit: Kit, code: string) => kit.ownedByNode(() => div({ class: 'mb-3 last:mb-0', 'data-code': 'streaming' }, kit.codeBlock({ copy: notYet }, code)))

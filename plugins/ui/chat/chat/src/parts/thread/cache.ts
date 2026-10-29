@@ -11,7 +11,6 @@ const keyOf = (thread: Thread): unknown[] => [
   thread.tools,
   [...thread.tools.running].join('\n'),
   thread.tools.results.size,
-  ...thread.tools.logs.values(),
 ]
 
 const sameKey = (a: unknown[], b: unknown[]) => a.length === b.length && a.every((value, index) => value === b[index])

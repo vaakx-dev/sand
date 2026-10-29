@@ -9,8 +9,8 @@ import { createHello } from './requests/hello'
 import { pagingRequests } from './requests/paging'
 import { sessionRequests } from './requests/sessions'
 import { createRoutes } from './routes'
-import { forwardEvents } from './socket/forward'
-import { createSockets, type Socket } from './socket/sockets'
+import { forwardEvents, type Send } from './socket/forward'
+import { createSockets, eventFrame, everyone, type Socket } from './socket/sockets'
 import { createLiveTracker } from './stream/live'
 import { createStream } from './stream/stream'
 
@@ -51,14 +51,14 @@ export default definePlugin({
       malformed: error => ctx.report(error),
     })
     const stream = createStream(ctx, sockets.publish, live)
-    const broadcast = (name: string, payload: unknown) => {
+    const send: Send = (event, payload, to = everyone) => {
       stream.flush()
-      sockets.broadcast(name, blobs.outbound(payload))
+      sockets.publish(() => eventFrame(event.id, blobs.outbound(payload)), to)
     }
     const listener = Bun.serve({ hostname: '127.0.0.1', port: 0, websocket: sockets.websocket, fetch: routes.respond })
     ctx.effect(() => () => void listener.stop(true))
 
-    forwardEvents(ctx, (event, payload) => broadcast(event.id, payload))
+    forwardEvents(ctx, send, stream.sees)
     ctx.effect(() => handlers.handle(hello, hellos.answer))
     ctx.effect(() => hellos.register(helloSafe, () => ctx.cli.safe))
     ctx.effect(() => sessionRequests(ctx, handlers))
@@ -67,7 +67,7 @@ export default definePlugin({
     const server: Server = {
       route: routes.route,
       handle: handlers.handle,
-      broadcast: (event, payload) => broadcast(event.id, payload),
+      broadcast: (event, payload) => send(event, payload),
       hello: hellos.register,
       inlineMedia: blobs.inline,
     }

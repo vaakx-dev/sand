@@ -25,6 +25,7 @@ import type { Store } from './store'
 export interface ThreadService extends Threads {
   adopt(opened: OpenedSession, device: string): Thread
   restored(): void
+  refocus(device: string): void
 }
 
 export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>): ThreadService => {
@@ -59,6 +60,11 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
 
   const select = (id: string | undefined, options?: { replace?: boolean }) => open(id, options?.replace ? 'replace' : 'push')
 
+  const refocus = (device: string) => {
+    const current = store.currentThread()
+    void wire.call(uiFocus, current?.device === device ? { session: current.id } : {}, device).catch(() => {})
+  }
+
   const openRequested = async () => {
     const { session, draft } = requestedPlace()
     if (session && !store.threads.has(session)) await load(session)
@@ -89,6 +95,7 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
 
   return {
     adopt: install,
+    refocus,
     restored() {
       const asked = requestedSession()
       if (!greeted && asked && store.threads.has(asked)) show(asked, 'replace')

@@ -53,7 +53,7 @@ const bubble = (text: string, press: TextMenu, context: RowContext) =>
   )
 
 const message = (...children: Child[]) =>
-  div({ class: 'group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
+  div({ class: 'chat-row group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
 export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[]) =>
   row(`user:${item.key}`, item, () => {

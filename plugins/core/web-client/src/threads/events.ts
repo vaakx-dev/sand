@@ -2,15 +2,22 @@ import { sessionEntryWire, sessionRemoveWire, sessionUpdateWire, type WireSessio
 import { contextChange } from '@sand/compaction/contract'
 import { artifactSavedWire } from '@sand/html/contract'
 import { toolProgressWire, toolResultWire, toolStartWire, turnEndWire, turnStartWire } from '@sand/loop/contract'
-import { liveSnapshot, llmEventWire } from '@sand/server/contract'
+import { type EntryHead, liveSnapshot, llmEventWire, sessionHeadWire } from '@sand/server/contract'
 import { applyLiveEvent } from '@sand/server/live'
 import { queueChange, turnSteerWire } from '@sand/steering/contract'
 import { joinDisposers } from '@sand/util'
-import type { Wire } from '../contract'
+import type { Thread, Wire } from '../contract'
+import { stale } from './hello'
 import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
 const everyPc = { remotes: true }
+
+const advance = (thread: Thread, entry: EntryHead) => {
+  const updated = entry.type === 'system' ? thread.info.updated : Math.max(thread.info.updated, entry.at)
+  thread.info = { ...thread.info, head: entry.id, updated }
+  if (entry.type === 'message') thread.live = []
+}
 
 export const listenThreads = (wire: Wire, store: Store, load: (id: string) => void) => {
   const thread = ({ $session }: WireSession, device: string) => store.upsert($session, device)
@@ -27,10 +34,19 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
         const found = thread(session, device)
         const open = found.id === store.current
         if (found.loaded || open) found.entries.set(entry.id, entry)
-        const updated = entry.type === 'system' ? found.info.updated : Math.max(found.info.updated, entry.at)
-        found.info = { ...found.info, head: entry.id, updated }
-        if (entry.type === 'message') found.live = []
+        advance(found, entry)
         if (!found.loaded && open) load(found.id)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      sessionHeadWire,
+      ([session, entry], device) => {
+        const found = thread(session, device)
+        stale(found)
+        advance(found, entry)
+        if (found.id === store.current) load(found.id)
         store.changed(found.id)
       },
       everyPc,

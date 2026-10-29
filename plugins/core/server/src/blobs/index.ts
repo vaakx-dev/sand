@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { createInbound } from './inbound'
 import { createOutbound } from './outbound'
 import { blobRoute } from './route'
+import { createSized } from './sized'
 import { createBlobStore } from './store'
 import { scheduleSweep } from './sweep'
 
@@ -39,7 +40,7 @@ export const createBlobs = (home: string, entries: Entries, report: (error: unkn
   const inbound = createInbound(find)
 
   return {
-    route: blobRoute(find),
+    route: blobRoute(find, createSized(folder)),
     outbound,
     sweep: () => scheduleSweep(store, folder, report),
     inline(type: string) {

@@ -1,5 +1,5 @@
 import type { Database } from 'bun:sqlite'
-import { carriedReader } from './carried'
+import { carriedReader, latestReader } from './carried'
 import { pager } from './page'
 import { sinceReader } from './since'
 
@@ -11,6 +11,7 @@ export const createPaging = (db: Database) => {
     page: pager(db),
     since: sinceReader(db),
     carried: carriedReader(db),
+    latest: latestReader(db),
     parent: (session: string, id: string) => parentOf.get({ id, session })?.parent ?? null,
   }
 }
