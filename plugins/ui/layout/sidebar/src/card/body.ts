@@ -37,11 +37,7 @@ const avatar = ({ kit, item }: CardParts) =>
     14,
   )
 
-const titleLook = ({ item, selected }: CardParts, quiet: boolean) => {
-  const value = item.get()
-  if (selected.get() || value.unread) return 'font-medium text-neutral-100'
-  return quiet ? 'text-neutral-400' : 'text-neutral-100'
-}
+const titleLook = ({ item, selected }: CardParts) => (selected.get() || item.get().unread ? 'font-medium text-neutral-100' : 'text-neutral-400')
 
 const placeText = (value: ThreadItem) => [value.project, value.subtitle].filter(Boolean).join(' · ')
 
@@ -49,12 +45,12 @@ const place = (parts: CardParts) =>
   div(
     { class: 'flex h-5 min-w-0 items-center gap-1.5', title: parts.item.map(value => tildeHome(value.path ?? '')) },
     avatar(parts),
-    span({ class: 'min-w-0 flex-1' }, parts.kit.metaLine(parts.item.map(placeText))),
+    span({ class: 'flex min-w-0 flex-1' }, parts.kit.metaLine(parts.item.map(placeText))),
     statusSlot(parts),
     actions(parts),
   )
 
-const title = (parts: CardParts, quiet: boolean) =>
-  div({ class: ['truncate text-sm', () => titleLook(parts, quiet)], title: parts.item.map(value => value.title) }, parts.item.map(value => value.title))
+const title = (parts: CardParts) =>
+  div({ class: ['truncate text-sm', () => titleLook(parts)], title: parts.item.map(value => value.title) }, parts.item.map(value => value.title))
 
-export const cardBody = (parts: CardParts, quiet: boolean) => div(place(parts), title(parts, quiet))
+export const cardBody = (parts: CardParts) => div(place(parts), title(parts))

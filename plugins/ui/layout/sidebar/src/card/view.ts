@@ -1,6 +1,6 @@
 import type { NavAction } from '@sand/nav/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, keys, sig, type Sig } from '@vaakx-dev/vrui'
+import { div, keys, sig, type Sig } from '@vaakx-dev/vrui'
 import type { CardRow } from '../rows/build'
 import type { Reorder } from '../rows/reorder'
 import { cardBody, type CardParts } from './body'
@@ -30,7 +30,6 @@ const touched = (event: MouseEvent) => event instanceof PointerEvent && event.po
 export const card = (kit: Kit, row: Sig<CardRow>, handlers: CardHandlers) => {
   const item = row.map(value => value.item)
   const selected = row.map(value => value.selected)
-  const compact = item.map(value => Boolean(value.settled || value.snoozed))
   const menu = row.map(value => handlers.menuOf(value.item.id))
   const choosing = sig<string | undefined>(undefined)
   const strip: StripParts = {
@@ -66,6 +65,6 @@ export const card = (kit: Kit, row: Sig<CardRow>, handlers: CardHandlers) => {
       ...dragging,
       ...press.props,
     },
-    dynamicChild(compact, small => cardBody(parts, small)),
+    cardBody(parts),
   )
 }
