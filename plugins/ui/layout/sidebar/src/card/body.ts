@@ -45,7 +45,7 @@ const place = (parts: CardParts) =>
   div(
     { class: 'flex h-5 min-w-0 items-center gap-1.5', title: parts.item.map(value => tildeHome(value.path ?? '')) },
     avatar(parts),
-    span({ class: 'min-w-0 flex-1' }, parts.kit.metaLine(parts.item.map(placeText))),
+    span({ class: 'flex min-w-0 flex-1' }, parts.kit.metaLine(parts.item.map(placeText))),
     statusSlot(parts),
     actions(parts),
   )
