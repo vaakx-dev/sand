@@ -6,7 +6,7 @@ import type { Pulse } from '@sand/web-client/reactive'
 import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { chatMenu, renameThread } from './menu'
-import { parentCrumb, parentOf } from './parent'
+import { parentCrumb, parentOf, type ParentLink } from './parent'
 import { currentPlace, type Place, projectLook, projectName, threadTitle } from './project'
 import type { Slots } from './slots'
 
@@ -21,12 +21,17 @@ const projectCrumb = (ctx: HeaderContext, changes: Pulse, place: Sig<Place | und
     span({ class: 'truncate' }, name),
   )
 
-const titleMenu = (ctx: HeaderContext, title: Sig<string>) => {
+const titleEdge = (name: Sig<string>, parent: Sig<ParentLink | undefined>) => () => {
+  if (parent.get()) return ''
+  return name.get() ? '-ml-2 md:ml-0' : '-ml-2'
+}
+
+const titleMenu = (ctx: HeaderContext, title: Sig<string>, edge: () => string) => {
   const { dropdown, icon, navButton } = ctx.kit
   return dropdown({
     trigger: (press, open) =>
       navButton(
-        { active: open, title, ...press, onDblClick: () => void renameThread(ctx) },
+        { active: open, title, class: edge, ...press, onDblClick: () => void renameThread(ctx) },
         span({ class: 'min-w-0 truncate font-medium text-neutral-100' }, title),
         span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
       ),
@@ -38,7 +43,8 @@ export const headerView = (ctx: HeaderContext, changes: Pulse, slots: Slots) => 
   const { layer, paneHead, showSideButton } = ctx.kit
   const place = changes.read(() => currentPlace(ctx))
   const name = changes.read(() => projectName(ctx, place.get()))
-  const title = changes.read(() => (ctx.get(threads) ? threadTitle(ctx) : 'sand'))
+  const title = changes.read(() => (ctx.get(threads) ? threadTitle(ctx) : 'Sand'))
+  const parent = changes.read(() => parentOf(ctx))
   const state = changes.read(() => ctx.get(layout)?.state())
   const narrow = state.map(value => value?.narrow ?? false)
   const led = state.map(sideHidden)
@@ -50,11 +56,8 @@ export const headerView = (ctx: HeaderContext, changes: Pulse, slots: Slots) => 
       { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm' },
       show(name.map(Boolean), () => projectCrumb(ctx, changes, place, name)),
       show(name.map(Boolean), () => span({ class: 'hidden text-neutral-500 md:inline' }, '/')),
-      parentCrumb(
-        ctx,
-        changes.read(() => parentOf(ctx)),
-      ),
-      titleMenu(ctx, title),
+      parentCrumb(ctx, parent),
+      titleMenu(ctx, title, titleEdge(name, parent)),
       slots.host('start'),
     ),
     slots.host('end'),
