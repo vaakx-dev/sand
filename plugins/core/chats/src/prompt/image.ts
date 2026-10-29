@@ -1,6 +1,6 @@
 import type { Block } from '../contract'
 
-export const imageLabel = (image: { name?: string }) => `${image.name ?? 'image'}:`
+export const imageLabel = ({ name = 'image', path }: { name?: string; path?: string }) => (path ? `${name} (saved at ${path}):` : `${name}:`)
 
 const signatures = [
   ['iVBORw0KGgo', 'image/png'],

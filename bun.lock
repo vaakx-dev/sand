@@ -79,6 +79,16 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/image-files": {
+      "name": "@sand/image-files",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/loop": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/agent/jobs": {
       "name": "@sand/jobs",
       "version": "0.0.0",
@@ -1284,6 +1294,8 @@
     "@sand/host-watch": ["@sand/host-watch@workspace:plugins/host/watch"],
 
     "@sand/html": ["@sand/html@workspace:plugins/ui/chat/html"],
+
+    "@sand/image-files": ["@sand/image-files@workspace:plugins/agent/image-files"],
 
     "@sand/images": ["@sand/images@workspace:plugins/ui/chat/images"],
 
