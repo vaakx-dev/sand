@@ -11,7 +11,7 @@ export interface FrameProps {
   label: string
   axis: AxisLabel[]
   onPointerMove(event: PointerEvent): void
-  onPointerLeave(): void
+  onPointerLeave(event: PointerEvent): void
 }
 
 const axisLabel = ({ text, top }: AxisLabel) =>
@@ -29,7 +29,7 @@ export const chartFrame = ({ width, height, label, axis, onPointerMove, onPointe
       { class: 'flex gap-2' },
       div({ class: 'relative h-48 w-12 shrink-0' }, axis.map(axisLabel)),
       div(
-        { class: 'relative h-48 min-w-0 flex-1 cursor-default', onPointerMove, onPointerLeave },
+        { class: 'relative h-48 min-w-0 flex-1 cursor-default', style: { touchAction: 'pan-y' }, onPointerDown: onPointerMove, onPointerMove, onPointerLeave },
         svg({ viewBox: `0 0 ${width} ${height}`, preserveAspectRatio: 'none', width: '100%', height: '100%', role: 'img', 'aria-label': label }, ...drawing),
         ...overlays,
       ),
