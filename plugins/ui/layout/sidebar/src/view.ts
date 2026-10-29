@@ -110,7 +110,7 @@ export const sidebarView = (kit: Kit, parts: SidebarParts) => {
   const context = contextMenu()
   return sideColumn(
     { narrow: parts.narrow, 'aria-label': 'Threads' },
-    sideHead('sand', parts.hide),
+    sideHead('Sand', parts.hide),
     topActions(kit, parts, context),
     filterChip(kit, parts, context),
     threadRows(kit, parts),
