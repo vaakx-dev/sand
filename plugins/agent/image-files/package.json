@@ -1,0 +1,21 @@
+{
+  "name": "@sand/image-files",
+  "version": "0.0.0",
+  "description": "Saves the images sent in a chat to files, so the agent can pass them on by path",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Image files",
+    "summary": "Saves the images you send, so the agent can pass them to sub-agents"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

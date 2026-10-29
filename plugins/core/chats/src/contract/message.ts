@@ -25,6 +25,7 @@ export type ImageBlock = {
   type: 'image'
   mediaType: string
   name?: string
+  path?: string
 } & MediaData
 
 export type DocumentBlock = {
