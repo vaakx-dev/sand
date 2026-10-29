@@ -1,8 +1,7 @@
 import type { Limits } from '@sand/accounts/contract'
 import type { Wire } from '@sand/web-client/contract'
 import { usageQuery } from '@sand/usage/records'
-import { grouped } from '@sand/util'
-import { clock, derive, effect, sig, untrack, type Sig } from '@vaakx-dev/vrui'
+import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader } from './data/fleet'
 import type { History } from './data/forecast'
 import { historyView } from './data/forecast/hours'
@@ -43,7 +42,6 @@ export const usageModel = (deps: UsageDeps) => {
   const breakdown = sig<Breakdown>('projects')
   const checking = sig(false)
   const now = clock(30_000)
-  const opened = new Map<string, Sig<boolean>>()
   const windows = sig(new Map<string, string>())
 
   effect(() => {
@@ -133,7 +131,6 @@ export const usageModel = (deps: UsageDeps) => {
     nameOf: (id: string) => nameOf(id) ?? id,
     refresh,
     checkLimits: () => checkWith(refresh),
-    openOf: (account: string) => grouped(opened, account, () => sig(false)),
     setWindow: (account: string, window: string) => windows.set(new Map(windows.get()).set(account, window)),
   }
 }

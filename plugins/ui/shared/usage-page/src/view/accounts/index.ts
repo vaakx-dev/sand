@@ -1,19 +1,16 @@
-import { span } from '@vaakx-dev/vrui'
 import { providersOf, type Provider } from '../../data/providers'
 import { colorsOf } from '../colors'
 import type { Account } from '../../data/types'
-import { isSubscription, providerName } from '../../names'
+import { isSubscription } from '../../names'
 import { limitCard, type CardProps } from './card'
 
 export type LimitsProps = Omit<CardProps, 'colorOf'>
 
-const providerSection = (provider: Provider, props: CardProps) => {
-  const { providerIcon, settingsSection } = props.kit
-  return settingsSection(
-    { title: span({ class: 'inline-flex items-center gap-2' }, providerIcon(provider.id, 14), providerName(provider.id)) },
+const providerSection = (provider: Provider, props: CardProps) =>
+  props.kit.settingsSection(
+    {},
     provider.accounts.map(account => limitCard(account, props)),
   )
-}
 
 const hasLimits = (account: Account) => isSubscription(account) || Boolean(account.limits?.windows.length)
 
