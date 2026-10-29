@@ -37,11 +37,7 @@ const avatar = ({ kit, item }: CardParts) =>
     14,
   )
 
-const titleLook = ({ item, selected }: CardParts, quiet: boolean) => {
-  const value = item.get()
-  if (selected.get() || value.unread) return 'font-medium text-neutral-100'
-  return quiet ? 'text-neutral-400' : 'text-neutral-100'
-}
+const titleLook = ({ item, selected }: CardParts) => (selected.get() || item.get().unread ? 'font-medium text-neutral-100' : 'text-neutral-400')
 
 const placeText = (value: ThreadItem) => [value.project, value.subtitle].filter(Boolean).join(' · ')
 
@@ -54,7 +50,7 @@ const place = (parts: CardParts) =>
     actions(parts),
   )
 
-const title = (parts: CardParts, quiet: boolean) =>
-  div({ class: ['truncate text-sm', () => titleLook(parts, quiet)], title: parts.item.map(value => value.title) }, parts.item.map(value => value.title))
+const title = (parts: CardParts) =>
+  div({ class: ['truncate text-sm', () => titleLook(parts)], title: parts.item.map(value => value.title) }, parts.item.map(value => value.title))
 
-export const cardBody = (parts: CardParts, quiet: boolean) => div(place(parts), title(parts, quiet))
+export const cardBody = (parts: CardParts) => div(place(parts), title(parts))
