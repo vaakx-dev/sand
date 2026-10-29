@@ -4,6 +4,7 @@ import type { Thread } from '@sand/web-client/contract'
 import type { DescribeSettings, Item, ToolView } from '../contract'
 import { tokens } from '@sand/util'
 import { itemCollector } from './collect'
+import { withProgress } from './progress'
 import { partialInput } from './results'
 import { settledItems, type Settled } from './settled'
 
@@ -15,7 +16,8 @@ const liveTool = (block: Extract<LiveBlock, { type: 'tool' }>, thread: Thread): 
   thread: thread.id,
 })
 
-export const liveItems = (settled: Settled, thread: Thread): Item[] => {
+export const liveItems = (cached: Settled, thread: Thread): Item[] => {
+  const settled = withProgress(cached, thread.tools.logs)
   const list = itemCollector(settled.group)
   const now = Date.now()
   for (const block of thread.live) {

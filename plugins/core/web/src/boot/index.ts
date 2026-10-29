@@ -6,7 +6,8 @@ import { reloadOnNewBuild } from './reload'
 import { paintPage } from './theme'
 import { registerWorker } from './worker'
 
-mount(document.body, div({ id: 'stage', class: 'fixed inset-0 flex flex-col overflow-auto' }))
+mount(document.documentElement, { class: 'overscroll-none' })
+mount(document.body, { class: 'overscroll-none' }, div({ id: 'stage', class: 'fixed inset-0 flex flex-col overflow-auto overscroll-contain' }))
 registerWorker()
 const ctx = createApp()
 ctx.on(scopeError, (scope, error) => console.error(`[${scope.name}]`, error))

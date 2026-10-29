@@ -8,12 +8,14 @@ import { div, effect, resource, show, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { maxHeight, minHeight } from '../page/limits'
 import { hostPath } from '../page/protocol'
+import type { FrameHeights } from './heights'
 import { listenToFrame, sandboxedFrame, showPageIn } from './integrations/frame'
+import { onceNearView } from './near'
 import { themed } from './theme'
 
-const startHeight = 320
+type FrameContext = Context<{ kit: typeof kitService; wire: typeof wireService }>
 
-const lastHeights = new Map<string, number>()
+const startHeight = 320
 
 const clamp = (height: number, cap: number) => Math.min(cap, maxHeight, Math.max(minHeight, Math.round(height)))
 
@@ -22,15 +24,8 @@ const loadingNote = ({ loadingState }: Kit) => div({ class: 'pointer-events-none
 const failure = ({ errorState }: Kit, title: string, retry: () => void) =>
   div({ class: 'absolute inset-0 flex items-center justify-center' }, errorState({ text: `Couldn't load ${title}`, retry }))
 
-export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wireService }>, thread: string, data: HtmlRenderEntry) => {
+const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, resize: (height: number) => void) => {
   const { kit, wire } = ctx
-  const cap = data.height ?? maxHeight
-  const height = sig(clamp(data.height ?? lastHeights.get(data.id) ?? startHeight, cap))
-  const resize = (next: number) => {
-    const fitted = clamp(next, cap)
-    lastHeights.set(data.id, fitted)
-    height.set(fitted)
-  }
   const loads = sig(0)
   const page = resource(() => wire.call(htmlPage, { session: thread, render: data.id }), { lazy: true })
   const failed = page.error.map(Boolean)
@@ -61,8 +56,7 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
 
   return div(
     {
-      class: 'relative mb-3 w-full',
-      style: { height: () => `${height.get()}px` },
+      class: 'h-full w-full',
       onMount: () =>
         joinDisposers(
           listenToFrame(frame, { resize, open: kit.openTab, swipe: () => ctx.get(layout)?.swipe() }),
@@ -72,5 +66,25 @@ export const htmlFrame = (ctx: Context<{ kit: typeof kitService; wire: typeof wi
     frame,
     show(() => !failed.get() && page.data.get() === undefined, () => loadingNote(kit)),
     show(failed, () => failure(kit, data.title, retry)),
+  )
+}
+
+export const htmlFrame = (ctx: FrameContext, heights: FrameHeights, thread: string, data: HtmlRenderEntry) => {
+  const cap = data.height ?? maxHeight
+  const height = sig(clamp(data.height ?? heights.get(data.id) ?? startHeight, cap))
+  const near = sig(false)
+  const resize = (next: number) => {
+    const fitted = clamp(next, cap)
+    heights.set(data.id, fitted)
+    height.set(fitted)
+  }
+
+  return div(
+    {
+      class: 'relative mb-3 w-full',
+      style: { height: () => `${height.get()}px` },
+      ref: box => onceNearView(box, () => near.set(true)),
+    },
+    show(near, () => framedPage(ctx, thread, data, resize)),
   )
 }

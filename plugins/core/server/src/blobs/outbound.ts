@@ -1,4 +1,5 @@
 import { isMedia, isText, rewrite, type Media, type Ref } from './media'
+import { unsigned } from './reasoning'
 import { dimensions } from './sniff'
 import type { BlobStore } from './store'
 
@@ -33,5 +34,5 @@ export const createOutbound = (store: BlobStore) => {
     return ref
   }
 
-  return (value: unknown) => rewrite(value, fields => (isMedia(fields) && fields.data.length >= threshold ? reference(fields) : fields))
+  return (value: unknown) => rewrite(value, fields => (isMedia(fields) && fields.data.length >= threshold ? reference(fields) : unsigned(fields)))
 }

@@ -4,8 +4,9 @@ import { listen } from '@vaakx-dev/vrui'
 
 const edge = 24
 
+const passive = { passive: true }
+
 interface Press {
-  id: number
   x: number
   y: number
   target: EventTarget | null
@@ -16,46 +17,50 @@ const atEdge = (x: number) => x < edge || x > document.documentElement.clientWid
 
 const blocked = ({ hasOpenLayer, gesture }: Kit, target: EventTarget | null) => hasOpenLayer(true) || gesture.editing(target) || gesture.selecting()
 
-const startDrag = ({ gesture }: Kit, press: Press, { clientX, timeStamp }: PointerEvent, begin: () => Swipe | undefined) => {
+const startDrag = ({ gesture }: Kit, press: Press, { clientX }: Touch, time: number, begin: () => Swipe | undefined) => {
   if (gesture.canScrollToward(press.target, clientX - press.x)) return
   const swipe = begin()
-  return swipe && gesture.follow(swipe, clientX, timeStamp)
+  return swipe && gesture.follow(swipe, clientX, time)
 }
 
 export const swipeGesture = (kit: Kit, begin: () => Swipe | undefined) => {
   let press: Press | undefined
 
-  listen(document, 'pointerdown', ({ pointerType, isPrimary, pointerId, clientX, clientY, target }: PointerEvent) => {
-    if (pointerType !== 'touch' || !isPrimary || blocked(kit, target) || atEdge(clientX)) return
-    press = { id: pointerId, x: clientX, y: clientY, target }
-  })
+  const release = ({ timeStamp }: TouchEvent) => {
+    press?.drag?.end(timeStamp)
+    press = undefined
+  }
 
-  listen(document, 'pointermove', (event: PointerEvent) => {
-    if (press?.id !== event.pointerId) return
-    if (press.drag) {
-      press.drag.move(event.clientX, event.timeStamp)
-      return
-    }
-    const way = kit.gesture.direction(event.clientX - press.x, event.clientY - press.y)
-    if (way === 'undecided') return
-    press.drag = way === 'sideways' ? startDrag(kit, press, event, begin) : undefined
-    if (!press.drag) press = undefined
-  })
+  listen(
+    document,
+    'touchstart',
+    (event: TouchEvent) => {
+      release(event)
+      const [touch] = event.touches
+      if (event.touches.length !== 1 || !touch || blocked(kit, event.target) || atEdge(touch.clientX)) return
+      press = { x: touch.clientX, y: touch.clientY, target: event.target }
+    },
+    passive,
+  )
 
   listen(
     document,
     'touchmove',
-    event => {
-      if (press?.drag && event.cancelable) event.preventDefault()
+    (event: TouchEvent) => {
+      const [touch] = event.touches
+      if (!press || !touch) return
+      if (press.drag) {
+        press.drag.move(touch.clientX, event.timeStamp)
+        return
+      }
+      const way = kit.gesture.direction(touch.clientX - press.x, touch.clientY - press.y)
+      if (way === 'undecided') return
+      press.drag = way === 'sideways' ? startDrag(kit, press, touch, event.timeStamp, begin) : undefined
+      if (!press.drag) press = undefined
     },
-    { passive: false },
+    passive,
   )
 
-  const release = ({ pointerId, timeStamp }: PointerEvent) => {
-    if (press?.id !== pointerId) return
-    press.drag?.end(timeStamp)
-    press = undefined
-  }
-  listen(document, 'pointerup', release)
-  listen(document, 'pointercancel', release)
+  listen(document, 'touchend', release, passive)
+  listen(document, 'touchcancel', release, passive)
 }

@@ -56,6 +56,7 @@ export interface Session extends SessionInfo {
   page(before?: string | null, size?: PageSize): EntryPage
   since(after: string): Entry[] | undefined
   carried(before: string, types: string[]): Entry[]
+  latest(type: string): Entry | undefined
   entries(): Entry[]
   messages(): Message[]
   checkout(entry: string | null): void
