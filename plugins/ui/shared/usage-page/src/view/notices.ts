@@ -7,7 +7,7 @@ import type { Notice } from '../model'
 
 const leadText = ({ pc, failure }: Notice) => (failure ? `${pc.name} didn't answer (${failure})` : `${pc.name} is offline`)
 
-const strong = (text: string) => span({ class: 'font-medium text-neutral-100' }, text)
+const strong = (text: string) => span({ class: 'text-neutral-100' }, text)
 
 const noticeText = (notice: Notice, now: Sig<number>) => {
   if (!notice.at) return span(strong(leadText(notice)), ', so its usage is missing.')
@@ -17,8 +17,8 @@ const noticeText = (notice: Notice, now: Sig<number>) => {
   })
 }
 
-export const offlineNotices = ({ callout }: Kit, notices: Notice[], now: Sig<number>) =>
-  notices.length ? div({ class: 'flex flex-col gap-2' }, notices.map(notice => callout('neutral', noticeText(notice, now)))) : null
+export const offlineNotices = ({ dot }: Kit, notices: Notice[], now: Sig<number>) =>
+  notices.map(notice => div({ class: 'flex items-center gap-2' }, dot('neutral'), noticeText(notice, now)))
 
 export const unpricedRow = ({ settingsRow }: Kit, item: UnpricedModel) =>
   settingsRow({

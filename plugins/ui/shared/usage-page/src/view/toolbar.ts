@@ -1,8 +1,6 @@
-import { exactTime } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, span, type Child } from '@vaakx-dev/vrui'
 import type { Pc } from '../data/types'
-import { agoText } from '../format'
 import type { UsageModel } from '../model'
 import { allPcs, type Tab } from '../prefs'
 
@@ -12,25 +10,41 @@ const tabChoices: { value: Tab; label: string }[] = [
   { value: 'tokens', label: 'Tokens' },
 ]
 
-const pcChoice = ({ dot }: Kit, pc: Pc) => ({ value: pc.id, label: pc.name, title: pc.online ? 'Online' : 'Offline', mark: dot(pc.online ? 'success' : 'neutral') })
-
-const pcFilter = (kit: Kit, model: UsageModel) => {
-  const { segmented } = kit
-  return dynamicChild(model.pcs, pcs =>
-    pcs.length > 1
-      ? segmented([{ value: allPcs, label: 'All PCs' }, ...pcs.map(pc => pcChoice(kit, pc))], model.pc, value => model.pc.set(value), { label: 'PC' })
-      : null,
-  )
-}
-
 const onLimits = (model: UsageModel) => model.tab.get() === 'usage'
 
-const checkedText = (model: UsageModel) => {
-  const updated = derive(() => Math.max(0, ...(model.usage.get()?.accounts ?? []).map(account => account.limits?.updated ?? 0)))
-  return span({ class: 'text-xs text-neutral-500 tabular-nums', title: () => (updated.get() ? exactTime(updated.get()) : '') }, () => {
-    model.now.get()
-    return updated.get() ? `Checked ${agoText(updated.get())}` : ''
-  })
+const pcItem = ({ choiceItem }: Kit, model: UsageModel, value: string, close: () => void, ...label: Child[]) =>
+  choiceItem(
+    {
+      selected: () => model.pc.get() === value,
+      onClick: () => {
+        model.pc.set(value)
+        close()
+      },
+    },
+    ...label,
+  )
+
+const pcName = (pc: Pc) => span({ class: 'min-w-0 flex-1 truncate' }, pc.name)
+
+const pcFilter = (kit: Kit, model: UsageModel) => {
+  const { dot, dropdown, icon, secondaryAction } = kit
+  return dynamicChild(model.pcs, pcs =>
+    pcs.length > 1
+      ? dropdown({
+          placement: 'below-right',
+          trigger: press =>
+            secondaryAction(
+              { ...press, title: 'Show usage from', class: 'max-w-48' },
+              span({ class: 'truncate' }, () => pcs.find(pc => pc.id === model.pc.get())?.name ?? 'All PCs'),
+              icon('down', 'sm'),
+            ),
+          items: close => [
+            pcItem(kit, model, allPcs, close, span({ class: 'min-w-0 flex-1' }, 'All PCs')),
+            ...pcs.map(pc => pcItem(kit, model, pc.id, close, dot(pc.online ? 'success' : 'neutral'), pcName(pc))),
+          ],
+        })
+      : null,
+  )
 }
 
 const refreshButton = ({ delayed, icon, iconButton, spinner }: Kit, model: UsageModel) => {
@@ -45,11 +59,10 @@ const refreshButton = ({ delayed, icon, iconButton, spinner }: Kit, model: Usage
 export const toolbar = (kit: Kit, model: UsageModel) => {
   const { segmented } = kit
   return div(
-    { class: 'flex flex-wrap items-center gap-2' },
+    { class: 'flex items-center gap-2' },
     segmented(tabChoices, model.tab, value => model.tab.set(value), { label: 'View' }),
     span({ class: 'flex-1' }),
     pcFilter(kit, model),
-    show(() => onLimits(model), () => checkedText(model)),
     refreshButton(kit, model),
   )
 }
