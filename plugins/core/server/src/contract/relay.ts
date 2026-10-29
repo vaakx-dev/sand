@@ -8,6 +8,8 @@ export interface LiveSnapshot {
   tools: string[]
 }
 
+export type EntryHead = Omit<Entry, 'data'>
+
 export interface OpenedSession extends Partial<LiveSnapshot> {
   info: SessionInfo
   entries: Entry[]

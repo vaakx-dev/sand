@@ -14,7 +14,9 @@ const walk = (entries: Map<string, Entry>, head: string | null) => {
 
 const isPrompt = (message: Message) => message.role === 'user' && !hasToolResult(message)
 
-export const loadedPath = (thread: Thread) => walk(thread.entries, thread.info.head)
+const shownHead = ({ info, entries, cursor }: Thread) => (info.head && !entries.has(info.head) && cursor ? cursor : info.head)
+
+export const loadedPath = (thread: Thread) => walk(thread.entries, shownHead(thread))
 
 export const hasOlder = (thread: Thread, path = loadedPath(thread)) => {
   const oldest = path[0]

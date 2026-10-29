@@ -3,6 +3,7 @@ import type { Entry, Message, Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 import type { Paging } from './paging'
 import { parseRow, type Row } from './paging/rows'
+import { sentSize } from './paging/size'
 
 export interface SessionHooks {
   entry(session: Session, entry: Entry): void
@@ -10,11 +11,16 @@ export interface SessionHooks {
 }
 
 export const createSession = (db: Database, info: SessionInfo, hooks: SessionHooks, cache: EntryCache, paging: Paging): Session => {
-  const insert = db.query('insert into entries (id, session, parent, at, type, data) values ($id, $session, $parent, $at, $type, $data)')
+  const insert = db.query(
+    'insert into entries (id, session, parent, at, type, data, size) values ($id, $session, $parent, $at, $type, $data, $size)',
+  )
   const setHead = db.query('update chats set head = $head where id = $id')
   const load = db.query<Row, { session: string }>('select * from entries where session = $session')
   const append = db.transaction((...added: Entry[]) => {
-    for (const entry of added) insert.run({ ...entry, data: JSON.stringify(entry.data) })
+    for (const entry of added) {
+      const data = JSON.stringify(entry.data)
+      insert.run({ ...entry, data, size: sentSize(data, entry.data) })
+    }
     setHead.run({ head: added.at(-1)!.id, id: info.id })
   })
   let entries: Map<string, Entry> | undefined
@@ -59,6 +65,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     },
     since: after => paging.since(info.id, session.head, after),
     carried: (before, types) => paging.carried(info.id, before, types),
+    latest: type => (session.head ? paging.latest(info.id, session.head, type) : undefined),
     entries: () => [...all().values()].sort((a, b) => a.at - b.at || a.id.localeCompare(b.id)),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {

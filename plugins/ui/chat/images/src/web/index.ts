@@ -10,6 +10,6 @@ export default definePlugin({
   inject,
   apply(ctx) {
     ctx.provide(imageViewer, createImageViewer(ctx))
-    ctx.provide(replyImages, createReplyImages(ctx.kit, ctx.wire, ctx.threads))
+    ctx.provide(replyImages, createReplyImages(ctx))
   },
 })

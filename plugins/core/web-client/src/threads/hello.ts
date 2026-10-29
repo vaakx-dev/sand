@@ -5,7 +5,7 @@ import type { HelloRead } from '../wire/hellos'
 import { clearTurn } from './live'
 import type { Store } from './store'
 
-const stale = (thread: Thread) => {
+export const stale = (thread: Thread) => {
   if (thread.info.head && thread.entries.has(thread.info.head)) thread.cursor = thread.info.head
   thread.loaded = false
 }

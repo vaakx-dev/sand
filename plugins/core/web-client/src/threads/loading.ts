@@ -12,11 +12,6 @@ const retryDelay = 600
 
 const wait = (ms: number) => new Promise<void>(resolve => after(ms, resolve))
 
-interface Resumed {
-  thread?: Thread
-  replace?: boolean
-}
-
 export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>) => {
   const loading = new Map<string, Promise<Thread | undefined>>()
 
@@ -54,29 +49,22 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     store.changed(id)
   }
 
-  const resume = async (id: string): Promise<Resumed> => {
+  const resume = async (id: string) => {
     const thread = store.threads.get(id)
-    if (!thread?.cursor || !thread.entries.size) return {}
-    try {
-      const delta = await wire.call(sessionSince, { session: id, after: thread.cursor })
-      return delta ? { thread: apply(store.upsert(delta.info, thread.device), delta) } : { replace: true }
-    } catch {
-      return {}
-    }
+    if (!thread?.cursor || !thread.entries.size) return undefined
+    const delta = await wire.call(sessionSince, { session: id, after: thread.cursor }).catch(() => null)
+    return delta ? apply(store.upsert(delta.info, thread.device), delta) : undefined
   }
 
-  const open = async (id: string, replace = false) => {
+  const open = async (id: string) => {
     const request = () => wire.call(sessionOpen, { session: id })
     const opened = await request().catch(error => (reconnecting(id) ? Promise.reject(error) : wait(retryDelay).then(request)))
-    const known = store.threads.get(id)
-    if (replace && known) known.entries = new Map()
     return install(opened)
   }
 
   const fetchThread = async (id: string) => {
     await hydrate(id).catch(() => {})
-    const resumed = await resume(id)
-    return resumed.thread ?? open(id, resumed.replace)
+    return (await resume(id)) ?? open(id)
   }
 
   const load = (id: string) => {

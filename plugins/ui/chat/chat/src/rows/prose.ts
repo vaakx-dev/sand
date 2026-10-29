@@ -16,7 +16,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply(text.get()) })
     const press = menus.text(context.menu, spec)
     return div(
-      { class: 'group mb-3 text-sm', ...press.props },
+      { class: 'chat-row group mb-3 text-sm', ...press.props },
       node,
       show(
         () => !railed?.get(),
