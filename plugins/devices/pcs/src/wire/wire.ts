@@ -1,7 +1,7 @@
 import type { ThreadPcs, Wire } from '@sand/devices-contract'
 import type { Fleet } from '../fleet/fleet'
 import { placeOf } from './place'
-import { directUrl } from './url'
+import { pcUrl } from './url'
 
 export const createWire = (fleet: Fleet, threads: () => ThreadPcs | undefined): Wire => ({
   ready: (pc = fleet.home) => fleet.ready(pc),
@@ -13,5 +13,5 @@ export const createWire = (fleet: Fleet, threads: () => ThreadPcs | undefined): 
   async fetch(path, init, pc = fleet.home, options) {
     return fleet.connection(pc).fetch(path, init, options)
   },
-  url: (path, pc = fleet.home) => directUrl(fleet, path, pc),
+  url: (path, pc = fleet.home) => pcUrl(fleet, path, pc),
 })

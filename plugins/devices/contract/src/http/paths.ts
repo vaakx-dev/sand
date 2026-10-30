@@ -5,6 +5,7 @@ export const devicePaths = {
   pair: '/pair',
   joinRequest: '/pair/request',
   joinCancel: '/pair/request/cancel',
+  via: '/via',
 } as const
 
 export const deviceParams = {
@@ -13,5 +14,7 @@ export const deviceParams = {
 } as const
 
 export const joinRequestPath = (id: string) => `${devicePaths.joinRequest}/${encodeURIComponent(id)}`
+
+export const viaPath = (pc: string, path: string) => `${devicePaths.via}/${encodeURIComponent(pc)}${path}`
 
 export const sessionHeader = (session: string) => `Bearer ${session}`

@@ -22,6 +22,8 @@ export interface Media {
 
 export const media = service<Media>('media')
 
+export const mediaPath = '/media/'
+
 const stored = z.object({ hash: z.string(), mediaType: z.string(), name: z.string().optional() })
 const file = z.object({ src: z.string() })
 
