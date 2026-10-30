@@ -30,9 +30,10 @@ const ordered = (commands: CliCommand[]) => [
 ]
 
 export const helpText = (commands: CliCommand[]) => {
-  const usage = ordered(commands)
+  const shown = commands.filter(command => !command.hidden)
+  const usage = ordered(shown)
     .flatMap(text => text.split('\n'))
     .map((line, index) => `${index ? '       ' : 'usage: '}${line}`)
-  const options = commands.flatMap(command => Object.entries(command.options ?? {}).map(optionLine))
+  const options = shown.flatMap(command => Object.entries(command.options ?? {}).map(optionLine))
   return [...usage, '', ...kernelOptions, ...options].join('\n')
 }

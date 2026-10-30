@@ -19,10 +19,16 @@ export default definePlugin({
         run: () => console.log(helpText(commands.list())),
       }),
     )
-    const start = async () => {
-      await ctx.settled()
-      ctx.cli.exit(await runCommand(commands, ctx.cli.args))
+    const run = async () => {
+      const awake = setInterval(() => {}, 60_000)
+      try {
+        await ctx.settled()
+        return await runCommand(commands, ctx.cli.args)
+      } finally {
+        clearInterval(awake)
+      }
     }
+    const start = async () => ctx.cli.exit(await run())
     void start()
   },
 })

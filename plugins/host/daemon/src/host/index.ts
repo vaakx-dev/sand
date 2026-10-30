@@ -9,7 +9,7 @@ import { handleStop } from './stop'
 
 export default definePlugin({
   name: 'host-daemon',
-  description: 'Reads the [host] settings, and stops or restarts the host when asked, going back to the previous build if the new one is unhealthy',
+  description: 'Reads the [host] settings, and stops or restarts the host when asked, going back to the previous build if the new one fails its own start check',
   inject: { cli, sandConfig },
   apply(ctx) {
     const { home, exit } = ctx.cli

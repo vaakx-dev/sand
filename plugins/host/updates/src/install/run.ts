@@ -1,6 +1,6 @@
 import type { BuildInfo } from '@sand/host-dist/contract'
 import { errorMessage } from '@sand/util'
-import { healthText, type HealthOutcome } from '@sand/util/boot'
+import { healthText } from '@sand/util/boot'
 import type { GithubRelease } from '../github/release'
 import { basename } from 'node:path'
 import type { UpdatePhase } from '../contract'
@@ -11,7 +11,6 @@ export interface InstallProgress {
   live(ticket: number): boolean
   fail(message: string): void
   done(build: BuildInfo): void
-  currentId(): string | undefined
 }
 
 const drainPoll = 2_000
@@ -44,39 +43,29 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
   const cleanup = (keep: string[]) =>
     deps.cleanup(keep).catch(failure => console.error(`sand could not remove old builds: ${errorMessage(failure)}`))
 
-  const goBack = async (before: string) => {
+  const swapBack = async (before: string, swapped: boolean) => {
     deps.app.use(before)
-    await deps.restorePrevious()
-  }
-
-  const unhealthy = async (prepared: PreparedBuild, before: string, previous: string, outcome: HealthOutcome) => {
-    const text = healthText(outcome)
-    console.error(`build ${short(prepared.build.id)} was not healthy:\n${text}`)
-    await goBack(before)
-    const back = await deps.runtimes.swap('update')
-    if (!back) console.error('the previous sand runtime did not start again either')
-    const reason = text.split('\n')[0] || 'no details'
-    progress.fail(`build ${short(prepared.build.id)} was not healthy, so this PC went back to build ${short(previous)}: ${reason}`)
+    if (swapped && !(await deps.runtimes.swap('update'))) console.error('the previous sand runtime did not start again either')
   }
 
   const swapRuntime = async (prepared: PreparedBuild, ticket: number) => {
     const before = deps.app.root()
-    const previous = progress.currentId() ?? basename(before)
     deps.app.use(prepared.root)
-    const ok = await deps.runtimes.swap('update')
+    const swapped = await deps.runtimes.swap('update')
     ensureLive(ticket)
-    if (!ok) {
-      await goBack(before)
-      progress.fail(`the new sand runtime did not start; this PC stays on build ${short(previous)}`)
-      return
+    const outcome = swapped ? await deps.health() : undefined
+    ensureLive(ticket)
+    if (outcome?.ok) {
+      const build = await deps.current().catch(() => prepared.build)
+      ensureLive(ticket)
+      progress.done(build)
+      void cleanup([prepared.root, deps.hostRoot])
+      return true
     }
-    const outcome = await deps.health()
-    ensureLive(ticket)
-    if (!outcome.ok) return await unhealthy(prepared, before, previous, outcome)
-    const build = await deps.current().catch(() => prepared.build)
-    ensureLive(ticket)
-    progress.done(build)
-    void cleanup([prepared.root, deps.hostRoot])
+    const detail = outcome ? `it was not healthy:\n${healthText(outcome)}` : 'it did not start'
+    console.error(`this sand could not run build ${short(prepared.build.id)}'s runtime, so it restarts into it instead; ${detail}`)
+    await swapBack(before, swapped)
+    return false
   }
 
   const needsRestart = async (prepared: PreparedBuild, force: boolean) =>
@@ -96,7 +85,7 @@ export const createInstaller = (deps: UpdaterDeps, progress: InstallProgress) =>
       ensureLive(ticket)
       await deps.switchTo(basename(prepared.root))
       await refreshShim()
-      if (!changed) return await swapRuntime(prepared, ticket)
+      if (!changed && (await swapRuntime(prepared, ticket))) return
       progress.step('waiting', ticket)
       await drain(ticket)
       progress.step('restarting', ticket)
