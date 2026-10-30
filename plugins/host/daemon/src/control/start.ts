@@ -1,21 +1,12 @@
-import { closeSync, existsSync, mkdirSync, openSync, renameSync, statSync, writeSync } from 'node:fs'
+import { closeSync, mkdirSync, openSync, renameSync, statSync, writeSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, join } from 'node:path'
-import { appMain, bunBinary, installedRoot, readBuildBun, withSafe } from '@sand/util/boot'
+import { join } from 'node:path'
+import { withSafe } from '@sand/util/boot'
+import { hostCommand } from './command'
 import { running } from './info'
 import { pcKeys } from './link/keys'
 
 const logLimit = 5 * 1024 * 1024
-
-const hostCommand = async (home: string): Promise<[bun: string, main: string]> => {
-  const root = await installedRoot(home)
-  if (!root) return [process.execPath, Bun.main]
-  const version = await readBuildBun(root)
-  if (!version) return [process.execPath, appMain(root)]
-  const bun = bunBinary(home, version)
-  if (!existsSync(bun)) throw new Error(`sand's Bun ${version} is missing for build ${basename(root).slice(0, 6)}; run Repair from another PC`)
-  return [bun, appMain(root)]
-}
 
 const openLog = (log: string) => {
   try {
@@ -38,7 +29,7 @@ export const start = async (home: string, { wait = 30_000, stopOnFail = false, s
   await pcKeys(home)
   const [bun, main] = await hostCommand(home)
   const output = openLog(log)
-  const child = Bun.spawn([bun, main, 'serve'], {
+  const child = Bun.spawn([bun, main, '--home', home, 'serve'], {
     cwd: homedir(),
     env: withSafe({ ...process.env }, safe),
     detached: true,
