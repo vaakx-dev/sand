@@ -31,7 +31,6 @@ const lookOf = (model: Model, sending: Sig<boolean>): Look => {
 
 const offTitle = (model: Model) => {
   if (!model.online.get()) return 'Reconnecting to sand'
-  if (model.loading.get()) return 'Reading attached files'
   return model.blocked.get() ? "Remove the files that can't be attached" : 'Send'
 }
 

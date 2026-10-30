@@ -1,9 +1,11 @@
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
+import type { MarkdownImage } from '@sand/markdown/contract'
+import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { ContextMenu, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { Child, ClassValue, Sig } from '@vaakx-dev/vrui'
+import type { Child, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
 export type ToolStatus = 'pending' | 'running' | 'done' | 'failed'
@@ -115,16 +117,12 @@ export interface TranscriptParts {
   menus: MenuKit
   toolStep(tool: Sig<ToolView>, options: ToolStepOptions): HTMLElement
   image: MediaImage
+  replyImage(thread: string): MarkdownImage
 }
 
-export interface ImageOptions {
-  class?: ClassValue
-  alt?: string
-  title?: string
-  maxHeight?: number
-}
+export type ImageOptions = Omit<ShownImageOptions, 'open'>
 
-export type MediaImage = (block: ImageBlock, thread: string | undefined, options?: ImageOptions) => HTMLImageElement
+export type MediaImage = (block: ImageBlock, thread: string | undefined, options?: ImageOptions) => HTMLElement
 
 export type TruncatedAt = 'before' | 'after'
 

@@ -1,5 +1,6 @@
 import type { AppOutput, AppSession, AppSetup } from '@sand/accounts/contract'
 import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 import { fieldsOf, type Json } from '../server/rpc'
 import type { CodexServer } from '../server/server'
 import { inputItem, toolOutput } from './content'
@@ -24,7 +25,13 @@ const usageMeter = (output: AppOutput) => {
 
 const failure = (turn: Json) => new Error(String(fieldsOf(turn.error).message ?? 'Codex stopped this turn'))
 
-export const openSession = async (server: CodexServer, setup: AppSetup, output: AppOutput): Promise<AppSession> => {
+export interface SessionNeeds {
+  server: CodexServer
+  media: Media
+}
+
+export const openSession = async ({ server, media }: SessionNeeds, setup: AppSetup, output: AppOutput): Promise<AppSession> => {
+  const toItem = inputItem(media)
   const { thread } = await server.request('thread/start', {
     model: setup.model,
     cwd: setup.cwd,
@@ -62,7 +69,7 @@ export const openSession = async (server: CodexServer, setup: AppSetup, output: 
     const id = String(params.callId)
     output.call({ id, name: String(params.tool), input: fieldsOf(params.arguments) })
     output.pause()
-    return toolOutput(await answerFor(id).promise)
+    return toolOutput(await answerFor(id).promise, media)
   }
 
   const forget = server.thread(threadId, { notify, call, fail: error => output.fail(error) })
@@ -72,12 +79,12 @@ export const openSession = async (server: CodexServer, setup: AppSetup, output: 
       const intro = history ? [{ type: 'text', text: earlier(history), text_elements: [] }] : []
       history = ''
       void server
-        .request('turn/start', { threadId, input: [...intro, ...content.map(inputItem)], model: setup.model, ...(setup.effort && { effort: setup.effort }), summary: 'auto' })
+        .request('turn/start', { threadId, input: [...intro, ...content.map(toItem)], model: setup.model, ...(setup.effort && { effort: setup.effort }), summary: 'auto' })
         .catch(error => output.fail(error))
     },
     steer(content: UserContent[]) {
       if (!turnId) return
-      void server.request('turn/steer', { threadId, expectedTurnId: turnId, input: content.map(inputItem) }).catch(error => output.fail(error))
+      void server.request('turn/steer', { threadId, expectedTurnId: turnId, input: content.map(toItem) }).catch(error => output.fail(error))
     },
     answer: (id, result) => answerFor(id).resolve(result),
     interrupt() {

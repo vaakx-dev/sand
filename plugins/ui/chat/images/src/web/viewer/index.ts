@@ -1,8 +1,8 @@
 import type { ImageViewer } from '../../contract'
 import type { Picture } from './gallery'
-import { img, mount } from '@vaakx-dev/vrui'
+import { mount } from '@vaakx-dev/vrui'
 import type { ImagesContext } from '../context'
-import { indexOfImage, threadImages } from './gallery'
+import { galleryOf } from './gallery'
 import { viewerDialog } from './view/dialog'
 import { viewerModel } from './view/model'
 
@@ -13,11 +13,9 @@ export const createImageViewer = (ctx: ImagesContext): ImageViewer => {
 
   return {
     open(thread, block) {
-      const images = threadImages(ctx.threads, thread)
-      const start = indexOfImage(images, block)
-      if (start < 0) return
+      const { images, start } = galleryOf(ctx.threads, thread, block)
       closeOpen?.()
-      const picture: Picture = (shown, props) => ctx.media.show(img({ alt: shown.name ?? 'image', ...props }), shown, thread)
+      const picture: Picture = (shown, options) => ctx.mediaView.image({ block: shown }, thread, options)
       const close = () => {
         unmount()
         closeOpen = undefined

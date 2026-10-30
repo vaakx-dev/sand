@@ -47,13 +47,18 @@ const skipSpace = (source: string, index: number) => {
   return index
 }
 
-const bareDestination = (source: string, start: number) => {
+const drivePath = /^[a-zA-Z]:[\\/]/
+const backslashed = /\\(\S)/g
+
+const windowsPath = (url: string) => drivePath.test(url) || [...url.matchAll(backslashed)].some(([, next]) => !escapable.test(next!))
+
+const scanDestination = (source: string, start: number, literal: boolean) => {
   let url = ''
   let depth = 0
   let index = start
   while (index < source.length) {
     const char = source[index]!
-    if (char === '\\' && escapable.test(source[index + 1] ?? '')) {
+    if (!literal && char === '\\' && escapable.test(source[index + 1] ?? '')) {
       url += source[index + 1]
       index += 2
       continue
@@ -65,6 +70,11 @@ const bareDestination = (source: string, start: number) => {
     index++
   }
   return { url, index }
+}
+
+const bareDestination = (source: string, start: number) => {
+  const raw = scanDestination(source, start, true)
+  return windowsPath(raw.url) ? raw : scanDestination(source, start, false)
 }
 
 export const inlineDestination = (source: string, open: number) => {

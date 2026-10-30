@@ -21,6 +21,7 @@ interface HostAuth {
   socketUrl(base: string, host: string): Promise<string>
   pairing(): WirePairing | undefined
   fetch(path: string, init?: RequestInit): Promise<Response>
+  url(path: string): string
 }
 
 const ticketWith = async (base: string, key: string) => {
@@ -32,6 +33,12 @@ export const createHostAuth = (options: HostAuthOptions): HostAuth => {
   let host: string | undefined
 
   const storedKey = () => (host ? hostKeys.get(host) : undefined)
+
+  const url = (path: string) => {
+    const base = options.base()
+    if (!base) throw new Error('Not connected to the sand server')
+    return new URL(path, base).href
+  }
 
   const storedTicket = async (base: string, id: string) => {
     const stored = hostKeys.get(id)
@@ -67,14 +74,13 @@ export const createHostAuth = (options: HostAuthOptions): HostAuth => {
       const stored = storedKey()
       return host && stored ? { host, device: stored.device } : undefined
     },
-    fetch(path, init = {}) {
+    async fetch(path, init = {}) {
       const stored = storedKey()
-      if (!stored) return Promise.reject(new Unpaired())
-      const base = options.base()
-      if (!base) return Promise.reject(new Error('Not connected to the sand server'))
+      if (!stored) throw new Unpaired()
       const headers = new Headers(init.headers)
       for (const [name, value] of Object.entries(bearer(stored.key))) headers.set(name, value)
-      return fetch(new URL(path, base), { ...init, headers })
+      return fetch(url(path), { ...init, headers })
     },
+    url,
   }
 }

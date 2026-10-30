@@ -17,7 +17,7 @@ export interface RowContext {
   thread: string
   parts: TranscriptParts
   markdown: Markdown
-  images(at: number): MarkdownImage | undefined
+  image: MarkdownImage
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
   reply(text: string): NavAction[]

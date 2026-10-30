@@ -1,10 +1,12 @@
 import { isRecord, joinDisposers } from '@sand/util'
 import type { RouteCaller } from '@sand/host-gateway/contract'
+import type { Media } from '@sand/media/contract'
 import type { Server } from '@sand/server/contract'
 import type { LLMRequest } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 import { shareInfo, sharedIds, sharePaths } from './info'
+import { keepCarried } from './media'
 import { streamLines } from './stream'
 import type { ShareUsers } from './users'
 
@@ -12,13 +14,14 @@ interface ShareOptions {
   local: LocalLLM
   accounts: Accounts
   users: ShareUsers
+  media: Media
 }
 
 const refuse = (text: string, status = 403) => new Response(text, { status, headers: { 'content-type': 'text/plain' } })
 
 const unpaired = () => refuse('only paired PCs can use the accounts on this PC', 401)
 
-const isRequest = (value: unknown): value is LLMRequest =>
+const isRequest = (value: unknown): value is LLMRequest & { media?: unknown } =>
   isRecord(value) && typeof value.system === 'string' && Array.isArray(value.messages) && Array.isArray(value.tools)
 
 const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {
@@ -33,7 +36,7 @@ const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {
   )
 }
 
-export const serveShare = (server: Server, { local, accounts, users }: ShareOptions) => {
+export const serveShare = (server: Server, { local, accounts, users, media }: ShareOptions) => {
   const info = async (request: Request, caller?: RouteCaller) => {
     if (caller?.kind !== 'pc') return unpaired()
     users.seen(caller)
@@ -51,7 +54,9 @@ export const serveShare = (server: Server, { local, accounts, users }: ShareOpti
     if (!model?.source) return refuse(`unknown model: ${body.model}`)
     if (!accounts.shared(model.source)) return refuse(`not shared: ${accounts.label(model.source)}`)
     users.used(caller)
-    return streamLines(signal => local.stream({ ...body, model: model.id }, signal), request.signal)
+    const { media: carried, ...asked } = body
+    keepCarried(media, carried)
+    return streamLines(signal => local.stream({ ...asked, model: model.id }, signal), request.signal)
   }
 
   return joinDisposers(server.route(sharePaths.info, info), server.route(sharePaths.stream, stream))

@@ -23,6 +23,7 @@
     "@sand/host-hub": "workspace:*",
     "@sand/host-remotes": "workspace:*",
     "@sand/layout": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",

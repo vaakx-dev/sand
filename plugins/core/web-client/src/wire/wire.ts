@@ -15,6 +15,7 @@ export interface HomeWire {
   pairing(): WirePairing | undefined
   call: Call
   fetch(path: string, init?: RequestInit): Promise<Response>
+  url(path: string): string
   info(): ConnectionInfo
 }
 
@@ -78,6 +79,7 @@ export const startWire = (ctx: Context, { cache, here, since, listeners, hellos 
     pairing: auth.pairing,
     call: home.call,
     fetch: auth.fetch,
+    url: auth.url,
     info: home.info,
   }
 }

@@ -2,7 +2,6 @@ import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { sessionUpdate } from '@sand/chats/contract'
 import { createHandlers, parseInput } from '@sand/util/wire'
 import { definePlugin } from 'drydock'
-import { createBlobs } from './blobs'
 import { helloSafe, type Server, server as serverService, uiFocus } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
@@ -11,6 +10,7 @@ import { sessionRequests } from './requests/sessions'
 import { createRoutes } from './routes'
 import { forwardEvents, type Send } from './socket/forward'
 import { createSockets, eventFrame, everyone, type Socket } from './socket/sockets'
+import { trimForPage } from './socket/trim'
 import { createLiveTracker } from './stream/live'
 import { createStream } from './stream/stream'
 
@@ -19,9 +19,6 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const routes = createRoutes(ctx.runtime)
-    const blobs = createBlobs(ctx.cli.home, id => ctx.sessions.open(id)?.entries(), error => ctx.report(error))
-    routes.route('/blob', blobs.route)
-    ctx.effect(blobs.sweep)
     const handlers = createHandlers()
     const hellos = createHello(ctx)
     const live = createLiveTracker(ctx)
@@ -45,7 +42,7 @@ export default definePlugin({
       leave: socket => stream.forget(socket),
       answer(socket, request) {
         if (request.type === uiFocus.id) return focus(socket, request)
-        return blobs.answer(request, input => handlers.answer(request.type, input, socket.data))
+        return handlers.answer(request.type, request.input, socket.data).then(trimForPage)
       },
       settle: () => stream.flush(),
       malformed: error => ctx.report(error),
@@ -53,7 +50,7 @@ export default definePlugin({
     const stream = createStream(ctx, sockets.publish, live)
     const send: Send = (event, payload, to = everyone) => {
       stream.flush()
-      sockets.publish(() => eventFrame(event.id, blobs.outbound(payload)), to)
+      sockets.publish(() => eventFrame(event.id, trimForPage(payload)), to)
     }
     const listener = Bun.serve({ hostname: '127.0.0.1', port: 0, websocket: sockets.websocket, fetch: routes.respond })
     ctx.effect(() => () => void listener.stop(true))
@@ -69,7 +66,6 @@ export default definePlugin({
       handle: handlers.handle,
       broadcast: (event, payload) => send(event, payload),
       hello: hellos.register,
-      inlineMedia: blobs.inline,
     }
     ctx.provide(serverService, server)
     ctx.runtime.listening(`http://127.0.0.1:${listener.port}`)

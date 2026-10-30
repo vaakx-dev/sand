@@ -5,7 +5,6 @@ import {
   fileIndex,
   limits,
   machines as machinesService,
-  media,
   models as modelsService,
   projects as projectsService,
   projectsChange,
@@ -19,7 +18,6 @@ import { createLimits } from './data/limits'
 import { createModels } from './data/models'
 import { createProjects } from './data/projects'
 import { createSkillIndex } from './data/skills'
-import { createMedia } from './media/service'
 import { bridgeRemotes } from './remotes/bridge'
 import { createLinks } from './remotes/links'
 import { createMachines } from './remotes/machines'
@@ -69,6 +67,5 @@ export default definePlugin({
     ctx.provide(skillIndex, createSkillIndex(ctx, wire, threads))
     ctx.provide(projectsService, projects.projects)
     ctx.provide(machinesService, machines.machines)
-    ctx.provide(media, createMedia(ctx, wire, store, machines.machines))
   },
 })

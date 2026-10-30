@@ -3,36 +3,21 @@ export interface TextBlock {
   text: string
 }
 
-export interface MediaRef {
-  blob: string
-  size: number
-  width?: number
-  height?: number
-}
+import type { MediaRef } from '@sand/media/contract'
 
-interface InlineMedia {
-  data: string
-  blob?: undefined
-}
+export type { MediaRef, StoredMedia } from '@sand/media/contract'
 
-interface StoredMedia extends MediaRef {
-  data?: undefined
-}
-
-export type MediaData = InlineMedia | StoredMedia
-
-export type ImageBlock = {
+export interface ImageBlock extends MediaRef {
   type: 'image'
   mediaType: string
   name?: string
-  path?: string
-} & MediaData
+}
 
-export type DocumentBlock = {
+export interface DocumentBlock extends MediaRef {
   type: 'document'
   mediaType: 'application/pdf' | 'text/plain'
   name?: string
-} & MediaData
+}
 
 export interface UnpackedFolder {
   path: string

@@ -49,8 +49,7 @@ export const createModel = (ctx: ComposerContext) => {
   })
   const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
   const empty = derive(() => !text.get().trim() && !files.items.get().length)
-  const loading = derive(() => files.loading())
-  const blocked = derive(() => Boolean(files.rejected()) || files.loading())
+  const blocked = derive(() => files.rejected())
   const clear = () => {
     text.set('')
     files.set([])
@@ -123,7 +122,6 @@ export const createModel = (ctx: ComposerContext) => {
     idle,
     online,
     empty,
-    loading,
     blocked,
     changes,
     turnError,

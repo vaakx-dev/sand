@@ -1,5 +1,6 @@
 import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
 import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 import { claudeArgs, claudeEnv } from '../cli/args'
 import { connect, fieldsOf, type Json } from '../cli/connection'
 import { usageLimits } from '../account/usage'
@@ -11,14 +12,20 @@ const cacheTtl = (setup: AppSetup) => (setup.sessionKind === 'thread' ? '1h' : '
 
 const earlier = (history: string) => `Earlier in this conversation (carried over from sand):\n\n${history}\n\n---\n\n`
 
-export const openSession = async (setup: AppSetup, output: AppOutput, report: (limits: PlanLimits) => void): Promise<AppSession> => {
+export interface SessionNeeds {
+  media: Media
+  report(limits: PlanLimits): void
+}
+
+export const openSession = async (setup: AppSetup, output: AppOutput, { media, report }: SessionNeeds): Promise<AppSession> => {
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   const answerFor = (id: string) => {
     const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
     answers.set(id, found)
     return found
   }
-  const serve = toolServer(setup.tools, id => answerFor(id).promise)
+  const serve = toolServer(setup.tools, id => answerFor(id).promise, media)
+  const toBlock = messageBlock(media)
   const reader = createReader(output)
   let history = setup.history
   let interrupted = false
@@ -56,7 +63,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, report: (l
   await connection.request('initialize', { sdkMcpServers: [serverName], systemPrompt: [setup.system] })
 
   const send = (content: UserContent[]) => {
-    const blocks = content.map(messageBlock)
+    const blocks = content.map(toBlock)
     const intro = history ? [{ type: 'text', text: earlier(history) }] : []
     history = ''
     connection.send({ type: 'user', message: { role: 'user', content: [...intro, ...blocks] }, parent_tool_use_id: null })
