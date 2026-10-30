@@ -1,13 +1,12 @@
 import type { ServerInfo } from '@sand/host-gateway/contract'
 import type { Request } from '@sand/host-hub/contract'
-import { adminSocketUrl, askOnce, SocketError } from '@sand/util/boot'
+import { openLink } from './link'
 
-const cliMessages = { timeout: 'sand did not answer', closed: 'sand did not answer', failed: 'could not reach sand' }
-
-export const ask = async <I, O>(info: Pick<ServerInfo, 'url' | 'key'>, request: Request<I, O>, input: I, timeout?: number) => {
+export const ask = async <I, O>(home: string, info: Pick<ServerInfo, 'url'>, request: Request<I, O>, input: I, timeout?: number) => {
+  const link = await openLink(home, info.url)
   try {
-    return await askOnce(() => adminSocketUrl(info), request, input, timeout)
-  } catch (error) {
-    throw error instanceof SocketError ? new Error(cliMessages[error.kind]) : error
+    return await link.call(request, input, { timeout })
+  } finally {
+    link.close()
   }
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@sand/devices-network",
+  "version": "0.0.0",
+  "description": "Who can reach this PC, the routes it publishes, Tailscale, and finding other sand PCs nearby",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "host": "./src/index.ts",
+    "label": "Network",
+    "summary": "Routes to this PC, Tailscale and finding your other PCs"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

@@ -1,32 +1,17 @@
-import { fetchHostIdentity } from '@sand/host-remotes/pairing'
-import { remoteStore, remoteUrls } from '@sand/host-remotes/peers'
-import type { RemoteRecord } from '@sand/host-remotes/contract'
-import { bearer } from '@sand/util/boot/wire'
+import type { Peers } from '@sand/devices-contract'
 import { eachChunk, fetchChunk, type ChunkedFile, type PcFetch } from './chunks'
 import type { TransferStore } from './transfers'
 
-const identityTimeout = 3000
-
-export const reachableUrl = async (record: RemoteRecord) => {
-  for (const url of remoteUrls(record)) {
-    const identity = await fetchHostIdentity(url, identityTimeout).catch(() => undefined)
-    if (identity?.deviceId === record.id) return url
-  }
-  throw new Error(`${record.name} is not reachable from this PC`)
-}
-
-const fetchFromPc = async (home: string, pc: string): Promise<PcFetch> => {
-  const record = (await remoteStore(home)).get(pc)
-  if (!record) throw new Error('This PC is not paired with the PC that has the files')
-  const url = await reachableUrl(record)
-  return (path, init) => fetch(new URL(path, url), { ...init, headers: bearer(record.key) })
+const fetchFromPc = (peers: Peers | undefined, pc: string): PcFetch => {
+  if (!peers?.get(pc)) throw new Error("The PC that has the files isn't one of your PCs")
+  return (path, init) => peers.fetch(pc, path, init)
 }
 
 export const pullFrom =
-  (home: string, transfers: TransferStore) =>
+  (transfers: TransferStore, peers: () => Peers | undefined) =>
   async ({ from, transfer, size, chunks }: ChunkedFile & { from?: string }) => {
     const file = { transfer, size, chunks }
-    const source = from && (await fetchFromPc(home, from))
+    const source = from ? fetchFromPc(peers(), from) : undefined
     const read = (index: number) => (source ? fetchChunk(source, file, index) : transfers.read(transfer, index).bytes())
     await eachChunk(chunks, async index => transfers.write(file, index, await read(index)))
   }

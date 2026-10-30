@@ -1,5 +1,5 @@
 import { AccountError, rawMessage } from '../errors'
-import { Refused } from './http'
+import { Refused } from './refused'
 
 const refusedText = (error: Refused, pc: string, provider: string) => {
   if (error.status === 401) return `${pc} no longer accepts this PC — pair it again`

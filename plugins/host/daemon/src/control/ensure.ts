@@ -6,7 +6,7 @@ import { start } from './start'
 export const ensureRunning = async (home: string, { safe = false }: { safe?: boolean } = {}): Promise<DaemonLaunch> => {
   const found = await running(home)
   const info = found ?? (await start(home, { safe }))
-  if (found && safe) await switchSafe(found, true)
+  if (found && safe) await switchSafe(home, found, true)
   await waitForRuntime(info, home)
   return { info, started: !found }
 }

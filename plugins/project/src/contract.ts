@@ -119,12 +119,16 @@ export const projectsUpdate = request('projects.update', { input: z.object({ pro
 export const projectsRemove = request('projects.remove', { input: z.object({ project: z.string(), device: z.string().optional() }), output: type<void>() })
 export const projectsRoot = request('projects.root', { input: z.object({ root: z.string() }), output: type<ProjectList>() })
 export const projectsCreate = request('projects.create', { input: z.object({ name: z.string() }), output: type<Project>() })
-export const projectsSync = request('projects.sync', { input: z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>() })
+export const projectsSync = request('projects.sync', { input: z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>(), callers: 'pc' })
 
-export const filesList = request('files.list', { input: z.object({ cwd: z.string().optional() }), output: type<string[]>() })
-export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>() })
-export const filesRead = request('files.read', { input: z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>() })
-export const filesChanges = request('files.changes', { input: z.object({ cwd: z.string() }), output: type<Record<string, FileChange>>() })
+export const filesList = request('files.list', { input: z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
+export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })
+export const filesRead = request('files.read', { input: z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>(), place: 'thread' })
+export const filesChanges = request('files.changes', {
+  input: z.object({ cwd: z.string() }),
+  output: type<Record<string, FileChange>>(),
+  place: 'thread',
+})
 export const fsBrowse = request('fs.browse', { input: pathInput, output: type<FolderListing>() })
 export const fsMkdir = request('fs.mkdir', { input: pathInput, output: type<void>() })
 

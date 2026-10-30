@@ -1,6 +1,6 @@
 import type { Entry } from '@sand/chats/contract'
 import { sessionEntries, sessionPage } from '@sand/server/contract'
-import type { Wire } from '../contract'
+import type { Wire } from '@sand/devices-contract'
 import { hasOlder, loadedPath, merge } from './path'
 import type { Store } from './store'
 

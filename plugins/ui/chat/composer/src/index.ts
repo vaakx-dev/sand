@@ -46,6 +46,7 @@ export default definePlugin({
       },
       attach: content => model.files.attach(content),
       slot: (where, view, order) => slots.add(where, view, order),
+      hold: reason => model.holds.add(reason),
       ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
     }

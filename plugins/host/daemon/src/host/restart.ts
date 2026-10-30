@@ -15,7 +15,7 @@ const launch = async (home: string) => {
   return info
 }
 
-const checkHealth = (info: ServerInfo) => waitHealthy(() => ask(info, hostHealthRequest, {}, 10_000), { timeout: healthWait })
+const checkHealth = (home: string, info: ServerInfo) => waitHealthy(() => ask(home, info, hostHealthRequest, {}, 10_000), { timeout: healthWait })
 
 const rollback = async (home: string) => {
   try {
@@ -27,8 +27,8 @@ const rollback = async (home: string) => {
   }
 }
 
-const reportPrevious = async (info: ServerInfo) => {
-  const outcome = await checkHealth(info)
+const reportPrevious = async (home: string, info: ServerInfo) => {
+  const outcome = await checkHealth(home, info)
   if (outcome.ok) console.log('the previous sand build is healthy')
   else console.error(`the previous sand build is not healthy either:\n${healthText(outcome)}`)
 }
@@ -40,7 +40,7 @@ const rollbackUnhealthy = async (home: string) => {
     console.error(`could not stop the new sand: ${errorMessage(error)}`)
   }
   const info = await rollback(home)
-  if (info) await reportPrevious(info)
+  if (info) await reportPrevious(home, info)
 }
 
 const startNew = async (home: string) => {
@@ -55,7 +55,7 @@ const startNew = async (home: string) => {
 export const restartHost = async (home: string): Promise<void> => {
   const info = await startNew(home)
   if (!info) return
-  const outcome = await checkHealth(info)
+  const outcome = await checkHealth(home, info)
   if (outcome.ok) return
   console.error(`the new sand is not healthy:\n${healthText(outcome)}`)
   await rollbackUnhealthy(home)

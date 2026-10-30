@@ -1,13 +1,11 @@
+import type { Peers, PeerView } from '@sand/devices-contract'
+import { loadPcIdentity } from '@sand/devices-identity/pc'
 import type { Request } from '@sand/host-hub/contract'
-import type { RemoteRecord } from '@sand/host-remotes/contract'
-import { callPeer, remoteStore } from '@sand/host-remotes/peers'
 import type { Tool } from '@sand/tools/contract'
 import { bytes } from '@sand/util'
-import { readDeviceId } from '@sand/util/boot'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 import { transfersOffer, transfersSave } from '../contract'
-import { reachableUrl } from '../pull'
 import type { TransferStore } from '../transfers'
 import { offerPath } from './offer'
 import { saveFrom } from './save'
@@ -25,19 +23,27 @@ const copyInput = z.object({
 
 const listInput = z.object({})
 
-export const pcTools = (home: string, transfers: TransferStore) => {
-  const offer = offerPath(transfers)
-  const save = saveFrom(home, transfers)
+const reachText = (pc: PeerView) => (pc.status.phase === 'connected' ? 'reachable' : 'unreachable')
 
-  const paired = async (name: string) => {
-    const records = (await remoteStore(home)).list()
-    const found = records.find(record => record.id === name || record.name.toLowerCase() === name.toLowerCase())
-    if (!found) throw new Error(`No paired PC is called ${name}. Paired PCs: ${records.map(record => record.name).join(', ') || 'none'}`)
+export const pcTools = (home: string, transfers: TransferStore, linked: () => Peers | undefined) => {
+  const offer = offerPath(transfers)
+  const save = saveFrom(transfers, linked)
+
+  const connected = () => {
+    const found = linked()
+    if (!found) throw new Error("This PC can't reach your other PCs right now")
     return found
   }
 
-  const on = <I, O>(pc: RemoteRecord | undefined, request: Request<I, O>, input: I, here: (input: I) => Promise<O>) =>
-    pc ? callPeer(pc, request, input, new Set(), copyTimeout) : here(input)
+  const paired = (name: string) => {
+    const pcs = connected().list()
+    const found = pcs.find(pc => pc.id === name || pc.name.toLowerCase() === name.toLowerCase())
+    if (!found) throw new Error(`No paired PC is called ${name}. Paired PCs: ${pcs.map(pc => pc.name).join(', ') || 'none'}`)
+    return found
+  }
+
+  const on = <I, O>(pc: PeerView | undefined, request: Request<I, O>, input: I, here: (input: I) => Promise<O>) =>
+    pc ? connected().call(pc.id, request, input, { timeout: copyTimeout }) : here(input)
 
   const list: Tool<typeof listInput> = {
     name: 'list_pcs',
@@ -45,8 +51,7 @@ export const pcTools = (home: string, transfers: TransferStore) => {
     group,
     input: listInput,
     async run() {
-      const reach = (record: RemoteRecord) => reachableUrl(record).then(() => 'reachable', () => 'unreachable')
-      const others = await Promise.all((await remoteStore(home)).list().map(async record => `${record.name} (${record.platform}, ${await reach(record)})`))
+      const others = (linked()?.list() ?? []).map(pc => `${pc.name} (${pc.platform ?? 'unknown platform'}, ${reachText(pc)})`)
       return [`this PC (${process.platform})`, ...others].join('\n')
     },
   }
@@ -57,10 +62,10 @@ export const pcTools = (home: string, transfers: TransferStore) => {
     group,
     input: copyInput,
     async run({ from, to, from_pc, to_pc }, { cwd }) {
-      const source = from_pc ? await paired(from_pc) : undefined
-      const target = to_pc ? await paired(to_pc) : undefined
+      const source = from_pc ? paired(from_pc) : undefined
+      const target = to_pc ? paired(to_pc) : undefined
       const offered = await on(source, transfersOffer, { path: source ? from : resolve(cwd, from) }, offer)
-      const sender = source?.id === target?.id ? undefined : (source?.id ?? (await readDeviceId(home)))
+      const sender = source?.id === target?.id ? undefined : (source?.id ?? (await loadPcIdentity(home)).id)
       await on(target, transfersSave, { ...offered, from: sender, path: target ? to : resolve(cwd, to) }, save)
       return `Copied ${offered.folder ? 'folder' : 'file'} (${bytes(offered.size)}) to ${to} on ${target?.name ?? 'this PC'}`
     },

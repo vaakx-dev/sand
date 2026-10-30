@@ -20,13 +20,13 @@ export const createSlots = () => {
 
   const empty = (...places: ComposerSlot[]) => entries.map(all => !all.some(entry => places.includes(entry.where)))
 
-  const host = (where: ComposerSlot, className: string) =>
+  const host = (where: ComposerSlot, className: string, wrap = (node: HTMLElement) => node) =>
     list(
       entries.map(all => all.filter(entry => entry.where === where).sort((a, b) => a.order - b.order)),
       entry => entry.id,
       entry => {
         const { view } = entry.get()
-        return typeof view === 'function' ? view() : view
+        return wrap(typeof view === 'function' ? view() : view)
       },
       div({ class: className, hidden: empty(where) }),
     )

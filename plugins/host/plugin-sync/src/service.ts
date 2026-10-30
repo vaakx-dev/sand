@@ -12,7 +12,7 @@ import { syncView } from './state/view'
 import type { PluginSync, PluginSyncOptions } from './types'
 
 export const createPluginSync = async (options: PluginSyncOptions): Promise<PluginSync> => {
-  const { home, device, link } = options
+  const { home, self, link } = options
   const root = join(home, 'plugins')
   const work = join(home, 'plugin-sync')
   const store = await syncStore(home)
@@ -27,7 +27,7 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
   const manifest = (): PluginManifest => {
     const local = localSet()
     const plugins = Object.fromEntries(Object.entries(scan.trees).filter(([name]) => !local.has(name)))
-    return { device: device.id, plugins, local: [...local] }
+    return { device: self, plugins, local: [...local] }
   }
 
   const view = () => syncView(scan.trees, localSet(), offers)
@@ -73,9 +73,10 @@ export const createPluginSync = async (options: PluginSyncOptions): Promise<Plug
 
   return {
     state: () => queue(async () => view()),
-    async exchange(value) {
+    async exchange(value, from) {
       const claimed = parseManifest(value)
-      const paired = (await link.list()).some(item => item.id === claimed.device)
+      if (claimed.device !== from) throw new Error('That plugin list belongs to a different PC')
+      const paired = link.list().some(item => item.id === claimed.device)
       if (paired && !stopped) peers.heard(claimed)
       return manifest()
     },

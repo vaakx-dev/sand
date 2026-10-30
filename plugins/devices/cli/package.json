@@ -1,0 +1,23 @@
+{
+  "name": "@sand/devices-cli",
+  "version": "0.0.0",
+  "description": "The sand devices command: lists your PCs, phones and browsers, pairs new ones and answers join requests",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "cli": "./src/index.ts",
+    "label": "Devices command",
+    "summary": "Lists and pairs devices from the terminal"
+  },
+  "dependencies": {
+    "@sand/cli-commands": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "uqr": "^0.1.3"
+  }
+}

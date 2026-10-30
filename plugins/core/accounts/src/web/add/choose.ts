@@ -26,9 +26,9 @@ const groups: Group[] = [
     ],
   },
   {
-    label: 'On your machine',
+    label: 'On this PC',
     options: [
-      { step: { kind: 'detect' }, logo: 'ollama', title: 'Ollama or LM Studio', detail: 'Finds them on this PC' },
+      { step: { kind: 'detect' }, logo: 'ollama', title: 'Ollama or LM Studio', detail: 'Finds them if they are running' },
       { step: customServer, logo: 'server', title: 'Custom server', detail: 'Any OpenAI-compatible URL' },
     ],
   },

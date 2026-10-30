@@ -8,7 +8,7 @@ export const createLinks = (runtimes: Runtimes, downstream: Downstream) => {
   const isLive = (id: string) => runtimes.live().some(runtime => runtime.id === id)
 
   const connect = (client: Client, runtime: RuntimeView) => {
-    const upstream = createUpstream(runtime, client.device, {
+    const upstream = createUpstream(runtime, client.caller, {
       message: raw => downstream(client, runtime, raw),
       lost: () => fail(client, runtime.id),
       alive: () => client.open && isLive(runtime.id),

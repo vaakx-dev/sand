@@ -1,5 +1,5 @@
 import { modelsSeen } from '@sand/accounts/contract'
-import { wire } from '@sand/web-client/contract'
+import { wire } from '@sand/devices-contract'
 import { derive, div, dynamicChild, effect } from '@vaakx-dev/vrui'
 import type { PanelOptions, PickerTarget } from '../contract'
 import type { Picker, PickerContext } from '../deps'

@@ -2,7 +2,8 @@ import type { Prompt } from '@sand/chats/contract'
 import { promptLabel } from '@sand/chats/prompt'
 import { loopInterrupt, loopRun } from '@sand/server/contract'
 import { loopSteer, loopUnsteer } from '@sand/steering/contract'
-import type { Turns, Wire } from '../contract'
+import type { Wire } from '@sand/devices-contract'
+import type { Turns } from '../contract'
 import type { Store } from './store'
 
 export const createTurns = (wire: Wire, store: Store): Turns => {

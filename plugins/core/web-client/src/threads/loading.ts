@@ -1,8 +1,9 @@
 import { contextGet } from '@sand/compaction/contract'
 import { type OpenedSession, sessionOpen, sessionSince } from '@sand/server/contract'
+import type { Wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import type { Context } from 'drydock'
-import { modelsChange, type Thread, threadChange, type Wire } from '../contract'
+import { modelsChange, type Thread, threadChange } from '../contract'
 import { after } from '../detached'
 import { catchUp } from './live'
 import { merge, turnStart } from './path'
@@ -40,7 +41,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     return apply(thread, opened)
   }
 
-  const reconnecting = (id: string) => store.deviceOf(id) === store.here() && wire.state() !== 'open'
+  const reconnecting = (id: string) => !wire.ready(store.deviceOf(id))
 
   const fail = (id: string, error: unknown) => {
     const thread = store.threads.get(id)

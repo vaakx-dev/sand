@@ -36,6 +36,7 @@ import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { segmented, settingsSection } from './rows/settings'
 import { dockFade } from './scroll/fade'
+import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
@@ -175,6 +176,7 @@ export const kit = {
   sideColumn,
   sideHead,
   spinner,
+  stableGutter,
   starMark,
   statusBadge,
   statusBanner,

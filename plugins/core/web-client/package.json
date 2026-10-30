@@ -1,34 +1,28 @@
 {
   "name": "@sand/web-client",
   "version": "0.0.0",
-  "description": "Connects the page to sand and its paired PCs with this browser's own keys",
+  "description": "Keeps the threads, models, projects and the rest of your PCs on the page, cached by PC",
   "type": "module",
   "exports": {
     "./address": "./src/integrations/address.ts",
     "./contract": "./src/contract/index.ts",
-    "./pairing": "./src/pairing/routes.ts",
     "./reactive": "./src/reactive/index.ts"
   },
   "sand": {
     "web": "./src/index.ts",
-    "label": "Connection",
-    "summary": "Connects the page to sand and your other PCs"
+    "label": "Threads",
+    "summary": "Keeps the threads, models and projects of your PCs on the page"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
-    "@sand/host-devices": "workspace:*",
-    "@sand/host-dist": "workspace:*",
-    "@sand/host-gateway": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
-    "@sand/host-runtimes": "workspace:*",
     "@sand/html": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/project": "workspace:*",
-    "@sand/reload": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",

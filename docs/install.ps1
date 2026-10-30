@@ -7,10 +7,10 @@ function Install-Sand {
   $arrow = [string][char]0x2192
   $channel = 'release'
   if ($env:SAND_CHANNEL) { $channel = $env:SAND_CHANNEL }
-  $pair = $env:SAND_PAIR
-  Remove-Item Env:SAND_PAIR, Env:SAND_CHANNEL -ErrorAction SilentlyContinue
+  $join = $env:SAND_JOIN
+  Remove-Item Env:SAND_JOIN, Env:SAND_CHANNEL -ErrorAction SilentlyContinue
   $base = ''
-  $secret = ''
+  $token = ''
   $made = $false
   $dir = ''
 
@@ -39,19 +39,19 @@ function Install-Sand {
 
   function Send-Step {
     param([string]$Step)
-    if (-not $secret) { return }
+    if (-not $token) { return }
     try {
-      Invoke-WebRequest -UseBasicParsing -Method Post -TimeoutSec 10 -Uri ($base + '/install/step?k=' + $secret + '&step=' + $Step) | Out-Null
+      Invoke-WebRequest -UseBasicParsing -Method Post -TimeoutSec 10 -Uri ($base + '/install/step?token=' + $token + '&step=' + $Step) | Out-Null
     } catch { }
   }
 
   function Send-Failure {
     param([string]$Text)
-    if (-not $secret) { return }
+    if (-not $token) { return }
     try {
       if ($Text.Length -gt 16000) { $Text = $Text.Substring(0, 16000) }
       $body = [Text.Encoding]::UTF8.GetBytes($Text)
-      Invoke-WebRequest -UseBasicParsing -Method Post -ContentType 'text/plain; charset=utf-8' -Body $body -TimeoutSec 10 -Uri ($base + '/install/fail?k=' + $secret) | Out-Null
+      Invoke-WebRequest -UseBasicParsing -Method Post -ContentType 'text/plain; charset=utf-8' -Body $body -TimeoutSec 10 -Uri ($base + '/install/fail?token=' + $token) | Out-Null
     } catch { }
   }
 
@@ -153,11 +153,11 @@ function Install-Sand {
 
   $work = Join-Path ([IO.Path]::GetTempPath()) ('sand-install-' + [guid]::NewGuid().ToString('N'))
   try {
-    if ($pair) {
-      $match = [regex]::Match($pair.Trim(), '^(https?://[^/#]+)/#install=([A-Za-z0-9_-]+)$')
-      if (-not $match.Success) { throw 'The pairing link is not one from Add a PC. Copy the command again.' }
+    if ($join) {
+      $match = [regex]::Match($join.Trim(), '^(https?://[^/#]+)/#pair=([A-Za-z0-9_-]+)$')
+      if (-not $match.Success) { throw 'The join link is not one from Add a PC. Copy the command again.' }
       $base = $match.Groups[1].Value
-      $secret = $match.Groups[2].Value
+      $token = $match.Groups[2].Value
     }
     Send-Step 'connected'
     if ($env:OS -ne 'Windows_NT') { throw 'This command is for Windows. On Linux or macOS, run the curl command instead.' }
@@ -203,15 +203,15 @@ function Install-Sand {
   }
 
   $main = Join-Path $dir 'apps\sand\src\main.ts'
-  if ($secret) { $env:SAND_INSTALL_KEY = $secret }
+  if ($token) { $env:SAND_JOIN = $join.Trim() }
   $env:SAND_CHANNEL = $channel
   try {
     & {
       $ErrorActionPreference = 'Continue'
-      if ($secret) { & $bun $main install $base } else { & $bun $main install }
+      & $bun $main install
     }
   } finally {
-    Remove-Item Env:SAND_INSTALL_KEY, Env:SAND_CHANNEL -ErrorAction SilentlyContinue
+    Remove-Item Env:SAND_JOIN, Env:SAND_CHANNEL -ErrorAction SilentlyContinue
   }
   $code = $LASTEXITCODE
   if ($code -ne 0) {

@@ -14,9 +14,8 @@
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/settings": "workspace:*",

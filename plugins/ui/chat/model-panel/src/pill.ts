@@ -28,8 +28,8 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
     return value ? ctx.models.label(value) : ''
   }
   const offline = () => {
-    const via = source.get()?.via
-    return via ? ctx.modelPicker.online(via) === false : false
+    const pc = source.get()?.pc
+    return pc ? ctx.modelPicker.online(pc) === false : false
   }
   const pillTip = () => {
     if (!current.get()) return ''

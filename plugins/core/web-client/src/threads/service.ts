@@ -11,9 +11,11 @@ import {
   sessionsQuick,
   uiFocus,
 } from '@sand/server/contract'
+import type { Pcs, Wire } from '@sand/devices-contract'
 import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
-import { type DraftTarget, type Thread, type Threads, threadSelect, type Wire, wireHello } from '../contract'
+import { type DraftTarget, type Thread, type Threads, threadSelect } from '../contract'
+import { helloOf, onPcHello } from '../greeted'
 import { onAddressChange } from '../integrations/address'
 import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink, type Visit } from './address'
 import { applyHello } from './hello'
@@ -25,10 +27,9 @@ import type { Store } from './store'
 export interface ThreadService extends Threads {
   adopt(opened: OpenedSession, device: string): Thread
   restored(): void
-  refocus(device: string): void
 }
 
-export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>): ThreadService => {
+export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void>): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
   let greeted = false
@@ -85,17 +86,24 @@ export const createThreads = (ctx: Context, wire: Wire, store: Store, hydrate: (
     return wire.call(sessionsCreate, { cwd: target.cwd }, target.device)
   }
 
-  ctx.on(wireHello, () => {
-    applyHello(store, field => wire.hello(field), store.here())
+  const greetedBy = (pc: string) => {
+    applyHello(store, helloOf(wire, pc), pc)
+    if (pc !== store.here()) {
+      refocus(pc)
+      const current = store.currentThread()
+      if (current?.device === pc) void load(current.id)
+      return
+    }
     if (greeted) return void open(store.current, 'replace')
     greeted = true
     void openRequested()
-  })
+  }
+
+  onPcHello(ctx, wire, pcs, greetedBy)
   ctx.effect(() => onAddressChange(() => void revisit()))
 
   return {
     adopt: install,
-    refocus,
     restored() {
       const asked = requestedSession()
       if (!greeted && asked && store.threads.has(asked)) show(asked, 'replace')

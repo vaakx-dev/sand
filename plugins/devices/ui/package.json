@@ -1,0 +1,25 @@
+{
+  "name": "@sand/devices-ui",
+  "version": "0.0.0",
+  "description": "Everything you see about your devices: the Devices page, PC details and routes, why a PC can't connect, adding PCs, phones and browsers, Allow prompts, the unpaired page, the composer's PC banner and picker, and status dots for other plugins",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Devices",
+    "summary": "Your PCs, phones and browsers: add, allow, remove, and see how each PC connects"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "uqr": "^0.1.3"
+  }
+}

@@ -1,13 +1,8 @@
 import { chmod, stat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { installPaths } from '@sand/devices-contract'
 import { executableList, installDependencies, safeRelative, validPluginName } from '@sand/host-plugin-library/files'
-import { hostPaths } from '@sand/util/boot/wire'
-
-interface CopyPluginsOptions {
-  base: string
-  secret: string
-  home: string
-}
+import { installEndpoint, type JoinGrant } from './remote'
 
 interface CopiedPlugins {
   copied: string[]
@@ -17,9 +12,8 @@ interface CopiedPlugins {
 
 const downloadTimeout = 120_000
 
-const download = async ({ base, secret }: CopyPluginsOptions): Promise<Uint8Array | undefined> => {
-  const url = `${base}${hostPaths.installPlugins}?k=${encodeURIComponent(secret)}`
-  const response = await fetch(url, { signal: AbortSignal.timeout(downloadTimeout) })
+const download = async (grant: JoinGrant): Promise<Uint8Array | undefined> => {
+  const response = await fetch(installEndpoint(grant, installPaths.plugins), { signal: AbortSignal.timeout(downloadTimeout) })
   if (response.status === 204) return undefined
   if (!response.ok) {
     const detail = (await response.text().catch(() => '')).trim() || `HTTP ${response.status}`
@@ -62,9 +56,9 @@ const writeFile = async (path: string, file: CopiedFile) => {
 
 const exists = (path: string) => stat(path).then(() => true, () => false)
 
-export const copyPlugins = async (options: CopyPluginsOptions): Promise<CopiedPlugins> => {
-  const folder = join(options.home, 'plugins')
-  const bytes = await download(options)
+export const copyPlugins = async (grant: JoinGrant, home: string): Promise<CopiedPlugins> => {
+  const folder = join(home, 'plugins')
+  const bytes = await download(grant)
   if (!bytes) return { copied: [], kept: [], folder }
   const copied: string[] = []
   const kept: string[] = []

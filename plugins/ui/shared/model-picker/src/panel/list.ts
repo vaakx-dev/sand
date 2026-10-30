@@ -16,7 +16,7 @@ const sourceList = (scene: Scene, source: SourceInfo) => {
   const { errorState, sectionHeading } = scene.kit
   const models = scene.models.filter(model => model.source === source.id)
   return [
-    sectionHeading(sourceTitle(source, scene.offline(source))),
+    sectionHeading(scene.pcDot(source), sourceTitle(source, scene.offline(source))),
     models.map(model => modelRow(model, scene)),
     scene.offline(source) && empty(scene, `${source.via} is offline. Its models come back when it does.`),
     source.error && errorState({ surface: 'raised', text: `Couldn't list the models: ${source.error}`, retry: () => scene.refresh(source) }),

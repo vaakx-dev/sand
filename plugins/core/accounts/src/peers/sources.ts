@@ -34,6 +34,7 @@ const sourceOf = (peer: PeerState, account: SharedAccount, id: string, pinned: b
     billing: billingOf(account.method),
     ...(account.plan && { plan: account.plan }),
     via,
+    pc: peer.pc.id,
     online: peer.online && !peer.refused,
   }
   const offered = (peer.info?.models ?? []).filter(model => model.source === account.id)

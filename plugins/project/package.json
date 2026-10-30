@@ -18,9 +18,10 @@
   "dependencies": {
     "@sand/composer": "workspace:*",
     "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",

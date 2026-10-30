@@ -1,9 +1,8 @@
 export { buildBunFile, bunBinary, bunFolder, defaultTarget, readBuildBun, readTarget, validTarget, validVersion, writeBuildBun } from './bun'
-export { accessOf, callerOf, deviceOf, runtimeEnv, upstreamSocketUrl, upstreamUrl } from './channel'
+export { accessOf, callerOf, runtimeEnv, socketCallerOf, upstreamSocketUrl, upstreamUrl } from './channel'
 export { healthText, type HealthOutcome } from './health/check'
 export { parseHealth } from './health/parse'
 export { waitHealthy } from './health/wait'
-export { loadIdentity, readDeviceId } from './identity'
 export {
   appMain,
   appRoot,
@@ -20,6 +19,5 @@ export {
   switchTo,
 } from './layout'
 export { safeEnv, safeFromEnv, withSafe } from './safe'
-export { adminSocketUrl, readServerInfo, serverInfoFile } from './server-info'
-export { askOnce, longCall, PeerError, SocketError, wireSocket, type WireSocket } from './socket'
+export { readServerInfo, serverInfoFile } from './server-info'
 export * from './wire'

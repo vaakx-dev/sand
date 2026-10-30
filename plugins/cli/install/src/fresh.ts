@@ -11,6 +11,7 @@ export const installFresh = async (installer: Installer) => {
     done('Sand installed')
     return dim("Run 'sand' to start it")
   }
-  await waitForHealth(daemon, await startHost(daemon), home)
+  await startHost(daemon)
+  await waitForHealth(daemon, home)
   await openSand(installer)
 }

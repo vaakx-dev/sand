@@ -32,5 +32,6 @@ export const queueChange = wireEvent<[session: string, state: QueueState]>('queu
 export const loopSteer = request('loop.steer', {
   input: z.object({ session: z.string(), prompt: promptInput, label: z.string().optional() }),
   output: type<string | null>(),
+  place: 'thread',
 })
-export const loopUnsteer = request('loop.unsteer', { input: z.object({ session: z.string(), item: z.string() }), output: type<boolean>() })
+export const loopUnsteer = request('loop.unsteer', { input: z.object({ session: z.string(), item: z.string() }), output: type<boolean>(), place: 'thread' })

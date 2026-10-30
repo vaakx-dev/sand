@@ -1,6 +1,5 @@
 import type { Daemon } from '@sand/host-daemon/contract'
 import { dim, done } from '@sand/host-dist/setup'
-import type { ServerInfo } from '@sand/host-gateway/contract'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
 import { healthText, waitHealthy } from '@sand/util/boot'
 import { join } from 'node:path'
@@ -17,9 +16,9 @@ export class UnhealthyError extends Error {
   }
 }
 
-export const waitForHealth = async (daemon: Daemon, info: Pick<ServerInfo, 'url' | 'key'>, home: string) => {
+export const waitForHealth = async (daemon: Daemon, home: string) => {
   dim('Waiting for sand to be ready…')
-  const read = () => daemon.request(hostHealthRequest, {}, { to: info, timeout: 10_000 })
+  const read = () => daemon.request(hostHealthRequest, {}, { timeout: 10_000 })
   const outcome = await waitHealthy(read, { timeout: 180_000 })
   if (outcome.ok) return done('Sand is ready')
   const details = healthText(outcome)

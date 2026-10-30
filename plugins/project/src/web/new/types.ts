@@ -1,10 +1,10 @@
+import type { PcView } from '@sand/devices-contract'
 import type { PalettePage } from '@sand/palette/contract'
-import type { Machine } from '@sand/web-client/contract'
 
 export type Source = 'Local folder' | 'Empty project'
 
 export interface Choice {
-  machine: Machine
+  pc: PcView
   source: Source
   how: 'add' | 'create-folder' | 'create'
   path: string

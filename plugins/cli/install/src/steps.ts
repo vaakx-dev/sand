@@ -46,7 +46,6 @@ export const startHost = async (daemon: Daemon) => {
   if (found) await daemon.stop()
   const info = await daemon.start()
   done(`Server ${found ? 'restarted' : 'started'} on port ${new URL(info.url).port}`)
-  return info
 }
 
 export const openSand = async (installer: Installer) => {

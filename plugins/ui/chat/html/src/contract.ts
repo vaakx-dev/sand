@@ -29,6 +29,6 @@ export const htmlPages = service<HtmlPages>('htmlPages')
 
 export const artifactSaved = event<(session: Session, artifact: Artifact) => void>('artifact.saved')
 
-export const htmlPage = request('html.page', { input: z.object({ session: z.string(), render: z.string() }), output: type<string>() })
+export const htmlPage = request('html.page', { input: z.object({ session: z.string(), render: z.string() }), output: type<string>(), place: 'thread' })
 
 export const artifactSavedWire = wireEvent<[session: WireSession, artifact: Artifact]>('artifact.saved')
