@@ -9,6 +9,7 @@ export interface ThreadItem {
   project: string
   icon?: ProjectLook
   subtitle?: string
+  pcMark?: () => HTMLElement
   path?: string
   updated: number
   started?: number

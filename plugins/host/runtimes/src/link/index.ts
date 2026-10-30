@@ -1,8 +1,9 @@
 import { cli } from '@sand/config/contract'
 import { accessOf, callerOf, runtimeEnv } from '@sand/util/boot'
 import { definePlugin } from 'drydock'
-import { runtime as runtimeService, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
+import { hostChannel, runtime as runtimeService, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
 import { createActivity } from './activity'
+import { createHostChannel } from './channel'
 import { createDrain } from './drain'
 import { createFailures } from './failures'
 import { exitOnSignals, guardCrashes } from './guard'
@@ -44,7 +45,12 @@ export default definePlugin({
 
     const ownership = createOwnership(ctx)
 
+    const host = createHostChannel(send)
+    ctx.effect(() => host.close)
+    ctx.provide(hostChannel, host.channel)
+
     const onHostMessage = (message: HostMessage) => {
+      host.receive(message)
       if (message.type === 'promote') ownership.promote(message.held)
       if (message.type === 'drain') {
         ownership.drain()

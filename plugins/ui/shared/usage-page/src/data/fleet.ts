@@ -1,5 +1,5 @@
 import { usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
-import type { Wire } from '@sand/web-client/contract'
+import type { Wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'

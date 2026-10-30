@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/steering": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

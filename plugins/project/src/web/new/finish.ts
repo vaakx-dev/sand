@@ -11,7 +11,7 @@ const addFolder = async (ctx: ProjectsContext, choice: Choice, device: string) =
 }
 
 const make = async (ctx: ProjectsContext, choice: Choice) => {
-  const device = choice.machine.id
+  const device = choice.pc.id
   const { projects } = ctx
   if (choice.how === 'create') return (await projects.create(choice.name, device)).path
   if (choice.how === 'create-folder') await projects.mkdir(choice.path, device)
@@ -21,6 +21,6 @@ const make = async (ctx: ProjectsContext, choice: Choice) => {
 export const finish = async (ctx: ProjectsContext, choice: Choice, progress: (text: string) => void) => {
   progress('Working…')
   const path = await make(ctx, choice)
-  await ctx.threads.draft(path, choice.machine.id)
+  await ctx.threads.draft(path, choice.pc.id)
   ctx.get(composer)?.focus()
 }

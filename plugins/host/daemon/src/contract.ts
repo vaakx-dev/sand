@@ -1,7 +1,8 @@
-import type { DeviceInfo } from '@sand/host-devices/contract'
+import type { PcIdentity } from '@sand/devices-contract'
 import type { ServerInfo } from '@sand/host-gateway/contract'
-import type { Request } from '@sand/host-hub/contract'
-import { event, service } from 'drydock'
+import { type Request, request, type, type WireEvent } from '@sand/host-hub/contract'
+import { type Dispose, event, service } from 'drydock'
+import { z } from 'zod'
 
 export interface HostOptions {
   home: string
@@ -9,7 +10,7 @@ export interface HostOptions {
   port: number
   watch: boolean
   drainTimeout: number
-  device: DeviceInfo
+  name?: string
 }
 
 export interface HostApp {
@@ -18,19 +19,21 @@ export interface HostApp {
   use(root: string): void
 }
 
-export interface DaemonTarget {
-  url: string
-  key: string
-}
-
 export interface DaemonRequestOptions {
-  to?: DaemonTarget
   timeout?: number
 }
 
 export interface DaemonLaunch {
   info: ServerInfo
   started: boolean
+}
+
+export interface DaemonLink {
+  readonly pc: PcIdentity
+  call<I, O>(request: Request<I, O>, input: I, options?: DaemonRequestOptions): Promise<O>
+  on<P>(event: WireEvent<P>, listener: (payload: P) => void): Dispose
+  closed(): Promise<void>
+  close(): void
 }
 
 export interface Daemon {
@@ -40,9 +43,12 @@ export interface Daemon {
   start(): Promise<ServerInfo>
   stop(): Promise<void>
   request<I, O>(request: Request<I, O>, input: I, options?: DaemonRequestOptions): Promise<O>
+  link(): Promise<DaemonLink>
 }
 
 export const daemon = service<Daemon>('daemon')
+
+export const daemonStop = request('daemon.stop', { input: z.object({}), output: type<void>() })
 export const hostOptions = service<HostOptions>('hostOptions')
 export const hostApp = service<HostApp>('hostApp')
 

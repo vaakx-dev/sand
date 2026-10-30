@@ -5,11 +5,11 @@ repo='vaakx-dev/sand'
 home="${SAND_HOME:-$HOME/.sand}"
 tmp="${TMPDIR:-/tmp}"
 channel="${SAND_CHANNEL:-release}"
-pair="${SAND_PAIR:-}"
+join="${SAND_JOIN:-}"
 assets=''
 label=''
 base=''
-secret=''
+token=''
 build=''
 bun_version=''
 work=''
@@ -45,14 +45,14 @@ ok() {
 
 report() {
   reported=1
-  if [ -n "$secret" ]; then
-    curl -fsS -X POST -H 'content-type: text/plain' --data-binary "$1" "$base/install/fail?k=$secret" </dev/null >/dev/null 2>&1 || true
+  if [ -n "$token" ]; then
+    curl -fsS -X POST -H 'content-type: text/plain' --data-binary "$1" "$base/install/fail?token=$token" </dev/null >/dev/null 2>&1 || true
   fi
 }
 
 step() {
-  if [ -n "$secret" ]; then
-    curl -fsS -X POST "$base/install/step?k=$secret&step=$1" </dev/null >/dev/null 2>&1 || true
+  if [ -n "$token" ]; then
+    curl -fsS -X POST "$base/install/step?token=$token&step=$1" </dev/null >/dev/null 2>&1 || true
   fi
 }
 
@@ -86,7 +86,7 @@ cleanup() {
 }
 
 usage() {
-  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--pair <link from Add a PC>]' >&2
+  printf '%s\n' 'usage: install.sh [--channel release|nightly|dev] [--join <link from Add a PC>]' >&2
   exit 2
 }
 
@@ -98,9 +98,9 @@ read_args() {
         channel=$2
         shift
         ;;
-      --pair)
+      --join)
         [ $# -gt 1 ] || usage
-        pair=$2
+        join=$2
         shift
         ;;
       *) usage ;;
@@ -113,16 +113,16 @@ read_args() {
   esac
 }
 
-read_pair() {
-  [ -n "$pair" ] || return 0
-  case "$pair" in
-    http://*/#install=?*|https://*/#install=?*) ;;
-    *) fail 'The pairing link is not one from Add a PC. Copy the command again.' ;;
+read_join() {
+  [ -n "$join" ] || return 0
+  case "$join" in
+    http://*/#pair=?*|https://*/#pair=?*) ;;
+    *) fail 'The join link is not one from Add a PC. Copy the command again.' ;;
   esac
-  base=${pair%%/#install=*}
-  secret=${pair##*#install=}
-  case "$secret" in
-    *[!A-Za-z0-9_-]*) fail 'The pairing link is damaged. Copy the command from Add a PC again.' ;;
+  base=${join%%/#pair=*}
+  token=${join##*#pair=}
+  case "$token" in
+    *[!A-Za-z0-9_-]*) fail 'The join link is damaged. Copy the command from Add a PC again.' ;;
   esac
 }
 
@@ -313,11 +313,7 @@ hand_over() {
   work=''
   handed=1
   code=0
-  if [ -n "$secret" ]; then
-    SAND_CHANNEL="$channel" SAND_INSTALL_KEY="$secret" "$bun" "$dir/apps/sand/src/main.ts" install "$base" </dev/null || code=$?
-  else
-    SAND_CHANNEL="$channel" "$bun" "$dir/apps/sand/src/main.ts" install </dev/null || code=$?
-  fi
+  SAND_CHANNEL="$channel" SAND_JOIN="$join" "$bun" "$dir/apps/sand/src/main.ts" install </dev/null || code=$?
   if [ "$code" -ne 0 ] && [ "$code" -ne 3 ]; then
     report "Setup on the new PC stopped (exit status $code); see the terminal there"
   fi
@@ -332,7 +328,7 @@ main() {
   trap 'exit 130' INT
   trap 'exit 143' TERM
   read_args "$@"
-  read_pair
+  read_join
   step connected
   check_system
   need curl

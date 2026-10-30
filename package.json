@@ -13,6 +13,7 @@
     "plugins/extend/*",
     "plugins/cli/*",
     "plugins/host/*",
+    "plugins/devices/*",
     "apps/*"
   ],
   "scripts": {
@@ -43,6 +44,9 @@
       "plugins/core/web-client/src/**",
       "plugins/extend/plugins/src/**",
       "plugins/pcs/*/src/**",
+      "plugins/devices/pcs/src/**",
+      "plugins/devices/ui/src/**",
+      "plugins/devices/*/src/browser/**",
       "plugins/project/src/web/**",
       "plugins/ui/layout/*/src/**",
       "plugins/ui/look/*/src/**",

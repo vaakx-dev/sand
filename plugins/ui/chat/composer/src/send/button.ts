@@ -24,13 +24,15 @@ const tone = (kit: Kit, look: Look) => {
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
-  if (!model.online.get() || model.blocked.get()) return 'off'
+  if (!model.online.get() || model.blocked.get() || model.holds.reason.get()) return 'off'
   if (model.running.get()) return model.empty.get() ? 'stop' : 'steer'
   return model.empty.get() ? 'off' : 'send'
 }
 
 const offTitle = (model: Model) => {
-  if (!model.online.get()) return 'Reconnecting to sand'
+  const held = model.holds.reason.get()
+  if (held) return held
+  if (!model.online.get()) return `Reconnecting to ${model.pcName.get()}`
   return model.blocked.get() ? "Remove the files that can't be attached" : 'Send'
 }
 

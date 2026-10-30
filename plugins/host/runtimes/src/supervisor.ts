@@ -1,7 +1,7 @@
 import type { HostOptions } from '@sand/host-daemon/contract'
 import { errorMessage } from '@sand/util'
 import { createBackoff } from './backoff'
-import type { FailedPlugin, RuntimeChange, RuntimeMessage, RuntimeReason, Runtimes } from './contract'
+import type { FailedPlugin, HostAnswer, HostCall, RuntimeChange, RuntimeMessage, RuntimeReason, Runtimes } from './contract'
 import { stopAll, terminate } from './kill'
 import { createLauncher, type Launched } from './launch'
 import { listFailed, restoredText } from './notices'
@@ -15,6 +15,7 @@ interface SupervisorEvents {
   failed(error: string): void
   good(): void
   restore(): Promise<string[]>
+  asked(runtime: string, call: HostCall): Promise<HostAnswer>
 }
 
 export const createSupervisor = (options: HostOptions, main: () => string, events: SupervisorEvents, startSafe: boolean) => {
@@ -55,6 +56,7 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
       return launcher.ready(child, message.url)
     }
     if (message.type === 'failed') return launcher.failed(child, message.failed)
+    if (message.type === 'call') return void events.asked(child.id, message).then(answer => sendTo(child, { type: 'answer', id: message.id, ...answer }))
     if (message.type === 'swap') return void swap('reload')
     if (message.type === 'drained') {
       child.drained = true
@@ -199,6 +201,12 @@ export const createSupervisor = (options: HostOptions, main: () => string, event
       ...(!current && lastFailed.length ? { failed: lastFailed } : {}),
       draining: draining.size,
     }),
+    tell(runtime, event, payload) {
+      const child = launcher.find(runtime)
+      if (!child) return false
+      sendTo(child, { type: 'event', name: event.id, payload })
+      return true
+    },
   }
 
   const start = () => void swap('start')

@@ -14,8 +14,8 @@
   "dependencies": {
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

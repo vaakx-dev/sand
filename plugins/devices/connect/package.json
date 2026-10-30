@@ -1,0 +1,19 @@
+{
+  "name": "@sand/devices-connect",
+  "version": "0.0.0",
+  "description": "Keeps this device connected to one PC over its closest working route, with status, diagnosis and per-call timeouts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser/index.ts",
+    "./pc": "./src/pc/index.ts"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

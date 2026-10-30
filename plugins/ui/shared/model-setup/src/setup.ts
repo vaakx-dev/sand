@@ -1,7 +1,8 @@
 import { composer } from '@sand/composer/contract'
+import type { wire } from '@sand/devices-contract'
 import { settingsSet } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
-import type { models, wire } from '@sand/web-client/contract'
+import type { models } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 

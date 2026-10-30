@@ -1,7 +1,7 @@
 import { helloAttachments } from '@sand/attachments/contract'
 import type { UserContent } from '@sand/chats/contract'
+import { wire } from '@sand/devices-contract'
 import { bytes, errorMessage } from '@sand/util'
-import { wire } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { contentName } from './content'

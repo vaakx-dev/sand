@@ -1,13 +1,15 @@
+import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import { modelPill } from '@sand/model-panel/contract'
 import { pluginReload } from '@sand/reload/contract'
 import { errorMessage } from '@sand/util'
-import { models, modelsChange, threadChange, threadSelect, wire, wireState } from '@sand/web-client/contract'
+import { models, modelsChange, threadChange, threadSelect } from '@sand/web-client/contract'
 import { pulse } from '@sand/web-client/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
 import type { ComposerContext } from './context'
 import type { Saved } from './drafts/store'
 import { createSegments } from './editor/segments'
+import { createHolds } from './send/holds'
 import { modelMissing, retry, sendDevice, submit } from './send/submit'
 
 interface Typed {
@@ -23,8 +25,9 @@ const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
   const key = `${thread.id}:${thread.info.head}`
   if (dismissed.has(key)) return undefined
   const known = ctx.get(models)
-  const via = known?.info(known.settings(thread.id)?.model)?.via
-  return { key, text: thread.ended.error ?? 'Unknown error', detail: thread.ended.detail, via }
+  const info = known?.info(known.settings(thread.id)?.model)
+  const source = info?.source ? known?.sources().find(found => found.id === info.source) : undefined
+  return { key, text: thread.ended.error ?? 'Unknown error', detail: thread.ended.detail, via: info?.via, viaOffline: source?.online === false }
 }
 
 export type TurnError = NonNullable<ReturnType<typeof turnErrorOf>>
@@ -36,20 +39,19 @@ export const createModel = (ctx: ComposerContext) => {
   const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
   const sending = sig(false)
   const dismissed = sig(new Set<string>())
-  const changes = pulse(ctx, [threadSelect, wireState, modelsChange], [wire])
+  const changes = pulse(ctx, [threadSelect, pcsChange, modelsChange], [wire, pcs])
   ctx.on(threadChange, id => {
     if (id === ctx.threads.current()?.id) changes.bump()
   })
 
   const running = changes.read(() => Boolean(ctx.threads.current()?.running))
   const idle = changes.read(() => !ctx.threads.current())
-  const online = changes.read(() => {
-    const connection = ctx.get(wire)
-    return !connection || connection.state() === 'open'
-  })
+  const online = changes.read(() => ctx.get(wire)?.ready(sendDevice(ctx)) ?? true)
+  const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
   const empty = derive(() => !text.get().trim() && !files.items.get().length)
   const blocked = derive(() => files.rejected())
+  const holds = createHolds()
   const clear = () => {
     text.set('')
     files.set([])
@@ -102,7 +104,7 @@ export const createModel = (ctx: ComposerContext) => {
   }
 
   const send = async () => {
-    if (sending.get() || blocked.get()) return
+    if (sending.get() || blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
     const attached = files.items.get().length > 0
     const reloader = ctx.get(pluginReload)
@@ -121,8 +123,10 @@ export const createModel = (ctx: ComposerContext) => {
     running,
     idle,
     online,
+    pcName,
     empty,
     blocked,
+    holds,
     changes,
     turnError,
     send,

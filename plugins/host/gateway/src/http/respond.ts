@@ -1,52 +1,46 @@
-import type { HostDevices } from '@sand/host-devices/contract'
 import { errorMessage } from '@sand/util'
 import { textReply } from '@sand/util/host'
-import { adminDevice, createCaller } from '../auth/caller'
 import type { RouteCaller } from '../contract'
+import { sourceOf } from '../listener/reach'
 import type { Proxy } from '../proxy'
 import { preflight, withCors } from './cors'
+import type { Peer, Reply } from './peer'
 import type { HttpRegistry } from './registry'
-import { createRoutes, type Peer, type Reply, type Route, type RoutesOptions } from './routes'
+import type { Route } from './routes'
 
-interface ResponderOptions extends Omit<RoutesOptions, 'caller' | 'devices'> {
-  devices: Pick<HostDevices, 'verify' | 'get' | 'redeem' | 'remove'>
-  admin: string
-  proxy: Proxy
+interface ResponderOptions {
+  routes: Map<string, Route>
   registry: Pick<HttpRegistry, 'get'>
+  caller(request: Request): RouteCaller | undefined
+  proxy: Proxy
 }
 
 type Allowed = Pick<Route, 'method'>
 
 const allows = (route: Allowed, method: string) => method === route.method || (route.method === 'GET' && method === 'HEAD')
 
-const notAllowed = (route: Allowed) => textReply('method not allowed', 405, { allow: `${route.method}, OPTIONS` })
+const notAllowed = (routes: Allowed[]) => textReply('method not allowed', 405, { allow: [...routes.map(route => route.method), 'OPTIONS'].join(', ') })
+
+const refused = () => textReply('sand only answers devices on your own networks', 403)
 
 const failed = (error: unknown) => {
   console.error(`gateway request failed: ${errorMessage(error)}`)
   return textReply('sand could not answer this request', 500)
 }
 
-export const createResponder = (options: ResponderOptions) => {
-  const caller = createCaller(options.admin, options.devices)
-  const routes = createRoutes({ ...options, caller })
-
-  const routeCaller = (device: string | undefined): RouteCaller | undefined => {
-    if (!device) return
-    if (device === adminDevice) return { device, name: 'sand', kind: 'admin' }
-    const paired = options.devices.get(device)
-    return paired && { device, name: paired.name, kind: paired.kind }
-  }
-
+export const createResponder = ({ routes, registry, caller, proxy }: ResponderOptions) => {
   const respond = (request: Request, peer: Peer): Reply => {
+    const source = sourceOf(request, peer.address)
+    if (source.reach === 'public') return refused()
     if (request.method === 'OPTIONS') return preflight()
     const url = new URL(request.url)
     const route = routes.get(url.pathname)
-    if (route) return allows(route, request.method) ? route.handle(request, peer) : notAllowed(route)
-    const registered = options.registry.get(url.pathname)
-    if (!registered) return options.proxy(request, routeCaller(caller(request, peer.address)))
-    if (!allows(registered, request.method)) return notAllowed(registered)
-    const device = caller(request, peer.address)
-    return registered.handle({ request, url, device, admin: device === adminDevice, address: peer.address })
+    if (route) return allows(route, request.method) ? route.handle(request, { ...peer, source }) : notAllowed([route])
+    const registered = registry.get(url.pathname)
+    if (!registered) return proxy(request, caller(request))
+    const match = registered.find(candidate => allows(candidate, request.method))
+    if (!match) return notAllowed(registered)
+    return match.handle({ request, url, caller: caller(request), ...source })
   }
 
   return (request: Request, peer: Peer): Reply => {

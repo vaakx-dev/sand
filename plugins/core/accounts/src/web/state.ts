@@ -1,6 +1,6 @@
+import type { wire } from '@sand/devices-contract'
 import type { Request } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
-import type { wire } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { loginChange, loginDetect, loginStatus, type DetectedServer, type LoginState } from '../contract'

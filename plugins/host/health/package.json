@@ -13,10 +13,10 @@
     "summary": "Health checks for this PC and paired PCs"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-dist": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

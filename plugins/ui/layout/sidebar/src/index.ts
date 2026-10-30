@@ -1,11 +1,12 @@
 import { draftsChange, drafts } from '@sand/composer/contract'
+import { pcs, pcsChange } from '@sand/devices-contract'
 import { jobs, jobsChange } from '@sand/jobs/contract'
 import { layout, layoutChange } from '@sand/layout/contract'
 import { closeDrawer, place } from '@sand/layout/place'
 import { nav, sidebar } from '@sand/nav/contract'
 import { palette } from '@sand/palette/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { machines, machinesChange, projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/web-client/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -28,7 +29,7 @@ export default definePlugin({
   inject: { nav, kit, threads },
   apply(ctx) {
     const shell = pulse(ctx, [layoutChange], [layout])
-    const changes = pulse(ctx, [projectsChange, threadsChange, threadSelect, machinesChange, draftsChange, jobsChange], [projects, machines, drafts, jobs])
+    const changes = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs])
     const list = threadList(ctx, ctx.kit, ctx.threads)
     const menu = sig<CardMenu | undefined>(undefined)
     const limits = sig<Record<string, number>>({})

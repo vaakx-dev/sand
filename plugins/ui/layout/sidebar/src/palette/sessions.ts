@@ -4,11 +4,11 @@ import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { visibleThreads } from '../items/items'
 import { projectLookup, quickName, type ProjectLookup } from '../items/lookup'
-import { machineName } from './places'
+import { awayPcName } from './places'
 
 const projectName = (lookup: ProjectLookup, thread: Thread) => (thread.info.kind === 'quick' ? quickName : lookup(thread.info.cwd, thread.device, thread.info.project).name)
 
-const detail = (ctx: Context, thread: Thread, project: string | false) => [project, machineName(ctx, thread.device), thread.info.pinned && 'pinned'].filter(Boolean).join(' · ')
+const detail = (ctx: Context, thread: Thread, project: string | false) => [project, awayPcName(ctx, thread.device), thread.info.pinned && 'pinned'].filter(Boolean).join(' · ')
 
 const sessionItem = (ctx: Context, threads: Threads, thread: Thread, group: string, project: string, mixed: boolean): PaletteItem => ({
   id: `session:${thread.id}`,

@@ -1,7 +1,7 @@
+import { peers, thisPc } from '@sand/devices-contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
 import { hostVersions } from '@sand/host-plugin-versions/contract'
-import { watchRemotes } from '@sand/host-remotes/peers'
 import { runtimes } from '@sand/host-runtimes/contract'
 import { debouncedWatch } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
@@ -19,17 +19,16 @@ const every = 120_000
 export default definePlugin({
   name: 'host-plugin-sync',
   description: 'Shares ~/.sand/plugins with paired PCs, asking before applying changes',
-  inject: { hostOptions, hub, runtimes },
+  inject: { hostOptions, hub, runtimes, peers, thisPc },
   async apply(ctx) {
-    const { home, device } = ctx.hostOptions
+    const { home } = ctx.hostOptions
     const root = join(home, 'plugins')
     await mkdir(root, { recursive: true })
     ctx.provide(hostPluginSync, { shared: () => sharedPlugins(home) })
-    const link = createLink(home)
     const sync = await createPluginSync({
       home,
-      device,
-      link,
+      self: ctx.thisPc.id,
+      link: createLink(ctx.peers),
       swap: () => ctx.runtimes.swap('plugins'),
       changed: state => ctx.hub.broadcast(pluginsChange, state),
       snapshot: async (source, plugins) => {
@@ -39,15 +38,12 @@ export default definePlugin({
     })
     for (const setup of pluginRequests(ctx.hub, sync)) ctx.effect(setup)
     ctx.effect(() => debouncedWatch(root, { recursive: true }, () => void sync.rescan(), settle))
-    ctx.effect(() => watchRemotes(home, () => void sync.round()))
+    ctx.effect(() => ctx.peers.onOpen(() => void sync.round()))
     ctx.effect(() => {
       const interval = setInterval(() => void sync.round(), every)
       return () => clearInterval(interval)
     })
-    ctx.effect(() => () => {
-      sync.stop()
-      link.stop()
-    })
+    ctx.effect(() => () => sync.stop())
     void sync.round()
   },
 })

@@ -9,6 +9,7 @@
     "summary": "Browse and customise plugins, see which failed to load, restore past versions and review plugin changes from your other PCs"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-health": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-plugin-library": "workspace:*",
@@ -18,7 +19,6 @@
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }

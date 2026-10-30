@@ -1,6 +1,6 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
-import { request, type, wireEvent, type WireEvent } from '@sand/host-hub/contract'
-import { event, service } from 'drydock'
+import { request, type, wireEvent, type WireEvent, type Request as WireRequest } from '@sand/host-hub/contract'
+import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export type RuntimeHealth = 'starting' | 'ready' | 'failed' | 'restarting'
@@ -33,14 +33,37 @@ export interface RuntimeChange {
   reason: RuntimeReason
 }
 
+export interface HostCall {
+  type: 'call'
+  id: number
+  request: string
+  input: unknown
+}
+
+export interface HostAnswer {
+  result?: unknown
+  error?: string
+}
+
 export type RuntimeMessage =
   | { type: 'ready'; url: string; failed: FailedPlugin[] }
   | { type: 'failed'; failed: FailedPlugin[] }
   | { type: 'activity'; activity: RuntimeActivity }
   | { type: 'swap' }
   | { type: 'drained' }
+  | HostCall
 
-export type HostMessage = { type: 'promote'; held: string[] } | { type: 'drain' } | { type: 'release'; sessions: string[] }
+export type HostMessage =
+  | { type: 'promote'; held: string[] }
+  | { type: 'drain' }
+  | { type: 'release'; sessions: string[] }
+  | ({ type: 'answer'; id: number } & HostAnswer)
+  | { type: 'event'; name: string; payload: unknown }
+
+export interface HostChannel {
+  call<I, O>(request: WireRequest<I, O>, input: I, timeout?: number): Promise<O>
+  on<P>(event: WireEvent<P>, listener: (payload: P) => void): Dispose
+}
 
 export interface Runtime {
   id: string
@@ -67,10 +90,12 @@ export interface Runtimes {
   wait(timeout: number): Promise<RuntimeView | undefined>
   swap(reason: RuntimeReason): Promise<boolean>
   status(): HostStatus
+  tell<P>(runtime: string, event: WireEvent<P>, payload: P): boolean
 }
 
 export const runtimes = service<Runtimes>('runtimes')
 export const runtime = service<Runtime>('runtime')
+export const hostChannel = service<HostChannel>('hostChannel')
 
 export const hostRuntimes = event<() => void>('host.runtimes')
 export const hostEvent = event<(event: WireEvent<unknown>, payload: unknown) => void>('host.event')

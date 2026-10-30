@@ -1,7 +1,5 @@
-import type { DeviceInfo } from '@sand/host-devices/contract'
 import type { Request } from '@sand/host-hub/contract'
 import type { VersionSource } from '@sand/host-plugin-versions/contract'
-import type { RemoteRecord } from '@sand/host-remotes/contract'
 import type { PluginFiles, PluginManifest, PluginSyncState } from './contract'
 
 export interface SyncFile {
@@ -10,14 +8,19 @@ export interface SyncFile {
   skipped: Record<string, Record<string, string>>
 }
 
+export interface PeerPc {
+  id: string
+  name: string
+}
+
 export interface PeerLink {
-  list(): Promise<RemoteRecord[]>
-  call<I, O>(record: RemoteRecord, request: Request<I, O>, input: I, timeout?: number): Promise<O>
+  list(): PeerPc[]
+  call<I, O>(pc: PeerPc, request: Request<I, O>, input: I, timeout?: number): Promise<O>
 }
 
 export interface PluginSyncOptions {
   home: string
-  device: DeviceInfo
+  self: string
   link: PeerLink
   swap(): Promise<boolean>
   changed(state: PluginSyncState): void
@@ -26,7 +29,7 @@ export interface PluginSyncOptions {
 
 export interface PluginSync {
   state(): Promise<PluginSyncState>
-  exchange(manifest: unknown): Promise<PluginManifest>
+  exchange(manifest: unknown, from: string): Promise<PluginManifest>
   files(plugin: string): Promise<PluginFiles>
   apply(peer: string, plugins: string[]): Promise<PluginSyncState>
   skip(peer: string, plugins: string[]): Promise<PluginSyncState>

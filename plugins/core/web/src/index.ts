@@ -1,6 +1,6 @@
 import { cli } from '@sand/config/contract'
+import { loadPcIdentity } from '@sand/devices-identity/pc'
 import { server } from '@sand/server/contract'
-import { readDeviceId } from '@sand/util/boot'
 import { expandHome, pluginContracts } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
@@ -35,9 +35,9 @@ export default definePlugin({
     })
     const states = createStates(site)
     ctx.provide(webExtensions, { list: states.list })
-    const device = await readDeviceId(home)
+    const { id: pc } = await loadPcIdentity(home)
     const routes = {
-      '/': () => new Response(page(site.current().id, device), { headers: headers('text/html') }),
+      '/': () => new Response(page(site.current().id, pc), { headers: headers('text/html') }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,

@@ -3,6 +3,7 @@ import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
 import { appMain, bunBinary, installedRoot, readBuildBun, withSafe } from '@sand/util/boot'
 import { running } from './info'
+import { pcKeys } from './link/keys'
 
 const logLimit = 5 * 1024 * 1024
 
@@ -34,6 +35,7 @@ interface StartOptions {
 export const start = async (home: string, { wait = 30_000, stopOnFail = false, safe = false }: StartOptions = {}) => {
   const log = join(home, 'server.log')
   mkdirSync(home, { recursive: true })
+  await pcKeys(home)
   const [bun, main] = await hostCommand(home)
   const output = openLog(log)
   const child = Bun.spawn([bun, main, 'serve'], {

@@ -1,5 +1,6 @@
+import type { Wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import type { Threads, Wire } from '@sand/web-client/contract'
+import type { Threads } from '@sand/web-client/contract'
 import { mediaSign, type SignItem, type Signed, type StoredMedia } from '../contract'
 import type { ImageSource } from './contract'
 

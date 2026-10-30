@@ -1,8 +1,10 @@
 import { composer, drafts } from '@sand/composer/contract'
+import { pcMarks, pcs } from '@sand/devices-contract'
 import { jobs } from '@sand/jobs/contract'
-import { machines, type Thread, type Threads } from '@sand/web-client/contract'
+import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import type { Kit } from '@sand/ui-kit/contract'
+import { awayPcName } from '../palette/places'
 import { openDraft } from '../palette/projects'
 import type { ThreadItem } from './item'
 import { draftId, draftItem, threadItems, type AgentsOf, type Places } from './items'
@@ -24,10 +26,8 @@ const visibleAncestor = (threads: Threads, thread: Thread | undefined) => {
 
 export const threadList = (ctx: Context, kit: Kit, threads: Threads) => {
   const places: Places = {
-    machine: device => {
-      const machine = ctx.get(machines)?.get(device)
-      return machine && !machine.local ? machine.name : undefined
-    },
+    pc: device => awayPcName(ctx, device),
+    mark: device => () => ctx.get(pcMarks)?.dot(device) ?? kit.dot(ctx.get(pcs)?.online(device) ? 'success' : 'neutral'),
   }
   const agentsOf: AgentsOf = thread => {
     const running = (ctx.get(jobs)?.list(thread) ?? []).filter(job => job.status === 'running')

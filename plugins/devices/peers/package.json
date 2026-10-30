@@ -1,0 +1,25 @@
+{
+  "name": "@sand/devices-peers",
+  "version": "0.0.0",
+  "description": "Keeps this PC connected to each of your other PCs, shares the device list with them and forwards connections through this PC",
+  "type": "module",
+  "exports": {
+    ".": "./src/host.ts"
+  },
+  "sand": {
+    "host": "./src/host.ts",
+    "runtime": "./src/runtime.ts",
+    "label": "Your PCs",
+    "summary": "Connections to your other PCs"
+  },
+  "dependencies": {
+    "@sand/devices-connect": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

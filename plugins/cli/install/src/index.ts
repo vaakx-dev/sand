@@ -5,7 +5,7 @@ import { definePlugin } from 'drydock'
 
 export default definePlugin({
   name: 'cli-install',
-  description: 'The sand install command: sets up a downloaded sand, optionally paired with another PC',
+  description: 'The sand install command: sets up a downloaded sand, optionally joining your other PCs',
   inject: { cli, cliCommands, daemon },
   apply(ctx) {
     const open = async () => {
@@ -18,8 +18,8 @@ export default definePlugin({
         name: 'install',
         summary: 'set up a downloaded sand',
         usage: [
-          'sand install [<url>]            set up a downloaded sand (the installer runs this); with',
-          '                                SAND_INSTALL_KEY=<secret> and the url of another PC, pair with it',
+          'sand install                    set up a downloaded sand (the installer runs this); with',
+          '                                SAND_JOIN=<link from Add a PC>, add this PC to your PCs',
         ].join('\n'),
         run: async args => (await import('./install')).installCommand({ home: ctx.cli.home, daemon: ctx.daemon, open }, args),
       }),

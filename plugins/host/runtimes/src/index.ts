@@ -6,6 +6,7 @@ import { errorMessage } from '@sand/util'
 import { safeEnv } from '@sand/util/boot'
 import { definePlugin } from 'drydock'
 import { hostEvent, hostRuntimes, runtimeChanged, runtimeFailed, runtimes, runtimesSafe } from './contract'
+import { answerRuntime } from './answer'
 import { createSupervisor } from './supervisor'
 
 export default definePlugin({
@@ -24,6 +25,10 @@ export default definePlugin({
         failed: error => ctx.emit(hostEvent, runtimeFailed, error),
         good: () => void ctx.get(hostVersions)?.markGood().catch(error => console.error(`could not remember the working plugins: ${errorMessage(error)}`)),
         restore: async () => (await ctx.get(hostVersions)?.autoRestore()) ?? [],
+        asked: async (runtime, call) => {
+          await ctx.settled()
+          return answerRuntime(ctx.get(hub), runtime, call)
+        },
       },
       startSafe,
     )

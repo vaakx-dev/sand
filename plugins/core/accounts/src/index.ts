@@ -2,7 +2,7 @@ import { cli } from '@sand/config/contract'
 import { media } from '@sand/media/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
 import { helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
-import { watchRemotes } from '@sand/host-remotes/peers'
+import { peers as pcLinks } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
@@ -72,7 +72,7 @@ export default definePlugin({
 
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, plans, catalog, claude, openai, compat, bridges, limits })
-    const peers = createPeers({ home, media: ctx.media, changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
+    const peers = createPeers({ home, media: ctx.media, links: () => ctx.get(pcLinks), changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
     const merged = mergeLLM(local, peers, accounts, catalog)
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
@@ -99,7 +99,10 @@ export default definePlugin({
 
     ctx.provide(llm, merged.llm)
     ctx.provide(llmPlans, { register: plans.register, limits: limits.save })
-    ctx.effect(() => watchRemotes(home, () => void peers.refresh()))
+    ctx.watch(pcLinks, found => {
+      void peers.refresh()
+      return found?.onOpen(() => void peers.refresh())
+    })
     ctx.effect(() => {
       const peerTimer = setInterval(() => void Promise.all([peers.refresh(), plans.refresh()]), refreshEvery)
       const discoverTimer = setInterval(() => void catalog.refresh(), discoverEvery)

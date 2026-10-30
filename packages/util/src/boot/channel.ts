@@ -1,10 +1,11 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
+import type { Caller, CallerKind } from '@sand/host-hub/contract'
 import type { RuntimeAccess } from '@sand/host-runtimes/contract'
 
 const runtimeParam = 'sand_runtime'
 const clientParam = 'sand_client'
 const callerParams = { device: 'sand_device', name: 'sand_device_name', kind: 'sand_device_kind' } as const
-const kinds: RouteCaller['kind'][] = ['pc', 'phone', 'browser', 'admin']
+const callerKinds: CallerKind[] = ['pc', 'phone', 'browser', 'cli']
 
 export const runtimeEnv = { id: 'SAND_RUNTIME_ID', secret: 'SAND_RUNTIME_SECRET' } as const
 
@@ -24,14 +25,19 @@ export const upstreamUrl = (base: string, incoming: URL, secret: string, client:
   return url
 }
 
-export const upstreamSocketUrl = (base: string, secret: string, device: string): string => {
+export const upstreamSocketUrl = (base: string, secret: string, caller: Caller): string => {
   const url = upstreamUrl(base, new URL('/ws', base), secret, true)
-  url.searchParams.set(callerParams.device, device)
+  url.searchParams.set(callerParams.device, caller.device)
+  url.searchParams.set(callerParams.kind, caller.kind)
   url.protocol = 'ws:'
   return url.href
 }
 
-export const deviceOf = (url: URL) => url.searchParams.get(callerParams.device) ?? undefined
+export const socketCallerOf = (url: URL): Caller | undefined => {
+  const device = url.searchParams.get(callerParams.device)
+  const kind = callerKinds.find(known => known === url.searchParams.get(callerParams.kind))
+  return device && kind ? { device, kind } : undefined
+}
 
 export const accessOf = (url: URL, secret: string): RuntimeAccess => {
   if (url.searchParams.get(runtimeParam) !== secret) return 'denied'
@@ -41,7 +47,7 @@ export const accessOf = (url: URL, secret: string): RuntimeAccess => {
 export const callerOf = (url: URL, secret: string): RouteCaller | undefined => {
   if (accessOf(url, secret) !== 'client') return
   const device = url.searchParams.get(callerParams.device)
-  const kind = kinds.find(known => known === url.searchParams.get(callerParams.kind))
+  const kind = callerKinds.find(known => known === url.searchParams.get(callerParams.kind))
   if (!device || !kind) return
   return { device, kind, name: url.searchParams.get(callerParams.name) || device }
 }

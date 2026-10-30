@@ -5,6 +5,7 @@ import { closeButton } from '../buttons/close'
 import { headTitle, paneHead } from '../heads/page-head'
 import { icon } from '../icons/lucide'
 import { layer } from '../layer'
+import { stableGutter } from '../scroll/gutter'
 
 export type SheetSize = 'sm' | 'md' | 'lg'
 
@@ -45,7 +46,7 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
 export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
   const led = () => Boolean(back) && read(backShown)
   return paneHead(
-    { led },
+    { led, class: 'overflow-hidden', style: stableGutter },
     back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
     headTitle(2, title),
     actions ?? null,
@@ -54,10 +55,10 @@ export const sheetHead = ({ title, close, back, backShown = true, actions }: She
 }
 
 export const sheetBody = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
-  div({ ...props, class: ['flex min-h-0 flex-col gap-4 overflow-auto px-4 pt-1 pb-4', extra] }, ...children)
+  div({ style: stableGutter, ...props, class: ['flex min-h-0 flex-col gap-4 overflow-auto px-4 pt-1 pb-4', extra] }, ...children)
 
 export const sheetFoot = (...children: Child[]) =>
-  div({ class: 'flex shrink-0 items-center justify-end gap-2 border-t border-neutral-700 px-4 py-3' }, ...children)
+  div({ class: 'flex shrink-0 items-center justify-end gap-2 overflow-hidden border-t border-neutral-700 px-4 py-3', style: stableGutter }, ...children)
 
 export const sheetStep = (body: Child, ...foot: Child[]) =>
   div({ class: 'flex min-h-0 flex-1 flex-col' }, sheetBody({}, body), foot.length ? sheetFoot(...foot) : null)

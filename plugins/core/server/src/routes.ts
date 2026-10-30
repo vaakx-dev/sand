@@ -1,6 +1,6 @@
 import type { Caller } from '@sand/host-hub/contract'
 import type { Runtime } from '@sand/host-runtimes/contract'
-import { deviceOf } from '@sand/util/boot'
+import { socketCallerOf } from '@sand/util/boot'
 import type { RouteHandler, RouteOptions } from './contract'
 
 interface Route {
@@ -9,9 +9,9 @@ interface Route {
 }
 
 const upgrade = (request: Request, server: Bun.Server<Caller>) => {
-  const device = deviceOf(new URL(request.url))
-  if (!device) return new Response('the socket has no device', { status: 400 })
-  return server.upgrade(request, { data: { device } }) ? undefined : new Response('expected a websocket', { status: 400 })
+  const caller = socketCallerOf(new URL(request.url))
+  if (!caller) return new Response('the socket has no caller', { status: 400 })
+  return server.upgrade(request, { data: caller }) ? undefined : new Response('expected a websocket', { status: 400 })
 }
 
 export const createRoutes = (runtime: Runtime) => {

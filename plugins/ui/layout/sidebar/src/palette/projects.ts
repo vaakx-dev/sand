@@ -1,8 +1,9 @@
 import { composer } from '@sand/composer/contract'
+import { pcs } from '@sand/devices-contract'
 import { palette, type PaletteItem, type PaletteItemAction, type PalettePage } from '@sand/palette/contract'
 import { picker } from '@sand/picker/contract'
 import { oneLine } from '@sand/util'
-import { machines, projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
+import { projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { quickName } from '../items/lookup'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
@@ -39,7 +40,7 @@ const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => (
 
 const startAction = (ctx: Context, threads: Threads, location: ProjectEntry): PaletteItemAction => ({
   label: `Start on ${pcName(ctx, location.device)}`,
-  icon: ctx.get(machines)?.get(location.device)?.local === false ? 'monitor' : 'laptop',
+  icon: ctx.get(pcs)?.get(location.device)?.home === false ? 'monitor' : 'laptop',
   run: () => openDraft(ctx, threads, location.path, location.device),
 })
 

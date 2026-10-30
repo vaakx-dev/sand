@@ -52,5 +52,7 @@ export const createLauncher = (main: () => string, receive: (child: Child, messa
 
   const procs = () => [...children].map(child => child.proc)
 
-  return { launch, ready, failed, procs }
+  const find = (id: string) => [...children].find(child => child.id === id)
+
+  return { launch, ready, failed, procs, find }
 }

@@ -5,13 +5,14 @@ import { toolProgressWire, toolResultWire, toolStartWire, turnEndWire, turnStart
 import { type EntryHead, liveSnapshot, llmEventWire, sessionHeadWire } from '@sand/server/contract'
 import { applyLiveEvent } from '@sand/server/live'
 import { queueChange, turnSteerWire } from '@sand/steering/contract'
+import type { Wire, WireListen } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
-import type { Thread, Wire } from '../contract'
+import type { Thread } from '../contract'
 import { stale } from './hello'
 import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
-const everyPc = { remotes: true }
+const everyPc: WireListen = { from: 'all' }
 
 const advance = (thread: Thread, entry: EntryHead) => {
   const updated = entry.type === 'system' ? thread.info.updated : Math.max(thread.info.updated, entry.at)

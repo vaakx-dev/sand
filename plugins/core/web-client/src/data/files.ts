@@ -1,5 +1,6 @@
 import { filesGrep, filesList } from '@sand/project/contract'
-import type { FileIndex, Wire } from '../contract'
+import type { Wire } from '@sand/devices-contract'
+import type { FileIndex } from '../contract'
 
 const freshMs = 15_000
 

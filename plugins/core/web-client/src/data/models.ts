@@ -11,10 +11,11 @@ import {
   settingsGet,
   type SettingsState,
 } from '@sand/model/contract'
+import type { Pcs, Wire, WireListen } from '@sand/devices-contract'
 import type { Context } from 'drydock'
-import { type Models, modelsChange, type Threads, type Wire, wireHello } from '../contract'
+import { type Models, modelsChange, type Threads } from '../contract'
+import { type HelloRead, helloOf, onPcHello } from '../greeted'
 import type { Store } from '../threads/store'
-import type { HelloRead } from '../wire/hellos'
 
 const empty: ModelsUpdate = { models: [], sources: [], levels: [], defaults: {} }
 
@@ -25,14 +26,13 @@ const fromHello = (read: HelloRead): ModelsUpdate => ({
   defaults: read(helloDefaults) ?? {},
 })
 
-const everyPc = { remotes: true }
+const everyPc: WireListen = { from: 'all' }
 
 export interface DeviceModels extends Models {
-  hello(device: string, read: HelloRead): void
   forget(device: string): void
 }
 
-export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: Store): DeviceModels => {
+export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Threads, store: Store): DeviceModels => {
   const catalogs = new Map<string, ModelsUpdate>()
   let defaultState: SettingsState | undefined
   const asking = new Set<string>()
@@ -65,7 +65,7 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
     changed()
   }
 
-  ctx.on(wireHello, () => useCatalog(store.here(), fromHello(field => wire.hello(field))))
+  onPcHello(ctx, wire, pcs, pc => useCatalog(pc, fromHello(helloOf(wire, pc))))
   ctx.effect(() => wire.on(modelsUpdate, (update, device) => useCatalog(device, { ...update, sources: update.sources ?? [] }), everyPc))
   ctx.effect(() =>
     wire.on(
@@ -121,7 +121,6 @@ export const createModels = (ctx: Context, wire: Wire, threads: Threads, store: 
       const current = state(thread)?.current
       return current && labelOn(thread ? store.deviceOf(thread) : store.device(), current)
     },
-    hello: (device, read) => useCatalog(device, fromHello(read)),
     forget(device) {
       if (!catalogs.delete(device)) return
       changed()

@@ -1,12 +1,12 @@
+import type { PcView } from '@sand/devices-contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
-import type { Machine } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
 import { listings } from './listings'
 import { absolute, join, leafName, short, split } from './paths'
 import type { Next } from './types'
 
-export const folderPage = (ctx: ProjectsContext, machine: Machine, next: Next): PalettePage => {
-  const device = machine.id
+export const folderPage = (ctx: ProjectsContext, pc: PcView, next: Next): PalettePage => {
+  const device = pc.id
   const place = ctx.projects.place(device)
   const { sep } = place
   const root = short(place.root, place)
@@ -61,7 +61,7 @@ export const folderPage = (ctx: ProjectsContext, machine: Machine, next: Next): 
     const found = state(value)
     if (!found.enabled) return
     const path = found.target
-    return next({ machine, path, name: leafName(path, sep), source: 'Local folder', how: found.exists ? 'add' : 'create-folder' })
+    return next({ pc, path, name: leafName(path, sep), source: 'Local folder', how: found.exists ? 'add' : 'create-folder' })
   }
 
   return {

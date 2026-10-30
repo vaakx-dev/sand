@@ -1,28 +1,34 @@
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import { createHandlers } from '@sand/util/wire'
+import { callerAllowed, createHandlers } from '@sand/util/wire'
 import { type Client, createClient, send } from './client'
-import type { Hub, HubSocket, ServerMessage } from './contract'
+import type { Caller, Hub, HubSocket, ServerMessage } from './contract'
 import { createDownstream } from './downstream'
+import { createGreetings } from './greetings'
 import { createLinks } from './links'
 import { createReceiver } from './receive'
 
+const eventFrame = (name: string, payload: unknown) => JSON.stringify({ type: 'event', name, payload } satisfies ServerMessage)
+
 export const createHub = (runtimes: Runtimes, opened: (device: string) => void) => {
   const clients = new Map<HubSocket, Client>()
+  const leaves = new Set<(caller: Caller) => void>()
   const handlers = createHandlers()
-  const links = createLinks(runtimes, createDownstream(runtimes))
+  const greetings = createGreetings()
+  const links = createLinks(runtimes, createDownstream(runtimes, greetings))
   const receive = createReceiver({ runtimes, handlers, upstream: links.upstream })
 
   const forget = (client: Client) => {
     client.open = false
     links.close(client)
+    for (const listener of [...leaves]) listener(client.caller)
   }
 
   const hub: Hub = {
-    open(socket, device) {
-      const client = createClient(socket, device)
+    open(socket, caller) {
+      const client = createClient(socket, { ...caller })
       clients.set(socket, client)
       links.sync(client)
-      opened(device)
+      opened(caller.device)
     },
     message(socket, raw) {
       const client = clients.get(socket)
@@ -36,18 +42,27 @@ export const createHub = (runtimes: Runtimes, opened: (device: string) => void) 
     },
     disconnect(device) {
       for (const [socket, client] of clients) {
-        if (client.device !== device) continue
+        if (client.caller.device !== device) continue
         clients.delete(socket)
         forget(client)
         socket.close()
       }
     },
-    devices: () => [...new Set([...clients.values()].map(client => client.device))],
-    broadcast(event, payload) {
-      const raw = JSON.stringify({ type: 'event', name: event.id, payload } satisfies ServerMessage)
-      for (const client of clients.values()) send(client, raw)
+    devices: () => [...new Set([...clients.values()].map(client => client.caller.device))],
+    broadcast(event, payload, to = 'any') {
+      const raw = eventFrame(event.id, payload)
+      for (const client of clients.values()) if (callerAllowed(to, client.caller.kind)) send(client, raw)
+    },
+    tell(caller, event, payload) {
+      for (const client of clients.values()) if (client.caller === caller) send(client, eventFrame(event.id, payload))
+    },
+    onLeave(listener) {
+      leaves.add(listener)
+      return () => void leaves.delete(listener)
     },
     handle: handlers.handle,
+    answer: handlers.answer,
+    greet: greetings.greet,
   }
 
   const sync = () => {

@@ -1,10 +1,9 @@
-import type { RemoteRecord } from '@sand/host-remotes/contract'
+import { isPcUnavailable } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { PeerError } from '@sand/util/boot'
 import { pluginsExchange, type PluginManifest } from '../contract'
 import { parseManifest } from '../state/parse'
 import type { SyncStore } from '../state/store'
-import type { PeerLink } from '../types'
+import type { PeerLink, PeerPc } from '../types'
 
 interface KnownPeer {
   name: string
@@ -19,21 +18,21 @@ interface PeerRounds {
   stopped(): boolean
 }
 
-type PeerState = PeerError['state'] | 'ok'
+type PeerState = 'ok' | 'offline' | 'failed'
 
 const stateOf = (error: unknown): PeerState => {
   if (!error) return 'ok'
-  return error instanceof PeerError ? error.state : 'failed'
+  return isPcUnavailable(error) ? 'offline' : 'failed'
 }
 
 const createStatus = () => {
   const states = new Map<string, PeerState>()
-  return (record: RemoteRecord, error?: unknown) => {
+  return (record: PeerPc, error?: unknown) => {
     const state = stateOf(error)
     const previous = states.get(record.id)
     if (previous === state) return
     states.set(record.id, state)
-    if (error instanceof PeerError) console.error(`plugin sync: ${error.message}`)
+    if (state === 'offline') console.error(`plugin sync: ${record.name} isn't connected`)
     else if (error) console.error(`plugin sync: ${record.name} could not share plugins: ${errorMessage(error)}`)
     else if (previous) console.error(`plugin sync: ${record.name} is back in sync`)
   }
@@ -45,7 +44,7 @@ export const createPeerRounds = ({ link, store, manifest, recompute, stopped }: 
   let current: Promise<void> | undefined
   let next: Promise<void> | undefined
 
-  const exchange = async (record: RemoteRecord) => {
+  const exchange = async (record: PeerPc) => {
     try {
       const answer = parseManifest(await link.call(record, pluginsExchange, { manifest: manifest() }))
       if (answer.device !== record.id) throw new Error('it answered for a different PC')
@@ -58,8 +57,7 @@ export const createPeerRounds = ({ link, store, manifest, recompute, stopped }: 
   }
 
   const once = async () => {
-    const records = await link.list()
-    if (stopped()) return
+    const records = link.list()
     const ids = records.map(record => record.id)
     await store.forget(ids)
     for (const id of known.keys()) if (!ids.includes(id)) known.delete(id)

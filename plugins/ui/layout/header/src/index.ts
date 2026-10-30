@@ -1,7 +1,8 @@
+import { pcs, pcsChange } from '@sand/devices-contract'
 import { layout, layoutChange } from '@sand/layout/contract'
 import { place } from '@sand/layout/place'
 import { kit } from '@sand/ui-kit/contract'
-import { projects, projectsChange, threadSelect, threads, threadsChange, wire, wireState } from '@sand/web-client/contract'
+import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
 import { header } from './contract'
@@ -13,7 +14,7 @@ export default definePlugin({
   description: 'Breadcrumb bar: project / thread title with a thread menu, slots for other controls and a button for the side drawer',
   inject: { kit },
   apply(ctx) {
-    const changes = pulse(ctx, [threadsChange, threadSelect, layoutChange, wireState, projectsChange], [threads, layout, wire, projects])
+    const changes = pulse(ctx, [threadsChange, threadSelect, layoutChange, pcsChange, projectsChange], [threads, layout, pcs, projects])
     const slots = owned(ctx, createSlots)
     const view = owned(ctx, () => headerView(ctx, changes, slots))
     place(ctx, 'main', view, 0)
