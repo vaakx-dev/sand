@@ -2,6 +2,7 @@ import type { LLMRequest } from '../contract'
 import { bearer } from '@sand/util/boot/wire'
 import { rawMessage } from '../errors'
 import { sharePaths } from '../share/info'
+import type { Carried } from '../share/media'
 import { Refused, refusal } from './http'
 import type { RemotePc } from './remotes'
 
@@ -12,7 +13,9 @@ interface OpenOptions {
   forget(): void
 }
 
-const post = async (url: string, pc: RemotePc, request: LLMRequest, signal?: AbortSignal) => {
+export type SharedRequest = LLMRequest & { media: Carried }
+
+const post = async (url: string, pc: RemotePc, request: SharedRequest, signal?: AbortSignal) => {
   const controller = new AbortController()
   const abort = () => controller.abort()
   signal?.addEventListener('abort', abort, { once: true })
@@ -31,7 +34,7 @@ const post = async (url: string, pc: RemotePc, request: LLMRequest, signal?: Abo
   }
 }
 
-export const openStream = async (pc: RemotePc, request: LLMRequest, signal: AbortSignal | undefined, options: OpenOptions) => {
+export const openStream = async (pc: RemotePc, request: SharedRequest, signal: AbortSignal | undefined, options: OpenOptions) => {
   for (let attempt = 0; ; attempt++) {
     const url = await options.connect(pc)
     try {

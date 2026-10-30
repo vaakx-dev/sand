@@ -1,5 +1,6 @@
 import { llmPlans, type AppPlan, type PlanLimits } from '@sand/accounts/contract'
 import { cli } from '@sand/config/contract'
+import { media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -7,10 +8,10 @@ import { codexAccount } from './account/account'
 import { limitsOf } from './account/limits'
 import { installUrl } from './server/binary'
 import { createServer, type CodexServer } from './server/server'
-import { openSession } from './session/session'
+import { openSession, type SessionNeeds } from './session/session'
 import pkg from '../package.json'
 
-const codexPlan = (server: CodexServer): AppPlan => ({
+const codexPlan = (needs: SessionNeeds): AppPlan => ({
   id: 'codex',
   label: 'Codex',
   name: 'ChatGPT',
@@ -19,8 +20,8 @@ const codexPlan = (server: CodexServer): AppPlan => ({
   app: 'Codex',
   install: installUrl,
   family: 'openai',
-  ...codexAccount(server),
-  open: (setup, output) => openSession(server, setup, output),
+  ...codexAccount(needs.server),
+  open: (setup, output) => openSession(needs, setup, output),
 })
 
 const reportLimits = (server: CodexServer, report: (limits: PlanLimits) => void) =>
@@ -33,7 +34,7 @@ const reportLimits = (server: CodexServer, report: (limits: PlanLimits) => void)
 export default definePlugin({
   name: 'codex',
   description: 'Adds Codex to Settings → Accounts using the Codex app on this PC: sand runs codex app-server with sand’s own tools and prompt, and the app keeps its own sign-in',
-  inject: { cli },
+  inject: { cli, media },
   async apply(ctx) {
     const folder = join(ctx.cli.home, 'apps', 'codex')
     await mkdir(folder, { recursive: true })
@@ -42,7 +43,7 @@ export default definePlugin({
     ctx.watch(llmPlans, plans => {
       if (!plans) return
       const stopLimits = reportLimits(server, limits => plans.limits('codex', limits))
-      const unregister = plans.register(codexPlan(server))
+      const unregister = plans.register(codexPlan({ server, media: ctx.media }))
       return () => {
         stopLimits()
         unregister()

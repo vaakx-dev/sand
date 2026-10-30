@@ -12,6 +12,7 @@ interface Link {
   info(): ConnectionInfo
   call: Call
   fetch(path: string, init?: RequestInit): Promise<Response>
+  url(path: string): string
   nudge(): void
   close(): void
 }
@@ -51,6 +52,7 @@ const openLink = (remote: Remote, invite: Invite, handlers: () => LinkHandlers):
     info: connection.info,
     call: connection.call,
     fetch: auth.fetch,
+    url: auth.url,
     nudge: connection.nudge,
     close: connection.close,
   }

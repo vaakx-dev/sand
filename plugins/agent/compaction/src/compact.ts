@@ -1,5 +1,6 @@
 import type { llm, LLMRequest } from '@sand/accounts/contract'
 import type { Entry, Session } from '@sand/chats/contract'
+import type { media } from '@sand/media/contract'
 import { contextUsage, type CompactionReason, type CompactionRecord } from './contract'
 import { usageRecord } from '@sand/usage/records'
 import type { Context } from 'drydock'
@@ -13,7 +14,7 @@ import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
 import { summarizeInContext } from './summarize/in-context'
 
-export type CompactionContext = Context<{ llm: typeof llm }>
+export type CompactionContext = Context<{ llm: typeof llm; media: typeof media }>
 
 export interface CompactOptions {
   reason: CompactionReason
@@ -42,7 +43,7 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
     let after = before
     try {
       const { summary, usage, source } = overflow
-        ? await summarize(ctx.llm, {
+        ? await summarize(ctx.llm, ctx.media, {
             model: request.model,
             messages: cut.dropped,
             previous: cut.previous?.summary,

@@ -27,10 +27,7 @@ const link = (href: string, children: Inline[], title?: string): Node => {
 
 const imageLink = (src: string, alt: string, title?: string) => link(src, [`▣ ${alt || 'image'}`], title ?? src)
 
-const picture = (src: string, alt: string, title: string | undefined, scope: Scope) => {
-  const shown = safeUrl(src) ? undefined : scope.image?.(src, alt)
-  return shown ?? imageLink(src, alt, title)
-}
+const picture = (src: string, alt: string, title: string | undefined, scope: Scope) => scope.image?.(src, alt) ?? imageLink(src, alt, title)
 
 const trimUrl = (url: string) => {
   let trimmed = url.replace(/[?!.,:;*_~'"]+$/, '')

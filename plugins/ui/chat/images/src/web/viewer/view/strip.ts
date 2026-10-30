@@ -36,7 +36,7 @@ const thumb = (kit: Kit, { image, index }: Numbered, model: ViewerModel, picture
           if (active()) node.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
         }),
     },
-    picture(image.block, { class: 'block h-full w-auto' }),
+    picture(image.block, { class: 'block', maxHeight: 48 }),
   )
 }
 

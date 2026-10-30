@@ -10,7 +10,7 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
     const node = div({ class: ['leading-relaxed wrap-anywhere', () => (railed?.get() ? 'text-neutral-400' : 'text-neutral-100')], 'data-quote': '' })
-    const render = streamedMarkdown(node, context.markdown, context.images(item.at))
+    const render = streamedMarkdown(node, context.markdown, context.image)
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context.parts
     const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply(text.get()) })

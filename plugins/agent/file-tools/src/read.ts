@@ -1,11 +1,9 @@
 import type { Attachments } from '@sand/attachments/contract'
 import type { Tool } from '@sand/tools/contract'
 import { isFolder } from '@sand/util/fs'
-import { extname, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { z } from 'zod'
 import { readText } from './files'
-
-const media = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.tif', '.tiff', '.heic', '.avif', '.pdf'])
 
 const input = z.object({
   path: z.string().describe('File path, absolute or relative to the working directory'),
@@ -22,7 +20,7 @@ export const readTool = (attachments: () => Attachments): Tool<typeof input> => 
   async run({ path, offset = 1, limit = 2000 }, { cwd }) {
     const full = resolve(cwd, path)
     if (await isFolder(full)) throw new Error(`${path} is a directory`)
-    if (media.has(extname(full).toLowerCase())) return [await attachments().fromFile(full)]
+    if (attachments().isMedia(full)) return [await attachments().fromFile(full)]
     const text = await readText(full)
     if (text.slice(0, 8192).includes('\0')) throw new Error(`${path} is a binary file`)
     const lines = text.split(/\r?\n/)

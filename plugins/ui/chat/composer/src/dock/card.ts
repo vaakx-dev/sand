@@ -1,7 +1,7 @@
 import { errorMessage } from '@sand/util'
 import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import { fromPaste, pasteLimit } from '../attachments/content'
+import { pastedFile, pasteLimit } from '../attachments/content'
 import { shelf } from '../attachments/shelf'
 import { createCompletion, type CompletionSource } from '../complete/model'
 import { builtinSources } from '../complete/sources'
@@ -49,7 +49,7 @@ export const card = ({ ctx, model, slots, menu }: CardParts) => {
     const pasted = event.clipboardData?.getData('text/plain') ?? ''
     if (pasted.length <= pasteLimit) return
     event.preventDefault()
-    model.files.attach([fromPaste(pasted)])
+    model.files.add([pastedFile(pasted)])
   }
 
   const sources = builtinSources(ctx)
@@ -61,7 +61,7 @@ export const card = ({ ctx, model, slots, menu }: CardParts) => {
     multiple: true,
     hidden: true,
     onChange: () => {
-      void model.files.add(picker.files ?? [])
+      model.files.add(picker.files ?? [])
       picker.value = ''
     },
   })

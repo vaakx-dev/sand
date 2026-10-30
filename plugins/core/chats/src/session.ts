@@ -3,7 +3,6 @@ import type { Entry, Message, Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 import type { Paging } from './paging'
 import { parseRow, type Row } from './paging/rows'
-import { sentSize } from './paging/size'
 
 export interface SessionHooks {
   entry(session: Session, entry: Entry): void
@@ -19,7 +18,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
   const append = db.transaction((...added: Entry[]) => {
     for (const entry of added) {
       const data = JSON.stringify(entry.data)
-      insert.run({ ...entry, data, size: sentSize(data, entry.data) })
+      insert.run({ ...entry, data, size: data.length })
     }
     setHead.run({ head: added.at(-1)!.id, id: info.id })
   })

@@ -1,4 +1,5 @@
 import type { Message } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 import type { Effort, LLMRequest, ModelInfo } from '../contract'
 import { createHash } from 'node:crypto'
 import { loadedTools } from '../http/deferred'
@@ -24,10 +25,10 @@ const functions = (request: LLMRequest) =>
     strict: false,
   }))
 
-export const openaiBody = (request: LLMRequest & { model: string }, model: ModelInfo) => ({
+export const openaiBody = (request: LLMRequest & { model: string }, model: ModelInfo, media: Media) => ({
   model: request.model,
   instructions: request.system,
-  input: openaiInput(request.messages, !!model.images),
+  input: openaiInput(request.messages, { media, images: !!model.images }),
   ...(loadedTools(request.tools).length && { tools: functions(request) }),
   tool_choice: 'auto',
   parallel_tool_calls: true,

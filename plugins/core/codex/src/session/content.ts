@@ -1,32 +1,38 @@
-import type { ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
-import { fileText } from '@sand/chats/prompt'
+import type { ImageBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
+import { fileText, unavailableText } from '@sand/chats/prompt'
 
 const dataUrl = (mediaType: string, data: string) => `data:${mediaType};base64,${data}`
 
-const asText = (block: UserContent) => {
+const asText = (block: Exclude<UserContent, ImageBlock>, media: Media) => {
   switch (block.type) {
     case 'text':
       return block.text
     case 'file':
       return fileText(block)
-    case 'document':
-      if (block.mediaType === 'text/plain' && block.data) return block.name ? `${block.name}\n\n${block.data}` : block.data
-      return `(PDF ${block.name ?? ''} attached, which Codex can't read here)`
-    case 'image':
-      return `(image ${block.name ?? ''} not available)`
+    case 'document': {
+      if (block.mediaType !== 'text/plain') return `(PDF ${block.name ?? ''} attached, which Codex can't read here)`
+      const data = media.data(block)
+      if (data === undefined) return unavailableText(block)
+      return block.name ? `${block.name}\n\n${data}` : data
+    }
   }
 }
 
-export const inputItem = (block: UserContent) =>
-  block.type === 'image' && block.data ? { type: 'image', url: dataUrl(block.mediaType, block.data) } : { type: 'text', text: asText(block), text_elements: [] }
-
-const outputItem = (item: ToolResultContent) => {
-  if (item.type === 'image' && item.data) return { type: 'inputImage', imageUrl: dataUrl(item.mediaType, item.data) }
-  if (item.type === 'tool_reference') return { type: 'inputText', text: `The ${item.name} tool is now available.` }
-  return { type: 'inputText', text: asText(item) }
+export const inputItem = (media: Media) => (block: UserContent) => {
+  if (block.type !== 'image') return { type: 'text', text: asText(block, media), text_elements: [] }
+  const data = media.data(block)
+  return data === undefined ? { type: 'text', text: unavailableText(block), text_elements: [] } : { type: 'image', url: dataUrl(block.mediaType, data) }
 }
 
-export const toolOutput = (result: ToolResultBlock) => ({
-  contentItems: result.content.length ? result.content.map(outputItem) : [{ type: 'inputText', text: '(no output)' }],
+const outputItem = (media: Media) => (item: ToolResultContent) => {
+  if (item.type === 'tool_reference') return { type: 'inputText', text: `The ${item.name} tool is now available.` }
+  if (item.type !== 'image') return { type: 'inputText', text: asText(item, media) }
+  const data = media.data(item)
+  return data === undefined ? { type: 'inputText', text: unavailableText(item) } : { type: 'inputImage', imageUrl: dataUrl(item.mediaType, data) }
+}
+
+export const toolOutput = (result: ToolResultBlock, media: Media) => ({
+  contentItems: result.content.length ? result.content.map(outputItem(media)) : [{ type: 'inputText', text: '(no output)' }],
   success: !result.isError,
 })

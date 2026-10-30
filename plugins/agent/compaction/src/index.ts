@@ -1,5 +1,6 @@
 import { llm, llmEvent } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
+import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
 import { context } from '@sand/prompt/contract'
 import { server } from '@sand/server/contract'
@@ -17,7 +18,7 @@ import { serveUsage } from './usage'
 
 export default definePlugin({
   name: 'compaction',
-  inject: { llm },
+  inject: { llm, media },
   config,
   apply(ctx, config) {
     const tracker = createTracker()

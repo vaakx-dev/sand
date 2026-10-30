@@ -1,5 +1,6 @@
-import { fileText, imageType } from '@sand/chats/prompt'
+import { fileText, unavailableText, type MediaBlock } from '@sand/chats/prompt'
 import type { Block, Message, ToolReferenceBlock, ToolResultContent } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 import type { Effort, LLMRequest, ToolSpec } from '../contract'
 import { loadedTools, withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
@@ -14,34 +15,42 @@ export interface ClaudeSettings {
 
 const cacheable = new Set<unknown>(['text', 'image', 'document', 'tool_use', 'tool_result'])
 
-const block = (value: Block | ToolReferenceBlock): Record<string, unknown> => {
-  switch (value.type) {
-    case 'text':
-      return { type: 'text', text: value.text }
-    case 'image':
-      return { type: 'image', source: { type: 'base64', media_type: imageType(value.data, value.mediaType), data: value.data } }
-    case 'document':
-      return {
-        type: 'document',
-        source:
-          value.mediaType === 'application/pdf'
-            ? { type: 'base64', media_type: 'application/pdf', data: value.data }
-            : { type: 'text', media_type: 'text/plain', data: value.data },
-        ...(value.name && { title: value.name }),
-      }
-    case 'file':
-      return { type: 'text', text: fileText(value) }
-    case 'thinking':
-      return { type: 'thinking', thinking: value.thinking, signature: value.signature }
-    case 'redacted_thinking':
-      return { type: 'redacted_thinking', data: value.data }
-    case 'tool_call':
-      return { type: 'tool_use', id: value.id, name: value.name, input: value.input }
-    case 'tool_result':
-      return { type: 'tool_result', tool_use_id: value.callId, content: value.content.map(block), is_error: value.isError }
-    case 'tool_reference':
-      return { type: 'tool_reference', tool_name: value.name }
+const mediaBlock = (value: MediaBlock, data: string) => {
+  if (value.type === 'image') return { type: 'image', source: { type: 'base64', media_type: value.mediaType, data } }
+  return {
+    type: 'document',
+    source: value.mediaType === 'application/pdf' ? { type: 'base64', media_type: 'application/pdf', data } : { type: 'text', media_type: 'text/plain', data },
+    ...(value.name && { title: value.name }),
   }
+}
+
+const blockWith = (media: Media) => {
+  const stored = (value: MediaBlock) => {
+    const data = media.data(value)
+    return data === undefined ? { type: 'text', text: unavailableText(value) } : mediaBlock(value, data)
+  }
+  const block = (value: Block | ToolReferenceBlock): Record<string, unknown> => {
+    switch (value.type) {
+      case 'text':
+        return { type: 'text', text: value.text }
+      case 'image':
+      case 'document':
+        return stored(value)
+      case 'file':
+        return { type: 'text', text: fileText(value) }
+      case 'thinking':
+        return { type: 'thinking', thinking: value.thinking, signature: value.signature }
+      case 'redacted_thinking':
+        return { type: 'redacted_thinking', data: value.data }
+      case 'tool_call':
+        return { type: 'tool_use', id: value.id, name: value.name, input: value.input }
+      case 'tool_result':
+        return { type: 'tool_result', tool_use_id: value.callId, content: value.content.map(block), is_error: value.isError }
+      case 'tool_reference':
+        return { type: 'tool_reference', tool_name: value.name }
+    }
+  }
+  return block
 }
 
 const withoutOpenAIReasoning = (messages: Message[]): Message[] =>
@@ -74,9 +83,10 @@ const toolsFor = (request: LLMRequest, searches: boolean) => {
   return { tools: request.tools.map(tool => toolOf(tool, deferred.has(tool.name))), refer: keepReferences(deferred) }
 }
 
-export const claudeBody = (request: LLMRequest, settings: ClaudeSettings, searches: boolean) => {
+export const claudeBody = (request: LLMRequest, settings: ClaudeSettings, searches: boolean, media: Media) => {
   const { efforts, fast } = settings
   const { tools, refer } = toolsFor(request, searches)
+  const block = blockWith(media)
   const messages = pair(withReferences(withoutOpenAIReasoning(request.messages), refer)).map(message => ({ role: message.role, content: message.content.map(block) }))
   const last = messages.at(-1)?.content.at(-1)
   if (last && cacheable.has(last.type)) last.cache_control = { type: 'ephemeral' }

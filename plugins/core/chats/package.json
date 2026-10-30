@@ -18,6 +18,7 @@
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/loop": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/util": "workspace:*",

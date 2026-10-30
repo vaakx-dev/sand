@@ -25,12 +25,17 @@ export const createRoutes = (runtime: Runtime) => {
     }
   }
 
+  const under = (pathname: string) => {
+    const folder = pathname.slice(0, pathname.indexOf('/', 1) + 1)
+    return folder ? routes.get(folder) : undefined
+  }
+
   const respond = (request: Request, server: Bun.Server<Caller>) => {
     const access = runtime.access(request)
     if (access === 'denied') return new Response('forbidden', { status: 403 })
     const url = new URL(request.url)
     if (url.pathname === '/ws') return access === 'client' ? upgrade(request, server) : new Response('unauthorized', { status: 401 })
-    const found = routes.get(url.pathname)
+    const found = routes.get(url.pathname) ?? under(url.pathname)
     if (!found) return new Response('not found', { status: 404 })
     if (!found.public && access !== 'client') return new Response('unauthorized', { status: 401 })
     return found.handler(request, runtime.caller(request))

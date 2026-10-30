@@ -20,6 +20,7 @@
     "@sand/layout": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/markdown": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",

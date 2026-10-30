@@ -17,6 +17,8 @@
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/transfers": "workspace:*",
     "@sand/util": "workspace:*",

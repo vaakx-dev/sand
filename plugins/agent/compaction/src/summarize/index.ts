@@ -1,5 +1,6 @@
 import type { LLM, LLMRequest, SourceRef, Usage } from '@sand/accounts/contract'
 import type { Message } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 import { sumUsage } from '@sand/usage/records'
 import { ask } from './ask'
 import { promptText, system } from './prompt'
@@ -40,8 +41,8 @@ const transcriptRequest = (text: string, model?: string): LLMRequest => ({
   model,
 })
 
-export const summarize = async (llm: LLM, { model, messages, previous, instructions, limit, signal }: SummaryInput) => {
-  const parts = messages.map(serialize).filter(Boolean)
+export const summarize = async (llm: LLM, media: Media, { model, messages, previous, instructions, limit, signal }: SummaryInput) => {
+  const parts = messages.map(serialize(media)).filter(Boolean)
   let summary = previous
   let usage: Usage | undefined
   let source: SourceRef | undefined

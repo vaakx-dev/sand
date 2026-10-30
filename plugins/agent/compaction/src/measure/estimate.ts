@@ -1,10 +1,8 @@
 import type { LLMRequest } from '@sand/accounts/contract'
 import { fileText } from '@sand/chats/prompt'
-import type { Block, DocumentBlock, Message, ToolReferenceBlock } from '@sand/chats/contract'
+import type { Block, Message, ToolReferenceBlock } from '@sand/chats/contract'
 
 const imageChars = 1600 * 4
-
-const dataLength = (block: DocumentBlock) => (typeof block.data === 'string' ? block.data.length : block.size)
 
 const charsOf = (block: Block | ToolReferenceBlock): number => {
   switch (block.type) {
@@ -23,7 +21,7 @@ const charsOf = (block: Block | ToolReferenceBlock): number => {
     case 'image':
       return imageChars
     case 'document':
-      return block.mediaType === 'application/pdf' ? Math.ceil(dataLength(block) / 50) : dataLength(block)
+      return block.mediaType === 'application/pdf' ? Math.ceil(block.size / 50) : block.size
     case 'file':
       return fileText(block).length
   }

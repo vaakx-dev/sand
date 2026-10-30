@@ -1,6 +1,6 @@
 import type { ChatContext } from '../context'
 import type { MediaImage, ToolViews, TranscriptParts } from './contract'
-import { mediaImage } from './image'
+import { chatImages } from './image'
 import { menuKit } from './menus'
 import { itemCache } from './thread/cache'
 import { threadItems } from './thread/items'
@@ -12,7 +12,7 @@ import { openStates } from './transcript/open'
 import { rendererRegistry } from './transcript/registry'
 
 export const transcriptParts = (ctx: ChatContext): TranscriptParts => {
-  const image = mediaImage(ctx)
+  const { image, replyImage } = chatImages(ctx)
   const menus = menuKit(ctx.kit)
   return {
     items: threadItems,
@@ -22,6 +22,7 @@ export const transcriptParts = (ctx: ChatContext): TranscriptParts => {
     openStates,
     menus,
     image,
+    replyImage,
     toolStep: (tool, options) => toolStep(ctx.kit, tool, options, menus, thread => ctx.threads.get(thread)?.info.cwd),
   }
 }

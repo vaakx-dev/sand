@@ -1,7 +1,6 @@
 import { event, service } from 'drydock'
 import type { FileIndex, LimitsFeed, Models, SkillIndex } from './data'
 import type { Machines } from './machines'
-import type { Media } from './media'
 import type { Projects } from './projects'
 import type { Threads } from './threads'
 import type { Turns } from './turns'
@@ -9,7 +8,6 @@ import type { Wire, WireState } from './wire'
 
 export type * from './data'
 export type * from './machines'
-export type * from './media'
 export type * from './projects'
 export type * from './threads'
 export type * from './turns'
@@ -24,7 +22,6 @@ export const fileIndex = service<FileIndex>('fileIndex')
 export const skillIndex = service<SkillIndex>('skillIndex')
 export const projects = service<Projects>('projects')
 export const machines = service<Machines>('machines')
-export const media = service<Media>('media')
 
 export const wireState = event<(state: WireState) => void>('wire.state')
 export const wireHello = event<() => void>('wire.hello')

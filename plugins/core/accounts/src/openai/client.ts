@@ -1,3 +1,4 @@
+import type { Media } from '@sand/media/contract'
 import type { LLMEvent, LLMRequest, ModelInfo } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { PlanRegistry } from '../auth/plans'
@@ -12,16 +13,17 @@ import { readOpenAI } from './reader'
 interface OpenAIOptions {
   accounts: Accounts
   plans: PlanRegistry
+  media: Media
   retries: number
   inspect(account: string): ((response: Response) => void) | undefined
 }
 
 export type OpenAI = ReturnType<typeof createOpenAI>
 
-export const createOpenAI = ({ accounts, plans, retries, inspect }: OpenAIOptions) => {
+export const createOpenAI = ({ accounts, plans, media, retries, inspect }: OpenAIOptions) => {
   const prepare = async (account: string, request: LLMRequest & { model: string }, model: ModelInfo) => {
     const credential = await accounts.auth(account)
-    const payload = openaiBody(request, model)
+    const payload = openaiBody(request, model, media)
     return credential.type === 'api_key' ? keyCall(credential, payload) : plans.call(account, credential, payload)
   }
 

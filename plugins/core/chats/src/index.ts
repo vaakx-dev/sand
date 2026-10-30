@@ -1,4 +1,5 @@
 import { turnEnd, turnStart } from '@sand/loop/contract'
+import { media } from '@sand/media/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { runtimeRelease } from '@sand/host-runtimes/contract'
@@ -8,17 +9,19 @@ import { join } from 'node:path'
 import { z } from 'zod'
 import { sessionClosing, sessionEntry, sessionRemove, sessions, sessionUpdate } from './contract'
 import { open } from './db'
+import { usedMedia } from './media'
 import { createStore } from './store'
 
 export default definePlugin({
   name: 'chats',
   description: "Stores each project's threads, their sub-agents and quick task chats, in SQLite",
-  inject: { paths, projectFiles },
+  inject: { paths, projectFiles, media },
   config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
     const { home } = ctx.paths
     const db = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
     ctx.effect(() => () => db.close())
+    ctx.effect(() => ctx.media.inUse(usedMedia(db)))
     const running = new Set<string>()
     ctx.on(turnStart, session => void running.add(session.id))
     ctx.on(turnEnd, session => {
