@@ -74,7 +74,6 @@ export const createUpdater = (deps: UpdaterDeps, store: UpdateStore): Updater =>
       current = build
       settle('idle')
     },
-    currentId: () => current?.id,
   })
 
   const runCheck = async () => {

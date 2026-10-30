@@ -26,7 +26,6 @@ export interface UpdaterDeps {
   hostChanged(running: string, next: string): Promise<boolean>
   switchTo(id: string): Promise<void>
   refreshShim(): Promise<void>
-  restorePrevious(): Promise<unknown>
   health(): Promise<HealthOutcome>
   cleanup(keep: string[]): Promise<void>
   restart(): void

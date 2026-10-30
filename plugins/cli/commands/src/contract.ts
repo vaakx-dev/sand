@@ -13,6 +13,7 @@ export interface CliCommand {
   usage?: string
   options?: Record<string, CliOption>
   default?: boolean
+  hidden?: boolean
   run(args: string[], values: CliValues): Promise<number | void> | number | void
 }
 

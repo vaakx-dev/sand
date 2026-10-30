@@ -5,7 +5,7 @@ import { writeShim } from '@sand/host-dist/setup'
 import { hostHealth } from '@sand/host-health/contract'
 import { hub } from '@sand/host-hub/contract'
 import { runtimes } from '@sand/host-runtimes/contract'
-import { appRoot, restorePrevious, switchTo, waitHealthy } from '@sand/util/boot'
+import { appRoot, switchTo, waitHealthy } from '@sand/util/boot'
 import { definePlugin } from 'drydock'
 import { announcer } from './announce'
 import { updatesChange } from './contract'
@@ -47,7 +47,6 @@ export default definePlugin({
         hostChanged: hostCodeChanged,
         switchTo: id => switchTo(home, id),
         refreshShim: () => writeShim(home),
-        restorePrevious: () => restorePrevious(home),
         health: () => waitHealthy(readHealth),
         cleanup: keep => cleanupBuilds(home, keep),
         restart: () => ctx.emit(hostRestart),

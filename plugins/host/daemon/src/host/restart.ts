@@ -1,62 +1,56 @@
-import type { ServerInfo } from '@sand/host-gateway/contract'
-import { hostHealthRequest } from '@sand/host-health/contract'
 import { errorMessage } from '@sand/util'
-import { healthText, restorePrevious, waitHealthy } from '@sand/util/boot'
-import { ask } from '../control/ask'
+import { healthText, restorePrevious } from '@sand/util/boot'
+import { checkHealth } from '../control/health'
 import { start } from '../control/start'
 import { stop } from '../control/stop'
+import { handOff } from '../handoff/hand-off'
 
 const startWait = 90_000
-const healthWait = 120_000
 
-const launch = async (home: string) => {
-  const info = await start(home, { wait: startWait, stopOnFail: true })
-  console.log(`restarted sand (pid ${info.pid})`)
-  return info
+const handedOff = async (home: string) => {
+  try {
+    return await handOff(home)
+  } catch (error) {
+    console.error(`could not hand over to the new sand: ${errorMessage(error)}`)
+    return false
+  }
 }
 
-const checkHealth = (home: string, info: ServerInfo) => waitHealthy(() => ask(home, info, hostHealthRequest, {}, 10_000), { timeout: healthWait })
+const stopLeftover = async (home: string) => {
+  try {
+    const pid = await stop(home)
+    if (pid) console.error(`stopped the new sand (pid ${pid})`)
+  } catch (error) {
+    console.error(`could not stop the new sand: ${errorMessage(error)}`)
+  }
+}
 
-const rollback = async (home: string) => {
+const startPrevious = async (home: string) => {
   try {
     await restorePrevious(home)
     console.error('went back to the previous sand build')
-    return await launch(home)
+    const info = await start(home, { wait: startWait, stopOnFail: true })
+    console.log(`restarted sand (pid ${info.pid})`)
+    return info
   } catch (error) {
     console.error(`could not restart sand: ${errorMessage(error)}`)
   }
 }
 
-const reportPrevious = async (home: string, info: ServerInfo) => {
+const rollBack = async (home: string) => {
+  await stopLeftover(home)
+  const info = await startPrevious(home)
+  if (!info) return
   const outcome = await checkHealth(home, info)
   if (outcome.ok) console.log('the previous sand build is healthy')
   else console.error(`the previous sand build is not healthy either:\n${healthText(outcome)}`)
 }
 
-const rollbackUnhealthy = async (home: string) => {
-  try {
-    await stop(home)
-  } catch (error) {
-    console.error(`could not stop the new sand: ${errorMessage(error)}`)
-  }
-  const info = await rollback(home)
-  if (info) await reportPrevious(home, info)
-}
-
-const startNew = async (home: string) => {
-  try {
-    return await launch(home)
-  } catch (error) {
-    console.error(`the new sand did not start: ${errorMessage(error)}`)
-    await rollback(home)
-  }
-}
-
 export const restartHost = async (home: string): Promise<void> => {
-  const info = await startNew(home)
-  if (!info) return
-  const outcome = await checkHealth(home, info)
-  if (outcome.ok) return
-  console.error(`the new sand is not healthy:\n${healthText(outcome)}`)
-  await rollbackUnhealthy(home)
+  const awake = setInterval(() => {}, 60_000)
+  try {
+    if (!(await handedOff(home))) await rollBack(home)
+  } finally {
+    clearInterval(awake)
+  }
 }

@@ -21,9 +21,9 @@ export const daemonService = (home: string): Daemon => {
       return launch
     },
     start: async () => remember(await start(home)),
-    async stop() {
+    stop() {
       known = undefined
-      await stop(home)
+      return stop(home)
     },
     async request(request, input, { timeout } = {}) {
       return ask(home, await require(), request, input, timeout)

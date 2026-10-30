@@ -1,8 +1,9 @@
 import type { ServerInfo } from '@sand/host-gateway/contract'
-import { readServerInfo } from '@sand/util/boot'
 import { daemonStop } from '../contract'
 import { ask } from './ask'
 import { isAlive } from './info'
+import { portHolder } from './owner/holder'
+import { servesHome } from './owner/serves-home'
 
 const waitForExit = async (pid: number) => {
   for (let tries = 0; tries < 100 && isAlive(pid); tries++) await Bun.sleep(100)
@@ -12,25 +13,29 @@ const waitForExit = async (pid: number) => {
 const askToStop = async (home: string, info: ServerInfo) => {
   try {
     await ask(home, info, daemonStop, {}, 3000)
-  } catch {}
+    return true
+  } catch {
+    return false
+  }
 }
 
-const stopWindows = async (home: string, info: ServerInfo) => {
-  await askToStop(home, info)
-  if (await waitForExit(info.pid)) return
+const signal = (pid: number, name: NodeJS.Signals) => {
   try {
-    process.kill(info.pid)
+    process.kill(pid, name)
   } catch {}
 }
 
-const stopPosix = async (info: ServerInfo) => {
-  process.kill(info.pid, 'SIGINT')
-  if (!(await waitForExit(info.pid))) process.kill(info.pid, 'SIGTERM')
+const forceStop = async (home: string, { pid, url }: ServerInfo) => {
+  if (!(await servesHome(pid, home))) throw new Error(`process ${pid} on ${url} is not sand serving ${home}, so it was left running`)
+  signal(pid, 'SIGINT')
+  if (await waitForExit(pid)) return
+  signal(pid, 'SIGTERM')
+  if (!(await waitForExit(pid))) throw new Error(`sand (pid ${pid}) did not stop`)
 }
 
 export const stop = async (home: string) => {
-  const info = await readServerInfo(home)
-  if (!info || !isAlive(info.pid)) return console.log('sand is not running')
-  await (process.platform === 'win32' ? stopWindows(home, info) : stopPosix(info))
-  console.log(`stopped sand (pid ${info.pid})`)
+  const info = await portHolder(home)
+  if (!info) return
+  if (!((await askToStop(home, info)) && (await waitForExit(info.pid)))) await forceStop(home, info)
+  return info.pid
 }

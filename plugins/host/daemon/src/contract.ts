@@ -41,7 +41,7 @@ export interface Daemon {
   require(hint?: string): Promise<ServerInfo>
   ensure(options?: { safe?: boolean }): Promise<DaemonLaunch>
   start(): Promise<ServerInfo>
-  stop(): Promise<void>
+  stop(): Promise<number | undefined>
   request<I, O>(request: Request<I, O>, input: I, options?: DaemonRequestOptions): Promise<O>
   link(): Promise<DaemonLink>
 }

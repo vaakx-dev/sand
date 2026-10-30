@@ -42,8 +42,7 @@ export const skipStart = () => Boolean(process.env.SAND_NO_START)
 
 export const startHost = async (daemon: Daemon) => {
   await allowThroughFirewall(process.execPath)
-  const found = await daemon.info()
-  if (found) await daemon.stop()
+  const found = await daemon.stop()
   const info = await daemon.start()
   done(`Server ${found ? 'restarted' : 'started'} on port ${new URL(info.url).port}`)
 }
