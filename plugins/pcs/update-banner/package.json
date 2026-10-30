@@ -9,6 +9,7 @@
     "summary": "Shows what a newer sand changes and updates every PC, with an Updates page in Settings"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-dist": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-updates": "workspace:*",

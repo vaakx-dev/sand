@@ -1,7 +1,7 @@
 import { toolViews, transcript as transcriptService, type ToolRenderer, type ToolViews } from '@sand/chat/contract'
+import { wire } from '@sand/devices-contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
-import { wire } from '@sand/web-client/contract'
 import type { HtmlRenderEntry } from '../contract'
 import { definePlugin } from 'drydock'
 import { htmlFrame } from './frame'

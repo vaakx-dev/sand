@@ -1,16 +1,16 @@
-import { machines, wire, wireHello } from '@sand/web-client/contract'
+import { pcHello, pcs, wire, type WireListen } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { helloJobs, jobCancel, jobEndWire, jobNoteWire, jobs, jobsChange, jobStartWire, type JobNote, type Jobs, type JobState, type WireJob } from '../contract'
 
-const everyPc = { remotes: true }
+const everyPc: WireListen = { from: 'all' }
 
 const seed = (job: WireJob, known?: JobState): JobState => ({ ...job, notes: known?.notes.length ? known.notes : job.note ? [job.note] : [] })
 
 export default definePlugin({
   name: 'jobs-web',
   description: 'Keeps the background jobs of each PC on the page, for the Agents panel and the agent tool cards',
-  inject: { wire },
+  inject: { wire, pcs },
   apply(ctx) {
     const devices = new Map<string, Map<string, JobState>>()
     const changed = () => ctx.emit(jobsChange)
@@ -29,17 +29,15 @@ export default definePlugin({
       changed()
     }
 
-    const hello = () => {
-      const device = ctx.get(machines)?.here().id
-      const listed = ctx.wire.hello(helloJobs) ?? []
-      if (!device) return
+    const hello = (device: string) => {
+      const listed = ctx.wire.hello(helloJobs, device) ?? []
       const previous = devices.get(device)
       devices.set(device, new Map(listed.map(job => [job.id, seed(job, previous?.get(job.id))])))
       changed()
     }
 
-    ctx.on(wireHello, hello)
-    if (ctx.wire.state() === 'open') hello()
+    ctx.on(pcHello, hello)
+    for (const pc of ctx.pcs.list()) if (ctx.wire.ready(pc.id)) hello(pc.id)
     ctx.effect(() =>
       joinDisposers(
         ctx.wire.on(jobStartWire, keep, everyPc),

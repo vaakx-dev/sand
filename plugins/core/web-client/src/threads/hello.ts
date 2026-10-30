@@ -1,7 +1,7 @@
 import { helloActive } from '@sand/host-hub/contract'
 import { helloDelta, helloSessions, helloStarted, helloSync } from '@sand/server/contract'
 import type { Thread } from '../contract'
-import type { HelloRead } from '../wire/hellos'
+import type { HelloRead } from '../greeted'
 import { clearTurn } from './live'
 import type { Store } from './store'
 

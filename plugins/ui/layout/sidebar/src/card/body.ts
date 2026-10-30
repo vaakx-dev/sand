@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { tildeHome } from '@sand/util'
-import { div, span, type Sig } from '@vaakx-dev/vrui'
+import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { ThreadItem } from '../items/item'
 import { status } from './status'
 import { actionStrip, type StripParts } from './strip'
@@ -41,11 +41,17 @@ const titleLook = ({ item, selected }: CardParts) => (selected.get() || item.get
 
 const placeText = (value: ThreadItem) => [value.project, value.subtitle].filter(Boolean).join(' · ')
 
+const pcMark = ({ item }: CardParts) =>
+  show(
+    () => Boolean(item.get().pcMark),
+    () => item.get().pcMark?.(),
+  )
+
 const place = (parts: CardParts) =>
   div(
     { class: 'flex h-5 min-w-0 items-center gap-1.5', title: parts.item.map(value => tildeHome(value.path ?? '')) },
     avatar(parts),
-    span({ class: 'flex min-w-0 flex-1' }, parts.kit.metaLine(parts.item.map(placeText))),
+    span({ class: 'flex min-w-0 flex-1 items-center gap-1.5' }, parts.kit.metaLine(parts.item.map(placeText)), pcMark(parts)),
     statusSlot(parts),
     actions(parts),
   )

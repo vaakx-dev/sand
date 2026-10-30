@@ -3,7 +3,7 @@ import type { AccountUsage, ModelUsage, PeriodUsage, UnpricedModel, UsageBucket,
 export interface Pc {
   id: string
   name: string
-  local: boolean
+  home: boolean
   online: boolean
 }
 

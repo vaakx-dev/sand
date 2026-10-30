@@ -61,7 +61,7 @@ export const pluginsState = request('plugins.state', { input: z.object({}), outp
 export const pluginsApply = request('plugins.apply', { input: choice, output: type<PluginSyncState>() })
 export const pluginsSkip = request('plugins.skip', { input: choice, output: type<PluginSyncState>() })
 export const pluginsLocal = request('plugins.local', { input: z.object({ plugin: pluginName, local: z.boolean() }), output: type<PluginSyncState>() })
-export const pluginsExchange = request('plugins.exchange', { input: z.object({ manifest: z.unknown() }), output: type<unknown>() })
-export const pluginsFiles = request('plugins.files', { input: z.object({ plugin: pluginName }), output: type<unknown>() })
+export const pluginsExchange = request('plugins.exchange', { input: z.object({ manifest: z.unknown() }), output: type<unknown>(), callers: 'pc' })
+export const pluginsFiles = request('plugins.files', { input: z.object({ plugin: pluginName }), output: type<unknown>(), callers: 'pc' })
 
 export const pluginsChange = wireEvent<PluginSyncState>('plugins.change')

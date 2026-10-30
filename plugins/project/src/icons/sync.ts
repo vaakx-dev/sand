@@ -1,3 +1,4 @@
+import type { Peers } from '@sand/devices-contract'
 import { serial } from '@sand/util'
 import type { Project } from '../contract'
 import { localCopy } from '../registry/list'
@@ -6,7 +7,15 @@ import { readCopyIcon, writeCopyIcon } from './copy'
 import { keepProjectIcon, projectIconFile } from './files'
 import { watchSandFolder } from './watch'
 
-const syncCopy = async (registry: Registry, home: string, project: Project, folder: string) => {
+interface IconSyncOptions {
+  registry: Registry
+  device: string
+  home: string
+  peers(): Peers | undefined
+  report(error: unknown): void
+}
+
+const syncCopy = async ({ registry, home, peers }: IconSyncOptions, project: Project, folder: string) => {
   const local = await readCopyIcon(folder)
   const shared = project.iconFile
   if (local) await keepProjectIcon(home, local.iconFile.hash, local.bytes)
@@ -16,11 +25,12 @@ const syncCopy = async (registry: Registry, home: string, project: Project, fold
     return
   }
   if (!shared) return
-  const file = await projectIconFile(home, shared.hash)
+  const file = await projectIconFile(home, shared.hash, peers())
   if (file) await writeCopyIcon(folder, await file.bytes(), shared.type)
 }
 
-export const iconSync = (registry: Registry, device: string, home: string, report: (error: unknown) => void) => {
+export const iconSync = (options: IconSyncOptions) => {
+  const { registry, device, report } = options
   const queue = serial()
   const watchers = new Map<string, () => void>()
 
@@ -32,7 +42,7 @@ export const iconSync = (registry: Registry, device: string, home: string, repor
 
   const sync = () =>
     void queue(async () => {
-      for (const { project, folder } of copies()) await syncCopy(registry, home, project, folder).catch(report)
+      for (const { project, folder } of copies()) await syncCopy(options, project, folder).catch(report)
     })
 
   const follow = () => {

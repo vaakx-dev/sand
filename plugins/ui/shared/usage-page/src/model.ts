@@ -1,5 +1,5 @@
 import type { Limits } from '@sand/accounts/contract'
-import type { Wire } from '@sand/web-client/contract'
+import type { Wire } from '@sand/devices-contract'
 import { usageQuery } from '@sand/usage/records'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader } from './data/fleet'
@@ -55,7 +55,7 @@ export const usageModel = (deps: UsageDeps) => {
   })
 
   const nameOf = (id: string) => pcs.get().find(machine => machine.id === id)?.name
-  const home = () => pcs.get().find(machine => machine.local)
+  const home = () => pcs.get().find(pc => pc.home)
 
   const selected = derive(() => {
     const list = pcs.get()

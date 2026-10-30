@@ -1,5 +1,6 @@
+import type { Wire } from '@sand/devices-contract'
 import type { Context } from 'drydock'
-import { type ProjectGroup, projectsChange, type Wire } from '../contract'
+import { type ProjectGroup, projectsChange } from '../contract'
 
 interface Icon {
   hash: string

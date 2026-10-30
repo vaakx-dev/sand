@@ -1,8 +1,8 @@
+import { pcHello, type wire as wireService } from '@sand/devices-contract'
 import { layout } from '@sand/layout/contract'
 import { theme } from '@sand/ui-theme/contract'
 import type { kit as kitService, Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
-import { machinesChange, type wire as wireService } from '@sand/web-client/contract'
 import { htmlPage, type HtmlRenderEntry } from '../contract'
 import { div, effect, resource, show, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
@@ -60,7 +60,7 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
       onMount: () =>
         joinDisposers(
           listenToFrame(frame, { resize, open: kit.openTab, swipe: () => ctx.get(layout)?.swipe() }),
-          ctx.on(machinesChange, retry),
+          ctx.on(pcHello, retry),
         ),
     },
     frame,

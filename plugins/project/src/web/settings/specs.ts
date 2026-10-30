@@ -34,7 +34,7 @@ const openChatHere = (ctx: ProjectsContext, entry: ProjectEntry): NavAction[] =>
   startable(ctx, entry) ? [{ id: 'new-thread', group: 'use', label: 'New thread here', icon: 'message', run: quietly(() => openAt(ctx, entry)) }] : []
 
 export const copySpec = (ctx: ProjectsContext, entry: ProjectEntry): MenuSpec => ({
-  title: ctx.machines.name(entry.device),
+  title: ctx.pcs.name(entry.device),
   subtitle: shorten(ctx, entry.path, entry.device),
   actions: [
     ...openChatHere(ctx, entry),

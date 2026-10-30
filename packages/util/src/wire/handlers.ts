@@ -1,4 +1,5 @@
 import type { Caller, Request, RequestHandler } from '@sand/host-hub/contract'
+import { callerAllowed } from './callers'
 import { parseInput } from './input'
 
 interface Entry {
@@ -22,6 +23,7 @@ export const createHandlers = () => {
   const answer = async (type: string, input: unknown, caller: Caller) => {
     const entry = entries.get(type)
     if (!entry) throw new Error(`Nothing answers ${type}`)
+    if (!callerAllowed(entry.request.callers, caller.kind)) throw new Error(`A ${caller.kind} can't ask for ${type}`)
     return entry.handler(await parseInput(entry.request, input), caller)
   }
 

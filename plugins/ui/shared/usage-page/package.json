@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",

@@ -1,5 +1,6 @@
+import type { Wire } from '@sand/devices-contract'
 import { filesChanges, filesList, filesRead, type FileChange } from '@sand/project/contract'
-import type { Threads, Wire } from '@sand/web-client/contract'
+import type { Threads } from '@sand/web-client/contract'
 import { batch, sig } from '@vaakx-dev/vrui'
 import { buildTree, foldersOf, type Folder } from './tree/build'
 

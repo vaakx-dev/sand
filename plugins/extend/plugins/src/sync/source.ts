@@ -1,5 +1,5 @@
+import { wireHello } from '@sand/devices-contract'
 import { pluginsApply, pluginsChange, pluginsLocal, pluginsSkip, pluginsState, type PluginSyncState } from '@sand/host-plugin-sync/contract'
-import { wireHello } from '@sand/web-client/contract'
 import type { WireContext } from '../context'
 import { wireState } from '../wire-state'
 
@@ -15,7 +15,7 @@ export const syncSource = (ctx: WireContext) => {
 
   ctx.on(wireHello, loadState)
   ctx.effect(() => ctx.wire.on(pluginsChange, next => state.set(next)))
-  if (ctx.wire.state() === 'open') loadState()
+  if (ctx.wire.ready()) loadState()
 
   return { state, busy, apply, skip, setLocal }
 }

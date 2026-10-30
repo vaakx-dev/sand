@@ -1,0 +1,17 @@
+{
+  "name": "@sand/devices-identity",
+  "version": "0.0.0",
+  "description": "Ed25519 device keys, device ids and signed proofs, with the PC and browser key stores",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pc": "./src/pc/index.ts",
+    "./browser": "./src/browser/index.ts"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/util": "workspace:*"
+  }
+}

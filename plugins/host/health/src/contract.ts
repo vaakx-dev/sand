@@ -21,5 +21,5 @@ export interface HostHealthCheck {
 
 export const hostHealth = service<HostHealthCheck>('hostHealth')
 
-export const hostHealthRequest = request('host.health', { input: z.object({}), output: type<HostHealth>() })
+export const hostHealthRequest = request('host.health', { input: z.object({}), output: type<HostHealth>(), callers: 'any' })
 export const pcHealth = request('pc.health', { input: z.object({ device: z.string().optional() }), output: type<HostHealth>() })

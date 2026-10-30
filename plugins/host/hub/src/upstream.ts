@@ -1,5 +1,6 @@
 import type { RuntimeView } from '@sand/host-runtimes/contract'
 import { upstreamSocketUrl } from '@sand/util/boot'
+import type { Caller } from './contract'
 
 const retryDelay = 1000
 
@@ -14,14 +15,14 @@ export interface Upstream {
   close(): void
 }
 
-export const createUpstream = (runtime: RuntimeView, device: string, handlers: UpstreamHandlers): Upstream => {
+export const createUpstream = (runtime: RuntimeView, caller: Caller, handlers: UpstreamHandlers): Upstream => {
   const backlog: string[] = []
   let closed = false
   let retry: Timer | undefined
   let socket: WebSocket
 
   const connect = () => {
-    const opened = new WebSocket(upstreamSocketUrl(runtime.url, runtime.secret, device))
+    const opened = new WebSocket(upstreamSocketUrl(runtime.url, runtime.secret, caller))
     socket = opened
     opened.addEventListener('open', () => {
       for (const raw of backlog.splice(0)) opened.send(raw)

@@ -19,7 +19,7 @@ const rename = async (ctx: ProjectsContext, ask: Picker, group: ProjectGroup) =>
   if (name && name !== group.name) await ctx.projects.rename(group, name)
 }
 
-export const startable = (ctx: ProjectsContext, entry: ProjectEntry) => !entry.missing && ctx.machines.online(entry.device)
+export const startable = (ctx: ProjectsContext, entry: ProjectEntry) => !entry.missing && ctx.pcs.online(entry.device)
 
 export const openAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
   await ctx.threads.draft(entry.path, entry.device)
@@ -44,7 +44,7 @@ export const projectEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry
 
 export const copyEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
   group.locations.map(entry => ({
-    label: `Forget copy on ${ctx.machines.name(entry.device)}`,
+    label: `Forget copy on ${ctx.pcs.name(entry.device)}`,
     icon: 'x',
     run: () => ctx.projects.removeCopy(entry),
   }))

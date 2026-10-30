@@ -1,0 +1,24 @@
+{
+  "name": "@sand/devices-registry",
+  "version": "0.0.0",
+  "description": "The device list shared by your PCs, this PC's identity and who each caller is",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "host": "./src/index.ts",
+    "label": "Devices",
+    "summary": "Your paired PCs, phones and browsers"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

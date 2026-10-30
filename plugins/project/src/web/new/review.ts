@@ -2,6 +2,7 @@ import type { PalettePage, PaletteReviewRow } from '@sand/palette/contract'
 import type { ProjectsContext } from '../context'
 import { finish } from './finish'
 import type { Choice } from './types'
+import { isThisPc } from './where'
 
 const verbs: Record<Choice['how'], string> = {
   add: 'Add project',
@@ -27,7 +28,7 @@ export const reviewPage = (ctx: ProjectsContext, choice: Choice): PalettePage =>
   review: {
     rows: [
       { label: 'Source', value: choice.source },
-      { label: 'On', value: `${choice.machine.name}${choice.machine.local ? ' (this device)' : ''}` },
+      { label: 'On', value: `${choice.pc.name}${isThisPc(choice.pc) ? ' (this PC)' : ''}` },
       { label: 'Folder', value: `${choice.path}${choice.how === 'add' ? '' : ' — new'}`, mono: true },
       ...projectRow(ctx, choice),
     ],

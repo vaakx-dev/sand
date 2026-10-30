@@ -28,6 +28,7 @@ export interface SourceInfo {
   billing: Billing
   plan?: string
   via?: string
+  pc?: string
   online?: boolean
   shown: number
   total: number

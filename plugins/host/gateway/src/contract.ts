@@ -1,59 +1,44 @@
-import type { PairInvite } from '@sand/host-devices/contract'
-import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { service, type Dispose } from 'drydock'
-import { z } from 'zod'
-
-export type DeviceKind = 'pc' | 'phone' | 'browser'
-
-export type RouteKind = 'local' | 'lan' | 'tailscale'
+import type { CallerKind } from '@sand/host-hub/contract'
+import { type Dispose, service } from 'drydock'
 
 export interface RouteCaller {
   device: string
   name: string
-  kind: DeviceKind | 'admin'
+  kind: CallerKind
 }
 
 export interface ServerInfo {
   url: string
   urls: string[]
   pid: number
-  key: string
 }
 
-export interface NetworkState {
-  lan: boolean
-  urls: string[]
-}
+export type ListenScope = 'local' | 'network'
 
-export interface HostRoute {
-  url: string
-  kind: RouteKind
-}
+export type AddressReach = 'loopback' | 'private' | 'tailscale' | 'public'
 
 export interface HttpCall {
   request: Request
   url: URL
-  device?: string
-  admin: boolean
+  caller?: RouteCaller
   address?: string
+  reach: AddressReach
+  local: boolean
 }
 
 export interface HttpRoute {
   method: 'GET' | 'POST'
+  prefix?: boolean
   handle(call: HttpCall): Response | Promise<Response>
 }
 
 export interface HostHttp {
   route(path: string, route: HttpRoute): Dispose
+  bind(scope: ListenScope): Promise<void>
+  scope(): ListenScope
+  port(): number
+  addresses(): string[]
   urls(): string[]
 }
 
 export const hostHttp = service<HostHttp>('hostHttp')
-
-export const pairCreate = request('pair.create', { input: z.object({}), output: type<PairInvite>() })
-export const networkGet = request('network.get', { input: z.object({}), output: type<NetworkState>() })
-export const networkSet = request('network.set', { input: z.object({ lan: z.boolean() }), output: type<NetworkState>() })
-export const hostRoutes = request('host.routes', { input: z.object({}), output: type<HostRoute[]>() })
-
-export const networkChange = wireEvent<NetworkState>('network.change')
-export const routesChange = wireEvent<HostRoute[]>('routes.change')

@@ -5,12 +5,12 @@ import { reviewPage } from './review'
 import type { Choice } from './types'
 
 const copyItem = (ctx: ProjectsContext, choice: Choice, group: ProjectGroup): PaletteItem => {
-  const here = group.locations.find(location => location.device === choice.machine.id)
+  const here = group.locations.find(location => location.device === choice.pc.id)
   return {
     id: `match:${group.id}`,
     icon: 'link',
     label: `Add as a copy of ${group.name}`,
-    detail: here ? `Replaces the copy at ${here.path} on ${choice.machine.name}` : group.remote,
+    detail: here ? `Replaces the copy at ${here.path} on ${choice.pc.name}` : group.remote,
     search: `copy link ${group.name}`,
     page: () => reviewPage(ctx, { ...choice, project: group.id }),
   }
@@ -29,7 +29,7 @@ const matchPage = (ctx: ProjectsContext, choice: Choice, groups: ProjectGroup[])
 
 export const suggestPage = async (ctx: ProjectsContext, choice: Choice): Promise<PalettePage> => {
   if (choice.how !== 'add') return reviewPage(ctx, choice)
-  const folder = await ctx.projects.inspect(choice.path, choice.machine.id).catch(() => undefined)
+  const folder = await ctx.projects.inspect(choice.path, choice.pc.id).catch(() => undefined)
   if (folder?.project) return reviewPage(ctx, { ...choice, existing: folder.project })
   if (folder?.restores) return reviewPage(ctx, { ...choice, project: folder.restores })
   const groups = folder?.matches.flatMap(id => ctx.projects.get(id) ?? []) ?? []

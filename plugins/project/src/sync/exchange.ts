@@ -1,10 +1,9 @@
-import type { RemoteRecord } from '@sand/host-remotes/contract'
-import { callPeer } from '@sand/host-remotes/peers'
-import { PeerError, type WireSocket } from '@sand/util/boot'
+import { isPcUnavailable, type Peers, type PeerView } from '@sand/devices-contract'
+import { errorMessage } from '@sand/util'
 import { projectsSync, type Project } from '../contract'
 import { cleanProjects } from './clean'
 
-export type Outcome = { state: 'ok'; projects: Project[] } | { state: PeerError['state']; detail: string }
+export type Outcome = { state: 'ok'; projects: Project[] } | { state: 'offline' | 'failed'; detail: string }
 
 const answer = (result: unknown): Outcome => {
   try {
@@ -14,11 +13,11 @@ const answer = (result: unknown): Outcome => {
   }
 }
 
-export const exchange = async (record: RemoteRecord, projects: Project[], sockets: Set<WireSocket>): Promise<Outcome> => {
+export const exchange = async (peers: Peers, pc: PeerView, projects: Project[]): Promise<Outcome> => {
   try {
-    return answer(await callPeer(record, projectsSync, { projects }, sockets))
+    return answer(await peers.call(pc.id, projectsSync, { projects }))
   } catch (error) {
-    if (!(error instanceof PeerError)) throw error
-    return { state: error.state, detail: error.message }
+    if (isPcUnavailable(error)) return { state: 'offline', detail: `${pc.name} isn't connected` }
+    return { state: 'failed', detail: errorMessage(error) }
   }
 }

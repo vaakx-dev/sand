@@ -6,7 +6,6 @@
 - Use TypeScript on Bun; prefer Bun APIs over Node ones.
 - Everything is a plugin. drydock stays agent-agnostic.
 - A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (`sand serve`), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins.
-- `packages/protocol` holds types only.
 - Register everything through `ctx` so unloading cleans it up.
 - The web UI is the only user surface; there is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI.
 - `sand -p` is a minimal test runner: it runs one prompt in its own process, without a server, and prints the reply. Use it to check the agent loop and server-side features. Don't build or adapt features for it, and don't keep it in parity with the web UI.

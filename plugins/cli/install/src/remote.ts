@@ -1,7 +1,12 @@
-import type { InstallDoneRequest, InstallPairRequest, InstallPairResult } from '@sand/host-dist/contract'
+import { type InstallDone, installParams, installPaths, type InstallStep, pageLinkKeys } from '@sand/devices-contract'
 import type { HostHealth } from '@sand/host-health/contract'
 import { trimSlash } from '@sand/util'
-import { hostPaths } from '@sand/util/boot/wire'
+
+export interface JoinGrant {
+  link: string
+  base: string
+  token: string
+}
 
 interface Failure {
   summary: string
@@ -10,7 +15,19 @@ interface Failure {
 
 const failLimit = 16_000
 
-const endpoint = (base: string, path: string, secret: string) => `${trimSlash(base)}${path}?k=${encodeURIComponent(secret)}`
+export const joinGrantOf = (link: string): JoinGrant => {
+  const url = URL.parse(link.trim())
+  const token = url && new URLSearchParams(url.hash.slice(1)).get(pageLinkKeys.pair)
+  if (!url || !/^https?:$/.test(url.protocol) || !token) throw new Error('the join link is not one from Add a PC; copy the install command again')
+  return { link: url.href, base: trimSlash(`${url.origin}${url.pathname}`), token }
+}
+
+export const installEndpoint = ({ base, token }: JoinGrant, path: string, step?: InstallStep) => {
+  const url = new URL(`${base}${path}`)
+  url.searchParams.set(installParams.token, token)
+  if (step) url.searchParams.set(installParams.step, step)
+  return url.href
+}
 
 const postJson = async (url: string, body: unknown, timeout: number) => {
   const response = await fetch(url, {
@@ -19,22 +36,16 @@ const postJson = async (url: string, body: unknown, timeout: number) => {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeout),
   })
-  if (!response.ok) throw new Error((await response.text().catch(() => '')) || `the old PC answered ${response.status}`)
-  return response
+  if (!response.ok) throw new Error((await response.text().catch(() => '')) || `the other PC answered ${response.status}`)
 }
 
-export const pairWithOld = async (base: string, secret: string, body: InstallPairRequest) => {
-  const response = await postJson(endpoint(base, hostPaths.installPair, secret), body, 60_000)
-  return (await response.json()) as InstallPairResult
+export const reportStep = async (grant: JoinGrant, step: InstallStep) => {
+  await fetch(installEndpoint(grant, installPaths.step, step), { method: 'POST', signal: AbortSignal.timeout(15_000) }).catch(() => undefined)
 }
 
-export const reportSharing = async (base: string, secret: string) => {
-  await fetch(`${endpoint(base, hostPaths.installStep, secret)}&step=sharing`, { method: 'POST', signal: AbortSignal.timeout(15_000) }).catch(() => undefined)
-}
-
-export const reportDone = async (base: string, secret: string, accounts: string[]) => {
-  const body: InstallDoneRequest = { accounts }
-  await postJson(endpoint(base, hostPaths.installDone, secret), body, 15_000)
+export const reportDone = (grant: JoinGrant, accounts: string[]) => {
+  const body: InstallDone = { accounts }
+  return postJson(installEndpoint(grant, installPaths.done), body, 15_000)
 }
 
 const clip = (text: string) => new TextDecoder().decode(new TextEncoder().encode(text).slice(0, failLimit))
@@ -56,10 +67,10 @@ const failBody = (message: string, failure?: Failure) => {
   return json ? { type: 'application/json', body: json } : { type: 'text/plain', body: clip(message) }
 }
 
-export const reportFail = async (base: string, secret: string, message: string, failure?: Failure) => {
+export const reportFail = async (grant: JoinGrant, message: string, failure?: Failure) => {
   const { type, body } = failBody(message, failure)
   try {
-    await fetch(endpoint(base, hostPaths.installFail, secret), {
+    await fetch(installEndpoint(grant, installPaths.fail), {
       method: 'POST',
       headers: { 'content-type': type },
       body,

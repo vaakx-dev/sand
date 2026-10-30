@@ -4,7 +4,7 @@ import type { ReleaseInfo, UpdateChannel, UpdatePhase, UpdateState } from '@sand
 export interface Pc {
   key: string
   name: string
-  local: boolean
+  home: boolean
   online: boolean
   state?: UpdateState
   failure?: string

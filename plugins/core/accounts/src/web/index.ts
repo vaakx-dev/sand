@@ -1,7 +1,7 @@
+import { wire, wireHello } from '@sand/devices-contract'
 import { place } from '@sand/layout/place'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { wire, wireHello } from '@sand/web-client/contract'
 import { owned } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
 import { addAccount } from './add/sheet'
@@ -18,7 +18,7 @@ export default definePlugin({
     const control = loginState(ctx)
     const add = addAccount(ctx, control)
     ctx.on(wireHello, () => void control.load())
-    if (ctx.wire.state() === 'open') void control.load()
+    if (ctx.wire.ready()) void control.load()
     ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
     place(ctx, 'main', () => welcomeView(ctx.kit, welcome, control), 0.5)

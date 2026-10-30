@@ -23,7 +23,7 @@ const parse = (raw: string) => {
 
 const local = async (client: Client, request: ClientMessage, handlers: Handlers) => {
   try {
-    answer(client, request.id, { result: await handlers.answer(request.type, request.input, { device: client.device }) })
+    answer(client, request.id, { result: await handlers.answer(request.type, request.input, client.caller) })
   } catch (error) {
     answer(client, request.id, { error: errorMessage(error) })
   }

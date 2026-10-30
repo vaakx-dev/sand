@@ -1,0 +1,21 @@
+{
+  "name": "@sand/devices-pcs",
+  "version": "0.0.0",
+  "description": "Connects the page to every PC it knows over the closest working route, pairs it from links and join requests, and routes calls to the right PC",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "PCs",
+    "summary": "Connects this page to your PCs and pairs it"
+  },
+  "dependencies": {
+    "@sand/devices-connect": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

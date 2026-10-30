@@ -16,8 +16,9 @@
   },
   "dependencies": {
     "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-remotes": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",

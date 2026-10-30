@@ -1,51 +1,30 @@
-import { pcsChange, pcsList, type PcList } from '@sand/host-remotes/contract'
-import { turnEndWire, type TurnResult } from '@sand/loop/contract'
-import { wire, wireHello } from '@sand/web-client/contract'
-import { effect, onTimeout, sig } from '@vaakx-dev/vrui'
+import { isPcUnavailable, pcHello, type PeerView, peersChange, peersList, wire } from '@sand/devices-contract'
+import { models } from '@sand/web-client/contract'
+import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-
-const recheck = 60_000
 
 export const pcStatus = (ctx: Context) => {
   const online = sig<Record<string, boolean>>({})
-  const down = sig(new Set<string>())
-  const apply = (list: PcList) => online.set(Object.fromEntries(list.pcs.filter(pc => pc.checked).map(pc => [pc.name, pc.online && pc.pairing !== 'refused'])))
-  const load = () => void ctx.get(wire)?.call(pcsList, {}).then(apply, () => undefined)
-  const recover = () => {
-    down.set(new Set())
-    load()
+  const threadPc = () => ctx.get(models)?.device()
+  const apply = (list: PeerView[]) => online.set(Object.fromEntries(list.map(peer => [peer.id, peer.status.phase === 'connected'])))
+
+  const load = () => {
+    const pc = threadPc()
+    const found = ctx.get(wire)
+    if (!pc || !found) return
+    void found.call(peersList, {}, pc).then(apply, error => {
+      if (isPcUnavailable(error)) online.set({})
+    })
   }
-  const ended = ({ stopReason, error }: TurnResult) => {
-    if (stopReason !== 'error' || !error) {
-      if (down.get().size) recover()
-      return
-    }
-    const name = Object.keys(online.get()).find(name => error.startsWith(`${name} is offline`))
-    if (name) down.update(names => new Set([...names, name]))
-    load()
-  }
-  ctx.watch(wire, found => {
-    if (!found) return
-    const stops = [
-      found.on(pcsChange, list => {
-        down.set(new Set())
-        apply(list)
-      }),
-      found.on(turnEndWire, ([, result]) => ended(result)),
-    ]
-    if (found.state() === 'open') load()
-    return () => {
-      for (const stop of stops) void stop()
-    }
+
+  ctx.watch(wire, found => found?.on(peersChange, (list, pc) => pc === threadPc() && apply(list), { from: 'all' }))
+  ctx.on(pcHello, pc => {
+    if (pc === threadPc()) load()
   })
-  effect(() => {
-    if (down.get().size) return onTimeout(recover, recheck)
-  })
-  ctx.on(wireHello, load)
-  const status = (name: string): boolean | undefined => (down.get().has(name) ? false : online.get()[name])
+
   return {
-    online: status,
-    key: () => JSON.stringify([online.get(), [...down.get()]]),
+    online: (pc: string): boolean | undefined => online.get()[pc],
+    key: () => JSON.stringify(online.get()),
     refresh: load,
   }
 }

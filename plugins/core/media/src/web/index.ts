@@ -1,5 +1,6 @@
+import { wire } from '@sand/devices-contract'
 import { kit } from '@sand/ui-kit/contract'
-import { threads, wire } from '@sand/web-client/contract'
+import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { mediaView } from './contract'
 import { createImages } from './image'

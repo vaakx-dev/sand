@@ -3,6 +3,7 @@ import type { Daemon } from '../contract'
 import { ask } from '../control/ask'
 import { ensureRunning } from '../control/ensure'
 import { requireRunning, running } from '../control/info'
+import { openLink } from '../control/link'
 import { start } from '../control/start'
 import { stop } from '../control/stop'
 
@@ -24,8 +25,9 @@ export const daemonService = (home: string): Daemon => {
       known = undefined
       await stop(home)
     },
-    async request(request, input, { to, timeout } = {}) {
-      return ask(to ?? (await require()), request, input, timeout)
+    async request(request, input, { timeout } = {}) {
+      return ask(home, await require(), request, input, timeout)
     },
+    link: async () => openLink(home, (await require()).url),
   }
 }

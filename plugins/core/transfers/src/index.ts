@@ -1,4 +1,5 @@
 import { cli } from '@sand/config/contract'
+import { peers } from '@sand/devices-contract'
 import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers } from '@sand/util'
@@ -21,6 +22,7 @@ export default definePlugin({
   inject: { cli },
   apply(ctx) {
     const { home } = ctx.cli
+    const linked = () => ctx.get(peers)
     const transfers = createTransfers(join(home, 'transfers'))
     ctx.provide(transfersService, transfers)
     ctx.effect(() => {
@@ -33,10 +35,10 @@ export default definePlugin({
       found
         ? joinDisposers(
             found.route(transferPath, transferRoute(transfers)),
-            found.handle(transfersPull, pullFrom(home, transfers)),
+            found.handle(transfersPull, pullFrom(transfers, linked)),
             found.handle(transfersStatus, ({ transfer }) => transfers.arrived(transfer)),
             found.handle(transfersOffer, offerPath(transfers)),
-            found.handle(transfersSave, saveFrom(home, transfers)),
+            found.handle(transfersSave, saveFrom(transfers, linked)),
           )
         : undefined,
     )
@@ -44,7 +46,7 @@ export default definePlugin({
       found
         ? joinDisposers(
             found.group({ name: group, label: 'PCs', summary: 'list your PCs and copy files and folders between them', load: 'on-demand' }),
-            ...pcTools(home, transfers).map(tool => found.register(tool)),
+            ...pcTools(home, transfers, linked).map(tool => found.register(tool)),
           )
         : undefined,
     )

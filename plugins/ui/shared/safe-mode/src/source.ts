@@ -1,6 +1,6 @@
+import { type wire, wireHello } from '@sand/devices-contract'
 import { runtimesSafe } from '@sand/host-runtimes/contract'
 import { helloSafe } from '@sand/server/contract'
-import { wireHello, type wire } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 

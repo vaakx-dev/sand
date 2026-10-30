@@ -1,11 +1,10 @@
 import type { VersionSource } from '@sand/host-plugin-versions/contract'
-import type { RemoteRecord } from '@sand/host-remotes/contract'
 import { installDependencies } from '@sand/host-plugin-library/files'
 import { serial } from '@sand/util'
 import { join } from 'node:path'
 import { pluginsFiles, type PluginOffer, type PluginSyncState } from '../contract'
 import { parseFiles } from '../state/parse'
-import type { PeerLink } from '../types'
+import type { PeerLink, PeerPc } from '../types'
 import { removePlugin } from './remove'
 import { writePlugin } from './write'
 
@@ -22,7 +21,7 @@ interface Applier {
 
 const filesTimeout = 120_000
 
-const fetchPlugin = async (link: PeerLink, record: RemoteRecord | undefined, offer: PluginOffer) => {
+const fetchPlugin = async (link: PeerLink, record: PeerPc | undefined, offer: PluginOffer) => {
   if (!record) throw new Error(`${offer.peerName} is no longer paired with this PC`)
   const files = parseFiles(await link.call(record, pluginsFiles, { plugin: offer.plugin }, filesTimeout))
   if (files.plugin !== offer.plugin || files.hash !== offer.hash) throw new Error(`${offer.plugin} changed again on ${offer.peerName}; try again`)
@@ -33,7 +32,7 @@ export const createApplier = ({ root, work, link, offers, refresh, swap, state, 
   const queue = serial()
 
   const run = async (peer: string, plugins: string[]) => {
-    const record = (await link.list()).find(item => item.id === peer)
+    const record = link.list().find(item => item.id === peer)
     let applied = false
     let failure: unknown
     await snapshot('edit', plugins)

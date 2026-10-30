@@ -14,11 +14,11 @@
     "summary": "Restarts the sand plugins from a sidebar button"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/web-client": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

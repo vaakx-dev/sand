@@ -1,5 +1,6 @@
+import { pcs } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
-import { machines, projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
+import { projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { findGroup, quickName } from '../items/lookup'
 
@@ -13,7 +14,7 @@ export interface Place {
   away?: boolean
 }
 
-const isOnline = (ctx: Context, device: string) => ctx.get(machines)?.online(device) ?? true
+const isOnline = (ctx: Context, device: string) => ctx.get(pcs)?.online(device) ?? true
 
 const usable = (ctx: Context, location: ProjectEntry) => !location.missing && isOnline(ctx, location.device)
 
@@ -59,12 +60,12 @@ export const places = (ctx: Context, threads: Threads): Place[] => {
     .sort((a, b) => Number(b.id === here) - Number(a.id === here) || Number(a.away ?? false) - Number(b.away ?? false) || b.updated - a.updated)
 }
 
-export const machineName = (ctx: Context, device: string) => {
-  const machine = ctx.get(machines)?.get(device)
-  return machine && !machine.local ? machine.name : undefined
+export const awayPcName = (ctx: Context, device: string) => {
+  const pc = ctx.get(pcs)?.get(device)
+  return pc && !pc.home ? pc.name : undefined
 }
 
-export const pcName = (ctx: Context, device: string) => ctx.get(machines)?.name(device) ?? 'This PC'
+export const pcName = (ctx: Context, device: string) => ctx.get(pcs)?.name(device) ?? 'This PC'
 
 export const pcNames = (ctx: Context, place: Place) => [...new Set((place.group?.locations ?? [place]).map(location => pcName(ctx, location.device)))]
 

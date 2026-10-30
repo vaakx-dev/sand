@@ -1,7 +1,8 @@
+import { pcsChange } from '@sand/devices-contract'
 import { nav } from '@sand/nav/contract'
 import { palette } from '@sand/palette/contract'
 import { settings } from '@sand/settings/contract'
-import { machinesChange, projectsChange } from '@sand/web-client/contract'
+import { projectsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/web-client/reactive'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
@@ -15,7 +16,7 @@ export default definePlugin({
   description: 'New project button, Projects settings page, and palette items to add a project, go to a file or search the project',
   inject,
   apply(ctx) {
-    const changes = pulse(ctx, [projectsChange, machinesChange], [palette])
+    const changes = pulse(ctx, [projectsChange, pcsChange], [palette])
     ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', icon: 'folder', order: 30, render: () => projectsPage(ctx, changes) }))
     ctx.watch(palette, found => found?.source(projectSource(ctx)))
     ctx.watch(palette, found => found?.source(newThreadSource(ctx)))

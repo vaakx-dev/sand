@@ -6,13 +6,16 @@ import type { Model, TurnError } from '../model'
 import { errorBanner } from './banner'
 
 const hints: [string, (pc: string) => string][] = [
-  [' is offline', pc => `The account for this model is on ${pc}. Turn ${pc} on or wake it up, then try again.`],
   [' no longer accepts', pc => `Pair ${pc} with this PC again from Devices, then try again.`],
   [" doesn't share", pc => `Turn sharing back on for this account on ${pc}, then try again.`],
 ]
 
-const pcHint = ({ via, text }: TurnError) => {
-  const found = via && hints.find(([words]) => text.startsWith(`${via}${words}`))
+const offlineHint = (pc: string) => `The account for this model is on ${pc}. Turn ${pc} on or wake it up, then try again.`
+
+const pcHint = ({ via, viaOffline, text }: TurnError) => {
+  if (!via) return undefined
+  if (viaOffline) return offlineHint(via)
+  const found = hints.find(([words]) => text.startsWith(`${via}${words}`))
   return found ? found[1](via) : undefined
 }
 

@@ -25,4 +25,5 @@ export const helloSkills = helloField<SkillSummary[]>('skills')
 export const skillsList = request('skills.list', {
   input: z.object({ session: z.string().optional(), cwd: z.string().optional() }),
   output: type<SkillSummary[]>(),
+  place: 'thread',
 })

@@ -7,7 +7,8 @@ import { quick, type ProjectInfo, type ProjectLookup } from './lookup'
 import { byPosition } from './order'
 
 export interface Places {
-  machine(device: string): string | undefined
+  pc(device: string): string | undefined
+  mark(device: string): () => HTMLElement
 }
 
 export type AgentsOf = (thread: string) => { agents: number; since?: number }
@@ -16,10 +17,11 @@ const place = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).slice(-3).join
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort(byPosition)
 
-const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<ThreadItem, 'project' | 'subtitle'> => {
-  const pc = places.machine(device)
-  if (project.quick) return { project: [project.name, pc].filter(Boolean).join(' · ') }
-  return { project: project.name, subtitle: [pc, !project.root && place(cwd)].filter(Boolean).join(' · ') || undefined }
+const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<ThreadItem, 'project' | 'subtitle' | 'pcMark'> => {
+  const pc = places.pc(device)
+  const mark = pc ? { pcMark: places.mark(device) } : {}
+  if (project.quick) return { project: [project.name, pc].filter(Boolean).join(' · '), ...mark }
+  return { project: project.name, subtitle: [pc, !project.root && place(cwd)].filter(Boolean).join(' · ') || undefined, ...mark }
 }
 
 const projectOf = (thread: Thread, lookup: ProjectLookup) =>

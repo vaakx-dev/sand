@@ -4,7 +4,7 @@ import { ask } from './ask'
 
 const swapTimeout = 90_000
 
-export const switchSafe = async (info: ServerInfo, on: boolean) => {
-  const ok = await ask(info, runtimesSafe, { on }, swapTimeout)
+export const switchSafe = async (home: string, info: ServerInfo, on: boolean) => {
+  const ok = await ask(home, info, runtimesSafe, { on }, swapTimeout)
   if (!ok) throw new Error(`sand could not ${on ? 'switch to' : 'leave'} safe mode; see the page or server.log`)
 }

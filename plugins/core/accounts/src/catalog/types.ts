@@ -9,6 +9,7 @@ export interface SourceMeta {
   billing: Billing
   plan?: string
   via?: string
+  pc?: string
   online?: boolean
 }
 

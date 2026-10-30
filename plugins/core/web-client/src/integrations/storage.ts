@@ -1,21 +1,4 @@
-import { isRecord } from '@sand/util'
-
 const persistAsked = 'sand.persist'
-
-export const loadRecord = (key: string): Record<string, unknown> => {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? '{}')
-    return isRecord(parsed) ? parsed : {}
-  } catch {
-    return {}
-  }
-}
-
-export const saveJson = (key: string, value: unknown) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {}
-}
 
 export const askPersistence = () => {
   try {

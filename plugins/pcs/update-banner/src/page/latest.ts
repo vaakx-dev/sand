@@ -7,7 +7,7 @@ import { changesFor } from '../fleet/status'
 
 const listedWhenCurrent = 10
 
-const localState = (fleet: Fleet) => fleet.pcs.get().find(pc => pc.local)?.state
+const localState = (fleet: Fleet) => fleet.pcs.get().find(pc => pc.home)?.state
 
 const checkedText = (fleet: Fleet) => {
   const state = localState(fleet)

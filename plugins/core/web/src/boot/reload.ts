@@ -1,6 +1,6 @@
+import { wire, wireHello } from '@sand/devices-contract'
 import { runtimeChanged } from '@sand/host-runtimes/contract'
 import { joinDisposers } from '@sand/util'
-import { wire, wireState } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { webBuild } from '../contract'
 
@@ -15,7 +15,5 @@ export const reloadOnNewBuild = (ctx: Context, build: string) => {
     if (current && current !== build) location.reload()
   }
   ctx.watch(wire, found => found && joinDisposers(found.on(webBuild, id => void check(id)), found.on(runtimeChanged, () => void check())))
-  ctx.on(wireState, state => {
-    if (state === 'open') void check()
-  })
+  ctx.on(wireHello, () => void check())
 }

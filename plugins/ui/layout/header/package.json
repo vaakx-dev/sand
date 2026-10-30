@@ -12,6 +12,7 @@
     "summary": "Project and thread title, with a thread menu"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/project": "workspace:*",

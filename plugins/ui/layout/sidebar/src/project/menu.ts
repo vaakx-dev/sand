@@ -1,7 +1,8 @@
+import { pcs } from '@sand/devices-contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
-import { machines, projects, type ProjectGroup, type Threads } from '@sand/web-client/contract'
+import { projects, type ProjectGroup, type Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { attempt } from '../items/failure'
 import { openDraft } from '../palette/projects'
@@ -37,7 +38,7 @@ const showAll = (hooks: ProjectMenuHooks): NavAction => ({
 
 const newThread = (ctx: Context, threads: Threads, group: ProjectGroup, hooks: ProjectMenuHooks): NavAction[] => {
   const device = threads.device()
-  const here = group.locations.find(location => location.device === device && !location.missing && (ctx.get(machines)?.online(device) ?? true))
+  const here = group.locations.find(location => location.device === device && !location.missing && (ctx.get(pcs)?.online(device) ?? true))
   if (!here) return []
   const start = async () => {
     hooks.done()

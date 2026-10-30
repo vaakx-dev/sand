@@ -1,9 +1,9 @@
-import type { HubSocket } from './contract'
+import type { Caller, HubSocket } from './contract'
 import type { Upstream } from './upstream'
 
 export interface Client {
   readonly socket: HubSocket
-  readonly device: string
+  readonly caller: Caller
   readonly upstreams: Map<string, Upstream>
   readonly waiting: Map<number, string>
   readonly hellos: Set<number>
@@ -11,9 +11,9 @@ export interface Client {
   open: boolean
 }
 
-export const createClient = (socket: HubSocket, device: string): Client => ({
+export const createClient = (socket: HubSocket, caller: Caller): Client => ({
   socket,
-  device,
+  caller,
   upstreams: new Map(),
   waiting: new Map(),
   hellos: new Set(),

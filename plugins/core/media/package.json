@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",

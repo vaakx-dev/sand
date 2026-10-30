@@ -1,5 +1,5 @@
+import { wire, wireHello } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { wire, wireState } from '@sand/web-client/contract'
 import { collectScope, onTimeout } from '@vaakx-dev/vrui'
 import { type Context, scopeError, type ScopeView, scopeStatus } from 'drydock'
 import type { BundledExtension } from 'sand:extensions'
@@ -31,7 +31,7 @@ export const reportStates = (ctx: Context, bundled: BundledExtension[], mounted:
   const send = async () => {
     cancel = undefined
     const connected = ctx.get(wire)
-    if (!connected || connected.state() !== 'open') return
+    if (!connected?.ready()) return
     const states = bundled.map(state)
     const text = JSON.stringify(states)
     if (text === sent) return
@@ -52,8 +52,7 @@ export const reportStates = (ctx: Context, bundled: BundledExtension[], mounted:
     schedule()
   })
   ctx.on(scopeStatus, schedule)
-  ctx.on(wireState, state => {
-    if (state !== 'open') return
+  ctx.on(wireHello, () => {
     sent = ''
     schedule()
   })

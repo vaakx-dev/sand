@@ -1,6 +1,5 @@
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { ProjectsContext } from '../context'
-import { connectItem } from './connect'
 import { sourcesPage } from './sources'
 
 const newProject = (ctx: ProjectsContext, group?: string): PaletteItem => ({
@@ -8,7 +7,7 @@ const newProject = (ctx: ProjectsContext, group?: string): PaletteItem => ({
   group,
   icon: 'folder-plus',
   label: 'New project',
-  search: 'new add project folder environment create',
+  search: 'new add project folder pc create',
   page: () => sourcesPage(ctx),
 })
 
@@ -18,7 +17,7 @@ export const projectSource = (ctx: ProjectsContext): PaletteSource => ({
   items(query) {
     if (query.startsWith('/')) return []
     if (!query.trim()) return [newProject(ctx, '')]
-    return [newProject(ctx, 'Actions'), connectItem(ctx, 'Actions')]
+    return [newProject(ctx, 'Actions')]
   },
 })
 

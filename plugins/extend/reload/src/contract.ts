@@ -8,4 +8,4 @@ export interface Reload {
 
 export const pluginReload = service<Reload>('pluginReload')
 
-export const pluginsReload = request('plugins.reload', { input: z.object({}), output: type<void>() })
+export const pluginsReload = request('plugins.reload', { input: z.object({}), output: type<void>(), place: 'thread' })

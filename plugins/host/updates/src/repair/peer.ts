@@ -1,14 +1,13 @@
-import type { DeviceInfo } from '@sand/host-devices/contract'
+import type { Peers } from '@sand/devices-contract'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
 import type { Request } from '@sand/host-hub/contract'
-import { callPeer, remoteStore } from '@sand/host-remotes/peers'
 import { errorMessage, isRecord } from '@sand/util'
-import { healthText, parseHealth, waitHealthy, type HealthOutcome, type WireSocket } from '@sand/util/boot'
+import { healthText, parseHealth, waitHealthy, type HealthOutcome } from '@sand/util/boot'
 import { updatesRepair, updatesState, type PcRepairResult } from '../contract'
 
 export interface RepairDeps {
-  home: string
-  self: DeviceInfo
+  self(): string | undefined
+  peers(): Peers | undefined
 }
 
 interface PeerState {
@@ -71,27 +70,22 @@ const repairError = (name: string, expected: string, state: PeerState | undefine
 }
 
 export const repairPeer = async (deps: RepairDeps, device: string): Promise<PcRepairResult> => {
-  if (device === deps.self.id) throw new Error('This PC cannot repair itself; use Repair on another PC')
-  const record = (await remoteStore(deps.home)).get(device)
-  if (!record) throw new Error('Unknown PC')
-  const sockets = new Set<WireSocket>()
-  const ask: Ask = (request, timeout) => callPeer(record, request, {}, sockets, timeout)
+  if (device === deps.self()) throw new Error('This PC cannot repair itself; use Repair on another PC')
+  const peers = deps.peers()
+  const record = peers?.get(device)
+  if (!peers || !record) throw new Error('Unknown PC')
+  const ask: Ask = (request, timeout) => peers.call(device, request, {}, { timeout })
+  let started: unknown
   try {
-    let started: unknown
-    try {
-      started = await ask(updatesRepair, 60_000)
-    } catch (error) {
-      return { device, build: '', ok: false, error: errorMessage(error) }
-    }
-    const expected = targetOf(started)
-    if (!expected) return { device, build: '', ok: false, error: `${record.name} did not say which sand build it reinstalls` }
-    const state = await waitFinished(ask, parseState(started))
-    const outcome = state?.phase === 'idle' ? await waitHealthy(() => readHealth(ask, record.name), { timeout: healthTimeout }) : undefined
-    const build = runningBuild(state, outcome) ?? expected
-    const error = repairError(record.name, expected, state, outcome)
-    return error ? { device, build, ok: false, error } : { device, build, ok: true }
-  } finally {
-    for (const socket of sockets) socket.close()
-    sockets.clear()
+    started = await ask(updatesRepair, 60_000)
+  } catch (error) {
+    return { device, build: '', ok: false, error: errorMessage(error) }
   }
+  const expected = targetOf(started)
+  if (!expected) return { device, build: '', ok: false, error: `${record.name} did not say which sand build it reinstalls` }
+  const state = await waitFinished(ask, parseState(started))
+  const outcome = state?.phase === 'idle' ? await waitHealthy(() => readHealth(ask, record.name), { timeout: healthTimeout }) : undefined
+  const build = runningBuild(state, outcome) ?? expected
+  const error = repairError(record.name, expected, state, outcome)
+  return error ? { device, build, ok: false, error } : { device, build, ok: true }
 }

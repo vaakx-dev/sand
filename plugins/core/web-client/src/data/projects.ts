@@ -15,9 +15,11 @@ import {
   projectsUpdate as projectsPatch,
 } from '@sand/project/contract'
 import { sandHomeProject } from '@sand/project/projects'
+import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
-import { machinesChange, type ProjectEntry, type ProjectGroup, type Projects, projectsChange, threadsChange, type Wire, wireHello } from '../contract'
+import { type ProjectEntry, type ProjectGroup, type Projects, projectsChange, threadsChange } from '../contract'
+import { onPcHello } from '../greeted'
 import type { Store } from '../threads/store'
 import { buildGroups, copyEntry, groupAt, type Lists } from './groups'
 import { projectIcons } from './icons'
@@ -25,7 +27,7 @@ import { keptLists } from './kept'
 
 const fallback = { home: '~', sep: '/', root: '~' }
 
-export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
+export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store) => {
   const lists: Lists = new Map()
   let view: ProjectGroup[] | undefined
   let shown = ''
@@ -61,8 +63,7 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
 
   const refreshHere = () => refresh(store.here())
 
-  ctx.on(wireHello, () => void refreshHere())
-  ctx.effect(() => wire.on(projectsUpdate, (list, device) => set(device, list), { remotes: true }))
+  ctx.effect(() => wire.on(projectsUpdate, (list, device) => set(device, list), { from: 'all' }))
   ctx.on(threadsChange, () => {
     view = undefined
     if (JSON.stringify(all()) !== shown) changed()
@@ -75,8 +76,11 @@ export const createProjects = (ctx: Context, wire: Wire, store: Store) => {
   const group = (path: string, device: string) => groupAt(all(), path, device, place(device).home)
 
   const icons = projectIcons(ctx, wire)
-  ctx.on(wireHello, icons.clear)
-  ctx.on(machinesChange, icons.retryMissed)
+  onPcHello(ctx, wire, pcs, pc => {
+    if (pc === store.here()) icons.clear()
+    void refresh(pc)
+  })
+  ctx.on(pcsChange, icons.retryMissed)
   ctx.effect(() => icons.clear)
 
   const groupIcon = (found: ProjectGroup): ProjectLook | undefined => {

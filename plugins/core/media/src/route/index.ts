@@ -1,10 +1,9 @@
 import type { RouteHandler } from '@sand/server/contract'
+import { mediaPath } from '../contract'
 import type { Tokens } from '../sign/tokens'
 import type { Store } from '../store'
 import { servedType } from '../store/types'
 import { askedHeight, type Sized } from './sized'
-
-export const mediaPath = '/media/'
 
 export const mediaRoute =
   (store: Store, tokens: Tokens, sized: Sized): RouteHandler =>

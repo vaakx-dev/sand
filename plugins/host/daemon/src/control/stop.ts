@@ -1,5 +1,7 @@
 import type { ServerInfo } from '@sand/host-gateway/contract'
-import { bearer, hostPaths, readServerInfo } from '@sand/util/boot'
+import { readServerInfo } from '@sand/util/boot'
+import { daemonStop } from '../contract'
+import { ask } from './ask'
 import { isAlive } from './info'
 
 const waitForExit = async (pid: number) => {
@@ -7,14 +9,14 @@ const waitForExit = async (pid: number) => {
   return !isAlive(pid)
 }
 
-const askToStop = async (info: ServerInfo) => {
+const askToStop = async (home: string, info: ServerInfo) => {
   try {
-    await fetch(`${info.url}${hostPaths.stop}`, { method: 'POST', headers: bearer(info.key), signal: AbortSignal.timeout(3000) })
+    await ask(home, info, daemonStop, {}, 3000)
   } catch {}
 }
 
-const stopWindows = async (info: ServerInfo) => {
-  await askToStop(info)
+const stopWindows = async (home: string, info: ServerInfo) => {
+  await askToStop(home, info)
   if (await waitForExit(info.pid)) return
   try {
     process.kill(info.pid)
@@ -29,6 +31,6 @@ const stopPosix = async (info: ServerInfo) => {
 export const stop = async (home: string) => {
   const info = await readServerInfo(home)
   if (!info || !isAlive(info.pid)) return console.log('sand is not running')
-  await (process.platform === 'win32' ? stopWindows(info) : stopPosix(info))
+  await (process.platform === 'win32' ? stopWindows(home, info) : stopPosix(info))
   console.log(`stopped sand (pid ${info.pid})`)
 }

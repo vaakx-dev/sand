@@ -1,7 +1,6 @@
-import { isRecord } from '@sand/util'
 import { isQuietFolder, isWithin, nearestRoot, samePath } from '@sand/util/fs'
 import { readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import type { LocalCopy, Project } from '../contract'
 import { parseProjectsFile, projectsPath } from '../registry/file'
 
@@ -28,34 +27,23 @@ const readText = (path: string) => {
   }
 }
 
-const readDevice = (home: string) => {
-  try {
-    const saved: unknown = JSON.parse(readText(join(home, 'device.json')) ?? '{}')
-    return isRecord(saved) && typeof saved.id === 'string' && saved.id ? saved.id : undefined
-  } catch {
-    return undefined
-  }
-}
-
-const copiesOf = (projects: Project[], device: string | undefined): LocalCopy[] => {
-  if (!device) return []
-  return projects
+const copiesOf = (projects: Project[], device: string): LocalCopy[] =>
+  projects
     .flatMap(project => {
       const copy = project.copies[device]
       return copy && !copy.removed ? [{ project: project.id, path: resolve(copy.path) }] : []
     })
     .sort((a, b) => b.path.length - a.path.length)
-}
 
-export const localCopies = (home: string) => {
+export const localCopies = (home: string, device: string) => {
   let cached: Cached | undefined
 
   const load = (): Cached => {
-    const key = `${stamp(projectsPath(home))}|${stamp(join(home, 'device.json'))}`
+    const key = stamp(projectsPath(home))
     if (cached?.key === key) return cached
     const text = readText(projectsPath(home))
     const projects = ((text ? parseProjectsFile(text) : undefined) ?? []).filter(project => !project.deleted)
-    cached = { key, projects, copies: copiesOf(projects, readDevice(home)) }
+    cached = { key, projects, copies: copiesOf(projects, device) }
     return cached
   }
 

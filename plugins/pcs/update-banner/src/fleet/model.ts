@@ -11,8 +11,8 @@ import {
   type UpdateChannel,
   type UpdateState,
 } from '@sand/host-updates/contract'
+import { pcHello, type pcs, pcsChange, type wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { machinesChange, wireHello, wireState, type machines, type wire } from '@sand/web-client/contract'
 import { pulse } from '@sand/web-client/reactive'
 import { derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
@@ -39,15 +39,15 @@ const withEntry = <T>(map: Map<string, T>, key: string, value: T) => new Map(map
 
 const isState = (value: unknown): value is UpdateState => typeof value === 'object' && value !== null && 'phase' in value
 
-export const createFleet = (ctx: Context<{ wire: typeof wire; machines: typeof machines }>) => {
-  const changes = pulse(ctx, [machinesChange, wireHello, wireState])
+export const createFleet = (ctx: Context<{ wire: typeof wire; pcs: typeof pcs }>) => {
+  const changes = pulse(ctx, [pcsChange, pcHello])
   const states = sig(new Map<string, UpdateState>())
   const failures = sig(new Map<string, string>())
   const run = sig<Run | undefined>(undefined)
   const busy = sig(false)
 
   const call = <I, O>(key: string, request: Request<I, O>, input: I) => ctx.wire.call(request, input, key)
-  const here = () => ctx.machines.here().id
+  const here = () => ctx.pcs.here().id
 
   const store = (key: string, state: unknown) => {
     if (isState(state)) states.set(withEntry(states.get(), key, state))
@@ -58,10 +58,7 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; machines: typeof m
   const pcs = changes.read<Pc[]>(() => {
     const known = states.get()
     const failed = failures.get()
-    return ctx.machines.list().map(machine => {
-      const key = machine.id
-      return { key, name: machine.name, local: machine.local, online: machine.online, state: known.get(key), failure: failed.get(key) }
-    })
+    return ctx.pcs.list().map(pc => ({ key: pc.id, name: pc.name, home: pc.home, online: pc.online, state: known.get(pc.id), failure: failed.get(pc.id) }))
   })
 
   const channel = derive<UpdateChannel | undefined>(() => {
@@ -98,12 +95,12 @@ export const createFleet = (ctx: Context<{ wire: typeof wire; machines: typeof m
     }
   }
 
-  ctx.on(wireHello, () => {
-    seen.add(here())
-    void load(here())
+  ctx.on(pcHello, pc => {
+    seen.add(pc)
+    void load(pc)
   })
-  ctx.effect(() => ctx.wire.on(updatesChange, (state, key) => store(key, state), { remotes: true }))
-  ctx.on(machinesChange, refresh)
+  ctx.effect(() => ctx.wire.on(updatesChange, (state, key) => store(key, state), { from: 'all' }))
+  ctx.on(pcsChange, refresh)
   onTimeout(refresh)
 
   const everyOnline = <I>(request: Request<I, UpdateState>, input: I) =>

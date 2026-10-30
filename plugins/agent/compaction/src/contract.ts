@@ -31,4 +31,4 @@ export const contextUsage = event<(session: Session, usage: ContextUsage) => voi
 
 export const contextChange = wireEvent<[session: string, usage: ContextUsage]>('context.change')
 
-export const contextGet = request('context.get', { input: z.object({ session: z.string() }), output: type<ContextUsage | undefined>() })
+export const contextGet = request('context.get', { input: z.object({ session: z.string() }), output: type<ContextUsage | undefined>(), place: 'thread' })

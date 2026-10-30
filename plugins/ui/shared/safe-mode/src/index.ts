@@ -1,6 +1,6 @@
+import { wire } from '@sand/devices-contract'
 import { place } from '@sand/layout/place'
 import { kit } from '@sand/ui-kit/contract'
-import { wire } from '@sand/web-client/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { bannerView } from './banner'

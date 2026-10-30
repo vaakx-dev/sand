@@ -1,7 +1,9 @@
 import { helloSkills, type SkillSummary, skillsChange as skillsUpdate, skillsList } from '@sand/skills/contract'
+import type { Wire } from '@sand/devices-contract'
 import type { Context } from 'drydock'
-import { type SkillIndex, skillsChange, threadSelect, type Threads, type Wire, wireHello } from '../contract'
+import { type SkillIndex, skillsChange, threadSelect, type Threads } from '../contract'
 import { coalesced } from '../detached'
+import { onHomeHello } from '../greeted'
 
 const listInput = (threads: Threads) => {
   const current = threads.current()
@@ -24,7 +26,7 @@ export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): Sk
       () => {},
     )
   })
-  ctx.on(wireHello, () => {
+  onHomeHello(ctx, wire, () => {
     set(wire.hello(helloSkills) ?? [])
     refresh()
   })

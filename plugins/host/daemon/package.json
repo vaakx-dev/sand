@@ -15,7 +15,8 @@
   "dependencies": {
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
-    "@sand/host-devices": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-health": "workspace:*",
     "@sand/host-hub": "workspace:*",

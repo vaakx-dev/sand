@@ -1,18 +1,4 @@
-import type { WirePairing } from '../contract'
-import { hostKeys } from '../auth/keys'
 import { transact, under } from '../integrations/indexed-db'
-
-interface Scope {
-  host: string
-  key: string
-}
-
-export const scopeOf = ({ host, device }: WirePairing): Scope => ({ host, key: `${host}/${device}` })
-
-export const savedScope = (host: string): Scope | undefined => {
-  const device = hostKeys.get(host)?.device
-  return device ? scopeOf({ host, device }) : undefined
-}
 
 export const wipeScope = (scope: string) =>
   transact('readwrite', pick => {

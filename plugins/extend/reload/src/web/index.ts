@@ -1,18 +1,19 @@
+import { threadPcs, wire } from '@sand/devices-contract'
 import { nav } from '@sand/nav/contract'
-import { wire } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { pluginReload, pluginsReload, type Reload } from '../contract'
 import { reloadFinished } from './finished'
 
 export default definePlugin({
   name: 'reload-button',
-  description: 'Sidebar footer button that reloads the plugins and spins until it finishes',
+  description: "Sidebar footer button that reloads the plugins on the current thread's PC and spins until it finishes",
   inject: { wire },
   apply(ctx) {
     const reload: Reload = {
       async run() {
-        const finished = reloadFinished(ctx, ctx.wire)
-        await ctx.wire.call(pluginsReload, {})
+        const pc = ctx.get(threadPcs)?.current()
+        const finished = reloadFinished(ctx, ctx.wire, pc)
+        await ctx.wire.call(pluginsReload, {}, pc)
         await finished
       },
     }
