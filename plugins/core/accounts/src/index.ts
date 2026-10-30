@@ -1,4 +1,5 @@
 import { cli } from '@sand/config/contract'
+import { media } from '@sand/media/contract'
 import { server as serverService, type Server } from '@sand/server/contract'
 import { helloLimits, llm, llmLimits, llmModels, llmPlans, loginChange, type Limits, type LoginSharePc } from './contract'
 import { watchRemotes } from '@sand/host-remotes/peers'
@@ -35,7 +36,7 @@ const retries = 4
 
 export default definePlugin({
   name: 'accounts',
-  inject: { cli },
+  inject: { cli, media },
   config: z.object({ prices: z.record(z.string(), priceSchema).default({}) }).default({ prices: {} }),
   async apply(ctx, options) {
     let server: Server | undefined
@@ -65,13 +66,13 @@ export default definePlugin({
       report: error => ctx.report(error),
     })
     const inspect = (account: string) => limits.inspect(plans.api(account))
-    const claude = createClaude({ accounts, plans, maxTokens, retries, inspect })
-    const openai = createOpenAI({ accounts, plans, retries, inspect })
-    const compat = createCompat({ retries })
+    const claude = createClaude({ accounts, plans, media: ctx.media, maxTokens, retries, inspect })
+    const openai = createOpenAI({ accounts, plans, media: ctx.media, retries, inspect })
+    const compat = createCompat({ retries, media: ctx.media })
 
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, plans, catalog, claude, openai, compat, bridges, limits })
-    const peers = createPeers({ home, changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
+    const peers = createPeers({ home, media: ctx.media, changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
     const merged = mergeLLM(local, peers, accounts, catalog)
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
@@ -123,7 +124,7 @@ export default definePlugin({
         found.hello(helloLimits, () => merged.llm.limits?.(), { fresh: true }),
         serveLogin(found, accounts, login, { plans, state, load: () => Promise.all([peers.refresh(), plans.refresh()]).then(() => {}), conflict }),
         serveModels(found, { view: merged.view, catalog, refreshPeers: () => peers.refresh() }),
-        serveShare(found, { local, accounts, users }),
+        serveShare(found, { local, accounts, users, media: ctx.media }),
       )
     })
   },

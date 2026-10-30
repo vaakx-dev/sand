@@ -1,3 +1,4 @@
+import type { Media } from '@sand/media/contract'
 import type { Limits, LLMEvent, LLMRequest } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
@@ -6,6 +7,7 @@ import { peerCache, type CachedInfo, type PeerCache } from './cache'
 import { failure } from './failure'
 import { fetchInfo, findUrl, Refused } from './http'
 import { readEvents } from './lines'
+import { carriedMedia } from './media'
 import { openStream } from './open'
 import { readRemotes, type RemotePc } from './remotes'
 import { tagged } from './tag'
@@ -22,6 +24,7 @@ export interface PeerState {
 
 interface PeersOptions {
   home: string
+  media: Media
   changed(): void
   limitsChanged(limits: Limits): void
 }
@@ -41,7 +44,7 @@ const rank = (state: PeerState) => (state.refused ? 2 : state.online ? 0 : 1)
 
 export type Peers = ReturnType<typeof createPeers>
 
-export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
+export const createPeers = ({ home, media, changed, limitsChanged }: PeersOptions) => {
   const cache = peerCache(home)
   const states = new Map<string, PeerState>()
   const bases = new Map<string, string>()
@@ -136,11 +139,12 @@ export const createPeers = ({ home, changed, limitsChanged }: PeersOptions) => {
   async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pc?: string): AsyncGenerator<LLMEvent> {
     await first
     let problem: Error | undefined
+    const sent = { ...request, media: carriedMedia(media, request.messages) }
     for (const peer of candidates(id).filter(found => !pc || found.pc.id === pc)) {
       const name = account(peer, id)?.label ?? nameOf(id)
       let body: ReadableStream<Uint8Array>
       try {
-        body = await openStream(peer.pc, request, signal, { connect, forget: () => bases.delete(peer.pc.id) })
+        body = await openStream(peer.pc, sent, signal, { connect, forget: () => bases.delete(peer.pc.id) })
       } catch (error) {
         if (signal?.aborted) throw error
         problem ??= failure(peer.pc.name, name, error)

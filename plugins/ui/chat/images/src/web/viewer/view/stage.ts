@@ -5,6 +5,7 @@ import { div, event, preventThen } from '@vaakx-dev/vrui'
 const swipeDistance = 60
 
 interface Drag {
+  image: HTMLElement
   startX: number
   x: number
   y: number
@@ -21,22 +22,25 @@ export const viewerStage = (shown: ThreadImage, picture: Picture, zoom: Zoom, fl
 
   const image = picture(shown.block, {
     class: ['max-h-full max-w-full touch-none select-none rounded-md object-contain', () => (zoom.zoomed.get() ? 'cursor-grab' : null)],
-    draggable: false,
-    style: { transform: zoom.transform },
-    onDblClick: zoom.toggle,
-    onPointerDown: pointer => {
-      if (pointer.button !== 0) return
-      image.setPointerCapture(pointer.pointerId)
-      drag = { startX: pointer.clientX, x: pointer.clientX, y: pointer.clientY }
-    },
-    onPointerMove: pointer => {
-      if (!drag || !zoom.zoomed.get()) return
-      zoom.pan(pointer.clientX - drag.x, pointer.clientY - drag.y, image)
-      drag = { ...drag, x: pointer.clientX, y: pointer.clientY }
-    },
-    onPointerUp: release,
-    onPointerCancel: () => {
-      drag = undefined
+    props: {
+      draggable: false,
+      style: { transform: zoom.transform },
+      onDblClick: zoom.toggle,
+      onPointerDown: pointer => {
+        const target = pointer.currentTarget
+        if (pointer.button !== 0 || !(target instanceof HTMLElement)) return
+        target.setPointerCapture(pointer.pointerId)
+        drag = { image: target, startX: pointer.clientX, x: pointer.clientX, y: pointer.clientY }
+      },
+      onPointerMove: pointer => {
+        if (!drag || !zoom.zoomed.get()) return
+        zoom.pan(pointer.clientX - drag.x, pointer.clientY - drag.y, drag.image)
+        drag = { ...drag, x: pointer.clientX, y: pointer.clientY }
+      },
+      onPointerUp: release,
+      onPointerCancel: () => {
+        drag = undefined
+      },
     },
   })
 

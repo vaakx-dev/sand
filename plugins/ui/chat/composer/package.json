@@ -15,6 +15,7 @@
     "@sand/attachments": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/layout": "workspace:*",
+    "@sand/media": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/reload": "workspace:*",

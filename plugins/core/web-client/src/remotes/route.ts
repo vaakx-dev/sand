@@ -43,5 +43,6 @@ export const routeWire = ({ home, links, store, listeners, hellos }: Routed): Wi
     on: listeners.on,
     hello: (field, pc = store.here()) => hellos.get(field, pc),
     fetch: async (path, init, pc = store.here()) => linkTo(pc).fetch(path, init),
+    url: (path, pc = store.here()) => linkTo(pc).url(path),
   }
 }

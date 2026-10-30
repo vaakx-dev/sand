@@ -1,5 +1,9 @@
-import type { ImageBlock } from '@sand/chats/contract'
-import type { AttachmentLimits } from './contract'
+import { TooLarge, type Fitted } from './fitted'
+
+export interface ImageLimits {
+  imageEdge: number
+  imageBytes: number
+}
 
 interface Encoding {
   mediaType: string
@@ -25,21 +29,23 @@ const metadata = async (data: Uint8Array) => {
   }
 }
 
-const shrink = async (data: Uint8Array, format: string, name: string, { imageEdge, imageBytes }: AttachmentLimits): Promise<ImageBlock> => {
+const fitted = (bytes: Uint8Array, mediaType: string, name: string): Fitted => ({ bytes, block: { type: 'image', mediaType, name } })
+
+const shrink = async (data: Uint8Array, format: string, name: string, { imageEdge, imageBytes }: ImageLimits): Promise<Fitted> => {
   for (const { mediaType, encode } of [...(format === 'png' ? [png] : []), jpeg(85), jpeg(70)]) {
     const resized = new Bun.Image(data).resize(imageEdge, imageEdge, { fit: 'inside', withoutEnlargement: true })
     const bytes = await encode(resized).bytes()
-    if (bytes.length <= imageBytes) return { type: 'image', mediaType, data: bytes.toBase64(), name }
+    if (bytes.length <= imageBytes) return fitted(bytes, mediaType, name)
   }
-  throw new Error(`${name} is still too large after resizing`)
+  throw new TooLarge(`${name} is still too large after resizing`)
 }
 
-export const image = async (data: Uint8Array, name: string, limits: AttachmentLimits): Promise<ImageBlock | undefined> => {
+export const image = async (data: Uint8Array, name: string, limits: ImageLimits): Promise<Fitted | undefined> => {
   const found = await metadata(data)
   if (!found) return undefined
   const { width, height, format } = found
   if (sendable.has(format) && Math.max(width, height) <= limits.imageEdge && data.length <= limits.imageBytes) {
-    return { type: 'image', mediaType: `image/${format}`, data: data.toBase64(), name }
+    return fitted(data, `image/${format}`, name)
   }
   return shrink(data, format, name, limits)
 }

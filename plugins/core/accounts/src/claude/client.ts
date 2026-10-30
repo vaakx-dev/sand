@@ -1,3 +1,4 @@
+import type { Media } from '@sand/media/contract'
 import type { LLMEvent, LLMRequest, ModelInfo, Payload, PlanCall } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { PlanRegistry } from '../auth/plans'
@@ -12,6 +13,7 @@ import { events } from './sse'
 interface ClaudeOptions {
   accounts: Accounts
   plans: PlanRegistry
+  media: Media
   maxTokens: number
   retries: number
   inspect(account: string): ((response: Response) => void) | undefined
@@ -19,11 +21,11 @@ interface ClaudeOptions {
 
 export type Claude = ReturnType<typeof createClaude>
 
-export const createClaude = ({ accounts, plans, maxTokens, retries, inspect }: ClaudeOptions) => {
+export const createClaude = ({ accounts, plans, media, maxTokens, retries, inspect }: ClaudeOptions) => {
   const prepare = async (account: string, request: LLMRequest, settings: ClaudeSettings) => {
     const credential = await accounts.auth(account)
-    if (credential.type === 'api_key') return keyCall(credential, request, settings)
-    return plans.call(account, credential, claudeBody(request, settings, true), request.sessionKind)
+    if (credential.type === 'api_key') return keyCall(credential, request, settings, media)
+    return plans.call(account, credential, claudeBody(request, settings, true, media), request.sessionKind)
   }
 
   const init = (call: PlanCall, payload: Payload): RequestInit => ({

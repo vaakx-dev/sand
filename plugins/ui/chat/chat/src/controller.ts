@@ -1,4 +1,3 @@
-import { replyImages } from '@sand/images/contract'
 import { models, type Thread } from '@sand/web-client/contract'
 import { div, sig, untrack } from '@vaakx-dev/vrui'
 import type { ChatContext } from './context'
@@ -93,7 +92,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       thread: thread.id,
       parts,
       markdown: ctx.markdown,
-      images: at => ctx.get(replyImages)?.forReply(thread.id, at),
+      image: parts.replyImage(thread.id),
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       reply: text => replyActions(ctx, text),

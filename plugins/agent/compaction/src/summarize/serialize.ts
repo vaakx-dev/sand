@@ -1,5 +1,6 @@
-import { fileText } from '@sand/chats/prompt'
-import type { Block, Message, ToolResultContent } from '@sand/chats/contract'
+import { fileText, unavailableText } from '@sand/chats/prompt'
+import type { Block, DocumentBlock, Message, ToolResultContent } from '@sand/chats/contract'
+import type { Media } from '@sand/media/contract'
 
 const textLimit = 16_000
 const resultLimit = 2_000
@@ -8,20 +9,23 @@ const inputLimit = 800
 const clip = (text: string, limit: number) =>
   text.length <= limit ? text : `${text.slice(0, limit)}\n[… ${text.length - limit} more characters]`
 
-const contentText = (content: ToolResultContent[]) =>
+const documentText = (block: DocumentBlock, media: Media) =>
+  block.mediaType === 'text/plain' ? (media.data(block) ?? unavailableText(block)) : `[pdf${block.name ? ` ${block.name}` : ''}]`
+
+const contentText = (content: ToolResultContent[], media: Media) =>
   content
     .map(block => {
       if (block.type === 'text') return block.text
       if (block.type === 'image') return '[image]'
       if (block.type === 'tool_reference') return `[tool ${block.name}]`
       if (block.type === 'file') return fileText(block)
-      return block.mediaType === 'text/plain' ? block.data : `[pdf${block.name ? ` ${block.name}` : ''}]`
+      return documentText(block, media)
     })
     .join('\n')
 
 const line = (speaker: string, text: string, limit: number) => (text.trim() ? [`[${speaker}]: ${clip(text.trim(), limit)}`] : [])
 
-const blockLines = (role: Message['role'], block: Block): string[] => {
+const blockLines = (role: Message['role'], block: Block, media: Media): string[] => {
   const speaker = role === 'user' ? 'User' : 'Assistant'
   switch (block.type) {
     case 'text':
@@ -29,7 +33,7 @@ const blockLines = (role: Message['role'], block: Block): string[] => {
     case 'image':
     case 'document':
     case 'file':
-      return line(speaker, contentText([block]), textLimit)
+      return line(speaker, contentText([block], media), textLimit)
     case 'thinking':
       return line('Assistant thinking', block.thinking, resultLimit)
     case 'redacted_thinking':
@@ -37,8 +41,8 @@ const blockLines = (role: Message['role'], block: Block): string[] => {
     case 'tool_call':
       return [`[Tool call]: ${block.name}(${clip(JSON.stringify(block.input ?? null), inputLimit)})`]
     case 'tool_result':
-      return line(block.isError ? 'Tool error' : 'Tool result', contentText(block.content) || '(empty)', resultLimit)
+      return line(block.isError ? 'Tool error' : 'Tool result', contentText(block.content, media) || '(empty)', resultLimit)
   }
 }
 
-export const serialize = (message: Message) => message.content.flatMap(block => blockLines(message.role, block)).join('\n\n')
+export const serialize = (media: Media) => (message: Message) => message.content.flatMap(block => blockLines(message.role, block, media)).join('\n\n')

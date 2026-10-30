@@ -21,4 +21,5 @@ export interface Wire {
   on<P>(event: WireEvent<P>, listener: WireListener<P>, options?: WireListen): Dispose
   hello<T>(field: HelloField<T>, device?: string): T | undefined
   fetch(path: string, init?: RequestInit, device?: string): Promise<Response>
+  url(path: string, device?: string): string
 }

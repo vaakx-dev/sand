@@ -3,7 +3,7 @@ const policy = [
   "script-src 'self'",
   "style-src 'unsafe-inline'",
   "font-src 'self'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: http: https:",
   "connect-src 'self' http: https: ws: wss:",
   "frame-src 'self'",
   "manifest-src 'self'",

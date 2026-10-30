@@ -5,7 +5,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import { senderNames } from '../gallery'
 
-const dimensions = (block: ImageBlock) => (typeof block.data !== 'string' && block.width && block.height ? `${block.width}×${block.height}` : undefined)
+const dimensions = (block: ImageBlock) => (block.width && block.height ? `${block.width}×${block.height}` : undefined)
 
 const details = ({ block, sender }: ThreadImage) => [senderNames[sender], dimensions(block)].filter(Boolean).join(' · ')
 

@@ -11,7 +11,7 @@ export const catchFiles = (files: Files) => {
     const pasted = [...(event.clipboardData?.files ?? [])]
     if (!pasted.length) return
     event.preventDefault()
-    void files.add(pasted)
+    files.add(pasted)
   })
   listen(document, 'dragenter', (event: DragEvent) => {
     if (!hasFiles(event)) return
@@ -31,7 +31,7 @@ export const catchFiles = (files: Files) => {
     event.preventDefault()
     depth = 0
     dropping.set(false)
-    void files.add(event.dataTransfer?.files ?? [])
+    files.add(event.dataTransfer?.files ?? [])
   })
   return dropping
 }

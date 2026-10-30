@@ -1,11 +1,23 @@
-import type { FileBlock } from '@sand/chats/contract'
+import type { FileBlock, UserContent } from '@sand/chats/contract'
 import type { InputOf } from '@sand/host-hub/contract'
+import type { Media } from '@sand/media/contract'
 import type { Transfers } from '@sand/transfers/contract'
 import type { attachmentsFinish } from '../contract'
+import type { ImageLimits } from '../image'
 import { mkdir, rename } from 'node:fs/promises'
 import { join } from 'node:path'
+import { fit, stored, worthFitting } from '../file'
+import { TooLarge } from '../fitted'
 import { unpack } from '../unpack'
 import { safeName } from './name'
+
+export interface UploadPlace {
+  transfers: Transfers
+  media: Media
+  uploads: string
+  uploadBytes: number
+  images: ImageLimits
+}
 
 const folderId = () => crypto.randomUUID().replaceAll('-', '').slice(0, 12)
 
@@ -26,13 +38,24 @@ const storeUpload = async (uploads: string, received: string, name: string): Pro
   return { type: 'file', name: saved, path, size, ...(mediaType && { mediaType }), ...(unpacked && { unpacked }) }
 }
 
-export const finishUpload = async (transfers: Transfers, uploads: string, limit: number, { transfer, name, chunks, size }: InputOf<typeof attachmentsFinish>) => {
-  if (size > limit) throw new Error(`Uploads are limited to ${Math.round(limit / 1024 ** 2)} MB`)
+const fitUpload = async (received: string, name: string, size: number, limits: ImageLimits) => {
+  if (!worthFitting(name, size)) return undefined
   try {
-    const received = await transfers.received(transfer, chunks, size)
+    return await fit(await Bun.file(received).bytes(), name, limits)
+  } catch (error) {
+    if (error instanceof TooLarge) return undefined
+    throw error
+  }
+}
+
+export const finishUpload = async (place: UploadPlace, { transfer, name, chunks, size }: InputOf<typeof attachmentsFinish>): Promise<UserContent> => {
+  if (size > place.uploadBytes) throw new Error(`Uploads are limited to ${Math.round(place.uploadBytes / 1024 ** 2)} MB`)
+  try {
+    const received = await place.transfers.received(transfer, chunks, size)
     if (!received) throw new Error('That file is empty')
-    return await storeUpload(uploads, received, name)
+    const fitted = await fitUpload(received, name, size, place.images)
+    return fitted ? stored(place.media, fitted) : await storeUpload(place.uploads, received, name)
   } finally {
-    await transfers.release(transfer)
+    await place.transfers.release(transfer)
   }
 }
