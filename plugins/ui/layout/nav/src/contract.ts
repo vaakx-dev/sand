@@ -15,6 +15,7 @@ export interface NavAction {
   active?: boolean
   danger?: boolean
   dot?: () => boolean
+  count?: () => number
   confirm?: string
   choices?: NavChoice[]
   ask?: NavAsk
@@ -44,4 +45,3 @@ export interface NavHost {
 }
 
 export const nav = service<NavHost>('nav')
-export const sidebar = service<object>('sidebar')

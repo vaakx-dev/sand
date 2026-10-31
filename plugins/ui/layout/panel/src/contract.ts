@@ -7,6 +7,7 @@ export interface PanelSpec {
   order?: number
   badge?: string | number
   attention?: boolean
+  hidden?: boolean
   render(body: HTMLElement): Dispose | void
 }
 

@@ -1,72 +1,109 @@
 import type { Wire } from '@sand/devices-contract'
-import { filesChanges, filesList, filesRead, type FileChange } from '@sand/project/contract'
+import { filesList, filesRead } from '@sand/project/contract'
 import type { Threads } from '@sand/web-client/contract'
 import { batch, sig } from '@vaakx-dev/vrui'
-import { buildTree, foldersOf, type Folder } from './tree/build'
-
-interface Place {
-  cwd: string
-  device: string
-}
+import { changesOf, noChanges, sameChanges, shapeOf, type Changes } from './changes'
+import type { FileMarksSource, FilesFolder } from './contract'
+import { buildTree, type Folder } from './tree/build'
 
 export interface Listing {
   files: string[]
   tree: Folder
-  changes: Record<string, FileChange>
-  changedFolders: Set<string>
 }
 
 export type Loaded = { listing: Listing } | { error: string } | undefined
 
 export const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
-const noChanges = (): Record<string, FileChange> => ({})
-
 export const filesModel = (wire: Wire, threads: Threads) => {
-  const here = (): Place => ({ cwd: threads.cwd(), device: threads.device() })
+  const here = (): FilesFolder => ({ cwd: threads.cwd(), device: threads.device() })
   const place = sig(here())
   const loaded = sig<Loaded>(undefined)
+  const changes = sig<Changes>(noChanges)
   const opened = sig<string | undefined>(undefined)
   const query = sig('')
   const expanded = sig<ReadonlySet<string>>(new Set())
   const version = sig(0)
   let started = false
   let latest = 0
+  let source: FileMarksSource | undefined
+  let unfollow: (() => void) | undefined
+  let session = 0
+  let shape: string | undefined
+  let watched = false
 
-  const fetchListing = async ({ cwd, device }: Place): Promise<Listing> => {
-    const [files, changes] = await Promise.all([wire.call(filesList, { cwd }, device), wire.call(filesChanges, { cwd }, device).catch(noChanges)])
-    return { files, tree: buildTree(files), changes, changedFolders: foldersOf(Object.keys(changes)) }
-  }
+  const rereadOpenFile = () => version.update(value => value + 1)
 
-  const refresh = async () => {
+  const relist = async () => {
     const at = place.get()
     if (!started || !at.cwd) return
     const ticket = ++latest
-    version.update(value => value + 1)
+    rereadOpenFile()
     try {
-      const listing = await fetchListing(at)
-      if (ticket === latest) loaded.set({ listing })
+      const files = await wire.call(filesList, { cwd: at.cwd }, at.device)
+      if (ticket === latest) loaded.set({ listing: { files, tree: buildTree(files) } })
     } catch (error) {
       if (ticket === latest) loaded.set({ error: message(error) })
     }
   }
 
+  const untrack = () => {
+    session++
+    unfollow?.()
+    unfollow = undefined
+    shape = undefined
+    watched = false
+    changes.set(noChanges)
+  }
+
+  const track = () => {
+    untrack()
+    const at = place.get()
+    if (!started || !source || !at.cwd) return
+    const mine = session
+    unfollow = source.follow(at, marks => {
+      if (mine !== session) return
+      watched = marks !== undefined
+      const next = changesOf(marks)
+      const nextShape = shapeOf(next)
+      if (!sameChanges(changes.get(), next)) changes.set(next)
+      if (!marks) return
+      if (shape !== undefined && shape !== nextShape) void relist()
+      shape = nextShape
+    })
+  }
+
   return {
     place,
     loaded,
+    changes,
     opened,
     query,
     expanded,
     version,
-    refresh: () => void refresh(),
     start() {
       if (started) return
       started = true
-      void refresh()
+      track()
+      void relist()
+    },
+    useMarks(found: FileMarksSource | undefined) {
+      source = found
+      track()
+      if (!found) return
+      return () => {
+        if (source !== found) return
+        source = undefined
+        untrack()
+      }
     },
     reload() {
       loaded.set(undefined)
-      void refresh()
+      void relist()
+    },
+    agentFinished() {
+      if (watched) rereadOpenFile()
+      else void relist()
     },
     toggle(path: string) {
       const next = new Set(expanded.get())
@@ -88,7 +125,8 @@ export const filesModel = (wire: Wire, threads: Threads) => {
         query.set('')
         expanded.set(new Set())
       })
-      void refresh()
+      track()
+      void relist()
     },
   }
 }

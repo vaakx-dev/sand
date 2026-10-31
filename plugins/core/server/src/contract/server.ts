@@ -17,4 +17,5 @@ export type HelloValue<T> = () => T | undefined | Promise<T | undefined>
 export interface Server extends WireHost {
   route(path: string, handler: RouteHandler, options?: RouteOptions): Dispose
   hello<T>(field: HelloField<T>, value: HelloValue<T>, options?: HelloOptions): Dispose
+  pages(): number
 }

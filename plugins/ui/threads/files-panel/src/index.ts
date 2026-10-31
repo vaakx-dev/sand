@@ -6,9 +6,12 @@ import { kit } from '@sand/ui-kit/contract'
 import { threadChange, threads, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { div, dynamicChild, mount, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
+import { fileMarks, filesPanel } from './contract'
 import { filePage } from './file/page'
 import { listPage } from './list'
 import { filesModel } from './model'
+
+const panelId = 'files'
 
 export default definePlugin({
   name: 'files-panel',
@@ -18,12 +21,13 @@ export default definePlugin({
     const model = filesModel(ctx.wire, ctx.threads)
     const writer = sig<Composer | undefined>(undefined)
     ctx.watch(composer, found => writer.set(found))
+    ctx.watch(fileMarks, found => model.useMarks(found))
 
     let running = false
     const follow = () => {
       model.follow()
       const now = ctx.threads.current()?.running ?? false
-      if (running && !now) model.refresh()
+      if (running && !now) model.agentFinished()
       running = now
     }
     ctx.on(threadSelect, follow)
@@ -32,10 +36,17 @@ export default definePlugin({
 
     const parts = { kit: ctx.kit, model, markdown: () => ctx.get(markdown), writer }
     const view = () => div({ class: 'absolute inset-0' }, listPage(ctx.kit, model), dynamicChild(model.opened, path => (path ? filePage(parts, path) : null)))
+    ctx.provide(filesPanel, {
+      open(path) {
+        model.opened.set(path)
+        ctx.get(panels)?.show(panelId)
+      },
+    })
+
     ctx.watch(panels, host => {
       if (!host) return
       const handle = host.panel({
-        id: 'files',
+        id: panelId,
         title: 'Files',
         icon: 'folder',
         order: 30,

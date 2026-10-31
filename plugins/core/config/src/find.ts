@@ -44,8 +44,11 @@ export const userPlugins = async (root: string, table: unknown) => {
   return [...folders, ...paths]
 }
 
-export const entryFor = async (dir: string, place: string) => {
-  const { sand } = await readManifest(dir)
-  const entry = isRecord(sand) ? sand[place] : undefined
-  return typeof entry === 'string' ? resolve(dir, entry) : undefined
+const fileIn = (dir: string, table: unknown, key: string) => {
+  const file = isRecord(table) ? table[key] : undefined
+  return typeof file === 'string' ? resolve(dir, file) : undefined
 }
+
+export const entryFor = async (dir: string, place: string) => fileIn(dir, (await readManifest(dir)).sand, place)
+
+export const contractFor = async (dir: string) => fileIn(dir, (await readManifest(dir)).exports, './contract')

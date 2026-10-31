@@ -13,7 +13,7 @@ const glyph = (view: PcView | undefined) => (view?.status.phase === 'connected' 
 const byHome = (a: PcView, b: PcView) => Number(b.home) - Number(a.home) || a.name.localeCompare(b.name)
 
 export const pcTab = (ui: Ui, { pc, draft }: ThreadPlace) => {
-  const { choiceItem, icon, metaLine, plainButton, popover, pressOpens } = ui.kit
+  const { choiceItem, icon, metaLine, popover, trayChip } = ui.kit
   const open = sig(false)
   const close = () => open.set(false)
   const view = derive(() => ui.data.pcs.get().find(found => found.id === pc.get()))
@@ -48,8 +48,6 @@ export const pcTab = (ui: Ui, { pc, draft }: ThreadPlace) => {
     span({ class: 'min-w-0 truncate' }, () => ui.data.nameOf(pc.get())),
   ]
 
-  const tabLook = 'flex min-w-0 items-center gap-1.5 px-1 text-xs'
-
   const viewOf = () =>
     div(
       { class: 'relative flex min-w-0' },
@@ -57,11 +55,8 @@ export const pcTab = (ui: Ui, { pc, draft }: ThreadPlace) => {
         derive(() => Boolean(draft.get())),
         choosing =>
           choosing
-            ? plainButton(
-                { class: [tabLook, 'rounded-md transition-colors', () => (open.get() ? 'text-neutral-100' : 'text-neutral-500 hover:text-neutral-100')], title: 'Choose which PC runs this thread', ...pressOpens(open, () => open.update(value => !value)) },
-                ...label(),
-              )
-            : span({ class: [tabLook, 'text-neutral-500'], title: words }, ...label()),
+            ? trayChip({ open, toggle: () => open.update(value => !value), title: 'Choose which PC runs this thread' }, ...label())
+            : span({ class: 'flex min-w-0 items-center gap-1.5 px-1 text-xs text-neutral-500', title: words }, ...label()),
       ),
       show(open, () =>
         popover(

@@ -1,5 +1,5 @@
+import type { GitRunner } from '@sand/git/contract'
 import { basename, resolve } from 'node:path'
-import { gitRemote } from './git'
 import { readProjectToml } from './toml'
 
 export interface FolderFacts {
@@ -8,8 +8,8 @@ export interface FolderFacts {
   remote?: string
 }
 
-export const inspectFolder = async (path: string): Promise<FolderFacts> => {
-  const [toml, remote] = await Promise.all([readProjectToml(path), gitRemote(path)])
+export const inspectFolder = async (path: string, git: GitRunner | undefined): Promise<FolderFacts> => {
+  const [toml, remote] = await Promise.all([readProjectToml(path), git?.remoteUrl(path)])
   return {
     name: toml.name ?? (basename(resolve(path)) || path),
     ...(toml.setup ? { setup: toml.setup } : {}),

@@ -23,15 +23,18 @@ export interface MenuRequest extends PressAt, MenuSpec {
 }
 
 export type { ContextMenu } from './context-menu/menu'
+export type { TextAreaProps } from './fields/field'
 export type { Direction } from './gesture/direction'
 export type { Drag } from './gesture/follow'
 export type { Listbox, ListboxOptions } from './listbox/model'
 export type { IconName, IconSize } from './icons/lucide'
+export type { FileChangeKind } from './marks/file-kind'
 export type { MarkerProps } from './marks/marker'
 export type { Tone } from './marks/marks'
 export type { StepState } from './marks/state-marks'
 export type { RunStatus } from './marks/status'
 export type { CalloutLook } from './notes/notes'
+export type { CheckRowProps } from './rows/check-row'
 export type { ListRowProps } from './rows/list-row'
 export type { SettingsRowProps } from './rows/rows'
 export type { Choice } from './rows/settings'

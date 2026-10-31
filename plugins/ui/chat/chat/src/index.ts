@@ -7,6 +7,7 @@ import { chatController } from './controller'
 import { createToolViews, transcriptParts } from './parts'
 import { toolViews, transcript } from './parts/contract'
 import { css } from './style'
+import { turnFooters } from './turns/footers'
 
 export default definePlugin({
   name: 'chat',
@@ -16,7 +17,8 @@ export default definePlugin({
     ctx.kit.style(ctx, css)
     const parts = transcriptParts(ctx)
     const registry = parts.registry(() => chat.refresh())
-    const chat = owned(ctx, () => chatController(ctx, parts, registry, parts.openStates()))
+    const footers = turnFooters(() => chat.render())
+    const chat = owned(ctx, () => chatController(ctx, parts, registry, parts.openStates(), footers))
 
     chat.render()
     place(ctx, 'main', chat.root, 1)
@@ -27,6 +29,6 @@ export default definePlugin({
     ctx.on(threadsChange, chat.forget)
     ctx.on(modelsChange, chat.stale)
     ctx.provide(toolViews, createToolViews(parts.image))
-    ctx.provide(transcript, { tool: registry.tool, entry: registry.entry })
+    ctx.provide(transcript, { tool: registry.tool, entry: registry.entry, turnFooter: footers.add })
   },
 })

@@ -1,9 +1,10 @@
 import { homePcMeta } from '@sand/devices-contract'
+import { pluginsOffMeta } from '../contract'
 import { background } from './first-paint'
 
 const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
-export const page = (build: string, pc: string) => `<!doctype html>
+export const page = (build: string, pc: string, off: string[]) => `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -16,6 +17,7 @@ export const page = (build: string, pc: string) => `<!doctype html>
   <meta name="apple-mobile-web-app-title" content="sand">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="${homePcMeta}" content="${attribute(pc)}">
+  <meta name="${pluginsOffMeta}" content="${attribute(off.join(' '))}">
   <title>sand</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/32x32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="/icons/64x64.png">

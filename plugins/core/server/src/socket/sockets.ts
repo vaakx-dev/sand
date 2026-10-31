@@ -11,6 +11,7 @@ export const everyone: Audience = () => true
 
 export interface SocketHandlers {
   leave(socket: Socket): void
+  counted(pages: number): void
   answer(socket: Socket, request: ClientMessage): Promise<unknown>
   settle(): void
   malformed(error: unknown): void
@@ -59,13 +60,15 @@ export const createSockets = (handlers: SocketHandlers) => {
     maxPayloadLength: 64 * 1024 * 1024,
     open(socket) {
       clients.add(socket)
+      handlers.counted(clients.size)
     },
     close(socket) {
       clients.delete(socket)
       handlers.leave(socket)
+      handlers.counted(clients.size)
     },
     message: (socket, data) => void receive(socket, String(data)),
   }
 
-  return { publish, websocket }
+  return { publish, websocket, pages: () => clients.size }
 }

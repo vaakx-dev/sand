@@ -18,6 +18,8 @@ export interface PanelsParts {
   hide(): void
 }
 
+export const shownPages = (pages: Page[]) => pages.filter(page => !page.spec.hidden)
+
 const hasBadge = (spec: PanelSpec) => spec.badge !== undefined && spec.badge !== ''
 
 const tabView = (page: Sig<Page>, parts: PanelsParts) => {
@@ -56,7 +58,12 @@ export const panelsView = (parts: PanelsParts) => {
       {},
       div(
         { class: 'flex min-w-0 flex-1 items-center overflow-auto scrollbar-none' },
-        list(parts.pages, page => page.key, page => tabView(page, parts), div({ class: 'flex gap-1' })),
+        list(
+          parts.pages.map(shownPages),
+          page => page.key,
+          page => tabView(page, parts),
+          div({ class: 'flex gap-1' }),
+        ),
       ),
       show(parts.surface.covering, () => closeButton({ title: 'Hide the panel', onClick: parts.hide })),
       show(() => !parts.surface.covering(), parts.toggle),
@@ -67,6 +74,6 @@ export const panelsView = (parts: PanelsParts) => {
 
 export const selectedPage = (pages: Sig<Page[]>, wanted: Sig<string | undefined>) =>
   derive(() => {
-    const list = pages.get()
+    const list = shownPages(pages.get())
     return list.find(page => page.spec.id === wanted.get())?.spec.id ?? list[0]?.spec.id
   })

@@ -1,4 +1,5 @@
 import { peers, thisPc } from '@sand/devices-contract'
+import { gitRunner } from '@sand/git/contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
@@ -28,8 +29,9 @@ export default definePlugin({
     const list = () => projectList(store.all(), { device, home: homedir(), sep, root: root.get() })
     const placeChanged = () => ctx.hub.broadcast(projectsChange, list())
 
-    const registry = createRegistry(store, device, () => changed(), () => sync.pull())
-    const icons = iconSync({ registry, device, home, peers: () => ctx.get(peers), report })
+    const git = () => ctx.get(gitRunner)
+    const registry = createRegistry(store, device, { changed: () => changed(), pull: () => sync.pull(), git })
+    const icons = iconSync({ registry, device, home, peers: () => ctx.get(peers), git, report })
     ctx.effect(() => icons.close)
     const sync = projectSync(ctx, registry)
     const changed = () => {
@@ -39,7 +41,9 @@ export default definePlugin({
     }
 
     for (const setup of projectRequests({ hub: ctx.hub, registry, root, list, placeChanged })) ctx.effect(setup)
-    registry.refresh().catch(report)
+    ctx.watch(gitRunner, found => {
+      if (found) registry.refresh().catch(report)
+    })
     icons.changed()
   },
 })

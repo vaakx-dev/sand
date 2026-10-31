@@ -14,7 +14,7 @@ export const composerParts = (ui: Ui) => {
     if (!found) return
     const unhold = found.hold(state.holdReason)
     const stopBanner = effect(() => (state.late.get() ? found.slot('banner', () => connectionBanner(ui, state)) : undefined))
-    const stopTab = effect(() => (tab.visible.get() ? found.slot('tray-start', tab.view) : undefined))
+    const stopTab = effect(() => (tab.visible.get() ? found.slot('tray-start', tab.view, 20) : undefined))
     return () => {
       void unhold()
       stopBanner()

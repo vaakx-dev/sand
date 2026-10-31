@@ -1,0 +1,28 @@
+{
+  "name": "@sand/git-workspace",
+  "version": "0.0.0",
+  "description": "Where a thread works: pick the main checkout or a worktree for a new thread, follow worktree setup, and move or remove a thread's worktree",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Worktrees",
+    "summary": "Start threads in their own worktree and manage it from the git menu"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-control": "workspace:*",
+    "@sand/git-pulls": "workspace:*",
+    "@sand/keys": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@sand/worktrees": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

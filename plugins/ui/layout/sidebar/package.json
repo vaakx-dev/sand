@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Card sidebar: search, project filter and actions, then Pinned, Active, Snoozed and Settled threads, and threads and projects in the palette",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Sidebar",

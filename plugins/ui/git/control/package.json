@@ -1,0 +1,30 @@
+{
+  "name": "@sand/git-control",
+  "version": "0.0.0",
+  "description": "Git in the thread header: the branch chip opens a branch picker and one button commits, pushes or pulls the thread's folder",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Git control",
+    "summary": "Branch, commit, push and pull from the thread header"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-actions": "workspace:*",
+    "@sand/header": "workspace:*",
+    "@sand/keys": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

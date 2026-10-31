@@ -29,6 +29,6 @@ export const chipButton = ({ active, menu = false, warning = false, class: extra
 export const chipPopover = (close: () => void, { class: place, width }: ChipPopoverProps, ...children: Child[]) =>
   popover(
     close,
-    { class: ['bottom-full mb-2 max-w-full overflow-auto', width ? '' : 'w-80', place], style: { width, maxHeight: `calc(100vh - ${SPACE['32']})` } },
+    { class: ['bottom-full mb-2 overflow-auto', width ? '' : 'w-80', place], style: { width, maxWidth: `calc(100vw - ${SPACE['8']})`, maxHeight: `calc(100vh - ${SPACE['32']})` } },
     ...children,
   )
