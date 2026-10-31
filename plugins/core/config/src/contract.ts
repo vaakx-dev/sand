@@ -26,5 +26,18 @@ export interface SandConfig {
   section(name: string): unknown
 }
 
+export interface PluginOff {
+  id: string
+  dir: string
+  needs: string[]
+}
+
+export interface PluginSwitches {
+  turnedOff(dir: string): boolean
+  needs(missing: string[]): string[] | undefined
+  off(): PluginOff[]
+}
+
 export const cli = service<Cli>('cli')
 export const sandConfig = service<SandConfig>('sandConfig')
+export const pluginSwitches = service<PluginSwitches>('pluginSwitches')

@@ -1,7 +1,8 @@
+import type { GitRunner } from '@sand/git/contract'
 import { isInside } from '@sand/util'
 import type { Project, ProjectFolder, ProjectIconFile, ProjectPatch } from '../contract'
-import { mergeProjects, remoteKey } from '../projects'
-import { gitRemote } from './folder/git'
+import { mergeProjects } from '../projects'
+import { remoteKey } from '../projects/remote'
 import { inspectFolder } from './folder/inspect'
 import { localCopy, projectAt, removedCopyAt } from './list'
 import { existingFolder } from './paths'
@@ -9,7 +10,13 @@ import type { ProjectStore } from './store'
 
 const nextStamp = (previous: number) => Math.max(Date.now(), previous + 1)
 
-export const createRegistry = (store: ProjectStore, device: string, changed: () => void, pull: () => Promise<void>) => {
+export interface RegistryDeps {
+  changed(): void
+  pull(): Promise<void>
+  git(): GitRunner | undefined
+}
+
+export const createRegistry = (store: ProjectStore, device: string, { changed, pull, git }: RegistryDeps) => {
   const commit = async (project: Project) => {
     await store.put(project)
     changed()
@@ -37,10 +44,12 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
     return commit({ ...project, remote, updated: nextStamp(project.updated) })
   }
   const refresh = async () => {
+    const runner = git()
+    if (!runner) return
     for (const listed of store.all()) {
       const copy = localCopy(listed, device)
       if (!copy) continue
-      const remote = await gitRemote(copy.path)
+      const remote = await runner.remoteUrl(copy.path)
       const project = store.get(listed.id)
       if (project && !project.deleted) await refreshRemote(project, remote)
     }
@@ -48,7 +57,7 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
 
   const inspect = async (path: string): Promise<ProjectFolder> => {
     const full = await existingFolder(path)
-    const facts = await inspectFolder(full)
+    const facts = await inspectFolder(full, git())
     const current = copyAt(full)
     if (current) await refreshRemote(current, facts.remote)
     const project = current?.id
@@ -64,7 +73,7 @@ export const createRegistry = (store: ProjectStore, device: string, changed: () 
   const add = async (path: string, id?: string): Promise<Project> => {
     const full = await existingFolder(path)
     if (id) await fetched(id)
-    const facts = await inspectFolder(full)
+    const facts = await inspectFolder(full, git())
     const now = Date.now()
     const current = copyAt(full)
     if (current && id && current.id !== id) throw new Error(`${full} is already a copy of ${current.name}`)

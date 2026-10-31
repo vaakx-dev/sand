@@ -1,4 +1,5 @@
 import { cliCommands } from '@sand/cli-commands/contract'
+import { gitRunner } from '@sand/git/contract'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({
@@ -11,7 +12,7 @@ export default definePlugin({
         name: 'release-assets',
         summary: 'write sand.tar.gz and sand-build.json for a GitHub release into a folder',
         usage: 'sand release-assets <folder>    write sand.tar.gz and sand-build.json for a GitHub release into a folder',
-        run: async args => (await import('./release')).releaseAssets(args),
+        run: async args => (await import('./release')).releaseAssets(args, ctx.get(gitRunner)),
       }),
     )
   },

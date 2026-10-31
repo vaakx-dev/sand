@@ -1,0 +1,26 @@
+{
+  "name": "@sand/git-actions",
+  "version": "0.0.0",
+  "description": "Commits, pushes, pulls, switches branches and starts repositories in a thread's folder, on the PC that holds it",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Git actions",
+    "summary": "Commits, pushes, pulls and switches branches from the page"
+  },
+  "dependencies": {
+    "@sand/ask": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

@@ -18,13 +18,21 @@ export interface ShownItem {
   rail: boolean
 }
 
-export type Shown = ShownItem | TurnHead
+export interface TurnFoot {
+  kind: 'foot'
+  key: string
+  entry: string
+  running: boolean
+}
+
+export type Shown = ShownItem | TurnHead | TurnFoot
 
 export interface FoldOptions {
   older: boolean
   running: boolean
   streaming: boolean
   started: number | undefined
+  footers: boolean
   open(key: string): boolean
 }
 
@@ -33,7 +41,7 @@ interface Turn {
   body: Item[]
 }
 
-const opens = (item: Item) => item.kind === 'user' && !item.steer
+const opens = (item: Item) => item.opens !== undefined
 
 const timeOf = (item: Item) => {
   if (item.kind === 'tools') return item.end
@@ -98,9 +106,15 @@ const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] 
   return shown
 }
 
+const footOf = (turn: Turn, running: boolean, options: FoldOptions): TurnFoot[] =>
+  options.footers && turn.head?.opens ? [{ kind: 'foot', key: `foot:${turn.head.opens}`, entry: turn.head.opens, running }] : []
+
 const isRunning = (turn: Turn, last: boolean, options: FoldOptions) => last && options.running && (options.streaming || !answered(turn.body))
 
 export const foldTurns = (items: Item[], options: FoldOptions): Shown[] => {
   const turns = split(items)
-  return turns.flatMap((turn, index) => shownTurn(turn, isRunning(turn, index === turns.length - 1, options), options))
+  return turns.flatMap((turn, index) => {
+    const last = index === turns.length - 1
+    return [...shownTurn(turn, isRunning(turn, last, options), options), ...footOf(turn, last && options.running, options)]
+  })
 }

@@ -1,0 +1,22 @@
+{
+  "name": "@sand/git-diff-view",
+  "version": "0.0.0",
+  "description": "Draws file diffs the same way everywhere: unified or split rows with line numbers, changed words, syntax colors, line picking and notes under lines",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Diff view",
+    "summary": "Shows file diffs with the same look in every panel"
+  },
+  "dependencies": {
+    "@sand/git-diff": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

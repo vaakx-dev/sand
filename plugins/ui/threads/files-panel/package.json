@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Files tab in the right panel: browse the current thread's folder, see what changed and read its files",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Files panel",

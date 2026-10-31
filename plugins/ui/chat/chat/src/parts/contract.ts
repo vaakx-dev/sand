@@ -39,9 +39,23 @@ export interface ToolRenderer {
 
 export type RenderEntry = (entry: Entry, thread: string) => HTMLElement | undefined
 
+export interface TurnInfo {
+  session: string
+  device: string
+  startEntry: string
+  running: boolean
+}
+
+export interface TurnFooter {
+  id: string
+  order?: number
+  view(turn: TurnInfo): Child | null
+}
+
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
+  turnFooter(footer: TurnFooter): Dispose
 }
 
 export type Step = { kind: 'tool'; key: string; tool: ToolView } | { kind: 'thinking'; key: string; text: string; streaming: boolean }
@@ -57,7 +71,7 @@ export interface ToolGroup {
 
 export type NoticeTone = 'dim' | 'error' | 'rule'
 
-export type Item =
+export type Item = (
   | { kind: 'user'; key: string; parts: UserPart[]; steer: boolean; at: number }
   | { kind: 'text'; key: string; text: string; streaming: boolean; at: number }
   | { kind: 'thinking'; key: string; text: string; streaming: boolean; at: number }
@@ -65,6 +79,7 @@ export type Item =
   | { kind: 'notice'; key: string; text: string; tone: NoticeTone }
   | { kind: 'custom'; key: string; entry: Entry }
   | { kind: 'live'; key: string }
+) & { opens?: string }
 
 export type DescribeSettings = (settings: SessionSettings) => string | undefined
 

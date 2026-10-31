@@ -1,0 +1,31 @@
+{
+  "name": "@sand/pull-review",
+  "version": "0.0.0",
+  "description": "Reviews a pull request in sand: changed files with GitHub's viewed marks, line comments gathered into your pending GitHub review, submitting it, and a review drafted by the agent",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Pull request review",
+    "summary": "Review pull requests with viewed marks, line comments and an agent-drafted review"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/pull-links": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

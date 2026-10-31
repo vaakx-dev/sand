@@ -12,6 +12,8 @@ export * from './requests'
 
 export const server = service<Server>('server')
 
+export const pagesChange = event<(pages: number) => void>('server.pages')
+
 export const sessionCarry = event<(types: string[]) => string[]>('session.carry')
 
 export const liveSnapshot = wireEvent<[session: string, snapshot: LiveSnapshot]>('live.snapshot')

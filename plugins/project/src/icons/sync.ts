@@ -1,4 +1,5 @@
 import type { Peers } from '@sand/devices-contract'
+import type { GitRunner } from '@sand/git/contract'
 import { serial } from '@sand/util'
 import type { Project } from '../contract'
 import { localCopy } from '../registry/list'
@@ -12,10 +13,11 @@ interface IconSyncOptions {
   device: string
   home: string
   peers(): Peers | undefined
+  git(): GitRunner | undefined
   report(error: unknown): void
 }
 
-const syncCopy = async ({ registry, home, peers }: IconSyncOptions, project: Project, folder: string) => {
+const syncCopy = async ({ registry, home, peers, git }: IconSyncOptions, project: Project, folder: string) => {
   const local = await readCopyIcon(folder)
   const shared = project.iconFile
   if (local) await keepProjectIcon(home, local.iconFile.hash, local.bytes)
@@ -26,7 +28,7 @@ const syncCopy = async ({ registry, home, peers }: IconSyncOptions, project: Pro
   }
   if (!shared) return
   const file = await projectIconFile(home, shared.hash, peers())
-  if (file) await writeCopyIcon(folder, await file.bytes(), shared.type)
+  if (file) await writeCopyIcon(git(), folder, await file.bytes(), shared.type)
 }
 
 export const iconSync = (options: IconSyncOptions) => {

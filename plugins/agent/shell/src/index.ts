@@ -1,7 +1,9 @@
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
+import { shellRunner } from './contract'
 import { detect, sidePowerShell } from './detect'
+import { shellRunnerOf } from './runner'
 import { shellTool } from './tool'
 
 export default definePlugin({
@@ -14,6 +16,7 @@ export default definePlugin({
   }),
   apply(ctx, config) {
     const shell = detect(config.shell)
+    ctx.provide(shellRunner, shellRunnerOf(shell))
     ctx.effect(() =>
       ctx.tools.register(
         shellTool(

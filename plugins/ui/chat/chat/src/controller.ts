@@ -13,6 +13,7 @@ import { rewriteActions } from './rows/rewrite'
 import type { RowContext } from './rows/row'
 import { slotHost } from './slot'
 import { foldTurns } from './turns/fold'
+import type { TurnFooters } from './turns/footers'
 import { shownRows } from './turns/rows'
 import { threadViews, type ThreadView } from './view'
 import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
@@ -20,7 +21,7 @@ import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
 const screensKeptAbove = 3
 const fewestTrimmed = 20
 
-export const chatController = (ctx: ChatContext, parts: TranscriptParts, registry: RendererRegistry, states: OpenStates) => {
+export const chatController = (ctx: ChatContext, parts: TranscriptParts, registry: RendererRegistry, states: OpenStates, footers: TurnFooters) => {
   const { contextMenu, jumpButton, nearEnd, toEnd } = ctx.kit
   const cache = parts.itemCache()
   const jumpShown = sig(false)
@@ -90,6 +91,8 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       registry,
       states,
       thread: thread.id,
+      device: thread.device,
+      footers,
       parts,
       markdown: ctx.markdown,
       image: parts.replyImage(thread.id),
@@ -105,6 +108,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       running: thread.running,
       streaming: thread.live.length > 0,
       started: thread.started,
+      footers: footers.any(),
       open: key => untrack(() => states.get(key).open.get()),
     })
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))

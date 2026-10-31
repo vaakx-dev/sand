@@ -20,6 +20,7 @@
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
+    "@sand/git": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/nav": "workspace:*",

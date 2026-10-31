@@ -5,6 +5,7 @@ import { createPaging } from './paging'
 import { parseRow, type Row } from './paging/rows'
 import { firstTitle, quickTasks } from './quick'
 import { chatRecords } from './records'
+import { relocator } from './relocate'
 import { chatRemover } from './remove'
 import { createSession, type SessionHooks } from './session'
 import { childSummaries, summaries, syncedSummaries } from './summaries'
@@ -16,6 +17,7 @@ export interface StoreOptions {
   running(id: string): boolean
   closing(session: Session): Promise<string | undefined>
   projectOf(cwd: string): string | null
+  knownProject(id: string): boolean
   scratch(id: string): string
 }
 
@@ -40,13 +42,14 @@ const pinPatch = (pinned: boolean): ChatPatch => (pinned ? { pinned, settled: nu
 
 const snoozePatch = (until: number | null): ChatPatch => (until === null ? { snoozed: null } : { snoozed: until, settled: null })
 
-export const createStore = (db: Database, { hooks, running, closing, projectOf, scratch }: StoreOptions) => {
+export const createStore = (db: Database, { hooks, running, closing, projectOf, knownProject, scratch }: StoreOptions) => {
   const opened = new Map<string, Session>()
   const cache = createEntryCache(loadedLimit, running)
   const paging = createPaging(db)
   const records = chatRecords(db)
   const removeChats = chatRemover(db)
   const tasks = quickTasks(scratch)
+  const children = childSummaries(db)
   const ofType = db.query<Row, { type: string }>('select * from entries where type = $type order by at')
 
   const sessionHooks: SessionHooks = {
@@ -91,8 +94,16 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
     if (refusal) throw new Error(refusal)
   }
 
+  const checked = (project: string | null) => {
+    if (project !== null && !knownProject(project)) throw new Error(`Project ${project} has no folder on this PC`)
+    return project
+  }
+
+  const relocate = relocator({ running, children, patch: records.patch, checked, update: hooks.update })
+
   const sessions: Sessions = {
-    thread: cwd => create({ cwd, project: projectOf(cwd), kind: 'thread' }),
+    thread: (cwd, options) =>
+      create({ cwd, project: options?.project === undefined ? projectOf(cwd) : checked(options.project), kind: 'thread' }),
     quick() {
       const id = Bun.randomUUIDv7()
       return create({ id, cwd: tasks.folder(id), project: null, kind: 'quick' })
@@ -101,7 +112,7 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
       const { cwd, project } = sessions.require(parent)
       return create({ cwd, project, kind: 'agent', parent, title, origin: origin ?? null })
     },
-    children: childSummaries(db),
+    children,
     update(id, patch) {
       const session = sessions.require(id)
       records.patch(id, patch)
@@ -109,6 +120,7 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
       hooks.update(session)
       return session
     },
+    relocate: (id, relocation) => relocate(topLevel(id), relocation),
     rename(id, title) {
       sessions.update(id, { title })
     },

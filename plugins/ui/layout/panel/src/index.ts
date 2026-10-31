@@ -5,7 +5,7 @@ import { definePlugin } from 'drydock'
 import { panels, panelsChange, type Panels } from './contract'
 import { createSurface } from './surface'
 import { panelToggle } from './toggle'
-import { panelsView, selectedPage, type Page } from './view'
+import { panelsView, selectedPage, shownPages, type Page } from './view'
 
 const byOrder = (pages: Page[]) => [...pages].sort((a, b) => (a.spec.order ?? 0) - (b.spec.order ?? 0))
 
@@ -46,7 +46,7 @@ export default definePlugin({
     }
 
     const surface = createSurface(ctx, () => ctx.emit(panelsChange, host.current()))
-    const toggle = panelToggle(ctx, surface, pages.map(list => list.some(page => page.spec.attention)))
+    const toggle = panelToggle(ctx, surface, pages.map(list => shownPages(list).some(page => page.spec.attention)))
     place(ctx, 'aside', () => panelsView({ kit: ctx.kit, pages, selected, surface, toggle, show: host.show, hide: host.hide }))
 
     ctx.effect(() => () => pages.set([]))

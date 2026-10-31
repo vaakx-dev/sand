@@ -8,29 +8,35 @@ import { toggleSwitch } from './buttons/toggle'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
-import { searchField, searchRow, textInput } from './fields/field'
+import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { headTitle, pageHead, paneHead } from './heads/page-head'
 import { sectionHeading } from './heads/section-heading'
-import { countMark, metaLine, rowTitle } from './heads/text'
+import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
+import { fileKindMark } from './marks/file-kind'
+import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
 import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
+import { toneText } from './marks/tones'
 import { chipButton, chipPopover } from './menus/chip'
 import { dropdown } from './menus/dropdown'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
+import { menuReason } from './menus/reason'
+import { trayChip } from './menus/tray-chip'
 import { navActionIcon } from './nav/action-icon'
 import { sideColumn } from './nav/side-column'
 import { bannerTitle, statusBanner } from './notes/banner'
 import { callout, errorText } from './notes/notes'
+import { checkRow } from './rows/check-row'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
@@ -71,6 +77,7 @@ export const kit = {
   bannerTitle,
   callout,
   checkMark,
+  checkRow,
   chevron,
   chipButton,
   chipPopover,
@@ -99,6 +106,7 @@ export const kit = {
   expandRow,
   expandToggle,
   floatButton,
+  fileKindMark,
   fold,
   gesture,
   hasOpenLayer,
@@ -108,6 +116,7 @@ export const kit = {
   isMac,
   jumpButton,
   layer,
+  lineStat,
   linkButton,
   listbox,
   listRow,
@@ -115,6 +124,7 @@ export const kit = {
   markerLine,
   menuItem,
   menuLayer,
+  menuReason,
   menuSeparator,
   metaLine,
   modal,
@@ -130,6 +140,7 @@ export const kit = {
   ownedByNode,
   pageHead,
   paneHead,
+  pathLabel,
   plainButton,
   popover,
   popupTrigger,
@@ -184,12 +195,15 @@ export const kit = {
   statusLine,
   stepMark,
   style,
+  textArea,
   textInput,
   textRule,
   toEnd,
   toggleSwitch,
+  toneText,
   toolBody,
   toolCard,
+  trayChip,
   waitingLine,
   withDot,
   working,

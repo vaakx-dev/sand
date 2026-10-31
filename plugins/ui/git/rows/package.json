@@ -1,0 +1,21 @@
+{
+  "name": "@sand/git-rows",
+  "version": "0.0.0",
+  "description": "Sidebar rows show the branch of each thread's folder and its uncommitted line counts",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Git in the sidebar",
+    "summary": "Branch and uncommitted changes on each thread card"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/sidebar": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

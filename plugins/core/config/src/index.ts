@@ -1,7 +1,9 @@
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { cli, sandConfig } from './contract'
+import { cli, pluginSwitches, sandConfig } from './contract'
 import { builtinPlugins, entryFor, userPlugins } from './find'
+import { serviceOwners } from './off/owners'
+import { createSwitches } from './off/switches'
 import { optionsOf } from './plugins'
 import { configPath, readConfig } from './read'
 
@@ -18,15 +20,21 @@ export default definePlugin({
     const settings = safe ? undefined : table.plugins
     const user = !safe && place !== 'host'
     const found = new Map([...(await builtinPlugins(builtins)), ...(user ? await userPlugins(join(home, 'plugins'), settings) : [])])
-    const entries = await Promise.all([...found].map(async ([id, dir]) => [optionsOf(settings, id), await entryFor(dir, place)] as const))
+    const plugins = await Promise.all(
+      [...found].map(async ([id, dir]) => ({ id, dir, options: optionsOf(settings, id), entry: await entryFor(dir, place) })),
+    )
+    const turnedOff = plugins.filter(plugin => !plugin.options).map(({ id, dir }) => ({ id, dir }))
+    const { switches, track, learnOwners } = createSwitches(turnedOff)
+    ctx.provide(pluginSwitches, switches)
 
-    for (const [options, entry] of entries) {
+    for (const { id, dir, options, entry } of plugins) {
       if (!options || !entry) continue
       try {
-        ctx.load(entry, options)
+        track({ id, dir, scope: ctx.load(entry, options) })
       } catch (error) {
         ctx.report(error)
       }
     }
+    if (turnedOff.length) learnOwners(await serviceOwners(found))
   },
 })

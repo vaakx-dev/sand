@@ -1,6 +1,6 @@
-import type { FileChange } from '@sand/project/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { span, type Child } from '@vaakx-dev/vrui'
+import type { Changes } from '../changes'
 import type { Listing } from '../model'
 import { fileName } from '../paths'
 import type { Folder } from './build'
@@ -9,18 +9,13 @@ import { fileIcon } from './kinds'
 export interface Rows {
   kit: Kit
   listing: Listing
+  changes: Changes
   expanded: ReadonlySet<string>
   open(path: string): void
   toggle(path: string): void
 }
 
 const matchLimit = 200
-
-const marks: Record<FileChange, { letter: string; tone: string }> = {
-  added: { letter: 'A', tone: 'text-success-400' },
-  modified: { letter: 'M', tone: 'text-neutral-400' },
-  deleted: { letter: 'D', tone: 'text-danger-400' },
-}
 
 const byName = (a: string, b: string) => a.localeCompare(b)
 
@@ -29,24 +24,23 @@ const slot = (...children: Child[]) => span({ class: 'flex w-4 shrink-0 justify-
 const lead = (depth: number, ...children: Child[]) =>
   span({ class: 'flex items-center gap-1' }, ...Array.from({ length: depth }, () => slot()), ...children)
 
-const changeMark = (change: FileChange | undefined) =>
-  change && span({ class: ['font-mono', marks[change].tone], title: change }, marks[change].letter)
-
-const fileRow = ({ kit, listing, open }: Rows, path: string, depth: number, meta?: string) =>
-  kit.listRow({
+const fileRow = ({ kit, changes, open }: Rows, path: string, depth: number, meta?: string) => {
+  const kind = changes.files.get(path)
+  return kit.listRow({
     title: fileName(path),
     meta,
     lead: lead(depth + 1, kit.icon(fileIcon(path), 16)),
-    trail: changeMark(listing.changes[path]),
+    trail: kind && kit.fileKindMark(kind),
     onClick: () => open(path),
   })
+}
 
-const folderRow = ({ kit, listing, toggle }: Rows, folder: Folder, depth: number, open: boolean) =>
+const folderRow = ({ kit, changes, toggle }: Rows, folder: Folder, depth: number, open: boolean) =>
   kit.listRow({
     title: folder.name,
     expanded: open,
     lead: lead(depth, slot(kit.icon(open ? 'down' : 'right', 14)), kit.icon(open ? 'folder-open' : 'folder', 16)),
-    trail: listing.changedFolders.has(folder.path) ? span({ class: 'flex', title: 'Has changes' }, kit.dot('neutral')) : null,
+    trail: changes.folders.has(folder.path) ? span({ class: 'flex', title: 'Has changes' }, kit.dot('neutral')) : null,
     onClick: () => toggle(folder.path),
   })
 

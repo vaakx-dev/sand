@@ -29,15 +29,18 @@ const settingsText = (settings: SessionSettings) =>
 const compactedText = ({ before, after }: CompactionRecord) =>
   before && after ? `Conversation compacted · ${tokens(before)} → ${tokens(after)} tokens` : 'Conversation compacted'
 
+const opening = ([first, ...rest]: Item[], start: string): Item[] => (first ? [{ ...first, opens: start }, ...rest] : [])
+
 const userItems = (entry: Entry, parts: UserPart[], steer: boolean, custom: (type: string) => boolean): Item[] => {
   const shown = untagged(parts, custom).filter(part => part.kind !== 'feedback')
   const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))
   const asked: Item[] = shown.length ? [{ kind: 'user', key: entry.id, parts: shown, steer, at: entry.at }] : []
-  return [
+  const items = [
     ...taggedItems(entry, parts, custom),
     ...asked,
     ...feedback.map((note, index): Item => ({ kind: 'notice', key: `${entry.id}:f${index}`, text: feedbackLine(note), tone: 'dim' })),
   ]
+  return steer ? items : opening(items, entry.id)
 }
 
 export const settledItems = (thread: Thread, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Settled => {

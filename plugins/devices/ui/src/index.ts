@@ -28,7 +28,7 @@ export default definePlugin({
   apply(ctx) {
     owned(ctx, () => {
       const data = createData(ctx)
-      const toasts = createToasts(ctx, ctx.kit)
+      const toasts = createToasts(ctx)
       const sheet = overlaySlot(ctx)
       const why = overlaySlot(ctx, 130)
       const adding = sig(false)

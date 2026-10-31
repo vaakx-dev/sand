@@ -32,6 +32,14 @@ const placed = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
     container,
   )
 
+const stacked = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
+  list(
+    views,
+    view => view,
+    view => div({ class: () => (views.get().at(-1) === view.get() ? 'contents' : 'hidden') }, view.get()),
+    container,
+  )
+
 export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled, covered, shift, swiped, widths }: ShellState, closeSide: () => void) => {
   const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const showSide = () => open.side.get() || (!narrow.get() && covered.get().side)
@@ -57,7 +65,7 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   const main = div(
     { class: 'relative isolate flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900' },
     placed(views.main, div({ class: 'contents' })),
-    placed(covers.main, div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })),
+    stacked(covers.main, div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })),
   )
 
   const aside: HTMLElement = div(

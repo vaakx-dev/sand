@@ -1,5 +1,5 @@
 import type { BuildChange } from '@sand/host-dist/contract'
-import { gitMaybe } from '@sand/util/git'
+import type { GitRunner } from '@sand/git/contract'
 
 const depth = 100
 const separator = '\x1f'
@@ -14,8 +14,8 @@ const parseChange = (line: string): BuildChange | undefined => {
   return { commit, type: type.toLowerCase(), ...(scope && { scope }), summary: summary.trim() }
 }
 
-export const buildHistory = async (root: string) => {
-  const log = await gitMaybe(root, ['log', `-n${depth}`, `--format=%H${separator}%s`]).catch(() => undefined)
+export const buildHistory = async (git: GitRunner | undefined, root: string) => {
+  const log = await git?.maybe(root, ['log', `-n${depth}`, `--format=%H${separator}%s`]).catch(() => undefined)
   if (!log) {
     console.error('git history is not available, so this build lists no changes')
     return undefined

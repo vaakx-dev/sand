@@ -18,6 +18,7 @@ import { type DraftTarget, type Thread, type Threads, threadSelect } from '../co
 import { helloOf, onPcHello } from '../greeted'
 import { onAddressChange } from '../integrations/address'
 import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink, type Visit } from './address'
+import { threadCreators } from './creators'
 import { applyHello } from './hello'
 import { threadLoader } from './loading'
 import { threadPages } from './pages'
@@ -32,6 +33,7 @@ export interface ThreadService extends Threads {
 export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void>): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
+  const creators = threadCreators()
   let greeted = false
 
   const recentFolder = () =>
@@ -81,7 +83,9 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     await open(session && store.threads.has(session) ? session : undefined, 'restore', draft)
   }
 
-  const created = async (target: Omit<DraftTarget, 'id'>) => {
+  const created = async (target: DraftTarget) => {
+    const claimed = creators.claim(target)
+    if (claimed) return claimed
     if (!target.cwd) return wire.call(sessionsQuick, {}, target.device)
     return wire.call(sessionsCreate, { cwd: target.cwd }, target.device)
   }
@@ -116,11 +120,12 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     get: id => store.threads.get(id),
     current: () => store.currentThread(),
     children: id => [...store.threads.values()].filter(chat => chat.info.parent === id),
-    async create(target) {
-      const thread = store.upsert(await created(target), target.device)
+    async create({ id = uuid(), cwd, device }) {
+      const thread = store.upsert(await created({ id, cwd, device }), device)
       thread.loaded = true
       return thread
     },
+    creator: creators.add,
     async rename(id, title) {
       await wire.call(sessionRename, { session: id, title }, store.deviceOf(id))
     },

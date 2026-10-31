@@ -1,6 +1,7 @@
 import { layout, layoutChange } from '@sand/layout/contract'
 import { running } from '@sand/layout/place'
-import { nav, sidebar } from '@sand/nav/contract'
+import { nav } from '@sand/nav/contract'
+import { sidebar } from '@sand/sidebar/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { pulse } from '@sand/web-client/reactive'
 import { mount } from '@vaakx-dev/vrui'

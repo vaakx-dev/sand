@@ -1,13 +1,14 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { tildeHome } from '@sand/util'
-import { show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
+import { div, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
 import { originLabels } from './filter'
 import { pluginMenu } from './menu'
 
 export interface RowActions {
   busy: () => boolean
   failure(name: string): string | undefined
+  offNeeds(name: string): string[] | undefined
   historyToggle(key: string, open: Sig<boolean>): Child
   historyDetail(key: string, open: Sig<boolean>): Child
   hasHistory(key: string): boolean
@@ -43,8 +44,20 @@ const failureNote = ({ codeBlock, rowDetail }: Kit, plugin: PluginEntry, actions
   )
 }
 
+const offReason = (plugin: PluginEntry, actions: RowActions) => {
+  const needs = () => actions.offNeeds(plugin.name) ?? []
+  return show(
+    () => needs().length > 0,
+    () => div(() => `Off because it needs ${needs().join(', ')}, which sand.toml turns off.`),
+  )
+}
+
 const marks = ({ badge }: Kit, plugin: PluginEntry, actions: RowActions) => [
   plugin.origin === 'builtin' ? null : badge('neutral', originLabels[plugin.origin]),
+  show(
+    () => actions.offNeeds(plugin.name) !== undefined,
+    () => badge('neutral', 'Off'),
+  ),
   show(
     () => actions.failure(plugin.name) !== undefined,
     () => badge('danger', "Couldn't load"),
@@ -61,7 +74,7 @@ export const pluginRow = (kit: Kit, plugin: PluginEntry, actions: RowActions) =>
     {},
     menu.view(),
     settingsRow(
-      { ...menu.target(() => pluginMenu(plugin, actions, history)), title: plugin.name, detail: detail(plugin) },
+      { ...menu.target(() => pluginMenu(plugin, actions, history)), title: plugin.name, detail: [detail(plugin), offReason(plugin, actions)] },
       ...marks(kit, plugin, actions),
       tracked ? actions.historyToggle(key, history) : null,
       control(kit, plugin, actions),

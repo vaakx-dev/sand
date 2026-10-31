@@ -1,0 +1,25 @@
+{
+  "name": "@sand/pull-detail",
+  "version": "0.0.0",
+  "description": "One pull request in full: description, checks, reviewers, commits and the whole conversation, plus replying, resolving and every GitHub action on it",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Pull request detail",
+    "summary": "Shows a pull request's conversation and runs its GitHub actions"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

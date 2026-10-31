@@ -49,9 +49,16 @@ const runningStatus = (kit: Kit, item: Sig<ThreadItem>) => {
 const backgroundStatus = (kit: Kit, item: Sig<ThreadItem>) =>
   statusText('text-neutral-400', item.map(itemStatus), agentMark(kit), kit.elapsed(item.map(value => value.started)))
 
-export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>) => {
+export const badgeSlot = (badge: Sig<Child[] | null>, shown: Sig<boolean>) =>
+  span(
+    { class: () => (shown.get() ? 'flex shrink-0 items-center text-xs' : 'hidden') },
+    dynamicChild(badge, found => (found ? span({ class: 'inline-flex items-center gap-1.5 tabular-nums' }, found) : null)),
+  )
+
+const kindStatus = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>, kinds: Sig<string>) => {
   const { icon } = kit
-  return dynamicChild(item.map(kindOf), kind => {
+  return dynamicChild(kinds, kind => {
+    if (kind === 'badge') return null
     if (kind === 'running') return runningStatus(kit, item)
     if (kind === 'background') return backgroundStatus(kit, item)
     if (kind === 'draft') return statusText('text-neutral-400', 'Draft', draftMark(kit), 'Draft')
@@ -67,3 +74,13 @@ export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>) => 
     return statusText('text-neutral-500', () => exactTime(item.get().updated), ticking(minute, () => ago(item.get().updated)))
   })
 }
+
+export const badgeShown = (item: Sig<ThreadItem>, badge: Sig<Child[] | null>) => derive(() => kindOf(item.get()) === '' && badge.get() !== null)
+
+export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>, badged: Sig<boolean>) =>
+  kindStatus(
+    kit,
+    item,
+    minute,
+    derive(() => (badged.get() ? 'badge' : kindOf(item.get()))),
+  )

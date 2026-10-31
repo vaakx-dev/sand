@@ -1,8 +1,9 @@
+import type { GitRunner } from '@sand/git/contract'
 import type { GrepMatch } from '../contract'
 
 const limit = 100
 
-const inRepo = ['git', 'grep', '-n', '-I', '-F', '-i', '--untracked', '-e']
+const inRepo = ['grep', '-n', '-I', '-F', '-i', '--untracked', '-e']
 const plain = ['grep', '-r', '-n', '-I', '-F', '-i', '--exclude-dir=node_modules', '--exclude-dir=.git', '-e']
 
 const parse = (line: string): GrepMatch | undefined => {
@@ -20,9 +21,9 @@ const start = (command: string[], cwd: string) => {
   }
 }
 
-const run = async (command: string[], cwd: string) => {
-  const child = start(command, cwd)
-  if (!child) return { found: [], code: -1 }
+const grepPlain = async (cwd: string, query: string) => {
+  const child = start([...plain, query, '.'], cwd)
+  if (!child) return []
   const found: GrepMatch[] = []
   const decoder = new TextDecoder()
   let rest = ''
@@ -33,12 +34,20 @@ const run = async (command: string[], cwd: string) => {
     if (found.length >= limit) break
   }
   child.kill()
-  return { found: found.slice(0, limit), code: await child.exited }
+  await child.exited
+  return found.slice(0, limit)
 }
 
-export const grepFiles = async (cwd: string, query: string) => {
+const grepRepo = (git: GitRunner, cwd: string, query: string) =>
+  git.lines(cwd, [...inRepo, query], limit, { read: true }).then(
+    ({ code, lines }) => ({ code, found: lines.flatMap(line => parse(line) ?? []) }),
+    () => ({ code: -1, found: [] }),
+  )
+
+export const grepFiles = async (git: GitRunner | undefined, cwd: string, query: string) => {
   if (!query.trim()) return []
-  const repo = await run([...inRepo, query], cwd)
+  if (!git) return grepPlain(cwd, query)
+  const repo = await grepRepo(git, cwd, query)
   if (repo.found.length || repo.code === 1 || !Bun.which('grep')) return repo.found
-  return (await run([...plain, query, '.'], cwd)).found
+  return grepPlain(cwd, query)
 }

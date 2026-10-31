@@ -1,5 +1,5 @@
 import type { LLMRequest } from '@sand/accounts/contract'
-import type { Message, Session, ToolCallBlock, ToolResultBlock, UserContent, WireSession, WireSessionRef } from '@sand/chats/contract'
+import type { Entry, Message, Session, ToolCallBlock, ToolResultBlock, UserContent, WireSession, WireSessionRef } from '@sand/chats/contract'
 import { wireEvent } from '@sand/host-hub/contract'
 import type { OpenedSession } from '@sand/server/contract'
 import { event, service } from 'drydock'
@@ -10,6 +10,7 @@ export type * from './turn'
 export const loop = service<Loop>('loop')
 
 export const turnStart = event<(session: Session, prompt: Message) => void>('turn.start')
+export const turnReady = event<(start: Entry, session: Session, signal: AbortSignal) => Promise<void> | void>('turn.ready')
 export const turnEnd = event<(session: Session, result: TurnResult) => void>('turn.end')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
 export const turnInbox = event<(content: UserContent[], session: Session) => UserContent[]>('turn.inbox')

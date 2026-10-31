@@ -85,8 +85,6 @@ export interface FileContent {
   skipped?: 'large' | 'binary'
 }
 
-export type FileChange = 'added' | 'modified' | 'deleted'
-
 export interface LocalCopy {
   project: string
   path: string
@@ -124,11 +122,6 @@ export const projectsSync = request('projects.sync', { input: z.object({ project
 export const filesList = request('files.list', { input: z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
 export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })
 export const filesRead = request('files.read', { input: z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>(), place: 'thread' })
-export const filesChanges = request('files.changes', {
-  input: z.object({ cwd: z.string() }),
-  output: type<Record<string, FileChange>>(),
-  place: 'thread',
-})
 export const fsBrowse = request('fs.browse', { input: pathInput, output: type<FolderListing>() })
 export const fsMkdir = request('fs.mkdir', { input: pathInput, output: type<void>() })
 

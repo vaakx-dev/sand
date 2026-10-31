@@ -3,6 +3,7 @@ import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '../par
 import type { NavAction } from '@sand/nav/contract'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import { div, type Child, type Sig } from '@vaakx-dev/vrui'
+import type { TurnFooters } from '../turns/footers'
 
 export interface Row<T = unknown> {
   key: string
@@ -15,6 +16,8 @@ export interface RowContext {
   registry: RendererRegistry
   states: OpenStates
   thread: string
+  device: string
+  footers: TurnFooters
   parts: TranscriptParts
   markdown: Markdown
   image: MarkdownImage

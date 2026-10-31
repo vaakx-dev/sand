@@ -2,7 +2,7 @@ import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { sessionUpdate } from '@sand/chats/contract'
 import { createHandlers, parseInput } from '@sand/util/wire'
 import { definePlugin } from 'drydock'
-import { helloSafe, type Server, server as serverService, uiFocus } from './contract'
+import { helloSafe, pagesChange, type Server, server as serverService, uiFocus } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
 import { pagingRequests } from './requests/paging'
@@ -40,6 +40,7 @@ export default definePlugin({
 
     const sockets = createSockets({
       leave: socket => stream.forget(socket),
+      counted: pages => ctx.emit(pagesChange, pages),
       answer(socket, request) {
         if (request.type === uiFocus.id) return focus(socket, request)
         return handlers.answer(request.type, request.input, socket.data).then(trimForPage)
@@ -66,6 +67,7 @@ export default definePlugin({
       handle: handlers.handle,
       broadcast: (event, payload) => send(event, payload),
       hello: hellos.register,
+      pages: sockets.pages,
     }
     ctx.provide(serverService, server)
     ctx.runtime.listening(`http://127.0.0.1:${listener.port}`)

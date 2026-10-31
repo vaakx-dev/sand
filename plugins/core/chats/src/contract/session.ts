@@ -28,6 +28,16 @@ export interface NewAgent {
   origin?: string
 }
 
+export interface NewThread {
+  project?: string | null
+}
+
+export interface Relocation {
+  cwd: string
+  project: string | null
+  note: string
+}
+
 export interface SessionSummary extends SessionInfo {
   updated: number
   messages: number
@@ -63,11 +73,12 @@ export interface Session extends SessionInfo {
 }
 
 export interface Sessions {
-  thread(cwd: string): Session
+  thread(cwd: string, options?: NewThread): Session
   quick(): Session
   agent(spec: NewAgent): Session
   children(parent: string): SessionSummary[]
   update(id: string, patch: ChatPatch): Session
+  relocate(id: string, relocation: Relocation): Session
   rename(id: string, title: string): void
   pin(id: string, pinned: boolean): Session
   settle(id: string, settled: boolean): Promise<Session>
