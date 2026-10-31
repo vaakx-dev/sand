@@ -1,3 +1,4 @@
+import type { PluginOff } from '@sand/config/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { service, type Status } from 'drydock'
 import { z } from 'zod'
@@ -21,6 +22,7 @@ export interface WebExtensionState {
   bundled: boolean
   problem?: string
   browser?: BrowserState & { at: number }
+  needs?: string[]
 }
 
 export interface WebExtensions {
@@ -38,5 +40,7 @@ const browserState = z.object({
 })
 
 export const webExtensionsReport = request('web.extensions.report', { input: z.object({ states: z.array(browserState) }), output: type<void>() })
+
+export const webPluginsOff = request('web.plugins.off', { input: z.object({}), output: type<PluginOff[]>() })
 
 export const webBuild = wireEvent<string>('web.build')

@@ -1,11 +1,11 @@
-import { cli } from '@sand/config/contract'
+import { cli, pluginSwitches } from '@sand/config/contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
 import { server } from '@sand/server/contract'
 import { expandHome, pluginContracts } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { webBuild, webExtensions, webExtensionsReport } from './contract'
+import { webBuild, webExtensions, webExtensionsReport, webPluginsOff } from './contract'
 import { discover } from './extensions/discover'
 import { createSite } from './extensions/site'
 import { createStates } from './extensions/states'
@@ -19,7 +19,7 @@ import { workerRoute } from './pwa/worker'
 export default definePlugin({
   name: 'web',
   description: 'Serves the browser UI: bundles the web extensions and hands them to the page',
-  inject: { server, cli },
+  inject: { server, cli, pluginSwitches },
   config: z.object({
     paths: z.array(z.string()).default([]),
   }),
@@ -28,12 +28,13 @@ export default definePlugin({
     const builtins = [{ dir: ctx.cli.builtins, builtin: true }]
     const folders = safe ? builtins : [...builtins, { dir: join(home, 'plugins'), builtin: false }]
     const extra = safe ? [] : config.paths.map(path => ({ dir: expandHome(path, home), builtin: false }))
+    const switches = ctx.pluginSwitches
     const site = await createSite({
-      find: () => discover(folders, extra),
+      find: async () => (await discover(folders, extra)).filter(extension => !switches.turnedOff(extension.dir)),
       contracts: await pluginContracts(ctx.cli.builtins),
       report: problem => ctx.report(new Error(problem)),
     })
-    const states = createStates(site)
+    const states = createStates(site, switches)
     ctx.provide(webExtensions, { list: states.list })
     const { id: pc } = await loadPcIdentity(home)
     const routes = {
@@ -46,6 +47,7 @@ export default definePlugin({
     }
     for (const [path, handler] of Object.entries(routes)) ctx.effect(() => ctx.server.route(path, handler, { public: true }))
     ctx.effect(() => ctx.server.handle(webExtensionsReport, request => states.report(request.states)))
+    ctx.effect(() => ctx.server.handle(webPluginsOff, () => states.off()))
     ctx.server.broadcast(webBuild, site.current().id)
   },
 })
