@@ -11,6 +11,7 @@ export interface ThreadItem {
   subtitle?: string
   pcMark?: () => HTMLElement
   path?: string
+  device: string
   updated: number
   started?: number
   state: ItemState

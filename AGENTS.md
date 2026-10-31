@@ -6,12 +6,13 @@
 - Use TypeScript on Bun; prefer Bun APIs over Node ones.
 - Everything is a plugin. drydock stays agent-agnostic.
 - A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (`sand serve`), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins.
+- Each plugin owns its wire contract in `src/contract.ts`, built with `request` and `wireEvent` from `@sand/host-hub/contract`.
 - Register everything through `ctx` so unloading cleans it up.
 - The web UI is the only user surface; there is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI.
 - `sand -p` is a minimal test runner: it runs one prompt in its own process, without a server, and prints the reply. Use it to check the agent loop and server-side features. Don't build or adapt features for it, and don't keep it in parity with the web UI.
 - Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
-- vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `node_modules/@vaakx-dev/vrui` and `packages/protocol/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
+- vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `node_modules/@vaakx-dev/vrui` and `plugins/host/hub/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
 - `bun run check` also runs `vrui-check`; fix everything it reports. List classes sand defines in its own CSS, and extra theme color roles, under `vrui` in the root `package.json`.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
 - Never start, stop, restart or reload the live sand daemon or its plugins. Tell the user when a restart is needed. To test, use `sand --home "$(mktemp -d)" -p "<prompt>"` (flags before `-p`, which takes the next word as the prompt) instead of starting another server, so test threads stay out of the user's `~/.sand`; it borrows `~/.sand/auth.json` for the model sign-ins.

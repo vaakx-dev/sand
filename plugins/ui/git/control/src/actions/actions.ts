@@ -1,0 +1,115 @@
+import { gitCommit, gitInit, gitMessage, gitPull, gitPush, gitSwitch } from '@sand/git-actions/contract'
+import { askAgent } from '../agent/ask'
+import type { AgentPrompt } from '../agent/prompts'
+import type { ControlContext } from '../inject'
+import type { NextAction } from '../next/action'
+import { repoOf } from '../next/facts'
+import { committedTitle, initTitle, pulledTitle, pushedTitle, pushFailedLead, switchedTitle } from '../results/titles'
+import type { Runs } from '../runs/runs'
+import type { StatusModel } from '../status/follow'
+import { askBranchName, confirmDefaultPush } from './guard'
+import { type Recovery, reportFailure, settle, type Target } from './settle'
+
+export interface CommitRequest {
+  paths?: string[]
+  message?: string
+  push: boolean
+}
+
+export const createActions = (ctx: ControlContext, model: StatusModel, runs: Runs) => {
+  const { wire } = ctx
+
+  const target = (): Target | undefined => {
+    const place = model.place.get()
+    const status = model.status.get()
+    return place && status ? { place, thread: model.thread.get(), status } : undefined
+  }
+
+  const recovery = (at: Target, retry: () => Promise<unknown>): Recovery => ({
+    retry: () => void retry(),
+    pullThenPush: () => void pullThenPush(at),
+  })
+
+  const push = async (at: Target): Promise<boolean> => {
+    const { cwd, device } = at.place
+    const result = await runs.perform(at.place, 'push', 'push', run => wire.call(gitPush, { cwd, run }, device))
+    return settle(ctx, at, 'push', result, recovery(at, () => push(at)), pushedTitle) !== undefined
+  }
+
+  const pull = async (at: Target): Promise<boolean> => {
+    const { cwd, device } = at.place
+    const result = await runs.perform(at.place, 'pull', 'pull', run => wire.call(gitPull, { cwd, run }, device))
+    return settle(ctx, at, 'pull', result, recovery(at, () => pull(at)), pulledTitle) !== undefined
+  }
+
+  const pullThenPush = async (at: Target) => (await pull(at)) && push(at)
+
+  const switchTo = async (branch: string, create: boolean, at: Target): Promise<boolean> => {
+    const { cwd, device } = at.place
+    const result = await runs.perform(at.place, 'switch', 'switch', run => wire.call(gitSwitch, { cwd, run, branch, create }, device))
+    return settle(ctx, at, 'switch', result, recovery(at, () => switchTo(branch, create, at)), switchedTitle) !== undefined
+  }
+
+  const init = async (at: Target): Promise<boolean> => {
+    const { cwd, device } = at.place
+    const result = await runs.perform(at.place, 'init', 'init', run => wire.call(gitInit, { cwd, run }, device))
+    return settle(ctx, at, 'init', result, recovery(at, () => init(at)), initTitle) !== undefined
+  }
+
+  const passGuard = async (at: Target) => {
+    const local = repoOf(at.status)
+    if (!local?.isDefault || !local.branch) return true
+    const choice = await confirmDefaultPush(ctx, local.branch)
+    if (choice !== 'branch') return choice === 'push'
+    const name = await askBranchName(ctx)
+    return name ? switchTo(name, true, at) : false
+  }
+
+  const guardedPush = async (at: Target) => (await passGuard(at)) && push(at)
+
+  const commit = async (request: CommitRequest, at: Target): Promise<boolean> => {
+    if (request.push && !(await passGuard(at))) return false
+    const { cwd, device } = at.place
+    const message = request.message?.trim() || undefined
+    const input = { cwd, paths: request.paths, message, push: request.push, session: at.thread }
+    const result = await runs.perform(at.place, 'commit', message ? 'stage' : 'message', run => wire.call(gitCommit, { ...input, run }, device))
+    const done = settle(ctx, at, 'commit', result, recovery(at, () => commit(request, at)), made => (made.pushFailure ? undefined : committedTitle(made)))
+    if (done?.pushFailure) reportFailure(ctx, at, 'push', done.pushFailure, recovery(at, () => push(at)), pushFailedLead(done))
+    return done !== undefined
+  }
+
+  const writeMessage = async (paths: string[] | undefined, at: Target): Promise<string | undefined> => {
+    const { cwd, device } = at.place
+    const result = await runs.perform(at.place, 'message', 'message', run => wire.call(gitMessage, { cwd, run, paths, session: at.thread }, device))
+    return settle(ctx, at, 'message', result, recovery(at, () => writeMessage(paths, at)))?.message
+  }
+
+  const run = (next: NextAction, at: Target) => {
+    if (next.id === 'commit') return commit({ push: false }, at)
+    if (next.id === 'commit-push') return commit({ push: true }, at)
+    if (next.id === 'push') return guardedPush(at)
+    if (next.id === 'pull') return pull(at)
+    return Promise.resolve(false)
+  }
+
+  const withTarget =
+    <A extends unknown[], R>(act: (...args: [...A, Target]) => Promise<R>) =>
+    (...args: A) => {
+      const at = target()
+      return at ? act(...args, at) : Promise.resolve(undefined)
+    }
+
+  return {
+    target,
+    run: withTarget(run),
+    commit: withTarget(commit),
+    push: withTarget(guardedPush),
+    pull: withTarget(pull),
+    switchTo: withTarget(switchTo),
+    init: withTarget(init),
+    writeMessage: withTarget(writeMessage),
+    ask: (prompt: AgentPrompt) => askAgent(ctx, model.thread.get(), prompt),
+  }
+}
+
+export type Actions = ReturnType<typeof createActions>

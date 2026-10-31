@@ -55,8 +55,6 @@ export const tools = service<Tools>('tools')
 
 export const toolsChange = event<() => void>('tools.change')
 
-export const toolFolder = event<(cwd: string, session: Session) => string | undefined | Promise<string | undefined>>('tool.folder')
-
 export const toolsChangeWire = wireEvent<GroupState[]>('tools.change')
 
 export const toolsGroups = request('tools.groups', { input: z.object({}), output: type<GroupState[]>() })

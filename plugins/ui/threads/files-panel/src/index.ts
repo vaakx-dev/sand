@@ -1,5 +1,6 @@
 import { composer, type Composer } from '@sand/composer/contract'
 import { wire } from '@sand/devices-contract'
+import { gitStatusClient } from '@sand/git/contract'
 import { markdown } from '@sand/markdown/contract'
 import { panels } from '@sand/panel/contract'
 import { kit } from '@sand/ui-kit/contract'
@@ -18,6 +19,7 @@ export default definePlugin({
     const model = filesModel(ctx.wire, ctx.threads)
     const writer = sig<Composer | undefined>(undefined)
     ctx.watch(composer, found => writer.set(found))
+    ctx.watch(gitStatusClient, found => model.useGit(found))
 
     let running = false
     const follow = () => {

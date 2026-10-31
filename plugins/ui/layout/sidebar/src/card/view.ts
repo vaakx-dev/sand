@@ -1,6 +1,7 @@
 import type { NavAction } from '@sand/nav/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, keys, sig, type Sig } from '@vaakx-dev/vrui'
+import type { RowDecorations } from '../decorations/registry'
 import type { CardRow } from '../rows/build'
 import type { Reorder } from '../rows/reorder'
 import { cardBody, type CardParts } from './body'
@@ -11,6 +12,7 @@ import type { StripParts } from './strip'
 export interface CardHandlers {
   minute: Sig<number>
   drag: Reorder
+  decorations: RowDecorations
   pick(row: CardRow): void
   prefetch(id: string): void
   menuOf(id: string): NavAction[]
@@ -44,7 +46,7 @@ export const card = (kit: Kit, row: Sig<CardRow>, handlers: CardHandlers) => {
       handlers.menu({ ...pointBelow(event), touch: touched(event), row: row.get(), ask: action.id })
     },
   }
-  const parts: CardParts = { kit, item, selected, minute: handlers.minute, strip }
+  const parts: CardParts = { kit, item, selected, minute: handlers.minute, strip, decor: handlers.decorations.row(item) }
   const press = kit.pressMenu(at => {
     if (menu.get().length) handlers.menu({ ...at, row: row.get() })
   })

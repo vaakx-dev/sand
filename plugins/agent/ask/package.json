@@ -1,0 +1,25 @@
+{
+  "name": "@sand/ask",
+  "version": "0.0.0",
+  "description": "Short one-shot model calls for other plugins, such as commit messages and branch names, as plain text or checked JSON",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Ask",
+    "summary": "Quick one-shot model replies for other plugins"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

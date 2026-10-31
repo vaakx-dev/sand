@@ -44,4 +44,3 @@ export interface NavHost {
 }
 
 export const nav = service<NavHost>('nav')
-export const sidebar = service<object>('sidebar')

@@ -1,7 +1,7 @@
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import { div, type Sig } from '@vaakx-dev/vrui'
-import { remoteKey } from '../../projects'
+import { remoteKey } from '../../projects/remote'
 import type { ProjectsContext } from '../context'
 import { iconEntries, iconSheet, type Picking } from './icon'
 import { locationLine } from './location'

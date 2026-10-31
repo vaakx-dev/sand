@@ -38,6 +38,7 @@ const threadItem = (thread: Thread, selected: boolean, lookup: ProjectLookup, pl
     icon: project.icon,
     ...where(project, thread.info.cwd, thread.device, places),
     path: thread.info.cwd,
+    device: thread.device,
     updated: thread.info.updated,
     started: thread.running ? thread.started : since,
     state,
@@ -67,6 +68,7 @@ export const draftItem = (draft: ThreadDraft, lookup: ProjectLookup, places: Pla
     icon: project.icon,
     ...where(project, draft.cwd, draft.device, places),
     path: draft.cwd,
+    device: draft.device,
     updated: draft.updated,
     state: 'draft',
   }

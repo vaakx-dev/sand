@@ -1,0 +1,28 @@
+{
+  "name": "@sand/git",
+  "version": "0.0.0",
+  "description": "Git for a thread's folder: live status, remote tracking, background fetch and branches, read on the PC that holds the folder",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/runner.ts",
+    "cli": "./src/runner.ts",
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Git",
+    "summary": "Shows each thread's branch and changes, kept up to date"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/watch": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

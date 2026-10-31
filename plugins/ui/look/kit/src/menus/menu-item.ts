@@ -2,6 +2,7 @@ import { media, read, show, span, type Child, type MaybeReactive, type Props } f
 import { rowButton } from '../buttons/button'
 import { icon, type IconName } from '../icons/lucide'
 import { surfaceFill } from '../surface'
+import { hasReason } from './reason'
 
 export type MenuSize = 'sm' | 'md'
 
@@ -33,7 +34,9 @@ export const pointerSize = () => {
 
 const menuFill = surfaceFill('raised')
 
-export const menuItem = ({ size = pointerSize(), tone, active = false, icon: glyph, class: extra, ...props }: MenuItemProps, ...children: Child[]) => {
+const itemLabel = (children: Child[]) => (hasReason(children) ? [span({ class: 'flex min-w-0 flex-1 flex-col py-1' }, ...children)] : children)
+
+const itemRow = ({ size = pointerSize(), tone, active = false, icon: glyph, class: extra, ...props }: MenuItemProps, children: Child[], trail: Child = null) => {
   const text = tone === 'danger' ? idleText.danger : idleText.normal
   return rowButton(
     {
@@ -50,9 +53,12 @@ export const menuItem = ({ size = pointerSize(), tone, active = false, icon: gly
       ],
     },
     glyph ? menuIcon(glyph) : null,
-    ...children,
+    ...itemLabel(children),
+    trail,
   )
 }
 
+export const menuItem = (props: MenuItemProps, ...children: Child[]) => itemRow(props, children)
+
 export const choiceItem = ({ selected, ...props }: ChoiceItemProps, ...children: Child[]) =>
-  menuItem({ role: 'menuitemradio', 'aria-checked': () => String(read(selected)), ...props }, ...children, choiceCheck(selected))
+  itemRow({ role: 'menuitemradio', 'aria-checked': () => String(read(selected)), ...props }, children, choiceCheck(selected))

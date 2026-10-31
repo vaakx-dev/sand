@@ -5,11 +5,16 @@ import { bar, failed, inset, page, pathLine } from './parts'
 import { matchRows, treeRows } from './tree/rows'
 
 const results = (kit: Kit, model: FilesModel) => {
-  const state = derive(() => ({ loaded: model.loaded.get(), query: model.query.get().trim(), expanded: model.expanded.get() }))
-  return dynamicChild(state, ({ loaded, query, expanded }) => {
+  const state = derive(() => ({
+    loaded: model.loaded.get(),
+    changes: model.changes.get(),
+    query: model.query.get().trim(),
+    expanded: model.expanded.get(),
+  }))
+  return dynamicChild(state, ({ loaded, changes, query, expanded }) => {
     if (!loaded) return inset(kit.loadingState({ flush: true }))
     if ('error' in loaded) return inset(kit.errorState({ text: failed('load the files', loaded.error), retry: model.reload, flush: true }))
-    const rows = { kit, listing: loaded.listing, expanded, open: (path: string) => model.opened.set(path), toggle: model.toggle }
+    const rows = { kit, listing: loaded.listing, changes, expanded, open: (path: string) => model.opened.set(path), toggle: model.toggle }
     return div({ class: 'px-2' }, ...(query ? matchRows(rows, query) : treeRows(rows, loaded.listing.tree)))
   })
 }
