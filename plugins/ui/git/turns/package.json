@@ -1,0 +1,27 @@
+{
+  "name": "@sand/git-turns",
+  "version": "0.0.0",
+  "description": "A card under each reply with the files that turn changed, a Review button that opens the Changes panel on it, restoring files to before or after the turn, and a Turns group in the Changes panel's scope menu",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Turn changes",
+    "summary": "See and review what each turn changed, and put files back to before or after it"
+  },
+  "dependencies": {
+    "@sand/chat": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-changes": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/git-diff-view": "workspace:*",
+    "@sand/git-snapshots": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

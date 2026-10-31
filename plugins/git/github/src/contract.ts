@@ -2,6 +2,8 @@ import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
+export { repoSlug } from './repo/slug'
+
 export type GitHubAuth =
   | { state: 'signed-in'; login: string; host: string; from: 'gh' | 'env' }
   | { state: 'signed-out'; gh: boolean }

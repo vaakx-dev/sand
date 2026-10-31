@@ -1,6 +1,6 @@
 import type { GitRunner } from '@sand/git/contract'
 import type { DiffScope } from '../contract'
-import { commitOf, type DiffGit, emptyTree } from '../git'
+import { commitOf, type DiffGit, emptyTree, treeOf } from '../git'
 import { type Repo, readRepo } from './repo'
 
 export interface Range {
@@ -19,6 +19,17 @@ const ofCommit = async (git: GitRunner, repo: Repo, revision: string): Promise<R
   if (!commit) throw new Error(`Couldn't find commit ${revision}.`)
   const parent = await commitOf(git, repo.root, `${commit}^1`)
   return parent ? { repo, from: parent, to: commit, base: parent } : { repo, from: await emptyTree(git, repo.root), to: commit }
+}
+
+const treeish = async (git: GitRunner, repo: Repo, revision: string) => {
+  const found = (await commitOf(git, repo.root, revision)) ?? (await treeOf(git, repo.root, revision))
+  if (!found) throw new Error(`Couldn't find ${revision} in this repository.`)
+  return found
+}
+
+const ofRange = async (git: GitRunner, repo: Repo, from: string, to: string): Promise<Range> => {
+  const [start, end] = await Promise.all([treeish(git, repo, from), treeish(git, repo, to)])
+  return { repo, from: start, to: end, base: start }
 }
 
 const forkFrom = (git: GitRunner, repo: Repo, head: string, commit: string) => git.maybe(repo.root, ['merge-base', head, commit], { read: true })
@@ -47,6 +58,7 @@ export const resolveScope = async (tools: DiffGit, cwd: string, scope: DiffScope
   const { git } = tools
   const repo = await readRepo(git, cwd)
   if (scope.kind === 'commit') return ofCommit(git, repo, scope.commit)
+  if (scope.kind === 'range') return ofRange(git, repo, scope.from, scope.to)
   if (scope.kind === 'all') return (await ofBranch(tools, repo, scope.base)) ?? uncommitted(git, repo)
   return uncommitted(git, repo)
 }

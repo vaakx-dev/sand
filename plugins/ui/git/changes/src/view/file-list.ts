@@ -1,14 +1,13 @@
 import type { DiffFile, DiffList } from '@sand/git-diff/contract'
 import { derive, div, dynamicChild, list, type Sig } from '@vaakx-dev/vrui'
 import { uncounted } from '../model/list'
-import { kindMark, lineStat, pathLabel } from './marks'
 import type { ViewParts } from './parts'
 
-const fileRow = ({ kit, sections }: ViewParts, file: Sig<DiffFile>) =>
+const fileRow = ({ kit, sections, diff }: ViewParts, file: Sig<DiffFile>) =>
   kit.listRow({
-    lead: kindMark(() => file.get().kind),
-    title: pathLabel(() => file.get().path),
-    trail: lineStat(
+    lead: diff.marks.kind(() => file.get().kind),
+    title: diff.marks.path(() => file.get().path),
+    trail: diff.marks.stat(
       () => file.get().add,
       () => file.get().del,
     ),

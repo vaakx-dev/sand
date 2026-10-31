@@ -5,12 +5,12 @@ import type { PageContext } from '../inject'
 import type { LinkBook, LinkedThread } from '../links/book'
 import { attempt, notify, notifyError } from '../notify'
 import { pullName } from '../pull/look'
+import { localCopy } from '../projects/local-copy'
 import { refOf } from '../pull/ref'
-import { repoPlace } from './place'
 import type { AgentPrompt } from './prompts'
 
 export const agentActions = (ctx: PageContext, links: LinkBook) => {
-  const canOpen = (pull: PullSummary) => Boolean(ctx.get(pullLinksClient) && repoPlace(ctx, pull.repo))
+  const canOpen = (pull: PullSummary) => Boolean(ctx.get(pullLinksClient) && localCopy(ctx, pull.repo))
 
   const open = async (pull: PullSummary, select = true): Promise<LinkedThread | undefined> => {
     const name = pullName(pull.number)
@@ -19,7 +19,7 @@ export const agentActions = (ctx: PageContext, links: LinkBook) => {
       notifyError(ctx, `Couldn't open ${name}`, 'Thread pull requests are turned off.')
       return undefined
     }
-    const at = repoPlace(ctx, pull.repo)
+    const at = localCopy(ctx, pull.repo)
     if (!at) {
       notifyError(ctx, `Couldn't open ${name}`, `No project on an online PC has ${pull.repo} as its remote.`)
       return undefined

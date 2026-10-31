@@ -1,19 +1,10 @@
-import type { DiffLine } from '../patch/line'
-import { pickedLines, type PickedLines } from './selection'
+import type { DiffLine, DiffRange } from '@sand/git-diff-view/contract'
 
 const signs: Partial<Record<DiffLine['kind'], string>> = { add: '+', del: '-', ctx: ' ' }
 
-const rangeText = (numbers: number[]) => {
-  const low = numbers.reduce((a, b) => Math.min(a, b))
-  const high = numbers.reduce((a, b) => Math.max(a, b))
-  return low === high ? String(low) : `${low}-${high}`
-}
-
-const where = (lines: DiffLine[]) => {
-  const kept = lines.flatMap(line => (line.new === undefined ? [] : [line.new]))
-  if (kept.length) return rangeText(kept)
-  const removed = lines.flatMap(line => (line.old === undefined ? [] : [line.old]))
-  return `${rangeText(removed)} (removed)`
+const where = ({ start, end, side }: DiffRange) => {
+  const span = start === end ? String(start) : `${start}-${end}`
+  return side === 'old' ? `${span} (removed)` : span
 }
 
 const fenceFor = (body: string[]) => {
@@ -22,9 +13,8 @@ const fenceFor = (body: string[]) => {
   return '`'.repeat(Math.max(3, longest + 1))
 }
 
-export const quoteText = (picked: PickedLines) => {
-  const lines = pickedLines(picked)
-  const body = lines.map(line => `${signs[line.kind] ?? ' '}${line.text}`)
+export const quoteText = (range: DiffRange) => {
+  const body = range.lines.map(line => `${signs[line.kind] ?? ' '}${line.text}`)
   const fence = fenceFor(body)
-  return [`${picked.path}:${where(lines)}`, `${fence}diff`, ...body, fence].join('\n')
+  return [`${range.path}:${where(range)}`, `${fence}diff`, ...body, fence].join('\n')
 }

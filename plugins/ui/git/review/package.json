@@ -1,0 +1,28 @@
+{
+  "name": "@sand/git-review",
+  "version": "0.0.0",
+  "description": "The Code tab on a pull request: its changed files with viewed marks, line comments gathered into your review, asking the agent about lines, and a review drafted by the agent",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Pull request code review",
+    "summary": "Review a pull request's code, comment on lines and submit your review"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/git-diff-view": "workspace:*",
+    "@sand/git-pull-page": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/pull-detail": "workspace:*",
+    "@sand/pull-links": "workspace:*",
+    "@sand/pull-review": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

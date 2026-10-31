@@ -2,6 +2,7 @@ import { div } from '@vaakx-dev/vrui'
 import { itemRows } from '../rows'
 import { row, type Row, type RowContext } from '../rows/row'
 import type { Shown } from './fold'
+import { footRow } from './footer'
 import { turnRow } from './header'
 
 const railed = (inner: Row, rail: boolean) =>
@@ -17,5 +18,6 @@ const railed = (inner: Row, rail: boolean) =>
 
 export const shownRows = (entry: Shown, context: RowContext): Row[] => {
   if (entry.kind === 'turn') return [turnRow(entry, context)]
+  if (entry.kind === 'foot') return [footRow(entry, context)]
   return itemRows(entry.item, context).map(inner => railed(inner, entry.rail))
 }

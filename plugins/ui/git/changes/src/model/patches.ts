@@ -1,14 +1,12 @@
-import type { Wire } from '@sand/devices-contract'
-import { gitPatch, type DiffFile, type DiffPatch, type DiffScope } from '@sand/git-diff/contract'
+import type { DiffFile, DiffPatch, DiffScope, GitDiffClient } from '@sand/git-diff/contract'
 import type { GitPlace } from '@sand/git/contract'
 import { sig, type Sig } from '@vaakx-dev/vrui'
-import { patchRows, type PatchRows } from '../patch/rows'
 import { messageOf } from './message'
 
 export type PatchState =
   | { kind: 'idle' }
   | { kind: 'loading' }
-  | { kind: 'ready'; patch: DiffPatch; rows: PatchRows }
+  | { kind: 'ready'; patch: DiffPatch }
   | { kind: 'error'; message: string }
 
 export interface DiffTarget {
@@ -26,7 +24,7 @@ interface Entry {
 
 const idle: PatchState = { kind: 'idle' }
 
-export const patchStore = (wire: Wire, replaced: (path: string) => void) => {
+export const patchStore = (diff: GitDiffClient, replaced: (path: string) => void) => {
   let target: DiffTarget | undefined
   let entries = new Map<string, Entry>()
 
@@ -38,9 +36,9 @@ export const patchStore = (wire: Wire, replaced: (path: string) => void) => {
     if (entry.state.get().kind !== 'ready') entry.state.set({ kind: 'loading' })
     const { path, from } = entry.file
     try {
-      const patch = await wire.call(gitPatch, { cwd: goal.at.cwd, scope: goal.scope, path, from }, goal.at.device)
+      const patch = await diff.patch({ cwd: goal.at.cwd, scope: goal.scope, path, from }, goal.at.device)
       if (mine !== entry.ticket || goal !== target) return
-      entry.state.set({ kind: 'ready', patch, rows: patchRows(patch) })
+      entry.state.set({ kind: 'ready', patch })
       replaced(path)
     } catch (error) {
       if (mine === entry.ticket && goal === target) entry.state.set({ kind: 'error', message: messageOf(error) })

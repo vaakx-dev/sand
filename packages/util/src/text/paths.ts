@@ -7,9 +7,19 @@ export const folderName = (path: string) => path.split(/[\\/]/).filter(Boolean).
 
 const windowsPath = /^([A-Za-z]:[\\/]|\\\\)/
 
+const folding = (a: string, b: string) =>
+  windowsPath.test(a) || windowsPath.test(b) ? (text: string) => text.replaceAll('\\', '/').toLowerCase() : (text: string) => text
+
+const trimmed = (path: string) => path.replace(/[\\/]+$/, '')
+
 export const isInside = (path: string, folder: string) => {
-  const fold = (text: string) => (windowsPath.test(path) || windowsPath.test(folder) ? text.toLowerCase() : text)
-  const base = fold(folder.replace(/[\\/]+$/, ''))
+  const fold = folding(path, folder)
+  const base = fold(trimmed(folder))
   const full = fold(path)
   return Boolean(base) && full.startsWith(base) && /[\\/]/.test(full.charAt(base.length))
+}
+
+export const samePath = (a: string, b: string) => {
+  const fold = folding(a, b)
+  return fold(trimmed(a)) === fold(trimmed(b))
 }

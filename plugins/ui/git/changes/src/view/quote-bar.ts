@@ -4,19 +4,17 @@ import type { ViewParts } from './parts'
 
 export const quoteBar = ({ kit, model, writer }: ViewParts) => {
   const { selection } = model
+  const count = () => selection.range.get()?.lines.length ?? 0
   const quote = () => {
-    const picked = selection.picked.get()
+    const range = selection.range.get()
     const composer = writer.get()
-    if (!picked || !composer) return
-    composer.quote(quoteText(picked))
+    if (!range || !composer) return
+    composer.quote(quoteText(range))
     selection.clear()
   }
-  const label = () => {
-    const count = selection.count.get()
-    return `Quote ${count} ${count === 1 ? 'line' : 'lines'} in reply`
-  }
+  const label = () => `Quote ${count()} ${count() === 1 ? 'line' : 'lines'} in reply`
   return show(
-    () => Boolean(writer.get()) && selection.count.get() > 0,
+    () => Boolean(writer.get()) && count() > 0,
     () =>
       div(
         { class: [kit.layer.menu, 'pointer-events-none absolute inset-x-0 bottom-4 flex justify-center'] },

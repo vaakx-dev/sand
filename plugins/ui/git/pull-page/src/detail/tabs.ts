@@ -41,7 +41,7 @@ const tabButton = (shown: Shown, tab: Sig<DetailTab>, current: Sig<string>) => {
 
 export const detailTabs = (shown: Shown) => {
   const current = sig('overview')
-  const tabs = derive(() => [...builtIn, ...shown.parts.tabs.tabs.get().map(hosted)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+  const tabs = derive(() => [...builtIn, ...shown.parts.tabs.entries.get().map(hosted)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
   const chosen = derive(() => tabs.get().find(tab => tab.id === current.get()) ?? tabs.get()[0])
   return [
     list(

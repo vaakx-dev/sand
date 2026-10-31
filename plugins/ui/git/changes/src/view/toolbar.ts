@@ -1,10 +1,9 @@
 import { derive, show, span } from '@vaakx-dev/vrui'
-import { lineStat } from './marks'
 import type { ViewParts } from './parts'
 import { scopeMenu } from './scope-menu'
 
 export const toolbar = (parts: ViewParts) => {
-  const { kit, model, layout } = parts
+  const { kit, model, layout, diff } = parts
   const { icon, iconButton, layer, paneHead, quietButton } = kit
   const totals = derive(() => {
     const state = model.list.get()
@@ -14,7 +13,7 @@ export const toolbar = (parts: ViewParts) => {
     { class: [layer.sticky, 'sticky top-0 bg-neutral-950'] },
     show(model.repo.map(Boolean), () => scopeMenu(parts)),
     show(totals.map(Boolean), () =>
-      lineStat(
+      diff.marks.stat(
         () => totals.get()?.add ?? 0,
         () => totals.get()?.del ?? 0,
       ),

@@ -4,12 +4,13 @@ import type { Thread } from '@sand/web-client/contract'
 import type { Derive, Sig } from '@vaakx-dev/vrui'
 import type { QueryState } from './address/state'
 import type { AgentActions } from './agent/actions'
+import type { PullMenu, PullTab } from './contract'
+import type { ExtensionBook } from './extend/book'
 import type { HomeAuth } from './home/auth'
 import type { PageContext } from './inject'
 import type { LinkBook } from './links/book'
 import type { ListModel } from './list/model'
 import type { RepoChoice } from './projects/repos'
-import type { TabBook } from './tabs/book'
 
 export interface PageParts {
   ctx: PageContext
@@ -18,7 +19,8 @@ export interface PageParts {
   list: ListModel
   links: LinkBook
   agent: AgentActions
-  tabs: TabBook
+  tabs: ExtensionBook<PullTab>
+  menus: ExtensionBook<PullMenu>
   repos: Derive<RepoChoice[]>
   count: Sig<number>
   github: HomeAuth

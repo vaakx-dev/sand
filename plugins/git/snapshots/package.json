@@ -1,0 +1,27 @@
+{
+  "name": "@sand/git-snapshots",
+  "version": "0.0.0",
+  "description": "Snapshots a thread's git folder before and after each turn in hidden commits, lists what each turn changed and restores files to before or after a turn",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
+    "label": "Turn snapshots",
+    "summary": "Shows what each turn changed and puts files back to before or after it"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

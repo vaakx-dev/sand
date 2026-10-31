@@ -6,23 +6,25 @@ import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { queryState } from './address/state'
 import { agentActions } from './agent/actions'
-import { pullPage } from './contract'
+import { pullPage, type PullMenu, type PullTab } from './contract'
+import { extensionBook } from './extend/book'
 import { homeAuth } from './home/auth'
 import { needsCount } from './home/count'
 import { inject } from './inject'
 import { linkBook } from './links/book'
 import { buildPage, type SharedParts } from './page/build'
 import { pageHost } from './page/host'
+import { localCopy } from './projects/local-copy'
 import { repoChoices } from './projects/repos'
 import { parseKey, pullKey } from './pull/ref'
-import { tabBook } from './tabs/book'
 
 export default definePlugin({
   name: 'git-pull-page',
   description: 'The Pull requests page: what needs you first, every project’s pull requests, and a detail you can merge, reply and resolve from',
   inject,
   apply(ctx) {
-    const tabs = tabBook()
+    const tabs = extensionBook<PullTab>()
+    const menus = extensionBook<PullMenu>()
     const { host, signedIn, count } = owned(ctx, () => {
       const auth = homeAuth(ctx)
       const query = queryState()
@@ -37,6 +39,7 @@ export default definePlugin({
         links,
         agent: agentActions(ctx, links),
         tabs,
+        menus,
         repos: repoChoices(ctx),
         count: needsCount(ctx, auth),
         github: auth,
@@ -64,7 +67,13 @@ export default definePlugin({
       run: host.toggle,
     })
 
-    ctx.provide(pullPage, { open: pull => host.show(pull), close: host.close, tab: tabs.add })
+    ctx.provide(pullPage, {
+      open: pull => host.show(pull),
+      close: host.close,
+      tab: tabs.add,
+      menu: menus.add,
+      localCopy: repo => localCopy(ctx, repo),
+    })
     ctx.watch(nav, found => (found ? effect(() => (signedIn.get() ? untrack(() => found.action(pullsAction())) : undefined)) : undefined))
   },
 })

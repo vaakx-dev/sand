@@ -64,7 +64,7 @@ export default definePlugin({
     }
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
-    ctx.on(turnReady, (session, signal) => setups.ready(session.cwd, signal).catch(report))
+    ctx.on(turnReady, (_start, session, signal) => setups.ready(session.cwd, signal).catch(report))
     ctx.on(turnStart, (session, prompt) => {
       if (session.kind !== 'thread') return
       nameOnFirstTurn(deps, session, textOf(prompt.content)).catch(error =>

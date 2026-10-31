@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Changes tab in the right panel: the thread's git diff by file, in unified or split view, with lines you can quote into the reply",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Changes panel",
@@ -10,12 +13,11 @@
   },
   "dependencies": {
     "@sand/composer": "workspace:*",
-    "@sand/devices-contract": "workspace:*",
     "@sand/files-panel": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-diff": "workspace:*",
+    "@sand/git-diff-view": "workspace:*",
     "@sand/keys": "workspace:*",
-    "@sand/markdown": "workspace:*",
     "@sand/panel": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",

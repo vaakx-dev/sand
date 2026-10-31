@@ -30,8 +30,9 @@ export const createFrame = (ctx: LoopsContext) => {
   const open = async (session: Session, prompt: Prompt) => {
     const user: Message = { role: 'user', content: await ctx.waterfall(turnPrompt, promptContent(prompt), session) }
     started.add(session.id)
-    session.append('message', user)
+    const start = session.append('message', user)
     ctx.emit(turnStart, session, user)
+    return start
   }
 
   const run = async (session: Session, prompt: Prompt, external?: AbortSignal): Promise<TurnResult> => {
@@ -45,8 +46,7 @@ export const createFrame = (ctx: LoopsContext) => {
     let failure: { error: unknown } | undefined
     try {
       try {
-        await open(session, prompt)
-        await ctx.bail(turnReady, session, signal)
+        await ctx.waterfall(turnReady, await open(session, prompt), session, signal)
         signal.throwIfAborted()
         const outcome = await runReact({ signal, hooks })
         state.stopReason = outcome.stopReason

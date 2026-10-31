@@ -9,10 +9,12 @@
   "sand": {
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "Git diff",
     "summary": "Reads what changed in a thread's folder straight from git"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
