@@ -1,8 +1,16 @@
-export type DiffKind = 'add' | 'del' | 'ctx' | 'gap'
+export type DiffKind = 'add' | 'del' | 'ctx' | 'gap' | 'empty'
+
+export interface DiffSpan {
+  start: number
+  end: number
+}
 
 export interface DiffLine {
   kind: DiffKind
   text: string
+  old?: number
+  new?: number
+  marks?: DiffSpan[]
 }
 
 export const lcsLines = (before: string[], after: string[]): DiffLine[] => {

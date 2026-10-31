@@ -1,0 +1,25 @@
+{
+  "name": "@sand/git-changes",
+  "version": "0.0.0",
+  "description": "Changes tab in the right panel: the thread's git diff by file, in unified or split view, with lines you can quote into the reply",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Changes panel",
+    "summary": "Review the thread's git changes and quote lines into the reply"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/files-panel": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/keys": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

@@ -21,6 +21,7 @@ export interface GitOptions {
 export interface GitLines {
   code: number
   lines: string[]
+  err: string
 }
 
 export interface GitProblem {
@@ -119,10 +120,19 @@ export const gitBranches = request('git.branches', {
 export const gitLocalChange = wireEvent<{ cwd: string; local: GitLocal }>('git.local')
 export const gitRemoteChange = wireEvent<{ cwd: string; remote: GitRemote }>('git.remote')
 
+export interface GitBase {
+  branch: string
+  ref: string
+  label: string
+  commit: string
+}
+
 export interface GitRepo {
   status(cwd: string): Promise<GitStatus>
   local(cwd: string): Promise<GitLocal>
   branches(cwd: string, query?: string, limit?: number): Promise<GitBranches>
+  defaultBranch(cwd: string): Promise<string | undefined>
+  base(cwd: string): Promise<GitBase | undefined>
   refresh(cwd: string): Promise<void>
   fetch(cwd: string): Promise<void>
 }

@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Git in the thread header: the branch chip opens a branch picker and one button commits, pushes or pulls the thread's folder",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "web": "./src/index.ts",
     "label": "Git control",

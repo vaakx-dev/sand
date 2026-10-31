@@ -1,0 +1,29 @@
+{
+  "name": "@sand/worktrees",
+  "version": "0.0.0",
+  "description": "Gives a thread its own git worktree: creates, sets up, names, moves into, removes and restores worktrees on the PC that holds the repo",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "label": "Worktrees",
+    "summary": "Lets a thread work in its own folder and branch"
+  },
+  "dependencies": {
+    "@sand/ask": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

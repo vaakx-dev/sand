@@ -10,6 +10,7 @@ export type * from './turn'
 export const loop = service<Loop>('loop')
 
 export const turnStart = event<(session: Session, prompt: Message) => void>('turn.start')
+export const turnReady = event<(session: Session, signal: AbortSignal) => Promise<void> | void>('turn.ready')
 export const turnEnd = event<(session: Session, result: TurnResult) => void>('turn.end')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
 export const turnInbox = event<(content: UserContent[], session: Session) => UserContent[]>('turn.inbox')

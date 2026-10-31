@@ -1,8 +1,9 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
 import type { TurnResult } from '@sand/loop/contract'
-import type { Entry, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
+import type { Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
 import type { Pending } from '@sand/steering/contract'
+import type { Dispose } from 'drydock'
 
 export interface ToolProgress {
   running: Set<string>
@@ -39,6 +40,8 @@ export interface DraftTarget {
   device: string
 }
 
+export type ThreadCreator = (target: DraftTarget) => Promise<SessionInfo> | undefined
+
 export interface Threads {
   cwd(): string
   device(): string
@@ -48,7 +51,8 @@ export interface Threads {
   get(id: string): Thread | undefined
   current(): Thread | undefined
   children(id: string): Thread[]
-  create(target: Omit<DraftTarget, 'id'>): Promise<Thread>
+  create(target: Omit<DraftTarget, 'id'> & { id?: string }): Promise<Thread>
+  creator(make: ThreadCreator): Dispose
   rename(id: string, title: string): Promise<void>
   pin(id: string, pinned: boolean): Promise<void>
   settle(id: string, settled: boolean): Promise<void>

@@ -22,6 +22,6 @@ export const gitLines = (cwd: string, args: string[], max: number, options: GitO
     const draining = new Response(child.stderr).text()
     const { lines, full } = await firstLines(child.stdout, max)
     if (full) child.kill()
-    const [code] = await Promise.all([child.exited, draining])
-    return { code: full ? 0 : code, lines }
+    const [code, err] = await Promise.all([child.exited, draining])
+    return { code: full ? 0 : code, lines, err }
   })

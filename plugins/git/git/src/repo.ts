@@ -1,5 +1,6 @@
 import type { GitLocal, GitRepo, GitStatus } from './contract'
 import { listBranches } from './branches/list'
+import { createDefaults } from './default/defaults'
 import { readLayout } from './status/layout'
 import { readLocal } from './status/local'
 import { createWatches, type WatchDeps } from './watch/watches'
@@ -16,16 +17,22 @@ const local = async (cwd: string): Promise<GitLocal> => {
 }
 
 export const createGitRepo = (deps: WatchDeps): GitRepoHost => {
-  const watches = createWatches(deps)
+  const defaults = createDefaults()
+  const watches = createWatches(deps, defaults.forget)
   return {
     repo: {
       status: watches.status,
       local,
       branches: listBranches,
+      defaultBranch: defaults.branch,
+      base: defaults.base,
       refresh: watches.refresh,
       fetch: watches.fetch,
     },
     watch: watches.lease,
-    close: watches.close,
+    close() {
+      watches.close()
+      defaults.clear()
+    },
   }
 }

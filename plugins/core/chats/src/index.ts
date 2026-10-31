@@ -38,6 +38,7 @@ export default definePlugin({
       running: id => running.has(id),
       closing: session => ctx.bail(sessionClosing, session),
       projectOf: cwd => ctx.projectFiles.ofFolder(cwd),
+      knownProject: id => ctx.projectFiles.copies().some(copy => copy.project === id),
       scratch: id => join(home, 'scratch', id),
     })
     ctx.provide(sessions, store.sessions)

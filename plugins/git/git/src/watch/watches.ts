@@ -31,13 +31,16 @@ export interface Watches {
 
 const notRepo = (cwd: string): GitStatus => ({ cwd, local: { repo: false } })
 
-export const createWatches = (deps: WatchDeps): Watches => {
+export const createWatches = (deps: WatchDeps, refsMoved: (commonDir: string) => void): Watches => {
   const leases = new Map<string, Lease>()
   const trees = new Map<string, Tree>()
   const repos = new Map<string, Repo>()
   let closed = false
 
-  const touchRepo = (commonDir: string) => Promise.all([...(repos.get(commonDir)?.trees ?? [])].map(root => trees.get(root)?.update(true)))
+  const touchRepo = (commonDir: string) => {
+    refsMoved(commonDir)
+    return Promise.all([...(repos.get(commonDir)?.trees ?? [])].map(root => trees.get(root)?.update(true)))
+  }
 
   const fetches = createFetches(touchRepo)
   const treeDeps: TreeDeps = { ...deps, fetched: fetches.info }
@@ -123,7 +126,8 @@ export const createWatches = (deps: WatchDeps): Watches => {
       return tree.status(cwd, layout.prefix)
     },
     async refresh(cwd) {
-      const { tree } = await treeOf(cwd)
+      const { layout, tree } = await treeOf(cwd)
+      if (layout) refsMoved(layout.commonDir)
       await tree?.update(true, true)
     },
     async fetch(cwd) {

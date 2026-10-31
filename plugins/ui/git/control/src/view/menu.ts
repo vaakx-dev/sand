@@ -5,6 +5,7 @@ import { canAsk } from '../agent/ask'
 import { defaultName, isDiverged, repoOf, upstreamName } from '../next/facts'
 import { catchUpBehind, commitReason, pullReason, pushReason } from '../next/reasons'
 import type { ControlParts } from '../parts'
+import { sectionItems } from './sections'
 
 interface Entry {
   icon: string
@@ -76,5 +77,6 @@ export const actionMenu = (parts: ControlParts, close: () => void): Child[] => {
   ]
   const agent = agentEntries(parts)
   const items = git.map(item => entry(parts, close, item))
-  return agent.length ? [...items, kit.menuSeparator(), ...agent.map(item => entry(parts, close, item))] : items
+  const own = agent.length ? [...items, kit.menuSeparator(), ...agent.map(item => entry(parts, close, item))] : items
+  return status ? [...own, ...sectionItems(parts, status, close)] : own
 }

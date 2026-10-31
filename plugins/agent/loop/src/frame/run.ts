@@ -2,7 +2,7 @@ import type { Message, Prompt, Session } from '@sand/chats/contract'
 import { promptContent, textOf } from '@sand/chats/prompt'
 import { emptyUsage } from '@sand/usage/records'
 import type { LoopsContext } from '../context'
-import { turnEnd, turnPrompt, turnStart, type TurnEnding, type TurnResult } from '../contract'
+import { turnEnd, turnPrompt, turnReady, turnStart, type TurnEnding, type TurnResult } from '../contract'
 import { runReact } from '../react'
 import type { TurnHooks } from '../turn'
 import { createHooks } from './hooks'
@@ -46,6 +46,8 @@ export const createFrame = (ctx: LoopsContext) => {
     try {
       try {
         await open(session, prompt)
+        await ctx.bail(turnReady, session, signal)
+        signal.throwIfAborted()
         const outcome = await runReact({ signal, hooks })
         state.stopReason = outcome.stopReason
         state.reply = outcome.text
