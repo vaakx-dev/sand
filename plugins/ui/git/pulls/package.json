@@ -1,7 +1,7 @@
 {
   "name": "@sand/git-pulls",
   "version": "0.0.0",
-  "description": "Pull requests on threads: the header chip, the PR panel tab with the next step, the Create PR sheet, sidebar pills, palette commands and GitHub sign-in",
+  "description": "Pull requests on threads: the PR panel tab with the next step, the Create PR sheet, sidebar pills, palette commands and GitHub sign-in",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -17,7 +17,6 @@
     "@sand/git-actions": "workspace:*",
     "@sand/git-control": "workspace:*",
     "@sand/github": "workspace:*",
-    "@sand/header": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/panel": "workspace:*",

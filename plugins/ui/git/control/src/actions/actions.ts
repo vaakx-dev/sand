@@ -1,7 +1,8 @@
 import { repoOf } from '@sand/git/contract'
 import { askAgent } from '../agent/ask'
-import type { AgentPrompt } from '../agent/prompts'
+import { type AgentPrompt, rebasePrompt } from '../agent/prompts'
 import type { GitBaseAction, GitCommitRequest } from '../contract'
+import { upstreamName } from '../next/facts'
 import type { ControlContext } from '../inject'
 import { committedTitle, initTitle, pulledTitle, pushedTitle, pushFailedLead, switchedTitle } from '../results/titles'
 import type { Runs } from '../runs/runs'
@@ -91,7 +92,8 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
     if (next.id === 'commit-push') return commit({ push: true }, at)
     if (next.id === 'push') return guardedPush(at)
     if (next.id === 'pull') return pull(at)
-    return Promise.resolve(false)
+    askAgent(ctx, at.thread, rebasePrompt(at.status.remote ? upstreamName(at.status.remote) : 'the remote'))
+    return Promise.resolve(true)
   }
 
   const withTarget =

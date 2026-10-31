@@ -1,3 +1,4 @@
+import type { GitMove } from '@sand/git-control/contract'
 import { repoOf } from '@sand/git/contract'
 import { picker } from '@sand/picker/contract'
 import type { Thread } from '@sand/web-client/contract'
@@ -27,8 +28,19 @@ const move = async (ctx: WorkspaceContext, thread: Thread, branch: string) => {
   if (moved.id !== thread.id) await ctx.threads.select(moved.id)
 }
 
-export const moveThread = async (ctx: WorkspaceContext, thread: Thread) => {
+const moveThread = async (ctx: WorkspaceContext, thread: Thread) => {
   const branch = await askBranch(ctx)
   if (branch === undefined) return
   await ctx.toasts.attempt(toastId, 'Could not move to a new worktree', () => move(ctx, thread, branch))
 }
+
+export const worktreeMove = (ctx: WorkspaceContext): GitMove => ({
+  id: 'git-workspace.move',
+  label: 'Move to a new worktree…',
+  title: 'Its own folder and branch; this checkout stays as it is',
+  offers: ({ status, thread }) => {
+    const local = repoOf(status)
+    return thread.info.kind !== 'quick' && Boolean(local && !local.worktree)
+  },
+  run: thread => moveThread(ctx, thread),
+})

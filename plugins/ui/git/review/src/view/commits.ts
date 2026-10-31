@@ -36,7 +36,7 @@ export const commitMenu = (tab: CodeTab) => {
             close()
           },
         },
-        'All commits',
+        span({ class: 'min-w-0 flex-1 truncate' }, 'All commits'),
       ),
       ...commits.get().map(commit => commitItem(tab, commit, close)),
     ],

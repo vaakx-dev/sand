@@ -1,4 +1,4 @@
-import { span } from '@vaakx-dev/vrui'
+import { dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Shown } from '../shown'
 
 export const updateItems = (shown: Shown, close: () => void) => {
@@ -14,18 +14,18 @@ export const updateItems = (shown: Shown, close: () => void) => {
   ]
 }
 
-export const updateSplit = (shown: Shown) => {
+export const updateAction = (shown: Shown) => {
   const { kit } = shown.parts
-  const behind = shown.pull().behindBy
-  return kit.splitButton(
+  const { base, behindBy } = shown.pull()
+  const busy = shown.model.busy
+  return kit.quietButton(
     {
+      size: 'sm',
+      title: `${behindBy ? `${behindBy} commits behind ${base}` : `Behind ${base}`}. Merges ${base} in; rebasing is in the ⋯ menu.`,
+      disabled: busy,
       onClick: () => void shown.actions.update(false),
-      menu: close => updateItems(shown, close),
-      busy: shown.model.busy,
-      title: behind ? `${behind} commits behind ${shown.pull().base}` : `Behind ${shown.pull().base}`,
-      menuTitle: 'How to update',
     },
-    kit.icon('pull', 14),
-    'Update branch',
+    dynamicChild(busy, on => (on ? kit.spinner(14) : kit.icon('pull', 14))),
+    () => (busy.get() ? 'Updating…' : 'Update branch'),
   )
 }

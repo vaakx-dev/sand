@@ -2,18 +2,17 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, list, type Child } from '@vaakx-dev/vrui'
 import type { ChangesModel } from '../model/model'
 import type { Phase } from '../model/phase'
-import { fileList } from './file-list'
 import type { ChangesServices, ViewParts } from './parts'
 import { quoteBar } from './quote-bar'
 import { fileSection } from './section'
-import { sectionIndex } from './sections'
 import { toolbar } from './toolbar'
+import { truncatedNote } from './truncated-note'
 
 const inset = (child: Child) => div({ class: 'px-2' }, child)
 
 const readyView = (parts: ViewParts) =>
   div(
-    fileList(parts),
+    truncatedNote(parts),
     list(
       parts.model.files,
       file => file.path,
@@ -38,7 +37,7 @@ const content = (parts: ViewParts, phase: Phase) => {
 }
 
 export const changesPage = (kit: Kit, model: ChangesModel, services: ChangesServices) => {
-  const parts: ViewParts = { ...services, kit, model, layout: services.diff.layout(), sections: sectionIndex() }
+  const parts: ViewParts = { ...services, kit, model, layout: services.diff.layout() }
   return div(
     { class: 'absolute inset-0' },
     div(

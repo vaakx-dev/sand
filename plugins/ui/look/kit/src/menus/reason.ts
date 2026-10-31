@@ -1,12 +1,3 @@
-import type { Child } from '@vaakx-dev/vrui'
-import { metaLine } from '../heads/text'
+import { span, type Child } from '@vaakx-dev/vrui'
 
-const reasons = new WeakSet<Node>()
-
-export const menuReason = (text: Child) => {
-  const line = metaLine(text)
-  reasons.add(line)
-  return line
-}
-
-export const hasReason = (children: Child[]) => children.some(child => child instanceof Node && reasons.has(child))
+export const menuReason = (text: Child) => span({ class: 'ml-auto min-w-0 shrink truncate pl-3 text-xs text-neutral-500' }, text)

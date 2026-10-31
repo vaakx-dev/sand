@@ -9,9 +9,9 @@ export const toolbar = (tab: CodeTab) => {
     return now.kind === 'ready' ? `${now.files.viewed} of ${now.files.total} viewed` : ''
   })
   return kit.paneHead(
-    { led: true, class: [kit.layer.sticky, 'sticky top-0 bg-neutral-950'] },
+    { led: true, class: [kit.layer.menu, 'sticky top-0 bg-neutral-950'] },
     commitMenu(tab),
-    span({ class: 'shrink-0 text-sm text-neutral-400' }, counts),
+    kit.metaLine(counts),
     span({ class: 'flex-1' }),
     layout.splitButton(),
   )

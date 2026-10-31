@@ -18,8 +18,9 @@ import { workspaceSource } from './palette/source'
 import { setupCard } from './setup/card'
 import { followSetup } from './setup/follow'
 import { cleanUpAction } from './thread/clean-up'
+import { worktreeMove } from './thread/move'
 import { preloadWorktrees } from './thread/preload'
-import { threadSection } from './thread/section'
+import { moveSection, removeSection } from './thread/section'
 import { worktreeCache } from './worktrees/cache'
 
 export default definePlugin({
@@ -60,8 +61,16 @@ export default definePlugin({
     ctx.watch(threadPullsClient, found => {
       pulls.set(found)
     })
+    const move = worktreeMove(ctx)
     ctx.watch(gitControl, found =>
-      found ? joinDisposers(found.menu.section(threadSection(ctx, cache)), found.actions.register(cleanUpAction(ctx, cache, pulls))) : undefined,
+      found
+        ? joinDisposers(
+            found.moves.register(move),
+            found.menu.section(moveSection(ctx, move)),
+            found.menu.section(removeSection(ctx, cache)),
+            found.actions.register(cleanUpAction(ctx, cache, pulls)),
+          )
+        : undefined,
     )
     ctx.watch(palette, found => found?.source(workspaceSource(ctx, choices, cache)))
   },

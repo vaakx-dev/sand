@@ -51,10 +51,15 @@ const foldLine = (shown: Shown, resolved: () => number, bots: () => number, show
   const toggle = (on: Sig<boolean>, count: () => number, noun: string) =>
     show(
       () => count() > 0,
-      () => kit.linkButton({ class: 'text-xs', onClick: on.toggle() }, () => `${on.get() ? 'Hide' : 'Show'} ${plural(count(), noun)}`),
+      () =>
+        kit.quietButton(
+          { size: 'sm', 'aria-expanded': () => String(on.get()), onClick: on.toggle() },
+          () => `${on.get() ? 'Hide' : 'Show'} ${plural(count(), noun)}`,
+          kit.chevron(() => on.get()),
+        ),
     )
   return div(
-    { class: 'flex flex-wrap items-center gap-3' },
+    { class: 'flex flex-wrap items-center gap-2' },
     toggle(showResolved, resolved, 'resolved conversation'),
     toggle(showBots, bots, 'bot comment'),
   )

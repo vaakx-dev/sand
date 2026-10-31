@@ -56,6 +56,6 @@ export const workspaceChip = (ctx: WorkspaceContext, model: DraftModel, cache: W
         dynamicChild(glyph, name => kit.icon(name, 'sm')),
         span({ class: 'min-w-0 truncate' }, label),
       ),
-      show(open, () => kit.chipPopover(close, { class: 'left-0 w-80' }, chipMenu(menu))),
+      show(open, () => kit.chipPopover(close, { class: 'left-0' }, chipMenu(menu))),
     )
 }

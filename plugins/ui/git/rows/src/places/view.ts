@@ -9,6 +9,7 @@ export interface Change {
 
 export interface PlaceView {
   branch: Derive<string | undefined>
+  worktree: Derive<boolean>
   change: Derive<Change | undefined>
 }
 
@@ -35,7 +36,11 @@ export const placeView = () =>
     const status = sig<GitStatus | undefined>(undefined)
     const { value: view, scope } = collectScope((): PlaceView => {
       const local = derive(() => repoOf(status.get()))
-      return { branch: derive(() => branchOf(local.get())), change: steady(() => changeOf(local.get())) }
+      return {
+        branch: derive(() => branchOf(local.get())),
+        worktree: derive(() => Boolean(local.get()?.worktree)),
+        change: steady(() => changeOf(local.get())),
+      }
     })
     return { status, view, dispose: () => disposeAll(scope) }
   })

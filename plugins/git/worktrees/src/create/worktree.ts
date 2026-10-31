@@ -2,7 +2,7 @@ import { errorMessage } from '@sand/util'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { WorktreeDeps } from '../deps'
-import type { PlannedStep, WorktreeRecord } from '../records/schema'
+import type { WorktreeRecord } from '../records/schema'
 import { branchExists } from '../repo/refs'
 import { longGitMs } from '../repo/timeout'
 import { planSteps } from '../setup/plan'
@@ -15,7 +15,6 @@ export interface NewWorktree {
   start: string
   base: string
   branch?: string
-  steps: PlannedStep[]
 }
 
 export interface BranchWorktree {
@@ -32,11 +31,10 @@ interface Addition {
   base?: string
   temp?: string
   adopted?: true
-  steps: PlannedStep[]
 }
 
 const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<WorktreeRecord> => {
-  const { main, path, args, branch, base, temp, adopted, steps } = addition
+  const { main, path, args, branch, base, temp, adopted } = addition
   const plan = await planSteps(main)
   await mkdir(dirname(path), { recursive: true })
   await deps.git.ok(main, ['worktree', 'add', ...args], { timeoutMs: longGitMs, what: "Couldn't create the worktree" })
@@ -50,7 +48,7 @@ const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<Work
     created: Date.now(),
     ...(temp ? { temp } : {}),
     ...(adopted ? { adopted } : {}),
-    setup: freshSetup(path, [...steps, doneStep('create', `Create ${path}`), ...plan]),
+    setup: freshSetup(path, [doneStep('create', `Create ${path}`), ...plan]),
   }
   try {
     await deps.store.put(record)
@@ -60,7 +58,7 @@ const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<Work
   return record
 }
 
-export const createWorktree = async (deps: WorktreeDeps, { main, start, base, branch, steps }: NewWorktree): Promise<WorktreeRecord> => {
+export const createWorktree = async (deps: WorktreeDeps, { main, start, base, branch }: NewWorktree): Promise<WorktreeRecord> => {
   const place = await freePlace(deps.git, deps.folder, main, deps.prefix)
   const name = branch ?? place.branch
   return addWorktree(deps, {
@@ -70,7 +68,6 @@ export const createWorktree = async (deps: WorktreeDeps, { main, start, base, br
     branch: name,
     base,
     ...(branch ? {} : { temp: name }),
-    steps,
   })
 }
 
@@ -84,7 +81,6 @@ export const branchWorktree = async (deps: WorktreeDeps, { main, branch, base }:
     branch,
     ...(base ? { base } : {}),
     adopted: true,
-    steps: [],
   })
 }
 

@@ -9,9 +9,10 @@ const groupsOf = (extras: ChangesScope[]) => {
   return [...groups]
 }
 
-const extraItem = ({ kit, model }: ViewParts, choice: ChangesScope, close: () => void) => {
-  const { add, del } = choice.stat ?? { add: 0, del: 0 }
-  return kit.choiceItem(
+const itemLabel = (text: string) => span({ class: 'min-w-0 flex-1 truncate' }, text)
+
+const extraItem = ({ kit, model }: ViewParts, choice: ChangesScope, close: () => void) =>
+  kit.choiceItem(
     {
       selected: () => model.scopeId.get() === choice.id,
       icon: choice.icon,
@@ -20,14 +21,10 @@ const extraItem = ({ kit, model }: ViewParts, choice: ChangesScope, close: () =>
         model.pick(choice.id)
       },
     },
-    span(
-      { class: 'flex min-w-0 flex-1 items-center gap-3' },
-      span({ class: 'min-w-0 flex-1 truncate' }, choice.label),
-      choice.stat ? kit.lineStat(add, del) : null,
-    ),
+    itemLabel(choice.label),
+    choice.stat ? kit.lineStat(choice.stat.add, choice.stat.del) : null,
     choice.detail ? kit.menuReason(choice.detail) : null,
   )
-}
 
 const extraItems = (parts: ViewParts, close: () => void): Child[] =>
   groupsOf(untrack(() => parts.model.extras.get())).flatMap(([group, choices]) => [
@@ -38,27 +35,26 @@ const extraItems = (parts: ViewParts, close: () => void): Child[] =>
 
 export const scopeMenu = (parts: ViewParts) => {
   const { kit, model } = parts
-  const { chipButton, choiceItem, dropdown, menuReason } = kit
-  return dropdown({
+  return kit.dropdown({
     menuClass: 'max-h-96 overflow-y-auto',
     trigger: (press, open) =>
-      chipButton(
+      kit.chipButton(
         { active: open, menu: true, title: 'Choose which changes to show', ...press },
         span({ class: 'min-w-0 truncate' }, () => scopeLabel(model.scopeId.get(), model.extras.get(), model.baseLabel.get())),
       ),
     items: close => [
       ...scopeChoices.map(choice =>
-        choiceItem(
+        kit.choiceItem(
           {
             selected: () => model.scopeId.get() === choice.id,
             icon: choice.icon,
+            title: choice.detail,
             onClick: () => {
               close()
               model.pick(choice.id)
             },
           },
-          choice.label(model.baseLabel.get()),
-          choice.detail ? menuReason(choice.detail) : null,
+          itemLabel(choice.label(model.baseLabel.get())),
         ),
       ),
       ...extraItems(parts, close),

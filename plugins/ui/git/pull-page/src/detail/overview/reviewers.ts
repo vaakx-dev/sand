@@ -59,7 +59,7 @@ export const reviewersBlock = (shown: Shown) => {
     div(
       { class: 'flex items-center gap-2' },
       span({ class: 'flex-1 text-xs text-neutral-500' }, () => (rows.get().length ? '' : 'No reviewers yet')),
-      isLivePull(shown.pull().state) && shown.pull().canEdit ? kit.linkButton({ class: 'text-xs', onClick: () => reviewersSheet(shown) }, 'Request review') : null,
+      isLivePull(shown.pull().state) && shown.pull().canEdit ? kit.quietButton({ size: 'sm', onClick: () => reviewersSheet(shown) }, 'Request review…') : null,
     ),
   )
 }

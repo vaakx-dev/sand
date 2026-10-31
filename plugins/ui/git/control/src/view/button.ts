@@ -5,56 +5,43 @@ import { actionMenu } from './menu'
 
 const menuLabel = 'Git actions'
 
-const splitView = (parts: ControlParts) => {
+const nextView = (parts: ControlParts) => {
   const { kit, model, runs, next } = parts
   const run = () => runs.at(model.place.get())
-  const glyph = next.map(action => (action?.busy ? undefined : action?.icon))
-  const title = () => {
-    const action = next.get()
-    if (action?.busy) return run()?.line ?? action.label
-    return action?.reason ?? action?.title ?? action?.label ?? ''
-  }
-  return kit.splitButton(
+  const busy = () => Boolean(next.get()?.busy)
+  const label = () => next.get()?.label ?? ''
+  const title = () => (busy() ? (run()?.line ?? label()) : (next.get()?.title ?? label()))
+  const glyph = derive(() => (busy() ? 'busy' : next.get()?.icon))
+  return kit.quietButton(
     {
       title,
-      disabled: () => next.get()?.disabled ?? true,
-      busy: () => next.get()?.busy ?? false,
-      menu: close => actionMenu(parts, close),
-      menuTitle: menuLabel,
+      'aria-label': label,
+      'aria-busy': () => String(busy()),
+      disabled: busy,
       onClick: () => {
-        const action = next.get()
-        if (action && !action.disabled) action.run()
+        if (!busy()) next.get()?.run()
       },
     },
-    dynamicChild(glyph, name => (name ? kit.icon(name, 14) : null)),
-    span({ class: 'hidden md:inline' }, () => next.get()?.label ?? ''),
-    span({ class: 'md:hidden' }, () => next.get()?.short ?? next.get()?.label ?? ''),
-    show(
-      () => Boolean(next.get()?.busy),
-      () => span({ class: 'font-normal' }, kit.elapsed(() => run()?.started)),
-    ),
+    dynamicChild(glyph, name => (name === 'busy' ? kit.spinner(14) : name ? kit.icon(name, 14) : null)),
+    span({ class: 'hidden md:inline' }, label),
+    show(busy, () => span({ class: 'hidden md:inline' }, kit.elapsed(() => run()?.started))),
   )
 }
 
-const menuView = (parts: ControlParts) => {
-  const { kit } = parts
-  return kit.dropdown({
-    placement: 'below-right',
-    class: 'shrink-0',
-    items: close => actionMenu(parts, close),
-    trigger: (press, open) => kit.iconButton({ ...press, active: open, title: menuLabel, 'aria-label': menuLabel }, kit.icon('more', 16)),
-  })
-}
+export const nextButton = (parts: ControlParts) =>
+  show(
+    () => Boolean(parts.next.get()),
+    () => nextView(parts),
+  )
 
-type ButtonKind = 'split' | 'menu' | 'none'
-
-const kindOf = (parts: ControlParts): ButtonKind => {
-  if (parts.next.get()) return 'split'
-  return repoOf(parts.model.status.get()) ? 'menu' : 'none'
-}
-
-export const actionButton = (parts: ControlParts) =>
-  dynamicChild(
-    derive(() => kindOf(parts)),
-    kind => (kind === 'split' ? splitView(parts) : kind === 'menu' ? menuView(parts) : null),
+export const menuButton = (parts: ControlParts) =>
+  show(
+    () => Boolean(repoOf(parts.model.status.get())),
+    () =>
+      parts.kit.dropdown({
+        placement: 'below-right',
+        class: 'shrink-0',
+        items: close => actionMenu(parts, close),
+        trigger: (press, open) => parts.kit.iconButton({ ...press, active: open, title: menuLabel, 'aria-label': menuLabel }, parts.kit.icon('more', 16)),
+      }),
   )

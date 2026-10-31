@@ -69,6 +69,7 @@ export const createThreadLinks = (deps: LinkDeps) => {
       if (on) deps.watched(pull)
       return result
     },
+    linkStack: (found: Session, pulls: PullRef[]) => change(found, links => pulls.reduce((next, pull) => withLink(next, pull, 'stack', Date.now()), links)),
     stopWatching: (found: Session) => change(found, withoutWatching),
     stopWatch: (found: Session, pull: PullRef) => change(found, links => withWatch(links, pull, false)),
     mark: (found: Session, pull: PullRef, mark: WatchMark, quiet: number, keepWatching: boolean) =>

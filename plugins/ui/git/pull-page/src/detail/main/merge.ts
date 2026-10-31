@@ -1,60 +1,40 @@
 import type { MergeMethod } from '@sand/github/contract'
-import { dynamicChild, sig, type Sig, span } from '@vaakx-dev/vrui'
+import type { Choice } from '@sand/ui-kit/contract'
+import { div, dynamicChild, sig } from '@vaakx-dev/vrui'
 import { confirmStep } from '../../confirm/step'
-import { chosenMethod, methodLabels, methodNotes, rememberMethod } from '../../pull/method'
+import { chosenMethod, methodNotes, rememberMethod } from '../../pull/method'
 import type { Shown } from '../shown'
 
-export interface MergeOptions {
-  auto: boolean
-  blocked?: string
-}
+const shortLabels: Record<MergeMethod, string> = { squash: 'Squash', merge: 'Merge commit', rebase: 'Rebase' }
 
-const methodItems = (shown: Shown, method: Sig<MergeMethod>, close: () => void) => {
-  const { kit } = shown.parts
-  const pull = shown.pull()
-  return pull.methods.map(choice =>
-    kit.choiceItem(
-      {
-        selected: () => method.get() === choice,
-        onClick: () => {
-          method.set(choice)
-          rememberMethod(pull.repo, choice)
-          close()
-        },
-      },
-      span({ class: 'min-w-0 flex-1 truncate' }, methodLabels[choice]),
-      kit.menuReason(methodNotes[choice]),
-    ),
-  )
-}
-
-export const mergeSplit = (shown: Shown, { auto, blocked }: MergeOptions) => {
+export const mergeAction = (shown: Shown, auto: boolean) => {
   const { parts, model, actions } = shown
+  const { kit } = parts
   const pull = shown.pull()
   const method = sig<MergeMethod>(chosenMethod(pull.repo, pull.methods))
   const confirm = confirmStep()
+  const choices: Choice<MergeMethod>[] = pull.methods.map(value => ({ value, label: shortLabels[value], title: methodNotes[value] }))
+  const choose = (value: MergeMethod) => {
+    method.set(value)
+    rememberMethod(pull.repo, value)
+    confirm.reset()
+  }
   const press = () => {
     if (auto) return void actions.merge(method.get(), true)
     confirm.press(() => void actions.merge(method.get()))
   }
   const label = () => {
+    if (model.busy.get()) return 'Merging…'
     if (confirm.armed.get()) return 'Confirm merge?'
-    return auto ? 'Merge when ready' : methodLabels[method.get()]
+    return auto ? 'Merge when ready' : 'Merge'
   }
-  const title = () => (auto ? `GitHub merges it (${methodLabels[method.get()].toLowerCase()}) once the checks pass` : (blocked ?? `Into ${pull.base}`))
-  return span(
-    { class: ['inline-flex rounded-md', confirm.ring] },
-    parts.kit.splitButton(
-      {
-        onClick: press,
-        menu: close => methodItems(shown, method, close),
-        disabled: Boolean(blocked),
-        busy: model.busy,
-        title,
-        menuTitle: 'Merge method',
-        menuDisabled: pull.methods.length < 2,
-      },
-      dynamicChild(confirm.armed, armed => parts.kit.icon(armed ? 'check' : 'merge', 14)),
+  const title = () => (auto ? `GitHub merges it once the checks pass` : `Into ${pull.base}`)
+  return div(
+    { class: 'flex flex-wrap items-center gap-2' },
+    choices.length > 1 ? kit.segmented(choices, method, choose, { label: 'Merge method' }) : null,
+    kit.primaryAction(
+      { size: 'sm', class: confirm.ring, title, disabled: model.busy, onClick: press },
+      dynamicChild(model.busy, busy => (busy ? kit.spinner(14) : kit.icon('merge', 14))),
       label,
     ),
   )

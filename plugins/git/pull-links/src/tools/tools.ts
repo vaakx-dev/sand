@@ -44,11 +44,26 @@ const linkInput = z.object({ ref: z.string().min(1).describe('A pull request URL
 const linkTool = (deps: ToolDeps): Tool<typeof linkInput> => ({
   name: 'link_pull_request',
   group,
-  description: 'Link a GitHub pull request to this thread so it shows in the thread and pull_request_status covers it. Pull requests for the thread\'s branch are linked on their own.',
+  description: 'Link a GitHub pull request to this thread so it shows in the thread and pull_request_status covers it. Pull requests for the thread\'s branch, ones you open with gh pr create and the rest of their stack are linked on their own.',
   input: linkInput,
   async run({ ref }, { session }) {
     const pulls = await deps.links.linkText(session.id, ref)
     return `Linked. This thread now has ${pulls.links.map(link => `#${link.number}`).join(', ')}.`
+  },
+})
+
+const linkedText = (numbers: number[]) => (numbers.length ? `This thread still has ${numbers.map(number => `#${number}`).join(', ')}.` : 'This thread has no linked pull requests now.')
+
+const unlinkTool = (deps: ToolDeps): Tool<typeof pickInput> => ({
+  name: 'unlink_pull_request',
+  group,
+  description: "Unlink a pull request from this thread. It stays unlinked: the thread's branch and its stack won't link it again.",
+  input: pickInput,
+  async run({ number }, { session }) {
+    const thread = deps.links.thread(session.id)
+    const link = pickLink(deps.links.read(thread.id), number)
+    const pulls = await deps.links.unlink(thread.id, link)
+    return `Unlinked #${link.number}. ${linkedText(pulls.links.map(each => each.number))}`
   },
 })
 
@@ -71,9 +86,10 @@ const watchTool = (deps: ToolDeps, on: boolean): Tool<typeof pickInput> => ({
 
 export const pullTools = (tools: Tools, deps: ToolDeps) =>
   joinDisposers(
-    tools.group({ name: group, label: 'Pull requests', summary: "check, link and watch the thread's GitHub pull requests", load: 'on-demand' }),
+    tools.group({ name: group, label: 'Pull requests', summary: "check, link, unlink and watch the thread's GitHub pull requests", load: 'on-demand' }),
     tools.register(statusTool(deps)),
     tools.register(linkTool(deps)),
+    tools.register(unlinkTool(deps)),
     tools.register(watchTool(deps, true)),
     tools.register(watchTool(deps, false)),
   )

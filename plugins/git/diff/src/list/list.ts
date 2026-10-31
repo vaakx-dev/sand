@@ -8,13 +8,16 @@ const maxFiles = 3000
 
 const changeList = ['--raw', '--numstat', '-z']
 
+const markUntracked = (files: DiffFile[], untracked: Set<string>) =>
+  files.map(file => (file.kind === 'added' && untracked.has(file.path) ? { ...file, kind: 'untracked' as const } : file))
+
 const sum = (files: DiffFile[], key: 'add' | 'del') => files.reduce((total, file) => total + file[key], 0)
 
 export const listDiff = async (tools: DiffGit, cwd: string, scope: DiffScope): Promise<DiffList> => {
   const { git } = tools
   const range = await resolveScope(tools, cwd, scope)
-  const { value: out, truncated } = await readRange(git, range, [], env => git.output(range.repo.root, diffArgs(range, changeList), { env, read: true }))
-  const files = parseChanges(out)
+  const { value: out, truncated, untracked } = await readRange(git, range, [], env => git.output(range.repo.root, diffArgs(range, changeList), { env, read: true }))
+  const files = markUntracked(parseChanges(out), new Set(untracked))
   const cut = truncated || files.length > maxFiles
   return {
     scope,

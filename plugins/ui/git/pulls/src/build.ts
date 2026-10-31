@@ -1,5 +1,6 @@
 import { type PullRef, pullKey } from '@sand/github/contract'
 import { panels } from '@sand/panel/contract'
+import { arrangePulls } from '@sand/pull-links/contract'
 import { threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/web-client/reactive'
 import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
@@ -7,7 +8,6 @@ import type { PullPlace, ThreadPullsClient } from './contract'
 import { createOpener } from './create/open'
 import type { PullsContext } from './inject'
 import { currentPlace } from './links/current'
-import { primaryOf } from './links/rank'
 import { panelId } from './panel/id'
 import { detailStates } from './panel/state'
 import type { PullParts } from './parts'
@@ -42,7 +42,8 @@ export const buildPulls = (ctx: PullsContext) => {
     })
     const states = detailStates()
     effect(() => states.keep(place.get()?.session, links.get()))
-    return { ctx, kit: ctx.kit, actions, states, place, links, primary: links.map(primaryOf), focus, create: creator.open, open }
+    const arrangement = links.map(arrangePulls)
+    return { ctx, kit: ctx.kit, actions, states, place, links, arrangement, primary: arrangement.map(found => found.primary), focus, create: creator.open, open }
   })
 
   const follow: ThreadPullsClient['follow'] = (at, onChange) =>
@@ -55,7 +56,7 @@ export const buildPulls = (ctx: PullsContext) => {
   const client: ThreadPullsClient = {
     follow,
     links: session => pullLinks.of(session),
-    primary: session => primaryOf(pullLinks.of(session)),
+    primary: session => arrangePulls(pullLinks.of(session)).primary,
     canCreate: at => github.authOf(at.device)?.state === 'signed-in' && Boolean(github.repoOf(at)) && pullLinks.loaded(at.device),
     create: creator.open,
     open,

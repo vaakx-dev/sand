@@ -23,8 +23,8 @@ const turnCard = (parts: TurnParts, turn: TurnInfo, snapshot: Sig<ListedTurn | u
   }
   const canReview = reviewable(parts, turn, snapshot)
   return div(
-    { class: 'mb-3 flex h-10 items-center gap-2 rounded-xl border border-neutral-800 pl-3 pr-1 text-sm text-neutral-100' },
-    span({ class: 'flex shrink-0 text-neutral-500' }, kit.icon('folder', 'sm')),
+    { class: 'mb-3 flex min-h-8 items-center gap-2 rounded-md px-2 text-sm text-neutral-400 transition-colors hover:bg-neutral-800' },
+    span({ class: 'flex shrink-0' }, kit.icon('folder', 14)),
     span({ class: 'min-w-0 truncate' }, () => `Changed ${plural(snapshot.get()?.files ?? 0, 'file')}`),
     kit.lineStat(
       () => snapshot.get()?.add ?? 0,

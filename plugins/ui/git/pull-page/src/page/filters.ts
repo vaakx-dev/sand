@@ -3,6 +3,7 @@ import type { Choice } from '@sand/ui-kit/contract'
 import { type Child, div, type Sig, show, span } from '@vaakx-dev/vrui'
 import type { StateFilter } from '../address/query'
 import type { PageParts } from '../parts'
+import { pageColumn } from './column'
 
 const stateChoices: { value: StateFilter; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -61,7 +62,7 @@ const projectChoices = (parts: PageParts): ChipChoice[] => [
 export const filtersRow = (parts: PageParts): Child => {
   const { kit, query } = parts
   return div(
-    { class: 'flex flex-wrap items-center gap-2 px-4 pb-2' },
+    { class: ['flex flex-wrap items-center gap-2 px-4 pb-2', pageColumn(parts)] },
     kit.segmented(viewChoices(parts), query.view, value => query.view.set(value), { label: 'Which pull requests' }),
     span({ class: 'flex-1' }),
     show(

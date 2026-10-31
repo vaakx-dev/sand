@@ -14,4 +14,4 @@ export const diffArgs = (range: Range, format: string[], paths: string[] = []) =
 ]
 
 export const readRange = async <T>(git: GitRunner, range: Range, paths: string[], work: (env: GitEnv) => Promise<T>): Promise<WorktreeRead<T>> =>
-  range.to ? { value: await work(literalPaths), truncated: false } : withUntracked(git, range.repo.root, paths, work)
+  range.to ? { value: await work(literalPaths), truncated: false, untracked: [] } : withUntracked(git, range.repo.root, paths, work)

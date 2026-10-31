@@ -39,6 +39,11 @@ export interface CheckCounts {
   nodes: (CheckNode | null)[] | null
 }
 
+export interface StackNode {
+  number: number
+  entries: { nodes: ({ position: number; pullRequest: { number: number } | null } | null)[] | null }
+}
+
 export interface PullNode {
   id: string
   number: number
@@ -58,6 +63,8 @@ export interface PullNode {
   mergeable: 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
   mergeStateStatus: string
   autoMergeRequest: { mergeMethod: 'MERGE' | 'SQUASH' | 'REBASE' } | null
+  stack: StackNode | null
+  stackEntry: { position: number } | null
   reviewThreads: { nodes: ({ isResolved: boolean } | null)[] | null }
   commits: { nodes: ({ commit: { statusCheckRollup: { contexts: CheckCounts } | null } } | null)[] | null }
 }

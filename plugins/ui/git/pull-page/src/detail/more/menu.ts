@@ -32,8 +32,7 @@ export const moreMenu = (shown: Shown) => {
   const { kit } = shown.parts
   return kit.dropdown({
     placement: 'below-right',
-    menuClass: 'w-80',
-    trigger: (press, open) => kit.iconButton({ ...press, active: open, title: 'More actions', 'aria-label': 'More actions' }, kit.icon('more')),
+    trigger: (press, open) => kit.iconButton({ ...press, size: 'sm', active: open, title: 'More actions', 'aria-label': 'More actions' }, kit.icon('more', 14)),
     items: close =>
       sections(shown, close)
         .filter(items => items.length)

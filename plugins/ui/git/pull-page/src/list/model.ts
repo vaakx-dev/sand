@@ -5,6 +5,7 @@ import { derive, effect, onTimeout, sig, untrack, type Derive } from '@vaakx-dev
 import type { QueryState } from '../address/state'
 import { type PageContext, toastId } from '../inject'
 import { reposFor, type RepoChoice } from '../projects/repos'
+import { isOneRepo } from './one-repo'
 
 type Phase = 'loading' | 'ready' | 'failed'
 
@@ -29,6 +30,7 @@ export const listModel = (ctx: PageContext, query: QueryState, choices: Derive<R
     repos: reposFor(choices.get(), query.project.get()),
   }))
   const signature = derive(() => JSON.stringify(request.get()))
+  const oneRepo = derive(() => isOneRepo(request.get().repos, request.get().q))
 
   const load = (fresh = false, quiet = false) => {
     const mine = ++token
@@ -97,6 +99,7 @@ export const listModel = (ctx: PageContext, query: QueryState, choices: Derive<R
     capped,
     more,
     view: shown,
+    oneRepo,
     load,
     loadMore,
     patch,

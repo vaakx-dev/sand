@@ -1,7 +1,8 @@
 import type { PullChecks, PullSummary } from '@sand/github/contract'
 import type { IconName, Kit, Tone } from '@sand/ui-kit/contract'
-import { duration } from '@sand/util'
-import { div, span } from '@vaakx-dev/vrui'
+import { duration, plural } from '@sand/util'
+import { type Child, div, show, type Sig, sig, span } from '@vaakx-dev/vrui'
+import { panelLine } from './line'
 
 type CheckRun = PullSummary['checkList'][number]
 type CheckState = CheckRun['state']
@@ -21,21 +22,33 @@ const looks: Record<CheckState, CheckLook> = {
 
 const order: Record<CheckState, number> = { fail: 0, pending: 1, pass: 2, skip: 3 }
 
-const counts = (checks: PullChecks) =>
-  [
-    { state: 'fail' as const, count: checks.failed },
-    { state: 'pending' as const, count: checks.pending },
-    { state: 'pass' as const, count: checks.passed },
-  ].filter(item => item.count > 0)
+const summaryText = (checks: PullChecks) => {
+  const found = [
+    checks.failed ? `${checks.failed} failing` : '',
+    checks.pending ? `${checks.pending} running` : '',
+    checks.passed ? `${plural(checks.passed, 'check')} passed` : '',
+  ].filter(Boolean)
+  return checks.state === 'none' ? '' : found.join(' · ')
+}
+
+const summaryState = (checks: PullChecks): CheckState => {
+  if (checks.failed) return 'fail'
+  return checks.pending ? 'pending' : 'pass'
+}
 
 const stateMark = (kit: Kit, look: CheckLook) => span({ class: ['inline-flex', kit.toneText[look.tone]] }, kit.icon(look.icon, 14))
 
-const summaryLine = (kit: Kit, checks: PullChecks) => {
-  const found = counts(checks)
-  const first = found[0]
-  if (checks.state === 'none' || !first) return kit.statusLine({ mark: kit.icon('check', 14), text: 'No checks', title: 'This pull request has no checks' })
-  const text = found.map(item => `${item.count} ${looks[item.state].label}`).join(' · ')
-  return kit.statusLine({ mark: stateMark(kit, looks[first.state]), text, title: `Checks: ${text}` })
+const toggle = (kit: Kit, open: Sig<boolean>) =>
+  kit.quietButton(
+    { size: 'sm', class: 'ml-auto', 'aria-expanded': () => String(open.get()), onClick: open.toggle() },
+    () => (open.get() ? 'Hide' : 'Show'),
+    kit.chevron(() => open.get()),
+  )
+
+const summaryLine = (kit: Kit, checks: PullChecks, more: Child) => {
+  const text = summaryText(checks)
+  if (!text) return kit.statusLine({ mark: kit.icon('check', 14), text: 'No checks', title: 'This pull request has no checks' })
+  return kit.statusLine({ mark: stateMark(kit, looks[summaryState(checks)]), text, title: `Checks: ${text}` }, more)
 }
 
 const runTools = (kit: Kit, run: CheckRun) => {
@@ -56,5 +69,17 @@ const runRow = (kit: Kit, run: CheckRun) => {
 
 const byState = (runs: CheckRun[]) => [...runs].sort((a, b) => order[a.state] - order[b.state])
 
-export const checksList = (kit: Kit, summary: PullSummary) =>
-  div({ class: 'flex flex-col gap-1' }, summaryLine(kit, summary.checks), ...byState(summary.checkList).map(run => runRow(kit, run)))
+const runRows = (kit: Kit, runs: CheckRun[]) => div({ class: 'flex flex-col gap-1 pl-6' }, ...runs.map(run => panelLine(runRow(kit, run))))
+
+export const checksList = (kit: Kit, summary: PullSummary) => {
+  const open = sig(false)
+  const runs = byState(summary.checkList)
+  const failing = runs.filter(run => run.state === 'fail')
+  const rest = runs.filter(run => run.state !== 'fail')
+  return div(
+    { class: 'flex flex-col gap-1' },
+    panelLine(summaryLine(kit, summary.checks, rest.length > 0 ? toggle(kit, open) : null)),
+    failing.length > 0 ? runRows(kit, failing) : null,
+    show(open, () => runRows(kit, rest)),
+  )
+}

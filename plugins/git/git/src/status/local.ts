@@ -1,3 +1,4 @@
+import { comparePaths } from '@sand/util'
 import { gitOk } from '../run/run'
 import type { GitFile, GitLayout, GitRepoLocal } from '../contract'
 import { readDefaultBranch } from './default-branch'
@@ -22,7 +23,8 @@ export const readLocal = async (layout: GitLayout): Promise<GitRepoLocal> => {
   const { root } = layout
   const [out, defaultBranch] = await Promise.all([gitOk(root, statusArgs, { read: true }), readDefaultBranch(root)])
   const { head, files } = parseStatus(out)
-  const counted = await countUntracked(root, withCounts(files, await readLineCounts(root, head.unborn)))
+  const ordered = files.sort((a, b) => comparePaths(a.path, b.path))
+  const counted = await countUntracked(root, withCounts(ordered, await readLineCounts(root, head.unborn)))
   return {
     repo: true,
     root,

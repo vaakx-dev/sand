@@ -24,7 +24,7 @@ const threadInExisting = async (deps: WorktreeDeps, path: string): Promise<Sessi
 
 const newRecord = (deps: WorktreeDeps, main: string, defaultBranch: string | undefined, { branch, from }: WorktreeThreadInput) => {
   if (branch) return branchWorktree(deps, { main, branch, ...(from ? { base: from } : {}) })
-  return resolveBase(deps.git, main, defaultBranch, from).then(base => createWorktree(deps, { main, start: base.start, base: base.name, steps: base.steps }))
+  return resolveBase(deps.git, main, defaultBranch, from).then(base => createWorktree(deps, { main, start: base.start, base: base.name }))
 }
 
 const threadInNew = async (deps: WorktreeDeps, input: WorktreeThreadInput): Promise<SessionInfo> => {

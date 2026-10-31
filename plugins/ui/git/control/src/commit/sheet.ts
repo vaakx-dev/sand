@@ -1,5 +1,6 @@
 import { repoOf } from '@sand/git/contract'
 import { derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
+import { pushAfterCommitReason } from '../next/reasons'
 import type { ControlParts } from '../parts'
 import type { CommitDraft } from './drafts'
 import { fileList } from './files'
@@ -15,7 +16,11 @@ export const commitSheet = (parts: ControlParts, draft: CommitDraft, close: () =
   const chosen = derive(() => files.get().filter(file => !draft.excluded.get().has(file.path)))
   const everything = () => truncated() || draft.excluded.get().size === 0
   const count = () => (everything() ? total() : chosen.get().length)
-  const pushable = derive(() => Boolean(model.status.get()?.remote?.remote))
+  const noPush = derive(() => {
+    const now = local.get()
+    return now ? pushAfterCommitReason(now, model.status.get()?.remote) : undefined
+  })
+  const pushable = noPush.map(reason => !reason)
   const writing = () => runs.at(model.place.get())?.action === 'message'
   const busy = () => Boolean(waiting.get())
   const blocked = () => busy() || count() === 0
@@ -35,7 +40,7 @@ export const commitSheet = (parts: ControlParts, draft: CommitDraft, close: () =
   const branchLine = kit.statusLine(
     {
       mark: kit.icon(local.get()?.worktree ? 'worktree' : 'branch', 16),
-      text: span({ class: 'font-mono text-neutral-100' }, branch),
+      text: span({ class: 'text-neutral-100' }, branch),
       title: branch,
     },
     span({ class: 'ml-auto shrink-0 text-neutral-500' }, () => `${count()} of ${total()} files`),
@@ -62,6 +67,10 @@ export const commitSheet = (parts: ControlParts, draft: CommitDraft, close: () =
         branchLine,
         fileList(kit, { files, draft, disabled: busy, all: truncated }),
         show(truncated, () => kit.sheetText(() => `Showing ${files.get().length} of ${total()} files. Too many to pick from, so all of them are committed.`)),
+        show(
+          () => !truncated() && Boolean(noPush.get()),
+          () => kit.sheetText(() => noPush.get() ?? ''),
+        ),
         div({ class: 'flex flex-col gap-2' }, kit.textArea({ bindValue: draft.message, placeholder, rows: 4 }), div({ class: 'flex justify-end' }, writeButton)),
       ),
       kit.sheetFoot(

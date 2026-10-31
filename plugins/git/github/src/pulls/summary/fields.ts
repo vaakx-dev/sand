@@ -18,6 +18,8 @@ fragment PullSummaryFields on PullRequest {
   mergeable
   mergeStateStatus
   autoMergeRequest { mergeMethod }
+  stack { number entries(first: 50) { nodes { position pullRequest { number } } } }
+  stackEntry { position }
   reviewThreads(first: 100) { nodes { isResolved } }
   commits(last: 1) {
     nodes {

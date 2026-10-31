@@ -1,7 +1,8 @@
 import { repoOf } from '@sand/git/contract'
 import { derive } from '@vaakx-dev/vrui'
 import type { Actions } from '../actions/actions'
-import type { GitActionContext, GitRunContext } from '../contract'
+import { canAsk } from '../agent/ask'
+import type { GitActionContext, GitBaseId, GitRunContext } from '../contract'
 import type { ControlContext } from '../inject'
 import { nextAction } from '../next/action'
 import { type ShownButton, shownButton } from '../next/shown'
@@ -11,6 +12,7 @@ import { type Picked, pickPrimary } from './pick'
 import type { PrimaryRegistry } from './registry'
 
 export interface ShownAction extends ShownButton {
+  base?: GitBaseId
   run(): void
 }
 
@@ -28,7 +30,7 @@ export const followPrimary = ({ ctx, model, runs, actions, registry }: PrimaryDe
     const status = model.status.get()
     if (!place || !status || !repoOf(status)) return undefined
     const id = model.thread.get()
-    return { status, place, thread: id ? ctx.threads.get(id) : undefined, base: nextAction(status) }
+    return { status, place, thread: id ? ctx.threads.get(id) : undefined, base: nextAction(status, canAsk(ctx, id)) }
   }
 
   const runContext = (): GitRunContext | undefined => {
@@ -53,6 +55,7 @@ export const followPrimary = ({ ctx, model, runs, actions, registry }: PrimaryDe
     if (!at) return undefined
     const picked = pickPrimary(registry.list(), at)
     const button = shownButton(picked?.button, { running: model.running.get(), phase: runs.at(at.place)?.phase })
-    return button && { ...button, run: () => picked && run(picked) }
+    const base = picked && !picked.owner && !button?.busy ? at.base?.id : undefined
+    return button && { ...button, base, run: () => picked && run(picked) }
   })
 }

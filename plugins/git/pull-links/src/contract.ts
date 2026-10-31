@@ -3,7 +3,9 @@ import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
-export type LinkSource = 'created' | 'branch' | 'linked' | 'opened'
+export { arrangePulls } from './arrange/arrange'
+
+export type LinkSource = 'created' | 'branch' | 'linked' | 'opened' | 'stack'
 
 export interface PullLink extends PullRef {
   source: LinkSource
@@ -15,6 +17,17 @@ export interface PullLink extends PullRef {
 export interface ThreadPulls {
   session: string
   links: PullLink[]
+}
+
+export interface PullLine {
+  link: PullLink
+  depth: number
+}
+
+export interface PullArrangement {
+  lines: PullLine[]
+  primary?: PullLink
+  stack: boolean
 }
 
 const session = z.string()

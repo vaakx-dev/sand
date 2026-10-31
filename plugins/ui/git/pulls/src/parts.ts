@@ -1,4 +1,4 @@
-import type { PullLink } from '@sand/pull-links/contract'
+import type { PullArrangement, PullLink } from '@sand/pull-links/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Derive, Sig } from '@vaakx-dev/vrui'
 import type { PullPlace } from './contract'
@@ -13,6 +13,7 @@ export interface PullParts {
   states: DetailStates
   place: Sig<PullPlace | undefined>
   links: Derive<PullLink[]>
+  arrangement: Derive<PullArrangement>
   primary: Derive<PullLink | undefined>
   focus: Sig<string | undefined>
   create(place: PullPlace): void

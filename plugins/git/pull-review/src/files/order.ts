@@ -1,3 +1,5 @@
+import { comparePaths } from '@sand/util'
+
 const lockFiles = new Set([
   'bun.lock',
   'bun.lockb',
@@ -38,5 +40,5 @@ const rank = (path: string) => {
 export const reviewOrder = <T extends { path: string }>(files: T[]) =>
   files
     .map(file => ({ file, rank: rank(file.path) }))
-    .sort((a, b) => a.rank - b.rank || a.file.path.localeCompare(b.file.path))
+    .sort((a, b) => a.rank - b.rank || comparePaths(a.file.path, b.file.path))
     .map(({ file }) => file)

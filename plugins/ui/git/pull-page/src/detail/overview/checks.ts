@@ -79,7 +79,12 @@ export const checksBlock = (shown: Shown) => {
       span({ class: 'min-w-0 flex-1 truncate' }, () => summaryText(checks())),
       show(
         () => shown.pull().checkList.length > 0,
-        () => kit.linkButton({ class: 'text-xs', 'aria-expanded': () => String(open.get()), onClick: open.toggle() }, () => (open.get() ? 'Hide' : 'Show')),
+        () =>
+          kit.quietButton(
+            { size: 'sm', 'aria-expanded': () => String(open.get()), onClick: open.toggle() },
+            () => (open.get() ? 'Hide' : 'Show'),
+            kit.chevron(() => open.get()),
+          ),
       ),
     ),
     show(open, () =>

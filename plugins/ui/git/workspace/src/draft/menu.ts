@@ -27,13 +27,12 @@ const defaultRow = (menu: ChipMenu, place: GitPlace) => {
   const { ctx, kit, model, defaults } = menu
   const project = ctx.get(projects)?.name(place.cwd, place.device) || 'this project'
   const differs = () => kindOf(model.current.get()) !== (defaults.get(place) ?? 'checkout')
-  const detail = () =>
-    kindOf(model.current.get()) === 'worktree' ? 'New threads start in a new worktree' : 'New threads start in the main checkout'
+  const where = () => (kindOf(model.current.get()) === 'worktree' ? 'a new worktree' : 'the main checkout')
   return show(differs, () =>
     div(
       { class: 'flex flex-col' },
       kit.menuSeparator(),
-      kit.menuItem({ icon: 'star', onClick: menu.makeDefault }, menuText(kit, { title: `Make this the default for ${project}`, detail: detail() })),
+      kit.menuItem({ icon: 'star', title: () => `New threads in ${project} start in ${where()}`, onClick: menu.makeDefault }, ...menuText(kit, { title: 'Make this the default' })),
     ),
   )
 }
@@ -51,19 +50,21 @@ const mainList = (menu: ChipMenu, place: GitPlace, showExisting: () => void) => 
     { class: 'flex flex-col' },
     kit.choiceItem(
       { selected: () => current().kind === 'checkout', icon: 'branch', onClick: () => pick({ kind: 'checkout' }) },
-      menuText(kit, { title: checkoutLabel(local), detail: local?.branch ? `On ${local.branch}` : undefined }),
+      ...menuText(kit, { title: checkoutLabel(local), detail: local?.branch }),
     ),
     kit.choiceItem(
-      { selected: () => isNewFromDefault(current()), icon: 'worktree', onClick: () => pick({ kind: 'new' }) },
-      menuText(kit, { title: `New worktree from ${defaultBranch(local)}`, detail: 'Its own folder and branch, named from your first message' }),
+      { selected: () => isNewFromDefault(current()), icon: 'worktree', title: 'Its own folder and branch, named from your first message', onClick: () => pick({ kind: 'new' }) },
+      ...menuText(kit, { title: 'New worktree', detail: `from ${defaultBranch(local)}` }),
     ),
+    trees.length
+      ? kit.choiceItem(
+          { selected: () => current().kind === 'existing', icon: 'worktree', title: existingSummary(trees), onClick: showExisting },
+          ...menuText(kit, { title: 'Existing worktree…', detail: String(trees.length) }),
+        )
+      : null,
     kit.choiceItem(
-      { selected: () => current().kind === 'existing', icon: 'worktree', disabled: trees.length === 0, onClick: showExisting },
-      menuText(kit, trees.length ? { title: 'Existing worktree…', detail: existingSummary(trees) } : { title: 'Existing worktree…', reason: 'No other worktrees yet' }),
-    ),
-    kit.choiceItem(
-      { selected: () => Boolean(from()), icon: 'branch', onClick: openBranches },
-      menuText(kit, { title: 'Start from another branch…', detail: from() ? `New worktree from ${from()}` : undefined }),
+      { selected: () => Boolean(from()), icon: 'branch', title: 'A new worktree that starts from a branch you pick', onClick: openBranches },
+      ...menuText(kit, { title: 'From another branch…', detail: from() }),
     ),
     defaultRow(menu, place),
   )

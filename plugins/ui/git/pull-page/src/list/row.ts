@@ -2,10 +2,9 @@ import { samePull } from '@sand/github/contract'
 import { pullRef, pullStateLook } from '@sand/github/look'
 import type { InboxPull } from '@sand/pull-inbox/contract'
 import { ago } from '@sand/util'
-import { type Derive, derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
+import { type Derive, derive, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import { threadChip } from '../links/chip'
 import type { PageParts } from '../parts'
-import { metaRow } from '../pull/meta'
 import { inlineMerge } from './merge'
 
 const repoName = (repo: string) => repo.split('/').at(-1) ?? repo
@@ -15,74 +14,62 @@ const stateMark = (parts: PageParts, pull: Sig<InboxPull>) =>
     pull.map(value => value.state),
     state => {
       const look = pullStateLook(state)
-      return span({ class: ['inline-flex shrink-0', parts.kit.toneText[look.tone]], title: look.label }, parts.kit.icon(look.icon, 16))
+      return span({ class: ['inline-flex', parts.kit.toneText[look.tone]], title: look.label }, parts.kit.icon(look.icon, 16))
     },
   )
 
-const rightSide = (parts: PageParts, pull: Sig<InboxPull>) =>
+const repeatsState = ({ state, reason }: InboxPull) => state !== 'draft' && reason.text === pullStateLook(state).label
+
+const canMergeHere = ({ reason, state }: InboxPull) => reason.group === 'ready' && state === 'open'
+
+const reasonBadge = (parts: PageParts, pull: Sig<InboxPull>) =>
   dynamicChild(
-    pull.map(value => (value.reason.group === 'ready' && value.state === 'open' ? 'merge' : 'reason')),
-    kind =>
-      kind === 'merge'
-        ? inlineMerge(parts, () => pull.get())
-        : dynamicChild(
-            pull.map(value => value.reason),
-            reason => parts.kit.badge(reason.tone, reason.text),
-          ),
+    pull.map(value => (repeatsState(value) || canMergeHere(value) ? undefined : value.reason)),
+    reason => (reason ? parts.kit.badge(reason.tone, reason.text) : null),
   )
 
-const linkedChips = (parts: PageParts, pull: Sig<InboxPull>) =>
-  list(
-    derive(() => parts.agent.linked(pull.get())),
-    linked => linked.session,
-    linked => threadChip(parts, () => linked.get()),
-    span({ class: 'flex min-w-0 items-center gap-1' }),
-  )
+const metaText = ({ author, repo, unresolved }: InboxPull, oneRepo: boolean) =>
+  [author, oneRepo ? '' : repoName(repo), unresolved > 0 ? `${unresolved} unresolved` : ''].filter(Boolean).join(' · ')
 
-const pullMeta = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) => {
-  const value = () => pull.get()
-  return metaRow(
-    span({ class: 'shrink-0' }, () => value().author),
-    span({ class: 'shrink-0 text-neutral-500' }, '·'),
-    span({ class: 'min-w-0 truncate', title: () => value().repo }, () => repoName(value().repo)),
-    show(
-      () => value().unresolved > 0,
-      () => span({ class: 'shrink-0' }, () => `· ${value().unresolved} unresolved`),
-    ),
-    linkedChips(parts, pull),
-    span({ class: 'flex-1' }),
-    parts.kit.lineStat(
-      () => value().add,
-      () => value().del,
-    ),
-    span({ class: 'shrink-0 tabular-nums', title: () => new Date(value().updated).toLocaleString() }, () => {
-      minute.get()
-      return ago(value().updated)
-    }),
-  )
-}
+const trail = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) => [
+  reasonBadge(parts, pull),
+  parts.kit.lineStat(
+    () => pull.get().add,
+    () => pull.get().del,
+  ),
+  span({ class: 'tabular-nums', title: () => new Date(pull.get().updated).toLocaleString() }, () => {
+    minute.get()
+    return ago(pull.get().updated)
+  }),
+]
 
-export const pullRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) => {
-  const { kit } = parts
-  const selected = () => {
-    const chosen = parts.selected.get()
-    return chosen ? samePull(chosen, pull.get()) : false
-  }
-  return div(
-    {
-      class: ['flex cursor-pointer flex-col gap-1 rounded-md px-3 py-2 transition-colors hover:bg-neutral-800', () => (selected() ? 'bg-neutral-800' : '')],
-      onClick: () => parts.select(pullRef(pull.get())),
-    },
-    div(
-      { class: 'flex min-w-0 items-center gap-2' },
-      stateMark(parts, pull),
-      kit.plainButton(
-        { class: 'min-w-0 flex-1 truncate text-left text-sm text-neutral-100', 'aria-current': () => String(selected()), title: () => pull.get().title },
-        () => pull.get().title,
-        span({ class: 'text-neutral-500' }, () => ` #${pull.get().number}`),
+const actions = (parts: PageParts, pull: Sig<InboxPull>) => [
+  show(
+    () => !parts.selected.get(),
+    () =>
+      list(
+        derive(() => parts.agent.linked(pull.get())),
+        linked => linked.session,
+        linked => threadChip(parts, () => linked.get()),
+        span({ class: 'flex min-w-0 items-center gap-1' }),
       ),
-      rightSide(parts, pull),
-    ),
-    pullMeta(parts, pull, minute),
-  )
-}
+  ),
+  show(
+    () => canMergeHere(pull.get()),
+    () => inlineMerge(parts, () => pull.get()),
+  ),
+]
+
+export const pullRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) =>
+  parts.kit.listRow({
+    lead: stateMark(parts, pull),
+    title: [() => pull.get().title, span({ class: 'text-neutral-500' }, () => ` #${pull.get().number}`)],
+    meta: () => metaText(pull.get(), parts.list.oneRepo.get()),
+    trail: trail(parts, pull, minute),
+    actions: actions(parts, pull),
+    current: () => {
+      const chosen = parts.selected.get()
+      return chosen ? samePull(chosen, pull.get()) : false
+    },
+    onClick: () => parts.select(pullRef(pull.get())),
+  })

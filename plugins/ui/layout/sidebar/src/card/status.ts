@@ -49,9 +49,9 @@ const runningStatus = (kit: Kit, item: Sig<ThreadItem>) => {
 const backgroundStatus = (kit: Kit, item: Sig<ThreadItem>) =>
   statusText('text-neutral-400', item.map(itemStatus), agentMark(kit), kit.elapsed(item.map(value => value.started)))
 
-const badgeSlot = (badge: Sig<Child[] | null>, shown: Sig<boolean>) =>
+export const badgeSlot = (badge: Sig<Child[] | null>, shown: Sig<boolean>) =>
   span(
-    { class: () => (shown.get() ? 'inline-flex' : 'hidden') },
+    { class: () => (shown.get() ? 'flex shrink-0 items-center text-xs' : 'hidden') },
     dynamicChild(badge, found => (found ? span({ class: 'inline-flex items-center gap-1.5 tabular-nums' }, found) : null)),
   )
 
@@ -75,8 +75,12 @@ const kindStatus = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>, kinds:
   })
 }
 
-export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>, badge: Sig<Child[] | null>) => {
-  const badged = derive(() => kindOf(item.get()) === '' && badge.get() !== null)
-  const kind = derive(() => (badged.get() ? 'badge' : kindOf(item.get())))
-  return [badgeSlot(badge, badged), kindStatus(kit, item, minute, kind)]
-}
+export const badgeShown = (item: Sig<ThreadItem>, badge: Sig<Child[] | null>) => derive(() => kindOf(item.get()) === '' && badge.get() !== null)
+
+export const status = (kit: Kit, item: Sig<ThreadItem>, minute: Sig<number>, badged: Sig<boolean>) =>
+  kindStatus(
+    kit,
+    item,
+    minute,
+    derive(() => (badged.get() ? 'badge' : kindOf(item.get()))),
+  )

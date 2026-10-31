@@ -21,7 +21,7 @@ export const inlineMerge = (parts: PageParts, pull: () => InboxPull) => {
     if (done) ctx.toasts.show({ id: toastId, tone: 'success', title: `Merged ${name}` })
   }
 
-  return kit.secondaryAction(
+  return kit.quietButton(
     {
       size: 'sm',
       class: confirm.ring,

@@ -56,7 +56,7 @@ export const unifiedRows = (look: RowLook, { lines }: PatchRows) =>
   withNotes(
     lines.map((_, index) => index),
     index => notesAt(look, [index]),
-    run => div({ class: 'overflow-x-auto' }, wide(run.map(index => lineRow(look, lines, index, 'both')))),
+    run => div({ class: 'scrollbars-thin overflow-x-auto' }, wide(run.map(index => lineRow(look, lines, index, 'both')))),
   )
 
 const sideRow = (look: RowLook, lines: DiffLine[], index: number | undefined, side: 'old' | 'new') => {
@@ -67,7 +67,7 @@ const sideRow = (look: RowLook, lines: DiffLine[], index: number | undefined, si
 
 const column = (look: RowLook, lines: DiffLine[], pairs: SplitPair[], side: 'old' | 'new') =>
   div(
-    { class: ['min-w-0 flex-1 overflow-x-auto', side === 'old' && 'border-r border-neutral-800'] },
+    { class: ['scrollbars-thin min-w-0 flex-1 overflow-x-auto', side === 'old' && 'border-r border-neutral-800'] },
     wide(pairs.map(pair => sideRow(look, lines, side === 'old' ? pair.left : pair.right, side))),
   )
 

@@ -4,7 +4,6 @@ import { copyButton } from './buttons/copy'
 import { floatButton } from './buttons/float'
 import { quoteButton } from './buttons/quote'
 import { rowAction } from './buttons/row-action'
-import { splitButton } from './buttons/split'
 import { toggleSwitch } from './buttons/toggle'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
@@ -13,7 +12,7 @@ import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { headTitle, pageHead, paneHead } from './heads/page-head'
 import { sectionHeading } from './heads/section-heading'
-import { countMark, metaLine, rowTitle } from './heads/text'
+import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
@@ -141,6 +140,7 @@ export const kit = {
   ownedByNode,
   pageHead,
   paneHead,
+  pathLabel,
   plainButton,
   popover,
   popupTrigger,
@@ -187,7 +187,6 @@ export const kit = {
   sideColumn,
   sideHead,
   spinner,
-  splitButton,
   stableGutter,
   starMark,
   statusBadge,

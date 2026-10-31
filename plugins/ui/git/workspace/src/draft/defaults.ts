@@ -1,3 +1,4 @@
+import { isPcUnavailable } from '@sand/devices-contract'
 import { type GitPlace, placeKey } from '@sand/git/contract'
 import type { WorkspaceKind } from '@sand/worktrees/contract'
 import { sig } from '@vaakx-dev/vrui'
@@ -15,7 +16,9 @@ export const workspaceDefaults = (ctx: WorkspaceContext) => {
     void ctx.worktrees
       .defaults({ cwd: place.cwd }, place.device)
       .then(found => remember(place, found.kind))
-      .catch(ctx.report)
+      .catch(error => {
+        if (!isPcUnavailable(error)) ctx.report(error)
+      })
   }
 
   const set = async (place: GitPlace, kind: WorkspaceKind) => {

@@ -24,7 +24,7 @@ export const fileList = (kit: Kit, { files, draft, disabled, all }: FileListProp
         title: span(
           { class: 'flex min-w-0 items-center gap-2' },
           kit.fileKindMark(() => item.get().kind),
-          span({ class: 'min-w-0 truncate font-mono text-xs', title: path }, path),
+          kit.pathLabel(path),
         ),
         trail: kit.lineStat(
           () => item.get().add,
@@ -32,5 +32,5 @@ export const fileList = (kit: Kit, { files, draft, disabled, all }: FileListProp
         ),
       })
     },
-    div({ class: 'flex max-h-80 flex-col overflow-auto rounded-md p-1 ring-1 ring-neutral-700' }),
+    div({ class: 'flex max-h-80 flex-col overflow-auto rounded-xl p-1 ring-1 ring-neutral-700' }),
   )

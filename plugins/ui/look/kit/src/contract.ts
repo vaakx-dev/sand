@@ -22,7 +22,6 @@ export interface MenuRequest extends PressAt, MenuSpec {
   expand?: string
 }
 
-export type { SplitButtonProps } from './buttons/split'
 export type { ContextMenu } from './context-menu/menu'
 export type { TextAreaProps } from './fields/field'
 export type { Direction } from './gesture/direction'

@@ -1,6 +1,7 @@
 import type { InboxView } from '@sand/pull-inbox/contract'
 import { clock, derive, div, dynamicChild, intersectionObserver, list, show, type Sig } from '@vaakx-dev/vrui'
 import type { StateFilter } from '../address/query'
+import { pageColumn } from '../page/column'
 import type { PageParts } from '../parts'
 import { type ListEntry, listEntries } from './groups'
 import { pullRow } from './row'
@@ -20,7 +21,7 @@ const emptyText = (view: InboxView, state: StateFilter, q: string) => {
 
 const groupHead = (parts: PageParts, entry: Sig<ListEntry>) => {
   const value = entry.get()
-  return div({ class: 'pt-3' }, parts.kit.sectionHeading(value.kind === 'group' ? value.title : ''))
+  return div({ class: 'px-2 pt-3' }, parts.kit.sectionHeading(value.kind === 'group' ? value.title : ''))
 }
 
 const entryView = (parts: PageParts, entry: Sig<ListEntry>, minute: ReturnType<typeof clock>) => {
@@ -53,7 +54,7 @@ const filledList = (parts: PageParts) => {
   const minute = clock(60_000)
   const entries = derive(() => listEntries(model.view.get(), model.pulls.get()))
   return div(
-    { class: 'flex flex-col px-2 pb-6' },
+    { class: ['flex flex-col px-2 pb-6', pageColumn(parts)] },
     list(
       entries,
       entry => entry.key,
@@ -61,7 +62,7 @@ const filledList = (parts: PageParts) => {
       div({ class: 'flex flex-col' }),
     ),
     dynamicChild(model.cursor, cursor => (cursor ? moreSentinel(parts) : null)),
-    show(model.capped, () => div({ class: 'px-3 pt-2' }, kit.metaLine('Showing the newest results. Narrow the search to find older ones.'))),
+    show(model.capped, () => div({ class: 'px-2 pt-2' }, kit.metaLine('Showing the newest results. Narrow the search to find older ones.'))),
   )
 }
 
@@ -80,9 +81,9 @@ export const listView = (parts: PageParts) => {
   return div(
     { class: 'min-h-0 flex-1 overflow-auto overscroll-contain', 'data-pull-list': '' },
     dynamicChild(shown, state => {
-      if (state === 'loading') return listSkeleton()
-      if (state === 'failed') return div({ class: 'p-3' }, kit.errorState({ text: () => model.failure.get(), retry: () => model.load() }))
-      if (state === 'empty') return div({ class: 'p-3' }, emptyList(parts))
+      if (state === 'loading') return div({ class: ['px-2', pageColumn(parts)] }, listSkeleton())
+      if (state === 'failed') return div({ class: ['px-2', pageColumn(parts)] }, kit.errorState({ text: () => model.failure.get(), retry: () => model.load() }))
+      if (state === 'empty') return div({ class: ['px-2', pageColumn(parts)] }, emptyList(parts))
       return filledList(parts)
     }),
   )

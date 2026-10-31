@@ -1,3 +1,4 @@
+import { type GitPlace, samePlace } from '@sand/git/contract'
 import { palette } from '@sand/palette/contract'
 import { owned } from '@sand/web-client/reactive'
 import { derive } from '@vaakx-dev/vrui'
@@ -6,6 +7,7 @@ import { branchPage } from './branches/page'
 import { commitOpener } from './commit/open'
 import type { ControlContext } from './inject'
 import { menuSections } from './menu/sections'
+import { moveRegistry } from './moves/registry'
 import { busyReason, waitReason } from './next/facts'
 import type { ControlParts } from './parts'
 import { followPrimary } from './primary/follow'
@@ -21,10 +23,15 @@ export const buildControl = (ctx: ControlContext) => {
   const sections = menuSections()
   const registry = primaryRegistry()
 
-  const openBranches = () => {
+  const switchBranch = (wanted: GitPlace) => {
     const at = model.place.get()
     const found = ctx.get(palette)
-    if (at && found) found.open(branchPage(parts, at))
+    if (at && found && samePlace(at, wanted)) found.open(branchPage(parts, at))
+  }
+
+  const openBranches = () => {
+    const at = model.place.get()
+    if (at) switchBranch(at)
   }
 
   const parts: ControlParts = owned(ctx, () => {
@@ -43,5 +50,5 @@ export const buildControl = (ctx: ControlContext) => {
     }
   })
 
-  return { parts, commit, sections, registry }
+  return { parts, commit, sections, registry, moves: moveRegistry(), switchBranch }
 }

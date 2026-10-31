@@ -1,7 +1,7 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { tildeHome } from '@sand/util'
-import { show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { div, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
 import { originLabels } from './filter'
 import { pluginMenu } from './menu'
 
@@ -44,14 +44,13 @@ const failureNote = ({ codeBlock, rowDetail }: Kit, plugin: PluginEntry, actions
   )
 }
 
-const offText = (needs: string[]) =>
-  needs.length ? `Off because it needs ${needs.join(', ')}, which sand.toml turns off.` : 'Turned off in sand.toml.'
-
-const offNote = ({ callout, rowDetail }: Kit, plugin: PluginEntry, actions: RowActions) =>
-  show(
-    () => actions.offNeeds(plugin.name) !== undefined,
-    () => rowDetail(callout({ tone: 'neutral', icon: 'info' }, span({ class: 'min-w-0 flex-1' }, () => offText(actions.offNeeds(plugin.name) ?? [])))),
+const offReason = (plugin: PluginEntry, actions: RowActions) => {
+  const needs = () => actions.offNeeds(plugin.name) ?? []
+  return show(
+    () => needs().length > 0,
+    () => div(() => `Off because it needs ${needs().join(', ')}, which sand.toml turns off.`),
   )
+}
 
 const marks = ({ badge }: Kit, plugin: PluginEntry, actions: RowActions) => [
   plugin.origin === 'builtin' ? null : badge('neutral', originLabels[plugin.origin]),
@@ -75,14 +74,13 @@ export const pluginRow = (kit: Kit, plugin: PluginEntry, actions: RowActions) =>
     {},
     menu.view(),
     settingsRow(
-      { ...menu.target(() => pluginMenu(plugin, actions, history)), title: plugin.name, detail: detail(plugin) },
+      { ...menu.target(() => pluginMenu(plugin, actions, history)), title: plugin.name, detail: [detail(plugin), offReason(plugin, actions)] },
       ...marks(kit, plugin, actions),
       tracked ? actions.historyToggle(key, history) : null,
       control(kit, plugin, actions),
     ),
     plugin.changed ? changedNote(kit, plugin, actions) : null,
     failureNote(kit, plugin, actions),
-    offNote(kit, plugin, actions),
     tracked ? actions.historyDetail(key, history) : null,
   )
 }

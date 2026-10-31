@@ -1,3 +1,4 @@
+import { isPcUnavailable, pcHello } from '@sand/devices-contract'
 import { type GitPlace, placeKey } from '@sand/git/contract'
 import type { Worktree } from '@sand/worktrees/contract'
 import { sig } from '@vaakx-dev/vrui'
@@ -27,7 +28,9 @@ export const worktreeCache = (ctx: WorkspaceContext) => {
   }
 
   const loadInBackground = (place: GitPlace) => {
-    void load(place).catch(ctx.report)
+    void load(place).catch(error => {
+      if (!isPcUnavailable(error)) ctx.report(error)
+    })
   }
 
   const get = (place: GitPlace) => {
@@ -39,11 +42,12 @@ export const worktreeCache = (ctx: WorkspaceContext) => {
     if (!lists.has(placeKey(place))) loadInBackground(place)
   }
 
-  const reload = (device: string) => {
-    for (const [key, place] of places) if (place.device === device && lists.has(key)) loadInBackground(place)
+  const reload = (device: string, missing: boolean) => {
+    for (const [key, place] of places) if (place.device === device && lists.has(key) !== missing) loadInBackground(place)
   }
 
-  ctx.effect(() => ctx.worktrees.onChange((_change, device) => reload(device)))
+  ctx.effect(() => ctx.worktrees.onChange((_change, device) => reload(device, false)))
+  ctx.on(pcHello, device => reload(device, true))
 
   return { get, load, ensure }
 }

@@ -1,5 +1,7 @@
+import { type GitControl, gitControl } from '@sand/git-control/contract'
 import type { PullSummary } from '@sand/github/contract'
 import { place } from '@sand/layout/place'
+import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { PullPlace } from '../contract'
 import { type PullsContext, toastId } from '../inject'
@@ -9,6 +11,10 @@ import { createSheet } from './sheet'
 
 export const createOpener = (ctx: PullsContext, show: (pull: PullSummary, at: PullPlace) => void) => {
   const drafts = createDrafts()
+  const control = sig<GitControl | undefined>(undefined)
+  ctx.watch(gitControl, found => {
+    control.set(found)
+  })
   let unplace: Dispose | undefined
 
   const close = () => {
@@ -30,11 +36,7 @@ export const createOpener = (ctx: PullsContext, show: (pull: PullSummary, at: Pu
     unplace = place(
       ctx,
       'overlay',
-      () => {
-        const model = createModel(ctx, at, draft)
-        if (!draft.written) void model.write()
-        return createSheet(ctx, model, close, opened)
-      },
+      () => createSheet(ctx, createModel(ctx, at, draft, control), close, opened),
       100,
     )
   }

@@ -26,7 +26,7 @@ export const fileTags = ({ kit, pending }: CodeTab, file: Sig<ReviewFile>) => {
     ),
     show(
       () => comments.get() > 0,
-      () => kit.badge('accent', () => plural(comments.get(), 'comment')),
+      () => kit.metaLine(() => plural(comments.get(), 'comment')),
     ),
   ]
 }

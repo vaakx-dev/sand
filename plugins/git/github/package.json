@@ -6,6 +6,7 @@
   "exports": {
     "./contract": "./src/contract.ts",
     "./look": "./src/web/look.ts",
+    "./facts": "./src/web/facts.ts",
     "./summary": "./src/summary.ts"
   },
   "sand": {

@@ -17,11 +17,11 @@ const place = (cwd: string) => cwd.split(/[\\/]/).filter(Boolean).slice(-3).join
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort(byPosition)
 
-const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<ThreadItem, 'project' | 'subtitle' | 'pcMark'> => {
+const where = (project: ProjectInfo, cwd: string, device: string, places: Places): Pick<ThreadItem, 'project' | 'pc' | 'folder' | 'pcMark'> => {
   const pc = places.pc(device)
   const mark = pc ? { pcMark: places.mark(device) } : {}
   if (project.quick) return { project: [project.name, pc].filter(Boolean).join(' · '), ...mark }
-  return { project: project.name, subtitle: [pc, !project.root && place(cwd)].filter(Boolean).join(' · ') || undefined, ...mark }
+  return { project: project.name, pc, folder: project.root ? undefined : place(cwd), ...mark }
 }
 
 const projectOf = (thread: Thread, lookup: ProjectLookup) =>

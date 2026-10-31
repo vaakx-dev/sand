@@ -24,14 +24,11 @@ export interface GitMenu {
 
 export interface GitButton {
   label: string
-  short?: string
   icon?: IconName
   title?: string
-  disabled?: boolean
-  reason?: string
 }
 
-export type GitBaseId = 'commit' | 'commit-push' | 'push' | 'pull' | 'diverged' | 'detached'
+export type GitBaseId = 'commit' | 'commit-push' | 'push' | 'pull' | 'rebase'
 
 export interface GitBaseAction extends GitButton {
   id: GitBaseId
@@ -71,9 +68,30 @@ export interface GitActions {
   register(action: GitPrimaryAction): Dispose
 }
 
+export interface GitMoveContext {
+  status: GitStatus
+  place: GitPlace
+  thread: Thread
+}
+
+export interface GitMove {
+  id: string
+  label: string
+  title?: string
+  offers(context: GitMoveContext): boolean
+  run(thread: Thread): Promise<void> | void
+}
+
+export interface GitMoves {
+  register(move: GitMove): Dispose
+  offered(context: GitMoveContext): GitMove[]
+}
+
 export interface GitControl {
   menu: GitMenu
   actions: GitActions
+  moves: GitMoves
+  switchBranch(place: GitPlace): void
 }
 
 export const gitControl = service<GitControl>('gitControl')

@@ -3,9 +3,7 @@ import { div, list } from '@vaakx-dev/vrui'
 import { toastCard } from './card'
 import type { ToastModel } from './model'
 
-const placement = (narrow: boolean) => (narrow ? 'inset-x-3 bottom-32' : 'right-4 bottom-4 w-96')
-
-export const toastStack = (kit: Kit, model: ToastModel, narrow: () => boolean) =>
+export const toastStack = (kit: Kit, model: ToastModel) =>
   list(
     model.visible,
     entry => entry.key,
@@ -13,5 +11,5 @@ export const toastStack = (kit: Kit, model: ToastModel, narrow: () => boolean) =
       const entry = item.get()
       return toastCard(kit, entry, () => model.dismiss(entry))
     },
-    div({ class: () => [kit.layer.drawer, 'pointer-events-none fixed flex flex-col gap-2', placement(narrow())] }),
+    div({ class: [kit.layer.tooltip, 'pointer-events-none fixed inset-x-0 bottom-4 flex flex-col items-center gap-2 px-3'] }),
   )

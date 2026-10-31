@@ -1,10 +1,9 @@
-import { floating } from '@sand/layout/place'
+import { place } from '@sand/layout/place'
 import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { toasts } from './contract'
 import { failureToasts } from './failures'
 import { toastModel } from './model'
-import { watchNarrow } from './narrow'
 import { toastStack } from './stack'
 
 export default definePlugin({
@@ -13,8 +12,7 @@ export default definePlugin({
   inject: { kit },
   apply(ctx) {
     const model = toastModel()
-    const narrow = watchNarrow(ctx)
-    floating(ctx, () => toastStack(ctx.kit, model, narrow))
+    place(ctx, 'overlay', () => toastStack(ctx.kit, model), 300)
     ctx.provide(toasts, { show: model.show, ...failureToasts(model.show) })
   },
 })

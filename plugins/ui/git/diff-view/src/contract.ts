@@ -1,6 +1,6 @@
 import type { DiffPatch } from '@sand/git-diff/contract'
 import type { FileChangeKind, Kit } from '@sand/ui-kit/contract'
-import type { Child, Cleanup, Derive, MaybeReactive, Sig } from '@vaakx-dev/vrui'
+import type { Child, Derive, MaybeReactive, Sig } from '@vaakx-dev/vrui'
 import { service } from 'drydock'
 
 export type DiffLine = Parameters<Kit['diffRow']>[0]
@@ -66,7 +66,6 @@ export interface DiffSectionOptions<F extends DiffSectionFile> {
   open: Sig<boolean>
   tags?: Child
   actions?: Child
-  onMount?(element: HTMLElement): Cleanup
   body(patch: DiffPatch): HTMLElement
 }
 
@@ -78,7 +77,6 @@ export interface DiffLayout {
 
 export interface DiffView {
   selection(): DiffSelection
-  pathLabel(path: () => string): HTMLElement
   head(file: () => DiffHeadFile, options: DiffHeadOptions): HTMLElement
   file(patch: DiffPatch, options: DiffFileOptions): HTMLElement
   lines(patch: DiffPatch): DiffLine[]

@@ -3,6 +3,7 @@ import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export { GitHubError, type GitHubErrorDetails, isForbidden, isMissing } from './api/errors'
+export { parsePullRef } from './pulls/parse'
 export { pullKey, pullLabel, pullVariables, samePull } from './pulls/ref'
 export { repoSlug } from './repo/slug'
 
@@ -43,6 +44,12 @@ export interface CheckItem {
   seconds?: number
 }
 
+export interface PullStack {
+  number: number
+  position: number
+  layers: number[]
+}
+
 export interface PullSummary extends PullRef {
   title: string
   url: string
@@ -60,6 +67,7 @@ export interface PullSummary extends PullRef {
   merge: MergeState
   unresolved: number
   autoMerge?: MergeMethod
+  stack?: PullStack
 }
 
 export interface PullText {

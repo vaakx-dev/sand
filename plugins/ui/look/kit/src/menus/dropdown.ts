@@ -28,6 +28,6 @@ export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus =
   return div(
     { class: ['relative flex min-w-0', extra], onMouseDown: keepFocus ? preventThen() : undefined },
     trigger(triggerProps(open), open),
-    show(open, () => popover(close, { class: [anchors[placement], menuClass] }, ...items(close))),
+    show(open, () => popover(close, { class: [anchors[placement], 'w-max max-w-80', menuClass] }, ...items(close))),
   )
 }

@@ -18,9 +18,6 @@ export const hasUpstream = async (git: GitRunner, dir: string, branch: string) =
 
 export const validBranch = async (git: GitRunner, dir: string, name: string) => Boolean(await git.maybe(dir, ['check-ref-format', '--branch', name], read))
 
-export const hasOrigin = async (git: GitRunner, dir: string) =>
-  ((await git.maybe(dir, ['remote'], read)) ?? '').split(/\r?\n/).includes('origin')
-
 export const uniqueBranch = async (git: GitRunner, dir: string, name: string) => {
   for (let count = 1; count <= mostTries; count++) {
     const candidate = count === 1 ? name : `${name}-${count}`

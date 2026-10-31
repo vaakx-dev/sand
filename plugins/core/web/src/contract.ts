@@ -44,3 +44,5 @@ export const webExtensionsReport = request('web.extensions.report', { input: z.o
 export const webPluginsOff = request('web.plugins.off', { input: z.object({}), output: type<PluginOff[]>() })
 
 export const webBuild = wireEvent<string>('web.build')
+
+export const pluginsOffMeta = 'sand-plugins-off'

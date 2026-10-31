@@ -5,7 +5,7 @@ import { type NextStep, nextStep } from '../pull/next'
 import { mergeControl } from './merge'
 import type { Shown } from './shown'
 
-const stepText = (step: NextStep) => [span({ class: 'font-medium' }, step.title), step.detail ? span(` · ${step.detail}`) : null]
+const stepText = (step: NextStep) => [span(step.title), step.detail ? span(` · ${step.detail}`) : null]
 
 const stepButton = (shown: Shown, step: NextStep, summary: PullSummary) => {
   const { parts, link, at, state } = shown
@@ -17,7 +17,7 @@ const stepButton = (shown: Shown, step: NextStep, summary: PullSummary) => {
     void state.run(() => parts.actions.ask(link, at, prompt))
   }
   const hint = step.kind !== 'ready' && { title: 'Sends the agent a prepared prompt in this thread' }
-  return parts.kit.primaryAction({ size: 'sm', ...hint, disabled: state.busy, onClick: run }, step.action)
+  return parts.kit.quietButton({ size: 'sm', surface: 'raised', ...hint, disabled: state.busy, onClick: run }, step.action)
 }
 
 export const nextCallout = (shown: Shown, summary: PullSummary) => {

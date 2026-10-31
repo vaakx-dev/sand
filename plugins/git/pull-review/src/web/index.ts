@@ -1,4 +1,4 @@
-import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
+import { pcHello, pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { definePlugin } from 'drydock'
 import {
   pullReviewClient,
@@ -25,6 +25,7 @@ export default definePlugin({
     const marks = agentMarks({ wire, pcs: ctx.pcs, report: error => ctx.report(error) })
     ctx.effect(() => wire.on(reviewChange, marks.note, { from: 'all' }))
     ctx.on(pcsChange, marks.sync)
+    ctx.on(pcHello, marks.sync)
     ctx.on(wireHello, marks.reload)
     marks.sync()
     ctx.provide(pullReviewClient, {

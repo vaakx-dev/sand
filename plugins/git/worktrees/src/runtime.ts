@@ -49,7 +49,7 @@ export default definePlugin({
       sessions: ctx.sessions,
       store,
       setups,
-      folder: expandHome(config.folder),
+      folder: config.folder ? expandHome(config.folder) : join(ctx.paths.home, 'worktrees'),
       prefix: config.prefix,
       queue: (main, task) => serialByRepo(pathKey(main), task),
       busy,

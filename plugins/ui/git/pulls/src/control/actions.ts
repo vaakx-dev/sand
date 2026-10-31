@@ -1,6 +1,6 @@
 import { type GitActionContext, gitBaseRank, type GitPrimaryAction } from '@sand/git-control/contract'
 import type { PullPlace, ThreadPullsClient } from '../contract'
-import { blockReason } from '../create/facts'
+import { blockOf } from '../create/facts'
 
 const rank = gitBaseRank + 10
 
@@ -13,13 +13,13 @@ const withoutPull = (client: ThreadPullsClient, context: GitActionContext) => {
 }
 
 const pushedAhead = ({ base, status }: GitActionContext) =>
-  !base && !blockReason(status) && Boolean(status.remote?.upstream) && (status.remote?.aheadBase ?? 0) > 0
+  !base && !blockOf(status) && Boolean(status.remote?.upstream) && (status.remote?.aheadBase ?? 0) > 0
 
 export const shipAction = (client: ThreadPullsClient): GitPrimaryAction => ({
   id: 'git-pulls.ship',
   decide: context =>
     context.base?.id === 'commit-push' && withoutPull(client, context)
-      ? { label: 'Commit, push & PR', short: 'Ship', icon: 'pull-request', title: 'Commit and push, then open a pull request', rank }
+      ? { label: 'Commit, push & PR', icon: 'pull-request', title: 'Commit and push, then open a pull request', rank }
       : undefined,
   run: async context => {
     const at = pullPlace(context)
@@ -31,7 +31,7 @@ export const createAction = (client: ThreadPullsClient): GitPrimaryAction => ({
   id: 'git-pulls.create',
   decide: context =>
     pushedAhead(context) && withoutPull(client, context)
-      ? { label: 'Create PR', short: 'PR', icon: 'pull-request', title: 'Open a pull request for this branch', rank }
+      ? { label: 'Create PR', icon: 'pull-request', title: 'Open a pull request for this branch', rank }
       : undefined,
   run: context => {
     const at = pullPlace(context)

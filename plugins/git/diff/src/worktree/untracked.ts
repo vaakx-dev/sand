@@ -9,6 +9,7 @@ export const literalPaths = { GIT_LITERAL_PATHSPECS: '1' }
 export interface WorktreeRead<T> {
   value: T
   truncated: boolean
+  untracked: string[]
 }
 
 const listUntracked = async (git: GitRunner, root: string, paths: string[]) => {
@@ -19,11 +20,12 @@ const listUntracked = async (git: GitRunner, root: string, paths: string[]) => {
 
 export const withUntracked = async <T>(git: GitRunner, root: string, paths: string[], work: (env: GitEnv) => Promise<T>): Promise<WorktreeRead<T>> => {
   const untracked = await listUntracked(git, root, paths)
-  if (!untracked.paths.length) return { value: await work(literalPaths), truncated: untracked.truncated }
+  const { paths: found, truncated } = untracked
+  if (!found.length) return { value: await work(literalPaths), truncated, untracked: found }
   const value = await git.withTempIndex(root, async index => {
     const env = { ...literalPaths, ...index }
-    await git.output(root, addIntent, { env, input: untracked.paths.join('\0'), read: true })
+    await git.output(root, addIntent, { env, input: found.join('\0'), read: true })
     return work(env)
   })
-  return { value, truncated: untracked.truncated }
+  return { value, truncated, untracked: found }
 }

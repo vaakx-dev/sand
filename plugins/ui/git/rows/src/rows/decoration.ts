@@ -9,7 +9,14 @@ const viewOf = (statuses: PlaceStatuses, thread: SidebarThread) =>
 export const gitDecoration = (kit: Kit, statuses: PlaceStatuses): RowDecoration => ({
   id: 'git',
   order: 50,
-  subtitle: thread => viewOf(statuses, thread)?.branch.get(),
+  place: thread => {
+    const view = viewOf(statuses, thread)
+    return view?.worktree.get() ? view.branch.get() : undefined
+  },
+  subtitle: thread => {
+    const view = viewOf(statuses, thread)
+    return view?.worktree.get() ? undefined : view?.branch.get()
+  },
   badge(thread) {
     const change = viewOf(statuses, thread)?.change.get()
     return change ? changeBadge(kit, change) : null

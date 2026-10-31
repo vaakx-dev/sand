@@ -23,6 +23,8 @@ export const attentionLook = (summary: PullSummary | undefined): PullStateLook =
 export const needsAttention = (summary: PullSummary | undefined) =>
   isLive(summary) && (summary?.merge === 'conflict' || summary?.checks.state === 'fail')
 
+export const needsUser = (summary: PullSummary | undefined) => needsAttention(summary) || (isLive(summary) && summary?.review === 'changes')
+
 export const pullTitle = (link: PullLink) => {
   const look = attentionLook(link.summary)
   return [pullName(link), link.summary?.title, look.short ?? look.label].filter(Boolean).join(' · ')

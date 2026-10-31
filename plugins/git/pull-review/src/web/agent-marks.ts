@@ -1,4 +1,4 @@
-import type { Pcs, Wire } from '@sand/devices-contract'
+import { isPcUnavailable, type Pcs, type Wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { type PendingReview, type ReviewChange, reviewAgentComments } from '../contract'
 
@@ -21,6 +21,7 @@ export const agentMarks = ({ wire, pcs, report }: AgentMarksDeps) => {
       },
       error => {
         if (loads.get(device) === loading) loads.delete(device)
+        if (isPcUnavailable(error)) return
         report(new Error(`Couldn't learn which pending review comments the agent on ${pcs.name(device)} wrote: ${errorMessage(error)}`))
       },
     )

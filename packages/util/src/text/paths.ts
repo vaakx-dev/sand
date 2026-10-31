@@ -3,6 +3,8 @@ export const tildeHome = (text: string) =>
     .replace(/(^|[\s'"=(])\/(?:home|Users)\/[^/\s'"]+(?=[/\s'"]|$)/g, '$1~')
     .replace(/(^|[\s'"=(])[A-Za-z]:[\\/]Users[\\/][^\\/\s'"]+(?=[\\/\s'"]|$)/gi, '$1~')
 
+export const comparePaths = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+
 export const folderName = (path: string) => path.split(/[\\/]/).filter(Boolean).at(-1) ?? path
 
 const windowsPath = /^([A-Za-z]:[\\/]|\\\\)/

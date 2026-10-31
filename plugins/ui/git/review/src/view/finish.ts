@@ -1,5 +1,6 @@
 import { place } from '@sand/layout/place'
 import type { ReviewEvent } from '@sand/pull-review/contract'
+import { plural } from '@sand/util'
 import { show, sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { CodeTab } from '../model/state'
@@ -10,7 +11,7 @@ const events: { value: ReviewEvent; label: string }[] = [
   { value: 'REQUEST_CHANGES', label: 'Request changes' },
 ]
 
-const plural = (count: number) => `${count} ${count === 1 ? 'comment' : 'comments'}`
+const comments = (count: number) => plural(count, 'comment')
 
 export const finishSheet = (tab: CodeTab) => {
   const { kit, ctx, pending } = tab
@@ -54,7 +55,7 @@ export const finishSheet = (tab: CodeTab) => {
               () => count() > 0,
               () =>
                 kit.quietButton({ surface: 'raised', disabled: pending.busy, onClick: () => void discard() }, () =>
-                  discarding.get() ? `Discard ${plural(count())}? Click again` : `Discard ${plural(count())}`,
+                  discarding.get() ? `Discard ${comments(count())}? Click again` : `Discard ${comments(count())}`,
                 ),
             ),
             kit.primaryAction({ disabled: () => blocked() || pending.busy.get(), onClick: () => void submit() }, 'Submit review'),

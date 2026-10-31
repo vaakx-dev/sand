@@ -1,12 +1,14 @@
+import type { GitControl } from '@sand/git-control/contract'
 import { gitStatusClient, type GitStatus } from '@sand/git/contract'
 import { errorMessage } from '@sand/util'
-import { batch, derive, effect, sig } from '@vaakx-dev/vrui'
+import { batch, derive, effect, type Sig, sig, untrack } from '@vaakx-dev/vrui'
 import type { PullPlace } from '../contract'
 import type { PullsContext } from '../inject'
 import type { CreateDraft } from './draft'
-import { baseOf, blockReason } from './facts'
+import { baseOf, blockOf } from './facts'
+import { blockFix } from './fix'
 
-export const createModel = (ctx: PullsContext, at: PullPlace, draft: CreateDraft) => {
+export const createModel = (ctx: PullsContext, at: PullPlace, draft: CreateDraft, control: Sig<GitControl | undefined>) => {
   const client = ctx.get(gitStatusClient)
   const status = sig<GitStatus | undefined>(undefined)
   const writing = sig(false)
@@ -39,10 +41,20 @@ export const createModel = (ctx: PullsContext, at: PullPlace, draft: CreateDraft
     }
   }
 
-  const blocked = derive(() => blockReason(status.get()))
+  const blocked = derive(() => blockOf(status.get()))
+  const fix = derive(() => blockFix(ctx, control.get(), at, status.get(), blocked.get()))
+  const known = () => !client || Boolean(status.get())
+
+  let tried = false
+  effect(() => {
+    if (tried || draft.written || !known() || blocked.get()) return
+    tried = true
+    untrack(() => void write())
+  })
+
   const canCreate = () => !busy.get() && !writing.get() && !blocked.get() && Boolean(draft.title.get().trim())
 
-  return { at, draft, status, writing, writeError, busy, blocked, canCreate, write }
+  return { at, draft, status, writing, writeError, busy, blocked, fix, canCreate, write }
 }
 
 export type CreateModel = ReturnType<typeof createModel>

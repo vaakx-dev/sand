@@ -1,14 +1,14 @@
 import type { PullRef } from '@sand/github/contract'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { ReviewContext } from '../inject'
-import { commitsModel } from './commits'
+import { detailModel } from './detail'
 import { filesModel } from './files'
 import { reviewPatches } from './patches'
 import { pendingModel } from './pending'
 
 export const codeState = (ctx: ReviewContext, ref: PullRef) => {
   const files = filesModel(ctx, ref)
-  const commits = commitsModel(ctx, ref)
+  const { commits, live } = detailModel(ctx, ref)
   const patches = reviewPatches(ctx, ref)
   const pending = pendingModel(ctx, ref)
   const selection = ctx.diff.selection()
@@ -28,6 +28,7 @@ export const codeState = (ctx: ReviewContext, ref: PullRef) => {
     ref,
     files,
     commits,
+    live,
     patches: patches.store,
     pending,
     selection,

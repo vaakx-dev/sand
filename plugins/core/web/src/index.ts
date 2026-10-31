@@ -38,7 +38,7 @@ export default definePlugin({
     ctx.provide(webExtensions, { list: states.list })
     const { id: pc } = await loadPcIdentity(home)
     const routes = {
-      '/': () => new Response(page(site.current().id, pc), { headers: headers('text/html') }),
+      '/': () => new Response(page(site.current().id, pc, states.unmounted()), { headers: headers('text/html') }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,

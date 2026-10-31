@@ -1,3 +1,4 @@
+import { isPcUnavailable, pcHello } from '@sand/devices-contract'
 import { threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
 import type { WorktreeSetup } from '@sand/worktrees/contract'
 import { collectScope, derive, onTimeout, sig } from '@vaakx-dev/vrui'
@@ -58,7 +59,10 @@ export const followSetup = (ctx: WorkspaceContext) => {
       found => {
         if (mine === ticket && heard !== mine && found && !isReady(found)) setup.set(found)
       },
-      ctx.report,
+      error => {
+        if (!isPcUnavailable(error)) return ctx.report(error)
+        if (mine === ticket) watched = undefined
+      },
     )
   }
 
@@ -73,6 +77,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
   ctx.on(threadSelect, sync)
   ctx.on(threadsChange, sync)
   ctx.on(threadChange, sync)
+  ctx.on(pcHello, sync)
   const hear = (next: WorktreeSetup, device: string) => {
     if (!matches(next, device)) return
     heard = ticket

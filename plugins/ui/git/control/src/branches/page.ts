@@ -1,5 +1,6 @@
 import { type GitBranch, type GitPlace, repoOf } from '@sand/git/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
+import { tildeHome } from '@sand/util'
 import type { ControlParts } from '../parts'
 
 const limit = 50
@@ -12,10 +13,10 @@ const tags = (branch: GitBranch) =>
 const fullName = (branch: GitBranch) => (branch.remote ? `${branch.remote}/${branch.name}` : branch.name)
 
 const branchItem = ({ actions }: ControlParts, branch: GitBranch, waiting: string | undefined): PaletteItem => {
-  const elsewhere = branch.worktree && !branch.current ? `Checked out in ${branch.worktree}` : undefined
+  const elsewhere = branch.worktree && !branch.current ? `Checked out in ${tildeHome(branch.worktree)}` : undefined
   return {
     id: `git-branch:${fullName(branch)}`,
-    icon: branch.worktree ? 'worktree' : 'branch',
+    icon: elsewhere ? 'worktree' : 'branch',
     label: fullName(branch),
     meta: tags(branch) || undefined,
     detail: branch.current ? undefined : (elsewhere ?? waiting),
@@ -47,8 +48,7 @@ export const branchPage = (parts: ControlParts, place: GitPlace): PalettePage =>
     const wanted = query.trim()
     const { branches } = await parts.ctx.gitStatus.branches(place, wanted || undefined, limit)
     const waiting = parts.waiting.get()
-    const ordered = [...branches.filter(branch => branch.current), ...branches.filter(branch => !branch.current)]
-    const rows = ordered.map(branch => branchItem(parts, branch, waiting))
+    const rows = branches.map(branch => branchItem(parts, branch, waiting))
     const taken = branches.some(branch => branch.name === wanted)
     return wanted && !taken ? [...rows, createItem(parts, wanted, waiting)] : rows
   },

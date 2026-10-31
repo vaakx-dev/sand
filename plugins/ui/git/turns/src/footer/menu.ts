@@ -1,5 +1,5 @@
 import type { ListedTurn, SnapshotSide } from '@sand/git-snapshots/contract'
-import type { Sig } from '@vaakx-dev/vrui'
+import { type Sig, span } from '@vaakx-dev/vrui'
 import type { TurnParts } from '../parts'
 import { busyReason } from '../restore/busy'
 import { restoreTurn } from '../restore/restore'
@@ -23,8 +23,8 @@ export const turnMenu = (parts: TurnParts, device: string, snapshot: Sig<ListedT
             void restoreTurn(parts, found, to)
           },
         },
-        `Restore files to ${to} this turn`,
-        menuReason(() => reason.get()),
+        span({ class: 'min-w-0 flex-1 truncate' }, `Restore to ${to} this turn`),
+        menuReason(() => reason.get() ?? ''),
       ),
     )
   }

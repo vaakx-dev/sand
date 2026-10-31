@@ -14,7 +14,7 @@ const listColumn = (parts: PageParts, hasDetail: () => boolean) =>
       class: [
         'min-h-0 min-w-0 flex-col',
         () => (parts.narrow.get() && hasDetail() ? 'hidden' : 'flex'),
-        () => (hasDetail() && !parts.narrow.get() ? 'w-96 shrink-0 border-r border-neutral-800' : 'mx-auto w-full max-w-4xl'),
+        () => (hasDetail() && !parts.narrow.get() ? 'w-96 shrink-0 border-r border-neutral-800' : 'w-full'),
       ],
     },
     listView(parts),

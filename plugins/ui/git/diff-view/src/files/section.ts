@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, effect, intersectionObserver, show, SPACE, untrack, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, intersectionObserver, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { DiffSectionFile, DiffSectionOptions, DiffView, PatchState } from '../contract'
 import { inset } from '../view/inset'
 import { scrollParent } from './scroll'
@@ -28,7 +28,6 @@ export const fileSection = <F extends DiffSectionFile>(kit: Kit, head: DiffView[
   return div(
     {
       class: 'border-b border-neutral-800',
-      style: { scrollMarginTop: SPACE['12'] },
       onMount: element => {
         intersectionObserver(
           element,
@@ -38,7 +37,6 @@ export const fileSection = <F extends DiffSectionFile>(kit: Kit, head: DiffView[
           },
           { root: scrollParent(element), rootMargin: preload },
         )
-        return options.onMount?.(element)
       },
     },
     head(() => file.get(), { open, tags: options.tags, actions: options.actions }),

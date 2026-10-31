@@ -14,6 +14,6 @@ export const defaultName = (local: GitRepoLocal) => local.defaultBranch ?? 'the 
 
 export const notOnBranch = 'Not on a branch. Switch to one first.'
 
-export const waitReason = 'Waits until the agent finishes'
+export const waitReason = 'Agent is working'
 
-export const busyReason = 'Waits for the running git action'
+export const busyReason = 'Git is busy'

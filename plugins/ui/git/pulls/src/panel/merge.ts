@@ -16,7 +16,7 @@ export const mergeControl = (shown: Shown, summary: PullSummary) => {
   const { parts, link, at, state } = shown
   const { kit } = parts
   const auto = canAutoMerge(summary)
-  const blocked = Boolean(mergeBlock(summary)) && !auto
+  if (mergeBlock(summary) && !auto) return null
 
   effect(() => {
     if (state.confirming.get()) onTimeout(() => state.confirming.set(false), confirmFor)
@@ -39,6 +39,6 @@ export const mergeControl = (shown: Shown, summary: PullSummary) => {
   return div(
     { class: 'flex flex-wrap items-center gap-2' },
     kit.segmented(methods, state.method, choose, { label: 'Merge method', inset: true }),
-    kit.primaryAction({ size: 'sm', disabled: () => blocked || state.busy.get(), onClick: press }, label),
+    kit.primaryAction({ size: 'sm', disabled: state.busy, onClick: press }, label),
   )
 }

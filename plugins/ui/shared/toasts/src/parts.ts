@@ -19,8 +19,10 @@ const actionButton = (kit: Kit, action: ToastAction, dismiss: () => void) => {
     dismiss()
     void action.run()
   }
-  return action.primary ? kit.primaryAction({ size: 'sm', onClick: press }, action.label) : kit.secondaryAction({ size: 'sm', onClick: press }, action.label)
+  return action.primary
+    ? kit.secondaryAction({ size: 'sm', onClick: press }, action.label)
+    : kit.quietButton({ size: 'sm', surface: 'raised', onClick: press }, action.label)
 }
 
 export const actionRow = (kit: Kit, actions: ToastAction[], dismiss: () => void) =>
-  div({ class: 'flex flex-wrap justify-end gap-2' }, ...actions.map(action => actionButton(kit, action, dismiss)))
+  div({ class: 'flex flex-wrap items-center gap-2 pt-1' }, ...actions.map(action => actionButton(kit, action, dismiss)))

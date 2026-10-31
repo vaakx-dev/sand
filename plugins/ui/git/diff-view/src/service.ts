@@ -9,7 +9,6 @@ import { patchRows } from './patch/rows'
 import { linePicker, type LinePicker } from './select/picker'
 import { fileView } from './view/file'
 import { fileHead } from './view/head'
-import { pathLabel } from './view/path'
 
 export const diffFiles = (kit: Kit, markdown: Sig<Markdown | undefined>): DiffView => {
   const pickers = new WeakMap<DiffSelection, LinePicker>()
@@ -21,7 +20,6 @@ export const diffFiles = (kit: Kit, markdown: Sig<Markdown | undefined>): DiffVi
       pickers.set(picker.selection, picker)
       return picker.selection
     },
-    pathLabel,
     head,
     file: (patch, options) => fileView({ kit, markdown, picker: options.selection && pickers.get(options.selection) }, patch, options),
     lines: patch => patchRows(patch).lines,

@@ -15,10 +15,12 @@ export const createStates = (site: StateSource, switches: PluginSwitches) => {
   const needsOf = (browser: BrowserState | undefined) =>
     browser?.status === 'pending' && browser.missing ? switches.needs(browser.missing) : undefined
 
-  const state = ({ id, dir, label, summary, builtin }: Extension): WebExtensionState => {
+  const cascaded = () => new Map(switches.off().flatMap(({ dir, needs }) => (needs.length ? [[dir, needs] as const] : [])))
+
+  const state = ({ id, dir, label, summary, builtin }: Extension, off: ReadonlyMap<string, string[]>): WebExtensionState => {
     const built = site.current()
     const browser = reported.get(id)
-    const needs = needsOf(browser)
+    const needs = off.get(dir) ?? needsOf(browser)
     return {
       id,
       dir,
@@ -32,12 +34,25 @@ export const createStates = (site: StateSource, switches: PluginSwitches) => {
     }
   }
 
-  const list = () => site.list().map(state)
+  const list = () => {
+    const off = cascaded()
+    return site.list().map(extension => state(extension, off))
+  }
 
-  const webOff = (): PluginOff[] => list().flatMap(({ id, dir, needs }) => (needs ? [{ id, dir, needs }] : []))
+  const webOff = (): PluginOff[] =>
+    site.list().flatMap(({ id, dir }) => {
+      const needs = needsOf(reported.get(id))
+      return needs ? [{ id, dir, needs }] : []
+    })
+
+  const unmounted = () => {
+    const off = cascaded()
+    return site.list().flatMap(({ id, dir }) => (off.has(dir) ? [id] : []))
+  }
 
   return {
     list,
+    unmounted,
     off: () => [...switches.off(), ...webOff()],
     report(states: BrowserState[]) {
       reported = new Map(states.map(browser => [browser.id, browser]))

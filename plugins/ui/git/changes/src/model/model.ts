@@ -8,7 +8,7 @@ import { currentScope } from '../scope/current'
 import { scopeExtras } from '../scope/extras'
 import { sameScope } from '../scope/scopes'
 import type { ScopeSources } from '../scope/sources'
-import { badgeOf, idleList, loadingList, sortedFiles, type ListState } from './list'
+import { idleList, loadingList, sortedFiles, type ListState } from './list'
 import { phaseOf } from './phase'
 import { changedPaths, statusPrint } from './prints'
 
@@ -125,7 +125,7 @@ const buildModel = (ctx: ChangesContext, sources: ScopeSources) => {
     selection,
     baseLabel,
     files: derive(() => sortedFiles(list.get())),
-    badge: derive(() => badgeOf(list.get())),
+    badge: derive(() => repo.get()?.fileCount || undefined),
     phase,
     visible,
     pick(id: string) {

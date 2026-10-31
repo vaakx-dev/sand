@@ -44,7 +44,7 @@ const makeWorktree = async (deps: WorktreeDeps, local: GitRepoLocal, request: Mo
   const base = local.branch ?? shortSha(head)
   let record: WorktreeRecord
   try {
-    record = await createWorktree(deps, { main: local.main, start: head, base, ...(branch ? { branch } : {}), steps: [] })
+    record = await createWorktree(deps, { main: local.main, start: head, base, ...(branch ? { branch } : {}) })
   } catch (error) {
     throw carried ? await rolledBack(error, () => restoreStash(deps.git, local.root, carried)) : error
   }

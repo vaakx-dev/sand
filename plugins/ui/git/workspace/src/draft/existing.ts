@@ -31,7 +31,7 @@ export const existingList = (menu: ChipMenu, trees: Worktree[], back: () => void
         icon: 'worktree',
         onClick: () => pick({ kind: 'existing', path: tree.path, branch: tree.branch }),
       },
-      menuText(kit, { title: worktreeName(tree), detail: threadsLine(tree) }),
+      ...menuText(kit, { title: worktreeName(tree), detail: threadsLine(tree) }),
     )
   return div({ class: 'flex flex-col' }, kit.menuItem({ icon: 'back', onClick: back }, 'Existing worktree'), kit.menuSeparator(), ...trees.map(row))
 }

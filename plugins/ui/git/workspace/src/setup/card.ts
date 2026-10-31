@@ -44,7 +44,7 @@ export const setupCard = (ctx: WorkspaceContext, model: SetupModel) => () => {
 
   const steps = () =>
     div(
-      { class: 'flex flex-col gap-1 pt-1 text-neutral-400' },
+      { class: 'flex flex-col gap-1 pt-1 text-xs text-neutral-400' },
       dynamicChild(model.setup, setup => div({ class: 'flex flex-col gap-1' }, ...(setup?.steps ?? []).map(stepRow))),
       dynamicChild(step, output),
     )

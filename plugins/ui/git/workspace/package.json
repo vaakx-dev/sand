@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-control": "workspace:*",
     "@sand/git-pulls": "workspace:*",

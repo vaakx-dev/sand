@@ -1,7 +1,7 @@
 import { sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
-import { loop, sessionOpened, turnEnd } from '@sand/loop/contract'
+import { loop, sessionOpened, toolResult, turnEnd } from '@sand/loop/contract'
 import { type Server, server, sessionCarry } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { steering } from '@sand/steering/contract'
@@ -13,12 +13,14 @@ import { join } from 'node:path'
 import { createLinkBook } from './book/book'
 import { linksEntry } from './book/record'
 import { pullLinksService, threadPullsChange } from './contract'
+import { linkCreatedInShell } from './created/link'
 import { createDiscovery } from './discover/discovery'
 import { createBranchFollow } from './discover/follow'
 import { createThreadLinks } from './links/links'
 import { type OpenDeps, openPull } from './open/open'
 import { createOnceReport } from './report/once'
 import { servePullLinks } from './requests'
+import { followStacks } from './stack/follow'
 import { createSweep } from './sweep/sweep'
 import { createViewed } from './sweep/viewed'
 import { pullTools } from './tools/tools'
@@ -37,15 +39,18 @@ export default definePlugin({
     const book = createLinkBook(ctx.sessions)
 
     const announce = (session: string) => {
-      const found = live
-      if (!found) return
       links
         .view(session)
-        .then(pulls => found.broadcast(threadPullsChange, pulls))
+        .then(pulls => {
+          live?.broadcast(threadPullsChange, pulls)
+          stacks(pulls)
+        })
         .catch(report)
     }
 
     const links = createThreadLinks({ github: ctx.github, sessions: ctx.sessions, book, announce, watched: pull => sweep.soon(pull) })
+    const stacks = followStacks({ sessions: ctx.sessions, book, links })
+    const created = linkCreatedInShell(links, report)
     const discovery = createDiscovery({ github: ctx.github, repos: ctx.gitRepo, book, links, failures })
     const branches = createBranchFollow({ repos: ctx.gitRepo, sessions: ctx.sessions, discovery })
     const viewed = createViewed({ touched: branches.follow, ended: branches.unfollow })
@@ -106,6 +111,14 @@ export default definePlugin({
       for (const id of links.linking(summary)) announce(id)
     })
     ctx.on(pullCreated, (summary, session) => void linkCreated(summary, session).catch(report))
+    ctx.on(toolResult, (result, call, session) => {
+      try {
+        created(result, call, session)
+      } catch (error) {
+        report(error)
+      }
+      return undefined
+    })
 
     ctx.watch(tools, found => found && pullTools(found, { github: ctx.github, links, discovery }))
     ctx.watch(skills, found => found?.register(skillDir))

@@ -14,7 +14,7 @@ const watchMark = z.object({
 })
 
 const storedLink = ref.extend({
-  source: z.enum(['created', 'branch', 'linked', 'opened']),
+  source: z.enum(['created', 'branch', 'linked', 'opened', 'stack']),
   linked: z.number(),
   watching: z.boolean(),
   mark: watchMark.optional(),

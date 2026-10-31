@@ -7,9 +7,7 @@ export interface MenuText {
   reason?: string
 }
 
-export const menuText = (kit: Kit, { title, detail, reason }: MenuText) =>
-  span(
-    { class: 'flex min-w-0 flex-1 flex-col' },
-    span({ class: 'truncate' }, title),
-    reason ? kit.menuReason(reason) : detail ? kit.metaLine(detail) : null,
-  )
+export const menuText = (kit: Kit, { title, detail, reason }: MenuText) => [
+  span({ class: 'min-w-0 flex-1 truncate' }, title),
+  reason ? kit.menuReason(reason) : detail ? kit.metaLine(detail) : null,
+]

@@ -3,7 +3,7 @@ import { tildeHome } from '@sand/util'
 import { derive, div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { RowDecor } from '../decorations/registry'
 import type { ThreadItem } from '../items/item'
-import { status } from './status'
+import { badgeShown, badgeSlot, status } from './status'
 import { actionStrip, type StripParts } from './strip'
 
 export interface CardParts {
@@ -21,14 +21,22 @@ const onTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:fle
 
 const offTouchCurrent = ({ selected }: CardParts) => (selected.get() ? 'touch:hidden' : '')
 
-const statusSlot = (parts: CardParts) =>
-  span(
-    {
-      class: () =>
-        parts.strip.choosing.get() ? 'hidden' : ['flex shrink-0 items-center text-xs group-hover:hidden group-focus-visible-within:hidden', offTouchCurrent(parts)],
-    },
-    status(parts.kit, parts.item, parts.minute, parts.decor.badge),
-  )
+const statusSlots = (parts: CardParts) => {
+  const badged = badgeShown(parts.item, parts.decor.badge)
+  return [
+    badgeSlot(
+      parts.decor.badge,
+      derive(() => badged.get() && !parts.strip.choosing.get()),
+    ),
+    span(
+      {
+        class: () =>
+          parts.strip.choosing.get() || badged.get() ? 'hidden' : ['flex shrink-0 items-center text-xs group-hover:hidden group-focus-visible-within:hidden', offTouchCurrent(parts)],
+      },
+      status(parts.kit, parts.item, parts.minute, badged),
+    ),
+  ]
+}
 
 const actions = (parts: CardParts) => actionStrip(parts.kit, parts.strip, [onHover, () => onTouchCurrent(parts)])
 
@@ -44,7 +52,7 @@ const titleLook = ({ item, selected }: CardParts) => (selected.get() || item.get
 const placeText = ({ item, decor }: CardParts) =>
   derive(() => {
     const value = item.get()
-    return [value.project, value.subtitle, decor.subtitle.get()].filter(Boolean).join(' · ')
+    return [value.project, value.pc, decor.place.get() || value.folder, decor.subtitle.get()].filter(Boolean).join(' · ')
   })
 
 const pcMark = ({ item }: CardParts) =>
@@ -58,7 +66,7 @@ const place = (parts: CardParts) =>
     { class: 'flex h-5 min-w-0 items-center gap-1.5', title: parts.item.map(value => tildeHome(value.path ?? '')) },
     avatar(parts),
     span({ class: 'flex min-w-0 flex-1 items-center gap-1.5' }, parts.kit.metaLine(placeText(parts)), pcMark(parts)),
-    statusSlot(parts),
+    ...statusSlots(parts),
     actions(parts),
   )
 

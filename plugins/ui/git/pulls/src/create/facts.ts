@@ -3,13 +3,18 @@ import { plural } from '@sand/util'
 
 export const repoOf = (status: GitStatus | undefined): GitRepoLocal | undefined => (status?.local.repo ? status.local : undefined)
 
-export const blockReason = (status: GitStatus | undefined): string | undefined => {
+export interface Block {
+  text: string
+  fix?: 'switch' | 'move'
+}
+
+export const blockOf = (status: GitStatus | undefined): Block | undefined => {
   if (!status) return undefined
   const local = repoOf(status)
-  if (!local) return 'This folder is not a git repo.'
-  if (local.detached || !local.branch) return 'Check out a branch first.'
-  if (!status.remote?.remote) return 'This repo has no remote to open a pull request on.'
-  if (local.isDefault) return `You're on ${local.branch}. Switch to a branch for this change first.`
+  if (!local) return { text: 'This folder is not a git repo.' }
+  if (local.detached || !local.branch) return { text: 'Check out a branch first.', fix: 'switch' }
+  if (!status.remote?.remote) return { text: 'This repo has no remote to open a pull request on.' }
+  if (local.isDefault) return { text: `You're on ${local.branch}. Move this change to its own branch first.`, fix: 'move' }
   return undefined
 }
 

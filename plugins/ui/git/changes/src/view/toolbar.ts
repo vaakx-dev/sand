@@ -10,7 +10,7 @@ export const toolbar = (parts: ViewParts) => {
     return state.kind === 'ready' ? state.list : undefined
   })
   return paneHead(
-    { class: [layer.sticky, 'sticky top-0 bg-neutral-950'] },
+    { class: [layer.menu, 'sticky top-0 bg-neutral-950'] },
     show(model.repo.map(Boolean), () => scopeMenu(parts)),
     show(totals.map(Boolean), () =>
       lineStat(
