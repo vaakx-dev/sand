@@ -1,7 +1,6 @@
-import type { PullRef, PullSummary } from '@sand/github/contract'
+import { type PullRef, type PullSummary, pullLabel } from '@sand/github/contract'
 import { type PullNode, pullSummaryFields, shapeSummary } from '@sand/github/summary'
 import { refusal } from '../errors/refusal'
-import { pullLabel } from '../pulls/ref'
 import { type ActionDeps, settle } from './action'
 
 const revertPull = `

@@ -1,9 +1,7 @@
 import type { PullCommit } from '@sand/pull-detail/contract'
-import { ago } from '@sand/util'
+import { ago, shortSha } from '@sand/util'
 import { derive, div, list, show, span } from '@vaakx-dev/vrui'
 import type { Shown } from '../shown'
-
-const shortSha = (sha: string) => sha.slice(0, 7)
 
 const commitRow = (shown: Shown, commit: () => PullCommit) => {
   const { kit } = shown.parts

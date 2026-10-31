@@ -1,10 +1,8 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, samePull } from '@sand/github/contract'
 import type { ReviewFiles, ViewedState } from '@sand/pull-review/contract'
 import { errorMessage } from '@sand/util'
 import { effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
-import type { ReviewContext } from '../inject'
-import { notifyError } from '../notify'
-import { sameRef } from '../pull/ref'
+import { type ReviewContext, toastId } from '../inject'
 
 export type FilesState = { kind: 'loading' } | { kind: 'ready'; files: ReviewFiles } | { kind: 'error'; message: string }
 
@@ -47,7 +45,7 @@ export const filesModel = (ctx: ReviewContext, ref: PullRef) => {
     try {
       await ctx.review.viewed({ ...ref, path, viewed })
     } catch (error) {
-      notifyError(ctx, viewed ? "Couldn't mark the file viewed" : "Couldn't clear the viewed mark", error)
+      ctx.toasts.error(toastId, viewed ? "Couldn't mark the file viewed" : "Couldn't clear the viewed mark", error)
       load()
     }
   }
@@ -61,7 +59,7 @@ export const filesModel = (ctx: ReviewContext, ref: PullRef) => {
   })
   effect(() =>
     ctx.pullDetail.onChange(changed => {
-      if (sameRef(changed, ref)) soon()
+      if (samePull(changed, ref)) soon()
     }),
   )
   effect(() => () => waiting?.())

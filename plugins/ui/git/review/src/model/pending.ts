@@ -1,9 +1,7 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, samePull } from '@sand/github/contract'
 import type { PendingComment, PendingReview, ReviewEvent, ReviewSide } from '@sand/pull-review/contract'
 import { effect, sig } from '@vaakx-dev/vrui'
-import type { ReviewContext } from '../inject'
-import { attempt, notifyError } from '../notify'
-import { sameRef } from '../pull/ref'
+import { type ReviewContext, toastId } from '../inject'
 
 export interface CommentPlace {
   path: string
@@ -27,7 +25,7 @@ export const pendingModel = (ctx: ReviewContext, ref: PullRef) => {
         if (mine === ticket) review.set(found)
       })
       .catch(error => {
-        if (mine === ticket) notifyError(ctx, "Couldn't load your pending review", error)
+        if (mine === ticket) ctx.toasts.error(toastId, "Couldn't load your pending review", error)
       })
   }
 
@@ -36,7 +34,7 @@ export const pendingModel = (ctx: ReviewContext, ref: PullRef) => {
     busy.set(true)
     ticket++
     try {
-      return await attempt(ctx, title, work)
+      return await ctx.toasts.attempt(toastId, title, work)
     } finally {
       busy.set(false)
     }
@@ -74,7 +72,7 @@ export const pendingModel = (ctx: ReviewContext, ref: PullRef) => {
 
   effect(() =>
     ctx.review.onChange(changed => {
-      if (sameRef(changed, ref)) load()
+      if (samePull(changed, ref)) load()
     }),
   )
   load()

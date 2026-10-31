@@ -10,8 +10,6 @@ export interface Followed {
   stopRenewal: () => void
 }
 
-export const placeKey = ({ device, cwd }: GitPlace) => `${device}\n${cwd}`
-
 export const withLocal = (status: GitStatus | undefined, change: Pick<GitStatus, 'cwd' | 'local'>): GitStatus =>
   change.local.repo ? { ...status, ...change } : change
 

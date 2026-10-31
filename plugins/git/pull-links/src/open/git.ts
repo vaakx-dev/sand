@@ -1,15 +1,8 @@
-import type { GitOptions, GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git/contract'
 
 export const longGitMs = 2 * 60_000
 
 const read = { read: true }
-
-export const gitStep = async (git: GitRunner, dir: string, args: string[], what: string, options?: GitOptions) => {
-  const result = await git.run(dir, args, options)
-  if (result.code === 0) return result.out.trim()
-  const { message, detail } = git.classify(result, args)
-  throw new Error(`${what}: ${message}${detail ? `\n${detail}` : ''}`)
-}
 
 export const gitTrue = async (git: GitRunner, dir: string, args: string[]) => (await git.run(dir, args, read)).code === 0
 

@@ -12,6 +12,7 @@
     "@sand/composer": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/sidebar": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

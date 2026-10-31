@@ -1,5 +1,5 @@
 import type { DiffFile, DiffList, DiffScope } from '../contract'
-import { type DiffGit, readOut } from '../git'
+import type { DiffGit } from '../git'
 import { diffArgs, readRange } from '../scope/read'
 import { resolveScope } from '../scope/resolve'
 import { parseChanges } from './parse'
@@ -13,7 +13,7 @@ const sum = (files: DiffFile[], key: 'add' | 'del') => files.reduce((total, file
 export const listDiff = async (tools: DiffGit, cwd: string, scope: DiffScope): Promise<DiffList> => {
   const { git } = tools
   const range = await resolveScope(tools, cwd, scope)
-  const { value: out, truncated } = await readRange(git, range, [], env => readOut(git, range.repo.root, diffArgs(range, changeList), { env }))
+  const { value: out, truncated } = await readRange(git, range, [], env => git.output(range.repo.root, diffArgs(range, changeList), { env, read: true }))
   const files = parseChanges(out)
   const cut = truncated || files.length > maxFiles
   return {

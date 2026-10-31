@@ -6,12 +6,11 @@ import type { WorktreeDeps } from '../deps'
 import { changedFiles } from '../move/carry'
 import type { WorktreeRecord } from '../records/schema'
 import { branchExists, currentBranch } from '../repo/refs'
-import { gitStep } from '../repo/run'
 import { threadsIn } from '../sessions/inside'
 
 export const unpushedCommits = async (git: GitRunner, dir: string, rev: string, branch?: string) => {
   const others = branch ? [`--exclude=${branch}`, '--branches'] : ['--branches']
-  const count = await gitStep(git, dir, ['rev-list', '--count', rev, '--not', '--remotes', ...others], "Couldn't count unpushed commits", { read: true })
+  const count = await git.ok(dir, ['rev-list', '--count', rev, '--not', '--remotes', ...others], { read: true, what: "Couldn't count unpushed commits" })
   return Number(count) || 0
 }
 

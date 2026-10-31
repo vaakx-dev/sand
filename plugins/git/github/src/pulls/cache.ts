@@ -1,17 +1,12 @@
+import { ttlCache } from '@sand/util'
 import type { Client } from '../api/client'
 import type { PullRef, PullSummary } from '../contract'
-import { refKey } from './ref'
-import { fetchPull } from './summary/fetch'
+import { pullKey } from './ref'
+import { type FetchedPull, fetchPull } from './summary/fetch'
 
 const openMs = 15_000
 const doneMs = 10 * 60_000
 const most = 500
-
-interface Cached {
-  summary: PullSummary
-  id: string
-  at: number
-}
 
 export interface Summaries {
   get(ref: PullRef, fresh?: boolean): Promise<PullSummary>
@@ -20,51 +15,36 @@ export interface Summaries {
   note(id: string, summary: PullSummary): void
 }
 
-const keepFor = (summary: PullSummary) => (summary.state === 'open' || summary.state === 'draft' ? openMs : doneMs)
+const keepFor = ({ summary }: FetchedPull) => (summary.state === 'open' || summary.state === 'draft' ? openMs : doneMs)
+
+const differs = (previous: FetchedPull | undefined, next: FetchedPull) => previous !== undefined && JSON.stringify(previous.summary) !== JSON.stringify(next.summary)
 
 export const createSummaries = (client: Client, changed: (summary: PullSummary) => void): Summaries => {
-  const cached = new Map<string, Cached>()
-  const loading = new Map<string, Promise<Cached>>()
+  const refreshing = new Map<string, Promise<FetchedPull>>()
+  const pulls = ttlCache<FetchedPull>({
+    ttl: keepFor,
+    most,
+    stored(key, next, previous) {
+      if (refreshing.has(key) || differs(previous, next)) changed(next.summary)
+    },
+  })
 
-  const store = (key: string, next: Cached) => {
-    cached.delete(key)
-    cached.set(key, next)
-    if (cached.size <= most) return
-    const oldest = cached.keys().next().value
-    if (oldest !== undefined) cached.delete(oldest)
-  }
+  const fetchOf = (ref: PullRef) => () => fetchPull(client, ref)
+  const current = (ref: PullRef, fresh?: boolean) => pulls.get(pullKey(ref), fetchOf(ref), fresh)
 
-  const keep = (key: string, id: string, summary: PullSummary, always: boolean) => {
-    const previous = cached.get(key)?.summary
-    const entry = { summary, id, at: Date.now() }
-    store(key, entry)
-    if (always || (previous && JSON.stringify(previous) !== JSON.stringify(summary))) changed(summary)
-    return entry
-  }
-
-  const load = (ref: PullRef, always: boolean) => {
-    const key = refKey(ref)
-    const running = loading.get(key)
-    if (running && !always) return running
-    const next = fetchPull(client, ref)
-      .then(({ id, summary }) => keep(key, id, summary, always))
-      .finally(() => {
-        if (loading.get(key) === next) loading.delete(key)
-      })
-    loading.set(key, next)
-    return next
-  }
-
-  const current = (ref: PullRef, fresh?: boolean) => {
-    const found = cached.get(refKey(ref))
-    if (!fresh && found && Date.now() - found.at < keepFor(found.summary)) return Promise.resolve(found)
-    return load(ref, false)
+  const refresh = (ref: PullRef) => {
+    const key = pullKey(ref)
+    const loading: Promise<FetchedPull> = pulls.refresh(key, fetchOf(ref)).finally(() => {
+      if (refreshing.get(key) === loading) refreshing.delete(key)
+    })
+    refreshing.set(key, loading)
+    return loading
   }
 
   return {
-    get: (ref, fresh) => current(ref, fresh).then(entry => entry.summary),
-    refresh: ref => load(ref, true).then(entry => entry.summary),
-    id: async ref => cached.get(refKey(ref))?.id ?? (await current(ref)).id,
-    note: (id, summary) => void keep(refKey(summary), id, summary, false),
+    get: (ref, fresh) => current(ref, fresh).then(pull => pull.summary),
+    refresh: ref => refresh(ref).then(pull => pull.summary),
+    id: async ref => pulls.peek(pullKey(ref))?.id ?? (await current(ref)).id,
+    note: (id, summary) => pulls.set(pullKey(summary), { id, summary }),
   }
 }

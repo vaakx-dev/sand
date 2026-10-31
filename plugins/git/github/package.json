@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts",
+    "./look": "./src/web/look.ts",
     "./summary": "./src/summary.ts"
   },
   "sand": {
@@ -20,7 +21,10 @@
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

@@ -25,6 +25,7 @@ export interface GitHubDeps {
   loginCode(code: GitHubLoginCode): void
   pullChanged(summary: PullSummary): void
   pullCreated(summary: PullSummary, session?: string): void
+  report(error: unknown): void
 }
 
 export type GitHubHost = ReturnType<typeof createGitHub>
@@ -35,7 +36,7 @@ export const createGitHub = (deps: GitHubDeps) => {
     token: auth.token,
     rejected() {
       auth.invalidate()
-      void auth.auth().catch(() => undefined)
+      auth.auth().catch(deps.report)
     },
   })
   const infos = createRepoInfos(client)
@@ -59,6 +60,7 @@ export const createGitHub = (deps: GitHubDeps) => {
   const service: GitHub = {
     auth: auth.auth,
     summary: summaries.get,
+    nodeId: summaries.id,
     noteSummary: summaries.note,
     forBranch,
     resolve: (cwd, ref) => resolvePull(place, summaries, cwd, ref),

@@ -1,4 +1,3 @@
-import type { PullRef } from '@sand/github/contract'
 import type { PullLink } from '@sand/pull-links/contract'
 
 const rank = ({ summary }: PullLink) => {
@@ -14,7 +13,3 @@ const rank = ({ summary }: PullLink) => {
 export const byAttention = (links: PullLink[]) => [...links].sort((a, b) => rank(a) - rank(b) || b.linked - a.linked)
 
 export const primaryOf = (links: PullLink[]): PullLink | undefined => byAttention(links)[0]
-
-export const pullKey = ({ repo, number }: PullRef) => `${repo}#${number}`
-
-export const samePull = (a: PullRef, b: PullRef) => a.repo === b.repo && a.number === b.number

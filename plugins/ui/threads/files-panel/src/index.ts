@@ -1,13 +1,12 @@
 import { composer, type Composer } from '@sand/composer/contract'
 import { wire } from '@sand/devices-contract'
-import { gitStatusClient } from '@sand/git/contract'
 import { markdown } from '@sand/markdown/contract'
 import { panels } from '@sand/panel/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threadChange, threads, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { div, dynamicChild, mount, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { filesPanel } from './contract'
+import { fileMarks, filesPanel } from './contract'
 import { filePage } from './file/page'
 import { listPage } from './list'
 import { filesModel } from './model'
@@ -22,13 +21,13 @@ export default definePlugin({
     const model = filesModel(ctx.wire, ctx.threads)
     const writer = sig<Composer | undefined>(undefined)
     ctx.watch(composer, found => writer.set(found))
-    ctx.watch(gitStatusClient, found => model.useGit(found))
+    ctx.watch(fileMarks, found => model.useMarks(found))
 
     let running = false
     const follow = () => {
       model.follow()
       const now = ctx.threads.current()?.running ?? false
-      if (running && !now) model.refresh()
+      if (running && !now) model.agentFinished()
       running = now
     }
     ctx.on(threadSelect, follow)

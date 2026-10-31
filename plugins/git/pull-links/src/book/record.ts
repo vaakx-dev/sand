@@ -34,8 +34,4 @@ export const parseLinks = (data: unknown): StoredLinks | undefined => {
   return parsed.success ? parsed.data : undefined
 }
 
-export const pullKey = (pull: PullRef) => `${pull.repo.toLowerCase()}#${pull.number}`
-
-export const samePull = (a: PullRef, b: PullRef) => pullKey(a) === pullKey(b)
-
 export const refOf = ({ repo, number }: PullRef): PullRef => ({ repo, number })

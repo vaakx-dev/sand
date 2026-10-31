@@ -1,8 +1,7 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, pullVariables } from '@sand/github/contract'
 import { present } from '../detail/nodes'
 import type { Nodes } from '../detail/raw'
 import { refusal } from '../errors/refusal'
-import { pullVariables } from '../pulls/ref'
 import type { ActionDeps } from './action'
 
 const most = 20

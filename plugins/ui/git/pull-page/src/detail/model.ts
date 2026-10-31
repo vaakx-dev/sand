@@ -1,9 +1,8 @@
-import type { PullRef, PullSummary } from '@sand/github/contract'
+import { type PullRef, type PullSummary, samePull } from '@sand/github/contract'
 import type { PullDetail } from '@sand/pull-detail/contract'
 import { errorMessage } from '@sand/util'
 import { effect, onTimeout, sig } from '@vaakx-dev/vrui'
 import { hereOf, type PageContext } from '../inject'
-import { sameKey } from '../pull/ref'
 
 const settleFor = 250
 
@@ -24,7 +23,9 @@ export const detailModel = (ctx: PageContext, ref: PullRef) => {
         detail.set(found)
       })
       .catch(error => {
-        if (mine === token && !detail.get()) failure.set(errorMessage(error))
+        if (mine !== token) return
+        if (detail.get()) return ctx.report(error)
+        failure.set(errorMessage(error))
       })
   }
 
@@ -34,7 +35,7 @@ export const detailModel = (ctx: PageContext, ref: PullRef) => {
   }
 
   const put = (next: PullDetail | PullSummary | undefined) => {
-    if (!next || !sameKey(next, ref)) return
+    if (!next || !samePull(next, ref)) return
     token++
     const known = detail.get()
     detail.set(known ? { ...known, ...next } : 'body' in next ? next : known)
@@ -53,12 +54,12 @@ export const detailModel = (ctx: PageContext, ref: PullRef) => {
 
   effect(() =>
     ctx.pullDetail.onChange(changedRef => {
-      if (sameKey(changedRef, ref)) soon()
+      if (samePull(changedRef, ref)) soon()
     }),
   )
   effect(() =>
     ctx.github.onPullChange((summary, device) => {
-      if (device !== hereOf(ctx) || !sameKey(summary, ref)) return
+      if (device !== hereOf(ctx) || !samePull(summary, ref)) return
       const known = detail.get()
       if (known) detail.set({ ...known, ...summary })
       soon()

@@ -1,8 +1,6 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
+import { type GitHub, type PullRef, pullKey } from '@sand/github/contract'
 import { keyedSerial } from '@sand/util'
-import type { PendingReview } from '../contract'
-import type { PullNodes } from '../pull/node'
-import { refKey } from '../pull/ref'
+import type { PendingReview, ReviewChange } from '../contract'
 import type { AgentRecord } from './agent-record'
 import { addComment, type NewComment } from './comment'
 import { deleteComment, deleteReview } from './delete'
@@ -11,9 +9,8 @@ import { type Submission, submitReview } from './submit'
 
 export interface ReviewDeps {
   github: GitHub
-  nodes: PullNodes
   record: AgentRecord
-  changed(ref: PullRef): void
+  changed(change: ReviewChange): void
   report(error: unknown): void
 }
 
@@ -21,13 +18,8 @@ export type Reviews = ReturnType<typeof createReviews>
 
 export const createReviews = (deps: ReviewDeps) => {
   const queue = keyedSerial()
-  const locked = <T>(ref: PullRef, task: () => Promise<T>) => queue(refKey(ref), task)
-
-  const read = async (ref: PullRef) => {
-    const pending = await readPending(deps.github, ref)
-    deps.nodes.note(ref, pending.pull)
-    return pending
-  }
+  const locked = <T>(ref: PullRef, task: () => Promise<T>) => queue(pullKey(ref), task)
+  const read = (ref: PullRef) => readPending(deps.github, ref)
 
   const shown = async (ref: PullRef, pending: PendingOnGitHub): Promise<PendingReview> => {
     const ids = await deps.record.ids(ref)
@@ -47,12 +39,15 @@ export const createReviews = (deps: ReviewDeps) => {
   return {
     pending: (ref: PullRef) => locked(ref, async () => shown(ref, await read(ref))),
 
-    comment: (ref: PullRef, comment: NewComment, byAgent = false) =>
-      changing(ref, async () => {
+    async comment(ref: PullRef, comment: NewComment, byAgent = false) {
+      const { id, pending } = await locked(ref, async () => {
         const id = await addComment(deps.github, await read(ref), comment)
         if (byAgent) await deps.record.add(ref, id)
-        return shown(ref, await read(ref))
-      }),
+        return { id, pending: await shown(ref, await read(ref)) }
+      })
+      deps.changed(byAgent ? { ...ref, agentComments: [id] } : ref)
+      return pending
+    },
 
     remove: (ref: PullRef, comment: string) =>
       changing(ref, async () => {

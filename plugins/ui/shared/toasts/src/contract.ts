@@ -24,6 +24,8 @@ export interface ToastHandle {
 
 export interface Toasts {
   show(toast: Toast): ToastHandle
+  error(id: string, title: string, error: unknown, actions?: ToastAction[]): ToastHandle
+  attempt<T>(id: string, title: string, run: () => Promise<T>): Promise<T | undefined>
 }
 
 export const toasts = service<Toasts>('toasts')

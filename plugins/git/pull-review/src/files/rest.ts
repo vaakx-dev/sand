@@ -1,5 +1,4 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
-import { ownerAndName } from '../pull/ref'
+import { type GitHub, type PullRef, pullVariables } from '@sand/github/contract'
 
 export type RestFileStatus = 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged'
 
@@ -25,7 +24,7 @@ const perPage = 100
 const maxFiles = 3000
 
 const pageUrl = ({ repo, number, commit }: FileSource, page: number) => {
-  const { owner, name } = ownerAndName(repo)
+  const { owner, name } = pullVariables({ repo, number })
   const query = `per_page=${perPage}&page=${page}`
   return commit ? `/repos/${owner}/${name}/commits/${encodeURIComponent(commit)}?${query}` : `/repos/${owner}/${name}/pulls/${number}/files?${query}`
 }

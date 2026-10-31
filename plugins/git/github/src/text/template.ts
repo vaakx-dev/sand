@@ -1,3 +1,4 @@
+import { isMissing } from '@sand/util/fs'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
@@ -13,9 +14,18 @@ const readFirst = async (paths: string[]) => {
   return undefined
 }
 
+const entriesOf = async (folder: string) => {
+  try {
+    return await readdir(folder)
+  } catch (error) {
+    if (isMissing(error)) return []
+    throw error
+  }
+}
+
 const fromTemplateFolder = async (root: string) => {
   const folder = join(root, '.github', 'PULL_REQUEST_TEMPLATE')
-  const entries = await readdir(folder).catch(() => [])
+  const entries = await entriesOf(folder)
   const first = entries.filter(entry => entry.toLowerCase().endsWith('.md')).sort()[0]
   return first ? Bun.file(join(folder, first)).text() : undefined
 }

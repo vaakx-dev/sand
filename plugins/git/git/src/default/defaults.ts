@@ -11,7 +11,7 @@ export interface Defaults {
 }
 
 const commonDirOf = async (cwd: string) => {
-  const out = await gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-common-dir'], { read: true }).catch(() => undefined)
+  const out = await gitMaybe(cwd, ['rev-parse', '--path-format=absolute', '--git-common-dir'], { read: true })
   return out ? normalize(out) : undefined
 }
 

@@ -1,9 +1,7 @@
-import type { GitStatus } from '@sand/git/contract'
+import { type GitStatus, repoOf } from '@sand/git/contract'
+import { shortSha } from '@sand/util'
 import { dynamicChild, show, span } from '@vaakx-dev/vrui'
-import { repoOf } from '../next/facts'
 import type { ControlParts } from '../parts'
-import { shortSha } from '../results/titles'
-import { diffStat } from './stat'
 
 type ChipKind = 'repo' | 'none' | 'loading'
 
@@ -20,7 +18,7 @@ const chipChevron = ({ kit }: ControlParts) => span({ class: 'hidden text-neutra
 
 const repoChip = (parts: ControlParts) => {
   const { kit, model, openBranches } = parts
-  const { icon, navButton } = kit
+  const { icon, lineStat, navButton } = kit
   const name = model.status.map(branchName)
   const glyph = model.status.map(status => (repoOf(status)?.worktree ? 'worktree' : 'branch'))
   const add = model.status.map(status => repoOf(status)?.add ?? 0)
@@ -32,7 +30,7 @@ const repoChip = (parts: ControlParts) => {
     span({ class: 'hidden max-w-48 truncate font-mono text-neutral-100 md:block' }, name),
     show(
       () => add.get() + del.get() > 0,
-      () => span({ class: 'hidden md:flex' }, diffStat(add, del)),
+      () => span({ class: 'hidden md:flex' }, lineStat(add, del)),
     ),
     chipChevron(parts),
   )

@@ -1,6 +1,6 @@
-import type { GitRemote, GitRepoLocal, GitStatus } from '@sand/git/contract'
+import { type GitRemote, type GitRepoLocal, type GitStatus, repoOf } from '@sand/git/contract'
 import type { GitBaseAction, GitBaseId } from '../contract'
-import { hasCommitsToPush, isDiverged, notOnBranch, repoOf, upstreamName } from './facts'
+import { hasCommitsToPush, isDiverged, notOnBranch, upstreamName } from './facts'
 
 const blocked = (id: GitBaseId, label: string, reason: string): GitBaseAction => ({ id, label, short: label, disabled: true, reason })
 

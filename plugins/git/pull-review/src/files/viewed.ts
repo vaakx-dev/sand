@@ -1,11 +1,9 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
+import { type GitHub, type PullRef, pullLabel, pullVariables } from '@sand/github/contract'
 import type { ViewedState } from '../contract'
-import { pullVariables, refLabel } from '../pull/ref'
 
 const query = `query PullViewed($owner: String!, $name: String!, $number: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
-      id
       headRefOid
       files(first: 100, after: $after) {
         nodes { path viewerViewedState }
@@ -20,7 +18,6 @@ type GitHubViewed = 'VIEWED' | 'UNVIEWED' | 'DISMISSED'
 interface ViewedData {
   repository: {
     pullRequest: {
-      id: string
       headRefOid: string
       files: { nodes: { path: string; viewerViewedState: GitHubViewed }[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } | null
     } | null
@@ -28,7 +25,6 @@ interface ViewedData {
 }
 
 export interface PullViewed {
-  id: string
   head: string
   states: Map<string, ViewedState>
 }
@@ -44,7 +40,7 @@ const stateOf = (viewed: GitHubViewed): ViewedState => {
 const readPage = async (github: GitHub, ref: PullRef, after: string | null) => {
   const data = await github.graphql<ViewedData>(query, { ...pullVariables(ref), after })
   const pull = data.repository?.pullRequest
-  if (!pull) throw new Error(`GitHub couldn't find ${refLabel(ref)}.`)
+  if (!pull) throw new Error(`GitHub couldn't find ${pullLabel(ref)}.`)
   return pull
 }
 
@@ -55,7 +51,7 @@ export const readViewed = async (github: GitHub, ref: PullRef): Promise<PullView
   for (let page = 1; ; page++) {
     for (const file of pull.files?.nodes ?? []) states.set(file.path, stateOf(file.viewerViewedState))
     const after = pull.files?.pageInfo.hasNextPage ? pull.files.pageInfo.endCursor : null
-    if (!after || page >= maxPages) return { id: first.id, head: first.headRefOid, states }
+    if (!after || page >= maxPages) return { head: first.headRefOid, states }
     pull = await readPage(github, ref, after)
   }
 }

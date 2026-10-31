@@ -1,4 +1,4 @@
-import type { PullRef, PullSummary } from '@sand/github/contract'
+import { type PullSummary, pullKey } from '@sand/github/contract'
 import { serial } from '@sand/util'
 import type { Found, FoundPage, Source } from '../search/page'
 
@@ -22,8 +22,6 @@ export interface PullStream {
   take(count: number): Promise<Taken>
   patch(summary: PullSummary): Found | undefined
 }
-
-export const pullKey = ({ repo, number }: PullRef) => `${repo.toLowerCase()}#${number}`
 
 const newer = (best: Feed | undefined, feed: Feed) => {
   const head = feed.buffer[0]

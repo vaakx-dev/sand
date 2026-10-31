@@ -21,14 +21,17 @@ export interface Auth {
 
 const missingError = (auth: GitHubAuth) => {
   if (auth.state === 'error') return new GitHubError(auth.message)
-  if (auth.state === 'signed-out' && !auth.gh) return new GitHubError('GitHub needs the GitHub CLI (gh) on this PC, or a GH_TOKEN; install gh and sign in.', 401)
-  return new GitHubError("This PC isn't signed in to GitHub; sign in under Settings → Git.", 401)
+  if (auth.state === 'signed-out' && !auth.gh) return new GitHubError('GitHub needs the GitHub CLI (gh) on this PC, or a GH_TOKEN; install gh and sign in.', { status: 401 })
+  return new GitHubError("This PC isn't signed in to GitHub; sign in under Settings → Git.", { status: 401 })
 }
 
 const later = (ms: number) => Date.now() + ms
 
 const settle = async (host: string, source: TokenSource): Promise<Known> => {
-  if (source.token === undefined) return { auth: { state: 'signed-out', gh: source.gh }, until: later(otherwiseMs) }
+  if (source.token === undefined) {
+    const auth: GitHubAuth = source.failed ? { state: 'error', message: source.failed } : { state: 'signed-out', gh: source.gh }
+    return { auth, until: later(otherwiseMs) }
+  }
   const user = await checkUser(source.token)
   if (user.ok) return { auth: { state: 'signed-in', login: user.login, host, from: source.from }, token: source.token, until: later(signedInMs) }
   if (!user.rejected) return { auth: { state: 'error', message: user.message }, token: source.token, until: later(otherwiseMs) }
@@ -69,7 +72,7 @@ export const createAuth = (host: string, changed: (auth: GitHubAuth) => void): A
       throw missingError(found.auth)
     },
     async reload() {
-      await loading?.catch(() => undefined)
+      if (loading) await Promise.allSettled([loading])
       known = undefined
       return (await load(true)).auth
     },

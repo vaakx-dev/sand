@@ -1,8 +1,8 @@
+import { pullRef } from '@sand/github/look'
 import { place } from '@sand/layout/place'
 import { errorMessage } from '@sand/util'
 import { derive, div, effect, list, onTimeout, show, sig, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
-import { refOf } from '../../pull/ref'
 import type { Shown } from '../shown'
 
 const searchDelay = 250
@@ -19,7 +19,7 @@ const candidateModel = (shown: Shown) => {
     const mine = ++token
     loading.set(true)
     ctx.pullDetail
-      .candidates({ ...refOf(shown.model.ref), ...(q.trim() && { q: q.trim() }) })
+      .candidates({ ...pullRef(shown.model.ref), ...(q.trim() && { q: q.trim() }) })
       .then(names => {
         if (mine !== token) return
         failure.set('')

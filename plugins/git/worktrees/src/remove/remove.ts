@@ -4,7 +4,7 @@ import { rolledBack } from '../create/rollback'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { currentBranch, headCommit } from '../repo/refs'
-import { gitStep, longGitMs } from '../repo/run'
+import { longGitMs } from '../repo/timeout'
 import { threadsIn, withSessions } from '../sessions/inside'
 import { relocateAll } from '../sessions/relocate'
 import { lossMessage, removeCheck } from './check'
@@ -34,11 +34,11 @@ const moveThreadsOut = (deps: WorktreeDeps, record: WorktreeRecord, branch: stri
 
 const detach = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
   const args = exists ? ['worktree', 'remove', '--force', record.path] : ['worktree', 'prune']
-  await gitStep(deps.git, record.main, args, "Couldn't remove the worktree", { timeoutMs: longGitMs })
+  await deps.git.ok(record.main, args, { timeoutMs: longGitMs, what: "Couldn't remove the worktree" })
 }
 
 const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: string) => {
-  await gitStep(deps.git, record.main, ['branch', '-D', branch], `The worktree is gone, but its branch ${branch} couldn't be deleted`).catch(deps.report)
+  await deps.git.ok(record.main, ['branch', '-D', branch], { what: `The worktree is gone, but its branch ${branch} couldn't be deleted` }).catch(deps.report)
 }
 
 const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean): Promise<RemoveResult> => {

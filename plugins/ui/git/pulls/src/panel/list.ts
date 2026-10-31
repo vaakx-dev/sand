@@ -1,8 +1,9 @@
+import { pullKey } from '@sand/github/contract'
+import { pullName } from '@sand/github/look'
 import type { PullLink } from '@sand/pull-links/contract'
 import { type Derive, div, dynamicChild, type Sig, span } from '@vaakx-dev/vrui'
-import { pullKey } from '../links/rank'
 import type { PullParts } from '../parts'
-import { attentionLook, pullName } from '../pull/look'
+import { attentionLook } from '../pull/look'
 
 const metaOf = (link: PullLink) => {
   const look = attentionLook(link.summary)

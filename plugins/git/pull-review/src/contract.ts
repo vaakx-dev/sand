@@ -65,9 +65,13 @@ export const reviewSubmit = request('pulls.review.submit', {
 })
 export const reviewDiscard = request('pulls.review.discard', { input: z.object(ref), output: type<void>() })
 export const reviewWithAgent = request('pulls.review.agent', { input: z.object({ ...ref, cwd: z.string() }), output: type<{ session: string }>(), place: 'thread' })
-export const reviewAgentComments = request('pulls.review.agentComments', { input: z.object(ref), output: type<string[]>() })
+export const reviewAgentComments = request('pulls.review.agentComments', { input: z.object({}), output: type<string[]>() })
 
-export const reviewChange = wireEvent<PullRef>('pulls.review.change')
+export interface ReviewChange extends PullRef {
+  agentComments?: string[]
+}
+
+export const reviewChange = wireEvent<ReviewChange>('pulls.review.change')
 
 export interface PullReviewClient {
   files(input: InputOf<typeof reviewFiles>, device?: string): Promise<ReviewFiles>

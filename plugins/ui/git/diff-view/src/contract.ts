@@ -1,7 +1,6 @@
 import type { DiffPatch } from '@sand/git-diff/contract'
-import type { FileKind } from '@sand/git/contract'
-import type { Kit } from '@sand/ui-kit/contract'
-import type { Child, Derive, MaybeReactive, Sig } from '@vaakx-dev/vrui'
+import type { FileChangeKind, Kit } from '@sand/ui-kit/contract'
+import type { Child, Cleanup, Derive, MaybeReactive, Sig } from '@vaakx-dev/vrui'
 import { service } from 'drydock'
 
 export type DiffLine = Parameters<Kit['diffRow']>[0]
@@ -33,7 +32,7 @@ export interface DiffFileOptions {
 export interface DiffHeadFile {
   path: string
   from?: string
-  kind: FileKind
+  kind: FileChangeKind
   add: number
   del: number
 }
@@ -44,18 +43,48 @@ export interface DiffHeadOptions {
   actions?: Child
 }
 
-export interface DiffMarks {
-  kind(kind: () => FileKind): HTMLElement
-  path(path: () => string): HTMLElement
-  stat(add: () => number, del: () => number): HTMLElement
+export type PatchState = { kind: 'idle' } | { kind: 'loading' } | { kind: 'ready'; patch: DiffPatch } | { kind: 'error'; message: string }
+
+export interface PatchFile {
+  path: string
+  binary?: boolean
+}
+
+export interface PatchStore<F extends PatchFile> {
+  state(file: F): Sig<PatchState>
+  files(files: F[]): void
+  seen(path: string, near: boolean): void
+  retry(path: string): void
+  stale(paths?: Iterable<string>): void
+  reset(): void
+}
+
+export interface DiffSectionFile extends DiffHeadFile, PatchFile {}
+
+export interface DiffSectionOptions<F extends DiffSectionFile> {
+  patches: PatchStore<F>
+  open: Sig<boolean>
+  tags?: Child
+  actions?: Child
+  onMount?(element: HTMLElement): Cleanup
+  body(patch: DiffPatch): HTMLElement
+}
+
+export interface DiffLayout {
+  split: Derive<boolean>
+  measure(element: HTMLElement): void
+  splitButton(): Child
 }
 
 export interface DiffView {
   selection(): DiffSelection
-  marks: DiffMarks
+  pathLabel(path: () => string): HTMLElement
   head(file: () => DiffHeadFile, options: DiffHeadOptions): HTMLElement
   file(patch: DiffPatch, options: DiffFileOptions): HTMLElement
   lines(patch: DiffPatch): DiffLine[]
+  patches<F extends PatchFile>(load: (file: F) => Promise<DiffPatch>, loaded?: (path: string) => void): PatchStore<F>
+  section<F extends DiffSectionFile>(file: Sig<F>, options: DiffSectionOptions<F>): HTMLElement
+  layout(): DiffLayout
 }
 
 export const diffView = service<DiffView>('diffView')

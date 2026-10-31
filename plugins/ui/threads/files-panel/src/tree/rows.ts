@@ -1,4 +1,3 @@
-import type { FileKind } from '@sand/git/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { span, type Child } from '@vaakx-dev/vrui'
 import type { Changes } from '../changes'
@@ -18,15 +17,6 @@ export interface Rows {
 
 const matchLimit = 200
 
-const marks: Record<FileKind, { letter: string; tone: string; title: string }> = {
-  added: { letter: 'A', tone: 'text-success-400', title: 'Added' },
-  untracked: { letter: 'A', tone: 'text-success-400', title: 'New, not tracked yet' },
-  modified: { letter: 'M', tone: 'text-neutral-400', title: 'Modified' },
-  deleted: { letter: 'D', tone: 'text-danger-400', title: 'Deleted' },
-  renamed: { letter: 'R', tone: 'text-accent-400', title: 'Renamed' },
-  conflicted: { letter: '!', tone: 'text-warning-400', title: 'Conflict' },
-}
-
 const byName = (a: string, b: string) => a.localeCompare(b)
 
 const slot = (...children: Child[]) => span({ class: 'flex w-4 shrink-0 justify-center' }, ...children)
@@ -34,17 +24,16 @@ const slot = (...children: Child[]) => span({ class: 'flex w-4 shrink-0 justify-
 const lead = (depth: number, ...children: Child[]) =>
   span({ class: 'flex items-center gap-1' }, ...Array.from({ length: depth }, () => slot()), ...children)
 
-const changeMark = (kind: FileKind | undefined) =>
-  kind && span({ class: ['font-mono', marks[kind].tone], title: marks[kind].title }, marks[kind].letter)
-
-const fileRow = ({ kit, changes, open }: Rows, path: string, depth: number, meta?: string) =>
-  kit.listRow({
+const fileRow = ({ kit, changes, open }: Rows, path: string, depth: number, meta?: string) => {
+  const kind = changes.files.get(path)
+  return kit.listRow({
     title: fileName(path),
     meta,
     lead: lead(depth + 1, kit.icon(fileIcon(path), 16)),
-    trail: changeMark(changes.files[path]),
+    trail: kind && kit.fileKindMark(kind),
     onClick: () => open(path),
   })
+}
 
 const folderRow = ({ kit, changes, toggle }: Rows, folder: Folder, depth: number, open: boolean) =>
   kit.listRow({

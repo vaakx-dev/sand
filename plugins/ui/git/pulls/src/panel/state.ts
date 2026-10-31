@@ -1,6 +1,5 @@
-import type { MergeMethod, PullRef } from '@sand/github/contract'
+import { type MergeMethod, type PullRef, pullKey } from '@sand/github/contract'
 import { sig, type Sig } from '@vaakx-dev/vrui'
-import { pullKey } from '../links/rank'
 
 export interface DetailState {
   method: Sig<MergeMethod>
@@ -27,16 +26,22 @@ const detailState = (): DetailState => {
   }
 }
 
+const keyOf = (session: string, pull: PullRef) => `${session}\u0000${pullKey(pull)}`
+
 export const detailStates = () => {
   const states = new Map<string, DetailState>()
   return {
     of(session: string, pull: PullRef) {
-      const key = `${session}\u0000${pullKey(pull)}`
+      const key = keyOf(session, pull)
       const found = states.get(key)
       if (found) return found
       const made = detailState()
       states.set(key, made)
       return made
+    },
+    keep(session: string | undefined, pulls: PullRef[]) {
+      const shown = new Set(session === undefined ? [] : pulls.map(pull => keyOf(session, pull)))
+      for (const key of states.keys()) if (!shown.has(key)) states.delete(key)
     },
   }
 }

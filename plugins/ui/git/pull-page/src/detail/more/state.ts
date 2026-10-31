@@ -1,12 +1,12 @@
+import { pullName } from '@sand/github/look'
 import { type Child, span } from '@vaakx-dev/vrui'
 import { confirmSheet } from '../../confirm/sheet'
-import { pullName } from '../../pull/look'
 import type { Shown } from '../shown'
 
 const label = (text: string) => span({ class: 'min-w-0 flex-1 truncate' }, text)
 
 const closePull = async (shown: Shown) => {
-  const name = pullName(shown.pull().number)
+  const name = pullName(shown.pull())
   const sure = await confirmSheet(shown.parts.ctx, {
     title: `Close ${name}?`,
     text: 'It closes without merging. You can reopen it later.',
@@ -18,7 +18,7 @@ const closePull = async (shown: Shown) => {
 const revertPull = async (shown: Shown) => {
   const pull = shown.pull()
   const sure = await confirmSheet(shown.parts.ctx, {
-    title: `Revert ${pullName(pull.number)}?`,
+    title: `Revert ${pullName(pull)}?`,
     text: `GitHub opens a new pull request that undoes these changes on ${pull.base}.`,
     action: 'Open revert pull request',
   })

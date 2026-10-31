@@ -26,6 +26,7 @@ export default definePlugin({
         ctx.emit(pullChanged, summary)
       },
       pullCreated: (summary, session) => ctx.emit(pullCreated, summary, session),
+      report: error => ctx.report(error),
     })
     ctx.effect(() => host.stop)
     ctx.provide(github, host.service)

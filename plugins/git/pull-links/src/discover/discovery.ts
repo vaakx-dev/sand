@@ -62,6 +62,11 @@ export const createDiscovery = (deps: DiscoveryDeps) => {
     now: (thread: Session) => (isLive(thread) ? look(thread, 0) : Promise.resolve()),
     afterTurn: (thread: Session) => soon(thread, afterTurnGapMs),
     revisit: (thread: Session) => soon(thread, revisitGapMs),
+    forget(id: string) {
+      clearTimeout(pending.get(id)?.timer)
+      pending.delete(id)
+      looked.delete(id)
+    },
     close() {
       for (const { timer } of pending.values()) clearTimeout(timer)
       pending.clear()

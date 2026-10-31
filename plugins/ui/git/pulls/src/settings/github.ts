@@ -1,12 +1,12 @@
 import type { GitHubAuth, GitHubLoginCode } from '@sand/github/contract'
 import { errorMessage } from '@sand/util'
 import { batch, sig } from '@vaakx-dev/vrui'
-import type { GitHubAccounts } from '../github/accounts'
 import type { PullsContext } from '../inject'
 
 const stillSignedIn = 'Still signed in: the token comes from GITHUB_TOKEN where sand runs on that PC. Remove it there to sign out.'
 
-const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) => {
+const signInFor = (ctx: PullsContext, device: string) => {
+  const { github } = ctx
   const code = sig<GitHubLoginCode | undefined>(undefined)
   const signing = sig(false)
   const leaving = sig(false)
@@ -27,7 +27,7 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
       code.set(undefined)
     })
     try {
-      accounts.set(device, await ctx.github.login(device))
+      await github.login(device)
     } catch (error) {
       failure.set(errorMessage(error))
     } finally {
@@ -41,9 +41,8 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
   const settleLogout = (next: GitHubAuth) => {
     if (next.state === 'error') {
       failure.set(next.message)
-      return void accounts.load(device)
+      return void github.auth(device)
     }
-    accounts.set(device, next)
     if (next.state === 'signed-in' && next.from === 'env') note.set(stillSignedIn)
   }
 
@@ -52,7 +51,7 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
     reset()
     leaving.set(true)
     try {
-      settleLogout(await ctx.github.logout(device))
+      settleLogout(await github.logout(device))
     } catch (error) {
       failure.set(errorMessage(error))
     } finally {
@@ -60,18 +59,18 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
     }
   }
 
-  return { device, auth: () => accounts.of(device), code, signing, leaving, failure, note, login, logout, check: () => accounts.load(device) }
+  return { device, auth: () => github.authOf(device), code, signing, leaving, failure, note, login, logout, check: () => github.auth(device) }
 }
 
 export type GitHubSignIn = ReturnType<typeof signInFor>
 
-export const githubSignIns = (ctx: PullsContext, accounts: GitHubAccounts) => {
+export const githubSignIns = (ctx: PullsContext) => {
   const signIns = new Map<string, GitHubSignIn>()
 
   const of = (device: string) => {
     const found = signIns.get(device)
     if (found) return found
-    const made = signInFor(ctx, accounts, device)
+    const made = signInFor(ctx, device)
     signIns.set(device, made)
     return made
   }

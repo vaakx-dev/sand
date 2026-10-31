@@ -1,6 +1,6 @@
+import type { LinkedThread } from '@sand/pull-links/contract'
 import { dynamicChild, span, stopThen } from '@vaakx-dev/vrui'
 import type { PageParts } from '../parts'
-import type { LinkedThread } from './book'
 
 type Activity = 'running' | 'watching' | 'idle'
 

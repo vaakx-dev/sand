@@ -735,6 +735,7 @@
         "@sand/server": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/watch": "workspace:*",
+        "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -749,7 +750,10 @@
         "@sand/git": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -793,9 +797,12 @@
         "@sand/server": "workspace:*",
         "@sand/skills": "workspace:*",
         "@sand/steering": "workspace:*",
+        "@sand/toasts": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
         "@sand/worktrees": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -1194,6 +1201,7 @@
         "@sand/keys": "workspace:*",
         "@sand/panel": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1223,11 +1231,20 @@
       "name": "@sand/git-diff-view",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/git": "workspace:*",
         "@sand/git-diff": "workspace:*",
         "@sand/markdown": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/ui/git/file-marks": {
+      "name": "@sand/git-file-marks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/files-panel": "workspace:*",
+        "@sand/git": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
@@ -1281,7 +1298,6 @@
       "name": "@sand/git-review",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/devices-contract": "workspace:*",
         "@sand/git-diff": "workspace:*",
         "@sand/git-diff-view": "workspace:*",
         "@sand/git-pull-page": "workspace:*",
@@ -1305,6 +1321,7 @@
         "@sand/composer": "workspace:*",
         "@sand/git": "workspace:*",
         "@sand/sidebar": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
@@ -1320,7 +1337,6 @@
         "@sand/git": "workspace:*",
         "@sand/git-changes": "workspace:*",
         "@sand/git-diff": "workspace:*",
-        "@sand/git-diff-view": "workspace:*",
         "@sand/git-snapshots": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/toasts": "workspace:*",
@@ -1557,6 +1573,7 @@
       "dependencies": {
         "@sand/layout": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -1608,7 +1625,6 @@
       "dependencies": {
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
-        "@sand/git": "workspace:*",
         "@sand/markdown": "workspace:*",
         "@sand/panel": "workspace:*",
         "@sand/project": "workspace:*",
@@ -1704,6 +1720,8 @@
     "@sand/git-diff": ["@sand/git-diff@workspace:plugins/git/diff"],
 
     "@sand/git-diff-view": ["@sand/git-diff-view@workspace:plugins/ui/git/diff-view"],
+
+    "@sand/git-file-marks": ["@sand/git-file-marks@workspace:plugins/ui/git/file-marks"],
 
     "@sand/git-pull-page": ["@sand/git-pull-page@workspace:plugins/ui/git/pull-page"],
 
@@ -2004,6 +2022,8 @@
     "@sand/git-control/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/git-diff-view/@vaakx-dev/vrui": ["@vaakx-dev/vrui@github:vaakx-dev/vrui#8bb2810", { "peerDependencies": { "lucide": "^1.16.0" }, "bin": { "vrui-check": "./scripts/check.mjs" } }, "vaakx-dev-vrui-8bb2810", "sha512-owJAY1BqNAoq1t9IuM3QnLiViOB3UxCZ3QZd3DWIOQR530zCDaaYmceE/FJNw/ngFnNLR0xZFGnSqiT0/4eRyA=="],
+
+    "@sand/git-file-marks/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 
     "@sand/git-pull-page/drydock": ["drydock@github:vaakx-dev/drydock#0fc87b9", {}, "vaakx-dev-drydock-0fc87b9", "sha512-JCErgpRnoL27YOU7dn/rddMNA0anSSugkgRKtyEOcOunRoHY2j0tTh7sBwJqmZCpRN3Y1fe+wOmIKDAzAz9tQA=="],
 

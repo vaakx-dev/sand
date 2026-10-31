@@ -1,4 +1,4 @@
-import { pcs, wire } from '@sand/devices-contract'
+import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { definePlugin } from 'drydock'
 import {
   pullReviewClient,
@@ -22,14 +22,18 @@ export default definePlugin({
   inject: { wire, pcs },
   apply(ctx) {
     const { wire } = ctx
-    const marked = agentMarks(wire, ctx.pcs)
+    const marks = agentMarks({ wire, pcs: ctx.pcs, report: error => ctx.report(error) })
+    ctx.effect(() => wire.on(reviewChange, marks.note, { from: 'all' }))
+    ctx.on(pcsChange, marks.sync)
+    ctx.on(wireHello, marks.reload)
+    marks.sync()
     ctx.provide(pullReviewClient, {
       files: (input, device) => wire.call(reviewFiles, input, device),
       patch: (input, device) => wire.call(reviewPatch, input, device),
       viewed: (input, device) => wire.call(reviewViewed, input, device),
-      pending: async (ref, device) => marked(ref, await wire.call(reviewPending, ref, device)),
-      comment: async (input, device) => marked(input, await wire.call(reviewComment, input, device)),
-      remove: async (input, device) => marked(input, await wire.call(reviewRemove, input, device)),
+      pending: async (ref, device) => marks.mark(await wire.call(reviewPending, ref, device)),
+      comment: async (input, device) => marks.mark(await wire.call(reviewComment, input, device)),
+      remove: async (input, device) => marks.mark(await wire.call(reviewRemove, input, device)),
       submit: (input, device) => wire.call(reviewSubmit, input, device),
       discard: (ref, device) => wire.call(reviewDiscard, ref, device),
       agent: (input, device) => wire.call(reviewWithAgent, input, device),

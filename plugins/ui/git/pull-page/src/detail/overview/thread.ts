@@ -27,19 +27,21 @@ const threadHead = (shown: Shown, thread: () => ReviewThread) => {
 
 const askButton = (shown: Shown, thread: () => ReviewThread) => {
   const { kit, agent } = shown.parts
-  return dynamicChild(
-    () => shown.linked.get()[0],
-    linked =>
-      linked
-        ? kit.secondaryAction(
-            { size: 'sm', title: 'Send this conversation to the pull request’s thread', onClick: () => void agent.ask(linked, threadPrompt(shown.pull(), thread())) },
-            kit.icon('sparkles', 12),
-            'Ask agent',
-          )
-        : agent.canOpen(shown.pull())
-          ? kit.secondaryAction({ size: 'sm', title: 'Open a thread for this pull request first', onClick: () => void agent.open(shown.pull()) }, kit.icon('worktree', 12), 'Open in a thread')
-          : null,
-  )
+  const choice = derive(() => {
+    if (shown.linked.get().length > 0) return 'ask'
+    return agent.canOpen(shown.pull()) ? 'open' : 'none'
+  })
+  return dynamicChild(choice, kind => {
+    if (kind === 'ask')
+      return kit.secondaryAction(
+        { size: 'sm', title: 'Send this conversation to the pull request’s thread', onClick: () => void agent.ask(shown.pull(), threadPrompt(shown.pull(), thread())) },
+        kit.icon('sparkles', 12),
+        'Ask agent',
+      )
+    if (kind === 'open')
+      return kit.secondaryAction({ size: 'sm', title: 'Open a thread for this pull request first', onClick: () => void agent.open(shown.pull()) }, kit.icon('worktree', 12), 'Open in a thread')
+    return null
+  })
 }
 
 const threadFoot = (shown: Shown, thread: () => ReviewThread) => {

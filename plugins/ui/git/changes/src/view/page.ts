@@ -1,9 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, list, resizeObserver, type Child } from '@vaakx-dev/vrui'
+import { div, dynamicChild, list, type Child } from '@vaakx-dev/vrui'
 import type { ChangesModel } from '../model/model'
 import type { Phase } from '../model/phase'
 import { fileList } from './file-list'
-import { viewLayout } from './layout'
 import type { ChangesServices, ViewParts } from './parts'
 import { quoteBar } from './quote-bar'
 import { fileSection } from './section'
@@ -39,16 +38,13 @@ const content = (parts: ViewParts, phase: Phase) => {
 }
 
 export const changesPage = (kit: Kit, model: ChangesModel, services: ChangesServices) => {
-  const parts: ViewParts = { ...services, kit, model, layout: viewLayout(), sections: sectionIndex() }
+  const parts: ViewParts = { ...services, kit, model, layout: services.diff.layout(), sections: sectionIndex() }
   return div(
     { class: 'absolute inset-0' },
     div(
       {
-        'data-changes-scroll': 'true',
         class: 'absolute inset-0 overflow-auto bg-neutral-950',
-        onMount: element => {
-          resizeObserver(element, entries => parts.layout.width.set(entries[0]?.contentRect.width ?? 0))
-        },
+        onMount: element => parts.layout.measure(element),
       },
       toolbar(parts),
       dynamicChild(model.phase, phase => content(parts, phase)),

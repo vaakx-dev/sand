@@ -1,8 +1,7 @@
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, placeKey } from '@sand/git/contract'
 import type { Worktree } from '@sand/worktrees/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
-import { placeKey } from '../paths'
 
 export const worktreeCache = (ctx: WorkspaceContext) => {
   const lists = new Map<string, Worktree[]>()
@@ -27,17 +26,21 @@ export const worktreeCache = (ctx: WorkspaceContext) => {
     return call
   }
 
+  const loadInBackground = (place: GitPlace) => {
+    void load(place).catch(ctx.report)
+  }
+
   const get = (place: GitPlace) => {
     version.get()
     return lists.get(placeKey(place))
   }
 
   const ensure = (place: GitPlace) => {
-    if (!lists.has(placeKey(place))) void load(place).catch(() => undefined)
+    if (!lists.has(placeKey(place))) loadInBackground(place)
   }
 
   const reload = (device: string) => {
-    for (const [key, place] of places) if (place.device === device && lists.has(key)) void load(place).catch(() => undefined)
+    for (const [key, place] of places) if (place.device === device && lists.has(key)) loadInBackground(place)
   }
 
   ctx.effect(() => ctx.worktrees.onChange((_change, device) => reload(device)))

@@ -1,4 +1,4 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, pullLabel } from '@sand/github/contract'
 import { type Layout, layout } from '@sand/layout/contract'
 import { running } from '@sand/layout/place'
 import { onAddressChange } from '@sand/web-client/address'
@@ -7,7 +7,6 @@ import { collectScope, disposeAll, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { leaveQuery, openQuery, recordQuery, requestedQuery } from '../address/query'
 import type { QueryState } from '../address/state'
 import type { PageContext } from '../inject'
-import { pullKey } from '../pull/ref'
 
 export const pageHost = (ctx: PageContext, query: QueryState, build: () => HTMLElement) => {
   const open = sig(false)
@@ -39,8 +38,8 @@ export const pageHost = (ctx: PageContext, query: QueryState, build: () => HTMLE
   }
 
   const show = (pull?: PullRef) => {
-    if (open.get()) return query.pull.set(pull && pullKey(pull))
-    openQuery({ ...query.current(), pull: pull && pullKey(pull) })
+    if (open.get()) return query.pull.set(pull && pullLabel(pull))
+    openQuery({ ...query.current(), pull: pull && pullLabel(pull) })
     sync()
   }
 

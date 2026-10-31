@@ -1,7 +1,8 @@
+import { pullName } from '@sand/github/look'
 import type { PullLink } from '@sand/pull-links/contract'
 import { dynamicChild, span } from '@vaakx-dev/vrui'
 import type { PullParts } from '../parts'
-import { attentionLook, pullName, pullTitle } from '../pull/look'
+import { attentionLook, pullTitle } from '../pull/look'
 
 const chipButton = (parts: PullParts, link: PullLink) => {
   const { kit } = parts

@@ -1,13 +1,18 @@
+import { repoOf, samePlace } from '@sand/git/contract'
 import type { DraftTarget, ThreadCreator } from '@sand/web-client/contract'
 import type { WorkspaceContext } from '../inject'
-import { repoOf } from '../paths'
 import type { DraftChoices } from './choices'
 import type { DraftModel } from './model'
+
+const inRepo = (ctx: WorkspaceContext, target: DraftTarget) => {
+  const current = ctx.gitStatus.current.get()
+  return Boolean(current && samePlace(current.place, target) && repoOf(current.status))
+}
 
 const chosenFor = (ctx: WorkspaceContext, model: DraftModel, choices: DraftChoices, target: DraftTarget) => {
   const picked = choices.get(target.id)
   if (picked) return picked
-  return repoOf(ctx.gitStatus.current(target)) ? model.choiceFor(target) : undefined
+  return inRepo(ctx, target) ? model.choiceFor(target) : undefined
 }
 
 export const worktreeCreator =

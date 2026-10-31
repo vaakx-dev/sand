@@ -9,7 +9,7 @@ const groupsOf = (extras: ChangesScope[]) => {
   return [...groups]
 }
 
-const extraItem = ({ kit, model, diff }: ViewParts, choice: ChangesScope, close: () => void) => {
+const extraItem = ({ kit, model }: ViewParts, choice: ChangesScope, close: () => void) => {
   const { add, del } = choice.stat ?? { add: 0, del: 0 }
   return kit.choiceItem(
     {
@@ -23,7 +23,7 @@ const extraItem = ({ kit, model, diff }: ViewParts, choice: ChangesScope, close:
     span(
       { class: 'flex min-w-0 flex-1 items-center gap-3' },
       span({ class: 'min-w-0 flex-1 truncate' }, choice.label),
-      choice.stat ? diff.marks.stat(() => add, () => del) : null,
+      choice.stat ? kit.lineStat(add, del) : null,
     ),
     choice.detail ? kit.menuReason(choice.detail) : null,
   )

@@ -1,6 +1,5 @@
-import type { GitRunner } from '@sand/git/contract'
-import { literalPaths } from '../worktree/untracked'
-import { type GitEnv, withUntracked, type WorktreeRead } from '../worktree/temp-index'
+import type { GitEnv, GitRunner } from '@sand/git/contract'
+import { literalPaths, withUntracked, type WorktreeRead } from '../worktree/untracked'
 import type { Range } from './resolve'
 
 const plainDiff = ['-c', 'diff.suppressBlankEmpty=false', 'diff', '--no-color', '--no-ext-diff', '--no-textconv', '--no-relative', '--submodule=short', '-M']
@@ -15,4 +14,4 @@ export const diffArgs = (range: Range, format: string[], paths: string[] = []) =
 ]
 
 export const readRange = async <T>(git: GitRunner, range: Range, paths: string[], work: (env: GitEnv) => Promise<T>): Promise<WorktreeRead<T>> =>
-  range.to ? { value: await work(literalPaths), truncated: false } : withUntracked(git, range.repo, paths, work)
+  range.to ? { value: await work(literalPaths), truncated: false } : withUntracked(git, range.repo.root, paths, work)

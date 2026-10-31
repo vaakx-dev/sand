@@ -1,9 +1,7 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, samePull } from '@sand/github/contract'
 import type { PullCommit } from '@sand/pull-detail/contract'
 import { effect, sig } from '@vaakx-dev/vrui'
-import type { ReviewContext } from '../inject'
-import { notifyError } from '../notify'
-import { sameRef } from '../pull/ref'
+import { type ReviewContext, toastId } from '../inject'
 
 export const commitsModel = (ctx: ReviewContext, ref: PullRef) => {
   const commits = sig<PullCommit[]>([])
@@ -17,13 +15,13 @@ export const commitsModel = (ctx: ReviewContext, ref: PullRef) => {
         if (mine === ticket) commits.set(found.commits)
       })
       .catch(error => {
-        if (mine === ticket) notifyError(ctx, "Couldn't load the pull request's commits", error)
+        if (mine === ticket) ctx.toasts.error(toastId, "Couldn't load the pull request's commits", error)
       })
   }
 
   effect(() =>
     ctx.pullDetail.onChange(changed => {
-      if (sameRef(changed, ref)) load()
+      if (samePull(changed, ref)) load()
     }),
   )
   load()

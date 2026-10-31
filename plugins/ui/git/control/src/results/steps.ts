@@ -1,7 +1,11 @@
 import type { GitAction, GitActionFailure } from '@sand/git-actions/contract'
 import type { ToastAction } from '@sand/toasts/contract'
 import { type AgentPrompt, conflictPrompt, dirtyPrompt, hookPrompt, rejectedPrompt } from '../agent/prompts'
-import type { FailureNote } from './notify'
+
+export interface FailureNote {
+  detail?: string
+  actions: ToastAction[]
+}
 
 export interface StepHelpers {
   action: GitAction

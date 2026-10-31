@@ -1,6 +1,5 @@
-import type { GitBranch, GitPlace } from '@sand/git/contract'
+import { type GitBranch, type GitPlace, repoOf } from '@sand/git/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
-import { repoOf } from '../next/facts'
 import type { ControlParts } from '../parts'
 
 const limit = 50

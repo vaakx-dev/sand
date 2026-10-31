@@ -1,10 +1,9 @@
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitLayout, GitRepo, GitRunner } from '@sand/git/contract'
 import { keyedSerial } from '@sand/util'
 import { resolve } from 'node:path'
 import type { GitActionResult, GitProgress } from '../contract'
 import { failedThrow, failure } from './failure'
 import { createProgress, type Progress, type ProgressPlace } from './progress'
-import { type Repo, readRepo } from './repo'
 
 export interface PerformDeps {
   git: GitRunner
@@ -15,12 +14,13 @@ export interface PerformDeps {
 
 export interface Job {
   git: GitRunner
-  repo: Repo
+  repo: GitLayout
   progress: Progress
 }
 
 export interface FolderJob {
   git: GitRunner
+  repos: GitRepo
   cwd: string
   progress: Progress
 }
@@ -46,7 +46,7 @@ export const createPerformer = ({ git, repos, send, report }: PerformDeps) => {
 
   const inRepo = <T>(place: ProgressPlace, serial: boolean, work: Work<T, Job>) =>
     perform<T>(place, async progress => {
-      const repo = await readRepo(git, place.cwd)
+      const repo = await repos.layout(place.cwd)
       if (!repo) return failure('not-a-repo', "This folder isn't a git repository.")
       const job = () => work({ git, repo, progress })
       return serial ? queue(repo.commonDir, job) : job()
@@ -56,6 +56,6 @@ export const createPerformer = ({ git, repos, send, report }: PerformDeps) => {
     mutate: <T>(place: ProgressPlace, work: Work<T, Job>) => inRepo(place, true, work),
     read: <T>(place: ProgressPlace, work: Work<T, Job>) => inRepo(place, false, work),
     folder: <T>(place: ProgressPlace, work: Work<T, FolderJob>) =>
-      perform<T>(place, progress => queue(resolve(place.cwd), () => work({ git, cwd: place.cwd, progress }))),
+      perform<T>(place, progress => queue(resolve(place.cwd), () => work({ git, repos, cwd: place.cwd, progress }))),
   }
 }

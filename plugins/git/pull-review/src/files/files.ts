@@ -1,6 +1,5 @@
 import type { GitHub } from '@sand/github/contract'
 import type { ReviewFile, ReviewFileKind, ReviewFiles } from '../contract'
-import type { PullNodes } from '../pull/node'
 import { reviewOrder } from './order'
 import { type FileSource, isBinary, listFiles, movedFrom, type RestFile, type RestFileStatus } from './rest'
 import { readViewed } from './viewed'
@@ -25,9 +24,8 @@ const reviewFile = (file: RestFile, viewed: ReviewFile['viewed']): ReviewFile =>
   ...(isBinary(file) ? { binary: true } : {}),
 })
 
-export const readFiles = async (github: GitHub, nodes: PullNodes, source: FileSource): Promise<ReviewFiles> => {
+export const readFiles = async (github: GitHub, source: FileSource): Promise<ReviewFiles> => {
   const [listed, viewed] = await Promise.all([listFiles(github, source), readViewed(github, source)])
-  nodes.note(source, viewed.id)
   const files = reviewOrder(listed.map(file => reviewFile(file, viewed.states.get(file.filename) ?? 'unviewed')))
   return {
     repo: source.repo,

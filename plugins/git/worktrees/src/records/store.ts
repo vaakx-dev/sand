@@ -1,8 +1,8 @@
+import { pathKey } from '@sand/git/contract'
 import { serial } from '@sand/util'
 import { isWithin, writeAtomic } from '@sand/util/fs'
 import type { WorkspaceDefaults } from '../contract'
 import { reviveSetup } from '../setup/state'
-import { pathKey } from './key'
 import { type Stored, storedSchema, type WorktreeRecord } from './schema'
 
 export type RecordStore = ReturnType<typeof createStore>

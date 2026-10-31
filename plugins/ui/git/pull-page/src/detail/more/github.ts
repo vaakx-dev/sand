@@ -1,5 +1,5 @@
+import { isLivePull } from '@sand/github/look'
 import type { Child } from '@vaakx-dev/vrui'
-import { isLive } from '../../pull/look'
 import { editSheet } from '../edit/sheet'
 import { updateItems } from '../main/update'
 import { reviewersSheet } from '../reviewers/sheet'
@@ -8,7 +8,7 @@ import type { Shown } from '../shown'
 export const githubItems = (shown: Shown, close: () => void): Child[] => {
   const { kit } = shown.parts
   const pull = shown.pull()
-  const live = isLive(pull.state)
+  const live = isLivePull(pull.state)
   const then = (run: () => void) => () => {
     close()
     run()

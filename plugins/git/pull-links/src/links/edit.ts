@@ -1,6 +1,6 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, samePull } from '@sand/github/contract'
 import type { LinkSource } from '../contract'
-import { refOf, samePull, type StoredLink, type StoredLinks, type WatchMark } from '../book/record'
+import { refOf, type StoredLink, type StoredLinks, type WatchMark } from '../book/record'
 
 export const findLink = (links: StoredLinks, pull: PullRef) => links.links.find(link => samePull(link, pull))
 

@@ -17,7 +17,7 @@ const refused = (response: Response) =>
 const clock = (at: number) => new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
 const limitError = (resource: Resource, until: number) =>
-  new GitHubError(`This PC has used up its GitHub ${resource === 'graphql' ? 'GraphQL ' : ''}rate limit until ${clock(until)}; try again then.`, 429)
+  new GitHubError(`This PC has used up its GitHub ${resource === 'graphql' ? 'GraphQL ' : ''}rate limit until ${clock(until)}; try again then.`, { status: 429 })
 
 export const createRate = () => {
   const blocked = new Map<Resource, number>()

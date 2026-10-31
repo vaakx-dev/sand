@@ -1,10 +1,6 @@
 import type { GitRunner } from '@sand/git/contract'
 
-export const listPaths = async (git: GitRunner, root: string, args: string[]) => {
-  const result = await git.run(root, args, { read: true })
-  if (result.code !== 0) throw new Error(git.classify(result, args).message)
-  return result.out.split('\0').filter(Boolean)
-}
+export const listPaths = async (git: GitRunner, root: string, args: string[]) => (await git.output(root, args, { read: true })).split('\0').filter(Boolean)
 
 const blobPath = (record: string) => {
   const tab = record.indexOf('\t')

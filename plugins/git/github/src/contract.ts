@@ -2,6 +2,8 @@ import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
+export { GitHubError, type GitHubErrorDetails, isForbidden, isMissing } from './api/errors'
+export { pullKey, pullLabel, pullVariables, samePull } from './pulls/ref'
 export { repoSlug } from './repo/slug'
 
 export type GitHubAuth =
@@ -104,6 +106,7 @@ export const pullCreated = event<(summary: PullSummary, session?: string) => voi
 export interface GitHub {
   auth(): Promise<GitHubAuth>
   summary(ref: PullRef, fresh?: boolean): Promise<PullSummary>
+  nodeId(ref: PullRef): Promise<string>
   noteSummary(id: string, summary: PullSummary): void
   forBranch(cwd: string): Promise<PullSummary | null>
   resolve(cwd: string, ref: string): Promise<PullSummary>
@@ -113,11 +116,18 @@ export interface GitHub {
 
 export const github = service<GitHub>('github')
 
+export interface GitHubFolder {
+  cwd: string
+  device: string
+}
+
 export interface GitHubClient {
+  authOf(device: string): GitHubAuth | undefined
   auth(device: string): Promise<GitHubAuth>
   login(device: string): Promise<GitHubAuth>
   logout(device: string): Promise<GitHubAuth>
-  repo(input: InputOf<typeof githubRepo>, device: string): Promise<{ repo: string } | null>
+  repoOf(folder: GitHubFolder): string | null | undefined
+  localCopy(repo: string): GitHubFolder | undefined
   forBranch(input: InputOf<typeof pullsForBranch>, device: string): Promise<PullSummary | null>
   summary(input: InputOf<typeof pullsSummary>, device: string): Promise<PullSummary>
   resolve(input: InputOf<typeof pullsResolve>, device: string): Promise<PullSummary>
@@ -125,7 +135,6 @@ export interface GitHubClient {
   create(input: InputOf<typeof pullsCreate>, device: string): Promise<PullSummary>
   merge(input: InputOf<typeof pullsMerge>, device: string): Promise<PullSummary>
   ready(input: InputOf<typeof pullsReady>, device: string): Promise<PullSummary>
-  onAuthChange(listener: (auth: GitHubAuth, device: string) => void): Dispose
   onLoginCode(listener: (code: GitHubLoginCode, device: string) => void): Dispose
   onPullChange(listener: (summary: PullSummary, device: string) => void): Dispose
 }

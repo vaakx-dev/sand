@@ -1,13 +1,9 @@
+import { folderName } from '@sand/util'
 import type { Worktree } from '@sand/worktrees/contract'
 import type { WorkspaceContext } from '../inject'
-import { notify, notifyError } from '../notify'
-import { folderName } from '../paths'
+import { toastId } from '../toast'
 
 export const restoreWorktree = async (ctx: WorkspaceContext, device: string, tree: Worktree) => {
-  try {
-    const restored = await ctx.worktrees.restore({ path: tree.path }, device)
-    notify(ctx, { tone: 'success', title: `Restored ${restored.branch ?? folderName(restored.path)}` })
-  } catch (error) {
-    notifyError(ctx, 'Could not restore the worktree', error)
-  }
+  const restored = await ctx.toasts.attempt(toastId, 'Could not restore the worktree', () => ctx.worktrees.restore({ path: tree.path }, device))
+  if (restored) ctx.toasts.show({ id: toastId, tone: 'success', title: `Restored ${restored.branch ?? folderName(restored.path)}` })
 }

@@ -1,4 +1,5 @@
 import type { ReviewFile } from '@sand/pull-review/contract'
+import { plural } from '@sand/util'
 import { derive, show, type Sig } from '@vaakx-dev/vrui'
 import type { CodeTab } from '../model/state'
 
@@ -15,8 +16,6 @@ export const viewedToggle = ({ kit, files }: CodeTab, file: Sig<ReviewFile>, ope
     'Viewed',
   )
 }
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export const fileTags = ({ kit, pending }: CodeTab, file: Sig<ReviewFile>) => {
   const comments = derive(() => pending.review.get().comments.filter(comment => comment.path === file.get().path).length)

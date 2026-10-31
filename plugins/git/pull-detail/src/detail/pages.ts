@@ -1,5 +1,4 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
-import { pullVariables } from '../pulls/ref'
+import { type GitHub, type PullRef, pullVariables } from '@sand/github/contract'
 import { present } from './nodes'
 import { commentFields, pageQuery, reviewFields, threadFields } from './query'
 import type { Connection, PageData, RawComment, RawDetail, RawReview, RawThread } from './raw'

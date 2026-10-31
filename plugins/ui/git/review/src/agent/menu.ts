@@ -1,4 +1,5 @@
 import type { PullMenu } from '@sand/git-pull-page/contract'
+import { isLivePull, pullRef } from '@sand/github/look'
 import { span } from '@vaakx-dev/vrui'
 import type { ReviewContext } from '../inject'
 import { agentReview } from './review'
@@ -12,9 +13,9 @@ export const agentReviewMenu = (ctx: ReviewContext): PullMenu => {
     id: 'review-with-agent',
     order: 15,
     items: ({ pull, close }) => {
-      if (pull.state !== 'open' && pull.state !== 'draft') return []
-      const ref = { repo: pull.repo, number: pull.number }
-      if (!ctx.pullPage.localCopy(pull.repo))
+      if (!isLivePull(pull.state)) return []
+      const ref = pullRef(pull)
+      if (!ctx.github.localCopy(pull.repo))
         return [kit.menuItem({ icon: 'sparkles', disabled: true }, label('Review with the agent'), kit.menuReason(`Add a project with ${pull.repo} as its remote first`))]
       return [
         kit.menuItem(

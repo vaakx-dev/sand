@@ -1,9 +1,9 @@
 import type { GitPlace } from '@sand/git/contract'
 import { picker } from '@sand/picker/contract'
+import { folderName } from '@sand/util'
 import type { Worktree } from '@sand/worktrees/contract'
 import type { WorkspaceContext } from '../inject'
-import { notify, notifyError } from '../notify'
-import { folderName } from '../paths'
+import { toastId } from '../toast'
 import type { WorktreeCache } from '../worktrees/cache'
 import { worktreeAt } from '../worktrees/find'
 import { restoreWorktree } from '../worktrees/restore'
@@ -19,7 +19,8 @@ const confirmForce = async (ctx: WorkspaceContext, message: string) => {
 }
 
 const removed = (ctx: WorkspaceContext, place: GitPlace, tree: Worktree) =>
-  notify(ctx, {
+  ctx.toasts.show({
+    id: toastId,
     tone: 'success',
     title: 'Removed worktree',
     detail: tree.branch ?? folderName(tree.path),
@@ -33,17 +34,16 @@ const sandWorktree = async (cache: WorktreeCache, place: GitPlace) => {
   return tree
 }
 
-export const removeWorktree = async (ctx: WorkspaceContext, cache: WorktreeCache, place: GitPlace) => {
-  try {
-    const tree = await sandWorktree(cache, place)
-    const input = { path: tree.path }
-    const first = await ctx.worktrees.remove(input, place.device)
-    if (first.removed) return removed(ctx, place, tree)
+const remove = async (ctx: WorkspaceContext, cache: WorktreeCache, place: GitPlace) => {
+  const tree = await sandWorktree(cache, place)
+  const input = { path: tree.path }
+  const first = await ctx.worktrees.remove(input, place.device)
+  if (!first.removed) {
     if (!(await confirmForce(ctx, first.message))) return
     const forced = await ctx.worktrees.remove({ ...input, force: true }, place.device)
-    if (forced.removed) return removed(ctx, place, tree)
-    notifyError(ctx, removeTitle, forced.message)
-  } catch (error) {
-    notifyError(ctx, removeTitle, error)
+    if (!forced.removed) throw new Error(forced.message)
   }
+  removed(ctx, place, tree)
 }
+
+export const removeWorktree = (ctx: WorkspaceContext, cache: WorktreeCache, place: GitPlace) => ctx.toasts.attempt(toastId, removeTitle, () => remove(ctx, cache, place))

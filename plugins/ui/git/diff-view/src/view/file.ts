@@ -7,6 +7,7 @@ import { highlighter } from '../patch/highlight'
 import { patchRows, type PatchRows } from '../patch/rows'
 import type { LinePicker } from '../select/picker'
 import { pickHandlers } from '../select/picking'
+import { inset } from './inset'
 import { splitRows, unifiedRows, type IsPicked } from './rows'
 
 export interface FileViewDeps {
@@ -15,7 +16,7 @@ export interface FileViewDeps {
   picker?: LinePicker
 }
 
-const note = (kit: Kit, text: string) => div({ class: 'px-4' }, kit.emptyState({ text }))
+const note = (kit: Kit, text: string) => inset(kit.emptyState({ text }))
 
 const pickedBy = (picker: LinePicker, path: string): IsPicked => {
   const range = picker.of(path)

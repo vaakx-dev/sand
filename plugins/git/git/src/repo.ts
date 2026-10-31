@@ -3,6 +3,7 @@ import { listBranches } from './branches/list'
 import { createDefaults } from './default/defaults'
 import { readLayout } from './status/layout'
 import { readLocal } from './status/local'
+import { readWorktrees } from './status/worktrees'
 import { createWatches, type WatchDeps } from './watch/watches'
 
 export interface GitRepoHost {
@@ -23,6 +24,8 @@ export const createGitRepo = (deps: WatchDeps): GitRepoHost => {
     repo: {
       status: watches.status,
       local,
+      layout: readLayout,
+      worktrees: readWorktrees,
       branches: listBranches,
       defaultBranch: defaults.branch,
       base: defaults.base,

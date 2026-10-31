@@ -95,7 +95,7 @@ export default definePlugin({
         toggle: row => sections.toggle(row.key, openByDefault(row.name)),
         more: row => limits.update(current => ({ ...current, [row.section]: (current[row.section] ?? pageSize) + pageStep })),
       })
-    const own: Sidebar = { decorate: decorations.decorate, refresh: decorations.refresh }
+    const own: Sidebar = { decorate: decorations.decorate }
     ctx.provide(sidebar, own)
     ctx.watch(sidebar, current => (current === own ? place(ctx, 'side', view) : undefined))
     ctx.effect(() => ctx.nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create }))

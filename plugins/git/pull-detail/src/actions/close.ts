@@ -1,4 +1,4 @@
-import { pullLabel } from '../pulls/ref'
+import { pullLabel } from '@sand/github/contract'
 import type { Action } from './action'
 import { stateNote } from './state'
 

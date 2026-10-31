@@ -18,6 +18,8 @@ import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
+import { fileKindMark } from './marks/file-kind'
+import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
 import { textRule } from './marks/rule'
@@ -105,6 +107,7 @@ export const kit = {
   expandRow,
   expandToggle,
   floatButton,
+  fileKindMark,
   fold,
   gesture,
   hasOpenLayer,
@@ -114,6 +117,7 @@ export const kit = {
   isMac,
   jumpButton,
   layer,
+  lineStat,
   linkButton,
   listbox,
   listRow,

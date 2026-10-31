@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, show, span } from '@vaakx-dev/vrui'
 import type { DiffHeadFile, DiffHeadOptions } from '../contract'
-import { kindMark, lineStat, pathLabel } from './marks'
+import { pathLabel } from './path'
 
 export const fileHead = (kit: Kit, file: () => DiffHeadFile, { open, tags = null, actions = null }: DiffHeadOptions) =>
   div(
@@ -10,7 +10,7 @@ export const fileHead = (kit: Kit, file: () => DiffHeadFile, { open, tags = null
       { size: 'sm', title: () => (open.get() ? 'Collapse' : 'Expand'), 'aria-expanded': () => String(open.get()), onClick: open.toggle() },
       kit.chevron(() => open.get()),
     ),
-    kindMark(() => file().kind),
+    kit.fileKindMark(() => file().kind),
     show(
       () => Boolean(file().from),
       () => span({ class: 'flex min-w-0 shrink items-center gap-1' }, pathLabel(() => file().from ?? ''), span({ class: 'shrink-0 text-neutral-500' }, '→')),
@@ -18,7 +18,7 @@ export const fileHead = (kit: Kit, file: () => DiffHeadFile, { open, tags = null
     pathLabel(() => file().path),
     tags,
     span({ class: 'flex-1' }),
-    lineStat(
+    kit.lineStat(
       () => file().add,
       () => file().del,
     ),

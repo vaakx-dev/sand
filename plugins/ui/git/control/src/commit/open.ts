@@ -1,9 +1,8 @@
+import { placeKey, repoOf } from '@sand/git/contract'
 import { place } from '@sand/layout/place'
 import type { Dispose } from 'drydock'
-import { repoOf } from '../next/facts'
 import { commitReason } from '../next/reasons'
 import type { ControlParts } from '../parts'
-import { placeKey } from '../status/place'
 import { commitDrafts } from './drafts'
 import { commitSheet } from './sheet'
 

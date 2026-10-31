@@ -1,14 +1,13 @@
 import type { Wire } from '@sand/devices-contract'
 import { collectScope, onInterval } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { gitBranches, gitLocalChange, type GitPlace, gitRemoteChange, type GitStatus, gitStatus, type GitStatusClient, gitWatch } from '../contract'
-import { type Followed, placeKey, type StatusListener, withLocal, withRemote } from './followed'
+import { gitBranches, gitLocalChange, type GitPlace, gitRemoteChange, type GitStatus, gitStatus, type GitStatusClient, gitWatch, placeKey } from '../contract'
+import { type Followed, type StatusListener, withLocal, withRemote } from './followed'
 
 const renewMs = 60_000
 
-export interface StatusClient extends GitStatusClient {
+export interface StatusClient extends Omit<GitStatusClient, 'current'> {
   renew(device?: string): void
-  devices(): string[]
 }
 
 export const createStatusClient = (ctx: Context, wire: Wire): StatusClient => {
@@ -86,17 +85,17 @@ export const createStatusClient = (ctx: Context, wire: Wire): StatusClient => {
       const entry = followed.get(placeKey(place)) ?? start(place)
       const listener: StatusListener = status => onChange(status)
       entry.listeners.add(listener)
+      if (entry.status) onChange(entry.status)
       return () => leave(entry, listener)
     },
-    current: place => followed.get(placeKey(place))?.status,
     status,
-    async refresh(place) {
-      await status(place)
+    rewatch(place) {
+      const entry = followed.get(placeKey(place))
+      if (entry) lease(entry)
     },
     branches: (place, query, limit) => wire.call(gitBranches, { cwd: place.cwd, query, limit }, place.device),
     renew(device) {
       for (const entry of followed.values()) if (!device || entry.place.device === device) lease(entry)
     },
-    devices: () => [...new Set([...followed.values()].map(entry => entry.place.device))],
   }
 }

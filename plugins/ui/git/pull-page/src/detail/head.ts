@@ -1,9 +1,8 @@
+import { pullStateLook } from '@sand/github/look'
 import { plural } from '@sand/util'
 import { div, dynamicChild, list, show, span } from '@vaakx-dev/vrui'
 import { threadChip } from '../links/chip'
-import { stateLook } from '../pull/look'
 import { metaRow } from '../pull/meta'
-import { lineStat } from '../pull/stat'
 import { mainAction } from './main/view'
 import { moreMenu } from './more/menu'
 import type { Shown } from './shown'
@@ -32,13 +31,16 @@ const factsLine = (shown: Shown) => {
     dynamicChild(
       () => pull().state,
       state => {
-        const look = stateLook(state)
+        const look = pullStateLook(state)
         return kit.badge(look.tone, kit.icon(look.icon, 12), look.label)
       },
     ),
     span({ class: 'min-w-0 truncate font-mono', title: () => `${pull().head} into ${pull().base}` }, () => `${pull().base} ← ${pull().head}`),
     span({ class: 'shrink-0' }, () => plural(pull().files, 'file')),
-    lineStat(kit, () => pull().add, () => pull().del),
+    kit.lineStat(
+      () => pull().add,
+      () => pull().del,
+    ),
   )
 }
 

@@ -1,7 +1,7 @@
 import type { PullCommit } from '@sand/pull-detail/contract'
+import { shortSha } from '@sand/util'
 import { derive, span } from '@vaakx-dev/vrui'
 import type { CodeTab } from '../model/state'
-import { shortSha } from '../pull/ref'
 
 const commitItem = ({ kit, files }: CodeTab, commit: PullCommit, close: () => void) =>
   kit.choiceItem(

@@ -1,7 +1,7 @@
+import { isLivePull } from '@sand/github/look'
 import type { ReviewerState } from '@sand/pull-detail/contract'
 import type { IconName, Tone } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, list, span } from '@vaakx-dev/vrui'
-import { isLive } from '../../pull/look'
 import { reviewersSheet } from '../reviewers/sheet'
 import type { Shown } from '../shown'
 
@@ -59,7 +59,7 @@ export const reviewersBlock = (shown: Shown) => {
     div(
       { class: 'flex items-center gap-2' },
       span({ class: 'flex-1 text-xs text-neutral-500' }, () => (rows.get().length ? '' : 'No reviewers yet')),
-      isLive(shown.pull().state) && shown.pull().canEdit ? kit.linkButton({ class: 'text-xs', onClick: () => reviewersSheet(shown) }, 'Request review') : null,
+      isLivePull(shown.pull().state) && shown.pull().canEdit ? kit.linkButton({ class: 'text-xs', onClick: () => reviewersSheet(shown) }, 'Request review') : null,
     ),
   )
 }

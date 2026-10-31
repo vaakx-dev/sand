@@ -1,13 +1,13 @@
 import { type Session, sessionClosing, sessionRemove, sessions } from '@sand/chats/contract'
-import { gitRepo, gitRunner } from '@sand/git/contract'
+import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
 import { loop, turnEnd, turnReady } from '@sand/loop/contract'
 import { type Server, server, sessionCarry } from '@sand/server/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'
+import { isWithin } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { snapshotsChange } from './contract'
 import type { SnapshotDeps } from './deps'
 import { createHolds } from './git/holds'
-import { isInside, pathKey } from './git/repo'
 import { serveSnapshots } from './requests'
 import { createCleanup } from './turns/cleanup'
 import { snapshotEntry } from './turns/entries'
@@ -19,7 +19,7 @@ const snapshotted = (session: Session) => session.kind !== 'quick'
 export default definePlugin({
   name: 'git-snapshots',
   description: "Snapshots a thread's git folder before and after each turn in hidden commits, lists what each turn changed and restores files to before or after a turn",
-  inject: { gitRunner, sessions },
+  inject: { gitRunner, gitRepo, sessions },
   apply(ctx) {
     let live: Server | undefined
     const report = (error: unknown) => ctx.report(error)
@@ -36,9 +36,10 @@ export default definePlugin({
 
     const deps: SnapshotDeps = {
       git: ctx.gitRunner,
+      repos: ctx.gitRepo,
       sessions: ctx.sessions,
       queue: (root, task) => holds.hold(() => serialByRepo(pathKey(root), task)),
-      busyIn: root => ctx.sessions.list().some(summary => isInside(root, summary.cwd) && running(summary.id)),
+      busyIn: root => ctx.sessions.list().some(summary => isWithin(summary.cwd, root) && running(summary.id)),
       changed(session) {
         const found = live
         if (!found) return
@@ -46,7 +47,7 @@ export default definePlugin({
           .then(turns => found.broadcast(snapshotsChange, turns))
           .catch(report)
       },
-      refresh: cwd => void ctx.get(gitRepo)?.refresh(cwd).catch(report),
+      refresh: cwd => void ctx.gitRepo.refresh(cwd).catch(report),
     }
     const tracker = createTurnTracker(deps)
     const cleanup = createCleanup(deps)

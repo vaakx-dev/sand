@@ -1,33 +1,22 @@
 import type { PullSummary } from '@sand/github/contract'
+import { pullName, pullStateLook } from '@sand/github/look'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { PullPlace } from '../contract'
-import { notify, notifyError } from '../notify'
+import { toastId } from '../inject'
 import type { PullParts } from '../parts'
-import { pullName, stateLook } from '../pull/look'
 import { linkTo, refField } from './link'
 
 type OpenMode = 'worktree' | 'checkout'
 
-const openIn = async (parts: PullParts, at: PullPlace, pull: PullSummary, mode: OpenMode) => {
-  const { ctx } = parts
-  const name = pullName(pull)
-  const shown = notify(ctx, { tone: 'neutral', sticky: true, title: `Opening ${name}…` })
-  try {
-    const { session } = await ctx.pullLinks.open({ cwd: at.cwd, ref: pull.url, mode }, at.device)
-    shown?.dismiss()
-    await ctx.threads.select(session)
-  } catch (error) {
-    notifyError(ctx, `Couldn't open ${name}`, error)
-  }
+const openIn = async ({ ctx }: PullParts, at: PullPlace, pull: PullSummary, mode: OpenMode) => {
+  const progress = ctx.toasts.show({ tone: 'neutral', sticky: true, title: `Opening ${pullName(pull)}…` })
+  const opened = await ctx.toasts.attempt(toastId, `Couldn't open ${pullName(pull)}`, () =>
+    ctx.pullLinks.open({ cwd: at.cwd, ref: pull.url, mode }, at.device).finally(() => progress.dismiss()),
+  )
+  if (opened) await ctx.threads.select(opened.session)
 }
 
-const linkOnly = async (parts: PullParts, at: PullPlace, pull: PullSummary) => {
-  try {
-    await linkTo(parts, at, pull.url)
-  } catch (error) {
-    notifyError(parts.ctx, `Couldn't link ${pullName(pull)}`, error)
-  }
-}
+const linkOnly = (parts: PullParts, at: PullPlace, pull: PullSummary) => parts.ctx.toasts.attempt(toastId, `Couldn't link ${pullName(pull)}`, () => linkTo(parts, at, pull.url))
 
 const choices = (parts: PullParts, at: PullPlace, pull: PullSummary): PaletteItem[] => [
   { id: 'git-pulls:open-worktree', icon: 'worktree', label: 'In a new worktree', detail: 'Leaves your main checkout alone', run: () => openIn(parts, at, pull, 'worktree') },
@@ -36,13 +25,13 @@ const choices = (parts: PullParts, at: PullPlace, pull: PullSummary): PaletteIte
 ]
 
 const pullDetailLine = (pull: PullSummary) =>
-  `${pullName(pull)} · ${pull.base} ← ${pull.head} · by ${pull.author} · ${stateLook(pull).label.toLowerCase()}`
+  `${pullName(pull)} · ${pull.base} ← ${pull.head} · by ${pull.author} · ${pullStateLook(pull.state).label.toLowerCase()}`
 
 const wherePage = (parts: PullParts, at: PullPlace, pull: PullSummary): PalettePage => ({
   id: 'git-pulls:open-where',
   title: pullName(pull),
   placeholder: 'Where should the thread work?',
-  card: () => ({ label: 'Pull request', icon: stateLook(pull).icon, title: pull.title, detail: pullDetailLine(pull) }),
+  card: () => ({ label: 'Pull request', icon: pullStateLook(pull.state).icon, title: pull.title, detail: pullDetailLine(pull) }),
   items: () => choices(parts, at, pull),
 })
 

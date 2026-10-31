@@ -1,5 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
-import type { Repo } from '../run/repo'
+import type { GitLayout, GitRunner } from '@sand/git/contract'
 
 export interface Change {
   path: string
@@ -29,7 +28,7 @@ const parseChanges = (out: string) => {
   return changes
 }
 
-export const readChanges = async (git: GitRunner, repo: Repo) => parseChanges(await git.ok(repo.root, statusArgs, { read: true }))
+export const readChanges = async (git: GitRunner, repo: GitLayout) => parseChanges(await git.ok(repo.root, statusArgs, { read: true }))
 
 export const withRenameSources = (paths: string[], changes: Change[]) => {
   const picked = new Set(paths)

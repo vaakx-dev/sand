@@ -8,6 +8,7 @@ export interface GitMenuContext {
   status: GitStatus
   place: GitPlace
   thread?: Thread
+  waiting?: string
   close(): void
 }
 

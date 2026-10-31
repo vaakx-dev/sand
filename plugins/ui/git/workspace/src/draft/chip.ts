@@ -1,9 +1,9 @@
 import { composer } from '@sand/composer/contract'
+import { repoOf } from '@sand/git/contract'
 import { palette } from '@sand/palette/contract'
 import { div, dynamicChild, show, type Sig, span } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
-import { notify, notifyError } from '../notify'
-import { repoOf } from '../paths'
+import { toastId } from '../toast'
 import type { WorktreeCache } from '../worktrees/cache'
 import { branchPage } from './branches'
 import { choiceLabel, kindOf, type WorkspaceChoice } from './choice'
@@ -38,8 +38,8 @@ export const workspaceChip = (ctx: WorkspaceContext, model: DraftModel, cache: W
     close()
     if (!place) return
     defaults.set(place, kind).then(
-      () => notify(ctx, { tone: 'success', title: 'Default saved', detail: defaultSaved(kind) }),
-      error => notifyError(ctx, 'Could not save the default', error),
+      () => ctx.toasts.show({ id: toastId, tone: 'success', title: 'Default saved', detail: defaultSaved(kind) }),
+      error => ctx.toasts.error(toastId, 'Could not save the default', error),
     )
   }
 

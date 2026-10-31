@@ -1,14 +1,8 @@
-import type { GitOptions, GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo, GitRunner } from '@sand/git/contract'
 
 export interface DiffGit {
   git: GitRunner
   repos: GitRepo
-}
-
-export const readOut = async (git: GitRunner, cwd: string, args: string[], options: GitOptions = {}) => {
-  const result = await git.run(cwd, args, { ...options, read: true })
-  if (result.code !== 0) throw new Error(git.classify(result, args).message)
-  return result.out
 }
 
 export const isRevision = (name: string) => !!name && !name.startsWith('-')

@@ -1,8 +1,6 @@
 import type { MergeMethod, PullRef } from '@sand/github/contract'
-import { hereOf, type PageContext } from '../inject'
-import { attempt, notify } from '../notify'
-import { pullName } from '../pull/look'
-import { refOf } from '../pull/ref'
+import { pullName, pullRef } from '@sand/github/look'
+import { hereOf, type PageContext, toastId } from '../inject'
 import type { DetailModel } from './model'
 
 export interface ActionDeps {
@@ -11,16 +9,16 @@ export interface ActionDeps {
 }
 
 export const pullActions = ({ ctx, select }: ActionDeps, model: DetailModel) => {
-  const { github, pullDetail } = ctx
-  const ref = refOf(model.ref)
-  const name = pullName(ref.number)
+  const { github, pullDetail, toasts } = ctx
+  const ref = pullRef(model.ref)
+  const name = pullName(ref)
 
-  const act = <T>(title: string, work: () => Promise<T>) => model.run(() => attempt(ctx, title, work))
+  const act = <T>(title: string, work: () => Promise<T>) => model.run(() => toasts.attempt(toastId, title, work))
 
   const merge = async (method: MergeMethod, auto = false) => {
     const done = await act(`Couldn't merge ${name}`, () => github.merge({ ...ref, method, auto }, hereOf(ctx)))
     model.put(done)
-    if (done) notify(ctx, { tone: 'success', title: done.state === 'merged' ? `Merged ${name}` : `${name} merges when it's ready` })
+    if (done) toasts.show({ id: toastId, tone: 'success', title: done.state === 'merged' ? `Merged ${name}` : `${name} merges when it's ready` })
   }
 
   const ready = async (on: boolean) => model.put(await act(`Couldn't change ${name}`, () => github.ready({ ...ref, ready: on }, hereOf(ctx))))
@@ -28,7 +26,7 @@ export const pullActions = ({ ctx, select }: ActionDeps, model: DetailModel) => 
   const update = async (rebase: boolean) => {
     const done = await act(`Couldn't update ${name}`, () => pullDetail.updateBranch({ ...ref, rebase }))
     model.put(done)
-    if (done) notify(ctx, { tone: 'success', title: rebase ? `Rebasing ${name} onto ${done.base}` : `Merging ${done.base} into ${name}` })
+    if (done) toasts.show({ id: toastId, tone: 'success', title: rebase ? `Rebasing ${name} onto ${done.base}` : `Merging ${done.base} into ${name}` })
   }
 
   const deleteBranch = async () => model.put(await act(`Couldn't delete the branch of ${name}`, () => pullDetail.deleteBranch(ref)))
@@ -38,7 +36,7 @@ export const pullActions = ({ ctx, select }: ActionDeps, model: DetailModel) => 
   const revert = async () => {
     const made = await act(`Couldn't revert ${name}`, () => pullDetail.revert(ref))
     if (!made) return
-    notify(ctx, { tone: 'success', title: `Opened ${pullName(made.number)} to revert ${name}`, actions: [{ label: 'Show', primary: true, run: () => select(refOf(made)) }] })
+    toasts.show({ id: toastId, tone: 'success', title: `Opened ${pullName(made)} to revert ${name}`, actions: [{ label: 'Show', primary: true, run: () => select(pullRef(made)) }] })
   }
 
   const edit = async (text: { title?: string; body?: string }) => {

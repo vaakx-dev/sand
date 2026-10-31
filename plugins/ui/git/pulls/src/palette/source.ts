@@ -1,7 +1,7 @@
+import { pullName } from '@sand/github/look'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { PullPlace } from '../contract'
 import type { PullParts } from '../parts'
-import { pullName } from '../pull/look'
 import { linkPage } from './link'
 import { openPage } from './open'
 

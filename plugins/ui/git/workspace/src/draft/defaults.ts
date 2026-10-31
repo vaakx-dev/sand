@@ -1,8 +1,7 @@
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, placeKey } from '@sand/git/contract'
 import type { WorkspaceKind } from '@sand/worktrees/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
-import { placeKey } from '../paths'
 
 export const workspaceDefaults = (ctx: WorkspaceContext) => {
   const kinds = sig(new Map<string, WorkspaceKind>())
@@ -16,7 +15,7 @@ export const workspaceDefaults = (ctx: WorkspaceContext) => {
     void ctx.worktrees
       .defaults({ cwd: place.cwd }, place.device)
       .then(found => remember(place, found.kind))
-      .catch(() => undefined)
+      .catch(ctx.report)
   }
 
   const set = async (place: GitPlace, kind: WorkspaceKind) => {

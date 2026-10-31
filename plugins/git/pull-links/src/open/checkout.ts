@@ -4,7 +4,6 @@ import type { PullSummary } from '@sand/github/contract'
 import { plural } from '@sand/util'
 import { readActivity } from '../activity/read'
 import { preparePullBranch } from './branch'
-import { gitStep } from './git'
 import type { OpenDeps } from './open'
 
 const switchTo = async (git: GitRunner, main: string, name: string) => {
@@ -14,8 +13,7 @@ const switchTo = async (git: GitRunner, main: string, name: string) => {
   if (/already (checked out|used by worktree)/i.test(`${result.out}\n${result.err}`)) {
     throw new Error(`${name} is already checked out in another worktree. Open a thread in that worktree instead.`)
   }
-  const { message, detail } = git.classify(result, args)
-  throw new Error(`Couldn't switch ${main} to ${name}: ${message}${detail ? `\n${detail}` : ''}`)
+  throw new Error(git.classify(result, args, `Couldn't switch ${main} to ${name}`).message)
 }
 
 export const openInCheckout = async (deps: OpenDeps, main: string, pull: PullSummary): Promise<Session> => {
@@ -27,7 +25,7 @@ export const openInCheckout = async (deps: OpenDeps, main: string, pull: PullSum
   const head = await readActivity(deps.github, pull)
   const branch = await preparePullBranch(deps.git, main, pull, head)
   if (local.branch !== branch.name) await switchTo(deps.git, main, branch.name)
-  if (branch.behind) await gitStep(deps.git, main, ['merge', '--ff-only', '--quiet', branch.head], `Couldn't bring ${branch.name} up to date with #${pull.number}`)
+  if (branch.behind) await deps.git.ok(main, ['merge', '--ff-only', '--quiet', branch.head], { what: `Couldn't bring ${branch.name} up to date with #${pull.number}` })
   await deps.repos.refresh(main)
   return deps.sessions.thread(main)
 }

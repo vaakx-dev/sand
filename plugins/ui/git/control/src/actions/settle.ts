@@ -1,10 +1,9 @@
-import type { GitAction, GitActionFailure, GitActionResult } from '@sand/git-actions/contract'
-import type { GitPlace, GitStatus } from '@sand/git/contract'
 import { pcs } from '@sand/devices-contract'
+import type { GitAction, GitActionFailure, GitActionResult } from '@sand/git-actions/contract'
+import { type GitPlace, type GitStatus, placeKey } from '@sand/git/contract'
 import { askAgent, canAsk } from '../agent/ask'
 import type { ControlContext } from '../inject'
 import { upstreamName } from '../next/facts'
-import { notifyFailure, notifySuccess } from '../results/notify'
 import { failureSteps } from '../results/steps'
 
 export interface Target {
@@ -18,6 +17,8 @@ export interface Recovery {
   pullThenPush(): void
 }
 
+const toastId = (place: GitPlace) => `git-control:${placeKey(place)}`
+
 export const failed = <T>(result: GitActionResult<T>): result is GitActionFailure => result.ok === false
 
 export const settle = <T>(
@@ -29,13 +30,12 @@ export const settle = <T>(
   success?: (done: T) => string | undefined,
 ): T | undefined => {
   if (!result) return undefined
-  void ctx.gitStatus.refresh(at.place).catch(() => undefined)
   if (failed(result)) {
     reportFailure(ctx, at, action, result, recovery)
     return undefined
   }
   const title = success?.(result)
-  if (title) notifySuccess(ctx, at.place, title)
+  if (title) ctx.toasts.show({ id: toastId(at.place), tone: 'success', title })
   return result
 }
 
@@ -49,5 +49,13 @@ export const reportFailure = (ctx: ControlContext, at: Target, action: GitAction
     pullThenPush: recovery.pullThenPush,
     ask: canAsk(ctx, at.thread) ? prompt => askAgent(ctx, at.thread, prompt) : undefined,
   })
-  notifyFailure(ctx, at.place, lead ? { ...failure, message: `${lead} ${failure.message}` } : failure, note)
+  ctx.toasts.show({
+    id: toastId(at.place),
+    tone: 'danger',
+    sticky: true,
+    title: lead ? `${lead} ${failure.message}` : failure.message,
+    detail: note.detail,
+    output: failure.output,
+    actions: note.actions,
+  })
 }

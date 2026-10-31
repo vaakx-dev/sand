@@ -2,8 +2,8 @@ import { threadChange, threadSelect, threadsChange } from '@sand/web-client/cont
 import type { WorktreeSetup } from '@sand/worktrees/contract'
 import { collectScope, derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
-import { notifyError } from '../notify'
-import { isInside } from '../paths'
+import { toastId } from '../toast'
+import { inFolder } from '../worktrees/find'
 
 export type SetupPhase = 'running' | 'failed' | 'ready'
 
@@ -42,7 +42,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
   }
 
   const matches = (next: WorktreeSetup, device: string) =>
-    Boolean(watched && device === watched.device && (next.session === watched.id || isInside(watched.cwd, next.path)))
+    Boolean(watched && device === watched.device && (next.session === watched.id || inFolder(watched.cwd, next.path)))
 
   const sync = () => {
     const chat = ctx.threads.current()
@@ -58,7 +58,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
       found => {
         if (mine === ticket && heard !== mine && found && !isReady(found)) setup.set(found)
       },
-      () => undefined,
+      ctx.report,
     )
   }
 
@@ -66,12 +66,8 @@ export const followSetup = (ctx: WorkspaceContext) => {
     const at = watched
     const current = setup.get()
     if (!at || !current) return
-    try {
-      const next = await ctx.worktrees.setup({ path: current.path, ...flag }, at.device)
-      if (next && at === watched) accept(next)
-    } catch (error) {
-      notifyError(ctx, 'Could not continue the worktree setup', error)
-    }
+    const next = await ctx.toasts.attempt(toastId, 'Could not continue the worktree setup', () => ctx.worktrees.setup({ path: current.path, ...flag }, at.device))
+    if (next && at === watched) accept(next)
   }
 
   ctx.on(threadSelect, sync)

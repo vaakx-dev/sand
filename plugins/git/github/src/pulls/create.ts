@@ -20,8 +20,8 @@ const headFor = (place: BranchPlace) => (sameRepo(place.head.repo, place.base) ?
 const createError = (error: unknown, place: BranchPlace) => {
   if (!(error instanceof GitHubError)) return error
   if (error.status === 422 && /head\b.*invalid/i.test(error.message))
-    return new GitHubError(`GitHub has no branch ${place.head.branch} on ${place.head.repo}; push the branch first.`, 422)
-  return new GitHubError(`Couldn't create the pull request. ${error.message}`, error.status, error.kind)
+    return new GitHubError(`GitHub has no branch ${place.head.branch} on ${place.head.repo}; push the branch first.`, { status: 422 })
+  return new GitHubError(`Couldn't create the pull request. ${error.message}`, error)
 }
 
 export const createPull = async (deps: PlaceDeps & { client: Client }, summaries: Summaries, request: CreateRequest): Promise<PullSummary> => {

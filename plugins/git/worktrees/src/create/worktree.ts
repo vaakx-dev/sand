@@ -4,7 +4,7 @@ import { dirname } from 'node:path'
 import type { WorktreeDeps } from '../deps'
 import type { PlannedStep, WorktreeRecord } from '../records/schema'
 import { branchExists } from '../repo/refs'
-import { gitStep, longGitMs } from '../repo/run'
+import { longGitMs } from '../repo/timeout'
 import { planSteps } from '../setup/plan'
 import { doneStep, freshSetup } from '../setup/state'
 import { freePlace } from './place'
@@ -39,7 +39,7 @@ const addWorktree = async (deps: WorktreeDeps, addition: Addition): Promise<Work
   const { main, path, args, branch, base, temp, adopted, steps } = addition
   const plan = await planSteps(main)
   await mkdir(dirname(path), { recursive: true })
-  await gitStep(deps.git, main, ['worktree', 'add', ...args], "Couldn't create the worktree", { timeoutMs: longGitMs })
+  await deps.git.ok(main, ['worktree', 'add', ...args], { timeoutMs: longGitMs, what: "Couldn't create the worktree" })
   const record: WorktreeRecord = {
     id: crypto.randomUUID(),
     path,

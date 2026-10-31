@@ -1,20 +1,13 @@
 import { composer } from '@sand/composer/contract'
-import type { GitPlace, GitRepoLocal } from '@sand/git/contract'
+import { type GitPlace, type GitRepoLocal, repoOf } from '@sand/git/contract'
 import type { PaletteSource } from '@sand/palette/contract'
 import { uuid } from '@sand/util'
+import { defaultBranch } from '../draft/choice'
 import type { DraftChoices } from '../draft/choices'
 import type { WorkspaceContext } from '../inject'
-import { notifyError } from '../notify'
-import { defaultBranch, repoOf } from '../paths'
+import { toastId } from '../toast'
 import type { WorktreeCache } from '../worktrees/cache'
 import { restorePage } from './restore'
-
-const currentPlace = (ctx: WorkspaceContext): GitPlace | undefined => {
-  const chat = ctx.threads.current()
-  if (chat?.info.kind === 'quick') return undefined
-  const cwd = ctx.threads.cwd()
-  return cwd ? { cwd, device: chat?.device ?? ctx.threads.device() } : undefined
-}
 
 const projectPlace = (place: GitPlace, local: GitRepoLocal): GitPlace => (local.worktree ? { cwd: local.main, device: place.device } : place)
 
@@ -26,7 +19,7 @@ const newWorktreeThread = async (ctx: WorkspaceContext, choices: DraftChoices, p
     ctx.get(composer)?.focus()
   } catch (error) {
     choices.forget(id)
-    notifyError(ctx, 'Could not open a new thread', error)
+    ctx.toasts.error(toastId, 'Could not open a new thread', error)
   }
 }
 
@@ -34,10 +27,10 @@ export const workspaceSource = (ctx: WorkspaceContext, choices: DraftChoices, ca
   id: 'git-workspace',
   order: 19,
   items: () => {
-    const at = currentPlace(ctx)
-    const local = at && repoOf(ctx.gitStatus.current(at))
-    if (!at || !local) return []
-    const project = projectPlace(at, local)
+    const current = ctx.gitStatus.current.get()
+    const local = repoOf(current?.status)
+    if (!current || !local) return []
+    const project = projectPlace(current.place, local)
     return [
       {
         id: 'git-workspace:new-thread',

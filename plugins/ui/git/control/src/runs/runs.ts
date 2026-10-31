@@ -1,9 +1,8 @@
 import type { GitAction, GitActionFailure, GitActionResult, GitPhase } from '@sand/git-actions/contract'
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, placeKey } from '@sand/git/contract'
 import { errorMessage, uuid } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { ControlContext } from '../inject'
-import { placeKey } from '../status/place'
 
 export interface ActiveRun {
   id: string

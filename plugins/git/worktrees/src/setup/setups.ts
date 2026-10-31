@@ -1,17 +1,17 @@
+import { pathKey } from '@sand/git/contract'
 import type { ShellRunner } from '@sand/shell/contract'
 import { errorMessage } from '@sand/util'
 import type { WorktreeSetup } from '../contract'
-import { pathKey } from '../records/key'
 import type { PlannedStep, WorktreeRecord } from '../records/schema'
 import type { RecordStore } from '../records/store'
 import { runCommand } from './command'
 import { copyEntry } from './copy'
 import type { StepOutcome } from './outcome'
 import { configStep, planSteps } from './plan'
+import { createPublisher } from './publish'
+import { createRuns } from './runs'
 import { settle, shownSetup } from './state'
 import { createWaiters } from './waiters'
-
-const outputEveryMs = 300
 
 export interface SetupDeps {
   store: RecordStore
@@ -20,42 +20,20 @@ export interface SetupDeps {
   report(error: unknown): void
 }
 
-interface Active {
-  controller: AbortController
-  done: Promise<void>
-}
-
 export type Setups = ReturnType<typeof createSetups>
 
 export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
-  const active = new Map<string, Active>()
-  const pending = new Map<string, ReturnType<typeof setTimeout>>()
+  const runs = createRuns(report)
+  const publisher = createPublisher(send)
   const waiters = createWaiters()
-
-  const publish = (record: WorktreeRecord) => {
-    if (record.setup) send(shownSetup(record.setup))
-  }
-
-  const publishSoon = (record: WorktreeRecord) => {
-    const key = pathKey(record.path)
-    if (pending.has(key)) return
-    pending.set(
-      key,
-      setTimeout(() => {
-        pending.delete(key)
-        publish(record)
-      }, outputEveryMs),
-    )
-  }
 
   const changed = async (record: WorktreeRecord) => {
     const setup = record.setup
     if (!setup) return
     settle(setup)
-    clearTimeout(pending.get(pathKey(record.path)))
-    pending.delete(pathKey(record.path))
+    publisher.cancel(record)
     await store.save().catch(report)
-    publish(record)
+    publisher.now(record)
     if (setup.done) waiters.wake(pathKey(record.path))
   }
 
@@ -64,7 +42,7 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
     if (step.run === undefined) return { state: 'ok' }
     return runCommand(shell(), record.path, step.run, signal, tail => {
       step.output = tail
-      publishSoon(record)
+      publisher.soon(record)
     })
   }
 
@@ -88,22 +66,7 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
     }
   }
 
-  const begin = (record: WorktreeRecord) => {
-    const key = pathKey(record.path)
-    if (active.has(key)) return
-    const controller = new AbortController()
-    const done = runRest(record, controller.signal)
-      .catch(report)
-      .finally(() => active.delete(key))
-    active.set(key, { controller, done })
-  }
-
-  const stop = async (key: string) => {
-    const running = active.get(key)
-    if (!running) return
-    running.controller.abort()
-    await running.done
-  }
+  const begin = (record: WorktreeRecord) => runs.begin(pathKey(record.path), signal => runRest(record, signal))
 
   const state = (path: string) => {
     const setup = store.get(path)?.setup
@@ -114,7 +77,7 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
     const setup = record.setup
     const failed = setup?.steps.findIndex(step => step.state === 'fail') ?? -1
     const step = setup?.steps[failed]
-    if (!setup || !step || active.has(pathKey(record.path))) return
+    if (!setup || !step || runs.running(pathKey(record.path))) return
     if (step.id === configStep) setup.steps.splice(failed, setup.steps.length - failed, ...(await planSteps(record.main)))
     else {
       step.state = 'wait'
@@ -126,7 +89,7 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
 
   const skip = async (record: WorktreeRecord) => {
     if (!record.setup) return
-    await stop(pathKey(record.path))
+    await runs.stop(pathKey(record.path))
     for (const step of record.setup.steps) if (step.state !== 'ok') step.state = 'skip'
     await changed(record)
   }
@@ -152,13 +115,12 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
       await waiters.wait(pathKey(record.path), signal)
     },
     async forget(path: string) {
-      await stop(pathKey(path))
+      await runs.stop(pathKey(path))
       waiters.wake(pathKey(path))
     },
     close() {
-      for (const running of active.values()) running.controller.abort()
-      for (const timer of pending.values()) clearTimeout(timer)
-      pending.clear()
+      runs.abortAll()
+      publisher.close()
       waiters.wakeAll()
     },
   }

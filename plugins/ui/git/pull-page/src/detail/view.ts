@@ -21,7 +21,7 @@ const shownOf = (parts: PageParts, model: DetailModel): Shown => {
     model,
     actions: pullActions({ ctx: parts.ctx, select: parts.select }, model),
     pull,
-    linked: derive(() => parts.links.of(model.ref)),
+    linked: derive(() => parts.agent.linked(model.ref)),
   }
 }
 

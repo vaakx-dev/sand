@@ -1,7 +1,12 @@
 import type { GitRunner } from '@sand/git/contract'
 import type { DiffScope } from '../contract'
 import { commitOf, type DiffGit, emptyTree, treeOf } from '../git'
-import { type Repo, readRepo } from './repo'
+
+interface Repo {
+  root: string
+  head?: string
+  branch?: string
+}
 
 export interface Range {
   repo: Repo
@@ -54,9 +59,17 @@ const ofBranch = (tools: DiffGit, repo: Repo, name?: string) => {
   return name ? ofNamed(tools.git, repo, repo.head, name) : ofDefault(tools, repo, repo.head)
 }
 
+const readRepo = async ({ git, repos }: DiffGit, cwd: string): Promise<Repo> => {
+  const layout = await repos.layout(cwd)
+  if (!layout) throw new Error("This folder isn't a git repository.")
+  const { root } = layout
+  const [head, branch] = await Promise.all([commitOf(git, root, 'HEAD'), git.maybe(root, ['symbolic-ref', '-q', '--short', 'HEAD'], { read: true })])
+  return { root, head, branch: branch || undefined }
+}
+
 export const resolveScope = async (tools: DiffGit, cwd: string, scope: DiffScope): Promise<Range> => {
   const { git } = tools
-  const repo = await readRepo(git, cwd)
+  const repo = await readRepo(tools, cwd)
   if (scope.kind === 'commit') return ofCommit(git, repo, scope.commit)
   if (scope.kind === 'range') return ofRange(git, repo, scope.from, scope.to)
   if (scope.kind === 'all') return (await ofBranch(tools, repo, scope.base)) ?? uncommitted(git, repo)

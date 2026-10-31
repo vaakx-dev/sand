@@ -1,7 +1,6 @@
 import { gitOk } from '../run/run'
-import type { GitFile, GitRepoLocal } from '../contract'
+import type { GitFile, GitLayout, GitRepoLocal } from '../contract'
 import { readDefaultBranch } from './default-branch'
-import type { Layout } from './layout'
 import { type LineCounts, readLineCounts } from './numstat'
 import { parseStatus } from './porcelain'
 import { countUntracked } from './untracked'
@@ -19,7 +18,7 @@ const withCounts = (files: GitFile[], counts: LineCounts) =>
 
 const total = (files: GitFile[], key: 'add' | 'del') => files.reduce((sum, file) => sum + file[key], 0)
 
-export const readLocal = async (layout: Layout): Promise<GitRepoLocal> => {
+export const readLocal = async (layout: GitLayout): Promise<GitRepoLocal> => {
   const { root } = layout
   const [out, defaultBranch] = await Promise.all([gitOk(root, statusArgs, { read: true }), readDefaultBranch(root)])
   const { head, files } = parseStatus(out)

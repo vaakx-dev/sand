@@ -1,5 +1,5 @@
 import type { MergeState, PullSummary, ReviewState } from '@sand/github/contract'
-import { oneLine, plural } from '@sand/util'
+import { oneLine, plural, shortSha } from '@sand/util'
 import type { PullActivity } from '../activity/types'
 import type { StoredLink } from '../book/record'
 import { quotedItem, untrustedNote } from '../watch/note'
@@ -45,7 +45,7 @@ export const statusText = (link: StoredLink, summary: PullSummary, activity: Pul
   [
     `#${summary.number} in ${summary.repo}: ${oneLine(summary.title, 120)}`,
     summary.url,
-    `State: ${summary.state} · ${summary.base} ← ${summary.head} · head ${activity.head.slice(0, 7)}`,
+    `State: ${summary.state} · ${summary.base} ← ${summary.head} · head ${shortSha(activity.head)}`,
     ...checksLines(summary, activity),
     `Review: ${reviews[summary.review]} · ${plural(summary.unresolved, 'unresolved conversation')}`,
     `Merge: ${merges[summary.merge]}`,

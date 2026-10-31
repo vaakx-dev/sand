@@ -1,14 +1,15 @@
 import type { GitRepoLocal } from '@sand/git/contract'
-import { plural } from '@sand/util'
+import { folderName, plural, samePath } from '@sand/util'
 import type { Worktree } from '@sand/worktrees/contract'
 import { div } from '@vaakx-dev/vrui'
-import { folderName, samePath } from '../paths'
 import { menuText } from '../menu-text'
 import type { WorkspaceChoice } from './choice'
 import type { ChipMenu } from './menu'
 
+const isCurrent = (tree: Worktree, local: GitRepoLocal | undefined) => local !== undefined && samePath(tree.path, local.root)
+
 export const otherWorktrees = (list: Worktree[] | undefined, local: GitRepoLocal | undefined) =>
-  (list ?? []).filter(tree => !tree.removed && !samePath(tree.path, tree.main) && !samePath(tree.path, local?.root))
+  (list ?? []).filter(tree => !tree.removed && !samePath(tree.path, tree.main) && !isCurrent(tree, local))
 
 export const worktreeName = (tree: Worktree) => tree.branch ?? folderName(tree.path)
 

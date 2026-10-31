@@ -1,15 +1,10 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
-import { pullKey } from '../pulls/ref'
+import { type GitHub, type PullRef, pullKey } from '@sand/github/contract'
+import { ttlCache } from '@sand/util'
 import { fetchDetail, type LoadedPull } from './fetch'
 
 const openMs = 30_000
 const doneMs = 10 * 60_000
 const most = 100
-
-interface Cached {
-  pull: LoadedPull
-  at: number
-}
 
 export interface Details {
   get(ref: PullRef, fresh?: boolean): Promise<LoadedPull>
@@ -22,49 +17,22 @@ export interface Details {
 const keepFor = ({ detail }: LoadedPull) => (detail.state === 'open' || detail.state === 'draft' ? openMs : doneMs)
 
 export const createDetails = (github: GitHub): Details => {
-  const cached = new Map<string, Cached>()
-  const loading = new Map<string, Promise<LoadedPull>>()
+  const pulls = ttlCache<LoadedPull>({
+    ttl: keepFor,
+    most,
+    stored: (_key, pull) => github.noteSummary(pull.ids.pull, pull.summary),
+  })
 
-  const store = (key: string, pull: LoadedPull) => {
-    cached.delete(key)
-    cached.set(key, { pull, at: Date.now() })
-    github.noteSummary(pull.ids.pull, pull.summary)
-    if (cached.size <= most) return
-    const oldest = cached.keys().next().value
-    if (oldest !== undefined) cached.delete(oldest)
-  }
-
-  const load = (ref: PullRef, always: boolean) => {
-    const key = pullKey(ref)
-    const running = loading.get(key)
-    if (running && !always) return running
-    const next: Promise<LoadedPull> = fetchDetail(github, ref)
-      .then(pull => {
-        if (loading.get(key) === next) store(key, pull)
-        return pull
-      })
-      .finally(() => {
-        if (loading.get(key) === next) loading.delete(key)
-      })
-    loading.set(key, next)
-    return next
-  }
+  const fetchOf = (ref: PullRef) => () => fetchDetail(github, ref)
 
   return {
-    get(ref, fresh) {
-      const found = cached.get(pullKey(ref))
-      if (!fresh && found && Date.now() - found.at < keepFor(found.pull)) return Promise.resolve(found.pull)
-      return load(ref, false)
-    },
-    refresh: ref => load(ref, true),
-    drop: ref => void cached.delete(pullKey(ref)),
+    get: (ref, fresh) => pulls.get(pullKey(ref), fetchOf(ref), fresh),
+    refresh: ref => pulls.refresh(pullKey(ref), fetchOf(ref)),
+    drop: ref => void pulls.delete(pullKey(ref)),
     outdate(ref) {
       const key = pullKey(ref)
-      return !loading.has(key) && cached.delete(key)
+      return !pulls.isLoading(key) && pulls.delete(key)
     },
-    clear() {
-      cached.clear()
-      loading.clear()
-    },
+    clear: pulls.clear,
   }
 }

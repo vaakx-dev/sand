@@ -1,10 +1,9 @@
 import type { GitMenuContext, GitMenuSection } from '@sand/git-control/contract'
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, repoOf } from '@sand/git/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import type { Child } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { menuText } from '../menu-text'
-import { repoOf, waitReason } from '../paths'
 import type { WorktreeCache } from '../worktrees/cache'
 import { worktreeAt } from '../worktrees/find'
 import { moveThread } from './move'
@@ -18,9 +17,8 @@ interface SectionEntry {
   run(): void
 }
 
-const entry = (ctx: WorkspaceContext, { close, thread }: GitMenuContext, item: SectionEntry): Child => {
-  const reason = thread?.running ? waitReason : undefined
-  return ctx.kit.menuItem(
+const entry = (ctx: WorkspaceContext, { close, waiting: reason }: GitMenuContext, item: SectionEntry): Child =>
+  ctx.kit.menuItem(
     {
       icon: item.icon,
       tone: item.danger ? 'danger' : undefined,
@@ -32,7 +30,6 @@ const entry = (ctx: WorkspaceContext, { close, thread }: GitMenuContext, item: S
     },
     menuText(ctx.kit, { title: item.title, detail: item.detail, reason }),
   )
-}
 
 const items = (ctx: WorkspaceContext, cache: WorktreeCache, context: GitMenuContext): Child[] => {
   const { status, place, thread } = context

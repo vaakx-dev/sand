@@ -1,6 +1,5 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
+import { type GitHub, type PullRef, pullLabel, pullVariables } from '@sand/github/contract'
 import type { PendingComment, ReviewSide } from '../contract'
-import { pullVariables, refLabel } from '../pull/ref'
 
 const threadFields = `nodes {
   path diffSide line startLine originalLine originalStartLine
@@ -83,7 +82,7 @@ const allThreads = async (github: GitHub, pull: string, first: ThreadPage) => {
 export const readPending = async (github: GitHub, ref: PullRef): Promise<PendingOnGitHub> => {
   const data = await github.graphql<ReviewData>(reviewQuery, pullVariables(ref))
   const pull = data.repository?.pullRequest
-  if (!pull) throw new Error(`GitHub couldn't find ${refLabel(ref)}.`)
+  if (!pull) throw new Error(`GitHub couldn't find ${pullLabel(ref)}.`)
   const review = pull.reviews?.nodes.find(node => node.viewerDidAuthor)
   if (!review) return { pull: pull.id, comments: [] }
   const threads = await allThreads(github, pull.id, pull.reviewThreads)

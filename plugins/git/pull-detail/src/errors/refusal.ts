@@ -1,13 +1,11 @@
-import type { PullRef } from '@sand/github/contract'
+import { GitHubError, isForbidden, isMissing, type PullRef, pullLabel } from '@sand/github/contract'
 import { errorMessage } from '@sand/util'
-import { pullLabel } from '../pulls/ref'
-import { isForbidden, isMissing, saidBy } from './github'
 import { hintFor } from './hints'
 
 const sentence = (text: string) => (/[.!?]$/.test(text) ? text : `${text}.`)
 
 const whyOf = (error: unknown, ref: PullRef) => {
-  const said = saidBy(error)
+  const said = error instanceof GitHubError ? error.said : undefined
   const hint = said ? hintFor(said, ref) : undefined
   if (hint) return hint
   if (isForbidden(error)) return `your GitHub account doesn't have permission to do that in ${ref.repo}.`

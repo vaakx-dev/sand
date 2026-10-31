@@ -1,10 +1,9 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, pullLabel } from '@sand/github/contract'
 import type { PullLinks } from '@sand/pull-links/contract'
 import type { Tool, Tools } from '@sand/tools/contract'
 import { joinDisposers, plural } from '@sand/util'
 import { z } from 'zod'
 import type { Reviews } from '../pending/reviews'
-import { refLabel } from '../pull/ref'
 
 export const commentTool = 'add_review_comment'
 
@@ -45,7 +44,7 @@ const commentToolFor = (deps: CommentToolDeps): Tool<typeof commentInput> => ({
   async run({ number, ...comment }, { session }) {
     const ref = await linkedPull(deps, session.id, number)
     const pending = await deps.reviews.comment(ref, comment, true)
-    return `Added to the pending review on ${refLabel(ref)} at ${comment.path}:${comment.line}. ${plural(pending.comments.length, 'comment')} waiting.`
+    return `Added to the pending review on ${pullLabel(ref)} at ${comment.path}:${comment.line}. ${plural(pending.comments.length, 'comment')} waiting.`
   },
 })
 

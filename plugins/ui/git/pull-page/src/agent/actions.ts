@@ -1,58 +1,38 @@
-import type { PullSummary } from '@sand/github/contract'
-import { pullLinksClient } from '@sand/pull-links/contract'
-import { turns } from '@sand/web-client/contract'
-import type { PageContext } from '../inject'
-import type { LinkBook, LinkedThread } from '../links/book'
-import { attempt, notify, notifyError } from '../notify'
-import { pullName } from '../pull/look'
-import { localCopy } from '../projects/local-copy'
-import { refOf } from '../pull/ref'
-import type { AgentPrompt } from './prompts'
+import type { PullRef } from '@sand/github/contract'
+import { pullName, pullRef } from '@sand/github/look'
+import { type AgentPrompt, type LinkedThread, pullLinksClient } from '@sand/pull-links/contract'
+import { pulse } from '@sand/web-client/reactive'
+import { type PageContext, toastId } from '../inject'
 
-export const agentActions = (ctx: PageContext, links: LinkBook) => {
-  const canOpen = (pull: PullSummary) => Boolean(ctx.get(pullLinksClient) && localCopy(ctx, pull.repo))
+const turnedOff = 'Thread pull requests are turned off.'
 
-  const open = async (pull: PullSummary, select = true): Promise<LinkedThread | undefined> => {
-    const name = pullName(pull.number)
-    const client = ctx.get(pullLinksClient)
-    if (!client) {
-      notifyError(ctx, `Couldn't open ${name}`, 'Thread pull requests are turned off.')
-      return undefined
-    }
-    const at = localCopy(ctx, pull.repo)
-    if (!at) {
-      notifyError(ctx, `Couldn't open ${name}`, `No project on an online PC has ${pull.repo} as its remote.`)
-      return undefined
-    }
-    const shown = notify(ctx, { tone: 'neutral', sticky: true, title: `Opening ${name} in a worktree…` })
-    const opened = await attempt(ctx, `Couldn't open ${name}`, () => client.open({ cwd: at.cwd, ref: pull.url, mode: 'worktree' }, at.device))
-    shown?.dismiss()
-    if (!opened) return undefined
-    if (select) await ctx.threads.select(opened.session)
-    return { session: opened.session, device: at.device, watching: false }
+export const agentActions = (ctx: PageContext) => {
+  const client = pulse(ctx, [], [pullLinksClient]).read(() => ctx.get(pullLinksClient))
+
+  const linked = (pull: PullRef): LinkedThread[] => client.get()?.threadsOf(pull) ?? []
+
+  const canOpen = (pull: PullRef) => Boolean(client.get() && ctx.github.localCopy(pull.repo))
+
+  const open = async (pull: PullRef) => {
+    const links = client.get()
+    if (!links) return ctx.toasts.error(toastId, `Couldn't open ${pullName(pull)}`, turnedOff)
+    await links.openThread(pullRef(pull))
   }
 
-  const watch = async (pull: PullSummary, thread: LinkedThread, on: boolean) => {
-    const title = `Couldn't change watching for ${pullName(pull.number)}`
-    const client = ctx.get(pullLinksClient)
-    if (!client) return notifyError(ctx, title, 'Thread pull requests are turned off.')
-    const result = await attempt(ctx, title, () => client.watch({ session: thread.session, pull: refOf(pull), on }, thread.device))
-    if (result) links.put(thread.device, [result], false)
+  const watch = async (pull: PullRef, thread: LinkedThread, on: boolean) => {
+    const title = `Couldn't change watching for ${pullName(pull)}`
+    const links = client.get()
+    if (!links) return ctx.toasts.error(toastId, title, turnedOff)
+    await ctx.toasts.attempt(toastId, title, () => links.watch({ session: thread.session, pull: pullRef(pull), on }, thread.device))
   }
 
-  const ask = async (thread: LinkedThread, prompt: AgentPrompt) => {
-    const sender = ctx.get(turns)
-    if (!sender) return notifyError(ctx, "Couldn't reach the agent", 'Sending prompts is not available on this page.')
-    const sent = await attempt(ctx, "Couldn't send the prompt", () => sender.send(thread.session, prompt.text, prompt.label).then(() => true))
-    if (sent) notify(ctx, { tone: 'success', title: 'Sent to the agent', actions: [{ label: 'Show thread', run: () => ctx.threads.select(thread.session) }] })
+  const ask = async (pull: PullRef, prompt: AgentPrompt) => {
+    const links = client.get()
+    if (!links) return ctx.toasts.error(toastId, "Couldn't reach the agent", turnedOff)
+    await links.ask(pullRef(pull), prompt)
   }
 
-  const askLinked = async (pull: PullSummary, linked: LinkedThread | undefined, prompt: AgentPrompt) => {
-    const thread = linked ?? (await open(pull, false))
-    if (thread) await ask(thread, prompt)
-  }
-
-  return { canOpen, open, watch, ask, askLinked }
+  return { linked, canOpen, open, watch, ask }
 }
 
 export type AgentActions = ReturnType<typeof agentActions>

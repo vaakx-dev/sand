@@ -1,13 +1,12 @@
+import { pullKey } from '@sand/github/contract'
 import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
-import { byAttention, pullKey } from '../links/rank'
+import { byAttention } from '../links/rank'
 import type { PullParts } from '../parts'
 import { pullDetail } from './detail'
 import { pullList } from './list'
-import { detailStates } from './state'
 
 export const pullPage = (parts: PullParts) => {
-  const { kit, links, focus, place } = parts
-  const states = detailStates()
+  const { kit, links, focus, place, states } = parts
   const ordered = links.map(byAttention)
   const selected = derive(() => {
     const list = ordered.get()

@@ -1,4 +1,4 @@
-import type { GitRepoLocal, GitStatus } from '@sand/git/contract'
+import { type GitRepoLocal, type GitStatus, repoOf } from '@sand/git/contract'
 import { collectScope, derive, disposeAll, sig, untrack, type Derive } from '@vaakx-dev/vrui'
 
 export interface Change {
@@ -13,8 +13,6 @@ export interface PlaceView {
 }
 
 const shortSha = 7
-
-const repoOf = (status: GitStatus | undefined) => (status?.local.repo ? status.local : undefined)
 
 const branchOf = (local: GitRepoLocal | undefined) => local && (local.branch ?? local.head?.slice(0, shortSha))
 

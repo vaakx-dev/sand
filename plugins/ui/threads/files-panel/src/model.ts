@@ -1,15 +1,10 @@
 import type { Wire } from '@sand/devices-contract'
-import type { GitStatusClient } from '@sand/git/contract'
 import { filesList, filesRead } from '@sand/project/contract'
 import type { Threads } from '@sand/web-client/contract'
 import { batch, sig } from '@vaakx-dev/vrui'
 import { changesOf, noChanges, sameChanges, shapeOf, type Changes } from './changes'
+import type { FileMarksSource, FilesFolder } from './contract'
 import { buildTree, type Folder } from './tree/build'
-
-interface Place {
-  cwd: string
-  device: string
-}
 
 export interface Listing {
   files: string[]
@@ -21,7 +16,7 @@ export type Loaded = { listing: Listing } | { error: string } | undefined
 export const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 export const filesModel = (wire: Wire, threads: Threads) => {
-  const here = (): Place => ({ cwd: threads.cwd(), device: threads.device() })
+  const here = (): FilesFolder => ({ cwd: threads.cwd(), device: threads.device() })
   const place = sig(here())
   const loaded = sig<Loaded>(undefined)
   const changes = sig<Changes>(noChanges)
@@ -31,16 +26,19 @@ export const filesModel = (wire: Wire, threads: Threads) => {
   const version = sig(0)
   let started = false
   let latest = 0
-  let git: GitStatusClient | undefined
+  let source: FileMarksSource | undefined
   let unfollow: (() => void) | undefined
   let session = 0
   let shape: string | undefined
+  let watched = false
 
-  const refresh = async () => {
+  const rereadOpenFile = () => version.update(value => value + 1)
+
+  const relist = async () => {
     const at = place.get()
     if (!started || !at.cwd) return
     const ticket = ++latest
-    version.update(value => value + 1)
+    rereadOpenFile()
     try {
       const files = await wire.call(filesList, { cwd: at.cwd }, at.device)
       if (ticket === latest) loaded.set({ listing: { files, tree: buildTree(files) } })
@@ -54,21 +52,23 @@ export const filesModel = (wire: Wire, threads: Threads) => {
     unfollow?.()
     unfollow = undefined
     shape = undefined
+    watched = false
     changes.set(noChanges)
   }
 
   const track = () => {
     untrack()
     const at = place.get()
-    if (!started || !git || !at.cwd) return
+    if (!started || !source || !at.cwd) return
     const mine = session
-    unfollow = git.follow(at, status => {
+    unfollow = source.follow(at, marks => {
       if (mine !== session) return
-      const next = changesOf(status)
+      watched = marks !== undefined
+      const next = changesOf(marks)
       const nextShape = shapeOf(next)
       if (!sameChanges(changes.get(), next)) changes.set(next)
-      if (!status) return
-      if (shape !== undefined && shape !== nextShape) void refresh()
+      if (!marks) return
+      if (shape !== undefined && shape !== nextShape) void relist()
       shape = nextShape
     })
   }
@@ -81,27 +81,29 @@ export const filesModel = (wire: Wire, threads: Threads) => {
     query,
     expanded,
     version,
-    refresh: () => void refresh(),
     start() {
       if (started) return
       started = true
       track()
-      void refresh()
+      void relist()
     },
-    useGit(client: GitStatusClient | undefined) {
-      git = client
+    useMarks(found: FileMarksSource | undefined) {
+      source = found
       track()
-      if (!client) return
+      if (!found) return
       return () => {
-        if (git !== client) return
-        git = undefined
+        if (source !== found) return
+        source = undefined
         untrack()
       }
     },
     reload() {
       loaded.set(undefined)
-      void refresh()
-      if (git && place.get().cwd) void git.refresh(place.get()).catch(() => undefined)
+      void relist()
+    },
+    agentFinished() {
+      if (watched) rereadOpenFile()
+      else void relist()
     },
     toggle(path: string) {
       const next = new Set(expanded.get())
@@ -124,7 +126,7 @@ export const filesModel = (wire: Wire, threads: Threads) => {
         expanded.set(new Set())
       })
       track()
-      void refresh()
+      void relist()
     },
   }
 }

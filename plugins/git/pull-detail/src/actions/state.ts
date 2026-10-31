@@ -1,5 +1,5 @@
+import { pullLabel } from '@sand/github/contract'
 import type { PullDetail } from '../contract'
-import { pullLabel } from '../pulls/ref'
 
 export const isOpen = (detail: PullDetail) => detail.state === 'open' || detail.state === 'draft'
 

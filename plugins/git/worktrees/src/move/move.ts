@@ -1,6 +1,6 @@
 import type { Relocation, SessionInfo } from '@sand/chats/contract'
 import type { GitRepoLocal } from '@sand/git/contract'
-import { errorMessage } from '@sand/util'
+import { errorMessage, shortSha } from '@sand/util'
 import { rolledBack } from '../create/rollback'
 import { createWorktree, discardWorktree } from '../create/worktree'
 import type { WorktreeDeps } from '../deps'
@@ -41,7 +41,7 @@ const makeWorktree = async (deps: WorktreeDeps, local: GitRepoLocal, request: Mo
   if (!head) throw new Error('Make a first commit before moving this thread to a worktree.')
   const branch = request.branch === undefined ? undefined : await checkedNewBranch(deps.git, local.root, request.branch)
   const carried = request.carry ? await stashChanges(deps.git, local.root) : undefined
-  const base = local.branch ?? head.slice(0, 7)
+  const base = local.branch ?? shortSha(head)
   let record: WorktreeRecord
   try {
     record = await createWorktree(deps, { main: local.main, start: head, base, ...(branch ? { branch } : {}), steps: [] })

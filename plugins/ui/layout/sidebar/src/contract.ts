@@ -19,7 +19,6 @@ export interface RowDecoration {
 
 export interface Sidebar {
   decorate(decoration: RowDecoration): Dispose
-  refresh(thread?: string): void
 }
 
 export const sidebar = service<Sidebar>('sidebar')

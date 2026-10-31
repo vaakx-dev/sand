@@ -1,8 +1,9 @@
+import { pullLabel } from '@sand/github/contract'
 import { derive, div, dynamicChild, show } from '@vaakx-dev/vrui'
 import { detailView } from '../detail/view'
 import { listView } from '../list/view'
 import type { PageParts } from '../parts'
-import { parseKey, pullKey } from '../pull/ref'
+import { parsePull } from '../address/pull'
 import { filtersRow } from './filters'
 import { pageHead } from './head'
 import { githubState, signedOutNotice } from './signed-out'
@@ -23,10 +24,10 @@ const detailColumn = (parts: PageParts) =>
   dynamicChild(
     derive(() => {
       const chosen = parts.selected.get()
-      return chosen ? pullKey(chosen) : ''
+      return chosen ? pullLabel(chosen) : ''
     }),
     key => {
-      const chosen = parseKey(key)
+      const chosen = parsePull(key)
       return chosen ? div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, detailView(parts, chosen)) : null
     },
   )
@@ -42,7 +43,7 @@ export const pageView = (parts: PageParts) => {
       () => div({ class: 'flex shrink-0 flex-col' }, pageHead(parts), filtersRow(parts)),
     ),
     dynamicChild(
-      derive(() => githubState(parts.github.auth.get())),
+      derive(() => githubState(parts.auth.get())),
       state => {
         if (state === 'checking') return kit.loadingState({ text: 'Checking GitHub…' })
         if (state === 'signed-out') return signedOutNotice(parts)

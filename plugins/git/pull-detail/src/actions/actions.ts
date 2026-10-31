@@ -1,6 +1,5 @@
-import type { PullRef } from '@sand/github/contract'
+import { type PullRef, pullKey } from '@sand/github/contract'
 import { keyedSerial } from '@sand/util'
-import { pullKey } from '../pulls/ref'
 import { type Action, type ActionDeps, perform } from './action'
 import { deleteBranch } from './branch'
 import { reviewCandidates } from './candidates'

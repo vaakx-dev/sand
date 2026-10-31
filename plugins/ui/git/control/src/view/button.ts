@@ -1,5 +1,5 @@
+import { repoOf } from '@sand/git/contract'
 import { derive, dynamicChild, show, span } from '@vaakx-dev/vrui'
-import { repoOf } from '../next/facts'
 import type { ControlParts } from '../parts'
 import { actionMenu } from './menu'
 

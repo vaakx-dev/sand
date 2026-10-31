@@ -1,8 +1,7 @@
 import type { Sessions } from '@sand/chats/contract'
-import type { GitHub, PullRef } from '@sand/github/contract'
+import { type GitHub, type PullRef, pullLabel } from '@sand/github/contract'
 import type { Loop } from '@sand/loop/contract'
 import type { PullLinks } from '@sand/pull-links/contract'
-import { refLabel } from '../pull/ref'
 import { reviewPrompt } from './prompt'
 
 export interface AgentReviewDeps {
@@ -27,7 +26,7 @@ export const startAgentReview = async (deps: AgentReviewDeps, { cwd, ...ref }: A
   const sessions = needed(deps.sessions(), 'Chat store')
   const loop = needed(deps.loop(), 'Agent loop')
   const pull = await deps.github.summary(ref, true)
-  const { session } = await links.open({ cwd, ref: refLabel(ref), mode: 'worktree' })
+  const { session } = await links.open({ cwd, ref: pullLabel(ref), mode: 'worktree' })
   loop.run(sessions.require(session), reviewPrompt(pull)).catch(deps.report)
   return { session }
 }

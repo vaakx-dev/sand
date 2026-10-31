@@ -1,10 +1,9 @@
 import type { Ask } from '@sand/ask/contract'
-import type { GitRunner } from '@sand/git/contract'
+import type { GitLayout, GitRunner } from '@sand/git/contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { z } from 'zod'
 import type { GitActionResult } from '../contract'
 import { failure } from '../run/failure'
-import type { Repo } from '../run/repo'
 import { nothingToCommit } from '../stage/empty'
 import { previewChanges } from './preview'
 import { messagePrompt, messageSystem } from './prompt'
@@ -26,12 +25,12 @@ const compose = ({ title, bullets }: z.infer<typeof written>) => {
   return body.length ? `${head}\n\n${body.map(bullet => `- ${bullet}`).join('\n')}` : head
 }
 
-const readSubjects = async (git: GitRunner, repo: Repo) => {
+const readSubjects = async (git: GitRunner, repo: GitLayout) => {
   const out = await git.maybe(repo.root, ['log', `-${recentSubjects}`, '--format=%s'], { read: true })
   return out?.split(/\r?\n/).filter(Boolean) ?? []
 }
 
-export const writeMessage = async (git: GitRunner, repo: Repo, ask: Ask | undefined, { paths, session }: MessageRequest): Promise<GitActionResult<{ message: string }>> => {
+export const writeMessage = async (git: GitRunner, repo: GitLayout, ask: Ask | undefined, { paths, session }: MessageRequest): Promise<GitActionResult<{ message: string }>> => {
   if (!ask) return cannotWrite('no model is available')
   const preview = await previewChanges(git, repo, paths)
   if (!preview.stat) return nothingToCommit()

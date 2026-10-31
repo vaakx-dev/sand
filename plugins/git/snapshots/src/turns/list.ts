@@ -2,11 +2,10 @@ import type { Session } from '@sand/chats/contract'
 import type { ListedTurn, TurnSnapshot, TurnSnapshots } from '../contract'
 import type { SnapshotDeps } from '../deps'
 import { sessionRefs, turnRef } from '../git/refs'
-import { findRepo } from '../git/repo'
 import { recordedTurns } from './entries'
 
-const refsIn = async ({ git }: SnapshotDeps, cwd: string, session: string) => {
-  const repo = await findRepo(git, cwd)
+const refsIn = async ({ git, repos }: SnapshotDeps, cwd: string, session: string) => {
+  const repo = await repos.layout(cwd)
   return new Set(repo ? await sessionRefs(git, repo.root, session) : [])
 }
 

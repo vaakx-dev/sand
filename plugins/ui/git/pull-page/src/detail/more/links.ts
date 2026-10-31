@@ -1,5 +1,5 @@
 import type { Child } from '@vaakx-dev/vrui'
-import { notify } from '../../notify'
+import { toastId } from '../../inject'
 import type { Shown } from '../shown'
 
 export const linkItems = (shown: Shown, close: () => void): Child[] => {
@@ -21,7 +21,7 @@ export const linkItems = (shown: Shown, close: () => void): Child[] => {
         icon: 'link',
         onClick: () => {
           close()
-          void kit.copyText(url).then(() => notify(ctx, { tone: 'success', title: 'Copied the link' }))
+          void kit.copyText(url).then(() => ctx.toasts.show({ id: toastId, tone: 'success', title: 'Copied the link' }))
         },
       },
       'Copy link',

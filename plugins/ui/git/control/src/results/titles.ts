@@ -1,7 +1,5 @@
 import type { Committed, Pulled, Pushed, Switched } from '@sand/git-actions/contract'
-import { plural } from '@sand/util'
-
-export const shortSha = (sha: string) => sha.slice(0, 7)
+import { plural, shortSha } from '@sand/util'
 
 export const committedTitle = (done: Committed) => `${done.pushed ? 'Committed and pushed' : 'Committed'} ${shortSha(done.commit)} · ${done.subject}`
 

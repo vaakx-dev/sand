@@ -1,6 +1,5 @@
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, placeKey } from '@sand/git/contract'
 import type { DraftTarget, Thread } from '@sand/web-client/contract'
-import { placeKey } from './key'
 
 export const placeLimit = 40
 

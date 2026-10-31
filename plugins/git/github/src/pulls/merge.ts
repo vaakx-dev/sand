@@ -1,8 +1,8 @@
 import type { Client } from '../api/client'
-import { GitHubError } from '../api/errors'
+import { GitHubError, sentence } from '../api/errors'
 import type { MergeMethod, PullRef, PullSummary } from '../contract'
 import type { Summaries } from './cache'
-import { refLabel } from './ref'
+import { pullLabel } from './ref'
 
 export interface MergeRequest extends PullRef {
   method: MergeMethod
@@ -28,9 +28,9 @@ const blocker = (pull: PullSummary) => {
 
 const refused = (error: unknown, pull: PullSummary) => {
   if (!(error instanceof GitHubError)) return error
-  const label = refLabel(pull)
-  if (error.status === 409) return new GitHubError(`${label} changed while merging; check the latest commits and try again.`, 409)
-  if (error.status === 405 || error.status === 422) return new GitHubError(`GitHub won't merge ${label}: ${blocker(pull) ?? error.message.replace(/^GitHub said: /, '')}`, error.status)
+  const label = pullLabel(pull)
+  if (error.status === 409) return new GitHubError(`${label} changed while merging; check the latest commits and try again.`, { status: 409 })
+  if (error.status === 405 || error.status === 422) return new GitHubError(`GitHub won't merge ${label}: ${blocker(pull) ?? sentence(error.said ?? error.message)}`, error)
   return error
 }
 
@@ -43,14 +43,14 @@ const mergeLater = async (client: Client, summaries: Summaries, pull: PullSummar
   const id = await summaries.id(pull)
   await client.graphql(enableAuto, { id, method: method.toUpperCase() }).catch((error: unknown) => {
     if (!(error instanceof GitHubError)) throw error
-    throw new GitHubError(`Couldn't turn on auto-merge for ${refLabel(pull)}. ${error.message}`, error.status, error.kind)
+    throw new GitHubError(`Couldn't turn on auto-merge for ${pullLabel(pull)}. ${error.message}`, error)
   })
 }
 
 export const mergePull = async (client: Client, summaries: Summaries, request: MergeRequest): Promise<PullSummary> => {
   const pull = await summaries.get(request, true)
   if (pull.state === 'merged') return pull
-  if (pull.state === 'closed') throw new GitHubError(`${refLabel(pull)} is closed; reopen it on GitHub to merge it.`)
+  if (pull.state === 'closed') throw new GitHubError(`${pullLabel(pull)} is closed; reopen it on GitHub to merge it.`)
   if (request.auto && pull.merge !== 'clean') await mergeLater(client, summaries, pull, request.method)
   else await mergeNow(client, pull, request.method)
   return summaries.refresh(request)

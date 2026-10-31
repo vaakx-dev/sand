@@ -4,7 +4,8 @@
   "description": "Pull requests attached to threads: links found from the branch or added by hand, kept fresh, watched for the agent, and opened as threads",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract.ts",
+    "./prompts": "./src/web/prompts.ts"
   },
   "sand": {
     "runtime": "./src/runtime.ts",
@@ -23,9 +24,12 @@
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",
+    "@sand/toasts": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@sand/worktrees": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

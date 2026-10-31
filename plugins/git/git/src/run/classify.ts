@@ -34,10 +34,11 @@ const commandOf = (args: string[]) => args.find((arg, index) => !arg.startsWith(
 
 const cleaned = (line: string) => line.replace(/^(fatal|error|!)\s*:?\s*/i, '').replace(/\s+/g, ' ')
 
-export const classify = (result: GitResult, args: string[]): GitError => {
+export const classify = (result: GitResult, args: string[], what?: string): GitError => {
   const lines = linesOf(result)
   const failure = firstFailure(lines)
   const line = failure?.line ?? lines.find(text => /^(fatal|error):/.test(text)) ?? lines[0]
   const detail = line ? cleaned(line) : undefined
-  return new GitError(failure?.reason ?? 'unknown', detail || `git ${commandOf(args)} failed`, detail)
+  const message = detail || `git ${commandOf(args)} failed`
+  return new GitError(failure?.reason ?? 'unknown', what ? `${what}: ${message}` : message, detail)
 }

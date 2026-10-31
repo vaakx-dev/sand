@@ -8,7 +8,7 @@ import { baseOf, blockReason } from './facts'
 
 export const createModel = (ctx: PullsContext, at: PullPlace, draft: CreateDraft) => {
   const client = ctx.get(gitStatusClient)
-  const status = sig<GitStatus | undefined>(client?.current(at))
+  const status = sig<GitStatus | undefined>(undefined)
   const writing = sig(false)
   const writeError = sig('')
   const busy = sig(false)

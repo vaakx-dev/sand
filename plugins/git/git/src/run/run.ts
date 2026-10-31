@@ -11,11 +11,13 @@ export const git = (cwd: string, args: string[], options: GitOptions = {}): Prom
     return { code, out, err }
   })
 
-export const gitOk = async (cwd: string, args: string[], options?: GitOptions) => {
+export const gitOutput = async (cwd: string, args: string[], options: GitOptions = {}) => {
   const result = await git(cwd, args, options)
-  if (result.code !== 0) throw classify(result, args)
-  return result.out.trim()
+  if (result.code !== 0) throw classify(result, args, options.what)
+  return result.out
 }
+
+export const gitOk = async (cwd: string, args: string[], options?: GitOptions) => (await gitOutput(cwd, args, options)).trim()
 
 export const gitMaybe = async (cwd: string, args: string[], options?: GitOptions) => {
   const result = await git(cwd, args, options)

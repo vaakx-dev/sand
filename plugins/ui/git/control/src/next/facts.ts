@@ -1,6 +1,4 @@
-import type { GitRemote, GitRepoLocal, GitStatus } from '@sand/git/contract'
-
-export const repoOf = (status: GitStatus | undefined): GitRepoLocal | undefined => (status?.local.repo ? status.local : undefined)
+import type { GitRemote, GitRepoLocal } from '@sand/git/contract'
 
 export const isDiverged = (remote: GitRemote | undefined) => Boolean(remote && remote.ahead > 0 && remote.behind > 0)
 

@@ -1,5 +1,5 @@
 import type { PullSummary } from '@sand/github/contract'
-import { oneLine } from '@sand/util'
+import { oneLine, shortSha } from '@sand/util'
 import type { PullItem } from '../activity/types'
 import { type Change, quietLimit } from './mark'
 
@@ -8,13 +8,11 @@ const quoteLimit = 8
 
 const said: Record<PullItem['kind'], string> = { approved: 'approved', changes: 'requested changes', reviewed: 'reviewed', comment: 'commented' }
 
-const short = (sha: string) => sha.slice(0, 7)
-
 export const placeOf = (item: Pick<PullItem, 'path' | 'line'>) => (item.path ? `${item.path}${item.line ? `:${item.line}` : ''}` : '')
 
 const bullet = (change: Change, base: string) => {
-  if (change.kind === 'failed') return `${change.names.map(name => oneLine(name, 80)).join(', ')} failed on ${short(change.head)}`
-  if (change.kind === 'passed') return `checks passed on ${short(change.head)}`
+  if (change.kind === 'failed') return `${change.names.map(name => oneLine(name, 80)).join(', ')} failed on ${shortSha(change.head)}`
+  if (change.kind === 'passed') return `checks passed on ${shortSha(change.head)}`
   if (change.kind === 'conflict') return `the branch now conflicts with ${base}`
   const place = placeOf(change.item)
   return `${change.item.author} ${said[change.item.kind]}${place ? ` on ${place}` : ''}`

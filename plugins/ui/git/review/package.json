@@ -9,7 +9,6 @@
     "summary": "Review a pull request's code, comment on lines and submit your review"
   },
   "dependencies": {
-    "@sand/devices-contract": "workspace:*",
     "@sand/git-diff": "workspace:*",
     "@sand/git-diff-view": "workspace:*",
     "@sand/git-pull-page": "workspace:*",

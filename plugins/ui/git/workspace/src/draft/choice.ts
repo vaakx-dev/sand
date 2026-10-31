@@ -1,6 +1,8 @@
 import type { GitRepoLocal } from '@sand/git/contract'
+import { folderName } from '@sand/util'
 import type { WorkspaceKind } from '@sand/worktrees/contract'
-import { defaultBranch, folderName } from '../paths'
+
+export const defaultBranch = (local: GitRepoLocal | undefined) => local?.defaultBranch ?? 'the default branch'
 
 export type WorkspaceChoice = { kind: 'checkout' } | { kind: 'new'; from?: string } | { kind: 'existing'; path: string; branch?: string }
 

@@ -1,8 +1,8 @@
+import { repoOf } from '@sand/git/contract'
 import { askAgent } from '../agent/ask'
 import type { AgentPrompt } from '../agent/prompts'
 import type { GitBaseAction, GitCommitRequest } from '../contract'
 import type { ControlContext } from '../inject'
-import { repoOf } from '../next/facts'
 import { committedTitle, initTitle, pulledTitle, pushedTitle, pushFailedLead, switchedTitle } from '../results/titles'
 import type { Runs } from '../runs/runs'
 import type { StatusModel } from '../status/follow'
@@ -46,7 +46,9 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
   const init = async (at: Target): Promise<boolean> => {
     const { cwd, device } = at.place
     const result = await runs.perform(at.place, 'init', 'init', run => git.init({ cwd, run }, device))
-    return settle(ctx, at, 'init', result, recovery(at, () => init(at)), initTitle) !== undefined
+    const started = settle(ctx, at, 'init', result, recovery(at, () => init(at)), initTitle) !== undefined
+    if (started) ctx.gitStatus.rewatch(at.place)
+    return started
   }
 
   const passGuard = async (at: Target) => {

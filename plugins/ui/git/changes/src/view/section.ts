@@ -1,43 +1,18 @@
 import type { DiffFile } from '@sand/git-diff/contract'
-import { div, effect, intersectionObserver, show, sig, SPACE, untrack, type Sig } from '@vaakx-dev/vrui'
-import { fileBody } from './body'
+import { sig, type Sig } from '@vaakx-dev/vrui'
 import { openFileButton } from './open-file'
 import type { ViewParts } from './parts'
 
 const openLimit = 20
 
-const preload = '800px 0px'
-
 export const fileSection = (parts: ViewParts, file: Sig<DiffFile>, index: number) => {
-  const { patches } = parts.model
-  const path = file.get().path
+  const { diff, model, layout, sections } = parts
   const open = sig(index < openLimit)
-  const state = patches.state(file.get())
-  let near = false
-
-  effect(() => {
-    const showing = open.get()
-    untrack(() => patches.seen(path, near && showing))
+  return diff.section(file, {
+    patches: model.patches,
+    open,
+    actions: openFileButton(parts, file),
+    onMount: element => sections.add(file.get().path, { element, open }),
+    body: patch => diff.file(patch, { split: layout.split, selection: model.selection }),
   })
-
-  return div(
-    {
-      class: 'border-b border-neutral-800',
-      style: { scrollMarginTop: SPACE['12'] },
-      onMount: element => {
-        const root = element.closest('[data-changes-scroll]')
-        intersectionObserver(
-          element,
-          entries => {
-            near = entries.some(entry => entry.isIntersecting)
-            patches.seen(path, near && open.get())
-          },
-          { root, rootMargin: preload },
-        )
-        return parts.sections.add(path, { element, open })
-      },
-    },
-    parts.diff.head(() => file.get(), { open, actions: openFileButton(parts, file) }),
-    show(open, () => fileBody(parts, file, state, () => patches.retry(path))),
-  )
 }

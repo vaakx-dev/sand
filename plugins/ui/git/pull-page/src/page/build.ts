@@ -5,21 +5,18 @@ import { pageView } from './view'
 
 export type SharedParts = Omit<PageParts, 'list'>
 
-const reloadOnAuth = ({ github, list }: PageParts) => {
-  let was = untrack(() => github.signedIn.get())
-  let seen = untrack(() => github.changes.get())
+const reloadOnAccount = ({ account, list }: PageParts) => {
+  let was = untrack(() => account.get())
   effect(() => {
-    const now = github.signedIn.get()
-    const changes = github.changes.get()
-    if (now && (!was || changes !== seen)) untrack(() => list.load())
+    const now = account.get()
+    if (now && now !== was) untrack(() => list.load())
     was = now
-    seen = changes
   })
 }
 
 const followChanges = (parts: PageParts) => {
   const { ctx, list } = parts
-  reloadOnAuth(parts)
+  reloadOnAccount(parts)
   effect(() => ctx.inbox.onRow(list.patch))
   effect(() =>
     ctx.inbox.onCount(() => {

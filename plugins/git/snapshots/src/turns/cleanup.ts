@@ -1,12 +1,11 @@
 import type { Session } from '@sand/chats/contract'
 import type { SnapshotDeps } from '../deps'
 import { deleteSessionRefs } from '../git/refs'
-import { findRepo } from '../git/repo'
 import { recordedTurns } from './entries'
 
 const foldersOf = (session: Session) => [...new Set([session.cwd, ...recordedTurns(session).map(turn => turn.cwd)])]
 
-export const createCleanup = ({ git, sessions, queue }: SnapshotDeps) => {
+export const createCleanup = ({ git, repos, sessions, queue }: SnapshotDeps) => {
   const leaving = new Map<string, string[]>()
 
   const note = (session: Session) => {
@@ -18,7 +17,7 @@ export const createCleanup = ({ git, sessions, queue }: SnapshotDeps) => {
   }
 
   const removeIn = async (cwd: string, session: string) => {
-    const repo = await findRepo(git, cwd)
+    const repo = await repos.layout(cwd)
     if (repo) await queue(repo.root, () => deleteSessionRefs(git, repo.root, session))
   }
 

@@ -1,4 +1,4 @@
-import { derive, show, span } from '@vaakx-dev/vrui'
+import { derive, span } from '@vaakx-dev/vrui'
 import type { CodeTab } from '../model/state'
 import { commitMenu } from './commits'
 
@@ -13,8 +13,6 @@ export const toolbar = (tab: CodeTab) => {
     commitMenu(tab),
     span({ class: 'shrink-0 text-sm text-neutral-400' }, counts),
     span({ class: 'flex-1' }),
-    show(layout.wide, () =>
-      kit.quietButton({ size: 'sm', active: layout.preferSplit, title: 'Show old and new side by side', onClick: layout.toggle }, 'Split'),
-    ),
+    layout.splitButton(),
   )
 }

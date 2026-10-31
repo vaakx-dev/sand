@@ -1,7 +1,6 @@
 import type { Session } from '@sand/chats/contract'
 import type { WorktreeDeps } from '../deps'
 import { currentBranch, hasUpstream, uniqueBranch } from '../repo/refs'
-import { gitStep } from '../repo/run'
 import { askBranchName } from './ask'
 
 export const nameOnFirstTurn = async (deps: WorktreeDeps, session: Session, prompt: string) => {
@@ -17,7 +16,7 @@ export const nameOnFirstTurn = async (deps: WorktreeDeps, session: Session, prom
   const renamed = await deps.queue(record.main, async () => {
     if ((await currentBranch(deps.git, record.path)) !== temp || (await hasUpstream(deps.git, record.path, temp))) return false
     const branch = await uniqueBranch(deps.git, record.path, `${deps.prefix}${slug}`)
-    await gitStep(deps.git, record.path, ['branch', '-m', temp, branch], `Couldn't rename ${temp}`)
+    await deps.git.ok(record.path, ['branch', '-m', temp, branch], { what: `Couldn't rename ${temp}` })
     record.branch = branch
     await deps.store.save()
     return true

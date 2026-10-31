@@ -9,14 +9,14 @@ export const serialized = (task: () => Promise<void>) => {
     return running
   }
 
+  const next = () => {
+    queued = undefined
+    return start()
+  }
+
   return (): Promise<void> => {
     if (!running) return start()
-    queued ??= running
-      .catch(() => {})
-      .then(() => {
-        queued = undefined
-        return start()
-      })
+    queued ??= running.then(next, next)
     return queued
   }
 }

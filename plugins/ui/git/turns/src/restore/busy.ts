@@ -1,12 +1,13 @@
-import type { GitPlace } from '@sand/git/contract'
+import { type GitPlace, repoOf, samePlace } from '@sand/git/contract'
 import { isInside, samePath } from '@sand/util'
 import type { TurnsContext } from '../inject'
 
 const inFolder = (path: string, folder: string) => samePath(path, folder) || isInside(path, folder)
 
 const rootOf = (ctx: TurnsContext, place: GitPlace) => {
-  const local = ctx.gitStatus.current(place)?.local
-  return local?.repo ? local.root : place.cwd
+  const current = ctx.gitStatus.current.get()
+  const local = current && samePlace(current.place, place) ? repoOf(current.status) : undefined
+  return local?.root ?? place.cwd
 }
 
 export const busyReason = (ctx: TurnsContext, place: GitPlace) => {

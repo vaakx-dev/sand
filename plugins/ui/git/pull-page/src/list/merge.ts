@@ -1,12 +1,10 @@
+import { pullName, pullRef } from '@sand/github/look'
 import type { InboxPull } from '@sand/pull-inbox/contract'
 import { sig, stopThen } from '@vaakx-dev/vrui'
 import { confirmStep } from '../confirm/step'
-import { hereOf } from '../inject'
-import { attempt, notify } from '../notify'
+import { hereOf, toastId } from '../inject'
 import type { PageParts } from '../parts'
-import { pullName } from '../pull/look'
 import { chosenMethod, methodLabels } from '../pull/method'
-import { refOf } from '../pull/ref'
 
 export const inlineMerge = (parts: PageParts, pull: () => InboxPull) => {
   const { kit, ctx } = parts
@@ -16,11 +14,11 @@ export const inlineMerge = (parts: PageParts, pull: () => InboxPull) => {
 
   const merge = async () => {
     const shown = pull()
-    const name = pullName(shown.number)
+    const name = pullName(shown)
     busy.set(true)
-    const done = await attempt(ctx, `Couldn't merge ${name}`, () => ctx.github.merge({ ...refOf(shown), method: method() }, hereOf(ctx)))
+    const done = await ctx.toasts.attempt(toastId, `Couldn't merge ${name}`, () => ctx.github.merge({ ...pullRef(shown), method: method() }, hereOf(ctx)))
     busy.set(false)
-    if (done) notify(ctx, { tone: 'success', title: `Merged ${name}` })
+    if (done) ctx.toasts.show({ id: toastId, tone: 'success', title: `Merged ${name}` })
   }
 
   return kit.secondaryAction(

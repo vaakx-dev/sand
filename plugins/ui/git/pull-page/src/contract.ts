@@ -22,17 +22,11 @@ export interface PullMenu {
   items(context: PullMenuContext): Child[]
 }
 
-export interface LocalCopy {
-  cwd: string
-  device: string
-}
-
 export interface PullPage {
   open(pull?: PullRef): void
   close(): void
   tab(tab: PullTab): Dispose
   menu(menu: PullMenu): Dispose
-  localCopy(repo: string): LocalCopy | undefined
 }
 
 export const pullPage = service<PullPage>('pullPage')

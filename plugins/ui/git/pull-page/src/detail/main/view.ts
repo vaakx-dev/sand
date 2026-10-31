@@ -1,5 +1,5 @@
+import { pullPrompts } from '@sand/pull-links/prompts'
 import { derive, div, dynamicChild, type Child } from '@vaakx-dev/vrui'
-import { conflictPrompt } from '../../agent/prompts'
 import type { Shown } from '../shown'
 import { blockReason, type MainKind, mainKind } from './kind'
 import { mergeSplit } from './merge'
@@ -16,8 +16,8 @@ const resolveButton = (shown: Shown) => {
   return kit.primaryAction(
     {
       disabled: shown.model.busy,
-      title: 'Ask the agent to merge the base in and resolve the conflicts',
-      onClick: () => void agent.askLinked(shown.pull(), shown.linked.get()[0], conflictPrompt(shown.pull())),
+      title: 'Ask the agent to bring in the base branch and resolve the conflicts',
+      onClick: () => void agent.ask(shown.pull(), pullPrompts.resolve(shown.pull())),
     },
     kit.icon('sparkles', 14),
     'Resolve in thread',

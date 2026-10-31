@@ -1,5 +1,5 @@
+import { pullKey } from '@sand/github/contract'
 import type { InboxGroup, InboxPull, InboxView } from '@sand/pull-inbox/contract'
-import { pullKey } from '../pull/ref'
 
 export type ListEntry = { kind: 'group'; key: string; title: string } | { kind: 'pull'; key: string; pull: InboxPull }
 

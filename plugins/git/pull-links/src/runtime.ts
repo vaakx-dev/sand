@@ -93,11 +93,14 @@ export default definePlugin({
       return opened
     })
     ctx.on(sessionUpdate, session => {
-      if (session.settled !== null) links.stopWatching(session)
+      if (session.settled === null) return
+      links.stopWatching(session)
+      discovery.forget(session.id)
     })
     ctx.on(sessionRemove, id => {
       viewed.end(id)
       book.forget(id)
+      discovery.forget(id)
     })
     ctx.on(pullChanged, summary => {
       for (const id of links.linking(summary)) announce(id)

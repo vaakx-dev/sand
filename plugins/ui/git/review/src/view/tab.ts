@@ -1,5 +1,5 @@
 import type { PullRef } from '@sand/github/contract'
-import { derive, div, dynamicChild, list, resizeObserver } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list } from '@vaakx-dev/vrui'
 import type { ReviewContext } from '../inject'
 import type { FilesState } from '../model/files'
 import { codeState, type CodeTab } from '../model/state'
@@ -38,9 +38,7 @@ export const codeTab = (ctx: ReviewContext, ref: PullRef) => {
   return div(
     {
       class: 'flex flex-1 flex-col',
-      onMount: element => {
-        resizeObserver(element, entries => tab.layout.width.set(entries[0]?.contentRect.width ?? 0))
-      },
+      onMount: element => tab.layout.measure(element),
     },
     toolbar(tab),
     div(

@@ -2,9 +2,8 @@ import type { WireHost } from '@sand/host-hub/contract'
 import { joinDisposers } from '@sand/util'
 import type { Watcher } from '@sand/watch/contract'
 import { existsSync } from 'node:fs'
-import { type GitLocal, gitLocalChange, type GitRemote, gitRemoteChange, type GitStatus } from '../contract'
+import { type GitLayout, type GitLocal, gitLocalChange, type GitRemote, gitRemoteChange, type GitStatus } from '../contract'
 import { GitError } from '../run/error'
-import type { Layout } from '../status/layout'
 import { readLocal } from '../status/local'
 import { type FetchInfo, readRemote } from '../status/remote'
 import { debounceMs, inGitDir, inWorkingTree } from './filters'
@@ -19,7 +18,7 @@ export interface TreeDeps {
 }
 
 export interface Tree {
-  readonly layout: Layout
+  readonly layout: GitLayout
   readonly cwds: Map<string, string>
   readonly ready: Promise<void>
   status(cwd: string, prefix: string): GitStatus
@@ -35,7 +34,7 @@ const viewOf = (local: GitLocal, prefix: string): GitLocal => (local.repo ? { ..
 const headMoved = (before: GitLocal | undefined, after: GitLocal) =>
   !before?.repo || !after.repo || before.branch !== after.branch || before.head !== after.head || before.defaultBranch !== after.defaultBranch
 
-export const watchTree = (layout: Layout, deps: TreeDeps): Tree => {
+export const watchTree = (layout: GitLayout, deps: TreeDeps): Tree => {
   const cwds = new Map<string, string>()
   let local: GitLocal | undefined
   let localPrint = ''

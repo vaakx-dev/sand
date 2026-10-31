@@ -1,10 +1,10 @@
+import { samePull } from '@sand/github/contract'
 import type { InboxPull, InboxView } from '@sand/pull-inbox/contract'
 import { errorMessage } from '@sand/util'
 import { derive, effect, onTimeout, sig, untrack, type Derive } from '@vaakx-dev/vrui'
 import type { QueryState } from '../address/state'
-import type { PageContext } from '../inject'
+import { type PageContext, toastId } from '../inject'
 import { reposFor, type RepoChoice } from '../projects/repos'
-import { sameKey } from '../pull/ref'
 
 type Phase = 'loading' | 'ready' | 'failed'
 
@@ -47,7 +47,8 @@ export const listModel = (ctx: PageContext, query: QueryState, choices: Derive<R
         phase.set('ready')
       })
       .catch(error => {
-        if (mine !== token || quiet) return
+        if (mine !== token) return
+        if (quiet) return ctx.report(error)
         failure.set(errorMessage(error))
         phase.set('failed')
       })
@@ -63,18 +64,20 @@ export const listModel = (ctx: PageContext, query: QueryState, choices: Derive<R
       .then(page => {
         if (mine !== token) return
         const known = pulls.get()
-        pulls.set([...known, ...page.pulls.filter(pull => !known.some(each => sameKey(each, pull)))])
+        pulls.set([...known, ...page.pulls.filter(pull => !known.some(each => samePull(each, pull)))])
         cursor.set(page.cursor)
         extended = true
       })
-      .catch(() => undefined)
+      .catch(error => {
+        if (mine === token) ctx.toasts.error(toastId, "Couldn't load more pull requests", error)
+      })
       .finally(() => {
         if (mine === token) more.set(false)
       })
   }
 
   const patch = (row: InboxPull) => {
-    if (pulls.get().some(pull => sameKey(pull, row))) pulls.update(list => list.map(pull => (sameKey(pull, row) ? row : pull)))
+    if (pulls.get().some(pull => samePull(pull, row))) pulls.update(list => list.map(pull => (samePull(pull, row) ? row : pull)))
   }
 
   effect(() => {

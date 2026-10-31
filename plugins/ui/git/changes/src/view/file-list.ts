@@ -5,9 +5,9 @@ import type { ViewParts } from './parts'
 
 const fileRow = ({ kit, sections, diff }: ViewParts, file: Sig<DiffFile>) =>
   kit.listRow({
-    lead: diff.marks.kind(() => file.get().kind),
-    title: diff.marks.path(() => file.get().path),
-    trail: diff.marks.stat(
+    lead: kit.fileKindMark(() => file.get().kind),
+    title: diff.pathLabel(() => file.get().path),
+    trail: kit.lineStat(
       () => file.get().add,
       () => file.get().del,
     ),

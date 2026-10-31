@@ -1,7 +1,8 @@
 import type { PullSummary } from '@sand/github/contract'
+import { pullName } from '@sand/github/look'
 import { plural } from '@sand/util'
 import { div, span } from '@vaakx-dev/vrui'
-import { pullName, stateLook } from '../pull/look'
+import { stateLook } from '../pull/look'
 import { pullUrl, type Shown } from './shown'
 
 const statLine = (summary: PullSummary) => `by ${summary.author} · ${plural(summary.files, 'file')} · +${summary.add} −${summary.del}`
