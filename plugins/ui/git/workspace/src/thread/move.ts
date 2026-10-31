@@ -1,7 +1,5 @@
-import { gitStatus } from '@sand/git/contract'
 import { picker } from '@sand/picker/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { worktreesMove } from '@sand/worktrees/contract'
 import type { WorkspaceContext } from '../inject'
 import { notify, notifyError } from '../notify'
 import { repoOf } from '../paths'
@@ -14,7 +12,7 @@ const askBranch = async (ctx: WorkspaceContext) => {
 }
 
 const branchAt = (ctx: WorkspaceContext, cwd: string, device: string) =>
-  ctx.wire.call(gitStatus, { cwd }, device).then(
+  ctx.gitStatus.status({ cwd, device }).then(
     status => repoOf(status)?.branch,
     () => undefined,
   )
@@ -23,7 +21,7 @@ export const moveThread = async (ctx: WorkspaceContext, thread: Thread) => {
   const branch = await askBranch(ctx)
   if (branch === undefined) return
   try {
-    const moved = await ctx.wire.call(worktreesMove, { session: thread.id, branch: branch || undefined, carry: true }, thread.device)
+    const moved = await ctx.worktrees.move({ session: thread.id, branch: branch || undefined, carry: true }, thread.device)
     const name = await branchAt(ctx, moved.cwd, thread.device)
     notify(ctx, { tone: 'success', title: name ? `Moved to ${name}` : 'Moved to a new worktree' })
     if (moved.id !== thread.id) await ctx.threads.select(moved.id)

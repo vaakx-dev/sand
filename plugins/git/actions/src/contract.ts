@@ -1,5 +1,6 @@
-import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import type { GitFailure } from '@sand/git/contract'
+import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
 export type GitAction = 'commit' | 'push' | 'pull' | 'switch' | 'init' | 'message'
@@ -79,3 +80,15 @@ export const gitSwitch = request('git.switch', {
 export const gitInit = request('git.init', { input: z.object({ cwd, run }), output: type<GitActionResult<{ branch: string }>>(), place: 'thread' })
 
 export const gitProgress = wireEvent<GitProgress>('git.progress')
+
+export interface GitActionsClient {
+  commit(input: InputOf<typeof gitCommit>, device: string): Promise<GitActionResult<Committed>>
+  message(input: InputOf<typeof gitMessage>, device: string): Promise<GitActionResult<{ message: string }>>
+  push(input: InputOf<typeof gitPush>, device: string): Promise<GitActionResult<Pushed>>
+  pull(input: InputOf<typeof gitPull>, device: string): Promise<GitActionResult<Pulled>>
+  switch(input: InputOf<typeof gitSwitch>, device: string): Promise<GitActionResult<Switched>>
+  init(input: InputOf<typeof gitInit>, device: string): Promise<GitActionResult<{ branch: string }>>
+  onProgress(listener: (progress: GitProgress, device: string) => void): Dispose
+}
+
+export const gitActionsClient = service<GitActionsClient>('gitActionsClient')

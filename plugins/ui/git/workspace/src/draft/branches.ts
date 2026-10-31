@@ -1,5 +1,5 @@
 import { composer } from '@sand/composer/contract'
-import { type GitBranch, gitBranches, type GitPlace } from '@sand/git/contract'
+import type { GitBranch, GitPlace } from '@sand/git/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { WorkspaceContext } from '../inject'
 import type { DraftModel } from './model'
@@ -31,7 +31,7 @@ export const branchPage = (ctx: WorkspaceContext, model: DraftModel, place: GitP
   delay: 120,
   async items(query) {
     const wanted = query.trim()
-    const { branches } = await ctx.wire.call(gitBranches, { cwd: place.cwd, query: wanted || undefined, limit }, place.device)
+    const { branches } = await ctx.gitStatus.branches(place, wanted || undefined, limit)
     return branches.map(branch => branchItem(ctx, model, branch))
   },
 })

@@ -1,5 +1,4 @@
 import { gitStatusClient, type GitStatus } from '@sand/git/contract'
-import { pullsText } from '@sand/github/contract'
 import { errorMessage } from '@sand/util'
 import { batch, derive, effect, sig } from '@vaakx-dev/vrui'
 import type { PullPlace } from '../contract'
@@ -27,7 +26,7 @@ export const createModel = (ctx: PullsContext, at: PullPlace, draft: CreateDraft
       writeError.set('')
     })
     try {
-      const text = await ctx.wire.call(pullsText, { cwd: at.cwd, base: baseOf(status.get()), session: at.session }, at.device)
+      const text = await ctx.github.text({ cwd: at.cwd, base: baseOf(status.get()), session: at.session }, at.device)
       batch(() => {
         draft.title.set(text.title)
         draft.body.set(text.body)

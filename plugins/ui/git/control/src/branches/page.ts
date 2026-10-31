@@ -1,4 +1,4 @@
-import { type GitBranch, gitBranches, type GitPlace } from '@sand/git/contract'
+import type { GitBranch, GitPlace } from '@sand/git/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import { repoOf } from '../next/facts'
 import type { ControlParts } from '../parts'
@@ -46,7 +46,7 @@ export const branchPage = (parts: ControlParts, place: GitPlace): PalettePage =>
   delay: 120,
   async items(query) {
     const wanted = query.trim()
-    const { branches } = await parts.ctx.wire.call(gitBranches, { cwd: place.cwd, query: wanted || undefined, limit }, place.device)
+    const { branches } = await parts.ctx.gitStatus.branches(place, wanted || undefined, limit)
     const waiting = parts.waiting.get()
     const ordered = [...branches.filter(branch => branch.current), ...branches.filter(branch => !branch.current)]
     const rows = ordered.map(branch => branchItem(parts, branch, waiting))

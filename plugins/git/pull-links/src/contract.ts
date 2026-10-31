@@ -1,6 +1,6 @@
 import type { PullRef, PullSummary } from '@sand/github/contract'
-import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { service } from 'drydock'
+import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
+import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
 export type LinkSource = 'created' | 'branch' | 'linked' | 'opened'
@@ -31,11 +31,26 @@ export const pullOpen = request('pulls.open', {
   place: 'thread',
 })
 
+export type PullOpenRequest = InputOf<typeof pullOpen>
+
 export const threadPullsChange = wireEvent<ThreadPulls>('pulls.thread')
 
 export interface PullLinks {
   links(session: string): Promise<ThreadPulls>
   link(session: string, pull: PullRef, source: LinkSource): Promise<ThreadPulls>
+  open(request: PullOpenRequest): Promise<{ session: string }>
 }
 
 export const pullLinksService = service<PullLinks>('pullLinks')
+
+export interface PullLinksClient {
+  links(input: InputOf<typeof pullLinks>, device: string): Promise<ThreadPulls>
+  linksAll(device: string): Promise<ThreadPulls[]>
+  link(input: InputOf<typeof pullLink>, device: string): Promise<ThreadPulls>
+  unlink(input: InputOf<typeof pullUnlink>, device: string): Promise<ThreadPulls>
+  watch(input: InputOf<typeof pullWatch>, device: string): Promise<ThreadPulls>
+  open(input: PullOpenRequest, device: string): Promise<{ session: string }>
+  onChange(listener: (pulls: ThreadPulls, device: string) => void): Dispose
+}
+
+export const pullLinksClient = service<PullLinksClient>('pullLinksClient')

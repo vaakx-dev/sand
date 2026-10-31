@@ -1,4 +1,4 @@
-import { type GitAction, type GitActionFailure, type GitActionResult, type GitPhase, gitProgress } from '@sand/git-actions/contract'
+import type { GitAction, GitActionFailure, GitActionResult, GitPhase } from '@sand/git-actions/contract'
 import type { GitPlace } from '@sand/git/contract'
 import { errorMessage, uuid } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
@@ -24,13 +24,9 @@ export const createRuns = (ctx: ControlContext) => {
   }
 
   ctx.effect(() =>
-    ctx.wire.on(
-      gitProgress,
-      ({ run: id, phase, line }) => {
-        for (const [key, run] of active.get()) if (run.id === id) put(key, { ...run, phase, line })
-      },
-      { from: 'all' },
-    ),
+    ctx.gitActions.onProgress(({ run: id, phase, line }) => {
+      for (const [key, run] of active.get()) if (run.id === id) put(key, { ...run, phase, line })
+    }),
   )
 
   const at = (place: GitPlace | undefined) => (place ? active.get().get(placeKey(place)) : undefined)

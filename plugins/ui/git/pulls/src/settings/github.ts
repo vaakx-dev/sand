@@ -1,4 +1,4 @@
-import { type GitHubAuth, githubLogin, type GitHubLoginCode, githubLoginCode, githubLogout } from '@sand/github/contract'
+import type { GitHubAuth, GitHubLoginCode } from '@sand/github/contract'
 import { errorMessage } from '@sand/util'
 import { batch, sig } from '@vaakx-dev/vrui'
 import type { GitHubAccounts } from '../github/accounts'
@@ -27,7 +27,7 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
       code.set(undefined)
     })
     try {
-      accounts.set(device, await ctx.wire.call(githubLogin, {}, device))
+      accounts.set(device, await ctx.github.login(device))
     } catch (error) {
       failure.set(errorMessage(error))
     } finally {
@@ -52,7 +52,7 @@ const signInFor = (ctx: PullsContext, accounts: GitHubAccounts, device: string) 
     reset()
     leaving.set(true)
     try {
-      settleLogout(await ctx.wire.call(githubLogout, {}, device))
+      settleLogout(await ctx.github.logout(device))
     } catch (error) {
       failure.set(errorMessage(error))
     } finally {
@@ -77,14 +77,10 @@ export const githubSignIns = (ctx: PullsContext, accounts: GitHubAccounts) => {
   }
 
   ctx.effect(() =>
-    ctx.wire.on(
-      githubLoginCode,
-      (next, device) => {
-        const found = signIns.get(device)
-        if (found?.signing.get()) found.code.set(next)
-      },
-      { from: 'all' },
-    ),
+    ctx.github.onLoginCode((next, device) => {
+      const found = signIns.get(device)
+      if (found?.signing.get()) found.code.set(next)
+    }),
   )
 
   return { of }

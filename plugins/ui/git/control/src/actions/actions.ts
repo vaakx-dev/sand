@@ -1,4 +1,3 @@
-import { gitCommit, gitInit, gitMessage, gitPull, gitPush, gitSwitch } from '@sand/git-actions/contract'
 import { askAgent } from '../agent/ask'
 import type { AgentPrompt } from '../agent/prompts'
 import type { GitBaseAction, GitCommitRequest } from '../contract'
@@ -11,7 +10,7 @@ import { askBranchName, confirmDefaultPush } from './guard'
 import { type Recovery, reportFailure, settle, type Target } from './settle'
 
 export const createActions = (ctx: ControlContext, model: StatusModel, runs: Runs) => {
-  const { wire } = ctx
+  const git = ctx.gitActions
 
   const target = (): Target | undefined => {
     const place = model.place.get()
@@ -26,13 +25,13 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
 
   const push = async (at: Target): Promise<boolean> => {
     const { cwd, device } = at.place
-    const result = await runs.perform(at.place, 'push', 'push', run => wire.call(gitPush, { cwd, run }, device))
+    const result = await runs.perform(at.place, 'push', 'push', run => git.push({ cwd, run }, device))
     return settle(ctx, at, 'push', result, recovery(at, () => push(at)), pushedTitle) !== undefined
   }
 
   const pull = async (at: Target): Promise<boolean> => {
     const { cwd, device } = at.place
-    const result = await runs.perform(at.place, 'pull', 'pull', run => wire.call(gitPull, { cwd, run }, device))
+    const result = await runs.perform(at.place, 'pull', 'pull', run => git.pull({ cwd, run }, device))
     return settle(ctx, at, 'pull', result, recovery(at, () => pull(at)), pulledTitle) !== undefined
   }
 
@@ -40,13 +39,13 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
 
   const switchTo = async (branch: string, create: boolean, at: Target): Promise<boolean> => {
     const { cwd, device } = at.place
-    const result = await runs.perform(at.place, 'switch', 'switch', run => wire.call(gitSwitch, { cwd, run, branch, create }, device))
+    const result = await runs.perform(at.place, 'switch', 'switch', run => git.switch({ cwd, run, branch, create }, device))
     return settle(ctx, at, 'switch', result, recovery(at, () => switchTo(branch, create, at)), switchedTitle) !== undefined
   }
 
   const init = async (at: Target): Promise<boolean> => {
     const { cwd, device } = at.place
-    const result = await runs.perform(at.place, 'init', 'init', run => wire.call(gitInit, { cwd, run }, device))
+    const result = await runs.perform(at.place, 'init', 'init', run => git.init({ cwd, run }, device))
     return settle(ctx, at, 'init', result, recovery(at, () => init(at)), initTitle) !== undefined
   }
 
@@ -66,7 +65,7 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
     const { cwd, device } = at.place
     const message = request.message?.trim() || undefined
     const input = { cwd, paths: request.paths, message, push: request.push, session: at.thread }
-    const result = await runs.perform(at.place, 'commit', message ? 'stage' : 'message', run => wire.call(gitCommit, { ...input, run }, device))
+    const result = await runs.perform(at.place, 'commit', message ? 'stage' : 'message', run => git.commit({ ...input, run }, device))
     const done = settle(ctx, at, 'commit', result, recovery(at, () => commit(request, at)), made => (made.pushFailure ? undefined : committedTitle(made)))
     if (done?.pushFailure) reportFailure(ctx, at, 'push', done.pushFailure, recovery(at, () => push(at)), pushFailedLead(done))
     return done
@@ -81,7 +80,7 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
 
   const writeMessage = async (paths: string[] | undefined, at: Target): Promise<string | undefined> => {
     const { cwd, device } = at.place
-    const result = await runs.perform(at.place, 'message', 'message', run => wire.call(gitMessage, { cwd, run, paths, session: at.thread }, device))
+    const result = await runs.perform(at.place, 'message', 'message', run => git.message({ cwd, run, paths, session: at.thread }, device))
     return settle(ctx, at, 'message', result, recovery(at, () => writeMessage(paths, at)))?.message
   }
 

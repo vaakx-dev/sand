@@ -9,11 +9,13 @@
   "sand": {
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "Git actions",
     "summary": "Commits, pushes, pulls and switches branches from the page"
   },
   "dependencies": {
     "@sand/ask": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",

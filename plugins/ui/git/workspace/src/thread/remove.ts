@@ -1,6 +1,6 @@
 import type { GitPlace } from '@sand/git/contract'
 import { picker } from '@sand/picker/contract'
-import { type Worktree, worktreesRemove } from '@sand/worktrees/contract'
+import type { Worktree } from '@sand/worktrees/contract'
 import type { WorkspaceContext } from '../inject'
 import { notify, notifyError } from '../notify'
 import { folderName } from '../paths'
@@ -37,10 +37,10 @@ export const removeWorktree = async (ctx: WorkspaceContext, cache: WorktreeCache
   try {
     const tree = await sandWorktree(cache, place)
     const input = { path: tree.path }
-    const first = await ctx.wire.call(worktreesRemove, input, place.device)
+    const first = await ctx.worktrees.remove(input, place.device)
     if (first.removed) return removed(ctx, place, tree)
     if (!(await confirmForce(ctx, first.message))) return
-    const forced = await ctx.wire.call(worktreesRemove, { ...input, force: true }, place.device)
+    const forced = await ctx.worktrees.remove({ ...input, force: true }, place.device)
     if (forced.removed) return removed(ctx, place, tree)
     notifyError(ctx, removeTitle, forced.message)
   } catch (error) {

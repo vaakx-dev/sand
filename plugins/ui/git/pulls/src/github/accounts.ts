@@ -1,4 +1,4 @@
-import { type GitHubAuth, githubAuth, githubAuthChange } from '@sand/github/contract'
+import type { GitHubAuth } from '@sand/github/contract'
 import { errorMessage } from '@sand/util'
 import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { PullsContext } from '../inject'
@@ -21,7 +21,7 @@ export const githubAccounts = (ctx: PullsContext) => {
     loading.add(device)
     const auth = slot(device)
     try {
-      auth.set(await ctx.wire.call(githubAuth, {}, device))
+      auth.set(await ctx.github.auth(device))
     } catch (error) {
       auth.set({ state: 'error', message: errorMessage(error) })
     } finally {
@@ -39,13 +39,9 @@ export const githubAccounts = (ctx: PullsContext) => {
   const signedIn = (device: string) => of(device)?.state === 'signed-in'
 
   ctx.effect(() =>
-    ctx.wire.on(
-      githubAuthChange,
-      (next, device) => {
-        if (auths.has(device)) set(device, next)
-      },
-      { from: 'all' },
-    ),
+    ctx.github.onAuthChange((next, device) => {
+      if (auths.has(device)) set(device, next)
+    }),
   )
   onReconnect(ctx, device => {
     for (const each of auths.keys()) if (!device || each === device) void load(each)

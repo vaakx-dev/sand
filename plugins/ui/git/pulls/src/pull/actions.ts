@@ -1,5 +1,5 @@
-import { type MergeMethod, pullsMerge, pullsReady, pullsSummary, type PullSummary } from '@sand/github/contract'
-import { type PullLink, pullUnlink, pullWatch } from '@sand/pull-links/contract'
+import type { MergeMethod, PullSummary } from '@sand/github/contract'
+import type { PullLink } from '@sand/pull-links/contract'
 import { turns } from '@sand/web-client/contract'
 import type { PullPlace } from '../contract'
 import type { PullsContext } from '../inject'
@@ -9,7 +9,7 @@ import { pullName } from './look'
 import type { AgentPrompt } from './prompts'
 
 export const pullActions = (ctx: PullsContext, store: LinkStore) => {
-  const { wire } = ctx
+  const { github, pullLinks } = ctx
   const ref = (link: PullLink) => ({ repo: link.repo, number: link.number })
 
   const attempt = async <T>(title: string, work: () => Promise<T>): Promise<T | undefined> => {
@@ -34,30 +34,30 @@ export const pullActions = (ctx: PullsContext, store: LinkStore) => {
 
   const ready = async (link: PullLink, place: PullPlace) => {
     const name = pullName(link)
-    const done = changed(await attempt(`Couldn't mark ${name} ready`, () => wire.call(pullsReady, { ...ref(link), ready: true }, place.device)), place)
+    const done = changed(await attempt(`Couldn't mark ${name} ready`, () => github.ready({ ...ref(link), ready: true }, place.device)), place)
     if (done) notify(ctx, { tone: 'success', title: `${name} is ready for review` })
   }
 
   const merge = async (link: PullLink, place: PullPlace, method: MergeMethod, auto = false) => {
     const name = pullName(link)
-    const done = changed(await attempt(`Couldn't merge ${name}`, () => wire.call(pullsMerge, { ...ref(link), method, auto }, place.device)), place)
+    const done = changed(await attempt(`Couldn't merge ${name}`, () => github.merge({ ...ref(link), method, auto }, place.device)), place)
     if (!done) return
     const title = done.state === 'merged' ? `Merged ${name}` : `${name} merges when it's ready`
     notify(ctx, { tone: 'success', title, actions: [githubAction(ctx, done.url)] })
   }
 
   const watch = async (link: PullLink, place: PullPlace, on: boolean) => {
-    const result = await attempt(`Couldn't change watching for ${pullName(link)}`, () => wire.call(pullWatch, { session: place.session, pull: ref(link), on }, place.device))
+    const result = await attempt(`Couldn't change watching for ${pullName(link)}`, () => pullLinks.watch({ session: place.session, pull: ref(link), on }, place.device))
     if (result) store.apply(result, place.device)
   }
 
   const unlink = async (link: PullLink, place: PullPlace) => {
-    const result = await attempt(`Couldn't unlink ${pullName(link)}`, () => wire.call(pullUnlink, { session: place.session, pull: ref(link) }, place.device))
+    const result = await attempt(`Couldn't unlink ${pullName(link)}`, () => pullLinks.unlink({ session: place.session, pull: ref(link) }, place.device))
     if (result) store.apply(result, place.device)
   }
 
   const refresh = async (link: PullLink, place: PullPlace) => {
-    changed(await attempt(`Couldn't refresh ${pullName(link)}`, () => wire.call(pullsSummary, { ...ref(link), fresh: true }, place.device)), place)
+    changed(await attempt(`Couldn't refresh ${pullName(link)}`, () => github.summary({ ...ref(link), fresh: true }, place.device)), place)
   }
 
   return { ask, ready, merge, watch, unlink, refresh }

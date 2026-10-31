@@ -15,6 +15,7 @@ export interface NavAction {
   active?: boolean
   danger?: boolean
   dot?: () => boolean
+  count?: () => number
   confirm?: string
   choices?: NavChoice[]
   ask?: NavAsk

@@ -9,11 +9,13 @@
   "sand": {
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "Thread pull requests",
     "summary": "Links pull requests to threads and wakes the agent when they change"
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",

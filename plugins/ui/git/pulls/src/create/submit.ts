@@ -1,5 +1,5 @@
-import { gitPush } from '@sand/git-actions/contract'
-import { pullsCreate, type PullSummary } from '@sand/github/contract'
+import { gitActionsClient, type GitActionFailure } from '@sand/git-actions/contract'
+import type { PullSummary } from '@sand/github/contract'
 import { uuid } from '@sand/util'
 import type { PullPlace } from '../contract'
 import type { PullsContext } from '../inject'
@@ -7,8 +7,11 @@ import { githubAction, notify, notifyError } from '../notify'
 import { baseOf, needsPush, repoOf } from './facts'
 import type { CreateModel } from './model'
 
+const pushOff: GitActionFailure = { ok: false, reason: 'unknown', message: 'Git actions are turned off, so sand cannot push. Push the branch yourself, then try again.' }
+
 const pushBranch = async (ctx: PullsContext, at: PullPlace, branch: string) => {
-  const result = await ctx.wire.call(gitPush, { cwd: at.cwd, run: uuid() }, at.device)
+  const actions = ctx.get(gitActionsClient)
+  const result = actions ? await actions.push({ cwd: at.cwd, run: uuid() }, at.device) : pushOff
   if (result.ok) return true
   const shown = notify(ctx, { tone: 'danger', sticky: true, title: `Couldn't push ${branch}`, detail: result.message, output: result.output })
   if (!shown) ctx.report(new Error(result.message))
@@ -23,7 +26,7 @@ export const submitPull = async (ctx: PullsContext, model: CreateModel, opened: 
   try {
     if (needsPush(status) && !(await pushBranch(ctx, at, repoOf(status)?.branch ?? 'the branch'))) return
     const input = { cwd: at.cwd, title: draft.title.get().trim(), body: draft.body.get(), base: baseOf(status), draft: draft.draft.get(), session: at.session }
-    const pull = await ctx.wire.call(pullsCreate, input, at.device)
+    const pull = await ctx.github.create(input, at.device)
     opened(pull)
     notify(ctx, { tone: 'success', title: `Opened PR #${pull.number}`, detail: pull.title, actions: [githubAction(ctx, pull.url)] })
   } catch (error) {

@@ -1,4 +1,3 @@
-import { githubRepo } from '@sand/github/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { PullsContext } from '../inject'
 import { onReconnect } from '../reconnect'
@@ -34,7 +33,7 @@ export const githubRepos = (ctx: PullsContext) => {
     loading.add(key)
     folders.set(key, folder)
     try {
-      put(key, (await ctx.wire.call(githubRepo, { cwd: folder.cwd }, folder.device))?.repo ?? null)
+      put(key, (await ctx.github.repo({ cwd: folder.cwd }, folder.device))?.repo ?? null)
     } catch {
       put(key, null)
     } finally {

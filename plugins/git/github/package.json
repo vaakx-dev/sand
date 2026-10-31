@@ -10,11 +10,13 @@
   "sand": {
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "GitHub",
     "summary": "Signs in to GitHub and keeps pull requests up to date"
   },
   "dependencies": {
     "@sand/ask": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",

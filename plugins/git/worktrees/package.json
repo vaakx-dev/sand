@@ -9,12 +9,14 @@
   "sand": {
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "Worktrees",
     "summary": "Lets a thread work in its own folder and branch"
   },
   "dependencies": {
     "@sand/ask": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/loop": "workspace:*",

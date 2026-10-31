@@ -148,7 +148,9 @@ export interface GitPlace {
 export interface GitStatusClient {
   follow(place: GitPlace, onChange: (status: GitStatus | undefined) => void): Dispose
   current(place: GitPlace): GitStatus | undefined
+  status(place: GitPlace): Promise<GitStatus>
   refresh(place: GitPlace): Promise<void>
+  branches(place: GitPlace, query?: string, limit?: number): Promise<GitBranches>
 }
 
 export const gitStatusClient = service<GitStatusClient>('gitStatus')

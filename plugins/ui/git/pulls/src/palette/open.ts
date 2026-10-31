@@ -1,6 +1,5 @@
-import { pullsResolve, type PullSummary } from '@sand/github/contract'
+import type { PullSummary } from '@sand/github/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
-import { pullOpen } from '@sand/pull-links/contract'
 import type { PullPlace } from '../contract'
 import { notify, notifyError } from '../notify'
 import type { PullParts } from '../parts'
@@ -14,7 +13,7 @@ const openIn = async (parts: PullParts, at: PullPlace, pull: PullSummary, mode: 
   const name = pullName(pull)
   const shown = notify(ctx, { tone: 'neutral', sticky: true, title: `Opening ${name}…` })
   try {
-    const { session } = await ctx.wire.call(pullOpen, { cwd: at.cwd, ref: pull.url, mode }, at.device)
+    const { session } = await ctx.pullLinks.open({ cwd: at.cwd, ref: pull.url, mode }, at.device)
     shown?.dismiss()
     await ctx.threads.select(session)
   } catch (error) {
@@ -50,5 +49,5 @@ const wherePage = (parts: PullParts, at: PullPlace, pull: PullSummary): PaletteP
 export const openPage = (parts: PullParts, at: PullPlace): PalettePage => ({
   id: 'git-pulls:open',
   title: 'Open pull request',
-  field: refField('Find', async ref => wherePage(parts, at, await parts.ctx.wire.call(pullsResolve, { cwd: at.cwd, ref }, at.device))),
+  field: refField('Find', async ref => wherePage(parts, at, await parts.ctx.github.resolve({ cwd: at.cwd, ref }, at.device))),
 })

@@ -1,5 +1,5 @@
 import type { GitPlace } from '@sand/git/contract'
-import { type Worktree, worktreesChange, worktreesList } from '@sand/worktrees/contract'
+import type { Worktree } from '@sand/worktrees/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { placeKey } from '../paths'
@@ -15,8 +15,8 @@ export const worktreeCache = (ctx: WorkspaceContext) => {
     const pending = loading.get(key)
     if (pending) return pending
     places.set(key, place)
-    const call = ctx.wire
-      .call(worktreesList, { cwd: place.cwd }, place.device)
+    const call = ctx.worktrees
+      .list({ cwd: place.cwd }, place.device)
       .then(list => {
         lists.set(key, list)
         version.update(value => value + 1)
@@ -40,7 +40,7 @@ export const worktreeCache = (ctx: WorkspaceContext) => {
     for (const [key, place] of places) if (place.device === device && lists.has(key)) void load(place).catch(() => undefined)
   }
 
-  ctx.effect(() => ctx.wire.on(worktreesChange, (_change, device) => reload(device), { from: 'all' }))
+  ctx.effect(() => ctx.worktrees.onChange((_change, device) => reload(device)))
 
   return { get, load, ensure }
 }

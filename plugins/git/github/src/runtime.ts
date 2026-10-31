@@ -2,7 +2,7 @@ import { ask } from '@sand/ask/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { type Server, server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
-import { github, githubAuthChange, githubLoginCode, pullChanged, pullCreated, pullsChange } from './contract'
+import { authChanged, github, githubAuthChange, githubLoginCode, pullChanged, pullCreated, pullsChange } from './contract'
 import { serveGitHub } from './requests'
 import { createGitHub } from './service'
 
@@ -16,7 +16,10 @@ export default definePlugin({
       git: ctx.gitRunner,
       repos: ctx.gitRepo,
       ask: () => ctx.get(ask),
-      authChanged: auth => live?.broadcast(githubAuthChange, auth),
+      authChanged(auth) {
+        live?.broadcast(githubAuthChange, auth)
+        ctx.emit(authChanged, auth)
+      },
       loginCode: code => live?.broadcast(githubLoginCode, code),
       pullChanged(summary) {
         live?.broadcast(pullsChange, summary)

@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@sand/chats/contract'
-import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { service } from 'drydock'
+import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
+import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
 export type WorkspaceKind = 'checkout' | 'worktree'
@@ -100,3 +100,17 @@ export const worktreesDefaults = request('worktrees.defaults', {
 
 export const worktreesProgress = wireEvent<WorktreeSetup>('worktrees.progress')
 export const worktreesChange = wireEvent<{ main: string }>('worktrees.change')
+
+export interface WorktreesClient {
+  list(input: InputOf<typeof worktreesList>, device: string): Promise<Worktree[]>
+  thread(input: InputOf<typeof worktreesThread>, device: string): Promise<SessionInfo>
+  move(input: InputOf<typeof worktreesMove>, device: string): Promise<SessionInfo>
+  remove(input: InputOf<typeof worktreesRemove>, device: string): Promise<RemoveResult>
+  restore(input: InputOf<typeof worktreesRestore>, device: string): Promise<Worktree>
+  setup(input: InputOf<typeof worktreesSetup>, device: string): Promise<WorktreeSetup | null>
+  defaults(input: InputOf<typeof worktreesDefaults>, device: string): Promise<WorkspaceDefaults>
+  onProgress(listener: (setup: WorktreeSetup, device: string) => void): Dispose
+  onChange(listener: (change: { main: string }, device: string) => void): Dispose
+}
+
+export const worktreesClient = service<WorktreesClient>('worktreesClient')

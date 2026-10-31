@@ -1,5 +1,5 @@
-import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { event, service } from 'drydock'
+import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
+import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export type GitHubAuth =
@@ -95,6 +95,7 @@ export const pullsReady = request('pulls.ready', { input: pullRef.extend({ ready
 
 export const pullsChange = wireEvent<PullSummary>('pulls.change')
 
+export const authChanged = event<(auth: GitHubAuth) => void>('github.auth.changed')
 export const pullChanged = event<(summary: PullSummary) => void>('github.pull.changed')
 export const pullCreated = event<(summary: PullSummary, session?: string) => void>('github.pull.created')
 
@@ -109,3 +110,22 @@ export interface GitHub {
 }
 
 export const github = service<GitHub>('github')
+
+export interface GitHubClient {
+  auth(device: string): Promise<GitHubAuth>
+  login(device: string): Promise<GitHubAuth>
+  logout(device: string): Promise<GitHubAuth>
+  repo(input: InputOf<typeof githubRepo>, device: string): Promise<{ repo: string } | null>
+  forBranch(input: InputOf<typeof pullsForBranch>, device: string): Promise<PullSummary | null>
+  summary(input: InputOf<typeof pullsSummary>, device: string): Promise<PullSummary>
+  resolve(input: InputOf<typeof pullsResolve>, device: string): Promise<PullSummary>
+  text(input: InputOf<typeof pullsText>, device: string): Promise<PullText>
+  create(input: InputOf<typeof pullsCreate>, device: string): Promise<PullSummary>
+  merge(input: InputOf<typeof pullsMerge>, device: string): Promise<PullSummary>
+  ready(input: InputOf<typeof pullsReady>, device: string): Promise<PullSummary>
+  onAuthChange(listener: (auth: GitHubAuth, device: string) => void): Dispose
+  onLoginCode(listener: (code: GitHubLoginCode, device: string) => void): Dispose
+  onPullChange(listener: (summary: PullSummary, device: string) => void): Dispose
+}
+
+export const githubClient = service<GitHubClient>('githubClient')

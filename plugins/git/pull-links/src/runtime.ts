@@ -16,7 +16,7 @@ import { pullLinksService, threadPullsChange } from './contract'
 import { createDiscovery } from './discover/discovery'
 import { createBranchFollow } from './discover/follow'
 import { createThreadLinks } from './links/links'
-import type { OpenDeps } from './open/open'
+import { type OpenDeps, openPull } from './open/open'
 import { createOnceReport } from './report/once'
 import { servePullLinks } from './requests'
 import { createSweep } from './sweep/sweep'
@@ -80,7 +80,7 @@ export default definePlugin({
       branches.close()
       failures.clear()
     })
-    ctx.provide(pullLinksService, { links: links.view, link: links.link })
+    ctx.provide(pullLinksService, { links: links.view, link: links.link, open: request => openPull(open, request) })
 
     ctx.on(sessionCarry, types => [...types, linksEntry])
     ctx.on(turnEnd, session => {

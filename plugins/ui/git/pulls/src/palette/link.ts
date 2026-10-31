@@ -1,5 +1,5 @@
 import type { PalettePage } from '@sand/palette/contract'
-import { type PullLink, pullLink } from '@sand/pull-links/contract'
+import type { PullLink } from '@sand/pull-links/contract'
 import type { PullPlace } from '../contract'
 import { pullKey } from '../links/rank'
 import { notify } from '../notify'
@@ -21,7 +21,7 @@ const linkedTitle = (added: PullLink[]) => {
 
 export const linkTo = async (parts: PullParts, at: PullPlace, ref: string) => {
   const before = new Set(parts.store.read(at.session).map(pullKey))
-  const result = await parts.ctx.wire.call(pullLink, { session: at.session, ref }, at.device)
+  const result = await parts.ctx.pullLinks.link({ session: at.session, ref }, at.device)
   parts.store.apply(result, at.device)
   const added = result.links.filter(link => !before.has(pullKey(link)))
   notify(parts.ctx, { tone: added.length ? 'success' : 'neutral', title: linkedTitle(added) })

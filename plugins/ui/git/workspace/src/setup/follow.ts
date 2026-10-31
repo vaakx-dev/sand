@@ -1,5 +1,5 @@
 import { threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { type WorktreeSetup, worktreesProgress, worktreesSetup } from '@sand/worktrees/contract'
+import type { WorktreeSetup } from '@sand/worktrees/contract'
 import { collectScope, derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { notifyError } from '../notify'
@@ -54,7 +54,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
     setup.set(undefined)
     if (!next) return
     const mine = ticket
-    ctx.wire.call(worktreesSetup, { path: next.cwd }, next.device).then(
+    ctx.worktrees.setup({ path: next.cwd }, next.device).then(
       found => {
         if (mine === ticket && heard !== mine && found && !isReady(found)) setup.set(found)
       },
@@ -67,7 +67,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
     const current = setup.get()
     if (!at || !current) return
     try {
-      const next = await ctx.wire.call(worktreesSetup, { path: current.path, ...flag }, at.device)
+      const next = await ctx.worktrees.setup({ path: current.path, ...flag }, at.device)
       if (next && at === watched) accept(next)
     } catch (error) {
       notifyError(ctx, 'Could not continue the worktree setup', error)
@@ -83,7 +83,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
     accept(next)
   }
 
-  ctx.effect(() => ctx.wire.on(worktreesProgress, hear, { from: 'all' }))
+  ctx.effect(() => ctx.worktrees.onProgress(hear))
   ctx.effect(() => {
     sync()
     return () => {

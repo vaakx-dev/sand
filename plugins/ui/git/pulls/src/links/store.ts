@@ -1,5 +1,5 @@
-import { pullsChange, pullsSummary, type PullSummary } from '@sand/github/contract'
-import { type PullLink, pullLinks, pullLinksAll, threadPullsChange, type ThreadPulls } from '@sand/pull-links/contract'
+import type { PullSummary } from '@sand/github/contract'
+import type { PullLink, ThreadPulls } from '@sand/pull-links/contract'
 import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { PullsContext } from '../inject'
@@ -52,8 +52,8 @@ export const linkStore = (ctx: PullsContext) => {
   const fill = (entry: Entry) => {
     for (const link of entry.links.get()) {
       if (link.summary) continue
-      ctx.wire
-        .call(pullsSummary, { repo: link.repo, number: link.number }, entry.device)
+      ctx.github
+        .summary({ repo: link.repo, number: link.number }, entry.device)
         .then(summary => patch(summary, entry.device))
         .catch(() => undefined)
     }
@@ -76,8 +76,8 @@ export const linkStore = (ctx: PullsContext) => {
   const loadDevice = (device: string) => {
     if (loading.has(device)) return
     loading.add(device)
-    ctx.wire
-      .call(pullLinksAll, {}, device)
+    ctx.pullLinks
+      .linksAll(device)
       .then(all => settleDevice(device, all))
       .catch(() => undefined)
       .finally(() => loading.delete(device))
@@ -111,14 +111,14 @@ export const linkStore = (ctx: PullsContext) => {
   const reload = async (session: string) => {
     const entry = entries.get(session)
     if (!entry) return
-    await ctx.wire
-      .call(pullLinks, { session }, entry.device)
+    await ctx.pullLinks
+      .links({ session }, entry.device)
       .then(result => apply(result, entry.device))
       .catch(() => undefined)
   }
 
-  ctx.effect(() => ctx.wire.on(threadPullsChange, (payload, device) => apply(payload, device), { from: 'all' }))
-  ctx.effect(() => ctx.wire.on(pullsChange, (summary, device) => patch(summary, device), { from: 'all' }))
+  ctx.effect(() => ctx.pullLinks.onChange((payload, device) => apply(payload, device)))
+  ctx.effect(() => ctx.github.onPullChange((summary, device) => patch(summary, device)))
   onReconnect(ctx, device => {
     for (const each of wanted) if (!device || each === device) loadDevice(each)
   })

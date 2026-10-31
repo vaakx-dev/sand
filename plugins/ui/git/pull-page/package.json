@@ -1,0 +1,32 @@
+{
+  "name": "@sand/git-pull-page",
+  "version": "0.0.0",
+  "description": "The Pull requests page: what needs you first, every project's pull requests, and a detail you can merge, reply and resolve from",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Pull requests page",
+    "summary": "Lists your pull requests across projects, with what needs you first"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/pull-detail": "workspace:*",
+    "@sand/pull-inbox": "workspace:*",
+    "@sand/pull-links": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
