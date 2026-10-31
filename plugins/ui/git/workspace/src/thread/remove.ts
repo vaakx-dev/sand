@@ -3,8 +3,9 @@ import { picker } from '@sand/picker/contract'
 import { type Worktree, worktreesRemove } from '@sand/worktrees/contract'
 import type { WorkspaceContext } from '../inject'
 import { notify, notifyError } from '../notify'
-import { folderName, samePath } from '../paths'
+import { folderName } from '../paths'
 import type { WorktreeCache } from '../worktrees/cache'
+import { worktreeAt } from '../worktrees/find'
 import { restoreWorktree } from '../worktrees/restore'
 
 const removeTitle = 'Could not remove the worktree'
@@ -25,17 +26,16 @@ const removed = (ctx: WorkspaceContext, place: GitPlace, tree: Worktree) =>
     actions: [{ label: 'Restore', run: () => restoreWorktree(ctx, place.device, tree) }],
   })
 
-const sandWorktree = async (cache: WorktreeCache, place: GitPlace, root: string) => {
-  const list = await cache.load(place)
-  const tree = list.find(item => !item.removed && samePath(item.path, root))
-  if (!tree) throw new Error(`${root} is no longer a worktree of this repository.`)
+const sandWorktree = async (cache: WorktreeCache, place: GitPlace) => {
+  const tree = worktreeAt(await cache.load(place), place.cwd)
+  if (!tree) throw new Error(`${place.cwd} is no longer in a worktree of this repository.`)
   if (!tree.sand) throw new Error("Sand didn't make this worktree, so it leaves it to you. Remove it with git worktree remove.")
   return tree
 }
 
-export const removeWorktree = async (ctx: WorkspaceContext, cache: WorktreeCache, place: GitPlace, root: string) => {
+export const removeWorktree = async (ctx: WorkspaceContext, cache: WorktreeCache, place: GitPlace) => {
   try {
-    const tree = await sandWorktree(cache, place, root)
+    const tree = await sandWorktree(cache, place)
     const input = { path: tree.path }
     const first = await ctx.wire.call(worktreesRemove, input, place.device)
     if (first.removed) return removed(ctx, place, tree)

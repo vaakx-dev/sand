@@ -1,5 +1,6 @@
 import type { SessionInfo } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export type WorkspaceKind = 'checkout' | 'worktree'
@@ -49,8 +50,21 @@ const cwd = z.string()
 
 export const worktreesList = request('worktrees.list', { input: z.object({ cwd }), output: type<Worktree[]>(), place: 'thread' })
 
+export interface WorktreeThreadInput {
+  cwd: string
+  branch?: string
+  from?: string
+  existing?: string
+}
+
+export interface Worktrees {
+  thread(input: WorktreeThreadInput): Promise<SessionInfo>
+}
+
+export const worktrees = service<Worktrees>('worktrees')
+
 export const worktreesThread = request('worktrees.thread', {
-  input: z.object({ cwd, from: z.string().optional(), existing: z.string().optional() }),
+  input: z.object({ cwd, branch: z.string().optional(), from: z.string().optional(), existing: z.string().optional() }),
   output: type<SessionInfo>(),
   place: 'thread',
 })

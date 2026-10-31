@@ -6,9 +6,10 @@ import { branchPage } from './branches/page'
 import { commitOpener } from './commit/open'
 import type { ControlContext } from './inject'
 import { menuSections } from './menu/sections'
-import { nextAction } from './next/action'
 import { busyReason, waitReason } from './next/facts'
 import type { ControlParts } from './parts'
+import { followPrimary } from './primary/follow'
+import { primaryRegistry } from './primary/registry'
 import { createRuns } from './runs/runs'
 import { followStatus } from './status/follow'
 
@@ -18,6 +19,7 @@ export const buildControl = (ctx: ControlContext) => {
   const actions = createActions(ctx, model, runs)
   const commit = commitOpener(() => parts)
   const sections = menuSections()
+  const registry = primaryRegistry()
 
   const openBranches = () => {
     const at = model.place.get()
@@ -33,7 +35,7 @@ export const buildControl = (ctx: ControlContext) => {
       model,
       runs,
       actions,
-      next: derive(() => nextAction(model.status.get(), { running: model.running.get(), phase: phase() })),
+      next: followPrimary({ ctx, model, runs, actions, registry }),
       waiting: derive(() => (model.running.get() ? waitReason : phase() ? busyReason : undefined)),
       sections,
       openCommit: commit.open,
@@ -41,5 +43,5 @@ export const buildControl = (ctx: ControlContext) => {
     }
   })
 
-  return { parts, commit, sections }
+  return { parts, commit, sections, registry }
 }

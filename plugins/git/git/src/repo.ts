@@ -28,6 +28,7 @@ export const createGitRepo = (deps: WatchDeps): GitRepoHost => {
       base: defaults.base,
       refresh: watches.refresh,
       fetch: watches.fetch,
+      watchLocal: watches.watchLocal,
     },
     watch: watches.lease,
     close() {

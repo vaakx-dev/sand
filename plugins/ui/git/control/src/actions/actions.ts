@@ -1,20 +1,14 @@
 import { gitCommit, gitInit, gitMessage, gitPull, gitPush, gitSwitch } from '@sand/git-actions/contract'
 import { askAgent } from '../agent/ask'
 import type { AgentPrompt } from '../agent/prompts'
+import type { GitBaseAction, GitCommitRequest } from '../contract'
 import type { ControlContext } from '../inject'
-import type { NextAction } from '../next/action'
 import { repoOf } from '../next/facts'
 import { committedTitle, initTitle, pulledTitle, pushedTitle, pushFailedLead, switchedTitle } from '../results/titles'
 import type { Runs } from '../runs/runs'
 import type { StatusModel } from '../status/follow'
 import { askBranchName, confirmDefaultPush } from './guard'
 import { type Recovery, reportFailure, settle, type Target } from './settle'
-
-export interface CommitRequest {
-  paths?: string[]
-  message?: string
-  push: boolean
-}
 
 export const createActions = (ctx: ControlContext, model: StatusModel, runs: Runs) => {
   const { wire } = ctx
@@ -67,15 +61,22 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
 
   const guardedPush = async (at: Target) => (await passGuard(at)) && push(at)
 
-  const commit = async (request: CommitRequest, at: Target): Promise<boolean> => {
-    if (request.push && !(await passGuard(at))) return false
+  const committed = async (request: GitCommitRequest, at: Target) => {
+    if (request.push && !(await passGuard(at))) return undefined
     const { cwd, device } = at.place
     const message = request.message?.trim() || undefined
     const input = { cwd, paths: request.paths, message, push: request.push, session: at.thread }
     const result = await runs.perform(at.place, 'commit', message ? 'stage' : 'message', run => wire.call(gitCommit, { ...input, run }, device))
     const done = settle(ctx, at, 'commit', result, recovery(at, () => commit(request, at)), made => (made.pushFailure ? undefined : committedTitle(made)))
     if (done?.pushFailure) reportFailure(ctx, at, 'push', done.pushFailure, recovery(at, () => push(at)), pushFailedLead(done))
-    return done !== undefined
+    return done
+  }
+
+  const commit = async (request: GitCommitRequest, at: Target): Promise<boolean> => (await committed(request, at)) !== undefined
+
+  const commitFully = async (request: GitCommitRequest, at: Target): Promise<boolean> => {
+    const done = await committed(request, at)
+    return done !== undefined && !done.pushFailure
   }
 
   const writeMessage = async (paths: string[] | undefined, at: Target): Promise<string | undefined> => {
@@ -84,7 +85,7 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
     return settle(ctx, at, 'message', result, recovery(at, () => writeMessage(paths, at)))?.message
   }
 
-  const run = (next: NextAction, at: Target) => {
+  const run = (next: GitBaseAction, at: Target) => {
     if (next.id === 'commit') return commit({ push: false }, at)
     if (next.id === 'commit-push') return commit({ push: true }, at)
     if (next.id === 'push') return guardedPush(at)
@@ -103,6 +104,7 @@ export const createActions = (ctx: ControlContext, model: StatusModel, runs: Run
     target,
     run: withTarget(run),
     commit: withTarget(commit),
+    commitFully: withTarget(commitFully),
     push: withTarget(guardedPush),
     pull: withTarget(pull),
     switchTo: withTarget(switchTo),

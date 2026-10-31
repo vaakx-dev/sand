@@ -4,8 +4,9 @@ import type { IconName } from '@sand/ui-kit/contract'
 import type { Child } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { menuText } from '../menu-text'
-import { repoOf, samePath, waitReason } from '../paths'
+import { repoOf, waitReason } from '../paths'
 import type { WorktreeCache } from '../worktrees/cache'
+import { worktreeAt } from '../worktrees/find'
 import { moveThread } from './move'
 import { removeWorktree } from './remove'
 
@@ -46,12 +47,13 @@ const items = (ctx: WorkspaceContext, cache: WorktreeCache, context: GitMenuCont
         run: () => void moveThread(ctx, thread),
       }),
     ]
-  if (madeElsewhere(cache, place, local.root)) return []
-  return [entry(ctx, context, { icon: 'trash', title: 'Remove this worktree…', danger: true, run: () => void removeWorktree(ctx, cache, place, local.root) })]
+  if (madeElsewhere(cache, place)) return []
+  return [entry(ctx, context, { icon: 'trash', title: 'Remove this worktree…', danger: true, run: () => void removeWorktree(ctx, cache, place) })]
 }
 
-const madeElsewhere = (cache: WorktreeCache, place: GitPlace, root: string) => {
-  const known = cache.get(place)?.find(tree => !tree.removed && samePath(tree.path, root))
+const madeElsewhere = (cache: WorktreeCache, place: GitPlace) => {
+  const list = cache.get(place)
+  const known = list && worktreeAt(list, place.cwd)
   return known ? !known.sand : false
 }
 

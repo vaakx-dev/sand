@@ -1,5 +1,6 @@
 import { composer } from '@sand/composer/contract'
-import { gitMenu } from '@sand/git-control/contract'
+import { gitControl } from '@sand/git-control/contract'
+import { type ThreadPullsClient, threadPullsClient } from '@sand/git-pulls/contract'
 import { keys } from '@sand/keys/contract'
 import { palette } from '@sand/palette/contract'
 import { joinDisposers } from '@sand/util'
@@ -16,6 +17,7 @@ import { inject } from './inject'
 import { workspaceSource } from './palette/source'
 import { setupCard } from './setup/card'
 import { followSetup } from './setup/follow'
+import { cleanUpAction } from './thread/clean-up'
 import { preloadWorktrees } from './thread/preload'
 import { threadSection } from './thread/section'
 import { worktreeCache } from './worktrees/cache'
@@ -54,7 +56,13 @@ export default definePlugin({
         run: () => open.set(true),
       }),
     )
-    ctx.watch(gitMenu, found => found?.section(threadSection(ctx, cache)))
+    const pulls = sig<ThreadPullsClient | undefined>(undefined)
+    ctx.watch(threadPullsClient, found => {
+      pulls.set(found)
+    })
+    ctx.watch(gitControl, found =>
+      found ? joinDisposers(found.menu.section(threadSection(ctx, cache)), found.actions.register(cleanUpAction(ctx, cache, pulls))) : undefined,
+    )
     ctx.watch(palette, found => found?.source(workspaceSource(ctx, choices, cache)))
   },
 })

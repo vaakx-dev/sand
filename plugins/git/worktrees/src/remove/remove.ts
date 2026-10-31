@@ -60,7 +60,7 @@ const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: bool
       if (back.failed.length) throw new Error(`These threads stay in the main checkout: ${back.failed.join('; ')}`)
     })
   }
-  if (branch && branch === record.branch && (force || check.unpushed === 0)) await deleteBranch(deps, record, branch)
+  if (branch && branch === record.branch && !record.adopted && (force || check.unpushed === 0)) await deleteBranch(deps, record, branch)
   record.removed = Date.now()
   record.sessions = withSessions(record.sessions, moved)
   if (head) record.head = head

@@ -135,6 +135,7 @@ export interface GitRepo {
   base(cwd: string): Promise<GitBase | undefined>
   refresh(cwd: string): Promise<void>
   fetch(cwd: string): Promise<void>
+  watchLocal(cwd: string, listener: (local: GitLocal) => void): Dispose
 }
 
 export const gitRepo = service<GitRepo>('gitRepo')

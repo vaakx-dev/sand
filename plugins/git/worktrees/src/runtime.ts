@@ -12,7 +12,8 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { config } from './config'
-import { worktreesChange, worktreesProgress } from './contract'
+import { worktrees, worktreesChange, worktreesProgress } from './contract'
+import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
 import { nameOnFirstTurn } from './naming/name'
 import { pathKey } from './records/key'
@@ -62,6 +63,7 @@ export default definePlugin({
       report,
     }
 
+    ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
     ctx.on(turnReady, (session, signal) => setups.ready(session.cwd, signal).catch(report))
     ctx.on(turnStart, (session, prompt) => {
       if (session.kind !== 'thread') return

@@ -1,0 +1,30 @@
+{
+  "name": "@sand/pull-links",
+  "version": "0.0.0",
+  "description": "Pull requests attached to threads: links found from the branch or added by hand, kept fresh, watched for the agent, and opened as threads",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/runtime.ts",
+    "print": "./src/runtime.ts",
+    "label": "Thread pull requests",
+    "summary": "Links pull requests to threads and wakes the agent when they change"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/skills": "workspace:*",
+    "@sand/steering": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/worktrees": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

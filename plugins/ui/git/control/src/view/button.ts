@@ -6,13 +6,13 @@ import { actionMenu } from './menu'
 const menuLabel = 'Git actions'
 
 const splitView = (parts: ControlParts) => {
-  const { kit, model, runs, actions, next } = parts
+  const { kit, model, runs, next } = parts
   const run = () => runs.at(model.place.get())
   const glyph = next.map(action => (action?.busy ? undefined : action?.icon))
   const title = () => {
     const action = next.get()
     if (action?.busy) return run()?.line ?? action.label
-    return action?.reason ?? action?.label ?? ''
+    return action?.reason ?? action?.title ?? action?.label ?? ''
   }
   return kit.splitButton(
     {
@@ -23,12 +23,12 @@ const splitView = (parts: ControlParts) => {
       menuTitle: menuLabel,
       onClick: () => {
         const action = next.get()
-        if (action && !action.disabled) void actions.run(action)
+        if (action && !action.disabled) action.run()
       },
     },
     dynamicChild(glyph, name => (name ? kit.icon(name, 14) : null)),
     span({ class: 'hidden md:inline' }, () => next.get()?.label ?? ''),
-    span({ class: 'md:hidden' }, () => next.get()?.short ?? ''),
+    span({ class: 'md:hidden' }, () => next.get()?.short ?? next.get()?.label ?? ''),
     show(
       () => Boolean(next.get()?.busy),
       () => span({ class: 'font-normal' }, kit.elapsed(() => run()?.started)),

@@ -14,6 +14,7 @@ export interface TreeDeps {
   watcher: Watcher
   broadcast: WireHost['broadcast']
   fetched(commonDir: string): FetchInfo
+  localChanged(cwd: string, local: GitLocal): void
   report(error: unknown): void
 }
 
@@ -50,7 +51,11 @@ export const watchTree = (layout: Layout, deps: TreeDeps): Tree => {
     if (print === localPrint && !force) return
     local = next
     localPrint = print
-    for (const [cwd, prefix] of cwds) deps.broadcast(gitLocalChange, { cwd, local: viewOf(next, prefix) })
+    for (const [cwd, prefix] of cwds) {
+      const view = viewOf(next, prefix)
+      deps.broadcast(gitLocalChange, { cwd, local: view })
+      deps.localChanged(cwd, view)
+    }
   }
 
   const setRemote = (next: GitRemote, force: boolean) => {

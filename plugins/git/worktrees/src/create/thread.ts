@@ -1,4 +1,5 @@
 import type { SessionInfo } from '@sand/chats/contract'
+import type { WorktreeThreadInput } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { repoAt } from '../repo/local'
@@ -6,13 +7,7 @@ import { infoOf } from '../sessions/info'
 import { withSessions } from '../sessions/inside'
 import { resolveBase } from './base'
 import { rolledBack } from './rollback'
-import { createWorktree, discardWorktree } from './worktree'
-
-export interface ThreadRequest {
-  cwd: string
-  from?: string | undefined
-  existing?: string | undefined
-}
+import { branchWorktree, createWorktree, discardWorktree } from './worktree'
 
 const threadInExisting = async (deps: WorktreeDeps, path: string): Promise<SessionInfo> => {
   const local = await repoAt(deps.repos, path)
@@ -27,13 +22,15 @@ const threadInExisting = async (deps: WorktreeDeps, path: string): Promise<Sessi
   return infoOf(session)
 }
 
-const threadInNew = async (deps: WorktreeDeps, cwd: string, from?: string): Promise<SessionInfo> => {
-  const local = await repoAt(deps.repos, cwd)
+const newRecord = (deps: WorktreeDeps, main: string, defaultBranch: string | undefined, { branch, from }: WorktreeThreadInput) => {
+  if (branch) return branchWorktree(deps, { main, branch, ...(from ? { base: from } : {}) })
+  return resolveBase(deps.git, main, defaultBranch, from).then(base => createWorktree(deps, { main, start: base.start, base: base.name, steps: base.steps }))
+}
+
+const threadInNew = async (deps: WorktreeDeps, input: WorktreeThreadInput): Promise<SessionInfo> => {
+  const local = await repoAt(deps.repos, input.cwd)
   await deps.store.ready()
-  const record = await deps.queue(local.main, async () => {
-    const base = await resolveBase(deps.git, local.main, local.defaultBranch, from)
-    return createWorktree(deps, { main: local.main, start: base.start, base: base.name, steps: base.steps })
-  })
+  const record = await deps.queue(local.main, () => newRecord(deps, local.main, local.defaultBranch, input))
   const session = await startThread(deps, record, local.main)
   record.sessions = [session.id]
   if (record.setup) record.setup.session = session.id
@@ -50,5 +47,4 @@ const startThread = async (deps: WorktreeDeps, record: WorktreeRecord, main: str
   }
 }
 
-export const threadIn = (deps: WorktreeDeps, { cwd, from, existing }: ThreadRequest) =>
-  existing ? threadInExisting(deps, existing) : threadInNew(deps, cwd, from)
+export const threadIn = (deps: WorktreeDeps, input: WorktreeThreadInput) => (input.existing ? threadInExisting(deps, input.existing) : threadInNew(deps, input))

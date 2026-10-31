@@ -3,7 +3,7 @@ import type { Derive } from '@vaakx-dev/vrui'
 import type { Actions } from './actions/actions'
 import type { ControlContext } from './inject'
 import type { MenuSections } from './menu/sections'
-import type { NextAction } from './next/action'
+import type { ShownAction } from './primary/follow'
 import type { Runs } from './runs/runs'
 import type { StatusModel } from './status/follow'
 
@@ -13,7 +13,7 @@ export interface ControlParts {
   model: StatusModel
   runs: Runs
   actions: Actions
-  next: Derive<NextAction | undefined>
+  next: Derive<ShownAction | undefined>
   waiting: Derive<string | undefined>
   sections: MenuSections
   openCommit(): void

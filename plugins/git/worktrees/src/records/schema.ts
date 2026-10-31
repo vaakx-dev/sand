@@ -28,6 +28,7 @@ const record = z.object({
   created: z.number(),
   removed: z.number().optional(),
   temp: z.string().optional(),
+  adopted: z.literal(true).optional(),
   setup: setup.optional(),
 })
 

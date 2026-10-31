@@ -13,6 +13,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-control": "workspace:*",
+    "@sand/git-pulls": "workspace:*",
     "@sand/keys": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
