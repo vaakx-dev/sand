@@ -28,7 +28,7 @@ const reviewView = (shown: Shown, item: () => Review) =>
     authorLine(item, span({ class: 'shrink-0' }, () => reviewWords[item().state])),
     show(
       () => Boolean(item().body.trim()),
-      () => richText(shown.parts, item().body),
+      () => richText(shown, item().body),
     ),
   )
 
@@ -43,7 +43,7 @@ const itemView = (shown: Shown, item: Sig<ConversationItem>) => {
   const first = item.get()
   if (first.kind === 'thread') return threadCard(shown, latest<ReviewThread>(item, first))
   if (first.kind === 'review') return reviewView(shown, latest<Review>(item, first))
-  return commentView(shown.parts, latest(item, first))
+  return commentView(shown, latest(item, first))
 }
 
 const foldLine = (shown: Shown, resolved: () => number, bots: () => number, showResolved: Sig<boolean>, showBots: Sig<boolean>) => {

@@ -48,7 +48,7 @@ export const detailTabs = (shown: Shown) => {
       tabs,
       tab => tab.id,
       tab => tabButton(shown, tab, current),
-      div({ role: 'tablist', class: 'flex shrink-0 items-center gap-1 border-b border-neutral-800 px-3 py-1' }),
+      div({ role: 'tablist', class: 'flex shrink-0 items-center gap-1 overflow-x-auto scrollbar-none border-b border-neutral-800 px-3 py-1' }),
     ),
     div(
       { class: 'flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain', role: 'tabpanel' },

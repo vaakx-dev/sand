@@ -44,7 +44,12 @@ export interface PullDetail extends PullSummary {
   methods: MergeMethod[]
   behindBy?: number
   headDeleted: boolean
+  images: Record<string, string>
 }
+
+const assetId = /[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}/i
+
+export const imageKey = (src: string) => assetId.exec(src)?.[0] ?? src
 
 const ref = { repo: z.string(), number: z.number().int().positive() }
 

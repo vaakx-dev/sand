@@ -17,6 +17,7 @@ export interface Nodes<T> {
 export interface RawComment {
   id: string
   body: string
+  bodyHTML: string
   createdAt: string
   viewerDidAuthor: boolean
   author: RawActor | null
@@ -30,6 +31,7 @@ export interface RawThreadComment extends RawComment {
 export interface RawReview {
   id: string
   body: string
+  bodyHTML: string
   state: string
   submittedAt: string | null
   author: RawActor | null
@@ -65,6 +67,7 @@ export interface RawCommit {
 
 export interface RawDetail extends PullNode {
   body: string
+  bodyHTML: string
   viewerCanUpdate: boolean
   viewerCanMergeAsAdmin: boolean
   headRefOid: string

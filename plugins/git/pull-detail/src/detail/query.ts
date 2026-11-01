@@ -3,8 +3,8 @@ import { mergeSettingsFields, pullSummaryFields } from '@sand/github/summary'
 const author = 'author { __typename login }'
 const pageInfo = 'pageInfo { hasNextPage endCursor }'
 
-export const commentFields = `id body createdAt viewerDidAuthor ${author}`
-export const reviewFields = `id body state submittedAt ${author}`
+export const commentFields = `id body bodyHTML createdAt viewerDidAuthor ${author}`
+export const reviewFields = `id body bodyHTML state submittedAt ${author}`
 export const threadFields = `
   id
   path
@@ -24,6 +24,7 @@ query PullDetail($owner: String!, $name: String!, $number: Int!) {
     pullRequest(number: $number) {
       ...PullSummaryFields
       body
+      bodyHTML
       viewerCanUpdate
       viewerCanMergeAsAdmin
       headRefOid
