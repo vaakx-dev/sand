@@ -13,9 +13,8 @@ export interface SidebarThread {
 export interface RowDecoration {
   id: string
   order?: number
-  place?(thread: SidebarThread): string | undefined
-  subtitle?(thread: SidebarThread): string | undefined
-  badge?(thread: SidebarThread): Child | null
+  meta?(thread: SidebarThread): Child | null
+  mark?(thread: SidebarThread): Child | null
 }
 
 export interface Sidebar {

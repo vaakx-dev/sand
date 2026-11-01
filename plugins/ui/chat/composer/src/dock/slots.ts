@@ -18,7 +18,7 @@ export const createSlots = () => {
     return () => entries.update(all => all.filter(other => other !== entry))
   }
 
-  const empty = (...places: ComposerSlot[]) => entries.map(all => !all.some(entry => places.includes(entry.where)))
+  const empty = (where: ComposerSlot) => entries.map(all => !all.some(entry => entry.where === where))
 
   const host = (where: ComposerSlot, className: string, wrap = (node: HTMLElement) => node) =>
     list(

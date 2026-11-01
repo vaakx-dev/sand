@@ -7,22 +7,26 @@ export interface Decorating {
   decorations: RowDecoration[]
 }
 
+export type RowPart = 'meta' | 'mark'
+
 const shown = (child: Child | undefined): child is Child => child != null && child !== false && child !== ''
 
-const firstBadge = ({ thread, decorations }: Decorating): Child[] => {
+const collect = ({ thread, decorations }: Decorating, part: RowPart, limit: number): Child[] => {
+  const found: Child[] = []
   for (const decoration of decorations) {
-    const child = attempt(decoration, () => decoration.badge?.(thread))
-    if (shown(child)) return [child]
+    if (found.length >= limit) break
+    const child = attempt(decoration, () => decoration[part]?.(thread))
+    if (shown(child)) found.push(child)
   }
-  return []
+  return found
 }
 
-export const badges = (read: () => Decorating) => {
+export const decorated = (read: () => Decorating, part: RowPart, limit: number) => {
   let built: Disposer[] = []
   registerInScope(() => disposeAll(built))
   return derive(() => {
     const decorating = read()
-    const next = collectScope(() => firstBadge(decorating))
+    const next = collectScope(() => collect(decorating, part, limit))
     disposeAll(built)
     built = next.scope
     return next.value.length ? next.value : null

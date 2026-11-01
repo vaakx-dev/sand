@@ -24,7 +24,7 @@ const content = (parts: ViewParts, phase: Phase) => {
   const { kit, model } = parts
   if (phase === 'ready') return readyView(parts)
   if (phase === 'no-folder') return inset(kit.emptyState({ text: 'This thread has no folder.' }))
-  if (phase === 'no-repo') return inset(kit.emptyState({ text: 'Not a git repo' }))
+  if (phase === 'no-repo') return inset(kit.emptyState({ text: 'Not a git repo', action: parts.slots.host('no-repo') }))
   if (phase === 'empty') return inset(kit.emptyState({ text: 'No changes' }))
   if (phase === 'error') {
     const message = () => {
@@ -45,6 +45,7 @@ export const changesPage = (kit: Kit, model: ChangesModel, services: ChangesServ
         class: 'absolute inset-0 overflow-auto bg-neutral-950',
         onMount: element => parts.layout.measure(element),
       },
+      services.slots.host('top'),
       toolbar(parts),
       dynamicChild(model.phase, phase => content(parts, phase)),
     ),

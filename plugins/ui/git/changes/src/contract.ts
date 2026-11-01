@@ -25,8 +25,13 @@ export interface ChangesScopes {
   register(source: ChangesScopeSource): Dispose
 }
 
+export type ChangesSlot = 'top' | 'no-repo'
+
+export type ChangesView = () => HTMLElement
+
 export interface ChangesPanel {
   scopes: ChangesScopes
+  slot(view: ChangesView, slot: ChangesSlot): Dispose
   show(scope?: string): void
 }
 

@@ -1,4 +1,3 @@
-import { repoOf } from '@sand/git/contract'
 import { derive, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import type { ControlParts } from '../parts'
 import { actionMenu } from './menu'
@@ -23,8 +22,8 @@ const nextView = (parts: ControlParts) => {
       },
     },
     dynamicChild(glyph, name => (name === 'busy' ? kit.spinner(14) : name ? kit.icon(name, 14) : null)),
-    span({ class: 'hidden md:inline' }, label),
-    show(busy, () => span({ class: 'hidden md:inline' }, kit.elapsed(() => run()?.started))),
+    span(label),
+    show(busy, () => span(kit.elapsed(() => run()?.started))),
   )
 }
 
@@ -35,13 +34,9 @@ export const nextButton = (parts: ControlParts) =>
   )
 
 export const menuButton = (parts: ControlParts) =>
-  show(
-    () => Boolean(repoOf(parts.model.status.get())),
-    () =>
-      parts.kit.dropdown({
-        placement: 'below-right',
-        class: 'shrink-0',
-        items: close => actionMenu(parts, close),
-        trigger: (press, open) => parts.kit.iconButton({ ...press, active: open, title: menuLabel, 'aria-label': menuLabel }, parts.kit.icon('more', 16)),
-      }),
-  )
+  parts.kit.dropdown({
+    placement: 'below-right',
+    class: 'shrink-0',
+    items: close => actionMenu(parts, close),
+    trigger: (press, open) => parts.kit.iconButton({ ...press, active: open, title: menuLabel, 'aria-label': menuLabel }, parts.kit.icon('more', 16)),
+  })

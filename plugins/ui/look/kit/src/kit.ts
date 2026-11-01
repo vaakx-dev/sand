@@ -31,7 +31,6 @@ import { dropdown } from './menus/dropdown'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
 import { menuReason } from './menus/reason'
-import { trayChip } from './menus/tray-chip'
 import { navActionIcon } from './nav/action-icon'
 import { sideColumn } from './nav/side-column'
 import { bannerTitle, statusBanner } from './notes/banner'
@@ -203,7 +202,6 @@ export const kit = {
   toneText,
   toolBody,
   toolCard,
-  trayChip,
   waitingLine,
   withDot,
   working,

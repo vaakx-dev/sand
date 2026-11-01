@@ -104,7 +104,7 @@ const buildModel = (ctx: ChangesContext, sources: ScopeSources) => {
   const visible = sig(false)
   effect(() => {
     const now = phase.get()
-    if (now !== 'waiting') visible.set(now !== 'no-folder' && now !== 'no-repo')
+    if (now !== 'waiting') visible.set(now !== 'no-folder')
   })
 
   const baseLabel = derive(() => {
