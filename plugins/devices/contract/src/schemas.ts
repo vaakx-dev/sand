@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 export const deviceKindSchema = z.enum(['pc', 'phone', 'browser'])
 
+export const pcIconSchema = z.enum(['desktop', 'laptop', 'tower', 'mini', 'server', 'cloud', 'board', 'linux'])
+
+export type PcIcon = z.infer<typeof pcIconSchema>
+
 export const removalSchema = z.object({ at: z.number(), by: z.string() })
 
 export const deviceRecordSchema = z.object({
@@ -9,6 +13,8 @@ export const deviceRecordSchema = z.object({
   kind: deviceKindSchema,
   name: z.string(),
   platform: z.string().optional(),
+  icon: pcIconSchema.optional(),
+  detectedIcon: pcIconSchema.optional(),
   keys: z.array(z.object({ publicKey: z.string().min(1), added: z.number(), origin: z.string().optional() })),
   added: z.number(),
   addedBy: z.string(),

@@ -19,9 +19,12 @@ export const viewOf = (link: PcLink, home: boolean, known: KnownPc | undefined):
   const platform = known?.platform ?? identity?.platform
   const address = status.phase === 'connected' ? addressOf(status.route) : undefined
   const build = identity?.build
+  const detectedIcon = known?.detectedIcon
   return {
     id: link.pc,
     name: known?.name ?? identity?.name ?? fallbackName(home),
+    icon: known?.icon ?? detectedIcon ?? 'desktop',
+    ...(detectedIcon && { detectedIcon }),
     home,
     online: status.phase === 'connected',
     status,

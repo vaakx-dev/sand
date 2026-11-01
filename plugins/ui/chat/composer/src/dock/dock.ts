@@ -6,7 +6,6 @@ import { parentRect, publishHeight } from '../integrations/measure'
 import type { Card, CardParts } from './card'
 import { bannerPanel, completionPopup } from './glass'
 import { tab } from './tab'
-import { tray } from './tray'
 
 export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => {
   const completing = () => card.completion.visible.get()
@@ -22,7 +21,6 @@ export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => 
         tab(slots, completing),
         div({ class: 'relative z-10' }, card.node),
       ),
-      tray(slots),
     ),
     chatDrop(ctx.kit, dropping, () => parentRect(view)),
   )

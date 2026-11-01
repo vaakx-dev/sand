@@ -1,4 +1,4 @@
-import type { AddedKey, DeviceRecord, NewDevice, Registry } from '@sand/devices-contract'
+import type { AddedKey, DeviceRecord, NewDevice, PcIcon, Registry } from '@sand/devices-contract'
 import { deviceIdOf } from '@sand/devices-identity'
 import type { Dispose } from 'drydock'
 import type { DeviceFile } from './store/file'
@@ -85,6 +85,18 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     return change(normalRecord({ ...record, name: next, updated: stamp(record) }))
   }
 
+  const setIcon = async (id: string, icon: PcIcon) => {
+    const record = live(id)
+    if (record.icon === icon) return record
+    return change(normalRecord({ ...record, icon, updated: stamp(record) }))
+  }
+
+  const setDetectedIcon = async (id: string, detectedIcon: PcIcon) => {
+    const record = live(id)
+    if (record.detectedIcon === detectedIcon) return record
+    return change(normalRecord({ ...record, detectedIcon, updated: stamp(record) }))
+  }
+
   const remove = async (id: string, by: string) => {
     const record = records.get(id)
     if (!record || record.removed) return
@@ -115,6 +127,8 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     add,
     addKey,
     rename,
+    setIcon,
+    setDetectedIcon,
     remove,
     merge,
     onChange: listener => listen(changes, listener),

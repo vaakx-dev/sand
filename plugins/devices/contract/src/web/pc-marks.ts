@@ -6,6 +6,7 @@ export interface PcMarks {
   tone(pc: string): PcTone
   words(pc: string): string
   dot(pc: string): HTMLElement
+  icon(pc: string): HTMLElement
   why(pc: string): void
 }
 

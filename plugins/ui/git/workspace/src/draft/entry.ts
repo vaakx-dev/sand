@@ -1,24 +1,26 @@
-import { composer } from '@sand/composer/contract'
+import { composer, type PlusEntry } from '@sand/composer/contract'
 import { repoOf } from '@sand/git/contract'
 import { palette } from '@sand/palette/contract'
-import { div, dynamicChild, show, type Sig, span } from '@vaakx-dev/vrui'
+import type { WorkspaceKind } from '@sand/worktrees/contract'
+import type { Sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { toastId } from '../toast'
 import type { WorktreeCache } from '../worktrees/cache'
 import { branchPage } from './branches'
-import { choiceLabel, kindOf, type WorkspaceChoice } from './choice'
+import { choiceLabel, choiceOfKind, kindOf, type WorkspaceChoice } from './choice'
 import type { WorkspaceDefaults } from './defaults'
 import { type ChipMenu, chipMenu } from './menu'
 import type { DraftModel } from './model'
 
-export const shortcutHint = (mac: boolean) => (mac ? '⌘⇧X' : 'Ctrl⇧X')
-
 const defaultSaved = (kind: string) => (kind === 'worktree' ? 'New threads here start in a new worktree' : 'New threads here start in the main checkout')
 
-export const workspaceChip = (ctx: WorkspaceContext, model: DraftModel, cache: WorktreeCache, defaults: WorkspaceDefaults, open: Sig<boolean>) => {
-  const { kit } = ctx
+const isUsual = (choice: WorkspaceChoice, kind: WorkspaceKind | undefined) =>
+  choice.kind === choiceOfKind(kind).kind && (choice.kind !== 'new' || !choice.from)
+
+const shortLabel = (choice: WorkspaceChoice, label: string) => (choice.kind === 'new' && !choice.from ? 'New worktree' : label)
+
+export const workspaceEntry = (ctx: WorkspaceContext, model: DraftModel, cache: WorktreeCache, defaults: WorkspaceDefaults, open: Sig<boolean>): PlusEntry => {
   const close = () => open.set(false)
-  const toggle = () => open.update(value => !value)
 
   const pick = (choice: WorkspaceChoice) => {
     model.choose(choice)
@@ -43,19 +45,19 @@ export const workspaceChip = (ctx: WorkspaceContext, model: DraftModel, cache: W
     )
   }
 
-  const menu: ChipMenu = { ctx, kit, model, cache, defaults, pick, openBranches, makeDefault }
-  const glyph = model.current.map(choice => (choice.kind === 'checkout' ? 'branch' : 'worktree'))
+  const menu: ChipMenu = { ctx, kit: ctx.kit, model, cache, defaults, pick, openBranches, makeDefault }
+  const usualKind = () => {
+    const place = model.place()
+    return place && defaults.get(place)
+  }
   const label = () => choiceLabel(model.current.get(), repoOf(model.status.get()))
-  const title = () => `Where this thread works · ${shortcutHint(kit.isMac())}`
 
-  return () =>
-    div(
-      { class: 'relative flex min-w-0' },
-      kit.trayChip(
-        { open, toggle, title },
-        dynamicChild(glyph, name => kit.icon(name, 'sm')),
-        span({ class: 'min-w-0 truncate' }, label),
-      ),
-      show(open, () => kit.chipPopover(close, { class: 'left-0' }, chipMenu(menu))),
-    )
+  return {
+    icon: () => (model.current.get().kind === 'checkout' ? 'branch' : 'worktree'),
+    label,
+    open,
+    panel: () => chipMenu(menu),
+    unusual: () => (isUsual(model.current.get(), usualKind()) ? undefined : shortLabel(model.current.get(), label())),
+    reset: () => model.choose(choiceOfKind(usualKind())),
+  }
 }

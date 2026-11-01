@@ -9,6 +9,7 @@ import { inject } from './inject'
 import { changesModel } from './model/model'
 import { scopeSources } from './scope/sources'
 import { changesPage } from './view/page'
+import { createSlots } from './view/slots'
 
 export default definePlugin({
   name: 'git-changes',
@@ -23,7 +24,8 @@ export default definePlugin({
       ctx.watch(role, next => found.set(next))
       return found
     }
-    const services = { writer: followed(composer), files: followed(filesPanel), diff: ctx.diff }
+    const slots = createSlots()
+    const services = { writer: followed(composer), files: followed(filesPanel), diff: ctx.diff, slots }
     const look = () => ({ badge: model.badge.get(), hidden: !model.visible.get() })
 
     ctx.watch(panels, host => {
@@ -45,6 +47,7 @@ export default definePlugin({
 
     ctx.provide(changesPanel, {
       scopes: { register: sources.register },
+      slot: slots.add,
       show(scope) {
         if (scope) model.pick(scope)
         openPanel()

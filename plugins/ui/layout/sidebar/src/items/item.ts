@@ -8,9 +8,7 @@ export interface ThreadItem {
   projectKey: string
   project: string
   icon?: ProjectLook
-  pc?: string
-  folder?: string
-  pcMark?: () => HTMLElement
+  pcIcon?: () => HTMLElement
   path?: string
   device: string
   updated: number

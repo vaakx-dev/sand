@@ -1,4 +1,14 @@
-import { type DeviceRecord, type DeviceSeen, devicesChange, devicesList, devicesRemove, devicesRename, devicesSeen } from '@sand/devices-contract'
+import {
+  type DeviceRecord,
+  type DeviceSeen,
+  devicesChange,
+  devicesIcon,
+  devicesList,
+  devicesRemove,
+  devicesRename,
+  devicesSeen,
+  type PcIcon,
+} from '@sand/devices-contract'
 import type { UiContext } from '../inject'
 import { feed } from './feed'
 
@@ -24,6 +34,7 @@ export const devicesData = (ctx: UiContext) => {
     seenOf: (id: string) => seen.value.get().find(entry => entry.device === id),
     refresh: () => Promise.all([records.refresh(), seen.refresh()]),
     rename: (device: string, name: string) => ctx.wire.call(devicesRename, { device, name }),
+    setIcon: (device: string, icon: PcIcon) => ctx.wire.call(devicesIcon, { device, icon }),
     remove: (device: string) => ctx.wire.call(devicesRemove, { device }),
   }
 }

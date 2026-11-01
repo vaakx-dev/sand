@@ -7,6 +7,8 @@ import { createCompletion, type CompletionSource } from '../complete/model'
 import { builtinSources } from '../complete/sources'
 import { createEditor } from '../editor/view'
 import type { Model } from '../model'
+import type { Plus } from '../plus/entries'
+import { plusView } from '../plus/view'
 import { sendControl } from '../send/button'
 import type { SendMenu } from '../send/menu'
 import { interrupt } from '../send/submit'
@@ -18,6 +20,7 @@ export interface CardParts {
   model: Model
   slots: Slots
   menu: SendMenu
+  plus: Plus
   dropping: Sig<boolean>
 }
 
@@ -27,8 +30,8 @@ const placeholder = (model: Model, sources: CompletionSource[]) => () => {
   return ['Ask anything', ...triggers].join(', ')
 }
 
-export const card = ({ ctx, model, slots, menu }: CardParts) => {
-  const { hasOpenLayer, icon, iconButton } = ctx.kit
+export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
+  const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
 
   const keydown = (event: KeyboardEvent) => {
@@ -73,7 +76,7 @@ export const card = ({ ctx, model, slots, menu }: CardParts) => {
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      iconButton({ surface: 'raised', title: 'Attach files', 'aria-label': 'Attach files', class: '-ml-2', onClick: choose }, icon('plus', 'md')),
+      plusView(ctx.kit, plus, choose),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),

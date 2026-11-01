@@ -1,5 +1,6 @@
 import type { BuildInfo } from '@sand/host-dist/contract'
 import type { CallerKind } from '@sand/host-hub/contract'
+import type { PcIcon } from './schemas'
 
 export type DeviceKind = Exclude<CallerKind, 'cli' | 'runtime'>
 
@@ -19,6 +20,8 @@ export interface DeviceRecord {
   kind: DeviceKind
   name: string
   platform?: string
+  icon?: PcIcon
+  detectedIcon?: PcIcon
   keys: DeviceKey[]
   added: number
   addedBy: string

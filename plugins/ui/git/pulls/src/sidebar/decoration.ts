@@ -1,4 +1,3 @@
-import { pullName } from '@sand/github/look'
 import { arrangePulls, type PullArrangement, type PullLink } from '@sand/pull-links/contract'
 import type { RowDecoration, SidebarThread } from '@sand/sidebar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
@@ -30,7 +29,7 @@ const pullMark = (kit: Kit, thread: SidebarThread, arrangement: PullArrangement,
       }),
     },
     span({ class: ['inline-flex', tint] }, kit.icon(look.icon, 12)),
-    many ? String(links.length) : pullName(primary),
+    String(many ? links.length : primary.number),
   )
   return many ? [mark, pullsCard(kit, arrangement.lines, hover, open)] : mark
 }
@@ -38,7 +37,7 @@ const pullMark = (kit: Kit, thread: SidebarThread, arrangement: PullArrangement,
 export const pullDecoration = ({ kit, pullLinks }: PullsContext, client: ThreadPullsClient): RowDecoration => ({
   id: 'git-pulls',
   order: 40,
-  badge(thread) {
+  mark(thread) {
     if (thread.draft) return null
     const arrangement = arrangePulls(pullLinks.of(thread.id))
     return arrangement.primary ? pullMark(kit, thread, arrangement, arrangement.primary, client) : null
