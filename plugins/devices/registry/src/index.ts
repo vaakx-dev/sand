@@ -5,6 +5,7 @@ import { hostBuild } from '@sand/host-dist/contract'
 import { hub, hubOpen } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
 import { createAuth } from './auth'
+import { detectIconOnce } from './detected-icon'
 import { createRegistry } from './registry'
 import { deviceRequests } from './requests'
 import { loadSeen } from './seen/seen'
@@ -26,6 +27,7 @@ export default definePlugin({
       build: async () => ctx.get(hostBuild)?.info(),
     })
     void thisPc.identity()
+    detectIconOnce(registry, thisPc.id)
 
     ctx.effect(() => registry.onChange(() => ctx.hub.broadcast(devicesChange, registry.list(), 'user')))
     ctx.effect(() => ctx.hub.greet(helloPc, () => thisPc.current()))

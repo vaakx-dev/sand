@@ -1,7 +1,8 @@
 import type { RowDecoration, SidebarThread } from '@sand/sidebar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { PlaceStatuses } from '../places/statuses'
-import { changeBadge } from './badge'
+import { branchMeta } from './branch'
+import { changeMark } from './change'
 
 const viewOf = (statuses: PlaceStatuses, thread: SidebarThread) =>
   thread.cwd ? statuses.view({ cwd: thread.cwd, device: thread.device }) : undefined
@@ -9,16 +10,13 @@ const viewOf = (statuses: PlaceStatuses, thread: SidebarThread) =>
 export const gitDecoration = (kit: Kit, statuses: PlaceStatuses): RowDecoration => ({
   id: 'git',
   order: 50,
-  place: thread => {
+  meta(thread) {
     const view = viewOf(statuses, thread)
-    return view?.worktree.get() ? view.branch.get() : undefined
+    const branch = view?.branch.get()
+    return view && branch ? branchMeta(kit, branch, view.worktree.get()) : null
   },
-  subtitle: thread => {
-    const view = viewOf(statuses, thread)
-    return view?.worktree.get() ? undefined : view?.branch.get()
-  },
-  badge(thread) {
+  mark(thread) {
     const change = viewOf(statuses, thread)?.change.get()
-    return change ? changeBadge(kit, change) : null
+    return change ? changeMark(kit, change) : null
   },
 })

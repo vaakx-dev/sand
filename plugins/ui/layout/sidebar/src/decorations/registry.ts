@@ -1,15 +1,13 @@
-import { derive, sig, type Child, type Derive, type Sig } from '@vaakx-dev/vrui'
+import { sig, type Child, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
-import type { RowDecoration, Sidebar, SidebarThread } from '../contract'
+import type { RowDecoration, Sidebar } from '../contract'
 import type { ThreadItem } from '../items/item'
-import { attempt } from './attempt'
-import { badges, type Decorating } from './badges'
+import { decorated, type Decorating } from './decorated'
 import { rowThread } from './thread'
 
 export interface RowDecor {
-  place: Derive<string>
-  subtitle: Derive<string>
-  badge: Derive<Child[] | null>
+  meta: Derive<Child[] | null>
+  marks: Derive<Child[] | null>
 }
 
 export interface RowDecorations extends Sidebar {
@@ -29,14 +27,7 @@ export const rowDecorations = (): RowDecorations => {
     row(item) {
       const thread = rowThread(item)
       const read = (): Decorating => ({ thread: thread.get(), decorations: decorations.get() })
-      const texts = (pick: (decoration: RowDecoration, thread: SidebarThread) => string | undefined) =>
-        derive(() => {
-          const { thread, decorations } = read()
-          return decorations.map(decoration => attempt(decoration, () => pick(decoration, thread))).filter((text): text is string => Boolean(text))
-        })
-      const places = texts((decoration, thread) => decoration.place?.(thread))
-      const subtitles = texts((decoration, thread) => decoration.subtitle?.(thread))
-      return { place: places.map(found => found[0] ?? ''), subtitle: subtitles.map(found => found.join(' · ')), badge: badges(read) }
+      return { meta: decorated(read, 'meta', 1), marks: decorated(read, 'mark', Infinity) }
     },
   }
 }

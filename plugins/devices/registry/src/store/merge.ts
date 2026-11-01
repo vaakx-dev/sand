@@ -8,6 +8,8 @@ export const normalRecord = (record: DeviceRecord): DeviceRecord => ({
   kind: record.kind,
   name: record.name,
   ...(record.platform !== undefined && { platform: record.platform }),
+  ...(record.icon !== undefined && { icon: record.icon }),
+  ...(record.detectedIcon !== undefined && { detectedIcon: record.detectedIcon }),
   keys: record.keys.map(normalKey),
   added: record.added,
   addedBy: record.addedBy,

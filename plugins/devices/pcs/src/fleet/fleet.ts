@@ -84,7 +84,13 @@ export const createFleet = (options: FleetOptions) => {
     const pcs = records.filter(record => record.kind === 'pc' && !record.removed)
     const wanted = new Set(pcs.map(record => record.id))
     for (const record of pcs) {
-      known.learn({ id: record.id, name: record.name, ...(record.platform && { platform: record.platform }) })
+      known.learn({
+        id: record.id,
+        name: record.name,
+        ...(record.platform && { platform: record.platform }),
+        ...(record.icon && { icon: record.icon }),
+        ...(record.detectedIcon && { detectedIcon: record.detectedIcon }),
+      })
       if (!links.has(record.id)) open(record.id)
     }
     for (const pc of [...links.keys()]) if (pc !== home && !wanted.has(pc)) drop(pc)

@@ -1,6 +1,7 @@
-import type { PcMarks, PcTone } from '@sand/devices-contract'
+import type { PcIcon, PcMarks, PcTone } from '@sand/devices-contract'
 import type { Ui } from '../ui'
 import { toneDot } from './dot'
+import { toneIcon } from './icon'
 import { statusWords, toneOf } from './words'
 
 export const createMarks = (ui: Ui): PcMarks => {
@@ -16,10 +17,21 @@ export const createMarks = (ui: Ui): PcMarks => {
     const view = ui.ctx.pcs.get(pc)
     return view ? statusWords(view, data.nameOf, ui.device()) : 'Not one of your PCs'
   }
+  const kind = (pc: string): PcIcon => {
+    data.changes.version.get()
+    return ui.ctx.pcs.get(pc)?.icon ?? 'desktop'
+  }
   return {
     tone,
     words,
     dot: pc => toneDot(ui.kit, () => tone(pc), () => `${data.nameOf(pc)}: ${words(pc)}`),
+    icon: pc =>
+      toneIcon(
+        ui.kit,
+        () => kind(pc),
+        () => tone(pc),
+        () => `${data.nameOf(pc)} · ${words(pc)}`,
+      ),
     why: pc => ui.open.why(pc),
   }
 }

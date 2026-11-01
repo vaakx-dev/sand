@@ -4,11 +4,14 @@ import type { RoutePrefs } from '../connection/routes'
 import type { ConnectionStatus, Diagnosis } from '../connection/status'
 import type { JoinTicket, PairRefusalReason } from '../http/pair'
 import type { DeviceRecord } from '../records'
+import type { PcIcon } from '../schemas'
 
 export interface PcView {
   id: string
   name: string
   platform?: string
+  icon: PcIcon
+  detectedIcon?: PcIcon
   home: boolean
   online: boolean
   status: ConnectionStatus

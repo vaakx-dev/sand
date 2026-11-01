@@ -1,5 +1,6 @@
 import type { PcView } from '@sand/devices-contract'
 import { derive, dynamicChild, type Sig } from '@vaakx-dev/vrui'
+import { withIconPicker } from '../../icon/row'
 import { toneDot } from '../../status/dot'
 import { statusWords, toneOf } from '../../status/words'
 import type { Ui } from '../../ui'
@@ -25,12 +26,16 @@ const whyButton = (ui: Ui, view: Sig<PcView>) => {
 export const pcRow = (ui: Ui, view: Sig<PcView>) => {
   const { chevron, listRow, statusLine } = ui.kit
   const words = () => statusWords(view.get(), ui.data.nameOf, ui.device(), ui.data.now.get())
-  return listRow({
-    surface: 'group',
-    title: () => ui.data.nameOf(view.get().id),
-    meta: statusLine({ mark: toneDot(ui.kit, () => toneOf(view.get().status), words), text: words, title: words }),
-    trail: chevron(() => false),
-    actions: whyButton(ui, view),
-    onClick: () => ui.open.details(view.get().id),
-  })
+  return withIconPicker(
+    ui,
+    view,
+    listRow({
+      surface: 'group',
+      title: () => ui.data.nameOf(view.get().id),
+      meta: statusLine({ mark: toneDot(ui.kit, () => toneOf(view.get().status), words), text: words, title: words }),
+      trail: chevron(() => false),
+      actions: whyButton(ui, view),
+      onClick: () => ui.open.details(view.get().id),
+    }),
+  )
 }

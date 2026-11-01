@@ -1,11 +1,15 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { z } from 'zod'
 import type { DeviceRecord, PcIdentity } from './records'
-import { deviceRecordSchema } from './schemas'
+import { deviceRecordSchema, pcIconSchema } from './schemas'
 
 export const devicesList = request('devices.list', { input: z.object({}), output: type<DeviceRecord[]>() })
 export const devicesRename = request('devices.rename', {
   input: z.object({ device: z.string().min(1), name: z.string().trim().min(1) }),
+  output: type<DeviceRecord>(),
+})
+export const devicesIcon = request('devices.icon', {
+  input: z.object({ device: z.string().min(1), icon: pcIconSchema }),
   output: type<DeviceRecord>(),
 })
 export const devicesRemove = request('devices.remove', { input: z.object({ device: z.string().min(1) }), output: type<void>() })

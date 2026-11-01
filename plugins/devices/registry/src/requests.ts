@@ -1,4 +1,4 @@
-import { devicesList, devicesRemove, devicesRename, devicesSync, pcRename } from '@sand/devices-contract'
+import { devicesIcon, devicesList, devicesRemove, devicesRename, devicesSync, pcRename } from '@sand/devices-contract'
 import type { Hub } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { HostRegistry } from './registry'
@@ -12,6 +12,7 @@ export const deviceRequests = (hub: Hub, registry: HostRegistry, thisPc: HostThi
       else await registry.rename(device, name, caller.device)
       return registry.get(device)!
     }),
+  () => hub.handle(devicesIcon, ({ device, icon }) => registry.setIcon(device, icon)),
   () =>
     hub.handle(devicesRemove, ({ device }, caller) => {
       if (device === thisPc.id) throw new Error("This PC can't remove itself; remove it from another of your PCs")

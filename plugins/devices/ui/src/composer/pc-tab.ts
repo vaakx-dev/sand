@@ -2,13 +2,14 @@ import { composer } from '@sand/composer/contract'
 import type { PcView } from '@sand/devices-contract'
 import { projects, threads } from '@sand/web-client/contract'
 import { derive, div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
+import { iconKinds } from '../icon/kinds'
 import { toneDot } from '../status/dot'
 import { statusWords, toneOf } from '../status/words'
 import type { Ui } from '../ui'
 import { type PcChoice, pcChoices } from './choices'
 import type { ThreadPlace } from './thread-pc'
 
-const glyph = (view: PcView | undefined) => (view?.status.phase === 'connected' && view.status.route.kind === 'local' ? 'laptop' : 'monitor')
+const glyph = (view: PcView | undefined) => iconKinds[view?.icon ?? 'desktop'].glyph
 
 const byHome = (a: PcView, b: PcView) => Number(b.home) - Number(a.home) || a.name.localeCompare(b.name)
 
