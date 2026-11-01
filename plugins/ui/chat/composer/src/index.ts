@@ -12,6 +12,7 @@ import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
+import { createPlus } from './plus/entries'
 import { createSendMenu } from './send/menu'
 
 export default definePlugin({
@@ -21,6 +22,7 @@ export default definePlugin({
   apply(ctx) {
     const slots = createSlots()
     const menu = createSendMenu()
+    const plus = createPlus()
     let current: Card | undefined
     const { model, dropping, session } = owned(ctx, () => {
       const model = createModel(ctx)
@@ -49,9 +51,10 @@ export default definePlugin({
       hold: reason => model.holds.add(reason),
       ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
+      plus: plus.add,
     }
 
-    const parts = { ctx, model, slots, menu, dropping }
+    const parts = { ctx, model, slots, menu, plus, dropping }
     session.start()
     place(
       ctx,

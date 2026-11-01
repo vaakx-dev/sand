@@ -4,10 +4,6 @@ import { derive, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import { isDiverged } from '../next/facts'
 import type { ControlParts } from '../parts'
 
-type ChipKind = 'repo' | 'none' | 'loading'
-
-const kindOf = (status: GitStatus | undefined): ChipKind => (!status ? 'loading' : status.local.repo ? 'repo' : 'none')
-
 const branchName = (status: GitStatus | undefined) => {
   const local = repoOf(status)
   if (!local) return ''
@@ -29,7 +25,7 @@ const changedText = (status: GitStatus | undefined) => {
 const chipTitle = (status: GitStatus | undefined) =>
   [branchName(status), statusWord(status), changedText(status), 'Switch branch'].filter(Boolean).join(' · ')
 
-const repoChip = (parts: ControlParts) => {
+export const branchChip = (parts: ControlParts) => {
   const { kit, model, openBranches } = parts
   const { icon, navButton } = kit
   const glyph = model.status.map(status => (repoOf(status)?.worktree ? 'worktree' : 'branch'))
@@ -41,43 +37,11 @@ const repoChip = (parts: ControlParts) => {
   return navButton(
     { title, 'aria-label': title, onClick: openBranches },
     dynamicChild(glyph, value => icon(value, 16)),
-    span({ class: 'min-w-0 max-w-40 truncate' }, () => branchName(model.status.get())),
+    span({ class: 'min-w-0 truncate' }, () => branchName(model.status.get())),
     show(
       () => Boolean(word.get()),
       () => span({ class: 'shrink-0 text-xs text-warning-400' }, word),
     ),
+    span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
   )
 }
-
-const initChip = ({ kit, actions }: ControlParts) => {
-  const { dropdown, icon, menuItem, navButton } = kit
-  return dropdown({
-    placement: 'below-right',
-    class: 'shrink-0',
-    trigger: (press, open) =>
-      navButton(
-        { active: open, title: 'Not a git repo', 'aria-label': 'Not a git repo', ...press },
-        icon('branch', 16),
-        span({ class: 'hidden md:block' }, 'Not a git repo'),
-        span({ class: 'hidden text-neutral-500 md:inline-flex' }, icon('down', 14)),
-      ),
-    items: close => [
-      menuItem(
-        {
-          icon: 'plus',
-          onClick: () => {
-            close()
-            void actions.init()
-          },
-        },
-        'Start a git repo',
-      ),
-    ],
-  })
-}
-
-export const branchChip = (parts: ControlParts) =>
-  dynamicChild(parts.model.status.map(kindOf), kind => {
-    if (kind === 'repo') return repoChip(parts)
-    return kind === 'none' ? initChip(parts) : null
-  })

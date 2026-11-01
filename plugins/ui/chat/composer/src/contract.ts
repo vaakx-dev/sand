@@ -1,9 +1,20 @@
 import type { UserContent } from '@sand/chats/contract'
 import type { NavAction } from '@sand/nav/contract'
+import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
+import type { Child, Sig } from '@vaakx-dev/vrui'
 import { event, service, type Dispose } from 'drydock'
 
-export type ComposerSlot = 'banner' | 'start' | 'end' | 'tab' | 'tray-start' | 'tray-end'
+export type ComposerSlot = 'banner' | 'start' | 'end' | 'tab'
+
+export interface PlusEntry {
+  icon(): IconName
+  label(): string
+  open: Sig<boolean>
+  panel(): Child
+  unusual(): string | undefined
+  reset(): void
+}
 
 export type SendHold = () => string | undefined
 
@@ -27,6 +38,7 @@ export interface Composer {
   restore(saved: ComposerContent): void
   clear(): void
   sendMenu(action: NavAction): Dispose
+  plus(entry: PlusEntry, order?: number): Dispose
 }
 
 export interface ThreadDraft extends DraftTarget {
