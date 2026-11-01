@@ -1,37 +1,24 @@
 import { composer, drafts } from '@sand/composer/contract'
 import { pcMarks, pcs } from '@sand/devices-contract'
-import { jobs } from '@sand/jobs/contract'
-import type { Thread, Threads } from '@sand/web-client/contract'
+import type { Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import type { Kit } from '@sand/ui-kit/contract'
 import { awayPcName } from '../palette/places'
 import { openDraft } from '../palette/projects'
+import { runningAgents } from './agents'
+import { visibleAncestor } from './ancestor'
 import type { ThreadItem } from './item'
-import { draftId, draftItem, threadItems, type AgentsOf, type Places } from './items'
+import { draftId, draftItem, threadItems, type Places } from './items'
 import { projectLookup } from './lookup'
 import { draftMenu, threadMenu } from './menu'
 import { moveThread } from './order'
 
 const prefetchLimit = 2
 
-const visibleAncestor = (threads: Threads, thread: Thread | undefined) => {
-  const seen = new Set<string>()
-  let at = thread
-  while (at?.info.kind === 'agent' && !seen.has(at.id)) {
-    seen.add(at.id)
-    at = at.info.parent ? threads.get(at.info.parent) : undefined
-  }
-  return at?.info.kind === 'agent' ? undefined : at
-}
-
 export const threadList = (ctx: Context, kit: Kit, threads: Threads) => {
   const places: Places = {
     pc: device => awayPcName(ctx, device),
     mark: device => () => ctx.get(pcMarks)?.dot(device) ?? kit.dot(ctx.get(pcs)?.online(device) ? 'success' : 'neutral'),
-  }
-  const agentsOf: AgentsOf = thread => {
-    const running = (ctx.get(jobs)?.list(thread) ?? []).filter(job => job.status === 'running')
-    return { agents: running.length, since: running.length ? Math.min(...running.map(job => job.started)) : undefined }
   }
   const draftOf = (id: string) => ctx.get(drafts)?.list().find(draft => draftId(draft.id) === id)
   let fetching = 0
@@ -46,7 +33,7 @@ export const threadList = (ctx: Context, kit: Kit, threads: Threads) => {
     items(): ThreadItem[] {
       const lookup = projectLookup(ctx)
       const draftItems = (ctx.get(drafts)?.list() ?? []).map(draft => draftItem(draft, lookup, places))
-      return [...draftItems, ...threadItems(threads.list(), selected(), lookup, places, agentsOf)]
+      return [...draftItems, ...threadItems(threads.list(), selected(), lookup, places, runningAgents(ctx, threads))]
     },
     select(id: string) {
       const draft = draftOf(id)

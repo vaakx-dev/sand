@@ -5,6 +5,7 @@ import { models, modelsChange, threadChange, threads, threadSelect, threadsChang
 import { mount, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { toolCalls } from './runs/calls'
+import { descendants, isWithin } from './runs/family'
 import { modelsUnlike } from './runs/models'
 import { toRuns, type Run } from './runs/runs'
 import { ticker } from './ticker'
@@ -29,10 +30,12 @@ export default definePlugin({
         runs.set([])
         return
       }
+      const family = descendants(ctx.threads, current.id)
+      const ids = new Set([current.id, ...family.map(thread => thread.id)])
       runs.set(
         toRuns({
-          jobs: ctx.jobs.list(current.id),
-          agents: ctx.threads.children(current.id).filter(chat => chat.info.kind === 'agent'),
+          jobs: ctx.jobs.list().filter(job => ids.has(job.parent)),
+          agents: family.filter(chat => chat.info.kind === 'agent'),
           calls: toolCalls(current.entries.values()),
           modelOf: modelsUnlike(ctx.get(models), current.id),
         }),
@@ -89,7 +92,7 @@ export default definePlugin({
     ctx.watch(models, () => paint())
     ctx.on(threadChange, id => {
       const current = ctx.threads.current()
-      if (current && (id === current.id || ctx.threads.get(id)?.info.parent === current.id)) paint()
+      if (current && isWithin(ctx.threads, id, current.id)) paint()
     })
   },
 })
