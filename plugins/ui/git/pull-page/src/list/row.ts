@@ -1,24 +1,12 @@
 import { samePull } from '@sand/github/contract'
-import { pullRef, pullStateLook } from '@sand/github/look'
+import { pullRef } from '@sand/github/look'
 import type { InboxPull } from '@sand/pull-inbox/contract'
-import { ago } from '@sand/util'
 import { type Derive, derive, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import { threadChip } from '../links/chip'
 import type { PageParts } from '../parts'
+import { compactRow } from './compact-row'
+import { repeatsState, repoName, stateMark, updatedAgo } from './marks'
 import { inlineMerge } from './merge'
-
-const repoName = (repo: string) => repo.split('/').at(-1) ?? repo
-
-const stateMark = (parts: PageParts, pull: Sig<InboxPull>) =>
-  dynamicChild(
-    pull.map(value => value.state),
-    state => {
-      const look = pullStateLook(state)
-      return span({ class: ['inline-flex', parts.kit.toneText[look.tone]], title: look.label }, parts.kit.icon(look.icon, 16))
-    },
-  )
-
-const repeatsState = ({ state, reason }: InboxPull) => state !== 'draft' && reason.text === pullStateLook(state).label
 
 const canMergeHere = ({ reason, state }: InboxPull) => reason.group === 'ready' && state === 'open'
 
@@ -37,10 +25,7 @@ const trail = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) =
     () => pull.get().add,
     () => pull.get().del,
   ),
-  span({ class: 'tabular-nums', title: () => new Date(pull.get().updated).toLocaleString() }, () => {
-    minute.get()
-    return ago(pull.get().updated)
-  }),
+  updatedAgo(pull, minute),
 ]
 
 const actions = (parts: PageParts, pull: Sig<InboxPull>) => [
@@ -60,16 +45,22 @@ const actions = (parts: PageParts, pull: Sig<InboxPull>) => [
   ),
 ]
 
-export const pullRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) =>
+const wideRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>, current: () => boolean, open: () => void) =>
   parts.kit.listRow({
     lead: stateMark(parts, pull),
     title: [() => pull.get().title, span({ class: 'text-neutral-500' }, () => ` #${pull.get().number}`)],
     meta: () => metaText(pull.get(), parts.list.oneRepo.get()),
     trail: trail(parts, pull, minute),
     actions: actions(parts, pull),
-    current: () => {
-      const chosen = parts.selected.get()
-      return chosen ? samePull(chosen, pull.get()) : false
-    },
-    onClick: () => parts.select(pullRef(pull.get())),
+    current,
+    onClick: open,
   })
+
+export const pullRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>) => {
+  const current = () => {
+    const chosen = parts.selected.get()
+    return chosen ? samePull(chosen, pull.get()) : false
+  }
+  const open = () => parts.select(pullRef(pull.get()))
+  return dynamicChild(parts.narrow, narrow => (narrow ? compactRow : wideRow)(parts, pull, minute, current, open))
+}

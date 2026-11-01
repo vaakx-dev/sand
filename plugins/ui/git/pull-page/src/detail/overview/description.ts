@@ -7,6 +7,6 @@ export const descriptionBlock = (shown: Shown) =>
     { class: 'border-t border-neutral-800 pt-3' },
     dynamicChild(
       () => shown.pull().body.trim(),
-      body => (body ? richText(shown.parts, body) : shown.parts.kit.emptyState({ text: 'No description.', flush: true })),
+      body => (body ? richText(shown, body) : shown.parts.kit.emptyState({ text: 'No description.', flush: true })),
     ),
   )
