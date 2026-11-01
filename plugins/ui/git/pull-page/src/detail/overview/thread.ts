@@ -82,7 +82,7 @@ export const threadCard = (shown: Shown, thread: () => ReviewThread) => {
     list(
       derive(() => thread().comments),
       comment => comment.id,
-      comment => commentView(shown.parts, () => comment.get()),
+      comment => commentView(shown, () => comment.get()),
       div({ class: 'flex flex-col gap-3 px-3 py-2' }),
     ),
     threadFoot(shown, thread),

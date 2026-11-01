@@ -37,6 +37,7 @@ const filterChip = <T extends string>(parts: PageParts, chosen: Sig<T>, choices:
   const label = () => choices().find(choice => choice.value === chosen.get())?.label ?? choices()[0]?.label ?? ''
   return kit.dropdown({
     placement: 'below-right',
+    class: 'shrink-0',
     trigger: (press, open) => kit.chipButton({ ...press, active: open, menu: true, 'aria-label': name }, span({ class: 'min-w-0 truncate' }, label)),
     items: close =>
       choices().map(choice =>
@@ -60,11 +61,17 @@ const projectChoices = (parts: PageParts): ChipChoice[] => [
 ]
 
 export const filtersRow = (parts: PageParts): Child => {
-  const { kit, query } = parts
+  const { kit, query, narrow } = parts
   return div(
-    { class: ['flex flex-wrap items-center gap-2 px-4 pb-2', pageColumn(parts)] },
-    kit.segmented(viewChoices(parts), query.view, value => query.view.set(value), { label: 'Which pull requests' }),
-    span({ class: 'flex-1' }),
+    { class: ['flex items-center gap-2 px-4 pb-2', () => (narrow.get() ? '' : 'flex-wrap'), pageColumn(parts)] },
+    div(
+      { class: ['flex', () => (narrow.get() ? 'min-w-0 flex-1 overflow-x-auto scrollbar-none' : '')] },
+      kit.segmented(viewChoices(parts), query.view, value => query.view.set(value), { label: 'Which pull requests', class: 'shrink-0' }),
+    ),
+    show(
+      () => !narrow.get(),
+      () => span({ class: 'flex-1' }),
+    ),
     show(
       () => query.view.get() !== 'needs',
       () => filterChip(parts, query.state, () => stateChoices, 'State'),

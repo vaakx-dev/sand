@@ -2,6 +2,7 @@ import type { PullSummary } from '@sand/github/contract'
 import { allowedMethods } from '@sand/github/summary'
 import type { PullCommit, PullDetail } from '../contract'
 import { conversationOf } from './conversation'
+import { imagesOf } from './images'
 import { present } from './nodes'
 import type { PagedLists } from './pages'
 import type { RawDetail, RawRepo } from './raw'
@@ -40,4 +41,5 @@ export const shapeDetail = ({ summary, node, repo, viewer, lists, behindBy }: De
   methods: allowedMethods(repo),
   ...(behindBy === undefined ? {} : { behindBy }),
   headDeleted: node.headRef === null,
+  images: imagesOf(node, lists),
 })

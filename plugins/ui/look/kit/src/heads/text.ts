@@ -2,6 +2,8 @@ import { read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 
 export const rowTitle = (...children: Child[]) => span({ class: 'min-w-0 truncate text-sm group-aria-current:font-medium' }, ...children)
 
+export const overLine = (...children: Child[]) => span({ class: 'min-w-0 text-xs text-neutral-500' }, ...children)
+
 export const metaLine = (...children: Child[]) => span({ class: 'min-w-0 truncate text-xs text-neutral-400' }, ...children)
 
 const splitPath = (path: string) => {
