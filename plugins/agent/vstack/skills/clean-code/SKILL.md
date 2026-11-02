@@ -39,6 +39,7 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 ## Names
 
 - Name things for what they are in the domain.
+- Let folders carry context. Group with folders, not name prefixes, and don't repeat the folder in a file name or the context in a type, function or variable name: `enemies/body`, not `enemies/enemy_body`.
 - If no honest name fits, the design is unclear. Fix the design first.
 
 ## Leave out
