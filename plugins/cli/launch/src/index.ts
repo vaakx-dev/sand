@@ -3,6 +3,7 @@ import { cli } from '@sand/config/contract'
 import { daemon } from '@sand/host-daemon/contract'
 import { definePlugin } from 'drydock'
 import { launch } from './launch'
+import { sandbox } from './sandbox'
 
 export default definePlugin({
   name: 'cli-launch',
@@ -19,6 +20,17 @@ export default definePlugin({
           '                 already paired so it needs no link or QR code',
         ].join('\n'),
         run: () => launch(ctx.daemon, ctx.cli.safe),
+      }),
+    )
+    ctx.effect(() =>
+      ctx.cliCommands.register({
+        name: 'sandbox',
+        summary: 'start a throwaway sand for testing and print its paired link',
+        usage: [
+          'sand sandbox     start a throwaway sand from this build in a temp home, on a free port and off the network,',
+          '                 with your plugins and model, and print a link that opens it paired',
+        ].join('\n'),
+        run: () => sandbox(ctx.cli.home),
       }),
     )
   },

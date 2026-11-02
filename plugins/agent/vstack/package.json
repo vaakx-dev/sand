@@ -1,0 +1,21 @@
+{
+  "name": "@sand/vstack",
+  "version": "0.0.0",
+  "description": "The user's taste: how the agent writes code and replies, as skills and a reply section in the system prompt",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "vstack",
+    "summary": "How the agent writes code and replies"
+  },
+  "dependencies": {
+    "@sand/prompt": "workspace:*",
+    "@sand/skills": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

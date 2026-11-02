@@ -4,7 +4,8 @@
   "description": "Starts, stops and restarts sand in the background, and reads the [host] settings",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract.ts",
+    "./service": "./src/cli/service.ts"
   },
   "sand": {
     "host": "./src/host/index.ts",

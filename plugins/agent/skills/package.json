@@ -1,7 +1,7 @@
 {
   "name": "@sand/skills",
   "version": "0.0.0",
-  "description": "Bundles core skills like verify, discovers skills in plugin, home and project folders and gives the agent the skill tool",
+  "description": "Discovers skills in plugin, home and project folders and gives the agent the skill tool",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

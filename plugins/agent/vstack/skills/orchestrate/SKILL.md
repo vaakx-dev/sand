@@ -23,6 +23,8 @@ Agents can't see the chat. Each brief says:
 - what to read first and what not to touch;
 - the report length.
 
+Don't teach agents to suck eggs. They already know how to code, use git and load skills. Leave out how-tos, coding rules and anything in the skills or project instructions. Give only what they can't know.
+
 ## Phases
 
 1. Write: `writer` agents change code without building or testing.
@@ -39,6 +41,7 @@ Use `explore` for read-only questions and investigations.
 
 ## Review each report
 
+- Treat an agent's "done" as a claim. Read its diff before you report it.
 - Look for "simplified", "skipped", "not done", "for now" and stand-ins. Send those back unless the user agreed to them.
 - Undo anything the agent did that the user didn't agree to, like editing design docs or adding files outside the project.
-- Tell the user what changed, what's open and what they need to decide. Keep it short.
+- Tell the user what changed, what's open and what they need to decide.

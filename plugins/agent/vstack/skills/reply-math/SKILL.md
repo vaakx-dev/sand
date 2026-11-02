@@ -7,7 +7,7 @@ description: How to reply with maths, physics or other worked calculations. Load
 
 **Show the working the way you'd write it on paper.**
 
-- Give the answer first, then work down to it.
+- Under the answer, work down to it.
 - Let the equations carry the solution. Add a short sentence only where a step isn't obvious.
 - Don't break the working into bullet points. Use headings only to separate the parts of a question.
 - Write equations in LaTeX. The chat renders it.
