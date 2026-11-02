@@ -1,12 +1,7 @@
-import { pageLinkKeys, pairLink } from '@sand/devices-contract'
+import { pairLink } from '@sand/devices-contract'
 import type { Daemon } from '@sand/host-daemon/contract'
 import { openBrowser } from './browser'
-
-const pageUrl = (base: string, token: string) => {
-  const url = new URL(base)
-  url.hash = `${pageLinkKeys.pair}=${encodeURIComponent(token)}`
-  return url.href
-}
+import { pageUrl } from './page-url'
 
 export const launch = async (daemon: Daemon, safe: boolean) => {
   const { info, started } = await daemon.ensure({ safe })
