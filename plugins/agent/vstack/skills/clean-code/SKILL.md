@@ -39,7 +39,7 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 ## Names
 
 - Name things for what they are in the domain.
-- No prefixes or suffixes on folder, file or code names. The context around a name carries the rest: its folder, module, namespace or type. `enemies/body`, not `enemies/enemy_body` or `enemies/body_enemy`; `user.name`, not `user.userName`.
+- No prefixes or suffixes on folder, file or code names, unless a tool or language requires it. The context around a name carries the rest: its folder, module, namespace or type. `enemies/body`, not `enemies/enemy_body` or `enemies/body_enemy`; `user.name`, not `user.userName`.
 - If no honest name fits, the design is unclear. Fix the design first.
 
 ## Leave out
