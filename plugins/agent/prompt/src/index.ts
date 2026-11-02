@@ -13,12 +13,12 @@ export default definePlugin({
   inject: { paths, tools },
   config: z.object({ instructions: z.string().optional() }),
   apply(ctx, config) {
-    const written = createInstructions(ctx.tools, ctx.paths)
+    const written = createInstructions(ctx.tools, ctx.paths, config.instructions)
     const systemPrompt = async (session: Session) => {
       const stored = session.path().find(entry => entry.type === 'system')
       if (stored) return String(stored.data)
       const sections = await ctx.waterfall(promptSections, [], session)
-      const system = await compose(written, session, sections, ctx.get(modelSettings)?.effective(session).model, config.instructions)
+      const system = await compose(written, session, sections, ctx.get(modelSettings)?.effective(session).model)
       session.append('system', system)
       return system
     }

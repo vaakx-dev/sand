@@ -25,7 +25,8 @@ const project = async (root: string) => {
   return found.filter(Boolean).join('\n\n')
 }
 
-export const createInstructions = (tools: Tools, paths: Paths): Instructions => ({
+export const createInstructions = (tools: Tools, paths: Paths, additional?: string): Instructions => ({
   environment: (session, model) => environment(session.cwd, tools.notes(session), model),
   project: (cwd, projectName) => project(paths.projectFolder(cwd, projectName)),
+  additional,
 })

@@ -13,6 +13,7 @@ export const compose = async (definition: AgentDefinition, session: Session, sec
     definition.prompt && `# Your role\n\n${definition.prompt}`,
     sections?.environment(session, model),
     instructions && `# Project instructions\n\n${instructions}`,
+    sections?.additional && `# Additional instructions\n\n${sections.additional}`,
   ]
     .filter(Boolean)
     .join('\n\n')
