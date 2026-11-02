@@ -21,7 +21,7 @@ export default definePlugin({
   config: z.object({ paths: z.array(z.string()).default([]) }),
   async apply(ctx, config) {
     const { home } = ctx.paths
-    const roots = [join(import.meta.dir, '..', 'skills'), join(home, 'skills'), ...config.paths.map(path => expandHome(path, home))]
+    const roots = [join(home, 'skills'), ...config.paths.map(path => expandHome(path, home))]
     const contributed = new Map<string, Record<string, string>>()
     const changed = () => ctx.get(server)?.broadcast(skillsChange, undefined)
     const project = projectSkills(ctx, roots, changed)

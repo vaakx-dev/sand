@@ -11,6 +11,9 @@ Title it `type(scope): what is now true`.
 fix(auth): repeated failed logins pause sign-in
 ```
 
+- `scope` is the plugin or area the change is mainly in.
+- After the colon, start lowercase and say the result, not the work. Join two results with a semicolon.
+
 The title is usually enough. Add a body only for what the diff doesn't show, as `- ` bullets after a blank line.
 
 | Type | Meaning |

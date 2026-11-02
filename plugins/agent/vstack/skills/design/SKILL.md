@@ -12,6 +12,7 @@ Keep each screen focused on its main task. Open on useful content and controls.
 - Read the existing interface and any references the user named.
 - Name the audience, the main task and the content that matters most.
 - For visual changes, propose colors with values, type sizes and a layout sketch. Get agreement first.
+- A mockup or plan is an HTML page, not real code.
 
 ## Headings and copy
 
@@ -38,4 +39,3 @@ Keep each screen focused on its main task. Open on useful content and controls.
 - Look at the running interface at small and large sizes.
 - For each line under a heading, name the question it answers. Delete it if the heading already answers it.
 - Check loading, empty, error and disabled states, keyboard focus and contrast.
-- Say what you couldn't check.
