@@ -9,6 +9,7 @@ export interface ContextBuilder {
 export interface Instructions {
   environment(session: Session, model?: string): string
   project(cwd: string, project?: string | null): Promise<string>
+  additional: string | undefined
 }
 
 export const context = service<ContextBuilder>('context')
