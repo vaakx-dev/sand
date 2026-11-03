@@ -34,7 +34,7 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
     publisher.cancel(record)
     await store.save().catch(report)
     publisher.now(record)
-    if (setup.done) waiters.wake(pathKey(record.path))
+    if (setup.done || setup.failed) waiters.wake(pathKey(record.path))
   }
 
   const perform = async (record: WorktreeRecord, step: PlannedStep, signal: AbortSignal): Promise<StepOutcome> => {
@@ -108,10 +108,11 @@ export const createSetups = ({ store, shell, send, report }: SetupDeps) => {
       else if (again) await retry(record)
       return state(record.path)
     },
-    async ready(cwd: string, signal: AbortSignal) {
+    async ready(cwd: string, signal: AbortSignal, waiting: () => void) {
       await store.ready()
       const record = store.containing(cwd)
-      if (!record?.setup || record.setup.done) return
+      if (!record?.setup || record.setup.done || record.setup.failed) return
+      waiting()
       await waiters.wait(pathKey(record.path), signal)
     },
     async forget(path: string) {

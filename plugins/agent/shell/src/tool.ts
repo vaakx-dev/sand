@@ -13,6 +13,8 @@ export interface Limits {
 
 const stopGrace = 30_000
 
+export type ShellReady = (cwd: string, signal: AbortSignal, progress: (text: string) => void) => Promise<unknown>
+
 const minutes = (ms: number) => {
   const count = Math.round(ms / 6_000) / 10
   return `${count} minute${count === 1 ? '' : 's'}`
@@ -45,12 +47,15 @@ export const shellTool = (
   spec: Pick<Tool, 'name' | 'description' | 'environment'>,
   shell: Shell,
   limits: Limits,
+  ready: ShellReady,
 ): Tool<ReturnType<typeof inputOf>> => ({
   ...spec,
   description: `${spec.description} ${rules(limits)}`,
   input: inputOf(limits),
   timeoutMs: limits.limit_ms + stopGrace,
   async run({ command, silence_ms: silence = limits.silence_ms }, context) {
+    await ready(context.cwd, context.signal, context.progress)
+    context.signal.throwIfAborted()
     const timeouts = { silence, limit: limits.limit_ms }
     const tail = liveTail(context.progress)
     const { code, stopped, stdout, stderr } = await run(shell.argv(command), {
