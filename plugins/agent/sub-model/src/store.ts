@@ -10,11 +10,8 @@ const saved = z.object({
 export type Saved = z.output<typeof saved>
 
 const read = async (file: string): Promise<Saved> => {
-  try {
-    return saved.parse(await Bun.file(file).json())
-  } catch {
-    return { models: {}, skills: {} }
-  }
+  const found = Bun.file(file)
+  return saved.parse((await found.exists()) ? await found.json() : {})
 }
 
 export const put = <R, K extends keyof R>(record: R, key: K, value: R[K] | null): R => {

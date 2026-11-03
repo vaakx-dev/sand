@@ -1,8 +1,8 @@
 import type { Ask, AskRequest } from '@sand/ask/contract'
 import type { ModelSettings, SessionSettings } from '@sand/model/contract'
 import type { Skills } from '@sand/skills/contract'
-import type { Job, JobRequest, SubModel, SubModelState, Tier } from './contract'
-import type { Store } from './store'
+import type { ChosenModel, Job, JobRequest, SubModel, SubModelState, Tier } from './contract'
+import { put, type Saved, type Store } from './store'
 
 interface SubModelDeps {
   ask: Ask
@@ -18,6 +18,11 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
   const jobs = new Map<string, Job>()
   const state = (): SubModelState => ({ ...store.get(), jobs: [...jobs.values()] })
 
+  const save = async (next: Saved) => {
+    await store.save(next)
+    changed(state())
+  }
+
   const settings = (tier: Tier): SessionSettings => {
     const own = store.get().models[tier]
     if (own) return own
@@ -28,8 +33,9 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
   const skillBody = async (job: string, cwd: string | undefined) => {
     const name = store.get().skills[job]
     if (!name) return undefined
-    const found = await skills()?.list(cwd)
-    return found?.find(skill => skill.name === name)?.body
+    const found = (await skills()?.list(cwd))?.find(skill => skill.name === name)
+    if (!found) throw new Error(`The skill "${name}" picked for this job isn't available here. Pick another in Settings › Models.`)
+    return found.body
   }
 
   const askRequest = async ({ job, tier, cwd, ...request }: JobRequest): Promise<AskRequest> => {
@@ -55,5 +61,10 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
     json: async (request, schema) => ask.json(await askRequest(request), schema),
   }
 
-  return { service, state }
+  return {
+    service,
+    state,
+    choose: (tier: Tier, model: ChosenModel | null) => save({ ...store.get(), models: put(store.get().models, tier, model) }),
+    pick: (job: string, skill: string | null) => save({ ...store.get(), skills: put(store.get().skills, job, skill) }),
+  }
 }
