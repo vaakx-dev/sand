@@ -1,8 +1,8 @@
 import { ask } from '@sand/ask/contract'
-import { sessions } from '@sand/chats/contract'
+import { sessions, sessionUpdate } from '@sand/chats/contract'
 import { textOf } from '@sand/chats/prompt'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
-import { loop, turnStart } from '@sand/loop/contract'
+import { loop, turnPrompt, turnStart } from '@sand/loop/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { type Server, server } from '@sand/server/contract'
@@ -16,6 +16,7 @@ import { worktrees, worktreesChange, worktreesProgress } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
 import { nameOnFirstTurn } from './naming/name'
+import { createParking } from './park/park'
 import { createStore } from './records/store'
 import { serveWorktrees } from './requests'
 import { createSetups } from './setup/setups'
@@ -63,7 +64,10 @@ export default definePlugin({
     }
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
-    ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
+    ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish�')).catch(report))
+    const parking = createParking(deps)
+    ctx.on(sessionUpdate, parking.settled)
+    ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })
     ctx.on(turnStart, (session, prompt) => {
       if (session.kind !== 'thread') return
       nameOnFirstTurn(deps, session, textOf(prompt.content)).catch(error =>

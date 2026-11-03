@@ -29,6 +29,7 @@ const record = z.object({
   removed: z.number().optional(),
   temp: z.string().optional(),
   adopted: z.literal(true).optional(),
+  parked: z.literal(true).optional(),
   setup: setup.optional(),
 })
 
