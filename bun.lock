@@ -261,6 +261,7 @@
         "@sand/paths": "workspace:*",
         "@sand/prompt": "workspace:*",
         "@sand/steering": "workspace:*",
+        "@sand/sub-model": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
