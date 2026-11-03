@@ -1,16 +1,12 @@
-import { oneLine } from '@sand/util'
 import { retryLocked } from '@sand/util/fs'
-import { promptText } from './prompt'
+import { quickTitle } from './prompt'
 import { mkdirSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
 import type { Entry, Message, Session } from './contract'
 
-const titleLength = 48
-
 export const firstTitle = (session: Session, entry: Entry) => {
   if (session.kind === 'agent' || session.title !== '' || entry.type !== 'message') return undefined
-  const message = entry.data as Message
-  return message.role === 'user' ? oneLine(promptText(message), titleLength) || undefined : undefined
+  return quickTitle(entry.data as Message) || undefined
 }
 
 export const quickTasks = (scratch: (id: string) => string) => ({
