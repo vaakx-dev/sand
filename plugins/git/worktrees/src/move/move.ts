@@ -66,6 +66,7 @@ export const moveThread = async (deps: WorktreeDeps, request: MoveRequest): Prom
     if (record.setup) record.setup.session = session.id
   }
   await deps.setups.start(record)
+  deps.proposals.offer(record).catch(deps.report)
   await deps.changed(local.main, local.root, record.path)
   if (stuck) throw new Error(`The worktree is ready at ${record.path}${carried ? ' with your changes' : ''}, but the thread couldn't move there: ${stuck}`)
   return infoOf(deps.sessions.require(session.id))

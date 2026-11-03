@@ -1,6 +1,6 @@
 import type { StepState } from '@sand/ui-kit/contract'
 import type { SetupState, SetupStep, WorktreeSetup } from '@sand/worktrees/contract'
-import { derive, div, dynamicChild, effect, show, sig, span } from '@vaakx-dev/vrui'
+import { type Child, derive, div, dynamicChild, effect, show, sig, span } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { phaseOf, type SetupModel, type SetupPhase } from './follow'
 
@@ -14,6 +14,8 @@ const tail = (output: string) => output.trimEnd().split('\n').slice(-tailLines).
 
 const focusStep = (setup: WorktreeSetup | undefined) =>
   setup?.steps.find(step => step.state === 'fail') ?? setup?.steps.find(step => step.state === 'run')
+
+export const cardFrame = (...children: Child[]) => div({ class: 'flex w-80 max-w-full flex-col px-2 py-1' }, ...children)
 
 export const setupCard = (ctx: WorkspaceContext, model: SetupModel) => () => {
   const { kit } = ctx
@@ -56,8 +58,7 @@ export const setupCard = (ctx: WorkspaceContext, model: SetupModel) => () => {
       kit.quietButton({ size: 'sm', onClick: () => void model.skip() }, 'Continue anyway'),
     )
 
-  return div(
-    { class: 'flex w-80 max-w-full flex-col px-2 py-1' },
+  return cardFrame(
     kit.plainButton(
       {
         class: 'flex min-w-0 items-center gap-1.5 text-neutral-400 hover:text-neutral-100',

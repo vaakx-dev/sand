@@ -4,21 +4,13 @@ import type { WorktreeSetup } from '@sand/worktrees/contract'
 import { collectScope, derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import { toastId } from '../toast'
-import { inFolder } from '../worktrees/find'
+import { sameWatch, type Watched, watchedThread, watches } from './watched'
 
 export type SetupPhase = 'running' | 'failed' | 'ready'
-
-interface Watched {
-  id: string
-  cwd: string
-  device: string
-}
 
 const readyMs = 2500
 
 const isReady = (setup: WorktreeSetup) => setup.done && !setup.failed
-
-const sameWatch = (a: Watched | undefined, b: Watched | undefined) => a?.id === b?.id && a?.cwd === b?.cwd && a?.device === b?.device
 
 export const phaseOf = (setup: WorktreeSetup): SetupPhase => (setup.failed ? 'failed' : setup.done ? 'ready' : 'running')
 
@@ -42,12 +34,8 @@ export const followSetup = (ctx: WorkspaceContext) => {
     hide = collectScope(() => onTimeout(() => setup.set(undefined), readyMs)).value
   }
 
-  const matches = (next: WorktreeSetup, device: string) =>
-    Boolean(watched && device === watched.device && (next.session === watched.id || inFolder(watched.cwd, next.path)))
-
   const sync = () => {
-    const chat = ctx.threads.current()
-    const next = chat && chat.info.kind !== 'quick' ? { id: chat.id, cwd: chat.info.cwd, device: chat.device } : undefined
+    const next = watchedThread(ctx)
     if (sameWatch(next, watched)) return
     watched = next
     ticket++
@@ -79,7 +67,7 @@ export const followSetup = (ctx: WorkspaceContext) => {
   ctx.on(threadChange, sync)
   ctx.on(pcHello, sync)
   const hear = (next: WorktreeSetup, device: string) => {
-    if (!matches(next, device)) return
+    if (!watches(watched, next, device)) return
     heard = ticket
     accept(next)
   }
