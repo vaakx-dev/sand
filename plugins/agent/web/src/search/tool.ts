@@ -24,7 +24,8 @@ export const searchTool = (exaApiKey?: string): Tool<typeof input> => {
     parallel: true,
     input,
     async run({ query, count }, { signal }) {
-      return (await search(chain, query, count, signal)).slice(0, count).map(hitText).join('\n\n')
+      const hits = (await search(chain, { text: query, count }, signal)).slice(0, count)
+      return hits.length ? hits.map(hitText).join('\n\n') : 'No results'
     },
   }
 }

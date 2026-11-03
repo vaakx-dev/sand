@@ -4,4 +4,14 @@ export interface Hit {
   snippet: string
 }
 
-export type Provider = (query: string, count: number, signal: AbortSignal) => Promise<Hit[]>
+export interface Query {
+  text: string
+  count: number
+}
+
+export interface Provider {
+  name: string
+  find: (query: Query, signal: AbortSignal) => Promise<Hit[]>
+}
+
+export class Fatal extends Error {}

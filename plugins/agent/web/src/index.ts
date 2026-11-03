@@ -16,8 +16,9 @@ export default definePlugin({
   description: 'web_search (Exa, then DuckDuckGo) and web_fetch (pages as markdown) tools',
   inject: { tools, sandConfig },
   apply(ctx) {
-    const { exa_api_key } = schema.parse(ctx.sandConfig.section('web') ?? {})
+    const settings = schema.safeParse(ctx.sandConfig.section('web') ?? {})
+    if (!settings.success) ctx.report(new Error(`${ctx.sandConfig.path} [web]: ${z.prettifyError(settings.error)}; searching without an Exa key`))
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Web', summary: 'search the web and read pages as markdown', load: 'always' }))
-    for (const tool of [searchTool(exa_api_key), fetchTool()]) ctx.effect(() => ctx.tools.register({ ...tool, group }))
+    for (const tool of [searchTool(settings.data?.exa_api_key), fetchTool()]) ctx.effect(() => ctx.tools.register({ ...tool, group }))
   },
 })
