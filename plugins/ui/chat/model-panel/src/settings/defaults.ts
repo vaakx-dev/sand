@@ -17,5 +17,6 @@ export const defaultsSection = (page: Page) => {
   return settingsSection(
     { title: 'Defaults' },
     settingsRow({ title: 'Model' }, page.ctx.modelPicker.button(defaultsTarget(page), 'Default model')),
+    page.slots.host(),
   )
 }

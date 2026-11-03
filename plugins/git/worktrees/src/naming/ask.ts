@@ -1,4 +1,5 @@
-import type { Ask } from '@sand/ask/contract'
+import type { Session } from '@sand/chats/contract'
+import type { SubModel } from '@sand/sub-model/contract'
 import { z } from 'zod'
 import { slugOf } from './slug'
 
@@ -8,9 +9,11 @@ const system = `You name git branches. Given the task a developer is starting, r
 
 const named = z.object({ branch: z.string().min(1) })
 
-export const askBranchName = async (ask: Ask, session: string, title: string, prompt: string) => {
-  const task = [title && `Thread title: ${title}`, `Task:\n${prompt.slice(0, mostPromptChars)}`].filter(Boolean).join('\n\n')
-  const { branch } = await ask.json({ system, prompt: task, session }, named)
+export const branchJob = { id: 'branch-name', label: 'Branch names' }
+
+export const askBranchName = async (sub: SubModel, session: Session, prompt: string) => {
+  const task = [session.title && `Thread title: ${session.title}`, `Task:\n${prompt.slice(0, mostPromptChars)}`].filter(Boolean).join('\n\n')
+  const { branch } = await sub.json({ job: branchJob.id, tier: 'fast', system, prompt: task, cwd: session.cwd, session: session.id }, named)
   const slug = slugOf(branch)
   if (!slug) throw new Error(`the suggested name "${branch}" has no letters or digits`)
   return slug

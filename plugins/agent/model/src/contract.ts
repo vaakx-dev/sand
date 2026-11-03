@@ -61,11 +61,11 @@ export const helloLevels = helloField<EffortLevel[]>('levels')
 
 const effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
 const speed = z.enum(['normal', 'fast'])
-const settings = z.object({ model: z.string().optional(), effort: effort.optional(), speed: speed.optional() })
+export const sessionSettings = z.object({ model: z.string().optional(), effort: effort.optional(), speed: speed.optional() })
 const patch = z.object({ model: z.string().nullish(), effort: effort.nullish(), speed: speed.nullish() })
 
 export const settingsGet = request('settings.get', {
-  input: z.object({ session: z.string().optional(), settings: settings.optional() }),
+  input: z.object({ session: z.string().optional(), settings: sessionSettings.optional() }),
   output: type<SettingsState>(),
   place: 'thread',
 })

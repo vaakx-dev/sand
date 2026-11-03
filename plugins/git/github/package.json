@@ -17,11 +17,11 @@
     "summary": "Signs in to GitHub and keeps pull requests up to date"
   },
   "dependencies": {
-    "@sand/ask": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
+    "@sand/sub-model": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

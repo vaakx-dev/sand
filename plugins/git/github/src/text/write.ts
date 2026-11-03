@@ -1,5 +1,5 @@
-import type { Ask } from '@sand/ask/contract'
 import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { SubModel } from '@sand/sub-model/contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { z } from 'zod'
 import { GitHubError, sentence } from '../api/errors'
@@ -18,16 +18,18 @@ export interface TextRequest {
 export interface TextDeps {
   git: GitRunner
   repos: GitRepo
-  ask(): Ask | undefined
+  sub(): SubModel | undefined
 }
+
+export const pullTextJob = { id: 'pull-text', label: 'Pull request text' }
 
 const written = z.object({ title: z.string().min(1), body: z.string() })
 
 const cannotWrite = (why: string) => new GitHubError(sentence(`Couldn't write the pull request text: ${why.replace(/\.$/, '')}; write it yourself`))
 
-export const writePullText = async ({ git, repos, ask }: TextDeps, request: TextRequest): Promise<PullText> => {
-  const model = ask()
-  if (!model) throw cannotWrite('no model is available')
+export const writePullText = async ({ git, repos, sub }: TextDeps, request: TextRequest): Promise<PullText> => {
+  const subModel = sub()
+  if (!subModel) throw cannotWrite('no model is available')
   const local = await repos.local(request.cwd)
   if (!local.repo) throw cannotWrite("this folder isn't a git repository")
   if (local.detached || !local.branch) throw cannotWrite('no branch is checked out')
@@ -38,7 +40,17 @@ export const writePullText = async ({ git, repos, ask }: TextDeps, request: Text
   const [changes, template] = await Promise.all([readChanges(git, local.root, ref), readTemplate(local.root)])
   if (!changes.commits.trim()) throw cannotWrite(`${local.branch} has no commits that aren't on ${base}`)
   try {
-    const reply = await model.json({ system: textSystem, prompt: textPrompt(local.branch, base, changes, template), ...(request.session ? { session: request.session } : {}) }, written)
+    const reply = await subModel.json(
+      {
+        job: pullTextJob.id,
+        tier: 'fast',
+        system: textSystem,
+        prompt: textPrompt(local.branch, base, changes, template),
+        cwd: local.root,
+        ...(request.session ? { session: request.session } : {}),
+      },
+      written,
+    )
     return { title: oneLine(reply.title), body: reply.body.trim() }
   } catch (error) {
     throw cannotWrite(errorMessage(error))

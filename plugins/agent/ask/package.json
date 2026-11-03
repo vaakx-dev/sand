@@ -1,7 +1,7 @@
 {
   "name": "@sand/ask",
   "version": "0.0.0",
-  "description": "Short one-shot model calls for other plugins, such as commit messages and branch names, as plain text or checked JSON",
+  "description": "Short one-shot calls to a given model, as plain text or checked JSON",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -16,7 +16,6 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/model": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

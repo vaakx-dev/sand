@@ -14,7 +14,6 @@
     "summary": "Lets a thread work in its own folder and branch"
   },
   "dependencies": {
-    "@sand/ask": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
@@ -25,6 +24,7 @@
     "@sand/project": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/shell": "workspace:*",
+    "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
