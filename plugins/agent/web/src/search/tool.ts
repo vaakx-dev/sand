@@ -1,9 +1,9 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { timeoutMs } from '../http'
-import { duckDuckGo, type Hit } from './duckduckgo'
+import type { Hit } from './hit'
+import { providers, search } from './providers'
 
-const snippetLength = 600
+const snippetLength = 200
 
 const input = z.object({
   query: z.string().min(1).describe('What to search for, in a few specific words'),
@@ -15,14 +15,16 @@ const snippetOf = (text: string) => (text.length > snippetLength ? `${text.slice
 const hitText = ({ title, url, snippet }: Hit, index: number) =>
   [`${index + 1}. ${title || url}`, `   ${url}`, snippet && `   ${snippetOf(snippet)}`].filter(Boolean).join('\n')
 
-export const searchTool: Tool<typeof input> = {
-  name: 'web_search',
-  description:
-    'Search the web with DuckDuckGo. Returns numbered results with title, URL and a snippet. site:example.com limits results to one domain. Snippets can be partial or stale, so read the pages that matter with web_fetch.',
-  parallel: true,
-  input,
-  async run({ query, count }, { signal }) {
-    const hits = await duckDuckGo(query, AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]))
-    return hits.length ? hits.slice(0, count).map(hitText).join('\n\n') : 'No results'
-  },
+export const searchTool = (exaApiKey?: string): Tool<typeof input> => {
+  const chain = providers(exaApiKey)
+  return {
+    name: 'web_search',
+    description:
+      'Search the web. Returns numbered results with title, URL and a short snippet. Snippets are only a hint, so read the pages that matter with web_fetch.',
+    parallel: true,
+    input,
+    async run({ query, count }, { signal }) {
+      return (await search(chain, query, count, signal)).slice(0, count).map(hitText).join('\n\n')
+    },
+  }
 }
