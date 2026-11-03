@@ -15,6 +15,7 @@
     "@sand/git-control": "workspace:*",
     "@sand/git-pulls": "workspace:*",
     "@sand/keys": "workspace:*",
+    "@sand/layout": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/settings": "workspace:*",

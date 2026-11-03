@@ -8,7 +8,7 @@ import { skills } from '@sand/skills/contract'
 import { steering } from '@sand/steering/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers, keyedSerial } from '@sand/util'
-import { worktrees } from '@sand/worktrees/contract'
+import { worktreePulls, worktrees } from '@sand/worktrees/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { createLinkBook } from './book/book'
@@ -18,6 +18,7 @@ import { linkCreatedInShell } from './created/link'
 import { createDiscovery } from './discover/discovery'
 import { createBranchFollow } from './discover/follow'
 import { createThreadLinks } from './links/links'
+import { primaryPull } from './links/primary'
 import { type OpenDeps, openPull } from './open/open'
 import { createOnceReport } from './report/once'
 import { servePullLinks } from './requests'
@@ -101,6 +102,7 @@ export default definePlugin({
       failures.clear()
     })
     ctx.provide(pullLinksService, { links: links.view, link: links.link, open: request => openPull(open, request) })
+    ctx.provide(worktreePulls, { primary: ids => primaryPull(ctx.sessions, links, ids) })
 
     ctx.on(sessionCarry, types => [...types, linksEntry])
     ctx.on(turnEnd, session => {

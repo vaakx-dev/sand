@@ -1,7 +1,10 @@
 import type { SessionInfo } from '@sand/chats/contract'
+import type { PullState } from '@sand/github/contract'
 import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
+
+export { unsaved } from './status/unsaved'
 
 export type WorkspaceKind = 'checkout' | 'worktree'
 
@@ -49,6 +52,27 @@ export interface RemoveCheck {
 }
 
 export type RemoveResult = { removed: true } | { removed: false; check: RemoveCheck; message: string }
+
+export interface WorktreePull {
+  number: number
+  state: PullState
+}
+
+export interface WorktreePulls {
+  primary(sessions: string[]): Promise<WorktreePull | undefined>
+}
+
+export const worktreePulls = service<WorktreePulls>('worktreePulls')
+
+export interface WorktreeStatus {
+  path: string
+  main: string
+  branch?: string
+  base?: string
+  ahead?: number
+  check: RemoveCheck
+  pull?: WorktreePull
+}
 
 const cwd = z.string()
 const kind = z.enum(['checkout', 'worktree'])
@@ -108,6 +132,10 @@ export const worktreesGlobal = request('worktrees.global', {
   output: type<GlobalDefault>(),
 })
 
+export const worktreesStatus = request('worktrees.status', { input: z.object({}), output: type<WorktreeStatus[]>(), place: 'thread' })
+
+export const worktreesSizes = request('worktrees.sizes', { input: z.object({}), output: type<Record<string, number>>(), place: 'thread' })
+
 export const worktreesProgress = wireEvent<WorktreeSetup>('worktrees.progress')
 export const worktreesChange = wireEvent<{ main: string }>('worktrees.change')
 
@@ -120,6 +148,8 @@ export interface WorktreesClient {
   setup(input: InputOf<typeof worktreesSetup>, device: string): Promise<WorktreeSetup | null>
   defaults(input: InputOf<typeof worktreesDefaults>, device: string): Promise<WorkspaceDefaults>
   global(input: InputOf<typeof worktreesGlobal>): Promise<GlobalDefault>
+  status(device: string): Promise<WorktreeStatus[]>
+  sizes(device: string): Promise<Record<string, number>>
   onProgress(listener: (setup: WorktreeSetup, device: string) => void): Dispose
   onChange(listener: (change: { main: string }, device: string) => void): Dispose
 }
