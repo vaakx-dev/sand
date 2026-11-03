@@ -35,6 +35,14 @@ export const createThreadLinks = (deps: LinkDeps) => {
     if (after !== before) deps.book.write(found, after)
   }
 
+  const writes = new Map<string, number>()
+
+  const withEnd = (id: string, pull: PullRef, ended: number | undefined) => (links: StoredLinks) => {
+    const next = withEnded(links, pull, ended)
+    const wrote = writes.get(id) ?? 0
+    return ended !== undefined && wrote > ended ? withEngaged(next, wrote) : next
+  }
+
   const linking = (pull: PullRef) => deps.book.threads().filter(id => findLink(deps.book.read(id), pull))
 
   const edited = (id: string, edit: (links: StoredLinks) => StoredLinks) => {
@@ -83,10 +91,15 @@ export const createThreadLinks = (deps: LinkDeps) => {
     recordEnd(pull: PullRef, ended: number | undefined) {
       for (const id of linking(pull)) {
         const found = deps.sessions.open(id)
-        if (found) changeUnseen(found, links => withEnded(links, pull, ended))
+        if (found) changeUnseen(found, withEnd(id, pull, ended))
       }
     },
     engage: (found: Session, at: number) => changeUnseen(found, links => withEngaged(links, at)),
+    wrote(found: Session, at: number) {
+      writes.set(found.id, at)
+      changeUnseen(found, links => withEngaged(links, at))
+    },
+    forget: (id: string) => void writes.delete(id),
     mark: (found: Session, pull: PullRef, mark: WatchMark, quiet: number, keepWatching: boolean) =>
       change(found, links => withMark(links, pull, mark, quiet, keepWatching)),
   }

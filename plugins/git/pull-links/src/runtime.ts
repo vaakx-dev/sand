@@ -120,11 +120,12 @@ export default definePlugin({
     })
     ctx.on(userWrote, session => {
       const thread = links.thread(session.id)
-      if (thread.kind === 'thread') links.engage(thread, Date.now())
+      if (thread.kind === 'thread') links.wrote(thread, Date.now())
     })
     ctx.on(sessionRemove, id => {
       viewed.end(id)
       book.forget(id)
+      links.forget(id)
       discovery.forget(id)
     })
     ctx.on(pullChanged, summary => {
