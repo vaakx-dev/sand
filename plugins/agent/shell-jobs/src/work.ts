@@ -15,7 +15,7 @@ const lastLine = (text: string) =>
 export const commandWork =
   (ctx: Context, runner: ShellRunner, command: string, cwd: string, output: OutputTail): JobWork =>
   async (signal, job) => {
-    await ctx.waterfall(shellReady, cwd, signal, () => {})
+    await ctx.waterfall(shellReady, cwd, signal, text => ctx.emit(jobNote, { id: job.id, label: job.label, text }))
     signal.throwIfAborted()
     let timer: Timer | undefined
     const note = () => {

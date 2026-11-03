@@ -64,7 +64,7 @@ export default definePlugin({
     }
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
-    ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish�')).catch(report))
+    ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
     const parking = createParking(deps)
     ctx.on(sessionSettle, parking.settled)
     ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })

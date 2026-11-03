@@ -23,7 +23,7 @@ const parkNow = async (deps: WorktreeDeps, session: Session) => {
 }
 
 const parkedFor = (deps: WorktreeDeps, session: Session) =>
-  deps.store.all().find(record => record.parked && record.removed && record.sessions.includes(session.id) && waitingThreads(deps, record).includes(session.id))
+  deps.store.all().find(record => record.parked && record.removed && waitingThreads(deps, record).includes(session.id))
 
 const resumeNow = async (deps: WorktreeDeps, session: Session) => {
   await deps.store.ready()
