@@ -289,6 +289,18 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/thread-titles": {
+      "name": "@sand/thread-titles",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/loop": "workspace:*",
+        "@sand/sub-model": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/agent/tools": {
       "name": "@sand/tools",
       "version": "0.0.0",
@@ -1937,6 +1949,8 @@
     "@sand/sub-model": ["@sand/sub-model@workspace:plugins/agent/sub-model"],
 
     "@sand/subagents": ["@sand/subagents@workspace:plugins/agent/subagents"],
+
+    "@sand/thread-titles": ["@sand/thread-titles@workspace:plugins/agent/thread-titles"],
 
     "@sand/toasts": ["@sand/toasts@workspace:plugins/ui/shared/toasts"],
 
