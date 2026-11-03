@@ -1,4 +1,4 @@
-import type { JobState, JobStatus } from '@sand/jobs/contract'
+import type { WireJob, JobStatus } from '@sand/jobs/contract'
 import type { Thread } from '@sand/web-client/contract'
 import { inputText, type Calls } from './calls'
 import type { ModelOf } from './models'
@@ -19,14 +19,14 @@ export interface Run {
 }
 
 export interface RunSources {
-  jobs: JobState[]
+  jobs: WireJob[]
   agents: Thread[]
   calls: Calls
   modelOf: ModelOf
 }
 
-const splitLabel = ({ kind, label }: JobState) => {
-  const at = label.indexOf(': ')
+const splitLabel = ({ kind, label }: WireJob) => {
+  const at = kind === 'agent' ? label.indexOf(': ') : -1
   return at > 0 ? { name: label.slice(0, at), task: label.slice(at + 2) } : { name: kind, task: label }
 }
 
@@ -42,7 +42,7 @@ const agentPart = (agent: Thread, running: boolean, modelOf: ModelOf) => ({
   step: running ? currentStep(agent) : undefined,
 })
 
-const jobRun = (job: JobState, agent: Thread | undefined, modelOf: ModelOf): Run => {
+const jobRun = (job: WireJob, agent: Thread | undefined, modelOf: ModelOf): Run => {
   const { name, task } = splitLabel(job)
   return {
     id: job.id,
@@ -52,6 +52,7 @@ const jobRun = (job: JobState, agent: Thread | undefined, modelOf: ModelOf): Run
     started: job.started,
     ...(job.ended && { ended: job.ended }),
     job: job.id,
+    ...(job.note && job.status === 'running' && { step: job.note }),
     ...(agent && agentPart(agent, job.status === 'running', modelOf)),
   }
 }

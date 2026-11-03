@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import { sessionRemove, type Session } from '@sand/chats/contract'
 import { turnEnd } from '@sand/loop/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { JobsContext } from './context'
@@ -38,7 +38,15 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
 
   ctx.on(turnEnd, (session, result) => {
     if (result.stopReason !== 'interrupted') return
-    for (const { job } of entries.values()) if (job.parent === session.id) stop(job)
+    for (const { job } of entries.values()) if (job.parent === session.id && job.kind === 'agent') stop(job)
+  })
+
+  ctx.on(sessionRemove, id => {
+    for (const { job } of entries.values()) {
+      if (job.parent !== id) continue
+      stop(job)
+      entries.delete(job.id)
+    }
   })
 
   const prune = () => {
@@ -60,7 +68,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
   const launch = (entry: Entry, work: JobWork) => {
     const { job, spec } = entry
     const controller = new AbortController()
-    const release = ctx.busy()
+    const release = job.kind === 'agent' ? ctx.busy() : () => {}
     job.status = 'running'
     job.cancel = () => controller.abort()
     delete job.ended

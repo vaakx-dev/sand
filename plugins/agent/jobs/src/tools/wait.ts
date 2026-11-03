@@ -11,10 +11,12 @@ import type { Entry, Store } from '../store'
 import { group, jobLine } from './line'
 
 const defaultTimeout = 600_000
+const maxTimeout = 1_800_000
+const settleGrace = 30_000
 
 const input = z.object({
   jobs: z.array(z.string()).min(1).describe('Job ids to wait for'),
-  timeout_ms: z.number().int().positive().optional().describe(`Give up waiting after this long (default ${defaultTimeout})`),
+  timeout_ms: z.number().int().positive().max(maxTimeout).optional().describe(`Give up waiting after this long (default ${defaultTimeout}, max ${maxTimeout})`),
 })
 
 const allDone = 'All finished.'
@@ -49,9 +51,10 @@ const settle = (ctx: JobsContext, delivery: Delivery, entries: Entry[], session:
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    'Wait for background agents to finish and get their results. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.',
+    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.",
   group,
   input,
+  timeoutMs: maxTimeout + settleGrace,
   async run({ jobs, timeout_ms = defaultTimeout }, { session, signal }) {
     const entries = jobs.map(id => store.own(session, id))
     const reason = await settle(ctx, delivery, entries, session, timeout_ms, signal)

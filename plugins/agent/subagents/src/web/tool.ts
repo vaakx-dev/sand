@@ -1,5 +1,5 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
-import type { JobState } from '@sand/jobs/contract'
+import type { WireJob } from '@sand/jobs/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration, oneLine } from '@sand/util'
@@ -11,7 +11,7 @@ const firstSentence = (text: string) => oneLine(/^[^\n]*?[.!?](?=\s|$)/.exec(tex
 export const subAgentOf = (chats: Threads | undefined, thread: string, call: string) => chats?.children(thread).find(chat => chat.info.origin === call)
 
 export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined): ToolRenderer => {
-  const outcomes: Record<JobState['status'], ToolBadge | undefined> = {
+  const outcomes: Record<WireJob['status'], ToolBadge | undefined> = {
     running: undefined,
     done: undefined,
     failed: { text: kit.statusLabel('failed'), tone: 'danger' },
@@ -25,7 +25,7 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
 
   const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)
 
-  const stop = (job: JobState): NavAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
+  const stop = (job: WireJob): NavAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
 
   const open = (tool: ToolView): NavAction[] => {
     const chat = subAgentOf(chats(), tool.thread, tool.call.id)

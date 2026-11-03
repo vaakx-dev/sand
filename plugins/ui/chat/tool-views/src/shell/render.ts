@@ -3,11 +3,11 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 
 const shownLines = 400
-const trailer = /\n?\[exit code (-?\d+)(, timed out)?\]\s*$/
+const trailer = /\n?\[exit code (-?\d+)(?:, stopped: ([^\]]+))?\]\s*$/
 
 const parse = (text: string) => {
   const found = trailer.exec(text)
-  return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, timedOut: Boolean(found?.[2]) }
+  return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, stopped: found?.[2] }
 }
 
 export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, outputText, resultText, truncatedNote }: ToolViews): ToolRenderer => {
@@ -26,15 +26,15 @@ export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, ou
     badge(tool): ToolBadge | undefined {
       if (!tool.result) return undefined
       if (tool.result.isError) return { text: statusLabel('failed'), tone: 'danger' }
-      const { code, timedOut } = parse(resultText(tool.result))
-      if (timedOut) return { text: 'Timed out', tone: 'danger' }
+      const { code, stopped } = parse(resultText(tool.result))
+      if (stopped) return { text: 'Stopped', tone: 'danger' }
       return code === undefined || code === 0 ? undefined : { text: `Exit ${code}`, tone: 'danger' }
     },
     copy: command,
     body(tool) {
       if (!tool.result) return multiline(tool) || undefined
       if (tool.result.isError) return div(multiline(tool), errorBody(tool))
-      const { output } = parse(resultText(tool.result))
+      const { output, stopped } = parse(resultText(tool.result))
       const lines = output.split('\n')
       const hidden = Math.max(0, lines.length - shownLines)
       const shown = lines.slice(hidden).join('\n') || 'No output'
@@ -42,6 +42,7 @@ export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, ou
         multiline(tool),
         hidden > 0 && truncatedNote(hidden, 'before'),
         fold({ lines: lines.length - hidden, chars: shown.length }, outputText(shown, false)),
+        stopped && div({ class: 'mt-1 text-xs text-neutral-500' }, `Stopped: ${stopped}`),
       )
     },
   }

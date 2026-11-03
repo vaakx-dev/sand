@@ -1,16 +1,41 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import type { Shell } from './detect'
-import { run } from './run'
-
-const input = z.object({
-  command: z.string().describe('Command to run'),
-  timeout_ms: z.number().int().positive().optional().describe('Kill the command after this many milliseconds'),
-})
+import { liveTail } from './live'
+import { agentEnv } from './process'
+import { run, type Stop, type Timeouts } from './run'
 
 export interface Limits {
-  timeout_ms: number
+  silence_ms: number
+  limit_ms: number
   max_output: number
+}
+
+const stopGrace = 30_000
+
+const minutes = (ms: number) => {
+  const count = Math.round(ms / 6_000) / 10
+  return `${count} minute${count === 1 ? '' : 's'}`
+}
+
+const inputOf = ({ silence_ms, limit_ms }: Limits) =>
+  z.object({
+    command: z.string().describe('Command to run'),
+    silence_ms: z
+      .number()
+      .int()
+      .positive()
+      .max(limit_ms)
+      .optional()
+      .describe(`Stop the command after this many milliseconds without new output (default ${silence_ms}). Raise it for commands you know are quiet.`),
+  })
+
+const rules = ({ silence_ms, limit_ms }: Limits) =>
+  `A command is stopped after ${minutes(silence_ms)} without new output and after ${minutes(limit_ms)} in any case. Commands get no input and run with CI=1, so prompts fail instead of waiting.`
+
+const stopReasons: Record<Stop, (timeouts: Timeouts) => string> = {
+  silence: ({ silence }) => `no output for ${minutes(silence)}`,
+  limit: ({ limit }) => `still running after ${minutes(limit)}`,
 }
 
 const truncate = (text: string, max: number) =>
@@ -19,14 +44,26 @@ const truncate = (text: string, max: number) =>
 export const shellTool = (
   spec: Pick<Tool, 'name' | 'description' | 'environment'>,
   shell: Shell,
-  { timeout_ms: timeout, max_output: maxOutput }: Limits,
-): Tool<typeof input> => ({
+  limits: Limits,
+): Tool<ReturnType<typeof inputOf>> => ({
   ...spec,
-  input,
-  async run({ command, timeout_ms = timeout }, context) {
-    const options = { cwd: context.cwd, verbatim: shell.verbatim }
-    const { code, timedOut, stdout, stderr } = await run(shell.argv(command), { ...options, signal: context.signal, timeout: timeout_ms })
-    const output = truncate([stdout, stderr].filter(Boolean).join('\n').trimEnd(), maxOutput)
-    return `${output || '(no output)'}\n[exit code ${code}${timedOut ? ', timed out' : ''}]`
+  description: `${spec.description} ${rules(limits)}`,
+  input: inputOf(limits),
+  timeoutMs: limits.limit_ms + stopGrace,
+  async run({ command, silence_ms: silence = limits.silence_ms }, context) {
+    const timeouts = { silence, limit: limits.limit_ms }
+    const tail = liveTail(context.progress)
+    const { code, stopped, stdout, stderr } = await run(shell.argv(command), {
+      ...timeouts,
+      cwd: context.cwd,
+      verbatim: shell.verbatim,
+      env: agentEnv,
+      signal: context.signal,
+      onText: tail.add,
+    })
+    tail.stop()
+    const output = truncate([stdout, stderr].filter(Boolean).join('\n').trimEnd(), limits.max_output)
+    const reason = stopped ? `, stopped: ${stopReasons[stopped](timeouts)}` : ''
+    return `${output || '(no output)'}\n[exit code ${code}${reason}]`
   },
 })

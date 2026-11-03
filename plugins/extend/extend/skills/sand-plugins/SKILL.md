@@ -33,6 +33,7 @@ export default definePlugin({
 })
 ```
 
+- A tool call is stopped after 2 minutes, and its `signal` aborted. A tool that needs longer sets `timeoutMs`.
 - Services, events and wire requests are tokens. Each built-in plugin exports its tokens and types from `@sand/<name>/contract`; read `{{plugins}}/<area>/<name>/src/contract.ts` (or `contract/index.ts`) for exact signatures.
 - Import only `drydock`, `zod`, `@sand/<name>/contract` modules and `node:`/`bun:` built-ins.
 - `inject` maps names to required service tokens; the plugin starts once they exist and restarts when they change. Read optional ones with `ctx.get(token)` or follow them with `ctx.watch(token, service => cleanup)`.
