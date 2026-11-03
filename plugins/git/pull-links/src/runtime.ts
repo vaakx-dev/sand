@@ -1,8 +1,9 @@
 import { sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
+import { cli } from '@sand/config/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
 import { loop, sessionOpened, toolResult, turnEnd } from '@sand/loop/contract'
-import { type Server, server, sessionCarry } from '@sand/server/contract'
+import { type Server, server, sessionCarry, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { steering } from '@sand/steering/contract'
 import { tools } from '@sand/tools/contract'
@@ -20,6 +21,9 @@ import { createThreadLinks } from './links/links'
 import { type OpenDeps, openPull } from './open/open'
 import { createOnceReport } from './report/once'
 import { servePullLinks } from './requests'
+import { isRunning } from './settle/running'
+import { type AutoSettleDeps, startAutoSettle } from './settle/settle'
+import { loadSettleSetting } from './settle/setting'
 import { followStacks } from './stack/follow'
 import { createSweep } from './sweep/sweep'
 import { createViewed } from './sweep/viewed'
@@ -31,8 +35,8 @@ const skillDir = join(import.meta.dir, '..', 'skills', 'babysit-pr')
 export default definePlugin({
   name: 'pull-links',
   description: "Links pull requests to threads, finds the thread branch's pull request, keeps linked ones fresh, wakes the agent when a watched one changes and opens a pull request as a thread",
-  inject: { github, sessions, gitRepo, gitRunner },
-  apply(ctx) {
+  inject: { github, sessions, gitRepo, gitRunner, cli },
+  async apply(ctx) {
     let live: Server | undefined
     const report = (error: unknown) => ctx.report(error)
     const failures = createOnceReport(report)
@@ -65,6 +69,17 @@ export default definePlugin({
       failures,
       hold: () => ctx.busy(),
     })
+    const setting = await loadSettleSetting(ctx.cli.home)
+    const settleDeps: AutoSettleDeps = {
+      github: ctx.github,
+      sessions: ctx.sessions,
+      book,
+      links,
+      setting,
+      failures,
+      running: thread => isRunning(ctx.sessions, ctx.get(loop), thread),
+      hold: () => ctx.busy(),
+    }
     const open: OpenDeps = {
       github: ctx.github,
       git: ctx.gitRunner,
@@ -100,14 +115,21 @@ export default definePlugin({
     ctx.on(sessionUpdate, session => {
       if (session.settled === null) return
       links.stopWatching(session)
+      links.engage(session, session.settled)
       discovery.forget(session.id)
+    })
+    ctx.on(userWrote, session => {
+      const thread = links.thread(session.id)
+      if (thread.kind === 'thread') links.wrote(thread, Date.now())
     })
     ctx.on(sessionRemove, id => {
       viewed.end(id)
       book.forget(id)
+      links.forget(id)
       discovery.forget(id)
     })
     ctx.on(pullChanged, summary => {
+      links.recordEnd(summary, summary.ended)
       for (const id of links.linking(summary)) announce(id)
     })
     ctx.on(pullCreated, (summary, session) => void linkCreated(summary, session).catch(report))
@@ -125,7 +147,7 @@ export default definePlugin({
     ctx.watch(server, found => {
       if (!found) return
       live = found
-      return joinDisposers(servePullLinks(found, { links, viewed, open }), sweep.start(), () => {
+      return joinDisposers(servePullLinks(found, { links, viewed, open, setting }), sweep.start(), startAutoSettle(settleDeps), () => {
         live = undefined
       })
     })

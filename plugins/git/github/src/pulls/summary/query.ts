@@ -56,6 +56,7 @@ export interface PullNode {
   baseRepository: { nameWithOwner: string } | null
   author: { login: string } | null
   updatedAt: string
+  closedAt: string | null
   additions: number
   deletions: number
   changedFiles: number

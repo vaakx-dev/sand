@@ -29,6 +29,6 @@ export default definePlugin({
     ctx.watch(gitControl, found => found && joinDisposers(found.actions.register(shipAction(client)), found.actions.register(createAction(client))))
     ctx.watch(sidebar, found => found?.decorate(pullDecoration(ctx, client)))
     ctx.watch(palette, found => found?.source(pullSource(parts)))
-    ctx.watch(settings, found => found?.page({ id: 'git', label: 'Git', icon: 'branch', order: 35, render: () => gitSettingsPage(ctx.kit, pcs, signIns) }))
+    ctx.watch(settings, found => found?.page({ id: 'git', label: 'Git', icon: 'branch', order: 35, render: () => gitSettingsPage(ctx, pcs, signIns) }))
   },
 })

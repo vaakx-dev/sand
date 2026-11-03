@@ -2,8 +2,10 @@ import type { PcView } from '@sand/devices-contract'
 import type { GitHubAuth } from '@sand/github/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { type Derive, derive, div, dynamicChild, type Sig } from '@vaakx-dev/vrui'
+import type { PullsContext } from '../inject'
 import type { GitHubSignIns } from './github'
 import { pcRows } from './rows'
+import { settleSection } from './settle'
 
 type PcState = GitHubAuth | 'checking' | 'offline'
 
@@ -25,15 +27,16 @@ const pcRow = (kit: Kit, signIns: GitHubSignIns, machine: Sig<PcView>) => {
   )
 }
 
-export const gitSettingsPage = (kit: Kit, pcs: Derive<PcView[]>, signIns: GitHubSignIns) =>
+export const gitSettingsPage = (ctx: PullsContext, pcs: Derive<PcView[]>, signIns: GitHubSignIns) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.settingsSection(
+    ctx.kit.settingsSection(
       { title: 'GitHub' },
-      kit.rowList(
+      ctx.kit.rowList(
         pcs,
         machine => machine.id,
-        machine => pcRow(kit, signIns, machine),
+        machine => pcRow(ctx.kit, signIns, machine),
       ),
     ),
+    settleSection(ctx),
   )

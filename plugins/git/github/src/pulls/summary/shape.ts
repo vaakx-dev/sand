@@ -21,6 +21,7 @@ export const shapeSummary = (ref: PullRef, node: PullNode): PullSummary => {
     base: node.baseRefName,
     author: node.author?.login ?? 'ghost',
     updated: Date.parse(node.updatedAt),
+    ...(node.state !== 'OPEN' && node.closedAt ? { ended: Date.parse(node.closedAt) } : {}),
     add: node.additions,
     del: node.deletions,
     files: node.changedFiles,
