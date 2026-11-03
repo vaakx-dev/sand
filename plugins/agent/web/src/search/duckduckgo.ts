@@ -1,5 +1,5 @@
 import { parseHTML } from 'linkedom'
-import { timeoutMs, userAgent } from '../http'
+import { userAgent } from '../http'
 import type { Hit, Provider } from './hit'
 import { paced } from './pace'
 
@@ -20,21 +20,24 @@ const hitsOf = (html: string): Hit[] =>
     return url ? [{ title: flat(link?.textContent), url, snippet: flat(result.querySelector('.result__snippet')?.textContent) }] : []
   })
 
-const botCheck = 'DuckDuckGo answered with a bot check instead of results'
+const botCheck = 'DuckDuckGo answered with a bot check instead of results; try again in a few minutes'
 
-const inTurn = paced(7000)
+const inTurn = paced({ gapMs: 7000, lanes: 1 })
 
-export const duckDuckGo: Provider = (query, _count, signal) =>
-  inTurn(signal, async () => {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'user-agent': userAgent, 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ q: query }),
-      signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
-    })
-    if (!response.ok && response.status !== 202) throw new Error(`DuckDuckGo answered HTTP ${response.status}`)
-    const page = await response.text()
-    const hits = hitsOf(page)
-    if (!hits.length && (response.status === 202 || page.includes('anomaly'))) throw new Error(botCheck)
-    return hits
-  })
+export const duckDuckGo: Provider = {
+  name: 'DuckDuckGo',
+  find: ({ text }, signal) =>
+    inTurn(signal, async deadline => {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'user-agent': userAgent, 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ q: text }),
+        signal: deadline,
+      })
+      if (!response.ok && response.status !== 202) throw new Error(`DuckDuckGo answered HTTP ${response.status}`)
+      const page = await response.text()
+      const hits = hitsOf(page)
+      if (!hits.length && (response.status === 202 || page.includes('anomaly'))) throw new Error(botCheck)
+      return hits
+    }),
+}
