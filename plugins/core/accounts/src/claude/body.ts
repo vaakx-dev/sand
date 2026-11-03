@@ -53,11 +53,13 @@ const blockWith = (media: Media) => {
   return block
 }
 
-const withoutOpenAIReasoning = (messages: Message[]): Message[] =>
-  messages.map(message => ({
-    ...message,
-    content: message.content.filter(block => !(block.type === 'thinking' && isReasoning(block.signature))),
-  }))
+const signedByClaude = (block: Block) => block.type !== 'thinking' || (!!block.signature && !isReasoning(block.signature))
+
+const withoutForeignThinking = (messages: Message[]): Message[] =>
+  messages.flatMap(message => {
+    const content = message.content.filter(signedByClaude)
+    return content.length ? [{ ...message, content }] : []
+  })
 
 const keepReferences = (deferred: Set<string>) => (content: ToolResultContent[]) => {
   const kept = content.filter(item => item.type === 'tool_reference' && deferred.has(item.name))
@@ -87,7 +89,7 @@ export const claudeBody = (request: LLMRequest, settings: ClaudeSettings, search
   const { efforts, fast } = settings
   const { tools, refer } = toolsFor(request, searches)
   const block = blockWith(media)
-  const messages = pair(withReferences(withoutOpenAIReasoning(request.messages), refer)).map(message => ({ role: message.role, content: message.content.map(block) }))
+  const messages = pair(withReferences(withoutForeignThinking(request.messages), refer)).map(message => ({ role: message.role, content: message.content.map(block) }))
   const last = messages.at(-1)?.content.at(-1)
   if (last && cacheable.has(last.type)) last.cache_control = { type: 'ephemeral' }
   const effort = request.effort && efforts.includes(request.effort) ? request.effort : undefined
