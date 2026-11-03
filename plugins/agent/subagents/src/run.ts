@@ -2,6 +2,7 @@ import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { modelSettings, type SessionSettings } from '@sand/model/contract'
 import { instructions } from '@sand/prompt/contract'
+import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
 import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
 import type { Resolve } from './layers'
@@ -46,7 +47,10 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
 
   const create = async (request: AgentRequest, definition: AgentDefinition, parentMeta: AgentMeta | undefined) => {
     const { parent, task, label, origin } = request
-    const settings = childSettings(request, definition, parentSettings(parent), ctx.get(llm))
+    const sub = ctx.get(subModel)
+    const tier = request.model || definition.model ? undefined : definition.tier
+    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...definition } : definition
+    const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
     const model = ctx.get(modelSettings)?.effective(session).model
