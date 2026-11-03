@@ -16,6 +16,7 @@ import { createRepoInfos } from './repo/info'
 import { createOrigins } from './repo/origins'
 import { branchPlace } from './repo/place'
 import { remoteFor } from './repo/remote'
+import { readRemotes } from './repo/remotes'
 import { type TextRequest, writePullText } from './text/write'
 
 export interface GitHubDeps {
@@ -49,8 +50,7 @@ export const createGitHub = (deps: GitHubDeps) => {
   const repo = async (cwd: string): Promise<FolderRepo | null> => {
     const found = await origins(cwd)
     if (!found) return null
-    const { parent } = await infos(found).catch(() => ({ parent: undefined }))
-    return parent ? { repo: found, parent } : { repo: found }
+    return { repo: found, remotes: [...(await readRemotes(deps.git, cwd)).values()] }
   }
 
   const forBranch = async (cwd: string) => {

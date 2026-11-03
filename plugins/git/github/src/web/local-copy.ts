@@ -23,7 +23,9 @@ export const localCopies = (ctx: Context, { pcs, projects, folderRepo }: CopyPar
       .flatMap(group => group.locations)
       .filter(entry => !entry.missing && pcs.online(entry.device))
       .map(entry => ({ cwd: entry.path, device: entry.device }))
-    const matching = (key: keyof FolderRepo) => folders.filter(folder => folderRepo(folder)?.[key]?.toLowerCase() === wanted)
-    return best(matching('repo')) ?? best(matching('parent'))
+    const named = (slug?: string) => slug?.toLowerCase() === wanted
+    const origins = folders.filter(folder => named(folderRepo(folder)?.repo))
+    const others = folders.filter(folder => folderRepo(folder)?.remotes.some(named))
+    return best(origins) ?? best(others)
   }
 }

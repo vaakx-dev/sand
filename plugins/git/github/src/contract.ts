@@ -85,7 +85,7 @@ export const githubAuthChange = wireEvent<GitHubAuth>('github.auth.change')
 
 export interface FolderRepo {
   repo: string
-  parent?: string
+  remotes: string[]
 }
 
 export const githubRepo = request('github.repo', { input: z.object({ cwd: z.string() }), output: type<FolderRepo | null>(), place: 'thread' })
