@@ -1,5 +1,5 @@
 import { ask } from '@sand/ask/contract'
-import { sessions, sessionUpdate } from '@sand/chats/contract'
+import { sessions, sessionSettle } from '@sand/chats/contract'
 import { textOf } from '@sand/chats/prompt'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
 import { loop, turnPrompt, turnStart } from '@sand/loop/contract'
@@ -66,7 +66,7 @@ export default definePlugin({
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish�')).catch(report))
     const parking = createParking(deps)
-    ctx.on(sessionUpdate, parking.settled)
+    ctx.on(sessionSettle, parking.settled)
     ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })
     ctx.on(turnStart, (session, prompt) => {
       if (session.kind !== 'thread') return

@@ -7,8 +7,6 @@ import { removeWorktree } from '../remove/remove'
 import { restoreRecord, waitingThreads } from '../remove/restore'
 import { threadsIn } from '../sessions/inside'
 
-const justSettledMs = 60_000
-
 const onlyThread = (deps: WorktreeDeps, path: string, id: string) => {
   const inside = threadsIn(deps.sessions, path)
   return inside.length === 1 && inside[0]?.id === id
@@ -42,13 +40,10 @@ const resumeNow = async (deps: WorktreeDeps, session: Session) => {
 }
 
 export const createParking = (deps: WorktreeDeps) => {
-  const handled = new Map<string, number>()
   const parking = new Map<string, Promise<void>>()
 
   const settled = (session: Session) => {
     if (session.kind !== 'thread' || !session.settled) return
-    if (handled.get(session.id) === session.settled || Date.now() - session.settled > justSettledMs) return
-    handled.set(session.id, session.settled)
     const run = parkNow(deps, session)
       .catch(error => deps.report(new Error(`Kept the worktree of a settled thread: ${errorMessage(error)}`)))
       .finally(() => parking.delete(session.id))

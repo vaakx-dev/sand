@@ -7,7 +7,7 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { sessionClosing, sessionEntry, sessionRemove, sessions, sessionUpdate } from './contract'
+import { sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
 import { open } from './db'
 import { usedMedia } from './media'
 import { createStore } from './store'
@@ -33,6 +33,7 @@ export default definePlugin({
       hooks: {
         entry: (session, entry) => ctx.emit(sessionEntry, session, entry),
         update: session => ctx.emit(sessionUpdate, session),
+        settle: session => ctx.emit(sessionSettle, session),
         remove: id => ctx.emit(sessionRemove, id),
       },
       running: id => running.has(id),
