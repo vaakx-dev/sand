@@ -10,8 +10,8 @@ const fastTarget = (rows: Rows): PickerTarget => ({
   shown: () => rows.ctx.modelPicker.resolve(rows.state.get()?.models.fast ?? {}),
   set: ({ model, effort, speed }) => {
     const own = rows.state.get()?.models.fast
-    const picked = model ?? own?.model
-    if (picked) save(rows, { ...own, model: picked, ...(effort && { effort }), ...(speed && { speed }) })
+    const next = model ? { model } : own && { ...own, ...(effort && { effort }), ...(speed && { speed }) }
+    if (next) save(rows, next)
   },
 })
 

@@ -1,21 +1,22 @@
 import type { Ask, AskRequest } from '@sand/ask/contract'
 import type { ModelSettings, SessionSettings } from '@sand/model/contract'
 import type { Skills } from '@sand/skills/contract'
-import type { Job, JobRequest, SubModel, Tier } from './contract'
+import type { Job, JobRequest, SubModel, SubModelState, Tier } from './contract'
 import type { Store } from './store'
 
-export interface SubModelDeps {
+interface SubModelDeps {
   ask: Ask
   store: Store
   modelSettings(): ModelSettings | undefined
   skills(): Skills | undefined
-  changed(): void
+  changed(state: SubModelState): void
 }
 
 const noModel = 'No model chosen. Set a default or a sub model in Settings › Models.'
 
 export const createSubModel = ({ ask, store, modelSettings, skills, changed }: SubModelDeps) => {
   const jobs = new Map<string, Job>()
+  const state = (): SubModelState => ({ ...store.get(), jobs: [...jobs.values()] })
 
   const settings = (tier: Tier): SessionSettings => {
     const own = store.get().models[tier]
@@ -41,11 +42,11 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
   const service: SubModel = {
     job(job) {
       jobs.set(job.id, job)
-      changed()
+      changed(state())
       return () => {
         if (jobs.get(job.id) !== job) return
         jobs.delete(job.id)
-        changed()
+        changed(state())
       }
     },
     has: tier => Boolean(store.get().models[tier]),
@@ -54,5 +55,5 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
     json: async (request, schema) => ask.json(await askRequest(request), schema),
   }
 
-  return { service, jobs: () => [...jobs.values()] }
+  return { service, state }
 }

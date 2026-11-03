@@ -28,8 +28,8 @@ const written = z.object({ title: z.string().min(1), body: z.string() })
 const cannotWrite = (why: string) => new GitHubError(sentence(`Couldn't write the pull request text: ${why.replace(/\.$/, '')}; write it yourself`))
 
 export const writePullText = async ({ git, repos, sub }: TextDeps, request: TextRequest): Promise<PullText> => {
-  const model = sub()
-  if (!model) throw cannotWrite('no model is available')
+  const subModel = sub()
+  if (!subModel) throw cannotWrite('no model is available')
   const local = await repos.local(request.cwd)
   if (!local.repo) throw cannotWrite("this folder isn't a git repository")
   if (local.detached || !local.branch) throw cannotWrite('no branch is checked out')
@@ -40,7 +40,7 @@ export const writePullText = async ({ git, repos, sub }: TextDeps, request: Text
   const [changes, template] = await Promise.all([readChanges(git, local.root, ref), readTemplate(local.root)])
   if (!changes.commits.trim()) throw cannotWrite(`${local.branch} has no commits that aren't on ${base}`)
   try {
-    const reply = await model.json(
+    const reply = await subModel.json(
       {
         job: pullTextJob.id,
         tier: 'fast',

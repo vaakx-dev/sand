@@ -5,7 +5,7 @@ import { server } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { subModel, subModelChange, type SubModelState } from './contract'
+import { subModel, subModelChange } from './contract'
 import { serveSubModel } from './serve'
 import { createSubModel } from './service'
 import { createStore } from './store'
@@ -16,10 +16,14 @@ export default definePlugin({
   inject: { ask, paths },
   async apply(ctx) {
     const store = await createStore(join(ctx.paths.home, 'sub-model.json'))
-    const state = (): SubModelState => ({ ...store.get(), jobs: sub.jobs() })
-    const changed = () => ctx.get(server)?.broadcast(subModelChange, state())
-    const sub = createSubModel({ ask: ctx.ask, store, modelSettings: () => ctx.get(modelSettings), skills: () => ctx.get(skills), changed })
+    const sub = createSubModel({
+      ask: ctx.ask,
+      store,
+      modelSettings: () => ctx.get(modelSettings),
+      skills: () => ctx.get(skills),
+      changed: state => ctx.get(server)?.broadcast(subModelChange, state),
+    })
     ctx.provide(subModel, sub.service)
-    ctx.watch(server, found => (found ? serveSubModel(found, store, state, changed) : undefined))
+    ctx.watch(server, found => (found ? serveSubModel(found, store, sub.state) : undefined))
   },
 })
