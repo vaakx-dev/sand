@@ -127,6 +127,7 @@ export interface GitHub {
   remoteFor(cwd: string, repo: string): Promise<string>
   graphql<T>(query: string, variables: Record<string, unknown>): Promise<T>
   rest<T>(method: string, path: string, body?: unknown): Promise<T>
+  jobLog(repo: string, job: number): Promise<string>
 }
 
 export const github = service<GitHub>('github')

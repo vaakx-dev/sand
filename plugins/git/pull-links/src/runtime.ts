@@ -6,6 +6,7 @@ import { loop, sessionOpened, toolResult, turnEnd } from '@sand/loop/contract'
 import { type Server, server, sessionCarry, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { steering } from '@sand/steering/contract'
+import { subModel } from '@sand/sub-model/contract'
 import { tools } from '@sand/tools/contract'
 import { joinDisposers, keyedSerial } from '@sand/util'
 import { worktreePulls, worktrees } from '@sand/worktrees/contract'
@@ -29,7 +30,8 @@ import { followStacks } from './stack/follow'
 import { createSweep } from './sweep/sweep'
 import { createViewed } from './sweep/viewed'
 import { pullTools } from './tools/tools'
-import { wakeAgent, type Wakers } from './watch/wake'
+import { watchJob } from './watch/screen'
+import { createWake } from './watch/wake'
 
 const skillDir = join(import.meta.dir, '..', 'skills', 'babysit-pr')
 
@@ -59,14 +61,14 @@ export default definePlugin({
     const discovery = createDiscovery({ github: ctx.github, repos: ctx.gitRepo, book, links, failures })
     const branches = createBranchFollow({ repos: ctx.gitRepo, sessions: ctx.sessions, discovery })
     const viewed = createViewed({ touched: branches.follow, ended: branches.unfollow })
-    const wakers: Wakers = { loop: () => ctx.get(loop), steering: () => ctx.get(steering), report }
+    const watch = createWake({ loop: () => ctx.get(loop), steering: () => ctx.get(steering), sub: () => ctx.get(subModel), github: ctx.github, report, failures, hold: () => ctx.busy() })
     const sweep = createSweep({
       github: ctx.github,
       sessions: ctx.sessions,
       book,
       links,
       viewed,
-      wake: (session, text, label) => wakeAgent(wakers, session, text, label),
+      wake: watch.wake,
       failures,
       hold: () => ctx.busy(),
     })
@@ -96,6 +98,7 @@ export default definePlugin({
     }
 
     ctx.effect(() => () => {
+      watch.stop()
       discovery.close()
       viewed.clear()
       branches.close()
@@ -146,6 +149,7 @@ export default definePlugin({
 
     ctx.watch(tools, found => found && pullTools(found, { github: ctx.github, links, discovery }))
     ctx.watch(skills, found => found?.register(skillDir))
+    ctx.watch(subModel, found => found?.job(watchJob))
     ctx.watch(server, found => {
       if (!found) return
       live = found

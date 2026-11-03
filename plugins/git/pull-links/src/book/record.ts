@@ -9,6 +9,7 @@ const watchMark = z.object({
   head: z.string(),
   failed: z.array(z.string()),
   passed: z.string().optional(),
+  red: z.boolean().optional(),
   conflict: z.boolean(),
   since: z.number(),
 })
