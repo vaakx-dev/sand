@@ -14,6 +14,7 @@ const replaced = (links: StoredLinks, pull: PullRef, change: (link: StoredLink) 
 export const withLink = (links: StoredLinks, pull: PullRef, source: LinkSource, now: number): StoredLinks => {
   if (findLink(links, pull)) return links
   return {
+    ...links,
     links: [...links.links, { ...refOf(pull), source, linked: now, watching: false }],
     dismissed: links.dismissed.filter(ref => !samePull(ref, pull)),
   }
@@ -22,6 +23,7 @@ export const withLink = (links: StoredLinks, pull: PullRef, source: LinkSource, 
 export const withoutLink = (links: StoredLinks, pull: PullRef): StoredLinks => {
   if (!findLink(links, pull)) return links
   return {
+    ...links,
     links: links.links.filter(link => !samePull(link, pull)),
     dismissed: [...links.dismissed.filter(ref => !samePull(ref, pull)), refOf(pull)],
   }
@@ -42,4 +44,17 @@ export const withMark = (links: StoredLinks, pull: PullRef, mark: WatchMark, qui
   const link = findLink(links, pull)
   if (!link?.watching) return links
   return replaced(links, pull, link => (keepWatching ? { ...link, mark, quiet } : watched(link, false)))
+}
+
+export const withEnded = (links: StoredLinks, pull: PullRef, ended: number | undefined): StoredLinks => {
+  const link = findLink(links, pull)
+  if (!link || link.ended === ended) return links
+  return replaced(links, pull, link => ({ ...link, ended }))
+}
+
+const endedAfter = (links: StoredLinks, at: number) => links.links.some(link => link.ended !== undefined && link.ended > at)
+
+export const withEngaged = (links: StoredLinks, at: number): StoredLinks => {
+  const engaged = links.engaged ?? 0
+  return engaged < at && endedAfter(links, engaged) ? { ...links, engaged: at } : links
 }

@@ -11,6 +11,7 @@ fragment PullSummaryFields on PullRequest {
   baseRepository { nameWithOwner }
   author { login }
   updatedAt
+  closedAt
   additions
   deletions
   changedFiles

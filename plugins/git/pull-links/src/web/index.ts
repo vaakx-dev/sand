@@ -5,6 +5,7 @@ import { threads, turns } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { type PullOpenRequest, pullLink, pullLinks, pullLinksClient, pullOpen, pullUnlink, pullWatch, type ThreadPulls } from '../contract'
 import { pullAgent } from './ask'
+import { settleSwitch } from './settle'
 import { linkStore } from './store'
 
 export default definePlugin({
@@ -19,6 +20,7 @@ export default definePlugin({
       store.apply(device, pulls)
       return pulls
     }
+    const settle = settleSwitch(ctx, wire, ctx.pcs)
     const open = (input: PullOpenRequest, device: string) => wire.call(pullOpen, input, device)
     const agent = pullAgent({ toasts: ctx.toasts, turns: ctx.turns, threads: ctx.threads, github: ctx.github, threadsOf: store.threadsOf, open })
     ctx.provide(pullLinksClient, {
@@ -32,6 +34,8 @@ export default definePlugin({
       open,
       openThread: agent.openThread,
       ask: agent.ask,
+      autoSettle: settle.on,
+      setAutoSettle: settle.set,
     })
   },
 })

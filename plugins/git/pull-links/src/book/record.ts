@@ -19,15 +19,16 @@ const storedLink = ref.extend({
   watching: z.boolean(),
   mark: watchMark.optional(),
   quiet: z.number().int().min(0).optional(),
+  ended: z.number().optional(),
 })
 
-const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref) })
+const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref), engaged: z.number().optional() })
 
 export type WatchMark = z.infer<typeof watchMark>
 export type StoredLink = z.infer<typeof storedLink>
 export type StoredLinks = z.infer<typeof storedLinks>
 
-export const noLinks: StoredLinks = { links: [], dismissed: [] }
+export const noLinks: StoredLinks = { links: [], dismissed: [], engaged: 0 }
 
 export const parseLinks = (data: unknown): StoredLinks | undefined => {
   const parsed = storedLinks.safeParse(data)

@@ -58,6 +58,7 @@ export interface PullSummary extends PullRef {
   base: string
   author: string
   updated: number
+  ended?: number
   add: number
   del: number
   files: number

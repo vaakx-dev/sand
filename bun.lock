@@ -835,6 +835,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chats": "workspace:*",
+        "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/git": "workspace:*",
         "@sand/github": "workspace:*",
