@@ -1,9 +1,7 @@
 import { pullName } from '@sand/github/look'
-import { type Child, span } from '@vaakx-dev/vrui'
+import type { Child } from '@vaakx-dev/vrui'
 import { confirmSheet } from '../../confirm/sheet'
 import type { Shown } from '../shown'
-
-const label = (text: string) => span({ class: 'min-w-0 flex-1 truncate' }, text)
 
 const closePull = async (shown: Shown) => {
   const name = pullName(shown.pull())
@@ -33,7 +31,7 @@ export const stateItems = (shown: Shown, close: () => void): Child[] => {
     close()
     void run()
   }
-  if (pull.state === 'merged') return [kit.menuItem({ icon: 'retry', onClick: then(() => revertPull(shown)) }, label('Revert'), kit.menuReason('Asks to confirm'))]
+  if (pull.state === 'merged') return [kit.menuItem({ icon: 'retry', onClick: then(() => revertPull(shown)) }, 'Revert')]
   if (pull.state === 'closed') return [kit.menuItem({ icon: 'pull-request', onClick: then(() => shown.actions.close(false)) }, 'Reopen')]
-  return [kit.menuItem({ icon: 'x', tone: 'danger', onClick: then(() => closePull(shown)) }, label('Close pull request'), kit.menuReason('Asks to confirm'))]
+  return [kit.menuItem({ icon: 'x', tone: 'danger', onClick: then(() => closePull(shown)) }, 'Close pull request')]
 }

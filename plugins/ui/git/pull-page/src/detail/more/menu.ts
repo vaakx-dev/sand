@@ -12,8 +12,8 @@ interface Section {
 }
 
 const builtIn = (shown: Shown): Section[] => [
-  { order: 0, items: close => githubItems(shown, close) },
-  { order: 10, items: close => agentItems(shown, close) },
+  { order: 0, items: close => agentItems(shown, close) },
+  { order: 10, items: close => githubItems(shown, close) },
   { order: 20, items: close => linkItems(shown, close) },
   { order: 30, items: close => stateItems(shown, close) },
 ]
@@ -23,10 +23,12 @@ const extended = (shown: Shown, menu: PullMenu): Section => ({
   items: close => menu.items({ pull: shown.pull(), close }),
 })
 
-const sections = (shown: Shown, close: () => void): Child[][] =>
-  [...builtIn(shown), ...shown.parts.menus.entries.get().map(menu => extended(shown, menu))]
-    .sort((a, b) => a.order - b.order)
-    .map(section => section.items(close))
+const groups = (shown: Shown, close: () => void): Child[][] => {
+  const sections = [...shown.parts.menus.entries.get().map(menu => extended(shown, menu)), ...builtIn(shown)].sort((a, b) => a.order - b.order)
+  const byOrder = new Map<number, Child[]>()
+  for (const section of sections) byOrder.set(section.order, [...(byOrder.get(section.order) ?? []), ...section.items(close)])
+  return [...byOrder.values()]
+}
 
 export const moreMenu = (shown: Shown) => {
   const { kit } = shown.parts
@@ -34,7 +36,7 @@ export const moreMenu = (shown: Shown) => {
     placement: 'below-right',
     trigger: (press, open) => kit.iconButton({ ...press, size: 'sm', active: open, title: 'More actions', 'aria-label': 'More actions' }, kit.icon('more', 14)),
     items: close =>
-      sections(shown, close)
+      groups(shown, close)
         .filter(items => items.length)
         .flatMap((items, index) => (index ? [kit.menuSeparator(), ...items] : items)),
   })

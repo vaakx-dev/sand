@@ -84,7 +84,12 @@ export const githubLogout = request('github.logout', { input: z.object({}), outp
 export const githubLoginCode = wireEvent<GitHubLoginCode>('github.login.code')
 export const githubAuthChange = wireEvent<GitHubAuth>('github.auth.change')
 
-export const githubRepo = request('github.repo', { input: z.object({ cwd: z.string() }), output: type<{ repo: string } | null>(), place: 'thread' })
+export interface FolderRepo {
+  repo: string
+  remotes: string[]
+}
+
+export const githubRepo = request('github.repo', { input: z.object({ cwd: z.string() }), output: type<FolderRepo | null>(), place: 'thread' })
 
 export const pullsForBranch = request('pulls.branch', { input: z.object({ cwd: z.string() }), output: type<PullSummary | null>(), place: 'thread' })
 export const pullsSummary = request('pulls.summary', { input: pullRef.extend({ fresh: z.boolean().optional() }), output: type<PullSummary>(), place: 'thread' })
@@ -119,6 +124,7 @@ export interface GitHub {
   noteSummary(id: string, summary: PullSummary): void
   forBranch(cwd: string): Promise<PullSummary | null>
   resolve(cwd: string, ref: string): Promise<PullSummary>
+  remoteFor(cwd: string, repo: string): Promise<string>
   graphql<T>(query: string, variables: Record<string, unknown>): Promise<T>
   rest<T>(method: string, path: string, body?: unknown): Promise<T>
 }
@@ -135,7 +141,7 @@ export interface GitHubClient {
   auth(device: string): Promise<GitHubAuth>
   login(device: string): Promise<GitHubAuth>
   logout(device: string): Promise<GitHubAuth>
-  repoOf(folder: GitHubFolder): string | null | undefined
+  repoOf(folder: GitHubFolder): string | undefined
   localCopy(repo: string): GitHubFolder | undefined
   forBranch(input: InputOf<typeof pullsForBranch>, device: string): Promise<PullSummary | null>
   summary(input: InputOf<typeof pullsSummary>, device: string): Promise<PullSummary>

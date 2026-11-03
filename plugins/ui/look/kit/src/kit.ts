@@ -30,7 +30,7 @@ import { chipButton, chipPopover } from './menus/chip'
 import { dropdown } from './menus/dropdown'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
-import { menuReason } from './menus/reason'
+import { menuLabel, menuReason } from './menus/reason'
 import { navActionIcon } from './nav/action-icon'
 import { sideColumn } from './nav/side-column'
 import { bannerTitle, statusBanner } from './notes/banner'
@@ -123,6 +123,7 @@ export const kit = {
   loadingState,
   markerLine,
   menuItem,
+  menuLabel,
   menuLayer,
   menuReason,
   menuSeparator,
