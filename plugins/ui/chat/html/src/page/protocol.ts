@@ -1,8 +1,13 @@
 export const hostPath = '/html-frame'
 export const pageStart = '<!doctype html>'
+export const themeStyle = 'sand-theme'
 
 export const sizeChanged = 'ui/notifications/size-changed'
 export const openLink = 'ui/open-link'
+export const openImage = 'sand/open-image'
+export const hostContext = 'ui/notifications/host-context-changed'
+export const shortcutKeys = 'sand/shortcut-keys'
+export const pressKey = 'sand/press-key'
 export const showPage = 'sand/show-page'
 export const swipeStart = 'sand/swipe-start'
 export const swipeMove = 'sand/swipe-move'

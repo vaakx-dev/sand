@@ -1,5 +1,5 @@
 import { listen } from '@vaakx-dev/vrui'
-import { openLink } from '../page/protocol'
+import { openLink } from '../protocol'
 import { post } from './post'
 
 const linkIn = (event: MouseEvent) =>

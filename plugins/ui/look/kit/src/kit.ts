@@ -47,6 +47,7 @@ import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { sheetText } from './sheets/text'
+import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyState, errorState, loadingState } from './states/states'
 import { diffRow } from './tools/diff'
 import { fold, toolBody, toolCard } from './tools/tool-card'
@@ -202,7 +203,10 @@ export const kit = {
   toneText,
   toolBody,
   toolCard,
+  viewerBar,
+  viewerShell,
   waitingLine,
   withDot,
   working,
+  zoomControls,
 }

@@ -1,8 +1,8 @@
-import type { Picture } from '../gallery'
-import type { ViewerModel } from './model'
 import type { Kit } from '@sand/ui-kit/contract'
-import { disposeAll, div, dynamicChild, keys, onWindow, type Derive } from '@vaakx-dev/vrui'
+import { div, dynamicChild, keys, type Derive } from '@vaakx-dev/vrui'
+import type { Draw } from '../gallery'
 import { viewerHead } from './head'
+import type { ViewerModel } from './model'
 import { viewerStage } from './stage'
 import { viewerStrip } from './strip'
 import { zoomState } from './zoom'
@@ -13,38 +13,40 @@ const flipButton = ({ floatButton, icon }: Kit, side: 'left' | 'right', title: s
     floatButton({ size: 'md', title, 'aria-label': title, disabled, onClick }, icon(side, 16)),
   )
 
-const imageView = (kit: Kit, model: ViewerModel, index: number, picture: Picture, close: () => void) => {
-  const shown = model.images[index]
-  if (!shown) return null
-  const zoom = zoomState()
-  const count = model.images.length > 1 ? `${index + 1} of ${model.images.length}` : ''
-  return div(
-    { class: 'flex min-h-0 flex-1 flex-col' },
-    viewerHead(kit, shown, count, zoom, close),
-    viewerStage(shown, picture, zoom, model.step, close),
-  )
-}
-
-export const viewerDialog = (kit: Kit, model: ViewerModel, picture: Picture, close: () => void) => {
-  const { dismissible, layer, returnFocus } = kit
-  const previous = document.activeElement
+export const viewerDialog = (kit: Kit, model: ViewerModel, draw: Draw, close: () => void) => {
   const many = model.images.length > 1
-  return div(
-    {
-      role: 'dialog',
-      'aria-label': 'Image viewer',
-      tabIndex: -1,
-      class: [layer.dialog, 'fixed inset-0 flex flex-col bg-neutral-950/90 px-safe py-safe outline-none backdrop-blur-md animate-fade'],
-      onMount: node => {
-        node.focus()
-        onWindow<KeyboardEvent>(node, 'keydown', keys({ ArrowLeft: () => model.step(-1), ArrowRight: () => model.step(1) }))
-        const stops = [dismissible(node, close), returnFocus(node, previous)]
-        return () => disposeAll(stops)
-      },
-    },
-    dynamicChild(model.current, index => imageView(kit, model, index, picture, close)),
-    many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, () => model.step(-1)),
-    many && flipButton(kit, 'right', 'Next (→)', model.atLast, () => model.step(1)),
-    many && viewerStrip(kit, model, picture),
+  const zoom = zoomState()
+  const go = (move: () => void) => {
+    move()
+    zoom.fit()
+  }
+  const back = () => go(() => model.step(-1))
+  const next = () => go(() => model.step(1))
+  const shortcuts = keys({
+    ArrowLeft: back,
+    ArrowRight: next,
+    Home: () => go(model.first),
+    End: () => go(model.last),
+    '+': zoom.zoomIn,
+    '=': zoom.zoomIn,
+    '-': zoom.zoomOut,
+    '0': zoom.fit,
+  })
+
+  return kit.viewerShell(
+    { label: 'Image viewer', close, onKeyDown: shortcuts },
+    dynamicChild(model.current, index => {
+      const shown = model.images[index]
+      if (!shown) return null
+      const count = many ? `${index + 1} of ${model.images.length}` : ''
+      return div(
+        { class: 'flex min-h-0 flex-1 flex-col' },
+        viewerHead(kit, shown, count, zoom, close),
+        viewerStage(shown, draw, zoom, by => go(() => model.step(by)), close),
+      )
+    }),
+    many && flipButton(kit, 'left', 'Previous (←)', model.atFirst, back),
+    many && flipButton(kit, 'right', 'Next (→)', model.atLast, next),
+    many && viewerStrip(kit, model, draw),
   )
 }
