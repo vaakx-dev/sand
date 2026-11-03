@@ -1,6 +1,6 @@
 import { composer } from '@sand/composer/contract'
 import { type GitPlace, type GitRepoLocal, repoOf } from '@sand/git/contract'
-import type { PaletteSource } from '@sand/palette/contract'
+import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import { uuid } from '@sand/util'
 import { defaultBranch } from '../draft/choice'
 import type { DraftChoices } from '../draft/choices'
@@ -23,13 +23,24 @@ const newWorktreeThread = async (ctx: WorkspaceContext, choices: DraftChoices, p
   }
 }
 
-export const workspaceSource = (ctx: WorkspaceContext, choices: DraftChoices, cache: WorktreeCache): PaletteSource => ({
+const cleanupItem = (openCleanup: () => void): PaletteItem => ({
+  id: 'git-workspace:clean-up',
+  group: 'Actions',
+  icon: 'trash',
+  label: 'Clean up worktrees…',
+  detail: 'Free disk space by removing finished worktrees',
+  search: 'git worktree remove delete disk space prune',
+  run: openCleanup,
+})
+
+export const workspaceSource = (ctx: WorkspaceContext, choices: DraftChoices, cache: WorktreeCache, openCleanup: () => void): PaletteSource => ({
   id: 'git-workspace',
   order: 19,
   items: () => {
     const current = ctx.gitStatus.current.get()
     const local = repoOf(current?.status)
-    if (!current || !local) return []
+    const cleanup = cleanupItem(openCleanup)
+    if (!current || !local) return [cleanup]
     const project = projectPlace(current.place, local)
     return [
       {
@@ -49,6 +60,7 @@ export const workspaceSource = (ctx: WorkspaceContext, choices: DraftChoices, ca
         search: 'git worktree restore undo removed',
         page: () => restorePage(ctx, cache, project),
       },
+      cleanup,
     ]
   },
 })

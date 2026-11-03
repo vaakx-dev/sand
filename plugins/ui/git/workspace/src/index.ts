@@ -9,6 +9,7 @@ import { threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/web-client/reactive'
 import { effect, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
+import { cleanupOpener } from './clean/open'
 import { draftChoices } from './draft/choices'
 import { worktreeCreator } from './draft/creator'
 import { workspaceDefaults } from './draft/defaults'
@@ -74,7 +75,8 @@ export default definePlugin({
           )
         : undefined,
     )
-    ctx.watch(palette, found => found?.source(workspaceSource(ctx, choices, cache)))
+    const openCleanup = cleanupOpener(ctx)
+    ctx.watch(palette, found => found?.source(workspaceSource(ctx, choices, cache, openCleanup)))
     ctx.watch(settings, found => found?.section({ page: 'git', id: 'git-workspace.default', order: 10, render: defaultSection(ctx, defaults) }))
   },
 })
