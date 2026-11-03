@@ -1,7 +1,7 @@
 {
   "name": "@sand/html",
   "version": "0.0.0",
-  "description": "html_render tool: the agent shows self-contained HTML pages inline in the chat, in the app theme",
+  "description": "html_render and html_preview: the agent shows HTML pages inline in the chat, in the app theme, and checks them in a headless browser first",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -11,7 +11,7 @@
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
-    "label": "HTML renders",
+    "label": "HTML pages",
     "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the chat"
   },
   "dependencies": {
@@ -20,7 +20,11 @@
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/images": "workspace:*",
+    "@sand/keys": "workspace:*",
     "@sand/layout": "workspace:*",
+    "@sand/media": "workspace:*",
+    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/tools": "workspace:*",

@@ -9,7 +9,7 @@ type Shown = { kind: 'signing' } | { kind: 'ready'; link: Link } | { kind: 'fail
 
 const signing: Shown = { kind: 'signing' }
 
-const onWeb = /^https?:\/\//i
+const unsigned = /^(?:https?:\/\/|data:image\/)/i
 
 const nameOf = (source: ImageSource) => ('block' in source ? source.block.name : source.src.split(/[\\/]/).pop())
 
@@ -45,7 +45,7 @@ const picture = (source: ImageSource, link: Link, options: ImageOptions, broke: 
 
 export const createImages = (kit: Kit, signer: Signer): MediaView => ({
   image(source, thread, options = {}) {
-    const direct = 'src' in source && onWeb.test(source.src)
+    const direct = 'src' in source && unsigned.test(source.src)
     const first = (): Shown => {
       if (direct) return { kind: 'ready', link: { src: source.src, expires: Infinity } }
       const link = signer.cached(source, thread)

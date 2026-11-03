@@ -1,28 +1,27 @@
-import { pcHello, type wire as wireService } from '@sand/devices-contract'
+import { pcHello } from '@sand/devices-contract'
 import { layout } from '@sand/layout/contract'
-import { theme } from '@sand/ui-theme/contract'
-import type { kit as kitService, Kit } from '@sand/ui-kit/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { htmlPage, type HtmlRenderEntry } from '../contract'
-import { div, effect, resource, show, sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
-import { maxHeight, minHeight } from '../page/limits'
+import { div, effect, mount, resource, show, sig } from '@vaakx-dev/vrui'
 import { hostPath } from '../page/protocol'
-import type { FrameHeights } from './heights'
-import { listenToFrame, sandboxedFrame, showPageIn } from './integrations/frame'
+import type { FrameContext } from './context'
+import { expandedPage } from './expand'
+import { frameHeight, type FrameHeights } from './heights'
+import { sandboxedFrame } from './integrations/frame'
 import { onceNearView } from './near'
-import { themed } from './theme'
-
-type FrameContext = Context<{ kit: typeof kitService; wire: typeof wireService }>
-
-const startHeight = 320
-
-const clamp = (height: number, cap: number) => Math.min(cap, maxHeight, Math.max(minHeight, Math.round(height)))
+import { connectPage } from './page'
 
 const loadingNote = ({ loadingState }: Kit) => div({ class: 'pointer-events-none absolute inset-0 flex items-center justify-center' }, loadingState())
 
 const failure = ({ errorState }: Kit, title: string, retry: () => void) =>
   div({ class: 'absolute inset-0 flex items-center justify-center' }, errorState({ text: `Couldn't load ${title}`, retry }))
+
+const expandButton = ({ floatButton, icon }: Kit, open: () => void) =>
+  div(
+    { class: 'absolute top-2 right-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 touch:opacity-100' },
+    floatButton({ size: 'sm', title: 'Open full screen', 'aria-label': 'Open full screen', onClick: open }, icon('expand', 'sm')),
+  )
 
 const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, resize: (height: number) => void) => {
   const { kit, wire } = ctx
@@ -31,7 +30,7 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
   const failed = page.error.map(Boolean)
 
   const frame = sandboxedFrame({
-    title: data.title,
+    'aria-label': data.title,
     src: hostPath,
     class: 'block h-full w-full border-0',
     style: { visibility: () => (failed.get() ? 'hidden' : '') },
@@ -40,6 +39,7 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
       loads.update(count => count + 1)
     },
   })
+  const connection = connectPage(ctx, frame, { resize, swipe: () => ctx.get(layout)?.swipe() })
 
   const retry = () => {
     if (!failed.get()) return
@@ -49,42 +49,52 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
 
   effect(() => {
     const html = page.data.get()
-    const load = loads.get()
-    if (!load || html === undefined) return
-    showPageIn(frame, themed(html, ctx.get(theme)))
+    if (!loads.get() || html === undefined) return
+    connection.show(html)
   })
 
-  return div(
-    {
-      class: 'h-full w-full',
-      onMount: () =>
-        joinDisposers(
-          listenToFrame(frame, { resize, open: kit.openTab, swipe: () => ctx.get(layout)?.swipe() }),
-          ctx.on(pcHello, retry),
-        ),
-    },
+  const box = div(
+    { class: 'h-full w-full', onMount: () => joinDisposers(connection.listen(), ctx.on(pcHello, retry)) },
     frame,
     show(() => !failed.get() && page.data.get() === undefined, () => loadingNote(kit)),
     show(failed, () => failure(kit, data.title, retry)),
   )
+  return { box, html: () => page.data.get() }
 }
 
 export const htmlFrame = (ctx: FrameContext, heights: FrameHeights, thread: string, data: HtmlRenderEntry) => {
-  const cap = data.height ?? maxHeight
-  const height = sig(clamp(data.height ?? heights.get(data.id) ?? startHeight, cap))
+  const measured = sig<number | undefined>(undefined)
   const near = sig(false)
-  const resize = (next: number) => {
-    const fitted = clamp(next, cap)
-    heights.set(data.id, fitted)
-    height.set(fitted)
+  const height = () => frameHeight(data, measured.get(), heights.get(data.id))
+  let closeExpanded: (() => void) | undefined
+
+  const page = framedPage(ctx, thread, data, next => {
+    measured.set(next)
+    heights.set(data.id, height())
+  })
+
+  const close = () => {
+    closeExpanded?.()
+    closeExpanded = undefined
+  }
+
+  const expand = () => {
+    const html = page.html()
+    if (html === undefined) return
+    close()
+    closeExpanded = mount(document.body, expandedPage(ctx, data, html, height(), close))
   }
 
   return div(
     {
-      class: 'relative mb-3 w-full',
-      style: { height: () => `${height.get()}px` },
-      ref: box => onceNearView(box, () => near.set(true)),
+      class: 'group relative mb-3 w-full',
+      style: { height: () => `${height()}px` },
+      ref: box => {
+        onceNearView(box, () => near.set(true))
+        return close
+      },
     },
-    show(near, () => framedPage(ctx, thread, data, resize)),
+    show(near, () => page.box),
+    show(near, () => expandButton(ctx.kit, expand)),
   )
 }

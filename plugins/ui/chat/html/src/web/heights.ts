@@ -1,3 +1,5 @@
+import type { HtmlRenderEntry } from '../contract'
+import { maxHeight, minHeight, startHeight } from '../page/limits'
 import { stored, untrack } from '@vaakx-dev/vrui'
 
 const kept = 300
@@ -29,3 +31,6 @@ export const frameHeights = (): FrameHeights => {
     },
   }
 }
+
+export const frameHeight = (data: HtmlRenderEntry, measured: number | undefined, remembered: number | undefined) =>
+  Math.min(maxHeight, Math.max(minHeight, Math.ceil(measured ?? remembered ?? data.height ?? startHeight)))

@@ -1,18 +1,20 @@
 import type { Swipe } from '@sand/layout/contract'
 import { el, listen, type Props } from '@vaakx-dev/vrui'
-import { openLink, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
+import { hostContext, openImage, openLink, pressKey, shortcutKeys, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
 
 interface Message {
   jsonrpc?: unknown
   id?: unknown
   method?: unknown
-  params?: { height?: unknown; url?: unknown; dx?: unknown; velocity?: unknown }
+  params?: { height?: unknown; url?: unknown; dx?: unknown; velocity?: unknown; src?: unknown; name?: unknown; key?: unknown }
 }
 
 export interface FrameEvents {
-  resize(height: number): void
+  resize?(height: number): void
   open(url: string): void
-  swipe(): Swipe | undefined
+  image(src: string, name: string): void
+  key(key: string): void
+  swipe?(): Swipe | undefined
 }
 
 const isWebUrl = (url: unknown): url is string => typeof url === 'string' && /^https?:\/\//i.test(url)
@@ -25,6 +27,10 @@ export const sandboxedFrame = (props: Props<HTMLIFrameElement>) =>
   el('iframe', { ref: frame => frame.setAttribute('sandbox', 'allow-scripts'), ...props })
 
 export const showPageIn = (frame: HTMLIFrameElement, html: string) => post(frame, { method: showPage, params: { html } })
+
+export const sendTheme = (frame: HTMLIFrameElement, css: string) => post(frame, { method: hostContext, params: { css } })
+
+export const sendKeys = (frame: HTMLIFrameElement, keys: string[]) => post(frame, { method: shortcutKeys, params: { keys } })
 
 const swipeRelay = (begin: () => Swipe | undefined) => {
   let swipe: Swipe | undefined
@@ -39,14 +45,28 @@ const swipeRelay = (begin: () => Swipe | undefined) => {
 }
 
 export const listenToFrame = (frame: HTMLIFrameElement, events: FrameEvents) => {
-  const relaySwipe = swipeRelay(events.swipe)
-  return listen(window, 'message', ({ source, data }: MessageEvent) => {
+  const relaySwipe = swipeRelay(() => events.swipe?.())
+  return listen<MessageEvent>(window, 'message', ({ source, data }) => {
     const message = data as Message | null
     if (source !== frame.contentWindow || message?.jsonrpc !== '2.0') return
-    if (message.method === sizeChanged && typeof message.params?.height === 'number') events.resize(message.params.height)
-    if (message.method === openLink && isWebUrl(message.params?.url) && clickedIn(frame)) {
-      events.open(message.params.url)
+    const params = message.params ?? {}
+    if (message.method === sizeChanged && typeof params.height === 'number') {
+      events.resize?.(params.height)
+      return
+    }
+    if (message.method === pressKey && typeof params.key === 'string') {
+      events.key(params.key)
+      return
+    }
+    if (!clickedIn(frame)) return
+    if (message.method === openLink && isWebUrl(params.url)) {
+      events.open(params.url)
       post(frame, { id: message.id, result: {} })
+      return
+    }
+    if (message.method === openImage && typeof params.src === 'string') {
+      events.image(params.src, typeof params.name === 'string' ? params.name : '')
+      return
     }
     relaySwipe(message)
   })
