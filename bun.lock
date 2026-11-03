@@ -182,6 +182,21 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/shell-jobs": {
+      "name": "@sand/shell-jobs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chat": "workspace:*",
+        "@sand/jobs": "workspace:*",
+        "@sand/shell": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/agent/skills": {
       "name": "@sand/skills",
       "version": "0.0.0",
@@ -1863,6 +1878,8 @@
     "@sand/settings": ["@sand/settings@workspace:plugins/ui/shared/settings"],
 
     "@sand/shell": ["@sand/shell@workspace:plugins/agent/shell"],
+
+    "@sand/shell-jobs": ["@sand/shell-jobs@workspace:plugins/agent/shell-jobs"],
 
     "@sand/sidebar": ["@sand/sidebar@workspace:plugins/ui/layout/sidebar"],
 

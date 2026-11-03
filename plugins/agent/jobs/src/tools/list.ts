@@ -10,7 +10,7 @@ const before = "Jobs from before sand last restarted aren't listed; their result
 
 export const listTool = (sessions: Sessions, store: Store, started: number): Tool<typeof input> => ({
   name: 'jobs',
-  description: 'List the background agents this thread started: id, kind, status, label, latest note and child thread ids.',
+  description: "List the background agents and commands this thread started: id, kind, status, label, latest note (a command's last output line) and child thread ids.",
   group,
   input,
   run(_input, { session }) {

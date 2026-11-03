@@ -14,9 +14,20 @@ export interface ShellOutcome {
   stderr: string
 }
 
+export interface ShellStart {
+  cwd: string
+  onText(text: string): void
+}
+
+export interface ShellProcess {
+  exited: Promise<number>
+  kill(): Promise<void>
+}
+
 export interface ShellRunner {
   name: string
   run(command: string, options: ShellCommand): Promise<ShellOutcome>
+  start(command: string, options: ShellStart): ShellProcess
 }
 
 export const shellRunner = service<ShellRunner>('shellRunner')

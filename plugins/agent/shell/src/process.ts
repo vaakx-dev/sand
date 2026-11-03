@@ -13,6 +13,7 @@ export interface SpawnOptions {
   cwd: string
   verbatim?: boolean
   env?: Record<string, string>
+  killOnClose?: boolean
 }
 
 const taskkill = async (pid: number) => {
@@ -21,8 +22,8 @@ const taskkill = async (pid: number) => {
   return code === 0
 }
 
-const windowsTree = (child: Subprocess) => {
-  const job = jobObject(child.pid)
+const windowsTree = (child: Subprocess, killOnClose: boolean) => {
+  const job = jobObject(child.pid, killOnClose)
   void child.exited.then(() => job?.close())
   return async () => {
     if (job) return void job.kill()
@@ -38,7 +39,7 @@ const groupTree = (child: Subprocess) => async () => {
   }
 }
 
-export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {} }: SpawnOptions) => {
+export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {}, killOnClose = false }: SpawnOptions) => {
   const child = Bun.spawn(argv, {
     cwd,
     env: { ...process.env, ...noPrompts, ...env },
@@ -49,7 +50,7 @@ export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, {
     windowsHide: true,
     windowsVerbatimArguments: verbatim,
   })
-  return { child, killTree: windows ? windowsTree(child) : groupTree(child) }
+  return { child, killTree: windows ? windowsTree(child, killOnClose) : groupTree(child) }
 }
 
 export const unixNewlines = (text: string) => (windows ? text.replaceAll('\r\n', '\n') : text)

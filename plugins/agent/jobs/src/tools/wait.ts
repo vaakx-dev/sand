@@ -51,7 +51,7 @@ const settle = (ctx: JobsContext, delivery: Delivery, entries: Entry[], session:
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    'Wait for background agents to finish and get their results. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.',
+    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.",
   group,
   input,
   timeoutMs: maxTimeout + settleGrace,
