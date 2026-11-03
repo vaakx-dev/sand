@@ -46,6 +46,9 @@ const payloadOf = (body: string) => {
 
 const inTurn = paced(1500)
 
+const said = (result: { content?: { type: string; text?: string }[] }) =>
+  result.content?.find(item => item.type === 'text')?.text?.trim() ?? 'no reason given'
+
 export const exa = (key?: string): Provider => (query, count, signal) =>
   inTurn(signal, async () => {
     const response = await fetch(endpoint(key), {
@@ -55,12 +58,10 @@ export const exa = (key?: string): Provider => (query, count, signal) =>
       signal,
     })
     if (!response.ok) throw new Error(`Exa answered HTTP ${response.status}`)
-    const result = payloadOf(await response.text())?.result
-    if (result?.isError) {
-      const said = result.content?.find((item: { type: string }) => item.type === 'text')?.text?.trim()
-      throw new Error(`Exa said: ${said ?? 'no reason given'}`)
-    }
-    const text = result?.content?.find((item: { type: string }) => item.type === 'text')?.text
+    const answer = payloadOf(await response.text())
+    if (answer.error) throw new Error(`Exa said: ${answer.error.message ?? 'no reason given'}`)
+    if (answer.result?.isError) throw new Error(`Exa said: ${said(answer.result)}`)
+    const text = answer.result?.content?.find((item: { type: string }) => item.type === 'text')?.text
     if (!text) throw new Error('Exa answered with nothing')
     return hitsOf(text)
   })
