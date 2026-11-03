@@ -22,7 +22,7 @@ const partLine = (part: UserPart) => {
 
 const messageText = (message: Message) => userParts(message).map(partLine).join('\n').slice(0, mostPromptChars)
 
-const cleaned = (title: string) => oneLine(title.replace(/^["'`]+|["'`.]+$/g, ''), mostTitleChars)
+const cleaned = (title: string) => oneLine(title.replace(/^[\s"'`]+|[\s"'`.]+$/g, ''), mostTitleChars)
 
 export const askTitle = async (sub: SubModel, session: Session, message: Message, signal: AbortSignal) => {
   const reply = await sub.json(

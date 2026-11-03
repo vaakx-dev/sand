@@ -29,7 +29,7 @@ export default definePlugin({
       if (session.kind !== 'thread' || !quick || session.title !== quick) return
       const signal = AbortSignal.any([unloaded.signal, AbortSignal.timeout(deadline)])
       retitle(session, message, quick, signal).catch(error => {
-        if (!signal.aborted) ctx.report(new Error(`Kept the short title of ${session.id}: ${errorMessage(error)}`))
+        if (!unloaded.signal.aborted) ctx.report(new Error(`Kept the short title of ${session.id}: ${errorMessage(error)}`))
       })
     })
   },
