@@ -53,7 +53,6 @@ Comment the way the existing code does. Before writing any, look at how the file
 ## Leave out
 
 - Suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Fix the cause instead.
-
 - Abstractions with one caller, wrappers that only pass calls through.
 - Dead code and unused parameters, including any your change left behind.
 - Logs, vague TODOs, and compatibility code for things you're replacing.
