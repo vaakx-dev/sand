@@ -52,4 +52,9 @@ export const withEnded = (links: StoredLinks, pull: PullRef, ended: number | und
   return replaced(links, pull, link => ({ ...link, ended }))
 }
 
-export const withEngaged = (links: StoredLinks, at: number): StoredLinks => (links.links.length && (links.engaged ?? 0) < at ? { ...links, engaged: at } : links)
+const endedAfter = (links: StoredLinks, at: number) => links.links.some(link => link.ended !== undefined && link.ended > at)
+
+export const withEngaged = (links: StoredLinks, at: number): StoredLinks => {
+  const engaged = links.engaged ?? 0
+  return engaged < at && endedAfter(links, engaged) ? { ...links, engaged: at } : links
+}

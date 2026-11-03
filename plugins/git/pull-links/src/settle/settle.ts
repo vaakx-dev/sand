@@ -5,7 +5,7 @@ import { refOf, type StoredLinks } from '../book/record'
 import type { ThreadLinks } from '../links/links'
 import { isLive } from '../links/thread'
 import type { OnceReport } from '../report/once'
-import { readEnded } from './ends'
+import { createEnds } from './ends'
 import { isSettleable, lastEnd } from './rule'
 import type { SettleSetting } from './setting'
 
@@ -29,6 +29,7 @@ const latestMessageAt = (thread: Session) => thread.latest('message')?.at ?? thr
 const engagedAt = (thread: Session, links: StoredLinks) => links.engaged ?? latestMessageAt(thread)
 
 export const startAutoSettle = (deps: AutoSettleDeps) => {
+  const readEnded = createEnds(deps.github, deps.failures)
   const refusedUntil = new Map<string, number>()
   let nextCheck = 0
   let sweeping = false
@@ -45,7 +46,7 @@ export const startAutoSettle = (deps: AutoSettleDeps) => {
 
   const checkEnds = async () => {
     const pulls = openPulls()
-    const ended = await readEnded(deps.github, pulls, deps.failures)
+    const ended = await readEnded(pulls)
     for (const pull of pulls) {
       const at = ended.get(pullKey(pull))
       if (at === undefined) continue

@@ -1,4 +1,4 @@
-import { type GitHub, type PullRef, pullKey, pullVariables } from '@sand/github/contract'
+import { type GitHub, isForbidden, isMissing, type PullRef, pullKey, pullVariables } from '@sand/github/contract'
 import type { OnceReport } from '../report/once'
 
 type PullClosing = { closed: true; closedAt: string } | { closed: false; closedAt: string | null }
@@ -26,26 +26,38 @@ const variablesOf = (pulls: PullRef[]) =>
     }),
   )
 
-const readBatch = async (github: GitHub, pulls: PullRef[], failures: OnceReport, ended: Map<string, number>) => {
-  const data = await github.graphql<ClosingData>(closingQuery(pulls.length), variablesOf(pulls))
-  pulls.forEach((pull, index) => {
-    const key = pullKey(pull)
-    const closing = data[`p${index}`]?.pullRequest
-    if (!closing) return
-    failures.passed(`closing:${key}`)
-    if (closing.closed) ended.set(key, Date.parse(closing.closedAt))
-  })
-}
+const isGone = (error: unknown) => isMissing(error) || isForbidden(error)
 
-const readEach = async (github: GitHub, pulls: PullRef[], failures: OnceReport, ended: Map<string, number>) => {
-  for (const pull of pulls) await readBatch(github, [pull], failures, ended).catch(error => failures.failed(`closing:${pullKey(pull)}`, error))
-}
+export const createEnds = (github: GitHub, failures: OnceReport) => {
+  const gone = new Set<string>()
 
-export const readEnded = async (github: GitHub, pulls: PullRef[], failures: OnceReport) => {
-  const ended = new Map<string, number>()
-  for (let start = 0; start < pulls.length; start += batchSize) {
-    const batch = pulls.slice(start, start + batchSize)
-    await readBatch(github, batch, failures, ended).catch(() => readEach(github, batch, failures, ended))
+  const readBatch = async (pulls: PullRef[], ended: Map<string, number>) => {
+    const data = await github.graphql<ClosingData>(closingQuery(pulls.length), variablesOf(pulls))
+    pulls.forEach((pull, index) => {
+      const key = pullKey(pull)
+      const closing = data[`p${index}`]?.pullRequest
+      if (!closing) return
+      failures.passed(`closing:${key}`)
+      if (closing.closed) ended.set(key, Date.parse(closing.closedAt))
+    })
   }
-  return ended
+
+  const readEach = async (pulls: PullRef[], ended: Map<string, number>) => {
+    for (const pull of pulls) {
+      await readBatch([pull], ended).catch((error: unknown) => {
+        if (isGone(error)) gone.add(pullKey(pull))
+        failures.failed(`closing:${pullKey(pull)}`, error)
+      })
+    }
+  }
+
+  return async (pulls: PullRef[]) => {
+    const readable = pulls.filter(pull => !gone.has(pullKey(pull)))
+    const ended = new Map<string, number>()
+    for (let start = 0; start < readable.length; start += batchSize) {
+      const batch = readable.slice(start, start + batchSize)
+      await readBatch(batch, ended).catch(() => readEach(batch, ended))
+    }
+    return ended
+  }
 }
