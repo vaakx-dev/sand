@@ -15,6 +15,7 @@ export interface ClientDeps {
 
 export interface Client {
   rest<T>(method: string, path: string, body?: unknown): Promise<T>
+  text(path: string): Promise<string>
   graphql<T>(query: string, variables: Record<string, unknown>): Promise<T>
 }
 
@@ -74,6 +75,12 @@ export const createClient = (deps: ClientDeps): Client => {
         const etag = verb === 'GET' ? response.headers.get('etag') : null
         if (etag) etags.set(path, etag, data)
         return data as T
+      })
+    },
+    text(path: string) {
+      return exchange('core', `${apiUrl}${path}`, { method: 'GET' }, {}, async response => {
+        if (!response.ok) throw restError(response.status, undefined)
+        return response.text()
       })
     },
     graphql<T>(query: string, variables: Record<string, unknown>) {

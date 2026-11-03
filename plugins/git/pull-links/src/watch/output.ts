@@ -10,7 +10,9 @@ const outputQuery = `query CheckOutput($owner: String!, $name: String!, $oid: Gi
               __typename
               ... on CheckRun {
                 name
+                databaseId
                 conclusion
+                checkSuite { app { slug } }
                 title
                 summary
                 text
@@ -31,15 +33,27 @@ interface RawAnnotation {
   location: { start: { line: number } }
 }
 
-type RawOutput =
-  | { __typename: 'CheckRun'; name: string; conclusion: string | null; title: string | null; summary: string | null; text: string | null; annotations: { nodes: RawAnnotation[] } }
-  | { __typename: 'StatusContext'; context: string; state: string; description: string | null }
+interface RawRun {
+  __typename: 'CheckRun'
+  name: string
+  databaseId: number
+  conclusion: string | null
+  checkSuite: { app: { slug: string } | null }
+  title: string | null
+  summary: string | null
+  text: string | null
+  annotations: { nodes: RawAnnotation[] }
+}
+
+type RawOutput = RawRun | { __typename: 'StatusContext'; context: string; state: string; description: string | null }
 
 interface RawCommit {
   repository: { object: { statusCheckRollup: { contexts: { nodes: RawOutput[] } } | null } | null } | null
 }
 
 const fieldLimit = 1500
+
+const logsAtMost = 3
 
 const cut = (text: string | null) => {
   const trimmed = text?.trim() ?? ''
@@ -50,11 +64,16 @@ const nameOf = (raw: RawOutput) => (raw.__typename === 'CheckRun' ? raw.name : r
 
 const passed = (raw: RawOutput) => (raw.__typename === 'CheckRun' ? raw.conclusion : raw.state) === 'SUCCESS'
 
+const fromActions = (raw: RawOutput): raw is RawRun => raw.__typename === 'CheckRun' && raw.checkSuite.app?.slug === 'github-actions'
+
 const annotationLine = ({ path, message, location }: RawAnnotation) => `${path}:${location.start.line}: ${cut(message)}`
 
-const outputText = (raw: RawOutput) => {
+const runText = (raw: RawRun, log: string) =>
+  [cut(raw.title), cut(raw.summary), cut(raw.text), ...raw.annotations.nodes.map(annotationLine), ...(log ? [`Log tail:\n${log}`] : [])].filter(Boolean).join('\n')
+
+const outputText = async (github: GitHub, repo: string, raw: RawOutput, logged: Set<RawRun>) => {
   if (raw.__typename === 'StatusContext') return cut(raw.description)
-  return [cut(raw.title), cut(raw.summary), cut(raw.text), ...raw.annotations.nodes.map(annotationLine)].filter(Boolean).join('\n')
+  return runText(raw, logged.has(raw) ? await github.jobLog(repo, raw.databaseId) : '')
 }
 
 export const checkOutput = async (github: GitHub, { repo, number }: PullRef, head: string, names: string[]) => {
@@ -62,8 +81,8 @@ export const checkOutput = async (github: GitHub, { repo, number }: PullRef, hea
   if (!owner || !name) throw new Error(`"${repo}" isn't an owner/name repository for #${number}.`)
   const raw = await github.graphql<RawCommit>(outputQuery, { owner, name, oid: head })
   const contexts = raw.repository?.object?.statusCheckRollup?.contexts.nodes ?? []
-  return contexts
-    .filter(context => names.includes(nameOf(context)) && !passed(context))
-    .map(context => `${nameOf(context)}:\n${outputText(context) || '(no output)'}`)
-    .join('\n\n')
+  const failing = contexts.filter(context => names.includes(nameOf(context)) && !passed(context))
+  const logged = new Set(failing.filter(fromActions).slice(0, logsAtMost))
+  const texts = await Promise.all(failing.map(context => outputText(github, repo, context, logged)))
+  return failing.map((context, at) => `${nameOf(context)}:\n${texts[at] || '(no output)'}`).join('\n\n')
 }

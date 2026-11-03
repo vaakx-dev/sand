@@ -1,5 +1,6 @@
 import type { GitRepo, GitRunner } from '@sand/git/contract'
 import type { SubModel } from '@sand/sub-model/contract'
+import { jobLog } from './actions/log'
 import { createClient } from './api/client'
 import { githubHost } from './api/endpoint'
 import { createAuth } from './auth/auth'
@@ -69,6 +70,7 @@ export const createGitHub = (deps: GitHubDeps) => {
     remoteFor: (cwd, repo) => remoteFor(deps.git, cwd, repo),
     graphql: client.graphql,
     rest: client.rest,
+    jobLog: (repo, job) => jobLog(client, repo, job),
   }
 
   return {
