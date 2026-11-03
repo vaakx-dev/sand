@@ -1,6 +1,6 @@
 ---
 name: clean-code
-description: Must be loaded before writing or changing any code, in every agent, every time. Rules for focused, readable code that fits the codebase.
+description: Write focused, readable code. Must be loaded before writing or changing any code, in every agent.
 ---
 
 # Clean code
@@ -42,17 +42,9 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 - No prefixes or suffixes on folder, file or code names, unless a tool or language requires it. The context around a name carries the rest: its folder, module, namespace or type. `enemies/body`, not `enemies/enemy_body` or `enemies/body_enemy`; `user.name`, not `user.userName`.
 - If no honest name fits, the design is unclear. Fix the design first.
 
-## Comments
-
-Comment the way the existing code does. Before writing any, look at how the file you're changing and its neighbours use comments, including `/** */` doc comments and docstrings.
-
-- Where the code has comments, add them in the same places, style and amount.
-- Where it has none, write none. Rename or split instead.
-- In a new project with nothing to follow, write none.
-
 ## Leave out
 
-- Suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Fix the cause instead.
+- Comments, unless the surrounding code has them; then match its style. Never suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Rename, split or fix the cause instead.
 - Abstractions with one caller, wrappers that only pass calls through.
 - Dead code and unused parameters, including any your change left behind.
 - Logs, vague TODOs, and compatibility code for things you're replacing.
@@ -60,4 +52,4 @@ Comment the way the existing code does. Before writing any, look at how the file
 
 ## Before you finish
 
-Reread the diff. Check every comment you added matches the code around it. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
+Reread the diff. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
