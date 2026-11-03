@@ -7,7 +7,7 @@ import { pageUrl } from './page-url'
 
 const settings = '[host]\nport = 0\n\n[plugins.devices-network]\nenabled = false\n'
 
-const borrowed = ['plugins', 'model.json']
+const borrowed = ['plugins', 'model.json', 'sub-model.json']
 
 const copyBorrowed = (home: string, box: string) => {
   for (const name of borrowed) {
