@@ -136,12 +136,11 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
     async remove(id) {
       const session = topLevel(id)
       await close(session)
-      const removed = removeChats(id)
-      if (session.kind === 'quick') await tasks.removeFolder(id)
-      for (const chat of removed) {
+      for (const chat of removeChats(id)) {
         forget(chat)
         hooks.remove(chat)
       }
+      if (session.kind === 'quick') await tasks.removeFolder(id)
     },
     open(id) {
       const row = opened.has(id) ? undefined : records.find(id)

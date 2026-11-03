@@ -13,7 +13,7 @@ export const jobTools = (ctx: JobsContext, store: Store, delivery: Delivery) => 
     ctx.tools.group({
       name: group,
       label: 'Background jobs',
-      summary: 'list, read, message, wait for and stop your background agents',
+      summary: 'list, read, message, wait for and stop your background agents and commands',
       load: 'on-demand',
     }),
   )

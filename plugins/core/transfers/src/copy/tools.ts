@@ -61,6 +61,7 @@ export const pcTools = (home: string, transfers: TransferStore, linked: () => Pe
     description: 'Copy a file or folder from one PC to another.',
     group,
     input: copyInput,
+    timeoutMs: copyTimeout,
     async run({ from, to, from_pc, to_pc }, { cwd }) {
       const source = from_pc ? paired(from_pc) : undefined
       const target = to_pc ? paired(to_pc) : undefined

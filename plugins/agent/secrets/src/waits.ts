@@ -4,7 +4,7 @@ export type Outcome = { status: 'saved'; file: string } | { status: Exclude<Secr
 
 type Settle = (outcome: Outcome) => void
 
-const timeout = 20 * 60_000
+export const answerTimeout = 20 * 60_000
 
 export const createWaits = () => {
   const pending = new Map<string, { session: string; settle: Settle }>()
@@ -19,7 +19,7 @@ export const createWaits = () => {
           resolve(outcome)
         }
         const cancel = () => settle({ status: 'cancelled' })
-        const timer = setTimeout(() => settle({ status: 'timed_out' }), timeout)
+        const timer = setTimeout(() => settle({ status: 'timed_out' }), answerTimeout)
         signal.addEventListener('abort', cancel, { once: true })
         pending.set(id, { session, settle })
       }),

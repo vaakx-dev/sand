@@ -3,7 +3,7 @@ import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
-export type JobKind = 'agent'
+export type JobKind = 'agent' | 'command'
 
 export type JobStatus = 'running' | 'done' | 'failed' | 'cancelled'
 
@@ -60,12 +60,8 @@ export const helloJobs = helloField<WireJob[]>('jobs')
 
 export const jobCancel = request('job.cancel', { input: z.object({ job: z.string() }), output: type<boolean>() })
 
-export interface JobState extends WireJob {
-  notes: string[]
-}
-
 export interface Jobs {
-  list(parent?: string): JobState[]
+  list(parent?: string): WireJob[]
   cancel(id: string): Promise<void>
 }
 

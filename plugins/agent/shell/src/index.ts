@@ -11,7 +11,8 @@ export default definePlugin({
   inject: { tools },
   config: z.object({
     shell: z.string().optional(),
-    timeout_ms: z.number().int().positive().default(120_000),
+    silence_ms: z.number().int().positive().default(120_000),
+    limit_ms: z.number().int().positive().default(1_200_000),
     max_output: z.number().int().positive().default(10_000),
   }),
   apply(ctx, config) {

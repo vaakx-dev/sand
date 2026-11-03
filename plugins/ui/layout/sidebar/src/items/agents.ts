@@ -13,7 +13,7 @@ const looseAgents = (threads: Threads, jobOrigins: Set<string>) =>
   threads.list().filter(thread => thread.info.kind === 'agent' && thread.running && !(thread.info.origin && jobOrigins.has(thread.info.origin)))
 
 const runningRuns = (ctx: Context, threads: Threads): Run[] => {
-  const running = (ctx.get(jobs)?.list() ?? []).filter(job => job.status === 'running')
+  const running = (ctx.get(jobs)?.list() ?? []).filter(job => job.kind === 'agent' && job.status === 'running')
   const origins = new Set(running.flatMap(job => job.origin ?? []))
   const ownerOf = (thread: Thread | undefined) => visibleAncestor(threads, thread)?.id
   return [

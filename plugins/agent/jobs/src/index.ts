@@ -8,7 +8,7 @@ import { jobTools } from './tools'
 
 export default definePlugin({
   name: 'jobs',
-  description: 'Background agents: their results reach the thread that started them, which can read, message, wait for and stop them',
+  description: 'Background agents and commands: their results reach the thread that started them, which can read, message, wait for and stop them',
   inject,
   apply(ctx) {
     const delivery = createDelivery(ctx)

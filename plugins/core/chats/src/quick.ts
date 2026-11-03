@@ -1,4 +1,5 @@
 import { oneLine } from '@sand/util'
+import { retryLocked } from '@sand/util/fs'
 import { promptText } from './prompt'
 import { mkdirSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
@@ -18,5 +19,5 @@ export const quickTasks = (scratch: (id: string) => string) => ({
     mkdirSync(path, { recursive: true })
     return path
   },
-  removeFolder: (id: string) => rm(scratch(id), { recursive: true, force: true }),
+  removeFolder: (id: string) => retryLocked(() => rm(scratch(id), { recursive: true, force: true })),
 })

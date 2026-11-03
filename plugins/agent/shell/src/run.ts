@@ -1,38 +1,66 @@
 import { drain, spawn, stream, unixNewlines, type SpawnOptions } from './process'
 
-interface RunOptions extends SpawnOptions {
+export type Stop = 'silence' | 'limit'
+
+export interface Timeouts {
+  silence: number
+  limit: number
+}
+
+interface RunOptions extends SpawnOptions, Timeouts {
   signal: AbortSignal
-  timeout: number
   onText?: (text: string) => void
 }
 
-export const run = async (argv: string[], { signal, timeout, onText, ...options }: RunOptions) => {
+const watchdog = ({ silence, limit }: Timeouts, stop: (reason: Stop) => void) => {
+  const started = performance.now()
+  let heard = started
+  const check = () => {
+    const now = performance.now()
+    if (now - started >= limit) return stop('limit')
+    if (now - heard >= silence) return stop('silence')
+    timer = setTimeout(check, Math.min(heard + silence, started + limit) - now)
+  }
+  let timer = setTimeout(check, Math.min(silence, limit))
+  return {
+    hear: () => {
+      heard = performance.now()
+    },
+    clear: () => clearTimeout(timer),
+  }
+}
+
+export const run = async (argv: string[], { signal, silence, limit, onText, ...options }: RunOptions) => {
   const { child, killTree } = spawn(argv, 'ignore', options)
+  let stopped: Stop | undefined
+  const watch = watchdog({ silence, limit }, reason => {
+    stopped = reason
+    void killTree()
+  })
+  const hear = (text: string) => {
+    watch.hear()
+    onText?.(text)
+  }
   let stdout = ''
   let stderr = ''
   const streams = [
     stream(child.stdout, text => {
       stdout += text
-      onText?.(text)
+      hear(text)
     }),
     stream(child.stderr, text => {
       stderr += text
-      onText?.(text)
+      hear(text)
     }),
   ]
-  let timedOut = false
   const abort = () => void killTree()
-  const timer = setTimeout(() => {
-    timedOut = true
-    abort()
-  }, timeout)
   signal.addEventListener('abort', abort, { once: true })
   if (signal.aborted) abort()
 
   const code = await child.exited
-  clearTimeout(timer)
+  watch.clear()
   signal.removeEventListener('abort', abort)
 
   await drain(streams)
-  return { code, timedOut, stdout: unixNewlines(stdout), stderr: unixNewlines(stderr) }
+  return { code, stopped, stdout: unixNewlines(stdout), stderr: unixNewlines(stderr) }
 }

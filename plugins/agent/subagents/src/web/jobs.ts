@@ -1,11 +1,11 @@
-import { jobs, jobsChange, type JobState } from '@sand/jobs/contract'
+import { jobs, jobsChange, type WireJob } from '@sand/jobs/contract'
 import { owned, pulse } from '@sand/web-client/reactive'
 import { effect, onInterval, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
 const refresh = 5000
 
-const snapshot = (list: JobState[]) =>
+const snapshot = (list: WireJob[]) =>
   list
     .filter(job => job.origin)
     .map(job => `${job.origin}:${job.status}`)
