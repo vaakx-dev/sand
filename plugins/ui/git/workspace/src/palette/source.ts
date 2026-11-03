@@ -27,7 +27,7 @@ const cleanupItem = (openCleanup: () => void): PaletteItem => ({
   id: 'git-workspace:clean-up',
   group: 'Actions',
   icon: 'trash',
-  label: 'Clean up worktrees…',
+  label: 'Clean up worktreesâ€¦',
   detail: 'Free disk space by removing finished worktrees',
   search: 'git worktree remove delete disk space prune',
   run: openCleanup,

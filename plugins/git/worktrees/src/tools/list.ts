@@ -3,15 +3,16 @@ import { bytes, plural } from '@sand/util'
 import { isWithin } from '@sand/util/fs'
 import { z } from 'zod'
 import type { RemoveCheck, WorktreeStatus } from '../contract'
+import { unsaved } from '../status/unsaved'
 import type { Survey } from '../status/survey'
 
 const input = z.object({})
 
 const sizeWaitMs = 5000
 
-const unsaved = ({ uncommitted, unpushed }: RemoveCheck) => {
-  const parts = [uncommitted ? plural(uncommitted, 'uncommitted file') : '', unpushed ? plural(unpushed, 'unpushed commit') : ''].filter(Boolean)
-  return parts.length ? `unsaved work: ${parts.join(', ')}` : 'nothing unsaved'
+const saved = (check: RemoveCheck) => {
+  const lost = unsaved(check)
+  return lost ? `unsaved work: ${lost}` : 'nothing unsaved'
 }
 
 const facts = (status: WorktreeStatus, size: number | undefined, cwd: string) =>
@@ -20,7 +21,7 @@ const facts = (status: WorktreeStatus, size: number | undefined, cwd: string) =>
     size === undefined ? 'size still counting' : bytes(size),
     status.pull ? `PR #${status.pull.number} ${status.pull.state}` : 'no linked PR',
     status.ahead === undefined ? '' : `${plural(status.ahead, 'commit')} beyond ${status.base}`,
-    unsaved(status.check),
+    saved(status.check),
     status.check.running ? 'a thread is working in it' : '',
     isWithin(cwd, status.path) ? 'you are in it' : '',
   ].filter(Boolean)

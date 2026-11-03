@@ -4,6 +4,8 @@ import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 
+export { unsaved } from './status/unsaved'
+
 export type WorkspaceKind = 'checkout' | 'worktree'
 
 export interface Worktree {

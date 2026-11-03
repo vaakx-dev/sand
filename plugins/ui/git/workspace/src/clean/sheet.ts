@@ -1,8 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { bytes, folderName, plural } from '@sand/util'
-import type { WorktreeStatus } from '@sand/worktrees/contract'
+import { unsaved, type WorktreeStatus } from '@sand/worktrees/contract'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
-import { type Cleanup, nameOf, unsaved } from './model'
+import { type Cleanup, nameOf } from './model'
 
 const progress = (status: WorktreeStatus) => {
   if (status.pull?.state === 'merged') return `Merged #${status.pull.number}`

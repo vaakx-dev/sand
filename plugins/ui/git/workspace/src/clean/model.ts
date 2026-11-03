@@ -1,13 +1,10 @@
 import { picker } from '@sand/picker/contract'
-import { errorMessage, folderName, plural } from '@sand/util'
-import type { RemoveCheck, WorktreeStatus } from '@sand/worktrees/contract'
+import { errorMessage, folderName } from '@sand/util'
+import { unsaved, type WorktreeStatus } from '@sand/worktrees/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 
 export const nameOf = (status: WorktreeStatus) => status.branch ?? folderName(status.path)
-
-export const unsaved = ({ uncommitted, unpushed }: RemoveCheck) =>
-  [uncommitted ? plural(uncommitted, 'uncommitted file') : '', unpushed ? plural(unpushed, 'unpushed commit') : ''].filter(Boolean).join(', ')
 
 const finished = (status: WorktreeStatus) => status.pull?.state === 'merged' || status.ahead === 0
 

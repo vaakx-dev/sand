@@ -6,7 +6,7 @@ import { moveThread } from '../move/move'
 import { repoAt } from '../repo/local'
 import { threadsIn } from '../sessions/inside'
 
-export interface PendingMove {
+interface PendingMove {
   branch?: string
   task?: string
 }
