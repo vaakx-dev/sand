@@ -4,5 +4,8 @@ import { run } from './run'
 
 export const shellRunnerOf = (shell: Shell): ShellRunner => ({
   name: shell.name,
-  run: (command, { cwd, signal, timeoutMs, onText }) => run(shell.argv(command), { cwd, verbatim: shell.verbatim, signal, timeout: timeoutMs, onText }),
+  async run(command, { cwd, signal, timeoutMs, onText }) {
+    const { stopped, ...outcome } = await run(shell.argv(command), { cwd, verbatim: shell.verbatim, signal, silence: timeoutMs, limit: timeoutMs, onText })
+    return { ...outcome, timedOut: stopped !== undefined }
+  },
 })

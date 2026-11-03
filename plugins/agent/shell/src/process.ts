@@ -5,6 +5,10 @@ const windows = process.platform === 'win32'
 const taskkillWait = 5000
 const drainGrace = 500
 
+const noPrompts = { GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never', GIT_EDITOR: 'true', GIT_PAGER: 'cat', PAGER: 'cat' }
+
+export const agentEnv = { CI: '1' }
+
 export interface SpawnOptions {
   cwd: string
   verbatim?: boolean
@@ -37,7 +41,7 @@ const groupTree = (child: Subprocess) => async () => {
 export const spawn = <In extends 'pipe' | 'ignore'>(argv: string[], stdin: In, { cwd, verbatim = false, env = {} }: SpawnOptions) => {
   const child = Bun.spawn(argv, {
     cwd,
-    env: { ...process.env, ...env },
+    env: { ...process.env, ...noPrompts, ...env },
     stdin,
     stdout: 'pipe',
     stderr: 'pipe',
