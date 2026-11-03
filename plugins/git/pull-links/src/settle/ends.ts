@@ -1,29 +1,17 @@
 import { type GitHub, type PullRef, pullKey, pullVariables } from '@sand/github/contract'
+import type { OnceReport } from '../report/once'
 
-interface EndNode {
-  state: 'OPEN' | 'CLOSED' | 'MERGED'
-  mergedAt: string | null
-  closedAt: string | null
-}
+type PullClosing = { closed: true; closedAt: string } | { closed: false; closedAt: string | null }
 
-type EndsData = Record<string, { pullRequest: EndNode | null } | null>
-
-/** When each pull request merged or closed, by pullKey; undefined while it is open. Pull requests GitHub didn't answer for are left out. */
-export type PullEnds = Map<string, number | undefined>
+type ClosingData = Record<string, { pullRequest: PullClosing | null } | null>
 
 const batchSize = 50
 
-const endOf = (node: EndNode) => {
-  if (node.state === 'OPEN') return undefined
-  const at = Date.parse(node.mergedAt ?? node.closedAt ?? '')
-  return Number.isNaN(at) ? Date.now() : at
-}
-
-const endsQuery = (count: number) => {
+const closingQuery = (count: number) => {
   const indexes = Array.from({ length: count }, (_, index) => index)
   const params = indexes.map(index => `$o${index}: String!, $n${index}: String!, $p${index}: Int!`).join(', ')
-  const fields = indexes.map(index => `p${index}: repository(owner: $o${index}, name: $n${index}) { pullRequest(number: $p${index}) { state mergedAt closedAt } }`)
-  return `query PullEnds(${params}) {\n  ${fields.join('\n  ')}\n}`
+  const fields = indexes.map(index => `p${index}: repository(owner: $o${index}, name: $n${index}) { pullRequest(number: $p${index}) { closed closedAt } }`)
+  return `query PullClosings(${params}) {\n  ${fields.join('\n  ')}\n}`
 }
 
 const variablesOf = (pulls: PullRef[]) =>
@@ -38,25 +26,26 @@ const variablesOf = (pulls: PullRef[]) =>
     }),
   )
 
-const readBatch = async (github: GitHub, pulls: PullRef[], ends: PullEnds) => {
-  const data = await github.graphql<EndsData>(endsQuery(pulls.length), variablesOf(pulls))
+const readBatch = async (github: GitHub, pulls: PullRef[], failures: OnceReport, ended: Map<string, number>) => {
+  const data = await github.graphql<ClosingData>(closingQuery(pulls.length), variablesOf(pulls))
   pulls.forEach((pull, index) => {
-    const node = data[`p${index}`]?.pullRequest
-    if (node) ends.set(pullKey(pull), endOf(node))
+    const key = pullKey(pull)
+    const closing = data[`p${index}`]?.pullRequest
+    if (!closing) return
+    failures.passed(key)
+    if (closing.closed) ended.set(key, Date.parse(closing.closedAt))
   })
 }
 
-/** One cheap query per 50 pull requests. A batch GitHub refuses, say for one pull request that's gone, is retried one at a time so the rest still answer. */
-export const readEnds = async (github: GitHub, pulls: PullRef[], failed: (pull: PullRef, error: unknown) => void): Promise<PullEnds> => {
-  const ends: PullEnds = new Map()
+const readEach = async (github: GitHub, pulls: PullRef[], failures: OnceReport, ended: Map<string, number>) => {
+  for (const pull of pulls) await readBatch(github, [pull], failures, ended).catch(error => failures.failed(pullKey(pull), error))
+}
+
+export const readEnded = async (github: GitHub, pulls: PullRef[], failures: OnceReport) => {
+  const ended = new Map<string, number>()
   for (let start = 0; start < pulls.length; start += batchSize) {
     const batch = pulls.slice(start, start + batchSize)
-    try {
-      await readBatch(github, batch, ends)
-    } catch (error) {
-      if (batch.length === 1) failed(batch[0]!, error)
-      else for (const pull of batch) await readBatch(github, [pull], ends).catch(error => failed(pull, error))
-    }
+    await readBatch(github, batch, failures, ended).catch(() => readEach(github, batch, failures, ended))
   }
-  return ends
+  return ended
 }

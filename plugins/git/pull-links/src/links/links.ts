@@ -4,7 +4,7 @@ import type { LinkSource, ThreadPulls } from '../contract'
 import type { LinkBook } from '../book/book'
 import { refOf, type StoredLinks, type WatchMark } from '../book/record'
 import { isEnded } from '../sweep/cadence'
-import { findLink, withEnded, withHeld, withLink, withMark, withoutLink, withoutWatching, withWatch } from './edit'
+import { findLink, withEnded, withEngaged, withLink, withMark, withoutLink, withoutWatching, withWatch } from './edit'
 import { threadOf } from './thread'
 import { threadPulls } from './view'
 
@@ -29,7 +29,7 @@ export const createThreadLinks = (deps: LinkDeps) => {
     return true
   }
 
-  const quietly = (found: Session, edit: (links: StoredLinks) => StoredLinks) => {
+  const changeUnseen = (found: Session, edit: (links: StoredLinks) => StoredLinks) => {
     const before = deps.book.read(found.id)
     const after = edit(before)
     if (after !== before) deps.book.write(found, after)
@@ -80,13 +80,13 @@ export const createThreadLinks = (deps: LinkDeps) => {
     linkStack: (found: Session, pulls: PullRef[]) => change(found, links => pulls.reduce((next, pull) => withLink(next, pull, 'stack', Date.now()), links)),
     stopWatching: (found: Session) => change(found, withoutWatching),
     stopWatch: (found: Session, pull: PullRef) => change(found, links => withWatch(links, pull, false)),
-    ended(pull: PullRef, ended: number | undefined) {
+    recordEnd(pull: PullRef, ended: number | undefined) {
       for (const id of linking(pull)) {
         const found = deps.sessions.open(id)
-        if (found) quietly(found, links => withEnded(links, pull, ended))
+        if (found) changeUnseen(found, links => withEnded(links, pull, ended))
       }
     },
-    hold: (found: Session, at: number) => quietly(found, links => withHeld(links, at)),
+    engage: (found: Session, at: number) => changeUnseen(found, links => withEngaged(links, at)),
     mark: (found: Session, pull: PullRef, mark: WatchMark, quiet: number, keepWatching: boolean) =>
       change(found, links => withMark(links, pull, mark, quiet, keepWatching)),
   }

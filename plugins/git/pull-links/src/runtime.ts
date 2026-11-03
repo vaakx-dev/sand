@@ -3,7 +3,7 @@ import { cli } from '@sand/config/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
 import { loop, sessionOpened, toolResult, turnEnd } from '@sand/loop/contract'
-import { promptSent, type Server, server, sessionCarry } from '@sand/server/contract'
+import { type Server, server, sessionCarry, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { steering } from '@sand/steering/contract'
 import { tools } from '@sand/tools/contract'
@@ -22,7 +22,7 @@ import { type OpenDeps, openPull } from './open/open'
 import { createOnceReport } from './report/once'
 import { servePullLinks } from './requests'
 import { isRunning } from './settle/running'
-import { createAutoSettle } from './settle/settle'
+import { type AutoSettleDeps, startAutoSettle } from './settle/settle'
 import { loadSettleSetting } from './settle/setting'
 import { followStacks } from './stack/follow'
 import { endedAt } from './sweep/cadence'
@@ -71,7 +71,7 @@ export default definePlugin({
       hold: () => ctx.busy(),
     })
     const setting = await loadSettleSetting(ctx.cli.home)
-    const settle = createAutoSettle({
+    const settleDeps: AutoSettleDeps = {
       github: ctx.github,
       sessions: ctx.sessions,
       book,
@@ -80,7 +80,7 @@ export default definePlugin({
       failures,
       running: thread => isRunning(ctx.sessions, ctx.get(loop), thread),
       hold: () => ctx.busy(),
-    })
+    }
     const open: OpenDeps = {
       github: ctx.github,
       git: ctx.gitRunner,
@@ -116,21 +116,20 @@ export default definePlugin({
     ctx.on(sessionUpdate, session => {
       if (session.settled === null) return
       links.stopWatching(session)
-      links.hold(session, session.settled)
+      links.engage(session, session.settled)
       discovery.forget(session.id)
     })
-    ctx.on(promptSent, session => {
+    ctx.on(userWrote, session => {
       const thread = links.thread(session.id)
-      if (thread.kind === 'thread') links.hold(thread, Date.now())
+      if (thread.kind === 'thread') links.engage(thread, Date.now())
     })
     ctx.on(sessionRemove, id => {
       viewed.end(id)
       book.forget(id)
       discovery.forget(id)
-      settle.forget(id)
     })
     ctx.on(pullChanged, summary => {
-      links.ended(summary, endedAt(summary))
+      links.recordEnd(summary, endedAt(summary))
       for (const id of links.linking(summary)) announce(id)
     })
     ctx.on(pullCreated, (summary, session) => void linkCreated(summary, session).catch(report))
@@ -148,8 +147,7 @@ export default definePlugin({
     ctx.watch(server, found => {
       if (!found) return
       live = found
-      const settingChanged = (on: boolean) => on && settle.soon()
-      return joinDisposers(servePullLinks(found, { links, viewed, open, setting, settingChanged }), sweep.start(), settle.start(), () => {
+      return joinDisposers(servePullLinks(found, { links, viewed, open, setting }), sweep.start(), startAutoSettle(settleDeps), () => {
         live = undefined
       })
     })

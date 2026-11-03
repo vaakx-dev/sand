@@ -5,8 +5,8 @@ import { refOf, type StoredLinks } from '../book/record'
 import type { ThreadLinks } from '../links/links'
 import { isLive } from '../links/thread'
 import type { OnceReport } from '../report/once'
-import { readEnds } from './ends'
-import { allEndedAt, mayAutoSettle, settlesAt } from './rule'
+import { readEnded } from './ends'
+import { endedSinceEngaged, isSettleable, lastEnd } from './rule'
 import type { SettleSetting } from './setting'
 
 export interface AutoSettleDeps {
@@ -24,58 +24,43 @@ const tickMs = 30_000
 const checkMs = 5 * 60_000
 const refusedMs = 5 * 60_000
 
-export const createAutoSettle = (deps: AutoSettleDeps) => {
-  const refused = new Map<string, number>()
-  const lastMessage = new Map<string, number>()
-  let nextCheck = 0
-  let busy = false
+const latestMessageAt = (thread: Session) => thread.latest('message')?.at ?? thread.created
 
-  const liveThreads = () =>
-    deps.book.threads().flatMap(id => {
-      const thread = deps.sessions.open(id)
-      return thread && isLive(thread) ? [thread] : []
-    })
+const engagedAt = (thread: Session, links: StoredLinks) => links.engaged ?? latestMessageAt(thread)
+
+export const startAutoSettle = (deps: AutoSettleDeps) => {
+  const refusedUntil = new Map<string, number>()
+  let nextCheck = 0
+  let sweeping = false
 
   const openPulls = () => {
     const found = new Map<string, PullRef>()
-    for (const thread of liveThreads()) for (const link of deps.book.read(thread.id).links) if (link.ended === undefined) found.set(pullKey(link), refOf(link))
+    for (const id of deps.book.threads()) {
+      const thread = deps.sessions.open(id)
+      if (!thread || !isLive(thread)) continue
+      for (const link of deps.book.read(id).links) if (link.ended === undefined) found.set(pullKey(link), refOf(link))
+    }
     return [...found.values()]
   }
 
-  const check = async () => {
+  const checkEnds = async () => {
     const pulls = openPulls()
-    if (!pulls.length) return
-    const ends = await readEnds(deps.github, pulls, (pull, error) => deps.failures.failed(`ends:${pullKey(pull)}`, error))
+    const ended = await readEnded(deps.github, pulls, deps.failures)
     for (const pull of pulls) {
-      const key = pullKey(pull)
-      if (!ends.has(key)) continue
-      deps.failures.passed(`ends:${key}`)
-      const ended = ends.get(key)
-      if (ended === undefined) continue
-      deps.links.ended(pull, ended)
-      deps.github.summary(pull, true).catch(error => deps.failures.failed(key, error))
+      const at = ended.get(pullKey(pull))
+      if (at === undefined) continue
+      deps.links.recordEnd(pull, at)
+      deps.github.summary(pull, true).catch(error => deps.failures.failed(pullKey(pull), error))
     }
   }
-
-  const lastMessageAt = (thread: Session) => {
-    const known = lastMessage.get(thread.id)
-    if (known !== undefined) return known
-    const at = thread.latest('message')?.at ?? thread.created
-    lastMessage.set(thread.id, at)
-    return at
-  }
-
-  // Links stored before auto-settle have no held time, so the latest message stands in for the user's.
-  const heldOf = (thread: Session, links: StoredLinks) => links.held ?? lastMessageAt(thread)
 
   const settleEnded = async (now: number) => {
     for (const id of deps.book.threads()) {
       const links = deps.book.read(id)
-      if (allEndedAt(links) === undefined || (refused.get(id) ?? 0) > now) continue
+      if (lastEnd(links) === undefined || (refusedUntil.get(id) ?? 0) > now) continue
       const thread = deps.sessions.open(id)
-      if (!thread || !mayAutoSettle(thread, now) || deps.running(thread)) continue
-      if (settlesAt(links, heldOf(thread, links)) === undefined) continue
-      await deps.sessions.settle(id, true).catch(() => refused.set(id, now + refusedMs))
+      if (!thread || !isSettleable(thread, now) || deps.running(thread) || !endedSinceEngaged(links, engagedAt(thread, links))) continue
+      await deps.sessions.settle(id, true).catch(() => refusedUntil.set(id, now + refusedMs))
     }
   }
 
@@ -83,37 +68,23 @@ export const createAutoSettle = (deps: AutoSettleDeps) => {
     const now = Date.now()
     if (now >= nextCheck) {
       nextCheck = now + checkMs
-      await check().catch(error => deps.failures.failed('ends', error))
+      await checkEnds()
     }
     await settleEnded(now)
   }
 
   const tick = async () => {
-    if (busy || !deps.setting.on()) return
-    busy = true
+    if (sweeping || !deps.setting.on()) return
+    sweeping = true
     const release = deps.hold()
     try {
       await sweep()
     } finally {
-      busy = false
+      sweeping = false
       release()
     }
   }
 
-  return {
-    start() {
-      const timer = setInterval(() => tick().catch(error => deps.failures.failed('settle', error)), tickMs)
-      return () => {
-        clearInterval(timer)
-        nextCheck = 0
-      }
-    },
-    soon: () => void (nextCheck = 0),
-    forget(id: string) {
-      refused.delete(id)
-      lastMessage.delete(id)
-    },
-  }
+  const timer = setInterval(() => tick().catch(error => deps.failures.failed('settle', error)), tickMs)
+  return () => clearInterval(timer)
 }
-
-export type AutoSettle = ReturnType<typeof createAutoSettle>

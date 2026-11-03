@@ -11,7 +11,6 @@ export interface RequestDeps {
   viewed: Viewed
   open: OpenDeps
   setting: SettleSetting
-  settingChanged(on: boolean): void
 }
 
 export const servePullLinks = (server: Server, deps: RequestDeps) =>
@@ -29,7 +28,6 @@ export const servePullLinks = (server: Server, deps: RequestDeps) =>
     server.handle(autoSettleSet, async ({ on }) => {
       await deps.setting.set(on)
       server.broadcast(autoSettleChange, on)
-      deps.settingChanged(on)
       return on
     }),
   )

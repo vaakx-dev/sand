@@ -5,17 +5,11 @@ import type { PullNode } from './query'
 import { pullStack } from './stack'
 import { mergeMethod, mergeState, pullState, reviewState } from './states'
 
-const endedAt = (node: PullNode) => {
-  const at = Date.parse(node.mergedAt ?? node.closedAt ?? '')
-  return Number.isNaN(at) ? undefined : at
-}
-
 const unresolved = (node: PullNode) => (node.reviewThreads.nodes ?? []).filter(thread => thread && !thread.isResolved).length
 
 export const shapeSummary = (ref: PullRef, node: PullNode): PullSummary => {
   const autoMerge = mergeMethod(node)
   const stack = pullStack(node)
-  const ended = endedAt(node)
   const contexts = node.commits.nodes?.[0]?.commit.statusCheckRollup?.contexts
   return {
     repo: node.baseRepository?.nameWithOwner ?? ref.repo,
@@ -27,7 +21,7 @@ export const shapeSummary = (ref: PullRef, node: PullNode): PullSummary => {
     base: node.baseRefName,
     author: node.author?.login ?? 'ghost',
     updated: Date.parse(node.updatedAt),
-    ...(ended === undefined ? {} : { ended }),
+    ...(node.state !== 'OPEN' && node.closedAt ? { ended: Date.parse(node.closedAt) } : {}),
     add: node.additions,
     del: node.deletions,
     files: node.changedFiles,

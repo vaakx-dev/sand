@@ -2,7 +2,7 @@ import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { sessionUpdate } from '@sand/chats/contract'
 import { createHandlers, parseInput } from '@sand/util/wire'
 import { definePlugin } from 'drydock'
-import { helloSafe, pagesChange, promptSent, type Server, server as serverService, uiFocus } from './contract'
+import { helloSafe, pagesChange, type Server, server as serverService, uiFocus, userWrote } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
 import { pagingRequests } from './requests/paging'
@@ -34,7 +34,7 @@ export default definePlugin({
       return true
     }
 
-    ctx.on(promptSent, session => {
+    ctx.on(userWrote, session => {
       if (session.settled !== null) ctx.sessions.settle(session.id, false).catch(error => ctx.report(error))
     })
 

@@ -85,7 +85,6 @@ export interface PullLinksClient {
   open(input: PullOpenRequest, device: string): Promise<{ session: string }>
   openThread(pull: PullRef, select?: boolean): Promise<LinkedThread | undefined>
   ask(pull: PullRef, prompt: AgentPrompt, place?: ThreadPlace): Promise<boolean>
-  /** Whether threads settle when their pull requests merge, on every PC that answered. */
   autoSettle(): boolean
   setAutoSettle(on: boolean): Promise<void>
 }

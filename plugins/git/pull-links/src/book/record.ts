@@ -22,14 +22,13 @@ const storedLink = ref.extend({
   ended: z.number().optional(),
 })
 
-// held: auto-settle skips pull requests that ended before this, the last time the user wrote in the thread or it was settled.
-const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref), held: z.number().optional() })
+const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref), engaged: z.number().optional() })
 
 export type WatchMark = z.infer<typeof watchMark>
 export type StoredLink = z.infer<typeof storedLink>
 export type StoredLinks = z.infer<typeof storedLinks>
 
-export const noLinks: StoredLinks = { links: [], dismissed: [] }
+export const noLinks: StoredLinks = { links: [], dismissed: [], engaged: 0 }
 
 export const parseLinks = (data: unknown): StoredLinks | undefined => {
   const parsed = storedLinks.safeParse(data)

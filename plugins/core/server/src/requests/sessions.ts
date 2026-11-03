@@ -16,7 +16,7 @@ import {
   sessionsQuick,
   sessionsCreate,
 } from '../contract/requests'
-import { promptSent } from '../contract'
+import { userWrote } from '../contract'
 import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
 
@@ -49,7 +49,7 @@ export const sessionRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle
     }),
     wire.handle(loopRun, ({ session: id, prompt }) => {
       const found = session(id)
-      ctx.emit(promptSent, found)
+      ctx.emit(userWrote, found)
       return ctx.loop.run(found, prompt)
     }),
     wire.handle(loopInterrupt, ({ session: id }) => ctx.loop.interrupt(session(id))),

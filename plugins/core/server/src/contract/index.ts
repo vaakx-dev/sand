@@ -14,8 +14,7 @@ export const server = service<Server>('server')
 
 export const pagesChange = event<(pages: number) => void>('server.pages')
 
-/** The user sent this chat a message from the page: a new turn or a steer. Turns the agent starts itself don't fire it. */
-export const promptSent = event<(session: Session) => void>('prompt.sent')
+export const userWrote = event<(session: Session) => void>('user.wrote')
 
 export const sessionCarry = event<(types: string[]) => string[]>('session.carry')
 

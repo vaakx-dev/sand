@@ -64,7 +64,7 @@ export const createSweep = (deps: SweepDeps) => {
   const refresh = async (key: string, target: Target, now: number) => {
     const summary = await deps.github.summary(target.ref, true)
     due.set(key, nextDue(summary, now))
-    deps.links.ended(target.ref, endedAt(summary))
+    deps.links.recordEnd(target.ref, endedAt(summary))
     const watching = target.threads.filter(thread => watchedIn(thread, target.ref))
     if (!watching.length) return
     if (isEnded(summary)) {
