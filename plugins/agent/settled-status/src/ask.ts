@@ -10,10 +10,13 @@ const mostChars = 1500
 
 const system = `A developer has settled a thread with a coding agent. Write one line, under 70 characters, on where it ended: the outcome first, then the detail that matters, such as "merged in #544, sprites draw one frame" or "dropped, the API has no batch endpoint". Lowercase, no quotes, no closing period. Reply with the line only.`
 
-const lastText = (messages: Message[], read: (message: Message) => string) =>
-  messages
-    .map(message => read(message).trim())
-    .findLast(Boolean) ?? ''
+const lastText = (messages: Message[], read: (message: Message) => string) => {
+  for (const message of messages.toReversed()) {
+    const text = read(message).trim()
+    if (text) return text
+  }
+  return ''
+}
 
 const pullLines = async (session: Session, links: PullLinks | undefined) => {
   const pulls = await links?.links(session.id)
