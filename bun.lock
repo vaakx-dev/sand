@@ -172,6 +172,23 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/settled-status": {
+      "name": "@sand/settled-status",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/pull-links": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/sidebar": "workspace:*",
+        "@sand/sub-model": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/agent/shell": {
       "name": "@sand/shell",
       "version": "0.0.0",
@@ -1904,6 +1921,8 @@
     "@sand/server": ["@sand/server@workspace:plugins/core/server"],
 
     "@sand/settings": ["@sand/settings@workspace:plugins/ui/shared/settings"],
+
+    "@sand/settled-status": ["@sand/settled-status@workspace:plugins/agent/settled-status"],
 
     "@sand/shell": ["@sand/shell@workspace:plugins/agent/shell"],
 
