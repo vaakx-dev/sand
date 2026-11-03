@@ -32,9 +32,12 @@ const record = z.object({
   setup: setup.optional(),
 })
 
+const kind = z.enum(['checkout', 'worktree'])
+
 export const storedSchema = z.object({
   worktrees: z.record(z.string(), record).default({}),
-  defaults: z.record(z.string(), z.object({ kind: z.enum(['checkout', 'worktree']) })).default({}),
+  defaults: z.record(z.string(), z.object({ kind })).default({}),
+  global: kind.optional(),
 })
 
 export type PlannedStep = z.infer<typeof step>
