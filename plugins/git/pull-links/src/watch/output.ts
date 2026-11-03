@@ -1,4 +1,5 @@
-import type { GitHub, PullRef } from '@sand/github/contract'
+import { type GitHub, type PullRef, pullVariables } from '@sand/github/contract'
+import { errorMessage } from '@sand/util'
 
 const outputQuery = `query CheckOutput($owner: String!, $name: String!, $oid: GitObjectID!) {
   repository(owner: $owner, name: $name) {
@@ -68,21 +69,25 @@ const fromActions = (raw: RawOutput): raw is RawRun => raw.__typename === 'Check
 
 const annotationLine = ({ path, message, location }: RawAnnotation) => `${path}:${location.start.line}: ${cut(message)}`
 
-const runText = (raw: RawRun, log: string) =>
-  [cut(raw.title), cut(raw.summary), cut(raw.text), ...raw.annotations.nodes.map(annotationLine), ...(log ? [`Log tail:\n${log}`] : [])].filter(Boolean).join('\n')
+const logTail = (github: GitHub, repo: string, job: number) =>
+  github.jobLog(repo, job).then(
+    log => (log ? `Log tail:\n${log}` : ''),
+    (error: unknown) => `Log tail unavailable: ${errorMessage(error)}`,
+  )
+
+const runText = (raw: RawRun, tail: string) => [cut(raw.title), cut(raw.summary), cut(raw.text), ...raw.annotations.nodes.map(annotationLine), tail].filter(Boolean).join('\n')
 
 const outputText = async (github: GitHub, repo: string, raw: RawOutput, logged: Set<RawRun>) => {
   if (raw.__typename === 'StatusContext') return cut(raw.description)
-  return runText(raw, logged.has(raw) ? await github.jobLog(repo, raw.databaseId) : '')
+  return runText(raw, logged.has(raw) ? await logTail(github, repo, raw.databaseId) : '')
 }
 
-export const checkOutput = async (github: GitHub, { repo, number }: PullRef, head: string, names: string[]) => {
-  const [owner, name] = repo.split('/')
-  if (!owner || !name) throw new Error(`"${repo}" isn't an owner/name repository for #${number}.`)
+export const checkOutput = async (github: GitHub, pull: PullRef, head: string, names: string[]) => {
+  const { owner, name } = pullVariables(pull)
   const raw = await github.graphql<RawCommit>(outputQuery, { owner, name, oid: head })
   const contexts = raw.repository?.object?.statusCheckRollup?.contexts.nodes ?? []
   const failing = contexts.filter(context => names.includes(nameOf(context)) && !passed(context))
   const logged = new Set(failing.filter(fromActions).slice(0, logsAtMost))
-  const texts = await Promise.all(failing.map(context => outputText(github, repo, context, logged)))
+  const texts = await Promise.all(failing.map(context => outputText(github, pull.repo, context, logged)))
   return failing.map((context, at) => `${nameOf(context)}:\n${texts[at] || '(no output)'}`).join('\n\n')
 }
