@@ -60,7 +60,7 @@ const manifest = z.object({ packageManager: z.string() })
 const managerCommand = async (main: string): Promise<Command[]> => {
   const file = Bun.file(join(main, 'package.json'))
   if (!(await file.exists())) return []
-  const found = manifest.safeParse(await file.json().catch(() => null))
+  const found = manifest.safeParse(await file.json())
   if (!found.success) return []
   const { packageManager } = found.data
   const command = managers[packageManager.split('@')[0] ?? '']

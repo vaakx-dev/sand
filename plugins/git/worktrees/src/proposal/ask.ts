@@ -1,7 +1,4 @@
 import type { JobRequest, SubModel } from '@sand/sub-model/contract'
-import { isWithin } from '@sand/util/fs'
-import { existsSync } from 'node:fs'
-import { isAbsolute, join, resolve } from 'node:path'
 import { z } from 'zod'
 import type { SetupLines } from '../contract'
 import type { Facts } from './facts'
@@ -21,13 +18,11 @@ const describe = ({ files, commands }: Facts) =>
     ...(commands.length ? commands.map(({ command, why }) => `- ${command} (${why})`) : ['(none)']),
   ].join('\n')
 
-const inMain = (main: string, path: string) => !isAbsolute(path) && isWithin(resolve(main, path), main) && existsSync(join(main, path))
-
 export const askSetup = async (sub: SubModel, main: string, facts: Facts, session: string | undefined): Promise<SetupLines> => {
   const request: JobRequest = { job: setupJob.id, tier: 'fast', system, prompt: describe(facts), cwd: main, ...(session ? { session } : {}) }
   const answer = await sub.json(request, chosen)
   return {
-    copy: facts.files.filter(file => answer.copy.includes(file) && inMain(main, file)),
+    copy: facts.files.filter(file => answer.copy.includes(file)),
     run: facts.commands.map(({ command }) => command).filter(command => answer.run.includes(command)),
   }
 }

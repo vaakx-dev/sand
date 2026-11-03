@@ -63,10 +63,10 @@ export const createProposals = ({ git, store, setups, file, sub, send }: Proposa
     async request(path: string, answer: SetupAnswer | undefined) {
       await store.ready()
       const record = store.containing(path)
-      const lines = record && shown.get(pathKey(record.path))
-      if (!record || !lines) return null
-      if (!answer) return lines
+      if (!record) return null
       const key = pathKey(record.path)
+      const lines = shown.get(key)
+      if (!lines || !answer) return lines ?? null
       shown.delete(key)
       try {
         await answers[answer](record, lines)
