@@ -1,24 +1,50 @@
 import type { Session } from '@sand/chats/contract'
-import type { PullSummary } from '@sand/github/contract'
+import { type PullSummary, pullKey } from '@sand/github/contract'
 import type { PullActivity } from '../activity/types'
-import type { StoredLink } from '../book/record'
+import type { StoredLink, WatchMark } from '../book/record'
+import { findLink } from '../links/edit'
 import type { ThreadLinks } from '../links/links'
 import { baselineMark, changesSince, nextMark, onlyTalk, quietLimit, sameMark } from './mark'
 import { wakeLabel, wakeNote } from './note'
+import type { Verdict, WatchEvent } from './screen'
 
-export type Wake = (session: Session, text: string, label: string) => boolean
+export interface Wake {
+  agent(session: Session, text: string, label: string): boolean
+  screen(): ((event: WatchEvent) => Promise<Verdict>) | undefined
+  once(key: string, run: () => Promise<void>): void
+  report(error: unknown): void
+}
+
+const unchanged = (links: ThreadLinks, thread: Session, link: StoredLink, mark: WatchMark) => {
+  const now = findLink(links.read(thread.id), link)
+  return Boolean(now?.watching && now.mark && sameMark(now.mark, mark))
+}
 
 export const checkWatched = (links: ThreadLinks, wake: Wake, thread: Session, link: StoredLink, summary: PullSummary, activity: PullActivity) => {
-  if (!link.mark) return void links.mark(thread, link, baselineMark(activity), 0, true)
+  const mark = link.mark
+  if (!mark) return void links.mark(thread, link, baselineMark(activity), 0, true)
   const quiet = link.quiet ?? 0
-  const next = nextMark(link.mark, activity)
-  const changes = changesSince(link.mark, activity)
+  const next = nextMark(mark, activity)
+  const changes = changesSince(mark, activity)
   if (!changes.length) {
-    if (!sameMark(next, link.mark)) links.mark(thread, link, next, quiet, true)
+    if (!sameMark(next, mark)) links.mark(thread, link, next, quiet, true)
     return
   }
   const talk = onlyTalk(changes) ? quiet + 1 : 0
   const stopped = talk >= quietLimit
-  if (!wake(thread, wakeNote(summary, changes, stopped), wakeLabel(summary))) return
-  links.mark(thread, link, next, talk, !stopped)
+  const wakeWith = (cause?: string) => {
+    if (wake.agent(thread, wakeNote(summary, changes, stopped, cause), wakeLabel(summary))) links.mark(thread, link, next, talk, !stopped)
+  }
+  const screen = wake.screen()
+  if (!screen) return wakeWith()
+  wake.once(`${thread.id} ${pullKey(link)}`, async () => {
+    const verdict = await screen({ thread, summary, head: activity.head, mark, changes }).catch((error: unknown) => {
+      wake.report(error)
+      return undefined
+    })
+    if (!unchanged(links, thread, link, mark)) return
+    if (!verdict) return wakeWith()
+    if (verdict.wake) return wakeWith(verdict.cause)
+    links.mark(thread, link, next, quiet, true)
+  })
 }

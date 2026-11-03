@@ -865,6 +865,7 @@
         "@sand/server": "workspace:*",
         "@sand/skills": "workspace:*",
         "@sand/steering": "workspace:*",
+        "@sand/sub-model": "workspace:*",
         "@sand/toasts": "workspace:*",
         "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
