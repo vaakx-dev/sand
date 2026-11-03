@@ -6,7 +6,7 @@ import type { ThreadLinks } from '../links/links'
 import { isLive } from '../links/thread'
 import type { OnceReport } from '../report/once'
 import { readEnded } from './ends'
-import { endedSinceEngaged, isSettleable, lastEnd } from './rule'
+import { isSettleable, lastEnd } from './rule'
 import type { SettleSetting } from './setting'
 
 export interface AutoSettleDeps {
@@ -57,9 +57,10 @@ export const startAutoSettle = (deps: AutoSettleDeps) => {
   const settleEnded = async (now: number) => {
     for (const id of deps.book.threads()) {
       const links = deps.book.read(id)
-      if (lastEnd(links) === undefined || (refusedUntil.get(id) ?? 0) > now) continue
+      const ended = lastEnd(links)
+      if (ended === undefined || (refusedUntil.get(id) ?? 0) > now) continue
       const thread = deps.sessions.open(id)
-      if (!thread || !isSettleable(thread, now) || deps.running(thread) || !endedSinceEngaged(links, engagedAt(thread, links))) continue
+      if (!thread || !isSettleable(thread, now) || deps.running(thread) || ended <= engagedAt(thread, links)) continue
       await deps.sessions.settle(id, true).catch(() => refusedUntil.set(id, now + refusedMs))
     }
   }

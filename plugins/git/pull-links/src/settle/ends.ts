@@ -32,13 +32,13 @@ const readBatch = async (github: GitHub, pulls: PullRef[], failures: OnceReport,
     const key = pullKey(pull)
     const closing = data[`p${index}`]?.pullRequest
     if (!closing) return
-    failures.passed(key)
+    failures.passed(`closing:${key}`)
     if (closing.closed) ended.set(key, Date.parse(closing.closedAt))
   })
 }
 
 const readEach = async (github: GitHub, pulls: PullRef[], failures: OnceReport, ended: Map<string, number>) => {
-  for (const pull of pulls) await readBatch(github, [pull], failures, ended).catch(error => failures.failed(pullKey(pull), error))
+  for (const pull of pulls) await readBatch(github, [pull], failures, ended).catch(error => failures.failed(`closing:${pullKey(pull)}`, error))
 }
 
 export const readEnded = async (github: GitHub, pulls: PullRef[], failures: OnceReport) => {

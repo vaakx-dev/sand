@@ -25,7 +25,6 @@ import { isRunning } from './settle/running'
 import { type AutoSettleDeps, startAutoSettle } from './settle/settle'
 import { loadSettleSetting } from './settle/setting'
 import { followStacks } from './stack/follow'
-import { endedAt } from './sweep/cadence'
 import { createSweep } from './sweep/sweep'
 import { createViewed } from './sweep/viewed'
 import { pullTools } from './tools/tools'
@@ -129,7 +128,7 @@ export default definePlugin({
       discovery.forget(id)
     })
     ctx.on(pullChanged, summary => {
-      links.recordEnd(summary, endedAt(summary))
+      links.recordEnd(summary, summary.ended)
       for (const id of links.linking(summary)) announce(id)
     })
     ctx.on(pullCreated, (summary, session) => void linkCreated(summary, session).catch(report))

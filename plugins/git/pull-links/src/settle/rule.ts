@@ -1,8 +1,6 @@
-import type { SessionInfo } from '@sand/chats/contract'
+import type { Session } from '@sand/chats/contract'
 import type { StoredLink, StoredLinks } from '../book/record'
 import { isLive } from '../links/thread'
-
-type SettleThread = Pick<SessionInfo, 'kind' | 'settled' | 'pinned' | 'snoozed'>
 
 const linkedBeforeEnd = (link: StoredLink) => link.ended === undefined || link.ended >= link.linked
 
@@ -17,6 +15,4 @@ export const lastEnd = ({ links }: StoredLinks): number | undefined => {
   return latest
 }
 
-export const isSettleable = (thread: SettleThread, now: number) => isLive(thread) && !thread.pinned && !(thread.snoozed !== null && thread.snoozed > now)
-
-export const endedSinceEngaged = (links: StoredLinks, engaged: number) => (lastEnd(links) ?? 0) > engaged
+export const isSettleable = (thread: Session, now: number) => isLive(thread) && !thread.pinned && !(thread.snoozed !== null && thread.snoozed > now)
