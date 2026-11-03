@@ -1,6 +1,6 @@
 ---
 name: clean-code
-description: Write focused, readable code. Load before writing or changing any code.
+description: Write focused, readable code. Must be loaded before writing or changing any code, in every agent.
 ---
 
 # Clean code
@@ -44,7 +44,7 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 
 ## Leave out
 
-- Comments, including suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Rename, split or fix the cause instead.
+- Comments, unless the surrounding code has them; then match its style. Never suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Rename, split or fix the cause instead.
 - Abstractions with one caller, wrappers that only pass calls through.
 - Dead code and unused parameters, including any your change left behind.
 - Logs, vague TODOs, and compatibility code for things you're replacing.
