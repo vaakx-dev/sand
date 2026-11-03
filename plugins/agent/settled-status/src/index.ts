@@ -1,4 +1,4 @@
-import { type Session, sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
+import { type Session, sessionRemove, sessions, sessionSettle } from '@sand/chats/contract'
 import { pullLinksService } from '@sand/pull-links/contract'
 import { type Server, server } from '@sand/server/contract'
 import { type SubModel, subModel } from '@sand/sub-model/contract'
@@ -15,7 +15,6 @@ export default definePlugin({
   apply(ctx) {
     let live: Server | undefined
     const book = createBook(ctx.sessions)
-    const asked = new Map<string, number>()
 
     const save = (session: Session, text: string | null) => {
       book.write(session, text)
@@ -27,26 +26,18 @@ export default definePlugin({
       if (text && ctx.sessions.open(session.id)?.settled === settled) save(session, text)
     }
 
-    const sync = (session: Session) => {
+    const settle = (session: Session) => {
       if (session.settled === null) {
-        asked.delete(session.id)
         if (book.has(session.id)) save(session, null)
         return
       }
       const sub = ctx.get(subModel)
-      if (!sub?.has('fast') || book.has(session.id) || asked.get(session.id) === session.settled) return
-      asked.set(session.id, session.settled)
-      write(sub, session, session.settled).catch(error => ctx.report(error))
+      if (sub?.has('fast')) write(sub, session, session.settled).catch(error => ctx.report(error))
     }
 
     ctx.watch(subModel, found => found?.job(statusJob))
-    ctx.on(sessionUpdate, session => {
-      if (session.kind !== 'agent') sync(session)
-    })
-    ctx.on(sessionRemove, id => {
-      asked.delete(id)
-      book.forget(id)
-    })
+    ctx.on(sessionSettle, settle)
+    ctx.on(sessionRemove, id => book.forget(id))
     ctx.watch(server, found => {
       if (!found) return
       live = found
