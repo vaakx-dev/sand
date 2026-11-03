@@ -1,4 +1,3 @@
-import { ask } from '@sand/ask/contract'
 import { sessions, sessionSettle } from '@sand/chats/contract'
 import { textOf } from '@sand/chats/prompt'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
@@ -7,6 +6,7 @@ import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { type Server, server } from '@sand/server/contract'
 import { shellReady, shellRunner } from '@sand/shell/contract'
+import { subModel } from '@sand/sub-model/contract'
 import { tools } from '@sand/tools/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'
 import { expandHome } from '@sand/util/fs'
@@ -16,6 +16,7 @@ import { config } from './config'
 import { worktreePulls, worktrees, worktreesChange, worktreesProgress } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
+import { branchJob } from './naming/ask'
 import { nameOnFirstTurn } from './naming/name'
 import { createParking } from './park/park'
 import { createStore } from './records/store'
@@ -59,7 +60,7 @@ export default definePlugin({
       queue: (main, task) => serialByRepo(pathKey(main), task),
       busy,
       projectOf: folder => ctx.get(projectFiles)?.ofFolder(folder) ?? null,
-      ask: () => ctx.get(ask),
+      sub: () => ctx.get(subModel),
       async changed(main, ...folders) {
         live?.broadcast(worktreesChange, { main })
         await Promise.all([main, ...folders].map(folder => ctx.gitRepo.refresh(folder).catch(report)))
@@ -71,6 +72,7 @@ export default definePlugin({
     const moves = createMoves(deps, () => ctx.get(loop), () => ctx.busy())
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
+    ctx.watch(subModel, found => found?.job(branchJob))
     ctx.on(turnEnd, (session, result) => moves.ended(session, result))
     ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(loop)) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
