@@ -34,8 +34,7 @@ export const createSubModel = ({ ask, store, modelSettings, skills, changed }: S
     const name = store.get().skills[job]
     if (!name) return undefined
     const found = (await skills()?.list(cwd))?.find(skill => skill.name === name)
-    if (!found) throw new Error(`The skill "${name}" picked for this job isn't available here. Pick another in Settings › Models.`)
-    return found.body
+    return found?.body
   }
 
   const askRequest = async ({ job, tier, cwd, ...request }: JobRequest): Promise<AskRequest> => {
