@@ -29,10 +29,7 @@ export const repoBook = (ctx: Context, wire: Wire) => {
     return repos.get().get(key)
   }
 
-  const repoOf = (folder: GitHubFolder) => {
-    const found = folderRepo(folder)
-    return found === null ? null : found?.repo
-  }
+  const repoOf = (folder: GitHubFolder) => folderRepo(folder)?.repo
 
   ctx.on(pcHello, device => {
     for (const folder of folders.values()) if (folder.device === device) look(folder)

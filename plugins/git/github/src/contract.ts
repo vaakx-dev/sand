@@ -140,7 +140,7 @@ export interface GitHubClient {
   auth(device: string): Promise<GitHubAuth>
   login(device: string): Promise<GitHubAuth>
   logout(device: string): Promise<GitHubAuth>
-  repoOf(folder: GitHubFolder): string | null | undefined
+  repoOf(folder: GitHubFolder): string | undefined
   localCopy(repo: string): GitHubFolder | undefined
   forBranch(input: InputOf<typeof pullsForBranch>, device: string): Promise<PullSummary | null>
   summary(input: InputOf<typeof pullsSummary>, device: string): Promise<PullSummary>

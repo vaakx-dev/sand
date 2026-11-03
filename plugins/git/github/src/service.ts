@@ -15,8 +15,7 @@ import { resolvePull } from './pulls/resolve'
 import { createRepoInfos } from './repo/info'
 import { createOrigins } from './repo/origins'
 import { branchPlace } from './repo/place'
-import { remoteFor } from './repo/remote'
-import { readRemotes } from './repo/remotes'
+import { readRemotes, remoteFor } from './repo/remotes'
 import { type TextRequest, writePullText } from './text/write'
 
 export interface GitHubDeps {
