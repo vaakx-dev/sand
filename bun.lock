@@ -1409,6 +1409,7 @@
         "@sand/keys": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
+        "@sand/settings": "workspace:*",
         "@sand/toasts": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",

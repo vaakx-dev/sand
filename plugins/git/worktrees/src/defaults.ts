@@ -1,13 +1,11 @@
 import { pathKey } from '@sand/git/contract'
-import type { WorkspaceDefaults } from './contract'
+import type { GlobalDefault, WorkspaceDefaults, WorkspaceKind } from './contract'
 import type { WorktreeDeps } from './deps'
 
 export interface DefaultsRequest {
   cwd: string
-  set?: WorkspaceDefaults | undefined
+  set?: { kind: WorkspaceKind } | undefined
 }
-
-const fallback: WorkspaceDefaults = { kind: 'checkout' }
 
 const defaultsKey = async (deps: WorktreeDeps, cwd: string) => {
   const local = await deps.repos.local(cwd)
@@ -19,6 +17,13 @@ const defaultsKey = async (deps: WorktreeDeps, cwd: string) => {
 export const workspaceDefaults = async (deps: WorktreeDeps, { cwd, set }: DefaultsRequest): Promise<WorkspaceDefaults> => {
   await deps.store.ready()
   const key = await defaultsKey(deps, cwd)
-  if (set) await deps.store.setDefaults(key, set)
-  return deps.store.defaults(key) ?? fallback
+  if (set) await deps.store.setDefaults(key, set.kind)
+  const kind = deps.store.defaults(key)
+  return kind ? { kind } : {}
+}
+
+export const globalDefault = async (deps: WorktreeDeps, set?: { kind: WorkspaceKind }): Promise<GlobalDefault> => {
+  await deps.store.ready()
+  if (set) await deps.store.setGlobal(set.kind)
+  return { kind: deps.store.global() }
 }

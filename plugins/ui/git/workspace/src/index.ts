@@ -3,6 +3,7 @@ import { gitControl } from '@sand/git-control/contract'
 import { type ThreadPullsClient, threadPullsClient } from '@sand/git-pulls/contract'
 import { keys } from '@sand/keys/contract'
 import { palette } from '@sand/palette/contract'
+import { settings } from '@sand/settings/contract'
 import { joinDisposers } from '@sand/util'
 import { threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/web-client/reactive'
@@ -15,6 +16,7 @@ import { workspaceEntry } from './draft/entry'
 import { followDraft } from './draft/model'
 import { inject } from './inject'
 import { workspaceSource } from './palette/source'
+import { defaultSection } from './settings/section'
 import { setupCard } from './setup/card'
 import { followSetup } from './setup/follow'
 import { cleanUpAction } from './thread/clean-up'
@@ -28,14 +30,14 @@ export default definePlugin({
   description: "Where a thread works: pick the main checkout or a worktree for a new thread, follow worktree setup, and move or remove a thread's worktree",
   inject,
   apply(ctx) {
-    const { cache, choices, model, setup, entry, card, open } = owned(ctx, () => {
+    const { cache, choices, defaults, model, setup, entry, card, open } = owned(ctx, () => {
       const cache = worktreeCache(ctx)
       const choices = draftChoices()
       const defaults = workspaceDefaults(ctx)
       const model = followDraft(ctx, cache, choices, defaults)
       const setup = followSetup(ctx)
       const open = sig(false)
-      return { cache, choices, model, setup, open, entry: workspaceEntry(ctx, model, cache, defaults, open), card: setupCard(ctx, setup) }
+      return { cache, choices, defaults, model, setup, open, entry: workspaceEntry(ctx, model, cache, defaults, open), card: setupCard(ctx, setup) }
     })
     preloadWorktrees(ctx, cache)
     ctx.on(threadSelect, () => open.set(false))
@@ -73,5 +75,6 @@ export default definePlugin({
         : undefined,
     )
     ctx.watch(palette, found => found?.source(workspaceSource(ctx, choices, cache)))
+    ctx.watch(settings, found => found?.section({ page: 'git', id: 'git-workspace.default', order: 10, render: defaultSection(ctx, defaults) }))
   },
 })

@@ -13,7 +13,7 @@ import { childSummaries, summaries, syncedSummaries } from './summaries'
 const loadedLimit = 20
 
 export interface StoreOptions {
-  hooks: SessionHooks & { remove(id: string): void }
+  hooks: SessionHooks & { settle(session: Session): void; remove(id: string): void }
   running(id: string): boolean
   closing(session: Session): Promise<string | undefined>
   projectOf(cwd: string): string | null
@@ -115,9 +115,11 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
     children,
     update(id, patch) {
       const session = sessions.require(id)
+      const settled = session.settled
       records.patch(id, patch)
       Object.assign(session, patch)
       hooks.update(session)
+      if (session.settled !== settled) hooks.settle(session)
       return session
     },
     relocate: (id, relocation) => relocate(topLevel(id), relocation),
