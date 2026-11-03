@@ -16,6 +16,8 @@ export interface RemoveRequest {
   force?: boolean | undefined
 }
 
+export type RemovedNote = (record: WorktreeRecord, branch: string | undefined, cwd: string) => string
+
 const loses = ({ uncommitted, unpushed }: RemoveCheck) => uncommitted > 0 || unpushed > 0
 
 const lastHead = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
@@ -24,9 +26,9 @@ const lastHead = async (deps: WorktreeDeps, record: WorktreeRecord, exists: bool
   return deps.git.maybe(record.main, ['rev-parse', '--verify', '--quiet', `refs/heads/${record.branch}^{commit}`], { read: true })
 }
 
-const moveThreadsOut = (deps: WorktreeDeps, record: WorktreeRecord, branch: string | undefined) => {
+const moveThreadsOut = (deps: WorktreeDeps, record: WorktreeRecord, branch: string | undefined, note: RemovedNote) => {
   const inside = threadsIn(deps.sessions, record.path).map(session => session.id)
-  const away = relocateAll(deps, inside, record.path, record.main, cwd => removedNote(record, branch, cwd))
+  const away = relocateAll(deps, inside, record.path, record.main, cwd => note(record, branch, cwd))
   if (!away.failed.length) return away.moved
   const back = relocateAll(deps, away.moved, record.main, record.path, cwd => keptNote(record, cwd))
   throw new Error(`Couldn't move the threads out, so the worktree stays: ${[...away.failed, ...back.failed].join('; ')}`)
@@ -41,7 +43,7 @@ const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: 
   await deps.git.ok(record.main, ['branch', '-D', branch], { what: `The worktree is gone, but its branch ${branch} couldn't be deleted` }).catch(deps.report)
 }
 
-const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean): Promise<RemoveResult> => {
+const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean, note: RemovedNote): Promise<RemoveResult> => {
   const check = await removeCheck(deps, record)
   if (check.running || (loses(check) && !force)) return { removed: false, check, message: lossMessage(check) }
   const exists = existsSync(record.path)
@@ -51,7 +53,7 @@ const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: bool
   await deps.setups.forget(record.path)
   let moved: string[] = []
   try {
-    moved = moveThreadsOut(deps, record, branch)
+    moved = moveThreadsOut(deps, record, branch, note)
     await detach(deps, record, exists)
   } catch (error) {
     throw await rolledBack(error, async () => {
@@ -77,10 +79,10 @@ export const sandRecord = async (deps: WorktreeDeps, path: string) => {
   return record
 }
 
-export const removeWorktree = async (deps: WorktreeDeps, { path, force }: RemoveRequest): Promise<RemoveResult> => {
+export const removeWorktree = async (deps: WorktreeDeps, { path, force }: RemoveRequest, note: RemovedNote = removedNote): Promise<RemoveResult> => {
   const record = await sandRecord(deps, path)
   if (record.removed) throw new Error('This worktree is already removed.')
-  const result = await deps.queue(record.main, () => removeNow(deps, record, Boolean(force)))
+  const result = await deps.queue(record.main, () => removeNow(deps, record, Boolean(force), note))
   if (result.removed) await deps.changed(record.main)
   return result
 }

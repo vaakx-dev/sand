@@ -27,7 +27,7 @@ const addArgs = async (git: GitRunner, record: WorktreeRecord) => {
   return record.branch ? ['-b', record.branch, record.path, head] : ['--detach', record.path, head]
 }
 
-const waitingThreads = (deps: WorktreeDeps, record: WorktreeRecord) =>
+export const waitingThreads = (deps: WorktreeDeps, record: WorktreeRecord) =>
   record.sessions.filter(id => {
     const session = deps.sessions.open(id)
     return session && isWithin(session.cwd, record.main) && !deps.store.containing(session.cwd)
@@ -41,8 +41,19 @@ const addBack = async (deps: WorktreeDeps, record: WorktreeRecord) => {
   await dropKeptHead(deps.git, record).catch(deps.report)
   delete record.removed
   delete record.head
+  delete record.parked
   record.setup = freshSetup(record.path, [doneStep('restore', `Restore ${record.path}`), ...(await planSteps(record.main))])
   await deps.store.save()
+}
+
+export const restoreRecord = async (deps: WorktreeDeps, record: WorktreeRecord, waiting: string[]) => {
+  await deps.queue(record.main, () => addBack(deps, record))
+  const back = relocateAll(deps, waiting, record.main, record.path, cwd => restoredNote(record, cwd))
+  if (record.setup && back.moved[0]) record.setup.session = back.moved[0]
+  await deps.setups.start(record)
+  await deps.changed(record.main, record.path)
+  if (back.failed.length) deps.report(new Error(`The worktree at ${record.path} is back, but some threads stayed in the main checkout: ${back.failed.join('; ')}`))
+  return back.moved
 }
 
 export const restoreWorktree = async (deps: WorktreeDeps, { path }: RestoreRequest): Promise<Worktree> => {
@@ -50,11 +61,5 @@ export const restoreWorktree = async (deps: WorktreeDeps, { path }: RestoreReque
   if (!record.removed) throw new Error('This worktree is still there.')
   const waiting = waitingThreads(deps, record)
   if (waiting.some(deps.busy)) throw new Error('Stop the thread first')
-  await deps.queue(record.main, () => addBack(deps, record))
-  const back = relocateAll(deps, waiting, record.main, record.path, cwd => restoredNote(record, cwd))
-  if (record.setup && back.moved[0]) record.setup.session = back.moved[0]
-  await deps.setups.start(record)
-  await deps.changed(record.main, record.path)
-  if (back.failed.length) deps.report(new Error(`The worktree at ${record.path} is back, but some threads stayed in the main checkout: ${back.failed.join('; ')}`))
-  return recordedWorktree(record, back.moved)
+  return recordedWorktree(record, await restoreRecord(deps, record, waiting))
 }

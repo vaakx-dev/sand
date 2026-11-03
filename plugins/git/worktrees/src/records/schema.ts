@@ -29,12 +29,16 @@ const record = z.object({
   removed: z.number().optional(),
   temp: z.string().optional(),
   adopted: z.literal(true).optional(),
+  parked: z.literal(true).optional(),
   setup: setup.optional(),
 })
 
+const kind = z.enum(['checkout', 'worktree'])
+
 export const storedSchema = z.object({
   worktrees: z.record(z.string(), record).default({}),
-  defaults: z.record(z.string(), z.object({ kind: z.enum(['checkout', 'worktree']) })).default({}),
+  defaults: z.record(z.string(), z.object({ kind })).default({}),
+  global: kind.optional(),
 })
 
 export type PlannedStep = z.infer<typeof step>

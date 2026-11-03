@@ -1,4 +1,4 @@
-import { service } from 'drydock'
+import { event, service } from 'drydock'
 
 export interface ShellCommand {
   cwd: string
@@ -31,3 +31,5 @@ export interface ShellRunner {
 }
 
 export const shellRunner = service<ShellRunner>('shellRunner')
+
+export const shellReady = event<(cwd: string, signal: AbortSignal, progress: (text: string) => void) => Promise<void> | void>('shell.ready')

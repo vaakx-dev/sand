@@ -35,6 +35,10 @@ export interface WorktreeSetup {
 }
 
 export interface WorkspaceDefaults {
+  kind?: WorkspaceKind
+}
+
+export interface GlobalDefault {
   kind: WorkspaceKind
 }
 
@@ -47,6 +51,7 @@ export interface RemoveCheck {
 export type RemoveResult = { removed: true } | { removed: false; check: RemoveCheck; message: string }
 
 const cwd = z.string()
+const kind = z.enum(['checkout', 'worktree'])
 
 export const worktreesList = request('worktrees.list', { input: z.object({ cwd }), output: type<Worktree[]>(), place: 'thread' })
 
@@ -93,9 +98,14 @@ export const worktreesSetup = request('worktrees.setup', {
 })
 
 export const worktreesDefaults = request('worktrees.defaults', {
-  input: z.object({ cwd, set: z.object({ kind: z.enum(['checkout', 'worktree']) }).optional() }),
+  input: z.object({ cwd, set: z.object({ kind }).optional() }),
   output: type<WorkspaceDefaults>(),
   place: 'thread',
+})
+
+export const worktreesGlobal = request('worktrees.global', {
+  input: z.object({ set: z.object({ kind }).optional() }),
+  output: type<GlobalDefault>(),
 })
 
 export const worktreesProgress = wireEvent<WorktreeSetup>('worktrees.progress')
@@ -109,6 +119,7 @@ export interface WorktreesClient {
   restore(input: InputOf<typeof worktreesRestore>, device: string): Promise<Worktree>
   setup(input: InputOf<typeof worktreesSetup>, device: string): Promise<WorktreeSetup | null>
   defaults(input: InputOf<typeof worktreesDefaults>, device: string): Promise<WorkspaceDefaults>
+  global(input: InputOf<typeof worktreesGlobal>): Promise<GlobalDefault>
   onProgress(listener: (setup: WorktreeSetup, device: string) => void): Dispose
   onChange(listener: (change: { main: string }, device: string) => void): Dispose
 }

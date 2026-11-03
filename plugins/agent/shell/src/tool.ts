@@ -1,5 +1,7 @@
 import type { Tool } from '@sand/tools/contract'
+import type { Context } from 'drydock'
 import { z } from 'zod'
+import { shellReady } from './contract'
 import type { Shell } from './detect'
 import { liveTail } from './live'
 import { agentEnv } from './process'
@@ -42,6 +44,7 @@ const truncate = (text: string, max: number) =>
   text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${text.slice(-max / 2)}`
 
 export const shellTool = (
+  ctx: Context,
   spec: Pick<Tool, 'name' | 'description' | 'environment'>,
   shell: Shell,
   limits: Limits,
@@ -51,6 +54,8 @@ export const shellTool = (
   input: inputOf(limits),
   timeoutMs: limits.limit_ms + stopGrace,
   async run({ command, silence_ms: silence = limits.silence_ms }, context) {
+    await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)
+    context.signal.throwIfAborted()
     const timeouts = { silence, limit: limits.limit_ms }
     const tail = liveTail(context.progress)
     const { code, stopped, stdout, stderr } = await run(shell.argv(command), {

@@ -1,5 +1,5 @@
 import { jobNote, type JobWork } from '@sand/jobs/contract'
-import type { ShellRunner } from '@sand/shell/contract'
+import { shellReady, type ShellRunner } from '@sand/shell/contract'
 import type { Context } from 'drydock'
 import type { OutputTail } from './output'
 
@@ -15,6 +15,8 @@ const lastLine = (text: string) =>
 export const commandWork =
   (ctx: Context, runner: ShellRunner, command: string, cwd: string, output: OutputTail): JobWork =>
   async (signal, job) => {
+    await ctx.waterfall(shellReady, cwd, signal, text => ctx.emit(jobNote, { id: job.id, label: job.label, text }))
+    signal.throwIfAborted()
     let timer: Timer | undefined
     const note = () => {
       timer = undefined

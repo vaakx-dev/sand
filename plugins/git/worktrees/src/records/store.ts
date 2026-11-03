@@ -1,7 +1,7 @@
 import { pathKey } from '@sand/git/contract'
 import { serial } from '@sand/util'
 import { isWithin, writeAtomic } from '@sand/util/fs'
-import type { WorkspaceDefaults } from '../contract'
+import type { WorkspaceKind } from '../contract'
 import { reviveSetup } from '../setup/state'
 import { type Stored, storedSchema, type WorktreeRecord } from './schema'
 
@@ -62,9 +62,14 @@ export const createStore = (file: string, hold: () => () => void) => {
       return save()
     },
     save,
-    defaults: (key: string): WorkspaceDefaults | undefined => data.defaults[key],
-    setDefaults(key: string, value: WorkspaceDefaults) {
-      data.defaults[key] = value
+    defaults: (key: string): WorkspaceKind | undefined => data.defaults[key]?.kind,
+    setDefaults(key: string, kind: WorkspaceKind) {
+      data.defaults[key] = { kind }
+      return save()
+    },
+    global: (): WorkspaceKind => data.global ?? 'checkout',
+    setGlobal(kind: WorkspaceKind) {
+      data.global = kind
       return save()
     },
     close() {

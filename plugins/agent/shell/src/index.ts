@@ -21,6 +21,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.tools.register(
         shellTool(
+          ctx,
           {
             name: 'shell',
             description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
@@ -36,6 +37,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.tools.register(
         shellTool(
+          ctx,
           {
             name: 'powershell',
             description:
