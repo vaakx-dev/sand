@@ -35,6 +35,7 @@ const threadInNew = async (deps: WorktreeDeps, input: WorktreeThreadInput): Prom
   record.sessions = [session.id]
   if (record.setup) record.setup.session = session.id
   await deps.setups.start(record)
+  deps.proposals.offer(record).catch(deps.report)
   await deps.changed(local.main, record.path)
   return infoOf(session)
 }

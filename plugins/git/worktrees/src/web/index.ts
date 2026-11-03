@@ -8,6 +8,8 @@ import {
   worktreesList,
   worktreesMove,
   worktreesProgress,
+  worktreesProposal,
+  worktreesProposed,
   worktreesRemove,
   worktreesRestore,
   worktreesSetup,
@@ -32,7 +34,9 @@ export default definePlugin({
       global: input => ctx.wire.call(worktreesGlobal, input),
       status: device => ctx.wire.call(worktreesStatus, {}, device),
       sizes: device => ctx.wire.call(worktreesSizes, {}, device),
+      proposal: (input, device) => ctx.wire.call(worktreesProposal, input, device),
       onProgress: listener => ctx.wire.on(worktreesProgress, listener, { from: 'all' }),
+      onProposal: listener => ctx.wire.on(worktreesProposed, listener, { from: 'all' }),
       onChange: listener => ctx.wire.on(worktreesChange, listener, { from: 'all' }),
     })
   },

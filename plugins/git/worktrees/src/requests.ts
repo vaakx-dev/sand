@@ -1,6 +1,18 @@
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { worktreesDefaults, worktreesGlobal, worktreesList, worktreesMove, worktreesRemove, worktreesRestore, worktreesSetup, worktreesSizes, worktreesStatus, worktreesThread } from './contract'
+import {
+  worktreesDefaults,
+  worktreesGlobal,
+  worktreesList,
+  worktreesMove,
+  worktreesProposal,
+  worktreesRemove,
+  worktreesRestore,
+  worktreesSetup,
+  worktreesSizes,
+  worktreesStatus,
+  worktreesThread,
+} from './contract'
 import { threadIn } from './create/thread'
 import { globalDefault, workspaceDefaults } from './defaults'
 import type { WorktreeDeps } from './deps'
@@ -18,6 +30,7 @@ export const serveWorktrees = (server: Server, deps: WorktreeDeps, survey: Surve
     server.handle(worktreesRemove, request => removeWorktree(deps, request)),
     server.handle(worktreesRestore, request => restoreWorktree(deps, request)),
     server.handle(worktreesSetup, ({ path, ...request }) => deps.setups.request(path, request)),
+    server.handle(worktreesProposal, ({ path, answer }) => deps.proposals.request(path, answer)),
     server.handle(worktreesDefaults, request => workspaceDefaults(deps, request)),
     server.handle(worktreesGlobal, ({ set }) => globalDefault(deps, set)),
     server.handle(worktreesStatus, () => survey.status()),
