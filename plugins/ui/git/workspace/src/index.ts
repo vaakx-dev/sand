@@ -17,6 +17,8 @@ import { workspaceEntry } from './draft/entry'
 import { followDraft } from './draft/model'
 import { inject } from './inject'
 import { workspaceSource } from './palette/source'
+import { proposalCard } from './proposal/card'
+import { followProposal } from './proposal/follow'
 import { defaultSection } from './settings/section'
 import { setupCard } from './setup/card'
 import { followSetup } from './setup/follow'
@@ -31,14 +33,26 @@ export default definePlugin({
   description: "Where a thread works: pick the main checkout or a worktree for a new thread, follow worktree setup, and move or remove a thread's worktree",
   inject,
   apply(ctx) {
-    const { cache, choices, defaults, model, setup, entry, card, open } = owned(ctx, () => {
+    const { cache, choices, defaults, model, setup, proposal, entry, card, offer, open } = owned(ctx, () => {
       const cache = worktreeCache(ctx)
       const choices = draftChoices()
       const defaults = workspaceDefaults(ctx)
       const model = followDraft(ctx, cache, choices, defaults)
       const setup = followSetup(ctx)
+      const proposal = followProposal(ctx)
       const open = sig(false)
-      return { cache, choices, defaults, model, setup, open, entry: workspaceEntry(ctx, model, cache, defaults, open), card: setupCard(ctx, setup) }
+      return {
+        cache,
+        choices,
+        defaults,
+        model,
+        setup,
+        proposal,
+        open,
+        entry: workspaceEntry(ctx, model, cache, defaults, open),
+        card: setupCard(ctx, setup),
+        offer: proposalCard(ctx, proposal),
+      }
     })
     preloadWorktrees(ctx, cache)
     ctx.on(threadSelect, () => open.set(false))
@@ -49,6 +63,7 @@ export default definePlugin({
         ? joinDisposers(
             effect(() => (model.visible.get() ? found.plus(entry, 10) : undefined)),
             effect(() => (setup.visible.get() ? found.slot('tab', card, 10) : undefined)),
+            effect(() => (proposal.visible.get() && !setup.visible.get() ? found.slot('tab', offer, 10) : undefined)),
           )
         : undefined,
     )

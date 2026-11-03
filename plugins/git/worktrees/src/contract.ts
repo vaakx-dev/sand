@@ -136,6 +136,29 @@ export const worktreesStatus = request('worktrees.status', { input: z.object({})
 
 export const worktreesSizes = request('worktrees.sizes', { input: z.object({}), output: type<Record<string, number>>(), place: 'thread' })
 
+export interface SetupLines {
+  copy: string[]
+  run: string[]
+}
+
+export const setupAnswers = ['save', 'decline'] as const
+
+export type SetupAnswer = (typeof setupAnswers)[number]
+
+export interface SetupProposal {
+  path: string
+  session?: string
+  lines: SetupLines | null
+}
+
+export const worktreesProposal = request('worktrees.proposal', {
+  input: z.object({ path: z.string(), answer: z.enum(setupAnswers).optional() }),
+  output: type<SetupLines | null>(),
+  place: 'thread',
+})
+
+export const worktreesProposed = wireEvent<SetupProposal>('worktrees.proposed')
+
 export const worktreesProgress = wireEvent<WorktreeSetup>('worktrees.progress')
 export const worktreesChange = wireEvent<{ main: string }>('worktrees.change')
 
@@ -150,7 +173,9 @@ export interface WorktreesClient {
   global(input: InputOf<typeof worktreesGlobal>): Promise<GlobalDefault>
   status(device: string): Promise<WorktreeStatus[]>
   sizes(device: string): Promise<Record<string, number>>
+  proposal(input: InputOf<typeof worktreesProposal>, device: string): Promise<SetupLines | null>
   onProgress(listener: (setup: WorktreeSetup, device: string) => void): Dispose
+  onProposal(listener: (proposal: SetupProposal, device: string) => void): Dispose
   onChange(listener: (change: { main: string }, device: string) => void): Dispose
 }
 

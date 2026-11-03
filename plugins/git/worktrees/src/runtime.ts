@@ -13,12 +13,14 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { config } from './config'
-import { worktreePulls, worktrees, worktreesChange, worktreesProgress } from './contract'
+import { worktreePulls, worktrees, worktreesChange, worktreesProgress, worktreesProposed } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
 import { branchJob } from './naming/ask'
 import { nameOnFirstTurn } from './naming/name'
 import { createParking } from './park/park'
+import { setupJob } from './proposal/ask'
+import { createProposals } from './proposal/proposals'
 import { createStore } from './records/store'
 import { serveWorktrees } from './requests'
 import { createSetups } from './setup/setups'
@@ -41,6 +43,14 @@ export default definePlugin({
       setups.close()
       store.close()
     })
+    const proposals = createProposals({
+      git: ctx.gitRunner,
+      store,
+      setups,
+      file: join(ctx.paths.home, 'worktree-proposals.json'),
+      sub: () => ctx.get(subModel),
+      send: proposal => live?.broadcast(worktreesProposed, proposal),
+    })
     const serialByRepo = keyedSerial()
 
     const busy = (id: string): boolean => {
@@ -55,6 +65,7 @@ export default definePlugin({
       sessions: ctx.sessions,
       store,
       setups,
+      proposals,
       folder: config.folder ? expandHome(config.folder) : join(ctx.paths.home, 'worktrees'),
       prefix: config.prefix,
       queue: (main, task) => serialByRepo(pathKey(main), task),
@@ -73,6 +84,7 @@ export default definePlugin({
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
     ctx.watch(subModel, found => found?.job(branchJob))
+    ctx.watch(subModel, found => found?.job(setupJob))
     ctx.on(turnEnd, (session, result) => moves.ended(session, result))
     ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(loop)) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
