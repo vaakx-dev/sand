@@ -1,11 +1,19 @@
 ---
 name: clean-code
-description: Write focused, readable code. Load before writing or changing any code.
+description: Must be loaded before writing or changing any code, in every agent, every time. Rules for focused, readable code with no comments.
 ---
 
 # Clean code
 
 Less is more. Code is clean, readable, simple and fast, and the best choice for long-term maintenance and growth.
+
+## Core rule: no comments
+
+Write no comments of any kind. That means line comments, block comments, `/** */` doc comments, JSDoc, docstrings, header comments, and suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`.
+
+- When code seems to need a comment, rename, split or fix the cause instead.
+- Comments in nearby code are not a pattern to copy. Don't add more, even in a file full of them.
+- This rule outranks everything else here. Only the project's instructions can override it, and only when they ask for comments by name.
 
 ## Scope
 
@@ -44,7 +52,6 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 
 ## Leave out
 
-- Comments, including suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Rename, split or fix the cause instead.
 - Abstractions with one caller, wrappers that only pass calls through.
 - Dead code and unused parameters, including any your change left behind.
 - Logs, vague TODOs, and compatibility code for things you're replacing.
@@ -52,4 +59,4 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 
 ## Before you finish
 
-Reread the diff. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
+Reread the diff. Delete every comment you added. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
