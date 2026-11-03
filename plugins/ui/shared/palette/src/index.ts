@@ -35,7 +35,7 @@ export default definePlugin({
     floating(ctx, () => show(isOpen, () => paletteSheet(ctx, stack, () => query)))
     const toggle = () => (isOpen.get() ? host.close() : host.open())
     ctx.provide(palette, host)
-    ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, run: toggle }))
+    ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, passthrough: true, run: toggle }))
     ctx.watch(nav, found => found?.action({ id: 'search', label: 'Search', icon: 'search', order: 0, wide: true, run: () => host.open() }))
   },
 })

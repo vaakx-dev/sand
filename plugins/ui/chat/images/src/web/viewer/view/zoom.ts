@@ -1,7 +1,7 @@
 import { derive, sig } from '@vaakx-dev/vrui'
 
 const fit = 1
-const most = 4
+const most = 8
 const step = 1.5
 const wheelSpeed = 500
 

@@ -24,18 +24,24 @@ export default definePlugin({
 
     const find = (key: string, event: KeyboardEvent) => bindings.findLast(bound => bound.key === key && allowed(bound, key, event))
 
+    const run = ({ shortcut }: Bound) => {
+      try {
+        shortcut.run()
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
     const press = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return
       const key = keyName(event)
       const hit = key && find(key, event)
       if (!hit) return
       event.preventDefault()
-      try {
-        hit.shortcut.run()
-      } catch (error) {
-        console.error(error)
-      }
+      run(hit)
     }
+
+    const passthrough = () => bindings.filter(bound => bound.shortcut.passthrough && chorded(bound.key))
 
     const host: Keys = {
       bind(shortcut) {
@@ -44,6 +50,11 @@ export default definePlugin({
         return () => {
           bindings = bindings.filter(candidate => candidate !== bound)
         }
+      },
+      passthroughKeys: () => [...new Set(passthrough().map(bound => bound.key))],
+      runPassthrough(key) {
+        const hit = passthrough().findLast(bound => bound.key === key)
+        if (hit) run(hit)
       },
     }
 

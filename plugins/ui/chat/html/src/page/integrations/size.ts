@@ -1,17 +1,13 @@
 import { listen, resizeObserver } from '@vaakx-dev/vrui'
-import { sizeChanged } from '../page/protocol'
+import { pageHeight } from '../height'
+import { sizeChanged } from '../protocol'
 import { post } from './post'
-
-const pageHeight = () => {
-  const root = document.documentElement
-  return Math.ceil(root.scrollHeight > root.clientHeight ? root.scrollHeight : root.getBoundingClientRect().height)
-}
 
 export const reportSize = () => {
   let last = 0
   const report = () => {
     const height = pageHeight()
-    if (height === last) return
+    if (height === last || height <= 0) return
     last = height
     post(sizeChanged, { height })
   }

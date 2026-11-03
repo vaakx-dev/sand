@@ -19,10 +19,25 @@ export interface LoadedPage {
   missing: string[]
 }
 
+export type ConsoleLevel = 'log' | 'info' | 'warning' | 'error'
+
+export interface ConsoleMessage {
+  level: ConsoleLevel
+  text: string
+}
+
+export interface HtmlPreview {
+  png: string
+  height: number
+  console: ConsoleMessage[]
+}
+
 export interface HtmlPages {
   columnWidth: number
   maxHeight: number
+  prepare(html: string, base: string): Promise<LoadedPage>
   load(path: string, cwd: string): Promise<LoadedPage>
+  preview(html: string, width: number): Promise<HtmlPreview>
 }
 
 export const htmlPages = service<HtmlPages>('htmlPages')

@@ -3,7 +3,7 @@ type Shade = readonly [role: string, shade: string]
 type Colors = Readonly<Record<string, Readonly<Partial<Record<string, string>>>>>
 
 const sans = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif'
-const mono = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace'
+const mono = '"SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace'
 
 interface Group {
   use: string
@@ -15,6 +15,7 @@ const groups: Group[] = [
   { use: "the chat's background and text", colors: { '--background': ['neutral', '900'], '--foreground': ['neutral', '100'] } },
   { use: 'quiet surfaces, secondary text', colors: { '--muted': ['neutral', '800'], '--muted-foreground': ['neutral', '400'] } },
   { use: 'raised surfaces', colors: { '--card': ['neutral', '800'], '--card-foreground': ['neutral', '100'] } },
+  { use: 'menus and popovers', colors: { '--popover': ['neutral', '800'], '--popover-foreground': ['neutral', '100'] } },
   { use: 'chips, secondary buttons', colors: { '--secondary': ['neutral', '700'], '--secondary-foreground': ['neutral', '200'] } },
   { use: 'borders and focus rings', colors: { '--border': ['neutral', '700'], '--input': ['neutral', '700'], '--ring': ['accent', '500'] } },
   { use: 'solid buttons', colors: { '--primary': ['accent', '500'], '--primary-foreground': ['neutral', '50'] } },
@@ -45,8 +46,8 @@ const themeVariables = (colors: Colors): [string, string][] =>
     ...Object.entries(group.values ?? {}),
   ])
 
-export const rootRule = (selector: string, colors: Colors, mode: string) =>
-  `${selector}{color-scheme:${mode};${themeVariables(colors)
+export const rootRule = (colors: Colors, mode: string) =>
+  `:where(:root){color-scheme:${mode};${themeVariables(colors)
     .map(([name, value]) => `${name}:${value};`)
     .join('')}}`
 
@@ -54,3 +55,5 @@ const names = (group: Group) => [...Object.keys(group.colors ?? {}), ...Object.k
 
 export const tokenTable = () =>
   ['| Variables | Use |', '|---|---|', ...groups.map(group => `| ${names(group).map(name => `\`${name}\``).join(', ')} | ${group.use} |`)].join('\n')
+
+export const tokenNames = () => groups.flatMap(names)

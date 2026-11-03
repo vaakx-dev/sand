@@ -20,7 +20,7 @@ export const renderStore = (dir: string): RenderStore => {
     },
     async read(id) {
       const file = Bun.file(path(id))
-      if (!(await file.exists())) throw new Error('This render is no longer saved')
+      if (!(await file.exists())) throw new Error('This page is no longer saved on this PC')
       return file.text()
     },
   }

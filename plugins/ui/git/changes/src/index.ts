@@ -53,6 +53,6 @@ export default definePlugin({
         openPanel()
       },
     })
-    ctx.watch(keys, found => found?.bind({ key: 'mod+d', global: true, run: openPanel }))
+    ctx.watch(keys, found => found?.bind({ key: 'mod+d', global: true, passthrough: true, run: openPanel }))
   },
 })
