@@ -1,7 +1,9 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { answerEntry, requestEntry, type SecretAnswer, type SecretRequest, type SecretStatus } from './contract'
-import type { Outcome, Waits } from './waits'
+import { answerTimeout, type Outcome, type Waits } from './waits'
+
+const settleGrace = 30_000
 
 const input = z.object({
   title: z.string().trim().min(1).max(100).describe("Card title, such as 'GitHub token'"),
@@ -26,6 +28,7 @@ export const secretTool = (waits: Waits): Tool<typeof input> => ({
   description,
   input,
   active: session => session.kind !== 'agent',
+  timeoutMs: answerTimeout + settleGrace,
   async run({ title, reason, placeholder }, { session, signal }) {
     const id = Bun.randomUUIDv7()
     session.append(requestEntry, { id, title, reason, ...(placeholder && { placeholder }) } satisfies SecretRequest)

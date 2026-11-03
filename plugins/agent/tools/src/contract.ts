@@ -20,6 +20,7 @@ export interface Tool<S extends ZodType = ZodType> {
   environment?: string
   group?: string
   parallel?: boolean
+  timeoutMs?: number
   input: S
   active?(session: Session): boolean
   replaces?: string[]
