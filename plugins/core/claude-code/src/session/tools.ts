@@ -8,8 +8,10 @@ export const serverName = 'sand'
 
 const toolUseKey = 'claudecode/toolUseId'
 
+const loading = { 'anthropic/alwaysLoad': true, 'anthropic/maxResultSizeChars': 500_000 }
+
 const listed = (tools: ToolSpec[]) =>
-  tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema, annotations: { readOnlyHint: true } }))
+  tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema, annotations: { readOnlyHint: true }, _meta: loading }))
 
 export const toolServer = (tools: ToolSpec[], answer: (id: string) => Promise<ToolResultBlock>, media: Media) => {
   const result = async (method: unknown, params: Json): Promise<Json | undefined> => {

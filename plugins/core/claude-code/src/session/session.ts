@@ -66,7 +66,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
     const blocks = content.map(toBlock)
     const intro = history ? [{ type: 'text', text: earlier(history) }] : []
     history = ''
-    connection.send({ type: 'user', message: { role: 'user', content: [...intro, ...blocks] }, parent_tool_use_id: null })
+    connection.send({ type: 'user', message: { role: 'user', content: [...intro, ...blocks] }, parent_tool_use_id: null, client_composed: true })
   }
 
   return {
