@@ -19,13 +19,9 @@ const fromRef = async (git: GitRunner, main: string, from: string): Promise<Base
   throw new Error(`There's no branch or commit called ${from}.`)
 }
 
-const fetched = async (git: GitRunner, main: string, branch: string) => {
-  const result = await git.run(main, ['fetch', '--quiet', '--no-tags', 'origin', `refs/heads/${branch}:refs/remotes/origin/${branch}`], { timeoutMs: fetchMs })
-  return result.code === 0
-}
-
 const freshRef = async (git: GitRunner, main: string, branch: string): Promise<Base> => {
-  if (await fetched(git, main, branch).catch(() => false)) return { start: `refs/remotes/origin/${branch}`, name: `origin/${branch}` }
+  const fetched = await git.run(main, ['fetch', '--quiet', '--no-tags', 'origin', `refs/heads/${branch}:refs/remotes/origin/${branch}`], { timeoutMs: fetchMs })
+  if (fetched.code === 0) return { start: `refs/remotes/origin/${branch}`, name: `origin/${branch}` }
   if (await refExists(git, main, `refs/heads/${branch}`)) return { start: `refs/heads/${branch}`, name: branch }
   throw new Error(`Couldn't fetch origin/${branch} and there's no local ${branch} branch to start the worktree from.`)
 }

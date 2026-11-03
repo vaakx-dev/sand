@@ -8,7 +8,7 @@ export const workspaceDefaults = (ctx: WorkspaceContext) => {
   const kinds = sig(new Map<string, WorkspaceKind | null>())
   const global = sig<WorkspaceKind | undefined>(undefined)
 
-  const quiet = (error: unknown) => {
+  const failed = (error: unknown) => {
     if (!isPcUnavailable(error)) ctx.report(error)
   }
 
@@ -20,7 +20,7 @@ export const workspaceDefaults = (ctx: WorkspaceContext) => {
     void ctx.worktrees
       .global({})
       .then(found => global.set(found.kind))
-      .catch(quiet)
+      .catch(failed)
 
   const load = (place: GitPlace) => {
     if (global.get() === undefined) loadGlobal()
@@ -28,7 +28,7 @@ export const workspaceDefaults = (ctx: WorkspaceContext) => {
     void ctx.worktrees
       .defaults({ cwd: place.cwd }, place.device)
       .then(found => remember(place, found.kind))
-      .catch(quiet)
+      .catch(failed)
   }
 
   const set = async (place: GitPlace, kind: WorkspaceKind) => {

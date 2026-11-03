@@ -34,10 +34,10 @@ const resumeNow = async (deps: WorktreeDeps, session: Session) => {
   try {
     await restoreRecord(deps, record, [session.id])
   } catch (error) {
-    delete record.parked
-    await deps.store.save().catch(deps.report)
     session.append('message', { role: 'user', content: [noteBlock('sand', notRestoredNote(record, session.cwd, errorMessage(error)))] })
     deps.report(error)
+    delete record.parked
+    await deps.store.save()
   }
 }
 
@@ -46,10 +46,7 @@ export const createParking = (deps: WorktreeDeps) => {
   const parking = new Map<string, Promise<void>>()
 
   const settled = (session: Session) => {
-    if (session.kind !== 'thread' || !session.settled) {
-      handled.delete(session.id)
-      return
-    }
+    if (session.kind !== 'thread' || !session.settled) return
     if (handled.get(session.id) === session.settled || Date.now() - session.settled > justSettledMs) return
     handled.set(session.id, session.settled)
     const run = parkNow(deps, session)

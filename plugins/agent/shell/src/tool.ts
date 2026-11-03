@@ -1,5 +1,7 @@
 import type { Tool } from '@sand/tools/contract'
+import type { Context } from 'drydock'
 import { z } from 'zod'
+import { shellReady } from './contract'
 import type { Shell } from './detect'
 import { liveTail } from './live'
 import { agentEnv } from './process'
@@ -12,8 +14,6 @@ export interface Limits {
 }
 
 const stopGrace = 30_000
-
-export type ShellReady = (cwd: string, signal: AbortSignal, progress: (text: string) => void) => Promise<unknown>
 
 const minutes = (ms: number) => {
   const count = Math.round(ms / 6_000) / 10
@@ -44,17 +44,17 @@ const truncate = (text: string, max: number) =>
   text.length <= max ? text : `${text.slice(0, max / 2)}\n… ${text.length - max} characters omitted; filter with grep, head or tail …\n${text.slice(-max / 2)}`
 
 export const shellTool = (
+  ctx: Context,
   spec: Pick<Tool, 'name' | 'description' | 'environment'>,
   shell: Shell,
   limits: Limits,
-  ready: ShellReady,
 ): Tool<ReturnType<typeof inputOf>> => ({
   ...spec,
   description: `${spec.description} ${rules(limits)}`,
   input: inputOf(limits),
   timeoutMs: limits.limit_ms + stopGrace,
   async run({ command, silence_ms: silence = limits.silence_ms }, context) {
-    await ready(context.cwd, context.signal, context.progress)
+    await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)
     context.signal.throwIfAborted()
     const timeouts = { silence, limit: limits.limit_ms }
     const tail = liveTail(context.progress)

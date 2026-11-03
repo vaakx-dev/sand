@@ -1,10 +1,10 @@
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
-import { shellReady, shellRunner } from './contract'
+import { shellRunner } from './contract'
 import { detect, sidePowerShell } from './detect'
 import { shellRunnerOf } from './runner'
-import { type ShellReady, shellTool } from './tool'
+import { shellTool } from './tool'
 
 export default definePlugin({
   name: 'shell',
@@ -17,11 +17,11 @@ export default definePlugin({
   }),
   apply(ctx, config) {
     const shell = detect(config.shell)
-    const ready: ShellReady = (cwd, signal, progress) => ctx.waterfall(shellReady, cwd, signal, progress)
     ctx.provide(shellRunner, shellRunnerOf(shell))
     ctx.effect(() =>
       ctx.tools.register(
         shellTool(
+          ctx,
           {
             name: 'shell',
             description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
@@ -29,7 +29,6 @@ export default definePlugin({
           },
           shell,
           config,
-          ready,
         ),
       ),
     )
@@ -38,6 +37,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.tools.register(
         shellTool(
+          ctx,
           {
             name: 'powershell',
             description:
@@ -45,7 +45,6 @@ export default definePlugin({
           },
           powerShell,
           config,
-          ready,
         ),
       ),
     )
