@@ -12,7 +12,8 @@ export interface Wake {
   agent(session: Session, text: string, label: string): boolean
   screen(): ((event: WatchEvent) => Promise<Verdict>) | undefined
   once(key: string, run: () => Promise<void>): void
-  report(error: unknown): void
+  failed(key: string, error: unknown): void
+  passed(key: string): void
 }
 
 const unchanged = (links: ThreadLinks, thread: Session, link: StoredLink, mark: WatchMark) => {
@@ -37,11 +38,18 @@ export const checkWatched = (links: ThreadLinks, wake: Wake, thread: Session, li
   }
   const screen = wake.screen()
   if (!screen) return wakeWith()
+  const failure = `screen:${pullKey(link)}`
   wake.once(`${thread.id} ${pullKey(link)}`, async () => {
-    const verdict = await screen({ thread, summary, head: activity.head, mark, changes }).catch((error: unknown) => {
-      wake.report(error)
-      return undefined
-    })
+    const verdict = await screen({ thread, summary, head: activity.head, mark, changes }).then(
+      found => {
+        wake.passed(failure)
+        return found
+      },
+      (error: unknown) => {
+        wake.failed(failure, error)
+        return undefined
+      },
+    )
     if (!unchanged(links, thread, link, mark)) return
     if (!verdict) return wakeWith()
     if (verdict.wake) return wakeWith(verdict.cause)

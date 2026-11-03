@@ -61,7 +61,7 @@ export default definePlugin({
     const discovery = createDiscovery({ github: ctx.github, repos: ctx.gitRepo, book, links, failures })
     const branches = createBranchFollow({ repos: ctx.gitRepo, sessions: ctx.sessions, discovery })
     const viewed = createViewed({ touched: branches.follow, ended: branches.unfollow })
-    const watch = createWake({ loop: () => ctx.get(loop), steering: () => ctx.get(steering), sub: () => ctx.get(subModel), github: ctx.github, report })
+    const watch = createWake({ loop: () => ctx.get(loop), steering: () => ctx.get(steering), sub: () => ctx.get(subModel), github: ctx.github, report, failures, hold: () => ctx.busy() })
     const sweep = createSweep({
       github: ctx.github,
       sessions: ctx.sessions,

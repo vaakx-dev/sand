@@ -3,6 +3,7 @@ import type { GitHub } from '@sand/github/contract'
 import type { Loop } from '@sand/loop/contract'
 import type { Steering } from '@sand/steering/contract'
 import type { SubModel } from '@sand/sub-model/contract'
+import type { OnceReport } from '../report/once'
 import type { Wake } from './check'
 import { screen } from './screen'
 
@@ -12,6 +13,8 @@ export interface Wakers {
   sub(): SubModel | undefined
   github: GitHub
   report(error: unknown): void
+  failures: OnceReport
+  hold(): () => void
 }
 
 const wakeAgent = (wakers: Wakers, session: Session, text: string, label: string): boolean => {
@@ -35,13 +38,18 @@ export const createWake = (wakers: Wakers) => {
     once(key, run) {
       if (running.has(key)) return
       running.add(key)
+      const release = wakers.hold()
       run()
         .catch(wakers.report)
-        .finally(() => running.delete(key))
+        .finally(() => {
+          running.delete(key)
+          release()
+        })
     },
-    report(error) {
-      if (!stop.signal.aborted) wakers.report(error)
+    failed(key, error) {
+      if (!stop.signal.aborted) wakers.failures.failed(key, error)
     },
+    passed: key => wakers.failures.passed(key),
   }
   return { wake, stop: () => stop.abort() }
 }
