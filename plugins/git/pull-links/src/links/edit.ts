@@ -14,6 +14,8 @@ const replaced = (links: StoredLinks, pull: PullRef, change: (link: StoredLink) 
 export const withLink = (links: StoredLinks, pull: PullRef, source: LinkSource, now: number): StoredLinks => {
   if (findLink(links, pull)) return links
   return {
+    ...links,
+    ...(links.links.length ? {} : { held: links.held ?? 0 }),
     links: [...links.links, { ...refOf(pull), source, linked: now, watching: false }],
     dismissed: links.dismissed.filter(ref => !samePull(ref, pull)),
   }
@@ -22,6 +24,7 @@ export const withLink = (links: StoredLinks, pull: PullRef, source: LinkSource, 
 export const withoutLink = (links: StoredLinks, pull: PullRef): StoredLinks => {
   if (!findLink(links, pull)) return links
   return {
+    ...links,
     links: links.links.filter(link => !samePull(link, pull)),
     dismissed: [...links.dismissed.filter(ref => !samePull(ref, pull)), refOf(pull)],
   }
@@ -43,3 +46,11 @@ export const withMark = (links: StoredLinks, pull: PullRef, mark: WatchMark, qui
   if (!link?.watching) return links
   return replaced(links, pull, link => (keepWatching ? { ...link, mark, quiet } : watched(link, false)))
 }
+
+export const withEnded = (links: StoredLinks, pull: PullRef, ended: number | undefined): StoredLinks => {
+  const link = findLink(links, pull)
+  if (!link || link.ended === ended) return links
+  return replaced(links, pull, ({ ended: _, ...rest }) => (ended === undefined ? rest : { ...rest, ended }))
+}
+
+export const withHeld = (links: StoredLinks, at: number): StoredLinks => (links.links.length && (links.held ?? 0) < at ? { ...links, held: at } : links)

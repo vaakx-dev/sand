@@ -19,9 +19,11 @@ const storedLink = ref.extend({
   watching: z.boolean(),
   mark: watchMark.optional(),
   quiet: z.number().int().min(0).optional(),
+  ended: z.number().optional(),
 })
 
-const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref) })
+// held: auto-settle skips pull requests that ended before this, the last time the user wrote in the thread or it was settled.
+const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref), held: z.number().optional() })
 
 export type WatchMark = z.infer<typeof watchMark>
 export type StoredLink = z.infer<typeof storedLink>

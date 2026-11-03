@@ -1,5 +1,5 @@
 import type { Session, sessions } from '@sand/chats/contract'
-import { server } from '@sand/server/contract'
+import { promptSent, server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
 import { loopSteer, loopUnsteer, queueChange, turnQueue, type QueueState, type Steering } from './contract'
@@ -12,7 +12,12 @@ export const serveSteering = (ctx: Context<{ sessions: typeof sessions }>, steer
     if (!found) return
     return joinDisposers(
       ctx.on(turnQueue, thread => found.broadcast(queueChange, [thread.id, queueState(steering, thread)])),
-      found.handle(loopSteer, request => steering.steer(session(request.session), request.prompt, request.label) ?? null),
+      found.handle(loopSteer, request => {
+        const thread = session(request.session)
+        const id = steering.steer(thread, request.prompt, request.label)
+        if (id) ctx.emit(promptSent, thread)
+        return id ?? null
+      }),
       found.handle(loopUnsteer, request => steering.unsteer(session(request.session), request.item)),
     )
   })

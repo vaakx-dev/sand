@@ -1,4 +1,4 @@
-import type { Session, Sessions } from '@sand/chats/contract'
+import type { Session, SessionInfo, Sessions } from '@sand/chats/contract'
 
 export const threadOf = (sessions: Sessions, id: string): Session => {
   const session = sessions.require(id)
@@ -6,4 +6,4 @@ export const threadOf = (sessions: Sessions, id: string): Session => {
   return threadOf(sessions, session.parent)
 }
 
-export const isLive = (session: Session) => session.kind === 'thread' && session.settled === null
+export const isLive = (session: Pick<SessionInfo, 'kind' | 'settled'>) => session.kind === 'thread' && session.settled === null

@@ -1,5 +1,5 @@
 import type { PullRef, PullSummary } from '@sand/github/contract'
-import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
+import { helloField, type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -48,6 +48,10 @@ export type PullOpenRequest = InputOf<typeof pullOpen>
 
 export const threadPullsChange = wireEvent<ThreadPulls>('pulls.thread')
 
+export const helloAutoSettle = helloField<boolean>('pulls.autoSettle')
+export const autoSettleSet = request('pulls.autoSettle.set', { input: z.object({ on: z.boolean() }), output: type<boolean>() })
+export const autoSettleChange = wireEvent<boolean>('pulls.autoSettle')
+
 export interface PullLinks {
   links(session: string): Promise<ThreadPulls>
   link(session: string, pull: PullRef, source: LinkSource): Promise<ThreadPulls>
@@ -81,6 +85,9 @@ export interface PullLinksClient {
   open(input: PullOpenRequest, device: string): Promise<{ session: string }>
   openThread(pull: PullRef, select?: boolean): Promise<LinkedThread | undefined>
   ask(pull: PullRef, prompt: AgentPrompt, place?: ThreadPlace): Promise<boolean>
+  /** Whether threads settle when their pull requests merge, on every PC that answered. */
+  autoSettle(): boolean
+  setAutoSettle(on: boolean): Promise<void>
 }
 
 export const pullLinksClient = service<PullLinksClient>('pullLinksClient')

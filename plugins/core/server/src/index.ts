@@ -2,7 +2,7 @@ import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { sessionUpdate } from '@sand/chats/contract'
 import { createHandlers, parseInput } from '@sand/util/wire'
 import { definePlugin } from 'drydock'
-import { helloSafe, pagesChange, type Server, server as serverService, uiFocus } from './contract'
+import { helloSafe, pagesChange, promptSent, type Server, server as serverService, uiFocus } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
 import { pagingRequests } from './requests/paging'
@@ -33,6 +33,10 @@ export default definePlugin({
       if (session) markSeen(session)
       return true
     }
+
+    ctx.on(promptSent, session => {
+      if (session.settled !== null) ctx.sessions.settle(session.id, false).catch(error => ctx.report(error))
+    })
 
     ctx.on(sessionUpdate, session => {
       if (!session.seen && stream.focused(session.id)) markSeen(session.id)

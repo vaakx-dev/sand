@@ -4,7 +4,7 @@ import type { LinkSource, ThreadPulls } from '../contract'
 import type { LinkBook } from '../book/book'
 import { refOf, type StoredLinks, type WatchMark } from '../book/record'
 import { isEnded } from '../sweep/cadence'
-import { findLink, withLink, withMark, withoutLink, withoutWatching, withWatch } from './edit'
+import { findLink, withEnded, withHeld, withLink, withMark, withoutLink, withoutWatching, withWatch } from './edit'
 import { threadOf } from './thread'
 import { threadPulls } from './view'
 
@@ -29,6 +29,14 @@ export const createThreadLinks = (deps: LinkDeps) => {
     return true
   }
 
+  const quietly = (found: Session, edit: (links: StoredLinks) => StoredLinks) => {
+    const before = deps.book.read(found.id)
+    const after = edit(before)
+    if (after !== before) deps.book.write(found, after)
+  }
+
+  const linking = (pull: PullRef) => deps.book.threads().filter(id => findLink(deps.book.read(id), pull))
+
   const edited = (id: string, edit: (links: StoredLinks) => StoredLinks) => {
     const found = thread(id)
     change(found, edit)
@@ -49,7 +57,7 @@ export const createThreadLinks = (deps: LinkDeps) => {
           return found ? [view(found)] : []
         }),
       ),
-    linking: (pull: PullRef) => deps.book.threads().filter(id => findLink(deps.book.read(id), pull)),
+    linking,
     read: (id: string) => deps.book.read(thread(id).id),
     link: (id: string, pull: PullRef, source: LinkSource) => edited(id, links => withLink(links, pull, source, Date.now())),
     async linkText(id: string, text: string) {
@@ -72,6 +80,13 @@ export const createThreadLinks = (deps: LinkDeps) => {
     linkStack: (found: Session, pulls: PullRef[]) => change(found, links => pulls.reduce((next, pull) => withLink(next, pull, 'stack', Date.now()), links)),
     stopWatching: (found: Session) => change(found, withoutWatching),
     stopWatch: (found: Session, pull: PullRef) => change(found, links => withWatch(links, pull, false)),
+    ended(pull: PullRef, ended: number | undefined) {
+      for (const id of linking(pull)) {
+        const found = deps.sessions.open(id)
+        if (found) quietly(found, links => withEnded(links, pull, ended))
+      }
+    },
+    hold: (found: Session, at: number) => quietly(found, links => withHeld(links, at)),
     mark: (found: Session, pull: PullRef, mark: WatchMark, quiet: number, keepWatching: boolean) =>
       change(found, links => withMark(links, pull, mark, quiet, keepWatching)),
   }
