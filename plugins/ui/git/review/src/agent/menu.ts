@@ -3,23 +3,18 @@ import { isLivePull, pullRef } from '@sand/github/look'
 import type { ReviewContext } from '../inject'
 import { agentReview } from './review'
 
+const label = 'Review with the agent'
+
 export const agentReviewMenu = (ctx: ReviewContext): PullMenu => {
   const { kit } = ctx
   const agent = agentReview(ctx)
   return {
     id: 'review-with-agent',
-    order: 15,
+    order: 0,
     items: ({ pull, close }) => {
       if (!isLivePull(pull.state)) return []
+      if (!ctx.github.localCopy(pull.repo)) return [kit.menuItem({ icon: 'sparkles', disabled: true }, kit.menuLabel(label, `Needs a local clone of ${pull.repo}`))]
       const ref = pullRef(pull)
-      if (!ctx.github.localCopy(pull.repo))
-        return [
-          kit.menuItem(
-            { icon: 'sparkles', disabled: true, title: `Add a project with ${pull.repo} as its remote first` },
-            'Review with the agent',
-            kit.menuReason('No local copy'),
-          ),
-        ]
       return [
         kit.menuItem(
           {
@@ -31,7 +26,7 @@ export const agentReviewMenu = (ctx: ReviewContext): PullMenu => {
               void agent.start(ref)
             },
           },
-          'Review with the agent',
+          label,
         ),
       ]
     },

@@ -9,7 +9,7 @@ import { reply } from './reply'
 import { resolve } from './resolve'
 import { revertPullRequest } from './revert'
 import { requestReview } from './reviewers'
-import { update } from './update'
+import { updatePullBranch } from './update'
 
 export type PullActions = ReturnType<typeof createActions>
 
@@ -26,8 +26,8 @@ export const createActions = (deps: ActionDeps) => {
     edit: act(edit),
     requestReview: act(requestReview),
     close: act(close),
-    update: act(update),
     deleteBranch: act(deleteBranch),
+    update: (ref: PullRef) => queue(pullKey(ref), () => updatePullBranch(deps, ref)),
     revert: (ref: PullRef) => queue(pullKey(ref), () => revertPullRequest(deps, ref)),
     candidates: (ref: PullRef, q?: string) => reviewCandidates(deps, ref, q),
   }

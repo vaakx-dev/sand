@@ -1,5 +1,5 @@
 import type { GitRepo, GitRunner } from '@sand/git/contract'
-import type { PullSummary } from '@sand/github/contract'
+import type { GitHub, PullSummary } from '@sand/github/contract'
 import type { PullActivity } from '../activity/types'
 import { hasBranch, hasCommit, isAncestor, longGitMs } from './git'
 
@@ -16,24 +16,30 @@ const branchName = (pull: PullSummary, head: HeadInfo) => {
   return head.headOwner ? `${head.headOwner}-${head.headBranch}` : `pr/${pull.number}`
 }
 
-const fetchHead = async (git: GitRunner, main: string, pull: PullSummary, sha: string) => {
-  const args = ['fetch', '--quiet', '--no-tags', 'origin', `refs/pull/${pull.number}/head`]
-  await git.ok(main, args, { timeoutMs: longGitMs, what: `Couldn't fetch #${pull.number} from origin` })
+const fetchHead = async (git: GitRunner, main: string, remote: string, pull: PullSummary, sha: string) => {
+  const args = ['fetch', '--quiet', '--no-tags', remote, `refs/pull/${pull.number}/head`]
+  await git.ok(main, args, { timeoutMs: longGitMs, what: `Couldn't fetch #${pull.number} from ${remote}` })
   if (!(await hasCommit(git, main, sha))) throw new Error(`#${pull.number} moved while it was being fetched. Try again.`)
 }
 
-const createBranch = async (git: GitRunner, main: string, name: string, sha: string, head: HeadInfo) => {
+const createBranch = async (git: GitRunner, main: string, remote: string, name: string, sha: string, head: HeadInfo) => {
   await git.ok(main, ['branch', '--no-track', name, sha], { what: `Couldn't create the branch ${name}` })
   if (head.fork) return
-  await git.ok(main, ['config', `branch.${name}.remote`, 'origin'], { what: `Couldn't set ${name} to push to origin` })
-  await git.ok(main, ['config', `branch.${name}.merge`, `refs/heads/${head.headBranch}`], { what: `Couldn't set ${name} to push to origin` })
+  await git.ok(main, ['config', `branch.${name}.remote`, remote], { what: `Couldn't set ${name} to push to ${remote}` })
+  await git.ok(main, ['config', `branch.${name}.merge`, `refs/heads/${head.headBranch}`], { what: `Couldn't set ${name} to push to ${remote}` })
 }
 
-export const preparePullBranch = async (git: GitRunner, main: string, pull: PullSummary, head: PullActivity): Promise<PullBranch> => {
+export interface BranchDeps {
+  git: GitRunner
+  github: GitHub
+}
+
+export const preparePullBranch = async ({ git, github }: BranchDeps, main: string, pull: PullSummary, head: PullActivity): Promise<PullBranch> => {
   const name = branchName(pull, head)
-  await fetchHead(git, main, pull, head.head)
+  const remote = await github.remoteFor(main, pull.repo)
+  await fetchHead(git, main, remote, pull, head.head)
   if (!(await hasBranch(git, main, name))) {
-    await createBranch(git, main, name, head.head, head)
+    await createBranch(git, main, remote, name, head.head, head)
     return { name, head: head.head, behind: false }
   }
   if (await isAncestor(git, main, head.head, `refs/heads/${name}`)) return { name, head: head.head, behind: false }

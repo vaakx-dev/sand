@@ -8,16 +8,6 @@ export const linkItems = (shown: Shown, close: () => void): Child[] => {
   return [
     kit.menuItem(
       {
-        icon: 'external',
-        onClick: () => {
-          close()
-          kit.openTab(url)
-        },
-      },
-      'Open on GitHub',
-    ),
-    kit.menuItem(
-      {
         icon: 'link',
         onClick: () => {
           close()

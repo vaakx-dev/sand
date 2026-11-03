@@ -1,5 +1,6 @@
 import type { MergeMethod, PullRef } from '@sand/github/contract'
 import { pullName, pullRef } from '@sand/github/look'
+import type { ToastAction } from '@sand/toasts/contract'
 import { hereOf, type PageContext, toastId } from '../inject'
 import type { DetailModel } from './model'
 
@@ -23,10 +24,13 @@ export const pullActions = ({ ctx, select }: ActionDeps, model: DetailModel) => 
 
   const ready = async (on: boolean) => model.put(await act(`Couldn't change ${name}`, () => github.ready({ ...ref, ready: on }, hereOf(ctx))))
 
-  const update = async (rebase: boolean) => {
-    const done = await act(`Couldn't update ${name}`, () => pullDetail.updateBranch({ ...ref, rebase }))
-    model.put(done)
-    if (done) toasts.show({ id: toastId, tone: 'success', title: rebase ? `Rebasing ${name} onto ${done.base}` : `Merging ${done.base} into ${name}` })
+  const update = async (onConflict: ToastAction) => {
+    const done = await act(`Couldn't update ${name}`, () => pullDetail.updateBranch(ref))
+    if (!done) return
+    const { detail, conflict } = done
+    model.put(detail)
+    if (conflict) toasts.show({ id: toastId, tone: 'danger', title: `${name} has conflicts with ${detail.base}`, actions: [onConflict] })
+    else toasts.show({ id: toastId, tone: 'success', title: `Merging ${detail.base} into ${name}` })
   }
 
   const deleteBranch = async () => model.put(await act(`Couldn't delete the branch of ${name}`, () => pullDetail.deleteBranch(ref)))
