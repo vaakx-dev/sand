@@ -1,6 +1,7 @@
 import type { Message, ToolResultBlock, UserContent } from '@sand/chats/contract'
 import type { AppPlan, AppSession, AppSetup, LLMEvent, LLMRequest } from '../contract'
 import { isUserContent } from '@sand/chats/prompt'
+import { loadedTools } from '../http/deferred'
 import { markOf, transcript } from './history'
 import { createSignals, type Signals } from './signals'
 import { readStep } from './step'
@@ -15,6 +16,7 @@ interface Live {
 }
 
 const idleFor = 15 * 60_000
+const toolsRunFor = 90 * 60_000
 const resume = 'Continue from where the conversation above stops.'
 
 const setupPrint = ({ model, effort, system, tools }: AppSetup) =>
@@ -63,14 +65,14 @@ export const createBridge = (plan: AppPlan, cwd: string) => {
   }
 
   const carryOn = (entry: Live, marks: string[], messages: Message[], print: string) => {
-    if (!extends1(entry.marks, marks)) return false
+    if (entry.setup !== print || !extends1(entry.marks, marks)) return false
     const last = messages.at(-1)
     if (!last || last.role !== 'user') return false
     if (entry.waiting.length) {
       answer(entry.session, last, entry.waiting)
       return true
     }
-    if (entry.setup !== print || last.content.some(block => block.type === 'tool_result')) return false
+    if (last.content.some(block => block.type === 'tool_result')) return false
     entry.session.send(userContent(last))
     return true
   }
@@ -97,7 +99,7 @@ export const createBridge = (plan: AppPlan, cwd: string) => {
       model: request.model,
       ...(request.effort && { effort: request.effort }),
       system: request.system,
-      tools: request.session ? request.tools : [],
+      tools: request.session ? loadedTools(request.tools) : [],
       history: '',
       cwd,
       ...(request.sessionKind && { sessionKind: request.sessionKind }),
@@ -109,7 +111,7 @@ export const createBridge = (plan: AppPlan, cwd: string) => {
       if (!request.session) return drop(key, entry)
       entry.waiting = paused ? reply.content.flatMap(block => (block.type === 'tool_call' ? [block.id] : [])) : []
       entry.marks = [...marks, markOf(reply)]
-      entry.timer = setTimeout(() => drop(key, entry), idleFor)
+      entry.timer = setTimeout(() => drop(key, entry), paused ? toolsRunFor : idleFor)
       entry.timer.unref?.()
     }
 

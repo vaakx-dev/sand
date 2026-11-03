@@ -1,6 +1,7 @@
 import type { AppOutput, AppSession, AppSetup } from '@sand/accounts/contract'
 import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
+import { threadConfig } from '../server/args'
 import { fieldsOf, type Json } from '../server/rpc'
 import type { CodexServer } from '../server/server'
 import { inputItem, toolOutput } from './content'
@@ -39,8 +40,9 @@ export const openSession = async ({ server, media }: SessionNeeds, setup: AppSet
     sandbox: 'read-only',
     baseInstructions: setup.system,
     ephemeral: true,
+    environments: [],
     dynamicTools: setup.tools.map(dynamicTool),
-    config: { project_doc_max_bytes: 0 },
+    config: threadConfig(await server.mcpServers(setup.cwd)),
   })
   const threadId = String(fieldsOf(thread).id)
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()

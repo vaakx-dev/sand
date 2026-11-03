@@ -1,6 +1,7 @@
 import { plainArgs, sandArgs } from './args'
 import { requireCodex } from './binary'
 import { writeCatalog } from './catalog'
+import { unwantedFeatures } from './features'
 import { fieldsOf, startRpc, type Json, type Rpc } from './rpc'
 
 export interface ThreadHandlers {
@@ -49,17 +50,16 @@ export const createServer = (folder: string, version: string) => {
     return rpc
   }
 
-  const userServers = async (rpc: Rpc) => {
-    const { config } = await rpc.request('config/read', {})
+  const survey = async (rpc: Rpc) => {
     await rpc.request('model/list', {})
-    return Object.keys(fieldsOf(fieldsOf(config).mcp_servers))
+    return unwantedFeatures(rpc)
   }
 
   const boot = async () => {
     const binary = await requireCodex()
     const plain = await spawn(binary, plainArgs)
-    const mcpServers = await userServers(plain).finally(() => plain.close())
-    return spawn(binary, sandArgs({ catalog: await writeCatalog(folder), mcpServers }))
+    const features = await survey(plain).finally(() => plain.close())
+    return spawn(binary, sandArgs({ catalog: await writeCatalog(folder), features }))
   }
 
   const rpc = () =>
@@ -68,8 +68,11 @@ export const createServer = (folder: string, version: string) => {
       throw error
     }))
 
+  const request = async (method: string, params: Json = {}) => (await rpc()).request(method, params)
+
   return {
-    request: async (method: string, params: Json = {}) => (await rpc()).request(method, params),
+    request,
+    mcpServers: async (cwd: string) => Object.keys(fieldsOf(fieldsOf((await request('config/read', { cwd })).config).mcp_servers)),
     thread(id: string, handlers: ThreadHandlers) {
       threads.set(id, handlers)
       return () => threads.delete(id)

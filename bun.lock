@@ -154,6 +154,25 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/secrets": {
+      "name": "@sand/secrets",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chat": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/config": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/agent/shell": {
       "name": "@sand/shell",
       "version": "0.0.0",
@@ -1836,6 +1855,8 @@
     "@sand/reload": ["@sand/reload@workspace:plugins/extend/reload"],
 
     "@sand/safe-mode": ["@sand/safe-mode@workspace:plugins/ui/shared/safe-mode"],
+
+    "@sand/secrets": ["@sand/secrets@workspace:plugins/agent/secrets"],
 
     "@sand/server": ["@sand/server@workspace:plugins/core/server"],
 
