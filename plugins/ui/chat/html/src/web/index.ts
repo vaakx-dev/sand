@@ -5,6 +5,7 @@ import { definePlugin } from 'drydock'
 import { inject } from './context'
 import { htmlFrame } from './frame'
 import { frameHeights } from './heights'
+import { previewView } from './preview'
 
 const renderView = ({ errorBody, field }: ToolViews): ToolRenderer => ({
   icon: 'chart',
@@ -12,15 +13,6 @@ const renderView = ({ errorBody, field }: ToolViews): ToolRenderer => ({
   activeVerb: 'Rendering',
   label: tool => field(tool.call.input, 'title'),
   copy: tool => field(tool.call.input, 'title'),
-  body: tool => (tool.result?.isError ? errorBody(tool) : undefined),
-})
-
-const previewView = ({ errorBody, field }: ToolViews): ToolRenderer => ({
-  icon: 'chart',
-  verb: 'Checked',
-  activeVerb: 'Checking',
-  label: tool => field(tool.call.input, 'path') || 'page',
-  copy: tool => field(tool.call.input, 'path'),
   body: tool => (tool.result?.isError ? errorBody(tool) : undefined),
 })
 
@@ -36,7 +28,7 @@ export default definePlugin({
         transcript &&
         joinDisposers(
           transcript.tool('html_render', renderView(ctx.toolViews)),
-          transcript.tool('html_preview', previewView(ctx.toolViews)),
+          transcript.tool('html_preview', previewView(ctx.kit, ctx.toolViews)),
           transcript.entry('html-render', (entry, thread) => htmlFrame(ctx, heights, thread, entry.data as HtmlRenderEntry)),
         ),
     )

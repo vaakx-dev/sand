@@ -1,8 +1,9 @@
 import type { ImageBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import type { Tool } from '@sand/tools/contract'
-import type { ConsoleMessage, HtmlPages } from '../contract'
+import type { HtmlPages } from '../contract'
 import { columnWidth, maxHtmlChars } from '../page/limits'
+import { consoleNote, sizeNote } from '../report'
 import { previewDescription } from './describe'
 import { missingNote, readPage } from './page'
 import type { RecentPages } from './recent'
@@ -13,9 +14,6 @@ const input = z.object({
   path: z.string().optional().describe('Path to a .html file to check instead of html.'),
   width: z.number().int().min(240).max(1600).optional().describe(`CSS pixels. Default ${columnWidth}. About 390 checks a phone.`),
 })
-
-const consoleNote = (messages: ConsoleMessage[]) =>
-  messages.length ? `\n\nConsole:\n${messages.map(message => `${message.level}: ${message.text}`).join('\n')}` : '\n\nConsole: no output.'
 
 const screenshot = (media: Media, png: string): ImageBlock => ({
   ...media.put(Buffer.from(png, 'base64'), 'image/png'),
@@ -37,7 +35,7 @@ export const previewTool = (pages: HtmlPages, media: Media, recent: RecentPages)
     return [
       {
         type: 'text' as const,
-        text: `Height ${preview.height}px at ${width}px wide. To show exactly this page, call html_render with only a title.${missingNote(page.missing)}${consoleNote(preview.console)}`,
+        text: `${sizeNote(preview.height, width)} To show exactly this page, call html_render with only a title.${missingNote(page.missing)}${consoleNote(preview.console)}`,
       },
       screenshot(media, preview.png),
     ]
