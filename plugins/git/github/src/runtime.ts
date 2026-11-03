@@ -1,10 +1,11 @@
-import { ask } from '@sand/ask/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { type Server, server } from '@sand/server/contract'
+import { subModel } from '@sand/sub-model/contract'
 import { definePlugin } from 'drydock'
 import { authChanged, github, githubAuthChange, githubLoginCode, pullChanged, pullCreated, pullsChange } from './contract'
 import { serveGitHub } from './requests'
 import { createGitHub } from './service'
+import { pullTextJob } from './text/write'
 
 export default definePlugin({
   name: 'github',
@@ -15,7 +16,7 @@ export default definePlugin({
     const host = createGitHub({
       git: ctx.gitRunner,
       repos: ctx.gitRepo,
-      ask: () => ctx.get(ask),
+      sub: () => ctx.get(subModel),
       authChanged(auth) {
         live?.broadcast(githubAuthChange, auth)
         ctx.emit(authChanged, auth)
@@ -30,6 +31,7 @@ export default definePlugin({
     })
     ctx.effect(() => host.stop)
     ctx.provide(github, host.service)
+    ctx.watch(subModel, found => found?.job(pullTextJob))
     ctx.watch(server, found => {
       if (!found) return
       live = found

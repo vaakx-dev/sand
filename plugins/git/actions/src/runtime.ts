@@ -1,8 +1,9 @@
-import { ask } from '@sand/ask/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { type Server, server } from '@sand/server/contract'
+import { subModel } from '@sand/sub-model/contract'
 import { definePlugin } from 'drydock'
 import { gitProgress } from './contract'
+import { messageJob } from './message/write'
 import { serveActions } from './requests'
 import { createPerformer } from './run/perform'
 
@@ -18,10 +19,11 @@ export default definePlugin({
       send: progress => live?.broadcast(gitProgress, progress),
       report: error => ctx.report(error),
     })
+    ctx.watch(subModel, found => found?.job(messageJob))
     ctx.watch(server, found => {
       if (!found) return
       live = found
-      const stop = serveActions(found, { perform, ask: () => ctx.get(ask) })
+      const stop = serveActions(found, { perform, sub: () => ctx.get(subModel) })
       return () => {
         live = undefined
         stop()

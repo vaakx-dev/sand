@@ -1,0 +1,54 @@
+import type { AskRequest } from '@sand/ask/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { type SessionSettings, sessionSettings } from '@sand/model/contract'
+import { type Dispose, service } from 'drydock'
+import { z } from 'zod'
+
+export const tiers = ['fast', 'smart'] as const
+
+export type Tier = (typeof tiers)[number]
+
+export interface Job {
+  id: string
+  label: string
+}
+
+export interface JobRequest extends Omit<AskRequest, 'model' | 'effort' | 'speed'> {
+  job: string
+  tier: Tier
+  cwd?: string
+}
+
+export interface SubModel {
+  job(job: Job): Dispose
+  has(tier: Tier): boolean
+  settings(tier: Tier): SessionSettings
+  text(request: JobRequest): Promise<string>
+  json<S extends z.ZodType>(request: JobRequest, schema: S): Promise<z.infer<S>>
+}
+
+export const subModel = service<SubModel>('subModel')
+
+export const chosenModel = sessionSettings.required({ model: true })
+
+export type ChosenModel = z.output<typeof chosenModel>
+
+export interface SubModelState {
+  models: Partial<Record<Tier, ChosenModel>>
+  skills: Record<string, string>
+  jobs: Job[]
+}
+
+export const helloSubModel = helloField<SubModelState>('subModel')
+
+export const subModelChange = wireEvent<SubModelState>('subModel.change')
+
+export const subModelSet = request('subModel.set', {
+  input: z.object({ tier: z.enum(tiers), model: chosenModel.nullable() }),
+  output: type<void>(),
+})
+
+export const subModelSkill = request('subModel.skill', {
+  input: z.object({ job: z.string(), skill: z.string().nullable() }),
+  output: type<void>(),
+})

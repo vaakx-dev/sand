@@ -4,10 +4,11 @@ import { errorMessage } from '@sand/util'
 import type { Pulse } from '@sand/web-client/reactive'
 import { sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
+import type { Slots } from './slots'
 
 export type View = { kind: 'top' } | { kind: 'favourites' } | { kind: 'source'; id: string }
 
-export const createPage = (ctx: PanelContext, changes: Pulse) => {
+export const createPage = (ctx: PanelContext, changes: Pulse, slots: Slots) => {
   const problem = sig('')
   const view = sig<View>({ kind: 'top' })
 
@@ -22,7 +23,7 @@ export const createPage = (ctx: PanelContext, changes: Pulse) => {
 
   const source = (id: string): SourceInfo | undefined => ctx.models.sources().find(found => found.id === id)
 
-  return { ctx, changes, problem, view, fail, call, run, source, go: (next: View) => view.set(next) }
+  return { ctx, changes, slots, problem, view, fail, call, run, source, go: (next: View) => view.set(next) }
 }
 
 export type Page = ReturnType<typeof createPage>

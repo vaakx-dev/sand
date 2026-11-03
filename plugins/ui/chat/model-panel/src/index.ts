@@ -8,10 +8,11 @@ import { definePlugin } from 'drydock'
 import { createActions } from './actions'
 import { modelChanges } from './changes'
 import { inject } from './context'
-import { modelPill as modelPillService } from './contract'
+import { modelDefaults, modelPill as modelPillService } from './contract'
 import { modelSource } from './palette'
 import { modelPill } from './pill'
 import { modelsPage } from './settings'
+import { createSlots } from './settings/slots'
 import { composerTarget } from './target'
 
 export default definePlugin({
@@ -22,12 +23,14 @@ export default definePlugin({
     const problem = sig('')
     const actions = createActions(ctx, text => problem.set(text))
     const changes = modelChanges(ctx)
+    const slots = createSlots()
     const pill = owned(ctx, () => modelPill(ctx, composerTarget(ctx, actions, changes, problem), changes))
 
     ctx.watch(composerService, composer => composer && joinDisposers(composer.slot('end', pill.view, 0), ctx.provide(modelPillService, { open: pill.open })))
     ctx.watch(paletteService, palette => palette?.source(modelSource(ctx, actions)))
+    ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>
-      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes) }),
+      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes, slots) }),
     )
   },
 })

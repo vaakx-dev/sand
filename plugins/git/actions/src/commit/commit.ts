@@ -1,4 +1,4 @@
-import type { Ask } from '@sand/ask/contract'
+import type { SubModel } from '@sand/sub-model/contract'
 import type { Committed, GitActionResult } from '../contract'
 import { findHooks } from '../hooks/find'
 import { writeMessage } from '../message/write'
@@ -19,11 +19,11 @@ export interface CommitRequest {
 
 const commitHooks = ['pre-commit', 'prepare-commit-msg', 'commit-msg']
 
-const chooseMessage = async (job: Job, ask: Ask | undefined, request: CommitRequest, paths?: string[]) => {
+const chooseMessage = async (job: Job, sub: SubModel | undefined, request: CommitRequest, paths?: string[]) => {
   const typed = request.message?.trim()
   if (typed) return { ok: true as const, message: typed }
   job.progress.phase('message')
-  return writeMessage(job.git, job.repo, ask, { ...(paths ? { paths } : {}), ...(request.session ? { session: request.session } : {}) })
+  return writeMessage(job.git, job.repo, sub, { ...(paths ? { paths } : {}), ...(request.session ? { session: request.session } : {}) })
 }
 
 const readCommit = async ({ git, repo }: Job) => {
@@ -31,11 +31,11 @@ const readCommit = async ({ git, repo }: Job) => {
   return { commit, subject }
 }
 
-export const commitChanges = async (job: Job, ask: Ask | undefined, request: CommitRequest): Promise<GitActionResult<Committed>> => {
+export const commitChanges = async (job: Job, sub: SubModel | undefined, request: CommitRequest): Promise<GitActionResult<Committed>> => {
   const { git, repo, progress } = job
   const selected = await selectPaths(git, repo, request.paths)
   if (!selected.ok) return selected
-  const message = await chooseMessage(job, ask, request, selected.paths)
+  const message = await chooseMessage(job, sub, request, selected.paths)
   if (!message.ok) return message
   progress.phase('stage')
   const staged = await stagePaths(git, repo, selected.paths)

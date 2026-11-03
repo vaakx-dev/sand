@@ -1,5 +1,5 @@
-import type { Ask } from '@sand/ask/contract'
 import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { SubModel } from '@sand/sub-model/contract'
 import { createClient } from './api/client'
 import { githubHost } from './api/endpoint'
 import { createAuth } from './auth/auth'
@@ -21,7 +21,7 @@ import { type TextRequest, writePullText } from './text/write'
 export interface GitHubDeps {
   git: GitRunner
   repos: GitRepo
-  ask(): Ask | undefined
+  sub(): SubModel | undefined
   authChanged(auth: GitHubAuth): void
   loginCode(code: GitHubLoginCode): void
   pullChanged(summary: PullSummary): void
@@ -75,7 +75,7 @@ export const createGitHub = (deps: GitHubDeps) => {
     service,
     login: login.login,
     repo,
-    text: (request: TextRequest) => writePullText({ git: deps.git, repos: deps.repos, ask: deps.ask }, request),
+    text: (request: TextRequest) => writePullText({ git: deps.git, repos: deps.repos, sub: deps.sub }, request),
     async create(request: CreateRequest) {
       const summary = await createPull({ ...place, client }, summaries, request)
       deps.pullCreated(summary, request.session)
