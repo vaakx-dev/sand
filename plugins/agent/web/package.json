@@ -11,7 +11,7 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Web tools",
-    "summary": "Searches the web with DuckDuckGo and reads pages as markdown"
+    "summary": "Searches the web with Exa, falling back to DuckDuckGo, and reads pages as markdown"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
