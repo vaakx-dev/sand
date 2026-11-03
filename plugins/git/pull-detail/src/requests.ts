@@ -26,7 +26,7 @@ export const servePullDetail = (server: Server, details: Details, actions: PullA
     server.handle(pullsRequestReview, ({ repo, number, add }) => actions.requestReview({ repo, number }, { add })),
     server.handle(pullsCandidates, ({ repo, number, q }) => actions.candidates({ repo, number }, q)),
     server.handle(pullsClose, ({ repo, number, closed }) => actions.close({ repo, number }, { closed })),
-    server.handle(pullsUpdateBranch, ({ repo, number, rebase }) => actions.update({ repo, number }, rebase === undefined ? {} : { rebase })),
+    server.handle(pullsUpdateBranch, ({ repo, number }) => actions.update({ repo, number }, {})),
     server.handle(pullsRevert, ({ repo, number }) => actions.revert({ repo, number })),
     server.handle(pullsDeleteBranch, ({ repo, number }) => actions.deleteBranch({ repo, number }, {})),
   )

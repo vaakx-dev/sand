@@ -60,7 +60,7 @@ export const pullsEdit = request('pulls.edit', { input: z.object({ ...ref, title
 export const pullsRequestReview = request('pulls.reviewers', { input: z.object({ ...ref, add: z.array(z.string()).min(1) }), output: type<PullDetail>() })
 export const pullsCandidates = request('pulls.reviewers.candidates', { input: z.object({ ...ref, q: z.string().optional() }), output: type<string[]>() })
 export const pullsClose = request('pulls.close', { input: z.object({ ...ref, closed: z.boolean() }), output: type<PullDetail>() })
-export const pullsUpdateBranch = request('pulls.update', { input: z.object({ ...ref, rebase: z.boolean().optional() }), output: type<PullDetail>() })
+export const pullsUpdateBranch = request('pulls.update', { input: z.object(ref), output: type<PullDetail>() })
 export const pullsRevert = request('pulls.revert', { input: z.object(ref), output: type<PullSummary>() })
 export const pullsDeleteBranch = request('pulls.branch.delete', { input: z.object(ref), output: type<PullDetail>() })
 

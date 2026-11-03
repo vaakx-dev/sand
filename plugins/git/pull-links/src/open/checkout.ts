@@ -23,7 +23,7 @@ export const openInCheckout = async (deps: OpenDeps, main: string, pull: PullSum
     throw new Error(`The main checkout at ${main} has ${plural(local.fileCount, 'uncommitted change')}. Commit or stash them first, or open #${pull.number} in a new worktree.`)
   }
   const head = await readActivity(deps.github, pull)
-  const branch = await preparePullBranch(deps.git, main, pull, head)
+  const branch = await preparePullBranch(deps, main, pull, head)
   if (local.branch !== branch.name) await switchTo(deps.git, main, branch.name)
   if (branch.behind) await deps.git.ok(main, ['merge', '--ff-only', '--quiet', branch.head], { what: `Couldn't bring ${branch.name} up to date with #${pull.number}` })
   await deps.repos.refresh(main)

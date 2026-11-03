@@ -14,11 +14,11 @@ export default definePlugin({
   apply(ctx) {
     const { wire } = ctx
     const auth = authBook(ctx, wire)
-    const { repoOf } = repoBook(ctx, wire)
+    const { folderRepo, repoOf } = repoBook(ctx, wire)
     ctx.provide(githubClient, {
       ...auth,
       repoOf,
-      localCopy: localCopies(ctx, { pcs: ctx.pcs, projects: ctx.projects, repoOf }),
+      localCopy: localCopies(ctx, { pcs: ctx.pcs, projects: ctx.projects, folderRepo }),
       forBranch: (input, device) => wire.call(pullsForBranch, input, device),
       summary: (input, device) => wire.call(pullsSummary, input, device),
       resolve: (input, device) => wire.call(pullsResolve, input, device),

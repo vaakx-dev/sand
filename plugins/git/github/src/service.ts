@@ -5,7 +5,7 @@ import { githubHost } from './api/endpoint'
 import { createAuth } from './auth/auth'
 import { createLogin } from './auth/login'
 import { logout } from './auth/logout'
-import type { GitHub, GitHubAuth, GitHubLoginCode, PullRef, PullSummary } from './contract'
+import type { FolderRepo, GitHub, GitHubAuth, GitHubLoginCode, PullRef, PullSummary } from './contract'
 import { createSummaries } from './pulls/cache'
 import { type CreateRequest, createPull } from './pulls/create'
 import { findBranchPull } from './pulls/find'
@@ -15,6 +15,7 @@ import { resolvePull } from './pulls/resolve'
 import { createRepoInfos } from './repo/info'
 import { createOrigins } from './repo/origins'
 import { branchPlace } from './repo/place'
+import { remoteFor } from './repo/remote'
 import { type TextRequest, writePullText } from './text/write'
 
 export interface GitHubDeps {
@@ -45,9 +46,11 @@ export const createGitHub = (deps: GitHubDeps) => {
   const place = { git: deps.git, repos: deps.repos, infos }
   const origins = createOrigins(deps.git)
 
-  const repo = async (cwd: string) => {
+  const repo = async (cwd: string): Promise<FolderRepo | null> => {
     const found = await origins(cwd)
-    return found ? { repo: found } : null
+    if (!found) return null
+    const { parent } = await infos(found).catch(() => ({ parent: undefined }))
+    return parent ? { repo: found, parent } : { repo: found }
   }
 
   const forBranch = async (cwd: string) => {
@@ -64,6 +67,7 @@ export const createGitHub = (deps: GitHubDeps) => {
     noteSummary: summaries.note,
     forBranch,
     resolve: (cwd, ref) => resolvePull(place, summaries, cwd, ref),
+    remoteFor: (cwd, repo) => remoteFor(deps.git, cwd, repo),
     graphql: client.graphql,
     rest: client.rest,
   }
