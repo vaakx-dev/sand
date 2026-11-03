@@ -1,5 +1,6 @@
 import type { Effort } from '@sand/accounts/contract'
 import { errorMessage, parseFrontmatter } from '@sand/util'
+import { tiers } from '@sand/sub-model/contract'
 import { scanFolder } from '@sand/util/fs'
 import { basename, join } from 'node:path'
 import type { AgentDefinition } from './contract'
@@ -13,6 +14,7 @@ export const builtins: AgentDefinition[] = [
   {
     name: 'explore',
     description: 'Read-only search and questions about files.',
+    tier: 'fast',
     tools: ['read', 'glob', 'grep', 'find', 'search', 'outline', 'where', 'shell', 'powershell'],
     prompt: "Read-only. Don't create, change or delete files. Use shell and powershell only for commands that read, like git log, ls or cat.",
   },
@@ -39,9 +41,17 @@ const list = (value: unknown) => {
       .filter(Boolean)
 }
 
+const parseTier = (value: unknown) => {
+  if (value === undefined || value === null) return undefined
+  const tier = tiers.find(known => known === value)
+  if (!tier) throw new Error(`tier must be one of ${tiers.join(', ')}`)
+  return tier
+}
+
 const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> => {
   const { meta, body: prompt } = parseFrontmatter(await Bun.file(path).text())
   const effort = parseEffort(meta.effort, efforts)
+  const tier = parseTier(meta.tier)
   const tools = list(meta.tools)
   return {
     name: String(meta.name ?? basename(path, '.md')),
@@ -50,6 +60,7 @@ const parse = async (path: string, efforts: Effort[]): Promise<AgentDefinition> 
     ...(tools && { tools }),
     ...(meta.model != null && { model: String(meta.model) }),
     ...(effort && { effort }),
+    ...(tier && { tier }),
   }
 }
 
