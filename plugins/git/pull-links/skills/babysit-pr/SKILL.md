@@ -8,7 +8,7 @@ description: 'See a pull request through: fix failing checks and answer review u
 Get the thread's pull request to a state where it can merge, then hand it back.
 
 1. Run `pull_request_status`. If the thread has no pull request linked, link it with `link_pull_request` (a URL or `#number`).
-2. Call `watch_pull_request` so you get a message here when checks finish, a review or comment arrives, or the branch starts to conflict. You don't need to poll.
+2. Call `watch_pull_request` so you get a message here when a check fails or turns green after failing, a review or comment needs an answer, or the branch starts to conflict. You don't need to poll.
 3. Work through what blocks it, in this order:
    - **Conflicts**: rebase onto the base branch, resolve them and check the result still builds.
    - **Failing checks**: read the failing check's log (`gh run view --log-failed`, or `gh pr checks`), reproduce it locally, fix the cause and run it again. Don't skip, disable or loosen a check to make it pass.

@@ -15,17 +15,21 @@ const latestAt = (items: PullItem[], floor: number) => items.reduce((latest, ite
 
 const passedHead = (activity: PullActivity, before?: string) => (allPassed(activity) ? activity.head : before)
 
-const marked = (activity: PullActivity, since: number, passed?: string): WatchMark => ({
+const stillRed = (activity: PullActivity, before = false) => !allPassed(activity) && (before || failingNames(activity).length > 0)
+
+const marked = (activity: PullActivity, since: number, passed: string | undefined, red: boolean): WatchMark => ({
   head: activity.head,
   failed: failingNames(activity),
   ...(passed ? { passed } : {}),
+  ...(red ? { red } : {}),
   conflict: activity.conflict,
   since,
 })
 
-export const baselineMark = (activity: PullActivity) => marked(activity, latestAt(activity.items, 0), passedHead(activity))
+export const baselineMark = (activity: PullActivity) => marked(activity, latestAt(activity.items, 0), passedHead(activity), stillRed(activity))
 
-export const nextMark = (mark: WatchMark, activity: PullActivity) => marked(activity, latestAt(activity.items, mark.since), passedHead(activity, mark.passed))
+export const nextMark = (mark: WatchMark, activity: PullActivity) =>
+  marked(activity, latestAt(activity.items, mark.since), passedHead(activity, mark.passed), stillRed(activity, mark.red))
 
 export const changesSince = (mark: WatchMark, activity: PullActivity): Change[] => {
   const reported = mark.head === activity.head ? mark.failed : []
