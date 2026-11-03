@@ -1,5 +1,6 @@
+import { serial } from '@sand/util'
 import { parseHTML } from 'linkedom'
-import { userAgent } from '../http'
+import { timeoutMs, userAgent } from '../http'
 
 export interface Hit {
   title: string
@@ -26,12 +27,14 @@ const hitsOf = (html: string): Hit[] =>
 
 const botCheck = 'DuckDuckGo answered with a bot check instead of results. It blocks an address for minutes at a time, so search again later rather than straight away.'
 
-export const duckDuckGo = async (query: string, signal: AbortSignal) => {
+const gapMs = 7000
+
+const hitsIn = async (query: string, signal: AbortSignal) => {
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'user-agent': userAgent, 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ q: query }),
-    signal,
+    signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
   })
   if (!response.ok && response.status !== 202) throw new Error(`DuckDuckGo answered HTTP ${response.status}`)
   const page = await response.text()
@@ -39,3 +42,16 @@ export const duckDuckGo = async (query: string, signal: AbortSignal) => {
   if (!hits.length && (response.status === 202 || page.includes('anomaly'))) throw new Error(botCheck)
   return hits
 }
+
+let lastAskedAt = 0
+
+const afterGap = async (signal: AbortSignal) => {
+  const wait = lastAskedAt + gapMs - Date.now()
+  if (wait > 0) await Bun.sleep(wait)
+  signal.throwIfAborted()
+  lastAskedAt = Date.now()
+}
+
+const oneAtATime = serial()
+
+export const duckDuckGo = (query: string, signal: AbortSignal) => oneAtATime(() => afterGap(signal).then(() => hitsIn(query, signal)))

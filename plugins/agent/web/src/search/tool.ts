@@ -1,6 +1,5 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { timeoutMs } from '../http'
 import { duckDuckGo, type Hit } from './duckduckgo'
 
 const snippetLength = 600
@@ -22,7 +21,7 @@ export const searchTool: Tool<typeof input> = {
   parallel: true,
   input,
   async run({ query, count }, { signal }) {
-    const hits = await duckDuckGo(query, AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]))
+    const hits = await duckDuckGo(query, signal)
     return hits.length ? hits.slice(0, count).map(hitText).join('\n\n') : 'No results'
   },
 }
