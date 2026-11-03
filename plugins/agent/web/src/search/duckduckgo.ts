@@ -24,6 +24,8 @@ const hitsOf = (html: string): Hit[] =>
     return url ? [{ title: flat(link?.textContent), url, snippet: flat(result.querySelector('.result__snippet')?.textContent) }] : []
   })
 
+const botCheck = 'DuckDuckGo answered with a bot check instead of results. It blocks an address for minutes at a time, so search again later rather than straight away.'
+
 export const duckDuckGo = async (query: string, signal: AbortSignal) => {
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -31,6 +33,9 @@ export const duckDuckGo = async (query: string, signal: AbortSignal) => {
     body: new URLSearchParams({ q: query }),
     signal,
   })
-  if (!response.ok) throw new Error(`DuckDuckGo answered HTTP ${response.status}`)
-  return hitsOf(await response.text())
+  if (!response.ok && response.status !== 202) throw new Error(`DuckDuckGo answered HTTP ${response.status}`)
+  const page = await response.text()
+  const hits = hitsOf(page)
+  if (!hits.length && (response.status === 202 || page.includes('anomaly'))) throw new Error(botCheck)
+  return hits
 }
