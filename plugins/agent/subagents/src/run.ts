@@ -45,15 +45,12 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     return effective && { model: effective.model, effort: effective.effort, speed: effective.speed }
   }
 
-  const preset = ({ model }: AgentRequest, definition: AgentDefinition): SessionSettings => {
-    const sub = ctx.get(subModel)
-    if (model || definition.model || !definition.tier || !sub?.has(definition.tier)) return definition
-    return { ...sub.settings(definition.tier), ...definition }
-  }
-
   const create = async (request: AgentRequest, definition: AgentDefinition, parentMeta: AgentMeta | undefined) => {
     const { parent, task, label, origin } = request
-    const settings = childSettings(request, preset(request, definition), parentSettings(parent), ctx.get(llm))
+    const sub = ctx.get(subModel)
+    const tier = request.model || definition.model ? undefined : definition.tier
+    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...definition } : definition
+    const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
     const model = ctx.get(modelSettings)?.effective(session).model
