@@ -58,13 +58,17 @@ export interface WorktreePull {
   state: PullState
 }
 
+export interface WorktreePulls {
+  primary(sessions: string[]): Promise<WorktreePull | undefined>
+}
+
+export const worktreePulls = service<WorktreePulls>('worktreePulls')
+
 export interface WorktreeStatus {
   path: string
   main: string
   branch?: string
   base?: string
-  sessions: string[]
-  created: number
   ahead?: number
   check: RemoveCheck
   pull?: WorktreePull

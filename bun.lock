@@ -901,7 +901,6 @@
         "@sand/loop": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/project": "workspace:*",
-        "@sand/pull-links": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/shell": "workspace:*",
         "@sand/tools": "workspace:*",

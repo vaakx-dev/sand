@@ -1,10 +1,10 @@
 import { pathKey } from '@sand/git/contract'
-import type { PullLinks } from '@sand/pull-links/contract'
+import type { WorktreePulls } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import { sizeOf } from './size'
 import { liveRecords, worktreeStatuses } from './status'
 
-export const createSurvey = (deps: WorktreeDeps, links: () => PullLinks | undefined) => {
+export const createSurvey = (deps: WorktreeDeps, pulls: () => WorktreePulls | undefined) => {
   const known = new Map<string, number>()
   const counting = new Map<string, Promise<number>>()
 
@@ -23,7 +23,7 @@ export const createSurvey = (deps: WorktreeDeps, links: () => PullLinks | undefi
   }
 
   return {
-    status: () => worktreeStatuses(deps, links()),
+    status: () => worktreeStatuses(deps, pulls()),
     known: (folder: string) => known.get(pathKey(folder)),
     async sizes() {
       const sizes: Record<string, number> = {}

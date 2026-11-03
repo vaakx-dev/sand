@@ -1,7 +1,6 @@
 import type { GitRunner } from '@sand/git/contract'
-import { arrangePulls, type PullLinks } from '@sand/pull-links/contract'
 import { existsSync } from 'node:fs'
-import type { WorktreePull, WorktreeStatus } from '../contract'
+import type { WorktreePulls, WorktreeStatus } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { removeCheck } from '../remove/check'
@@ -19,16 +18,7 @@ const beyondBase = async (git: GitRunner, { path, base }: WorktreeRecord) => {
   return count === undefined ? undefined : Number(count)
 }
 
-const pullOf = async (deps: WorktreeDeps, links: PullLinks | undefined, sessions: string[]): Promise<WorktreePull | undefined> => {
-  if (!links) return undefined
-  for (const id of sessions.filter(id => deps.sessions.open(id))) {
-    const primary = arrangePulls((await links.links(id)).links).primary
-    if (primary?.summary) return { number: primary.number, state: primary.summary.state }
-  }
-  return undefined
-}
-
-const statusOf = async (deps: WorktreeDeps, record: WorktreeRecord, links: PullLinks | undefined): Promise<WorktreeStatus> => {
+const statusOf = async (deps: WorktreeDeps, record: WorktreeRecord, pulls: WorktreePulls | undefined): Promise<WorktreeStatus> => {
   const sessions = withSessions(
     record.sessions,
     threadsIn(deps.sessions, record.path).map(session => session.id),
@@ -38,20 +28,18 @@ const statusOf = async (deps: WorktreeDeps, record: WorktreeRecord, links: PullL
     removeCheck(deps, record),
     exists ? currentBranch(deps.git, record.path) : record.branch,
     exists ? beyondBase(deps.git, record) : undefined,
-    pullOf(deps, links, sessions),
+    pulls?.primary(sessions),
   ])
   return {
     path: record.path,
     main: record.main,
     ...(branch ? { branch } : {}),
     ...(record.base ? { base: record.base } : {}),
-    sessions,
-    created: record.created,
     check,
     ...(ahead === undefined ? {} : { ahead }),
     ...(pull ? { pull } : {}),
   }
 }
 
-export const worktreeStatuses = async (deps: WorktreeDeps, links: PullLinks | undefined) =>
-  Promise.all((await liveRecords(deps)).map(record => statusOf(deps, record, links)))
+export const worktreeStatuses = async (deps: WorktreeDeps, pulls: WorktreePulls | undefined) =>
+  Promise.all((await liveRecords(deps)).map(record => statusOf(deps, record, pulls)))

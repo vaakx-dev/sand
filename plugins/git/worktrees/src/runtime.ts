@@ -5,7 +5,6 @@ import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
 import { loop, turnEnd, turnPrompt, turnStart } from '@sand/loop/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
-import { pullLinksService } from '@sand/pull-links/contract'
 import { type Server, server } from '@sand/server/contract'
 import { shellReady, shellRunner } from '@sand/shell/contract'
 import { tools } from '@sand/tools/contract'
@@ -14,7 +13,7 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { config } from './config'
-import { worktrees, worktreesChange, worktreesProgress } from './contract'
+import { worktreePulls, worktrees, worktreesChange, worktreesProgress } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
 import { nameOnFirstTurn } from './naming/name'
@@ -68,7 +67,7 @@ export default definePlugin({
       report,
     }
 
-    const survey = createSurvey(deps, () => ctx.get(pullLinksService))
+    const survey = createSurvey(deps, () => ctx.get(worktreePulls))
     const moves = createMoves(deps, () => ctx.get(loop), () => ctx.busy())
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
