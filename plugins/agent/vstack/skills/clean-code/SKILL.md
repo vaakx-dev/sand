@@ -1,19 +1,11 @@
 ---
 name: clean-code
-description: Must be loaded before writing or changing any code, in every agent, every time. Rules for focused, readable code with no comments.
+description: Must be loaded before writing or changing any code, in every agent, every time. Rules for focused, readable code that fits the codebase.
 ---
 
 # Clean code
 
 Less is more. Code is clean, readable, simple and fast, and the best choice for long-term maintenance and growth.
-
-## Core rule: no comments
-
-Write no comments of any kind. That means line comments, block comments, `/** */` doc comments, JSDoc, docstrings, header comments, and suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`.
-
-- When code seems to need a comment, rename, split or fix the cause instead.
-- Comments in nearby code are not a pattern to copy. Don't add more, even in a file full of them.
-- This rule outranks everything else here. Only the project's instructions can override it, and only when they ask for comments by name.
 
 ## Scope
 
@@ -50,7 +42,17 @@ Write no comments of any kind. That means line comments, block comments, `/** */
 - No prefixes or suffixes on folder, file or code names, unless a tool or language requires it. The context around a name carries the rest: its folder, module, namespace or type. `enemies/body`, not `enemies/enemy_body` or `enemies/body_enemy`; `user.name`, not `user.userName`.
 - If no honest name fits, the design is unclear. Fix the design first.
 
+## Comments
+
+Comment the way the existing code does. Before writing any, look at how the file you're changing and its neighbours use comments, including `/** */` doc comments and docstrings.
+
+- Where the code has comments, add them in the same places, style and amount.
+- Where it has none, write none. Rename or split instead.
+- In a new project with nothing to follow, write none.
+
 ## Leave out
+
+- Suppressions like `@ts-ignore`, `eslint-disable` and `#[allow]`. Fix the cause instead.
 
 - Abstractions with one caller, wrappers that only pass calls through.
 - Dead code and unused parameters, including any your change left behind.
@@ -59,4 +61,4 @@ Write no comments of any kind. That means line comments, block comments, `/** */
 
 ## Before you finish
 
-Reread the diff. Delete every comment you added. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
+Reread the diff. Check every comment you added matches the code around it. If 200 lines could be 50, rewrite it. For each new function, file or layer, imagine deleting it. If nothing gets harder, delete it.
