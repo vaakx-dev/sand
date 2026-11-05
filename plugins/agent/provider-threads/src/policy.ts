@@ -24,9 +24,11 @@ const delta: Transition = { type: 'handoff', strategy: 'delta' }
 
 const settings = ['effort', 'speed'] as const
 
+const movedFolder = ({ native }: ProviderThreadInfo, cwd: string) => !!native && !native.pc && native.cwd !== cwd
+
 const continuing = ({ caps, selection, cwd }: Target, { thread, onPath }: Candidate): Transition => {
   if (!onPath) return caps.native ? full : reuse
-  if (caps.native && (thread.status === 'uncertain' || (thread.native && thread.native.cwd !== cwd))) return full
+  if (caps.native && (thread.status === 'uncertain' || movedFolder(thread, cwd))) return full
   const changed = settings.filter(key => thread[key] !== selection[key])
   if (!changed.length) return reuse
   if (changed.every(key => caps.reconfigure.includes(key))) return { type: 'reconfigure' }

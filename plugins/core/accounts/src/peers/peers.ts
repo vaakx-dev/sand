@@ -1,6 +1,6 @@
 import type { Peers as PcLinks } from '@sand/devices-contract'
 import type { Media } from '@sand/media/contract'
-import type { Limits, LLMEvent, LLMRequest } from '../contract'
+import { type Limits, type LLMEvent, type LLMRequest, ThreadLost } from '../contract'
 import { isKeyKind, keyLabels } from '../auth/kinds'
 import { rawMessage } from '../errors'
 import type { ShareInfo } from '../share/info'
@@ -22,6 +22,11 @@ export interface PeerState {
   checked: boolean
   refused: boolean
   error?: string
+}
+
+export interface Pin {
+  pc: string
+  native?: boolean
 }
 
 interface PeersOptions {
@@ -130,22 +135,24 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
   const source = (id: string) => candidates(id).find(peer => !peer.refused)
   const nameOf = (id: string) => (isKeyKind(id) ? keyLabels[id] : (list().flatMap(peer => account(peer, id) ?? [])[0]?.label ?? id))
 
-  async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pc?: string): AsyncGenerator<LLMEvent> {
+  async function* stream(id: string, request: LLMRequest, signal?: AbortSignal, pin?: Pin): AsyncGenerator<LLMEvent> {
     await first
     const found = links()
     if (!found) throw noLinks()
     let problem: Error | undefined
     const sent = { ...request, media: carriedMedia(media, request.messages) }
-    for (const peer of candidates(id).filter(candidate => !pc || candidate.pc.id === pc)) {
+    for (const peer of candidates(id).filter(candidate => !pin || candidate.pc.id === pin.pc)) {
       const name = account(peer, id)?.label ?? nameOf(id)
       let body: ReadableStream<Uint8Array>
       try {
         body = await openStream(found, peer.pc, sent, signal)
       } catch (error) {
         if (signal?.aborted) throw error
-        problem ??= failure(peer.pc.name, name, error)
+        const failed = failure(peer.pc.name, name, error)
         if (!(error instanceof Refused) || error.status === 401 || error.status === 404) fail(peer.pc, error)
         changed()
+        if (pin?.native && !(error instanceof Refused)) throw new ThreadLost(failed.message, { cause: error })
+        problem ??= failed
         continue
       }
       if (!peer.online) {
@@ -156,6 +163,7 @@ export const createPeers = ({ home, media, links, changed, limitsChanged }: Peer
       return
     }
     void refresh()
+    if (pin?.native && !problem) throw new ThreadLost(`The PC that held this chat's ${nameOf(id)} session no longer shares it`)
     throw problem ?? new Error(`No paired PC shares ${nameOf(id)}`)
   }
 

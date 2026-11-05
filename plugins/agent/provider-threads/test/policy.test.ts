@@ -52,6 +52,7 @@ test.each([
   ['a native thread after a checkout', target({ caps: native }), candidate({ onPath: false }), full],
   ['a native thread whose last step is uncertain', target({ caps: native }), candidate({}, { status: 'uncertain' }), full],
   ['a native thread in another folder', target({ caps: native }), candidate({}, { native: { id: 'n', cwd: '/elsewhere' } }), full],
+  ['a native thread on the PC that shares the account, in its own folder', target({ caps: native }), candidate({}, { native: { id: 'n', cwd: '/elsewhere', pc: 'other' } }), { type: 'reuse' }],
   ['a new effort the source takes per request', target({ selection: { source: 'a', model: 'a/m', effort: 'low', speed: 'normal' } }), candidate(), { type: 'reconfigure' }],
   ['a new effort a native thread needs a restart for', target({ caps: native, selection: { source: 'a', model: 'a/m', effort: 'low', speed: 'normal' } }), candidate(), { type: 'restart_and_resume' }],
   ['a model returned to while its cache is warm', target(), candidate({ last: false }), { type: 'handoff', strategy: 'delta' }],

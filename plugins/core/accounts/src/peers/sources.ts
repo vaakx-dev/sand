@@ -32,7 +32,7 @@ const sourceOf = (peer: PeerState, account: SharedAccount, id: string, pinned: b
     label: account.label,
     provider: account.provider,
     billing: billingOf(account.method),
-    caps: statelessCaps(),
+    caps: account.caps ?? statelessCaps(),
     ...(account.plan && { plan: account.plan }),
     via,
     pc: peer.pc.id,
