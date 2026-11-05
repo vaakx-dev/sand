@@ -25,19 +25,24 @@ const tone = (kit: Kit, look: Look) => {
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
-  if (!model.online.get() || model.blocked.get() || model.holds.reason.get()) return 'off'
-  if (model.running.get()) return model.empty.get() ? 'stop' : 'steer'
-  return model.empty.get() ? 'off' : 'send'
+  const delivery = model.delivery.get()
+  if (delivery === 'unreachable' || model.blocked.get() || model.holds.reason.get()) return 'off'
+  if (model.empty.get()) return model.running.get() && delivery === 'now' ? 'stop' : 'off'
+  return model.running.get() ? 'steer' : 'send'
 }
 
 const offTitle = (model: Model) => {
   const held = model.holds.reason.get()
   if (held) return held
-  if (!model.online.get()) return `Reconnecting to ${model.pcName.get()}`
+  if (model.delivery.get() === 'unreachable') return `Reconnecting to ${model.pcName.get()}`
   return model.blocked.get() ? "Remove the files that can't be attached" : 'Send'
 }
 
-const titleOf = (model: Model, look: Look) => (look === 'off' ? offTitle(model) : titles[look])
+const titleOf = (model: Model, look: Look) => {
+  if (look === 'off') return offTitle(model)
+  if (look === 'busy' || model.delivery.get() === 'now') return titles[look]
+  return `Send when ${model.pcName.get()} is back`
+}
 
 const glyphOf = (look: Look): IconName | 'busy' => (look === 'busy' ? 'busy' : icons[look])
 
