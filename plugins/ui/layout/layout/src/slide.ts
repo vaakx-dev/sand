@@ -1,25 +1,16 @@
-export interface Shift {
-  px: number
-  drawer: number
-  settling: boolean
-  shown: Record<'side' | 'aside', boolean>
+import { settleMs, type Drawer, type Phone } from './phone'
+
+const easing = 'cubic-bezier(.2,.8,.2,1)'
+
+const offsets: Record<Drawer, (px: number) => string> = {
+  side: px => `calc(-100% + ${px}px)`,
+  aside: px => `calc(100% - ${px}px)`,
 }
 
-export const settleMs = 250
+const timing = (property: string, phone: Phone) => ({ transition: phone.kind === 'settle' ? `${property} ${settleMs}ms ${easing}` : 'none' })
 
-const rem = 20
+export const slide = (phone: Phone, drawer: Drawer) =>
+  phone.kind !== 'rest' && phone.drawer === drawer ? { transform: `translateX(${offsets[drawer](phone.px)})`, ...timing('transform', phone) } : null
 
-export const drawerWidth = (viewport: number) => Math.min(rem * parseFloat(getComputedStyle(document.documentElement).fontSize), viewport * 0.85)
-
-const follow = (property: string, shift: Shift) => ({ transition: shift.settling ? `${property} ${settleMs}ms cubic-bezier(.2,.8,.2,1)` : 'none' })
-
-export const slideSide = (shift: Shift | undefined) =>
-  shift ? { transform: `translateX(calc(-100% + ${Math.max(shift.px, 0)}px))`, ...follow('transform', shift) } : null
-
-export const slideAside = (shift: Shift | undefined) =>
-  shift ? { transform: `translateX(calc(100% + ${Math.min(shift.px, 0)}px))`, ...follow('transform', shift) } : null
-
-export const backdropOpacity = (shift: Shift | undefined) => {
-  if (!shift) return null
-  return { opacity: String(Math.min(Math.max(shift.px / shift.drawer, 0), 1)), ...follow('opacity', shift) }
-}
+export const backdropOpacity = (phone: Phone) =>
+  phone.kind !== 'rest' && phone.drawer === 'side' ? { opacity: String(phone.px / phone.reach), ...timing('opacity', phone) } : null

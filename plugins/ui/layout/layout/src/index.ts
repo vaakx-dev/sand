@@ -1,19 +1,22 @@
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
-import { batch, byId, derive, effect, media, mount, setStyle, sig, store, untrack, type Sig } from '@vaakx-dev/vrui'
+import { onAddressChange } from '@sand/web-client/contract'
+import { byId, derive, effect, media, mount, setStyle, sig, store, untrack, type Sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { cssOrder, layout, layoutChange, type Layout, type LayoutState, type Region } from './contract'
 import { layoutMemory } from './memory'
+import { phoneNavigation, type Drawer } from './phone'
 import { savedWidths } from './resize'
 import { buildShell, type Coverable, type Open, type Views } from './shell'
-import type { Shift } from './slide'
-import { swiper } from './swipe'
+import { keyboardArea } from './viewport'
 
 const narrowQuery = '(max-width: 760px)'
-const closed: Open = { side: false, aside: false }
-const drawers = ['side', 'aside'] as const
 
 const has = (views: Sig<HTMLElement[]>) => views.get().length > 0
+
+const blurFocus = () => {
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+}
 
 export default definePlugin({
   name: 'layout',
@@ -22,20 +25,8 @@ export default definePlugin({
   apply(ctx) {
     const { remembered, remember } = layoutMemory()
     const narrow = owned(ctx, () => media(narrowQuery))
-    const open = store<Open>(narrow.get() ? closed : remembered())
-    const current = (): Open => ({ side: open.side.get(), aside: open.aside.get() })
-    const adopt = (next: Open) => {
-      open.side.set(next.side)
-      open.aside.set(next.aside)
-    }
-    const shift = sig<Shift | undefined>(undefined)
-    const swiped = sig(false)
-    const reset = (next: Open) =>
-      batch(() => {
-        adopt(next)
-        shift.set(undefined)
-        swiped.set(false)
-      })
+    const open = store<Open>(remembered())
+    const columns = (): Open => ({ side: open.side.get(), aside: open.aside.get() })
 
     const views: Views<Region> = { top: sig([]), side: sig([]), main: sig([]), aside: sig([]), bottom: sig([]), overlay: sig([]) }
     const covers: Views<Coverable> = { side: sig([]), main: sig([]) }
@@ -50,6 +41,13 @@ export default definePlugin({
         overlay: has(views.overlay),
       })),
     }))
+    const available = (drawer: Drawer) => filled.get()[drawer] && !(drawer === 'aside' && covered.get().main)
+    const phone = phoneNavigation(available, () => root, () => changed())
+    const current = (): Open => {
+      if (!narrow.get()) return columns()
+      const pane = phone.pane()
+      return { side: pane === 'side', aside: pane === 'aside' }
+    }
     const state = (): LayoutState => ({ narrow: narrow.get(), open: current(), filled: { ...filled.get() } })
     const changed = () => ctx.emit(layoutChange, state())
 
@@ -63,7 +61,10 @@ export default definePlugin({
     }
 
     const widths = savedWidths()
-    const root = owned(ctx, () => buildShell(ctx.kit, { narrow, open, views, covers, filled, covered, shift, swiped, widths }, () => host.toggle('side', false)))
+    const keyboard = owned(ctx, keyboardArea)
+    const root = owned(ctx, () =>
+      buildShell(ctx.kit, { narrow, open, views, covers, filled, covered, phone: phone.state, keyboard, widths }, () => host.toggle('side', false)),
+    )
 
     const host: Layout = {
       mount(region, view, order = 0) {
@@ -71,44 +72,50 @@ export default definePlugin({
         return add(views[region], view)
       },
       cover(region, view) {
-        if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+        blurFocus()
         return add(covers[region], view)
       },
       toggle(region, value) {
-        const next = { ...current(), [region]: value ?? !open[region].get() }
-        if (narrow.get() && next[region]) next[region === 'side' ? 'aside' : 'side'] = false
-        if (!narrow.get()) remember(next)
-        reset(next)
-        changed()
+        if (!narrow.get()) {
+          open[region].set(value ?? !open[region].get())
+          remember(columns())
+          changed()
+          return
+        }
+        const shown = phone.pane() === region
+        if (value ?? !shown) phone.show(region)
+        else if (shown) phone.show('thread')
+      },
+      handOff() {
+        if (narrow.get()) phone.handOff()
       },
       state,
-      swipe: () => (narrow.get() ? beginSwipe() : undefined),
+      swipe: () => (narrow.get() ? phone.swipe() : undefined),
     }
-    const beginSwipe = swiper({
-      open,
-      shift,
-      swiped,
-      owner: root,
-      commit: next => {
-        adopt(next)
-        changed()
-      },
-    })
 
     owned(ctx, () =>
       effect(() => {
         const matches = narrow.get()
         untrack(() => {
-          reset(matches ? closed : remembered())
+          if (matches) phone.follow()
           changed()
         })
       }),
     )
+    ctx.effect(() =>
+      onAddressChange(() => {
+        if (narrow.get()) phone.follow()
+      }),
+    )
     owned(ctx, () => {
-      const drawer = derive(() => (narrow.get() ? drawers.find(region => open[region].get()) : undefined))
+      const drawer = derive(() => {
+        const pane = phone.pane()
+        return narrow.get() && pane !== 'thread' ? pane : undefined
+      })
       effect(() => {
-        const region = drawer.get()
-        if (region) return ctx.kit.dismissible(root, () => host.toggle(region, false), { overlay: false })
+        if (!drawer.get()) return
+        untrack(blurFocus)
+        return ctx.kit.dismissible(root, () => phone.show('thread'), { overlay: false })
       })
     })
     ctx.effect(() => mount(byId('stage'), root))
