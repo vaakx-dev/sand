@@ -44,7 +44,7 @@ const modelsReady = (app: ContextCore, ids: string[]) =>
 const signedIn = (sources: Source[]) =>
   Object.fromEntries(sources.flatMap(source => (source.api ? [[source.id, { type: 'oauth', access: 'replay', refresh: 'replay', expires: 8e15 }]] : [])))
 
-const boot = async (app: Context, home: string, sources: Source[]) => {
+const boot = async (app: Context, home: string, sources: Source[], extra: string[]) => {
   await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(sources)))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
@@ -52,7 +52,7 @@ const boot = async (app: Context, home: string, sources: Source[]) => {
   app.provide(projectFiles, { copies: () => [], ofFolder: () => null })
   const wire = createHandlers()
   app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0 })
-  for (const plugin of plugins) app.load(await runtimeEntry(plugin), {})
+  for (const plugin of [...plugins, ...extra]) app.load(await runtimeEntry(plugin), {})
   app.load(await runtimeEntry('core/replay'), { sources })
   await app.settled()
   if (errors.length) throw errors[0]
@@ -60,14 +60,19 @@ const boot = async (app: Context, home: string, sources: Source[]) => {
   return wire
 }
 
-export const startSand = async (sources: Source[], shared?: string) => {
+export interface SandOptions {
+  home?: string
+  plugins?: string[]
+}
+
+export const startSand = async (sources: Source[], { home: shared, plugins: extra = [] }: SandOptions = {}) => {
   const home = shared ?? mkdtempSync(join(tmpdir(), 'sand-test-'))
   const app = createApp()
   const stop = async () => {
     await app.dispose()
     if (!shared) rmSync(home, { recursive: true, force: true })
   }
-  const wire = await boot(app, home, sources).catch(async (error: unknown) => {
+  const wire = await boot(app, home, sources, extra).catch(async (error: unknown) => {
     await stop()
     throw error
   })

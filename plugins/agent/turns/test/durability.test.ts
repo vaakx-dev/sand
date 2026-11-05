@@ -23,7 +23,7 @@ afterEach(async () => {
 const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async (replies: Source['replies'] = []) => {
-  const sand = await startSand([{ id: 'fake', models: ['m'], replies }], home)
+  const sand = await startSand([{ id: 'fake', models: ['m'], replies }], { home })
   running.push(sand)
   return sand
 }

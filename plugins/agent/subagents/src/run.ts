@@ -3,17 +3,15 @@ import type { Session } from '@sand/chats/contract'
 import { modelSettings, type SessionSettings } from '@sand/model/contract'
 import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
-import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
+import type { AgentDefinition, AgentLimits, AgentMeta, AgentRequest, AgentResult } from './contract'
 import type { Resolve } from './layers'
-import type { AgentMeta, Meta } from './meta'
 import { childSettings } from './settings'
 import { slots } from './slots'
 import { agentTitle } from './title'
 
 export interface RunOptions {
   resolve: Resolve
-  meta: Meta
-  maxDepth: number
+  limits: AgentLimits
   maxAgents: number
 }
 
@@ -23,12 +21,7 @@ export interface OpenedAgent {
   follow(task: string, signal: AbortSignal): Promise<AgentResult>
 }
 
-const narrowed = (inherited: string[] | undefined, own: string[] | undefined) => {
-  if (!inherited) return own
-  return own ? own.filter(tool => inherited.includes(tool)) : inherited
-}
-
-export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgents }: RunOptions) => {
+export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: RunOptions) => {
   const take = slots(maxAgents)
 
   const definitionOf = async (name: string, { cwd, project }: Session) => {
@@ -43,7 +36,7 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     return effective && { model: effective.model, effort: effective.effort, speed: effective.speed }
   }
 
-  const create = async (request: AgentRequest, definition: AgentDefinition, parentMeta: AgentMeta | undefined) => {
+  const create = async (request: AgentRequest, definition: AgentDefinition, scope: AgentMeta) => {
     const { parent, task, label, origin } = request
     const sub = ctx.get(subModel)
     const tier = request.model || definition.model ? undefined : definition.tier
@@ -51,9 +44,7 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
-    const tools = narrowed(parentMeta?.tools, definition.tools)
-    const depth = (parentMeta?.depth ?? 0) + 1
-    session.append('agent', { name: definition.name, depth, ...(tools && { tools }) } satisfies AgentMeta)
+    limits.give(session, scope)
     return session
   }
 
@@ -68,9 +59,7 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
 
   const open = async (request: AgentRequest): Promise<OpenedAgent> => {
     const definition = await definitionOf(request.agent ?? 'general', request.parent)
-    const parentMeta = meta(request.parent)
-    if ((parentMeta?.depth ?? 0) >= maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
-    const session = await create(request, definition, parentMeta)
+    const session = await create(request, definition, limits.child(request.parent, definition.name, definition.tools))
     return {
       session,
       run: signal => drive(session, request.task, signal),
