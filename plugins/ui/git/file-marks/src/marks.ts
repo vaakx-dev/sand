@@ -1,8 +1,9 @@
 import type { FileMarks, FileMarksSource } from '@sand/files-panel/contract'
 import { type GitStatus, type GitStatusClient, repoOf } from '@sand/git/contract'
+import { trimSlash } from '@sand/util'
 
 const basePath = (prefix: string) => {
-  const trimmed = prefix.replace(/\/+$/, '')
+  const trimmed = trimSlash(prefix)
   return trimmed && trimmed !== '.' ? `${trimmed}/` : ''
 }
 

@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import { div, list, sig } from '@vaakx-dev/vrui'
 import type { HeaderSide, HeaderView } from './contract'
 
@@ -19,7 +20,7 @@ export const createSlots = () => {
   }
 
   const host = (side: HeaderSide) => {
-    const shown = entries.map(list => list.filter(entry => entry.side === side).sort((a, b) => a.order - b.order))
+    const shown = entries.map(list => list.filter(entry => entry.side === side).sort(byOrder))
     return list(
       shown,
       entry => entry.id,

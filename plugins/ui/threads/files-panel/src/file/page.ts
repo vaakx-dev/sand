@@ -2,8 +2,9 @@ import type { Composer } from '@sand/composer/contract'
 import type { Markdown } from '@sand/markdown/contract'
 import type { FileContent } from '@sand/project/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import { errorMessage } from '@sand/util'
 import { dynamicChild, effect, show, sig, type Sig } from '@vaakx-dev/vrui'
-import { message, type FilesModel } from '../model'
+import type { FilesModel } from '../model'
 import { bar, failed, inset, page, pathLine } from '../parts'
 import { fileName } from '../paths'
 import { fileBody } from './body'
@@ -31,7 +32,7 @@ export const filePage = ({ kit, model, markdown, writer }: FileParts, path: stri
     const ticket = ++latest
     model.read(path).then(
       content => ticket === latest && read.set({ content }),
-      error => ticket === latest && read.set({ error: message(error) }),
+      error => ticket === latest && read.set({ error: errorMessage(error) }),
     )
   })
   const text = () => {

@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import type { ComposerSlot, SlotView } from '../contract'
 import { div, list, sig } from '@vaakx-dev/vrui'
 
@@ -22,7 +23,7 @@ export const createSlots = () => {
 
   const host = (where: ComposerSlot, className: string, wrap = (node: HTMLElement) => node) =>
     list(
-      entries.map(all => all.filter(entry => entry.where === where).sort((a, b) => a.order - b.order)),
+      entries.map(all => all.filter(entry => entry.where === where).sort(byOrder)),
       entry => entry.id,
       entry => {
         const { view } = entry.get()

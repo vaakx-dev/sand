@@ -1,9 +1,8 @@
 import type { NavAction, NavHost } from './contract'
 import { pulse } from '@sand/reactive'
+import { byOrder } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-
-const byOrder = <T extends { order?: number }>(items: T[]) => [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
 const pendingActions = () => {
   const pending = sig<ReadonlySet<string>>(new Set())
@@ -40,7 +39,7 @@ export const navHost = (ctx: Context): NavHost => {
         changes.schedule()
       }
     },
-    actions: changes.read(() => byOrder([...actions])),
+    actions: changes.read(() => [...actions].sort(byOrder)),
     busy: pending.busy,
     run: pending.run,
   }

@@ -1,5 +1,6 @@
 import type { Wire } from '@sand/devices-contract'
 import { filesList, filesRead } from '@sand/project/contract'
+import { errorMessage } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
 import { batch, sig } from '@vaakx-dev/vrui'
 import { changesOf, noChanges, sameChanges, shapeOf, type Changes } from './changes'
@@ -12,8 +13,6 @@ export interface Listing {
 }
 
 export type Loaded = { listing: Listing } | { error: string } | undefined
-
-export const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
 
 export const filesModel = (wire: Wire, threads: Threads) => {
   const here = (): FilesFolder => ({ cwd: threads.cwd(), device: threads.device() })
@@ -43,7 +42,7 @@ export const filesModel = (wire: Wire, threads: Threads) => {
       const files = await wire.call(filesList, { cwd: at.cwd }, at.device)
       if (ticket === latest) loaded.set({ listing: { files, tree: buildTree(files) } })
     } catch (error) {
-      if (ticket === latest) loaded.set({ error: message(error) })
+      if (ticket === latest) loaded.set({ error: errorMessage(error) })
     }
   }
 
