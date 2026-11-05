@@ -1,3 +1,5 @@
+import { Prec } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
 import { errorMessage } from '@sand/util'
 import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
@@ -34,30 +36,33 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
 
+  const escape = () => {
+    if (hasOpenLayer() || !model.running.get()) return false
+    void interrupt(ctx).catch(error => model.fail(errorMessage(error)))
+    return true
+  }
+
   const keydown = (event: KeyboardEvent) => {
-    if (event.isComposing) return
-    if (completion.keydown(event)) return event.preventDefault()
-    if (event.key === 'Escape' && hasOpenLayer()) return
-    if (event.key === 'Escape' && model.running.get()) {
-      event.preventDefault()
-      return void interrupt(ctx).catch(error => model.fail(errorMessage(error)))
-    }
-    if (event.key === 'Enter' && !event.shiftKey && !coarse.get()) {
-      event.preventDefault()
-      void model.send()
-    }
+    if (event.isComposing) return false
+    if (event.key === 'Escape') return escape()
+    if (event.key !== 'Enter' || event.shiftKey || coarse.get()) return false
+    void model.send()
+    return true
   }
 
   const paste = (event: ClipboardEvent) => {
     const pasted = event.clipboardData?.getData('text/plain') ?? ''
-    if (pasted.length <= pasteLimit) return
-    event.preventDefault()
+    if (pasted.length <= pasteLimit) return false
     model.files.add([pastedFile(pasted)])
+    return true
   }
 
   const sources = builtinSources(ctx)
-  const editor = createEditor(ctx.kit, model.segments, { placeholder: placeholder(model, sources), keydown, paste })
-  const completion = createCompletion(ctx.kit, editor.node, editor.active, sources)
+  const completion = createCompletion(ctx.kit, sources)
+  const editor = createEditor(ctx.kit, model.text, {
+    placeholder: placeholder(model, sources),
+    extensions: [completion.extension, Prec.high(EditorView.domEventHandlers({ keydown, paste }))],
+  })
 
   const picker = input({
     type: 'file',
