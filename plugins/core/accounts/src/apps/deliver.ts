@@ -1,33 +1,33 @@
 import type { AppSession, Effort } from '../contract'
-import { isUserContent, type Block, type Message, type ToolResultBlock, unrecorded, type UserContent } from '@sand/chats/contract'
+import { isModelContent, type Block, type Message, type ModelContent, type ToolResultBlock, unrecorded } from '@sand/chats/contract'
 import { withoutReferences } from '../http/deferred'
 
 export interface Outgoing {
   messages: Message[]
   waiting: string[]
-  lead: UserContent[]
+  lead: ModelContent[]
   replay: boolean
   effort?: Effort
 }
 
 const unanswered = (callId: string): ToolResultBlock => ({ type: 'tool_result', callId, content: [{ type: 'text', text: unrecorded }], isError: true })
 
-const said = (text: string): UserContent => ({ type: 'text', text })
+const said = (text: string): ModelContent => ({ type: 'text', text })
 
-const ownBlock = (block: Block): UserContent[] => {
+const ownBlock = (block: Block): ModelContent[] => {
   if (block.type === 'text') return [said(`[You said earlier in this turn]\n${block.text}`)]
   if (block.type === 'tool_call') return [said(`[You called ${block.name}(${JSON.stringify(block.input ?? {})}) as call ${block.id}]`)]
   return []
 }
 
-const resultText = ({ callId, content, isError }: ToolResultBlock): UserContent[] => [
+const resultText = ({ callId, content, isError }: ToolResultBlock): ModelContent[] => [
   said(`[Result of call ${callId}${isError ? ', failed' : ''}]`),
   ...withoutReferences(content),
 ]
 
 const userBlock = (waiting: string[]) => (block: Block) => {
   if (block.type === 'tool_result') return waiting.includes(block.callId) ? [] : resultText(block)
-  return isUserContent(block) ? [block] : []
+  return isModelContent(block) ? [block] : []
 }
 
 export const deliver = (session: AppSession, { messages, waiting, lead, replay, effort }: Outgoing) => {
