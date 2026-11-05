@@ -44,28 +44,31 @@ const inWorktree = async (ctx: OrchestratorContext, cwd: string) => {
   return ctx.sessions.require((await found.thread({ cwd })).id)
 }
 
+export type Adopt = (session: Session) => void
+
 export const createStart = (ctx: OrchestratorContext, receipts: Receipts) => {
   const opening = new Map<string, Promise<Session>>()
 
-  const open = async (input: StartInput) => {
+  const open = async (input: StartInput, adopt?: Adopt) => {
     const { cwd, project } = folderOf(ctx, input)
     const session = input.worktree ? await inWorktree(ctx, cwd) : ctx.sessions.thread(cwd, project ? { project } : undefined)
     if (input.title) ctx.sessions.rename(session.id, input.title)
+    adopt?.(session)
     receipts.put(input.clientRequestId, session.id)
     return session
   }
 
-  const threadFor = (input: StartInput) => {
+  const threadFor = (input: StartInput, adopt?: Adopt) => {
     const known = receipts.get(input.clientRequestId)
     if (known) return Promise.resolve(ctx.sessions.require(known))
-    const pending = opening.get(input.clientRequestId) ?? open(input).finally(() => opening.delete(input.clientRequestId))
+    const pending = opening.get(input.clientRequestId) ?? open(input, adopt).finally(() => opening.delete(input.clientRequestId))
     opening.set(input.clientRequestId, pending)
     return pending
   }
 
-  return async (input: StartInput): Promise<Sent> => {
+  return async (input: StartInput, adopt?: Adopt): Promise<Sent> => {
     const settings = settingsOf(ctx, input)
-    const session = await threadFor(input)
+    const session = await threadFor(input, adopt)
     const sent = await ctx.turns.send(session, { prompt: input.prompt, origin: input.origin, clientRequestId: input.clientRequestId, ...(settings && { settings }) })
     return { ...sent, thread: session.id }
   }

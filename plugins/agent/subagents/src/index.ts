@@ -2,7 +2,9 @@ import { llm } from '@sand/accounts/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { inject } from './context'
+import { agentLimits } from './contract'
 import { agentLayers } from './layers'
+import { createLimits } from './limits'
 import { createMeta } from './meta'
 import { group, modelsTool } from './models'
 import { restrictContext } from './restrict'
@@ -22,7 +24,9 @@ export default definePlugin({
     const meta = createMeta()
     const efforts = () => ctx.get(llm)?.levels?.().map(level => level.id) ?? []
     const resolve = agentLayers(ctx, efforts)
-    const open = createRun(ctx, { resolve, meta, maxDepth: config.max_depth, maxAgents: config.max_agents })
+    const limits = createLimits(meta, config.max_depth)
+    ctx.provide(agentLimits, limits)
+    const open = createRun(ctx, { resolve, limits, maxAgents: config.max_agents })
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Agents', summary: 'list the models agents can use', load: 'on-demand' }))
     ctx.effect(() => ctx.tools.register(agentTool(ctx, open)))
     ctx.effect(() => ctx.tools.register(modelsTool(ctx)))
