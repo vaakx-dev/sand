@@ -1,6 +1,6 @@
 import type { Caller, Hub, HubSocket, Request, ServerMessage } from '@sand/host-hub/contract'
 import { failure } from '@sand/orchestrator/contract'
-import type { Use } from '../server'
+import type { Use } from '../threads'
 
 const defaultTimeout = 30_000
 

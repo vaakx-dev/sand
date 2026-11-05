@@ -2,7 +2,7 @@ import { createMcpHandler } from '@modelcontextprotocol/server'
 import type { Auth } from '@sand/devices-contract'
 import type { Caller } from '@sand/host-hub/contract'
 import { textReply } from '@sand/util/host'
-import { threadsServer, type Use } from '../server'
+import { threadsServer, type Use } from '../threads'
 
 const bearer = /^Bearer\s+(\S+)\s*$/i
 
