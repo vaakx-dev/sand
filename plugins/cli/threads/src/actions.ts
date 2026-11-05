@@ -20,13 +20,20 @@ interface Flags {
   json: boolean
   model?: string
   effort?: string
+  pc?: string
 }
 
 type Parse = (args: string[], flags: Flags, cwd: string) => Action | undefined
 
 const text = (value: CliValues[string]) => (typeof value === 'string' ? value : undefined)
 
-const flagsOf = (values: CliValues): Flags => ({ wait: values.wait === true, json: values.json === true, model: text(values.model), effort: text(values.effort) })
+const flagsOf = (values: CliValues): Flags => ({
+  wait: values.wait === true,
+  json: values.json === true,
+  model: text(values.model),
+  effort: text(values.effort),
+  pc: text(values.pc),
+})
 
 const promptOf = async (message: string) => (message === '-' ? (await Bun.stdin.text()).trimEnd() : message)
 
@@ -34,11 +41,13 @@ const settle = async (call: Call, sent: Sent, flags: Flags) =>
   printState(await waitThread(call, sent.thread, 'attention', flags.wait ? Infinity : Date.now()), flags.json)
 
 const start: Parse = (args, flags, cwd) => {
-  if (args.length !== 1 && args.length !== 2) return undefined
+  const fits = flags.pc ? args.length === 2 : args.length === 1 || args.length === 2
+  if (!fits) return undefined
   const [dir, message] = args.length === 2 ? [args[0]!, args[1]!] : ['.', args[0]!]
+  const place = flags.pc ? { pc: flags.pc, cwd: dir } : { cwd: resolve(cwd, dir) }
   const settings = { ...(flags.model && { model: flags.model }), ...(flags.effort && { effort: flags.effort }) }
   return async call => {
-    const input = { cwd: resolve(cwd, dir), prompt: await promptOf(message), ...settings, origin: 'cli', clientRequestId: Bun.randomUUIDv7() } as const
+    const input = { ...place, prompt: await promptOf(message), ...settings, origin: 'cli', clientRequestId: Bun.randomUUIDv7() } as const
     return settle(call, await call(threadStart, input), flags)
   }
 }

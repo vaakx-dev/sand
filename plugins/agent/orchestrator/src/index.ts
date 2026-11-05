@@ -1,5 +1,6 @@
 import { definePlugin } from 'drydock'
 import { inject } from './context'
+import { createPcs } from './pcs'
 import { openReceipts } from './receipts'
 import { serveThreads } from './serve'
 import { createStart } from './start'
@@ -8,11 +9,11 @@ import { threadTools } from './tools'
 export default definePlugin({
   name: 'orchestrator',
   description:
-    "Threads for the sand thread command, outside agents and sand's own agents: start, message, wait for, read, list and stop threads, built on turns",
+    "Threads for the sand thread command, outside agents and sand's own agents: start, message, wait for, read, list and stop threads on this PC or your other PCs, built on turns",
   inject,
   apply(ctx) {
     const start = createStart(ctx, openReceipts(ctx.ledger))
-    serveThreads(ctx, start)
+    serveThreads(ctx, start, createPcs(ctx))
     threadTools(ctx, start)
   },
 })

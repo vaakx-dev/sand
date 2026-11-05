@@ -42,7 +42,8 @@ const readInput = z.object({
 
 const startInput = z.object({
   prompt,
-  cwd: z.string().optional().describe('The folder the thread works in (default: the folder this server runs in)'),
+  pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
+  cwd: z.string().optional().describe('The folder the thread works in (default: the folder this server runs in, when it starts on this PC)'),
   project: z.string().optional().describe('A project id to work in instead of a folder'),
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),
@@ -84,7 +85,11 @@ export const threadsServer = (use: Use, here: string) => {
 
   server.registerTool(
     'thread_list',
-    { description: "List sand's threads, newest first, with each one's status", inputSchema: listInput, annotations: reading },
+    {
+      description: "List sand's threads on all your reachable PCs, newest first, with each one's status; pc names the PC a thread is on when it isn't this one",
+      inputSchema: listInput,
+      annotations: reading,
+    },
     input => respond(() => use(call => call(threadList, input))),
   )
   server.registerTool(
@@ -98,7 +103,7 @@ export const threadsServer = (use: Use, here: string) => {
     ({ clientRequestId, ...input }) =>
       respond(() =>
         use(call =>
-          call(threadStart, { ...(!input.project && { cwd: here }), ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
+          call(threadStart, { ...(!input.project && !input.pc && { cwd: here }), ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
         ),
       ),
   )
