@@ -1,7 +1,9 @@
-import type { DeviceKey, DeviceRecord } from '@sand/devices-contract'
+import type { DeviceKey, DevicePush, DeviceRecord } from '@sand/devices-contract'
 import { deviceIdOf } from '@sand/devices-identity'
 
 const normalKey = ({ publicKey, added, origin }: DeviceKey): DeviceKey => ({ publicKey, added, ...(origin !== undefined && { origin }) })
+
+const normalPush = ({ pc, endpoint, keys }: DevicePush): DevicePush => ({ pc, endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } })
 
 export const normalRecord = (record: DeviceRecord): DeviceRecord => ({
   id: record.id,
@@ -11,6 +13,7 @@ export const normalRecord = (record: DeviceRecord): DeviceRecord => ({
   ...(record.icon !== undefined && { icon: record.icon }),
   ...(record.detectedIcon !== undefined && { detectedIcon: record.detectedIcon }),
   keys: record.keys.map(normalKey),
+  ...(record.push && { push: normalPush(record.push) }),
   added: record.added,
   addedBy: record.addedBy,
   updated: record.updated,

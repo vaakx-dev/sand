@@ -55,16 +55,29 @@ self.addEventListener('fetch', event => {
   if (isScript(new URL(request.url))) event.respondWith(script(request))
 })
 
-const openAlert = async ({ session, url }) => {
-  const [page] = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-  if (!page) return self.clients.openWindow(url || '/')
-  page.postMessage({ open: session })
+const pages = () => self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+
+const watched = async () => (await pages()).some(page => page.visibilityState === 'visible' && page.focused)
+
+const showPush = async notice => {
+  if (await watched()) return
+  await self.registration.showNotification(notice.title, { body: notice.body, tag: notice.tag, icon: '/icons/192x192.png', data: notice })
+}
+
+self.addEventListener('push', event => {
+  event.waitUntil(showPush(event.data ? event.data.json() : { title: 'sand' }))
+})
+
+const openNotice = async notice => {
+  const [page] = await pages()
+  if (!page) return self.clients.openWindow(notice.thread ? '/?session=' + encodeURIComponent(notice.thread) : '/')
+  page.postMessage({ notice })
   return page.focus()
 }
 
 self.addEventListener('notificationclick', event => {
   event.notification.close()
-  event.waitUntil(openAlert(event.notification.data || {}))
+  event.waitUntil(openNotice(event.notification.data || {}))
 })
 `
 

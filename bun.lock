@@ -733,6 +733,27 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/devices/notify": {
+      "name": "@sand/devices-notify",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/devices-identity": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
+        "@sand/loop": "workspace:*",
+        "@sand/settings": "workspace:*",
+        "@sand/toasts": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "plugins/devices/pairing": {
       "name": "@sand/devices-pairing",
       "version": "0.0.0",
@@ -1894,6 +1915,8 @@
     "@sand/devices-identity": ["@sand/devices-identity@workspace:plugins/devices/identity"],
 
     "@sand/devices-network": ["@sand/devices-network@workspace:plugins/devices/network"],
+
+    "@sand/devices-notify": ["@sand/devices-notify@workspace:plugins/devices/notify"],
 
     "@sand/devices-pairing": ["@sand/devices-pairing@workspace:plugins/devices/pairing"],
 
