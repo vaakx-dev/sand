@@ -774,6 +774,7 @@
         "@sand/loop": "workspace:*",
         "@sand/settings": "workspace:*",
         "@sand/toasts": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
