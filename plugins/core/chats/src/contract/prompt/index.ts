@@ -1,5 +1,6 @@
 export { callsOf, errorResult, refused, skip, truncated, unrecorded } from './calls'
-export { isUserContent, promptContent } from './content'
+export { isModelContent, promptContent } from './content'
+export { contextLabel, contextLink, contextLinks, projectContext, type ContextLink, type ContextProjection, type ContextProjector } from './context'
 export { feedbackLine, feedbackOnly, noteBlock, stopFeedback } from './feedback'
 export { fileText } from './file'
 export { imageLabel, isImageLabel } from './image'

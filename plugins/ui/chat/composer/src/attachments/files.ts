@@ -25,7 +25,10 @@ const previewable = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp
 
 let next = 0
 
-const sizeOf = (content: UserContent) => (content.type === 'text' ? content.text.length : content.size)
+const sizeOf = (content: UserContent) => {
+  if (content.type === 'text') return content.text.length
+  return content.type === 'context' ? 0 : content.size
+}
 
 const fromContent = (content: UserContent): Attached => ({ id: String(++next), name: contentName(content), bytes: sizeOf(content), content })
 

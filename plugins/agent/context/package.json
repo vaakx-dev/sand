@@ -1,0 +1,24 @@
+{
+  "name": "@sand/context",
+  "version": "0.0.0",
+  "description": "Turns context links in a prompt into markers and one context envelope the model reads",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Context references",
+    "summary": "Files and threads a message links to, given to the model"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}
