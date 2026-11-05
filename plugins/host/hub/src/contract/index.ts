@@ -91,6 +91,8 @@ export const hello = request('hello', {
 
 export const helloActive = helloField<string[]>('active')
 
+export const hubResync = wireEvent<void>('hub.resync')
+
 export interface HubSocket {
   send(data: string): number
   close(): void

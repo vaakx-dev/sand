@@ -1,7 +1,7 @@
 import { connect, directTransport, type ViaRelay, viaTransport } from '@sand/devices-connect'
 import { browserRouteStore, browserWake, pageVisible } from '@sand/devices-connect/browser'
 import type { PcConnection, PcIdentity, Route, Signer } from '@sand/devices-contract'
-import { hello } from '@sand/host-hub/contract'
+import { hello, hubResync } from '@sand/host-hub/contract'
 import { runtimeChanged } from '@sand/host-runtimes/contract'
 import { securePage } from '../page/home'
 import { type HelloMemory, helloMemory } from './hellos'
@@ -50,7 +50,7 @@ export const openPcLink = (options: LinkOptions): PcLink => {
     greeting,
     greeted: reply => options.greeted(hellos.take(reply)),
     event(name, payload) {
-      if (name === runtimeChanged.id) regreet()
+      if (name === runtimeChanged.id || name === hubResync.id) regreet()
       options.event(name, payload)
     },
     changed: options.changed,

@@ -1,5 +1,7 @@
 import type { Runtimes, RuntimeView } from '@sand/host-runtimes/contract'
-import { type Client, fail } from './client'
+import { type Client, fail, send } from './client'
+import { hubResync } from './contract'
+import { eventFrame } from './frames'
 import { createUpstream } from './upstream'
 
 export type Downstream = (client: Client, runtime: RuntimeView, raw: string) => void
@@ -11,6 +13,7 @@ export const createLinks = (runtimes: Runtimes, downstream: Downstream) => {
     const upstream = createUpstream(runtime, client.caller, {
       message: raw => downstream(client, runtime, raw),
       lost: () => fail(client, runtime.id),
+      reopened: () => send(client, eventFrame(hubResync.id, undefined)),
       alive: () => client.open && isLive(runtime.id),
     })
     client.upstreams.set(runtime.id, upstream)

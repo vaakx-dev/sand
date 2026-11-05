@@ -63,7 +63,7 @@ export default definePlugin({
     ctx.effect(() => handlers.handle(hello, hellos.answer))
     ctx.effect(() => hellos.register(helloSafe, () => ctx.cli.safe))
     ctx.effect(() => sessionRequests(ctx, handlers))
-    ctx.effect(() => pagingRequests(ctx, handlers, live))
+    ctx.effect(() => pagingRequests(ctx, handlers, stream.snapshot))
 
     const server: Server = {
       route: routes.route,

@@ -3,14 +3,16 @@ import type { Thread } from '../contract'
 
 const tailLines = 4
 
-export const catchUp = (thread: Thread, { live, tools }: LiveSnapshot) => {
+export const catchUp = (thread: Thread, { live, tools, mark }: LiveSnapshot) => {
   thread.live = live
+  thread.mark = mark
   thread.tools = { ...thread.tools, running: new Set(tools) }
 }
 
 export const clearTurn = (thread: Thread) => {
   thread.started = undefined
   thread.live = []
+  thread.mark = undefined
   thread.tools = { running: new Set(), results: new Map(), logs: new Map() }
 }
 

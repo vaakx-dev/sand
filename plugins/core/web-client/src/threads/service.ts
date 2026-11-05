@@ -91,15 +91,13 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
 
   const greetedBy = (pc: string) => {
     applyHello(store, helloOf(wire, pc), pc)
-    if (pc !== store.here()) {
-      refocus(pc)
-      const current = store.currentThread()
-      if (current?.device === pc) void load(current.id)
-      return
+    if (pc === store.here() && !greeted) {
+      greeted = true
+      return void openRequested()
     }
-    if (greeted) return void open(store.current, 'replace')
-    greeted = true
-    void openRequested()
+    refocus(pc)
+    const current = store.currentThread()
+    if (current?.device === pc) void load(current.id)
   }
 
   onPcHello(ctx, wire, pcs, greetedBy)

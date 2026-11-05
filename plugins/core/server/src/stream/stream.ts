@@ -15,19 +15,27 @@ type Publish = (frame: () => string, to: Audience) => void
 export const createStream = (ctx: ServerContext, publish: Publish, tracker: LiveTracker) => {
   const watchers = createWatchers<Socket>()
 
-  const send = (event: LLMEvent, session: Session) =>
-    publish(() => eventFrame(llmEventWire.id, [liveEvent(event), sessionRef(session)]), socket => watchers.sees(socket, session.id))
+  const send = (event: LLMEvent, session: Session) => {
+    const mark = tracker.sent(session.id)
+    const payload = [liveEvent(event), sessionRef(session), ...(mark ? [mark] : [])]
+    publish(() => eventFrame(llmEventWire.id, payload), socket => watchers.sees(socket, session.id))
+  }
 
   const coalescer = createCoalescer(send, overdueMs)
   ctx.on(llmEvent, coalescer.push)
   ctx.effect(() => coalescer.stop)
 
+  const snapshot = (session: string) => {
+    coalescer.flush()
+    return tracker.snapshot(session)
+  }
+
   const focus = (socket: Socket, session: string | undefined) => {
     coalescer.flush()
     watchers.focus(socket, session)
-    const snapshot = session && tracker.snapshot(session)
-    if (snapshot) deliver(socket, eventFrame(liveSnapshot.id, [session, snapshot]))
+    const found = session && tracker.snapshot(session)
+    if (found) deliver(socket, eventFrame(liveSnapshot.id, [session, found]))
   }
 
-  return { focus, forget: watchers.forget, focused: watchers.focused, sees: watchers.sees, flush: coalescer.flush }
+  return { focus, snapshot, forget: watchers.forget, focused: watchers.focused, sees: watchers.sees, flush: coalescer.flush }
 }
