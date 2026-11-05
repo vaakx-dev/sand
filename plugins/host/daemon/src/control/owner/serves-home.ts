@@ -13,7 +13,7 @@ const comparable = (text: string) => {
   return process.platform === 'win32' ? slashed.toLowerCase() : slashed
 }
 
-const folder = (path: string) => trimSlash(comparable(resolve(path)))
+export const folder = (path: string) => trimSlash(comparable(resolve(path)))
 
 const namedHome = (line: string) => {
   const found = line.match(homeFlag)

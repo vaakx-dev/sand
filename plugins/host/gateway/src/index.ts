@@ -13,7 +13,7 @@ import { hostHttp, type ListenScope } from './contract'
 import { createHttpRegistry } from './http/registry'
 import { createResponder } from './http/respond'
 import { createRoutes } from './http/routes'
-import { writeServerInfo } from './info'
+import { removeServerInfo, writeServerInfo } from './info'
 import { createListen } from './listen'
 import { createListener } from './listener/listener'
 import { createProxy } from './proxy'
@@ -36,6 +36,7 @@ export default definePlugin({
     const respond = createResponder({ routes, registry, caller, proxy: createProxy(ctx.runtimes) })
     const listener = createListener(createListen({ respond, hub: ctx.hub, sessions }), port)
     ctx.effect(() => () => void listener.stop())
+    ctx.effect(() => () => removeServerInfo(home))
 
     const save = () => writeServerInfo(home, listener.urls())
     const bind = async (scope: ListenScope) => {
