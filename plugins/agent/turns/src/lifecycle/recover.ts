@@ -17,11 +17,12 @@ const unanswered = (entries: Entry[]) => {
 }
 
 export const recoverTurns = (ctx: TurnsContext, stores: Stores, owner: string, announce: Announce) => {
-  const recover = ({ id, session: chat, partial }: Stale) => {
+  const recover = ({ id, session: chat, thread, partial }: Stale) => {
     const session = ctx.sessions.open(chat)
     const turn = { turn: id }
     const lost = ctx.ledger.tx(() => {
       if (!stores.turns.lose(id)) return false
+      if (thread) ctx.providerThreads.abandon(thread)
       if (!session) return true
       if (partial) session.append('message', partial, turn)
       const entries = session.path().filter(entry => entry.turn === id)

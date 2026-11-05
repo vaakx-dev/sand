@@ -34,6 +34,8 @@ const draft = (session: Session, record: CompactionRecord): Entry => ({
 export const createCompactor = (ctx: CompactionContext, config: CompactionConfig, tracker: Tracker) => {
   const running = new Map<string, Promise<number>>()
 
+  const native = (model?: string) => !!model && !!ctx.llm.caps?.(model).native
+
   const run = async (session: Session, request: LLMRequest, budget: Budget, { reason, signal }: CompactOptions) => {
     const path = session.path()
     const overflow = reason === 'overflow'
@@ -43,7 +45,7 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
     ctx.emit(contextUsage, session, usageOf(budget, before, true))
     let after = before
     try {
-      const { summary, usage, source } = overflow
+      const { summary, usage, source } = overflow || native(request.model)
         ? await summarize(ctx.llm, ctx.media, {
             model: request.model,
             messages: cut.dropped,

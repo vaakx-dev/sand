@@ -14,6 +14,7 @@ export interface Candidate {
   thread: ProviderThreadInfo
   last: boolean
   onPath: boolean
+  compacted: boolean
   fits: boolean
   now: number
 }
@@ -26,9 +27,9 @@ const settings = ['effort', 'speed'] as const
 
 const movedFolder = ({ native }: ProviderThreadInfo, cwd: string) => !!native && !native.pc && native.cwd !== cwd
 
-const continuing = ({ caps, selection, cwd }: Target, { thread, onPath }: Candidate): Transition => {
+const continuing = ({ caps, selection, cwd }: Target, { thread, onPath, compacted }: Candidate): Transition => {
   if (!onPath) return caps.native ? full : reuse
-  if (caps.native && (thread.status === 'uncertain' || movedFolder(thread, cwd))) return full
+  if (caps.native && (thread.status === 'uncertain' || compacted || movedFolder(thread, cwd))) return full
   const changed = settings.filter(key => thread[key] !== selection[key])
   if (!changed.length) return reuse
   if (changed.every(key => caps.reconfigure.includes(key))) return { type: 'reconfigure' }

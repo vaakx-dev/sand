@@ -54,11 +54,11 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     return { ...common, base: credential.base_url ?? openRouterBase, key: credential.key }
   }
 
-  const route = async function* (meta: SourceMeta, model: ModelInfo, request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+  const route = async function* (meta: SourceMeta, model: ModelInfo, request: LLMRequest, signal?: AbortSignal, caller?: string): AsyncIterable<LLMEvent> {
     const name = model.name ?? model.id
     const sent = { ...request, model: name }
     const app = plans.app(meta.id)
-    if (app) yield* bridges.stream(app, sent, signal)
+    if (app) yield* bridges.stream(app, sent, signal, caller)
     else if (meta.api === 'anthropic') yield* claude.stream(meta.id, sent, model, signal)
     else if (meta.api === 'openai') yield* openai.stream(meta.id, sent, model, signal)
     else yield* compat.stream(await target(meta, model, name), sent, signal)
@@ -84,17 +84,18 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
     view,
     models: view.models,
     levels: () => levels,
-    async *stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    async *stream(request: LLMRequest, signal?: AbortSignal, caller?: string): AsyncIterable<LLMEvent> {
       await Promise.all([accounts.ready, catalog.ready])
       const model = view.resolve(request.model)
       const meta = model?.source ? view.entry(model.source)?.meta : undefined
       if (!model || !meta) throw view.missing(request.model)
       const source = sourceRef(meta)
-      for await (const event of route(meta, model, request, signal)) {
+      for await (const event of route(meta, model, request, signal, caller)) {
         if (event.type === 'start') yield { ...event, model: model.id }
         else yield event.type === 'done' ? { ...event, source } : event
       }
     },
+    release: bridges.release,
     limits: firstLimits,
     allLimits,
     price: (model: string): ModelPrice | undefined => catalog.price(view.find(model)?.id ?? model),

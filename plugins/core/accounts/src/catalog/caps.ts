@@ -3,7 +3,6 @@ import { type LoginMethod, type PlanApi, type ProviderCapabilities, statelessCap
 const minutes = 60_000
 
 const byMethod: Partial<Record<LoginMethod, ProviderCapabilities>> = {
-  app: statelessCaps(),
   server: statelessCaps(['effort']),
 }
 

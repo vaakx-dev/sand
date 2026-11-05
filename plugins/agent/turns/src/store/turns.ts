@@ -49,6 +49,7 @@ export interface Ending {
 export interface Stale {
   id: string
   session: string
+  thread?: string
   partial?: Message
 }
 
@@ -71,9 +72,10 @@ const infoOf = (row: Row): TurnInfo => ({
   ...(row.ended !== null && { ended: row.ended }),
 })
 
-const staleOf = (row: Pick<Row, 'id' | 'session' | 'partial'>): Stale => ({
+const staleOf = (row: Pick<Row, 'id' | 'session' | 'provider_thread' | 'partial'>): Stale => ({
   id: row.id,
   session: row.session,
+  ...(row.provider_thread && { thread: row.provider_thread }),
   ...(row.partial && { partial: JSON.parse(row.partial) }),
 })
 
@@ -105,8 +107,8 @@ export const createTurnStore = (db: Database) => {
     'update turns set lease = $lease where owner = $owner and ended is null returning id, cancel',
   )
   const cancelled = db.query('update turns set cancel = 1 where id = $id and ended is null')
-  const expired = db.query<Pick<Row, 'id' | 'session' | 'partial'>, { owner: string; now: number }>(
-    'select id, session, partial from turns where ended is null and lease <= $now and owner != $owner',
+  const expired = db.query<Pick<Row, 'id' | 'session' | 'provider_thread' | 'partial'>, { owner: string; now: number }>(
+    'select id, session, provider_thread, partial from turns where ended is null and lease <= $now and owner != $owner',
   )
   const removed = db.query('delete from turns where session = $session')
   const lost = db.query(

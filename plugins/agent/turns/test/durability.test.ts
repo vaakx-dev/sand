@@ -1,4 +1,4 @@
-import { unrecorded } from '@sand/chats/contract'
+import { ledger, unrecorded } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
 import { Database } from 'bun:sqlite'
@@ -70,6 +70,7 @@ test('a turn whose process died is marked lost when sand starts again, keeping t
   expect(recovered.latest('turn-ending')?.data).toEqual({ stopReason: 'lost' })
   expect(next.turns.get(turn)).toMatchObject({ status: 'lost', stopReason: 'lost' })
   expect(next.turns.current(recovered)).toBeUndefined()
+  expect(next.app.get(ledger)!.db.query('select status from provider_threads').all()).toEqual([{ status: 'uncertain' }])
 })
 
 test('what the model had said when its process died is kept', async () => {

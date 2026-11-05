@@ -1,4 +1,4 @@
-import { llmPlans, type AppPlan, type PlanLimits } from '@sand/accounts/contract'
+import { llmPlans, type AppPlan, type PlanLimits, type ProviderCapabilities } from '@sand/accounts/contract'
 import { cli } from '@sand/config/contract'
 import { media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
@@ -7,9 +7,19 @@ import { join } from 'node:path'
 import { codexAccount } from './account/account'
 import { limitsOf } from './account/limits'
 import { installUrl } from './server/binary'
-import { createServer, type CodexServer } from './server/server'
+import { createPool, type Pool } from './server/pool'
 import { openSession, type SessionNeeds } from './session/session'
 import pkg from '../package.json'
+
+const caps: ProviderCapabilities = {
+  native: true,
+  resume: true,
+  inject: true,
+  steer: true,
+  reconfigure: ['effort'],
+  processScope: 'thread',
+  cacheTtlMs: 10 * 60_000,
+}
 
 const codexPlan = (needs: SessionNeeds): AppPlan => ({
   id: 'codex',
@@ -20,12 +30,14 @@ const codexPlan = (needs: SessionNeeds): AppPlan => ({
   app: 'Codex',
   install: installUrl,
   family: 'openai',
-  ...codexAccount(needs.server),
-  open: (setup, output) => openSession(needs, setup, output),
+  caps,
+  fixedTools: true,
+  ...codexAccount(needs.pool),
+  open: (setup, output, resume) => openSession(needs, setup, output, resume),
 })
 
-const reportLimits = (server: CodexServer, report: (limits: PlanLimits) => void) =>
-  server.listen((method, params) => {
+const reportLimits = (pool: Pool, report: (limits: PlanLimits) => void) =>
+  pool.listen((method, params) => {
     if (method !== 'account/rateLimits/updated') return
     const limits = limitsOf(params.rateLimits)
     if (limits) report(limits)
@@ -38,12 +50,12 @@ export default definePlugin({
   async apply(ctx) {
     const folder = join(ctx.cli.home, 'apps', 'codex')
     await mkdir(folder, { recursive: true })
-    const server = createServer(folder, pkg.version)
-    ctx.effect(() => () => server.close())
+    const pool = createPool(folder, pkg.version)
+    ctx.effect(() => () => pool.close())
     ctx.watch(llmPlans, plans => {
       if (!plans) return
-      const stopLimits = reportLimits(server, limits => plans.limits('codex', limits))
-      const unregister = plans.register(codexPlan({ server, media: ctx.media }))
+      const stopLimits = reportLimits(pool, limits => plans.limits('codex', limits))
+      const unregister = plans.register(codexPlan({ pool, media: ctx.media }))
       return () => {
         stopLimits()
         unregister()

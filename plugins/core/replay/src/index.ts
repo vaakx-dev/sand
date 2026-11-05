@@ -13,6 +13,7 @@ export default definePlugin({
   apply(ctx, { sources }) {
     let base = ''
     const apis = new Map(sources.flatMap(source => (source.api ? [[source.id, replayApi(source, () => base)] as const] : [])))
+    const apps = new Map(sources.flatMap(source => (source.api ? [] : [[source.id, replayApp(source)] as const])))
     ctx.effect(() => {
       if (!apis.size) return undefined
       const server = Bun.serve({
@@ -23,7 +24,7 @@ export default definePlugin({
       base = server.url.origin
       return () => void server.stop(true)
     })
-    ctx.provide(replayRequests, { bodies: source => apis.get(source)?.bodies ?? [] })
-    ctx.watch(llmPlans, plans => plans && joinDisposers(...sources.map(source => plans.register(apis.get(source.id)?.plan ?? replayApp(source)))))
+    ctx.provide(replayRequests, { bodies: source => apis.get(source)?.bodies ?? [], native: source => apps.get(source)?.calls ?? [] })
+    ctx.watch(llmPlans, plans => plans && joinDisposers(...[...apis.values(), ...apps.values()].map(({ plan }) => plans.register(plan))))
   },
 })

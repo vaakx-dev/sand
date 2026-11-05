@@ -1,5 +1,5 @@
 import type { ChatKind, StopReason, ToolResultBlock, UserContent } from '@sand/chats/contract'
-import type { ToolSpec } from './llm'
+import type { HandoffBlock, ProviderCapabilities, ToolSpec } from './llm'
 import type { Effort, LimitWindow, ModelPrice } from './models'
 import type { Usage } from './usage'
 
@@ -78,8 +78,8 @@ export interface AppSetup {
   effort?: Effort
   system: string
   tools: ToolSpec[]
-  history: string
   cwd: string
+  persist: boolean
   sessionKind?: ChatKind
 }
 
@@ -97,13 +97,16 @@ export interface AppOutput {
   pause(): void
   finish(stopReason?: StopReason): void
   fail(error: unknown): void
+  exit(error: Error): void
 }
 
 export interface AppSession {
-  send(content: UserContent[]): void
+  id?: string
+  send(content: UserContent[], effort?: Effort): void
   steer?(content: UserContent[]): void
   answer(id: string, result: ToolResultBlock): void
-  interrupt(): void
+  inject?(handoff: HandoffBlock): Promise<boolean>
+  interrupt(): Promise<void>
   close(): void
 }
 
@@ -111,12 +114,14 @@ export interface AppPlan extends PlanInfo {
   app: string
   install: string
   family?: PlanApi
+  caps: ProviderCapabilities
+  fixedTools?: boolean
   status(): Promise<AppStatus>
   signIn(signal: AbortSignal): Promise<SignInFlow<void>>
   signOut(): Promise<void>
   models(): Promise<PlanModel[]>
   usage?(): Promise<PlanLimits | undefined>
-  open(setup: AppSetup, output: AppOutput): Promise<AppSession>
+  open(setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession>
 }
 
 export type AnyPlan = Plan | AppPlan

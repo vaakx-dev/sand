@@ -16,13 +16,14 @@ export interface Built {
 
 const received = (seen: Segment[], handoff?: HandoffBlock) => (handoff ? seen.filter(segment => !('handoff' in segment && segment.handoff === handoff.id)) : seen)
 
-const refOf = (thread: ProviderThreadInfo, handoff?: HandoffBlock): ThreadRef => {
+const refOf = (thread: ProviderThreadInfo, cwd: string, handoff?: HandoffBlock): ThreadRef => {
   const seen = received(thread.seen, handoff)
   return {
     id: thread.id,
     generation: thread.generation,
     fresh: !seen.length,
     seenHead: headOf(seen),
+    cwd,
     ...(thread.native && { native: thread.native }),
   }
 }
@@ -55,7 +56,7 @@ export const buildRequest = async (
       speed,
       session: session.id,
       sessionKind: session.kind,
-      thread: refOf(thread, handoff),
+      thread: refOf(thread, session.cwd, handoff),
       delta,
       ...(handoff && { handoff }),
     },

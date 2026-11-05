@@ -83,6 +83,7 @@ export const startSand = async (sources: Source[], shared?: string) => {
       return session
     },
     requests: (source: string) => need(app, replayRequests).bodies(source),
+    native: (source: string) => need(app, replayRequests).native(source),
     ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }),
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })

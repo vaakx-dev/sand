@@ -74,7 +74,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       return catalog.price(id) ?? remotes.get().prices.get(id)
     },
     caps: model => metaOf(model)?.caps ?? statelessCaps(),
-    release() {},
+    release: local.release,
   }
 
   const reset = () => {
