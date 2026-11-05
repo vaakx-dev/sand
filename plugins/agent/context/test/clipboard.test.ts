@@ -8,13 +8,13 @@ const text = 'Check [notes.md](sand-context://v1/file/n1) <b>against</b> [Releas
 
 const reader = (formats: Record<string, string>) => (type: string) => formats[type] ?? ''
 
-const fragment = (value: unknown) => reader({ [contextMime]: JSON.stringify(value) })
+const fragment = (value: unknown) => reader({ [contextMime]: JSON.stringify(value), 'text/plain': text })
 
 test('copied records paste back from the custom type, or from the HTML when only that survives', () => {
   const formats = contextFormats(text, [plan, { ...notes, id: 'unused' }, notes])
 
-  expect(pastedRecords(reader(formats))).toEqual([notes, plan])
-  expect(pastedRecords(reader({ 'text/html': `<meta charset="utf-8">${formats['text/html']}` }))).toEqual([notes, plan])
+  expect(pastedRecords(reader({ ...formats, 'text/plain': text }))).toEqual([notes, plan])
+  expect(pastedRecords(reader({ 'text/html': `<meta charset="utf-8">${formats['text/html']}`, 'text/plain': text }))).toEqual([notes, plan])
   expect(formats['text/html']?.match(/<\/?[a-z]+/g)).toEqual(['<pre', '</pre'])
 })
 
@@ -33,15 +33,14 @@ test('a hostile or broken fragment gives no records, and bad records are dropped
     fragment({ v: 1, records: Array.from({ length: 101 }, (_, index) => ({ ...notes, id: `n${index}` })) }),
     fragment([notes]),
     fragment(null),
-    reader({ [contextMime]: JSON.stringify({ v: 1, records: [notes] }).padEnd(1_000_001) }),
-    reader({ 'text/html': '<pre data-sand-context="%E0%A4%A">x</pre>' }),
-    reader({ 'text/html': '<pre data-sand-context="%7B">x</pre>' }),
+    reader({ [contextMime]: JSON.stringify({ v: 1, records: [notes] }).padEnd(1_000_001), 'text/plain': text }),
+    reader({ 'text/html': '<pre data-sand-context="%E0%A4%A">x</pre>', 'text/plain': text }),
+    reader({ 'text/html': '<pre data-sand-context="%7B">x</pre>', 'text/plain': text }),
   ]
   expect(broken.map(pastedRecords)).toEqual(broken.map(() => []))
 
   const mixed = [
     notes,
-    { ...notes, label: 'second copy of n1' },
     { ...plan, v: 2 },
     { ...plan, id: 'Bad ID' },
     { ...plan, kind: 'Thread' },
@@ -52,4 +51,11 @@ test('a hostile or broken fragment gives no records, and bad records are dropped
     plan,
   ]
   expect(pastedRecords(fragment({ v: 1, records: mixed }))).toEqual([notes, plan])
+})
+
+test('a pasted record comes in only when the pasted text links it', () => {
+  const forged = encodeURIComponent(JSON.stringify({ v: 1, records: [notes, { ...plan, kind: 'file' }] }))
+  const html = `<p data-sand-context="${forged}">harmless</p>`
+  expect(pastedRecords(reader({ 'text/html': html, 'text/plain': 'harmless' }))).toEqual([])
+  expect(pastedRecords(reader({ 'text/html': html, 'text/plain': text }))).toEqual([notes])
 })

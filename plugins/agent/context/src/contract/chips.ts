@@ -1,7 +1,7 @@
 import type { ContextLink, ContextRecord } from '@sand/chats/contract'
 import type { IconName } from '@sand/ui-kit/contract'
-import type { Child } from '@vaakx-dev/vrui'
-import { service, type Dispose } from 'drydock'
+import { span, type Child } from '@vaakx-dev/vrui'
+import { service, type Context, type Dispose } from 'drydock'
 
 export type ChipLink = Pick<ContextLink, 'kind' | 'id' | 'label'>
 
@@ -24,3 +24,5 @@ export interface ContextChips {
 }
 
 export const contextChips = service<ContextChips>('contextChips')
+
+export const drawChip = (ctx: Pick<Context, 'get'>) => (link: ChipLink, record?: ContextRecord) => ctx.get(contextChips)?.chip(link, record) ?? span(link.label)

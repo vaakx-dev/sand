@@ -5,6 +5,7 @@ export type ClipboardFormats = Record<string, string>
 export const contextMime = 'web application/x-sand-context+json'
 
 const fragmentLimit = 1_000_000
+const percentEncodedGrowth = 9
 const recordLimit = 100
 const htmlPattern = /data-sand-context="([^"]+)"/
 
@@ -41,23 +42,22 @@ const decoded = (encoded: string) => {
   }
 }
 
-const firstOfEach = (records: ContextRecord[]) => records.filter((record, index) => records.findIndex(other => other.id === record.id) === index)
-
-const fromFragment = (raw: string): ContextRecord[] => {
+const fromFragment = (raw: string): unknown[] => {
   if (!raw || raw.length > fragmentLimit) return []
   const fragment = parsed(raw)
   if (typeof fragment !== 'object' || fragment === null || !('v' in fragment) || fragment.v !== 1 || !('records' in fragment)) return []
   const { records } = fragment
   if (!Array.isArray(records) || records.length > recordLimit) return []
-  return firstOfEach(records.filter(isContextRecord))
+  return records
 }
 
 const fromHtml = (html: string) => {
-  const encoded = html.length <= fragmentLimit * 9 ? htmlPattern.exec(html)?.[1] : undefined
+  const encoded = html.length <= fragmentLimit * percentEncodedGrowth ? htmlPattern.exec(html)?.[1] : undefined
   return encoded ? fromFragment(decoded(encoded)) : []
 }
 
 export const pastedRecords = (read: (type: string) => string) => {
   const direct = fromFragment(read(contextMime))
-  return direct.length ? direct : fromHtml(read('text/html'))
+  const records = direct.length ? direct : fromHtml(read('text/html'))
+  return linkedRecords(read('text/plain'), records.filter(isContextRecord))
 }
