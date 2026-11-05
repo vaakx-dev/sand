@@ -1,5 +1,6 @@
 import { models, type Thread } from '@sand/web-client/contract'
 import { div, sig, untrack } from '@vaakx-dev/vrui'
+import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { failed, hero, loading } from './hero'
 import { findQuote, quoteFlash } from './integrations/quote-jump'
@@ -7,6 +8,7 @@ import { firstRowBelow, keepAnchor, scrollTo, stickToEnd } from './integrations/
 import { rowSizes } from './integrations/sizes'
 import { topEdge } from './integrations/top-edge'
 import type { OpenStates, RendererRegistry, TranscriptParts } from './parts/contract'
+import { branchSwitch } from './rows/branches'
 import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
@@ -27,7 +29,11 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
   const jumpShown = sig(false)
   const slot = slotHost()
   const menu = contextMenu()
-  const views = threadViews(ctx.kit, node => watchRow(node))
+  const views = threadViews(
+    ctx.kit,
+    node => watchRow(node),
+    id => branchLists(entry => ctx.threads.branches(id, entry)),
+  )
   const edge = topEdge(
     () => reveal(),
     () => trim(),
@@ -99,6 +105,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       reply: text => replyActions(ctx, text),
+      branchSwitch: entry => branchSwitch(ctx, view, entry),
       jump,
       repaint,
     }
@@ -114,6 +121,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))
     view.rowEntries = drawn.map(({ entry }) => entry)
     view.more.set(view.above > 0 || ctx.threads.older(thread.id))
+    view.branches.follow(thread)
     view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, context)])
   }
 

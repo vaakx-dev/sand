@@ -1,5 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, list, media, onMount, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
+import type { BranchLists } from './branches'
 import type { Row } from './rows/row'
 
 export interface ThreadView {
@@ -9,6 +10,7 @@ export interface ThreadView {
   rowEntries: string[]
   visible: Sig<boolean>
   more: Sig<boolean>
+  branches: BranchLists
   scroll: number | undefined
   first: string | undefined
   above: number
@@ -17,13 +19,14 @@ export interface ThreadView {
 
 export type WatchRow = (node: Element) => () => void
 
-const threadView = (id: string): ThreadView => ({
+const threadView = (id: string, branches: BranchLists): ThreadView => ({
   id,
   rows: sig<Row[]>([]),
   rowList: div({ class: 'pb-6' }),
   rowEntries: [],
   visible: sig(false),
   more: sig(false),
+  branches,
   scroll: undefined,
   first: undefined,
   above: 0,
@@ -46,7 +49,7 @@ const column = (kit: Kit, view: ThreadView, watch: WatchRow) =>
     kit.dockFade(),
   )
 
-export const threadViews = (kit: Kit, watch: WatchRow) => {
+export const threadViews = (kit: Kit, watch: WatchRow, branches: (id: string) => BranchLists) => {
   const recent = new Map<string, ThreadView>()
   const mounted = sig<ThreadView[]>([])
   const phone = media('(max-width: 767px)')
@@ -58,7 +61,7 @@ export const threadViews = (kit: Kit, watch: WatchRow) => {
   }
 
   const get = (id: string) => {
-    const view = recent.get(id) ?? threadView(id)
+    const view = recent.get(id) ?? threadView(id, branches(id))
     if (!recent.has(id)) mounted.update(views => [...views, view])
     recent.delete(id)
     recent.set(id, view)

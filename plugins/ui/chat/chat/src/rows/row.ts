@@ -24,6 +24,7 @@ export interface RowContext {
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
   reply(text: string): NavAction[]
+  branchSwitch(entry: string): Child
   jump(from: Element, quote: string): void
   repaint(): void
 }
@@ -32,6 +33,7 @@ export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>
 
 export const row = <T>(key: string, data: T, view: Row<T>['view']): Row<T> => ({ key, data, view })
 
-export const actionRow = (extra: string, ...children: Child[]) => div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100', extra] }, ...children)
+export const actionRow = (children: Child[], extra?: string) =>
+  div({ class: ['flex h-6 items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-visible-within:opacity-100 touch:opacity-100', extra] }, ...children)
 
 export const workFrame = (...children: Child[]) => div({ class: 'chat-row -mx-2 mb-2 flex flex-col' }, ...children)

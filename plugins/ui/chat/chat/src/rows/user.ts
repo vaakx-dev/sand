@@ -66,13 +66,16 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
       note?.(),
-      actionRow(
-        '-mt-1',
-        text && context.kit.copyButton({ text: () => text, size: 'sm' }),
-        show(
-          () => spec().actions.length > 0,
-          () => menus.more(context.menu, spec),
-        ),
+      div(
+        { class: '-mt-1 flex items-center gap-1' },
+        actionRow([
+          text && context.kit.copyButton({ text: () => text, size: 'sm' }),
+          show(
+            () => spec().actions.length > 0,
+            () => menus.more(context.menu, spec),
+          ),
+        ]),
+        !item.steer && context.branchSwitch(item.key),
       ),
     )
   })

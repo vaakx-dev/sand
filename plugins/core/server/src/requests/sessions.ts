@@ -3,6 +3,7 @@ import { joinDisposers } from '@sand/util'
 import { existsSync } from 'node:fs'
 import {
   sessionAppend,
+  sessionBranches,
   sessionCheckout,
   sessionMove,
   sessionPin,
@@ -44,5 +45,6 @@ export const sessionRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle
       session(id).checkout(entry)
       return true
     }),
+    wire.handle(sessionBranches, ({ session: id, entry }) => session(id).branches(entry)),
   )
 }
