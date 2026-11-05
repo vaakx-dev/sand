@@ -1,4 +1,5 @@
-import type { DeviceKind, DeviceRecord } from '../records'
+import type { DeviceRecord, JoinKind } from '../records'
+import type { ShareLink } from './links'
 
 export type JoinOutcome = 'approved' | 'denied' | 'expired'
 
@@ -8,7 +9,7 @@ export interface JoinRequest {
   pcName: string
   code: string
   name: string
-  kind: DeviceKind
+  kind: JoinKind
   platform: string
   address: string
   created: number
@@ -44,4 +45,10 @@ export interface PairJoinResult {
   pc: string
   outcome: OutgoingOutcome
   error?: string
+}
+
+export interface AgentPairing {
+  device: DeviceRecord
+  token: string
+  links: ShareLink[]
 }

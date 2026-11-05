@@ -11,7 +11,7 @@ export const phonesSection = (ui: Ui) => {
   const list = derive(() =>
     devices
       .live()
-      .filter(device => device.kind !== 'pc')
+      .filter(device => device.kind === 'phone' || device.kind === 'browser')
       .sort(selfFirst(ui.ctx.pcs.self())),
   )
   return settingsSection(

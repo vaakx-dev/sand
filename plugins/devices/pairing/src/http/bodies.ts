@@ -1,4 +1,4 @@
-import { deviceKindSchema } from '@sand/devices-contract'
+import { joinKindSchema } from '@sand/devices-contract'
 import { decodeBase64url } from '@sand/devices-identity'
 import { readJson } from '@sand/util/host'
 import { z } from 'zod'
@@ -17,7 +17,7 @@ const isPublicKey = (value: string) => {
 const device = {
   publicKey: z.string().max(128).refine(isPublicKey, 'not an ed25519 public key'),
   name: z.string().max(200),
-  kind: deviceKindSchema,
+  kind: joinKindSchema,
   platform: z.string().max(80),
 }
 

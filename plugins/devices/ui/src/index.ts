@@ -5,6 +5,7 @@ import { definePlugin } from 'drydock'
 import { commandSheet } from './add/command-sheet'
 import { reportJoins } from './add/joining'
 import { addSheet } from './add/sheet'
+import { agentSheet } from './agent/sheet'
 import { anywherePrompt } from './anywhere/prompt'
 import { approvals } from './approve/watch'
 import { composerParts } from './composer'
@@ -49,6 +50,7 @@ export default definePlugin({
         details: pc => showSheet(() => detailsSheet(ui, pc, closeSheet)),
         why: pc => why.open(() => diagnosisSheet(ui, pc, why.close)),
         add: (step: AddStep = 'list') => showSheet(() => addSheet(ui, step, closeSheet), true),
+        agent: () => showSheet(() => agentSheet(ui, closeSheet)),
         command: install => showSheet(() => commandSheet(ui, install, closeSheet)),
       }
       const ui: Ui = { ctx, kit: ctx.kit, data, toasts, open, device: () => (phone.get() ? 'This phone' : 'This browser') }

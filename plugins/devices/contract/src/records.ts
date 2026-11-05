@@ -1,8 +1,10 @@
 import type { CallerKind } from '@sand/host-hub/contract'
 import type { BuildInfo } from '@sand/util/release'
-import type { PcIcon } from './schemas'
+import type { AgentAccess, PcIcon } from './schemas'
 
 export type DeviceKind = Exclude<CallerKind, 'cli' | 'runtime'>
+
+export type JoinKind = Exclude<DeviceKind, 'agent'>
 
 export interface DeviceKey {
   publicKey: string
@@ -13,6 +15,11 @@ export interface DeviceKey {
 export interface Removal {
   at: number
   by: string
+}
+
+export interface AgentGrant {
+  access: AgentAccess
+  token: string
 }
 
 export interface PushKeys {
@@ -42,10 +49,11 @@ export interface DeviceRecord {
   addedBy: string
   updated: number
   removed?: Removal
+  agent?: AgentGrant
 }
 
 export interface NewDevice {
-  kind: DeviceKind
+  kind: JoinKind
   name: string
   platform?: string
   publicKey: string

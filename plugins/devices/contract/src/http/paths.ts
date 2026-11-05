@@ -6,6 +6,7 @@ export const devicePaths = {
   joinRequest: '/pair/request',
   joinCancel: '/pair/request/cancel',
   via: '/via',
+  mcp: '/mcp',
 } as const
 
 export const deviceParams = {
