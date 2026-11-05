@@ -3,12 +3,16 @@ import { inject } from './context'
 import { openReceipts } from './receipts'
 import { serveThreads } from './serve'
 import { createStart } from './start'
+import { threadTools } from './tools'
 
 export default definePlugin({
   name: 'orchestrator',
-  description: 'Threads for the sand thread command and outside agents: start, message, wait for, read, list and stop threads, built on turns',
+  description:
+    "Threads for the sand thread command, outside agents and sand's own agents: start, message, wait for, read, list and stop threads, built on turns",
   inject,
   apply(ctx) {
-    serveThreads(ctx, createStart(ctx, openReceipts(ctx.ledger)))
+    const start = createStart(ctx, openReceipts(ctx.ledger))
+    serveThreads(ctx, start)
+    threadTools(ctx, start)
   },
 })

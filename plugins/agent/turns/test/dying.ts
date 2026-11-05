@@ -3,7 +3,7 @@ import { startSand } from '@sand/harness'
 
 const [home, script] = process.argv.slice(2)
 const { replies, after } = JSON.parse(script!)
-const sand = await startSand([{ id: 'fake', models: ['m'], replies }], home)
+const sand = await startSand([{ id: 'fake', models: ['m'], replies }], { home })
 const chat = sand.chat('fake/m')
 
 const ready = () => console.log(JSON.stringify({ chat: chat.id, turn: sand.turns.current(chat)?.id }))

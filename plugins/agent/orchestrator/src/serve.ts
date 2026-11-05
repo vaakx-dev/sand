@@ -2,7 +2,8 @@ import type { Session } from '@sand/chats/contract'
 import { server, userWrote } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { OrchestratorContext } from './context'
-import { failure, threadList, threadRead, threadSend, threadStart, threadStop, threadWait, waitLimit } from './contract'
+import { threadList, threadRead, threadSend, threadStart, threadStop, threadWait, waitLimit } from './contract'
+import { findThread } from './find'
 import { listThreads } from './list'
 import { readThread } from './read'
 import type { Start } from './start'
@@ -11,11 +12,7 @@ import { waitThread } from './state'
 const stopWait = 10_000
 
 export const serveThreads = (ctx: OrchestratorContext, start: Start) => {
-  const thread = (id: string) => {
-    const found = ctx.sessions.open(id)
-    if (!found) throw failure('not_found', `No thread ${id}`)
-    return found
-  }
+  const thread = (id: string) => findThread(ctx, id)
 
   const stop = async (session: Session) => {
     const turn = ctx.turns.current(session)
