@@ -40,6 +40,7 @@ export const statusWords = (view: PcView, nameOf: NameOf, device: string, now = 
   if (status.phase === 'connected')
     return status.route.kind === 'local' ? joined('This computer', platformWords(view.platform)) : joined(routeWords(status.route, nameOf), msWords(status.latency))
   if (status.phase === 'connecting') return 'Connecting…'
+  if (status.phase === 'greeting') return 'Catching up…'
   if (status.phase === 'reconnecting') {
     const wait = secondsUntil(status.retryAt, now)
     return wait ? `Reconnecting · trying again in ${wait} s` : 'Reconnecting…'

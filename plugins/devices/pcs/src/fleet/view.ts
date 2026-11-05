@@ -28,6 +28,7 @@ export const viewOf = (link: PcLink, home: boolean, known: KnownPc | undefined):
     home,
     online: status.phase === 'connected',
     status,
+    freshness: link.connection.freshness(),
     ...(platform && { platform }),
     ...(address && { address }),
     ...(build && { build }),

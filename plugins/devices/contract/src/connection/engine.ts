@@ -2,7 +2,7 @@ import type { Hello, hello, InputOf, Request } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 import type { PcIdentity } from '../records'
 import type { PcRoutes, Route, RoutePrefs } from './routes'
-import type { ConnectionStatus, Diagnosis } from './status'
+import type { ConnectionStatus, Diagnosis, Freshness } from './status'
 
 export interface Signer {
   publicKey: string
@@ -76,6 +76,7 @@ export interface CallOptions {
 export interface PcConnection {
   readonly pc: string
   status(): ConnectionStatus
+  freshness(): Freshness
   diagnosis(): Diagnosis
   identity(): PcIdentity | undefined
   tag(): string | undefined
