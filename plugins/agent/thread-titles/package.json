@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/sub-model": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

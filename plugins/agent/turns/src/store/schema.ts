@@ -25,4 +25,26 @@ export const schema = [
     )`,
     'create index turns_open on turns (session, lease) where ended is null',
   ],
+  [
+    "alter table turns add column origin text not null default 'user'",
+    'alter table turns add column waiting text',
+    `create table pending (
+      id text primary key,
+      session text not null,
+      kind text not null,
+      prompt text not null,
+      label text not null,
+      origin text not null,
+      held integer not null default 0,
+      at integer not null
+    )`,
+    'create index pending_session on pending (session, at)',
+    `create table receipts (
+      session text not null,
+      request text not null,
+      result text not null,
+      at integer not null,
+      primary key (session, request)
+    )`,
+  ],
 ]

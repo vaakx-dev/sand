@@ -55,7 +55,7 @@ const bubble = (text: string, press: TextMenu, context: RowContext) =>
 const message = (...children: Child[]) =>
   div({ class: 'chat-row group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
-export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[]) =>
+export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[], note?: () => Child) =>
   row(`user:${item.key}`, item, () => {
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
@@ -65,6 +65,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     return message(
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       text && bubble(text, press, context),
+      note?.(),
       actionRow(
         '-mt-1',
         text && context.kit.copyButton({ text: () => text, size: 'sm' }),

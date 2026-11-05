@@ -1,5 +1,5 @@
 import { hostChannel } from '@sand/host-runtimes/contract'
-import { turnEnd } from '@sand/loop/contract'
+import { turnEnd } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { type Notify, notify, notifySend } from '../contract'
 import { turnMoment } from './turns'

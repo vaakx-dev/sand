@@ -94,7 +94,7 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
       else assistant(entry, message)
     }
     last = entry.at
-    previousTurn = entry.turn
+    previousTurn = entry.turn ?? previousTurn
   }
 
   return { items: list.items, group: list.group, last }

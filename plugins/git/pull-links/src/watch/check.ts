@@ -9,7 +9,7 @@ import { wakeLabel, wakeNote } from './note'
 import type { Verdict, WatchEvent } from './screen'
 
 export interface Wake {
-  agent(session: Session, text: string, label: string): boolean
+  agent(session: Session, text: string, label: string, id: string): boolean
   screen(): ((event: WatchEvent) => Promise<Verdict>) | undefined
   once(key: string, run: () => Promise<void>): void
   failed(key: string, error: unknown): void
@@ -33,8 +33,9 @@ export const checkWatched = (links: ThreadLinks, wake: Wake, thread: Session, li
   }
   const talk = onlyTalk(changes) ? quiet + 1 : 0
   const stopped = talk >= quietLimit
+  const id = `wake:${pullKey(link)}:${Bun.hash(JSON.stringify(next)).toString(36)}`
   const wakeWith = (cause?: string) => {
-    if (wake.agent(thread, wakeNote(summary, changes, stopped, cause), wakeLabel(summary))) links.mark(thread, link, next, talk, !stopped)
+    if (wake.agent(thread, wakeNote(summary, changes, stopped, cause), wakeLabel(summary), id)) links.mark(thread, link, next, talk, !stopped)
   }
   const screen = wake.screen()
   if (!screen) return wakeWith()

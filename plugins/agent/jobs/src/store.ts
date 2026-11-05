@@ -1,5 +1,5 @@
 import { sessionRemove, type Session } from '@sand/chats/contract'
-import { turnEnd } from '@sand/loop/contract'
+import { turnEnd } from '@sand/turns-contract/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { JobsContext } from './context'
 import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus, type JobWork } from './contract'
@@ -61,8 +61,8 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
 
   const deliver = (job: Job, parent: Session, output: string) => {
     const text = notification(job, output)
-    if (job.status === 'cancelled' && !ctx.loop.active(parent)) delivery.record(parent, text)
-    else delivery.post(job.id, parent, text)
+    if (job.status === 'cancelled' && !ctx.turns.current(parent)) delivery.record(parent, text)
+    else delivery.post(job, parent, text)
   }
 
   const launch = (entry: Entry, work: JobWork) => {

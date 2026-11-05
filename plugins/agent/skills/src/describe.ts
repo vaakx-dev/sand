@@ -1,4 +1,4 @@
-import { contextBuild } from '@sand/loop/contract'
+import { contextBuild } from '@sand/turns-contract/contract'
 import type { Skills } from './contract'
 import type { Context } from 'drydock'
 import { describeSkills } from './tool'

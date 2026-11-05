@@ -1,6 +1,6 @@
 import { type LiveBlock, llmEvent } from '@sand/accounts/contract'
 import { sessionEntry } from '@sand/chats/contract'
-import { toolResult, toolStart, turnEnd, turnStart } from '@sand/loop/contract'
+import { toolResult, toolStart, turnEnd, turnStart } from '@sand/turns-contract/contract'
 import { applyLiveEvent, type LiveSnapshot } from '../contract'
 import type { ServerContext } from '../context'
 

@@ -5,6 +5,7 @@ import { errorMessage } from '@sand/util'
 import type { Context } from 'drydock'
 import { modelsChange, type Thread, threadChange } from '../contract'
 import { after } from '../detached'
+import { legacyPending } from './legacy'
 import { catchUp } from './live'
 import { merge, turnStart } from './path'
 import type { Store } from './store'
@@ -25,7 +26,8 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     thread.failed = undefined
     if (opened.live || !thread.running) catchUp(thread, { live: opened.live ?? [], tools: opened.tools ?? [] })
     if (thread.running) thread.started ??= turnStart(thread)
-    if (opened.queue) store.queue(thread.id, opened.queue)
+    const pending = opened.pending ?? (opened.queue && legacyPending(opened.queue))
+    if (pending) store.pending(thread.id, pending)
     if (opened.settings) store.settings.set(thread.id, opened.settings)
     void wire.call(contextGet, { session: thread.id }).then(usage => store.context(thread.id, usage), () => {})
     store.changed(thread.id, true)

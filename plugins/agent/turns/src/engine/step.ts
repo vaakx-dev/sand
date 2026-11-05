@@ -1,12 +1,14 @@
 import type { LLMEvent } from '@sand/accounts/contract'
-import { type Message, textOf, type ToolResultBlock } from '@sand/chats/contract'
-import { contextBuild, contextOverflow, turnInbox } from '@sand/loop/contract'
+import { type Message, promptContent, textOf, type ToolResultBlock } from '@sand/chats/contract'
+import { contextBuild, contextOverflow, turnPrompt } from '@sand/turns-contract/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
+import type { Announce } from '../announce'
 import type { TurnsContext } from '../context'
-import type { TurnStore } from '../store/turns'
+import type { Stores } from '../store'
 import { streamStep } from './stream'
 import { runTools } from './tools'
 import type { TurnHooks, TurnRun } from './turn'
+import { createWaiting } from './waiting'
 
 type Done = Extract<LLMEvent, { type: 'done' }>
 
@@ -18,9 +20,10 @@ const joined = (messages: Message[]) =>
     return all
   }, [])
 
-export const createHooks = (ctx: TurnsContext, store: TurnStore, run: TurnRun): TurnHooks => {
+export const createHooks = (ctx: TurnsContext, stores: Stores, announce: Announce, run: TurnRun): TurnHooks => {
   const { session, signal, info } = run
   const turn = { turn: info.id }
+  const wait = createWaiting(stores.turns, info.id, () => announce.turn(info.id))
 
   const append = (message: Message) => session.append('message', message, turn)
 
@@ -47,26 +50,40 @@ export const createHooks = (ctx: TurnsContext, store: TurnStore, run: TurnRun): 
     }
   }
 
-  const record = ({ message, usage, source }: Done, model?: string) =>
+  const record = ({ message, usage, source }: Done, model?: string) => {
     ctx.ledger.tx(() => {
       append(message)
       if (tokensOf(usage)) session.append('usage', usageRecord(ctx.llm.provider?.(model), model, usage, source), turn)
       run.usage = sumUsage(run.usage, usage)
-      store.usage(info.id, run.usage)
+      stores.turns.usage(info.id, run.usage)
     })
+    announce.turn(info.id)
+  }
+
+  const steer = async () => {
+    const steers = signal.aborted ? [] : stores.pending.steers(session.id)
+    if (!steers.length) return false
+    const expanded = await Promise.all(steers.map(item => ctx.waterfall(turnPrompt, promptContent(item.prompt), session)))
+    const taken = ctx.ledger.tx(() => {
+      const content = steers.flatMap((item, index) => (stores.pending.remove(session.id, item.id) ? expanded[index]! : []))
+      if (content.length) append({ role: 'user', content })
+      return content.length > 0
+    })
+    if (taken) announce.pending(session)
+    return taken
+  }
 
   return {
     async step() {
-      store.step(info.id)
+      stores.turns.step(info.id)
       const { done, model } = await send()
       record(done, model)
       run.partial.clear()
       run.reply = textOf(done.message.content)
       return { message: done.message, stopReason: done.stopReason }
     },
-    tools: calls => runTools(ctx, calls, session, signal, result => answer([result])),
+    tools: calls => runTools(ctx, calls, { cwd: session.cwd, signal, session, turn: info.id, wait }, result => answer([result])),
     answer,
-    inbox: () => ctx.waterfall(turnInbox, [], session),
-    append,
+    steer,
   }
 }

@@ -24,7 +24,6 @@
     "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/steering": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

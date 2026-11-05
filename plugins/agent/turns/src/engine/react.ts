@@ -1,20 +1,13 @@
 import { callsOf, type Message, refused, skip, type StopReason, truncated } from '@sand/chats/contract'
 import type { Turn, TurnOutcome } from './turn'
 
-const appendInbox = async ({ hooks }: Turn) => {
-  const steering = await hooks.inbox()
-  if (!steering.length) return false
-  hooks.append({ role: 'user', content: steering })
-  return true
-}
-
 const answerCalls = async (turn: Turn, message: Message, stopReason: StopReason) => {
   const pending = callsOf(message)
-  if (!pending.length) return stopReason === 'pause_turn' || appendInbox(turn)
+  if (!pending.length) return stopReason === 'pause_turn' || turn.hooks.steer()
   if (stopReason === 'refusal') turn.hooks.answer(skip(pending, refused))
   else if (stopReason === 'max_tokens') turn.hooks.answer(skip(pending, truncated))
   else await turn.hooks.tools(pending)
-  await appendInbox(turn)
+  await turn.hooks.steer()
   return stopReason !== 'refusal'
 }
 
@@ -30,6 +23,6 @@ export const runReact = async (turn: Turn): Promise<TurnOutcome> => {
   do {
     let more = true
     while (more) more = await step(turn, outcome)
-  } while (await appendInbox(turn))
+  } while (await turn.hooks.steer())
   return outcome
 }

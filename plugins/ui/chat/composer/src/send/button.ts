@@ -1,3 +1,4 @@
+import type { NavAction } from '@sand/nav/contract'
 import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
@@ -40,9 +41,12 @@ const titleOf = (model: Model, look: Look) => (look === 'off' ? offTitle(model) 
 
 const glyphOf = (look: Look): IconName | 'busy' => (look === 'busy' ? 'busy' : icons[look])
 
+const queueAction = (model: Model): NavAction => ({ id: 'queue', label: 'Queue for next turn', icon: 'clock', run: () => model.send('queue') })
+
 const menuOf = (model: Model, menu: SendMenu): MenuSpec | undefined => {
-  const actions = menu.actions.get()
-  if (!actions.length || model.empty.get() || model.sending.get()) return undefined
+  if (model.empty.get() || model.sending.get()) return undefined
+  const actions = [...(model.running.get() ? [queueAction(model)] : []), ...menu.actions.get()]
+  if (!actions.length) return undefined
   return { title: oneLine(model.text.get(), 60) || 'Message', actions }
 }
 

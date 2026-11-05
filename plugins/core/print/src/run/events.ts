@@ -1,7 +1,7 @@
 import { llmEvent, llmLimits } from '@sand/accounts/contract'
 import { contextUsage } from '@sand/compaction/contract'
 import { artifactSaved } from '@sand/html/contract'
-import { toolResult, toolStart, turnEnd, turnStart } from '@sand/loop/contract'
+import { toolResult, toolStart, turnEnd, turnStart } from '@sand/turns-contract/contract'
 import type { Context } from 'drydock'
 import type { Follower } from '../follow/follower'
 

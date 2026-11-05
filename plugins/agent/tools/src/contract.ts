@@ -1,6 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import type { Message, Session, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import type { WaitReason } from '@sand/turns-contract/contract'
 import { event, service, type Dispose } from 'drydock'
 import { z, type output, type ZodType } from 'zod'
 
@@ -9,7 +10,9 @@ export interface ToolContext {
   signal: AbortSignal
   session: Session
   call: ToolCallBlock
+  turn: string
   progress(text: string): void
+  wait(reason: WaitReason): Dispose
 }
 
 export type ToolOutput = string | ToolResultContent[]

@@ -6,7 +6,7 @@ import { modelSettings } from '@sand/model/contract'
 import { projectFiles } from '@sand/project/contract'
 import type { Source } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
-import { tools } from '@sand/tools/contract'
+import { type ToolContext, tools } from '@sand/tools/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { type Context, createApp, scopeError, type ContextCore, type Service } from 'drydock'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -80,7 +80,7 @@ export const startSand = async (sources: Source[], shared?: string) => {
       return session
     },
     ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }),
-    tool(name: string, run: (input: Record<string, unknown>) => string | Promise<string>) {
+    tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },
     stop,

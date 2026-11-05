@@ -1,5 +1,5 @@
-import type { Loop } from '@sand/loop/contract'
 import type { Tool } from '@sand/tools/contract'
+import type { Turns } from '@sand/turns-contract/contract'
 import { z } from 'zod'
 import { threadIn } from '../create/thread'
 import type { WorktreeDeps } from '../deps'
@@ -12,7 +12,7 @@ const input = z.object({
   from: z.string().optional().describe('New thread only: the branch or commit to start from (default: the default branch)'),
 })
 
-export const newTool = (deps: WorktreeDeps, moves: Moves, loop: () => Loop | undefined): Tool<typeof input> => ({
+export const newTool = (deps: WorktreeDeps, moves: Moves, turns: () => Turns | undefined): Tool<typeof input> => ({
   name: 'worktree_new',
   description: [
     'Start a new thread in its own git worktree and branch to work on a task in parallel, or move this thread into one.',
@@ -30,10 +30,10 @@ export const newTool = (deps: WorktreeDeps, moves: Moves, loop: () => Loop | und
       ].join(' ')
     }
     if (!task) throw new Error('Give the new thread a task.')
-    const running = loop()
+    const running = turns()
     if (!running) throw new Error("This sand can't run another agent right now.")
     const thread = await threadIn(deps, { cwd, ...(branch ? { branch } : {}), ...(from ? { from } : {}) })
-    running.run(deps.sessions.require(thread.id), task).catch(deps.report)
+    running.run(deps.sessions.require(thread.id), task, { origin: 'agent' }).catch(deps.report)
     return `Started thread ${thread.id} in the worktree ${thread.cwd}. It works on the task on its own; the user sees it in the sidebar.`
   },
 })

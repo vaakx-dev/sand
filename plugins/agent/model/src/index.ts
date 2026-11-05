@@ -1,7 +1,7 @@
 import { llm } from '@sand/accounts/contract'
 import { sessions } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
-import { contextBuild, turnEnd } from '@sand/loop/contract'
+import { contextBuild, turnEnd } from '@sand/turns-contract/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { createChoices } from './choices'
