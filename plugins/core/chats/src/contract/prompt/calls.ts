@@ -4,6 +4,8 @@ export const refused = 'Not run: the response was refused.'
 
 export const truncated = 'Not run: the response hit max_tokens before this call was complete. Retry with a smaller input.'
 
+export const unrecorded = 'No result recorded: sand stopped while this call ran. It may have finished; check before repeating it.'
+
 export const errorResult = (call: ToolCallBlock, text: string): ToolResultBlock => ({
   type: 'tool_result',
   callId: call.id,

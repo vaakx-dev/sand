@@ -1,4 +1,4 @@
-import { callsOf, type Message, refused, skip, type StopReason, textOf, type ToolResultBlock, truncated } from '@sand/chats/contract'
+import { callsOf, type Message, refused, skip, type StopReason, truncated } from '@sand/chats/contract'
 import type { Turn, TurnOutcome } from './turn'
 
 const appendInbox = async ({ hooks }: Turn) => {
@@ -8,32 +8,25 @@ const appendInbox = async ({ hooks }: Turn) => {
   return true
 }
 
-const answer = async ({ hooks }: Turn, results: ToolResultBlock[]) => {
-  hooks.append({ role: 'user', content: [...results, ...(await hooks.inbox())] })
-}
-
 const answerCalls = async (turn: Turn, message: Message, stopReason: StopReason) => {
   const pending = callsOf(message)
   if (!pending.length) return stopReason === 'pause_turn' || appendInbox(turn)
-  if (stopReason === 'refusal') {
-    await answer(turn, skip(pending, refused))
-    return false
-  }
-  await answer(turn, stopReason === 'max_tokens' ? skip(pending, truncated) : await turn.hooks.tools(pending))
-  return true
+  if (stopReason === 'refusal') turn.hooks.answer(skip(pending, refused))
+  else if (stopReason === 'max_tokens') turn.hooks.answer(skip(pending, truncated))
+  else await turn.hooks.tools(pending)
+  await appendInbox(turn)
+  return stopReason !== 'refusal'
 }
 
 const step = async (turn: Turn, outcome: TurnOutcome) => {
   turn.signal.throwIfAborted()
-  const { message, stopReason } = await turn.hooks.send()
-  turn.hooks.respond(message)
+  const { message, stopReason } = await turn.hooks.step()
   outcome.stopReason = stopReason
-  outcome.text = textOf(message.content)
   return answerCalls(turn, message, stopReason)
 }
 
 export const runReact = async (turn: Turn): Promise<TurnOutcome> => {
-  const outcome: TurnOutcome = { stopReason: 'end_turn', text: '' }
+  const outcome: TurnOutcome = { stopReason: 'end_turn' }
   do {
     let more = true
     while (more) more = await step(turn, outcome)

@@ -1,4 +1,4 @@
-export { callsOf, errorResult, refused, skip, truncated } from './calls'
+export { callsOf, errorResult, refused, skip, truncated, unrecorded } from './calls'
 export { isUserContent, promptContent } from './content'
 export { feedbackLine, feedbackOnly, noteBlock, stopFeedback } from './feedback'
 export { fileText } from './file'

@@ -2,6 +2,7 @@ import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/ac
 import type { Session } from '@sand/chats/contract'
 import type { CliFlags } from '@sand/config/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import type { Selection } from '@sand/turns-contract/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -33,6 +34,7 @@ export interface SettingsState {
 export interface ModelSettings {
   effective(session?: Session): EffectiveSettings
   resolve(settings: SessionSettings): EffectiveSettings
+  select(session: Session): Selection | undefined
   state(session?: Session): SettingsState
   defaults(): SessionSettings
   update(session: Session, patch: SessionSettings): SessionSettings

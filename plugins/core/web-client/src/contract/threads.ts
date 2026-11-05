@@ -1,6 +1,6 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
-import type { TurnResult } from '@sand/loop/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import type { Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
 import type { Pending } from '@sand/steering/contract'
 import type { Dispose } from 'drydock'

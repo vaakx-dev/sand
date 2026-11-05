@@ -1,5 +1,5 @@
 import type { AppPlan, AppSession, AppSetup, LLMEvent, LLMRequest } from '../contract'
-import { isUserContent, type Message, type ToolResultBlock, type UserContent } from '@sand/chats/contract'
+import { isUserContent, type Message, type ToolResultBlock, unrecorded, type UserContent } from '@sand/chats/contract'
 import { loadedTools } from '../http/deferred'
 import { markOf, transcript } from './history'
 import { createSignals, type Signals } from './signals'
@@ -25,7 +25,7 @@ const extends1 = (before: string[], after: string[]) => after.length === before.
 
 const userContent = (message: Message | undefined) => (message?.role === 'user' ? message.content.filter(isUserContent) : [])
 
-const unanswered = (callId: string): ToolResultBlock => ({ type: 'tool_result', callId, content: [{ type: 'text', text: 'Not run.' }], isError: true })
+const unanswered = (callId: string): ToolResultBlock => ({ type: 'tool_result', callId, content: [{ type: 'text', text: unrecorded }], isError: true })
 
 const answer = (session: AppSession, message: Message, ids: string[]) => {
   const results = new Map(message.content.flatMap(block => (block.type === 'tool_result' ? [[block.callId, block] as const] : [])))

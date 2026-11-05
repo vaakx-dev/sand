@@ -24,7 +24,7 @@ test('two chats run at the same time, each on its own model source', async () =>
   const a = sand.chat('fake-a/opus')
   const b = sand.chat('fake-b/deepseek')
 
-  const [first, second] = await Promise.all([sand.loop.run(a, 'go'), sand.loop.run(b, 'go')])
+  const [first, second] = await Promise.all([sand.turns.run(a, 'go'), sand.turns.run(b, 'go')])
 
   expect([first.text, second.text]).toEqual(['A is done', 'B is done'])
   expect(a.messages().at(-1)).toEqual({ role: 'assistant', content: [said('A is done')] })
