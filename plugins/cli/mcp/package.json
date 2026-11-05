@@ -1,0 +1,26 @@
+{
+  "name": "@sand/cli-mcp",
+  "version": "0.0.0",
+  "description": "The sand mcp command: an MCP server on stdio that lets outside agents list, read, start, message, wait for and stop sand's threads",
+  "type": "module",
+  "sand": {
+    "cli": "./src/index.ts",
+    "label": "MCP server",
+    "summary": "Serves sand's threads to outside agents over MCP"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@sand/cli-commands": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@sand/harness": "workspace:*"
+  }
+}
