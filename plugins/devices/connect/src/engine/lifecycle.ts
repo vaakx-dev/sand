@@ -1,16 +1,17 @@
 import {
   type ConnectionStatus,
   type ConnectOptions,
+  type Freshness,
   type PcIdentity,
   PcUnavailable,
   type PublishedRoute,
   type Route,
   routesChange,
 } from '@sand/devices-contract'
-import { errorMessage } from '@sand/util'
 import type { DialContext, DialRun } from '../dial/context'
 import { dial } from '../dial/dial'
 import type { Opened } from '../dial/open'
+import { probeRoute } from '../dial/probe'
 import type { LinkListener } from '../link/link'
 import type { RouteBook } from '../routes/book'
 import { isPublishedRoutes } from '../routes/valid'
@@ -30,6 +31,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   const steadyTimer = timer()
   let status: ConnectionStatus = { phase: 'connecting', attempt: 1 }
   let active: Active | undefined
+  let heard: number | undefined
   let identity: PcIdentity | undefined
   let lastTag: string | undefined
   let failures = 0
@@ -83,14 +85,16 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   const health = healthWatch({
     current: () => active?.opened.link,
     visible: options.visible,
+    answers: route => probeRoute(route, context.transportOf, expected()).then(probe => probe.ok),
     measured(link, latency) {
       if (active?.opened.link !== link) return
       active.latency = latency
       setStatus(connectedStatus(active))
     },
-    failed(link, error) {
-      if (active?.opened.link === link) lose(`no answer to a health check: ${errorMessage(error)}`)
+    failed(link) {
+      if (active?.opened.link === link) replace()
     },
+    changed: options.changed,
   })
 
   const upgrade = upgrader({
@@ -134,9 +138,10 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     noteBlockedRoutes()
     const routes = candidates()
     if (!routes.length) return stuck()
-    const run: DialRun = { stopped: false }
+    const attempt = failures + 1
+    const run: DialRun = { stopped: false, greeting: route => setStatus({ phase: 'greeting', route, attempt }) }
     dialing = run
-    setStatus({ phase: 'connecting', attempt: failures + 1 })
+    setStatus({ phase: 'connecting', attempt })
     const outcome = await dialRoutes(routes, run)
     if (dialing !== run) {
       if (outcome.ok) outcome.opened.link.close()
@@ -166,20 +171,36 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     options.greeted(opened.hello, retagged)
   }
 
-  const lose = (cause: string) => {
+  const drop = () => {
     const link = active?.opened.link
+    heard = link?.heard() ?? heard
     active = undefined
     upgrade.stop()
     health.stop()
     steadyTimer.clear()
     link?.close()
+  }
+
+  const lose = (cause: string) => {
+    drop()
     scheduleRetry(cause)
+  }
+
+  const replace = () => {
+    drop()
+    void dialNow()
+  }
+
+  const freshness = (): Freshness => {
+    if (!active) return heard === undefined ? { state: 'stale' } : { state: 'stale', heard }
+    const { link } = active.opened
+    return health.checking(link) ? { state: 'checking', heard: link.heard() } : { state: 'live' }
   }
 
   const woke = () => {
     if (closed) return
     if (!active) return void dialNow()
-    health.now()
+    health.wake()
     void upgrade.run()
   }
 
@@ -187,6 +208,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
 
   return {
     status: () => status,
+    freshness,
     active: () => active,
     identity: () => identity,
     tag: () => lastTag,

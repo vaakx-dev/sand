@@ -44,7 +44,7 @@ export const dial = async (routes: Route[], context: DialContext, run: DialRun, 
     context.identified(probe.identity)
     const started = Date.now()
     try {
-      const opened = await openRoute(probe, context)
+      const opened = await openRoute(probe, context, run)
       if (run.stopped) {
         opened.link.close()
         return { ok: false, cause: 'stopped' }
