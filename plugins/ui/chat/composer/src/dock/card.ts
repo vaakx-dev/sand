@@ -1,5 +1,5 @@
 import { Prec } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { BREAKPOINT, div, input, media, span, type Sig } from '@vaakx-dev/vrui'
@@ -17,7 +17,7 @@ import type { Plus } from '../plus/entries'
 import { plusView } from '../plus/view'
 import { sendControl } from '../send/button'
 import type { SendMenu } from '../send/menu'
-import { interrupt } from '../send/submit'
+import { interrupt, lastPrompt } from '../send/submit'
 import { glassPanel } from './glass'
 import type { Slots } from './slots'
 
@@ -28,6 +28,7 @@ export interface CardParts {
   menu: SendMenu
   plus: Plus
   dropping: Sig<boolean>
+  typed: () => void
 }
 
 const labelsByChar = (triggers: Trigger[]) => {
@@ -47,7 +48,11 @@ const placeholder = (model: Model, wide: () => boolean) => () => {
   return ['Ask anything', ...hints(labelsByChar(model.triggers.list.get()), wide())].join(', ')
 }
 
-export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
+const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
+
+const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserEvent('input') || tr.isUserEvent('delete'))
+
+export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const wide = media(`(min-width: ${BREAKPOINT.md})`)
@@ -58,9 +63,19 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
     return true
   }
 
+  const recall = (event: KeyboardEvent) => {
+    if (model.text.get() || modified(event)) return false
+    const prompt = lastPrompt(ctx)
+    if (!prompt?.text) return false
+    model.records.add(prompt.records)
+    editor.replace(prompt.text)
+    return true
+  }
+
   const keydown = (event: KeyboardEvent) => {
     if (event.isComposing) return false
     if (event.key === 'Escape') return escape()
+    if (event.key === 'ArrowUp') return recall(event)
     if (event.key !== 'Enter' || event.shiftKey || coarse.get()) return false
     void model.send()
     return true
@@ -76,7 +91,15 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
   const editor = createEditor(ctx.kit, model.text, {
     placeholder: placeholder(model, () => wide.get()),
-    extensions: [completion.extension, chipWidgets(model.records, drawChip(ctx)), chipClipboard(model.records), Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
+    extensions: [
+      completion.extension,
+      chipWidgets(model.records, drawChip(ctx)),
+      chipClipboard(model.records),
+      Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles })),
+      EditorView.updateListener.of(update => {
+        if (edited(update)) typed()
+      }),
+    ],
   })
 
   const picker = input({

@@ -1,3 +1,4 @@
+import { afterTyping } from '@sand/composer/contract'
 import type { JoinRequest, PairSettled } from '@sand/devices-contract'
 import { derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { overlaySlot } from '../shared/overlay'
@@ -32,10 +33,10 @@ export const approvals = (ui: Ui, adding: () => boolean) => {
 
   effect(() => {
     const id = current.get()
-    untrack(() => {
+    return untrack(() => {
+      prompt.close()
       const request = id ? ui.data.requests.get(id) : undefined
-      if (!request) return prompt.close()
-      prompt.open(() => approvePrompt(ui, request, () => later.update(all => new Set([...all, request.id]))))
+      if (request) return afterTyping(ui.ctx, () => prompt.open(() => approvePrompt(ui, request, () => later.update(all => new Set([...all, request.id])))))
     })
   })
 

@@ -285,6 +285,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chat": "workspace:*",
+        "@sand/composer": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",

@@ -1,4 +1,4 @@
-import { feedbackOnly, hasToolResult, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
+import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { models, type SendOptions } from '@sand/web-client/contract'
 import { compose, contentName } from '../attachments/content'
@@ -42,10 +42,20 @@ const typedContent = (content: UserContent[]) =>
 
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
 
+const prompted = (entry: Entry) => entry.type === 'message' && asked(entry.data as Message)
+
+export const lastPrompt = (ctx: ComposerContext) => {
+  const thread = ctx.threads.current()
+  const entry = thread && ctx.threads.path(thread.id).findLast(prompted)
+  if (!entry) return undefined
+  const message = entry.data as Message
+  return { text: promptText(message), records: userParts(message).flatMap(part => (part.kind === 'context' ? part.records : [])) }
+}
+
 export const retry = async (ctx: ComposerContext) => {
   const thread = ctx.threads.current()
   if (!thread || thread.running) return
-  const entry = await ctx.threads.findLast(thread.id, candidate => candidate.type === 'message' && asked(candidate.data as Message))
+  const entry = await ctx.threads.findLast(thread.id, prompted)
   if (!entry) return
   const content = typedContent((entry.data as Message).content as UserContent[])
   await ctx.threads.checkout(thread.id, entry.parent)

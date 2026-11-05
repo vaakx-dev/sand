@@ -4,7 +4,7 @@ import type { NavAction } from '@sand/nav/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
-import { event, service, type Dispose } from 'drydock'
+import { event, service, type Context, type Dispose } from 'drydock'
 
 export type ComposerSlot = 'banner' | 'start' | 'end' | 'tab'
 
@@ -68,6 +68,10 @@ export interface Composer {
   choose(patch: SettingsPatch): void
 }
 
+export interface Typing {
+  idle(run: () => void): Dispose
+}
+
 export interface ThreadDraft extends DraftTarget {
   text: string
   attachments: number
@@ -81,4 +85,18 @@ export interface Drafts {
 
 export const composer = service<Composer>('composer')
 export const drafts = service<Drafts>('drafts')
+export const typing = service<Typing>('typing')
 export const draftsChange = event<() => void>('drafts.change')
+
+export const afterTyping = (ctx: Context, run: () => void): Dispose => {
+  let done = false
+  const once = () => {
+    done = true
+    run()
+  }
+  return ctx.watch(typing, found => {
+    if (done) return
+    if (!found) return once()
+    return found.idle(once)
+  })
+}
