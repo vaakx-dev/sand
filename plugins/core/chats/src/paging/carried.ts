@@ -1,13 +1,13 @@
 import type { Entry } from '../contract'
 import type { Database } from 'bun:sqlite'
-import { parseRow, type Row } from './rows'
+import { entryColumns, parseRow, type Row } from './rows'
 
 const ancestors = (seed: string) => `with recursive walk(id, depth) as (
   ${seed}
   union all
   select e.parent, walk.depth + 1 from walk join entries e on e.id = walk.id where e.parent is not null
 )
-select e.* from walk join entries e on e.id = walk.id and e.session = $session`
+select ${entryColumns} from walk join entries e on e.id = walk.id and e.session = $session`
 
 const carriedSql = `${ancestors('select parent, 0 from entries where id = $before and session = $session')}
 where e.type in (select value from json_each($types))

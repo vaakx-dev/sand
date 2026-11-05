@@ -21,7 +21,11 @@ export const sessionPage = request('session.page', {
   output: type<EntryPage>(),
   place,
 })
-export const sessionSince = request('session.since', { input: session.extend({ after: z.string() }), output: type<OpenedSession | null>(), place })
+export const sessionSince = request('session.since', {
+  input: session.extend({ after: z.union([z.number(), z.string()]) }),
+  output: type<OpenedSession | null>(),
+  place,
+})
 export const sessionEntries = request('session.entries', { input: session, output: type<Entry[]>(), place })
 export const sessionAppend = request('session.append', {
   input: session.extend({ entry: z.object({ id: z.string(), type: z.string(), data: z.unknown() }) }),
