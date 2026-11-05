@@ -233,10 +233,8 @@ describe('userParts', () => {
   })
 
   test('a quick title from a stored message reads the link labels', async () => {
-    const { stored } = await roundTrip('Compare [notes.md](sand-context://v1/file/a) with [the plan](sand-context://v1/thread/b)', [record('a', 'file'), record('b', 'thread')], {
-      a: 'A',
-      b: 'B',
-    })
+    const text = 'Compare [notes.md](sand-context://v1/file/a) with [the plan](sand-context://v1/thread/b)'
+    const stored = await projectContext([said(text), { type: 'context', records: [record('a', 'file'), record('b', 'thread')] }], projectors({ a: 'A', b: 'B' }))
 
     expect(quickTitle({ role: 'user', content: stored })).toBe('Compare notes.md with the plan')
   })

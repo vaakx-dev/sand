@@ -13,7 +13,7 @@ export const createRecords = () => {
     linked,
     find: ({ kind, id }: ContextLink) => list.get().find(record => record.id === id && record.kind === kind),
     add: (records: ContextRecord[]) =>
-      list.update(held => records.reduce((all, record) => (all.some(known => known.id === record.id) ? all : [...all, record]), held)),
+      list.update(held => records.reduce((all, record) => (all.some(known => known.id === record.id && known.kind === record.kind) ? all : [...all, record]), held)),
     content(text: string): ContextBlock[] {
       const records = linked(text)
       return records.length ? [{ type: 'context', records }] : []
