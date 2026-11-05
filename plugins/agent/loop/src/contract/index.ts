@@ -13,17 +13,18 @@ import {
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings } from '@sand/model/contract'
 import type { OpenedSession } from '@sand/server/contract'
+import type { TurnInfo, TurnResult } from '@sand/turns-contract/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
-import type { Loop, TurnResult } from './turn'
+import type { Loop } from './turn'
 
 export type * from './turn'
 
 export const loop = service<Loop>('loop')
 
-export const turnStart = event<(session: Session, prompt: Message) => void>('turn.start')
+export const turnStart = event<(session: Session, prompt: Message, info: TurnInfo) => void>('turn.start')
 export const turnReady = event<(start: Entry, session: Session, signal: AbortSignal) => Promise<void> | void>('turn.ready')
-export const turnEnd = event<(session: Session, result: TurnResult) => void>('turn.end')
+export const turnEnd = event<(session: Session, result: TurnResult, info: TurnInfo) => void>('turn.end')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
 export const turnInbox = event<(content: UserContent[], session: Session) => UserContent[]>('turn.inbox')
 export const contextBuild = event<(request: LLMRequest, session: Session, signal?: AbortSignal) => LLMRequest>('context.build')

@@ -1,0 +1,14 @@
+{
+  "name": "@sand/turns-contract",
+  "version": "0.0.0",
+  "description": "The contract of the turns plugin: each turn of a chat, its model selection, status and usage",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

@@ -1,6 +1,6 @@
 import type { Effort } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import type { TurnResult } from '@sand/loop/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import type { Tier } from '@sand/sub-model/contract'
 
 export interface AgentDefinition {

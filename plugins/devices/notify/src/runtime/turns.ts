@@ -1,5 +1,5 @@
 import type { Session } from '@sand/chats/contract'
-import type { TurnResult } from '@sand/loop/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import { oneLine } from '@sand/util'
 import type { Moment } from '../contract'
 

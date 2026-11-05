@@ -1,5 +1,5 @@
 import type { CompactionRecord } from '@sand/compaction/contract'
-import type { TurnEnding } from '@sand/loop/contract'
+import type { TurnEnding } from '@sand/turns-contract/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { Thread } from '@sand/web-client/contract'
 import type { DescribeSettings, Item, NoticeTone, ToolGroup } from '../contract'
@@ -18,6 +18,7 @@ export interface Settled {
 const endings: Record<string, { text: string; tone: NoticeTone }> = {
   interrupted: { text: 'Interrupted', tone: 'dim' },
   error: { text: 'The turn failed', tone: 'error' },
+  lost: { text: 'Sand stopped during this turn', tone: 'error' },
   refusal: { text: 'The model declined to continue', tone: 'error' },
   max_tokens: { text: 'Stopped at the output token limit', tone: 'error' },
 }
@@ -47,6 +48,7 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
   const list = itemCollector()
   let last = path[0]?.at ?? Date.now()
   let talked = Boolean(path[0]?.parent)
+  let previousTurn: string | undefined
 
   const tool = (call: ToolCallBlock, at: number) =>
     list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, thread, results), thread: thread.id } }, last, at)
@@ -54,7 +56,8 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
   const user = (entry: Entry, message: Message) => {
     list.extend(entry.at)
     const parts = userParts(message)
-    if (parts.length) list.emit(...userItems(entry, parts, hasToolResult(message), custom))
+    const steer = hasToolResult(message) || (entry.turn !== undefined && entry.turn === previousTurn)
+    if (parts.length) list.emit(...userItems(entry, parts, steer, custom))
   }
 
   const assistant = (entry: Entry, message: Message) =>
@@ -91,6 +94,7 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
       else assistant(entry, message)
     }
     last = entry.at
+    previousTurn = entry.turn
   }
 
   return { items: list.items, group: list.group, last }

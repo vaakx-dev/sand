@@ -16,6 +16,7 @@
     "@sand/html": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

@@ -34,12 +34,12 @@ test('a chat that ran keeps its model when the default changes', async () => {
   await setDefault(opus)
   sand.tool('gate', () => 'open')
   const chat = sand.sessions.thread(sand.home)
-  await sand.loop.run(chat, 'one')
+  await sand.turns.run(chat, 'one')
 
   await setDefault(deepseek)
 
   expect(effective(chat.id)).toBe(opus)
-  expect((await sand.loop.run(chat, 'two')).text).toBe('A two')
+  expect((await sand.turns.run(chat, 'two')).text).toBe('A two')
 })
 
 test('a default change in the middle of a turn leaves the turn on its model', async () => {
@@ -47,21 +47,21 @@ test('a default change in the middle of a turn leaves the turn on its model', as
   duringGate(() => setDefault(deepseek))
   const chat = sand.sessions.thread(sand.home)
 
-  expect((await sand.loop.run(chat, 'one')).text).toBe('A one')
+  expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
 })
 
 test('a model picked during a turn applies from the next turn', async () => {
   const chat = sand.chat(opus)
   duringGate(() => sand.ask(settingsSet, { session: chat.id, patch: { model: deepseek } }))
 
-  expect((await sand.loop.run(chat, 'one')).text).toBe('A one')
+  expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
   expect(effective(chat.id)).toBe(deepseek)
-  expect((await sand.loop.run(chat, 'two')).text).toBe('B one')
+  expect((await sand.turns.run(chat, 'two')).text).toBe('B one')
 })
 
 test('a turn runs every step on the model it started with', async () => {
   const chat = sand.chat(opus)
   duringGate(() => sand.app.get(modelSettings)?.update(chat, { model: deepseek }))
 
-  expect((await sand.loop.run(chat, 'one')).text).toBe('A one')
+  expect((await sand.turns.run(chat, 'one')).text).toBe('A one')
 })

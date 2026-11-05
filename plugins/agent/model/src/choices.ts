@@ -1,18 +1,33 @@
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
+import { turns, type Selection } from '@sand/turns-contract/contract'
 import { modelSettingsChange, type EffectiveSettings, type SessionSettings, type SettingsPatch, type SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Defaults } from './defaults'
 import { resolve } from './effective'
 import { clean, same, settingsOf, writeSettings } from './settings'
 
+const sourceOf = (model: string) => model.slice(0, Math.max(model.indexOf('/'), 0))
+
+const frozen = ({ effort: _, ...settings }: EffectiveSettings, { model, effort, speed }: Selection): EffectiveSettings => ({
+  ...settings,
+  model,
+  ...(effort && { effort }),
+  speed,
+})
+
 export const createChoices = (ctx: Context, defaults: Defaults) => {
-  const turns = new Map<string, EffectiveSettings>()
   const pending = new Map<string, SessionSettings>()
 
   const resolved = (settings: SessionSettings) => resolve(settings, defaults.get(), ctx.get(llm))
 
-  const effective = (session?: Session) => (session && turns.get(session.id)) ?? resolved(settingsOf(session))
+  const running = (session: Session) => ctx.get(turns)?.current(session)?.selection
+
+  const effective = (session?: Session) => {
+    const settings = resolved(settingsOf(session))
+    const selection = session && running(session)
+    return selection ? frozen(settings, selection) : settings
+  }
 
   const own = (session: Session) => {
     const settings = settingsOf(session)
@@ -20,14 +35,15 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
     if (model && !settings.model) writeSettings(session, { ...settings, model })
   }
 
-  const begin = (session: Session) => {
+  const select = (session: Session): Selection | undefined => {
     own(session)
-    turns.set(session.id, resolved(settingsOf(session)))
+    const { model, effort, speed } = resolved(settingsOf(session))
+    return model ? { source: sourceOf(model), model, ...(effort && { effort }), speed } : undefined
   }
 
   const change = (session: Session, patch: SettingsPatch) => {
     const current = settingsOf(session)
-    if (!turns.has(session.id)) {
+    if (!running(session)) {
       pending.delete(session.id)
       writeSettings(session, clean({ ...current, ...patch }))
       return
@@ -39,7 +55,6 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   }
 
   const settle = (session: Session) => {
-    turns.delete(session.id)
     const next = pending.get(session.id)
     if (!next) return
     pending.delete(session.id)
@@ -51,7 +66,7 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
     return { current: effective(session), ...(next && { next: resolved(next) }) }
   }
 
-  return { effective, resolved, begin, change, settle, state }
+  return { effective, resolved, select, change, settle, state }
 }
 
 export type Choices = ReturnType<typeof createChoices>
