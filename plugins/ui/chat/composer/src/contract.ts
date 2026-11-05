@@ -1,4 +1,4 @@
-import type { UserContent } from '@sand/chats/contract'
+import type { ContextRecord, UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName } from '@sand/ui-kit/contract'
@@ -31,6 +31,7 @@ export interface Composer {
   value(): string
   set(text: string): void
   insert(text: string): void
+  reference(record: ContextRecord): void
   quote(text: string): void
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose

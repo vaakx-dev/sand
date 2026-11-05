@@ -2,8 +2,10 @@ import {
   contextLabel,
   contextLink,
   contextLinks,
+  linkedRecords,
   projectContext,
   promptInput,
+  quickTitle,
   type ContextProjection,
   type ContextProjector,
   type ContextRecord,
@@ -89,6 +91,17 @@ describe('contextLabel', () => {
 
     expect(link).toBe('[a) b(](sand-context://v1/file/f1)')
     expect(contextLinks(link)).toEqual([{ start: 0, end: link.length, kind: 'file', id: 'f1', label: 'a) b(' }])
+  })
+})
+
+describe('linkedRecords', () => {
+  test('keeps the records the text still links, once each, in first-link order', () => {
+    const a = record('a', 'file')
+    const b = record('b', 'thread')
+    const text = '[b](sand-context://v1/thread/b) [a](sand-context://v1/file/a) [b again](sand-context://v1/thread/b) [wrong kind](sand-context://v1/file/c)'
+
+    expect(linkedRecords(text, [a, record('unused', 'file'), b, record('c', 'thread')])).toEqual([b, a])
+    expect(linkedRecords('[a](sand-context://v1/file/a', [a])).toEqual([])
   })
 })
 
@@ -217,6 +230,15 @@ describe('userParts', () => {
       { kind: 'text', text: marker },
       { kind: 'text', text: fake },
     ])
+  })
+
+  test('a quick title from a stored message reads the link labels', async () => {
+    const { stored } = await roundTrip('Compare [notes.md](sand-context://v1/file/a) with [the plan](sand-context://v1/thread/b)', [record('a', 'file'), record('b', 'thread')], {
+      a: 'A',
+      b: 'B',
+    })
+
+    expect(quickTitle({ role: 'user', content: stored })).toBe('Compare notes.md with the plan')
   })
 
   test('shows a prompt that has not been projected yet as typed', () => {

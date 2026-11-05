@@ -3,7 +3,7 @@ import { isContextLink, textPieces } from './context'
 import { oneLine } from '@sand/util'
 import { promptContent } from './content'
 
-const linkLabels = (text: string) =>
+export const linkLabels = (text: string) =>
   textPieces(text)
     .map(piece => (isContextLink(piece) ? piece.label : piece))
     .join('')

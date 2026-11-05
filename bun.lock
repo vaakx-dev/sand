@@ -125,8 +125,12 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chats": "workspace:*",
+        "@sand/layout": "workspace:*",
         "@sand/turns-contract": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
       "devDependencies": {
@@ -1363,6 +1367,7 @@
         "@sand/chats": "workspace:*",
         "@sand/compaction": "workspace:*",
         "@sand/composer": "workspace:*",
+        "@sand/context": "workspace:*",
         "@sand/images": "workspace:*",
         "@sand/layout": "workspace:*",
         "@sand/markdown": "workspace:*",
@@ -1388,6 +1393,7 @@
         "@codemirror/view": "6.43.15",
         "@sand/attachments": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/context": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/layout": "workspace:*",
         "@sand/media": "workspace:*",

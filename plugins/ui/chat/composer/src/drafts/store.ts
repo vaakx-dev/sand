@@ -1,3 +1,4 @@
+import type { ContextRecord } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Held } from '../attachments/files'
@@ -6,6 +7,7 @@ import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/
 export interface Saved {
   text: string
   items: Held[]
+  records?: ContextRecord[]
   settings?: SessionSettings
   target?: DraftTarget
   updated?: number

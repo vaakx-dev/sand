@@ -1,3 +1,4 @@
+import type { ContextLink, ContextRecord } from '@sand/chats/contract'
 import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
 import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '../parts/contract'
 import type { NavAction } from '@sand/nav/contract'
@@ -26,6 +27,7 @@ export interface RowContext {
   reply(text: string): NavAction[]
   branchSwitch(entry: string): Child
   jump(from: Element, quote: string): void
+  chip(link: ContextLink, record?: ContextRecord): Child
   repaint(): void
 }
 

@@ -5,20 +5,20 @@ import { iconButton, quietButton, type ToggleProps } from './button'
 
 type CopyState = 'idle' | 'copied' | 'failed'
 
-export type CopyProps = Omit<ToggleProps, 'active'> & { text: () => string; label?: string }
+export type CopyProps = Omit<ToggleProps, 'active'> & { text: () => string; formats?: () => Record<string, string>; label?: string }
 
 const resetAfter = 1500
 
 const words: Record<CopyState, string> = { idle: '', copied: 'Copied', failed: 'Copy failed' }
 
-export const copyButton = ({ text, label, ...props }: CopyProps) => {
+export const copyButton = ({ text, formats, label, ...props }: CopyProps) => {
   const state = sig<CopyState>('idle')
   const copies = sig(0)
   effect(() => {
     if (copies.get()) onTimeout(() => state.set('idle'), resetAfter)
   })
   const copy = async () => {
-    const copied = await copyText(text())
+    const copied = await copyText(text(), formats?.())
     state.set(copied ? 'copied' : 'failed')
     copies.update(count => count + 1)
   }

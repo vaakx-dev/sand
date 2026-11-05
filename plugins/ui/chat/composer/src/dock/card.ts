@@ -1,5 +1,6 @@
 import { Prec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
+import { contextChips } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
@@ -8,6 +9,8 @@ import { hasFiles } from '../attachments/drop'
 import { shelf } from '../attachments/shelf'
 import { createCompletion, type CompletionSource } from '../complete/model'
 import { builtinSources } from '../complete/sources'
+import { chipClipboard } from '../editor/chips/clipboard'
+import { chipWidgets, type DrawChip } from '../editor/chips/widget'
 import { createEditor } from '../editor/view'
 import type { Model } from '../model'
 import type { Plus } from '../plus/entries'
@@ -58,11 +61,13 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
     return true
   }
 
+  const chip: DrawChip = (link, record) => ctx.get(contextChips)?.chip(link, record) ?? span({}, link.label)
+
   const sources = builtinSources(ctx)
   const completion = createCompletion(ctx.kit, sources)
   const editor = createEditor(ctx.kit, model.text, {
     placeholder: placeholder(model, sources),
-    extensions: [completion.extension, Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
+    extensions: [completion.extension, chipWidgets(model.records, chip), chipClipboard(model.records), Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
   })
 
   const picker = input({

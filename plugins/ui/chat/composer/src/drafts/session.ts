@@ -46,6 +46,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, switched: () =>
     const saved = await store.load(next.id)
     if (next !== key) return
     if (!isBlank(saved)) {
+      model.records.list.set(saved.records ?? [])
       model.text.set(saved.text)
       model.files.set(saved.items)
       model.picked.set(saved.settings ?? {})
