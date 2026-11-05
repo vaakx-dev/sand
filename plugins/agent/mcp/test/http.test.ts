@@ -2,7 +2,7 @@ import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/cli
 import type { AgentVerdict } from '@sand/devices-contract'
 import { startSand, type Sand } from '@sand/harness'
 import { afterAll, beforeAll, expect, test } from 'bun:test'
-import { agentEndpoint } from '../src/http/endpoint'
+import { agentEndpoint } from '../src/server/http/endpoint'
 
 const agents = new Map<string, AgentVerdict>([
   ['reader-token', { caller: { device: 'reader', kind: 'agent' }, name: 'Reader', access: 'read' }],
