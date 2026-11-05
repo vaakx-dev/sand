@@ -1,5 +1,4 @@
-import type { UsageTotals } from '@sand/usage/contract'
-import { emptyTotals } from '@sand/usage/records'
+import { emptyTotals, type UsageTotals } from '@sand/usage/contract'
 import { grouped, periodTitle } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { addTotals, including } from '../../data/totals'

@@ -48,7 +48,7 @@ const addBack = async (deps: WorktreeDeps, record: WorktreeRecord) => {
 
 export const restoreRecord = async (deps: WorktreeDeps, record: WorktreeRecord, waiting: string[]) => {
   await deps.queue(record.main, () => addBack(deps, record))
-  const back = relocateAll(deps, waiting, record.main, record.path, cwd => restoredNote(record, cwd))
+  const back = await relocateAll(deps, waiting, record.main, record.path, cwd => restoredNote(record, cwd))
   if (record.setup && back.moved[0]) record.setup.session = back.moved[0]
   await deps.setups.start(record)
   await deps.changed(record.main, record.path)

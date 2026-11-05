@@ -1,5 +1,5 @@
 import type { LLM, LLMRequest } from '@sand/accounts/contract'
-import { textOf } from '@sand/chats/prompt'
+import { textOf } from '@sand/chats/contract'
 
 export const reply = async (llm: LLM, request: LLMRequest, signal?: AbortSignal) => {
   signal?.throwIfAborted()

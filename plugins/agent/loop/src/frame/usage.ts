@@ -1,7 +1,7 @@
 import type { LLM, SourceRef, Usage } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import type { TurnState } from './state'
-import { accountKey, emptyUsage, sumUsage, tokensOf, usageRecord } from '@sand/usage/records'
+import { accountKey, emptyUsage, sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 
 export const track = (state: TurnState, usage: Usage, model?: string, source?: SourceRef) => {
   state.usage = sumUsage(state.usage, usage)

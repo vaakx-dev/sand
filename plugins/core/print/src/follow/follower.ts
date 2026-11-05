@@ -1,6 +1,6 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { Artifact } from '@sand/html/contract'
-import { emptyUsage, sumUsage } from '@sand/usage/records'
+import { emptyUsage, sumUsage } from '@sand/usage/contract'
 import type { Limits, LLMEvent } from '@sand/accounts/contract'
 import type { TurnResult } from '@sand/loop/contract'
 import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'

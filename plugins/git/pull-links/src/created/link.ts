@@ -1,5 +1,4 @@
-import type { Session, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
+import { type Session, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { isDismissed } from '../links/edit'
 import type { ThreadLinks } from '../links/links'
 import { isLive } from '../links/thread'

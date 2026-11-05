@@ -1,5 +1,5 @@
 import type { IconName } from '@sand/ui-kit/contract'
-import { pullPrompts } from '@sand/pull-links/prompts'
+import { pullPrompts } from '@sand/pull-links/contract'
 import { derive, div, dynamicChild, type Child } from '@vaakx-dev/vrui'
 import type { Shown } from '../shown'
 import { blockReason, type MainKind, mainKind } from './kind'

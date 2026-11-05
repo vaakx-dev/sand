@@ -1,5 +1,4 @@
-import { type Message, type Session, sessions } from '@sand/chats/contract'
-import { quickTitle } from '@sand/chats/prompt'
+import { type Message, quickTitle, type Session, sessions } from '@sand/chats/contract'
 import { turnStart } from '@sand/loop/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { errorMessage } from '@sand/util'

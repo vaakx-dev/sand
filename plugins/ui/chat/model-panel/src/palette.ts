@@ -1,7 +1,7 @@
 import type { ModelInfo } from '@sand/accounts/contract'
 import type { EffectiveSettings } from '@sand/model/contract'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
-import { sourceName } from '@sand/model-picker/models'
+import { sourceName } from '@sand/model-picker/contract'
 import { matching, tokens } from '@sand/util'
 import type { Actions } from './actions'
 import type { PanelContext } from './context'

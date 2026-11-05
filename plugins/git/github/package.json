@@ -4,10 +4,7 @@
   "description": "GitHub for a thread's folder: this PC's gh sign-in, pull request summaries with a cache, and creating, merging and readying pull requests",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./look": "./src/web/look.ts",
-    "./facts": "./src/web/facts.ts",
-    "./summary": "./src/summary.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "runtime": "./src/runtime.ts",
@@ -20,6 +17,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sub-model": "workspace:*",
     "@sand/ui-kit": "workspace:*",

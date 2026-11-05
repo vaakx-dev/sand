@@ -1,5 +1,4 @@
-import type { AccountUsage, UsageSummary, UsageTotals } from '@sand/usage/contract'
-import { tokensOf } from '@sand/usage/records'
+import { type AccountUsage, tokensOf, type UsageSummary, type UsageTotals } from '@sand/usage/contract'
 import { periodLabel, tokens, usageCost, windowText } from '@sand/util'
 
 const table = (head: string[], rows: string[][]) => {

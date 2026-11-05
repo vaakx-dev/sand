@@ -1,5 +1,4 @@
-import type { Project, ProjectCopy, ProjectList } from '@sand/project/contract'
-import { liveProjects } from '@sand/project/projects'
+import { liveProjects, type Project, type ProjectCopy, type ProjectList } from '@sand/project/contract'
 import { isInside } from '@sand/util'
 import type { ProjectEntry, ProjectGroup, Thread } from '../contract'
 

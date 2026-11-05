@@ -1,5 +1,5 @@
 import { keys } from '@sand/keys/contract'
-import { floating } from '@sand/layout/place'
+import { floating } from '@sand/reactive'
 import { nav } from '@sand/nav/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { show, sig } from '@vaakx-dev/vrui'

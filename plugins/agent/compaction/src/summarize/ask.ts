@@ -1,5 +1,5 @@
 import type { LLM, LLMRequest } from '@sand/accounts/contract'
-import { textOf } from '@sand/chats/prompt'
+import { textOf } from '@sand/chats/contract'
 
 export const ask = async (llm: LLM, request: LLMRequest, signal?: AbortSignal) => {
   for await (const event of llm.stream(request, signal)) {

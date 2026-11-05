@@ -1,5 +1,4 @@
-import type { Message, Session, UserPart } from '@sand/chats/contract'
-import { userParts } from '@sand/chats/prompt'
+import { type Message, type Session, type UserPart, userParts } from '@sand/chats/contract'
 import type { SubModel } from '@sand/sub-model/contract'
 import { oneLine } from '@sand/util'
 import { z } from 'zod'

@@ -1,6 +1,5 @@
 import { isRecord } from '@sand/util'
-import type { DraftTarget } from '../contract'
-import { addressParam, addressState, pushAddress, updateAddress } from '../integrations/address'
+import { addressParam, addressState, type DraftTarget, pushAddress, updateAddress } from '../contract'
 
 const key = 'session'
 

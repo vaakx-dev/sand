@@ -1,4 +1,4 @@
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { div } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import { groupsSection } from './groups'

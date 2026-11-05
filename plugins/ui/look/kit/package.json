@@ -4,9 +4,7 @@
   "description": "Sand's buttons, menus, sheets, rows, marks and icons for other extensions to draw with",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./gesture": "./src/gesture/index.ts",
-    "./kit": "./src/kit.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/index.ts",

@@ -1,7 +1,7 @@
 import type { SourceInfo } from '@sand/accounts/contract'
 import type { Request } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { sig } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import type { Slots } from './slots'

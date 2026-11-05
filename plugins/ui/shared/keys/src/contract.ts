@@ -1,5 +1,7 @@
 import { service, type Dispose } from 'drydock'
 
+export * from './names'
+
 export interface Shortcut {
   key: string
   global?: boolean

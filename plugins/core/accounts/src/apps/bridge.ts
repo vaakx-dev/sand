@@ -1,6 +1,5 @@
-import type { Message, ToolResultBlock, UserContent } from '@sand/chats/contract'
 import type { AppPlan, AppSession, AppSetup, LLMEvent, LLMRequest } from '../contract'
-import { isUserContent } from '@sand/chats/prompt'
+import { isUserContent, type Message, type ToolResultBlock, type UserContent } from '@sand/chats/contract'
 import { loadedTools } from '../http/deferred'
 import { markOf, transcript } from './history'
 import { createSignals, type Signals } from './signals'

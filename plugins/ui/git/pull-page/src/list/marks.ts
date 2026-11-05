@@ -1,4 +1,4 @@
-import { pullStateLook } from '@sand/github/look'
+import { pullStateLook } from '@sand/github/contract'
 import type { InboxPull } from '@sand/pull-inbox/contract'
 import { ago } from '@sand/util'
 import { type Derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'

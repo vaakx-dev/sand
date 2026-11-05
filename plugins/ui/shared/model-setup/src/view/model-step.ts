@@ -1,5 +1,5 @@
 import type { Models } from '@sand/web-client/contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { ModelSetupState } from '../setup'
 import { problem, screen } from './layout'

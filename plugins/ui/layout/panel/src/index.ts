@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'

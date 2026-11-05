@@ -1,7 +1,7 @@
 import { cli, pluginSwitches } from '@sand/config/contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
 import { server } from '@sand/server/contract'
-import { expandHome, pluginContracts } from '@sand/util/fs'
+import { expandHome, packageExports, pluginContracts } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
@@ -31,7 +31,7 @@ export default definePlugin({
     const switches = ctx.pluginSwitches
     const site = await createSite({
       find: async () => (await discover(folders, extra)).filter(extension => !switches.turnedOff(extension.dir)),
-      contracts: await pluginContracts(ctx.cli.builtins),
+      modules: { ...(await pluginContracts(ctx.cli.builtins)), ...(await packageExports(join(ctx.cli.builtins, '..', 'packages'))) },
       report: problem => ctx.report(new Error(problem)),
     })
     const states = createStates(site, switches)

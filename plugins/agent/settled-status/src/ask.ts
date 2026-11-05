@@ -1,5 +1,4 @@
-import type { Message, Session } from '@sand/chats/contract'
-import { promptText, textOf } from '@sand/chats/prompt'
+import { type Message, promptText, type Session, textOf } from '@sand/chats/contract'
 import type { PullLinks } from '@sand/pull-links/contract'
 import type { SubModel } from '@sand/sub-model/contract'
 import { oneLine } from '@sand/util'

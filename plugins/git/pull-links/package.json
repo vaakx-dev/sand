@@ -4,8 +4,7 @@
   "description": "Pull requests attached to threads: links found from the branch or added by hand, kept fresh, watched for the agent, and opened as threads",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./prompts": "./src/web/prompts.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "runtime": "./src/runtime.ts",

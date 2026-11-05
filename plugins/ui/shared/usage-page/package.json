@@ -12,6 +12,7 @@
     "@sand/accounts": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/usage": "workspace:*",

@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract.ts",
-    "./records": "./src/records/index.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "runtime": "./src/index.ts",
@@ -18,7 +17,6 @@
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

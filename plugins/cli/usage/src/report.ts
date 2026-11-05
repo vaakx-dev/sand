@@ -1,6 +1,5 @@
 import type { Daemon } from '@sand/host-daemon/contract'
-import { usageSummary } from '@sand/usage/contract'
-import { usageQuery, type UsageRange } from '@sand/usage/records'
+import { usageQuery, type UsageRange, usageSummary } from '@sand/usage/contract'
 import { summaryText } from './print'
 
 type Range = Exclude<UsageRange, 'month'>

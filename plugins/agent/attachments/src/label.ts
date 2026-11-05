@@ -1,6 +1,5 @@
-import type { UserContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { imageLabel, isImageLabel } from '@sand/chats/prompt'
+import { imageLabel, isImageLabel, type UserContent } from '@sand/chats/contract'
 
 const labeled = (media: Media, block: UserContent, next?: UserContent): UserContent[] => {
   if (isImageLabel(block, next)) return []

@@ -1,7 +1,7 @@
 import { toolViews, transcript, type ToolBadge, type ToolRenderer, type ToolView } from '@sand/chat/contract'
 import { jobs, jobsChange, type JobStatus } from '@sand/jobs/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({

@@ -1,4 +1,4 @@
-import type { Entry, Message, ToolCallBlock } from '../contract'
+import type { Entry, Message, ToolCallBlock } from '..'
 
 export const hasToolResult = (message: Message) => message.content.some(block => block.type === 'tool_result')
 

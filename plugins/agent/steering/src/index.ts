@@ -1,5 +1,4 @@
-import { sessions } from '@sand/chats/contract'
-import { promptContent } from '@sand/chats/prompt'
+import { promptContent, sessions } from '@sand/chats/contract'
 import { loop, sessionOpened, turnEnd, turnInbox, turnPrompt } from '@sand/loop/contract'
 import { definePlugin } from 'drydock'
 import { steering as steeringService, turnQueue, turnSteer, turnUnsteer, type Steering } from './contract'

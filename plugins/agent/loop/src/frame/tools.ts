@@ -1,5 +1,4 @@
-import type { Session, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import { errorResult } from '@sand/chats/prompt'
+import { errorResult, type Session, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { LoopsContext } from '../context'
 import { toolProgress, toolResult, toolStart } from '../contract'

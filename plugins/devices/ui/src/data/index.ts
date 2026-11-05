@@ -1,5 +1,5 @@
 import { pcsChange, type PcView, wireHello } from '@sand/devices-contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { clock } from '@vaakx-dev/vrui'
 import type { UiContext } from '../inject'
 import { devicesData } from './devices'

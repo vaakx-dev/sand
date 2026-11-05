@@ -1,5 +1,4 @@
-import { type GitHub, isMissing, type PullRef, type PullSummary, pullVariables } from '@sand/github/contract'
-import { shapeSummary } from '@sand/github/summary'
+import { type GitHub, isMissing, type PullRef, type PullSummary, pullVariables, shapeSummary } from '@sand/github/contract'
 import type { PullDetail } from '../contract'
 import { missingPull } from '../errors/refusal'
 import { behindBase } from './behind'

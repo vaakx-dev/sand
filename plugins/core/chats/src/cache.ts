@@ -3,13 +3,13 @@ export interface EntryCache {
   forget(id: string): void
 }
 
-export const createEntryCache = (limit: number, pinned: (id: string) => boolean): EntryCache => {
+export const createEntryCache = (limit: number, pinned: (id: string) => Promise<boolean>): EntryCache => {
   const loaded = new Map<string, () => void>()
 
-  const trim = (kept: string) => {
+  const trim = async (kept: string) => {
     for (const [id, unload] of loaded) {
       if (loaded.size <= limit) return
-      if (id === kept || pinned(id)) continue
+      if (id === kept || (await pinned(id))) continue
       loaded.delete(id)
       unload()
     }
@@ -19,7 +19,7 @@ export const createEntryCache = (limit: number, pinned: (id: string) => boolean)
     touch(id, unload) {
       loaded.delete(id)
       loaded.set(id, unload)
-      trim(id)
+      void trim(id)
     },
     forget: id => void loaded.delete(id),
   }

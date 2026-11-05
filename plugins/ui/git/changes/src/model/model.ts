@@ -1,7 +1,7 @@
 import type { DiffFile, DiffScope } from '@sand/git-diff/contract'
 import { type GitPlace, type GitRepoLocal, placeKey, repoOf, samePlace } from '@sand/git/contract'
 import { errorMessage } from '@sand/util'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { batch, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import type { ChangesContext } from '../inject'
 import { currentScope } from '../scope/current'

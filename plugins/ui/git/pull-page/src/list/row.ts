@@ -1,5 +1,4 @@
-import { samePull } from '@sand/github/contract'
-import { pullRef } from '@sand/github/look'
+import { pullRef, samePull } from '@sand/github/contract'
 import type { InboxPull } from '@sand/pull-inbox/contract'
 import { type Derive, derive, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import { threadChip } from '../links/chip'

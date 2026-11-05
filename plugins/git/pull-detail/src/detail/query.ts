@@ -1,4 +1,4 @@
-import { mergeSettingsFields, pullSummaryFields } from '@sand/github/summary'
+import { mergeSettingsFields, pullSummaryFields } from '@sand/github/contract'
 
 const author = 'author { __typename login }'
 const pageInfo = 'pageInfo { hasNextPage endCursor }'

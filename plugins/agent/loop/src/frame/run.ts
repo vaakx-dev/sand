@@ -1,6 +1,5 @@
-import type { Message, Prompt, Session } from '@sand/chats/contract'
-import { promptContent, textOf } from '@sand/chats/prompt'
-import { emptyUsage } from '@sand/usage/records'
+import { type Message, type Prompt, promptContent, type Session, sessionBusy, textOf } from '@sand/chats/contract'
+import { emptyUsage } from '@sand/usage/contract'
 import type { LoopsContext } from '../context'
 import { turnEnd, turnPrompt, turnReady, turnStart, type TurnEnding, type TurnResult } from '../contract'
 import { runReact } from '../react'
@@ -26,11 +25,14 @@ const appendLeftovers = async (session: Session, hooks: TurnHooks) => {
 export const createFrame = (ctx: LoopsContext) => {
   const active = new Map<string, AbortController>()
   const started = new Set<string>()
+  const running = new Set<string>()
+  ctx.on(sessionBusy, session => running.has(session.id))
 
   const open = async (session: Session, prompt: Prompt) => {
     const user: Message = { role: 'user', content: await ctx.waterfall(turnPrompt, promptContent(prompt), session) }
     started.add(session.id)
     const start = session.append('message', user)
+    running.add(session.id)
     ctx.emit(turnStart, session, user)
     return start
   }
@@ -65,6 +67,8 @@ export const createFrame = (ctx: LoopsContext) => {
     record(session, state, ctx.llm)
     const result = resultOf(state, failure)
     if (result.stopReason !== 'end_turn') session.append('turn-ending', { stopReason: result.stopReason, ...(result.error && { error: result.error }) } satisfies TurnEnding)
+    running.delete(session.id)
+    if (session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
     ctx.emit(turnEnd, session, result)
     if (failure) throw failure.error
     return result

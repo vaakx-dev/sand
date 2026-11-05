@@ -1,5 +1,5 @@
 import type { PullSummary } from '@sand/github/contract'
-import { pullPrompts } from '@sand/pull-links/prompts'
+import { pullPrompts } from '@sand/pull-links/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import { type NextStep, nextStep } from '../pull/next'
 import { mergeControl } from './merge'

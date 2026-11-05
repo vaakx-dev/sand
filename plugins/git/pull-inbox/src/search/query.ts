@@ -1,4 +1,4 @@
-import { type MergeSettings, mergeSettingsFields, type PullNode, pullSummaryFields } from '@sand/github/summary'
+import { type MergeSettings, mergeSettingsFields, type PullNode, pullSummaryFields } from '@sand/github/contract'
 
 export const searchQuery = `
 query PullInbox($search: String!, $first: Int!, $after: String) {

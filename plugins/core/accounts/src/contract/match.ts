@@ -1,4 +1,4 @@
-import type { ModelInfo } from '../contract'
+import type { ModelInfo } from './models'
 
 const variant = /\[[^\]]*\]$/
 

@@ -19,6 +19,7 @@
     "@sand/media": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/reload": "workspace:*",
     "@sand/transfers": "workspace:*",
     "@sand/ui-kit": "workspace:*",

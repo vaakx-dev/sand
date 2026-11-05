@@ -1,6 +1,5 @@
 import type { SettingsPage } from './contract'
-import { onAddressChange } from '@sand/web-client/address'
-import { threadSelect } from '@sand/web-client/contract'
+import { onAddressChange, threadSelect } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { requestedPage } from './address'
 

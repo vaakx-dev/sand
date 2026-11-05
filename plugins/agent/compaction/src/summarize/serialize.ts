@@ -1,5 +1,4 @@
-import { fileText, unavailableText } from '@sand/chats/prompt'
-import type { Block, DocumentBlock, Message, ToolResultContent } from '@sand/chats/contract'
+import { type Block, type DocumentBlock, fileText, type Message, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 
 const textLimit = 16_000

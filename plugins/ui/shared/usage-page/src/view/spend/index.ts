@@ -1,4 +1,4 @@
-import { usageRanges } from '@sand/usage/records'
+import { usageRanges } from '@sand/usage/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'

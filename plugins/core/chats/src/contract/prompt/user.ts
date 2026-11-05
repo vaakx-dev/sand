@@ -1,4 +1,4 @@
-import type { Block, Message, UserPart } from '../contract'
+import type { Block, Message, UserPart } from '..'
 import { readFeedback } from './feedback'
 import { isImageLabel } from './image'
 

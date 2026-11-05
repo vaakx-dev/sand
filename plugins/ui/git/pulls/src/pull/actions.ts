@@ -1,5 +1,4 @@
-import type { MergeMethod } from '@sand/github/contract'
-import { pullName, pullRef } from '@sand/github/look'
+import { type MergeMethod, pullName, pullRef } from '@sand/github/contract'
 import type { AgentPrompt, PullLink } from '@sand/pull-links/contract'
 import type { PullPlace } from '../contract'
 import { type PullsContext, toastId } from '../inject'

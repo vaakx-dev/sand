@@ -8,6 +8,7 @@ import type { Session, SessionInfo, Sessions } from './session'
 export type * from './entry'
 export type * from './message'
 export type * from './parts'
+export * from './prompt'
 export type * from './session'
 
 export interface WireSession {
@@ -30,6 +31,7 @@ export const sessionUpdate = event<(session: Session) => void>('session.update')
 export const sessionSettle = event<(session: Session) => void>('session.settle')
 export const sessionRemove = event<(id: string) => void>('session.remove')
 export const sessionClosing = event<(session: Session) => string | undefined | Promise<string | undefined>>('session.closing')
+export const sessionBusy = event<(session: Session) => boolean>('session.busy')
 
 export const sessionEntryWire = wireEvent<[session: WireSession, entry: Entry]>('session.entry')
 export const sessionUpdateWire = wireEvent<WireSession>('session.update')

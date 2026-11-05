@@ -1,4 +1,4 @@
-import { emptyTotals } from '@sand/usage/records'
+import { emptyTotals } from '@sand/usage/contract'
 import { addTotals } from '../totals'
 import type { Merged, PcSummary } from '../types'
 import { mergeAccounts } from './accounts'

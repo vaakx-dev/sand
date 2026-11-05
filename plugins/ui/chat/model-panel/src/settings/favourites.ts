@@ -1,5 +1,5 @@
 import { modelsPref, modelsRemove, type ModelInfo } from '@sand/accounts/contract'
-import { favouritesOf } from '@sand/model-picker/models'
+import { favouritesOf } from '@sand/model-picker/contract'
 import { derive, div, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { settingsMenu } from './menu'
 import type { Page } from './page'

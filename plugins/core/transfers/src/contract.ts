@@ -3,6 +3,8 @@ import { service } from 'drydock'
 import { z } from 'zod'
 import type { ChunkedFile } from './chunks'
 
+export * from './client'
+
 export type { ChunkedFile }
 
 export interface Transfers {

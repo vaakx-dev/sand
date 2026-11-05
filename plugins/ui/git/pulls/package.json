@@ -21,6 +21,7 @@
     "@sand/palette": "workspace:*",
     "@sand/panel": "workspace:*",
     "@sand/pull-links": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/sidebar": "workspace:*",
     "@sand/toasts": "workspace:*",

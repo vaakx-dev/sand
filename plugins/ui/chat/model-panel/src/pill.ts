@@ -1,5 +1,5 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
 

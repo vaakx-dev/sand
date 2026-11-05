@@ -1,4 +1,4 @@
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { nav } from './contract'
 import { navHost } from './host'

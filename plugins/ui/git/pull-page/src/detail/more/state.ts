@@ -1,4 +1,4 @@
-import { pullName } from '@sand/github/look'
+import { pullName } from '@sand/github/contract'
 import type { Child } from '@vaakx-dev/vrui'
 import { confirmSheet } from '../../confirm/sheet'
 import type { Shown } from '../shown'

@@ -1,8 +1,7 @@
 import { retryLocked } from '@sand/util/fs'
-import { quickTitle } from './prompt'
 import { mkdirSync } from 'node:fs'
 import { rm } from 'node:fs/promises'
-import type { Entry, Message, Session } from './contract'
+import { type Entry, type Message, quickTitle, type Session } from './contract'
 
 export const firstTitle = (session: Session, entry: Entry) => {
   if (session.kind === 'agent' || session.title !== '' || entry.type !== 'message') return undefined

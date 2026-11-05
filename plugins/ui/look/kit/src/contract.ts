@@ -2,6 +2,8 @@ import type { NavAction } from '@sand/nav/contract'
 import { service } from 'drydock'
 import type { kit as kitImpl } from './kit'
 
+export * from './gesture'
+
 export type Kit = typeof kitImpl
 
 export interface PressAt {

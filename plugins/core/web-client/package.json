@@ -4,9 +4,7 @@
   "description": "Keeps the threads, models, projects and the rest of your PCs on the page, cached by PC",
   "type": "module",
   "exports": {
-    "./address": "./src/integrations/address.ts",
-    "./contract": "./src/contract/index.ts",
-    "./reactive": "./src/reactive/index.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "web": "./src/index.ts",
@@ -23,6 +21,7 @@
     "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/project": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/steering": "workspace:*",

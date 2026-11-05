@@ -1,5 +1,5 @@
 import { jobs, jobsChange, type WireJob } from '@sand/jobs/contract'
-import { owned, pulse } from '@sand/web-client/reactive'
+import { owned, pulse } from '@sand/reactive'
 import { effect, onInterval, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 

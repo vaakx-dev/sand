@@ -1,5 +1,5 @@
 import { pcHello, pcs, pcsChange } from '@sand/devices-contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import type { Context } from 'drydock'
 import type { Pc } from './data/types'
 

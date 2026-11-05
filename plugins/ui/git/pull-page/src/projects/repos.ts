@@ -1,6 +1,6 @@
 import { pcsChange } from '@sand/devices-contract'
 import { type ProjectGroup, projectsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import type { PageContext } from '../inject'
 
 export interface RepoChoice {

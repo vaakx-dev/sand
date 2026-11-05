@@ -1,5 +1,4 @@
-import { fileText, unavailableText, type MediaBlock } from '@sand/chats/prompt'
-import type { Block, Message, ToolReferenceBlock, ToolResultContent } from '@sand/chats/contract'
+import { type Block, fileText, type MediaBlock, type Message, type ToolReferenceBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import type { Effort, LLMRequest, ToolSpec } from '../contract'
 import { loadedTools, withoutReferences } from '../http/deferred'

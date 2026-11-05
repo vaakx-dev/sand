@@ -1,6 +1,6 @@
 import type { llm } from '@sand/accounts/contract'
 import { sessions } from '@sand/chats/contract'
-import { usageRecord } from '@sand/usage/records'
+import { usageRecord } from '@sand/usage/contract'
 import type { Context } from 'drydock'
 import type { AskRequest } from './contract'
 import { reply } from './reply'

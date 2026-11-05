@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/accounts/contract'
-import { sourceName } from '@sand/model-picker/models'
+import { sourceName } from '@sand/model-picker/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, type Child } from '@vaakx-dev/vrui'
 import type { Page } from './page'

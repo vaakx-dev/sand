@@ -1,4 +1,4 @@
-import { pullName, pullRef } from '@sand/github/look'
+import { pullName, pullRef } from '@sand/github/contract'
 import type { InboxPull } from '@sand/pull-inbox/contract'
 import { sig, stopThen } from '@vaakx-dev/vrui'
 import { confirmStep } from '../confirm/step'

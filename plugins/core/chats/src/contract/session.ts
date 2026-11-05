@@ -78,7 +78,7 @@ export interface Sessions {
   agent(spec: NewAgent): Session
   children(parent: string): SessionSummary[]
   update(id: string, patch: ChatPatch): Session
-  relocate(id: string, relocation: Relocation): Session
+  relocate(id: string, relocation: Relocation): Promise<Session>
   rename(id: string, title: string): void
   pin(id: string, pinned: boolean): Session
   settle(id: string, settled: boolean): Promise<Session>
