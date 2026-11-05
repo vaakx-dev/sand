@@ -18,7 +18,8 @@ export const listDevices = (daemon: Daemon) =>
     const [records, peers, requests] = await Promise.all([link.call(devicesList, {}), link.call(peersList, {}), link.call(pairRequests, {})])
     const others = records.filter(record => record.id !== link.pc.id)
     const pcs = others.filter(record => record.kind === 'pc')
-    const devices = others.filter(record => record.kind !== 'pc')
+    const devices = others.filter(record => record.kind === 'phone' || record.kind === 'browser')
+    const agents = others.filter(record => record.kind === 'agent')
     const lines = [
       `this PC: ${link.pc.name}  (${link.pc.id})`,
       '',
@@ -29,6 +30,7 @@ export const listDevices = (daemon: Daemon) =>
         devices.map(record => `  ${record.name}  (${deviceDetails(record)})`),
         'no phones or browsers yet; `sand devices add` shows a QR code that pairs one',
       ),
+      ...(agents.length ? ['', 'agents:', ...agents.map(record => `  ${record.name}  (${deviceDetails(record)})`)] : []),
       ...(requests.length ? ['', 'waiting to join:', ...requests.map(requestLine)] : []),
     ]
     console.log(lines.join('\n'))

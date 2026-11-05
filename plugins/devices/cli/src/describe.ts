@@ -1,7 +1,7 @@
 import type { BlockReason, ConnectionStatus, DeviceKind, DeviceRecord, RouteKind } from '@sand/devices-contract'
 import { ago } from '@sand/util'
 
-const kindNames: Record<DeviceKind, string> = { pc: 'PC', phone: 'phone', browser: 'browser' }
+const kindNames: Record<DeviceKind, string> = { pc: 'PC', phone: 'phone', browser: 'browser', agent: 'agent' }
 
 const platformNames: Record<string, string> = { win32: 'Windows', darwin: 'macOS', linux: 'Linux' }
 

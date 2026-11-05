@@ -1,5 +1,6 @@
-import type { AddedKey, DevicePush, DeviceRecord, NewDevice, PcIcon, Registry } from '@sand/devices-contract'
+import type { AddedKey, DevicePush, DeviceRecord, NewAgent, NewDevice, PcIcon, Registry } from '@sand/devices-contract'
 import { deviceIdOf } from '@sand/devices-identity'
+import { hashSecret, randomSecret } from '@sand/util/fs'
 import type { Dispose } from 'drydock'
 import type { DeviceFile } from './store/file'
 import { isSound, mergeRecord, normalRecord } from './store/merge'
@@ -78,6 +79,22 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     return change(normalRecord({ ...record, keys: [...record.keys, added], updated: stamp(record) }))
   }
 
+  const addAgent = async ({ name, access }: NewAgent, by: string) => {
+    const token = randomSecret()
+    const now = Date.now()
+    const device = await change({
+      id: randomSecret(16),
+      kind: 'agent',
+      name: deviceName(name, 'agent'),
+      keys: [],
+      added: now,
+      addedBy: by,
+      updated: now,
+      agent: { access, token: hashSecret(token) },
+    })
+    return { device, token }
+  }
+
   const rename = async (id: string, name: string) => {
     const record = live(id)
     const next = deviceName(name, record.kind)
@@ -132,6 +149,7 @@ export const createRegistry = (file: DeviceFile): HostRegistry => {
     },
     add,
     addKey,
+    addAgent,
     rename,
     setIcon,
     setDetectedIcon,

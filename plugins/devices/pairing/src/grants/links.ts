@@ -3,17 +3,21 @@ import { trimSlash } from '@sand/util'
 
 type LinkKey = keyof typeof pageLinkKeys
 
-const rank = (route: PublishedRoute) => {
-  if (route.kind === 'tailscale' && route.url.startsWith('https:')) return 0
-  return route.kind === 'lan' ? 1 : 2
-}
+const ranks: Record<PublishedRoute['kind'], number> = { tailscale: 2, lan: 1, local: 3 }
 
-const awayRoutes = (routes: PublishedRoute[]) => routes.filter(route => route.kind !== 'local').sort((a, b) => rank(a) - rank(b))
+const rank = (route: PublishedRoute) => (route.kind === 'tailscale' && route.url.startsWith('https:') ? 0 : ranks[route.kind])
+
+const byRank = (a: PublishedRoute, b: PublishedRoute) => rank(a) - rank(b)
+
+const awayRoutes = (routes: PublishedRoute[]) => routes.filter(route => route.kind !== 'local').sort(byRank)
 
 export const pageLink = (base: string, key: LinkKey, value: string) => `${trimSlash(base)}/#${pageLinkKeys[key]}=${encodeURIComponent(value)}`
 
 export const shareLinks = (routes: PublishedRoute[], key: LinkKey, value: string): ShareLink[] =>
   awayRoutes(routes).map(route => ({ route, url: pageLink(route.url, key, value) }))
+
+export const endpointLinks = (routes: PublishedRoute[], path: string): ShareLink[] =>
+  routes.toSorted(byRank).map(route => ({ route, url: `${trimSlash(route.url)}${path}` }))
 
 export const tokenOf = (link: string) => {
   try {

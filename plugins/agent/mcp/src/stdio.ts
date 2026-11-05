@@ -29,7 +29,7 @@ const serve = async (server: McpServer) => {
 }
 
 export default definePlugin({
-  name: 'cli-mcp',
+  name: 'mcp',
   description: "The sand mcp command: an MCP server on stdio that lets an outside agent list, read, start, message, wait for and stop sand's threads",
   inject: { cli, cliCommands, daemon },
   apply(ctx) {
@@ -41,7 +41,7 @@ export default definePlugin({
           "sand mcp                        serve sand's threads to an outside agent over MCP on stdio, through the running sand;",
           '                                add it with: claude mcp add sand-threads -- sand mcp',
         ].join('\n'),
-        run: () => serve(threadsServer(linked(ctx.daemon), ctx.cli.cwd)),
+        run: () => serve(threadsServer(linked(ctx.daemon), { access: 'operate', here: ctx.cli.cwd })),
       }),
     )
   },

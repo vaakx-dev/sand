@@ -1,4 +1,4 @@
-import type { DeviceKind, DeviceRecord, JoinOutcome, JoinRequest, PairSettled } from '@sand/devices-contract'
+import type { DeviceRecord, JoinKind, JoinOutcome, JoinRequest, PairSettled } from '@sand/devices-contract'
 import { newNonce } from '@sand/devices-identity'
 
 const life = 2 * 60_000
@@ -8,7 +8,7 @@ const nameLimit = 80
 export interface JoinAsk {
   publicKey: string
   name: string
-  kind: DeviceKind
+  kind: JoinKind
   platform: string
 }
 
@@ -21,7 +21,7 @@ interface Entry {
 
 const randomCode = () => String(crypto.getRandomValues(new Uint32Array(1))[0]! % 10_000).padStart(4, '0')
 
-const cleanName = (name: string, kind: DeviceKind) => name.trim().slice(0, nameLimit).trim() || (kind === 'pc' ? 'PC' : 'New device')
+const cleanName = (name: string, kind: JoinKind) => name.trim().slice(0, nameLimit).trim() || (kind === 'pc' ? 'PC' : 'New device')
 
 export const createIncoming = (pc: () => { id: string; name: string }) => {
   const entries = new Map<string, Entry>()

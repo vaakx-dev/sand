@@ -1,4 +1,4 @@
-import type { DeviceKind, GrantKind } from '@sand/devices-contract'
+import type { DeviceKind, GrantKind, JoinKind } from '@sand/devices-contract'
 import { hashSecret, randomSecret } from '@sand/util/fs'
 
 const lifetimes: Record<GrantKind, number> = {
@@ -21,7 +21,7 @@ export interface GrantOptions {
   life?: number
 }
 
-export const grantAccepts = (grant: Grant, kind: DeviceKind, handoffKind?: DeviceKind) => {
+export const grantAccepts = (grant: Grant, kind: JoinKind, handoffKind?: DeviceKind) => {
   if (grant.kind === 'device') return kind === 'phone' || kind === 'browser'
   if (grant.kind === 'pc') return kind === 'pc'
   return kind === handoffKind

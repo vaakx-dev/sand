@@ -9,6 +9,7 @@ export interface Openers {
   details(pc: string): void
   why(pc: string): void
   add(step?: AddStep): void
+  agent(): void
   command(install: string): void
 }
 

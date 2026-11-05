@@ -1,6 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/server'
+import type { AgentAccess } from '@sand/devices-contract'
 import {
   type Call,
+  failure,
   failureOf,
   readLimit,
   threadList,
@@ -43,7 +45,7 @@ const readInput = z.object({
 const startInput = z.object({
   prompt,
   pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
-  cwd: z.string().optional().describe('The folder the thread works in (default: the folder this server runs in, when it starts on this PC)'),
+  cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (sand mcp on stdio defaults to the folder it runs in)'),
   project: z.string().optional().describe('A project id to work in instead of a folder'),
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),
@@ -80,8 +82,18 @@ const respond = async (work: () => Promise<unknown>) => {
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
 
-export const threadsServer = (use: Use, here: string) => {
+const deny = async () => {
+  throw failure('denied', 'This agent may only read threads; give it operate access in sand to start, message or stop them')
+}
+
+export interface ServerOptions {
+  access: AgentAccess
+  here?: string
+}
+
+export const threadsServer = (use: Use, { access, here }: ServerOptions) => {
   const server = new McpServer({ name: 'sand-threads', version: '1.0.0' })
+  const write = (work: () => Promise<unknown>) => respond(access === 'operate' ? work : deny)
 
   server.registerTool(
     'thread_list',
@@ -101,9 +113,9 @@ export const threadsServer = (use: Use, here: string) => {
     'thread_start',
     { description: 'Start a new sand thread with a first message. Returns at once; use thread_wait for the reply', inputSchema: startInput, annotations: writing },
     ({ clientRequestId, ...input }) =>
-      respond(() =>
+      write(() =>
         use(call =>
-          call(threadStart, { ...(!input.project && !input.pc && { cwd: here }), ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
+          call(threadStart, { ...(here && !input.project && !input.pc && { cwd: here }), ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
         ),
       ),
   )
@@ -111,7 +123,7 @@ export const threadsServer = (use: Use, here: string) => {
     'thread_send',
     { description: 'Send a message to a thread. Returns at once; use thread_wait for the reply', inputSchema: sendInput, annotations: writing },
     ({ thread, clientRequestId, ...input }) =>
-      respond(() => use(call => call(threadSend, { session: thread, ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }))),
+      write(() => use(call => call(threadSend, { session: thread, ...input, origin: 'mcp', clientRequestId: requestId(clientRequestId) }))),
   )
   server.registerTool(
     'thread_wait',
@@ -127,7 +139,7 @@ export const threadsServer = (use: Use, here: string) => {
   server.registerTool(
     'thread_stop',
     { description: "Stop a thread's running turn", inputSchema: z.object({ thread }) },
-    ({ thread }) => respond(async () => ({ thread, stopped: await use(call => call(threadStop, { session: thread })) })),
+    ({ thread }) => write(async () => ({ thread, stopped: await use(call => call(threadStop, { session: thread })) })),
   )
   return server
 }

@@ -9,7 +9,7 @@ declare const phantom: unique symbol
 
 type InferInput<S extends StandardSchemaV1> = NonNullable<S['~standard']['types']>['input']
 
-export type CallerKind = 'pc' | 'phone' | 'browser' | 'cli' | 'runtime'
+export type CallerKind = 'pc' | 'phone' | 'browser' | 'cli' | 'agent' | 'runtime'
 
 export type RequestCallers = 'user' | 'pc' | 'runtime' | 'any'
 
