@@ -65,9 +65,10 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
 
   const recall = (event: KeyboardEvent) => {
     if (model.text.get() || modified(event)) return false
-    const text = lastPrompt(ctx)
-    if (!text) return false
-    editor.replace(text)
+    const prompt = lastPrompt(ctx)
+    if (!prompt?.text) return false
+    model.records.add(prompt.records)
+    editor.replace(prompt.text)
     return true
   }
 

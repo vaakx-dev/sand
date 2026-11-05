@@ -1,4 +1,4 @@
-import { feedbackOnly, hasToolResult, promptText, type Entry, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
+import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { models, type SendOptions } from '@sand/web-client/contract'
 import { compose, contentName } from '../attachments/content'
@@ -47,7 +47,9 @@ const prompted = (entry: Entry) => entry.type === 'message' && asked(entry.data 
 export const lastPrompt = (ctx: ComposerContext) => {
   const thread = ctx.threads.current()
   const entry = thread && ctx.threads.path(thread.id).findLast(prompted)
-  return entry ? promptText(entry.data as Message) : ''
+  if (!entry) return undefined
+  const message = entry.data as Message
+  return { text: promptText(message), records: userParts(message).flatMap(part => (part.kind === 'context' ? part.records : [])) }
 }
 
 export const retry = async (ctx: ComposerContext) => {
