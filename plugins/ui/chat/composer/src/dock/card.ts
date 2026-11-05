@@ -28,6 +28,7 @@ export interface CardParts {
   menu: SendMenu
   plus: Plus
   dropping: Sig<boolean>
+  typed: () => void
 }
 
 const labelsByChar = (triggers: Trigger[]) => {
@@ -49,7 +50,7 @@ const placeholder = (model: Model, wide: () => boolean) => () => {
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
 
-export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
+export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const wide = media(`(min-width: ${BREAKPOINT.md})`)
@@ -70,6 +71,7 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   }
 
   const keydown = (event: KeyboardEvent) => {
+    typed()
     if (event.isComposing) return false
     if (event.key === 'Escape') return escape()
     if (event.key === 'ArrowUp') return recall(event)

@@ -1,3 +1,4 @@
+import { afterTyping } from '@sand/composer/contract'
 import { pcHello, type wire as wireService } from '@sand/devices-contract'
 import type { Kit, kit as kitService } from '@sand/ui-kit/contract'
 import { errorMessage, joinDisposers } from '@sand/util'
@@ -71,8 +72,9 @@ const pendingCard = ({ kit, wire }: CardContext, session: string, request: Secre
 export const secretCard = (ctx: CardContext, session: string, request: SecretRequest) => {
   const answered = () => answerIn(ctx.threads.get(session), request.id)
   const answer = sig(answered())
+  const held = sig(true)
   const waiting = sig<boolean | undefined>(undefined)
-  const shown = derive(() => shownOf(answer.get(), waiting.get()))
+  const shown = derive(() => shownOf(answer.get(), held.get() ? undefined : waiting.get()))
   const check = () => {
     if (!answer.get()) void ctx.wire.call(secretWaiting, { session, id: request.id }).then(found => waiting.set(found), () => {})
   }
@@ -81,6 +83,7 @@ export const secretCard = (ctx: CardContext, session: string, request: SecretReq
       onMount: () => {
         check()
         return joinDisposers(
+          afterTyping(ctx, () => held.set(false)),
           ctx.on(threadChange, id => {
             if (id === session && !answer.get()) answer.set(answered())
           }),
