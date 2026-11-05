@@ -1,13 +1,15 @@
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelPill } from '@sand/model-panel/contract'
-import { pluginReload } from '@sand/reload/contract'
 import { errorMessage } from '@sand/util'
 import { models, modelsChange, outbox, outboxChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
+import { commandChar } from './complete/detect'
+import { createTriggers } from './complete/registry'
 import type { ComposerContext } from './context'
+import type { Command } from './contract'
 import type { Saved } from './drafts/store'
 import { createRecords } from './records'
 import { createHolds } from './send/holds'
@@ -24,8 +26,6 @@ interface Outgoing {
 }
 
 type Delivery = 'now' | 'queued' | 'unreachable'
-
-const reloadText = '/reload'
 
 const deliveryOf = (ctx: ComposerContext): Delivery => {
   const pc = sendDevice(ctx)
@@ -110,17 +110,16 @@ export const createModel = (ctx: ComposerContext) => {
     }
   }
 
-  const reload = (run: () => Promise<void>) => {
+  const runCommand = (command: Command) => {
     const before = text.get()
-    const task = async () => {
-      clear()
-      await run()
-    }
-    return attempt(false, task, error => {
+    text.set('')
+    return attempt(false, async () => command.run(), error => {
       if (!text.get()) text.set(before)
       fail(errorMessage(error))
     })
   }
+
+  const triggers = createTriggers(command => void runCommand(command))
 
   const sendPrompt = (outgoing: Outgoing) => {
     const task = async () => {
@@ -136,8 +135,8 @@ export const createModel = (ctx: ComposerContext) => {
     if (sending.get() || blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
     const attached = files.items.get().length > 0
-    const reloader = ctx.get(pluginReload)
-    if (!attached && value === reloadText && reloader) return reload(reloader.run)
+    const command = value.startsWith(commandChar) ? triggers.named(value.slice(1)) : undefined
+    if (command && !attached) return runCommand(command)
     const pill = ctx.get(modelPill)
     if ((value || attached) && modelMissing(ctx, settings()) && pill) return pill.open()
     return sendPrompt({ typed: typed(), options: { mode, clientRequestId: crypto.randomUUID() } })
@@ -147,6 +146,7 @@ export const createModel = (ctx: ComposerContext) => {
     text,
     files,
     records,
+    triggers,
     picked,
     settings,
     choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),

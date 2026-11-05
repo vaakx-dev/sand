@@ -3,7 +3,7 @@ import { EditorState, Transaction, type Extension } from '@codemirror/state'
 import { EditorView, keymap, placeholder as placeholderText } from '@codemirror/view'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, effect, scoped, span, type Sig } from '@vaakx-dev/vrui'
-import { spacedLink } from '../records'
+import { placeLink } from './chips/place'
 import { quote } from './quotes/commands'
 import { quoteState } from './quotes/field'
 import { quoteKeys } from './quotes/keys'
@@ -49,20 +49,12 @@ export const createEditor = (kit: Kit, text: Sig<string>, options: EditorOptions
     view.focus()
   }
 
-  const reference = (link: string) => {
-    const { state } = view
-    const { from, to } = state.selection.main
-    const insert = spacedLink(link, state.sliceDoc(Math.max(0, from - 1), from), state.sliceDoc(to, to + 1))
-    view.dispatch({ changes: { from, to, insert }, selection: { anchor: from + insert.length }, scrollIntoView: true, userEvent: 'input.reference' })
-    view.focus()
-  }
-
   return {
     node: div({ class: 'text-base text-neutral-100 md:text-sm leading-relaxed' }, view.dom),
     focus: () => view.focus(),
     focusEnd,
     insert: (value: string) => view.dispatch(view.state.replaceSelection(value), { scrollIntoView: true, userEvent: 'input' }),
     quote: (value: string) => quote(view, value),
-    reference,
+    reference: (link: string) => placeLink(view, link, view.state.selection.main.from, view.state.selection.main.to),
   }
 }

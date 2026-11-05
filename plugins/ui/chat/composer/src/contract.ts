@@ -26,6 +26,27 @@ export interface ComposerContent {
 
 export type SlotView = HTMLElement | (() => HTMLElement)
 
+export interface TriggerItem {
+  label: string
+  description?: string
+  icon?: IconName
+  path?: boolean
+  partial?: boolean
+}
+
+export interface Trigger<T extends TriggerItem = TriggerItem> {
+  char: string
+  label: string
+  items(query: string): T[] | Promise<T[]>
+  accept(item: T): string | ContextRecord
+}
+
+export interface Command {
+  name: string
+  description: string
+  run(): void | Promise<void>
+}
+
 export interface Composer {
   focus(): void
   value(): string
@@ -41,6 +62,8 @@ export interface Composer {
   clear(): void
   sendMenu(action: NavAction): Dispose
   plus(entry: PlusEntry, order?: number): Dispose
+  trigger<T extends TriggerItem>(trigger: Trigger<T>, order?: number): Dispose
+  command(command: Command): Dispose
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
 }
