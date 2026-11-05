@@ -48,6 +48,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, switched: () =>
     if (!isBlank(saved)) {
       model.text.set(saved.text)
       model.files.set(saved.items)
+      model.picked.set(saved.settings ?? {})
     }
     ready = true
   }

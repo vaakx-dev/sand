@@ -1,4 +1,5 @@
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
+import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelPill } from '@sand/model-panel/contract'
 import { pluginReload } from '@sand/reload/contract'
 import { errorMessage } from '@sand/util'
@@ -32,10 +33,16 @@ const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
 
 export type TurnError = NonNullable<ReturnType<typeof turnErrorOf>>
 
+const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettings => {
+  const { model, effort, speed } = { ...settings, ...patch }
+  return { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
+}
+
 export const createModel = (ctx: ComposerContext) => {
   const text = sig('')
   const segments = createSegments(text)
   const files = createFiles(ctx)
+  const picked = sig<SessionSettings>({})
   const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
   const sending = sig(false)
   const dismissed = sig(new Set<string>())
@@ -55,6 +62,14 @@ export const createModel = (ctx: ComposerContext) => {
   const clear = () => {
     text.set('')
     files.set([])
+    picked.set({})
+  }
+
+  const settings = (): SessionSettings => {
+    const known = ctx.get(models)
+    const pick = picked.get()
+    const usable = Boolean(pick.model && known?.info(pick.model))
+    return { ...known?.defaults(), ...(usable && pick) }
   }
 
   const fail = (message: string) => failure.set({ text: message, retry: false })
@@ -97,7 +112,7 @@ export const createModel = (ctx: ComposerContext) => {
     const before = typed()
     const task = async () => {
       const items = await files.upload(sendDevice(ctx))
-      await submit(ctx, value, items)
+      await submit(ctx, value, items, settings())
       if (unchanged(before)) clear()
     }
     return attempt(true, task, couldNotSend)
@@ -110,7 +125,7 @@ export const createModel = (ctx: ComposerContext) => {
     const reloader = ctx.get(pluginReload)
     if (!attached && value === reloadText && reloader) return reload(reloader.run)
     const pill = ctx.get(modelPill)
-    if ((value || attached) && modelMissing(ctx) && pill) return pill.open()
+    if ((value || attached) && modelMissing(ctx, settings()) && pill) return pill.open()
     return sendPrompt(value)
   }
 
@@ -118,6 +133,9 @@ export const createModel = (ctx: ComposerContext) => {
     text,
     segments,
     files,
+    picked,
+    settings,
+    choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),
     failure,
     sending,
     running,
@@ -132,7 +150,7 @@ export const createModel = (ctx: ComposerContext) => {
     send,
     clear,
     fail,
-    draft: (): Saved => ({ text: text.get(), items: files.held() }),
+    draft: (): Saved => ({ text: text.get(), items: files.held(), settings: picked.get() }),
     retryTurn: () => void retry(ctx).catch(error => fail(errorMessage(error))),
     dismiss: (key: string) => dismissed.update(keys => new Set([...keys, key])),
   }

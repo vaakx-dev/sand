@@ -1,5 +1,6 @@
 import type { WireHost } from '@sand/host-hub/contract'
 import { loopRun } from '@sand/loop/contract'
+import { modelSettings } from '@sand/model/contract'
 import { joinDisposers } from '@sand/util'
 import { existsSync } from 'node:fs'
 import {
@@ -47,9 +48,10 @@ export const sessionRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle
       session(id).checkout(entry)
       return true
     }),
-    wire.handle(loopRun, ({ session: id, prompt }) => {
+    wire.handle(loopRun, ({ session: id, prompt, settings }) => {
       const found = session(id)
       ctx.emit(userWrote, found)
+      if (settings) ctx.get(modelSettings)?.update(found, settings)
       return ctx.loop.run(found, prompt)
     }),
     wire.handle(loopInterrupt, ({ session: id }) => ctx.loop.interrupt(session(id))),

@@ -1,6 +1,6 @@
 import { composer } from '@sand/composer/contract'
 import type { wire } from '@sand/devices-contract'
-import { settingsSet } from '@sand/model/contract'
+import { defaultsSet } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
 import type { models } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
@@ -34,7 +34,7 @@ export const setupState = (ctx: SetupContext) => {
     busy.set(true)
     error.set('')
     try {
-      await ctx.wire.call(settingsSet, { patch: { model: id } })
+      await ctx.wire.call(defaultsSet, { patch: { model: id } })
       step.set('done')
     } catch (failure) {
       error.set(errorMessage(failure))

@@ -11,6 +11,7 @@ import {
   type WireSessionRef,
 } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { sessionSettings } from '@sand/model/contract'
 import type { OpenedSession } from '@sand/server/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
@@ -38,4 +39,8 @@ export const toolStartWire = wireEvent<[call: ToolCallBlock, session: WireSessio
 export const toolProgressWire = wireEvent<[call: ToolCallBlock, text: string, session: WireSessionRef]>('tool.progress')
 export const toolResultWire = wireEvent<[result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]>('tool.result')
 
-export const loopRun = request('loop.run', { input: z.object({ session: z.string(), prompt: promptInput }), output: type<TurnResult>(), place: 'thread' })
+export const loopRun = request('loop.run', {
+  input: z.object({ session: z.string(), prompt: promptInput, settings: sessionSettings.optional() }),
+  output: type<TurnResult>(),
+  place: 'thread',
+})

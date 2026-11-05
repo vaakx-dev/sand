@@ -1,4 +1,5 @@
 import type { UserContent } from '@sand/chats/contract'
+import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
@@ -39,6 +40,8 @@ export interface Composer {
   clear(): void
   sendMenu(action: NavAction): Dispose
   plus(entry: PlusEntry, order?: number): Dispose
+  settings(): SessionSettings
+  choose(patch: SettingsPatch): void
 }
 
 export interface ThreadDraft extends DraftTarget {
