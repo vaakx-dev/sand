@@ -1,7 +1,7 @@
 {
   "name": "@sand/reload",
   "version": "0.0.0",
-  "description": "Restarts the sand plugins from a sidebar button",
+  "description": "Restarts the sand plugins from a sidebar button or /reload",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,9 +10,10 @@
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Reload button",
-    "summary": "Restarts the sand plugins from a sidebar button"
+    "summary": "Restarts the sand plugins from a sidebar button or /reload"
   },
   "dependencies": {
+    "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",

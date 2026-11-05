@@ -8,7 +8,7 @@ export const theme = EditorView.theme(
     '.cm-scroller': { fontFamily: 'inherit', lineHeight: 'inherit', overflowY: 'auto' },
     '.cm-content': { minHeight: SPACE['8'], padding: '0', caretColor: 'currentColor' },
     '.cm-line': { padding: `0 ${SPACE['1']}` },
-    '.cm-placeholder': { color: colorVar('neutral', 500) },
+    '.cm-placeholder': { color: colorVar('neutral', 500), display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'top' },
   },
   { dark: true },
 )

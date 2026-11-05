@@ -1,21 +1,23 @@
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
-import { threadSelect } from '@sand/web-client/contract'
+import { fileIndex, skillIndex, threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'
+import { fileTrigger } from './complete/files'
+import { skillTrigger } from './complete/skills'
 import { inject } from './context'
 import { card, type Card } from './dock/card'
 import { dock } from './dock/dock'
 import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
+import { spacedLink } from './editor/chips/place'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
 import { createPlus } from './plus/entries'
-import { spacedLink } from './records'
 import { createSendMenu } from './send/menu'
 
 export default definePlugin({
@@ -61,6 +63,8 @@ export default definePlugin({
       ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
       plus: plus.add,
+      trigger: model.triggers.add,
+      command: model.triggers.addCommand,
       settings: model.settings,
       choose: model.choose,
     }
@@ -77,6 +81,8 @@ export default definePlugin({
       2,
     )
     ctx.on(threadSelect, session.open)
+    ctx.watch(fileIndex, found => found && model.triggers.add(fileTrigger(found, ctx.threads)))
+    ctx.watch(skillIndex, found => found && model.triggers.add(skillTrigger(found)))
     ctx.effect(() => () => session.keep())
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)

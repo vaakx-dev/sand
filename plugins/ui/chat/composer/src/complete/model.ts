@@ -1,36 +1,34 @@
 import { Prec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
-import type { IconName, Kit } from '@sand/ui-kit/contract'
+import { contextLink } from '@sand/chats/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { derive, sig, type KeyMap } from '@vaakx-dev/vrui'
+import type { Trigger } from '../contract'
+import { placeLink } from '../editor/chips/place'
+import type { Records } from '../records'
+import { typedTrigger } from './detect'
+import { merged, noMatch, type Found, type Suggestion } from './merge'
 
-export interface Suggestion {
-  value: string
-  description?: string
-  partial?: boolean
-  group?: string
-  icon?: IconName
-}
-
-export interface CompletionSource {
-  trigger: string
-  label: string
-  ready(): boolean
-  pattern: RegExp
-  items(query: string): Suggestion[] | Promise<Suggestion[]>
-  hint?(query: string): string | undefined
-}
-
+const perGroup = 10
 const limit = 20
 
 interface Target {
   view: EditorView
   from: number
+  query: string
 }
 
-export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) => {
+const lookup = (trigger: Trigger, query: string): Promise<Found> =>
+  Promise.resolve()
+    .then(() => trigger.items(query))
+    .then(
+      items => ({ trigger, items }),
+      () => ({ trigger, items: [] }),
+    )
+
+export const createCompletion = ({ listbox }: Kit, triggers: () => Trigger[], records: Records) => {
   const items = sig<Suggestion[]>([])
   const hint = sig<string | undefined>(undefined)
-  const source = sig<CompletionSource | undefined>(undefined)
   const visible = derive(() => items.get().length > 0 || Boolean(hint.get()))
   let target: Target | undefined
   let request = 0
@@ -41,7 +39,7 @@ export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) 
     hint.set(undefined)
   }
 
-  const insert = (text: string) => {
+  const replace = (text: string) => {
     if (!target) return
     const { view, from } = target
     view.dispatch({ changes: { from, to: view.state.selection.main.head, insert: text }, selection: { anchor: from + text.length }, userEvent: 'input.complete' })
@@ -49,11 +47,15 @@ export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) 
   }
 
   const accept = (index: number) => {
-    const item = items.get()[index]
-    const current = source.get()
-    if (!item || !current) return
-    insert(`${current.trigger}${item.value}${item.partial ? '' : ' '}`)
-    if (!item.partial) close()
+    const chosen = items.get()[index]
+    if (!chosen || !target) return
+    const result = chosen.trigger.accept(chosen.item)
+    if (typeof result === 'string') replace(result)
+    else {
+      records.add([result])
+      placeLink(target.view, contextLink(result), target.from, target.view.state.selection.main.head)
+    }
+    if (!chosen.item.partial) close()
   }
 
   const box = listbox({ count: () => items.get().length, choose: accept, wrap: true })
@@ -72,31 +74,28 @@ export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) 
     return true
   }
 
-  const show = (found: Suggestion[], candidate: CompletionSource, query: string, at: Target) => {
-    const shown = found.slice(0, limit)
-    if (shown.length === 1 && shown[0]?.value === query) return close()
+  const show = (found: Suggestion[], matching: Trigger[], at: Target) => {
+    if (found.length === 1 && found[0]?.item.label === at.query) return close()
     target = at
-    source.set(candidate)
-    hint.set(shown.length ? undefined : candidate.hint?.(query))
-    items.set(shown)
+    hint.set(found.length ? undefined : noMatch(matching))
+    items.set(found)
     box.select(0)
   }
 
   const update = (view: EditorView) => {
     const { head } = view.state.selection.main
-    const line = view.state.doc.lineAt(head)
-    const typed = line.text.slice(0, head - line.from)
-    for (const candidate of sources) {
-      const query = candidate.pattern.exec(typed)?.[1]
-      if (query === undefined) continue
-      const ticket = ++request
-      const at = { view, from: head - query.length - candidate.trigger.length }
-      void Promise.resolve(candidate.items(query)).then(found => {
-        if (ticket === request) show(found, candidate, query, at)
-      })
-      return
-    }
-    close()
+    const all = triggers()
+    const found = typedTrigger(
+      view.state.sliceDoc(0, head),
+      all.map(trigger => trigger.char),
+    )
+    if (!found) return close()
+    const matching = all.filter(trigger => trigger.char === found.char)
+    const ticket = ++request
+    const at = { view, from: found.from, query: found.query }
+    void Promise.all(matching.map(trigger => lookup(trigger, found.query))).then(groups => {
+      if (ticket === request) show(merged(groups, perGroup, limit), matching, at)
+    })
   }
 
   const extension = [
@@ -108,7 +107,7 @@ export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) 
     Prec.highest(EditorView.domEventHandlers({ keydown })),
   ]
 
-  return { items, hint, source, visible, box, close, extension }
+  return { items, hint, visible, box, close, extension }
 }
 
 export type Completion = ReturnType<typeof createCompletion>

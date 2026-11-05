@@ -1,11 +1,16 @@
-import { fileIndex } from '@sand/web-client/contract'
-import type { ComposerContext } from '../context'
-import type { CompletionSource } from './model'
+import type { ContextRecord } from '@sand/chats/contract'
+import { uuid } from '@sand/util'
+import type { FileIndex, Threads } from '@sand/web-client/contract'
+import type { Trigger, TriggerItem } from '../contract'
 import { rank } from './rank'
 
 export interface FileEntry {
   path: string
   directory: boolean
+}
+
+interface FileItem extends TriggerItem {
+  entry: FileEntry
 }
 
 const expanded = new WeakMap<string[], FileEntry[]>()
@@ -22,25 +27,16 @@ const withDirectories = (files: string[]): FileEntry[] => {
   return entries
 }
 
-const quote = (entry: FileEntry, quoted: boolean) => {
-  if (!quoted && !/\s/.test(entry.path)) return entry.path
-  return entry.directory ? `"${entry.path}` : `"${entry.path}"`
-}
+const fileRecord = (path: string): ContextRecord => ({ v: 1, id: uuid(), kind: 'file', label: path.slice(path.lastIndexOf('/') + 1), data: { path } })
 
-export const fileSource = (ctx: ComposerContext): CompletionSource => ({
-  trigger: '@',
+const browse = (path: string) => (/\s/.test(path) ? `@"${path}` : `@${path}`)
+
+export const fileTrigger = (index: FileIndex, threads: Threads): Trigger<FileItem> => ({
+  char: '@',
   label: 'files',
-  ready: () => Boolean(ctx.get(fileIndex)),
-  pattern: /(?:^|\s)@("[^"]*|[^\s"]*)$/,
-  async items(typed) {
-    const index = ctx.get(fileIndex)
-    if (!index) return []
-    const quoted = typed.startsWith('"')
-    const query = (quoted ? typed.slice(1) : typed).replaceAll('\\', '/')
-    const files = await index.list(ctx.threads.cwd()).catch(() => [])
-    return rank(withDirectories(files), query)
-      .slice(0, 10)
-      .map(entry => ({ value: quote(entry, quoted), group: 'Files', icon: entry.directory ? 'folder' : 'file', ...(entry.directory && { partial: true }) }))
+  async items(query) {
+    const files = await index.list(threads.cwd())
+    return rank(withDirectories(files), query.replaceAll('\\', '/')).map((entry): FileItem => ({ label: entry.path, icon: entry.directory ? 'folder' : 'file', partial: entry.directory, entry }))
   },
-  hint: () => (ctx.get(fileIndex) ? 'No matching files.' : undefined),
+  accept: ({ entry }) => (entry.directory ? browse(entry.path) : fileRecord(entry.path)),
 })
