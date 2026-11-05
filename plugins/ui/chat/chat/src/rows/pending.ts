@@ -11,7 +11,7 @@ const queuedRows = (ctx: ChatContext, thread: string, pending: Pending, context:
   const remove = () => ctx.turns.withdraw(thread, pending.id).catch(() => {})
   const parts = userParts({ role: 'user', content: promptContent(pending.prompt) })
   const custom = (type: string) => Boolean(context.registry.entryRenderer(type))
-  const entry: Entry = { id: pending.id, session: thread, parent: null, at: pending.at, type: 'message', data: null }
+  const entry: Entry = { id: pending.id, session: thread, parent: null, at: pending.at, type: 'message', data: null, seq: 0 }
   const shown = untagged(parts, custom)
   const asked = shown.length
     ? [userMessage({ kind: 'user', key: pending.id, parts: shown, steer: true, at: pending.at }, context, () => [

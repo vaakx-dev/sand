@@ -2,10 +2,12 @@ import { wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 import type { Entry } from './entry'
+import type { Ledger } from './ledger'
 import type { Prompt } from './message'
 import type { Session, SessionInfo, Sessions } from './session'
 
 export type * from './entry'
+export type * from './ledger'
 export type * from './message'
 export type * from './parts'
 export * from './prompt'
@@ -25,6 +27,7 @@ const isPrompt = (value: unknown) =>
 export const promptInput = z.custom<Prompt>(isPrompt, 'Expected a prompt')
 
 export const sessions = service<Sessions>('sessions')
+export const ledger = service<Ledger>('ledger')
 
 export const sessionEntry = event<(session: Session, entry: Entry) => void>('session.entry')
 export const sessionUpdate = event<(session: Session) => void>('session.update')

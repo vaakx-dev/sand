@@ -6,7 +6,7 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
+import { ledger, sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
 import { open } from './db'
 import { usedMedia } from './media'
 import { createStore } from './store'
@@ -18,7 +18,8 @@ export default definePlugin({
   config: z.object({ path: z.string().optional() }),
   apply(ctx, config) {
     const { home } = ctx.paths
-    const db = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
+    const book = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
+    const { db } = book
     ctx.effect(() => () => db.close())
     ctx.effect(() => ctx.media.inUse(usedMedia(db)))
     const store = createStore(db, {
@@ -35,6 +36,7 @@ export default definePlugin({
       scratch: id => join(home, 'scratch', id),
     })
     ctx.provide(sessions, store.sessions)
+    ctx.provide(ledger, book)
     ctx.on(runtimeRelease, ids => ids.forEach(store.forget))
   },
 })

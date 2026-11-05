@@ -2,7 +2,7 @@ import type { Database } from 'bun:sqlite'
 import { createEntryCache } from './cache'
 import type { ChatPatch, Session, SessionInfo, Sessions } from './contract'
 import { createPaging } from './paging'
-import { parseRow, type Row } from './paging/rows'
+import { entryColumns, parseRow, type Row } from './paging/rows'
 import { firstTitle, quickTasks } from './quick'
 import { chatRecords } from './records'
 import { relocator } from './relocate'
@@ -54,7 +54,7 @@ export const createStore = (db: Database, { hooks, busy, closing, projectOf, kno
   const removeChats = chatRemover(db)
   const tasks = quickTasks(scratch)
   const children = childSummaries(db)
-  const ofType = db.query<Row, { type: string }>('select * from entries where type = $type order by at')
+  const ofType = db.query<Row, { type: string }>(`select ${entryColumns} from entries e where e.type = $type order by e.at`)
 
   const sessionHooks: SessionHooks = {
     entry(session, entry) {

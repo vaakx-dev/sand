@@ -1,8 +1,8 @@
 import type { EntryCache } from './cache'
-import type { Entry, Message, Session, SessionInfo } from './contract'
+import type { AppendMeta, Entry, Message, Session, SessionInfo } from './contract'
 import type { Database } from 'bun:sqlite'
 import type { Paging } from './paging'
-import { parseRow, type Row } from './paging/rows'
+import { entryColumns, parseRow, type Row } from './paging/rows'
 
 export interface SessionHooks {
   entry(session: Session, entry: Entry): void
@@ -11,17 +11,12 @@ export interface SessionHooks {
 
 export const createSession = (db: Database, info: SessionInfo, hooks: SessionHooks, cache: EntryCache, paging: Paging): Session => {
   const insert = db.query(
-    'insert into entries (id, session, parent, at, type, data, size) values ($id, $session, $parent, $at, $type, $data, $size)',
+    'insert into entries (id, session, parent, at, type, data, size, seq, turn) values ($id, $session, $parent, $at, $type, $data, $size, $seq, $turn)',
   )
+  const nextSeq = db.query<{ seq: number }, { session: string }>('insert or replace into changes (session) values ($session) returning seq')
+  const headOf = db.query<{ head: string | null }, { id: string }>('select head from chats where id = $id')
   const setHead = db.query('update chats set head = $head where id = $id')
-  const load = db.query<Row, { session: string }>('select * from entries where session = $session')
-  const append = db.transaction((...added: Entry[]) => {
-    for (const entry of added) {
-      const data = JSON.stringify(entry.data)
-      insert.run({ ...entry, data, size: data.length })
-    }
-    setHead.run({ head: added.at(-1)!.id, id: info.id })
-  })
+  const load = db.query<Row, { session: string }>(`select ${entryColumns} from entries e where e.session = $session`)
   let entries: Map<string, Entry> | undefined
   const unload = () => {
     entries = undefined
@@ -32,24 +27,26 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     return map
   }
 
+  const write = db
+    .transaction((type: string, data: unknown, { id = Bun.randomUUIDv7(), at = Date.now(), turn }: AppendMeta): Entry => {
+      const parent = headOf.get({ id: info.id })?.head ?? null
+      if (parent !== session.head) unload()
+      const { seq } = nextSeq.get({ session: info.id })!
+      const json = JSON.stringify(data)
+      insert.run({ id, session: info.id, parent, at, type, data: json, size: json.length, seq, turn: turn ?? null })
+      setHead.run({ head: id, id: info.id })
+      return { id, session: info.id, parent, at, type, data, seq, ...(turn && { turn }) }
+    })
+    .immediate
+
   const session: Session = {
     ...info,
-    append(type, data, id, at) {
-      const entry = { id: id ?? Bun.randomUUIDv7(), session: info.id, parent: session.head, at: at ?? Date.now(), type, data }
-      append(entry)
+    append(type, data, meta = {}) {
+      const entry = write(type, data, meta)
       all().set(entry.id, entry)
       session.head = entry.id
       hooks.entry(session, entry)
       return entry
-    },
-    appendMany(items) {
-      if (!items.length) return
-      const added = items.map((item, index) => ({ ...item, session: info.id, parent: index ? items[index - 1]!.id : session.head }))
-      append(...added)
-      const map = all()
-      for (const entry of added) map.set(entry.id, entry)
-      session.head = added.at(-1)!.id
-      hooks.update(session)
     },
     path() {
       const path: Entry[] = []
@@ -65,7 +62,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     since: after => paging.since(info.id, session.head, after),
     carried: (before, types) => paging.carried(info.id, before, types),
     latest: type => (session.head ? paging.latest(info.id, session.head, type) : undefined),
-    entries: () => [...all().values()].sort((a, b) => a.at - b.at || a.id.localeCompare(b.id)),
+    entries: () => [...all().values()].sort((a, b) => a.seq - b.seq),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {
       setHead.run({ head: entry, id: info.id })
