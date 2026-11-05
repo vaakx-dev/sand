@@ -16,10 +16,10 @@ export const markStarted = (store: Store) => (item: OutboxItem, result: SendResu
 
 export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof createOutbox>): Turns => {
   const current: Turns = {
-    async send(id, prompt, { label, settings, mode } = {}) {
+    async send(id, prompt, { label, settings, mode, clientRequestId = crypto.randomUUID() } = {}) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
-      const item = { id: crypto.randomUUID(), session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
+      const item = { id: clientRequestId, session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
       await outbox.submit(item)
     },
     interrupt: id => wire.call(turnInterrupt, { session: id }),

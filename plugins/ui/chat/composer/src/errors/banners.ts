@@ -5,14 +5,14 @@ import { errorBanner } from './banner'
 import { turnErrorBanner } from './turn'
 
 const failureBanner = (ctx: ComposerContext, model: Model) =>
-  dynamicChild(model.failure, failure =>
-    failure
-      ? errorBanner(ctx.kit, {
-          text: failure.text,
-          ...(failure.retry && { retry: () => void model.send() }),
-          dismiss: () => model.failure.set(undefined),
-        })
-      : null,
-  )
+  dynamicChild(model.failure, failure => {
+    if (!failure) return null
+    const { text, retry } = failure
+    return errorBanner(ctx.kit, {
+      text,
+      ...(retry && { retry: () => void model.resend(retry) }),
+      dismiss: () => model.failure.set(undefined),
+    })
+  })
 
 export const errorBanners = (ctx: ComposerContext, model: Model) => [failureBanner(ctx, model), turnErrorBanner(ctx, model)]

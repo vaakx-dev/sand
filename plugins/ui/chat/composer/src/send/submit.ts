@@ -24,14 +24,14 @@ export const interrupt = async (ctx: ComposerContext) => {
   if (current?.running) await ctx.turns.interrupt(current.id)
 }
 
-export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, mode?: SendOptions['mode']) => {
+export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Pick<SendOptions, 'mode' | 'clientRequestId'>) => {
   if (!text && !attachments.length) return interrupt(ctx)
   const current = ctx.threads.current()
   const draft = ctx.threads.drafting()
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
   if (!thread) throw new Error('Pick a project for a new thread first')
   if (!current) await ctx.threads.select(thread.id, { replace: true })
-  await ctx.turns.send(thread.id, prompt(text, attachments), { label: label(text, attachments), settings: current ? undefined : settings, mode })
+  await ctx.turns.send(thread.id, prompt(text, attachments), { label: label(text, attachments), settings: current ? undefined : settings, ...options })
 }
 
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
