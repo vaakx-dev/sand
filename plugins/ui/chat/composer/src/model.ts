@@ -3,7 +3,7 @@ import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelPill } from '@sand/model-panel/contract'
 import { pluginReload } from '@sand/reload/contract'
 import { errorMessage } from '@sand/util'
-import { models, modelsChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
+import { models, modelsChange, outbox, outboxChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
@@ -23,7 +23,15 @@ interface Outgoing {
   options: Pick<SendOptions, 'mode' | 'clientRequestId'>
 }
 
+type Delivery = 'now' | 'queued' | 'unreachable'
+
 const reloadText = '/reload'
+
+const deliveryOf = (ctx: ComposerContext): Delivery => {
+  const pc = sendDevice(ctx)
+  if (ctx.get(wire)?.ready(pc) ?? true) return 'now'
+  return ctx.threads.current() && ctx.get(outbox)?.accepts(pc) ? 'queued' : 'unreachable'
+}
 
 const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
   const thread = ctx.threads.current()
@@ -51,14 +59,14 @@ export const createModel = (ctx: ComposerContext) => {
   const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
   const sending = sig(false)
   const dismissed = sig(new Set<string>())
-  const changes = pulse(ctx, [threadSelect, pcsChange, modelsChange], [wire, pcs])
+  const changes = pulse(ctx, [threadSelect, pcsChange, modelsChange, outboxChange], [wire, pcs, outbox])
   ctx.on(threadChange, id => {
     if (id === ctx.threads.current()?.id) changes.bump()
   })
 
   const running = changes.read(() => Boolean(ctx.threads.current()?.running))
   const idle = changes.read(() => !ctx.threads.current())
-  const online = changes.read(() => ctx.get(wire)?.ready(sendDevice(ctx)) ?? true)
+  const delivery = changes.read(() => deliveryOf(ctx))
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
   const empty = derive(() => !text.get().trim() && !files.items.get().length)
@@ -144,7 +152,7 @@ export const createModel = (ctx: ComposerContext) => {
     sending,
     running,
     idle,
-    online,
+    delivery,
     pcName,
     empty,
     blocked,
