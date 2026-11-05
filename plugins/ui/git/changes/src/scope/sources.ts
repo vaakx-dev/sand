@@ -1,7 +1,6 @@
+import { byOrder } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { ChangesScopeSource } from '../contract'
-
-const byOrder = (a: ChangesScopeSource, b: ChangesScopeSource) => (a.order ?? 0) - (b.order ?? 0)
 
 export const scopeSources = () => {
   const list = sig<ChangesScopeSource[]>([])

@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import { sig, type Child, type Derive, type Sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { RowDecoration, Sidebar } from '../contract'
@@ -13,8 +14,6 @@ export interface RowDecor {
 export interface RowDecorations extends Sidebar {
   row(item: Sig<ThreadItem>): RowDecor
 }
-
-const byOrder = (a: RowDecoration, b: RowDecoration) => (a.order ?? 0) - (b.order ?? 0)
 
 export const rowDecorations = (): RowDecorations => {
   const decorations = sig<RowDecoration[]>([])

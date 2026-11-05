@@ -4,7 +4,6 @@
   "description": "Short one-shot calls to a given model, as plain text or checked JSON",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

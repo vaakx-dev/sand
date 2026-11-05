@@ -4,7 +4,6 @@
   "description": "Discovers skills in plugin, home and project folders and gives the agent the skill tool",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -4,7 +4,6 @@
   "description": "Steers sent while a turn runs; the loop picks them up at its next step",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

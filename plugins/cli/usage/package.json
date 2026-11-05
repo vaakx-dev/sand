@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The sand usage command: tokens, API cost and plan limits",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "cli": "./src/index.ts",
     "label": "Usage command",

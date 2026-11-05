@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "types": ["bun"]
   },
-  "include": ["packages", "apps", "plugins"]
+  "include": ["packages", "apps", "plugins", "scripts"]
 }

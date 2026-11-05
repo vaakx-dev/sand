@@ -4,7 +4,6 @@
   "description": "Typesets LaTeX math formulas in the chat with KaTeX",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

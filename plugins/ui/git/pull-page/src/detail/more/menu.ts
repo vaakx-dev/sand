@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import type { Child } from '@vaakx-dev/vrui'
 import type { PullMenu } from '../../contract'
 import type { Shown } from '../shown'
@@ -24,10 +25,10 @@ const extended = (shown: Shown, menu: PullMenu): Section => ({
 })
 
 const groups = (shown: Shown, close: () => void): Child[][] => {
-  const sections = [...shown.parts.menus.entries.get().map(menu => extended(shown, menu)), ...builtIn(shown)].sort((a, b) => a.order - b.order)
-  const byOrder = new Map<number, Child[]>()
-  for (const section of sections) byOrder.set(section.order, [...(byOrder.get(section.order) ?? []), ...section.items(close)])
-  return [...byOrder.values()]
+  const sections = [...shown.parts.menus.entries.get().map(menu => extended(shown, menu)), ...builtIn(shown)].sort(byOrder)
+  const rows = new Map<number, Child[]>()
+  for (const section of sections) rows.set(section.order, [...(rows.get(section.order) ?? []), ...section.items(close)])
+  return [...rows.values()]
 }
 
 export const moreMenu = (shown: Shown) => {

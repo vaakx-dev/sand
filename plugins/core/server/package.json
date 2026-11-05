@@ -4,7 +4,6 @@
   "description": "Answers the sand host over a private socket: requests, events and page routes",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts"
   },
   "sand": {

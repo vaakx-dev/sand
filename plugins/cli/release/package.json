@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The sand release-assets command: writes the release bundle and stamp for a GitHub release",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "cli": "./src/index.ts",
     "label": "Release command",

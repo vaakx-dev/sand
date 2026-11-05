@@ -1,7 +1,6 @@
+import { byOrder } from '@sand/util'
 import { sig, untrack } from '@vaakx-dev/vrui'
 import type { TurnFooter } from '../parts/contract'
-
-const byOrder = (a: TurnFooter, b: TurnFooter) => (a.order ?? 0) - (b.order ?? 0)
 
 export const turnFooters = (changed: () => void) => {
   const list = sig<TurnFooter[]>([])

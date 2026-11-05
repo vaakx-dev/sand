@@ -4,7 +4,6 @@
   "description": "Lists built-in and user plugins, and lets a user copy of a built-in replace it",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

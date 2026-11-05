@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Keeps this PC connected to each of your other PCs, shares the device list with them and forwards connections through this PC",
   "type": "module",
-  "exports": {
-    ".": "./src/host.ts"
-  },
   "sand": {
     "host": "./src/host.ts",
     "runtime": "./src/runtime.ts",

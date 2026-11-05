@@ -1,4 +1,5 @@
 import { appsFolder } from '@sand/boot'
+import { trimSlash } from '@sand/util'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { commandLine } from './command-line'
@@ -12,7 +13,7 @@ const comparable = (text: string) => {
   return process.platform === 'win32' ? slashed.toLowerCase() : slashed
 }
 
-const folder = (path: string) => comparable(resolve(path)).replace(/\/+$/, '')
+const folder = (path: string) => trimSlash(comparable(resolve(path)))
 
 const namedHome = (line: string) => {
   const found = line.match(homeFlag)

@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import type { PaletteItem, PalettePage, PaletteSource } from './contract'
 
 const gather = (source: PaletteSource, query: string) => {
@@ -12,7 +13,7 @@ const gather = (source: PaletteSource, query: string) => {
 export const merged = (sources: PaletteSource[], query: string) => {
   const groups = new Map<string, PaletteItem[]>()
   const seen = new Set<string>()
-  for (const source of sources.toSorted((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+  for (const source of sources.toSorted(byOrder)) {
     for (const item of gather(source, query)) {
       if (seen.has(item.id)) continue
       seen.add(item.id)

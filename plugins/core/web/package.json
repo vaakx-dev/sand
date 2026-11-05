@@ -4,7 +4,6 @@
   "description": "Serves the browser UI: bundles the web extensions and hands them to the page",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

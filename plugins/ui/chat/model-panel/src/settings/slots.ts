@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import { div, list, sig } from '@vaakx-dev/vrui'
 import type { DefaultsView } from '../contract'
 
@@ -13,7 +14,7 @@ export const createSlots = () => {
 
   const add = (view: DefaultsView, order = 0) => {
     const entry = { id: ++next, view, order }
-    entries.update(all => [...all, entry].sort((a, b) => a.order - b.order))
+    entries.update(all => [...all, entry].sort(byOrder))
     return () => entries.update(all => all.filter(other => other !== entry))
   }
 

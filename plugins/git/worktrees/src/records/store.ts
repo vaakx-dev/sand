@@ -1,5 +1,5 @@
 import { pathKey } from '@sand/git/contract'
-import { serial } from '@sand/util'
+import { errorMessage, serial } from '@sand/util'
 import { isWithin, writeAtomic } from '@sand/util/fs'
 import type { WorkspaceKind } from '../contract'
 import { reviveSetup } from '../setup/state'
@@ -8,7 +8,7 @@ import { type Stored, storedSchema, type WorktreeRecord } from './schema'
 export type RecordStore = ReturnType<typeof createStore>
 
 const unreadable = (file: string, error: unknown) =>
-  new Error(`Couldn't read ${file}: ${error instanceof Error ? error.message : String(error)}. Fix or move the file; sand won't overwrite it.`)
+  new Error(`Couldn't read ${file}: ${errorMessage(error)}. Fix or move the file; sand won't overwrite it.`)
 
 const load = async (file: string): Promise<Stored> => {
   const source = Bun.file(file)

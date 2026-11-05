@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The sand install command: sets up a downloaded sand, optionally joining your other PCs",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "cli": "./src/index.ts",
     "label": "Install command",

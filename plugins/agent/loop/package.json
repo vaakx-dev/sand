@@ -4,7 +4,6 @@
   "description": "The agent loop: sends the conversation to the model, runs the tools it calls and repeats until it is done",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts"
   },
   "sand": {

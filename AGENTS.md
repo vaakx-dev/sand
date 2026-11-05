@@ -3,6 +3,7 @@
 - Everything is a plugin. drydock stays agent-agnostic.
 - A plugin's `package.json` `sand` field names an entry file for each place it runs: `host` (`sand serve`), `runtime` (the process behind the page), `print` (`sand -p`), `cli` (the other commands) and `web` (the page). The config plugin loads what the current place lists; the app picks no plugins. User plugins in `<home>/plugins` load only in the runtime.
 - Each plugin owns its wire contract in `src/contract.ts`, built with `request` and `wireEvent` from `@sand/host-hub/contract`.
+- Other packages import a plugin only through its contract, so a plugin's `exports` list its contract and nothing else (config also exports `.`, the entry the app loads). Helpers other plugins need go in its contract, or in a library under `packages/` when they're generic. `bun run check` enforces this and fails on imports across packages by path, unused `@sand/*` dependencies and import cycles between packages.
 - Register everything through `ctx` so unloading cleans it up.
 - The web UI is the only user surface; there is no TUI. Build features as plugins on shared services (`ui`, the wire protocol, web roles) rather than inside one UI.
 - Every visible part of the web UI is a browser extension. Depend on roles, never on another plugin's name: `inject` for hard dependencies, `ctx.watch` with a fallback for soft ones.

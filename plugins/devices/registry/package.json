@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The device list shared by your PCs, this PC's identity and who each caller is",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "host": "./src/index.ts",
     "label": "Devices",
