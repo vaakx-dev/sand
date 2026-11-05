@@ -1,45 +1,50 @@
-import type { LLMRequest, ThreadRef } from '@sand/accounts/contract'
+import type { HandoffBlock, LLMRequest, ThreadRef } from '@sand/accounts/contract'
 import type { Entry, Session } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
-import { type ProviderThreadInfo, type Segment, stepTools, turns } from '@sand/turns-contract/contract'
+import { type ProviderThreadInfo, type Segment, stepTools } from '@sand/turns-contract/contract'
 import type { ThreadsContext } from './context'
+import type { HandoffStore } from './store/handoffs'
+import { currentPath, madeBy } from './current'
+import { readsHistory, threadReadName } from './tools/thread-read'
 import { covered, headOf, threadBasis } from './view/basis'
-import { pathOf } from './view/path'
-import { renderView, type TurnSource } from './view/render'
+import { renderView } from './view/render'
 
 export interface Built {
   request: LLMRequest & { model: string }
   seen: Segment[]
 }
 
-const refOf = (thread: ProviderThreadInfo): ThreadRef => ({
-  id: thread.id,
-  generation: thread.generation,
-  fresh: !thread.seen.length,
-  seenHead: headOf(thread.seen),
-  ...(thread.native && { native: thread.native }),
-})
+const received = (seen: Segment[], handoff?: HandoffBlock) => (handoff ? seen.filter(segment => !('handoff' in segment && segment.handoff === handoff.id)) : seen)
+
+const refOf = (thread: ProviderThreadInfo, handoff?: HandoffBlock): ThreadRef => {
+  const seen = received(thread.seen, handoff)
+  return {
+    id: thread.id,
+    generation: thread.generation,
+    fresh: !seen.length,
+    seenHead: headOf(seen),
+    ...(thread.native && { native: thread.native }),
+  }
+}
 
 const lookupOf = (session: Session) => {
   let all: Map<string, Entry> | undefined
   return (id: string) => (all ??= new Map(session.entries().map(entry => [entry.id, entry]))).get(id)
 }
 
-const turnSourceOf = (ctx: ThreadsContext): TurnSource => {
-  const found = new Map<string, string | undefined>()
-  return turn => {
-    if (!found.has(turn)) found.set(turn, ctx.get(turns)?.get(turn)?.selection.source)
-    return found.get(turn)
-  }
-}
-
-export const currentPath = (ctx: ThreadsContext, session: Session) => pathOf(session.path(), ctx.entryViews)
-
-export const buildRequest = async (ctx: ThreadsContext, session: Session, thread: ProviderThreadInfo, { effort, speed }: Selection): Promise<Built> => {
+export const buildRequest = async (
+  ctx: ThreadsContext,
+  handoffs: HandoffStore,
+  session: Session,
+  thread: ProviderThreadInfo,
+  { effort, speed }: Selection,
+): Promise<Built> => {
   const path = currentPath(ctx, session)
   const basis = threadBasis(thread.id, thread.seen, path, lookupOf(session))
-  const { messages, delta } = renderView(basis, path, thread.source, turnSourceOf(ctx))
-  const tools = await ctx.waterfall(stepTools, ctx.context.tools(session, messages), session)
+  const { messages, delta } = renderView(basis, path, { source: thread.source, made: madeBy(ctx, path), handoff: handoffs.text })
+  const offered = await ctx.waterfall(stepTools, ctx.context.tools(session, messages), session)
+  const tools = readsHistory(thread) ? offered : offered.filter(tool => tool.name !== threadReadName)
+  const handoff = handoffs.pending(thread.id)
   return {
     request: {
       system: thread.system,
@@ -50,8 +55,9 @@ export const buildRequest = async (ctx: ThreadsContext, session: Session, thread
       speed,
       session: session.id,
       sessionKind: session.kind,
-      thread: refOf(thread),
+      thread: refOf(thread, handoff),
       delta,
+      ...(handoff && { handoff }),
     },
     seen: covered(basis, path),
   }

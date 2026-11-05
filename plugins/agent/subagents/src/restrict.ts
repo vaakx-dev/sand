@@ -9,12 +9,14 @@ import type { Meta } from './meta'
 
 const recursive = new Set(['agent'])
 
+const unrestricted = new Set(['thread_read'])
+
 const loaded = ({ deferred: _, ...tool }: ToolSpec): ToolSpec => tool
 
 export const restrictContext = (ctx: Context, resolve: Resolve, meta: Meta, maxDepth: number) => {
   const allows = (session: Session, tool: string) => {
     const info = meta(session)
-    if (!info) return true
+    if (!info || unrestricted.has(tool)) return true
     return (!info.tools || info.tools.includes(tool)) && !(info.depth >= maxDepth && recursive.has(tool))
   }
 

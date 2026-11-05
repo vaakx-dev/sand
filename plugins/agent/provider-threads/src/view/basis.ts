@@ -9,7 +9,10 @@ export interface Basis {
 
 export type Lookup = (id: string) => Entry | undefined
 
-const endOf = (segment: Segment) => ('entries' in segment ? segment.entries[1] : segment.summary)
+const endOf = (segment: Segment) => {
+  if ('entries' in segment) return segment.entries[1]
+  return 'summary' in segment ? segment.summary : segment.to
+}
 
 export const headOf = (seen: Segment[]) => {
   const last = seen.at(-1)
