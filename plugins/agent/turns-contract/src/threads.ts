@@ -3,7 +3,7 @@ import type { Session } from '@sand/chats/contract'
 import { event, service } from 'drydock'
 import type { TurnInfo } from './contract'
 
-export type Segment = { entries: [from: string, to: string] } | { summary: string }
+export type Segment = { entries: [from: string, to: string] } | { summary: string } | { handoff: string; to: string }
 
 export type ThreadStatus = 'idle' | 'active' | 'uncertain' | 'retired'
 

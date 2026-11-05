@@ -5,8 +5,10 @@ import { z } from 'zod'
 import { inject } from './context'
 import { handoffCap } from './handoff/budget'
 import { createThreads } from './prepare'
+import { createHandoffStore } from './store/handoffs'
 import { schema } from './store/schema'
 import { createThreadStore } from './store/threads'
+import { threadRead } from './tools/thread-read'
 
 export default definePlugin({
   name: 'provider-threads',
@@ -21,13 +23,15 @@ export default definePlugin({
   }),
   apply(ctx, config) {
     ctx.ledger.migrate('provider-threads', schema)
-    const store = createThreadStore(ctx.ledger.db)
-    ctx.provide(providerThreads, createThreads(ctx, store, config.handoff_tokens))
-    const release = (session: string) => store.open(session).forEach(thread => ctx.llm.release?.(thread.id))
+    const stores = { threads: createThreadStore(ctx.ledger.db), handoffs: createHandoffStore(ctx.ledger.db) }
+    ctx.provide(providerThreads, createThreads(ctx, stores, config.handoff_tokens))
+    ctx.effect(() => ctx.tools.register(threadRead(ctx)))
+    const release = (session: string) => stores.threads.open(session).forEach(thread => ctx.llm.release?.(thread.id))
     ctx.on(sessionSettle, session => release(session.id))
     ctx.on(sessionRemove, session => {
       release(session)
-      store.remove(session)
+      stores.threads.remove(session)
+      stores.handoffs.remove(session)
     })
   },
 })
