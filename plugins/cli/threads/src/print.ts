@@ -29,8 +29,8 @@ export const printItems = (items: ThreadItem[], json: boolean) => {
 
 export const printRows = (rows: ThreadRow[], json: boolean) => {
   if (json) return console.log(JSON.stringify(rows))
-  const cells = rows.map(row => [row.thread, row.status, row.title, row.cwd])
-  const widths = [0, 1, 2].map(column => Math.max(0, ...cells.map(cell => cell[column]!.length)))
+  const cells = rows.map(row => [row.thread, row.status, row.pc ?? 'this PC', row.title, row.cwd])
+  const widths = [0, 1, 2, 3].map(column => Math.max(0, ...cells.map(cell => cell[column]!.length)))
   for (const cell of cells) console.log(cell.map((text, column) => text.padEnd(widths[column] ?? 0)).join('  ').trimEnd())
 }
 

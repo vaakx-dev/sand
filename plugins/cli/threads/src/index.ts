@@ -6,10 +6,11 @@ import { threadAction } from './actions'
 
 const usage = [
   'sand thread start [<dir>] <message | -> start a thread in a folder (default: this one); - reads the message from stdin',
+  'sand thread start --pc <pc> <dir> <msg> start a thread on another of your PCs, in a folder on that PC',
   'sand thread send <id> <message | ->     message a thread; a running turn takes it at its next step',
   'sand thread wait <id>                   wait until the thread is done or waits on you',
   'sand thread show <id>                   print what the thread said',
-  'sand thread list                        list threads, newest first',
+  'sand thread list                        list threads on all your reachable PCs, newest first',
   'sand thread stop <id>                   stop the running turn',
   '                                        exit codes: 0 done, 1 failed, 2 usage, 3 waiting on you, 130 interrupted',
 ].join('\n')
@@ -29,6 +30,7 @@ export default definePlugin({
           json: { type: 'boolean', help: 'sand thread: print JSON, such as {thread, turn, status, reply, error}' },
           model: { type: 'string', help: 'sand thread start: the model of the new thread' },
           effort: { type: 'string', help: 'sand thread start: the reasoning effort of the new thread' },
+          pc: { type: 'string', help: 'sand thread start: start the thread on another of your PCs, by name' },
         },
         async run(args, values) {
           const action = threadAction(args, values, ctx.cli.cwd)
