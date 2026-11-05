@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { Entry } from './entry'
 import type { Ledger } from './ledger'
 import type { Prompt } from './message'
+import { isContextRecord } from './prompt/context'
 import type { Session, SessionInfo, Sessions } from './session'
 import type { EntryViews } from './view'
 
@@ -23,8 +24,14 @@ export interface WireSessionRef {
   $session: Pick<SessionInfo, 'id'>
 }
 
-const isPrompt = (value: unknown) =>
-  typeof value === 'string' || (Array.isArray(value) && value.every(block => typeof block === 'object' && block !== null && typeof block.type === 'string'))
+const isBlock = (block: unknown) =>
+  typeof block === 'object' &&
+  block !== null &&
+  'type' in block &&
+  typeof block.type === 'string' &&
+  (block.type !== 'context' || ('records' in block && Array.isArray(block.records) && block.records.every(isContextRecord)))
+
+const isPrompt = (value: unknown) => typeof value === 'string' || (Array.isArray(value) && value.every(isBlock))
 
 export const promptInput = z.custom<Prompt>(isPrompt, 'Expected a prompt')
 

@@ -1,4 +1,4 @@
-import { type Block, fileText, type MediaBlock, type Message, type ToolReferenceBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
+import { type Block, type ContextBlock, fileText, type MediaBlock, type Message, type ToolReferenceBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import type { Effort, LLMRequest, ToolSpec } from '../contract'
 import { loadedTools, withoutReferences } from '../http/deferred'
@@ -25,12 +25,16 @@ const mediaBlock = (value: MediaBlock, data: string) => {
   }
 }
 
+type SentBlock = Exclude<Block, ContextBlock>
+
+const isSent = (block: Block): block is SentBlock => block.type !== 'context'
+
 const blockWith = (media: Media) => {
   const stored = (value: MediaBlock) => {
     const data = media.data(value)
     return data === undefined ? { type: 'text', text: unavailableText(value) } : mediaBlock(value, data)
   }
-  const block = (value: Block | ToolReferenceBlock): Record<string, unknown> => {
+  const block = (value: SentBlock | ToolReferenceBlock): Record<string, unknown> => {
     switch (value.type) {
       case 'text':
         return { type: 'text', text: value.text }
@@ -90,7 +94,7 @@ export const claudeBody = (request: LLMRequest, settings: ClaudeSettings, search
   const { efforts, fast } = settings
   const { tools, refer } = toolsFor(request, searches)
   const block = blockWith(media)
-  const messages = pair(withReferences(withoutForeignThinking(request.messages), refer)).map(message => ({ role: message.role, content: message.content.map(block) }))
+  const messages = pair(withReferences(withoutForeignThinking(request.messages), refer)).map(message => ({ role: message.role, content: message.content.filter(isSent).map(block) }))
   const last = messages.at(-1)?.content.at(-1)
   if (last && cacheable.has(last.type)) last.cache_control = { type: 'ephemeral' }
   const effort = request.effort && efforts.includes(request.effort) ? request.effort : undefined

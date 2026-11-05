@@ -1,9 +1,9 @@
 import type { Media } from '@sand/media/contract'
-import { fileText, type ImageBlock, type ToolResultBlock, type ToolResultContent, unavailableText, type UserContent } from '@sand/chats/contract'
+import { fileText, type ImageBlock, type ModelContent, type ToolResultBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 
 const dataUrl = (mediaType: string, data: string) => `data:${mediaType};base64,${data}`
 
-const asText = (block: Exclude<UserContent, ImageBlock>, media: Media) => {
+const asText = (block: Exclude<ModelContent, ImageBlock>, media: Media) => {
   switch (block.type) {
     case 'text':
       return block.text
@@ -18,7 +18,7 @@ const asText = (block: Exclude<UserContent, ImageBlock>, media: Media) => {
   }
 }
 
-export const inputItem = (media: Media) => (block: UserContent) => {
+export const inputItem = (media: Media) => (block: ModelContent) => {
   if (block.type !== 'image') return { type: 'text', text: asText(block, media), text_elements: [] }
   const data = media.data(block)
   return data === undefined ? { type: 'text', text: unavailableText(block), text_elements: [] } : { type: 'image', url: dataUrl(block.mediaType, data) }

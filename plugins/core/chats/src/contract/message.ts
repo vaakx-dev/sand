@@ -54,7 +54,22 @@ export interface ToolCallBlock {
   malformed?: string
 }
 
-export type UserContent = TextBlock | ImageBlock | DocumentBlock | FileBlock
+export interface ContextRecord {
+  v: 1
+  id: string
+  kind: string
+  label: string
+  data: Record<string, unknown>
+}
+
+export interface ContextBlock {
+  type: 'context'
+  records: ContextRecord[]
+}
+
+export type ModelContent = TextBlock | ImageBlock | DocumentBlock | FileBlock
+
+export type UserContent = ModelContent | ContextBlock
 
 export type Prompt = string | UserContent[]
 
@@ -63,7 +78,7 @@ export interface ToolReferenceBlock {
   name: string
 }
 
-export type ToolResultContent = UserContent | ToolReferenceBlock
+export type ToolResultContent = ModelContent | ToolReferenceBlock
 
 export interface ToolResultBlock {
   type: 'tool_result'

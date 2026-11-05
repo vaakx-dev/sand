@@ -1,5 +1,5 @@
 import type { AppOutput, AppSession, AppSetup, PlanLimits } from '@sand/accounts/contract'
-import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { claudeArgs, claudeEnv } from '../cli/args'
 import { connect, fieldsOf, type Json } from '../cli/connection'
@@ -76,7 +76,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
   })
   await connection.request('initialize', { sdkMcpServers: [serverName], systemPrompt: [setup.system] })
 
-  const send = (content: UserContent[]) => {
+  const send = (content: ModelContent[]) => {
     running = true
     connection.send({ type: 'user', message: { role: 'user', content: content.map(toBlock) }, parent_tool_use_id: null, client_composed: true })
   }

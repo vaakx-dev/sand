@@ -1,4 +1,4 @@
-import { type Block, type DocumentBlock, fileText, type ImageBlock, isUserContent, type Message, textOf, type ToolResultBlock, unavailableText, type UserContent } from '@sand/chats/contract'
+import { type Block, type DocumentBlock, fileText, type ImageBlock, isModelContent, type Message, type ModelContent, textOf, type ToolResultBlock, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'
@@ -27,7 +27,7 @@ const imagePart = (block: ImageBlock, { media, images }: Reading): Part => {
   return data === undefined ? { type: 'text', text: unavailableText(block) } : { type: 'image_url', image_url: { url: `data:${block.mediaType};base64,${data}` } }
 }
 
-const part = (block: UserContent, reading: Reading): Part => {
+const part = (block: ModelContent, reading: Reading): Part => {
   switch (block.type) {
     case 'text':
       return { type: 'text', text: block.text }
@@ -43,7 +43,7 @@ const part = (block: UserContent, reading: Reading): Part => {
 const contentOf = (parts: Part[]) =>
   parts.every(part => part.type === 'text') ? parts.map(part => (part.type === 'text' ? part.text : '')).join('\n\n') : parts
 
-const toolText = (block: Exclude<UserContent, ImageBlock>, media: Media) => {
+const toolText = (block: Exclude<ModelContent, ImageBlock>, media: Media) => {
   switch (block.type) {
     case 'text':
       return block.text
@@ -69,7 +69,7 @@ const userMessages = (content: Block[], reading: Reading): ChatMessage[] => {
     block.type === 'tool_result' ? [{ role: 'tool', tool_call_id: block.callId, content: resultText(block, reading.media) }] : [],
   )
   const fromTools = content.flatMap(block => (block.type === 'tool_result' ? resultImages(block) : []))
-  const parts = [...fromTools, ...content.filter(isUserContent)].map(block => part(block, reading))
+  const parts = [...fromTools, ...content.filter(isModelContent)].map(block => part(block, reading))
   return [...results, ...(parts.length ? [{ role: 'user', content: contentOf(parts) }] : [])]
 }
 

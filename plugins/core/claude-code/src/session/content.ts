@@ -1,5 +1,5 @@
 import type { Media } from '@sand/media/contract'
-import { fileText, type MediaBlock, type ToolResultBlock, type ToolResultContent, unavailableText, type UserContent } from '@sand/chats/contract'
+import { fileText, type MediaBlock, type ModelContent, type ToolResultBlock, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 
 const base64 = (mediaType: string, data: string) => ({ type: 'base64', media_type: mediaType, data })
 
@@ -11,7 +11,7 @@ const mediaBlock = (block: MediaBlock, data: string) => {
   return text(block.name ? `${block.name}\n\n${data}` : data)
 }
 
-export const messageBlock = (media: Media) => (block: UserContent) => {
+export const messageBlock = (media: Media) => (block: ModelContent) => {
   switch (block.type) {
     case 'text':
       return text(block.text)
