@@ -4,7 +4,7 @@ import { capital } from '@sand/util'
 import { div } from '@vaakx-dev/vrui'
 import { pullKind, pullOf } from '../pull'
 
-export const pullChip = (open: (pull: PullRef, url: string) => void): ChipKind => ({
+export const pullChip = (open: (pull: PullRef) => void): ChipKind => ({
   kind: pullKind,
   title: 'Pull request',
   icon: 'pull-request',
@@ -17,7 +17,7 @@ export const pullChip = (open: (pull: PullRef, url: string) => void): ChipKind =
     label: 'Open pull request',
     run(record) {
       const pull = pullOf(record)
-      if (pull) open(pull, pull.url)
+      if (pull) open(pull)
     },
   },
 })

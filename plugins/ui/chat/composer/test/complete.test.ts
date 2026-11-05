@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 import { typedTrigger } from '../src/complete/detect'
-import { merged } from '../src/complete/merge'
+import { firstItem, merged } from '../src/complete/merge'
 import type { Trigger } from '../src/contract'
 
 const chars = ['@', '#', '$', '/']
@@ -50,4 +50,13 @@ test('triggers on one char merge into groups in order, each capped, under one li
 
   expect(shown.map(({ group, item }) => `${group}:${item.label}`)).toEqual([...items('Files:f', 10).map(item => item.label), 'Pull requests:p0', 'Pull requests:p1'])
   expect(shown[0]?.trigger).toBe(files)
+})
+
+test('the first suggestion is settled once every group before it has arrived', () => {
+  const some = [{ label: 'src/main.ts' }]
+  expect(firstItem([undefined, some])).toBe('loading')
+  expect(firstItem([[], undefined, some])).toBe('loading')
+  expect(firstItem([some, undefined])).toBe('found')
+  expect(firstItem([[], some, undefined])).toBe('found')
+  expect(firstItem([[], []])).toBe('none')
 })

@@ -36,7 +36,7 @@ export const fileTrigger = (index: FileIndex, threads: Threads): Trigger<FileIte
   label: 'files',
   async items(query) {
     const files = await index.list(threads.cwd())
-    return rank(withDirectories(files), query.replaceAll('\\', '/')).map((entry): FileItem => ({ label: entry.path, icon: entry.directory ? 'folder' : 'file', partial: entry.directory, entry }))
+    return rank(withDirectories(files), query.replaceAll('\\', '/')).map((entry): FileItem => ({ label: entry.path, icon: entry.directory ? 'folder' : 'file', path: true, partial: entry.directory, entry }))
   },
   accept: ({ entry }) => (entry.directory ? browse(entry.path) : fileRecord(entry.path)),
 })

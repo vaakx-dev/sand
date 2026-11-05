@@ -21,7 +21,6 @@ const pathLabel = (value: string, partial?: boolean) => {
 
 const itemRow = (kit: Kit, completion: Completion, { trigger, item }: Suggestion, index: Sig<number>) => {
   const { menuItem, metaLine, optionProps } = kit
-  const isFile = item.icon === 'file' || item.icon === 'folder'
   return menuItem(
     {
       ...optionProps(completion.box, index),
@@ -32,7 +31,7 @@ const itemRow = (kit: Kit, completion: Completion, { trigger, item }: Suggestion
     },
     span(
       { class: 'min-w-0 max-w-64 shrink-0 truncate' },
-      isFile ? pathLabel(item.label, item.partial) : [!item.icon && span({ class: 'text-neutral-500' }, trigger.char), item.label],
+      item.path ? pathLabel(item.label, item.partial) : [!item.icon && span({ class: 'text-neutral-500' }, trigger.char), item.label],
     ),
     item.description && metaLine(item.description),
   )

@@ -7,6 +7,7 @@ import { pullLinksClient } from '@sand/pull-links/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
+import { pullUrl } from '../pull'
 import { pullChip } from './chip'
 import { pullTrigger } from './trigger'
 
@@ -41,10 +42,10 @@ export default definePlugin({
       return inbox.pulls
     }
 
-    const open = (pull: PullRef, url: string) => {
+    const open = (pull: PullRef) => {
       const page = ctx.get(pullPage)
       if (page) page.open({ repo: pull.repo, number: pull.number })
-      else ctx.kit.openTab(url)
+      else ctx.kit.openTab(pullUrl(pull))
     }
 
     ctx.watch(composer, found => found?.trigger(pullTrigger({ linked, inbox: inboxPulls })))

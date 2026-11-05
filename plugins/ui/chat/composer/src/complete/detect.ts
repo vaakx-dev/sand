@@ -1,4 +1,4 @@
-export interface Typed {
+export interface TypedTrigger {
   char: string
   query: string
   from: number
@@ -8,12 +8,12 @@ export const commandChar = '/'
 
 const escaped = (char: string) => char.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')
 
-const command = (before: string): Typed | undefined => {
+const command = (before: string): TypedTrigger | undefined => {
   const query = /^\/(\S*)$/.exec(before)?.[1]
   return query === undefined ? undefined : { char: commandChar, query, from: 0 }
 }
 
-const mention = (before: string, chars: string[]): Typed | undefined => {
+const mention = (before: string, chars: string[]): TypedTrigger | undefined => {
   if (!chars.length) return undefined
   const line = before.lastIndexOf('\n') + 1
   const pattern = new RegExp(`(?:^|\\s)([${chars.map(escaped).join('')}])("[^"]*|[^\\s"]*)$`)

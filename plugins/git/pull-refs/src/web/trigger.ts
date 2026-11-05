@@ -16,7 +16,7 @@ export const pullTrigger = (sources: PullSources): Trigger<PullItem> => ({
   char: '#',
   label: 'PRs',
   async items(query) {
-    const pulls = [...sources.linked(), ...(await sources.inbox())]
+    const pulls = [...sources.linked(), ...(await sources.inbox().catch(() => []))]
     return pickPulls(pulls, query).map((pull): PullItem => ({ label: `#${pull.number}`, description: `${pull.title} · ${pull.repo}`, icon: 'pull-request', pull }))
   },
   accept: ({ pull }) => pullRecord(pull),

@@ -1,13 +1,14 @@
 import { contextKinds, type ContextKind } from '@sand/context/contract'
 import { definePlugin } from 'drydock'
-import { pullKind, pullOf } from './pull'
+import { pullKind, pullOf, pullUrl } from './pull'
 
 const pull: ContextKind = {
   kind: pullKind,
   title: 'Pull request',
   project(record) {
     const found = pullOf(record)
-    return found && `Pull request ${found.repo}#${found.number}: ${found.title}\nState: ${found.state}\nURL: ${found.url}`
+    if (!found) return { unavailable: 'The link holds no readable pull request.' }
+    return { body: `Pull request ${found.repo}#${found.number}: ${found.title}\nState: ${found.state}\nURL: ${pullUrl(found)}` }
   },
 }
 

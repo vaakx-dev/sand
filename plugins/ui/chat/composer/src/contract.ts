@@ -30,6 +30,7 @@ export interface TriggerItem {
   label: string
   description?: string
   icon?: IconName
+  path?: boolean
   partial?: boolean
 }
 

@@ -3,11 +3,12 @@ import { EditorView } from '@codemirror/view'
 import { contextLink } from '@sand/chats/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, sig, type KeyMap } from '@vaakx-dev/vrui'
-import type { Trigger } from '../contract'
+import type { TriggerItem } from '../contract'
 import { placeLink } from '../editor/chips/place'
 import type { Records } from '../records'
 import { typedTrigger } from './detect'
-import { merged, noMatch, type Found, type Suggestion } from './merge'
+import { firstItem, merged, noMatch, type Group, type Suggestion } from './merge'
+import type { Source } from './registry'
 
 const perGroup = 10
 const limit = 20
@@ -15,47 +16,53 @@ const limit = 20
 interface Target {
   view: EditorView
   from: number
-  query: string
 }
 
-const lookup = (trigger: Trigger, query: string): Promise<Found> =>
+interface Lookup {
+  at: Target
+  triggers: Source[]
+  groups: Group[]
+  acceptWhenReady: boolean
+}
+
+const itemsOf = (trigger: Source, query: string): Promise<TriggerItem[]> =>
   Promise.resolve()
     .then(() => trigger.items(query))
-    .then(
-      items => ({ trigger, items }),
-      () => ({ trigger, items: [] }),
-    )
+    .catch(() => [])
 
-export const createCompletion = ({ listbox }: Kit, triggers: () => Trigger[], records: Records) => {
+const typedText = ({ view, from }: Target) => view.state.sliceDoc(from, view.state.selection.main.head)
+
+const confirms = (event: KeyboardEvent) => !event.shiftKey && (event.key === 'Enter' || event.key === 'Tab')
+
+export const createCompletion = ({ listbox }: Kit, triggers: () => Source[], records: Records) => {
   const items = sig<Suggestion[]>([])
   const hint = sig<string | undefined>(undefined)
   const visible = derive(() => items.get().length > 0 || Boolean(hint.get()))
-  let target: Target | undefined
-  let request = 0
+  let lookup: Lookup | undefined
 
   const close = () => {
-    request++
+    lookup = undefined
     items.set([])
     hint.set(undefined)
   }
 
-  const replace = (text: string) => {
-    if (!target) return
-    const { view, from } = target
+  const replace = ({ view, from }: Target, text: string) => {
     view.dispatch({ changes: { from, to: view.state.selection.main.head, insert: text }, selection: { anchor: from + text.length }, userEvent: 'input.complete' })
     view.focus()
   }
 
   const accept = (index: number) => {
     const chosen = items.get()[index]
-    if (!chosen || !target) return
+    if (!chosen || !lookup) return
+    const { at } = lookup
     const result = chosen.trigger.accept(chosen.item)
-    if (typeof result === 'string') replace(result)
+    if (typeof result === 'string') replace(at, result)
     else {
       records.add([result])
-      placeLink(target.view, contextLink(result), target.from, target.view.state.selection.main.head)
+      placeLink(at.view, contextLink(result), at.from, at.view.state.selection.main.head)
     }
     if (!chosen.item.partial) close()
+    chosen.trigger.run?.(chosen.item)
   }
 
   const box = listbox({ count: () => items.get().length, choose: accept, wrap: true })
@@ -67,19 +74,40 @@ export const createCompletion = ({ listbox }: Kit, triggers: () => Trigger[], re
   }
 
   const keydown = (event: KeyboardEvent) => {
+    if (event.isComposing || !lookup) return false
+    if (confirms(event) && firstItem(lookup.groups) === 'loading') {
+      lookup.acceptWhenReady = true
+      return true
+    }
     const handler = keyMap[event.key]
-    if (event.isComposing || !handler || !visible.get()) return false
-    if (event.key !== 'Escape' && !items.get().length) return false
+    if (!handler || (event.key !== 'Escape' && !items.get().length)) return false
     handler(event)
     return true
   }
 
-  const show = (found: Suggestion[], matching: Trigger[], at: Target) => {
-    if (found.length === 1 && found[0]?.item.label === at.query) return close()
-    target = at
-    hint.set(found.length ? undefined : noMatch(matching))
+  const settled = (found: Suggestion[], at: Target) => {
+    const [only] = found
+    return found.length === 1 && only?.trigger.accept(only.item) === typedText(at)
+  }
+
+  const arrived = (current: Lookup) => {
+    const found = merged(
+      current.triggers.flatMap((trigger, index) => {
+        const group = current.groups[index]
+        return group ? [{ trigger, items: group }] : []
+      }),
+      perGroup,
+      limit,
+    )
+    const done = current.groups.every(Boolean)
+    if (done && settled(found, current.at)) return close()
+    hint.set(done && !found.length ? noMatch(current.triggers) : undefined)
     items.set(found)
     box.select(0)
+    const first = firstItem(current.groups)
+    if (!current.acceptWhenReady || first === 'loading') return
+    current.acceptWhenReady = false
+    if (first === 'found') accept(0)
   }
 
   const update = (view: EditorView) => {
@@ -91,10 +119,14 @@ export const createCompletion = ({ listbox }: Kit, triggers: () => Trigger[], re
     )
     if (!found) return close()
     const matching = all.filter(trigger => trigger.char === found.char)
-    const ticket = ++request
-    const at = { view, from: found.from, query: found.query }
-    void Promise.all(matching.map(trigger => lookup(trigger, found.query))).then(groups => {
-      if (ticket === request) show(merged(groups, perGroup, limit), matching, at)
+    const current: Lookup = { at: { view, from: found.from }, triggers: matching, groups: matching.map(() => undefined), acceptWhenReady: false }
+    lookup = current
+    matching.forEach((trigger, index) => {
+      void itemsOf(trigger, found.query).then(group => {
+        if (lookup !== current) return
+        current.groups[index] = group
+        arrived(current)
+      })
     })
   }
 

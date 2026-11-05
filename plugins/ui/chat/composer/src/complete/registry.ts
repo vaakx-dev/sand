@@ -3,6 +3,10 @@ import { derive, sig } from '@vaakx-dev/vrui'
 import type { Command, Trigger, TriggerItem } from '../contract'
 import { commandChar } from './detect'
 
+export interface Source<T extends TriggerItem = TriggerItem> extends Trigger<T> {
+  run?(item: T): void
+}
+
 interface Ranked {
   trigger: Trigger
   order: number
@@ -12,7 +16,7 @@ interface CommandItem extends TriggerItem {
   command: Command
 }
 
-const commandTrigger = (commands: Command[], run: (command: Command) => void): Trigger<CommandItem> => ({
+const commandTrigger = (commands: Command[], run: (command: Command) => void): Source<CommandItem> => ({
   char: commandChar,
   label: 'commands',
   items: query =>
@@ -23,16 +27,14 @@ const commandTrigger = (commands: Command[], run: (command: Command) => void): T
     )
       .map(index => commands[index]!)
       .map(command => ({ label: command.name, description: command.description, command })),
-  accept({ command }) {
-    run(command)
-    return ''
-  },
+  accept: ({ command }) => `${commandChar}${command.name}`,
+  run: ({ command }) => run(command),
 })
 
 export const createTriggers = (run: (command: Command) => void) => {
   const ranked = sig<Ranked[]>([])
   const commands = sig<Command[]>([])
-  const list = derive(() => {
+  const list = derive((): Source[] => {
     const own = ranked.get().map(({ trigger }) => trigger)
     return commands.get().length ? [...own, commandTrigger(commands.get(), run)] : own
   })
