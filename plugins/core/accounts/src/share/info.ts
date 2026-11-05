@@ -1,4 +1,4 @@
-import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice } from '../contract'
+import type { AccountKind, EffortLevel, Limits, LLMEvent, LoginAccount, LoginMethod, ModelInfo, ModelPrice, ProviderCapabilities } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 
@@ -11,6 +11,7 @@ export interface SharedAccount {
   label: string
   method: LoginMethod
   plan?: string
+  caps?: ProviderCapabilities
 }
 
 export interface ShareInfo {
@@ -21,12 +22,12 @@ export interface ShareInfo {
   limits?: Limits
 }
 
-export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: string; detail?: string }
+export type ShareLine = LLMEvent | { type: 'ping' } | { type: 'error'; message: string; detail?: string; lost?: boolean }
 
 export const sharedIds = (accounts: Accounts) => accounts.ids().filter(accounts.shared)
 
-const shareable = ({ id, kind, provider, label, method, plan }: LoginAccount): SharedAccount[] =>
-  method ? [{ id, kind, provider, label, method, ...(plan && { plan }) }] : []
+const shareable = ({ id, kind, provider, label, method, plan }: LoginAccount, caps?: ProviderCapabilities): SharedAccount[] =>
+  method ? [{ id, kind, provider, label, method, ...(plan && { plan }), ...(caps && { caps }) }] : []
 
 export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
   const shared = new Set(sharedIds(accounts))
@@ -37,7 +38,7 @@ export const shareInfo = (local: LocalLLM, accounts: Accounts): ShareInfo => {
       return price ? [[model.id, price] as const] : []
     }),
   )
-  const list = accounts.list().flatMap(found => (shared.has(found.id) ? shareable(found) : []))
+  const list = accounts.list().flatMap(found => (shared.has(found.id) ? shareable(found, local.view.entry(found.id)?.meta.caps) : []))
   const limits = local.allLimits().find(found => shared.has(found.source))
   return { accounts: list, models, levels: local.levels(), prices, ...(limits && { limits }) }
 }

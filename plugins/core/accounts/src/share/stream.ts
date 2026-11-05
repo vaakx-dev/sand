@@ -1,4 +1,4 @@
-import type { LLMEvent } from '../contract'
+import { type LLMEvent, ThreadLost } from '../contract'
 import { errorMessage } from '@sand/util'
 import { detailOf } from '../errors'
 import type { ShareLine } from './info'
@@ -7,48 +7,43 @@ const heartbeat = 5_000
 
 const errorLine = (error: unknown): ShareLine => {
   const detail = detailOf(error)
-  return { type: 'error', message: errorMessage(error), ...(detail && { detail }) }
+  return { type: 'error', message: errorMessage(error), ...(detail && { detail }), ...(error instanceof ThreadLost && { lost: true }) }
 }
 
 export const streamLines = (events: (signal: AbortSignal) => AsyncIterable<LLMEvent>, signal: AbortSignal) => {
   const cancelled = new AbortController()
   const upstream = AbortSignal.any([signal, cancelled.signal])
   const encoder = new TextEncoder()
-  let closed = false
   let beat: ReturnType<typeof setInterval> | undefined
 
-  const finish = () => {
-    closed = true
+  const stop = () => {
+    cancelled.abort()
     clearInterval(beat)
   }
 
   const body = new ReadableStream<Uint8Array>({
     async start(out) {
       const line = (value: ShareLine) => {
-        if (closed) return
+        if (upstream.aborted) return
         try {
           out.enqueue(encoder.encode(`${JSON.stringify(value)}\n`))
         } catch {
-          closed = true
+          stop()
         }
       }
       beat = setInterval(() => line({ type: 'ping' }), heartbeat)
       try {
         for await (const event of events(upstream)) {
-          if (closed) break
+          if (upstream.aborted) break
           line(event)
         }
       } catch (error) {
-        if (!upstream.aborted) line(errorLine(error))
+        line(errorLine(error))
       }
-      const open = !closed
-      finish()
-      if (open) out.close()
+      clearInterval(beat)
+      if (!upstream.aborted) out.close()
     },
-    cancel() {
-      finish()
-      cancelled.abort()
-    },
+    cancel: stop,
   })
 
   return new Response(body, { headers: { 'content-type': 'application/x-ndjson', 'cache-control': 'no-store' } })

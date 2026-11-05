@@ -1,18 +1,19 @@
 import { type LiveBlock, llmEvent } from '@sand/accounts/contract'
 import { sessionEntry } from '@sand/chats/contract'
 import { toolResult, toolStart, turnEnd, turnStart } from '@sand/turns-contract/contract'
-import { applyLiveEvent, type LiveSnapshot } from '../contract'
+import { applyLiveEvent, type LiveSnapshot, type Mark } from '../contract'
 import type { ServerContext } from '../context'
 
 interface Streaming {
   live: LiveBlock[]
   tools: Set<string>
+  mark: Mark
 }
 
 export const createLiveTracker = (ctx: ServerContext) => {
   const running = new Map<string, Streaming>()
 
-  ctx.on(turnStart, session => void running.set(session.id, { live: [], tools: new Set() }))
+  ctx.on(turnStart, (session, _prompt, info) => void running.set(session.id, { live: [], tools: new Set(), mark: { turn: info.id, n: 0 } }))
   ctx.on(llmEvent, (event, session) => {
     const streaming = running.get(session.id)
     if (streaming) streaming.live = applyLiveEvent(streaming.live, event)
@@ -28,12 +29,19 @@ export const createLiveTracker = (ctx: ServerContext) => {
   })
   ctx.on(turnEnd, session => void running.delete(session.id))
 
-  const snapshot = (id: string): LiveSnapshot | undefined => {
+  const sent = (id: string): Mark | undefined => {
     const streaming = running.get(id)
-    return streaming && { live: streaming.live, tools: [...streaming.tools] }
+    if (!streaming) return undefined
+    streaming.mark = { turn: streaming.mark.turn, n: streaming.mark.n + 1 }
+    return streaming.mark
   }
 
-  return { snapshot }
+  const snapshot = (id: string): LiveSnapshot | undefined => {
+    const streaming = running.get(id)
+    return streaming && { live: streaming.live, tools: [...streaming.tools], mark: streaming.mark }
+  }
+
+  return { sent, snapshot }
 }
 
 export type LiveTracker = ReturnType<typeof createLiveTracker>

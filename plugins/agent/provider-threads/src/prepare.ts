@@ -46,6 +46,7 @@ const promptOf = (path: Path, id: string) => (path.entries[path.index.get(id) ??
 
 export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number): ProviderThreads => {
   const systemOf = (session: Session, model: string) => ctx.context.system(session, model)
+  const capsOf = (model: string) => ctx.llm.caps?.(model) ?? statelessCaps()
 
   const create = async (session: Session, selection: Selection) =>
     stores.threads.create({ session: session.id, selection, system: await systemOf(session, selection.model), seen: [], used: Date.now() })
@@ -93,8 +94,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
       now: Date.now(),
     }
     const available = !!ctx.llm.find?.(selection.model)
-    const caps = ctx.llm.caps?.(selection.model) ?? statelessCaps()
-    const transition = decide({ available, caps, selection, cwd: session.cwd, history }, candidate)
+    const transition = decide({ available, caps: capsOf(selection.model), selection, cwd: session.cwd, history }, candidate)
     if (transition.type === 'reject') throw new Error(transition.reason)
     if (transition.type !== 'handoff') return { thread: target ?? (await create(session, selection)), transition }
     if (transition.strategy === 'delta' && target) return { thread: await handOver(step, target, 'delta'), transition }
@@ -118,7 +118,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     },
     lost(plan, error) {
       if (!(error instanceof ThreadLost)) return false
-      stores.threads.retire(plan.thread.id)
+      if (capsOf(plan.thread.model).native) stores.threads.retire(plan.thread.id)
       return true
     },
     active: session => stores.threads.open(session.id)[0],

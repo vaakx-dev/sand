@@ -1,3 +1,5 @@
+import type { ServerMessage } from './contract'
+
 type RuntimeFrame = { type: 'result'; id: number } | { type: 'event'; name: string }
 
 const resultHead = /^\{"type":"result","id":(-?\d+)[,}]/
@@ -19,3 +21,5 @@ export const peek = (raw: string): RuntimeFrame | undefined => {
   if (event) return { type: 'event', name: event[1]! }
   return parsed(raw)
 }
+
+export const eventFrame = (name: string, payload: unknown) => JSON.stringify({ type: 'event', name, payload } satisfies ServerMessage)

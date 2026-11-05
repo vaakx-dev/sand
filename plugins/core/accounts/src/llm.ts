@@ -5,7 +5,7 @@ import { qualify } from './catalog/build'
 import { cached } from './catalog/cached'
 import { viewOf } from './catalog/view'
 import type { LocalLLM } from './local'
-import type { Peers } from './peers/peers'
+import type { Peers, Pin } from './peers/peers'
 import { remoteSources } from './peers/sources'
 
 const fallback: ProviderInfo = { id: 'accounts', label: 'Accounts', billing: 'api' }
@@ -19,6 +19,12 @@ const remoteIndex = (peers: Peers, accounts: Accounts) => {
   }
 }
 
+const pinOf = (pc: string | undefined, request: LLMRequest): Pin | undefined => {
+  if (pc) return { pc }
+  const native = request.thread?.native?.pc
+  return native ? { pc: native, native: true } : undefined
+}
+
 export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, catalog: Catalog) => {
   const remotes = cached(() => remoteIndex(peers, accounts))
   const view = viewOf(() => [...local.view.entries(), ...remotes.get().sources.map(({ meta, models }) => catalog.entry(meta, models))])
@@ -27,7 +33,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
     const source = remotes.get().byId.get(model.source ?? '')
     if (!source) throw view.missing(model.id)
     const sent = { ...request, model: qualify(source.account, model.name ?? model.id) }
-    for await (const event of peers.stream(source.account, sent, signal, source.pc)) yield event.type === 'start' ? { ...event, model: model.id } : event
+    for await (const event of peers.stream(source.account, sent, signal, pinOf(source.pc, request))) yield event.type === 'start' ? { ...event, model: model.id } : event
   }
 
   const borrowed = () => peers.limits().filter(found => !accounts.signedIn(found.source))

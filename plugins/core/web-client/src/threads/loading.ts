@@ -24,7 +24,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     thread.cursor = opened.info.head ?? undefined
     thread.loaded = true
     thread.failed = undefined
-    if (opened.live || !thread.running) catchUp(thread, { live: opened.live ?? [], tools: opened.tools ?? [] })
+    if (opened.live || !thread.running) catchUp(thread, { live: opened.live ?? [], tools: opened.tools ?? [], mark: opened.mark })
     if (thread.running) thread.started ??= turnStart(thread)
     const pending = opened.pending ?? (opened.queue && legacyPending(opened.queue))
     if (pending) store.pending(thread.id, pending)
@@ -55,7 +55,8 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
   const resume = async (id: string) => {
     const thread = store.threads.get(id)
     if (!thread?.cursor || !thread.entries.size) return undefined
-    const delta = await wire.call(sessionSince, { session: id, after: thread.cursor }).catch(() => null)
+    const after = thread.entries.get(thread.cursor)?.seq ?? thread.cursor
+    const delta = await wire.call(sessionSince, { session: id, after }).catch(() => null)
     return delta ? apply(store.upsert(delta.info, thread.device), delta) : undefined
   }
 

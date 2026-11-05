@@ -2,7 +2,7 @@ import type { LiveEvent } from '@sand/accounts/contract'
 import type { Session, WireSession, WireSessionRef } from '@sand/chats/contract'
 import { wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
-import type { EntryHead, LiveSnapshot, OpenedSession } from './relay'
+import type { EntryHead, LiveSnapshot, Mark, OpenedSession } from './relay'
 import type { Server } from './server'
 
 export type * from './relay'
@@ -22,5 +22,5 @@ export const sessionOpened = event<(opened: OpenedSession, session: Session) => 
 export const sessionCarry = event<(types: string[]) => string[]>('session.carry')
 
 export const liveSnapshot = wireEvent<[session: string, snapshot: LiveSnapshot]>('live.snapshot')
-export const llmEventWire = wireEvent<[event: LiveEvent, session: WireSessionRef]>('llm.event')
+export const llmEventWire = wireEvent<[event: LiveEvent, session: WireSessionRef, mark?: Mark]>('llm.event')
 export const sessionHeadWire = wireEvent<[session: WireSession, entry: EntryHead]>('session.head')

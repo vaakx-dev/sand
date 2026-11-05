@@ -1,0 +1,20 @@
+{
+  "name": "@sand/outbox",
+  "version": "0.0.0",
+  "description": "Shows the messages waiting for the thread's PC above the composer, with Cancel and Send now",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Outbox",
+    "summary": "Messages waiting for a PC that can't be reached, sent when it's back"
+  },
+  "dependencies": {
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
