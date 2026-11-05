@@ -1,8 +1,8 @@
+import { plural } from '@sand/util'
+
 const minute = 60_000
 const hour = 60 * minute
 const day = 24 * hour
-
-const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export const dateWords = (at: number) => new Date(at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 

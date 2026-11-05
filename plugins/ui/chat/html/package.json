@@ -4,7 +4,6 @@
   "description": "html_render and html_preview: the agent shows HTML pages inline in the chat, in the app theme, and checks them in a headless browser first",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -1,5 +1,6 @@
 import { place } from '@sand/layout/contract'
 import { kit } from '@sand/ui-kit/contract'
+import { byOrder } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { panels, panelsChange, type Panels } from './contract'
@@ -7,7 +8,7 @@ import { createSurface } from './surface'
 import { panelToggle } from './toggle'
 import { panelsView, selectedPage, shownPages, type Page } from './view'
 
-const byOrder = (pages: Page[]) => [...pages].sort((a, b) => (a.spec.order ?? 0) - (b.spec.order ?? 0))
+const ordered = (pages: Page[]) => [...pages].sort((a, b) => byOrder(a.spec, b.spec))
 
 export default definePlugin({
   name: 'panel',
@@ -23,12 +24,12 @@ export default definePlugin({
     const host: Panels = {
       panel(spec) {
         const page: Page = { key: next++, spec: { ...spec } }
-        pages.update(list => byOrder([...list.filter(other => other.spec.id !== spec.id), page]))
+        pages.update(list => ordered([...list.filter(other => other.spec.id !== spec.id), page]))
         const owns = (other: Page) => other.key === page.key
         return {
           update(patch) {
             Object.assign(page.spec, patch)
-            pages.update(list => byOrder(list.map(other => (owns(other) ? { key: page.key, spec: { ...page.spec } } : other))))
+            pages.update(list => ordered(list.map(other => (owns(other) ? { key: page.key, spec: { ...page.spec } } : other))))
           },
           dispose() {
             pages.update(list => list.filter(other => !owns(other)))

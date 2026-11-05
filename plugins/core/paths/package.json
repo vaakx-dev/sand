@@ -4,7 +4,6 @@
   "description": "Where sand keeps its files: the home folder and project folders",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

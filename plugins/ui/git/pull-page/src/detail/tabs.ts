@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import { derive, div, dynamicChild, list, show, sig, type Sig } from '@vaakx-dev/vrui'
 import type { PullTab } from '../contract'
 import { commitsView } from './commits/view'
@@ -41,7 +42,7 @@ const tabButton = (shown: Shown, tab: Sig<DetailTab>, current: Sig<string>) => {
 
 export const detailTabs = (shown: Shown) => {
   const current = sig('overview')
-  const tabs = derive(() => [...builtIn, ...shown.parts.tabs.entries.get().map(hosted)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)))
+  const tabs = derive(() => [...builtIn, ...shown.parts.tabs.entries.get().map(hosted)].sort(byOrder))
   const chosen = derive(() => tabs.get().find(tab => tab.id === current.get()) ?? tabs.get()[0])
   return [
     list(

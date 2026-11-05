@@ -1,3 +1,4 @@
+import { errorMessage } from '@sand/util'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import type { Budget } from '../budget'
@@ -65,7 +66,7 @@ export const unzip = async (path: string, folder: string, budget: Budget) => {
     try {
       await extractEntry(zip, entry, target, budget)
     } catch (error) {
-      notes.push(`${entry.name} (${error instanceof Error ? error.message : String(error)})`)
+      notes.push(`${entry.name} (${errorMessage(error)})`)
       if (budget.spent()) break
     }
   }

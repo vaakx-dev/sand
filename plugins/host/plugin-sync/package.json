@@ -4,7 +4,6 @@
   "description": "Shares ~/.sand/plugins with paired PCs, asking before applying changes",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

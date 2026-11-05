@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The sand command: starts sand in the background if needed and opens it in the browser",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "cli": "./src/index.ts",
     "label": "Launch command",

@@ -4,7 +4,6 @@
   "description": "Keeps past versions of your plugins, and brings back the last one that started",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Use the Codex app's own sign-in: sand runs codex app-server on this PC and gives it sand's tools",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",

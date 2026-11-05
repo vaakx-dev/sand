@@ -1,3 +1,4 @@
+import { errorMessage } from '@sand/util'
 import { span } from '@vaakx-dev/vrui'
 import katex from 'katex'
 import 'katex/contrib/mhchem'
@@ -14,7 +15,7 @@ const render = (tex: string, displayMode: boolean): Typeset => {
   try {
     katex.render(tex, node, { displayMode, throwOnError: true, strict: 'ignore', trust: false, macros: { '\\label': { tokens: [], numArgs: 1 } } })
   } catch (error) {
-    return { error: error instanceof Error ? error.message : String(error) }
+    return { error: errorMessage(error) }
   }
   return node
 }

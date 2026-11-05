@@ -4,7 +4,6 @@
   "description": "Background jobs: sub-agents and commands that run on after the tool call returns",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Starts a fresh runtime when plugin files change, when [host] watch is on",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "host": "./src/index.ts",
     "label": "Watch",

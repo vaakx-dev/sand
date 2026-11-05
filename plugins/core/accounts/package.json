@@ -4,7 +4,6 @@
   "description": "Use Anthropic, OpenAI and OpenRouter API keys, local servers, and sign-in plans that other plugins add, all at once",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts"
   },
   "sand": {

@@ -1,7 +1,6 @@
+import { byOrder } from '@sand/util'
 import type { SettingsPage, SettingsSection } from './contract'
 import { sig } from '@vaakx-dev/vrui'
-
-const byOrder = (a: { order?: number }, b: { order?: number }) => (a.order ?? 0) - (b.order ?? 0)
 
 const matches = (page: SettingsPage, query: string) => page.id === query || page.label.toLowerCase() === query.toLowerCase()
 

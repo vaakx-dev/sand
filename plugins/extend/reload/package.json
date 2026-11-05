@@ -4,7 +4,6 @@
   "description": "Restarts the sand plugins from a sidebar button",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

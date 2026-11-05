@@ -1,12 +1,11 @@
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
+import { byOrder } from '@sand/util'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { connections, type Connection } from './contract'
 import { connectionsPage } from './page'
-
-const byOrder = (a: Connection, b: Connection) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name)
 
 export default definePlugin({
   name: 'connections',
@@ -15,7 +14,7 @@ export default definePlugin({
   apply(ctx) {
     const entries = sig<Connection[]>([])
     const add = (connection: Connection) => {
-      entries.update(list => [...list.filter(entry => entry.id !== connection.id), connection].sort(byOrder))
+      entries.update(list => [...list.filter(entry => entry.id !== connection.id), connection].sort((a, b) => byOrder(a, b) || a.name.localeCompare(b.name)))
       return () => entries.update(list => list.filter(entry => entry !== connection))
     }
     const shown = owned(ctx, () => entries.map(list => list.length > 0))

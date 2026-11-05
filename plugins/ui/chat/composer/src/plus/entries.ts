@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import type { PlusEntry } from '../contract'
 import { sig } from '@vaakx-dev/vrui'
 
@@ -12,7 +13,7 @@ export const createPlus = () => {
 
   const add = (entry: PlusEntry, order = 0) => {
     const added = { entry, order }
-    ranked.update(all => [...all, added].sort((a, b) => a.order - b.order))
+    ranked.update(all => [...all, added].sort(byOrder))
     return () => {
       entry.open.set(false)
       ranked.update(all => all.filter(other => other !== added))

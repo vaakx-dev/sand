@@ -1,3 +1,4 @@
+import { byOrder } from '@sand/util'
 import { sig, type Sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 
@@ -11,13 +12,11 @@ export interface ExtensionBook<T extends Extension> {
   add(entry: T): Dispose
 }
 
-const byOrder = <T extends Extension>(entries: T[]) => [...entries].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-
 export const extensionBook = <T extends Extension>(): ExtensionBook<T> => {
   const entries = sig<T[]>([])
 
   const add = (entry: T): Dispose => {
-    entries.update(list => byOrder([...list.filter(each => each.id !== entry.id), entry]))
+    entries.update(list => [...list.filter(each => each.id !== entry.id), entry].sort(byOrder))
     return () => entries.update(list => list.filter(each => each !== entry))
   }
 
