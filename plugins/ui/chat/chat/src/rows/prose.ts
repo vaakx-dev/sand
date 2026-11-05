@@ -22,19 +22,21 @@ export const textRow: RowMaker<'text'> = (item, context) =>
         () => !railed?.get(),
         () =>
           actionRow(
-            'mt-1',
-            show(
-              () => !streaming.get(),
-              () =>
-                span(
-                  { class: 'flex items-center gap-1' },
-                  copyButton({ text: () => text.get(), size: 'sm' }),
-                  show(
-                    () => spec().actions.length > 0,
-                    () => menus.more(context.menu, spec),
+            [
+              show(
+                () => !streaming.get(),
+                () =>
+                  span(
+                    { class: 'flex items-center gap-1' },
+                    copyButton({ text: () => text.get(), size: 'sm' }),
+                    show(
+                      () => spec().actions.length > 0,
+                      () => menus.more(context.menu, spec),
+                    ),
                   ),
-                ),
-            ),
+              ),
+            ],
+            'mt-1',
           ),
       ),
     )
