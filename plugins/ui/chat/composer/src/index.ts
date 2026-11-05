@@ -1,5 +1,5 @@
 import { contextLink } from '@sand/chats/contract'
-import { composer as composerService, drafts, type Composer } from './contract'
+import { composer as composerService, drafts, typing as typingService, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
 import { fileIndex, skillIndex, threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
@@ -19,6 +19,7 @@ import { createHandoff } from './handoff'
 import { createModel } from './model'
 import { createPlus } from './plus/entries'
 import { createSendMenu } from './send/menu'
+import { createTyping } from './typing'
 
 export default definePlugin({
   name: 'composer',
@@ -28,6 +29,7 @@ export default definePlugin({
     const slots = createSlots()
     const menu = createSendMenu()
     const plus = createPlus()
+    const typing = createTyping()
     let current: Card | undefined
     const { model, dropping, session } = owned(ctx, () => {
       const model = createModel(ctx)
@@ -69,7 +71,7 @@ export default definePlugin({
       choose: model.choose,
     }
 
-    const parts = { ctx, model, slots, menu, plus, dropping }
+    const parts = { ctx, model, slots, menu, plus, dropping, typed: typing.typed }
     session.start()
     place(
       ctx,
@@ -86,5 +88,7 @@ export default definePlugin({
     ctx.effect(() => () => session.keep())
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)
+    ctx.provide(typingService, typing)
+    ctx.effect(() => typing.stop)
   },
 })

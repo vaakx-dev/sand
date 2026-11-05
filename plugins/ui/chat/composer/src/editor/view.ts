@@ -2,10 +2,11 @@ import { history, historyKeymap, insertNewline, standardKeymap } from '@codemirr
 import { EditorState, Transaction, type Extension } from '@codemirror/state'
 import { EditorView, keymap, placeholder as placeholderText } from '@codemirror/view'
 import type { Kit } from '@sand/ui-kit/contract'
+import { quoteRuns } from '@sand/util'
 import { div, effect, scoped, span, type Sig } from '@vaakx-dev/vrui'
 import { placeLink } from './chips/place'
 import { quote } from './quotes/commands'
-import { quoteState } from './quotes/field'
+import { added, quoteState } from './quotes/field'
 import { quoteKeys } from './quotes/keys'
 import { quoteWidgets } from './quotes/widget'
 import { theme } from './theme'
@@ -49,10 +50,19 @@ export const createEditor = (kit: Kit, text: Sig<string>, options: EditorOptions
     view.focus()
   }
 
+  const replace = (value: string) =>
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: value },
+      selection: { anchor: value.length },
+      effects: quoteRuns(value).map(run => added.of(run)),
+      scrollIntoView: true,
+    })
+
   return {
     node: div({ class: 'text-base text-neutral-100 md:text-sm leading-relaxed' }, view.dom),
     focus: () => view.focus(),
     focusEnd,
+    replace,
     insert: (value: string) => view.dispatch(view.state.replaceSelection(value), { scrollIntoView: true, userEvent: 'input' }),
     quote: (value: string) => quote(view, value),
     reference: (link: string) => placeLink(view, link, view.state.selection.main.from, view.state.selection.main.to),
