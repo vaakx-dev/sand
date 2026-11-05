@@ -2,6 +2,7 @@ import { composer as composerService, drafts, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
 import { threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
+import { quotedText } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { catchFiles } from './attachments/drop'
@@ -44,7 +45,7 @@ export default definePlugin({
       },
       quote(text) {
         if (current) current.editor.quote(text)
-        else model.segments.quote(text)
+        else model.text.update(typed => quotedText([{ kind: 'text', text: typed }, { kind: 'quote', text }]))
       },
       attach: content => model.files.attach(content),
       slot: (where, view, order) => slots.add(where, view, order),

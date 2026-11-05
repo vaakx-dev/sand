@@ -31,6 +31,32 @@ export const quoteBlocks = (text: string): QuoteBlock[] => {
   return blocks.map(block => (block.kind === 'text' ? { ...block, text: trimBlank(block.text) } : block))
 }
 
+export interface QuoteRun {
+  from: number
+  to: number
+  text: string
+}
+
+export const quoteRuns = (text: string): QuoteRun[] => {
+  const lines = text.split('\n')
+  const kinds = lineKinds(lines)
+  const runs: QuoteRun[] = []
+  let from = 0
+  lines.forEach((line, index) => {
+    const to = from + line.length
+    if (kinds[index] === 'quote') {
+      const value = line.replace(marker, '')
+      const last = runs.at(-1)
+      if (last && kinds[index - 1] === 'quote') {
+        last.to = to
+        last.text += `\n${value}`
+      } else runs.push({ from, to, text: value })
+    }
+    from = to + 1
+  })
+  return runs
+}
+
 const quoted = (text: string) =>
   text
     .split('\n')

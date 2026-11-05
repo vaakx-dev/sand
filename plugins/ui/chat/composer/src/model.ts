@@ -9,7 +9,6 @@ import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
 import type { ComposerContext } from './context'
 import type { Saved } from './drafts/store'
-import { createSegments } from './editor/segments'
 import { createHolds } from './send/holds'
 import { modelMissing, retry, sendDevice, submit } from './send/submit'
 
@@ -53,7 +52,6 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
 
 export const createModel = (ctx: ComposerContext) => {
   const text = sig('')
-  const segments = createSegments(text)
   const files = createFiles(ctx)
   const picked = sig<SessionSettings>({})
   const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
@@ -143,7 +141,6 @@ export const createModel = (ctx: ComposerContext) => {
 
   return {
     text,
-    segments,
     files,
     picked,
     settings,
