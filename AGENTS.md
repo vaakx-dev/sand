@@ -10,6 +10,7 @@
 - `ref/` holds reference repos. Don't search or edit it unless asked; scope searches to `apps`, `packages` and `plugins`.
 - vrui (`@vaakx-dev/vrui`) and drydock come from GitHub (`vaakx-dev/vrui`, `vaakx-dev/drydock`), pinned to release tags and used from source. Read their `AGENTS.md` and `docs/` in `node_modules/@vaakx-dev/vrui` and `plugins/host/hub/node_modules/drydock`. Change them in their own repos and release a new tag, then move the pin here.
 - The check command is `bun run check`. It also runs `vrui-check`; fix everything it reports. List classes sand defines in its own CSS, and extra theme color roles, under `vrui` in the root `package.json`.
+- Tests live in each plugin's `test/` folder and run with `bun run test` (part of `check`). `startSand` from `@sand/harness` (`packages/harness`) runs sand in-process on a temp home, with `replay` model sources that play scripted replies.
 - `sand.toml` silently ignores unknown keys, so check the plugin's config schema for exact section and key names.
 
 ## Test on your own sand

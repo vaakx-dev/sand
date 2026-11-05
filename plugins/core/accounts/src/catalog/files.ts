@@ -55,6 +55,7 @@ const jsonFile = <T>(path: string, parse: (value: unknown) => T, failed: (error:
     write(value: T) {
       return queue(() => writePrivateJson(path, value)).catch(failed)
     },
+    idle: () => queue(async () => {}),
   }
 }
 
