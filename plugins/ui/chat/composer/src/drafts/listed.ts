@@ -1,3 +1,4 @@
+import { linkLabels } from '@sand/chats/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { draftsChange, type ThreadDraft } from '../contract'
@@ -12,9 +13,10 @@ export const createListed = (ctx: Context) => {
     list: () => [...entries.values()].sort((a, b) => b.updated - a.updated),
     set(target: DraftTarget, saved: Saved, updated = Date.now()) {
       const known = entries.get(target.id)
+      const text = linkLabels(saved.text)
       const same = known && known.cwd === target.cwd && known.device === target.device
-      if (same && known.text === saved.text && known.attachments === saved.items.length) return
-      entries.set(target.id, { ...target, text: saved.text, attachments: saved.items.length, updated })
+      if (same && known.text === text && known.attachments === saved.items.length) return
+      entries.set(target.id, { ...target, text, attachments: saved.items.length, updated })
       changed()
     },
     delete(id: string) {

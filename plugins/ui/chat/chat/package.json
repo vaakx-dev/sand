@@ -16,6 +16,7 @@
     "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
     "@sand/composer": "workspace:*",
+    "@sand/context": "workspace:*",
     "@sand/images": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/markdown": "workspace:*",

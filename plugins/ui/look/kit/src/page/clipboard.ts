@@ -9,10 +9,18 @@ const fallback = (text: string) => {
   return copied
 }
 
-export const copyText = async (text: string) => {
+const writeItem = (formats: Record<string, string>) => {
+  const blobs = Object.entries(formats)
+    .filter(([type]) => ClipboardItem.supports(type))
+    .map(([type, value]) => [type, new Blob([value], { type })])
+  return navigator.clipboard.write([new ClipboardItem(Object.fromEntries(blobs))])
+}
+
+export const copyText = async (text: string, formats: Record<string, string> = {}) => {
   try {
     if (!navigator.clipboard) return fallback(text)
-    await navigator.clipboard.writeText(text)
+    if (Object.keys(formats).length && typeof ClipboardItem === 'function') await writeItem({ 'text/plain': text, ...formats })
+    else await navigator.clipboard.writeText(text)
     return true
   } catch {
     return fallback(text)

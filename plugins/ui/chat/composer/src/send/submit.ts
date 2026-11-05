@@ -34,6 +34,12 @@ export const submit = async (ctx: ComposerContext, text: string, attachments: Us
   await ctx.turns.send(thread.id, prompt(text, attachments), { label: label(text, attachments), settings: current ? undefined : settings, ...options })
 }
 
+const typedContent = (content: UserContent[]) =>
+  content.flatMap((block): UserContent[] => {
+    if (block.type !== 'text' || block.typed === undefined) return [block]
+    return block.typed ? [{ type: 'text', text: block.typed }] : []
+  })
+
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
 
 export const retry = async (ctx: ComposerContext) => {
@@ -41,7 +47,7 @@ export const retry = async (ctx: ComposerContext) => {
   if (!thread || thread.running) return
   const entry = await ctx.threads.findLast(thread.id, candidate => candidate.type === 'message' && asked(candidate.data as Message))
   if (!entry) return
-  const content = (entry.data as Message).content as UserContent[]
+  const content = typedContent((entry.data as Message).content as UserContent[])
   await ctx.threads.checkout(thread.id, entry.parent)
-  await ctx.turns.send(thread.id, content, { label: label('', content.filter(block => block.type !== 'text')) || 'Retry' })
+  await ctx.turns.send(thread.id, content, { label: label('', content.filter(block => block.type !== 'text' && block.type !== 'context')) || 'Retry' })
 }

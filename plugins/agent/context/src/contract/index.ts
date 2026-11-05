@@ -1,6 +1,9 @@
 import type { ContextProjection, ContextRecord, Session } from '@sand/chats/contract'
 import { service, type Dispose } from 'drydock'
 
+export * from './chips'
+export * from './clipboard'
+
 export interface ContextKind {
   kind: string
   title: string

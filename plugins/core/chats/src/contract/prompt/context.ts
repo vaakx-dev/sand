@@ -77,6 +77,11 @@ const firstLinks = (links: ContextLink[]) => {
   return [...first.values()]
 }
 
+export const linkedRecords = (text: string, records: ContextRecord[]) => {
+  const byKey = new Map(records.map(record => [keyOf(record), record]))
+  return firstLinks(contextLinks(text)).flatMap(link => byKey.get(keyOf(link)) ?? [])
+}
+
 const escapeTags = (text: string) => text.replace(tagOpener, '&lt;')
 
 const escapeTyped = (text: string) => escapeTags(text).replace(refAssignment, '$1\\=')

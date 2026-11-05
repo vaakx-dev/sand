@@ -9,6 +9,7 @@ import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
 import type { ComposerContext } from './context'
 import type { Saved } from './drafts/store'
+import { createRecords } from './records'
 import { createHolds } from './send/holds'
 import { modelMissing, retry, sendDevice, submit } from './send/submit'
 
@@ -53,6 +54,7 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
 export const createModel = (ctx: ComposerContext) => {
   const text = sig('')
   const files = createFiles(ctx)
+  const records = createRecords()
   const picked = sig<SessionSettings>({})
   const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
   const sending = sig(false)
@@ -73,6 +75,7 @@ export const createModel = (ctx: ComposerContext) => {
   const clear = () => {
     text.set('')
     files.set([])
+    records.list.set([])
     picked.set({})
   }
 
@@ -122,7 +125,8 @@ export const createModel = (ctx: ComposerContext) => {
   const sendPrompt = (outgoing: Outgoing) => {
     const task = async () => {
       const items = await files.upload(sendDevice(ctx))
-      await submit(ctx, outgoing.typed.text.trim(), items, settings(), outgoing.options)
+      const value = outgoing.typed.text.trim()
+      await submit(ctx, value, [...items, ...records.content(value)], settings(), outgoing.options)
       if (unchanged(outgoing.typed)) clear()
     }
     return attempt(true, task, error => couldNotSend(outgoing, error))
@@ -142,6 +146,7 @@ export const createModel = (ctx: ComposerContext) => {
   return {
     text,
     files,
+    records,
     picked,
     settings,
     choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),
@@ -160,7 +165,7 @@ export const createModel = (ctx: ComposerContext) => {
     resend: sendPrompt,
     clear,
     fail,
-    draft: (): Saved => ({ text: text.get(), items: files.held(), settings: picked.get() }),
+    draft: (): Saved => ({ text: text.get(), items: files.held(), records: records.linked(text.get()), settings: picked.get() }),
     retryTurn: () => void retry(ctx).catch(error => fail(errorMessage(error))),
     dismiss: (key: string) => dismissed.update(keys => new Set([...keys, key])),
   }
