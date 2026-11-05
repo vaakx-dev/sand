@@ -17,7 +17,7 @@ import type { Plus } from '../plus/entries'
 import { plusView } from '../plus/view'
 import { sendControl } from '../send/button'
 import type { SendMenu } from '../send/menu'
-import { interrupt } from '../send/submit'
+import { interrupt, lastPrompt } from '../send/submit'
 import { glassPanel } from './glass'
 import type { Slots } from './slots'
 
@@ -47,6 +47,8 @@ const placeholder = (model: Model, wide: () => boolean) => () => {
   return ['Ask anything', ...hints(labelsByChar(model.triggers.list.get()), wide())].join(', ')
 }
 
+const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
+
 export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
@@ -58,9 +60,19 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
     return true
   }
 
+  const recall = (event: KeyboardEvent) => {
+    if (model.text.get() || modified(event)) return false
+    const text = lastPrompt(ctx)
+    if (!text) return false
+    model.text.set(text)
+    editor.focusEnd()
+    return true
+  }
+
   const keydown = (event: KeyboardEvent) => {
     if (event.isComposing) return false
     if (event.key === 'Escape') return escape()
+    if (event.key === 'ArrowUp') return recall(event)
     if (event.key !== 'Enter' || event.shiftKey || coarse.get()) return false
     void model.send()
     return true
