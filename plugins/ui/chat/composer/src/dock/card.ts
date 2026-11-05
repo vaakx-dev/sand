@@ -4,6 +4,7 @@ import { errorMessage } from '@sand/util'
 import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { pastedFile, pasteLimit } from '../attachments/content'
+import { hasFiles } from '../attachments/drop'
 import { shelf } from '../attachments/shelf'
 import { createCompletion, type CompletionSource } from '../complete/model'
 import { builtinSources } from '../complete/sources'
@@ -61,7 +62,7 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   const completion = createCompletion(ctx.kit, sources)
   const editor = createEditor(ctx.kit, model.text, {
     placeholder: placeholder(model, sources),
-    extensions: [completion.extension, Prec.high(EditorView.domEventHandlers({ keydown, paste }))],
+    extensions: [completion.extension, Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
   })
 
   const picker = input({

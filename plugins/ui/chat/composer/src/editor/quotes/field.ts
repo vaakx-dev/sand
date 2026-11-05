@@ -1,12 +1,12 @@
 import { invertedEffects } from '@codemirror/commands'
-import { EditorState, Prec, StateEffect, StateField, type Transaction } from '@codemirror/state'
-import { Decoration, EditorView, keymap } from '@codemirror/view'
+import { EditorState, StateEffect, StateField, type Transaction } from '@codemirror/state'
+import { Decoration, EditorView } from '@codemirror/view'
 import { quoteRuns, type QuoteRun } from '@sand/util'
-import { beside, edges, lineBeside, mapRun, quoting, spans, unquoting, type Edit, type Span } from './runs'
+import { beside, edges, lineBeside, mapRun, spans, toSpec, type Span } from './runs'
 
-const added = StateEffect.define<QuoteRun>({ map: (run, changes) => mapRun(run, changes) })
+export const added = StateEffect.define<QuoteRun>({ map: (run, changes) => mapRun(run, changes) })
 
-const runsOf = (spans: readonly Span[]) => spans.map(span => span.run)
+export const runsOf = (spans: readonly Span[]) => spans.map(span => span.run)
 
 const updated = (value: Span[], tr: Transaction) => {
   const fresh = tr.effects.filter(effect => effect.is(added)).map(effect => effect.value)
@@ -37,8 +37,6 @@ const restore = invertedEffects.of(tr =>
     .map(run => added.of(run)),
 )
 
-const toSpec = ({ changes, caret }: Edit) => ({ changes, selection: { anchor: caret } })
-
 const keepCaretOnLines = EditorState.transactionFilter.of(tr => {
   const { main } = tr.newSelection
   if (!main.empty || (!tr.docChanged && !tr.selection)) return tr
@@ -49,61 +47,4 @@ const keepCaretOnLines = EditorState.transactionFilter.of(tr => {
   return [tr, { ...toSpec(beside(doc, stranded, forward)), sequential: true }]
 })
 
-const apply = (view: EditorView, edit: Edit, run?: QuoteRun) => {
-  view.dispatch({ ...toSpec(edit), effects: run ? added.of(run) : [], scrollIntoView: true, userEvent: 'input' })
-  view.focus()
-}
-
-const spanAt = (state: EditorState, at: number) => state.field(quoteSpans).find(span => span.from <= at && at <= span.to)
-
-export const quote = (view: EditorView, text: string) => {
-  const { state } = view
-  const { from, to } = state.selection.main
-  const { edit, run } = quoting(state.doc, runsOf(state.field(quoteSpans)), from, to, text)
-  apply(view, edit, run)
-}
-
-export const reply = (view: EditorView, at: number) => {
-  const span = spanAt(view.state, at)
-  if (span) apply(view, beside(view.state.doc, span, true))
-}
-
-export const remove = (view: EditorView, at: number) => {
-  const span = spanAt(view.state, at)
-  if (span) apply(view, unquoting(view.state.doc, span))
-}
-
-const removeBeside = (side: 'from' | 'to') => (view: EditorView) => {
-  const { state } = view
-  const { main } = state.selection
-  const span = main.empty ? state.field(quoteSpans).find(span => edges(state.doc, span)[side] === main.head) : undefined
-  if (span) apply(view, unquoting(state.doc, span))
-  return Boolean(span)
-}
-
-const cross = (forward: boolean) => (view: EditorView) => {
-  const { state } = view
-  const { main } = state.selection
-  if (!main.empty) return false
-  const line = state.doc.lineAt(main.head)
-  const moved = view.moveVertically(main, forward).head
-  const span = state.field(quoteSpans).find(span => {
-    const { from, to } = edges(state.doc, span)
-    const adjacent = forward ? line.to === from : line.from === to
-    const into = forward ? from < moved && moved <= to : from <= moved && moved < to
-    return adjacent && (into || moved === main.head)
-  })
-  if (span) apply(view, beside(state.doc, span, forward))
-  return Boolean(span)
-}
-
-const keys = Prec.high(
-  keymap.of([
-    { key: 'Backspace', run: removeBeside('to') },
-    { key: 'Delete', run: removeBeside('from') },
-    { key: 'ArrowUp', run: cross(false) },
-    { key: 'ArrowDown', run: cross(true) },
-  ]),
-)
-
-export const quoteState = [quoteSpans, atomic, restore, keepCaretOnLines, keys]
+export const quoteState = [quoteSpans, atomic, restore, keepCaretOnLines]

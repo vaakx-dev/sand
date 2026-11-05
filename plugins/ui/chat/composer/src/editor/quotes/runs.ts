@@ -12,6 +12,8 @@ export interface Edit {
   caret: number
 }
 
+export const toSpec = ({ changes, caret }: Edit) => ({ changes, selection: { anchor: caret } })
+
 const blank = (doc: Text, line: number) => !doc.line(line).text.trim()
 
 const isSpace = (doc: Text, at: number) => /\s/.test(doc.sliceString(at, at + 1))

@@ -1,7 +1,8 @@
 import { Decoration, EditorView, WidgetType } from '@codemirror/view'
 import type { Kit } from '@sand/ui-kit/contract'
 import { collectScope, disposeAll, type Disposer } from '@vaakx-dev/vrui'
-import { quoteSpans, remove, reply } from './field'
+import { remove, reply } from './commands'
+import { quoteSpans } from './field'
 import { quoteRow } from './row'
 
 const owned = new WeakMap<HTMLElement, Disposer>()

@@ -1,9 +1,11 @@
 import { history, historyKeymap, insertNewline, standardKeymap } from '@codemirror/commands'
-import { EditorState, type Extension } from '@codemirror/state'
+import { EditorState, Transaction, type Extension } from '@codemirror/state'
 import { EditorView, keymap, placeholder as placeholderText } from '@codemirror/view'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, effect, scoped, span, untrack, type Sig } from '@vaakx-dev/vrui'
-import { quote, quoteState } from './quotes/field'
+import { div, effect, scoped, span, type Sig } from '@vaakx-dev/vrui'
+import { quote } from './quotes/commands'
+import { quoteState } from './quotes/field'
+import { quoteKeys } from './quotes/keys'
 import { quoteWidgets } from './quotes/widget'
 import { theme } from './theme'
 
@@ -12,30 +14,33 @@ export interface EditorOptions {
   extensions: Extension[]
 }
 
-const typing = EditorView.contentAttributes.of({ 'aria-label': 'Message', enterkeyhint: 'enter', autocapitalize: 'sentences', autocorrect: 'on', spellcheck: 'true' })
+const attributes = EditorView.contentAttributes.of({ 'aria-label': 'Message', enterkeyhint: 'enter', autocapitalize: 'sentences', autocorrect: 'on', spellcheck: 'true' })
 
 export const createEditor = (kit: Kit, text: Sig<string>, options: EditorOptions) => {
+  const hint = span(options.placeholder)
   const extensions = [
     history(),
     keymap.of([{ key: 'Enter', run: insertNewline, shift: insertNewline }, ...standardKeymap, ...historyKeymap]),
     EditorView.lineWrapping,
-    typing,
+    attributes,
     theme,
-    placeholderText(() => span(options.placeholder)),
+    placeholderText(() => hint),
     quoteState,
+    quoteKeys,
     quoteWidgets(kit),
     EditorView.updateListener.of(update => {
       if (update.docChanged) text.set(update.state.doc.toString())
     }),
     options.extensions,
   ]
-  const load = (doc: string) => EditorState.create({ doc, extensions }).update({ selection: { anchor: doc.length } }).state
-  const view = new EditorView({ state: load(untrack(() => text.get())) })
+  const view = new EditorView({ state: EditorState.create({ extensions }) })
   scoped(() => view.destroy())
 
   effect(() => {
     const value = text.get()
-    if (value !== view.state.doc.toString()) view.setState(load(value))
+    if (value === view.state.doc.toString()) return
+    view.setState(EditorState.create({ doc: value, extensions }))
+    view.dispatch({ selection: { anchor: value.length }, annotations: Transaction.addToHistory.of(false) })
   })
 
   const focusEnd = () => {
