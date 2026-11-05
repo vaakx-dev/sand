@@ -1,6 +1,7 @@
 export interface TextBlock {
   type: 'text'
   text: string
+  typed?: string
 }
 
 import type { MediaRef } from '@sand/media/contract'

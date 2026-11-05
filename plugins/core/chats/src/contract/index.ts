@@ -29,6 +29,7 @@ const isBlock = (block: unknown) =>
   block !== null &&
   'type' in block &&
   typeof block.type === 'string' &&
+  !('typed' in block) &&
   (block.type !== 'context' || ('records' in block && Array.isArray(block.records) && block.records.every(isContextRecord)))
 
 const isPrompt = (value: unknown) => typeof value === 'string' || (Array.isArray(value) && value.every(isBlock))

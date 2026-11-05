@@ -6,6 +6,6 @@ export const threadKind = (sessions: Sessions): ContextKind => ({
   title: 'Thread',
   project({ data }) {
     const thread = typeof data.id === 'string' ? sessions.open(data.id) : undefined
-    return thread && `Thread ${thread.id}, titled "${thread.title}".`
+    return thread ? { body: `Thread ${thread.id}, titled "${thread.title}".` } : { unavailable: 'Thread not found.' }
   },
 })

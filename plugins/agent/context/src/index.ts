@@ -1,9 +1,11 @@
-import { projectContext, sessions, type ContextProjector, type ContextRecord, type Session } from '@sand/chats/contract'
+import { projectContext, sessions, type ContextProjection, type ContextProjector, type ContextRecord, type Session } from '@sand/chats/contract'
 import { turnPrompt } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { contextKinds, type ContextKind } from './contract'
 import { fileKind } from './file'
 import { threadKind } from './thread'
+
+const titlePattern = /^\p{L}[\p{L}\p{N} -]{0,39}$/u
 
 export default definePlugin({
   name: 'context',
@@ -13,6 +15,7 @@ export default definePlugin({
     const kinds = new Map<string, ContextKind>()
 
     const register = (kind: ContextKind) => {
+      if (!titlePattern.test(kind.title)) throw new Error(`Context kind ${kind.kind} has a title markers can't hold: ${kind.title}`)
       kinds.set(kind.kind, kind)
       return () => {
         if (kinds.get(kind.kind) === kind) kinds.delete(kind.kind)
@@ -23,9 +26,9 @@ export default definePlugin({
       const kind = kinds.get(name)
       if (!kind) return undefined
       const project = (record: ContextRecord) =>
-        Promise.try(() => kind.project(record, session)).catch(error => {
+        Promise.try(() => kind.project(record, session)).catch((error): ContextProjection => {
           ctx.report(error)
-          return undefined
+          return { unavailable: 'Could not be read.' }
         })
       return { title: kind.title, project }
     }

@@ -1,4 +1,5 @@
-import type { Block, ContextRecord, UserContent } from '../message'
+import type { ContextRecord, ModelContent, UserContent } from '../message'
+import { isModelContent } from './content'
 
 export interface ContextLink {
   start: number
@@ -8,16 +9,13 @@ export interface ContextLink {
   label: string
 }
 
+export type TextPiece = string | ContextLink
+
+export type ContextProjection = { body: string } | { unavailable: string }
+
 export interface ContextProjector {
   title: string
-  project(record: ContextRecord): string | undefined | Promise<string | undefined>
-}
-
-interface Projection {
-  link: ContextLink
-  title: string
-  record?: ContextRecord
-  body?: string
+  project(record: ContextRecord): ContextProjection | Promise<ContextProjection>
 }
 
 const scheme = 'sand-context://v1/'
@@ -25,17 +23,13 @@ const kindGrammar = '[a-z][a-z0-9-]{0,39}'
 const idGrammar = '[a-z0-9_-]{1,128}'
 const labelLimit = 200
 const fallbackLabel = 'context'
-const envelopeOpen = '<context version="1">\n'
-const envelopeClose = '\n</context>'
-const tagAhead = '(?=/?(?:context|record)\\b)'
+const missing: ContextProjection = { unavailable: 'No record was sent for this link.' }
 
 const kindPattern = new RegExp(`^${kindGrammar}$`)
 const idPattern = new RegExp(`^${idGrammar}$`)
 const linkPattern = new RegExp(`\\[([^\\[\\]\\r\\n]{1,${labelLimit}})\\]\\(sand-context://v1/(${kindGrammar})/(${idGrammar})\\)`, 'gu')
-const markerPattern = new RegExp(`\\[[^\\[\\]\\r\\n:]+: ([^\\[\\]\\r\\n]+); ref=(${idGrammar})\\]`, 'gu')
-const entryPattern = new RegExp(`^<record kind="(${kindGrammar})" id="(${idGrammar})"`, 'gm')
-const openerPattern = new RegExp(`(?:<|&(?:amp;)*lt;)${tagAhead}`, 'gi')
-const escapedPattern = new RegExp(`&(?:amp;)*lt;${tagAhead}`, 'gi')
+const tagOpener = /<(?=\/?(?:context|record)\b)/gi
+const refAssignment = /(;\s*ref)=/gi
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 
@@ -62,64 +56,56 @@ export const contextLinks = (text: string): ContextLink[] =>
     contextLabel(label!) === label ? [{ start: index, end: index + link.length, kind: kind!, id: id!, label }] : [],
   )
 
-const escapeTags = (text: string) => text.replace(openerPattern, opener => (opener === '<' ? '&lt;' : `&amp;${opener.slice(1)}`))
+export const textPieces = (text: string): TextPiece[] => {
+  const pieces: TextPiece[] = []
+  let at = 0
+  for (const link of contextLinks(text)) {
+    pieces.push(text.slice(at, link.start), link)
+    at = link.end
+  }
+  pieces.push(text.slice(at))
+  return pieces
+}
 
-const unescapeTags = (text: string) => text.replace(escapedPattern, opener => (opener.length === 4 ? '<' : `&${opener.slice(5)}`))
+export const isContextLink = (piece: TextPiece): piece is ContextLink => typeof piece !== 'string'
+
+const keyOf = ({ kind, id }: Pick<ContextRecord, 'kind' | 'id'>) => `${kind}/${id}`
 
 const firstLinks = (links: ContextLink[]) => {
   const first = new Map<string, ContextLink>()
-  for (const link of links) if (!first.has(link.id)) first.set(link.id, link)
+  for (const link of links) if (!first.has(keyOf(link))) first.set(keyOf(link), link)
   return [...first.values()]
 }
 
-const project = async (link: ContextLink, record: ContextRecord | undefined, projectorOf: (kind: string) => ContextProjector | undefined): Promise<Projection> => {
-  const projector = projectorOf(link.kind)
-  const title = projector?.title ?? link.kind
-  if (!record || record.kind !== link.kind) return { link, title }
-  const body = projector ? await projector.project(record) : JSON.stringify(record.data, null, 2)
-  return body === undefined ? { link, title } : { link, title, record, body }
+const escapeTags = (text: string) => text.replace(tagOpener, '&lt;')
+
+const escapeTyped = (text: string) => escapeTags(text).replace(refAssignment, '$1\\=')
+
+const withMarkers = (pieces: TextPiece[], titleOf: (kind: string) => string) =>
+  pieces.map(piece => (isContextLink(piece) ? `[${titleOf(piece.kind)}: ${escapeTyped(piece.label)}; ref=${piece.id}]` : escapeTyped(piece))).join('')
+
+const project = async (record: ContextRecord | undefined, projector: ContextProjector | undefined): Promise<ContextProjection> => {
+  if (!record) return missing
+  return projector ? projector.project(record) : { body: JSON.stringify(record.data, null, 2) }
 }
 
-const marker = (link: ContextLink, title: string) => `[${title}: ${escapeTags(link.label)}; ref=${link.id}]`
-
-const withMarkers = (text: string, titles: Map<string, string>) =>
-  contextLinks(text).reduceRight((out, link) => out.slice(0, link.start) + marker(link, titles.get(link.id)!) + out.slice(link.end), text)
-
-const entry = ({ link, body }: Projection) => {
-  const open = `<record kind="${link.kind}" id="${link.id}"`
-  return body === undefined ? `${open} unavailable="true"/>` : `${open}>\n${escapeTags(body)}\n</record>`
-}
-
-const envelope = (projections: Projection[]) => `${envelopeOpen}${projections.map(entry).join('\n')}${envelopeClose}`
+const entry = ({ kind, id }: ContextLink, projection: ContextProjection) =>
+  'body' in projection
+    ? `<record kind="${kind}" id="${id}">\n${escapeTags(projection.body)}\n</record>`
+    : `<record kind="${kind}" id="${id}" unavailable="true">\n${escapeTags(projection.unavailable)}\n</record>`
 
 export const projectContext = async (content: UserContent[], projectorOf: (kind: string) => ContextProjector | undefined): Promise<UserContent[]> => {
-  const links = content.flatMap(block => (block.type === 'text' ? contextLinks(block.text) : []))
-  if (!links.length) return content
-  const records = new Map(content.flatMap(block => (block.type === 'context' ? block.records : [])).map(record => [record.id, record]))
-  const projections = await Promise.all(firstLinks(links).map(link => project(link, records.get(link.id), projectorOf)))
-  const titles = new Map(projections.map(({ link, title }) => [link.id, title]))
-  const projected = content.flatMap((block): UserContent[] => {
-    if (block.type === 'context') return []
-    return block.type === 'text' ? [{ type: 'text', text: withMarkers(block.text, titles) }] : [block]
-  })
-  const kept = projections.flatMap(({ record }) => record ?? [])
-  return [...projected, { type: 'text', text: envelope(projections) }, { type: 'context', records: kept }]
-}
-
-export const isContextEnvelope = (block: Block, next?: Block) =>
-  block.type === 'text' && next?.type === 'context' && block.text.startsWith(envelopeOpen) && block.text.endsWith(envelopeClose)
-
-const referencedKinds = (content: Block[]) =>
-  new Map(
-    content.flatMap((block, index) =>
-      block.type === 'text' && isContextEnvelope(block, content[index + 1]) ? [...block.text.matchAll(entryPattern)].map(([, kind, id]) => [id!, kind!] as const) : [],
-    ),
+  const typed = content.filter(isModelContent)
+  const parsed = typed.map(block => ({ block, pieces: block.type === 'text' ? textPieces(block.text) : [] }))
+  const links = firstLinks(parsed.flatMap(({ pieces }) => pieces.filter(isContextLink)))
+  if (!links.length) return typed
+  const records = new Map(content.flatMap(block => (block.type === 'context' ? block.records : [])).map(record => [keyOf(record), record]))
+  const entries = await Promise.all(links.map(async link => entry(link, await project(records.get(keyOf(link)), projectorOf(link.kind)))))
+  const titleOf = (kind: string) => projectorOf(kind)?.title ?? kind
+  const marked = parsed.map(({ block, pieces }): ModelContent =>
+    block.type === 'text' && pieces.some(isContextLink) ? { type: 'text', text: withMarkers(pieces, titleOf), typed: block.text } : block,
   )
-
-export const restoreLinks = (text: string, content: Block[]) => {
-  const kinds = referencedKinds(content)
-  return text.replace(markerPattern, (marker, label: string, id: string) => {
-    const kind = kinds.get(id)
-    return kind ? `[${unescapeTags(label)}](${scheme}${kind}/${id})` : marker
-  })
+  const envelope = ['<context version="1">', ...entries, '</context>'].join('\n')
+  const linked = links.flatMap(link => records.get(keyOf(link)) ?? [])
+  return [...marked, { type: 'text', text: envelope, typed: '' }, { type: 'context', records: linked }]
 }

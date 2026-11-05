@@ -1,10 +1,10 @@
-import type { ContextRecord, Session } from '@sand/chats/contract'
+import type { ContextProjection, ContextRecord, Session } from '@sand/chats/contract'
 import { service, type Dispose } from 'drydock'
 
 export interface ContextKind {
   kind: string
   title: string
-  project(record: ContextRecord, session: Session): string | undefined | Promise<string | undefined>
+  project(record: ContextRecord, session: Session): ContextProjection | Promise<ContextProjection>
 }
 
 export interface ContextKinds {
