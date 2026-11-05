@@ -18,6 +18,8 @@ export interface Selection {
   speed: Speed
 }
 
+export const modelSource = (model: string) => model.slice(0, Math.max(model.indexOf('/'), 0))
+
 export type SettingsPatch = { [K in keyof SessionSettings]?: SessionSettings[K] | null }
 
 export type SettingSource = 'session' | 'default' | 'model'

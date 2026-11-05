@@ -4,7 +4,7 @@ import { cli } from '@sand/config/contract'
 import { createHandlers, type Request } from '@sand/host-hub/contract'
 import { modelSettings } from '@sand/model/contract'
 import { projectFiles } from '@sand/project/contract'
-import type { Source } from '@sand/replay/contract'
+import { replayRequests, type Source } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
 import { turns } from '@sand/turns-contract/contract'
@@ -16,7 +16,7 @@ import { z } from 'zod'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
-const plugins = ['core/paths', 'core/media', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/turns', 'agent/model']
+const plugins = ['core/paths', 'core/media', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/turns', 'agent/model']
 
 const runtimeEntry = async (folder: string) => {
   const dir = join(builtins, folder)
@@ -41,8 +41,11 @@ const modelsReady = (app: ContextCore, ids: string[]) =>
     check()
   })
 
+const signedIn = (sources: Source[]) =>
+  Object.fromEntries(sources.flatMap(source => (source.api ? [[source.id, { type: 'oauth', access: 'replay', refresh: 'replay', expires: 8e15 }]] : [])))
+
 const boot = async (app: Context, home: string, sources: Source[]) => {
-  await Bun.write(join(home, 'auth.json'), '{}')
+  await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(sources)))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: true, args: [], exit() {} })
@@ -79,6 +82,7 @@ export const startSand = async (sources: Source[], shared?: string) => {
       need(app, modelSettings).update(session, { model })
       return session
     },
+    requests: (source: string) => need(app, replayRequests).bodies(source),
     ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }),
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })

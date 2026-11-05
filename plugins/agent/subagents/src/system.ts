@@ -1,20 +1,16 @@
-import type { Session } from '@sand/chats/contract'
-import type { Instructions } from '@sand/prompt/contract'
-import type { AgentDefinition } from './contract'
+import { promptBase } from '@sand/prompt/contract'
+import type { Context } from 'drydock'
+import type { Resolve } from './layers'
+import type { Meta } from './meta'
 
 const preamble = `You are a sand subagent doing one task for another agent. You have full access to the machine. Nobody will answer questions, so decide yourself.
 
 Finish the task. Your final message is all the other agent sees. Put in what you found or did, with sources, such as file paths or links, and results.`
 
-export const compose = async (definition: AgentDefinition, session: Session, sections?: Instructions, model?: string) => {
-  const instructions = await sections?.project(session.cwd, session.project)
-  return [
-    preamble,
-    definition.prompt && `# Your role\n\n${definition.prompt}`,
-    sections?.environment(session, model),
-    instructions && `# Project instructions\n\n${instructions}`,
-    sections?.additional && `# Additional instructions\n\n${sections.additional}`,
-  ]
-    .filter(Boolean)
-    .join('\n\n')
-}
+export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
+  ctx.on(promptBase, async (_, session) => {
+    const info = meta(session)
+    if (!info) return undefined
+    const role = (await resolve(session.cwd, session.project)).get(info.name)?.prompt
+    return role ? [preamble, `# Your role\n\n${role}`] : [preamble]
+  })

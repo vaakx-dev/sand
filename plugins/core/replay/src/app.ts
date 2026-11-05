@@ -1,10 +1,7 @@
 import type { AppOutput, AppPlan, AppSession } from '@sand/accounts/contract'
-import type { output } from 'zod'
-import type { Reply, sourceSchema } from './contract'
+import type { Reply, Script } from './contract'
 
-type Script = output<typeof sourceSchema>
-
-export const replayPlan = ({ id, label = id, models, replies }: Script): AppPlan => {
+export const replayApp = ({ id, label = id, models, replies }: Script): AppPlan => {
   const queue = [...replies]
   let calls = 0
 
@@ -21,7 +18,7 @@ export const replayPlan = ({ id, label = id, models, replies }: Script): AppPlan
             out.thinking(part.text)
             break
           case 'call': {
-            const call = { id: `${id}-${++calls}`, name: part.name, input: part.input }
+            const call = { id: part.id ?? `${id}-${++calls}`, name: part.name, input: part.input }
             waiting.add(call.id)
             out.call(call)
             break

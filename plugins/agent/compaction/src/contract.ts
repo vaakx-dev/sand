@@ -1,6 +1,6 @@
 import type { Session } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
-import { event } from 'drydock'
+import { event, service } from 'drydock'
 import { z } from 'zod'
 
 export interface ContextUsage {
@@ -25,7 +25,14 @@ export interface CompactionRecord {
   before?: number
   after?: number
   files?: CompactedFiles
+  thread?: string
 }
+
+export interface ContextLimits {
+  limit(model: string): number
+}
+
+export const contextLimits = service<ContextLimits>('contextLimits')
 
 export const contextUsage = event<(session: Session, usage: ContextUsage) => void>('context.usage')
 

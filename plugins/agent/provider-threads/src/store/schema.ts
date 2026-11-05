@@ -1,0 +1,21 @@
+export const schema = [
+  [
+    `create table provider_threads (
+      id text primary key,
+      session text not null,
+      source text not null,
+      model text not null,
+      generation integer not null,
+      native text,
+      status text not null,
+      system text not null,
+      seen text not null,
+      effort text,
+      speed text not null,
+      context integer not null default 0,
+      used integer not null,
+      created integer not null
+    )`,
+    "create unique index provider_threads_open on provider_threads (session, source, model) where status != 'retired'",
+  ],
+]

@@ -20,6 +20,44 @@ export interface EffortLevel {
 
 export type NewModels = 'show' | 'hide'
 
+export interface ProviderCapabilities {
+  native: boolean
+  resume: boolean
+  inject: boolean
+  steer: boolean
+  reconfigure: ('effort' | 'speed')[]
+  processScope: 'thread' | 'shared'
+  cacheTtlMs: number
+}
+
+export interface NativeRef {
+  id: string
+  cwd: string
+  pc?: string
+}
+
+export interface ThreadRef {
+  id: string
+  generation: number
+  fresh: boolean
+  seenHead: string | null
+  native?: NativeRef
+}
+
+export interface HandoffItem {
+  role: 'user' | 'assistant'
+  text: string
+}
+
+export interface HandoffBlock {
+  id: string
+  context: string
+  items: HandoffItem[]
+  text: string
+}
+
+export type Delivery = 'injected' | 'inline'
+
 export interface SourceInfo {
   id: string
   kind: AccountKind
@@ -38,6 +76,7 @@ export interface SourceInfo {
   slugs: boolean
   checked?: number
   error?: string
+  caps?: ProviderCapabilities
 }
 
 export interface LLMRequest {
@@ -49,12 +88,15 @@ export interface LLMRequest {
   speed?: Speed
   session?: string
   sessionKind?: ChatKind
+  thread?: ThreadRef
+  delta?: Message[]
+  handoff?: HandoffBlock
 }
 
 export type LLMEvent =
   | Exclude<LiveEvent, { type: 'block' | 'done' }>
   | { type: 'block'; index: number; block: Block }
-  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; source?: SourceRef }
+  | { type: 'done'; message: Message; stopReason: StopReason; usage: Usage; source?: SourceRef; native?: NativeRef; delivered?: Delivery }
 
 export interface Limits {
   source: string
@@ -76,4 +118,6 @@ export interface LLM {
   sourceLimits?(): Limits[]
   refreshLimits?(): Promise<Limits | undefined>
   price?(model: string): ModelPrice | undefined
+  caps?(model: string): ProviderCapabilities
+  release?(thread: string): void
 }

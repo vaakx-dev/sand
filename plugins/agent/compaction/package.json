@@ -18,7 +18,6 @@
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/usage": "workspace:*",

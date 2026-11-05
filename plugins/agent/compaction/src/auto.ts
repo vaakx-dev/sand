@@ -1,9 +1,8 @@
 import type { LLMRequest } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import { contextBuild, contextOverflow, turnEnd, turns } from '@sand/turns-contract/contract'
+import { contextOverflow, stepPrepare, turnEnd } from '@sand/turns-contract/contract'
 import type { CompactionReason } from './contract'
 import type { CompactionContext, Compactor } from './compact'
-import { rewrite } from './history/rewrite'
 import type { Tracker } from './measure/tracker'
 import { isOverflow } from './overflow'
 
@@ -11,12 +10,12 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
   const overflowed = new Set<string>()
   const failed = new Set<string>()
 
-  const attempt = async (session: Session, request: LLMRequest, reason: CompactionReason, signal?: AbortSignal) => {
+  const attempt = async (session: Session, request: LLMRequest, reason: CompactionReason, signal: AbortSignal) => {
     try {
       await compactor.compact(session, request, { reason, signal })
       return true
     } catch {
-      if (signal?.aborted) return false
+      if (signal.aborted) return false
       if (reason === 'threshold') failed.add(session.id)
       return false
     }
@@ -28,18 +27,12 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     return tracker.project(session.id, request) >= compactor.budget(request).limit ? 'threshold' : undefined
   }
 
-  ctx.on(
-    contextBuild,
-    async (request, session, signal) => {
-      let current = rewrite(session.path(), request)
-      if (!ctx.get(turns)?.current(session)) return current
-      const reason = due(session, current)
-      if (reason && (await attempt(session, current, reason, signal))) current = rewrite(session.path(), request)
-      tracker.sent(session.id, current.messages.length)
-      return current
-    },
-    { priority: -100 },
-  )
+  ctx.on(stepPrepare, async (request, session, signal) => {
+    const reason = due(session, request)
+    if (reason && (await attempt(session, request, reason, signal))) return true
+    tracker.sent(session.id, request)
+    return undefined
+  })
 
   ctx.on(contextOverflow, (session, error) => {
     if (!isOverflow(error)) return undefined

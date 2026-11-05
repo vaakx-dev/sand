@@ -15,7 +15,6 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/model": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/tools": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

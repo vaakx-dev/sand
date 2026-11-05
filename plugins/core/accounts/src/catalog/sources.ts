@@ -1,6 +1,7 @@
 import type { SourceInfo, SourceRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { billingOf } from '../auth/kinds'
+import { capsOf } from './caps'
 import type { Entry, SourceMeta } from './types'
 
 export const localMeta = (accounts: Accounts, id: string): SourceMeta | undefined => {
@@ -9,7 +10,16 @@ export const localMeta = (accounts: Accounts, id: string): SourceMeta | undefine
   if (!kind || !method) return undefined
   const plan = accounts.plan(id)
   const api = accounts.api(id)
-  return { id, kind, label: accounts.label(id), provider: accounts.provider(id), billing: billingOf(method), ...(api && { api }), ...(plan && { plan }) }
+  return {
+    id,
+    kind,
+    label: accounts.label(id),
+    provider: accounts.provider(id),
+    billing: billingOf(method),
+    caps: capsOf(method, api),
+    ...(api && { api }),
+    ...(plan && { plan }),
+  }
 }
 
 export const localMetas = (accounts: Accounts) => accounts.ids().flatMap(id => localMeta(accounts, id) ?? [])

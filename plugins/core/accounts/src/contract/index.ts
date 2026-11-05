@@ -15,6 +15,7 @@ export * from './match'
 export type * from './models'
 export type * from './plans'
 export type * from './setup'
+export { statelessCaps, ThreadLost } from './threads'
 export type * from './usage'
 export { windowText } from './window'
 

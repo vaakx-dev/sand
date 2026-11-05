@@ -1,4 +1,4 @@
-import type { ModelInfo, ModelPrice } from '../contract'
+import { type ModelInfo, type ModelPrice, statelessCaps } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { billingOf, kindOrder } from '../auth/kinds'
 import { qualify, split } from '../catalog/build'
@@ -32,6 +32,7 @@ const sourceOf = (peer: PeerState, account: SharedAccount, id: string, pinned: b
     label: account.label,
     provider: account.provider,
     billing: billingOf(account.method),
+    caps: statelessCaps(),
     ...(account.plan && { plan: account.plan }),
     via,
     pc: peer.pc.id,

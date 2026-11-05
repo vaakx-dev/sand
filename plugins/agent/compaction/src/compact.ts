@@ -7,7 +7,7 @@ import type { Context } from 'drydock'
 import { budgetOf, usageOf, type Budget } from './budget'
 import type { CompactionConfig } from './config'
 import { plan } from './history/plan'
-import { rewrite } from './history/rewrite'
+import { compactedMessages } from './history/summary'
 import { requestTokens } from './measure/estimate'
 import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
@@ -61,8 +61,9 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
         reason,
         before,
         files: filesOf(cut.dropped, cut.previous?.files),
+        ...(request.thread && { thread: request.thread.id }),
       }
-      after = requestTokens(rewrite([...path, draft(session, record)], request))
+      after = requestTokens({ ...request, messages: compactedMessages([...path, draft(session, record)]) })
       session.append('compaction', { ...record, after } satisfies CompactionRecord)
       if (usage) session.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))
       tracker.reset(session.id)

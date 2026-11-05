@@ -1,14 +1,20 @@
+import type { Session } from '@sand/chats/contract'
 import type { Paths } from '@sand/paths/contract'
 import type { Tools } from '@sand/tools/contract'
-import type { Instructions } from './contract'
 import { join } from 'node:path'
+
+export interface Instructions {
+  environment(session: Session, model: string): string
+  project(cwd: string, project?: string | null): Promise<string>
+  additional: string | undefined
+}
 
 const projectFiles = ['AGENTS.md', 'CLAUDE.md', '.sand/AGENTS.md']
 
-const environment = (cwd: string, notes: string[], model?: string) =>
+const environment = (cwd: string, notes: string[], model: string) =>
   [
     '# Environment\n',
-    ...(model ? [`- Model: ${model}`] : []),
+    `- Model: ${model}`,
     `- Working directory: ${cwd}`,
     `- Platform: ${process.platform}`,
     ...notes.map(note => `- ${note}`),

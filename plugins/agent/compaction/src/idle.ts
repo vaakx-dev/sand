@@ -1,6 +1,5 @@
 import { sessions, type Session } from '@sand/chats/contract'
-import { contextBuild, turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
-import { context } from '@sand/prompt/contract'
+import { providerThreads, turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
 import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
 
@@ -15,16 +14,11 @@ export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     timers.delete(session.id)
   }
 
-  const requestOf = async (session: Session) => {
-    const builder = ctx.get(context)
-    return builder && ctx.waterfall(contextBuild, await builder.build(session), session)
-  }
-
   const compact = async (id: string) => {
     timers.delete(id)
     const session = ctx.get(sessions)?.open(id)
     if (!session || session.settled || ctx.get(turns)?.current(session)) return
-    const request = await requestOf(session)
+    const request = await ctx.get(providerThreads)?.view(session)
     if (!request || tracker.project(id, request) < worthCompacting) return
     const release = ctx.busy()
     await compactor
