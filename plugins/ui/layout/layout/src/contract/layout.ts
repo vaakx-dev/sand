@@ -17,6 +17,7 @@ export interface Layout {
   mount(region: Region, view: HTMLElement, order?: number): Dispose
   cover(region: 'side' | 'main', view: HTMLElement): Dispose
   toggle(region: 'side' | 'aside', open?: boolean): void
+  handOff(): void
   state(): LayoutState
   swipe(): Swipe | undefined
 }

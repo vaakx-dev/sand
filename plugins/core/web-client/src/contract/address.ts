@@ -16,7 +16,28 @@ export const addressParam = (key: string) => addressParams()[key]
 
 export const addressState = (): AddressState => (isRecord(history.state) ? history.state : {})
 
-export const pushAddress = (params: AddressParams, state: AddressState) => history.pushState(state, '', urlOf(params))
+const layerKey = 'layer'
+
+export const addressLayer = () => {
+  const layer = addressState()[layerKey]
+  return typeof layer === 'string' ? layer : undefined
+}
+
+const push = (state: AddressState, url: string | URL) => {
+  if (addressLayer()) history.replaceState(state, '', url)
+  else history.pushState(state, '', url)
+}
+
+export const pushLayer = (layer: string) => push({ ...addressState(), [layerKey]: layer }, location.href)
+
+export const leaveLayer = () => {
+  if (addressLayer()) history.back()
+}
+
+export const pushAddress = (params: AddressParams, state: AddressState) => {
+  const { [layerKey]: _, ...page } = state
+  push(page, urlOf(params))
+}
 
 export const updateAddress = (params: AddressParams, state: AddressState = {}) =>
   history.replaceState({ ...addressState(), ...state }, '', urlOf({ ...addressParams(), ...params }, location.hash))
