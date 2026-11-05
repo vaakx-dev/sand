@@ -21,7 +21,7 @@ export const rewriteActions = (ctx: ChatContext, thread: string, entry: string, 
       () => true,
       () => false,
     )
-    if (moved && !composer.value().trim()) composer.restore({ text, content })
+    if (moved) composer.restore({ text, content })
   }
   return [
     {
