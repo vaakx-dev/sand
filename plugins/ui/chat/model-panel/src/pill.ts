@@ -2,10 +2,11 @@ import type { PickerTarget } from '@sand/model-picker/contract'
 import type { Pulse } from '@sand/reactive'
 import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
+import type { ShownState } from './shown'
 
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
-export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse) => {
+export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse, shownState: ShownState) => {
   const { chipButton, chipPopover, icon, modelLogo, pressOpens, shrinkBadge } = ctx.kit
   const open = sig(false)
   let flash = false
@@ -16,9 +17,9 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
   }
   const toggle = () => (open.get() ? close() : reveal(false))
 
-  const current = changes.read(() => ctx.models.state()?.current)
-  const next = changes.read(() => ctx.models.state()?.next)
-  const model = changes.read(() => ctx.models.info(ctx.models.state()?.current.model))
+  const current = changes.read(() => shownState()?.current)
+  const next = changes.read(() => shownState()?.next)
+  const model = changes.read(() => ctx.models.info(shownState()?.current.model))
   const source = changes.read(() => ctx.models.sources().find(known => known.id === model.get()?.source))
   const chosen = current.map(value => Boolean(value?.model))
   const modelLabel = () => model.get()?.label ?? current.get()?.model ?? 'Choose a model'

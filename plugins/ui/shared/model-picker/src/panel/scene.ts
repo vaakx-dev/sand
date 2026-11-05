@@ -1,6 +1,6 @@
 import { modelsPref, modelsRefresh, type ModelInfo, type SourceInfo } from '@sand/accounts/contract'
 import type { Request } from '@sand/host-hub/contract'
-import { settingsSet, type SessionSettings } from '@sand/model/contract'
+import type { SessionSettings } from '@sand/model/contract'
 import { settings as settingsPages } from '@sand/settings/contract'
 import { pcMarks, wire } from '@sand/devices-contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
@@ -60,7 +60,6 @@ export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View
         model,
         use: () => pick(model),
         ...(ctx.get(wire) && {
-          makeDefault: () => send(ctx, settingsSet, { patch: { model: model.id } }),
           toggleFavourite: () => send(ctx, modelsPref, { model: model.id, favourite: model.favourite === undefined }),
           toggleHidden: () => send(ctx, modelsPref, { model: model.id, hidden: !model.hidden }),
         }),

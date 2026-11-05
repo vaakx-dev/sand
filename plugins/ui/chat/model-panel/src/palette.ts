@@ -1,17 +1,18 @@
 import type { ModelInfo } from '@sand/accounts/contract'
-import type { EffectiveSettings } from '@sand/model/contract'
+import type { Picked } from '@sand/model-picker/contract'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import { sourceName } from '@sand/model-picker/contract'
 import { matching, tokens } from '@sand/util'
 import type { Actions } from './actions'
 import type { PanelContext } from './context'
+import type { ShownState } from './shown'
 
 interface Row {
   item: PaletteItem
   words: string
 }
 
-const modelRows = (ctx: PanelContext, actions: Actions, shown?: EffectiveSettings): Row[] => {
+const modelRows = (ctx: PanelContext, actions: Actions, shown?: Picked): Row[] => {
   const defaults = ctx.models.defaults()
   const sources = ctx.models.sources()
   return ctx.models.list().map(model => {
@@ -32,7 +33,7 @@ const modelRows = (ctx: PanelContext, actions: Actions, shown?: EffectiveSetting
   })
 }
 
-const effortRows = (ctx: PanelContext, actions: Actions, info: ModelInfo, shown?: EffectiveSettings): Row[] =>
+const effortRows = (ctx: PanelContext, actions: Actions, info: ModelInfo, shown?: Picked): Row[] =>
   ctx.models
     .levels()
     .filter(level => info.efforts.includes(level.id))
@@ -48,7 +49,7 @@ const effortRows = (ctx: PanelContext, actions: Actions, info: ModelInfo, shown?
       words: `effort thinking ${level.id} ${level.label}`,
     }))
 
-const fastRow = (actions: Actions, shown?: EffectiveSettings): Row => {
+const fastRow = (actions: Actions, shown?: Picked): Row => {
   const on = shown?.speed === 'fast'
   return {
     item: {
@@ -62,19 +63,19 @@ const fastRow = (actions: Actions, shown?: EffectiveSettings): Row => {
   }
 }
 
-const rows = (ctx: PanelContext, actions: Actions): Row[] => {
-  const state = ctx.models.state()
+const rows = (ctx: PanelContext, actions: Actions, shownState: ShownState): Row[] => {
+  const state = shownState()
   const shown = state?.next ?? state?.current
   const info = ctx.models.info(shown?.model)
   return [...modelRows(ctx, actions, shown), ...(info ? effortRows(ctx, actions, info, shown) : []), ...(info?.fast ? [fastRow(actions, shown)] : [])]
 }
 
-export const modelSource = (ctx: PanelContext, actions: Actions): PaletteSource => ({
+export const modelSource = (ctx: PanelContext, actions: Actions, shownState: ShownState): PaletteSource => ({
   id: 'model',
   order: 15,
   items(query) {
     if (query.startsWith('/') || !query.trim()) return []
-    const all = rows(ctx, actions)
+    const all = rows(ctx, actions, shownState)
     return matching(
       all.map(row => `${row.item.label} ${row.words}`),
       query,

@@ -1,10 +1,12 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
+import { createHandlers, type Request } from '@sand/host-hub/contract'
 import { loop } from '@sand/loop/contract'
 import { modelSettings } from '@sand/model/contract'
 import { projectFiles } from '@sand/project/contract'
 import type { Source } from '@sand/replay/contract'
+import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
 import { createApp, scopeError, type ContextCore, type Service } from 'drydock'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -47,6 +49,8 @@ export const startSand = async (sources: Source[]) => {
   app.on(scopeError, (_, error) => void errors.push(error))
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: true, args: [], exit() {} })
   app.provide(projectFiles, { copies: () => [], ofFolder: () => null })
+  const wire = createHandlers()
+  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0 })
   for (const plugin of plugins) app.load(await runtimeEntry(plugin), {})
   app.load(await runtimeEntry('core/replay'), { sources })
   await app.settled()
@@ -63,6 +67,7 @@ export const startSand = async (sources: Source[]) => {
       need(app, modelSettings).update(session, { model })
       return session
     },
+    ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }),
     tool(name: string, run: (input: Record<string, unknown>) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },
