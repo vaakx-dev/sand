@@ -148,6 +148,7 @@ export const createAccounts = (path: string, plans: PlanRegistry, changed: () =>
       if (server(id)) return 'server'
       return viaApp(id) ? 'app' : credential(id)?.type
     },
+    appCaps: (id: string) => plans.app(id)?.caps,
     api: (id: string): PlanApi | undefined => plans.api(id)?.api ?? plans.app(id)?.family ?? (isKeyKind(id) ? keyApis[id] : undefined),
     plan(id: string) {
       if (viaApp(id)) return plans.status(id).plan

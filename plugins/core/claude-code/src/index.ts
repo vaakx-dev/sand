@@ -1,4 +1,4 @@
-import { llmPlans, type AppPlan } from '@sand/accounts/contract'
+import { llmPlans, type AppPlan, type ProviderCapabilities } from '@sand/accounts/contract'
 import { media } from '@sand/media/contract'
 import { definePlugin } from 'drydock'
 import { modelCatalog } from './account/models'
@@ -7,6 +7,16 @@ import { signInClaude } from './account/sign-in'
 import { readStatus, signOutClaude } from './account/status'
 import { installUrl } from './cli/binary'
 import { openSession, type SessionNeeds } from './session/session'
+
+const caps: ProviderCapabilities = {
+  native: true,
+  resume: true,
+  inject: false,
+  steer: true,
+  reconfigure: [],
+  processScope: 'thread',
+  cacheTtlMs: 60 * 60_000,
+}
 
 const claudePlan = (needs: SessionNeeds): AppPlan => {
   const models = modelCatalog()
@@ -19,12 +29,13 @@ const claudePlan = (needs: SessionNeeds): AppPlan => {
     app: 'Claude Code',
     install: installUrl,
     family: 'anthropic',
+    caps,
     status: readStatus,
     signIn: signInClaude,
     signOut: signOutClaude,
     models: models.list,
     usage: readUsage,
-    open: async (setup, output) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs),
+    open: async (setup, output, resume) => openSession({ ...setup, model: await models.cliName(setup.model) }, output, needs, resume),
   }
 }
 

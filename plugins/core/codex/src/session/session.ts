@@ -1,54 +1,66 @@
-import type { AppOutput, AppSession, AppSetup } from '@sand/accounts/contract'
+import type { AppOutput, AppSession, AppSetup, HandoffBlock } from '@sand/accounts/contract'
 import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { threadConfig } from '../server/args'
-import { fieldsOf, type Json } from '../server/rpc'
-import type { CodexServer } from '../server/server'
+import type { Pool, ThreadServer } from '../server/pool'
+import { fieldsOf, type Json, RpcError } from '../server/rpc'
 import { inputItem, toolOutput } from './content'
 
-const earlier = (history: string) => `Earlier in this conversation (carried over from sand):\n\n${history}\n\n---\n\n`
+const methodMissing = -32601
 
 const dynamicTool = ({ name, description, inputSchema }: AppSetup['tools'][number]) => ({ type: 'function', name, description, inputSchema })
 
+const historyItems = ({ context, items }: HandoffBlock) => [
+  { type: 'message', role: 'user', content: [{ type: 'input_text', text: context }] },
+  ...items.map(({ role, text }) => ({ type: 'message', role, content: [{ type: role === 'user' ? 'input_text' : 'output_text', text }] })),
+]
+
 const usageMeter = (output: AppOutput) => {
   let before = { input: 0, cached: 0, written: 0, output: 0 }
-  return (total: Json) => {
+  return (total: Json, counted: boolean) => {
     const now = { input: Number(total.inputTokens ?? 0), cached: Number(total.cachedInputTokens ?? 0), written: Number(total.cacheWriteInputTokens ?? 0), output: Number(total.outputTokens ?? 0) }
-    output.usage({
-      input: now.input - now.cached - (before.input - before.cached),
-      cacheRead: now.cached - before.cached,
-      cacheWrite: now.written - before.written,
-      output: now.output - before.output,
-    })
+    if (counted)
+      output.usage({
+        input: now.input - now.cached - (before.input - before.cached),
+        cacheRead: now.cached - before.cached,
+        cacheWrite: now.written - before.written,
+        output: now.output - before.output,
+      })
     before = now
   }
 }
 
 const failure = (turn: Json) => new Error(String(fieldsOf(turn.error).message ?? 'Codex stopped this turn'))
 
-export interface SessionNeeds {
-  server: CodexServer
-  media: Media
-}
+const mcpServers = async (server: ThreadServer, cwd: string) => Object.keys(fieldsOf(fieldsOf((await server.request('config/read', { cwd })).config).mcp_servers))
 
-export const openSession = async ({ server, media }: SessionNeeds, setup: AppSetup, output: AppOutput): Promise<AppSession> => {
-  const toItem = inputItem(media)
-  const { thread } = await server.request('thread/start', {
+const begin = async (server: ThreadServer, setup: AppSetup, resume?: string) => {
+  const thread = {
     model: setup.model,
     cwd: setup.cwd,
     approvalPolicy: 'never',
     sandbox: 'read-only',
     baseInstructions: setup.system,
-    ephemeral: true,
-    environments: [],
-    dynamicTools: setup.tools.map(dynamicTool),
-    config: threadConfig(await server.mcpServers(setup.cwd)),
-  })
-  const threadId = String(fieldsOf(thread).id)
+    config: threadConfig(await mcpServers(server, setup.cwd)),
+  }
+  const started = resume
+    ? await server.request('thread/resume', { ...thread, threadId: resume, excludeTurns: true })
+    : await server.request('thread/start', { ...thread, ephemeral: !setup.persist, environments: [], dynamicTools: setup.tools.map(dynamicTool) })
+  return String(fieldsOf(started.thread).id)
+}
+
+export interface SessionNeeds {
+  pool: Pool
+  media: Media
+}
+
+export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup, output: AppOutput, resume?: string): Promise<AppSession> => {
+  const toItem = inputItem(media)
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   const meter = usageMeter(output)
-  let history = setup.history
+  let running = false
   let turnId: string | undefined
+  let stopped: PromiseWithResolvers<void> | undefined
 
   const answerFor = (id: string) => {
     const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
@@ -56,15 +68,37 @@ export const openSession = async ({ server, media }: SessionNeeds, setup: AppSet
     return found
   }
 
+  const dropAnswers = () => {
+    answers.forEach(found => {
+      found.promise.catch(() => {})
+      found.reject(new Error('sand stopped this turn'))
+    })
+    answers.clear()
+  }
+
+  const stop = () => {
+    if (turnId) void server.request('turn/interrupt', { threadId, turnId }).catch(() => {})
+  }
+
+  const end = (turn: Json) => {
+    running = false
+    turnId = undefined
+    if (stopped) {
+      stopped.resolve()
+      stopped = undefined
+    } else if (turn.status === 'completed') output.finish()
+    else output.fail(failure(turn))
+  }
+
   const notify = (method: string, params: Json) => {
-    if (method === 'turn/started') turnId = String(fieldsOf(params.turn).id)
+    if (method === 'turn/started') {
+      turnId = String(fieldsOf(params.turn).id)
+      if (stopped) stop()
+    }
     if (method === 'item/agentMessage/delta') output.text(String(params.delta ?? ''))
     if (method === 'item/reasoning/summaryTextDelta' || method === 'item/reasoning/textDelta') output.thinking(String(params.delta ?? ''))
-    if (method === 'thread/tokenUsage/updated') meter(fieldsOf(fieldsOf(params.tokenUsage).total))
-    if (method !== 'turn/completed') return
-    const turn = fieldsOf(params.turn)
-    if (turn.status === 'completed') output.finish()
-    else if (turn.status === 'failed') output.fail(failure(turn))
+    if (method === 'thread/tokenUsage/updated') meter(fieldsOf(fieldsOf(params.tokenUsage).total), turnId !== undefined)
+    if (method === 'turn/completed') end(fieldsOf(params.turn))
   }
 
   const call = async (params: Json) => {
@@ -74,31 +108,43 @@ export const openSession = async ({ server, media }: SessionNeeds, setup: AppSet
     return toolOutput(await answerFor(id).promise, media)
   }
 
-  const forget = server.thread(threadId, { notify, call, fail: error => output.fail(error) })
+  const server = await pool.open({ notify, call, exit: error => output.exit(error) })
+  const threadId = await begin(server, setup, resume).catch((error: unknown) => {
+    server.close()
+    throw error
+  })
+
+  const request = (method: string, params: Json) => void server.request(method, { threadId, ...params }).catch(error => output.fail(error))
 
   return {
-    send(content: UserContent[]) {
-      const intro = history ? [{ type: 'text', text: earlier(history), text_elements: [] }] : []
-      history = ''
-      void server
-        .request('turn/start', { threadId, input: [...intro, ...content.map(toItem)], model: setup.model, ...(setup.effort && { effort: setup.effort }), summary: 'auto' })
-        .catch(error => output.fail(error))
+    id: threadId,
+    send(content: UserContent[], effort) {
+      running = true
+      request('turn/start', { input: content.map(toItem), model: setup.model, ...(effort && { effort }), summary: 'auto' })
     },
     steer(content: UserContent[]) {
-      if (!turnId) return
-      void server.request('turn/steer', { threadId, expectedTurnId: turnId, input: content.map(toItem) }).catch(error => output.fail(error))
+      if (turnId) request('turn/steer', { expectedTurnId: turnId, input: content.map(toItem) })
     },
     answer: (id, result) => answerFor(id).resolve(result),
+    async inject(handoff) {
+      try {
+        await server.request('thread/inject_items', { threadId, items: historyItems(handoff) })
+        return true
+      } catch (error) {
+        if (error instanceof RpcError && error.code === methodMissing) return false
+        throw error
+      }
+    },
     interrupt() {
-      if (turnId) void server.request('turn/interrupt', { threadId, turnId }).catch(() => {})
+      dropAnswers()
+      if (!running) return Promise.resolve()
+      stopped ??= Promise.withResolvers<void>()
+      stop()
+      return stopped.promise
     },
     close() {
-      forget()
-      answers.forEach(found => {
-        found.promise.catch(() => {})
-        found.reject(new Error('sand stopped this turn'))
-      })
-      void server.request('thread/unsubscribe', { threadId }).catch(() => {})
+      dropAnswers()
+      server.close()
     },
   }
 }

@@ -8,6 +8,7 @@ const part = z.discriminatedUnion('type', [
   z.object({ type: z.literal('usage'), input: z.number().default(0), output: z.number().default(0) }),
   z.object({ type: z.literal('error'), message: z.string() }),
   z.object({ type: z.literal('hold') }),
+  z.object({ type: z.literal('crash') }),
 ])
 
 export const sourceSchema = z.object({
@@ -16,6 +17,8 @@ export const sourceSchema = z.object({
   api: z.literal('anthropic').optional(),
   models: z.array(z.string()).min(1),
   replies: z.array(z.array(part)).default([]),
+  resume: z.boolean().default(true),
+  inject: z.array(z.enum(['ok', 'missing', 'error'])).default([]),
 })
 
 export type Part = z.infer<typeof part>
@@ -26,8 +29,16 @@ export type Source = z.input<typeof sourceSchema>
 
 export type Script = z.output<typeof sourceSchema>
 
+export type NativeCall =
+  | { type: 'open'; cwd: string; resume?: string }
+  | { type: 'inject'; text: string }
+  | { type: 'send' | 'steer'; text: string }
+  | { type: 'answer'; id: string; text: string }
+  | { type: 'interrupt' | 'close' }
+
 export interface ReplayRequests {
   bodies(source: string): string[]
+  native(source: string): NativeCall[]
 }
 
 export const replayRequests = service<ReplayRequests>('replayRequests')

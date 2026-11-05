@@ -1,9 +1,17 @@
 import type { Effort } from '@sand/accounts/contract'
 
+interface Saved {
+  id: string
+  resume: boolean
+}
+
 interface RunOptions {
   model?: string
   effort?: Effort
+  saved?: Saved
 }
+
+const kept = (saved?: Saved) => (saved ? [saved.resume ? '--resume' : '--session-id', saved.id] : ['--no-session-persistence'])
 
 const locked = {
   CLAUDE_AGENT_SDK_MCP_NO_PREFIX: '1',
@@ -38,7 +46,7 @@ export const claudeEnv = (): Record<string, string> => {
   return { ...env, ...locked }
 }
 
-export const claudeArgs = ({ model, effort }: RunOptions) => [
+export const claudeArgs = ({ model, effort, saved }: RunOptions) => [
   '-p',
   '--input-format',
   'stream-json',
@@ -53,7 +61,7 @@ export const claudeArgs = ({ model, effort }: RunOptions) => [
   '',
   '--settings',
   JSON.stringify(settings),
-  '--no-session-persistence',
+  ...kept(saved),
   '--disable-slash-commands',
   '--permission-mode',
   'default',

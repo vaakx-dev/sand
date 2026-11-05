@@ -34,6 +34,7 @@ export interface NativeRef {
   id: string
   cwd: string
   pc?: string
+  tools?: string
 }
 
 export interface ThreadRef {
@@ -41,6 +42,7 @@ export interface ThreadRef {
   generation: number
   fresh: boolean
   seenHead: string | null
+  cwd: string
   native?: NativeRef
 }
 

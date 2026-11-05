@@ -10,14 +10,17 @@ import { serverName, toolServer } from './tools'
 
 const cacheTtl = (setup: AppSetup) => (setup.sessionKind === 'thread' ? '1h' : '5m')
 
-const earlier = (history: string) => `Earlier in this conversation (carried over from sand):\n\n${history}\n\n---\n\n`
+const savedOf = (setup: AppSetup, resume?: string) => {
+  if (resume) return { id: resume, resume: true }
+  return setup.persist ? { id: crypto.randomUUID(), resume: false } : undefined
+}
 
 export interface SessionNeeds {
   media: Media
   report(limits: PlanLimits): void
 }
 
-export const openSession = async (setup: AppSetup, output: AppOutput, { media, report }: SessionNeeds): Promise<AppSession> => {
+export const openSession = async (setup: AppSetup, output: AppOutput, { media, report }: SessionNeeds, resume?: string): Promise<AppSession> => {
   const answers = new Map<string, PromiseWithResolvers<ToolResultBlock>>()
   const answerFor = (id: string) => {
     const found = answers.get(id) ?? Promise.withResolvers<ToolResultBlock>()
@@ -27,8 +30,17 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
   const serve = toolServer(setup.tools, id => answerFor(id).promise, media)
   const toBlock = messageBlock(media)
   const reader = createReader(output)
-  let history = setup.history
-  let interrupted = false
+  const saved = savedOf(setup, resume)
+  let running = false
+  let stopped: PromiseWithResolvers<void> | undefined
+
+  const dropAnswers = () => {
+    answers.forEach(found => {
+      found.promise.catch(() => {})
+      found.reject(new Error('sand stopped this turn'))
+    })
+    answers.clear()
+  }
 
   const handle = async (subtype: unknown, request: Json) => {
     if (subtype === 'mcp_message') return { mcp_response: await serve(fieldsOf(request.message)) }
@@ -47,42 +59,43 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
 
   const onMessage = (message: Json) => {
     if (message.type !== 'result') return reader.read(message)
-    if (interrupted) return
-    reader.finish(message)
+    running = false
     void checkUsage()
+    if (!stopped) return reader.finish(message)
+    stopped.resolve()
+    stopped = undefined
   }
 
   const connection = await connect({
-    args: claudeArgs(setup),
+    args: claudeArgs({ ...setup, saved }),
     env: { ...claudeEnv(), CLAUDE_CODE_PROMPT_CACHE_TTL: cacheTtl(setup) },
     cwd: setup.cwd,
     handle,
     onMessage,
-    onExit: error => output.fail(error),
+    onExit: error => output.exit(error),
   })
   await connection.request('initialize', { sdkMcpServers: [serverName], systemPrompt: [setup.system] })
 
   const send = (content: UserContent[]) => {
-    const blocks = content.map(toBlock)
-    const intro = history ? [{ type: 'text', text: earlier(history) }] : []
-    history = ''
-    connection.send({ type: 'user', message: { role: 'user', content: [...intro, ...blocks] }, parent_tool_use_id: null, client_composed: true })
+    running = true
+    connection.send({ type: 'user', message: { role: 'user', content: content.map(toBlock) }, parent_tool_use_id: null, client_composed: true })
   }
 
   return {
+    ...(saved && { id: saved.id }),
     send,
     steer: send,
     answer: (id, result) => answerFor(id).resolve(result),
     interrupt() {
-      interrupted = true
+      dropAnswers()
+      if (!running) return Promise.resolve()
+      stopped ??= Promise.withResolvers<void>()
       void connection.request('interrupt').catch(() => {})
+      return stopped.promise
     },
     close() {
       connection.close()
-      answers.forEach(found => {
-        found.promise.catch(() => {})
-        found.reject(new Error('sand stopped this turn'))
-      })
+      dropAnswers()
     },
   }
 }

@@ -52,6 +52,7 @@ export interface ProviderThreads {
   prepare(session: Session, turn: TurnInfo, signal: AbortSignal): Promise<StepPlan>
   settle(plan: StepPlan, done: StepDone): void
   lost(plan: StepPlan, error: unknown): boolean
+  abandon(thread: string): void
   active(session: Session): ProviderThreadInfo | undefined
   view(session: Session): Promise<LLMRequest | undefined>
 }
