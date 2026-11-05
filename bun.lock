@@ -989,6 +989,7 @@
       "name": "@sand/reload",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
@@ -1107,6 +1108,24 @@
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
+      },
+    },
+    "plugins/git/pull-refs": {
+      "name": "@sand/pull-refs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/context": "workspace:*",
+        "@sand/git-pull-page": "workspace:*",
+        "@sand/github": "workspace:*",
+        "@sand/pull-inbox": "workspace:*",
+        "@sand/pull-links": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
     "plugins/git/pull-review": {
@@ -1401,7 +1420,6 @@
         "@sand/model-panel": "workspace:*",
         "@sand/nav": "workspace:*",
         "@sand/reactive": "workspace:*",
-        "@sand/reload": "workspace:*",
         "@sand/transfers": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
@@ -1993,6 +2011,17 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/threads/thread-refs": {
+      "name": "@sand/thread-refs",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
   },
   "overrides": {
     "htmlparser2": "^12.0.0",
@@ -2216,6 +2245,8 @@
 
     "@sand/pull-links": ["@sand/pull-links@workspace:plugins/git/pull-links"],
 
+    "@sand/pull-refs": ["@sand/pull-refs@workspace:plugins/git/pull-refs"],
+
     "@sand/pull-review": ["@sand/pull-review@workspace:plugins/git/pull-review"],
 
     "@sand/quote": ["@sand/quote@workspace:plugins/ui/chat/quote"],
@@ -2247,6 +2278,8 @@
     "@sand/sub-model": ["@sand/sub-model@workspace:plugins/agent/sub-model"],
 
     "@sand/subagents": ["@sand/subagents@workspace:plugins/agent/subagents"],
+
+    "@sand/thread-refs": ["@sand/thread-refs@workspace:plugins/ui/threads/thread-refs"],
 
     "@sand/thread-titles": ["@sand/thread-titles@workspace:plugins/agent/thread-titles"],
 

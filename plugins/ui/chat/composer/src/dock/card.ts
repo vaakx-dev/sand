@@ -2,13 +2,13 @@ import { Prec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
-import { div, input, media, span, type Sig } from '@vaakx-dev/vrui'
+import { BREAKPOINT, div, input, media, span, type Sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
+import type { Trigger } from '../contract'
 import { pastedFile, pasteLimit } from '../attachments/content'
 import { hasFiles } from '../attachments/drop'
 import { shelf } from '../attachments/shelf'
-import { createCompletion, type CompletionSource } from '../complete/model'
-import { builtinSources } from '../complete/sources'
+import { createCompletion } from '../complete/model'
 import { chipClipboard } from '../editor/chips/clipboard'
 import { chipWidgets } from '../editor/chips/widget'
 import { createEditor } from '../editor/view'
@@ -30,15 +30,27 @@ export interface CardParts {
   dropping: Sig<boolean>
 }
 
-const placeholder = (model: Model, sources: CompletionSource[]) => () => {
+const labelsByChar = (triggers: Trigger[]) => {
+  const labels = new Map<string, string[]>()
+  for (const { char, label } of triggers) labels.set(char, [...(labels.get(char) ?? []), label])
+  return labels
+}
+
+const hints = (labels: Map<string, string[]>, wide: boolean) => {
+  if (!labels.size) return []
+  if (!wide) return [`or type ${[...labels.keys()].join(' ')}`]
+  return [...labels].map(([char, names]) => `${char} ${names.join(' and ')}`)
+}
+
+const placeholder = (model: Model, wide: () => boolean) => () => {
   if (model.running.get()) return 'Add to the running turn'
-  const triggers = sources.filter(source => source.ready()).map(source => `${source.trigger} ${source.label}`)
-  return ['Ask anything', ...triggers].join(', ')
+  return ['Ask anything', ...hints(labelsByChar(model.triggers.list.get()), wide())].join(', ')
 }
 
 export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
+  const wide = media(`(min-width: ${BREAKPOINT.md})`)
 
   const escape = () => {
     if (hasOpenLayer() || !model.running.get()) return false
@@ -61,10 +73,9 @@ export const card = ({ ctx, model, slots, menu, plus }: CardParts) => {
     return true
   }
 
-  const sources = builtinSources(ctx)
-  const completion = createCompletion(ctx.kit, sources)
+  const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
   const editor = createEditor(ctx.kit, model.text, {
-    placeholder: placeholder(model, sources),
+    placeholder: placeholder(model, () => wide.get()),
     extensions: [completion.extension, chipWidgets(model.records, drawChip(ctx)), chipClipboard(model.records), Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
   })
 

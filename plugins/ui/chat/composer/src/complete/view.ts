@@ -1,16 +1,17 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { list, prevent, show, span, type Sig } from '@vaakx-dev/vrui'
-import type { Completion, Suggestion } from './model'
+import type { Suggestion } from './merge'
+import type { Completion } from './model'
 
-type Row = { kind: 'group'; title: string } | { kind: 'item'; item: Suggestion; index: number }
+type Row = { kind: 'group'; title: string } | { kind: 'item'; suggestion: Suggestion; index: number }
 
-const rowsOf = (items: Suggestion[]) =>
-  items.flatMap((item, index): Row[] => [
-    ...(item.group && item.group !== items[index - 1]?.group ? [{ kind: 'group' as const, title: item.group }] : []),
-    { kind: 'item', item, index },
+const rowsOf = (suggestions: Suggestion[]) =>
+  suggestions.flatMap((suggestion, index): Row[] => [
+    ...(suggestion.group !== suggestions[index - 1]?.group ? [{ kind: 'group' as const, title: suggestion.group }] : []),
+    { kind: 'item', suggestion, index },
   ])
 
-const keyOf = (row: Row) => (row.kind === 'group' ? `group:${row.title}` : row.item.value)
+const keyOf = (row: Row) => (row.kind === 'group' ? `group:${row.title}` : `${row.suggestion.group}:${row.index}:${row.suggestion.item.label}`)
 
 const pathLabel = (value: string, partial?: boolean) => {
   const bare = value.replace(/\/$/, '')
@@ -18,20 +19,19 @@ const pathLabel = (value: string, partial?: boolean) => {
   return [span({ class: 'text-neutral-500' }, bare.slice(0, cut)), bare.slice(cut), partial && span({ class: 'text-neutral-500' }, '/')]
 }
 
-const itemRow = (kit: Kit, completion: Completion, item: Suggestion, index: Sig<number>) => {
+const itemRow = (kit: Kit, completion: Completion, { trigger, item }: Suggestion, index: Sig<number>) => {
   const { menuItem, metaLine, optionProps } = kit
-  const isFile = item.icon === 'file' || item.icon === 'folder'
   return menuItem(
     {
       ...optionProps(completion.box, index),
       size: 'sm',
-      ...(isFile && { icon: item.icon }),
+      ...(item.icon && { icon: item.icon }),
       active: () => completion.box.isSelected(index.get()),
       onMouseDown: prevent,
     },
     span(
       { class: 'min-w-0 max-w-64 shrink-0 truncate' },
-      isFile ? pathLabel(item.value, item.partial) : [span({ class: 'text-neutral-500' }, completion.source.get()?.trigger ?? ''), item.value],
+      item.path ? pathLabel(item.label, item.partial) : [!item.icon && span({ class: 'text-neutral-500' }, trigger.char), item.label],
     ),
     item.description && metaLine(item.description),
   )
@@ -41,7 +41,7 @@ const rowView = (kit: Kit, completion: Completion, row: Sig<Row>) => {
   const { sectionHeading } = kit
   const current = row.get()
   if (current.kind === 'group') return sectionHeading(current.title)
-  return itemRow(kit, completion, current.item, row.map(value => (value.kind === 'item' ? value.index : -1)))
+  return itemRow(kit, completion, current.suggestion, row.map(value => (value.kind === 'item' ? value.index : -1)))
 }
 
 export const completionView = (kit: Kit, completion: Completion) => {
