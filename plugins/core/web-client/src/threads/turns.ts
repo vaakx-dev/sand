@@ -1,47 +1,33 @@
 import { promptLabel } from '@sand/chats/contract'
-import { isPcUnavailable, type Wire } from '@sand/devices-contract'
-import { type SendResult, turnHold, turnInterrupt, turnSend, turnWithdraw } from '@sand/turns-contract/contract'
-import type { Turns } from '../contract'
-import { after } from '../detached'
-import { legacyPc, legacyTurns } from './legacy'
+import type { Wire } from '@sand/devices-contract'
+import { type SendResult, turnHold, turnInterrupt, turnWithdraw } from '@sand/turns-contract/contract'
+import type { OutboxItem, Turns } from '../contract'
+import type { createOutbox } from '../outbox/outbox'
+import { legacyTurns } from './legacy'
 import type { Store } from './store'
 
-const attempts = 4
-const retryDelay = 2_000
-
-const wait = (ms: number) => new Promise<void>(resolve => after(ms, resolve))
-
-const unanswered = (error: unknown) => isPcUnavailable(error) || (error instanceof Error && error.name === 'TimedOut')
-
-const retried = async (call: () => Promise<SendResult>) => {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await call()
-    } catch (error) {
-      if (attempt === attempts || !unanswered(error)) throw error
-      await wait(retryDelay)
-    }
-  }
+export const markStarted = (store: Store) => (item: OutboxItem, result: SendResult) => {
+  const thread = store.threads.get(item.session)
+  if (!thread || result.disposition !== 'started') return
+  thread.running = true
+  thread.started ??= Date.now()
+  store.changed(thread.id, true)
 }
 
-export const createTurns = (wire: Wire, store: Store): Turns => {
+export const createTurns = (wire: Wire, store: Store, outbox: ReturnType<typeof createOutbox>): Turns => {
   const current: Turns = {
     async send(id, prompt, { label, settings, mode } = {}) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
-      const input = { session: id, prompt, mode, label: promptLabel(label ?? prompt), settings, clientRequestId: crypto.randomUUID() }
-      const result = await retried(() => wire.call(turnSend, input))
-      if (result.disposition !== 'started') return
-      thread.running = true
-      thread.started ??= Date.now()
-      store.changed(id, true)
+      const item = { id: crypto.randomUUID(), session: id, pc: thread.device, prompt, mode, label: promptLabel(label ?? prompt), settings, at: Date.now() }
+      await outbox.submit(item)
     },
     interrupt: id => wire.call(turnInterrupt, { session: id }),
     withdraw: async (id, pending) => void (await wire.call(turnWithdraw, { session: id, pending })),
     hold: async (id, pending, held) => void (await wire.call(turnHold, { session: id, pending, held })),
   }
   const legacy = legacyTurns(wire, store)
-  const pick = (id: string) => (legacyPc(wire, store.deviceOf(id)) ? legacy : current)
+  const pick = (id: string) => (outbox.service.accepts(store.deviceOf(id)) ? current : legacy)
 
   return {
     send: (id, prompt, options) => pick(id).send(id, prompt, options),
