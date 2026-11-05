@@ -2,13 +2,15 @@ import { div, dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Ui } from '../ui'
 import type { ConnectionState, Trouble } from './state'
 
-const tryingLine = (ui: Ui, state: ConnectionState) => {
+const waiting = new Set<Trouble>(['checking', 'catching-up', 'trying'])
+
+const tryingLine = (ui: Ui, state: ConnectionState, retry: boolean) => {
   const { secondaryAction, spinner } = ui.kit
   return div(
     { role: 'status', class: 'flex min-h-6 items-start gap-2 pb-1' },
     span({ class: 'inline-flex h-6 shrink-0 items-center' }, spinner('md')),
     span({ class: 'min-w-0 flex-1 leading-6' }, state.headline),
-    secondaryAction({ size: 'sm', onClick: () => ui.ctx.pcs.retry(state.pc.get()) }, 'Retry now'),
+    retry && secondaryAction({ size: 'sm', onClick: () => ui.ctx.pcs.retry(state.pc.get()) }, 'Retry now'),
   )
 }
 
@@ -33,5 +35,5 @@ const downBlock = (ui: Ui, state: ConnectionState, stopped: boolean) => {
 export const connectionBanner = (ui: Ui, state: ConnectionState) =>
   dynamicChild(
     () => state.trouble.get() ?? ('trying' as Trouble),
-    trouble => (trouble === 'trying' ? tryingLine(ui, state) : downBlock(ui, state, trouble === 'blocked')),
+    trouble => (waiting.has(trouble) ? tryingLine(ui, state, trouble === 'trying') : downBlock(ui, state, trouble === 'blocked')),
   )

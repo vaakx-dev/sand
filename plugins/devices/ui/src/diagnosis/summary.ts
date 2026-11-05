@@ -26,6 +26,7 @@ export const summaryOf = (facts: Facts): Summary => {
       text: `Its own addresses didn’t answer. Going through ${through} is slower and stops when ${through} is off.`,
     }
   }
+  if (status.phase === 'greeting') return { tone, title: `${name} is connected and catching up.` }
   if (status.phase === 'offline')
     return { tone, title: `${name} is offline.`, text: joined(view?.seen ? `Last seen ${agoWords(view.seen)}.` : undefined, reachNote(facts), 'sand keeps trying on its own.') }
   if (status.phase !== 'blocked') return { tone, title: `Can’t reach ${name} right now.`, text: joined(reachNote(facts), 'sand keeps trying on its own.') }

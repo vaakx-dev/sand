@@ -33,6 +33,7 @@ const latencyText = (latency?: number) => (latency === undefined ? '' : `, ${Mat
 export const statusText = (status: ConnectionStatus) => {
   if (status.phase === 'connected') return `connected over ${routeName(status.route.kind)}${latencyText(status.latency)}`
   if (status.phase === 'connecting') return 'connecting'
+  if (status.phase === 'greeting') return 'catching up'
   if (status.phase === 'reconnecting') return `can't connect: ${status.cause}`
   if (status.phase === 'offline') return 'offline'
   return `blocked: ${blockedText[status.reason]}`

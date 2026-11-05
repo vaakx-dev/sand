@@ -1,7 +1,7 @@
 import type { BuildInfo } from '@sand/util/release'
 import { event, service } from 'drydock'
 import type { RoutePrefs } from '../connection/routes'
-import type { ConnectionStatus, Diagnosis } from '../connection/status'
+import type { ConnectionStatus, Diagnosis, Freshness } from '../connection/status'
 import type { JoinTicket, PairRefusalReason } from '../http/pair'
 import type { DeviceRecord } from '../records'
 import type { PcIcon } from '../schemas'
@@ -15,6 +15,7 @@ export interface PcView {
   home: boolean
   online: boolean
   status: ConnectionStatus
+  freshness: Freshness
   address?: string
   build?: BuildInfo
   seen?: number
