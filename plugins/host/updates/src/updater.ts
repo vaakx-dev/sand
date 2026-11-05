@@ -1,13 +1,13 @@
-import { stampBuild } from '@sand/host-dist/build'
-import type { BuildInfo } from '@sand/host-dist/contract'
+import { isInstalled } from '@sand/boot'
+import { stampBuild } from '@sand/boot/build'
+import type { UpdateStore } from '@sand/boot/updates'
 import { errorMessage } from '@sand/util'
-import { isInstalled } from '@sand/util/boot'
+import type { BuildInfo } from '@sand/util/release'
 import type { UpdateChannel, UpdatePhase, UpdateState } from './contract'
 import type { GithubRelease } from './github/release'
 import { cancelled, createInstaller, runningWork } from './install/run'
 import { isNewer, releaseInfo } from './offer'
 import { scheduleChecks } from './schedule'
-import type { UpdateStore } from './store'
 import type { Updater, UpdaterDeps } from './types'
 
 const staleAfter = 10 * 60_000

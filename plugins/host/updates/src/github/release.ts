@@ -1,4 +1,4 @@
-import { bundleAsset, isStamp, stampAsset, type BuildStamp } from '@sand/util/boot/release'
+import { type BuildStamp, bundleAsset, isStamp, stampAsset } from '@sand/util/release'
 import type { ReleaseInfo, UpdateChannel } from '../contract'
 import { repo, repoApi, type ApiRelease } from './api'
 import { GithubError, githubGet } from './request'

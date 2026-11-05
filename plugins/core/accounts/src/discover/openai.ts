@@ -1,7 +1,7 @@
+import { bearer } from '@sand/util/host'
 import type { PlanModel } from '../contract'
 import type { ApiKey } from '../auth/store'
 import { isRecord, trimSlash } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
 import { listIn } from './fields'
 import { getJson } from './http'
 

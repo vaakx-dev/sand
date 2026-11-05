@@ -1,7 +1,7 @@
+import { parseHealth } from '@sand/boot'
 import { installParams } from '@sand/devices-contract'
 import type { HttpRoute } from '@sand/host-gateway/contract'
 import { isRecord } from '@sand/util'
-import { parseHealth } from '@sand/util/boot'
 import { readText } from '@sand/util/host'
 import type { Installs } from '../installs'
 import { expired, installToken } from './token'

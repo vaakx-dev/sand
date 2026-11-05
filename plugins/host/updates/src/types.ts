@@ -1,7 +1,7 @@
+import type { HealthOutcome } from '@sand/boot'
 import type { HostApp } from '@sand/host-daemon/contract'
-import type { BuildInfo } from '@sand/host-dist/contract'
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import type { HealthOutcome } from '@sand/util/boot'
+import type { BuildInfo } from '@sand/util/release'
 import type { UpdateChannel, UpdateState } from './contract'
 import type { GithubRelease } from './github/release'
 

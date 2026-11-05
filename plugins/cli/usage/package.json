@@ -12,6 +12,7 @@
     "summary": "Shows usage from the terminal"
   },
   "dependencies": {
+    "@sand/accounts": "workspace:*",
     "@sand/cli-commands": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/usage": "workspace:*",

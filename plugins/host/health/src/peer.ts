@@ -1,6 +1,6 @@
+import { parseHealth } from '@sand/boot'
 import { isPcUnavailable, type Peers } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { parseHealth } from '@sand/util/boot'
 import { hostHealthRequest, type HostHealth } from './contract'
 
 const timeout = 20_000

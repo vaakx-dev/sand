@@ -1,4 +1,4 @@
-import { serverInfoFile } from '@sand/util/boot'
+import { serverInfoFile } from '@sand/boot'
 import { writePrivateJson } from '@sand/util/fs'
 import type { ServerInfo } from './contract'
 

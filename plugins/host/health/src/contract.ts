@@ -1,6 +1,6 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
 import { request, type } from '@sand/host-hub/contract'
 import type { FailedPlugin, RuntimeHealth } from '@sand/host-runtimes/contract'
+import type { BuildInfo } from '@sand/util/release'
 import { service } from 'drydock'
 import { z } from 'zod'
 

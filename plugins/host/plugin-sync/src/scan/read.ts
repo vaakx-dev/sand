@@ -1,4 +1,4 @@
-import { pluginFiles, treeHash, validPluginName } from '@sand/host-plugin-library/files'
+import { pluginFiles, treeHash, validPluginName } from '@sand/plugin-files'
 import { fileHash, isFolder } from '@sand/util/fs'
 import { stat } from 'node:fs/promises'
 import { join } from 'node:path'

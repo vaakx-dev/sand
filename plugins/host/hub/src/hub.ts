@@ -1,7 +1,6 @@
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import { callerAllowed, createHandlers } from '@sand/util/wire'
 import { type Client, createClient, send } from './client'
-import type { Caller, Hub, HubSocket, ServerMessage } from './contract'
+import { type Caller, callerAllowed, createHandlers, type Hub, type HubSocket, type ServerMessage } from './contract'
 import { createDownstream } from './downstream'
 import { createGreetings } from './greetings'
 import { createLinks } from './links'

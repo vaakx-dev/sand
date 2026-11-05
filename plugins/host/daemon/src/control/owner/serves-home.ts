@@ -1,6 +1,6 @@
+import { appsFolder } from '@sand/boot'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { appsFolder } from '@sand/util/boot'
 import { commandLine } from './command-line'
 
 const sandMain = 'apps/sand/src/main.ts'

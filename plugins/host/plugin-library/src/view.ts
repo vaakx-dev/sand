@@ -1,8 +1,8 @@
+import { scanPlugin, validPluginName } from '@sand/plugin-files'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { type BuiltinPlugin, builtinPlugins } from './builtins'
 import type { PluginEntry } from './contract'
-import { scanPlugin, validPluginName } from './files'
 import { readManifest } from './manifest'
 import type { KeptStore } from './store'
 

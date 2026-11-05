@@ -1,16 +1,7 @@
-import { extractBundle, fetchOfficialBun } from '@sand/host-dist/build'
-import type { BuildInfo } from '@sand/host-dist/contract'
-import { readStamp, readyRelease } from '@sand/util/boot/release'
+import { appsFolder, buildFolder, inAppsFolder, readPointer } from '@sand/boot'
+import { extractBundle, fetchOfficialBun } from '@sand/boot/build'
 import { replaceFile } from '@sand/util/fs'
-import {
-  appsFolder,
-  buildFolder,
-  defaultTarget,
-  inAppsFolder,
-  readBuildBun,
-  readPointer,
-  readTarget,
-} from '@sand/util/boot'
+import { type BuildInfo, defaultTarget, readBuildBun, readStamp, readTarget, readyRelease } from '@sand/util/release'
 import { mkdir, rm } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import type { PreparedBuild } from '../types'

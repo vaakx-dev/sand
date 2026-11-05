@@ -1,6 +1,6 @@
+import { bearer } from '@sand/util/host'
 import type { ServerDraft, ServerProvider } from '../contract'
 import { errorMessage, trimSlash } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
 import { isServerProvider } from './kinds'
 import type { ServerEntry } from './store'
 

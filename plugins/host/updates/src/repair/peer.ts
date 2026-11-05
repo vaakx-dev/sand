@@ -1,8 +1,8 @@
+import { healthText, parseHealth, waitHealthy, type HealthOutcome } from '@sand/boot'
 import type { Peers } from '@sand/devices-contract'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
 import type { Request } from '@sand/host-hub/contract'
 import { errorMessage, isRecord } from '@sand/util'
-import { healthText, parseHealth, waitHealthy, type HealthOutcome } from '@sand/util/boot'
 import { updatesRepair, updatesState, type PcRepairResult } from '../contract'
 
 export interface RepairDeps {

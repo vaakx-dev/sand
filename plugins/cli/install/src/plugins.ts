@@ -1,7 +1,7 @@
+import { executableList, installDependencies, safeRelative, validPluginName } from '@sand/plugin-files'
 import { chmod, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { installPaths } from '@sand/devices-contract'
-import { executableList, installDependencies, safeRelative, validPluginName } from '@sand/host-plugin-library/files'
 import { installEndpoint, type JoinGrant } from './remote'
 
 interface CopiedPlugins {

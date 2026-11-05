@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "host": "./src/index.ts",
@@ -13,6 +13,7 @@
     "summary": "Routes requests between devices, the host and the runtime"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

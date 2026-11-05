@@ -1,5 +1,5 @@
-import { periodLabel } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
+import { periodLabel } from '@sand/usage/contract'
 import { dynamicChild, path, sig, span } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import { tickText, type Metric } from '../../format'

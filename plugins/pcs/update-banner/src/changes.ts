@@ -1,6 +1,6 @@
-import type { BuildChange } from '@sand/host-dist/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { capital, plural } from '@sand/util'
+import type { BuildChange } from '@sand/util/release'
 import { div, p, show, sig, span } from '@vaakx-dev/vrui'
 
 const kinds: Record<string, string> = { feat: 'New', fix: 'Fixed', perf: 'Faster' }

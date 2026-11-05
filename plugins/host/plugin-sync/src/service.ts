@@ -1,4 +1,4 @@
-import { type PluginScan, scanPlugins } from '@sand/host-plugin-library/files'
+import { type PluginScan, scanPlugins } from '@sand/plugin-files'
 import { serial } from '@sand/util'
 import { join } from 'node:path'
 import { createApplier } from './apply/applier'

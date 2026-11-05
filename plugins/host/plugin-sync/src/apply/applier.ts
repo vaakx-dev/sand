@@ -1,5 +1,5 @@
 import type { VersionSource } from '@sand/host-plugin-versions/contract'
-import { installDependencies } from '@sand/host-plugin-library/files'
+import { installDependencies } from '@sand/plugin-files'
 import { serial } from '@sand/util'
 import { join } from 'node:path'
 import { pluginsFiles, type PluginOffer, type PluginSyncState } from '../contract'

@@ -1,4 +1,4 @@
-import { bundleAsset } from '@sand/util/boot/release'
+import { bundleAsset } from '@sand/util/release'
 import type { GithubRelease } from './release'
 import { GithubError, githubGet } from './request'
 

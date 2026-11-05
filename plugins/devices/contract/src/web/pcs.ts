@@ -1,4 +1,4 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
+import type { BuildInfo } from '@sand/util/release'
 import { event, service } from 'drydock'
 import type { RoutePrefs } from '../connection/routes'
 import type { ConnectionStatus, Diagnosis } from '../connection/status'

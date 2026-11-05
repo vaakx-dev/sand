@@ -1,5 +1,5 @@
-import type { BuildChange, BuildInfo } from '@sand/host-dist/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import type { BuildChange, BuildInfo } from '@sand/util/release'
 import { z } from 'zod'
 
 export type UpdateChannel = 'release' | 'nightly' | 'dev'

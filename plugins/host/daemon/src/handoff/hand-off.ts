@@ -1,4 +1,4 @@
-import { withSafe } from '@sand/util/boot'
+import { withSafe } from '@sand/boot'
 import { homedir } from 'node:os'
 import { hostCommand } from '../control/command'
 

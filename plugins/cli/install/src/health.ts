@@ -1,7 +1,7 @@
+import { healthText, waitHealthy } from '@sand/boot'
+import { dim, done } from '@sand/boot/setup'
 import type { Daemon } from '@sand/host-daemon/contract'
-import { dim, done } from '@sand/host-dist/setup'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
-import { healthText, waitHealthy } from '@sand/util/boot'
 import { join } from 'node:path'
 
 const unhealthy = 'Sand started, but it is not healthy'

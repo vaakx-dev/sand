@@ -1,6 +1,7 @@
+import { appMain, installedRoot } from '@sand/boot'
+import { bunBinary, readBuildBun } from '@sand/util/release'
 import { existsSync } from 'node:fs'
 import { basename } from 'node:path'
-import { appMain, bunBinary, installedRoot, readBuildBun } from '@sand/util/boot'
 
 export const hostCommand = async (home: string): Promise<[bun: string, main: string]> => {
   const root = await installedRoot(home)

@@ -1,8 +1,8 @@
+import { appRoot, setCurrentApp } from '@sand/boot'
+import { allowThroughFirewall, dim, done, notice, putSandOnPath } from '@sand/boot/setup'
+import { isChannel, loadUpdateStore } from '@sand/boot/updates'
 import type { Daemon } from '@sand/host-daemon/contract'
-import { allowThroughFirewall, dim, done, notice, putSandOnPath } from '@sand/host-dist/setup'
-import { isChannel, loadUpdateStore } from '@sand/host-updates/store'
-import { appRoot, bunBinary, readBuildBun, setCurrentApp } from '@sand/util/boot'
-import { readStamp } from '@sand/util/boot/release'
+import { bunBinary, readBuildBun, readStamp } from '@sand/util/release'
 
 export interface Installer {
   home: string

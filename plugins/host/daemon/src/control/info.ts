@@ -1,6 +1,6 @@
+import { readServerInfo } from '@sand/boot'
 import type { ServerInfo } from '@sand/host-gateway/contract'
 import { hostHealthRequest, type HostHealth } from '@sand/host-health/contract'
-import { readServerInfo } from '@sand/util/boot'
 import { join } from 'node:path'
 import { ask } from './ask'
 import { ownIdentity } from './link/identity'
