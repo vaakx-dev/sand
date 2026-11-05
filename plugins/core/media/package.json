@@ -4,7 +4,6 @@
   "description": "Keeps every image and document a chat uses in one store on disk, and serves them to the page through signed links",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts",
     "./web/contract": "./src/web/contract.ts"
   },

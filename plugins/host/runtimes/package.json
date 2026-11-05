@@ -4,7 +4,6 @@
   "description": "Starts sand runtimes, swaps in fresh ones and restarts them when they crash",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

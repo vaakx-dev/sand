@@ -4,7 +4,6 @@
   "description": "Turns attached files, documents, images and clipboard content into prompt content",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -4,7 +4,6 @@
   "description": "Tool registry and catalog: tools register here, the loop runs them, and on-demand groups load through find_tools",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The plugin tool and the sand-plugins skill, so the agent can inspect and write plugins",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",

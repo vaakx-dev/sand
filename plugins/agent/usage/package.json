@@ -4,7 +4,6 @@
   "description": "Token and cost totals and plan limits for the usage page and sand usage",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts"
   },
   "sand": {

@@ -4,7 +4,6 @@
   "description": "Builds the system prompt and request for each turn from the project instructions, environment and tools",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

@@ -4,7 +4,6 @@
   "description": "Connects devices to the current runtime and routes host requests and events",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract/index.ts"
   },
   "sand": {

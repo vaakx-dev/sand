@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "File tools: read, write, edit, glob and grep",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",

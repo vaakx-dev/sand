@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Who can reach this PC, the routes it publishes, Tailscale, and finding other sand PCs nearby",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "host": "./src/index.ts",
     "label": "Network",

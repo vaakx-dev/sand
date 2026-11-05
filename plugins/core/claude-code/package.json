@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Use the Claude Code app's own sign-in: sand runs the claude CLI on this PC and gives it sand's tools",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",

@@ -4,7 +4,6 @@
   "description": "Model, effort and fast mode for each chat and as defaults",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

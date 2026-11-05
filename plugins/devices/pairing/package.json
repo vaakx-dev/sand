@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Pairing links, join requests with codes, approvals, handoff and install grants for new PCs",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "host": "./src/index.ts",
     "label": "Pairing",

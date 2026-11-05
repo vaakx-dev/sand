@@ -4,7 +4,6 @@
   "description": "Sub-agents: the agent tool, agent definitions, tool limits and the models tool",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {

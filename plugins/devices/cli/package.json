@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "The sand devices command: lists your PCs, phones and browsers, pairs new ones and answers join requests",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts"
-  },
   "sand": {
     "cli": "./src/index.ts",
     "label": "Devices command",
