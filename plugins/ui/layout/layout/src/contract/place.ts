@@ -19,7 +19,4 @@ export const place = (ctx: Context, region: Region, view: HTMLElement | (() => H
     }
   })
 
-export const closeDrawer = (ctx: Context) => {
-  const found = ctx.get(layout)
-  if (found?.state().narrow) found.toggle('side', false)
-}
+export const closeDrawer = (ctx: Context) => ctx.get(layout)?.handOff()

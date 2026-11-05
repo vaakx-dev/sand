@@ -13,7 +13,9 @@ interface Press {
   drag?: Drag
 }
 
-const atEdge = (x: number) => x < edge || x > document.documentElement.clientWidth - edge
+const installed = () => matchMedia('(display-mode: standalone)').matches
+
+const browserEdge = (x: number) => !installed() && (x < edge || x > document.documentElement.clientWidth - edge)
 
 const blocked = ({ hasOpenLayer, gesture }: Kit, target: EventTarget | null) => hasOpenLayer(true) || gesture.editing(target) || gesture.selecting()
 
@@ -37,7 +39,7 @@ export const swipeGesture = (kit: Kit, begin: () => Swipe | undefined) => {
     (event: TouchEvent) => {
       release(event)
       const [touch] = event.touches
-      if (event.touches.length !== 1 || !touch || blocked(kit, event.target) || atEdge(touch.clientX)) return
+      if (event.touches.length !== 1 || !touch || blocked(kit, event.target) || browserEdge(touch.clientX)) return
       press = { x: touch.clientX, y: touch.clientY, target: event.target }
     },
     passive,

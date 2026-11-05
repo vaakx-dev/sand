@@ -16,9 +16,14 @@ const copyBorrowed = (home: string, box: string) => {
   }
 }
 
+const ownSettings = async (home: string) => {
+  const file = Bun.file(join(home, 'sandbox.toml'))
+  return (await file.exists()) ? `\n${await file.text()}` : ''
+}
+
 export const sandbox = async (daemon: Daemon, home: string) => {
   const box = mkdtempSync(join(tmpdir(), 'sand-sandbox-'))
-  await Bun.write(join(box, 'sand.toml'), settings)
+  await Bun.write(join(box, 'sand.toml'), settings + (await ownSettings(home)))
   copyBorrowed(home, box)
   const sandboxed = daemon.at(box)
   const { info } = await sandboxed.ensure()

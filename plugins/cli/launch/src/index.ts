@@ -28,7 +28,7 @@ export default definePlugin({
         summary: 'start a throwaway sand for testing and print its paired link',
         usage: [
           'sand sandbox     start a throwaway sand from this build in a temp home, on a free port and off the network,',
-          '                 with your plugins and model, and print a link that opens it paired',
+          '                 with your plugins, model and sandbox.toml settings, and print a link that opens it paired',
         ].join('\n'),
         run: () => sandbox(ctx.daemon, ctx.cli.home),
       }),
