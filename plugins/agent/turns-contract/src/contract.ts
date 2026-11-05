@@ -21,7 +21,7 @@ export * from './threads'
 
 export type TurnStatus = 'running' | 'waiting' | 'completed' | 'interrupted' | 'failed' | 'lost'
 
-export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'print'] as const
+export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'print', 'cli', 'mcp'] as const
 
 export type TurnOrigin = (typeof turnOrigins)[number]
 
@@ -103,6 +103,7 @@ export interface Turns {
   interrupt(session: Session, turn?: string): boolean
   current(session: Session): TurnInfo | undefined
   get(turn: string): TurnInfo | undefined
+  list(session: Session, before?: number, limit?: number): TurnInfo[]
   wait(turn: string, until: WaitUntil, signal?: AbortSignal): Promise<TurnInfo>
   pending(session: Session): PendingItem[]
   withdraw(session: Session, pending: string): boolean

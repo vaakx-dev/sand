@@ -12,7 +12,7 @@ const pick = (commands: CliCommand[], [first]: string[]) => {
 }
 
 const parse = (command: CliCommand, args: string[]) => {
-  const options = Object.fromEntries(Object.entries(command.options ?? {}).map(([name, { type, short }]) => [name, { type, short }]))
+  const options = Object.fromEntries(Object.entries(command.options ?? {}).map(([name, { type, short }]) => [name, { type, ...(short && { short }) }]))
   return parseArgs({ args, options, allowPositionals: true })
 }
 
