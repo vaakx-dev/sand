@@ -1,7 +1,7 @@
-import type { Block, Prompt, UserContent } from '..'
+import type { Block, ModelContent, Prompt, UserContent } from '..'
 
-const userTypes = new Set<Block['type']>(['text', 'image', 'document', 'file'])
+const modelTypes = new Set<Block['type']>(['text', 'image', 'document', 'file'])
 
-export const isUserContent = (block: Block): block is UserContent => userTypes.has(block.type)
+export const isModelContent = (block: Block): block is ModelContent => modelTypes.has(block.type)
 
 export const promptContent = (prompt: Prompt): UserContent[] => (typeof prompt === 'string' ? [{ type: 'text', text: prompt }] : prompt)

@@ -36,6 +36,7 @@ const blockLines = (role: Message['role'], block: Block, media: Media): string[]
     case 'thinking':
       return line('Assistant thinking', block.thinking, resultLimit)
     case 'redacted_thinking':
+    case 'context':
       return []
     case 'tool_call':
       return [`[Tool call]: ${block.name}(${clip(JSON.stringify(block.input ?? null), inputLimit)})`]

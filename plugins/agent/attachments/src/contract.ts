@@ -1,4 +1,4 @@
-import type { UserContent } from '@sand/chats/contract'
+import type { DocumentBlock, ImageBlock, UserContent } from '@sand/chats/contract'
 import { helloField, request, type } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
@@ -9,8 +9,8 @@ export interface AttachmentLimits {
 
 export interface Attachments {
   isMedia(path: string): boolean
-  fromFile(path: string): Promise<UserContent>
-  fromBytes(data: Uint8Array, name: string): Promise<UserContent>
+  fromFile(path: string): Promise<ImageBlock | DocumentBlock>
+  fromBytes(data: Uint8Array, name: string): Promise<ImageBlock | DocumentBlock>
 }
 
 export const attachments = service<Attachments>('attachments')

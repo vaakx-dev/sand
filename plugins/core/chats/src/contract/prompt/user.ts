@@ -6,12 +6,15 @@ const part = (block: Block, next?: Block): UserPart[] => {
   if (block.type === 'image') return [{ kind: 'image', block }]
   if (block.type === 'document') return [{ kind: 'document', block }]
   if (block.type === 'file') return [{ kind: 'file', block }]
-  if (block.type !== 'text' || !block.text.trim() || isImageLabel(block, next)) return []
-  const skill = /^<skill name="([^"]+)"/.exec(block.text)?.[1]
+  if (block.type === 'context') return [{ kind: 'context', records: block.records }]
+  if (block.type !== 'text' || isImageLabel(block, next)) return []
+  const text = block.typed ?? block.text
+  if (!text.trim()) return []
+  const skill = /^<skill name="([^"]+)"/.exec(text)?.[1]
   if (skill) return [{ kind: 'skill', name: skill }]
-  const feedback = readFeedback(block.text)
+  const feedback = readFeedback(text)
   if (feedback) return [{ kind: 'feedback', feedback }]
-  return [{ kind: 'text', text: block.text }]
+  return [{ kind: 'text', text }]
 }
 
 export const userParts = (message: Message) => message.content.flatMap((block, index) => part(block, message.content[index + 1]))

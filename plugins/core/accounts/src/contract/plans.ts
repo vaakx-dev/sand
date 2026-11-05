@@ -1,4 +1,4 @@
-import type { ChatKind, StopReason, ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { ChatKind, ModelContent, StopReason, ToolResultBlock } from '@sand/chats/contract'
 import type { HandoffBlock, ProviderCapabilities, ToolSpec } from './llm'
 import type { Effort, LimitWindow, ModelPrice } from './models'
 import type { Usage } from './usage'
@@ -102,8 +102,8 @@ export interface AppOutput {
 
 export interface AppSession {
   id?: string
-  send(content: UserContent[], effort?: Effort): void
-  steer?(content: UserContent[]): void
+  send(content: ModelContent[], effort?: Effort): void
+  steer?(content: ModelContent[]): void
   answer(id: string, result: ToolResultBlock): void
   inject?(handoff: HandoffBlock): Promise<boolean>
   interrupt(): Promise<void>

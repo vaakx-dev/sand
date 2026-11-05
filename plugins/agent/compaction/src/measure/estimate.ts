@@ -23,6 +23,8 @@ const charsOf = (block: Block | ToolReferenceBlock): number => {
       return block.mediaType === 'application/pdf' ? Math.ceil(block.size / 50) : block.size
     case 'file':
       return fileText(block).length
+    case 'context':
+      return 0
   }
 }
 

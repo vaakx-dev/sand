@@ -1,5 +1,5 @@
 import type { AppOutput, AppSession, AppSetup, HandoffBlock } from '@sand/accounts/contract'
-import type { ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { ModelContent, ToolResultBlock } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { threadConfig } from '../server/args'
 import type { Pool, ThreadServer } from '../server/pool'
@@ -118,11 +118,11 @@ export const openSession = async ({ pool, media }: SessionNeeds, setup: AppSetup
 
   return {
     id: threadId,
-    send(content: UserContent[], effort) {
+    send(content: ModelContent[], effort) {
       running = true
       request('turn/start', { input: content.map(toItem), model: setup.model, ...(effort && { effort }), summary: 'auto' })
     },
-    steer(content: UserContent[]) {
+    steer(content: ModelContent[]) {
       if (turnId) request('turn/steer', { expectedTurnId: turnId, input: content.map(toItem) })
     },
     answer: (id, result) => answerFor(id).resolve(result),

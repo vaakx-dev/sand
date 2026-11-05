@@ -10,7 +10,7 @@ import {
   type ThreadRef,
   type ToolSpec,
 } from '../contract'
-import { isUserContent, type Message, type UserContent } from '@sand/chats/contract'
+import { isModelContent, type Message, type ModelContent } from '@sand/chats/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import { stat } from 'node:fs/promises'
 import { loadedTools } from '../http/deferred'
@@ -140,7 +140,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
     throw new ThreadLost(`${plan.app} can't continue this thread`)
   }
 
-  const handOver = async (entry: Live, request: Request): Promise<{ lead: UserContent[]; delivered?: Delivery }> => {
+  const handOver = async (entry: Live, request: Request): Promise<{ lead: ModelContent[]; delivered?: Delivery }> => {
     const { handoff } = request
     if (!handoff) return { lead: [] }
     if (entry.handoff?.id === handoff.id) return { lead: [], delivered: entry.handoff.delivered }
@@ -200,7 +200,7 @@ export const createBridge = (plan: AppPlan, home: string) => {
     const signals = createSignals()
     const session = await plan.open(await setupOf(request), signals.output)
     try {
-      session.send(message.content.filter(isUserContent), request.effort)
+      session.send(message.content.filter(isModelContent), request.effort)
       yield* readStep(() => signals.next(signal), request.model)
     } finally {
       signals.close()

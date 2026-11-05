@@ -12,14 +12,18 @@ const titled = z.object({ title: z.string() })
 
 export const titleJob = { id: 'thread-title', label: 'Thread titles' }
 
-const partLine = (part: UserPart) => {
+const partLine = (part: Exclude<UserPart, { kind: 'context' }>) => {
   if (part.kind === 'text') return part.text
   if (part.kind === 'skill') return `[skill: ${part.name}]`
   if (part.kind === 'feedback') return part.feedback.text
   return `[attached ${part.kind}: ${part.block.name ?? 'unnamed'}]`
 }
 
-const messageText = (message: Message) => userParts(message).map(partLine).join('\n').slice(0, mostPromptChars)
+const messageText = (message: Message) =>
+  userParts(message)
+    .flatMap(part => (part.kind === 'context' ? [] : [partLine(part)]))
+    .join('\n')
+    .slice(0, mostPromptChars)
 
 const cleaned = (title: string) => oneLine(title.replace(/^[\s"'`]+|[\s"'`.]+$/g, ''), mostTitleChars)
 

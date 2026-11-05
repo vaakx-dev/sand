@@ -120,6 +120,19 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/context": {
+      "name": "@sand/context",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/file-tools": {
       "name": "@sand/file-tools",
       "version": "0.0.0",
@@ -2027,6 +2040,8 @@
     "@sand/config": ["@sand/config@workspace:plugins/core/config"],
 
     "@sand/connections": ["@sand/connections@workspace:plugins/ui/shared/connections"],
+
+    "@sand/context": ["@sand/context@workspace:plugins/agent/context"],
 
     "@sand/devices-cli": ["@sand/devices-cli@workspace:plugins/devices/cli"],
 
