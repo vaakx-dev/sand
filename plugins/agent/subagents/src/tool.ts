@@ -1,6 +1,6 @@
 import { llm, type Effort } from '@sand/accounts/contract'
 import type { Job } from '@sand/jobs/contract'
-import type { TurnResult } from '@sand/loop/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import { steering } from '@sand/steering/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'

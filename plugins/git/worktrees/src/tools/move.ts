@@ -1,5 +1,6 @@
 import type { Session } from '@sand/chats/contract'
-import type { Loop, TurnResult } from '@sand/loop/contract'
+import type { Loop } from '@sand/loop/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import type { WorktreeDeps } from '../deps'
 import { moveThread } from '../move/move'

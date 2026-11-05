@@ -27,6 +27,7 @@
     "@sand/steering": "workspace:*",
     "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/watch": "workspace:*",

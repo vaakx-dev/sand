@@ -1,9 +1,11 @@
 import { errorResult, type Session, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import { toolProgress, toolResult, toolStart } from '@sand/loop/contract'
 import { errorMessage, untilAborted } from '@sand/util'
-import type { LoopsContext } from '../context'
-import { toolProgress, toolResult, toolStart } from '../contract'
+import type { TurnsContext } from '../context'
 
-const runCall = async (ctx: LoopsContext, call: ToolCallBlock, session: Session, signal: AbortSignal) => {
+type Answer = (result: ToolResultBlock) => void
+
+const runCall = async (ctx: TurnsContext, call: ToolCallBlock, session: Session, signal: AbortSignal) => {
   const progress = (text: string) => ctx.emit(toolProgress, call, text, session)
   try {
     return await untilAborted(ctx.tools.run(call, { cwd: session.cwd, signal, session, progress }), signal)
@@ -13,11 +15,11 @@ const runCall = async (ctx: LoopsContext, call: ToolCallBlock, session: Session,
   }
 }
 
-const runTool = async (ctx: LoopsContext, call: ToolCallBlock, session: Session, signal: AbortSignal) => {
-  if (signal.aborted) return errorResult(call, 'Not run: the user stopped the turn first.')
+const runTool = async (ctx: TurnsContext, call: ToolCallBlock, session: Session, signal: AbortSignal, answer: Answer) => {
+  if (signal.aborted) return answer(errorResult(call, 'Not run: the user stopped the turn first.'))
   ctx.emit(toolStart, call, session)
   const result = await runCall(ctx, call, session, signal)
-  return ctx.waterfall(toolResult, result, call, session)
+  answer(await ctx.waterfall(toolResult, result, call, session))
 }
 
 const batches = (calls: ToolCallBlock[], parallel: (call: ToolCallBlock) => boolean) =>
@@ -28,9 +30,7 @@ const batches = (calls: ToolCallBlock[], parallel: (call: ToolCallBlock) => bool
     return found
   }, [])
 
-export const runTools = async (ctx: LoopsContext, calls: ToolCallBlock[], session: Session, signal: AbortSignal) => {
-  const results: ToolResultBlock[] = []
+export const runTools = async (ctx: TurnsContext, calls: ToolCallBlock[], session: Session, signal: AbortSignal, answer: Answer) => {
   for (const batch of batches(calls, call => ctx.tools.parallel(call, session)))
-    results.push(...(await Promise.all(batch.map(call => runTool(ctx, call, session, signal)))))
-  return results
+    await Promise.all(batch.map(call => runTool(ctx, call, session, signal, answer)))
 }

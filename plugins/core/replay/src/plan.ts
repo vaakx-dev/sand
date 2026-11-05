@@ -26,6 +26,9 @@ export const replayPlan = ({ id, label = id, models, replies }: Script): AppPlan
             out.call(call)
             break
           }
+          case 'usage':
+            out.usage({ input: part.input, output: part.output })
+            break
           case 'error':
             return out.fail(new Error(part.message))
           case 'hold':

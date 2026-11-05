@@ -1,11 +1,6 @@
-import type { Block, Message, ToolResultBlock } from '@sand/chats/contract'
+import { type Block, type Message, type ToolResultBlock, unrecorded } from '@sand/chats/contract'
 
-const unfinished = (callId: string): ToolResultBlock => ({
-  type: 'tool_result',
-  callId,
-  content: [{ type: 'text', text: 'Not run: the turn stopped before this call finished.' }],
-  isError: true,
-})
+const unfinished = (callId: string): ToolResultBlock => ({ type: 'tool_result', callId, content: [{ type: 'text', text: unrecorded }], isError: true })
 
 const merge = (messages: Message[]) =>
   messages.reduce<Message[]>((merged, message) => {

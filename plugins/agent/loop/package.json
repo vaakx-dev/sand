@@ -1,31 +1,19 @@
 {
   "name": "@sand/loop",
   "version": "0.0.0",
-  "description": "The agent loop: sends the conversation to the model, runs the tools it calls and repeats until it is done",
+  "description": "The loop contract: turn and tool events and the loop service, served by turns while pages and plugins move to the turns contract",
   "type": "module",
   "exports": {
     "./contract": "./src/contract/index.ts"
-  },
-  "sand": {
-    "runtime": "./src/index.ts",
-    "print": "./src/index.ts",
-    "label": "Agent loop",
-    "summary": "Runs each turn: the model replies, the tools it calls run, and it repeats until it is done"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/tools": "workspace:*",
-    "@sand/usage": "workspace:*",
-    "@sand/util": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
-  },
-  "devDependencies": {
-    "@sand/harness": "workspace:*"
   }
 }
