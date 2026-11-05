@@ -5,6 +5,7 @@ import { daemon } from '../contract'
 import { stop } from '../control/stop'
 import { handoffCommand } from '../handoff/hand-off'
 import { startVerified } from '../handoff/verify'
+import { service, serviceUsage } from '../startup/command'
 import { daemonService } from './service'
 
 const stopCommand = async (home: string) => {
@@ -14,7 +15,7 @@ const stopCommand = async (home: string) => {
 
 export default definePlugin({
   name: 'host-daemon',
-  description: 'Starts, finds and stops the background sand for the commands, the sand stop command, and the hidden handoff command a restart uses to start and check this build',
+  description: 'Starts, finds and stops the background sand for the commands, the sand stop and sand service commands, and the hidden handoff command a restart uses to start and check this build',
   inject: { cli, cliCommands },
   apply(ctx) {
     const { home } = ctx.cli
@@ -36,6 +37,14 @@ export default definePlugin({
         summary: 'start this build in the background and exit 0 once it is healthy',
         hidden: true,
         run: () => startVerified(home),
+      }),
+    )
+    ctx.effect(() =>
+      ctx.cliCommands.register({
+        name: 'service',
+        summary: 'start sand with the OS, so it runs after a restart',
+        usage: serviceUsage,
+        run: args => service(home, args),
       }),
     )
   },

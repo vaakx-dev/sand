@@ -1,7 +1,6 @@
 import { buildBunFile, bunFolder } from '@sand/util/release'
 import { mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
-import { appsFolder, currentFile } from '../../layout'
+import { appsFolder, currentFile, shimFile } from '../../layout'
 
 const batchText = (value: string) => value.replaceAll('%', '%%')
 
@@ -71,7 +70,7 @@ const inProcessPath = (bin: string) => {
 
 export const writeWindowsShim = async (home: string, bin: string) => {
   await mkdir(bin, { recursive: true })
-  await Bun.write(join(bin, 'sand.cmd'), windowsShim(home))
+  await Bun.write(shimFile(home), windowsShim(home))
 }
 
 export const windowsPath = async (home: string, bin: string) => {

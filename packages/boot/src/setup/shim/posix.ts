@@ -2,7 +2,7 @@ import { buildBunFile, bunFolder } from '@sand/util/release'
 import { appendFile, chmod, mkdir, readFile, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, delimiter, join } from 'node:path'
-import { appsFolder, currentFile } from '../../layout'
+import { appsFolder, currentFile, shimFile } from '../../layout'
 
 const quote = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
 
@@ -85,7 +85,7 @@ const addToFish = async (user: string, bin: string) => {
 
 export const writePosixShim = async (home: string, bin: string) => {
   await mkdir(bin, { recursive: true })
-  const shim = join(bin, 'sand')
+  const shim = shimFile(home)
   await Bun.write(shim, posixShim(home))
   await chmod(shim, 0o755)
 }

@@ -15,6 +15,7 @@ export {
   readPointer,
   restorePrevious,
   setCurrentApp,
+  shimFile,
   switchTo,
 } from './layout'
 export { safeEnv, safeFromEnv, withSafe } from './safe'
