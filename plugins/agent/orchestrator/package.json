@@ -1,0 +1,31 @@
+{
+  "name": "@sand/orchestrator",
+  "version": "0.0.0",
+  "description": "Threads for scripts and outside agents: start a thread, message it, wait for it, read it, list and stop threads, all built on turns",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Thread orchestrator",
+    "summary": "Lets the sand thread command and outside agents start, message, wait for and read threads"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/worktrees": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

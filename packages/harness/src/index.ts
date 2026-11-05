@@ -16,7 +16,7 @@ import { z } from 'zod'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
-const plugins = ['core/paths', 'core/media', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/turns', 'agent/model']
+const plugins = ['core/paths', 'core/media', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/turns', 'agent/model', 'agent/orchestrator']
 
 const runtimeEntry = async (folder: string) => {
   const dir = join(builtins, folder)
@@ -84,7 +84,7 @@ export const startSand = async (sources: Source[], shared?: string) => {
     },
     requests: (source: string) => need(app, replayRequests).bodies(source),
     native: (source: string) => need(app, replayRequests).native(source),
-    ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }),
+    ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }) as Promise<O>,
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },
