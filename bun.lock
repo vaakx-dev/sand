@@ -181,6 +181,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/chats": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",

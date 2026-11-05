@@ -1,7 +1,7 @@
 {
   "name": "@sand/orchestrator",
   "version": "0.0.0",
-  "description": "Threads for scripts and outside agents: start a thread, message it, wait for it, read it, list and stop threads, all built on turns",
+  "description": "Threads for scripts and outside agents: start a thread, message it, wait for it, read it, list and stop threads on any of your PCs, all built on turns",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/project": "workspace:*",

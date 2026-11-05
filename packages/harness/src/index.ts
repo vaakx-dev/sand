@@ -1,7 +1,7 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
-import { createHandlers, type Request } from '@sand/host-hub/contract'
+import { type Caller, createHandlers, type Request } from '@sand/host-hub/contract'
 import { modelSettings } from '@sand/model/contract'
 import { projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
@@ -76,6 +76,10 @@ export const startSand = async (sources: Source[], { home: shared, plugins: extr
     await stop()
     throw error
   })
+  const askAs =
+    (caller: Caller) =>
+    <I, O>(request: Request<I, O>, input: I) =>
+      wire.answer(request.id, input, caller) as Promise<O>
 
   return {
     app,
@@ -89,7 +93,8 @@ export const startSand = async (sources: Source[], { home: shared, plugins: extr
     },
     requests: (source: string) => need(app, replayRequests).bodies(source),
     native: (source: string) => need(app, replayRequests).native(source),
-    ask: <I, O>(request: Request<I, O>, input: I) => wire.answer(request.id, input, { device: 'page', kind: 'browser' }) as Promise<O>,
+    ask: askAs({ device: 'page', kind: 'browser' }),
+    askAs,
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },

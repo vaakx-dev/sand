@@ -45,6 +45,7 @@ export interface ThreadRow {
   updated: number
   status: ThreadStatus
   settled: boolean
+  pc?: string
 }
 
 export const failureCodes = ['not_found', 'invalid_request', 'unavailable', 'failed'] as const
@@ -68,6 +69,7 @@ export const waitLimit = 25_000
 export const readLimit = 200
 
 const place = 'thread'
+const callers = 'any'
 const session = z.object({ session: z.string() })
 const prompt = z.string().min(1)
 const origin = z.enum(outsideOrigins)
@@ -82,20 +84,24 @@ export const threadStart = request('thread.start', {
     model: z.string().optional(),
     effort: z.string().optional(),
     worktree: z.boolean().optional(),
+    pc: z.string().min(1).optional(),
     origin,
     clientRequestId,
   }),
   output: type<Sent>(),
+  callers,
   place,
 })
 export const threadSend = request('thread.send', {
   input: session.extend({ prompt, mode: z.enum(sendModes).optional(), origin, clientRequestId }),
   output: type<Sent>(),
+  callers,
   place,
 })
 export const threadWait = request('thread.wait', {
   input: session.extend({ until: z.enum(['end', 'attention']).optional(), timeoutMs: z.number().int().min(0).max(waitLimit).optional() }),
   output: type<ThreadState>(),
+  callers,
   place,
 })
 export const threadRead = request('thread.read', {
@@ -105,20 +111,22 @@ export const threadRead = request('thread.read', {
     view: z.enum(threadViews).optional(),
   }),
   output: type<ThreadPage>(),
+  callers,
   place,
 })
 export const threadList = request('thread.list', {
   input: z.object({ cwd: z.string().optional(), project: z.string().optional(), limit: z.number().int().min(1).max(readLimit).optional() }),
   output: type<ThreadRow[]>(),
+  callers,
 })
-export const threadStop = request('thread.stop', { input: session, output: type<boolean>(), place })
+export const threadStop = request('thread.stop', { input: session, output: type<boolean>(), callers, place })
 
 export const settled = (status: ThreadStatus, until: WaitUntil) => status !== 'running' && (until === 'attention' || status !== 'waiting')
 
 export type Call = <I, O>(request: Request<I, O>, input: I, options?: { timeout?: number }) => Promise<O>
 
 const slice = 20_000
-const answerGrace = 10_000
+export const answerGrace = 10_000
 
 export const waitThread = async (call: Call, session: string, until: WaitUntil, deadline = Infinity): Promise<ThreadState> => {
   for (;;) {
