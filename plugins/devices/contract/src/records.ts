@@ -15,6 +15,20 @@ export interface Removal {
   by: string
 }
 
+export interface PushKeys {
+  p256dh: string
+  auth: string
+}
+
+export interface PushTarget {
+  endpoint: string
+  keys: PushKeys
+}
+
+export interface DevicePush extends PushTarget {
+  pc: string
+}
+
 export interface DeviceRecord {
   id: string
   kind: DeviceKind
@@ -23,6 +37,7 @@ export interface DeviceRecord {
   icon?: PcIcon
   detectedIcon?: PcIcon
   keys: DeviceKey[]
+  push?: DevicePush
   added: number
   addedBy: string
   updated: number
