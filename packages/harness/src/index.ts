@@ -8,7 +8,7 @@ import { projectFiles } from '@sand/project/contract'
 import type { Source } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
-import { createApp, scopeError, type ContextCore, type Service } from 'drydock'
+import { type Context, createApp, scopeError, type ContextCore, type Service } from 'drydock'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -41,10 +41,8 @@ const modelsReady = (app: ContextCore, ids: string[]) =>
     check()
   })
 
-export const startSand = async (sources: Source[]) => {
-  const home = mkdtempSync(join(tmpdir(), 'sand-test-'))
+const boot = async (app: Context, home: string, sources: Source[]) => {
   await Bun.write(join(home, 'auth.json'), '{}')
-  const app = createApp()
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: true, args: [], exit() {} })
@@ -56,6 +54,21 @@ export const startSand = async (sources: Source[]) => {
   await app.settled()
   if (errors.length) throw errors[0]
   await modelsReady(app, sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)))
+  return wire
+}
+
+const stop = async (app: Context, home: string) => {
+  await app.dispose()
+  rmSync(home, { recursive: true, force: true })
+}
+
+export const startSand = async (sources: Source[]) => {
+  const home = mkdtempSync(join(tmpdir(), 'sand-test-'))
+  const app = createApp()
+  const wire = await boot(app, home, sources).catch(async (error: unknown) => {
+    await stop(app, home)
+    throw error
+  })
 
   return {
     app,
@@ -71,10 +84,7 @@ export const startSand = async (sources: Source[]) => {
     tool(name: string, run: (input: Record<string, unknown>) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },
-    async stop() {
-      await app.dispose()
-      rmSync(home, { recursive: true, force: true })
-    },
+    stop: () => stop(app, home),
   }
 }
 

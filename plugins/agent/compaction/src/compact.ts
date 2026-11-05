@@ -28,6 +28,7 @@ const draft = (session: Session, record: CompactionRecord): Entry => ({
   at: Date.now(),
   type: 'compaction',
   data: record,
+  seq: 0,
 })
 
 export const createCompactor = (ctx: CompactionContext, config: CompactionConfig, tracker: Tracker) => {

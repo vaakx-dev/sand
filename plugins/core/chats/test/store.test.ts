@@ -54,3 +54,15 @@ test('paging back from the head walks the whole path, one turn at a time', () =>
   expect(ids(pages.toReversed().flat())).toEqual(ids(all))
   expect(pages.map(found => found[0]?.data)).toEqual([said('user', 'ask 3'), said('user', 'ask 2'), said('user', 'ask 1')])
 })
+
+test('catching up from a cursor returns what came after it, until the chat moves to another branch', () => {
+  const [ask, , , answer] = turn(1)
+  const later = turn(2)
+
+  expect(ids(chat.since(answer!.id)!)).toEqual(ids(later))
+  expect(ids(chat.since(answer!.seq)!)).toEqual(ids(later))
+
+  chat.checkout(ask!.id)
+  chat.append('message', said('assistant', 'another answer'))
+  expect(chat.since(answer!.id)).toBeUndefined()
+})

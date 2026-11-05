@@ -41,7 +41,7 @@ export const sessionRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle
     wire.handle(sessionSnooze, ({ session, until }) => Boolean(ctx.sessions.snooze(session, until))),
     wire.handle(sessionMove, ({ session, position }) => Boolean(ctx.sessions.move(session, position))),
     wire.handle(sessionAppend, ({ session: id, entry }) => {
-      session(id).append(entry.type, entry.data, entry.id)
+      session(id).append(entry.type, entry.data, { id: entry.id })
       return true
     }),
     wire.handle(sessionCheckout, ({ session: id, entry }) => {

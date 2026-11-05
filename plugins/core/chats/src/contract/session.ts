@@ -1,4 +1,4 @@
-import type { Entry } from './entry'
+import type { AppendMeta, Entry } from './entry'
 import type { Message } from './message'
 
 export type ChatKind = 'thread' | 'agent' | 'quick'
@@ -60,11 +60,10 @@ export interface SyncedSummaries {
 }
 
 export interface Session extends SessionInfo {
-  append(type: string, data: unknown, id?: string, at?: number): Entry
-  appendMany(entries: Pick<Entry, 'id' | 'type' | 'data' | 'at'>[]): void
+  append(type: string, data: unknown, meta?: AppendMeta): Entry
   path(): Entry[]
   page(before?: string | null, size?: PageSize): EntryPage
-  since(after: string): Entry[] | undefined
+  since(after: number | string): Entry[] | undefined
   carried(before: string, types: string[]): Entry[]
   latest(type: string): Entry | undefined
   entries(): Entry[]
