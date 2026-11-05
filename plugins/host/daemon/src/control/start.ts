@@ -1,7 +1,7 @@
+import { withSafe } from '@sand/boot'
 import { closeSync, mkdirSync, openSync, renameSync, statSync, writeSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { withSafe } from '@sand/util/boot'
 import { hostCommand } from './command'
 import { running } from './info'
 import { pcKeys } from './link/keys'

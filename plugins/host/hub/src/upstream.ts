@@ -1,5 +1,5 @@
+import { upstreamSocketUrl } from '@sand/boot'
 import type { RuntimeView } from '@sand/host-runtimes/contract'
-import { upstreamSocketUrl } from '@sand/util/boot'
 import type { Caller } from './contract'
 
 const retryDelay = 1000

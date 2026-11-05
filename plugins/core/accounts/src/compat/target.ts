@@ -1,5 +1,5 @@
 import { trimSlash } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
+import { bearer } from '@sand/util/host'
 
 export interface CompatTarget {
   base: string

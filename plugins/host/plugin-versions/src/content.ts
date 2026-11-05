@@ -1,3 +1,3 @@
-import { scanPlugin } from '@sand/host-plugin-library/files'
+import { scanPlugin } from '@sand/plugin-files'
 
 export const contentHash = async (path: string) => (await scanPlugin(path)).hash

@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract.ts",
-    "./store": "./src/store.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "host": "./src/index.ts",
@@ -14,9 +13,9 @@
     "summary": "Installs newer sand releases"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
-    "@sand/host-dist": "workspace:*",
     "@sand/host-health": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",

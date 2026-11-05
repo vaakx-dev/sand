@@ -1,4 +1,4 @@
-import { stagingFolder, validPluginName } from '@sand/host-plugin-library/files'
+import { stagingFolder, validPluginName } from '@sand/plugin-files'
 import { exists, isLink, removeQuietly } from '@sand/util/fs'
 import { rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'

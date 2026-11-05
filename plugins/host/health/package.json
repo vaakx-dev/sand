@@ -13,6 +13,7 @@
     "summary": "Health checks for this PC and paired PCs"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-dist": "workspace:*",

@@ -1,5 +1,5 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
 import { type HelloField, type Request, request, type, type WireEvent, wireEvent } from '@sand/host-hub/contract'
+import type { BuildInfo } from '@sand/util/release'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 import type { CallOptions } from './connection/engine'

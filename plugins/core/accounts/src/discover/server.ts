@@ -1,6 +1,6 @@
+import { bearer } from '@sand/util/host'
 import type { PlanModel } from '../contract'
 import { isRecord, trimSlash } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
 import { listIn, nonEmpty } from './fields'
 import { getJson } from './http'
 import { contexts, isOllama } from './ollama'

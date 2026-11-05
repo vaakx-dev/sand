@@ -1,3 +1,5 @@
+export const bearer = (key: string) => ({ authorization: `Bearer ${key}` })
+
 export const textReply = (body: string, status: number, headers?: Record<string, string>) =>
   new Response(body, { status, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', ...headers } })
 

@@ -1,6 +1,6 @@
+import { upstreamUrl } from '@sand/boot'
 import type { RuntimeView } from '@sand/host-runtimes/contract'
 import { errorMessage } from '@sand/util'
-import { upstreamUrl } from '@sand/util/boot'
 
 interface WebProbe {
   ok: boolean

@@ -1,7 +1,7 @@
+import { appsFolder, readPointer } from '@sand/boot'
+import { buildStamp, bunFolder, readBuildBun, validVersion } from '@sand/util/release'
 import { readdir, rename, rm, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { buildStamp } from '@sand/util/boot/release'
-import { appsFolder, bunFolder, readBuildBun, readPointer, validVersion } from '@sand/util/boot'
 import { exists, samePath } from '@sand/util/fs'
 import { readyFile } from './prepare'
 

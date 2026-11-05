@@ -1,6 +1,6 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
+import { healthText } from '@sand/boot'
 import { errorMessage } from '@sand/util'
-import { healthText } from '@sand/util/boot'
+import type { BuildInfo } from '@sand/util/release'
 import type { GithubRelease } from '../github/release'
 import { basename } from 'node:path'
 import type { UpdatePhase } from '../contract'

@@ -1,4 +1,4 @@
-import { runtimeEnv, withSafe } from '@sand/util/boot'
+import { runtimeEnv, withSafe } from '@sand/boot'
 import { randomSecret } from '@sand/util/fs'
 import type { Subprocess } from 'bun'
 import { homedir } from 'node:os'

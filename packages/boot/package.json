@@ -1,0 +1,20 @@
+{
+  "name": "@sand/boot",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./build": "./src/build/index.ts",
+    "./setup": "./src/setup/index.ts",
+    "./updates": "./src/updates.ts"
+  },
+  "dependencies": {
+    "@sand/host-dist": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-health": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/host-updates": "workspace:*",
+    "@sand/util": "workspace:*"
+  }
+}

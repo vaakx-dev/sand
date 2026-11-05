@@ -1,6 +1,6 @@
-import { allowThroughFirewall } from '@sand/host-dist/setup'
-import { bunBinary, validVersion } from '@sand/util/boot'
+import { allowThroughFirewall } from '@sand/boot/setup'
 import { replaceFile } from '@sand/util/fs'
+import { bunBinary, validVersion } from '@sand/util/release'
 import { chmod, mkdir, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'
 

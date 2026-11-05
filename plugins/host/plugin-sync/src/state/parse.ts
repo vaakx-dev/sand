@@ -1,4 +1,4 @@
-import { safeRelative, validPluginName } from '@sand/host-plugin-library/files'
+import { safeRelative, validPluginName } from '@sand/plugin-files'
 import { isRecord } from '@sand/util'
 import type { PluginFile, PluginFiles, PluginManifest, PluginTree } from '../contract'
 

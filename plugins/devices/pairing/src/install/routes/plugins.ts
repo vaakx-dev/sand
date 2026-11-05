@@ -1,5 +1,5 @@
 import type { HttpRoute } from '@sand/host-gateway/contract'
-import { executableList, pluginFiles } from '@sand/host-plugin-library/files'
+import { executableList, pluginFiles } from '@sand/plugin-files'
 import { stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Installs } from '../installs'

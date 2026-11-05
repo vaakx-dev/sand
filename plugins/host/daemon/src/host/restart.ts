@@ -1,5 +1,5 @@
+import { healthText, restorePrevious } from '@sand/boot'
 import { errorMessage } from '@sand/util'
-import { healthText, restorePrevious } from '@sand/util/boot'
 import { checkHealth } from '../control/health'
 import { start } from '../control/start'
 import { stop } from '../control/stop'

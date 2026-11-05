@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract.ts",
-    "./files": "./src/files/index.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "host": "./src/index.ts",
@@ -17,8 +16,8 @@
     "@sand/host-daemon": "workspace:*",
     "@sand/host-dist": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-plugin-sync": "workspace:*",
     "@sand/host-plugin-versions": "workspace:*",
+    "@sand/plugin-files": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

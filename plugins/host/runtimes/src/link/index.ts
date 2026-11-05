@@ -1,5 +1,5 @@
+import { accessOf, callerOf, runtimeEnv } from '@sand/boot'
 import { cli } from '@sand/config/contract'
-import { accessOf, callerOf, runtimeEnv } from '@sand/util/boot'
 import { definePlugin } from 'drydock'
 import { hostChannel, runtime as runtimeService, type HostMessage, type Runtime, type RuntimeMessage } from '../contract'
 import { createActivity } from './activity'

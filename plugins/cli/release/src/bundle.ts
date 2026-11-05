@@ -1,5 +1,5 @@
-import { readBuild, runtimeDeps, type Bundle } from '@sand/host-dist/build'
-import { buildStamp, moduleFiles, moduleHash, workspaceLinks, type AppFile, type BuildStamp } from '@sand/util/boot/release'
+import { readBuild, runtimeDeps, type Bundle } from '@sand/boot/build'
+import { type AppFile, type BuildStamp, buildStamp, moduleFiles, moduleHash, workspaceLinks } from '@sand/util/release'
 
 const sharedBun = () => {
   if (Bun.version.includes('-')) throw new Error('sand can only share release builds of Bun')

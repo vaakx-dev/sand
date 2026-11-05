@@ -1,5 +1,5 @@
+import { upstreamUrl } from '@sand/boot'
 import type { Runtimes } from '@sand/host-runtimes/contract'
-import { upstreamUrl } from '@sand/util/boot'
 import { textReply } from '@sand/util/host'
 import type { RouteCaller } from './contract'
 

@@ -1,5 +1,5 @@
-import { stampBuild } from '@sand/host-dist/build'
-import type { BuildInfo } from '@sand/host-dist/contract'
+import { stampBuild } from '@sand/boot/build'
+import type { BuildInfo } from '@sand/util/release'
 import type { ReleaseInfo } from './contract'
 import type { GithubRelease } from './github/release'
 

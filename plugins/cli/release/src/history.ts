@@ -1,5 +1,5 @@
-import type { BuildChange } from '@sand/host-dist/contract'
 import type { GitRunner } from '@sand/git/contract'
+import type { BuildChange } from '@sand/util/release'
 
 const depth = 100
 const separator = '\x1f'

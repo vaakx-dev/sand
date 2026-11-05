@@ -7,7 +7,7 @@ import {
   unsharedName,
   unsharedPaths,
   validPluginName,
-} from '@sand/host-plugin-library/files'
+} from '@sand/plugin-files'
 import { exists, fileHash, isLink, removeQuietly } from '@sand/util/fs'
 import { chmod, mkdir, readdir, rename, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'

@@ -1,4 +1,4 @@
-import { appMain, appRoot } from '@sand/util/boot'
+import { appMain, appRoot } from '@sand/boot'
 import type { HostApp } from '../contract'
 
 export const createHostApp = (main: string): HostApp => {

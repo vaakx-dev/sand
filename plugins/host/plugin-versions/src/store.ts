@@ -1,4 +1,4 @@
-import { copyPlugin } from '@sand/host-plugin-library/files'
+import { copyPlugin } from '@sand/plugin-files'
 import { errorMessage, serial } from '@sand/util'
 import { removeQuietly } from '@sand/util/fs'
 import { mkdir, rename, rm } from 'node:fs/promises'
