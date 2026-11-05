@@ -6,6 +6,7 @@ export interface SendOptions {
   label?: string
   settings?: SessionSettings
   mode?: SendMode
+  clientRequestId?: string
 }
 
 export interface Turns {

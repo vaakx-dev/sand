@@ -18,6 +18,11 @@ interface Typed {
   ids: string
 }
 
+interface Outgoing {
+  typed: Typed
+  options: Pick<SendOptions, 'mode' | 'clientRequestId'>
+}
+
 const reloadText = '/reload'
 
 const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
@@ -43,7 +48,7 @@ export const createModel = (ctx: ComposerContext) => {
   const segments = createSegments(text)
   const files = createFiles(ctx)
   const picked = sig<SessionSettings>({})
-  const failure = sig<{ text: string; retry: boolean } | undefined>(undefined)
+  const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
   const sending = sig(false)
   const dismissed = sig(new Set<string>())
   const changes = pulse(ctx, [threadSelect, pcsChange, modelsChange], [wire, pcs])
@@ -72,10 +77,10 @@ export const createModel = (ctx: ComposerContext) => {
     return { ...known?.defaults(), ...(usable && pick) }
   }
 
-  const fail = (message: string) => failure.set({ text: message, retry: false })
+  const fail = (message: string) => failure.set({ text: message })
 
-  const couldNotSend = (error: unknown) =>
-    failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: true })
+  const couldNotSend = (outgoing: Outgoing, error: unknown) =>
+    failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: outgoing })
 
   const typed = (): Typed => ({ text: text.get(), ids: files.items.get().map(item => item.id).join() })
 
@@ -108,14 +113,13 @@ export const createModel = (ctx: ComposerContext) => {
     })
   }
 
-  const sendPrompt = (value: string, mode?: SendOptions['mode']) => {
-    const before = typed()
+  const sendPrompt = (outgoing: Outgoing) => {
     const task = async () => {
       const items = await files.upload(sendDevice(ctx))
-      await submit(ctx, value, items, settings(), mode)
-      if (unchanged(before)) clear()
+      await submit(ctx, outgoing.typed.text.trim(), items, settings(), outgoing.options)
+      if (unchanged(outgoing.typed)) clear()
     }
-    return attempt(true, task, couldNotSend)
+    return attempt(true, task, error => couldNotSend(outgoing, error))
   }
 
   const send = async (mode?: SendOptions['mode']) => {
@@ -126,7 +130,7 @@ export const createModel = (ctx: ComposerContext) => {
     if (!attached && value === reloadText && reloader) return reload(reloader.run)
     const pill = ctx.get(modelPill)
     if ((value || attached) && modelMissing(ctx, settings()) && pill) return pill.open()
-    return sendPrompt(value, mode)
+    return sendPrompt({ typed: typed(), options: { mode, clientRequestId: crypto.randomUUID() } })
   }
 
   return {
@@ -148,6 +152,7 @@ export const createModel = (ctx: ComposerContext) => {
     changes,
     turnError,
     send,
+    resend: sendPrompt,
     clear,
     fail,
     draft: (): Saved => ({ text: text.get(), items: files.held(), settings: picked.get() }),
