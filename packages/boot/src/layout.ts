@@ -13,6 +13,8 @@ export const appsFolder = (home: string) => join(home, 'app')
 
 export const binFolder = (home: string) => join(home, 'bin')
 
+export const shimFile = (home: string) => join(binFolder(home), process.platform === 'win32' ? 'sand.cmd' : 'sand')
+
 export const currentFile = (home: string) => join(appsFolder(home), 'current')
 
 export const inAppsFolder = (home: string, folder: string) => resolve(dirname(folder)) === resolve(appsFolder(home))

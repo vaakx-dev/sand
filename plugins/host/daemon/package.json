@@ -1,7 +1,7 @@
 {
   "name": "@sand/host-daemon",
   "version": "0.0.0",
-  "description": "Starts, stops and restarts sand in the background, and reads the [host] settings",
+  "description": "Starts, stops and restarts sand in the background, starts it with the OS, and reads the [host] settings",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
