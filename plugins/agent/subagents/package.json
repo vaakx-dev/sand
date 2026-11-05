@@ -24,6 +24,7 @@
     "@sand/nav": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/prompt": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/steering": "workspace:*",
     "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",

@@ -1,5 +1,5 @@
 import { repoOf } from '@sand/git/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import type { WorkspaceContext } from '../inject'
 import type { WorktreeCache } from '../worktrees/cache'

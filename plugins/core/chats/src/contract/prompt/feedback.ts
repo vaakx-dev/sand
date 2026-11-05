@@ -1,4 +1,4 @@
-import type { Feedback, Message, TextBlock } from '../contract'
+import type { Feedback, Message, TextBlock } from '..'
 
 const pattern = /^<(stop-feedback|note) source="([^"]+)">([\s\S]*)<\/\1>$/
 

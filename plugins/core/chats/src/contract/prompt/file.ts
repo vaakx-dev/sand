@@ -1,4 +1,4 @@
-import type { FileBlock, UnpackedFolder } from '../contract'
+import type { FileBlock, UnpackedFolder } from '..'
 import { bytes, plural } from '@sand/util'
 
 const unpackedLines = ({ path, files, entries, notes }: UnpackedFolder) => {

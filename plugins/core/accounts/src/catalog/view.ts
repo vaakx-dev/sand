@@ -1,5 +1,4 @@
-import type { ModelInfo } from '../contract'
-import { canonicalModel } from './match'
+import { canonicalModel, type ModelInfo } from '../contract'
 import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
 import { split, unknownModel } from './build'
 import { cached } from './cached'

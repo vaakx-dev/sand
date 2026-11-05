@@ -1,5 +1,4 @@
-import type { MergeMethod, PullRef } from '@sand/github/contract'
-import { pullName, pullRef } from '@sand/github/look'
+import { type MergeMethod, pullName, pullRef, type PullRef } from '@sand/github/contract'
 import type { ToastAction } from '@sand/toasts/contract'
 import { hereOf, type PageContext, toastId } from '../inject'
 import type { DetailModel } from './model'

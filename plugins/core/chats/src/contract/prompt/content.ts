@@ -1,4 +1,4 @@
-import type { Block, Prompt, UserContent } from '../contract'
+import type { Block, Prompt, UserContent } from '..'
 
 const userTypes = new Set<Block['type']>(['text', 'image', 'document', 'file'])
 

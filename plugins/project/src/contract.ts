@@ -2,6 +2,8 @@ import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
+export * from './projects'
+
 export interface ProjectCopy {
   path: string
   added: number

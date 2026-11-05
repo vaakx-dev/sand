@@ -1,5 +1,5 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
-import { textOf } from '@sand/chats/prompt'
+import { textOf } from '@sand/chats/contract'
 
 const references = (tool: ToolView) => tool.result?.content.flatMap(block => (block.type === 'tool_reference' ? [block.name] : [])) ?? []
 

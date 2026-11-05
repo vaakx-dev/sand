@@ -1,5 +1,4 @@
-import type { AccountUsage, UsageSummary, UsageTotals } from '@sand/usage/contract'
-import { accountKey } from '@sand/usage/records'
+import { accountKey, type AccountUsage, type UsageSummary, type UsageTotals } from '@sand/usage/contract'
 import { ownsLimits } from './limits'
 import { addRecord } from './totals'
 import type { Pc } from './types'

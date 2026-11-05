@@ -1,7 +1,7 @@
 import { palette } from '@sand/palette/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
-import { pulse, type Pulse } from '@sand/web-client/reactive'
+import { pulse, type Pulse } from '@sand/reactive'
 import { div, dynamicChild, type Child } from '@vaakx-dev/vrui'
 import type { ChatContext } from './context'
 import { searchHint } from './idle'

@@ -1,6 +1,6 @@
 import type { ModelInfo, SourceInfo } from '@sand/accounts/contract'
 import type { Models } from '@sand/web-client/contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { tokens } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild, span, type Child, type Sig } from '@vaakx-dev/vrui'

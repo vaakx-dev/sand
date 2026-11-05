@@ -1,9 +1,9 @@
 import type { WireHost } from '@sand/host-hub/contract'
+import { loopRun } from '@sand/loop/contract'
 import { joinDisposers } from '@sand/util'
 import { existsSync } from 'node:fs'
 import {
   loopInterrupt,
-  loopRun,
   sessionAppend,
   sessionCheckout,
   sessionMove,

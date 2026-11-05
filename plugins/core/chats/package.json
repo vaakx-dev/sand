@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract/index.ts",
-    "./prompt": "./src/prompt/index.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "runtime": "./src/index.ts",
@@ -17,7 +16,6 @@
   "dependencies": {
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/project": "workspace:*",

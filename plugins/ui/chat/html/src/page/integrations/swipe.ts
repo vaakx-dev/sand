@@ -1,6 +1,5 @@
 import type { Swipe } from '@sand/layout/contract'
-import type { Drag } from '@sand/ui-kit/contract'
-import { canScrollToward, direction, editing, follow, selecting } from '@sand/ui-kit/gesture'
+import { canScrollToward, direction, type Drag, editing, follow, selecting } from '@sand/ui-kit/contract'
 import { listen } from '@vaakx-dev/vrui'
 import { swipeEnd, swipeMove, swipeStart } from '../protocol'
 import { post } from './post'

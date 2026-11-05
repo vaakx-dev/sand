@@ -19,6 +19,7 @@
     "@sand/git-diff-view": "workspace:*",
     "@sand/keys": "workspace:*",
     "@sand/panel": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

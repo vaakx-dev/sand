@@ -1,4 +1,4 @@
-import { pullFactsLine } from '@sand/github/facts'
+import { pullFactsLine } from '@sand/github/contract'
 import { div, list, show, span } from '@vaakx-dev/vrui'
 import { threadChip } from '../links/chip'
 import { metaRow } from '../pull/meta'

@@ -1,6 +1,5 @@
-import type { ImageBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { fileText, unavailableText } from '@sand/chats/prompt'
+import { fileText, type ImageBlock, type ToolResultBlock, type ToolResultContent, unavailableText, type UserContent } from '@sand/chats/contract'
 
 const dataUrl = (mediaType: string, data: string) => `data:${mediaType};base64,${data}`
 

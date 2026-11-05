@@ -1,8 +1,19 @@
 import type { LLMRequest } from '@sand/accounts/contract'
-import type { Entry, Message, Session, ToolCallBlock, ToolResultBlock, UserContent, WireSession, WireSessionRef } from '@sand/chats/contract'
-import { wireEvent } from '@sand/host-hub/contract'
+import {
+  type Entry,
+  type Message,
+  promptInput,
+  type Session,
+  type ToolCallBlock,
+  type ToolResultBlock,
+  type UserContent,
+  type WireSession,
+  type WireSessionRef,
+} from '@sand/chats/contract'
+import { request, type, wireEvent } from '@sand/host-hub/contract'
 import type { OpenedSession } from '@sand/server/contract'
 import { event, service } from 'drydock'
+import { z } from 'zod'
 import type { Loop, TurnResult } from './turn'
 
 export type * from './turn'
@@ -26,3 +37,5 @@ export const turnEndWire = wireEvent<[session: WireSession, result: TurnResult]>
 export const toolStartWire = wireEvent<[call: ToolCallBlock, session: WireSessionRef]>('tool.start')
 export const toolProgressWire = wireEvent<[call: ToolCallBlock, text: string, session: WireSessionRef]>('tool.progress')
 export const toolResultWire = wireEvent<[result: ToolResultBlock, call: ToolCallBlock, session: WireSessionRef]>('tool.result')
+
+export const loopRun = request('loop.run', { input: z.object({ session: z.string(), prompt: promptInput }), output: type<TurnResult>(), place: 'thread' })

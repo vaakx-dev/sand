@@ -1,5 +1,5 @@
-import { place } from '@sand/layout/place'
-import { owned } from '@sand/web-client/reactive'
+import { place } from '@sand/layout/contract'
+import { owned } from '@sand/reactive'
 import { modelsChange, threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'

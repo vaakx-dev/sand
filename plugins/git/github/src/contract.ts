@@ -5,7 +5,13 @@ import { z } from 'zod'
 export { GitHubError, type GitHubErrorDetails, isForbidden, isMissing } from './api/errors'
 export { parsePullRef } from './pulls/parse'
 export { pullKey, pullLabel, pullVariables, samePull } from './pulls/ref'
+export { pullSummaryFields } from './pulls/summary/fields'
+export { allowedMethods, type MergeSettings, mergeSettingsFields } from './pulls/summary/methods'
+export type { PullNode } from './pulls/summary/query'
+export { shapeSummary } from './pulls/summary/shape'
 export { repoSlug } from './repo/slug'
+export * from './web/facts'
+export * from './web/look'
 
 export type GitHubAuth =
   | { state: 'signed-in'; login: string; host: string; from: 'gh' | 'env' }
@@ -76,7 +82,7 @@ export interface PullText {
   body: string
 }
 
-const pullRef = z.object({ repo: z.string(), number: z.number().int().positive() })
+const pullInput = z.object({ repo: z.string(), number: z.number().int().positive() })
 
 export const githubAuth = request('github.auth', { input: z.object({}), output: type<GitHubAuth>(), place: 'thread' })
 export const githubLogin = request('github.login', { input: z.object({}), output: type<GitHubAuth>(), place: 'thread' })
@@ -92,7 +98,7 @@ export interface FolderRepo {
 export const githubRepo = request('github.repo', { input: z.object({ cwd: z.string() }), output: type<FolderRepo | null>(), place: 'thread' })
 
 export const pullsForBranch = request('pulls.branch', { input: z.object({ cwd: z.string() }), output: type<PullSummary | null>(), place: 'thread' })
-export const pullsSummary = request('pulls.summary', { input: pullRef.extend({ fresh: z.boolean().optional() }), output: type<PullSummary>(), place: 'thread' })
+export const pullsSummary = request('pulls.summary', { input: pullInput.extend({ fresh: z.boolean().optional() }), output: type<PullSummary>(), place: 'thread' })
 export const pullsResolve = request('pulls.resolve', { input: z.object({ cwd: z.string(), ref: z.string() }), output: type<PullSummary>(), place: 'thread' })
 export const pullsText = request('pulls.text', {
   input: z.object({ cwd: z.string(), base: z.string().optional(), session: z.string().optional() }),
@@ -105,11 +111,11 @@ export const pullsCreate = request('pulls.create', {
   place: 'thread',
 })
 export const pullsMerge = request('pulls.merge', {
-  input: pullRef.extend({ method: z.enum(['squash', 'merge', 'rebase']), auto: z.boolean().optional() }),
+  input: pullInput.extend({ method: z.enum(['squash', 'merge', 'rebase']), auto: z.boolean().optional() }),
   output: type<PullSummary>(),
   place: 'thread',
 })
-export const pullsReady = request('pulls.ready', { input: pullRef.extend({ ready: z.boolean() }), output: type<PullSummary>(), place: 'thread' })
+export const pullsReady = request('pulls.ready', { input: pullInput.extend({ ready: z.boolean() }), output: type<PullSummary>(), place: 'thread' })
 
 export const pullsChange = wireEvent<PullSummary>('pulls.change')
 

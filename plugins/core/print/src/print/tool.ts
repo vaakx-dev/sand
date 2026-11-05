@@ -1,5 +1,4 @@
-import type { ToolResultBlock } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
+import { textOf, type ToolResultBlock } from '@sand/chats/contract'
 import { isRecord, oneLine } from '@sand/util'
 
 const short = (value: unknown) => typeof value !== 'string' || (value.length <= 200 && !value.includes('\n'))

@@ -1,5 +1,4 @@
-import type { Block, Message, Session } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
+import { type Block, type Message, type Session, textOf } from '@sand/chats/contract'
 import { oneLine } from '@sand/util'
 
 const limit = 30_000

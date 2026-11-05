@@ -1,5 +1,5 @@
 import { oneLine } from '@sand/util'
-import type { Message } from '../contract'
+import type { Message } from '..'
 import { promptText } from './user'
 
 const titleLength = 48

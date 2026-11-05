@@ -6,7 +6,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./contract": "./src/contract.ts",
-    "./web": "./src/web/index.ts",
     "./web/contract": "./src/web/contract.ts"
   },
   "sand": {

@@ -1,7 +1,7 @@
 import type { EffectiveSettings } from '@sand/model/contract'
 import type { Picked, PickerTarget } from '@sand/model-picker/contract'
 import type { CalloutLook, Kit } from '@sand/ui-kit/contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { div, span, type Sig } from '@vaakx-dev/vrui'
 import type { Actions } from './actions'
 import type { PanelContext } from './context'

@@ -4,6 +4,7 @@ import type { Projects } from './projects'
 import type { Threads } from './threads'
 import type { Turns } from './turns'
 
+export * from './address'
 export type * from './data'
 export type * from './projects'
 export type * from './threads'

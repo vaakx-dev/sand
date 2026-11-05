@@ -1,5 +1,4 @@
-import type { PullSummary } from '@sand/github/contract'
-import { allowedMethods } from '@sand/github/summary'
+import { allowedMethods, type PullSummary } from '@sand/github/contract'
 import type { PullCommit, PullDetail } from '../contract'
 import { conversationOf } from './conversation'
 import { imagesOf } from './images'

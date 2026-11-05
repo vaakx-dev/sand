@@ -1,5 +1,5 @@
 import { type Threads, threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { Context, Dispose } from 'drydock'
 import { type GitPlace, placeKey, type PlaceStatus } from '../contract'

@@ -1,4 +1,4 @@
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { div, dynamicChild, show } from '@vaakx-dev/vrui'
 import type { PanelContext } from '../context'
 import { defaultsSection } from './defaults'

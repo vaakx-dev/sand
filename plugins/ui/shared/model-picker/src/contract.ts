@@ -4,6 +4,8 @@ import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { Child } from '@vaakx-dev/vrui'
 import { service } from 'drydock'
 
+export * from './models'
+
 export type Picked = Omit<EffectiveSettings, 'chosen' | 'source'>
 
 export interface PickerTarget {

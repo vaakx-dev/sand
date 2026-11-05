@@ -1,6 +1,6 @@
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { effect, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { connections, type Connection } from './contract'

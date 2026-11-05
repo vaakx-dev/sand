@@ -1,7 +1,7 @@
 import { draftsChange } from '@sand/composer/contract'
 import { threadPcs } from '@sand/devices-contract'
 import { threads, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import type { Ui } from '../ui'
 
 export const threadPlace = (ui: Ui) => {

@@ -1,6 +1,5 @@
-import type { Prompt, Session, UserContent } from '@sand/chats/contract'
 import type { Pending } from './contract'
-import { promptContent, promptLabel } from '@sand/chats/prompt'
+import { type Prompt, promptContent, promptLabel, type Session, type UserContent } from '@sand/chats/contract'
 
 type Steer = Pending & { prompt: UserContent[] }
 

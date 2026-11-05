@@ -13,7 +13,7 @@ import {
 } from '@sand/host-updates/contract'
 import { pcHello, type pcs, pcsChange, type wire } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { derive, onTimeout, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { isSettled, runStatus, type Run, type RunStatus } from './run'

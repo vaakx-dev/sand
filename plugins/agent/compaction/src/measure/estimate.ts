@@ -1,6 +1,5 @@
 import type { LLMRequest } from '@sand/accounts/contract'
-import { fileText } from '@sand/chats/prompt'
-import type { Block, Message, ToolReferenceBlock } from '@sand/chats/contract'
+import { type Block, fileText, type Message, type ToolReferenceBlock } from '@sand/chats/contract'
 
 const imageChars = 1600 * 4
 

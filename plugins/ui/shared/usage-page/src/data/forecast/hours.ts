@@ -1,5 +1,4 @@
-import type { PeriodUsage, UsageQuery } from '@sand/usage/contract'
-import { tokensOf } from '@sand/usage/records'
+import { type PeriodUsage, tokensOf, type UsageQuery } from '@sand/usage/contract'
 import { hourKey } from '../../range'
 import type { FleetView } from '../fleet'
 

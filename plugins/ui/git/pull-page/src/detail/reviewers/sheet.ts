@@ -1,5 +1,5 @@
-import { pullRef } from '@sand/github/look'
-import { place } from '@sand/layout/place'
+import { pullRef } from '@sand/github/contract'
+import { place } from '@sand/layout/contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, effect, list, onTimeout, show, sig, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'

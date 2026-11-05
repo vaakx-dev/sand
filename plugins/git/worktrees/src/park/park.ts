@@ -1,5 +1,4 @@
-import type { Session } from '@sand/chats/contract'
-import { noteBlock } from '@sand/chats/prompt'
+import { noteBlock, type Session } from '@sand/chats/contract'
 import { errorMessage } from '@sand/util'
 import type { WorktreeDeps } from '../deps'
 import { notRestoredNote, parkedNote } from '../remove/notes'

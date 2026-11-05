@@ -1,6 +1,5 @@
-import type { Message } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { mediaBlocks } from '@sand/chats/prompt'
+import { mediaBlocks, type Message } from '@sand/chats/contract'
 import type { Carried } from '../share/media'
 
 export const carriedMedia = (media: Media, messages: Message[]): Carried => {

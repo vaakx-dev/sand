@@ -1,7 +1,6 @@
-import type { PullRef } from '@sand/github/contract'
-import { pullName, pullRef } from '@sand/github/look'
+import { pullName, pullRef, type PullRef } from '@sand/github/contract'
 import { type AgentPrompt, type LinkedThread, pullLinksClient } from '@sand/pull-links/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { type PageContext, toastId } from '../inject'
 
 const turnedOff = 'Thread pull requests are turned off.'

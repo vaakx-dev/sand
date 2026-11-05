@@ -1,5 +1,4 @@
-import { type GitHubClient, type PullRef, pullLabel } from '@sand/github/contract'
-import { pullName } from '@sand/github/look'
+import { type GitHubClient, pullLabel, pullName, type PullRef } from '@sand/github/contract'
 import type { Toasts } from '@sand/toasts/contract'
 import type { Threads, Turns } from '@sand/web-client/contract'
 import type { AgentPrompt, LinkedThread, PullOpenRequest, ThreadPlace } from '../contract'

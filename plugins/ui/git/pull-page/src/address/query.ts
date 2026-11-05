@@ -1,5 +1,5 @@
 import type { InboxView } from '@sand/pull-inbox/contract'
-import { addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/address'
+import { addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/contract'
 
 export type StateFilter = 'open' | 'merged' | 'closed' | 'all'
 

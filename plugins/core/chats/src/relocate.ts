@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs'
-import type { Message, Relocation, Session } from './contract'
-import { noteBlock } from './prompt'
+import { type Message, noteBlock, type Relocation, type Session } from './contract'
 import type { ChatColumns } from './records'
 
 interface RelocateOptions {
-  running(id: string): boolean
+  running(id: string): Promise<boolean>
   children(id: string): { id: string }[]
   patch(id: string, columns: ChatColumns): void
   checked(project: string | null): string | null
@@ -12,10 +11,14 @@ interface RelocateOptions {
 }
 
 export const relocator = ({ running, children, patch, checked, update }: RelocateOptions) => {
-  const busy = (id: string): boolean => running(id) || children(id).some(child => busy(child.id))
+  const busy = async (id: string): Promise<boolean> => {
+    if (await running(id)) return true
+    for (const child of children(id)) if (await busy(child.id)) return true
+    return false
+  }
 
-  return (session: Session, { cwd, project, note }: Relocation) => {
-    if (busy(session.id)) throw new Error('Stop the thread first')
+  return async (session: Session, { cwd, project, note }: Relocation) => {
+    if (await busy(session.id)) throw new Error('Stop the thread first')
     if (!existsSync(cwd)) throw new Error(`${cwd} is not a folder on this PC`)
     const moved = { cwd, project: checked(project) }
     patch(session.id, moved)

@@ -1,4 +1,4 @@
-import { sandPalette } from '@sand/ui-theme/palette'
+import { sandPalette } from '@sand/ui-theme/contract'
 import { baseCss } from './base'
 import { frameScript } from './frame-script'
 import { themeStyle } from './protocol'

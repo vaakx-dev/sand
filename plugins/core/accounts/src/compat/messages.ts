@@ -1,5 +1,4 @@
-import { fileText, isUserContent, textOf, unavailableText } from '@sand/chats/prompt'
-import type { Block, DocumentBlock, ImageBlock, Message, ToolResultBlock, UserContent } from '@sand/chats/contract'
+import { type Block, type DocumentBlock, fileText, type ImageBlock, isUserContent, type Message, textOf, type ToolResultBlock, unavailableText, type UserContent } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { withoutReferences } from '../http/deferred'
 import { pair } from '../http/pair'

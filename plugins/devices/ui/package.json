@@ -11,9 +11,9 @@
   "dependencies": {
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/host-hub": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/picker": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/ui-kit": "workspace:*",

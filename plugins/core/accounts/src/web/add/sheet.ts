@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import type { Kit, kit } from '@sand/ui-kit/contract'
 import type { Context, Dispose } from 'drydock'
 import type { LoginControl } from '../state'

@@ -1,7 +1,6 @@
 import type { DiffLine, DiffRange } from '@sand/git-diff-view/contract'
 import type { PullRef } from '@sand/github/contract'
-import type { AgentPrompt } from '@sand/pull-links/contract'
-import { fenced, untrusted } from '@sand/pull-links/prompts'
+import { type AgentPrompt, fenced, untrusted } from '@sand/pull-links/contract'
 
 const signs: Partial<Record<DiffLine['kind'], string>> = { add: '+', del: '-', ctx: ' ' }
 

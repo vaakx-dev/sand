@@ -1,5 +1,5 @@
 import type { NavAction, NavHost } from './contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 

@@ -1,4 +1,4 @@
-import { keyName } from '@sand/keys/names'
+import { keyName } from '@sand/keys/contract'
 import { listen } from '@vaakx-dev/vrui'
 import { pressKey, shortcutKeys } from '../protocol'
 import { post } from './post'

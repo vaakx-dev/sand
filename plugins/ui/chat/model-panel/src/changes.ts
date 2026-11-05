@@ -1,5 +1,5 @@
 import { models, modelsChange, threadChange, threadSelect } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import type { PanelContext } from './context'
 
 export const modelChanges = (ctx: PanelContext) => {

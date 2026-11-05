@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { Shown } from '../shown'

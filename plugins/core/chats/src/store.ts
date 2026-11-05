@@ -14,7 +14,7 @@ const loadedLimit = 20
 
 export interface StoreOptions {
   hooks: SessionHooks & { settle(session: Session): void; remove(id: string): void }
-  running(id: string): boolean
+  busy(session: Session): Promise<boolean>
   closing(session: Session): Promise<string | undefined>
   projectOf(cwd: string): string | null
   knownProject(id: string): boolean
@@ -42,8 +42,12 @@ const pinPatch = (pinned: boolean): ChatPatch => (pinned ? { pinned, settled: nu
 
 const snoozePatch = (until: number | null): ChatPatch => (until === null ? { snoozed: null } : { snoozed: until, settled: null })
 
-export const createStore = (db: Database, { hooks, running, closing, projectOf, knownProject, scratch }: StoreOptions) => {
+export const createStore = (db: Database, { hooks, busy, closing, projectOf, knownProject, scratch }: StoreOptions) => {
   const opened = new Map<string, Session>()
+  const running = async (id: string) => {
+    const session = opened.get(id)
+    return session !== undefined && busy(session)
+  }
   const cache = createEntryCache(loadedLimit, running)
   const paging = createPaging(db)
   const records = chatRecords(db)
@@ -89,7 +93,7 @@ export const createStore = (db: Database, { hooks, running, closing, projectOf, 
   }
 
   const close = async (session: Session) => {
-    if (running(session.id)) throw new Error('Stop the thread first')
+    if (await busy(session)) throw new Error('Stop the thread first')
     const refusal = await closing(session)
     if (refusal) throw new Error(refusal)
   }

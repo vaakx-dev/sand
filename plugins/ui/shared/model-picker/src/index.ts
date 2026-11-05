@@ -1,5 +1,5 @@
 import { models, modelsChange } from '@sand/web-client/contract'
-import { owned, pulse } from '@sand/web-client/reactive'
+import { owned, pulse } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { pickerButton } from './button'
 import { modelPicker, type ModelPicker } from './contract'

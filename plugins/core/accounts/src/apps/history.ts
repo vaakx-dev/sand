@@ -1,5 +1,4 @@
-import type { Block, Message, ToolResultContent } from '@sand/chats/contract'
-import { fileText } from '@sand/chats/prompt'
+import { type Block, fileText, type Message, type ToolResultContent } from '@sand/chats/contract'
 
 const resultLimit = 4_000
 

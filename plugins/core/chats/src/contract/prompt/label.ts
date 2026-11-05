@@ -1,4 +1,4 @@
-import type { Prompt } from '../contract'
+import type { Prompt } from '..'
 import { oneLine } from '@sand/util'
 
 export const promptLabel = (prompt: Prompt) => {
