@@ -1,7 +1,7 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
 import type { PendingItem, TurnResult } from '@sand/turns-contract/contract'
-import type { Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
+import type { Branch, Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
 import type { Mark } from '@sand/server/contract'
 import type { Dispose } from 'drydock'
 
@@ -69,4 +69,5 @@ export interface Threads {
   findLast(id: string, test: (entry: Entry) => boolean): Promise<Entry | undefined>
   full(id: string): Promise<void>
   checkout(id: string, entry: string | null): Promise<void>
+  branches(id: string, entry: string): Promise<Branch[]>
 }

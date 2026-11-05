@@ -24,6 +24,7 @@ export interface RowContext {
   menu: ContextMenu
   rewrite(entry: string, text: string): NavAction[]
   reply(text: string): NavAction[]
+  branches(entry: string): Child
   jump(from: Element, quote: string): void
   repaint(): void
 }

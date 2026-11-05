@@ -9,6 +9,8 @@ export interface ThreadView {
   rowEntries: string[]
   visible: Sig<boolean>
   more: Sig<boolean>
+  running: Sig<boolean>
+  synced: Sig<boolean>
   scroll: number | undefined
   first: string | undefined
   above: number
@@ -24,6 +26,8 @@ const threadView = (id: string): ThreadView => ({
   rowEntries: [],
   visible: sig(false),
   more: sig(false),
+  running: sig(false),
+  synced: sig(false),
   scroll: undefined,
   first: undefined,
   above: 0,

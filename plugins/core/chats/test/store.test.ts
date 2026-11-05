@@ -41,6 +41,29 @@ test('checking out an earlier entry starts a branch and keeps the old one', () =
   expect(ids(chat.path())).not.toContain(second.id)
 })
 
+test('a message branches into the other messages sent from the same point, each at its newest entry', () => {
+  chat.append('message', said('user', 'hi'))
+  const answer = chat.append('message', said('assistant', 'hello'))
+  const first = chat.append('message', said('user', 'first try'))
+  const firstReply = chat.append('message', said('assistant', 'reply to first'))
+  const followUp = chat.append('message', said('user', 'follow-up'))
+
+  chat.checkout(answer.id)
+  chat.append('settings', { model: 'a/two' })
+  const second = chat.append('message', said('user', 'second try'))
+  chat.append('message', said('assistant', 'reply to second'))
+  chat.checkout(second.id)
+  const retried = chat.append('message', said('assistant', 'retried reply'))
+
+  chat.checkout(firstReply.id)
+  const expected = [
+    { entry: first.id, leaf: followUp.id },
+    { entry: second.id, leaf: retried.id },
+  ]
+  expect(chat.branches(first.id)).toEqual(expected)
+  expect(chat.branches(second.id)).toEqual(expected)
+})
+
 test('paging back from the head walks the whole path, one turn at a time', () => {
   const all = [...turn(1), ...turn(2), ...turn(3)]
   const pages: Entry[][] = []

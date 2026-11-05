@@ -7,6 +7,7 @@ import { firstRowBelow, keepAnchor, scrollTo, stickToEnd } from './integrations/
 import { rowSizes } from './integrations/sizes'
 import { topEdge } from './integrations/top-edge'
 import type { OpenStates, RendererRegistry, TranscriptParts } from './parts/contract'
+import { branchSwitch } from './rows/branches'
 import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
@@ -99,6 +100,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       menu,
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       reply: text => replyActions(ctx, text),
+      branches: entry => branchSwitch(ctx, view, entry),
       jump,
       repaint,
     }
@@ -114,6 +116,8 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))
     view.rowEntries = drawn.map(({ entry }) => entry)
     view.more.set(view.above > 0 || ctx.threads.older(thread.id))
+    view.running.set(thread.running)
+    view.synced.set(!thread.cached)
     view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, context)])
   }
 
