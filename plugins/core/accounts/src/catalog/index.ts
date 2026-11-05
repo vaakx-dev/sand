@@ -126,6 +126,7 @@ export const createCatalog = ({ home, accounts, plans, prices, changed, report }
     setPrefs,
     refresh,
     sync,
+    idle: () => Promise.all([prefsStore.idle(), cacheStore.idle()]),
     price(id: string): ModelPrice | undefined {
       const parts = split(id)
       if (!parts) return prices(id)

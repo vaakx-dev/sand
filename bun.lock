@@ -37,6 +37,22 @@
         "@sand/util": "workspace:*",
       },
     },
+    "packages/harness": {
+      "name": "@sand/harness",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/config": "workspace:*",
+        "@sand/loop": "workspace:*",
+        "@sand/model": "workspace:*",
+        "@sand/project": "workspace:*",
+        "@sand/replay": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
     "packages/plugin-files": {
       "name": "@sand/plugin-files",
       "version": "0.0.0",
@@ -144,6 +160,9 @@
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
       },
     },
     "plugins/agent/model": {
@@ -479,6 +498,9 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
     },
     "plugins/core/claude-code": {
       "name": "@sand/claude-code",
@@ -552,6 +574,16 @@
         "@sand/usage": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/core/replay": {
+      "name": "@sand/replay",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "plugins/core/server": {
@@ -1900,6 +1932,8 @@
 
     "@sand/github": ["@sand/github@workspace:plugins/git/github"],
 
+    "@sand/harness": ["@sand/harness@workspace:packages/harness"],
+
     "@sand/header": ["@sand/header@workspace:plugins/ui/layout/header"],
 
     "@sand/host-daemon": ["@sand/host-daemon@workspace:plugins/host/daemon"],
@@ -1983,6 +2017,8 @@
     "@sand/reactive": ["@sand/reactive@workspace:packages/reactive"],
 
     "@sand/reload": ["@sand/reload@workspace:plugins/extend/reload"],
+
+    "@sand/replay": ["@sand/replay@workspace:plugins/core/replay"],
 
     "@sand/safe-mode": ["@sand/safe-mode@workspace:plugins/ui/shared/safe-mode"],
 
