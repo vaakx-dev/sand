@@ -10,7 +10,7 @@ Finish the task. Your final message is all the other agent sees. Put in what you
 export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
   ctx.on(promptBase, async (_, session) => {
     const info = meta(session)
-    if (!info) return undefined
+    if (!info || session.kind !== 'agent') return undefined
     const role = (await resolve(session.cwd, session.project)).get(info.name)?.prompt
     return role ? [preamble, `# Your role\n\n${role}`] : [preamble]
   })
