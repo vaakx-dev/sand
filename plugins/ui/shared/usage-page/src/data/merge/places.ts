@@ -1,4 +1,4 @@
-import { byCost, emptyTotals } from '@sand/usage/records'
+import { byCost, emptyTotals } from '@sand/usage/contract'
 import { folderName, grouped } from '@sand/util'
 import { addTotals, including } from '../totals'
 import type { PcSummary, PcUsage, Project } from '../types'

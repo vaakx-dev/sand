@@ -1,4 +1,4 @@
-import type { MergeSettings, PullNode } from '@sand/github/summary'
+import type { MergeSettings, PullNode } from '@sand/github/contract'
 
 export interface RawActor {
   __typename: string

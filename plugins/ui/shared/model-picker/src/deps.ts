@@ -1,6 +1,6 @@
 import { kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import type { Context } from 'drydock'
 import type { PcStatus } from './pcs'
 

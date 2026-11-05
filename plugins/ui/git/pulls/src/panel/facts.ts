@@ -1,5 +1,4 @@
-import { isLivePull } from '@sand/github/look'
-import type { PullSummary, ReviewState } from '@sand/github/contract'
+import { isLivePull, type PullSummary, type ReviewState } from '@sand/github/contract'
 import type { IconName, Kit, Tone } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import { mergeBlock, mergeText, reviewText } from '../pull/facts'

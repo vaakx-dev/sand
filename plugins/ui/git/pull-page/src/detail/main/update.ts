@@ -1,4 +1,4 @@
-import { pullPrompts } from '@sand/pull-links/prompts'
+import { pullPrompts } from '@sand/pull-links/contract'
 import { dynamicChild } from '@vaakx-dev/vrui'
 import type { Shown } from '../shown'
 

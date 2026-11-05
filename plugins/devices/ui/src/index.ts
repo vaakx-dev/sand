@@ -1,5 +1,5 @@
 import { pcMarks } from '@sand/devices-contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { commandSheet } from './add/command-sheet'

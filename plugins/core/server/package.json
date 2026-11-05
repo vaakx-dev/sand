@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract/index.ts",
-    "./live": "./src/stream/apply.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "runtime": "./src/index.ts",

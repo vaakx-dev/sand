@@ -60,7 +60,7 @@ export const moveThread = async (deps: WorktreeDeps, request: MoveRequest): Prom
   const { record, carried } = await deps.queue(local.main, () => makeWorktree(deps, local, request))
   const cwd = sameFolderIn(session.cwd, local.root, record.path)
   const note = moveNote({ from: session.cwd, cwd, record, carried: carried?.files ?? 0, carry: request.carry })
-  const stuck = relocateInto(deps, session.id, { cwd, project: session.project, note })
+  const stuck = await relocateInto(deps, session.id, { cwd, project: session.project, note })
   if (!stuck) {
     record.sessions = [session.id]
     if (record.setup) record.setup.session = session.id
@@ -72,9 +72,9 @@ export const moveThread = async (deps: WorktreeDeps, request: MoveRequest): Prom
   return infoOf(deps.sessions.require(session.id))
 }
 
-const relocateInto = (deps: WorktreeDeps, id: string, relocation: Relocation) => {
+const relocateInto = async (deps: WorktreeDeps, id: string, relocation: Relocation) => {
   try {
-    deps.sessions.relocate(id, relocation)
+    await deps.sessions.relocate(id, relocation)
     return undefined
   } catch (error) {
     return errorMessage(error)

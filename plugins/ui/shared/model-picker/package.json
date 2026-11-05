@@ -4,8 +4,7 @@
   "description": "The model picker: search, model sources, effort and fast mode in one panel, for the composer and settings",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./models": "./src/models/index.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/index.ts",
@@ -18,6 +17,7 @@
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

@@ -1,5 +1,4 @@
-import { hasToolResult } from '@sand/chats/prompt'
-import type { Entry, Message } from '@sand/chats/contract'
+import { type Entry, hasToolResult, type Message } from '@sand/chats/contract'
 import type { Thread } from '../contract'
 
 const walk = (entries: Map<string, Entry>, head: string | null) => {

@@ -1,4 +1,4 @@
-import { isLivePull } from '@sand/github/look'
+import { isLivePull } from '@sand/github/contract'
 import type { Child } from '@vaakx-dev/vrui'
 import type { Shown } from '../shown'
 

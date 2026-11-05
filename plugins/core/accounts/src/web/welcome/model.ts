@@ -1,7 +1,7 @@
 import { composer } from '@sand/composer/contract'
 import type { wire } from '@sand/devices-contract'
 import { models, modelsChange, threads, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { modelSetup, type ModelSetup } from '../../contract'

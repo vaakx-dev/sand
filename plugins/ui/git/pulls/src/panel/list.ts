@@ -1,5 +1,4 @@
-import { pullKey } from '@sand/github/contract'
-import { pullName } from '@sand/github/look'
+import { pullKey, pullName } from '@sand/github/contract'
 import type { PullLine, PullLink } from '@sand/pull-links/contract'
 import { type Derive, div, dynamicChild, type Sig, span } from '@vaakx-dev/vrui'
 import type { PullParts } from '../parts'

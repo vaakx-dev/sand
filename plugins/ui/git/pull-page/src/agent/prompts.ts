@@ -1,7 +1,6 @@
 import type { PullSummary } from '@sand/github/contract'
 import type { ConversationItem } from '@sand/pull-detail/contract'
-import type { AgentPrompt } from '@sand/pull-links/contract'
-import { fenced, untrusted } from '@sand/pull-links/prompts'
+import { type AgentPrompt, fenced, untrusted } from '@sand/pull-links/contract'
 
 type ReviewThread = Extract<ConversationItem, { kind: 'thread' }>
 

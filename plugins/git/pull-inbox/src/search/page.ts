@@ -1,5 +1,4 @@
-import type { GitHub, MergeMethod, PullSummary } from '@sand/github/contract'
-import { allowedMethods, shapeSummary } from '@sand/github/summary'
+import { allowedMethods, type GitHub, type MergeMethod, type PullSummary, shapeSummary } from '@sand/github/contract'
 import { type SearchData, type SearchNode, searchQuery } from './query'
 
 const pageSize = 50

@@ -1,7 +1,6 @@
-import type { Entry } from '@sand/chats/contract'
 import type { Pending } from '@sand/steering/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { promptContent, userParts } from '@sand/chats/prompt'
+import { type Entry, promptContent, userParts } from '@sand/chats/contract'
 import type { ChatContext } from '../context'
 import { taggedItems, untagged } from '../parts/thread/tagged'
 import { itemRows } from './index'

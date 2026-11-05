@@ -1,4 +1,4 @@
-import type { Message, ToolCallBlock, ToolResultBlock } from '../contract'
+import type { Message, ToolCallBlock, ToolResultBlock } from '..'
 
 export const refused = 'Not run: the response was refused.'
 

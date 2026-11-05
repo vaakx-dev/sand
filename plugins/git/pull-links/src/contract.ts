@@ -4,6 +4,7 @@ import { service } from 'drydock'
 import { z } from 'zod'
 
 export { arrangePulls } from './arrange/arrange'
+export * from './web/prompts'
 
 export type LinkSource = 'created' | 'branch' | 'linked' | 'opened' | 'stack'
 

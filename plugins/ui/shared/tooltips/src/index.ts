@@ -1,5 +1,5 @@
 import { kit } from '@sand/ui-kit/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { portal, registerInScope } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { bubble } from './bubble'

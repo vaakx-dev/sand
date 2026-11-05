@@ -1,6 +1,5 @@
-import { type Entry, type EntryPage, promptInput, type SessionInfo, type SessionSummary } from '@sand/chats/contract'
+import type { Entry, EntryPage, SessionInfo, SessionSummary } from '@sand/chats/contract'
 import { request, type } from '@sand/host-hub/contract'
-import type { TurnResult } from '@sand/loop/contract'
 import { z } from 'zod'
 import type { OpenedSession } from './relay'
 
@@ -30,6 +29,5 @@ export const sessionAppend = request('session.append', {
   place,
 })
 export const sessionCheckout = request('session.checkout', { input: session.extend({ entry: z.string().nullable() }), output: type<boolean>(), place })
-export const loopRun = request('loop.run', { input: session.extend({ prompt: promptInput }), output: type<TurnResult>(), place })
 export const loopInterrupt = request('loop.interrupt', { input: session, output: type<boolean>(), place })
 export const uiFocus = request('ui.focus', { input: z.object({ session: z.string().optional() }), output: type<boolean>(), place })

@@ -16,6 +16,7 @@
     "@sand/git-diff": "workspace:*",
     "@sand/git-snapshots": "workspace:*",
     "@sand/picker": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

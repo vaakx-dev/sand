@@ -1,5 +1,4 @@
-import { sessions, sessionSettle } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
+import { sessions, sessionSettle, textOf } from '@sand/chats/contract'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
 import { loop, turnEnd, turnPrompt, turnStart } from '@sand/loop/contract'
 import { paths } from '@sand/paths/contract'

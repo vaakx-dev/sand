@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import type { Dispose } from 'drydock'
 import type { PageContext } from '../inject'
 

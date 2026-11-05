@@ -1,5 +1,5 @@
 import type { PcView } from '@sand/devices-contract'
-import type { Pulse } from '@sand/web-client/reactive'
+import type { Pulse } from '@sand/reactive'
 import { dynamicChild, keys, sig, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import { expand, shorten } from './places'

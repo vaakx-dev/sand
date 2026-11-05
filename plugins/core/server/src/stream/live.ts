@@ -1,9 +1,8 @@
 import { type LiveBlock, llmEvent } from '@sand/accounts/contract'
 import { sessionEntry } from '@sand/chats/contract'
 import { toolResult, toolStart, turnEnd, turnStart } from '@sand/loop/contract'
-import type { LiveSnapshot } from '../contract'
+import { applyLiveEvent, type LiveSnapshot } from '../contract'
 import type { ServerContext } from '../context'
-import { applyLiveEvent } from './apply'
 
 interface Streaming {
   live: LiveBlock[]

@@ -1,7 +1,7 @@
 import type { LLM, LLMRequest, SourceRef, Usage } from '@sand/accounts/contract'
 import type { Message } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
-import { sumUsage } from '@sand/usage/records'
+import { sumUsage } from '@sand/usage/contract'
 import { ask } from './ask'
 import { promptText, system } from './prompt'
 import { serialize } from './serialize'

@@ -1,4 +1,4 @@
-import { isLivePull } from '@sand/github/look'
+import { isLivePull } from '@sand/github/contract'
 import type { ReviewerState } from '@sand/pull-detail/contract'
 import type { IconName, Tone } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, list, span } from '@vaakx-dev/vrui'

@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import { bytes, plural } from '@sand/util'
 import type { Dispose } from 'drydock'
 import type { WorkspaceContext } from '../inject'

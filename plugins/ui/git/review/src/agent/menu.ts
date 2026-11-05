@@ -1,5 +1,5 @@
 import type { PullMenu } from '@sand/git-pull-page/contract'
-import { isLivePull, pullRef } from '@sand/github/look'
+import { isLivePull, pullRef } from '@sand/github/contract'
 import type { ReviewContext } from '../inject'
 import { agentReview } from './review'
 

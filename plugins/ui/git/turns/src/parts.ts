@@ -1,6 +1,6 @@
 import type { ChangesPanel } from '@sand/git-changes/contract'
 import { threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { sig } from '@vaakx-dev/vrui'
 import type { TurnsContext } from './inject'
 import { snapshotStore } from './snapshots/store'

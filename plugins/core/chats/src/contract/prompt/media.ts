@@ -1,4 +1,4 @@
-import type { Block, DocumentBlock, ImageBlock, Message, ToolReferenceBlock } from '../contract'
+import type { Block, DocumentBlock, ImageBlock, Message, ToolReferenceBlock } from '..'
 
 export type MediaBlock = ImageBlock | DocumentBlock
 

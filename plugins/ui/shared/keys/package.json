@@ -4,8 +4,7 @@
   "description": "Keybinding host: one window listener runs shortcuts",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./names": "./src/names.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "web": "./src/index.ts",

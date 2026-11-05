@@ -1,6 +1,6 @@
 import type { Limits } from '@sand/accounts/contract'
 import type { Wire } from '@sand/devices-contract'
-import { usageQuery } from '@sand/usage/records'
+import { usageQuery } from '@sand/usage/contract'
 import { clock, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { fleetLoader } from './data/fleet'
 import type { History } from './data/forecast'

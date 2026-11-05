@@ -1,4 +1,4 @@
-import { tokensOf } from '@sand/usage/records'
+import { tokensOf } from '@sand/usage/contract'
 import { tokens } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'

@@ -4,8 +4,7 @@
   "description": "Projects: the registry and its sync across PCs, project files and folders, icons, and the New button and palette items",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts",
-    "./projects": "./src/projects/index.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "host": "./src/host.ts",
@@ -26,6 +25,7 @@
     "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",

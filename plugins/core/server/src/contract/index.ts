@@ -8,6 +8,7 @@ import type { Server } from './server'
 export type * from './relay'
 export type * from './server'
 export * from './hello'
+export * from './live'
 export * from './requests'
 
 export const server = service<Server>('server')

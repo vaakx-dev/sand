@@ -1,6 +1,6 @@
 import { type GitPlace, samePlace } from '@sand/git/contract'
 import { palette } from '@sand/palette/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { derive } from '@vaakx-dev/vrui'
 import { createActions } from './actions/actions'
 import { branchPage } from './branches/page'

@@ -1,5 +1,4 @@
-import type { Message, Prompt, UserContent } from '@sand/chats/contract'
-import { feedbackOnly, hasToolResult } from '@sand/chats/prompt'
+import { feedbackOnly, hasToolResult, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
 import { models } from '@sand/web-client/contract'
 import { compose, contentName } from '../attachments/content'
 import type { ComposerContext } from '../context'

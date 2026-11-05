@@ -26,11 +26,11 @@ const lastHead = async (deps: WorktreeDeps, record: WorktreeRecord, exists: bool
   return deps.git.maybe(record.main, ['rev-parse', '--verify', '--quiet', `refs/heads/${record.branch}^{commit}`], { read: true })
 }
 
-const moveThreadsOut = (deps: WorktreeDeps, record: WorktreeRecord, branch: string | undefined, note: RemovedNote) => {
+const moveThreadsOut = async (deps: WorktreeDeps, record: WorktreeRecord, branch: string | undefined, note: RemovedNote) => {
   const inside = threadsIn(deps.sessions, record.path).map(session => session.id)
-  const away = relocateAll(deps, inside, record.path, record.main, cwd => note(record, branch, cwd))
+  const away = await relocateAll(deps, inside, record.path, record.main, cwd => note(record, branch, cwd))
   if (!away.failed.length) return away.moved
-  const back = relocateAll(deps, away.moved, record.main, record.path, cwd => keptNote(record, cwd))
+  const back = await relocateAll(deps, away.moved, record.main, record.path, cwd => keptNote(record, cwd))
   throw new Error(`Couldn't move the threads out, so the worktree stays: ${[...away.failed, ...back.failed].join('; ')}`)
 }
 
@@ -53,11 +53,11 @@ const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: bool
   await deps.setups.forget(record.path)
   let moved: string[] = []
   try {
-    moved = moveThreadsOut(deps, record, branch, note)
+    moved = await moveThreadsOut(deps, record, branch, note)
     await detach(deps, record, exists)
   } catch (error) {
     throw await rolledBack(error, async () => {
-      const back = relocateAll(deps, moved, record.main, record.path, cwd => keptNote(record, cwd))
+      const back = await relocateAll(deps, moved, record.main, record.path, cwd => keptNote(record, cwd))
       if (head) await dropKeptHead(deps.git, record)
       if (back.failed.length) throw new Error(`These threads stay in the main checkout: ${back.failed.join('; ')}`)
     })

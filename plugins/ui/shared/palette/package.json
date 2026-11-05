@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@sand/keys": "workspace:*",
-    "@sand/layout": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/project": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

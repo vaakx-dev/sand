@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./contract": "./src/contract/index.ts",
-    "./match": "./src/catalog/match.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "runtime": "./src/index.ts",
@@ -25,6 +24,7 @@
     "@sand/layout": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",

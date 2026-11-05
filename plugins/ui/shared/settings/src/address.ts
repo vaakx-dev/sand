@@ -1,4 +1,4 @@
-import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/address'
+import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/contract'
 
 const key = 'settings'
 const opened = 'settingsOpened'

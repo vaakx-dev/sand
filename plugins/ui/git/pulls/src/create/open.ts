@@ -1,6 +1,6 @@
 import { type GitControl, gitControl } from '@sand/git-control/contract'
 import type { PullSummary } from '@sand/github/contract'
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { PullPlace } from '../contract'

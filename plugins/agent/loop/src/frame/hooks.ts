@@ -1,5 +1,4 @@
-import type { Session } from '@sand/chats/contract'
-import { textOf } from '@sand/chats/prompt'
+import { type Session, textOf } from '@sand/chats/contract'
 import type { LoopsContext } from '../context'
 import { contextBuild, contextOverflow, turnInbox } from '../contract'
 import type { TurnHooks } from '../turn'

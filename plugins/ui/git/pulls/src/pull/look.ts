@@ -1,5 +1,4 @@
-import type { PullSummary } from '@sand/github/contract'
-import { isLivePull, pullName, pullStateLook, type PullStateLook } from '@sand/github/look'
+import { isLivePull, pullName, pullStateLook, type PullStateLook, type PullSummary } from '@sand/github/contract'
 import type { PullLink } from '@sand/pull-links/contract'
 
 const unknown: PullStateLook = { tone: 'neutral', icon: 'pull-request', label: 'Pull request' }

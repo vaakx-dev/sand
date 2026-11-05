@@ -18,6 +18,7 @@
   "dependencies": {
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/watch": "workspace:*",

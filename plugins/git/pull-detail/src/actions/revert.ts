@@ -1,5 +1,4 @@
-import { type PullRef, type PullSummary, pullLabel } from '@sand/github/contract'
-import { type PullNode, pullSummaryFields, shapeSummary } from '@sand/github/summary'
+import { pullLabel, type PullNode, type PullRef, type PullSummary, pullSummaryFields, shapeSummary } from '@sand/github/contract'
 import { refusal } from '../errors/refusal'
 import { type ActionDeps, settle } from './action'
 

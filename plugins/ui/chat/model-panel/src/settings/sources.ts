@@ -1,5 +1,5 @@
 import type { SourceInfo } from '@sand/accounts/contract'
-import { favouritesOf } from '@sand/model-picker/models'
+import { favouritesOf } from '@sand/model-picker/contract'
 import { span } from '@vaakx-dev/vrui'
 import { accountsButton } from './accounts'
 import type { Page } from './page'

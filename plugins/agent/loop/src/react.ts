@@ -1,5 +1,4 @@
-import { callsOf, refused, skip, textOf, truncated } from '@sand/chats/prompt'
-import type { Message, StopReason, ToolResultBlock } from '@sand/chats/contract'
+import { callsOf, type Message, refused, skip, type StopReason, textOf, type ToolResultBlock, truncated } from '@sand/chats/contract'
 import type { Turn, TurnOutcome } from './turn'
 
 const appendInbox = async ({ hooks }: Turn) => {

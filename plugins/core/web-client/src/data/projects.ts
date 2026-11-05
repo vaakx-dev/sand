@@ -1,20 +1,4 @@
-import {
-  fsBrowse,
-  fsMkdir,
-  type Project,
-  projectsAdd,
-  projectsChange as projectsUpdate,
-  projectsCreate,
-  projectsInspect,
-  type ProjectList,
-  projectsList,
-  type ProjectLook,
-  type ProjectPatch,
-  projectsRemove,
-  projectsRoot,
-  projectsUpdate as projectsPatch,
-} from '@sand/project/contract'
-import { sandHomeProject } from '@sand/project/projects'
+import { fsBrowse, fsMkdir, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsChange as projectsUpdate, projectsCreate, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'

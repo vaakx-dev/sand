@@ -1,6 +1,5 @@
 import type { Limits } from '@sand/accounts/contract'
-import type { AccountUsage } from '@sand/usage/contract'
-import { accountKey, emptyTotals } from '@sand/usage/records'
+import { accountKey, type AccountUsage, emptyTotals } from '@sand/usage/contract'
 import { providerOf, sourceName } from '../names'
 import type { Account, Pc } from './types'
 

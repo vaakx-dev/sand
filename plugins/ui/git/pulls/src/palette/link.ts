@@ -1,5 +1,4 @@
-import { pullKey } from '@sand/github/contract'
-import { pullName } from '@sand/github/look'
+import { pullKey, pullName } from '@sand/github/contract'
 import type { PalettePage } from '@sand/palette/contract'
 import type { PullLink } from '@sand/pull-links/contract'
 import type { PullPlace } from '../contract'

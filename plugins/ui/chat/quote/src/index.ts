@@ -1,5 +1,5 @@
 import { composer } from '@sand/composer/contract'
-import { floating } from '@sand/layout/place'
+import { floating } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { replyBubble } from './bubble'

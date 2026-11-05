@@ -1,6 +1,6 @@
 import { type Pcs, pcsChange } from '@sand/devices-contract'
 import { type Projects, projectsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import type { Context } from 'drydock'
 import type { FolderRepo, GitHubFolder } from '../contract'
 

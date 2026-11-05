@@ -10,7 +10,7 @@ export const sameFolderIn = (cwd: string, from: string, to: string) => {
   return existsSync(inner) ? inner : to
 }
 
-export const relocateAll = (deps: WorktreeDeps, ids: string[], from: string, to: string, note: (cwd: string) => string) => {
+export const relocateAll = async (deps: WorktreeDeps, ids: string[], from: string, to: string, note: (cwd: string) => string) => {
   const moved: string[] = []
   const failed: string[] = []
   for (const id of ids) {
@@ -18,7 +18,7 @@ export const relocateAll = (deps: WorktreeDeps, ids: string[], from: string, to:
     if (!session) continue
     const cwd = sameFolderIn(session.cwd, from, to)
     try {
-      deps.sessions.relocate(id, { cwd, project: session.project, note: note(cwd) })
+      await deps.sessions.relocate(id, { cwd, project: session.project, note: note(cwd) })
       moved.push(id)
     } catch (error) {
       failed.push(`${session.title || id}: ${errorMessage(error)}`)

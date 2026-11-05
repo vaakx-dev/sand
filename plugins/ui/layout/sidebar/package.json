@@ -20,6 +20,7 @@
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/project": "workspace:*",
+    "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

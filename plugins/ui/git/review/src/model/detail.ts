@@ -1,5 +1,4 @@
-import { isLivePull } from '@sand/github/look'
-import { type PullRef, samePull } from '@sand/github/contract'
+import { isLivePull, type PullRef, samePull } from '@sand/github/contract'
 import type { PullCommit } from '@sand/pull-detail/contract'
 import { effect, sig } from '@vaakx-dev/vrui'
 import { type ReviewContext, toastId } from '../inject'

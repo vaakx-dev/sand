@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/place'
+import { place } from '@sand/layout/contract'
 import type { ReviewEvent } from '@sand/pull-review/contract'
 import { plural } from '@sand/util'
 import { show, sig } from '@vaakx-dev/vrui'

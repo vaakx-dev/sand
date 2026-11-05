@@ -1,5 +1,4 @@
-import { pullFactsLine } from '@sand/github/facts'
-import { pullName } from '@sand/github/look'
+import { pullFactsLine, pullName } from '@sand/github/contract'
 import { div, span } from '@vaakx-dev/vrui'
 import { pullUrl, type Shown } from './shown'
 

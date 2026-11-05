@@ -1,5 +1,4 @@
-import type { PullSummary } from '@sand/github/contract'
-import { pullName, pullStateLook } from '@sand/github/look'
+import { pullName, pullStateLook, type PullSummary } from '@sand/github/contract'
 import type { PaletteItem, PalettePage } from '@sand/palette/contract'
 import type { PullPlace } from '../contract'
 import { toastId } from '../inject'

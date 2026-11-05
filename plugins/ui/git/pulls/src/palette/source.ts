@@ -1,4 +1,4 @@
-import { pullName } from '@sand/github/look'
+import { pullName } from '@sand/github/contract'
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { PullPlace } from '../contract'
 import type { PullParts } from '../parts'

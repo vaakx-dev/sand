@@ -1,5 +1,5 @@
 import { threadChange, threadSelect, threadsChange } from '@sand/web-client/contract'
-import { owned } from '@sand/web-client/reactive'
+import { owned } from '@sand/reactive'
 import { batch, derive, sig } from '@vaakx-dev/vrui'
 import type { ControlContext } from '../inject'
 

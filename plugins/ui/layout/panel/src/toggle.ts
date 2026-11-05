@@ -1,7 +1,7 @@
 import { header } from '@sand/header/contract'
 import { layout, layoutChange } from '@sand/layout/contract'
 import type { kit } from '@sand/ui-kit/contract'
-import { pulse } from '@sand/web-client/reactive'
+import { pulse } from '@sand/reactive'
 import { derive, show, type Derive } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { panelsChange } from './contract'

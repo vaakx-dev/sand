@@ -1,5 +1,4 @@
-import { type PullRef, pullKey } from '@sand/github/contract'
-import { pullName } from '@sand/github/look'
+import { pullKey, pullName, type PullRef } from '@sand/github/contract'
 import { sig } from '@vaakx-dev/vrui'
 import { type ReviewContext, toastId } from '../inject'
 
