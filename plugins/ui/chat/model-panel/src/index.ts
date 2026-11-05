@@ -13,6 +13,7 @@ import { modelSource } from './palette'
 import { modelPill } from './pill'
 import { modelsPage } from './settings'
 import { createSlots } from './settings/slots'
+import { shownState } from './shown'
 import { composerTarget } from './target'
 
 export default definePlugin({
@@ -24,10 +25,11 @@ export default definePlugin({
     const actions = createActions(ctx, text => problem.set(text))
     const changes = modelChanges(ctx)
     const slots = createSlots()
-    const pill = owned(ctx, () => modelPill(ctx, composerTarget(ctx, actions, changes, problem), changes))
+    const shown = shownState(ctx)
+    const pill = owned(ctx, () => modelPill(ctx, composerTarget(ctx, actions, changes, problem, shown), changes, shown))
 
     ctx.watch(composerService, composer => composer && joinDisposers(composer.slot('end', pill.view, 0), ctx.provide(modelPillService, { open: pill.open })))
-    ctx.watch(paletteService, palette => palette?.source(modelSource(ctx, actions)))
+    ctx.watch(paletteService, palette => palette?.source(modelSource(ctx, actions, shown)))
     ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>
       settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes, slots) }),

@@ -1,3 +1,4 @@
+import type { SessionSettings } from '@sand/model/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
 import type { Held } from '../attachments/files'
 import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/draft-db'
@@ -5,6 +6,7 @@ import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/
 export interface Saved {
   text: string
   items: Held[]
+  settings?: SessionSettings
   target?: DraftTarget
   updated?: number
 }

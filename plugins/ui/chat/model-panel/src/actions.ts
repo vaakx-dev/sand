@@ -1,27 +1,18 @@
-import type { Request } from '@sand/host-hub/contract'
-import { settingsSave, settingsSet, type EffectiveSettings, type SettingsPatch } from '@sand/model/contract'
+import { composer } from '@sand/composer/contract'
+import { settingsSet, type SettingsPatch } from '@sand/model/contract'
 import { errorMessage } from '@sand/util'
 import type { PanelContext } from './context'
 
 export const createActions = (ctx: PanelContext, fail: (text: string) => void) => {
-  const send = <I, O>(request: Request<I, O>, input: I) => void ctx.wire.call(request, input).catch(error => fail(errorMessage(error)))
-  const session = () => ctx.threads.current()?.id
-
-  const set = (patch: SettingsPatch) => send(settingsSet, { session: session(), patch })
-
-  const reset = () => {
-    const id = session()
-    if (id) send(settingsSet, { session: id, patch: { model: null, effort: null, speed: null } })
+  const set = (patch: SettingsPatch) => {
+    const session = ctx.threads.current()?.id
+    if (!session) return ctx.get(composer)?.choose(patch)
+    void ctx.wire.call(settingsSet, { session, patch }).catch(error => fail(errorMessage(error)))
   }
 
-  const makeDefault = (shown: EffectiveSettings) => {
-    const id = session()
-    if (id) return send(settingsSave, { session: id })
-    const { effort, speed } = shown.chosen
-    send(settingsSet, { patch: { model: shown.model, ...(effort && { effort }), ...(speed && { speed }) } })
-  }
+  const reset = () => set({ model: null, effort: null, speed: null })
 
-  return { set, reset, makeDefault }
+  return { set, reset }
 }
 
 export type Actions = ReturnType<typeof createActions>

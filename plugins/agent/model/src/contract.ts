@@ -69,5 +69,5 @@ export const settingsGet = request('settings.get', {
   output: type<SettingsState>(),
   place: 'thread',
 })
-export const settingsSet = request('settings.set', { input: z.object({ session: z.string().optional(), patch }), output: type<void>(), place: 'thread' })
-export const settingsSave = request('settings.save', { input: z.object({ session: z.string() }), output: type<void>(), place: 'thread' })
+export const settingsSet = request('settings.set', { input: z.object({ session: z.string(), patch }), output: type<void>(), place: 'thread' })
+export const defaultsSet = request('defaults.set', { input: z.object({ patch }), output: type<void>(), place: 'thread' })

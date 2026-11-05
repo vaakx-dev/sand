@@ -1,9 +1,9 @@
 import type { ModelInfo } from '@sand/accounts/contract'
-import { settingsSet, type SettingsPatch } from '@sand/model/contract'
+import { defaultsSet, type SettingsPatch } from '@sand/model/contract'
 import type { PickerTarget } from '@sand/model-picker/contract'
 import type { Page } from './page'
 
-const save = (page: Page, patch: SettingsPatch) => void page.run(settingsSet, { patch })
+const save = (page: Page, patch: SettingsPatch) => void page.run(defaultsSet, { patch })
 
 export const makeDefault = (page: Page, model: ModelInfo) => save(page, { model: model.id })
 

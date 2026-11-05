@@ -52,6 +52,8 @@ export default definePlugin({
       ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
       plus: plus.add,
+      settings: model.settings,
+      choose: model.choose,
     }
 
     const parts = { ctx, model, slots, menu, plus, dropping }

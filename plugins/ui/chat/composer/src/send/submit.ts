@@ -1,4 +1,5 @@
 import { feedbackOnly, hasToolResult, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
+import type { SessionSettings } from '@sand/model/contract'
 import { models } from '@sand/web-client/contract'
 import { compose, contentName } from '../attachments/content'
 import type { ComposerContext } from '../context'
@@ -7,7 +8,8 @@ const prompt = (text: string, attachments: UserContent[]): Prompt => (attachment
 
 const label = (text: string, attachments: UserContent[]) => text || attachments.map(contentName).join(', ')
 
-export const modelMissing = (ctx: ComposerContext) => {
+export const modelMissing = (ctx: ComposerContext, settings: SessionSettings) => {
+  if (!ctx.threads.current()) return !settings.model
   const current = ctx.get(models)?.state()?.current
   return Boolean(current && !current.model)
 }
@@ -22,14 +24,14 @@ export const interrupt = async (ctx: ComposerContext) => {
   if (current?.running) await ctx.turns.interrupt(current.id)
 }
 
-export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[]) => {
+export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings) => {
   if (!text && !attachments.length) return interrupt(ctx)
   const current = ctx.threads.current()
   const draft = ctx.threads.drafting()
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
   if (!thread) throw new Error('Pick a project for a new thread first')
   if (!current) await ctx.threads.select(thread.id, { replace: true })
-  await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments))
+  await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments), current ? undefined : settings)
 }
 
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
