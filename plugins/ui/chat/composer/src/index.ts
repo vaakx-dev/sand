@@ -1,3 +1,4 @@
+import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
 import { threadSelect } from '@sand/web-client/contract'
@@ -14,6 +15,7 @@ import { draftSession } from './drafts/session'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
 import { createPlus } from './plus/entries'
+import { spacedLink } from './records'
 import { createSendMenu } from './send/menu'
 
 export default definePlugin({
@@ -42,6 +44,12 @@ export default definePlugin({
       insert(value) {
         if (current) current.editor.insert(value)
         else model.text.update(text => text + value)
+      },
+      reference(record) {
+        model.records.add([record])
+        const link = contextLink(record)
+        if (current) current.editor.reference(link)
+        else model.text.update(text => text + spacedLink(link, text.slice(-1), ''))
       },
       quote(text) {
         if (current) current.editor.quote(text)

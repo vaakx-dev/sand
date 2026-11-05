@@ -1,21 +1,26 @@
 {
   "name": "@sand/context",
   "version": "0.0.0",
-  "description": "Turns context links in a prompt into markers and one context envelope the model reads",
+  "description": "Context links in messages: markers and one envelope for the model, chips with details on the page",
   "type": "module",
   "exports": {
-    "./contract": "./src/contract.ts"
+    "./contract": "./src/contract/index.ts"
   },
   "sand": {
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
     "label": "Context references",
-    "summary": "Files and threads a message links to, given to the model"
+    "summary": "Files and threads a message links to: given to the model, and shown as chips you can open"
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/layout": "workspace:*",
     "@sand/turns-contract": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import { turnPrompt } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { contextKinds, type ContextKind } from './contract'
 import { fileKind } from './file'
+import { kindRegistry } from './registry'
 import { threadKind } from './thread'
 
 const titlePattern = /^\p{L}[\p{L}\p{N} -]{0,39}$/u
@@ -12,14 +13,11 @@ export default definePlugin({
   description: 'Turns context links in a prompt into markers and one context envelope the model reads',
   inject: { sessions },
   apply(ctx) {
-    const kinds = new Map<string, ContextKind>()
+    const kinds = kindRegistry<ContextKind>()
 
     const register = (kind: ContextKind) => {
       if (!titlePattern.test(kind.title)) throw new Error(`Context kind ${kind.kind} has a title markers can't hold: ${kind.title}`)
-      kinds.set(kind.kind, kind)
-      return () => {
-        if (kinds.get(kind.kind) === kind) kinds.delete(kind.kind)
-      }
+      return kinds.register(kind)
     }
 
     const projectorOf = (session: Session) => (name: string): ContextProjector | undefined => {

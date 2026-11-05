@@ -1,3 +1,4 @@
+import { drawChip } from '@sand/context/contract'
 import { models, type Thread } from '@sand/web-client/contract'
 import { div, sig, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
@@ -107,6 +108,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
       reply: text => replyActions(ctx, text),
       branchSwitch: entry => branchSwitch(ctx, view, entry),
       jump,
+      chip: drawChip(ctx),
       repaint,
     }
     const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.get(models)?.summary(settings))

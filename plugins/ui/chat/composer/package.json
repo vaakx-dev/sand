@@ -17,6 +17,7 @@
     "@codemirror/view": "6.43.15",
     "@sand/attachments": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/context": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/media": "workspace:*",
