@@ -1,5 +1,5 @@
 import type { TextBlock, UserContent } from '@sand/chats/contract'
-import { turnPrompt } from '@sand/loop/contract'
+import { turnPrompt } from '@sand/turns-contract/contract'
 import type { Skill, Skills } from './contract'
 import type { Context } from 'drydock'
 

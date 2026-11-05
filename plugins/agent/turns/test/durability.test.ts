@@ -43,16 +43,22 @@ const blockingGate = (sand: Sand) => {
   return opened.promise
 }
 
-const dieDuring = async (replies: Source['replies'], after: 'gate' | 'text') => {
+const killDuring = async (replies: Source['replies'], after: 'gate' | 'text') => {
   const child = Bun.spawn([Bun.argv[0]!, join(import.meta.dir, 'dying.ts'), home, JSON.stringify({ replies, after })], { stdout: 'pipe' })
   const line = await new Response(child.stdout).body!.getReader().read()
   const died = JSON.parse(new TextDecoder().decode(line.value)) as { chat: string; turn: string }
   child.kill()
   await child.exited
+  return died
+}
+
+const restart = async ({ chat, turn }: { chat: string; turn: string }) => {
   expireLeases()
   const next = await start()
-  return { next, chat: next.sessions.require(died.chat), turn: died.turn }
+  return { next, chat: next.sessions.require(chat), turn }
 }
+
+const dieDuring = async (replies: Source['replies'], after: 'gate' | 'text') => restart(await killDuring(replies, after))
 
 test('a turn whose process died is marked lost when sand starts again, keeping the results it recorded', async () => {
   const { next, chat: recovered, turn } = await dieDuring([[{ type: 'call', name: 'echo', input: { word: 'pong' } }, { type: 'call', name: 'gate' }]], 'gate')
@@ -71,6 +77,21 @@ test('what the model had said when its process died is kept', async () => {
 
   expect(recovered.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Half a thought')] })
   expect(recovered.latest('turn-ending')?.data).toEqual({ stopReason: 'lost' })
+})
+
+test("a lost turn's untaken steers wait for the user if the user sent them, and run on their own otherwise", async () => {
+  const died = await killDuring([[{ type: 'call', name: 'gate' }]], 'gate')
+  const witness = await start()
+  const chat = witness.sessions.require(died.chat)
+  await witness.turns.send(chat, { prompt: 'and then this', clientRequestId: 'user' })
+  await witness.turns.send(chat, { prompt: 'job done', origin: 'job', clientRequestId: 'job' })
+
+  const { next, chat: recovered } = await restart(died)
+
+  expect(next.turns.pending(recovered).map(({ kind, origin, held }) => ({ kind, origin, held }))).toEqual([
+    { kind: 'queue', origin: 'user', held: true },
+    { kind: 'queue', origin: 'job', held: false },
+  ])
 })
 
 test('a turn running in another process is left alone, blocks a second runner and stops when interrupted from there', async () => {

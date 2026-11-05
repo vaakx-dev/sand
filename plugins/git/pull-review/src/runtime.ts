@@ -1,11 +1,11 @@
 import { sessions } from '@sand/chats/contract'
 import { diffHunks } from '@sand/git-diff/contract'
 import { github } from '@sand/github/contract'
-import { loop } from '@sand/loop/contract'
 import { paths } from '@sand/paths/contract'
 import { pullLinksService } from '@sand/pull-links/contract'
 import { type Server, server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
+import { turns } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { reviewTools } from './agent/tool'
@@ -36,7 +36,7 @@ export default definePlugin({
         reviews,
         record,
         patch: { github: ctx.github, hunks: () => ctx.get(diffHunks) },
-        agent: { github: ctx.github, pullLinks, sessions: () => ctx.get(sessions), loop: () => ctx.get(loop), report },
+        agent: { github: ctx.github, pullLinks, sessions: () => ctx.get(sessions), turns: () => ctx.get(turns), report },
         changed,
       })
       return () => {

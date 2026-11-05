@@ -29,10 +29,12 @@ export const secretTool = (waits: Waits): Tool<typeof input> => ({
   input,
   active: session => session.kind !== 'agent',
   timeoutMs: answerTimeout + settleGrace,
-  async run({ title, reason, placeholder }, { session, signal }) {
+  async run({ title, reason, placeholder }, context) {
+    const { session, signal } = context
     const id = Bun.randomUUIDv7()
     session.append(requestEntry, { id, title, reason, ...(placeholder && { placeholder }) } satisfies SecretRequest)
-    const outcome = await waits.wait(session.id, id, signal)
+    const done = context.wait({ kind: 'secret', call: context.call.id, title })
+    const outcome = await waits.wait(session.id, id, signal).finally(done)
     session.append(answerEntry, { id, status: outcome.status } satisfies SecretAnswer)
     return resultOf(outcome)
   },

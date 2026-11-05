@@ -19,11 +19,11 @@
     "@sand/git-diff": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/pull-links": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

@@ -1,40 +1,52 @@
-import { type Prompt, promptLabel } from '@sand/chats/contract'
-import { loopRun } from '@sand/loop/contract'
-import type { SessionSettings } from '@sand/model/contract'
-import { loopInterrupt } from '@sand/server/contract'
-import { loopSteer, loopUnsteer } from '@sand/steering/contract'
-import type { Wire } from '@sand/devices-contract'
+import { promptLabel } from '@sand/chats/contract'
+import { isPcUnavailable, type Wire } from '@sand/devices-contract'
+import { type SendResult, turnHold, turnInterrupt, turnSend, turnWithdraw } from '@sand/turns-contract/contract'
 import type { Turns } from '../contract'
+import { after } from '../detached'
+import { legacyPc, legacyTurns } from './legacy'
 import type { Store } from './store'
 
-export const createTurns = (wire: Wire, store: Store): Turns => {
-  const run = async (id: string, prompt: Prompt, settings?: SessionSettings) => {
-    const thread = store.threads.get(id)!
-    thread.running = true
-    thread.started = Date.now()
-    store.changed(id, true)
-    const started = store.whenStarted(id)
-    const running = wire.call(loopRun, { session: id, prompt, settings })
-    running.catch(() => {})
+const attempts = 4
+const retryDelay = 2_000
+
+const wait = (ms: number) => new Promise<void>(resolve => after(ms, resolve))
+
+const unanswered = (error: unknown) => isPcUnavailable(error) || (error instanceof Error && error.name === 'TimedOut')
+
+const retried = async (call: () => Promise<SendResult>) => {
+  for (let attempt = 1; ; attempt++) {
     try {
-      await Promise.race([started, running])
+      return await call()
     } catch (error) {
-      thread.running = false
-      thread.started = undefined
-      store.changed(id, true)
-      throw error
+      if (attempt === attempts || !unanswered(error)) throw error
+      await wait(retryDelay)
     }
   }
+}
 
-  return {
-    async send(id, prompt, label, settings) {
+export const createTurns = (wire: Wire, store: Store): Turns => {
+  const current: Turns = {
+    async send(id, prompt, { label, settings, mode } = {}) {
       const thread = store.threads.get(id)
       if (!thread) throw new Error(`No thread ${id}`)
-      const short = promptLabel(label ?? prompt)
-      if (thread.running && (await wire.call(loopSteer, { session: id, prompt, label: short }))) return
-      await run(id, prompt, settings)
+      const input = { session: id, prompt, mode, label: promptLabel(label ?? prompt), settings, clientRequestId: crypto.randomUUID() }
+      const result = await retried(() => wire.call(turnSend, input))
+      if (result.disposition !== 'started') return
+      thread.running = true
+      thread.started ??= Date.now()
+      store.changed(id, true)
     },
-    interrupt: id => wire.call(loopInterrupt, { session: id }),
-    withdraw: async (id, item) => void (await wire.call(loopUnsteer, { session: id, item })),
+    interrupt: id => wire.call(turnInterrupt, { session: id }),
+    withdraw: async (id, pending) => void (await wire.call(turnWithdraw, { session: id, pending })),
+    hold: async (id, pending, held) => void (await wire.call(turnHold, { session: id, pending, held })),
+  }
+  const legacy = legacyTurns(wire, store)
+  const pick = (id: string) => (legacyPc(wire, store.deviceOf(id)) ? legacy : current)
+
+  return {
+    send: (id, prompt, options) => pick(id).send(id, prompt, options),
+    interrupt: id => pick(id).interrupt(id),
+    withdraw: (id, pending) => pick(id).withdraw(id, pending),
+    hold: (id, pending, held) => pick(id).hold(id, pending, held),
   }
 }

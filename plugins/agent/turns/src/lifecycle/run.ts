@@ -1,18 +1,21 @@
-import { type Entry, type Message, type Prompt, type Session, textOf } from '@sand/chats/contract'
-import { turnEnd, turnReady, turnStart } from '@sand/loop/contract'
-import type { RunOptions, TurnEnding, TurnResult, TurnStatus } from '@sand/turns-contract/contract'
+import { type Entry, type Message, type Session, textOf } from '@sand/chats/contract'
+import { type TurnEnding, turnEnd, turnReady, type TurnResult, turnStart, type TurnStatus } from '@sand/turns-contract/contract'
 import { emptyUsage } from '@sand/usage/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
+import type { Announce } from '../announce'
 import type { TurnsContext } from '../context'
 import { createPartial } from '../engine/partial'
 import { runReact } from '../engine/react'
 import { createHooks } from '../engine/step'
 import type { TurnHooks, TurnRun } from '../engine/turn'
-import type { TurnStore } from '../store/turns'
+import type { Stores } from '../store'
+import type { Holding } from '../store/pending'
 import type { Leases } from './lease'
-import { turnStarter } from './start'
+import type { Started } from './start'
 
 const statuses: Partial<Record<TurnResult['stopReason'], TurnStatus>> = { interrupted: 'interrupted', error: 'failed' }
+
+const holdings: Partial<Record<TurnResult['stopReason'], Holding>> = { interrupted: 'all', error: 'all' }
 
 const detailOf = (error: unknown) => (isRecord(error) && typeof error.detail === 'string' && error.detail) || undefined
 
@@ -32,9 +35,12 @@ interface Outcome {
   failure?: { error: unknown }
 }
 
-export const turnRunner = (ctx: TurnsContext, store: TurnStore, leases: Leases) => {
-  const start = turnStarter(ctx, store, leases)
+export interface Driven {
+  result: TurnResult
+  failure?: { error: unknown }
+}
 
+export const createDriver = (ctx: TurnsContext, stores: Stores, leases: Leases, announce: Announce, ended: (session: Session) => void) => {
   const react = async (run: TurnRun, hooks: TurnHooks, prompt: Entry): Promise<Outcome> => {
     try {
       await ctx.waterfall(turnReady, prompt, run.session, run.signal)
@@ -45,39 +51,47 @@ export const turnRunner = (ctx: TurnsContext, store: TurnStore, leases: Leases) 
     }
   }
 
-  const close = (run: TurnRun, result: TurnResult, closing: Message[]) =>
+  const close = (run: TurnRun, result: TurnResult, partial: Message | undefined) =>
     ctx.ledger.tx(() => {
       const { session, info } = run
       const ending: TurnEnding = { stopReason: result.stopReason, ...(result.error && { error: result.error }) }
       const status = statuses[result.stopReason] ?? 'completed'
-      if (!store.finish(info.id, leases.owner, { ...ending, status, ...(result.detail && { detail: result.detail }) })) return
+      if (!stores.turns.finish(info.id, leases.owner, { ...ending, status, ...(result.detail && { detail: result.detail }) })) return false
       const turn = { turn: info.id }
-      for (const message of closing) session.append('message', message, turn)
+      if (partial) session.append('message', partial, turn)
       if (result.stopReason !== 'end_turn') session.append('turn-ending', ending, turn)
+      return stores.pending.settle(session.id, holdings[result.stopReason] ?? 'none')
     })
 
-  const end = async (run: TurnRun, hooks: TurnHooks, { stopReason, failure }: Outcome) => {
-    const leftovers = await hooks.inbox()
+  const end = (run: TurnRun, { stopReason, failure }: Outcome) => {
     const partial = run.partial.message()
     if (partial) run.reply = textOf(partial.content)
     const result = resultOf(run, stopReason, failure)
-    close(run, result, [...(partial ? [partial] : []), ...(leftovers.length ? [{ role: 'user', content: leftovers } satisfies Message] : [])])
+    if (close(run, result, partial)) announce.pending(run.session)
     return result
   }
 
-  return async (session: Session, prompt: Prompt, { signal: external }: RunOptions = {}): Promise<TurnResult> => {
-    const { info, entry, user } = await start(session, prompt)
+  return async ({ session, info, entry, user }: Started, external?: AbortSignal): Promise<Driven> => {
     const controller = new AbortController()
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
-    const run: TurnRun = { info, session, signal, partial: createPartial(message => store.partial(info.id, message)), usage: emptyUsage(), reply: '' }
-    const hooks = createHooks(ctx, store, run)
+    const run: TurnRun = { info, session, signal, partial: createPartial(message => stores.turns.partial(info.id, message)), usage: emptyUsage(), reply: '' }
+    const hooks = createHooks(ctx, stores, announce, run)
     const release = joinDisposers(leases.hold(info.id, controller), ctx.busy(), ctx.effect(() => run.partial.stop))
     ctx.emit(turnStart, session, user, info)
+    announce.turn(info.id)
     const outcome = await react(run, hooks, entry)
-    const result = await end(run, hooks, outcome).finally(release)
+    let result: TurnResult
+    try {
+      result = end(run, outcome)
+    } finally {
+      release()
+    }
     if (session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
-    ctx.emit(turnEnd, session, result, store.get(info.id) ?? info)
-    if (outcome.failure) throw outcome.failure.error
-    return result
+    ctx.emit(turnEnd, session, result, stores.turns.get(info.id) ?? info)
+    announce.turn(info.id)
+    ended(session)
+    return { result, ...(outcome.failure && { failure: outcome.failure }) }
   }
 }
+
+export type Drive = ReturnType<typeof createDriver>

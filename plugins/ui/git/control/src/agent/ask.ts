@@ -7,5 +7,5 @@ export const canAsk = (ctx: ControlContext, thread: string | undefined) => Boole
 export const askAgent = (ctx: ControlContext, thread: string | undefined, prompt: AgentPrompt) => {
   const sender = ctx.get(turns)
   if (!thread || !sender) return
-  void sender.send(thread, prompt.text, prompt.label).catch(error => ctx.report(error))
+  void sender.send(thread, prompt.text, { label: prompt.label }).catch(error => ctx.report(error))
 }

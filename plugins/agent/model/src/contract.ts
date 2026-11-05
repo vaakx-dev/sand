@@ -2,7 +2,6 @@ import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/ac
 import type { Session } from '@sand/chats/contract'
 import type { CliFlags } from '@sand/config/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import type { Selection } from '@sand/turns-contract/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -10,6 +9,13 @@ export interface SessionSettings {
   model?: string
   effort?: Effort
   speed?: Speed
+}
+
+export interface Selection {
+  source: string
+  model: string
+  effort?: Effort
+  speed: Speed
 }
 
 export type SettingsPatch = { [K in keyof SessionSettings]?: SessionSettings[K] | null }

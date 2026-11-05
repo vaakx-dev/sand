@@ -1,5 +1,5 @@
 import { type Message, quickTitle, type Session, sessions } from '@sand/chats/contract'
-import { turnStart } from '@sand/loop/contract'
+import { turnStart } from '@sand/turns-contract/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'

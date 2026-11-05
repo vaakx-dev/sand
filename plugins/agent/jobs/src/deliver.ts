@@ -1,64 +1,29 @@
 import type { Session } from '@sand/chats/contract'
-import { turnEnd } from '@sand/loop/contract'
-import { steering, turnSteer, turnUnsteer } from '@sand/steering/contract'
+import { turnEnd, type SendResult } from '@sand/turns-contract/contract'
 import type { JobsContext } from './context'
+import type { Job } from './contract'
 
 interface Notice {
-  job: string
   session: Session
-  text: string
-  steer?: string
+  sent: Promise<SendResult | undefined>
 }
 
 export const createDelivery = (ctx: JobsContext) => {
   const notices = new Map<string, Notice>()
-  const timers = new Set<Timer>()
-
-  const flush = (session: Session) => {
-    if (ctx.loop.active(session)) return
-    const due = [...notices.values()].filter(notice => notice.session.id === session.id && !notice.steer)
-    if (!due.length) return
-    for (const notice of due) notices.delete(notice.job)
-    ctx.loop
-      .run(
-        session,
-        due.map(notice => ({ type: 'text', text: notice.text })),
-      )
-      .catch(error => ctx.report(error))
-  }
-
-  const later = (session: Session) => {
-    const timer = setTimeout(() => {
-      timers.delete(timer)
-      flush(session)
-    })
-    timers.add(timer)
-  }
-
-  const forget = (steer: string) => {
-    for (const notice of notices.values()) if (notice.steer === steer) notices.delete(notice.job)
-  }
-
-  ctx.on(turnSteer, (_session, _content, id) => forget(id))
-  ctx.on(turnUnsteer, (_session, id) => forget(id))
 
   ctx.on(turnEnd, session => {
-    const own = [...notices.values()].filter(notice => notice.session.id === session.id)
-    for (const notice of own) delete notice.steer
-    if (own.length) later(session)
+    for (const [job, notice] of notices) if (notice.session.id === session.id) notices.delete(job)
   })
 
-  ctx.effect(() => () => {
-    timers.forEach(clearTimeout)
-    timers.clear()
-    notices.clear()
-  })
+  ctx.effect(() => () => notices.clear())
 
   return {
-    post(job: string, session: Session, text: string) {
-      const steer = session.kind === 'agent' ? ctx.get(steering)?.steer(session, text) : undefined
-      notices.set(job, { job, session, text, ...(steer && { steer }) })
-      if (!steer) flush(session)
+    post(job: Job, session: Session, text: string) {
+      const sent = ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId: `${job.id}@${job.ended}` }).catch(error => {
+        ctx.report(error)
+        return undefined
+      })
+      notices.set(job.id, { session, sent })
     },
     record(session: Session, text: string) {
       session.append('message', { role: 'user', content: [{ type: 'text', text }] })
@@ -67,9 +32,10 @@ export const createDelivery = (ctx: JobsContext) => {
       const notice = notices.get(job)
       if (!notice) return
       notices.delete(job)
-      if (notice.steer) ctx.get(steering)?.unsteer(notice.session, notice.steer)
+      void notice.sent.then(result => {
+        if (result && 'pending' in result) ctx.turns.withdraw(notice.session, result.pending)
+      })
     },
-    isNotice: (steer: string) => [...notices.values()].some(notice => notice.steer === steer),
   }
 }
 

@@ -1,7 +1,9 @@
 import { type Entry, errorResult, type Message, toolCalls, unrecorded } from '@sand/chats/contract'
 import type { TurnEnding } from '@sand/turns-contract/contract'
+import type { Announce } from '../announce'
 import type { TurnsContext } from '../context'
-import type { Stale, TurnStore } from '../store/turns'
+import type { Stores } from '../store'
+import type { Stale } from '../store/turns'
 
 const sweepEvery = 30_000
 
@@ -14,23 +16,27 @@ const unanswered = (entries: Entry[]) => {
   return [...calls.values()]
 }
 
-export const recoverTurns = (ctx: TurnsContext, store: TurnStore, owner: string) => {
+export const recoverTurns = (ctx: TurnsContext, stores: Stores, owner: string, announce: Announce) => {
   const recover = ({ id, session: chat, partial }: Stale) => {
     const session = ctx.sessions.open(chat)
     const turn = { turn: id }
     const lost = ctx.ledger.tx(() => {
-      if (!store.lose(id)) return false
+      if (!stores.turns.lose(id)) return false
       if (!session) return true
       if (partial) session.append('message', partial, turn)
       const entries = session.path().filter(entry => entry.turn === id)
       for (const call of unanswered(entries)) session.append('message', { role: 'user', content: [errorResult(call, unrecorded)] }, turn)
       session.append('turn-ending', { stopReason: 'lost' } satisfies TurnEnding, turn)
+      stores.pending.settle(chat, 'user')
       return true
     })
-    if (lost && session && session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
+    if (!lost || !session) return
+    if (session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
+    announce.turn(id)
+    announce.pending(session)
   }
 
-  const sweep = () => store.expired(owner).forEach(recover)
+  const sweep = () => stores.turns.expired(owner).forEach(recover)
 
   sweep()
   ctx.effect(() => {

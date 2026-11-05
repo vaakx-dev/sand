@@ -2,12 +2,11 @@ import { sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
 import { gitRepo, gitRunner } from '@sand/git/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
-import { loop, sessionOpened, toolResult, turnEnd } from '@sand/loop/contract'
-import { type Server, server, sessionCarry, userWrote } from '@sand/server/contract'
+import { type Server, server, sessionCarry, sessionOpened, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
-import { steering } from '@sand/steering/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { tools } from '@sand/tools/contract'
+import { toolResult, turnEnd, turns } from '@sand/turns-contract/contract'
 import { joinDisposers, keyedSerial } from '@sand/util'
 import { worktreePulls, worktrees } from '@sand/worktrees/contract'
 import { definePlugin } from 'drydock'
@@ -61,7 +60,7 @@ export default definePlugin({
     const discovery = createDiscovery({ github: ctx.github, repos: ctx.gitRepo, book, links, failures })
     const branches = createBranchFollow({ repos: ctx.gitRepo, sessions: ctx.sessions, discovery })
     const viewed = createViewed({ touched: branches.follow, ended: branches.unfollow })
-    const watch = createWake({ loop: () => ctx.get(loop), steering: () => ctx.get(steering), sub: () => ctx.get(subModel), github: ctx.github, report, failures, hold: () => ctx.busy() })
+    const watch = createWake({ turns: () => ctx.get(turns), sub: () => ctx.get(subModel), github: ctx.github, report, failures, hold: () => ctx.busy() })
     const sweep = createSweep({
       github: ctx.github,
       sessions: ctx.sessions,
@@ -80,7 +79,7 @@ export default definePlugin({
       links,
       setting,
       failures,
-      running: thread => isRunning(ctx.sessions, ctx.get(loop), thread),
+      running: thread => isRunning(ctx.sessions, ctx.get(turns), thread),
       hold: () => ctx.busy(),
     }
     const open: OpenDeps = {

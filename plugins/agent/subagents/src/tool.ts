@@ -1,8 +1,7 @@
 import { llm, type Effort } from '@sand/accounts/contract'
 import type { Job } from '@sand/jobs/contract'
-import type { TurnResult } from '@sand/turns-contract/contract'
-import { steering } from '@sand/steering/contract'
 import type { Tool } from '@sand/tools/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import { z } from 'zod'
 import { describeAgents } from './catalog'
 import type { AgentsContext } from './context'
@@ -33,9 +32,9 @@ const report = (result: TurnResult) => {
 
 export type OpenAgent = (request: AgentRequest) => Promise<OpenedAgent>
 
-const messenger = (ctx: AgentsContext, agent: OpenedAgent) => (message: string, job: Job) => {
+const messenger = (ctx: AgentsContext, agent: OpenedAgent) => async (message: string, job: Job) => {
   if (job.status === 'running') {
-    if (!ctx.get(steering)?.steer(agent.session, message)) throw new Error(`${job.id} can't take messages right now`)
+    await ctx.turns.send(agent.session, { prompt: message, mode: 'steer', origin: 'agent', clientRequestId: Bun.randomUUIDv7() })
     return `Sent to ${job.id}.`
   }
   ctx.backgroundJobs.resume(job, signal => agent.follow(message, signal).then(report))

@@ -1,7 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import { contextBuild } from '@sand/loop/contract'
+import { contextBuild } from '@sand/turns-contract/contract'
 import type { Context } from 'drydock'
 import { describeAgents } from './catalog'
 import type { Resolve } from './layers'

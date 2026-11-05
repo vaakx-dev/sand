@@ -33,5 +33,4 @@ export const sessionAppend = request('session.append', {
   place,
 })
 export const sessionCheckout = request('session.checkout', { input: session.extend({ entry: z.string().nullable() }), output: type<boolean>(), place })
-export const loopInterrupt = request('loop.interrupt', { input: session, output: type<boolean>(), place })
 export const uiFocus = request('ui.focus', { input: z.object({ session: z.string().optional() }), output: type<boolean>(), place })

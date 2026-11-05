@@ -1,6 +1,6 @@
 import { feedbackOnly, hasToolResult, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import { models } from '@sand/web-client/contract'
+import { models, type SendOptions } from '@sand/web-client/contract'
 import { compose, contentName } from '../attachments/content'
 import type { ComposerContext } from '../context'
 
@@ -24,14 +24,14 @@ export const interrupt = async (ctx: ComposerContext) => {
   if (current?.running) await ctx.turns.interrupt(current.id)
 }
 
-export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings) => {
+export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, mode?: SendOptions['mode']) => {
   if (!text && !attachments.length) return interrupt(ctx)
   const current = ctx.threads.current()
   const draft = ctx.threads.drafting()
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
   if (!thread) throw new Error('Pick a project for a new thread first')
   if (!current) await ctx.threads.select(thread.id, { replace: true })
-  await ctx.turns.send(thread.id, prompt(text, attachments), label(text, attachments), current ? undefined : settings)
+  await ctx.turns.send(thread.id, prompt(text, attachments), { label: label(text, attachments), settings: current ? undefined : settings, mode })
 }
 
 const asked = (message: Message) => message.role === 'user' && !hasToolResult(message) && !feedbackOnly(message)
@@ -43,5 +43,5 @@ export const retry = async (ctx: ComposerContext) => {
   if (!entry) return
   const content = (entry.data as Message).content as UserContent[]
   await ctx.threads.checkout(thread.id, entry.parent)
-  await ctx.turns.send(thread.id, content, label('', content.filter(block => block.type !== 'text')) || 'Retry')
+  await ctx.turns.send(thread.id, content, { label: label('', content.filter(block => block.type !== 'text')) || 'Retry' })
 }

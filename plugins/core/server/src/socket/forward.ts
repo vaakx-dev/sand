@@ -22,8 +22,7 @@ import {
   turnEndWire,
   turnStart,
   turnStartWire,
-} from '@sand/loop/contract'
-import { turnSteer, turnSteerWire } from '@sand/steering/contract'
+} from '@sand/turns-contract/contract'
 import { sessionHeadWire } from '../contract'
 import type { ServerContext } from '../context'
 import { sessionRef } from '../stream/wire'
@@ -47,7 +46,6 @@ export const forwardEvents = (ctx: ServerContext, send: Send, sees: Sees) => {
 
   ctx.on(turnStart, (session, prompt) => split(session, turnStartWire, [session, prompt], [session, { ...prompt, content: [] }]))
   ctx.on(turnEnd, (session, result) => split(session, turnEndWire, [session, result], [session, { ...result, text: '' }]))
-  ctx.on(turnSteer, (...args) => send(turnSteerWire, args))
   ctx.on(llmLimits, limits => send(llmLimitsWire, limits))
   ctx.on(sessionEntry, (session, entry) => {
     send(sessionEntryWire, [session, entry], watching(session))

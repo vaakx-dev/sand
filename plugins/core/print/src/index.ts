@@ -1,6 +1,6 @@
 import { sessions } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
-import { loop } from '@sand/loop/contract'
+import { turns } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { createPrinter } from './print/printer'
 import { readFlags } from './run/flags'
@@ -28,10 +28,10 @@ export default definePlugin({
     const start = async () => {
       const flags = readFlags(args)
       await ctx.settled()
-      const agent = ctx.get(loop)
+      const agent = ctx.get(turns)
       const store = ctx.get(sessions)
       if (!agent || !store) throw new Error('no plugin provides the agent loop and the chat store, so sand cannot answer')
-      return runPrompt(ctx, { loop: agent, sessions: store, printer, prompt, flags, signal })
+      return runPrompt(ctx, { turns: agent, sessions: store, printer, prompt, flags, signal })
     }
     start().then(exit, error => {
       printer.error(error)

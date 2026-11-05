@@ -1,13 +1,21 @@
 import { sessionEntryWire, sessionRemoveWire, sessionUpdateWire, type WireSession } from '@sand/chats/contract'
 import { contextChange } from '@sand/compaction/contract'
 import { artifactSavedWire } from '@sand/html/contract'
-import { toolProgressWire, toolResultWire, toolStartWire, turnEndWire, turnStartWire } from '@sand/loop/contract'
 import { applyLiveEvent, type EntryHead, liveSnapshot, llmEventWire, sessionHeadWire } from '@sand/server/contract'
-import { queueChange, turnSteerWire } from '@sand/steering/contract'
+import {
+  toolProgressWire,
+  toolResultWire,
+  toolStartWire,
+  turnChangeWire,
+  turnEndWire,
+  turnPendingWire,
+  turnStartWire,
+} from '@sand/turns-contract/contract'
 import type { Wire, WireListen } from '@sand/devices-contract'
 import { joinDisposers } from '@sand/util'
 import type { Thread } from '../contract'
 import { stale } from './hello'
+import { listenLegacy } from './legacy'
 import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
@@ -19,12 +27,19 @@ const advance = (thread: Thread, entry: EntryHead) => {
   if (entry.type === 'message') thread.live = []
 }
 
+const stop = (thread: Thread) => {
+  thread.running = false
+  clearTurn(thread)
+  thread.step = undefined
+}
+
 export const listenThreads = (wire: Wire, store: Store, load: (id: string) => void) => {
   const thread = ({ $session }: WireSession, device: string) => store.upsert($session, device)
   const known = (id: string) => store.threads.get(id)
 
   return joinDisposers(
-    wire.on(queueChange, ([id, state]) => store.queue(id, state), everyPc),
+    listenLegacy(wire, store),
+    wire.on(turnPendingWire, ([id, pending]) => store.pending(id, pending), everyPc),
     wire.on(contextChange, ([id, usage]) => store.context(id, usage), everyPc),
     wire.on(sessionUpdateWire, (session, device) => store.changed(thread(session, device).id), everyPc),
     wire.on(sessionRemoveWire, id => store.remove(id), everyPc),
@@ -67,19 +82,22 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
       turnEndWire,
       ([session, result], device) => {
         const found = thread(session, device)
-        found.running = false
-        clearTurn(found)
-        found.step = undefined
+        stop(found)
         found.ended = result
         store.changed(found.id)
       },
       everyPc,
     ),
     wire.on(
-      turnSteerWire,
-      ([session, , id], device) => {
-        const found = thread(session, device)
-        found.queued = found.queued.filter(steer => steer.id !== id)
+      turnChangeWire,
+      ([session, info]) => {
+        const found = known(session.$session.id)
+        if (!found) return
+        if (info.ended) stop(found)
+        else {
+          found.running = true
+          found.started = info.started
+        }
         store.changed(found.id)
       },
       everyPc,
