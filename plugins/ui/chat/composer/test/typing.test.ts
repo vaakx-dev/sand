@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, expect, jest, test } from 'bun:test'
+import { createApp } from 'drydock'
+import { afterTyping, typing as typingService } from '../src/contract'
 import { createTyping } from '../src/typing'
 
 beforeEach(() => {
@@ -37,4 +39,28 @@ test('a cancelled prompt never shows, and stopping the composer shows what it he
   expect(shown).toEqual(['held'])
   jest.advanceTimersByTime(2000)
   expect(shown).toEqual(['held'])
+})
+
+test('a prompt shows at once without a composer, and once while composers come and go', async () => {
+  const ctx = createApp()
+  const shown: string[] = []
+  afterTyping(ctx, () => shown.push('alone'))
+  expect(shown).toEqual(['alone'])
+
+  const first = createTyping()
+  ctx.provide(typingService, first)
+  first.typed()
+  afterTyping(ctx, () => shown.push('held'))
+  const second = createTyping()
+  second.typed()
+  const leave = ctx.provide(typingService, second)
+  jest.advanceTimersByTime(1499)
+  expect(shown).toEqual(['alone'])
+  jest.advanceTimersByTime(1)
+  expect(shown).toEqual(['alone', 'held'])
+
+  leave()
+  first.stop()
+  expect(shown).toEqual(['alone', 'held'])
+  await ctx.dispose()
 })

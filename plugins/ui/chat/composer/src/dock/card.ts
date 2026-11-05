@@ -1,5 +1,5 @@
 import { Prec } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { BREAKPOINT, div, input, media, span, type Sig } from '@vaakx-dev/vrui'
@@ -50,6 +50,8 @@ const placeholder = (model: Model, wide: () => boolean) => () => {
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
 
+const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserEvent('input') || tr.isUserEvent('delete'))
+
 export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
@@ -65,13 +67,11 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
     if (model.text.get() || modified(event)) return false
     const text = lastPrompt(ctx)
     if (!text) return false
-    model.text.set(text)
-    editor.focusEnd()
+    editor.replace(text)
     return true
   }
 
   const keydown = (event: KeyboardEvent) => {
-    typed()
     if (event.isComposing) return false
     if (event.key === 'Escape') return escape()
     if (event.key === 'ArrowUp') return recall(event)
@@ -90,7 +90,15 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
   const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
   const editor = createEditor(ctx.kit, model.text, {
     placeholder: placeholder(model, () => wide.get()),
-    extensions: [completion.extension, chipWidgets(model.records, drawChip(ctx)), chipClipboard(model.records), Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles }))],
+    extensions: [
+      completion.extension,
+      chipWidgets(model.records, drawChip(ctx)),
+      chipClipboard(model.records),
+      Prec.high(EditorView.domEventHandlers({ keydown, paste, drop: hasFiles })),
+      EditorView.updateListener.of(update => {
+        if (edited(update)) typed()
+      }),
+    ],
   })
 
   const picker = input({
