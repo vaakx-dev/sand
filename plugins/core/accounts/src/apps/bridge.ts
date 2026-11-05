@@ -1,132 +1,218 @@
-import type { AppPlan, AppSession, AppSetup, LLMEvent, LLMRequest } from '../contract'
-import { isUserContent, type Message, type ToolResultBlock, unrecorded, type UserContent } from '@sand/chats/contract'
+import {
+  type AppPlan,
+  type AppSession,
+  type AppSetup,
+  type Delivery,
+  type LLMEvent,
+  type LLMRequest,
+  type NativeRef,
+  ThreadLost,
+  type ThreadRef,
+  type ToolSpec,
+} from '../contract'
+import { isUserContent, type Message, type UserContent } from '@sand/chats/contract'
+import { errorMessage, untilAborted } from '@sand/util'
+import { stat } from 'node:fs/promises'
 import { loadedTools } from '../http/deferred'
-import { markOf, transcript } from './history'
+import { deliver } from './deliver'
 import { createSignals, type Signals } from './signals'
 import { readStep } from './step'
 
+type Request = LLMRequest & { model: string }
+
 interface Live {
+  thread: string
   session: AppSession
   signals: Signals
   setup: string
-  marks: string[]
+  tools: string
+  base: string | null
+  sent: Message[]
+  done: boolean
   waiting: string[]
+  handoff?: { id: string; delivered: Delivery }
+  calming?: Promise<void>
   timer?: ReturnType<typeof setTimeout>
+}
+
+interface Opened {
+  entry: Live
+  fresh: boolean
 }
 
 const idleFor = 15 * 60_000
 const toolsRunFor = 90 * 60_000
-const resume = 'Continue from where the conversation above stops.'
+const interruptFor = 5_000
 
-const setupPrint = ({ model, effort, system, tools }: AppSetup) =>
-  JSON.stringify([model, effort, system, tools.map(({ name, description, inputSchema }) => [name, description, inputSchema])])
+const toolsPrint = (tools: ToolSpec[]) => Bun.hash(JSON.stringify(tools.map(({ name, description, inputSchema }) => [name, description, inputSchema]))).toString(36)
 
-const extends1 = (before: string[], after: string[]) => after.length === before.length + 1 && before.every((mark, index) => after[index] === mark)
+const startsWith = (messages: Message[], prefix: Message[]) => prefix.every((message, at) => JSON.stringify(messages[at]) === JSON.stringify(message))
 
-const userContent = (message: Message | undefined) => (message?.role === 'user' ? message.content.filter(isUserContent) : [])
+const isFolder = (path: string) =>
+  stat(path).then(
+    found => found.isDirectory(),
+    () => false,
+  )
 
-const unanswered = (callId: string): ToolResultBlock => ({ type: 'tool_result', callId, content: [{ type: 'text', text: unrecorded }], isError: true })
-
-const answer = (session: AppSession, message: Message, ids: string[]) => {
-  const results = new Map(message.content.flatMap(block => (block.type === 'tool_result' ? [[block.callId, block] as const] : [])))
-  const answers = ids.map(id => results.get(id) ?? unanswered(id))
-  const extra = userContent(message)
-  const last = answers.at(-1)
-  if (extra.length && session.steer) session.steer(extra)
-  else if (last && extra.length) answers[answers.length - 1] = { ...last, content: [...last.content, ...extra] }
-  answers.forEach(result => session.answer(result.callId, result))
-}
-
-const fresh = (messages: Message[]) => {
-  const last = messages.at(-1)
-  const plain = last?.role === 'user' && !last.content.some(block => block.type === 'tool_result')
-  if (plain) return { history: transcript(messages.slice(0, -1)), content: userContent(last) }
-  const content: UserContent[] = [{ type: 'text', text: resume }]
-  return { history: transcript(messages), content }
-}
+const callsOf = (message: Message) => message.content.flatMap(block => (block.type === 'tool_call' ? [block.id] : []))
 
 export type Bridge = ReturnType<typeof createBridge>
 
-export const createBridge = (plan: AppPlan, cwd: string) => {
+export const createBridge = (plan: AppPlan, home: string) => {
   const live = new Map<string, Live>()
+  const effortFixed = !plan.caps.reconfigure.includes('effort')
 
-  const drop = (key: string, entry: Live) => {
+  const setupPrint = ({ model, effort, system, tools }: AppSetup) => JSON.stringify([model, system, toolsPrint(tools), effortFixed ? effort : undefined])
+
+  const forget = (key: string, entry: Live) => {
     if (live.get(key) === entry) live.delete(key)
     clearTimeout(entry.timer)
+  }
+
+  const drop = (key: string, entry: Live) => {
+    forget(key, entry)
     entry.signals.close()
     entry.session.close()
   }
 
-  const open = async (setup: AppSetup): Promise<Live> => {
-    const signals = createSignals()
-    const session = await plan.open(setup, signals.output)
-    return { session, signals, setup: setupPrint(setup), marks: [], waiting: [] }
+  const rest = (key: string, entry: Live) => {
+    entry.timer = setTimeout(() => drop(key, entry), entry.waiting.length ? toolsRunFor : idleFor)
+    entry.timer.unref?.()
   }
 
-  const carryOn = (entry: Live, marks: string[], messages: Message[], print: string) => {
-    if (entry.setup !== print || !extends1(entry.marks, marks)) return false
-    const last = messages.at(-1)
-    if (!last || last.role !== 'user') return false
-    if (entry.waiting.length) {
-      answer(entry.session, last, entry.waiting)
-      return true
-    }
-    if (last.content.some(block => block.type === 'tool_result')) return false
-    entry.session.send(userContent(last))
-    return true
+  const calm = async (key: string, entry: Live) => {
+    const acked = await untilAborted(entry.session.interrupt(), AbortSignal.timeout(interruptFor)).then(
+      () => true,
+      () => false,
+    )
+    entry.calming = undefined
+    if (!acked) return drop(key, entry)
+    entry.signals.clear()
+    rest(key, entry)
   }
 
-  const begin = async (key: string, setup: AppSetup, messages: Message[]) => {
-    const { history, content } = fresh(messages)
-    const entry = await open({ ...setup, history })
+  const halt = (key: string, entry: Live, signal?: AbortSignal) => {
+    if (signal?.aborted && live.get(key) === entry) entry.calming = calm(key, entry)
+    else drop(key, entry)
+  }
+
+  const setupOf = async (request: Request, thread?: ThreadRef): Promise<AppSetup> => ({
+    model: request.model,
+    ...(request.effort && { effort: request.effort }),
+    system: request.system,
+    tools: thread ? loadedTools(request.tools) : [],
+    cwd: thread && (await isFolder(thread.cwd)) ? thread.cwd : home,
+    persist: !!thread,
+    ...(request.sessionKind && { sessionKind: request.sessionKind }),
+  })
+
+  const open = async (key: string, thread: string, setup: AppSetup, tools: string, resume?: string): Promise<Live> => {
+    let entry: Live | undefined
+    const signals = createSignals(() => entry && forget(key, entry))
+    const session = await plan.open(setup, signals.output, resume).catch((error: unknown) => {
+      signals.close()
+      throw resume ? new ThreadLost(`${plan.app} couldn't reopen this thread: ${errorMessage(error)}`) : error
+    })
+    entry = { thread, session, signals, setup: setupPrint(setup), tools, base: null, sent: [], done: true, waiting: [] }
     live.set(key, entry)
-    entry.session.send(content)
     return entry
   }
 
-  const entryFor = async (key: string, setup: AppSetup, messages: Message[], marks: string[]) => {
+  const held = (key: string, thread: ThreadRef, delta: Message[]) => {
     const found = live.get(key)
-    if (found) clearTimeout(found.timer)
-    if (found && carryOn(found, marks, messages, setupPrint(setup))) return found
-    if (found) drop(key, found)
-    return begin(key, setup, messages)
+    if (!found) return undefined
+    clearTimeout(found.timer)
+    if (found.done && thread.seenHead !== found.base) return { found, messages: delta }
+    if (!found.done && thread.seenHead === found.base && startsWith(delta, found.sent)) return { found, messages: delta.slice(found.sent.length) }
+    drop(key, found)
+    throw new ThreadLost(`${plan.app} is out of step with this thread`)
   }
 
-  async function* stream(request: LLMRequest & { model: string }, signal?: AbortSignal): AsyncIterable<LLMEvent> {
-    const key = request.session ?? `once:${crypto.randomUUID()}`
-    const setup: AppSetup = {
-      model: request.model,
-      ...(request.effort && { effort: request.effort }),
-      system: request.system,
-      tools: request.session ? loadedTools(request.tools) : [],
-      history: '',
-      cwd,
-      ...(request.sessionKind && { sessionKind: request.sessionKind }),
-    }
-    const marks = request.messages.map(markOf)
-    const entry = await entryFor(key, setup, request.messages, marks)
+  const ready = async (key: string, found: Live | undefined, setup: AppSetup, thread: ThreadRef): Promise<Opened> => {
+    const tools = toolsPrint(setup.tools)
+    const started = found?.tools ?? thread.native?.tools ?? tools
+    if (plan.fixedTools && started !== tools) throw new ThreadLost(`${plan.app} can't change the tools of a running thread`)
+    if (found?.setup === setupPrint(setup)) return { entry: found, fresh: false }
+    if (found) drop(key, found)
+    const resume = found?.session.id ?? thread.native?.id
+    if (resume && plan.caps.resume) return { entry: await open(key, thread.id, setup, started, resume), fresh: false }
+    if (!resume && thread.fresh) return { entry: await open(key, thread.id, setup, tools), fresh: true }
+    throw new ThreadLost(`${plan.app} can't continue this thread`)
+  }
 
-    const settle = (reply: Message, paused: boolean) => {
-      if (!request.session) return drop(key, entry)
-      entry.waiting = paused ? reply.content.flatMap(block => (block.type === 'tool_call' ? [block.id] : [])) : []
-      entry.marks = [...marks, markOf(reply)]
-      entry.timer = setTimeout(() => drop(key, entry), paused ? toolsRunFor : idleFor)
-      entry.timer.unref?.()
-    }
+  const handOver = async (entry: Live, request: Request): Promise<{ lead: UserContent[]; delivered?: Delivery }> => {
+    const { handoff } = request
+    if (!handoff) return { lead: [] }
+    if (entry.handoff?.id === handoff.id) return { lead: [], delivered: entry.handoff.delivered }
+    const injected = await (entry.session.inject?.(handoff) ?? Promise.resolve(false)).catch((error: unknown) => {
+      throw new ThreadLost(`${plan.app} couldn't take the handoff: ${errorMessage(error)}`)
+    })
+    const delivered: Delivery = injected ? 'injected' : 'inline'
+    entry.handoff = { id: handoff.id, delivered }
+    return { lead: injected ? [] : [{ type: 'text', text: handoff.text }], delivered }
+  }
 
+  const nativeOf = (entry: Live, thread: ThreadRef): NativeRef | undefined =>
+    entry.session.id ? { id: entry.session.id, cwd: thread.cwd, ...(plan.fixedTools && { tools: entry.tools }) } : undefined
+
+  const read = async function* (key: string, entry: Live, model: string, signal?: AbortSignal) {
+    let ended = false
     try {
-      for await (const event of readStep(() => entry.signals.next(signal), request.model)) {
-        if (event.type === 'done') settle(event.message, event.stopReason === 'tool_use')
+      for await (const event of readStep(() => entry.signals.next(signal), model)) {
+        ended = event.type === 'done'
         yield event
       }
-    } catch (error) {
-      if (signal?.aborted) entry.session.interrupt()
-      drop(key, entry)
-      throw error
+    } finally {
+      if (!ended) halt(key, entry, signal)
     }
   }
 
-  const close = () => [...live].forEach(([key, entry]) => drop(key, entry))
+  async function* step(request: Request, thread: ThreadRef, caller: string, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    const key = `${caller}:${thread.id}:${thread.generation}`
+    await live.get(key)?.calming
+    const delta = request.delta ?? []
+    const { found, messages } = held(key, thread, delta) ?? { messages: delta }
+    const { entry, fresh } = await ready(key, found, await setupOf(request, thread), thread)
+    const { lead, delivered } = await handOver(entry, request)
+    const waiting = entry.waiting
+    entry.sent = entry.done ? messages : [...entry.sent, ...messages]
+    entry.base = thread.seenHead
+    entry.done = false
+    entry.waiting = []
+    deliver(entry.session, { messages, waiting, lead, replay: fresh, ...(request.effort && { effort: request.effort }) })
 
-  return { stream, close }
+    for await (const event of read(key, entry, request.model, signal)) {
+      if (event.type !== 'done') {
+        yield event
+        continue
+      }
+      entry.done = true
+      entry.waiting = event.stopReason === 'tool_use' ? callsOf(event.message) : []
+      rest(key, entry)
+      const native = nativeOf(entry, thread)
+      yield { ...event, ...(native && { native }), ...(delivered && { delivered }) }
+    }
+  }
+
+  async function* once(request: Request, signal?: AbortSignal): AsyncIterable<LLMEvent> {
+    const [message, ...more] = request.messages
+    if (!message || message.role !== 'user' || more.length) throw new Error(`${plan.app} takes one message outside a chat`)
+    const signals = createSignals()
+    const session = await plan.open(await setupOf(request), signals.output)
+    try {
+      session.send(message.content.filter(isUserContent), request.effort)
+      yield* readStep(() => signals.next(signal), request.model)
+    } finally {
+      signals.close()
+      session.close()
+    }
+  }
+
+  return {
+    stream: (request: Request, signal?: AbortSignal, caller = 'local') => (request.thread ? step(request, request.thread, caller, signal) : once(request, signal)),
+    release(thread: string) {
+      for (const [key, entry] of live) if (entry.thread === thread) drop(key, entry)
+    },
+    close: () => [...live].forEach(([key, entry]) => drop(key, entry)),
+  }
 }

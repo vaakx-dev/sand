@@ -61,11 +61,19 @@ const trim = (seen: Segment[], path: Path, lookup: Lookup) => {
   return kept
 }
 
+const ownReset = (thread: string, path: Path, from: number) => path.entries.findLastIndex((entry, at) => at >= from && resetOf(path, entry)?.thread === thread)
+
+export const compactedSince = (thread: string, seen: Segment[], path: Path) => {
+  const head = headOf(seen)
+  const at = head === null ? -1 : path.index.get(head)
+  return at !== undefined && ownReset(thread, path, at + 1) >= 0
+}
+
 export const threadBasis = (thread: string, seen: Segment[], path: Path, lookup: Lookup): Basis => {
   const segments = onPath(seen, path) ? seen : trim(seen, path, lookup)
   const head = headOf(segments)
   const from = head === null ? 0 : path.index.get(head)! + 1
-  const own = path.entries.findLastIndex((entry, at) => at >= from && resetOf(path, entry)?.thread === thread)
+  const own = ownReset(thread, path, from)
   return own < 0 ? { segments, from } : summaryBasis(path, own)
 }
 

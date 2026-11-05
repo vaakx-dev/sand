@@ -5,6 +5,22 @@ export type Json = Record<string, unknown>
 
 export const fieldsOf = (value: unknown): Json => (isRecord(value) ? value : {})
 
+export class RpcError extends Error {
+  override name = 'RpcError'
+
+  constructor(
+    message: string,
+    readonly code?: number,
+  ) {
+    super(message)
+  }
+}
+
+const rpcError = (raw: unknown) => {
+  const { message, code } = fieldsOf(raw)
+  return new RpcError(String(message ?? 'Codex refused the request'), typeof code === 'number' ? code : undefined)
+}
+
 interface RpcOptions {
   binary: string
   args: string[]
@@ -35,7 +51,7 @@ export const startRpc = ({ binary, args, onNotify, onRequest, onExit }: RpcOptio
     const entry = waiting.get(id)
     if (!entry) return
     waiting.delete(id)
-    if (message.error) entry.reject(new Error(String(fieldsOf(message.error).message ?? 'Codex refused the request')))
+    if (message.error) entry.reject(rpcError(message.error))
     else entry.resolve(fieldsOf(message.result))
   }
 

@@ -20,7 +20,7 @@ import { currentPath, madeBy } from './current'
 import { buildRequest } from './request'
 import type { HandoffStore } from './store/handoffs'
 import type { ThreadStore } from './store/threads'
-import { extended, onPath } from './view/basis'
+import { compactedSince, extended, onPath } from './view/basis'
 import { historyBefore, type Path } from './view/path'
 
 export interface Stores {
@@ -47,6 +47,11 @@ const promptOf = (path: Path, id: string) => (path.entries[path.index.get(id) ??
 export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number): ProviderThreads => {
   const systemOf = (session: Session, model: string) => ctx.context.system(session, model)
   const capsOf = (model: string) => ctx.llm.caps?.(model) ?? statelessCaps()
+
+  const retire = (thread: string) => {
+    stores.threads.retire(thread)
+    ctx.llm.release?.(thread)
+  }
 
   const create = async (session: Session, selection: Selection) =>
     stores.threads.create({ session: session.id, selection, system: await systemOf(session, selection.model), seen: [], used: Date.now() })
@@ -84,12 +89,13 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     const { selection } = turn
     const history = historyBefore(path, turn.prompt)
     const open = stores.threads.open(session.id)
-    const threads = open.length || !history ? open : [await adopt(session, path, selection)]
+    const threads = open.length || !history || stores.threads.known(session.id) ? open : [await adopt(session, path, selection)]
     const target = threads.find(thread => same(thread, selection))
     const candidate = target && {
       thread: target,
       last: target === threads[0],
       onPath: onPath(target.seen, path),
+      compacted: compactedSince(target.id, target.seen, path),
       fits: fits(roomFor(target, target.context, step.current)),
       now: Date.now(),
     }
@@ -98,7 +104,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     if (transition.type === 'reject') throw new Error(transition.reason)
     if (transition.type !== 'handoff') return { thread: target ?? (await create(session, selection)), transition }
     if (transition.strategy === 'delta' && target) return { thread: await handOver(step, target, 'delta'), transition }
-    if (target) stores.threads.retire(target.id)
+    if (target) retire(target.id)
     return { thread: await handOver(step, await create(session, selection), 'full'), transition }
   }
 
@@ -117,10 +123,14 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
       if (plan.handoff) stores.handoffs.deliver(plan.handoff, delivered ?? 'inline')
     },
     lost(plan, error) {
-      if (!(error instanceof ThreadLost)) return false
-      if (capsOf(plan.thread.model).native) stores.threads.retire(plan.thread.id)
+      if (!(error instanceof ThreadLost)) {
+        stores.threads.doubt(plan.thread.id)
+        return false
+      }
+      if (capsOf(plan.thread.model).native) retire(plan.thread.id)
       return true
     },
+    abandon: thread => stores.threads.doubt(thread),
     active: session => stores.threads.open(session.id)[0],
     async view(session) {
       const thread = stores.threads.open(session.id)[0]

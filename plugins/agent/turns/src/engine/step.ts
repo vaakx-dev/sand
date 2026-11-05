@@ -26,8 +26,11 @@ export const createHooks = (ctx: TurnsContext, stores: Stores, announce: Announc
 
   const answer = (results: ToolResultBlock[]) => results.forEach(result => append({ role: 'user', content: [result] }))
 
-  const retries = async (plan: StepPlan, error: unknown) =>
-    !signal.aborted && (ctx.providerThreads.lost(plan, error) || Boolean(await ctx.bail(contextOverflow, session, error, signal)))
+  const retries = async (plan: StepPlan, error: unknown, again: boolean) => {
+    if (signal.aborted) return false
+    const lost = ctx.providerThreads.lost(plan, error)
+    return again && (lost || Boolean(await ctx.bail(contextOverflow, session, error, signal)))
+  }
 
   const send = async (again = true): Promise<Sent> => {
     const plan = await ctx.providerThreads.prepare(session, info, signal)
@@ -35,7 +38,7 @@ export const createHooks = (ctx: TurnsContext, stores: Stores, announce: Announc
     try {
       return { plan, done: await streamStep(ctx, plan.request, run) }
     } catch (error) {
-      if (!again || !(await retries(plan, error))) throw error
+      if (!(await retries(plan, error, again))) throw error
       return send(false)
     }
   }

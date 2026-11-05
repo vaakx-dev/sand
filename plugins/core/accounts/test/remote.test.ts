@@ -88,6 +88,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
     allLimits: () => [],
     price: () => undefined,
     refreshLimits: async () => undefined,
+    release() {},
     async *stream(request, signal) {
       asked.push(request)
       const next = replies.shift() ?? new Error('no reply left')

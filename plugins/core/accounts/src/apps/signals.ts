@@ -1,5 +1,5 @@
 import type { StopReason } from '@sand/chats/contract'
-import type { AppCall, AppOutput, Usage } from '../contract'
+import { type AppCall, type AppOutput, ThreadLost, type Usage } from '../contract'
 import { untilAborted } from '@sand/util'
 
 export type Signal =
@@ -13,7 +13,7 @@ export type Signal =
 
 export type Signals = ReturnType<typeof createSignals>
 
-export const createSignals = () => {
+export const createSignals = (onExit: () => void = () => {}) => {
   const queued: Signal[] = []
   let waiting: ((signal: Signal) => void) | undefined
   let closed = false
@@ -34,6 +34,10 @@ export const createSignals = () => {
     pause: () => push({ type: 'pause' }),
     finish: (stopReason = 'end_turn') => push({ type: 'finish', stopReason }),
     fail: error => push({ type: 'fail', error }),
+    exit(error) {
+      onExit()
+      push({ type: 'fail', error: new ThreadLost(error.message) })
+    },
   }
 
   const next = (signal?: AbortSignal): Promise<Signal> => {
@@ -43,11 +47,15 @@ export const createSignals = () => {
     return signal ? untilAborted(arrival, signal) : arrival
   }
 
-  const close = () => {
-    closed = true
+  const clear = () => {
     queued.length = 0
     waiting = undefined
   }
 
-  return { output, next, close }
+  const close = () => {
+    closed = true
+    clear()
+  }
+
+  return { output, next, clear, close }
 }

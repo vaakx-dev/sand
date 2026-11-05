@@ -2,7 +2,7 @@ import type { AppStatus, Effort, PlanModel, SignInFlow } from '@sand/accounts/co
 import { capital } from '@sand/util'
 import { findCodex } from '../server/binary'
 import { fieldsOf, type Json } from '../server/rpc'
-import type { CodexServer } from '../server/server'
+import type { Pool } from '../server/pool'
 import { limitsOf } from './limits'
 
 const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
@@ -30,37 +30,37 @@ const modelOf = (entry: Json): PlanModel[] => {
   ]
 }
 
-export const codexAccount = (server: CodexServer) => ({
+export const codexAccount = (pool: Pool) => ({
   async status(): Promise<AppStatus> {
     if (!(await findCodex())) return { installed: false, signedIn: false }
-    const account = fieldsOf((await server.request('account/read', {})).account)
+    const account = fieldsOf((await pool.request('account/read', {})).account)
     if (!account.type) return { installed: true, signedIn: false }
     const plan = planOf(account)
     return { installed: true, signedIn: true, ...(typeof account.email === 'string' && { email: account.email }), ...(plan && { plan }) }
   },
 
   async signIn(signal: AbortSignal): Promise<SignInFlow<void>> {
-    const started = await server.request('account/login/start', { type: 'chatgptDeviceCode' })
+    const started = await pool.request('account/login/start', { type: 'chatgptDeviceCode' })
     const loginId = String(started.loginId)
     const done = Promise.withResolvers<void>()
-    const stop = server.listen((method, params) => {
+    const stop = pool.listen((method, params) => {
       if (method !== 'account/login/completed' || params.loginId !== loginId) return
       if (params.success) done.resolve()
       else done.reject(new Error(typeof params.error === 'string' ? params.error : 'Codex sign-in failed'))
     })
-    signal.addEventListener('abort', () => void server.request('account/login/cancel', { loginId }).catch(() => {}), { once: true })
+    signal.addEventListener('abort', () => void pool.request('account/login/cancel', { loginId }).catch(() => {}), { once: true })
     const wait = () => done.promise.finally(stop)
     return { kind: 'device', url: String(started.verificationUrl), code: String(started.userCode), expires: Date.now() + deviceTimeout, wait }
   },
 
   signOut: async () => {
-    await server.request('account/logout', {})
+    await pool.request('account/logout', {})
   },
 
   async models() {
-    const { data } = await server.request('model/list', { includeHidden: false })
+    const { data } = await pool.request('model/list', { includeHidden: false })
     return (Array.isArray(data) ? data : []).map(fieldsOf).flatMap(modelOf)
   },
 
-  usage: async () => limitsOf((await server.request('account/rateLimits/read', {})).rateLimits),
+  usage: async () => limitsOf((await pool.request('account/rateLimits/read', {})).rateLimits),
 })

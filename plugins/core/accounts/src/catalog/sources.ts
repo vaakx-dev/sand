@@ -16,7 +16,7 @@ export const localMeta = (accounts: Accounts, id: string): SourceMeta | undefine
     label: accounts.label(id),
     provider: accounts.provider(id),
     billing: billingOf(method),
-    caps: capsOf(method, api),
+    caps: accounts.appCaps(id) ?? capsOf(method, api),
     ...(api && { api }),
     ...(plan && { plan }),
   }

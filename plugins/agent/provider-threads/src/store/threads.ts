@@ -60,15 +60,18 @@ const insertSql = `insert into provider_threads (id, session, source, model, gen
 
 export const createThreadStore = (db: Database) => {
   const insert = db.query<Row, Record<string, string | number | null>>(insertSql)
+  const any = db.query<{ id: string }, { session: string }>('select id from provider_threads where session = $session limit 1')
   const open = db.query<Row, { session: string }>("select * from provider_threads where session = $session and status != 'retired' order by used desc")
   const activated = db.query("update provider_threads set status = 'active', used = $used, effort = $effort, speed = $speed where id = $id")
   const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
   const saw = db.query('update provider_threads set seen = $seen where id = $id')
   const retired = db.query("update provider_threads set status = 'retired' where id = $id")
+  const doubted = db.query("update provider_threads set status = 'uncertain' where id = $id and native is not null and status != 'retired'")
   const removed = db.query('delete from provider_threads where session = $session')
 
   return {
     open: (session: string) => open.all({ session }).map(infoOf),
+    known: (session: string) => !!any.get({ session }),
     create({ session, selection, system, seen, context = 0, used }: NewThread) {
       const row = insert.get({
         id: Bun.randomUUIDv7(),
@@ -90,6 +93,7 @@ export const createThreadStore = (db: Database) => {
       void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
     see: (id: string, seen: Segment[]) => void saw.run({ id, seen: JSON.stringify(seen) }),
     retire: (id: string) => void retired.run({ id }),
+    doubt: (id: string) => void doubted.run({ id }),
     remove: (session: string) => void removed.run({ session }),
   }
 }
