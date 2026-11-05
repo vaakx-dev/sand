@@ -6,7 +6,7 @@ import { type Daemon, daemon } from '@sand/host-daemon/contract'
 import { failure } from '@sand/orchestrator/contract'
 import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { threadsServer, type Use } from './server'
+import { threadsServer, type Use } from './threads'
 
 const linked =
   (found: Daemon): Use =>
