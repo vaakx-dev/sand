@@ -61,15 +61,22 @@ const target = (from: string, specifier: string) => {
   return workspace && file ? resolve(workspace.dir, file) : undefined
 }
 
+const reach = (specifier: string, from: Workspace, to: Workspace) => {
+  if (from === to) return
+  if (specifier.startsWith('.')) return 'from another package by path'
+  if (to.plugin && !specifier.endsWith('/contract')) return "past the plugin's contract"
+}
+
 const edges = new Map<string, string[]>()
-const byPath: string[] = []
+const imports: string[] = []
 for (const [file, workspace] of owners) {
   const targets: string[] = []
   for (const specifier of specifiers(await Bun.file(file).text())) {
     const found = target(file, specifier)
     if (!found || !owners.has(found)) continue
     targets.push(found)
-    if (specifier.startsWith('.') && owners.get(found) !== workspace) byPath.push(`${relative(root, file)} imports ${specifier} from another package by path`)
+    const wrong = reach(specifier, workspace, owners.get(found)!)
+    if (wrong) imports.push(`${relative(root, file)} imports ${specifier} ${wrong}`)
   }
   edges.set(file, targets)
 }
@@ -84,8 +91,8 @@ const crossing = (group: string[]) =>
 const exported = (workspace: Workspace) =>
   workspace.plugin
     ? Object.keys(workspace.exports)
-        .filter(key => !key.endsWith('/contract'))
-        .map(key => `${workspace.name} exports ${key}; a plugin exports only its contract`)
+        .filter(key => key !== '.' && !key.endsWith('/contract'))
+        .map(key => `${workspace.name} exports ${key}; a plugin exports only its entry and its contract`)
     : []
 
 const unused = (workspace: Workspace) => {
@@ -98,7 +105,7 @@ const cycles = stronglyConnected(edges)
   .filter(lines => lines.length)
   .map(lines => `import cycle across packages:\n${lines.join('\n')}`)
 
-const problems = [...byPath, ...workspaces.flatMap(workspace => [...exported(workspace), ...unused(workspace)]), ...cycles]
+const problems = [...imports, ...workspaces.flatMap(workspace => [...exported(workspace), ...unused(workspace)]), ...cycles]
 if (problems.length) {
   console.error(problems.join('\n'))
   process.exit(1)

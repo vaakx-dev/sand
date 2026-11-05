@@ -4,6 +4,7 @@
   "description": "Reads sand.toml and loads every plugin that declares an entry for the current place, from the built-in plugins and ~/.sand/plugins",
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./contract": "./src/contract.ts"
   },
   "sand": {
