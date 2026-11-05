@@ -1,12 +1,14 @@
 import type { Session } from '@sand/chats/contract'
-import { modelSettings } from '@sand/model/contract'
 import { paths } from '@sand/paths/contract'
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
+import { join } from 'node:path'
 import { z } from 'zod'
-import { context, instructions, promptSections } from './contract'
+import { context, promptBase, promptSections } from './contract'
 import { createInstructions } from './instructions'
 import { compose } from './system'
+
+const systemFile = Bun.file(join(import.meta.dir, 'system.md')).text()
 
 export default definePlugin({
   name: 'prompt',
@@ -14,20 +16,13 @@ export default definePlugin({
   config: z.object({ instructions: z.string().optional() }),
   apply(ctx, config) {
     const written = createInstructions(ctx.tools, ctx.paths, config.instructions)
-    const systemPrompt = async (session: Session) => {
-      const stored = session.path().find(entry => entry.type === 'system')
-      if (stored) return String(stored.data)
+    const base = async (session: Session) => {
       const sections = await ctx.waterfall(promptSections, [], session)
-      const system = await compose(written, session, sections, ctx.get(modelSettings)?.effective(session).model)
-      session.append('system', system)
-      return system
+      return ctx.waterfall(promptBase, [(await systemFile).trimEnd(), ...sections], session)
     }
-    ctx.provide(instructions, written)
     ctx.provide(context, {
-      build: async session => {
-        const messages = session.messages()
-        return { system: await systemPrompt(session), messages, tools: ctx.tools.specs(messages, session) }
-      },
+      system: async (session, model) => compose(written, session, await base(session), model),
+      tools: (session, messages) => ctx.tools.specs(messages, session),
     })
   },
 })

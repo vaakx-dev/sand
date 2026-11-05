@@ -7,6 +7,7 @@ import { createMeta } from './meta'
 import { group, modelsTool } from './models'
 import { restrictContext } from './restrict'
 import { createRun } from './run'
+import { agentPrompt } from './system'
 import { agentTool } from './tool'
 
 export default definePlugin({
@@ -26,5 +27,6 @@ export default definePlugin({
     ctx.effect(() => ctx.tools.register(agentTool(ctx, open)))
     ctx.effect(() => ctx.tools.register(modelsTool(ctx)))
     restrictContext(ctx, resolve, meta, config.max_depth)
+    agentPrompt(ctx, resolve, meta)
   },
 })

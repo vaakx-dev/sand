@@ -47,4 +47,5 @@ export const schema = [
       primary key (session, request)
     )`,
   ],
+  ['alter table turns add column provider_thread text'],
 ]

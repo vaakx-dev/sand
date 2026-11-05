@@ -1,7 +1,6 @@
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { modelSettings, type SessionSettings } from '@sand/model/contract'
-import { instructions } from '@sand/prompt/contract'
 import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
 import type { AgentDefinition, AgentRequest, AgentResult } from './contract'
@@ -9,7 +8,6 @@ import type { Resolve } from './layers'
 import type { AgentMeta, Meta } from './meta'
 import { childSettings } from './settings'
 import { slots } from './slots'
-import { compose } from './system'
 import { agentTitle } from './title'
 
 export interface RunOptions {
@@ -53,11 +51,9 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
     const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
-    const model = ctx.get(modelSettings)?.effective(session).model
     const tools = narrowed(parentMeta?.tools, definition.tools)
     const depth = (parentMeta?.depth ?? 0) + 1
     session.append('agent', { name: definition.name, depth, ...(tools && { tools }) } satisfies AgentMeta)
-    session.append('system', await compose(definition, session, ctx.get(instructions), model))
     return session
   }
 

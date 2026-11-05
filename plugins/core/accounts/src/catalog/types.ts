@@ -1,9 +1,10 @@
-import type { AccountKind, Billing, ModelInfo, NewModels, PlanApi, PlanModel } from '../contract'
+import type { AccountKind, Billing, ModelInfo, NewModels, PlanApi, PlanModel, ProviderCapabilities } from '../contract'
 
 export interface SourceMeta {
   id: string
   kind: AccountKind
   api?: PlanApi
+  caps: ProviderCapabilities
   label: string
   provider: string
   billing: Billing

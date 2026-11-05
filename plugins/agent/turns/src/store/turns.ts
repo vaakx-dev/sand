@@ -15,6 +15,7 @@ interface Row {
   model: string
   effort: Effort | null
   speed: Speed
+  provider_thread: string | null
   prompt: string
   step: number
   usage: string
@@ -58,6 +59,7 @@ const infoOf = (row: Row): TurnInfo => ({
   status: row.status,
   origin: row.origin,
   selection: { source: row.source, model: row.model, ...(row.effort && { effort: row.effort }), speed: row.speed },
+  ...(row.provider_thread && { providerThread: row.provider_thread }),
   prompt: row.prompt,
   step: row.step,
   usage: JSON.parse(row.usage),
@@ -95,6 +97,7 @@ export const createTurnStore = (db: Database) => {
   )
   const waited = db.query('update turns set status = $status, waiting = $waiting where id = $id and ended is null')
   const stepped = db.query('update turns set step = step + 1 where id = $id')
+  const threaded = db.query('update turns set provider_thread = $thread where id = $id')
   const used = db.query('update turns set usage = $usage, partial = null where id = $id')
   const written = db.query('update turns set partial = $partial where id = $id')
   const finished = db.query(finishSql)
@@ -135,6 +138,7 @@ export const createTurnStore = (db: Database) => {
     wait: (id: string, reason: WaitReason | undefined) =>
       void waited.run({ id, status: reason ? 'waiting' : 'running', waiting: reason ? JSON.stringify(reason) : null }),
     step: (id: string) => void stepped.run({ id }),
+    thread: (id: string, thread: string) => void threaded.run({ id, thread }),
     usage: (id: string, usage: Usage) => void used.run({ id, usage: JSON.stringify(usage) }),
     partial: (id: string, message: Message | undefined) => void written.run({ id, partial: message ? JSON.stringify(message) : null }),
     finish: (id: string, owner: string, { status, stopReason, error, detail }: Ending) =>

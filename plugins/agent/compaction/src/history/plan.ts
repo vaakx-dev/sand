@@ -1,7 +1,7 @@
 import type { Entry, Message } from '@sand/chats/contract'
 import type { CompactionRecord } from '../contract'
 import { messageTokens } from '../measure/estimate'
-import { pinnedMessage } from './rewrite'
+import { pinnedMessage } from './summary'
 import { isPrompt, messageOf, view } from './view'
 
 const pinLimit = 10_000

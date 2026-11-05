@@ -1,4 +1,4 @@
-import type { LLM, LLMEvent, LLMRequest, ModelInfo, ProviderInfo } from './contract'
+import { type LLM, type LLMEvent, type LLMRequest, type ModelInfo, type ProviderInfo, statelessCaps } from './contract'
 import type { Accounts } from './auth/accounts'
 import type { Catalog } from './catalog'
 import { qualify } from './catalog/build'
@@ -32,9 +32,13 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
 
   const borrowed = () => peers.limits().filter(found => !accounts.signedIn(found.source))
 
-  const provider = (model?: string): ProviderInfo => {
+  const metaOf = (model?: string) => {
     const found = view.resolve(model)
-    const meta = found?.source ? view.entry(found.source)?.meta : undefined
+    return found?.source ? view.entry(found.source)?.meta : undefined
+  }
+
+  const provider = (model?: string): ProviderInfo => {
+    const meta = metaOf(model)
     return meta ? { id: meta.id, label: meta.label, billing: meta.billing, ...(meta.plan && { plan: meta.plan }) } : fallback
   }
 
@@ -63,6 +67,8 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
       const id = view.find(model)?.id ?? model
       return catalog.price(id) ?? remotes.get().prices.get(id)
     },
+    caps: model => metaOf(model)?.caps ?? statelessCaps(),
+    release() {},
   }
 
   const reset = () => {

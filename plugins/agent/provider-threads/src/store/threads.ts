@@ -1,0 +1,95 @@
+import type { Effort, NativeRef, Speed } from '@sand/accounts/contract'
+import type { Selection } from '@sand/model/contract'
+import type { ProviderThreadInfo, Segment, ThreadStatus } from '@sand/turns-contract/contract'
+import type { Database } from 'bun:sqlite'
+
+interface Row {
+  id: string
+  session: string
+  source: string
+  model: string
+  generation: number
+  native: string | null
+  status: ThreadStatus
+  system: string
+  seen: string
+  effort: Effort | null
+  speed: Speed
+  context: number
+  used: number
+  created: number
+}
+
+export interface NewThread {
+  session: string
+  selection: Selection
+  system: string
+  seen: Segment[]
+  context?: number
+  used: number
+}
+
+export interface Settled {
+  seen: Segment[]
+  context: number
+  native?: NativeRef
+}
+
+const infoOf = (row: Row): ProviderThreadInfo => ({
+  id: row.id,
+  session: row.session,
+  source: row.source,
+  model: row.model,
+  generation: row.generation,
+  ...(row.native && { native: JSON.parse(row.native) }),
+  status: row.status,
+  system: row.system,
+  seen: JSON.parse(row.seen),
+  ...(row.effort && { effort: row.effort }),
+  speed: row.speed,
+  context: row.context,
+  used: row.used,
+  created: row.created,
+})
+
+const insertSql = `insert into provider_threads (id, session, source, model, generation, status, system, seen, effort, speed, context, used, created)
+  values ($id, $session, $source, $model,
+    (select coalesce(max(generation), 0) + 1 from provider_threads where session = $session and source = $source and model = $model),
+    'idle', $system, $seen, $effort, $speed, $context, $used, $created)
+  returning *`
+
+export const createThreadStore = (db: Database) => {
+  const insert = db.query<Row, Record<string, string | number | null>>(insertSql)
+  const open = db.query<Row, { session: string }>("select * from provider_threads where session = $session and status != 'retired' order by used desc")
+  const activated = db.query("update provider_threads set status = 'active', used = $used, effort = $effort, speed = $speed where id = $id")
+  const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
+  const retired = db.query("update provider_threads set status = 'retired' where id = $id")
+  const removed = db.query('delete from provider_threads where session = $session')
+
+  return {
+    open: (session: string) => open.all({ session }).map(infoOf),
+    create({ session, selection, system, seen, context = 0, used }: NewThread) {
+      const row = insert.get({
+        id: Bun.randomUUIDv7(),
+        session,
+        source: selection.source,
+        model: selection.model,
+        system,
+        seen: JSON.stringify(seen),
+        effort: selection.effort ?? null,
+        speed: selection.speed,
+        context,
+        used,
+        created: Date.now(),
+      })
+      return infoOf(row!)
+    },
+    activate: (id: string, { effort, speed }: Selection) => void activated.run({ id, used: Date.now(), effort: effort ?? null, speed }),
+    settle: (id: string, { seen, context, native }: Settled) =>
+      void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
+    retire: (id: string) => void retired.run({ id }),
+    remove: (session: string) => void removed.run({ session }),
+  }
+}
+
+export type ThreadStore = ReturnType<typeof createThreadStore>
