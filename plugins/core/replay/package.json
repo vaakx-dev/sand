@@ -1,0 +1,22 @@
+{
+  "name": "@sand/replay",
+  "version": "0.0.0",
+  "description": "Model sources that play scripted replies, for tests and sandboxes",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Replay",
+    "summary": "Scripted model sources for tests and sandboxes"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

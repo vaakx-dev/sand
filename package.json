@@ -18,8 +18,9 @@
     "apps/*"
   ],
   "scripts": {
-    "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts",
-    "sand": "bun apps/sand/src/main.ts"
+    "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts && bun run test",
+    "sand": "bun apps/sand/src/main.ts",
+    "test": "bun test ./apps ./packages ./plugins"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
