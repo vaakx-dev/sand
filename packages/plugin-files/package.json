@@ -1,0 +1,12 @@
+{
+  "name": "@sand/plugin-files",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@sand/host-plugin-sync": "workspace:*",
+    "@sand/util": "workspace:*"
+  }
+}

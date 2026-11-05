@@ -13,6 +13,7 @@
     "summary": "Serves sand to your devices"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
     "@sand/host-daemon": "workspace:*",

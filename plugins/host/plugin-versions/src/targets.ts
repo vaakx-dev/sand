@@ -1,4 +1,4 @@
-import { validPluginName } from '@sand/host-plugin-library/files'
+import { validPluginName } from '@sand/plugin-files'
 import { lstat, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 

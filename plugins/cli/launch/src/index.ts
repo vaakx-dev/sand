@@ -30,7 +30,7 @@ export default definePlugin({
           'sand sandbox     start a throwaway sand from this build in a temp home, on a free port and off the network,',
           '                 with your plugins and model, and print a link that opens it paired',
         ].join('\n'),
-        run: () => sandbox(ctx.cli.home),
+        run: () => sandbox(ctx.daemon, ctx.cli.home),
       }),
     )
   },

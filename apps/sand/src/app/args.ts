@@ -1,5 +1,5 @@
+import { safeFromEnv } from '@sand/boot'
 import type { CliPlace } from '@sand/config/contract'
-import { safeFromEnv } from '@sand/util/boot'
 import { expandHome } from '@sand/util/fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'

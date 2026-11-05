@@ -1,4 +1,4 @@
-import { carryOver, copyPlugin, unsharedPaths } from '@sand/host-plugin-library/files'
+import { carryOver, copyPlugin, unsharedPaths } from '@sand/plugin-files'
 import { exists, isLink, removeQuietly } from '@sand/util/fs'
 import { mkdir, rename } from 'node:fs/promises'
 import { dirname, join } from 'node:path'

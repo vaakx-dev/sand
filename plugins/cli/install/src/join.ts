@@ -1,6 +1,6 @@
+import { firewallHint } from '@sand/boot/setup'
 import { pairJoin, peersList, type PeerView } from '@sand/devices-contract'
 import type { Daemon } from '@sand/host-daemon/contract'
-import { firewallHint } from '@sand/host-dist/setup'
 import type { JoinGrant } from './remote'
 
 const joinTimeout = 60_000

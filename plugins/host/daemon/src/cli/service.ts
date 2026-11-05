@@ -29,5 +29,6 @@ export const daemonService = (home: string): Daemon => {
       return ask(home, await require(), request, input, timeout)
     },
     link: async () => openLink(home, (await require()).url),
+    at: daemonService,
   }
 }

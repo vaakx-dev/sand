@@ -1,8 +1,8 @@
+import { appRoot } from '@sand/boot'
 import type { GitRunner } from '@sand/git/contract'
+import { bundleAsset, stampAsset } from '@sand/util/release'
 import { mkdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { bundleAsset, stampAsset } from '@sand/util/boot/release'
-import { appRoot } from '@sand/util/boot'
 import { packBundle } from './bundle'
 import { buildHistory } from './history'
 

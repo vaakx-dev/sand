@@ -1,5 +1,5 @@
 import { pairLink } from '@sand/devices-contract'
-import { daemonService } from '@sand/host-daemon/service'
+import type { Daemon } from '@sand/host-daemon/contract'
 import { cpSync, existsSync, mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -16,13 +16,13 @@ const copyBorrowed = (home: string, box: string) => {
   }
 }
 
-export const sandbox = async (home: string) => {
+export const sandbox = async (daemon: Daemon, home: string) => {
   const box = mkdtempSync(join(tmpdir(), 'sand-sandbox-'))
   await Bun.write(join(box, 'sand.toml'), settings)
   copyBorrowed(home, box)
-  const daemon = daemonService(box)
-  const { info } = await daemon.ensure()
-  const { token } = await daemon.request(pairLink, { kind: 'device' })
+  const sandboxed = daemon.at(box)
+  const { info } = await sandboxed.ensure()
+  const { token } = await sandboxed.request(pairLink, { kind: 'device' })
   console.log(
     [
       `started a throwaway sand (pid ${info.pid}) in ${box}`,

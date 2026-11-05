@@ -44,6 +44,7 @@ export interface Daemon {
   stop(): Promise<number | undefined>
   request<I, O>(request: Request<I, O>, input: I, options?: DaemonRequestOptions): Promise<O>
   link(): Promise<DaemonLink>
+  at(home: string): Daemon
 }
 
 export const daemon = service<Daemon>('daemon')

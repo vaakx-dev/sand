@@ -1,5 +1,5 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
 import type { Runtimes } from '@sand/host-runtimes/contract'
+import type { BuildInfo } from '@sand/util/release'
 import type { HostHealth, HostHealthCheck } from './contract'
 import { serverLogTail } from './log'
 import { probeWeb } from './web'

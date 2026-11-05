@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@sand/devices-contract": "workspace:*",
-    "@sand/host-dist": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-updates": "workspace:*",
     "@sand/layout": "workspace:*",

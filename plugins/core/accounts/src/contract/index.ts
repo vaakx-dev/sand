@@ -16,6 +16,7 @@ export type * from './models'
 export type * from './plans'
 export type * from './setup'
 export type * from './usage'
+export { windowText } from './window'
 
 export const llm = service<LLM>('llm')
 export const llmPlans = service<Plans>('llmPlans')

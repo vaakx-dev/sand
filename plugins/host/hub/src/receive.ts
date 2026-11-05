@@ -1,8 +1,7 @@
 import type { Runtimes, RuntimeView } from '@sand/host-runtimes/contract'
 import { errorMessage } from '@sand/util'
-import type { Handlers } from '@sand/util/wire'
 import { answer, type Client } from './client'
-import { type ClientMessage, hello } from './contract'
+import { type ClientMessage, type Handlers, hello } from './contract'
 import { route } from './route'
 import type { Upstream } from './upstream'
 

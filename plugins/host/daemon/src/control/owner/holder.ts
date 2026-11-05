@@ -1,4 +1,4 @@
-import { readServerInfo } from '@sand/util/boot'
+import { readServerInfo } from '@sand/boot'
 import { isAlive } from '../info'
 
 const portOpen = async (url: string) => {

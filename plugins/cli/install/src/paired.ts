@@ -1,5 +1,5 @@
+import { dim, done, notice } from '@sand/boot/setup'
 import type { Daemon } from '@sand/host-daemon/contract'
-import { dim, done, notice } from '@sand/host-dist/setup'
 import { errorMessage, plural } from '@sand/util'
 import { waitForAccounts } from './accounts'
 import { UnhealthyError, waitForHealth } from './health'

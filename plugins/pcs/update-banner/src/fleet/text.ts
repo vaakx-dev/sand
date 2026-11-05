@@ -1,7 +1,7 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
 import type { ReleaseInfo, UpdateChannel, UpdatePhase } from '@sand/host-updates/contract'
 import type { Tone } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
+import type { BuildInfo } from '@sand/util/release'
 import type { RunStatus } from './run'
 import { isFar, type PcStatus } from './status'
 

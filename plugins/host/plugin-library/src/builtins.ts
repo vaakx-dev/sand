@@ -1,6 +1,6 @@
+import { unsharedName } from '@sand/plugin-files'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { unsharedName } from './files'
 
 export interface BuiltinPlugin {
   name: string

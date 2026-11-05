@@ -1,6 +1,6 @@
+import { buildInfo } from '@sand/boot/build'
 import { hostApp } from '@sand/host-daemon/contract'
 import { definePlugin } from 'drydock'
-import { buildInfo } from './build'
 import { hostBuild, type HostBuild } from './contract'
 
 export default definePlugin({

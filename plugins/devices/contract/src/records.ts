@@ -1,5 +1,5 @@
-import type { BuildInfo } from '@sand/host-dist/contract'
 import type { CallerKind } from '@sand/host-hub/contract'
+import type { BuildInfo } from '@sand/util/release'
 import type { PcIcon } from './schemas'
 
 export type DeviceKind = Exclude<CallerKind, 'cli' | 'runtime'>

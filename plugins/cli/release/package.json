@@ -12,9 +12,9 @@
     "summary": "Writes release assets"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/cli-commands": "workspace:*",
     "@sand/git": "workspace:*",
-    "@sand/host-dist": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }

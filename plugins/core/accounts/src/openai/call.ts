@@ -1,7 +1,7 @@
+import { bearer } from '@sand/util/host'
 import type { PlanCall } from '../contract'
 import type { ApiKey } from '../auth/store'
 import { trimSlash } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
 import type { openaiBody } from './body'
 
 const defaultBase = 'https://api.openai.com/v1'

@@ -1,6 +1,6 @@
+import { bearer } from '@sand/util/host'
 import type { ModelPrice, PlanModel } from '../contract'
 import { isRecord } from '@sand/util'
-import { bearer } from '@sand/util/boot/wire'
 import { listIn, nonEmpty, positive } from './fields'
 import { getJson } from './http'
 

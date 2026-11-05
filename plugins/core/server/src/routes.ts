@@ -1,6 +1,6 @@
+import { socketCallerOf } from '@sand/boot'
 import type { Caller } from '@sand/host-hub/contract'
 import type { Runtime } from '@sand/host-runtimes/contract'
-import { socketCallerOf } from '@sand/util/boot'
 import type { RouteHandler, RouteOptions } from './contract'
 
 interface Route {

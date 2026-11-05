@@ -1,7 +1,7 @@
 import type { PcIdentity, Registry, ThisPc } from '@sand/devices-contract'
 import { signerOf } from '@sand/devices-identity'
 import type { PcKeys } from '@sand/devices-identity/pc'
-import type { BuildInfo } from '@sand/host-dist/contract'
+import type { BuildInfo } from '@sand/util/release'
 import { hostname } from 'node:os'
 
 interface ThisPcOptions {

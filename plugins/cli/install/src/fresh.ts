@@ -1,4 +1,4 @@
-import { dim, done } from '@sand/host-dist/setup'
+import { dim, done } from '@sand/boot/setup'
 import { waitForHealth } from './health'
 import { checkInstalled, installedRoot, openSand, placeApp, skipStart, startHost, type Installer } from './steps'
 

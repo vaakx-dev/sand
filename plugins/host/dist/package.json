@@ -1,13 +1,11 @@
 {
   "name": "@sand/host-dist",
   "version": "0.0.0",
-  "description": "The build id of this sand, and the builds and setup steps the installer uses",
+  "description": "The build id of this sand",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./build": "./src/build/index.ts",
-    "./contract": "./src/contract.ts",
-    "./setup": "./src/setup/index.ts"
+    "./contract": "./src/contract.ts"
   },
   "sand": {
     "host": "./src/index.ts",
@@ -15,6 +13,7 @@
     "summary": "This build of sand"
   },
   "dependencies": {
+    "@sand/boot": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

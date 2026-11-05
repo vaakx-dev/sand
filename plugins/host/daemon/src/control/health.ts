@@ -1,6 +1,6 @@
+import { waitHealthy } from '@sand/boot'
 import type { ServerInfo } from '@sand/host-gateway/contract'
 import { hostHealthRequest } from '@sand/host-health/contract'
-import { waitHealthy } from '@sand/util/boot'
 import { ask } from './ask'
 
 const healthWait = 120_000

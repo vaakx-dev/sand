@@ -17,10 +17,32 @@
         "sand": "./src/main.ts",
       },
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
+      },
+    },
+    "packages/boot": {
+      "name": "@sand/boot",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/host-dist": "workspace:*",
+        "@sand/host-gateway": "workspace:*",
+        "@sand/host-health": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
+        "@sand/host-updates": "workspace:*",
+        "@sand/util": "workspace:*",
+      },
+    },
+    "packages/plugin-files": {
+      "name": "@sand/plugin-files",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/host-plugin-sync": "workspace:*",
+        "@sand/util": "workspace:*",
       },
     },
     "packages/reactive": {
@@ -34,16 +56,6 @@
     "packages/util": {
       "name": "@sand/util",
       "version": "0.0.0",
-      "dependencies": {
-        "@sand/accounts": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
-        "@sand/host-dist": "workspace:*",
-        "@sand/host-gateway": "workspace:*",
-        "@sand/host-health": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/host-runtimes": "workspace:*",
-        "@sand/usage": "workspace:*",
-      },
     },
     "plugins/agent/ask": {
       "name": "@sand/ask",
@@ -386,14 +398,13 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/boot": "workspace:*",
         "@sand/cli-commands": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-daemon": "workspace:*",
-        "@sand/host-dist": "workspace:*",
         "@sand/host-health": "workspace:*",
-        "@sand/host-plugin-library": "workspace:*",
-        "@sand/host-updates": "workspace:*",
+        "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -413,9 +424,9 @@
       "name": "@sand/cli-release",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/cli-commands": "workspace:*",
         "@sand/git": "workspace:*",
-        "@sand/host-dist": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -424,6 +435,7 @@
       "name": "@sand/cli-usage",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/accounts": "workspace:*",
         "@sand/cli-commands": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/usage": "workspace:*",
@@ -548,6 +560,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/boot": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/host-gateway": "workspace:*",
@@ -653,9 +666,9 @@
       "name": "@sand/devices-contract",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/host-dist": "workspace:*",
         "@sand/host-health": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -687,13 +700,14 @@
       "name": "@sand/devices-pairing",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/devices-identity": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/host-plugin-library": "workspace:*",
         "@sand/host-plugin-sync": "workspace:*",
+        "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -977,6 +991,7 @@
       "name": "@sand/host-daemon",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/cli-commands": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/devices-contract": "workspace:*",
@@ -994,6 +1009,7 @@
       "name": "@sand/host-dist",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1003,6 +1019,7 @@
       "name": "@sand/host-gateway",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/devices-identity": "workspace:*",
         "@sand/host-daemon": "workspace:*",
@@ -1017,6 +1034,7 @@
       "name": "@sand/host-health",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-dist": "workspace:*",
@@ -1031,6 +1049,7 @@
       "name": "@sand/host-hub",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1044,8 +1063,8 @@
         "@sand/host-daemon": "workspace:*",
         "@sand/host-dist": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/host-plugin-sync": "workspace:*",
         "@sand/host-plugin-versions": "workspace:*",
+        "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1061,6 +1080,7 @@
         "@sand/host-plugin-library": "workspace:*",
         "@sand/host-plugin-versions": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
+        "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1072,8 +1092,8 @@
       "dependencies": {
         "@sand/host-daemon": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/host-plugin-library": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
+        "@sand/plugin-files": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
@@ -1083,6 +1103,7 @@
       "name": "@sand/host-runtimes",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/host-daemon": "workspace:*",
@@ -1099,9 +1120,9 @@
       "name": "@sand/host-updates",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/boot": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/host-daemon": "workspace:*",
-        "@sand/host-dist": "workspace:*",
         "@sand/host-health": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
@@ -1124,7 +1145,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/devices-contract": "workspace:*",
-        "@sand/host-dist": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-updates": "workspace:*",
         "@sand/layout": "workspace:*",
@@ -1789,6 +1809,8 @@
 
     "@sand/attachments": ["@sand/attachments@workspace:plugins/agent/attachments"],
 
+    "@sand/boot": ["@sand/boot@workspace:packages/boot"],
+
     "@sand/chat": ["@sand/chat@workspace:plugins/ui/chat/chat"],
 
     "@sand/chats": ["@sand/chats@workspace:plugins/core/chats"],
@@ -1932,6 +1954,8 @@
     "@sand/paths": ["@sand/paths@workspace:plugins/core/paths"],
 
     "@sand/picker": ["@sand/picker@workspace:plugins/ui/shared/picker"],
+
+    "@sand/plugin-files": ["@sand/plugin-files@workspace:packages/plugin-files"],
 
     "@sand/plugins": ["@sand/plugins@workspace:plugins/extend/plugins"],
 

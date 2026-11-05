@@ -1,6 +1,5 @@
-import { type ClientMessage, hello } from '@sand/host-hub/contract'
 import { sessionUpdate } from '@sand/chats/contract'
-import { createHandlers, parseInput } from '@sand/util/wire'
+import { type ClientMessage, createHandlers, hello, parseInput } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
 import { helloSafe, pagesChange, type Server, server as serverService, uiFocus, userWrote } from './contract'
 import { inject } from './context'
