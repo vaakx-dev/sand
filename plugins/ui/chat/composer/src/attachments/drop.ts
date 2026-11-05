@@ -2,7 +2,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { div, listen, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import type { Files } from './files'
 
-const hasFiles = (event: DragEvent) => [...(event.dataTransfer?.types ?? [])].includes('Files')
+export const hasFiles = (event: DragEvent) => [...(event.dataTransfer?.types ?? [])].includes('Files')
 
 export const catchFiles = (files: Files) => {
   const dropping = sig(false)

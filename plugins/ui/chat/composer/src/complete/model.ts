@@ -1,5 +1,7 @@
+import { Prec } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
-import { derive, listen, sig, type KeyMap } from '@vaakx-dev/vrui'
+import { derive, sig, type KeyMap } from '@vaakx-dev/vrui'
 
 export interface Suggestion {
   value: string
@@ -20,12 +22,17 @@ export interface CompletionSource {
 
 const limit = 20
 
-export const createCompletion = ({ listbox }: Kit, host: HTMLElement, active: () => HTMLTextAreaElement | undefined, sources: CompletionSource[]) => {
+interface Target {
+  view: EditorView
+  from: number
+}
+
+export const createCompletion = ({ listbox }: Kit, sources: CompletionSource[]) => {
   const items = sig<Suggestion[]>([])
   const hint = sig<string | undefined>(undefined)
   const source = sig<CompletionSource | undefined>(undefined)
   const visible = derive(() => items.get().length > 0 || Boolean(hint.get()))
-  let start = 0
+  let target: Target | undefined
   let request = 0
 
   const close = () => {
@@ -35,13 +42,10 @@ export const createCompletion = ({ listbox }: Kit, host: HTMLElement, active: ()
   }
 
   const insert = (text: string) => {
-    const input = active()
-    if (!input) return
-    const cursor = input.selectionStart ?? input.value.length
-    input.value = input.value.slice(0, start) + text + input.value.slice(cursor)
-    input.selectionStart = input.selectionEnd = start + text.length
-    input.dispatchEvent(new Event('input'))
-    input.focus()
+    if (!target) return
+    const { view, from } = target
+    view.dispatch({ changes: { from, to: view.state.selection.main.head, insert: text }, selection: { anchor: from + text.length }, userEvent: 'input.complete' })
+    view.focus()
   }
 
   const accept = (index: number) => {
@@ -62,43 +66,49 @@ export const createCompletion = ({ listbox }: Kit, host: HTMLElement, active: ()
 
   const keydown = (event: KeyboardEvent) => {
     const handler = keyMap[event.key]
-    if (!handler || !visible.get()) return false
+    if (event.isComposing || !handler || !visible.get()) return false
     if (event.key !== 'Escape' && !items.get().length) return false
     handler(event)
     return true
   }
 
-  const show = (candidate: CompletionSource, query: string, typed: string, found: Suggestion[]) => {
+  const show = (found: Suggestion[], candidate: CompletionSource, query: string, at: Target) => {
     const shown = found.slice(0, limit)
     if (shown.length === 1 && shown[0]?.value === query) return close()
-    start = typed.length - query.length - candidate.trigger.length
+    target = at
     source.set(candidate)
     hint.set(shown.length ? undefined : candidate.hint?.(query))
     items.set(shown)
     box.select(0)
   }
 
-  const update = () => {
-    const input = active()
-    if (!input) return close()
-    const typed = input.value.slice(0, input.selectionStart ?? input.value.length)
+  const update = (view: EditorView) => {
+    const { head } = view.state.selection.main
+    const line = view.state.doc.lineAt(head)
+    const typed = line.text.slice(0, head - line.from)
     for (const candidate of sources) {
       const query = candidate.pattern.exec(typed)?.[1]
       if (query === undefined) continue
       const ticket = ++request
+      const at = { view, from: head - query.length - candidate.trigger.length }
       void Promise.resolve(candidate.items(query)).then(found => {
-        if (ticket === request) show(candidate, query, typed, found)
+        if (ticket === request) show(found, candidate, query, at)
       })
       return
     }
     close()
   }
 
-  listen(host, 'input', update)
-  listen(host, 'click', update)
-  listen(host, 'focusout', close)
+  const extension = [
+    EditorView.updateListener.of(change => {
+      if (!change.docChanged && !change.selectionSet && !change.focusChanged) return
+      if (change.view.hasFocus) update(change.view)
+      else close()
+    }),
+    Prec.highest(EditorView.domEventHandlers({ keydown })),
+  ]
 
-  return { items, hint, source, visible, box, close, keydown }
+  return { items, hint, source, visible, box, close, extension }
 }
 
 export type Completion = ReturnType<typeof createCompletion>

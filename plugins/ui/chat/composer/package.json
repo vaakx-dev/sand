@@ -12,6 +12,9 @@
     "summary": "Where you write messages: attachments, pending messages, context, drafts and slots for other controls"
   },
   "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.15",
     "@sand/attachments": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
