@@ -158,6 +158,28 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/agent/mcp": {
+      "name": "@sand/mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@modelcontextprotocol/server": "^2.4.0",
+        "@sand/cli-commands": "workspace:*",
+        "@sand/config": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-gateway": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@modelcontextprotocol/client": "^2.4.0",
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/agent/model": {
       "name": "@sand/model",
       "version": "0.0.0",
@@ -498,25 +520,6 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/cli/mcp": {
-      "name": "@sand/cli-mcp",
-      "version": "0.0.0",
-      "dependencies": {
-        "@modelcontextprotocol/server": "^2.4.0",
-        "@sand/cli-commands": "workspace:*",
-        "@sand/config": "workspace:*",
-        "@sand/host-daemon": "workspace:*",
-        "@sand/orchestrator": "workspace:*",
-        "@sand/turns-contract": "workspace:*",
-        "@sand/util": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
-      },
-      "devDependencies": {
-        "@modelcontextprotocol/client": "^2.4.0",
-        "@sand/harness": "workspace:*",
       },
     },
     "plugins/cli/release": {
@@ -2002,8 +2005,6 @@
 
     "@sand/cli-launch": ["@sand/cli-launch@workspace:plugins/cli/launch"],
 
-    "@sand/cli-mcp": ["@sand/cli-mcp@workspace:plugins/cli/mcp"],
-
     "@sand/cli-release": ["@sand/cli-release@workspace:plugins/cli/release"],
 
     "@sand/cli-threads": ["@sand/cli-threads@workspace:plugins/cli/threads"],
@@ -2121,6 +2122,8 @@
     "@sand/markdown": ["@sand/markdown@workspace:plugins/ui/chat/markdown"],
 
     "@sand/math": ["@sand/math@workspace:plugins/ui/chat/math"],
+
+    "@sand/mcp": ["@sand/mcp@workspace:plugins/agent/mcp"],
 
     "@sand/media": ["@sand/media@workspace:plugins/core/media"],
 

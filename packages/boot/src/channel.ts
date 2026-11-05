@@ -5,7 +5,7 @@ import type { RuntimeAccess } from '@sand/host-runtimes/contract'
 const runtimeParam = 'sand_runtime'
 const clientParam = 'sand_client'
 const callerParams = { device: 'sand_device', name: 'sand_device_name', kind: 'sand_device_kind' } as const
-const callerKinds: CallerKind[] = ['pc', 'phone', 'browser', 'cli']
+const callerKinds: CallerKind[] = ['pc', 'phone', 'browser', 'cli', 'agent']
 
 export const runtimeEnv = { id: 'SAND_RUNTIME_ID', secret: 'SAND_RUNTIME_SECRET' } as const
 

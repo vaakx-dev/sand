@@ -1,10 +1,11 @@
 {
-  "name": "@sand/cli-mcp",
+  "name": "@sand/mcp",
   "version": "0.0.0",
-  "description": "The sand mcp command: an MCP server on stdio that lets outside agents list, read, start, message, wait for and stop sand's threads",
+  "description": "Serves sand's threads over MCP: the sand mcp command on stdio, and /mcp over HTTP for paired agents on other machines",
   "type": "module",
   "sand": {
-    "cli": "./src/index.ts",
+    "cli": "./src/stdio.ts",
+    "host": "./src/http/index.ts",
     "label": "MCP server",
     "summary": "Serves sand's threads to outside agents over MCP"
   },
@@ -12,7 +13,10 @@
     "@modelcontextprotocol/server": "^2.4.0",
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
     "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",

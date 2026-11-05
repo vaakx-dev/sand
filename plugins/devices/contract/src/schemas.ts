@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
-export const deviceKindSchema = z.enum(['pc', 'phone', 'browser'])
+export const joinKindSchema = z.enum(['pc', 'phone', 'browser'])
+
+export const deviceKindSchema = z.enum([...joinKindSchema.options, 'agent'])
+
+export const agentAccessSchema = z.enum(['read', 'operate'])
+
+export type AgentAccess = z.infer<typeof agentAccessSchema>
 
 export const pcIconSchema = z.enum(['desktop', 'laptop', 'tower', 'mini', 'server', 'cloud', 'board', 'linux'])
 
@@ -28,6 +34,7 @@ export const deviceRecordSchema = z.object({
   addedBy: z.string(),
   updated: z.number(),
   removed: removalSchema.optional(),
+  agent: z.object({ access: agentAccessSchema, token: z.string().min(1) }).optional(),
 })
 
 export const joinRequestSchema = z.object({
@@ -36,7 +43,7 @@ export const joinRequestSchema = z.object({
   pcName: z.string(),
   code: z.string(),
   name: z.string(),
-  kind: deviceKindSchema,
+  kind: joinKindSchema,
   platform: z.string(),
   address: z.string(),
   created: z.number(),

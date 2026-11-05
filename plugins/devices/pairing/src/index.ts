@@ -4,6 +4,7 @@ import { hostHttp, type HttpRoute } from '@sand/host-gateway/contract'
 import { hub } from '@sand/host-hub/contract'
 import { hostPluginSync } from '@sand/host-plugin-sync/contract'
 import { definePlugin } from 'drydock'
+import { agentRequests } from './grants/agents'
 import { createGrants } from './grants/grants'
 import { redeemRoute } from './grants/redeem'
 import { createLink, grantRequests } from './grants/requests'
@@ -23,7 +24,7 @@ const sweepEvery = 5000
 
 export default definePlugin({
   name: 'devices-pairing',
-  description: 'Pairing links, join requests with codes, approvals, handoff and install grants for new PCs',
+  description: 'Pairing links, join requests with codes, approvals, handoff, agent tokens and install grants for new PCs',
   inject: { hostOptions, hub, hostHttp, registry, thisPc },
   apply(ctx) {
     const { hub, registry, thisPc } = ctx
@@ -56,6 +57,7 @@ export default definePlugin({
 
     const requests = [
       ...grantRequests(hub, registry, grants, createLink({ grants, routes })),
+      ...agentRequests(hub, registry, routes),
       ...joinRequests(hub, decisions),
       ...outgoingRequests(hub, outgoing),
       ...installRequests(hub, grants, installs),

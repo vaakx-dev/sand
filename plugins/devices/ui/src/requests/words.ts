@@ -8,6 +8,7 @@ export const viaTailscale = (address: string) => tailnet.test(address.replace(/^
 
 export const kindIcon = (kind: DeviceKind, platform?: string): IconName => {
   if (kind === 'phone') return 'smartphone'
+  if (kind === 'agent') return 'bot'
   if (kind === 'pc') return platform === 'darwin' || /mac/i.test(platform ?? '') ? 'laptop' : 'monitor'
   return 'monitor'
 }

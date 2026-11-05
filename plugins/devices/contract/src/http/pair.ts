@@ -1,11 +1,11 @@
 import type { ShareLink } from '../pairing/links'
-import type { DeviceKind, DeviceRecord, PcIdentity } from '../records'
+import type { DeviceRecord, JoinKind, PcIdentity } from '../records'
 
 export interface PairBody {
   token: string
   publicKey: string
   name: string
-  kind: DeviceKind
+  kind: JoinKind
   platform: string
 }
 
@@ -23,7 +23,7 @@ export interface PairRefusal {
 export interface JoinBody {
   publicKey: string
   name: string
-  kind: DeviceKind
+  kind: JoinKind
   platform: string
 }
 

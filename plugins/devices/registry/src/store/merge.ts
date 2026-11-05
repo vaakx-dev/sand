@@ -18,9 +18,10 @@ export const normalRecord = (record: DeviceRecord): DeviceRecord => ({
   addedBy: record.addedBy,
   updated: record.updated,
   ...(record.removed && { removed: { at: record.removed.at, by: record.removed.by } }),
+  ...(record.agent && { agent: { access: record.agent.access, token: record.agent.token } }),
 })
 
-export const isSound = (record: DeviceRecord) => {
+const keyed = (record: DeviceRecord) => {
   const first = record.keys[0]
   if (!first) return false
   try {
@@ -29,6 +30,9 @@ export const isSound = (record: DeviceRecord) => {
     return false
   }
 }
+
+export const isSound = (record: DeviceRecord) =>
+  record.kind === 'agent' ? Boolean(record.agent) && !record.keys.length : keyed(record) && !record.agent
 
 const winner = (local: DeviceRecord, incoming: DeviceRecord) => {
   if (incoming.updated !== local.updated) return incoming.updated > local.updated ? incoming : local

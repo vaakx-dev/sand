@@ -1,4 +1,5 @@
 import {
+  type AgentAccess,
   type DeviceRecord,
   type DeviceSeen,
   devicesChange,
@@ -8,6 +9,7 @@ import {
   devicesRename,
   devicesSeen,
   type PcIcon,
+  pairAgent,
 } from '@sand/devices-contract'
 import type { UiContext } from '../inject'
 import { feed } from './feed'
@@ -36,6 +38,7 @@ export const devicesData = (ctx: UiContext) => {
     rename: (device: string, name: string) => ctx.wire.call(devicesRename, { device, name }),
     setIcon: (device: string, icon: PcIcon) => ctx.wire.call(devicesIcon, { device, icon }),
     remove: (device: string) => ctx.wire.call(devicesRemove, { device }),
+    addAgent: (name: string, access: AgentAccess) => ctx.wire.call(pairAgent, { name, access }),
   }
 }
 

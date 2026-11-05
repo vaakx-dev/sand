@@ -48,7 +48,7 @@ export interface ThreadRow {
   pc?: string
 }
 
-export const failureCodes = ['not_found', 'invalid_request', 'unavailable', 'failed'] as const
+export const failureCodes = ['not_found', 'invalid_request', 'unavailable', 'denied', 'failed'] as const
 
 export type FailureCode = (typeof failureCodes)[number]
 

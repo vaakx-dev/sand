@@ -1,8 +1,8 @@
-import type { DeviceKind } from '@sand/devices-contract'
+import type { JoinKind } from '@sand/devices-contract'
 
 interface Described {
   name: string
-  kind: DeviceKind
+  kind: JoinKind
   platform: string
 }
 
