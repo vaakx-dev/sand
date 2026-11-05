@@ -1,6 +1,6 @@
 import { returnFocus } from '../layers/stack'
 import type { MenuRequest } from '../contract'
-import { disposeAll, div, dynamicChild, onWindow, sig } from '@vaakx-dev/vrui'
+import { disposeAll, div, dynamicChild, onWindow, resizeObserver, sig } from '@vaakx-dev/vrui'
 import { layer } from '../layer'
 import { popover } from '../menus/menu'
 import { firstStep, menuItems, stepView, type MenuControl, type MenuStep } from './items'
@@ -38,7 +38,7 @@ export const menuPopup = (request: MenuRequest, close: () => void) => {
       'data-menu-layer': '',
       style: { left: () => `${at.get().x}px`, top: () => `${at.get().y}px` },
       onMount: node => {
-        at.set(fitOnScreen(menu, request.x, request.y))
+        resizeObserver(menu, () => at.set(fitOnScreen(menu, request.x, request.y)))
         focusFirst(node)
         const stops = [onWindow(node, 'resize', close), returnFocus(node, request.from)]
         return () => disposeAll(stops)
