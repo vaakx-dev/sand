@@ -1,12 +1,11 @@
 import type { Runtimes } from '@sand/host-runtimes/contract'
 import { type Client, createClient, send } from './client'
-import { type Caller, callerAllowed, createHandlers, type Hub, type HubSocket, type ServerMessage } from './contract'
+import { type Caller, callerAllowed, createHandlers, type Hub, type HubSocket } from './contract'
 import { createDownstream } from './downstream'
+import { eventFrame } from './frames'
 import { createGreetings } from './greetings'
 import { createLinks } from './links'
 import { createReceiver } from './receive'
-
-const eventFrame = (name: string, payload: unknown) => JSON.stringify({ type: 'event', name, payload } satisfies ServerMessage)
 
 export const createHub = (runtimes: Runtimes, opened: (device: string) => void) => {
   const clients = new Map<HubSocket, Client>()

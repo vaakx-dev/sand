@@ -2,7 +2,7 @@ import { pcHello, type wire as wireService } from '@sand/devices-contract'
 import type { Kit, kit as kitService } from '@sand/ui-kit/contract'
 import { errorMessage, joinDisposers } from '@sand/util'
 import { threadChange, type Thread, type threads as threadsService } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, form, preventThen, resource, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, form, preventThen, sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { answerEntry, secretDecline, secretSave, secretWaiting, type SecretAnswer, type SecretRequest, type SecretStatus } from '../contract'
 
@@ -71,10 +71,10 @@ const pendingCard = ({ kit, wire }: CardContext, session: string, request: Secre
 export const secretCard = (ctx: CardContext, session: string, request: SecretRequest) => {
   const answered = () => answerIn(ctx.threads.get(session), request.id)
   const answer = sig(answered())
-  const waiting = resource(() => ctx.wire.call(secretWaiting, { session, id: request.id }), { lazy: true })
-  const shown = derive(() => shownOf(answer.get(), waiting.data.get()))
+  const waiting = sig<boolean | undefined>(undefined)
+  const shown = derive(() => shownOf(answer.get(), waiting.get()))
   const check = () => {
-    if (!answer.get()) waiting.refetch()
+    if (!answer.get()) void ctx.wire.call(secretWaiting, { session, id: request.id }).then(found => waiting.set(found), () => {})
   }
   return div(
     {

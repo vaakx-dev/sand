@@ -7,6 +7,7 @@ const retryDelay = 1000
 interface UpstreamHandlers {
   message(raw: string): void
   lost(): void
+  reopened(): void
   alive(): boolean
 }
 
@@ -20,12 +21,15 @@ export const createUpstream = (runtime: RuntimeView, caller: Caller, handlers: U
   let closed = false
   let retry: Timer | undefined
   let socket: WebSocket
+  let wasOpen = false
 
   const connect = () => {
     const opened = new WebSocket(upstreamSocketUrl(runtime.url, runtime.secret, caller))
     socket = opened
     opened.addEventListener('open', () => {
       for (const raw of backlog.splice(0)) opened.send(raw)
+      if (wasOpen) handlers.reopened()
+      wasOpen = true
     })
     opened.addEventListener('message', event => handlers.message(String(event.data)))
     opened.addEventListener('close', () => {

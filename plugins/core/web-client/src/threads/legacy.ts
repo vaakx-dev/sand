@@ -14,7 +14,7 @@ const turnSteerWire = wireEvent<[session: WireSession, content: UserContent[], i
 
 const everyPc: WireListen = { from: 'all' }
 
-export const legacyPc = (wire: Wire, pc: string) => !wire.hello(helloTurnsApi, pc)
+const legacyPc = (wire: Wire, pc: string) => !wire.hello(helloTurnsApi, pc)
 
 export const legacyPending = ({ steers }: QueueState): PendingItem[] => steers.map(steer => ({ ...steer, kind: 'steer', origin: 'user', held: false }))
 

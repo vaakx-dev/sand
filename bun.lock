@@ -523,6 +523,9 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
     },
     "plugins/core/chats": {
       "name": "@sand/chats",
@@ -1397,6 +1400,19 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/chat/outbox": {
+      "name": "@sand/outbox",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/composer": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/reactive": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/chat/quote": {
       "name": "@sand/quote",
       "version": "0.0.0",
@@ -2050,6 +2066,8 @@
     "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
 
     "@sand/nav": ["@sand/nav@workspace:plugins/ui/layout/nav"],
+
+    "@sand/outbox": ["@sand/outbox@workspace:plugins/ui/chat/outbox"],
 
     "@sand/palette": ["@sand/palette@workspace:plugins/ui/shared/palette"],
 

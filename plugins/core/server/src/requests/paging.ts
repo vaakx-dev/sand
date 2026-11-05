@@ -4,11 +4,10 @@ import { modelSettings } from '@sand/model/contract'
 import { joinDisposers } from '@sand/util'
 import type { ContextCore } from 'drydock'
 import { sessionCarry, sessionOpened } from '../contract'
-import type { OpenedSession } from '../contract/relay'
+import type { LiveSnapshot, OpenedSession } from '../contract/relay'
 import { sessionEntries, sessionOpen, sessionPage, sessionSince } from '../contract/requests'
 import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
-import type { LiveTracker } from '../stream/live'
 
 const pageLimit = 200
 const baseCarried = ['settings']
@@ -20,11 +19,11 @@ const tailOf = async (ctx: ContextCore, session: Session) => {
   return { entries, partial: true, ...(carried.length && { carried }) }
 }
 
-export const pagingRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle'>, live: LiveTracker) => {
+export const pagingRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle'>, snapshot: (session: string) => LiveSnapshot | undefined) => {
   const session = (id: string) => ctx.sessions.require(id)
   const opened = (found: Session, rest: Pick<OpenedSession, 'entries' | 'partial' | 'carried'>) => {
     const settings = ctx.get(modelSettings)?.state(found)
-    const base: OpenedSession = { info: info(found), ...rest, settings, ...live.snapshot(found.id) }
+    const base: OpenedSession = { info: info(found), ...rest, settings, ...snapshot(found.id) }
     return ctx.waterfall(sessionOpened, base, found)
   }
   return joinDisposers(

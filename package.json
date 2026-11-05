@@ -60,6 +60,7 @@
       "plugins/ui/chat/composer/src/**",
       "plugins/ui/chat/markdown/src/**",
       "plugins/ui/chat/model-panel/src/**",
+      "plugins/ui/chat/outbox/src/**",
       "plugins/ui/chat/quote/src/**",
       "plugins/ui/chat/tool-views/src/**"
     ],

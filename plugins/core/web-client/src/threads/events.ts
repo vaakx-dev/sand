@@ -1,7 +1,7 @@
 import { sessionEntryWire, sessionRemoveWire, sessionUpdateWire, type WireSession } from '@sand/chats/contract'
 import { contextChange } from '@sand/compaction/contract'
 import { artifactSavedWire } from '@sand/html/contract'
-import { applyLiveEvent, type EntryHead, liveSnapshot, llmEventWire, sessionHeadWire } from '@sand/server/contract'
+import { applyLiveEvent, type EntryHead, liveSnapshot, llmEventWire, type Mark, sessionHeadWire, uiFocus } from '@sand/server/contract'
 import {
   toolProgressWire,
   toolResultWire,
@@ -27,6 +27,8 @@ const advance = (thread: Thread, entry: EntryHead) => {
   if (entry.type === 'message') thread.live = []
 }
 
+const follows = (last: Mark | undefined, mark: Mark) => (last?.turn === mark.turn ? mark.n === last.n + 1 : mark.n === 1)
+
 const stop = (thread: Thread) => {
   thread.running = false
   clearTurn(thread)
@@ -36,6 +38,16 @@ const stop = (thread: Thread) => {
 export const listenThreads = (wire: Wire, store: Store, load: (id: string) => void) => {
   const thread = ({ $session }: WireSession, device: string) => store.upsert($session, device)
   const known = (id: string) => store.threads.get(id)
+  const resyncing = new Set<string>()
+
+  const resync = ({ id, device }: Thread) => {
+    if (id !== store.current || resyncing.has(id)) return
+    resyncing.add(id)
+    void wire
+      .call(uiFocus, { session: id }, device)
+      .catch(() => {})
+      .finally(() => resyncing.delete(id))
+  }
 
   return joinDisposers(
     listenLegacy(wire, store),
@@ -114,9 +126,11 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
     ),
     wire.on(
       llmEventWire,
-      ([event, session]) => {
+      ([event, session, mark]) => {
         const found = known(session.$session.id)
         if (!found) return
+        if (mark && !follows(found.mark, mark)) return resync(found)
+        found.mark = mark
         found.live = applyLiveEvent(found.live, event)
         store.changed(found.id)
       },
