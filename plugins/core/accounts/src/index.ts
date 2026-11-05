@@ -108,12 +108,13 @@ export default definePlugin({
       const discoverTimer = setInterval(() => void catalog.refresh(), discoverEvery)
       peerTimer.unref?.()
       discoverTimer.unref?.()
-      return () => {
+      return async () => {
         live = false
         clearInterval(peerTimer)
         clearInterval(discoverTimer)
         login.dispose()
         bridges.close()
+        await catalog.idle()
       }
     })
     ctx.watch(serverService, found => {
