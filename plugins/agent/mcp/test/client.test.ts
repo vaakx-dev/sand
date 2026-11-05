@@ -44,7 +44,7 @@ const nextToolsChange = () =>
   })
 
 const turn = async () => {
-  await sand.loop.run(chat, 'go')
+  await sand.turns.run(chat, 'go')
   const [result] = chat.messages().at(-2)?.content ?? []
   return result
 }
