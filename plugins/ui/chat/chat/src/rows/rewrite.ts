@@ -29,7 +29,7 @@ export const rewriteActions = (ctx: ChatContext, thread: string, entry: string, 
       group: 'rewrite',
       label: 'Edit message',
       icon: 'pencil',
-      confirm: 'Go back to before this message? The replies after it leave the thread.',
+      confirm: 'Go back to before this message? Its replies stay, and you can switch back to them.',
       run: edit,
     },
   ]

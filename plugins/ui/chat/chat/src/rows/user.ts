@@ -55,7 +55,7 @@ const bubble = (text: string, press: TextMenu, context: RowContext) =>
 const message = (...children: Child[]) =>
   div({ class: 'chat-row group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
-export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[], note?: () => Child, branches?: () => Child) =>
+export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[], note?: () => Child) =>
   row(`user:${item.key}`, item, () => {
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
@@ -68,24 +68,17 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
       note?.(),
       div(
         { class: '-mt-1 flex items-center gap-1' },
-        actionRow(
-          '',
+        actionRow([
           text && context.kit.copyButton({ text: () => text, size: 'sm' }),
           show(
             () => spec().actions.length > 0,
             () => menus.more(context.menu, spec),
           ),
-        ),
-        branches?.(),
+        ]),
+        !item.steer && context.branchSwitch(item.key),
       ),
     )
   })
 
 export const userRow: RowMaker<'user'> = (item, context) =>
-  userMessage(
-    item,
-    context,
-    text => [...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))],
-    undefined,
-    item.steer ? undefined : () => context.branches(item.key),
-  )
+  userMessage(item, context, text => [...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))])

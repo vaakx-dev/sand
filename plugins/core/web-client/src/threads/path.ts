@@ -1,4 +1,4 @@
-import { type Entry, hasToolResult, type Message } from '@sand/chats/contract'
+import { type Entry, isPrompt } from '@sand/chats/contract'
 import type { Thread } from '../contract'
 
 const walk = (entries: Map<string, Entry>, head: string | null) => {
@@ -10,8 +10,6 @@ const walk = (entries: Map<string, Entry>, head: string | null) => {
   }
   return path.reverse()
 }
-
-const isPrompt = (message: Message) => message.role === 'user' && !hasToolResult(message)
 
 const shownHead = ({ info, entries, cursor }: Thread) => (info.head && !entries.has(info.head) && cursor ? cursor : info.head)
 
@@ -28,10 +26,7 @@ export const pathOf = (thread: Thread, carried = false): Entry[] => {
   return [...thread.carried.filter(entry => !thread.entries.has(entry.id)), ...path]
 }
 
-export const turnStart = (thread: Thread) =>
-  loadedPath(thread)
-    .filter(entry => entry.type === 'message' && isPrompt(entry.data as Message))
-    .at(-1)?.at
+export const turnStart = (thread: Thread) => loadedPath(thread).findLast(isPrompt)?.at
 
 export const merge = (thread: Thread, entries: Entry[]) => {
   for (const entry of entries) thread.entries.set(entry.id, entry)

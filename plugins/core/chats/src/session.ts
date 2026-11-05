@@ -63,7 +63,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     since: after => paging.since(info.id, session.head, after),
     carried: (before, types) => paging.carried(info.id, before, types),
     latest: type => (session.head ? paging.latest(info.id, session.head, type) : undefined),
-    branches: entry => branchesOf(all(), entry),
+    branches: entry => branchesOf(session.entries(), entry),
     entries: () => [...all().values()].sort((a, b) => a.seq - b.seq),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {

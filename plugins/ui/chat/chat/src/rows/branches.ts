@@ -1,15 +1,13 @@
 import type { IconName } from '@sand/ui-kit/contract'
-import { div, effect, resource, show, span } from '@vaakx-dev/vrui'
+import { div, effect, show, span } from '@vaakx-dev/vrui'
 import type { ChatContext } from '../context'
 import type { ThreadView } from '../view'
 
 export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) => {
   const { icon, iconButton } = ctx.kit
-  const branches = resource(() => ctx.threads.branches(view.id, entry), { lazy: true })
-  effect(() => {
-    if (view.synced.get()) branches.refetch()
-  })
-  const all = () => branches.data.get() ?? []
+  const { branches } = view
+  effect(() => branches.want(entry))
+  const all = () => branches.of(entry)
   const index = () => all().findIndex(branch => branch.entry === entry)
   const at = (step: number) => all()[index() + step]
 
@@ -20,7 +18,7 @@ export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) 
         class: 'touch:h-10 touch:w-10',
         title,
         'aria-label': title,
-        disabled: () => view.running.get() || !at(step),
+        disabled: () => branches.running.get() || !at(step),
         onClick: () => {
           const branch = at(step)
           if (branch) void ctx.threads.checkout(view.id, branch.leaf)
