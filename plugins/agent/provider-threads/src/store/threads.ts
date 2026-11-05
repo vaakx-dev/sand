@@ -63,6 +63,7 @@ export const createThreadStore = (db: Database) => {
   const open = db.query<Row, { session: string }>("select * from provider_threads where session = $session and status != 'retired' order by used desc")
   const activated = db.query("update provider_threads set status = 'active', used = $used, effort = $effort, speed = $speed where id = $id")
   const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
+  const saw = db.query('update provider_threads set seen = $seen where id = $id')
   const retired = db.query("update provider_threads set status = 'retired' where id = $id")
   const removed = db.query('delete from provider_threads where session = $session')
 
@@ -87,6 +88,7 @@ export const createThreadStore = (db: Database) => {
     activate: (id: string, { effort, speed }: Selection) => void activated.run({ id, used: Date.now(), effort: effort ?? null, speed }),
     settle: (id: string, { seen, context, native }: Settled) =>
       void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
+    see: (id: string, seen: Segment[]) => void saw.run({ id, seen: JSON.stringify(seen) }),
     retire: (id: string) => void retired.run({ id }),
     remove: (session: string) => void removed.run({ session }),
   }

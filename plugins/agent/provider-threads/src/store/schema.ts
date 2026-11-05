@@ -18,4 +18,25 @@ export const schema = [
     )`,
     "create unique index provider_threads_open on provider_threads (session, source, model) where status != 'retired'",
   ],
+  [
+    `create table handoffs (
+      id text primary key,
+      session text not null,
+      turn text not null,
+      thread text not null,
+      generation integer not null,
+      strategy text not null,
+      first_seq integer not null,
+      last_seq integer not null,
+      context text not null,
+      text text not null,
+      items text not null,
+      omitted text not null,
+      delivery text not null,
+      tokens integer not null,
+      at integer not null
+    )`,
+    'create index handoffs_thread on handoffs (thread, delivery)',
+    'create index handoffs_session on handoffs (session)',
+  ],
 ]
