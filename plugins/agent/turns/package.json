@@ -16,7 +16,6 @@
     "@sand/host-runtimes": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/turns-contract": "workspace:*",

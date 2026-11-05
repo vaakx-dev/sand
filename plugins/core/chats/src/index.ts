@@ -6,10 +6,11 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { ledger, sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
+import { entryViews, ledger, sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
 import { open } from './db'
 import { usedMedia } from './media'
 import { createStore } from './store'
+import { createViews } from './views'
 
 export default definePlugin({
   name: 'chats',
@@ -37,6 +38,7 @@ export default definePlugin({
     })
     ctx.provide(sessions, store.sessions)
     ctx.provide(ledger, book)
+    ctx.provide(entryViews, createViews())
     ctx.on(runtimeRelease, ids => ids.forEach(store.forget))
   },
 })

@@ -1,0 +1,26 @@
+{
+  "name": "@sand/provider-threads",
+  "version": "0.0.0",
+  "description": "Keeps what each model of a chat has seen, so a model keeps its cached prefix and a switch hands over only what fits",
+  "type": "module",
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Provider threads",
+    "summary": "What each model of a chat has seen, so switching models keeps caches warm"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/compaction": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

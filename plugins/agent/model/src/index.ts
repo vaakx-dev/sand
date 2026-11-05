@@ -1,7 +1,7 @@
 import { llm } from '@sand/accounts/contract'
 import { sessions } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
-import { contextBuild, turnEnd } from '@sand/turns-contract/contract'
+import { turnEnd } from '@sand/turns-contract/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { createChoices } from './choices'
@@ -28,14 +28,6 @@ export default definePlugin({
       update: updateSettings,
       flags: flags => flagSettings(flags, current()),
     })
-    ctx.on(
-      contextBuild,
-      (request, session) => {
-        const { model, effort, speed } = choices.effective(session)
-        return { ...request, ...(model && { model }), ...(effort && { effort }), speed }
-      },
-      { priority: 150 },
-    )
     ctx.on(turnEnd, session => choices.settle(session))
     ctx.watch(server, found => (found ? serveSettings(ctx, found, choices, defaults) : undefined))
   },

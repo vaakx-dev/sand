@@ -1,13 +1,11 @@
 import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { turns } from '@sand/turns-contract/contract'
-import { modelSettingsChange, type EffectiveSettings, type Selection, type SessionSettings, type SettingsPatch, type SettingsState } from './contract'
+import { modelSettingsChange, modelSource, type EffectiveSettings, type Selection, type SessionSettings, type SettingsPatch, type SettingsState } from './contract'
 import type { Context } from 'drydock'
 import type { Defaults } from './defaults'
 import { resolve } from './effective'
 import { clean, same, settingsOf, writeSettings } from './settings'
-
-const sourceOf = (model: string) => model.slice(0, Math.max(model.indexOf('/'), 0))
 
 const frozen = ({ effort: _, ...settings }: EffectiveSettings, { model, effort, speed }: Selection): EffectiveSettings => ({
   ...settings,
@@ -38,7 +36,7 @@ export const createChoices = (ctx: Context, defaults: Defaults) => {
   const select = (session: Session): Selection | undefined => {
     own(session)
     const { model, effort, speed } = resolved(settingsOf(session))
-    return model ? { source: sourceOf(model), model, ...(effort && { effort }), speed } : undefined
+    return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
   }
 
   const change = (session: Session, patch: SettingsPatch) => {

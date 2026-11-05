@@ -1,4 +1,4 @@
-import type { LLMRequest, Usage } from '@sand/accounts/contract'
+import type { Usage } from '@sand/accounts/contract'
 import {
   type Entry,
   type Message,
@@ -16,6 +16,8 @@ import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Selection, type SessionSettings, sessionSettings } from '@sand/model/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
+
+export * from './threads'
 
 export type TurnStatus = 'running' | 'waiting' | 'completed' | 'interrupted' | 'failed' | 'lost'
 
@@ -49,6 +51,7 @@ export interface TurnInfo {
   status: TurnStatus
   origin: TurnOrigin
   selection: Selection
+  providerThread?: string
   prompt: string
   step: number
   usage: Usage
@@ -113,7 +116,6 @@ export const turnEnd = event<(session: Session, result: TurnResult, info: TurnIn
 export const turnChange = event<(info: TurnInfo) => void>('turn.change')
 export const turnPending = event<(session: Session) => void>('turn.pending')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
-export const contextBuild = event<(request: LLMRequest, session: Session, signal?: AbortSignal) => LLMRequest>('context.build')
 export const contextOverflow = event<(session: Session, error: unknown, signal: AbortSignal) => boolean | undefined>('context.overflow')
 export const toolStart = event<(call: ToolCallBlock, session: Session) => void>('tool.start')
 export const toolProgress = event<(call: ToolCallBlock, text: string, session: Session) => void>('tool.progress')

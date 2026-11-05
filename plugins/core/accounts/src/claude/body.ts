@@ -14,6 +14,8 @@ export interface ClaudeSettings {
 
 const cacheable = new Set<unknown>(['text', 'image', 'document', 'tool_use', 'tool_result'])
 
+const toolId = (id: string) => id.replace(/[^A-Za-z0-9_-]/g, '_')
+
 const mediaBlock = (value: MediaBlock, data: string) => {
   if (value.type === 'image') return { type: 'image', source: { type: 'base64', media_type: value.mediaType, data } }
   return {
@@ -42,9 +44,9 @@ const blockWith = (media: Media) => {
       case 'redacted_thinking':
         return { type: 'redacted_thinking', data: value.data }
       case 'tool_call':
-        return { type: 'tool_use', id: value.id, name: value.name, input: value.input }
+        return { type: 'tool_use', id: toolId(value.id), name: value.name, input: value.input }
       case 'tool_result':
-        return { type: 'tool_result', tool_use_id: value.callId, content: value.content.map(block), is_error: value.isError }
+        return { type: 'tool_result', tool_use_id: toolId(value.callId), content: value.content.map(block), is_error: value.isError }
       case 'tool_reference':
         return { type: 'tool_reference', tool_name: value.name }
     }
