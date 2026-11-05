@@ -55,6 +55,7 @@ export default definePlugin({
       },
       current: session => stores.turns.current(session.id),
       get: id => stores.turns.get(id),
+      list: (session, before, limit) => stores.turns.list(session.id, before, limit),
       wait: createWait(ctx, stores.turns),
       pending: session => stores.pending.list(session.id),
       withdraw(session, pending) {

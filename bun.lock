@@ -176,6 +176,26 @@
         "@sand/harness": "workspace:*",
       },
     },
+    "plugins/agent/orchestrator": {
+      "name": "@sand/orchestrator",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/model": "workspace:*",
+        "@sand/project": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/worktrees": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
+      },
+    },
     "plugins/agent/prompt": {
       "name": "@sand/prompt",
       "version": "0.0.0",
@@ -486,6 +506,20 @@
         "@sand/git": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/cli/threads": {
+      "name": "@sand/cli-threads",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/cli-commands": "workspace:*",
+        "@sand/config": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
       },
     },
     "plugins/cli/usage": {
@@ -1942,6 +1976,8 @@
 
     "@sand/cli-release": ["@sand/cli-release@workspace:plugins/cli/release"],
 
+    "@sand/cli-threads": ["@sand/cli-threads@workspace:plugins/cli/threads"],
+
     "@sand/cli-usage": ["@sand/cli-usage@workspace:plugins/cli/usage"],
 
     "@sand/codex": ["@sand/codex@workspace:plugins/core/codex"],
@@ -2067,6 +2103,8 @@
     "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
 
     "@sand/nav": ["@sand/nav@workspace:plugins/ui/layout/nav"],
+
+    "@sand/orchestrator": ["@sand/orchestrator@workspace:plugins/agent/orchestrator"],
 
     "@sand/outbox": ["@sand/outbox@workspace:plugins/ui/chat/outbox"],
 
