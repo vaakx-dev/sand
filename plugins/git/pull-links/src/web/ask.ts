@@ -16,7 +16,7 @@ interface AskParts {
 
 export const pullAgent = ({ toasts, turns, threads, github, threadsOf, open }: AskParts) => {
   const send = async ({ session }: ThreadPlace, prompt: AgentPrompt) => {
-    const sent = await toasts.attempt(toastId, "Couldn't send to the agent", () => turns.send(session, prompt.text, prompt.label).then(() => true))
+    const sent = await toasts.attempt(toastId, "Couldn't send to the agent", () => turns.send(session, prompt.text, { label: prompt.label }).then(() => true))
     if (!sent) return false
     toasts.show({ id: toastId, tone: 'success', title: 'Sent to the agent', actions: [{ label: 'Show thread', run: () => threads.select(session) }] })
     return true

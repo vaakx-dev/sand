@@ -1,7 +1,7 @@
 import { type Session, sessionClosing, sessionRemove, sessions } from '@sand/chats/contract'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
-import { loop, turnEnd, turnReady } from '@sand/loop/contract'
 import { type Server, server, sessionCarry } from '@sand/server/contract'
+import { turnEnd, turnReady, turns } from '@sand/turns-contract/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'
 import { isWithin } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
@@ -28,10 +28,8 @@ export default definePlugin({
     ctx.effect(() => holds.drain)
 
     const running = (id: string) => {
-      const turns = ctx.get(loop)
-      if (!turns) return false
       const session = ctx.sessions.open(id)
-      return Boolean(session && turns.active(session))
+      return Boolean(session && ctx.get(turns)?.current(session))
     }
 
     const deps: SnapshotDeps = {

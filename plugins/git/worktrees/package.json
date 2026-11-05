@@ -19,7 +19,6 @@
     "@sand/git": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/server": "workspace:*",

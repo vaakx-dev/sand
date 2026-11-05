@@ -64,7 +64,7 @@ export const createRun = (ctx: AgentsContext, { resolve, meta, maxDepth, maxAgen
   const drive = async (session: Session, task: string, signal: AbortSignal): Promise<AgentResult> => {
     const release = await take(signal)
     try {
-      return { ...(await ctx.loop.run(session, task, signal)), session }
+      return { ...(await ctx.turns.run(session, task, { origin: 'agent', signal })), session }
     } finally {
       release()
     }

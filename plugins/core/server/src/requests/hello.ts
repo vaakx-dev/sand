@@ -1,5 +1,5 @@
 import { type Hello, type HelloField, type HelloValues, helloActive, type InputOf, type hello } from '@sand/host-hub/contract'
-import { turnEnd, turnStart } from '@sand/loop/contract'
+import { turnEnd, turnStart } from '@sand/turns-contract/contract'
 import { helloDelta, helloSessions, helloStarted, helloSync } from '../contract/hello'
 import type { HelloOptions, HelloValue } from '../contract/server'
 import type { ServerContext } from '../context'

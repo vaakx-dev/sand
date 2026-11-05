@@ -1,6 +1,6 @@
 import type { LLMRequest } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
-import { contextBuild, contextOverflow, loop, turnEnd } from '@sand/loop/contract'
+import { contextBuild, contextOverflow, turnEnd, turns } from '@sand/turns-contract/contract'
 import type { CompactionReason } from './contract'
 import type { CompactionContext, Compactor } from './compact'
 import { rewrite } from './history/rewrite'
@@ -32,7 +32,7 @@ export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracke
     contextBuild,
     async (request, session, signal) => {
       let current = rewrite(session.path(), request)
-      if (!ctx.get(loop)?.active(session)) return current
+      if (!ctx.get(turns)?.current(session)) return current
       const reason = due(session, current)
       if (reason && (await attempt(session, current, reason, signal))) current = rewrite(session.path(), request)
       tracker.sent(session.id, current.messages.length)

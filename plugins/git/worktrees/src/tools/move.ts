@@ -1,6 +1,5 @@
 import type { Session } from '@sand/chats/contract'
-import type { Loop } from '@sand/loop/contract'
-import type { TurnResult } from '@sand/turns-contract/contract'
+import type { TurnResult, Turns } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import type { WorktreeDeps } from '../deps'
 import { moveThread } from '../move/move'
@@ -29,14 +28,14 @@ const moved = async (deps: WorktreeDeps, session: Session, { branch, task }: Pen
   }
 }
 
-export const createMoves = (deps: WorktreeDeps, loop: () => Loop | undefined, hold: () => () => void) => {
+export const createMoves = (deps: WorktreeDeps, turns: () => Turns | undefined, hold: () => () => void) => {
   const pending = new Map<string, PendingMove>()
 
   const carryOn = async (session: Session, move: PendingMove) => {
     const release = hold()
     const text = await moved(deps, session, move).finally(release)
-    const running = loop()
-    if (text && running) await running.run(deps.sessions.require(session.id), text)
+    const running = turns()
+    if (text && running) await running.run(deps.sessions.require(session.id), text, { origin: 'agent' })
   }
 
   return {

@@ -3,7 +3,7 @@ import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelPill } from '@sand/model-panel/contract'
 import { pluginReload } from '@sand/reload/contract'
 import { errorMessage } from '@sand/util'
-import { models, modelsChange, threadChange, threadSelect } from '@sand/web-client/contract'
+import { models, modelsChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { createFiles } from './attachments/files'
@@ -108,17 +108,17 @@ export const createModel = (ctx: ComposerContext) => {
     })
   }
 
-  const sendPrompt = (value: string) => {
+  const sendPrompt = (value: string, mode?: SendOptions['mode']) => {
     const before = typed()
     const task = async () => {
       const items = await files.upload(sendDevice(ctx))
-      await submit(ctx, value, items, settings())
+      await submit(ctx, value, items, settings(), mode)
       if (unchanged(before)) clear()
     }
     return attempt(true, task, couldNotSend)
   }
 
-  const send = async () => {
+  const send = async (mode?: SendOptions['mode']) => {
     if (sending.get() || blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
     const attached = files.items.get().length > 0
@@ -126,7 +126,7 @@ export const createModel = (ctx: ComposerContext) => {
     if (!attached && value === reloadText && reloader) return reload(reloader.run)
     const pill = ctx.get(modelPill)
     if ((value || attached) && modelMissing(ctx, settings()) && pill) return pill.open()
-    return sendPrompt(value)
+    return sendPrompt(value, mode)
   }
 
   return {

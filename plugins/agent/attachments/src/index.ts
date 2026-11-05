@@ -1,5 +1,5 @@
 import { cli } from '@sand/config/contract'
-import { turnPrompt } from '@sand/loop/contract'
+import { turnPrompt } from '@sand/turns-contract/contract'
 import { media } from '@sand/media/contract'
 import { server } from '@sand/server/contract'
 import { transfers } from '@sand/transfers/contract'

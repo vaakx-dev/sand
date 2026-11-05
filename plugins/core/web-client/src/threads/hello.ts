@@ -1,13 +1,19 @@
-import { helloActive } from '@sand/host-hub/contract'
-import { helloDelta, helloSessions, helloStarted, helloSync } from '@sand/server/contract'
+import { helloDelta, helloSessions, helloSync } from '@sand/server/contract'
+import { helloTurns, helloTurnsApi } from '@sand/turns-contract/contract'
 import type { Thread } from '../contract'
 import type { HelloRead } from '../greeted'
+import { legacyRunning } from './legacy'
 import { clearTurn } from './live'
 import type { Store } from './store'
 
 export const stale = (thread: Thread) => {
   if (thread.info.head && thread.entries.has(thread.info.head)) thread.cursor = thread.info.head
   thread.loaded = false
+}
+
+const runningOf = (read: HelloRead): Map<string, number | undefined> => {
+  if (!read(helloTurnsApi)) return legacyRunning(read)
+  return new Map(Object.entries(read(helloTurns) ?? {}).map(([id, turn]) => [id, turn.started]))
 }
 
 export const applyHello = (store: Store, read: HelloRead, device: string) => {
@@ -19,12 +25,11 @@ export const applyHello = (store: Store, read: HelloRead, device: string) => {
     for (const thread of owned()) if (!known.has(thread.id)) store.remove(thread.id)
   }
   for (const info of sessions) store.upsert(info, device)
-  const active = new Set(read(helloActive))
-  const started = read(helloStarted)
+  const running = runningOf(read)
   for (const thread of owned()) {
-    thread.running = active.has(thread.id)
+    thread.running = running.has(thread.id)
     if (!thread.running) clearTurn(thread)
-    else thread.started ??= started?.[thread.id]
+    else thread.started ??= running.get(thread.id)
     store.changed(thread.id)
   }
   const sync = read(helloSync)

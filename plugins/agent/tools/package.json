@@ -22,6 +22,7 @@
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

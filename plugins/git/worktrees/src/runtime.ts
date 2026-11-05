@@ -1,12 +1,12 @@
 import { sessions, sessionSettle, textOf } from '@sand/chats/contract'
 import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
-import { loop, turnEnd, turnPrompt, turnStart } from '@sand/loop/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { type Server, server } from '@sand/server/contract'
 import { shellReady, shellRunner } from '@sand/shell/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { tools } from '@sand/tools/contract'
+import { turnEnd, turnPrompt, turnStart, turns } from '@sand/turns-contract/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'
 import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
@@ -54,8 +54,7 @@ export default definePlugin({
 
     const busy = (id: string): boolean => {
       const session = ctx.sessions.open(id)
-      const running = ctx.get(loop)
-      return Boolean(session && running?.active(session)) || ctx.sessions.children(id).some(child => busy(child.id))
+      return Boolean(session && ctx.get(turns)?.current(session)) || ctx.sessions.children(id).some(child => busy(child.id))
     }
 
     const deps: WorktreeDeps = {
@@ -79,13 +78,13 @@ export default definePlugin({
     }
 
     const survey = createSurvey(deps, () => ctx.get(worktreePulls))
-    const moves = createMoves(deps, () => ctx.get(loop), () => ctx.busy())
+    const moves = createMoves(deps, () => ctx.get(turns), () => ctx.busy())
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
     ctx.watch(subModel, found => found?.job(branchJob))
     ctx.watch(subModel, found => found?.job(setupJob))
     ctx.on(turnEnd, (session, result) => moves.ended(session, result))
-    ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(loop)) : undefined))
+    ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(turns)) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
     const parking = createParking(deps)
     ctx.on(sessionSettle, parking.settled)

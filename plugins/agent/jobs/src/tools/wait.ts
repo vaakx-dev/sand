@@ -1,6 +1,6 @@
 import type { Session } from '@sand/chats/contract'
-import { steering, turnQueue } from '@sand/steering/contract'
 import type { Tool } from '@sand/tools/contract'
+import { turnPending } from '@sand/turns-contract/contract'
 import { duration } from '@sand/util'
 import { z } from 'zod'
 import type { JobsContext } from '../context'
@@ -24,9 +24,9 @@ const userSpoke = 'The user sent a message; running jobs keep running.'
 
 const finished = (entries: Entry[]) => entries.every(({ job }) => job.status !== 'running')
 
-const settle = (ctx: JobsContext, delivery: Delivery, entries: Entry[], session: Session, timeout: number, signal: AbortSignal) =>
+const settle = (ctx: JobsContext, entries: Entry[], session: Session, timeout: number, signal: AbortSignal) =>
   new Promise<string>(resolve => {
-    const spoke = () => Boolean(ctx.get(steering)?.list(session).some(item => !delivery.isNotice(item.id)))
+    const spoke = () => ctx.turns.pending(session).some(item => item.kind === 'steer' && item.origin === 'user')
     const finish = (reason: string) => {
       clearTimeout(timer)
       for (const stop of stops) void stop()
@@ -39,8 +39,8 @@ const settle = (ctx: JobsContext, delivery: Delivery, entries: Entry[], session:
       ctx.on(jobEnd, () => {
         if (finished(entries)) finish(allDone)
       }),
-      ctx.on(turnQueue, queued => {
-        if (queued.id === session.id) queueMicrotask(() => spoke() && finish(userSpoke))
+      ctx.on(turnPending, changed => {
+        if (changed.id === session.id && spoke()) finish(userSpoke)
       }),
     ]
     signal.addEventListener('abort', abort, { once: true })
@@ -57,7 +57,7 @@ export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): To
   timeoutMs: maxTimeout + settleGrace,
   async run({ jobs, timeout_ms = defaultTimeout }, { session, signal }) {
     const entries = jobs.map(id => store.own(session, id))
-    const reason = await settle(ctx, delivery, entries, session, timeout_ms, signal)
+    const reason = await settle(ctx, entries, session, timeout_ms, signal)
     signal.throwIfAborted()
     const reports = entries.map(({ job, output }) => {
       if (job.status === 'running') return jobLine(ctx.sessions, job)

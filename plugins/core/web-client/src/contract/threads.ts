@@ -1,8 +1,7 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
-import type { TurnResult } from '@sand/turns-contract/contract'
+import type { PendingItem, TurnResult } from '@sand/turns-contract/contract'
 import type { Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import type { Pending } from '@sand/steering/contract'
 import type { Dispose } from 'drydock'
 
 export interface ToolProgress {
@@ -28,7 +27,7 @@ export interface Thread {
   live: LiveBlock[]
   tools: ToolProgress
   step?: ToolCallBlock
-  queued: Pending[]
+  pending: PendingItem[]
   context?: ContextUsage
   ended?: TurnResult
   version: number

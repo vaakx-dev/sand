@@ -14,7 +14,6 @@
     "@sand/compaction": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/html": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/usage": "workspace:*",

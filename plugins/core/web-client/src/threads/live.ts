@@ -12,7 +12,6 @@ export const clearTurn = (thread: Thread) => {
   thread.started = undefined
   thread.live = []
   thread.tools = { running: new Set(), results: new Map(), logs: new Map() }
-  thread.queued = []
 }
 
 export const addLog = (thread: Thread, id: string, text: string) => {

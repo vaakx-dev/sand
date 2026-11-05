@@ -1,5 +1,5 @@
 import { sessions, type Session } from '@sand/chats/contract'
-import { contextBuild, loop, turnEnd, turnStart } from '@sand/loop/contract'
+import { contextBuild, turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
 import { context } from '@sand/prompt/contract'
 import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
@@ -23,7 +23,7 @@ export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracke
   const compact = async (id: string) => {
     timers.delete(id)
     const session = ctx.get(sessions)?.open(id)
-    if (!session || session.settled || ctx.get(loop)?.active(session)) return
+    if (!session || session.settled || ctx.get(turns)?.current(session)) return
     const request = await requestOf(session)
     if (!request || tracker.project(id, request) < worthCompacting) return
     const release = ctx.busy()

@@ -20,7 +20,6 @@
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
-    "@sand/loop": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/turns-contract": "workspace:*",
