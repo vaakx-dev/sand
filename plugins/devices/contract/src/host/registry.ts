@@ -1,5 +1,5 @@
 import { type Dispose, service } from 'drydock'
-import type { DeviceRecord, NewDevice } from '../records'
+import type { DevicePush, DeviceRecord, NewDevice } from '../records'
 import type { PcIcon } from '../schemas'
 
 export interface AddedKey {
@@ -17,6 +17,7 @@ export interface Registry {
   rename(id: string, name: string, by: string): Promise<DeviceRecord>
   setIcon(id: string, icon: PcIcon): Promise<DeviceRecord>
   setDetectedIcon(id: string, icon: PcIcon): Promise<DeviceRecord>
+  setPush(id: string, push: DevicePush | undefined): Promise<DeviceRecord>
   remove(id: string, by: string): Promise<void>
   merge(records: DeviceRecord[]): Promise<DeviceRecord[]>
   onChange(listener: (changed: DeviceRecord[]) => void): Dispose

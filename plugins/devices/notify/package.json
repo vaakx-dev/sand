@@ -1,0 +1,33 @@
+{
+  "name": "@sand/devices-notify",
+  "version": "0.0.0",
+  "description": "Notifies your phones and browsers when a moment needs them, on the page and by Web Push",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/host/index.ts",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Notifications",
+    "summary": "Notifies this phone or browser when a turn finishes or fails on any of your PCs"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/loop": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

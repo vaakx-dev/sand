@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowUpFromLine,
   ArrowUp,
+  Bell,
   Bot,
   ChartColumn,
   Check,
@@ -190,6 +191,7 @@ const nodes = {
   server: Server,
   cloud: Cloud,
   cpu: Cpu,
+  bell: Bell,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes | (string & {})
