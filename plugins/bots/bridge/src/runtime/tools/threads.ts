@@ -5,7 +5,8 @@ import { z } from 'zod'
 import type { BridgeContext } from '../context'
 import { toThread } from '../relay'
 import type { Starts } from '../starts'
-import { timeoutInput, toolTimeout, waitSignal } from './wait'
+import type { Waits } from '../waits'
+import { replyWaitInput, toolTimeout, waitSignal } from './wait'
 
 const listed = 20
 
@@ -22,6 +23,11 @@ const threadOf = (ctx: BridgeContext, thread: string) => {
 }
 
 const active = (conversation: Conversation) => conversation.owner === 'bot'
+
+const replyOf = (ctx: BridgeContext, waits: Waits, bot: string, thread: string, signal: AbortSignal, timeout?: number) =>
+  timeout
+    ? waits.during(bot, thread, () => ctx.orchestrator.wait(thread, 'attention', waitSignal(signal, timeout)))
+    : ctx.orchestrator.wait(thread, 'attention', AbortSignal.abort())
 
 const listTool = (ctx: BridgeContext): Tool => ({
   name: 'thread_list',
@@ -49,13 +55,13 @@ const startInput = z.object({
   project: z.string().describe('The project id, from thread_list'),
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
   title: z.string().optional(),
-  timeout_ms: timeoutInput,
+  timeout_ms: replyWaitInput,
 })
 
-const startTool = (ctx: BridgeContext, starts: Starts): Tool<typeof startInput> => ({
+const startTool = (ctx: BridgeContext, starts: Starts, waits: Waits): Tool<typeof startInput> => ({
   name: 'thread_start',
   description:
-    'Start a thread in a project with a first message. It works like any thread the user starts, and says you started it. Waits for its reply; when it takes longer you get the thread as a handle, and thread_read shows the reply later',
+    "Start a thread in a project with a first message. It works like any thread the user starts, and says you started it. Returns at once; each time it finishes, its final reply reaches you as a <task-notification>, so don't wait or poll for it",
   input: startInput,
   effect: 'run',
   active,
@@ -70,20 +76,20 @@ const startTool = (ctx: BridgeContext, starts: Starts): Tool<typeof startInput> 
       clientRequestId: `${conversation.id}:${call.id}`,
     })
     starts.put(sent.thread, bot.id)
-    return JSON.stringify(await ctx.orchestrator.wait(sent.thread, 'attention', waitSignal(signal, timeout_ms)))
+    return JSON.stringify(await replyOf(ctx, waits, bot.id, sent.thread, signal, timeout_ms))
   },
 })
 
 const sendInput = z.object({
   thread: z.string().describe('The thread id'),
   prompt: z.string().min(1).describe('The message'),
-  timeout_ms: timeoutInput,
+  timeout_ms: replyWaitInput,
 })
 
-const sendTool = (ctx: BridgeContext): Tool<typeof sendInput> => ({
+const sendTool = (ctx: BridgeContext, waits: Waits): Tool<typeof sendInput> => ({
   name: 'thread_send',
   description:
-    'Send a message to a thread. Waits for its reply; when it takes longer you get the thread as a handle, and thread_read shows the reply later',
+    'Send a message to a thread. Returns at once; a thread you started sends its final reply as a <task-notification>, and thread_read shows the reply of any other',
   input: sendInput,
   effect: 'run',
   active,
@@ -96,7 +102,7 @@ const sendTool = (ctx: BridgeContext): Tool<typeof sendInput> => ({
       origin: 'bot',
       clientRequestId: `${conversation.id}:${call.id}`,
     })
-    return JSON.stringify(await ctx.orchestrator.wait(thread, 'attention', waitSignal(signal, timeout_ms)))
+    return JSON.stringify(await replyOf(ctx, waits, bot.id, thread, signal, timeout_ms))
   },
 })
 
@@ -119,4 +125,9 @@ const readTool = (ctx: BridgeContext): Tool<typeof readInput> => ({
   },
 })
 
-export const threadTools = (ctx: BridgeContext, starts: Starts): Tool[] => [listTool(ctx), startTool(ctx, starts), sendTool(ctx), readTool(ctx)]
+export const threadTools = (ctx: BridgeContext, starts: Starts, waits: Waits): Tool[] => [
+  listTool(ctx),
+  startTool(ctx, starts, waits),
+  sendTool(ctx, waits),
+  readTool(ctx),
+]

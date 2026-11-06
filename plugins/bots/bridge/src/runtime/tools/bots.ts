@@ -5,6 +5,7 @@ import { readLimit } from '../../contract'
 import type { Ask } from '../ask'
 import type { BridgeContext } from '../context'
 import { type Sender, toBot } from '../relay'
+import type { Waits } from '../waits'
 import { timeoutInput, toolTimeout, waitSignal } from './wait'
 
 export const group = 'bots'
@@ -34,7 +35,7 @@ const sendInput = z.object({
   timeout_ms: timeoutInput,
 })
 
-const sendTool = (ctx: BridgeContext, ask: Ask): Tool<typeof sendInput> => ({
+const sendTool = (ctx: BridgeContext, ask: Ask, waits: Waits): Tool<typeof sendInput> => ({
   name: 'bots_send',
   description:
     "Hand one of the user's bots a task or question. Waits for its reply; when it takes longer you get its turn as a handle, and bots_read shows the reply later",
@@ -44,7 +45,10 @@ const sendTool = (ctx: BridgeContext, ask: Ask): Tool<typeof sendInput> => ({
   timeoutMs: toolTimeout,
   async run({ bot, prompt, timeout_ms }, { conversation, call, signal }) {
     if (conversation.owner === 'bot' && conversation.id === bot) throw new Error("A bot can't message itself")
-    if (!ctx.bots.get(bot)) throw new Error(`No bot ${bot}`)
+    const found = ctx.bots.get(bot)
+    if (!found) throw new Error(`No bot ${bot}`)
+    if (conversation.owner === 'thread' && waits.has(bot, conversation.id))
+      throw new Error(`${found.name} is waiting for this thread's reply. Ask in your reply and end your turn; its answer comes back as your next message.`)
     const sender = senderOf(ctx, conversation)
     const asked = await ask.ask(bot, {
       prompt: toBot(sender, `${intro[sender.kind](sender.label)}\n\n${prompt}`),
@@ -70,4 +74,4 @@ const readTool = (ask: Ask): Tool<typeof readInput> => ({
   run: ({ bot, ...options }) => JSON.stringify(ask.read(bot, options)),
 })
 
-export const botTools = (ctx: BridgeContext, ask: Ask): Tool[] => [listTool(ctx), sendTool(ctx, ask), readTool(ask)]
+export const botTools = (ctx: BridgeContext, ask: Ask, waits: Waits): Tool[] => [listTool(ctx), sendTool(ctx, ask, waits), readTool(ask)]

@@ -125,7 +125,7 @@ test('a bot starts and messages threads in any project, and the thread records t
   await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
   const bot = await createBot('Builder')
 
-  const started = await use(asBot(bot.id), 'thread_start', { project: 'p1', prompt: 'Fix the README' })
+  const started = await use(asBot(bot.id), 'thread_start', { project: 'p1', prompt: 'Fix the README', timeout_ms: 5000 })
   expect(started).toMatchObject({ status: 'completed', reply: 'README fixed.' })
   const thread = sand.sessions.require(started.thread)
   expect(thread.project).toBe('p1')
@@ -134,10 +134,58 @@ test('a bot starts and messages threads in any project, and the thread records t
   expect(recordsOf(userMessages(thread.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', label: 'Builder', data: { id: bot.id, sent: true } })])
 
   expect(await use(asBot(bot.id), 'thread_list', {})).toEqual([{ project: 'p1', folder, threads: [expect.objectContaining({ thread: thread.id })] }])
-  expect(await use(asBot(bot.id), 'thread_send', { thread: sand.chat('fake/t').id, prompt: 'Hi' })).toMatchObject({ status: 'completed', reply: 'Hi back.' })
+  expect(await use(asBot(bot.id), 'thread_send', { thread: sand.chat('fake/t').id, prompt: 'Hi', timeout_ms: 5000 })).toMatchObject({ status: 'completed', reply: 'Hi back.' })
   const names = (conversation: Conversation) => registry().specs([], conversation).map(spec => spec.name)
   expect(names(asBot(bot.id))).toContain('thread_start')
   expect(names(sand.chat('fake/t'))).not.toContain('thread_start')
+})
+
+const botTexts = async (bot: string) => userMessages((await sand.ask(botConversation, { bot })).entries).map(message => textOf(message.content))
+
+const noticeFor = async (bot: string) => {
+  for (let tries = 0; tries < 300; tries++) {
+    const found = (await botTexts(bot)).find(text => text.startsWith('<task-notification>'))
+    if (found) return found
+    await Bun.sleep(10)
+  }
+  throw new Error('The bot heard nothing')
+}
+
+test('a thread a bot started tells the bot its final reply when it finishes, but not after turns the user starts', async () => {
+  await start([said('README fixed.'), said('Glad to help.')], [said('The README is fixed.')])
+  await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
+  const bot = await createBot('Builder')
+
+  const started = await use(asBot(bot.id), 'thread_start', { project: 'p1', prompt: 'Fix the README' })
+  expect(started).toMatchObject({ status: 'running' })
+  const notice = await noticeFor(bot.id)
+  expect(notice).toContain(`<thread>${started.thread}</thread>`)
+  expect(notice).toContain('<status>done</status>')
+  expect(notice).toContain('README fixed.')
+
+  await sendAndSettle(sand.sessions.require(started.thread), [{ type: 'text', text: 'Thanks' }])
+  await Bun.sleep(100)
+  expect(await botTexts(bot.id)).toHaveLength(1)
+})
+
+test('a thread asking the bot that waits on it is told to ask in its reply, and the bot hears no separate notice', async () => {
+  await start([[{ type: 'hold' }]], [])
+  await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
+  const bot = await createBot('Builder')
+
+  const started = use(asBot(bot.id), 'thread_start', { project: 'p1', prompt: 'Fix the README', timeout_ms: 10_000 })
+  let thread: string | undefined
+  while (!thread) {
+    thread = Object.keys(await sand.ask(botStarts, {}))[0]
+    await Bun.sleep(10)
+  }
+  const session = sand.sessions.require(thread)
+  expect(await use(session, 'bots_send', { bot: bot.id, prompt: 'Which README?' })).toEqual({ error: expect.stringContaining('waiting for this thread') })
+
+  sand.turns.interrupt(session)
+  expect(await started).toMatchObject({ thread, status: 'interrupted' })
+  await Bun.sleep(100)
+  expect(await botTexts(bot.id)).toEqual([])
 })
 
 test('a bot cannot message itself, since its turn would wait on its own reply', async () => {
