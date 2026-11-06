@@ -12,7 +12,7 @@ const openWidth = { width: 'clamp(380px, 45vw, 640px)' }
 const listPane = (ctx: WorkContext, parts: WorkParts, tab: Sig<Tab>, open: (thread: string) => void) =>
   div(
     { class: 'flex w-64 flex-col' },
-    ctx.kit.paneHead({}, tabSwitch(ctx, tab)),
+    ctx.kit.paneHead({}, tabSwitch(ctx, parts, tab)),
     div({ class: 'flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain px-2 pb-4', style: ctx.kit.stableGutter }, tabBody(ctx, parts, tab, open)),
   )
 

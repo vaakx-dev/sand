@@ -5,7 +5,7 @@ import { contextChips } from '@sand/context/contract'
 import { sidebar } from '@sand/sidebar/contract'
 import { span } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { botKind, botReplyEntry, type BotReplyEntry } from '../contract'
+import { botKind, botReplyEntry, botStarters, type BotReplyEntry } from '../contract'
 import { replyCard } from './card'
 import { inject } from './context'
 import { botFace } from './face'
@@ -21,6 +21,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const roster = createRoster(ctx)
+    ctx.provide(botStarters, { startedBy: roster.startedBy })
     const project = projectSection(ctx, roster)
     ctx.watch(botProfile, found => found?.section({ id: 'project', order: 5, render: project }))
     ctx.watch(composer, found => found?.trigger(botTrigger(roster), 5))

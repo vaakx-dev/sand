@@ -31,6 +31,7 @@ export default definePlugin({
     const partsFor = (bot: string) => ({
       tasks: tasksFor(bot),
       started: () => roster.startedBy(bot).length > 0,
+      startsThreads: roster.startsThreads,
       plan: createPlan(ctx, bot),
       markdown: renderer,
     })
