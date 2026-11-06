@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import type { RemoveCheck, RemoveResult } from '../contract'
 import { rolledBack } from '../create/rollback'
 import type { WorktreeDeps } from '../deps'
+import { dropStash, restoreStash, stashChanges } from '../move/carry'
 import type { WorktreeRecord } from '../records/schema'
 import { currentBranch, headCommit } from '../repo/refs'
 import { longGitMs } from '../repo/timeout'
@@ -45,20 +46,24 @@ const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: 
 
 const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean, note: RemovedNote): Promise<RemoveResult> => {
   const check = await removeCheck(deps, record)
-  if (check.running || (loses(check) && !force)) return { removed: false, check, message: lossMessage(check) }
+  if (check.running || (loses(check) && !force)) return { removed: false, check, message: lossMessage(check, deps.keepDays.removed) }
   const exists = existsSync(record.path)
   const head = (await lastHead(deps, record, exists)) || record.head
   const branch = exists ? await currentBranch(deps.git, record.path) : record.branch
-  if (head) await keepHead(deps.git, record, head)
+  const saved = check.uncommitted ? await stashChanges(deps.git, record.path) : undefined
+  const kept = saved?.commit ?? head
   await deps.setups.forget(record.path)
   let moved: string[] = []
   try {
+    if (kept) await keepHead(deps.git, record, kept)
+    if (saved) await dropStash(deps.git, record.path, saved)
     moved = await moveThreadsOut(deps, record, branch, note)
     await detach(deps, record, exists)
   } catch (error) {
     throw await rolledBack(error, async () => {
       const back = await relocateAll(deps, moved, record.main, record.path, cwd => keptNote(record, cwd))
-      if (head) await dropKeptHead(deps.git, record)
+      if (saved) await restoreStash(deps.git, record.path, saved)
+      if (kept) await dropKeptHead(deps.git, record)
       if (back.failed.length) throw new Error(`These threads stay in the main checkout: ${back.failed.join('; ')}`)
     })
   }
@@ -66,6 +71,7 @@ const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: bool
   record.removed = Date.now()
   record.sessions = withSessions(record.sessions, moved)
   if (head) record.head = head
+  if (saved) record.saved = saved.commit
   if (branch) record.branch = branch
   delete record.temp
   await deps.store.save()
@@ -81,8 +87,10 @@ export const sandRecord = async (deps: WorktreeDeps, path: string) => {
 
 export const removeWorktree = async (deps: WorktreeDeps, { path, force }: RemoveRequest, note: RemovedNote = removedNote): Promise<RemoveResult> => {
   const record = await sandRecord(deps, path)
-  if (record.removed) throw new Error('This worktree is already removed.')
-  const result = await deps.queue(record.main, () => removeNow(deps, record, Boolean(force), note))
+  const result = await deps.queue(record.main, () => {
+    if (record.removed) throw new Error('This worktree is already removed.')
+    return removeNow(deps, record, Boolean(force), note)
+  })
   if (result.removed) await deps.changed(record.main)
   return result
 }

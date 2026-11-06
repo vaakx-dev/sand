@@ -1,24 +1,15 @@
 import { noteBlock, type Session } from '@sand/chats/contract'
 import { errorMessage } from '@sand/util'
+import type { WorktreePulls } from '../contract'
 import type { WorktreeDeps } from '../deps'
-import { notRestoredNote, parkedNote } from '../remove/notes'
-import { removeWorktree } from '../remove/remove'
+import { notRestoredNote } from '../remove/notes'
 import { restoreRecord, waitingThreads } from '../remove/restore'
-import { threadsIn } from '../sessions/inside'
+import { tidyWorktree } from './tidy'
 
-const onlyThread = (deps: WorktreeDeps, path: string, id: string) => {
-  const inside = threadsIn(deps.sessions, path)
-  return inside.length === 1 && inside[0]?.id === id
-}
-
-const parkNow = async (deps: WorktreeDeps, session: Session) => {
+const parkNow = async (deps: WorktreeDeps, pulls: WorktreePulls | undefined, session: Session) => {
   await deps.store.ready()
   const record = deps.store.containing(session.cwd)
-  if (!record || !session.settled || !onlyThread(deps, record.path, session.id)) return
-  const result = await removeWorktree(deps, { path: record.path }, parkedNote)
-  if (!result.removed) return
-  record.parked = true
-  await deps.store.save()
+  if (record) await tidyWorktree(deps, pulls, record, Date.now())
 }
 
 const parkedFor = (deps: WorktreeDeps, session: Session) =>
@@ -38,12 +29,12 @@ const resumeNow = async (deps: WorktreeDeps, session: Session) => {
   }
 }
 
-export const createParking = (deps: WorktreeDeps) => {
+export const createParking = (deps: WorktreeDeps, pulls: () => WorktreePulls | undefined) => {
   const parking = new Map<string, Promise<void>>()
 
   const settled = (session: Session) => {
     if (session.kind !== 'thread' || !session.settled) return
-    const run = parkNow(deps, session)
+    const run = parkNow(deps, pulls(), session)
       .catch(error => deps.report(new Error(`Kept the worktree of a settled thread: ${errorMessage(error)}`)))
       .finally(() => parking.delete(session.id))
     parking.set(session.id, run)

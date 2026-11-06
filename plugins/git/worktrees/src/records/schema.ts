@@ -24,6 +24,7 @@ const record = z.object({
   branch: z.string().optional(),
   base: z.string().optional(),
   head: z.string().optional(),
+  saved: z.string().optional(),
   sessions: z.array(z.string()),
   created: z.number(),
   removed: z.number().optional(),

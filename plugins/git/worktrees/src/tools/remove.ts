@@ -8,7 +8,10 @@ import type { Survey } from '../status/survey'
 
 const input = z.object({
   path: z.string().describe('The worktree folder, as worktree_list shows it'),
-  force: z.boolean().optional().describe('Also remove it when it has uncommitted files or unpushed commits, which are then lost. Only when the user said so'),
+  force: z
+    .boolean()
+    .optional()
+    .describe('Also remove it when it has uncommitted files or unpushed commits. Sand sets that work aside, and restoring the worktree brings it back. Only when the user said so'),
 })
 
 export const removeTool = (deps: WorktreeDeps, survey: Survey): Tool<typeof input> => ({
@@ -26,6 +29,6 @@ export const removeTool = (deps: WorktreeDeps, survey: Survey): Tool<typeof inpu
     const result = await removeWorktree(deps, { path: folder, force })
     if (result.removed) return `Removed ${folder}${size === undefined ? '' : `, freeing ${bytes(size)}`}.`
     if (result.check.running) return `Kept ${folder}. ${result.message}`
-    return `Kept ${folder}. ${result.message} Commit and push that work first, or pass force: true if the user agreed to lose it.`
+    return `Kept ${folder}. ${result.message} Commit and push that work first, or pass force: true if the user agreed.`
   },
 })
