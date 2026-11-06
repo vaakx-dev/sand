@@ -24,8 +24,11 @@ export const addressLayer = () => {
 }
 
 let waiting: (() => void)[] | undefined
+let covered: { href: string; restore: () => void } | undefined
 
 const settle = () => {
+  if (covered && !addressLayer() && location.href === covered.href) covered.restore()
+  covered = undefined
   const changes = waiting ?? []
   waiting = undefined
   for (const change of changes) change()
@@ -50,8 +53,16 @@ export const pushAddress = (params: AddressParams, state: AddressState) => {
   write(() => history.pushState(page, '', urlOf(params)))
 }
 
-export const updateAddress = (params: AddressParams, state: AddressState = {}) =>
-  write(() => history.replaceState({ ...addressState(), ...state }, '', urlOf({ ...addressParams(), ...params }, location.hash)))
+export const updateAddress = (params: AddressParams, state: AddressState = {}) => {
+  const change = () => history.replaceState({ ...addressState(), ...state }, '', urlOf({ ...addressParams(), ...params }, location.hash))
+  if (waiting) return void waiting.push(change)
+  if (!addressLayer()) return change()
+  const href = covered?.href ?? location.href
+  change()
+  const { [layerKey]: _, ...page } = addressState()
+  const url = location.href
+  covered = { href, restore: () => history.replaceState(page, '', url) }
+}
 
 export const backAddress = () => history.go(addressLayer() ? -2 : -1)
 

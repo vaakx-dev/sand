@@ -145,7 +145,7 @@ describe.each(phones)('settings on a $name', size => {
     await page.getByRole('button', { name: 'MCP servers', exact: true }).click()
     await page.mouse.click(size.width - 10, size.height / 2)
     expect(await closed()).toBe(0)
-    await Bun.sleep(300)
+    await page.waitForFunction(() => !history.state?.layer)
     expect(new URL(page.url()).searchParams.get('settings')).toBe('mcp')
 
     await page.getByRole('button', { name: 'Settings pages' }).click()
