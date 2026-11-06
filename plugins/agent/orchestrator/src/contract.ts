@@ -137,11 +137,6 @@ export interface ThreadRow {
   pc?: string
 }
 
-export interface ProjectRow {
-  project: string
-  folder: string
-}
-
 export const failureCodes = ['not_found', 'invalid_request', 'unavailable', 'denied', 'failed'] as const
 
 export type FailureCode = (typeof failureCodes)[number]
@@ -230,7 +225,6 @@ export const threadUpdate = request('thread.update', {
   callers,
   place,
 })
-export const threadProjects = request('thread.projects', { input: z.object({}), output: type<ProjectRow[]>(), callers })
 
 export const settled = (status: ThreadStatus, until: WaitUntil) => status !== 'running' && (until === 'attention' || status !== 'waiting')
 

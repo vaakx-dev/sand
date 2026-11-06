@@ -20,7 +20,6 @@ const run = (name: string, input: Record<string, unknown>) => {
 test('only the tools that change threads need operate access', () => {
   expect(Object.fromEntries(threadTools.map(tool => [tool.name, tool.access]))).toEqual({
     thread_list: 'read',
-    project_list: 'read',
     thread_read: 'read',
     thread_start: 'operate',
     thread_send: 'operate',

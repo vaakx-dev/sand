@@ -12,6 +12,15 @@ export interface PeerView extends Diagnosis {
   build?: BuildInfo
 }
 
+interface NamedPc {
+  id: string
+  name: string
+}
+
+export const findPc = <P extends NamedPc>(pcs: P[], name: string) => pcs.find(pc => pc.id === name || pc.name.toLowerCase() === name.toLowerCase())
+
+export const noSuchPc = (pcs: NamedPc[], name: string) => `No paired PC is called ${name}. Paired PCs: ${pcs.map(pc => pc.name).join(', ') || 'none'}`
+
 export type PeerOutcome<O> = { pc: string; ok: true; value: O } | { pc: string; ok: false; error: unknown }
 
 export interface Peers {

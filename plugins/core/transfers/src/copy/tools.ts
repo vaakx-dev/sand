@@ -1,4 +1,4 @@
-import type { Peers, PeerView } from '@sand/devices-contract'
+import { findPc, noSuchPc, type Peers, type PeerView } from '@sand/devices-contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
 import type { Request } from '@sand/host-hub/contract'
 import type { Tool } from '@sand/tools/contract'
@@ -37,8 +37,8 @@ export const pcTools = (home: string, transfers: TransferStore, linked: () => Pe
 
   const paired = (name: string) => {
     const pcs = connected().list()
-    const found = pcs.find(pc => pc.id === name || pc.name.toLowerCase() === name.toLowerCase())
-    if (!found) throw new Error(`No paired PC is called ${name}. Paired PCs: ${pcs.map(pc => pc.name).join(', ') || 'none'}`)
+    const found = findPc(pcs, name)
+    if (!found) throw new Error(noSuchPc(pcs, name))
     return found
   }
 

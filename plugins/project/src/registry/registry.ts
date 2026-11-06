@@ -130,7 +130,7 @@ export const createRegistry = (store: ProjectStore, device: string, { changed, p
     return true
   }
 
-  return { all: () => store.all(), inspect, add, update, setIconFile, remove, merge, refresh }
+  return { all: () => store.all(), find: fetched, inspect, add, update, setIconFile, remove, merge, refresh }
 }
 
 export type Registry = ReturnType<typeof createRegistry>

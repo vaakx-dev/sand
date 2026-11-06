@@ -2,7 +2,6 @@ import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
 import {
   readLimit,
   threadList,
-  threadProjects,
   threadRead,
   threadSend,
   threadStart,
@@ -34,8 +33,6 @@ const listInput = z.object({
   mine: z.boolean().optional().describe("Only threads you started (sand's own threads and bots)"),
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
-
-const projectsInput = z.object({})
 
 const readInput = z.object({
   thread,
@@ -98,14 +95,6 @@ export const threadTools: McpTool[] = [
     group: group.name,
     run: (input, { call }) => call(threadList, input),
   } satisfies McpTool<typeof listInput>,
-  {
-    name: 'project_list',
-    description: 'List the projects you can start threads in, with their folders on this PC',
-    input: projectsInput,
-    access: 'read',
-    group: group.name,
-    run: (input, { call }) => call(threadProjects, input),
-  } satisfies McpTool<typeof projectsInput>,
   {
     name: 'thread_read',
     description: 'Read what a thread said; each item has a seq to read on from',

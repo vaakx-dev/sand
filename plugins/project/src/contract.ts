@@ -99,6 +99,25 @@ export interface ProjectFiles {
 
 export const projectFiles = service<ProjectFiles>('projectFiles')
 
+export interface ProjectRow {
+  project: string
+  name: string
+  folder?: string
+  remote?: string
+  hidden?: boolean
+  icon?: ProjectIcon
+  otherPcs?: { pc: string; folder: string }[]
+}
+
+export interface CreatedProject extends ProjectRow {
+  sameRemote?: string[]
+}
+
+export interface RemovedProject {
+  project: string
+  removed: true
+}
+
 const iconInput = z.object({
   shape: z.number().int().positive().optional(),
   hue: z.number().min(0).lt(360).optional(),
@@ -121,6 +140,30 @@ export const projectsRemove = request('projects.remove', { input: z.object({ pro
 export const projectsRoot = request('projects.root', { input: z.object({ root: z.string() }), output: type<ProjectList>() })
 export const projectsCreate = request('projects.create', { input: z.object({ name: z.string() }), output: type<Project>() })
 export const projectsSync = request('projects.sync', { input: z.object({ projects: z.array(z.unknown()) }), output: type<Project[]>(), callers: 'pc' })
+
+export const createInput = z.object({
+  folder: z.string().trim().min(1).optional(),
+  name: z.string().trim().min(1).optional(),
+  git: z.boolean().optional(),
+  copyOf: z.string().min(1).optional(),
+})
+export const updateInput = z.object({
+  project: z.string(),
+  name: z.string().trim().min(1).optional(),
+  hidden: z.boolean().optional(),
+  icon: iconInput.nullable().optional(),
+})
+export const removeInput = z.object({ project: z.string(), pc: z.string().min(1).optional() })
+export const rootInput = z.object({ folder: z.string().trim().min(1).optional() })
+
+const runtime = 'runtime'
+
+export const runtimeProjectRows = request('projects.runtime.rows', { input: z.object({}), output: type<ProjectRow[]>(), callers: runtime })
+export const runtimeProjectRow = request('projects.runtime.row', { input: z.object({ project: z.string() }), output: type<ProjectRow>(), callers: runtime })
+export const runtimeProjectCreate = request('projects.runtime.create', { input: createInput, output: type<CreatedProject>(), callers: runtime })
+export const runtimeProjectUpdate = request('projects.runtime.update', { input: updateInput, output: type<ProjectRow>(), callers: runtime })
+export const runtimeProjectRemove = request('projects.runtime.remove', { input: removeInput, output: type<ProjectRow | RemovedProject>(), callers: runtime })
+export const runtimeProjectRoot = request('projects.runtime.root', { input: rootInput, output: type<{ root: string }>(), callers: runtime })
 
 export const filesList = request('files.list', { input: z.object({ cwd: z.string().optional() }), output: type<string[]>(), place: 'thread' })
 export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string(), query: z.string() }), output: type<GrepMatch[]>(), place: 'thread' })
