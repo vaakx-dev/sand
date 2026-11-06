@@ -49,7 +49,14 @@ const startInput = z.object({
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),
   effort: z.string().optional().describe('Reasoning effort, such as low, medium or high'),
-  worktree: z.boolean().optional().describe('Work in a new git worktree on its own branch'),
+  worktree: z
+    .boolean()
+    .optional()
+    .describe(
+      "Give the thread its own checkout: a git worktree and branch that sand makes, sets up as its working folder, and removes once the thread settles. Use this instead of git worktree add or telling the thread to make one",
+    ),
+  branch: z.string().min(1).optional().describe('An existing local branch for its worktree, instead of a new one. Implies worktree'),
+  from: z.string().min(1).optional().describe("The branch or commit its worktree's new branch starts from (default: the default branch). Implies worktree"),
   clientRequestId,
 })
 
@@ -105,12 +112,16 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof readInput>,
   {
     name: 'thread_start',
-    description: `Start a new sand thread with a first message. It works on its own. Returns its id at once. ${reported}; otherwise use thread_wait`,
+    description: [
+      'Start a new sand thread with a first message. It works on its own. Returns its id at once.',
+      'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
+      `${reported}; otherwise use thread_wait`,
+    ].join(' '),
     input: startInput,
     access: 'operate',
     group: group.name,
-    run: ({ clientRequestId, ...input }, { call, here }) =>
-      call(threadStart, { ...input, cwd: folderOf(input, here), origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
+    run: ({ clientRequestId, from, ...input }, { call, here }) =>
+      call(threadStart, { ...input, ...(from && { base: from }), cwd: folderOf(input, here), origin: 'mcp', clientRequestId: requestId(clientRequestId) }),
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',

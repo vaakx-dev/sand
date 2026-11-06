@@ -27,10 +27,12 @@ const folderOf = (ctx: OrchestratorContext, { cwd, project }: Pick<StartInput, '
   return { cwd: copy.path, project: copy.project }
 }
 
-const inWorktree = async (ctx: OrchestratorContext, cwd: string) => {
+const wantsWorktree = ({ worktree, branch, base }: StartInput) => Boolean(worktree || branch || base)
+
+const inWorktree = async (ctx: OrchestratorContext, cwd: string, { branch, base }: StartInput) => {
   const found = ctx.get(worktrees)
   if (!found) throw failure('invalid_request', 'Worktrees are turned off')
-  return ctx.sessions.require((await found.thread({ cwd })).id)
+  return ctx.sessions.require((await found.thread({ cwd, ...(branch && { branch }), ...(base && { from: base }) })).id)
 }
 
 export type Adopt = (session: Session) => void
@@ -42,7 +44,7 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starte
 
   const open = async (input: StartInput, adopt?: Adopt) => {
     const { cwd, project } = folderOf(ctx, placeOf(input))
-    const session = input.worktree ? await inWorktree(ctx, cwd) : ctx.sessions.thread(cwd, project ? { project } : undefined)
+    const session = wantsWorktree(input) ? await inWorktree(ctx, cwd, input) : ctx.sessions.thread(cwd, project ? { project } : undefined)
     if (input.title) ctx.sessions.rename(session.id, input.title)
     adopt?.(session)
     receipts.put(input.clientRequestId, session.id)

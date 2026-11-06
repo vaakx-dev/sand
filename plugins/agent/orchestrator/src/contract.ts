@@ -58,6 +58,8 @@ export interface StartInput {
   model?: string
   effort?: string
   worktree?: boolean
+  branch?: string
+  base?: string
   origin: TurnOrigin
   clientRequestId: string
   from?: ConversationRef
@@ -173,6 +175,8 @@ export const threadStart = request('thread.start', {
     model: z.string().optional(),
     effort: z.string().optional(),
     worktree: z.boolean().optional(),
+    branch: z.string().min(1).optional(),
+    base: z.string().min(1).optional(),
     pc: z.string().min(1).optional(),
     origin,
     clientRequestId,

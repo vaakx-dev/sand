@@ -26,11 +26,11 @@ export const removeCheck = async (deps: WorktreeDeps, record: WorktreeRecord): P
   unpushed: await lostCommits(deps.git, record),
 })
 
-export const lossMessage = ({ running, uncommitted, unpushed }: RemoveCheck) => {
+export const lossMessage = ({ running, uncommitted, unpushed }: RemoveCheck, keptDays: number) => {
   if (running) return 'A thread is working in this worktree. Stop it first.'
-  const losses = [
+  const unsaved = [
     uncommitted ? plural(uncommitted, 'uncommitted file') : '',
     unpushed ? `${plural(unpushed, 'commit')} that ${unpushed === 1 ? "isn't" : "aren't"} on any remote or other branch` : '',
   ].filter(Boolean)
-  return `Removing it would lose ${losses.join(' and ')}.`
+  return `It has ${unsaved.join(' and ')}. Removing it anyway keeps that work for ${plural(keptDays, 'day')}, and restoring the worktree brings it back.`
 }
