@@ -28,6 +28,7 @@ test('a bot gets its tools like a thread does, not as a list in its prompt', asy
   expect(given).toContain('shell_run')
   expect(given).not.toContain('thread_only')
   expect(system).not.toContain('shell_run')
+  expect(system).not.toContain('## Your job')
   expect(system).toContain('## Your memory\n\nYour memory is empty so far.')
   expect(system).toContain('# Environment')
   expect(system).not.toContain('Date:')
