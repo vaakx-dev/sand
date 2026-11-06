@@ -81,33 +81,20 @@ export interface Computer {
   screenshot(fit?: Size): Promise<Screenshot>
   elements(): Promise<UiElement[]>
   act(action: Action): Promise<void>
-  humanInput(): Promise<boolean>
-}
-
-export type Control = 'agent' | 'human'
-
-export interface ComputerState extends ComputerInfo {
-  control: Control
 }
 
 export interface Computers {
   register(computer: Computer): Dispose
-  list(): ComputerState[]
+  list(): ComputerInfo[]
   get(id: string): Computer | undefined
-  control(id: string, control: Control): void
 }
 
 export const computers = service<Computers>('computers')
 
 export const computersChange = event<() => void>('computers.change')
 
-export const computersChangeWire = wireEvent<ComputerState[]>('computers.change')
+export const computersChangeWire = wireEvent<ComputerInfo[]>('computers.change')
 
-export const computersList = request('computers.list', { input: z.object({}), output: type<ComputerState[]>() })
-
-export const computersControl = request('computers.control', {
-  input: z.object({ id: z.string(), control: z.enum(['agent', 'human']) }),
-  output: type<ComputerState[]>(),
-})
+export const computersList = request('computers.list', { input: z.object({}), output: type<ComputerInfo[]>() })
 
 export const center = ({ left, top, right, bottom }: Box): Point => ({ x: (left + right) / 2, y: (top + bottom) / 2 })

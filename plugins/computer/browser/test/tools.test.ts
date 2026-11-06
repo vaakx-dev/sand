@@ -60,7 +60,7 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
   })
 
   test('a thread lists computers, opens a page, clicks at fractions and reads the result', async () => {
-    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: `browser: Test browser (browser, ${osOf(process.platform)}), you can act on it` }] })
+    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: `browser: Test browser (browser, ${osOf(process.platform)})` }] })
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: open.' }] })
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: click.' }] })
     const elements = await turn()

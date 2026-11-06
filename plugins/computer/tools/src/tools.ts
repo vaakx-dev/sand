@@ -24,8 +24,6 @@ const round = (value: number) => value.toFixed(3)
 const elementLine = ({ ref, role, name, box }: UiElement) =>
   `${ref} ${role}${name ? ` "${name}"` : ''} [${round(box.left)}, ${round(box.top)}, ${round(box.right)}, ${round(box.bottom)}]`
 
-const controlNote = { agent: 'you can act on it', human: 'the user has taken it over; you can only look' }
-
 export const computerTools = (computers: Computers, media: Media, chosen: Chosen) => {
   const listed = new Map<string, Map<string, UiElement>>()
 
@@ -47,7 +45,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
     run: () =>
       computers
         .list()
-        .map(({ id, label, kind, os, control }) => `${id}: ${label} (${kind}, ${os}), ${controlNote[control]}`)
+        .map(({ id, label, kind, os }) => `${id}: ${label} (${kind}, ${os})`)
         .join('\n') || 'No computers are available.',
   }
 

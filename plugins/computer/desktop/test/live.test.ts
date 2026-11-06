@@ -124,13 +124,10 @@ describe.skipIf(!live)('the real Windows desktop', () => {
     expect(Math.abs(shot.width / shot.height - screen.width / screen.height)).toBeLessThan(0.01)
   })
 
-  test('moves the cursor to the exact pixel, and notices when a person moves it', async () => {
+  test('moves the cursor to the exact pixel', async () => {
     await rig.desktop.act({ type: 'move', at: { x: 0.5, y: 0.5 } })
     const screen = virtualScreen(rig.api)
     expect(cursorAt(rig.api)).toEqual({ x: screen.left + Math.floor(screen.width / 2), y: screen.top + Math.floor(screen.height / 2) })
-    expect(await rig.desktop.humanInput()).toBe(false)
-    dpiAware(rig.api, () => rig.windows.SetCursorPos(rig.home.x, rig.home.y + 40))
-    expect(await rig.desktop.humanInput()).toBe(true)
   })
 
   test('clicks a button in a real window', async () => {

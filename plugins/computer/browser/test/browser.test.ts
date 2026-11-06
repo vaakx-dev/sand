@@ -20,7 +20,6 @@ const page = `<!doctype html>
   <body>
     <div id="top">
       <button id="add">Add one</button>
-      <button id="later">Person types later</button>
       <form id="form"><input id="name" aria-label="Name" /></form>
       <p id="count">Count: 0</p>
       <p id="echo">Echo: none</p>
@@ -33,7 +32,6 @@ const page = `<!doctype html>
     <script>
       const show = (id, text) => (document.getElementById(id).textContent = text)
       let count = 0
-      document.getElementById('later').onclick = () => setTimeout(() => document.dispatchEvent(new KeyboardEvent('keydown')), 100)
       document.getElementById('add').onclick = () => show('count', 'Count: ' + ++count)
       document.getElementById('name').oninput = event => show('echo', 'Echo: ' + event.target.value)
       document.getElementById('form').onsubmit = event => {
@@ -138,15 +136,6 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     const y = center(pad).y
     await computer.act({ type: 'drag', from: { x: pad.left + 0.01, y }, to: { x: pad.right - 0.01, y } })
     await eventually('Mouse: dragged right')
-  })
-
-  test('notices input a person makes after the agent acted', async () => {
-    await click(await find('button', 'Add one'))
-    expect(await computer.humanInput()).toBe(false)
-    await click(await find('button', 'Person types later'))
-    expect(await computer.humanInput()).toBe(false)
-    await Bun.sleep(300)
-    expect(await computer.humanInput()).toBe(true)
   })
 
   test('keeps cookies in its profile across restarts', async () => {

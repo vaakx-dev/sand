@@ -1,7 +1,6 @@
 import { findBrowser, launch } from '@sand/cdp'
 import { fitInside, osOf, type Computer, type Screenshot, type Size } from '@sand/computers/contract'
 import { pageElements } from './elements'
-import { inputSince, markInputs, type InputMark } from './human'
 import { dispatch, type Viewport } from './input'
 import { openTabs, type Call, type Tabs } from './tabs'
 
@@ -53,7 +52,6 @@ const capture = async (call: Call, fit: Size | undefined) => {
 
 export const browserComputer = ({ id, label, profile, headless }: BrowserOptions) => {
   let running: Promise<Tabs> | undefined
-  let afterAgent: InputMark | undefined
 
   const start = async () => {
     const executable = await findBrowser()
@@ -91,11 +89,6 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
     async act(action) {
       const call = await page()
       await dispatch(call, await viewportOf(call), action)
-      if (action.type !== 'wait') afterAgent = await markInputs(await page())
-    },
-    async humanInput() {
-      if (!afterAgent || !running) return false
-      return inputSince(afterAgent, await markInputs(await page()))
     },
     async close() {
       const open = running
