@@ -6,7 +6,7 @@ import type { Selection } from '@sand/model/contract'
 import type { Dispose } from 'drydock'
 import { adoption, contextOf } from './adopt'
 import type { ThreadsContext } from './context'
-import { type Brief, type HandoffStrategy, type ProviderThreadInfo, type ProviderThreads, stepPrepare } from './contract'
+import { type Brief, briefTools, type HandoffStrategy, type ProviderThreadInfo, type ProviderThreads, stepPrepare } from './contract'
 import { budgetOf, currentOf, fits, nativeOf, windowOf } from './handoff/budget'
 import { handOff } from './handoff/deliver'
 import { decide } from './policy'
@@ -153,7 +153,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
   return {
     brief(owner, brief): Dispose {
       if (briefs.has(owner)) throw new Error(`${owner} conversations are already briefed`)
-      briefs.set(owner, brief)
+      briefs.set(owner, { ...brief, tools: async (conversation, messages) => ctx.waterfall(briefTools, await brief.tools(conversation, messages), conversation) })
       return () => void briefs.delete(owner)
     },
     async step(conversation, turn, signal) {

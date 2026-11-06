@@ -52,6 +52,8 @@ export interface ProviderThreads {
 
 export const providerThreads = service<ProviderThreads>('providerThreads')
 
+export const briefTools = event<(tools: ToolSpec[], conversation: Conversation) => ToolSpec[] | Promise<ToolSpec[]>>('brief.tools')
+
 export const stepPrepare = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, signal: AbortSignal) => Promise<boolean | undefined>>(
   'step.prepare',
 )
