@@ -24,11 +24,17 @@ jobs:
           built="$(git rev-parse -q --verify 'refs/tags/nightly^{commit}' || true)"
           if [ "$built" = "$(git rev-parse HEAD)" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; fi
       - if: steps.changed.outputs.skip != 'true'
+        name: Load Chrome from disk while the job sets up
+        run: google-chrome --headless=new --dump-dom about:blank > /dev/null 2>&1 & echo $! > "$RUNNER_TEMP/chrome.pid"
+      - if: steps.changed.outputs.skip != 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.2
       - if: steps.changed.outputs.skip != 'true'
         run: bun install --frozen-lockfile
+      - if: steps.changed.outputs.skip != 'true'
+        name: Wait for Chrome to finish loading, so the browser tests start it warm
+        run: timeout 60 tail --pid="$(cat "$RUNNER_TEMP/chrome.pid")" -f /dev/null
       - if: steps.changed.outputs.skip != 'true'
         run: bun run check
       - if: steps.changed.outputs.skip != 'true'
