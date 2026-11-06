@@ -10,7 +10,6 @@ import {
   type Orchestrator,
   originOf,
   threadList,
-  threadProjects,
   threadRead,
   threadSend,
   threadStart,
@@ -63,8 +62,6 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
     return forwarded(caller) ? listThreads(ctx, filter) : pcs.list(filter)
   }
 
-  const projects = () => [...new Map(ctx.projectFiles.copies().map(({ project, path }) => [project, { project, folder: path }])).values()]
-
   const onOwner = <I extends { session: string }, O>(
     found: Server,
     request: Request<I, O>,
@@ -81,7 +78,6 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
     return joinDisposers(
       found.handle(threadStart, begin),
       found.handle(threadList, list),
-      found.handle(threadProjects, projects),
       onOwner(found, threadSend, send),
       onOwner(
         found,

@@ -1,4 +1,4 @@
-import { isPcUnavailable, type PeerOutcome, peers } from '@sand/devices-contract'
+import { findPc, isPcUnavailable, noSuchPc, type PeerOutcome, peers } from '@sand/devices-contract'
 import type { InputOf, Request } from '@sand/host-hub/contract'
 import type { OrchestratorContext } from './context'
 import { failure, threadList, threadRead, type ThreadRow, threadStart } from './contract'
@@ -21,8 +21,8 @@ export const createPcs = (ctx: OrchestratorContext) => {
 
   const named = (name: string) => {
     const pcs = linked()?.list() ?? []
-    const found = pcs.find(pc => pc.id === name || pc.name.toLowerCase() === name.toLowerCase())
-    if (!found) throw failure('not_found', `No paired PC is called ${name}. Paired PCs: ${pcs.map(pc => pc.name).join(', ') || 'none'}`)
+    const found = findPc(pcs, name)
+    if (!found) throw failure('not_found', noSuchPc(pcs, name))
     return found.id
   }
 
