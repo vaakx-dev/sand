@@ -21,6 +21,7 @@
           "media",
           "markdown",
           "transcript",
+          "composer",
           "watch"
         ],
         "uses": [
@@ -88,7 +89,8 @@
           "engine",
           "models",
           "markdown",
-          "transcript"
+          "transcript",
+          "composer"
         ],
         "uses": [
           "compaction",
@@ -289,6 +291,11 @@
         "needs": [
           "markdown"
         ]
+      },
+      "composer": {
+        "kind": "capability",
+        "label": "Composer",
+        "summary": "Where you write messages: completions, commands, attachments and drafts"
       },
       "html": {
         "kind": "capability",

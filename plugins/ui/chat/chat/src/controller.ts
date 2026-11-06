@@ -3,8 +3,6 @@ import { div, sig, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { failed, hero, loading } from './hero'
-import { firstRowBelow, keepAnchor, scrollTo, stickToEnd } from './integrations/scroll'
-import { rowSizes } from './integrations/sizes'
 import { topEdge } from './integrations/top-edge'
 import { itemCache } from './cache'
 import { branchSwitch } from './rows/branches'
@@ -22,7 +20,7 @@ const fewestTrimmed = 20
 
 export const chatController = (ctx: ChatContext) => {
   const { kit, transcriptParts: parts } = ctx
-  const { contextMenu, jumpButton, nearEnd, toEnd } = kit
+  const { contextMenu, firstRowBelow, jumpButton, keepAnchor, nearEnd, rowSizes, toEnd } = kit
   const cache = itemCache(parts)
   const states = parts.openStates()
   const jumpShown = sig(false)
@@ -160,8 +158,8 @@ export const chatController = (ctx: ChatContext) => {
     if (tail && view.size > trimAt) resetToEnd(view)
     if (switching || tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
-    if (saved !== undefined) scrollTo(scroller, saved)
-    else if (tail) stickToEnd(scroller)
+    if (saved !== undefined) scroller.scrollTop = saved
+    else if (tail) toEnd(scroller)
     pinned = nearEnd(scroller)
     jumpShown.set(!pinned)
     edge.pump()

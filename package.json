@@ -27,7 +27,7 @@
     "sand": "bun apps/sand/src/main.ts",
     "bench:finders": "bun plugins/computer/finders/bench/main.ts",
     "test": "bun test ./apps ./packages ./plugins",
-    "test:phone": "bun test --timeout 30000 ./plugins/ui/layout/layout/test/phone/drawers.ts ./plugins/ui/layout/layout/test/phone/keyboard.ts ./plugins/ui/layout/layout/test/phone/spaces.ts ./plugins/core/features/test/web/matrix.ts"
+    "test:phone": "bun test --timeout 30000 ./plugins/ui/layout/layout/test/phone/drawers.ts ./plugins/ui/layout/layout/test/phone/keyboard.ts ./plugins/ui/layout/layout/test/phone/spaces.ts ./plugins/core/features/test/web/matrix.ts ./plugins/bots/space/test/web/scroll.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",

@@ -1,13 +1,15 @@
+import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
-import { composer as composerService, drafts, typing as typingService, type Composer } from './contract'
+import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
 import { threadsSlot } from '@sand/threads-space/contract'
 import { fileIndex, skillIndex, threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
-import { listen } from '@vaakx-dev/vrui'
+import { listen, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { fileTrigger } from './complete/files'
+import { createTriggers } from './complete/registry'
 import { skillTrigger } from './complete/skills'
 import { inject } from './context'
 import { card, type Card } from './dock/card'
@@ -15,10 +17,13 @@ import { dock } from './dock/dock'
 import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
 import { spacedLink } from './editor/chips/place'
+import { createTurnErrors, turnErrorBanner } from './errors/turn'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
 import { createPlus } from './plus/entries'
 import { createSendMenu } from './send/menu'
+import { chatTarget } from './target'
+import { threadSettings, threadTarget } from './thread'
 import { createTyping } from './typing'
 
 export default definePlugin({
@@ -30,13 +35,25 @@ export default definePlugin({
     const menu = createSendMenu()
     const plus = createPlus()
     const typing = createTyping()
+    const triggers = createTriggers()
+    const files = createTriggers()
+    const shelf = sig<Shelves | undefined>(undefined)
+    ctx.watch(shelves, found => {
+      shelf.set(found)
+    })
     let current: Card | undefined
-    const { model, session } = owned(ctx, () => {
-      const model = createModel(ctx)
+    const { model, session, errors } = owned(ctx, () => {
+      const model = createModel(threadTarget(ctx), [triggers, files], shelf)
       const session = draftSession(ctx, model, () => current?.completion.close())
       listen(window, 'pagehide', () => session.keep())
-      return { model, session }
+      return { model, session, errors: createTurnErrors(ctx) }
     })
+
+    const chatDock = (chat: Chat): ChatDock => {
+      const own = createSlots()
+      const parts = { ctx, model: createModel(chatTarget(chat), [triggers], shelf), slots: own, plus: createPlus(), actions: () => [], typed: typing.typed }
+      return { view: dock(parts, card(parts)), slot: own.add }
+    }
 
     const composer: Composer = {
       focus: () => current?.editor.focus(),
@@ -65,26 +82,27 @@ export default definePlugin({
       ...createHandoff(model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
       plus: plus.add,
-      trigger: model.triggers.add,
-      command: model.triggers.addCommand,
-      settings: model.settings,
+      trigger: triggers.add,
+      command: triggers.addCommand,
+      settings: () => threadSettings(ctx, model.picked.get()),
       choose: model.choose,
+      dock: chatDock,
     }
 
-    const parts = { ctx, model, slots, menu, plus, typed: typing.typed }
+    const parts = { ctx, model, slots, plus, actions: menu.actions(model), typed: typing.typed }
     session.start()
     place(
       ctx,
       threadsSlot('main'),
       () => {
         current = card(parts)
-        return dock(parts, current)
+        return dock(parts, current, turnErrorBanner(ctx, model, errors))
       },
       2,
     )
     ctx.on(threadSelect, session.open)
-    ctx.watch(fileIndex, found => found && model.triggers.add(fileTrigger(found, ctx.threads)))
-    ctx.watch(skillIndex, found => found && model.triggers.add(skillTrigger(found)))
+    ctx.watch(fileIndex, found => found && files.add(fileTrigger(found, ctx.threads)))
+    ctx.watch(skillIndex, found => found && triggers.add(skillTrigger(found)))
     ctx.effect(() => () => session.keep())
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)

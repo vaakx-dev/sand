@@ -7,7 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "threads",
+    "feature": "composer",
     "web": "./src/index.ts",
     "label": "Composer",
     "summary": "Where you write messages: attachments, pending messages, context, drafts and slots for other controls"
