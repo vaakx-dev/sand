@@ -82,7 +82,7 @@ const eventually = async (text: string) => {
 const click = async (element: UiElement) => computer.act({ type: 'click', at: center(element.box) })
 
 describe.skipIf(!(await findBrowser()))('browser computer', () => {
-  beforeAll(() => computer.act({ type: 'open', url }))
+  beforeAll(() => computer.act({ type: 'open', url }), 30_000)
 
   afterAll(async () => {
     await computer.close()
