@@ -34,7 +34,7 @@ export default definePlugin({
     const waiting = () => stores.decisions.waiting().filter(live)
     const changed = () => ctx.emit(approvalsChange, waiting())
     const settingsChanged = () => ctx.emit(approvalSettingsChange)
-    const title = (owner: Owner, id: string) => (owner === 'thread' ? ctx.get(sessions)?.open(id)?.title : ctx.get(bots)?.get(id)?.name) ?? id
+    const title = (owner: Owner, id: string) => (owner === 'thread' ? ctx.get(sessions)?.open(id)?.title : ctx.get(bots)?.get(id)?.name) || id
 
     const service: Approvals = {
       waiting,

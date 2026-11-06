@@ -1,8 +1,9 @@
 import { shelves } from '@sand/attachments/web/contract'
-import { botProfile, type BotProfileSection, botViews } from '@sand/bots/contract'
+import { botProfile, type BotProfileSection, botViews, jobEntry, type JobEntry } from '@sand/bots/contract'
 import { firstRun } from '@sand/features/contract'
 import { closeDrawer, layout, layoutChange, spaces } from '@sand/layout/contract'
 import { modelPicker } from '@sand/model-picker/contract'
+import { transcript } from '@sand/transcript/contract'
 import { owned, pulse } from '@sand/reactive'
 import { models, modelsChange } from '@sand/web-client/contract'
 import { derive, sig } from '@vaakx-dev/vrui'
@@ -10,6 +11,7 @@ import { byOrder } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { createAddress, newBot } from './address'
 import { avatar } from './avatar'
+import { jobCard } from './chat/job'
 import { inject } from './context'
 import { firstBot } from './create/first'
 import { css } from './face/motion'
@@ -63,6 +65,8 @@ export default definePlugin({
         }),
       }),
     )
+
+    ctx.watch(transcript, found => found?.entry(jobEntry, (entry, bot) => jobCard(ctx.kit, { store, edit: address.profile }, bot, entry.data as JobEntry)))
 
     ctx.provide(botProfile, {
       section(section) {

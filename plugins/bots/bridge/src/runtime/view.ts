@@ -12,7 +12,7 @@ export const replyView = (bots: Bots, ask: Ask): EntryView => ({
   type: botReplyEntry,
   message(entry) {
     const { bot, turn } = entry.data as BotReplyEntry
-    const name = bots.get(bot)?.name ?? 'The bot'
+    const name = bots.get(bot)?.name || 'The bot'
     const text = `<bot-reply bot="${bot}">\n${said(name, turn && ask.final(bot, turn))}\n</bot-reply>`
     return { role: 'user', content: [{ type: 'text', text }] }
   },

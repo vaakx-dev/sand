@@ -23,4 +23,12 @@ export const schema = [
     )`,
   ],
   ['alter table bots add column project text'],
+  [
+    `create table bot_jobs (
+      bot text not null,
+      replaced integer not null,
+      job text not null
+    )`,
+    'create index bot_jobs_bot on bot_jobs (bot, replaced)',
+  ],
 ]

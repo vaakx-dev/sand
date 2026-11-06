@@ -27,7 +27,7 @@ export default definePlugin({
     ctx.effect(() =>
       ctx.orchestrator.owner('bot', {
         deliver: (bot, { text, clientRequestId }) => ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId }),
-        label: bot => ctx.bots.get(bot)?.name,
+        label: bot => ctx.bots.get(bot)?.name || undefined,
         project: bot => ctx.bots.get(bot)?.project ?? undefined,
       }),
     )

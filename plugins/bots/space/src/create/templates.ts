@@ -1,10 +1,10 @@
-import type { Bot } from '@sand/bots/contract'
+import type { NewBot } from '@sand/bots/contract'
 
 export interface Template {
   id: string
   label: string
   summary: string
-  start: Pick<Bot, 'name' | 'job'>
+  start: NewBot
 }
 
 const calendar = `You keep the user's calendar and plan their days.
@@ -50,5 +50,5 @@ export const templates: Template[] = [
     summary: 'Tracks to-dos and small tasks and follows up',
     start: { name: 'Errands', job: errands },
   },
-  { id: 'blank', label: 'Blank', summary: 'Start from nothing and write its job yourself', start: { name: '', job: '' } },
+  { id: 'blank', label: 'Blank', summary: "Tell it in chat what it's for", start: {} },
 ]

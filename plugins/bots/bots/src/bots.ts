@@ -6,16 +6,18 @@ import { rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { type Bot, botChange, botEntry, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, type ModelChoice, type NewBot } from './contract'
 import { createEntries } from './entries'
+import { createJobs } from './jobs'
 import { lastLine } from './last'
 import { createRecords } from './records'
 
 const scanned = 20
 
-const initialOf = (name: string) => [...name.trim()][0]!.toUpperCase()
+const initialOf = (name = '') => [...name.trim()][0]?.toUpperCase() ?? ''
 
 export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick: (main: ModelChoice) => ModelChoice): Bots => {
   const records = createRecords(db)
   const entries = createEntries(db)
+  const jobs = createJobs(db)
   const statuses = new Map<string, BotStatus>()
 
   const summary = (bot: Bot): BotSummary => {
@@ -54,6 +56,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
       if (spec.id && records.get(spec.id)) throw new Error(`Bot ${spec.id} already exists`)
       const bot: Bot = {
         id: uuid(),
+        name: '',
         initial: initialOf(spec.name),
         color: freshColor(records.list()),
         job: '',
@@ -68,12 +71,19 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
       return changed(bot.id)
     },
     update(id, patch) {
-      records.save({ ...known(id), ...patch, updated: Date.now() })
+      const bot = known(id)
+      const now = Date.now()
+      tx(() => {
+        if (patch.job !== undefined && patch.job !== bot.job && bot.job.trim()) jobs.keep(id, bot.job, now)
+        records.save({ ...bot, ...patch, updated: now })
+      })
       return changed(id)
     },
+    jobs: id => jobs.list(known(id).id),
     remove(id) {
       const removed = tx(() => {
         entries.remove(id)
+        jobs.remove(id)
         return records.remove(id)
       })
       if (!removed) return false

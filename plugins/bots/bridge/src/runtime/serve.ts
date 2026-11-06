@@ -2,7 +2,7 @@ import type { Actor } from '@sand/host-hub/contract'
 import { failure, originOf } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import type { BotSummary } from '@sand/bots/contract'
+import { botName, type BotSummary } from '@sand/bots/contract'
 import { botAsk, botAwait, botProject, botRead, botRoster, type BotRow, botStarts, waitLimit } from '../contract'
 import { type Ask, sentAnswer } from './ask'
 import type { BridgeContext } from './context'
@@ -18,11 +18,11 @@ const intro: Record<Sender['kind'], (label: string) => string> = {
   thread: label => `This message is from the agent working in the user's thread "${label}", not from the user. Your reply goes back to it.`,
 }
 
-const rowOf = ({ id, name, job, status, project }: BotSummary): BotRow => ({ bot: id, name, job: job.slice(0, jobLength), status, project })
+const rowOf = (bot: BotSummary): BotRow => ({ bot: bot.id, name: botName(bot), job: bot.job.slice(0, jobLength), status: bot.status, project: bot.project })
 
 export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
   const senderOf = ({ owner, id }: Actor): Sender =>
-    owner === 'bot' ? { kind: 'bot', id, label: ctx.bots.get(id)?.name ?? 'a bot' } : { kind: 'thread', id, label: ctx.sessions.open(id)?.title || 'a thread' }
+    owner === 'bot' ? { kind: 'bot', id, label: ctx.bots.get(id)?.name || 'a bot' } : { kind: 'thread', id, label: ctx.sessions.open(id)?.title || 'a thread' }
 
   const promptOf = (actor: Actor | undefined, prompt: string) => {
     if (!actor) return `${outside}\n\n${prompt}`

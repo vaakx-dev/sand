@@ -1,30 +1,18 @@
 import { freshColor } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { errorMessage } from '@sand/util'
-import { show, sig } from '@vaakx-dev/vrui'
+import { show } from '@vaakx-dev/vrui'
 import type { BotStore } from '../store'
 import { templateCard } from './card'
-import { templates, type Template } from './templates'
+import { starter } from './start'
+import { templates } from './templates'
 
 export const firstBot = (kit: Kit, store: BotStore, open: (bot: string) => void) => (next: () => void) => {
   const { errorText, setupColumn, setupHeading, setupScreen } = kit
-  const creating = sig(false)
-  const failure = sig('')
+  const { choose, failure } = starter(store.create, bot => {
+    next()
+    open(bot.id)
+  })
   const color = () => freshColor(store.bots.get() ?? [])
-  const choose = ({ start }: Template) => {
-    if (creating.get()) return
-    creating.set(true)
-    store.create(start).then(
-      bot => {
-        next()
-        open(bot.id)
-      },
-      error => {
-        creating.set(false)
-        failure.set(errorMessage(error))
-      },
-    )
-  }
   return setupScreen(
     setupHeading('Make your first bot'),
     setupColumn(

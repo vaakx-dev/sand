@@ -43,6 +43,20 @@ export interface LastLine {
   at: number
 }
 
+export const botName = (bot: Pick<Bot, 'name'>) => bot.name || 'New bot'
+
+export interface JobVersion {
+  job: string
+  replaced: number
+}
+
+export const jobEntry = 'bot-job'
+
+export interface JobEntry {
+  job: string
+  previous: string
+}
+
 export interface BotSummary extends Bot {
   status: BotStatus
   last?: LastLine
@@ -87,7 +101,7 @@ const botFields = z.object({
   project: z.string().min(1).nullable(),
 })
 
-export const newBot = botFields.partial().required({ name: true }).extend({ id: z.uuid().optional() })
+export const newBot = botFields.partial().extend({ id: z.uuid().optional() })
 
 export const botPatch = botFields.partial()
 
@@ -100,6 +114,7 @@ export interface Bots {
   get(id: string): BotSummary | undefined
   create(spec: NewBot): BotSummary
   update(id: string, patch: BotPatch): BotSummary
+  jobs(id: string): JobVersion[]
   remove(id: string): boolean
   status(id: string, status: BotStatus): void
   conversation(id: string): Conversation
@@ -143,6 +158,7 @@ export const botList = request('bot.list', { input: z.object({}), output: type<B
 export const botGet = request('bot.get', { input: one, output: type<BotSummary | null>() })
 export const botCreate = request('bot.create', { input: newBot, output: type<BotSummary>() })
 export const botUpdate = request('bot.update', { input: one.extend({ patch: botPatch }), output: type<BotSummary>() })
+export const botJobs = request('bot.jobs', { input: one, output: type<JobVersion[]>() })
 export const botDelete = request('bot.delete', { input: one, output: type<boolean>() })
 export const botConversation = request('bot.conversation', {
   input: one.extend({ before: z.number().int().optional(), limit: z.number().int().min(1).max(500).optional() }),

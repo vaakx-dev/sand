@@ -1,4 +1,4 @@
-import type { BotSummary } from '@sand/bots/contract'
+import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago } from '@sand/util'
 import { derive, div, dynamicChild, list, type Derive, type Sig } from '@vaakx-dev/vrui'
@@ -21,7 +21,7 @@ const botRow = (kit: Kit, bot: Sig<BotSummary>, { current, choose }: SideParts) 
     touch: true,
     class: 'w-full shrink-0',
     lead: avatar(() => bot.get(), 32),
-    title: () => bot.get().name,
+    title: () => botName(bot.get()),
     meta: () => bot.get().last?.text ?? '',
     trail: () => ago(bot.get().last?.at),
     onClick: () => choose(bot.get().id),

@@ -1,12 +1,15 @@
 import { botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
+import { mcpTools } from '@sand/mcp-server/contract'
 import { context } from '@sand/prompt/contract'
+import { stepPrepare } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { botBrief, offered } from './brief'
-import { botInterrupt, botLive, botSend, botStreamWire, botTurns } from './contract'
+import { botInterrupt, botLive, botSend, botSetJob, botStreamWire, botTurns } from './contract'
 import { conversationOf } from './conversation'
+import { jobTool, setJob } from './job'
 import { createLive } from './live'
 import { botConversations, inject } from './runner'
 
@@ -17,7 +20,9 @@ export default definePlugin({
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
-    ctx.effect(() => ctx.providerThreads.brief('bot', botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context)))
+    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context)
+    ctx.effect(() => ctx.providerThreads.brief('bot', brief))
+    ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && stale(conversation.id)) || undefined)
     ctx.effect(() => ctx.tools.offer('bot', () => offered))
     const conversations = botConversations(ctx, live)
     const runner = ctx.engine.attach(conversations)
@@ -39,12 +44,14 @@ export default definePlugin({
       runner.forget(id)
       ctx.providerThreads.forget({ owner: 'bot', id })
     })
+    ctx.watch(mcpTools, found => found?.register(jobTool))
     ctx.watch(server, found => {
       if (!found) return
       return joinDisposers(
         found.handle(botSend, ({ bot, prompt, clientRequestId }) => runner.send(open(bot), { prompt, clientRequestId })),
         found.handle(botInterrupt, ({ bot }) => runner.interrupt(open(bot))),
         found.handle(botLive, ({ bot }) => live.snapshot(bot)),
+        found.handle(botSetJob, (input, { actor }) => setJob(ctx.bots, ctx.engine, actor, input)),
       )
     })
   },

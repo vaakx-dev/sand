@@ -1,4 +1,4 @@
-import type { BotSummary } from '@sand/bots/contract'
+import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Trigger, TriggerItem } from '@sand/composer/contract'
 import { matching, oneLine, uuid } from '@sand/util'
 import { botKind } from '../contract'
@@ -14,13 +14,13 @@ export const botTrigger = (roster: Roster): Trigger<BotItem> => ({
   items(query) {
     const bots = roster.list()
     return matching(
-      bots.map(bot => bot.name),
+      bots.map(botName),
       query,
       true,
     ).map((index): BotItem => {
       const bot = bots[index]!
-      return { label: bot.name, description: oneLine(bot.job).slice(0, 80) || 'Bot', icon: 'bot', bot }
+      return { label: botName(bot), description: oneLine(bot.job).slice(0, 80) || 'Bot', icon: 'bot', bot }
     })
   },
-  accept: ({ bot }) => ({ v: 1, id: uuid(), kind: botKind, label: bot.name, data: { id: bot.id } }),
+  accept: ({ bot }) => ({ v: 1, id: uuid(), kind: botKind, label: botName(bot), data: { id: bot.id } }),
 })

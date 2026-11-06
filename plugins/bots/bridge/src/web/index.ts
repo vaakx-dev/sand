@@ -1,4 +1,4 @@
-import { botProfile, botViews } from '@sand/bots/contract'
+import { botName, botProfile, botViews } from '@sand/bots/contract'
 import { transcript } from '@sand/transcript/contract'
 import { composer } from '@sand/composer/contract'
 import { contextChips } from '@sand/context/contract'
@@ -49,7 +49,7 @@ export default definePlugin({
         order: 20,
         meta(thread) {
           const bot = roster.starterOf(thread.id)
-          return bot ? span({ class: 'truncate text-neutral-500' }, `Started by ${bot.name}`) : null
+          return bot ? span({ class: 'truncate text-neutral-500' }, `Started by ${botName(bot)}`) : null
         },
       }),
     )

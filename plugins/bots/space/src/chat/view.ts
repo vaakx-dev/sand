@@ -1,5 +1,5 @@
 import type { Shelves } from '@sand/attachments/web/contract'
-import type { BotSummary } from '@sand/bots/contract'
+import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, effect, list, onRaf, p, show, span, untrack, type Derive, type Sig } from '@vaakx-dev/vrui'
@@ -31,22 +31,19 @@ const chatHead = (kit: Kit, parts: ChatParts) => {
       kit.plainButton(
         { title: 'Profile', class: 'flex min-w-0 max-w-full items-center gap-2 rounded-md', onClick: profile },
         avatar(bot, 32),
-        span({ class: 'truncate' }, () => bot().name),
+        span({ class: 'truncate' }, () => botName(bot())),
       ),
     ),
   )
 }
 
-const emptyChat = ({ secondaryAction, setupHeading, setupScreen }: Kit, { bot, profile }: ChatParts) =>
+const emptyChat = ({ setupHeading, setupScreen }: Kit, { bot }: ChatParts) =>
   div(
     { class: 'flex flex-1 flex-col items-center justify-center px-4 py-12 text-center' },
     setupScreen(
       avatar(bot, 64),
-      setupHeading(() => bot().name),
-      dynamicChild(
-        derive(() => Boolean(bot().job.trim())),
-        hasJob => (hasJob ? p({ class: 'text-sm text-neutral-500' }, 'Send a message to start.') : secondaryAction({ size: 'sm', onClick: profile }, 'Give it a job')),
-      ),
+      setupHeading(() => botName(bot())),
+      p({ class: 'text-sm text-neutral-500' }, () => (bot().job.trim() ? 'Send a message to start.' : "Tell it what you'd like it to take care of.")),
     ),
   )
 
@@ -111,6 +108,6 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
     scroller,
     menu.view(),
     parts.approvals ? div({ class: 'shrink-0 px-3 md:px-4' }, div({ class: column }, parts.approvals)) : null,
-    composer(kit, { name: () => parts.bot().name, working: () => working(parts), shelves: parts.shelves, send: talk.send, interrupt: talk.interrupt }),
+    composer(kit, { name: () => botName(parts.bot()), working: () => working(parts), shelves: parts.shelves, send: talk.send, interrupt: talk.interrupt }),
   )
 }
