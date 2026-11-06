@@ -1,7 +1,7 @@
 import { errorResult, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import type { ToolContext } from '@sand/tools/contract'
 import { errorMessage, untilAborted } from '@sand/util'
-import { type Conversation, type Conversations, HandedOver } from '../contract'
+import { type Conversation, type Conversations, HandedOver, toolContent } from '../contract'
 import type { EngineContext } from '../context'
 
 type Answer = (result: ToolResultBlock) => void
@@ -11,7 +11,8 @@ export type CallContext<C extends Conversation> = Omit<ToolContext, 'call' | 'pr
 const runCall = async <C extends Conversation>(ctx: EngineContext, conversations: Conversations<C>, call: ToolCallBlock, context: CallContext<C>) => {
   const progress = (text: string) => conversations.toolProgress?.(call, text, context.conversation)
   try {
-    return await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
+    const result = await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
+    return { ...result, content: await ctx.waterfall(toolContent, result.content, context.conversation) }
   } catch (error) {
     if (context.signal.reason instanceof HandedOver) throw error
     if (context.signal.aborted) return errorResult(call, 'Interrupted: the user stopped the turn before this call finished.')

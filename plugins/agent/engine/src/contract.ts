@@ -1,5 +1,5 @@
 import type { Delivery, LLMEvent, LLMRequest, NativeRef, Usage } from '@sand/accounts/contract'
-import type { AppendMeta, Entry, Message, Prompt, StopReason, ToolCallBlock, ToolResultBlock, UserContent } from '@sand/chats/contract'
+import type { AppendMeta, Entry, Message, Prompt, StopReason, ToolCallBlock, ToolResultBlock, ToolResultContent, UserContent } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
 import { type Dispose, event, service } from 'drydock'
 
@@ -180,3 +180,5 @@ export interface EntryViews {
 export const entryViews = service<EntryViews>('entryViews')
 
 export const turnContent = event<(content: UserContent[], conversation: Conversation) => UserContent[] | Promise<UserContent[]>>('turn.content')
+
+export const toolContent = event<(content: ToolResultContent[], conversation: Conversation) => ToolResultContent[] | Promise<ToolResultContent[]>>('tool.content')
