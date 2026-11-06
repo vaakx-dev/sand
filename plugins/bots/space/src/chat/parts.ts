@@ -1,8 +1,7 @@
 import type { BotChat, BotChatPart } from '@sand/bots/contract'
-import { byOrder } from '@sand/util'
-import { derive, list, sig, untrack, type Sig } from '@vaakx-dev/vrui'
-
-export type ChatSlot = 'beside' | 'above'
+import type { ChatDock } from '@sand/composer/contract'
+import { byOrder, joinDisposers } from '@sand/util'
+import { derive, effect, list, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 
 export const chatParts = () => {
   const parts = sig<BotChatPart[]>([])
@@ -15,11 +14,11 @@ export const chatParts = () => {
   return { parts, host }
 }
 
-export const slotted = (parts: Sig<BotChatPart[]>, slot: ChatSlot, bot: string, into: HTMLElement) =>
+export const beside = (parts: Sig<BotChatPart[]>, bot: string, into: HTMLElement) =>
   list(
     derive(() =>
       parts.get().flatMap(part => {
-        const render = part[slot]
+        const render = part.beside
         return render ? [{ id: part.id, render }] : []
       }),
     ),
@@ -27,3 +26,9 @@ export const slotted = (parts: Sig<BotChatPart[]>, slot: ChatSlot, bot: string, 
     shown => untrack(() => shown.get()).render(bot),
     into,
   )
+
+export const aboveDock = (parts: Sig<BotChatPart[]>, bot: string, dock: ChatDock) =>
+  effect(() => {
+    const shown = parts.get().flatMap(part => (part.above ? [{ render: part.above, order: part.order }] : []))
+    return untrack(() => joinDisposers(...shown.map(({ render, order }) => dock.slot('above', () => render(bot), order))))
+  })

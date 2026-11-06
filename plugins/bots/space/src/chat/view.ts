@@ -7,7 +7,7 @@ import { derive, div, dynamicChild, effect, list, onMount, p, show, sig, span, u
 import { avatar } from '../avatar'
 import { column, pane, paneHead, type HeadParts } from '../pane'
 import type { Conversation } from './conversation'
-import { slotted } from './parts'
+import { aboveDock, beside } from './parts'
 import { statusView } from './status'
 import { transcriptRows } from './transcript'
 
@@ -134,11 +134,11 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
   if (approvals) effect(() => (approvals.asking() ? dock.slot('banner', approvals.view) : undefined))
 
   const id = untrack(() => parts.bot().id)
+  aboveDock(parts.parts, id, dock)
   const chat = pane(
     { onMount: () => talk.stop },
     chatHead(kit, parts),
     div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(jumpShown, toLatest), menu.view()),
-    slotted(parts.parts, 'above', id, div({ class: 'shrink-0 px-3 md:px-4' })),
     dock.view,
   )
   return div(
@@ -146,7 +146,7 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
     chat,
     show(
       () => !parts.narrow.get(),
-      () => slotted(parts.parts, 'beside', id, div({ class: 'flex h-full min-h-0 shrink-0' })),
+      () => beside(parts.parts, id, div({ class: 'flex h-full min-h-0 shrink-0' })),
     ),
   )
 }
