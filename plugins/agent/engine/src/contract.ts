@@ -157,6 +157,7 @@ export interface Runner<C extends Conversation> {
 export interface Engine {
   attach<C extends Conversation>(conversations: Conversations<C>): Runner<C>
   turn(owner: Owner, id: string): TurnInfo | undefined
+  open(conversation: ConversationRef): Conversation | undefined
 }
 
 export const engine = service<Engine>('engine')

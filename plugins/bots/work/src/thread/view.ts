@@ -16,14 +16,6 @@ const olderEdge = 240
 
 const waitingText = 'Waiting for you'
 
-const keepPlace = async (scroller: HTMLElement, rowList: HTMLElement, load: () => Promise<void>) => {
-  const anchor = rowList.firstElementChild
-  const top = scroller.scrollTop
-  const before = anchor instanceof HTMLElement ? anchor.offsetTop : 0
-  await load()
-  if (anchor instanceof HTMLElement) scroller.scrollTop = top + anchor.offsetTop - before
-}
-
 const head = (ctx: WorkContext, source: ThreadSource, { back, backLabel }: ThreadActions) => {
   const { headTitle, icon, iconButton, paneHead, plainButton } = ctx.kit
   return paneHead(
@@ -75,29 +67,22 @@ export const threadView = (ctx: WorkContext, thread: string, actions: ThreadActi
   const quote = parts.quoteJump(rowList)
   const rows = source.rowsOf({ menu, states: parts.openStates(), jump: (from, text) => quote(rowList, from, text) })
   const paging = sig(false)
-  const jumpShown = sig(false)
-  let pinned = true
-  let lastTop = 0
 
   const older = () => {
     if (paging.get() || !source.older()) return
     paging.set(true)
-    void keepPlace(scroller, rowList, source.page)
+    void kit.loadAbove(scroller, rowList, source.page)
       .catch(error => ctx.report(error))
       .finally(() => paging.set(false))
   }
 
   const onScroll = () => {
-    const top = scroller.scrollTop
-    if (kit.nearEnd(scroller)) pinned = true
-    else if (top < lastTop) pinned = false
-    lastTop = top
-    jumpShown.set(!pinned)
-    if (top < olderEdge) older()
+    follow.scrolled()
+    if (scroller.scrollTop < olderEdge) older()
   }
 
   const watched = (node: HTMLElement) => {
-    onMount(node, () => watchRow(node))
+    onMount(node, () => follow.watch(node))
     return node
   }
 
@@ -117,15 +102,10 @@ export const threadView = (ctx: WorkContext, thread: string, actions: ThreadActi
       kit.dockFade(),
     ),
   )
-  const watchRow = kit.rowSizes(scroller, () => pinned)
-
-  const toLatest = () => {
-    kit.toEnd(scroller)
-    pinned = true
-    jumpShown.set(false)
-  }
+  const follow = kit.followEnd(scroller)
 
   const dock = ctx.composer.dock({
+    skills: { session: thread },
     running: () => source.running.get(),
     path: () => ctx.threads.path(thread),
     send: prompt => ctx.turns.send(thread, prompt),
@@ -137,7 +117,7 @@ export const threadView = (ctx: WorkContext, thread: string, actions: ThreadActi
   return div(
     { class: 'flex h-full min-h-0 min-w-0 flex-1 flex-col', onMount: source.listen },
     head(ctx, source, actions),
-    div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(jumpShown, toLatest), menu.view()),
+    div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
     dock.view,
   )
 }

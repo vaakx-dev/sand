@@ -3,7 +3,7 @@ import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
 import { threadsSlot } from '@sand/threads-space/contract'
-import { fileIndex, skillIndex, threadSelect } from '@sand/web-client/contract'
+import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
 import { listen, sig } from '@vaakx-dev/vrui'
@@ -36,14 +36,15 @@ export default definePlugin({
     const plus = createPlus()
     const typing = createTyping()
     const triggers = createTriggers()
-    const files = createTriggers()
+    const threadOnly = createTriggers()
+    const skills = sig<SkillIndex | undefined>(undefined)
     const shelf = sig<Shelves | undefined>(undefined)
     ctx.watch(shelves, found => {
       shelf.set(found)
     })
     let current: Card | undefined
     const { model, session, errors } = owned(ctx, () => {
-      const model = createModel(threadTarget(ctx), [triggers, files], shelf)
+      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf)
       const session = draftSession(ctx, model, () => current?.completion.close())
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx) }
@@ -51,7 +52,9 @@ export default definePlugin({
 
     const chatDock = (chat: Chat): ChatDock => {
       const own = createSlots()
-      const parts = { ctx, model: createModel(chatTarget(chat), [triggers], shelf), slots: own, plus: createPlus(), actions: () => [], typed: typing.typed }
+      const chatOnly = createTriggers()
+      chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
+      const parts = { ctx, model: createModel(chatTarget(chat), [triggers, chatOnly], shelf), slots: own, plus: createPlus(), actions: () => [], typed: typing.typed }
       return { view: dock(parts, card(parts)), slot: own.add }
     }
 
@@ -101,8 +104,11 @@ export default definePlugin({
       2,
     )
     ctx.on(threadSelect, session.open)
-    ctx.watch(fileIndex, found => found && files.add(fileTrigger(found, ctx.threads)))
-    ctx.watch(skillIndex, found => found && triggers.add(skillTrigger(found)))
+    ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))
+    ctx.watch(skillIndex, found => {
+      skills.set(found)
+      return found && threadOnly.add(skillTrigger(() => found.list()))
+    })
     ctx.effect(() => () => session.keep())
     ctx.provide(composerService, composer)
     ctx.provide(drafts, session.drafts)
