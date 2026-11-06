@@ -1,6 +1,6 @@
 import { routineRecord } from '@sand/bot-routines/contract'
-import type { BotEntry } from '@sand/bots/contract'
-import { textOf, type Message } from '@sand/chats/contract'
+import { type BotEntry, shownText } from '@sand/bots/contract'
+import type { Message } from '@sand/chats/contract'
 import type { Markdown } from '@sand/markdown/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { isRecord } from '@sand/util'
@@ -24,7 +24,7 @@ const lineOf = ({ id, type, data }: BotEntry): Line[] => {
   if (type !== 'message' || !isMessage(data)) return []
   const routine = routineOf(data)
   if (routine) return [{ id, kind: 'routine', text: `${routine.data.repeats === true ? 'Routine' : 'Reminder'} · ${routine.label}` }]
-  const text = textOf(data.content, '\n\n').trim()
+  const text = shownText(data, '\n\n').trim()
   return text ? [{ id, kind: data.role, text }] : []
 }
 

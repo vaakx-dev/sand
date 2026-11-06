@@ -1,4 +1,4 @@
-import type { AppendMeta } from '@sand/chats/contract'
+import { type AppendMeta, type Message, promptText, textOf } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
 import { type Dispose, event, service } from 'drydock'
@@ -35,6 +35,9 @@ export interface Bot {
 }
 
 export type BotStatus = 'idle' | 'working' | 'waiting' | 'failed'
+
+export const shownText = (message: Message, separator = '\n') =>
+  message.role === 'user' ? promptText(message, separator) : textOf(message.content, separator)
 
 export interface LastLine {
   role: 'user' | 'assistant'

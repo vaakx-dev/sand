@@ -44,8 +44,8 @@ test('a bot on an app plan keeps one native thread in its folder and sends it on
 
   expect(sand.native('n')).toEqual([
     { type: 'open', cwd: sand.app.get(bots)!.folder(bot.id) },
-    { type: 'send', text: 'one' },
-    { type: 'send', text: 'two' },
+    { type: 'send', text: expect.stringMatching(/^<time>.+<\/time>\none$/) },
+    { type: 'send', text: expect.stringMatching(/^<time>.+<\/time>\ntwo$/) },
   ])
   expect(threads()).toEqual([{ owner: 'bot', generation: 1, status: 'idle' }])
 })

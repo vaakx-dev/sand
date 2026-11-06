@@ -74,7 +74,8 @@ test('a bot sets a reminder, and when it is due the bot gets a routine turn in i
   await until(async () => !(await ask(routineList, { bot: bot.id })).length)
   expect(told).toEqual([{ kind: 'routine', title: 'Call Ana', text: 'Time to call Ana about lunch!' }])
 
-  const prompt = JSON.parse(requests('fake')[2]!).messages.at(-1).content[0].text
+  const [time, { text: prompt }] = JSON.parse(requests('fake')[2]!).messages.at(-1).content
+  expect(time.text).toBe('<time>Wed, 4 Nov 2026, 18:00 (UTC)</time>')
   expect(prompt).toContain('Your routine "Call Ana" is due now.')
   expect(prompt).toContain('<routine>\nRemind the user to call Ana about lunch\n</routine>')
   const { entries } = await ask(botConversation, { bot: bot.id })

@@ -24,7 +24,7 @@ const abilitiesOf = (tools: ToolSpec[]) =>
 
 export const instructions = async (bot: BotSummary, memory: BotMemory, tools: ToolSpec[]) =>
   [
-    `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above.`,
+    `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above. Each message to you starts with the time it reached you, in <time> tags.`,
     `## Your job\n\n${bot.job.trim() || noJob}`,
     abilitiesOf(tools),
     [
@@ -33,5 +33,4 @@ export const instructions = async (bot: BotSummary, memory: BotMemory, tools: To
       'When you learn something worth keeping (preferences, people, plans, decisions, open tasks), save it with memory_write: one topic per file, rewriting the whole file.',
       await memoryOf(memory, bot.id),
     ].join('\n\n'),
-    `Today is ${new Date().toDateString()}, in the ${Intl.DateTimeFormat().resolvedOptions().timeZone} time zone.`,
   ].join('\n\n')

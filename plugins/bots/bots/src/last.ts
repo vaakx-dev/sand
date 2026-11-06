@@ -1,6 +1,6 @@
-import { type Message, textOf } from '@sand/chats/contract'
+import type { Message } from '@sand/chats/contract'
 import { oneLine } from '@sand/util'
-import type { BotEntry, LastLine } from './contract'
+import { type BotEntry, type LastLine, shownText } from './contract'
 
 const maxLength = 200
 
@@ -13,7 +13,7 @@ const plain = (markdown: string) =>
 export const lastLine = (entries: BotEntry[]): LastLine | undefined => {
   for (const entry of entries) {
     const message = entry.data as Message
-    const text = oneLine(plain(textOf(message.content, '\n')), maxLength)
+    const text = oneLine(plain(shownText(message)), maxLength)
     if (text) return { role: message.role, text, at: entry.at }
   }
   return undefined
