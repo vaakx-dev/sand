@@ -7,6 +7,7 @@ import { homedir } from 'node:os'
 import { sep } from 'node:path'
 import { projectsChange } from './contract'
 import { iconSync } from './icons/sync'
+import { manageRequests } from './manage/requests'
 import { seedSandHome } from './registry/home'
 import { projectList } from './registry/list'
 import { createRegistry } from './registry/registry'
@@ -40,7 +41,9 @@ export default definePlugin({
       placeChanged()
     }
 
-    for (const setup of projectRequests({ hub: ctx.hub, registry, root, list, placeChanged })) ctx.effect(setup)
+    const pcs = () => [{ id: device, name: ctx.thisPc.name() }, ...(ctx.get(peers)?.list() ?? [])]
+    const setups = [...projectRequests({ hub: ctx.hub, registry, root, list, placeChanged }), ...manageRequests({ hub: ctx.hub, registry, root, device, pcs, git, placeChanged })]
+    for (const setup of setups) ctx.effect(setup)
     ctx.watch(gitRunner, found => {
       if (found) registry.refresh().catch(report)
     })

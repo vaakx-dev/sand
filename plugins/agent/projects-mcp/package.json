@@ -1,0 +1,31 @@
+{
+  "name": "@sand/projects-mcp",
+  "version": "0.0.0",
+  "description": "sand's project tools, defined once for its own threads and bots and for outside agents over MCP: list, add, create, update and remove projects, and set where new ones go",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "threads-mcp",
+    "runtime": "./src/runtime.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Project tools",
+    "summary": "Lets your threads, your bots and outside agents add, create and manage your projects"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

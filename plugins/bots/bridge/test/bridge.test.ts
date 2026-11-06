@@ -163,7 +163,6 @@ test('a bot starts a thread in its project, which says the bot sent it and tells
   await Bun.sleep(100)
   expect(await botTexts(bot.id)).toHaveLength(1)
 
-  expect(await use(asBot(bot.id), 'project_list', {})).toEqual([{ project: 'p1', folder }])
   const other = sand.chat('fake/t')
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')
