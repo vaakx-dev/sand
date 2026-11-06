@@ -10,18 +10,20 @@ const current = (text: string) =>
 
 const format = (memory: string) => `Reply with exactly two parts, each in its tags, and nothing else.
 
-The summary is your short-term memory: what the conversation needs to carry on from here. If there is an earlier summary, keep what still matters and drop finished work nothing depends on any more.
+The summary is your short-term memory: what the current work needs to carry on from here. If there is an earlier summary, keep what the current work still needs, add what's new, and drop work that is now finished, kept promises and anything the user moved on from. Leave out any section with nothing in it.
 
 <summary>
 ## Working on
 - [What you're doing for the user now, and how far it got]
 
-## Done, still relevant
-- [Finished work the conversation still depends on: just the result, like a date, a number or a link]
-
 ## Next steps
 1. [What happens next, in order, including anything you promised and haven't done yet]
+
+## Context
+- [Findings, data and references the current work needs]
 </summary>
+
+Leave out finished work. If later work needs a result of it, like a date, a number or a link, keep just that result under Context.
 
 The memory is your long-term memory, rewritten whole from your memory now and everything above. It lasts for months, so only the most important things go in:
 - Keep what is still true. Fix what changed, and drop what is stale or no longer true.

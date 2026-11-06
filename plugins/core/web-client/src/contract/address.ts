@@ -23,23 +23,51 @@ export const addressLayer = () => {
   return typeof layer === 'string' ? layer : undefined
 }
 
-const push = (state: AddressState, url: string | URL) => {
-  if (addressLayer()) history.replaceState(state, '', url)
-  else history.pushState(state, '', url)
+let waiting: (() => void)[] | undefined
+let covered: { href: string; restore: () => void } | undefined
+
+const settle = () => {
+  if (covered && !addressLayer() && location.href === covered.href) covered.restore()
+  covered = undefined
+  const changes = waiting ?? []
+  waiting = undefined
+  for (const change of changes) change()
 }
 
-export const pushLayer = (layer: string) => push({ ...addressState(), [layerKey]: layer }, location.href)
+const write = (change: () => void) => {
+  if (waiting) return void waiting.push(change)
+  if (!addressLayer()) return change()
+  waiting = [change]
+  listen(window, 'popstate', settle, { once: true })
+  history.back()
+}
+
+export const pushLayer = (layer: string) => write(() => history.pushState({ ...addressState(), [layerKey]: layer }, '', location.href))
 
 export const leaveLayer = () => {
-  if (addressLayer()) history.back()
+  if (!waiting && addressLayer()) history.back()
 }
 
 export const pushAddress = (params: AddressParams, state: AddressState) => {
   const { [layerKey]: _, ...page } = state
-  push(page, urlOf(params))
+  write(() => history.pushState(page, '', urlOf(params)))
 }
 
-export const updateAddress = (params: AddressParams, state: AddressState = {}) =>
-  history.replaceState({ ...addressState(), ...state }, '', urlOf({ ...addressParams(), ...params }, location.hash))
+export const updateAddress = (params: AddressParams, state: AddressState = {}) => {
+  const change = () => history.replaceState({ ...addressState(), ...state }, '', urlOf({ ...addressParams(), ...params }, location.hash))
+  if (waiting) return void waiting.push(change)
+  if (!addressLayer()) return change()
+  const href = covered?.href ?? location.href
+  change()
+  const { [layerKey]: _, ...page } = addressState()
+  const url = location.href
+  covered = { href, restore: () => history.replaceState(page, '', url) }
+}
 
-export const onAddressChange = (changed: () => void) => listen(window, 'popstate', changed)
+export const backAddress = (steps = 1) => history.go(-(addressLayer() ? steps + 1 : steps))
+
+export const onAddressChange = (changed: () => void) =>
+  listen(window, 'popstate', () => {
+    settle()
+    changed()
+  })

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import type { Browser, BrowserContext } from 'playwright'
 import { startSandbox } from './sand'
-import { newThread, openPhone, phoneBrowser, pane, phones, pick, send, swipe, type Phone } from './touch'
+import { newThread, openPhone, phoneBrowser, pane, phones, pick, send, swipe, until, type Phone } from './touch'
 
 const table = [
   'Wide table:',
@@ -128,5 +128,29 @@ describe.each(phones)('on a $name', size => {
     expect(search.y).toBeGreaterThanOrEqual(47)
     await page.goBack()
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} })
+  })
+})
+
+describe.each(phones)('settings on a $name', size => {
+  test('a page picked from the drawer stays when the drawer closes, and Close settings returns to the thread', async () => {
+    const { page } = await openPhone(context, new URL(sand.url).origin, size)
+    await pick(page, 'second')
+    const thread = page.url()
+    const drawer = page.locator('button:visible[aria-label="Show the page"]')
+    const closed = () => until(() => drawer.count(), count => count === 0)
+
+    await page.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Settings' }).click()
+    await page.getByRole('button', { name: 'Settings pages' }).click()
+    await page.getByRole('button', { name: 'MCP servers', exact: true }).click()
+    await page.mouse.click(size.width - 10, size.height / 2)
+    expect(await closed()).toBe(0)
+    await page.waitForFunction(() => !history.state?.layer)
+    expect(new URL(page.url()).searchParams.get('settings')).toBe('mcp')
+
+    await page.getByRole('button', { name: 'Settings pages' }).click()
+    await page.locator('button:visible[aria-label="Close settings"]').first().click()
+    await page.waitForURL(thread, { timeout: 3000 })
+    await page.close()
   })
 })

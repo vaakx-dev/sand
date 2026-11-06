@@ -1,4 +1,4 @@
-import { addressParam, addressParams, addressState, onAddressChange, pushAddress, updateAddress } from '@sand/web-client/contract'
+import { addressParam, addressParams, addressState, backAddress, onAddressChange, pushAddress, updateAddress } from '@sand/web-client/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 
@@ -40,11 +40,11 @@ export const createAddress = (ctx: Context) => {
     show: (bot: string) => write(() => updateAddress({ [botKey]: bot, [viewKey]: undefined }, { [profileKey]: false })),
     profile: () => write(() => pushAddress({ ...addressParams(), [viewKey]: 'profile' }, { ...addressState(), [profileKey]: true, [depthKey]: depth() && depth() + 1 })),
     chat() {
-      if (addressState()[profileKey]) history.back()
+      if (addressState()[profileKey]) backAddress()
       else write(() => updateAddress({ [viewKey]: undefined }))
     },
     leave() {
-      if (depth()) history.go(-depth())
+      if (depth()) backAddress(depth())
       else drop()
     },
   }
