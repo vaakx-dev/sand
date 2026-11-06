@@ -26,7 +26,7 @@ const ruleOf = (row: Row): Rule => ({
 })
 
 export const createRules = (db: Database) => {
-  const listed = db.query<Row, []>('select * from approval_rules order by at desc')
+  const listed = db.query<Row, []>('select * from approval_rules order by at desc, rowid desc')
   const same = db.query<Row, Record<string, string | null>>(
     `select * from approval_rules where owner = $owner and conversation is $conversation and tool is $tool and effect is $effect and verdict = $verdict`,
   )
