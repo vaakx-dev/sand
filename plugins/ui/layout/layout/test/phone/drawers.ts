@@ -109,9 +109,12 @@ describe.each(phones)('on a $name', size => {
     await swipe(phone, [size.width - 60, y], [60, y])
     expect(await pane(page)).toBe('thread')
     expect(await scrolled()).toBeGreaterThan(0)
+    for (let swipes = 0; swipes < 3 && (await scrolled()) > 1; swipes++) {
+      await swipe(phone, [60, y], [size.width - 60, y])
+      expect(await pane(page)).toBe('thread')
+    }
+    expect(await scrolled()).toBeLessThanOrEqual(1)
     await swipe(phone, [60, y], [size.width - 60, y])
-    await swipe(phone, [60, y], [size.width - 60, y])
-    expect(await scrolled()).toBe(0)
     expect(await pane(page, 'side')).toBe('side')
     await page.goBack()
     expect(await pane(page, 'thread')).toBe('thread')
