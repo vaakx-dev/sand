@@ -1,14 +1,15 @@
-export const system = `You summarize a transcript between a user and a coding agent so another agent can continue without it.
+export const system = `You summarize a conversation between a user and an AI assistant so the assistant can carry on without it. It can be about anything: code, research, planning, writing or everyday chat.
 
 Don't continue the conversation, answer it or call tools. Output only the summary.`
 
-const format = `Use this exact format:
+const format = `Use these sections in this order. Leave out any section with nothing in it; don't write "none".
 
 ## Goal
-[What the user asked for, including the original request and any later changes]
+[What the user wants, including the original request and later changes. For open-ended chat, what it's about]
 
-## Constraints
-- [Requirements and preferences the user stated]
+## User
+- [Preferences, requirements, and the style and tone the user wants]
+- [Facts the user shared, and the people, names and relationships they mentioned]
 
 ## Progress
 ### Done
@@ -17,30 +18,34 @@ const format = `Use this exact format:
 ### In progress
 - [ ] [Current work]
 
-### Blocked
-- [Open problems, if any]
-
 ## Decisions
-- [Decision], because [reason]
+- [What was settled], because [reason]
+
+## Open
+- [Questions still being discussed, unsolved problems and blockers]
+
+## Commitments
+- [What the assistant promised to do or check on, and reminders the user asked for, with any dates and times]
 
 ## Next steps
 1. [What should happen next, in order]
 
 ## Context
-- [Data, findings, examples or references needed to continue, or "(none)"]
+- [Findings, data, sources and references needed to carry on]
 
-Keep each section short. Keep exact file paths, function names, commands and error messages.`
+Keep each section short. Keep exact details: names, dates, numbers, links and quotes that matter, and for technical work, file paths, function names, commands and error messages.`
 
 const fresh = `Summarize the transcript in <conversation> tags above. ${format}`
 
 const update = `The transcript in <conversation> tags above continues the conversation summarized in <previous-summary>. Update that summary:
-- Keep everything in it that still matters
-- Add new progress, decisions and context from the transcript
-- Move finished items from In progress to Done and update Next steps
+- Keep everything in it that still matters, and drop what no longer does
+- Add what's new in the transcript
+- Move finished work to Done and settled questions to Decisions
+- Remove commitments that were kept, and update Next steps
 
 ${format}`
 
-const inContext = `Stop the work here. Summarize this conversation so another agent can continue it without seeing it. If it starts with an earlier summary, keep everything in it that still matters. Leave out your system prompt; the next agent gets it too.
+const inContext = `Stop here. Summarize this conversation so it can carry on from the summary alone. If it starts with an earlier summary, keep everything in it that still matters. Leave out your system prompt; it stays in place.
 
 Don't continue the conversation, answer it or call tools. Output only the summary.
 
