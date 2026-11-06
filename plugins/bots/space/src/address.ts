@@ -23,7 +23,12 @@ const read = (): Route => ({ bot: addressParam(botKey), profile: addressParam(vi
 
 export const createAddress = (ctx: Context) => {
   const route = sig(read())
-  const sync = () => route.set(read())
+  const last = sig(route.get().bot)
+  const sync = () => {
+    const next = read()
+    if (next.bot) last.set(next.bot)
+    route.set(next)
+  }
   ctx.effect(() => onAddressChange(sync))
 
   const write = (change: () => void) => {
@@ -35,10 +40,12 @@ export const createAddress = (ctx: Context) => {
 
   return {
     route,
+    current: (): Route => ({ ...route.get(), bot: route.get().bot ?? last.get() }),
     drop,
     open: (bot: string) => write(() => pushAddress({ ...addressParams(), [botKey]: bot, [viewKey]: undefined }, { [depthKey]: 1 })),
     show: (bot: string) => write(() => updateAddress({ [botKey]: bot, [viewKey]: undefined }, { [profileKey]: false })),
-    profile: () => write(() => pushAddress({ ...addressParams(), [viewKey]: 'profile' }, { ...addressState(), [profileKey]: true, [depthKey]: depth() && depth() + 1 })),
+    profile: (bot: string) =>
+      write(() => pushAddress({ ...addressParams(), [botKey]: bot, [viewKey]: 'profile' }, { ...addressState(), [profileKey]: true, [depthKey]: depth() && depth() + 1 })),
     chat() {
       if (addressState()[profileKey]) backAddress()
       else write(() => updateAddress({ [viewKey]: undefined }))

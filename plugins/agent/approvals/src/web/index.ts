@@ -6,15 +6,13 @@ import { owned, pulse } from '@sand/reactive'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threadSelect, threads, threadsChange } from '@sand/web-client/contract'
-import { derive, div, effect, sig } from '@vaakx-dev/vrui'
+import { derive, div, effect, sig, type Derive } from '@vaakx-dev/vrui'
 import { definePlugin, type Dispose } from 'drydock'
 import { approvalMode, approvalRuleRemove, type ApprovalSettings, approvalSettings, approvalSettingsWire, approvalViews, type Mode } from '../contract'
 import { approvalCards } from './card'
 import { inboxSheet } from './inbox'
-import { createModel } from './model'
+import { createModel, type Waiting } from './model'
 import { approvalsPage } from './page'
-
-const boxed = 'rounded-xl bg-neutral-900 p-3 ring-1 ring-neutral-800'
 
 export default definePlugin({
   name: 'approvals-web',
@@ -29,20 +27,15 @@ export default definePlugin({
     )
     const asking = owned(ctx, () => derive(() => here.get().length > 0))
 
+    const cards = (items: Derive<Waiting[]>) => approvalCards(kit, model, items, '', div({ class: 'flex flex-col gap-4 py-1' }))
+
     ctx.provide(approvalViews, {
-      card(owner, conversation) {
+      banner(owner, conversation) {
         const items = model.of(owner, conversation)
-        return approvalCards(kit, model, items, boxed, div({ class: ['flex flex-col gap-2', () => (items.get().length ? 'pb-2' : 'hidden')] }))
+        return { asking: () => items.get().length > 0, view: () => cards(items) }
       },
     })
-    ctx.watch(
-      composer,
-      found =>
-        found &&
-        effect(() =>
-          asking.get() ? found.slot('banner', () => approvalCards(kit, model, here, '', div({ class: 'flex flex-col gap-4 py-1' }))) : undefined,
-        ),
-    )
+    ctx.watch(composer, found => found && effect(() => (asking.get() ? found.slot('banner', () => cards(here)) : undefined)))
 
     let unplace: Dispose | undefined
     const close = () => {

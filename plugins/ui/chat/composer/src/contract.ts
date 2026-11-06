@@ -1,4 +1,4 @@
-import type { ContextRecord, UserContent } from '@sand/chats/contract'
+import type { ContextRecord, Entry, Prompt, UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName } from '@sand/ui-kit/contract'
@@ -47,6 +47,18 @@ export interface Command {
   run(): void | Promise<void>
 }
 
+export interface Chat {
+  running(): boolean
+  path(): Entry[]
+  send(prompt: Prompt): Promise<void>
+  interrupt(): Promise<void>
+}
+
+export interface ChatDock {
+  view: HTMLElement
+  slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+}
+
 export interface Composer {
   focus(): void
   value(): string
@@ -66,6 +78,7 @@ export interface Composer {
   command(command: Command): Dispose
   settings(): SessionSettings
   choose(patch: SettingsPatch): void
+  dock(chat: Chat): ChatDock
 }
 
 export interface Typing {

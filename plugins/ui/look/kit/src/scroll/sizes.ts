@@ -1,5 +1,5 @@
 import { resizeObserver } from '@vaakx-dev/vrui'
-import { nativeAnchoring, shiftBy, stickToEnd } from './scroll'
+import { nativeAnchoring, shiftBy, toEnd } from './end'
 
 const heightOf = (entry: ResizeObserverEntry) => entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height
 
@@ -23,7 +23,7 @@ export const rowSizes = (scroller: HTMLElement, pinned: () => boolean) => {
 
   const resized = (entries: ResizeObserverEntry[]) => {
     const shift = nativeAnchoring ? 0 : shiftAbove(entries)
-    if (pinned()) stickToEnd(scroller)
+    if (pinned()) toEnd(scroller)
     else shiftBy(scroller, shift)
   }
 

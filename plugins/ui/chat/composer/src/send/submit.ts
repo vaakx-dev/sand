@@ -1,8 +1,9 @@
 import { labelOf, promptOf } from '@sand/attachments/web/contract'
 import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import { models, type SendOptions } from '@sand/web-client/contract'
+import { models } from '@sand/web-client/contract'
 import type { ComposerContext } from '../context'
+import type { Outgoing } from '../target'
 
 export const modelMissing = (ctx: ComposerContext, settings: SessionSettings) => {
   if (!ctx.threads.current()) return !settings.model
@@ -20,8 +21,7 @@ export const interrupt = async (ctx: ComposerContext) => {
   if (current?.running) await ctx.turns.interrupt(current.id)
 }
 
-export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Pick<SendOptions, 'mode' | 'clientRequestId'>) => {
-  if (!text && !attachments.length) return interrupt(ctx)
+export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {
   const current = ctx.threads.current()
   const draft = ctx.threads.drafting()
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
@@ -40,9 +40,8 @@ const asked = (message: Message) => message.role === 'user' && !hasToolResult(me
 
 const prompted = (entry: Entry) => entry.type === 'message' && asked(entry.data as Message)
 
-export const lastPrompt = (ctx: ComposerContext) => {
-  const thread = ctx.threads.current()
-  const entry = thread && ctx.threads.path(thread.id).findLast(prompted)
+export const lastPrompt = (path: Entry[]) => {
+  const entry = path.findLast(prompted)
   if (!entry) return undefined
   const message = entry.data as Message
   return { text: promptText(message), records: userParts(message).flatMap(part => (part.kind === 'context' ? part.records : [])) }

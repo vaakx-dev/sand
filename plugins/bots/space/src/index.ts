@@ -1,4 +1,3 @@
-import { shelves } from '@sand/attachments/web/contract'
 import { botProfile, type BotProfileSection, botViews, jobEntry, type JobEntry } from '@sand/bots/contract'
 import { firstRun } from '@sand/features/contract'
 import { closeDrawer, layout, layoutChange, spaces } from '@sand/layout/contract'
@@ -28,9 +27,9 @@ export default definePlugin({
     ctx.kit.style(ctx, css)
     const store = botStore(ctx)
     const address = createAddress(ctx)
-    const shell = pulse(ctx, [layoutChange, modelsChange], [layout, modelPicker, models, shelves])
+    const shell = pulse(ctx, [layoutChange, modelsChange], [layout, modelPicker, models])
     const narrow = shell.read(() => ctx.get(layout)?.state().narrow ?? false)
-    const page = owned(ctx, () => derive(() => pageOf(address.route.get(), store.bots.get())))
+    const page = owned(ctx, () => derive(() => pageOf(address.current(), store.bots.get())))
     const current = () => {
       const shown = page.get()
       return shown.kind === 'chat' || shown.kind === 'profile' ? shown.bot.id : undefined
@@ -50,7 +49,6 @@ export default definePlugin({
       page,
       narrow,
       showSide,
-      shelves: shell.read(() => ctx.get(shelves)),
       picker: shell.read(() => ctx.get(modelPicker)),
       defaults: shell.read(() => ctx.get(models)?.defaults() ?? {}),
       sections,
@@ -66,7 +64,7 @@ export default definePlugin({
       }),
     )
 
-    ctx.watch(transcript, found => found?.entry(jobEntry, (entry, bot) => jobCard(ctx.kit, { store, edit: address.profile }, bot, entry.data as JobEntry)))
+    ctx.watch(transcript, found => found?.entry(jobEntry, (entry, bot) => jobCard(ctx.kit, { store, edit: () => address.profile(bot) }, bot, entry.data as JobEntry)))
 
     ctx.provide(botProfile, {
       section(section) {

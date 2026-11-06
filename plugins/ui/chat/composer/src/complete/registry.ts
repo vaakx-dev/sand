@@ -31,17 +31,13 @@ const commandTrigger = (commands: Command[], run: (command: Command) => void): S
   run: ({ command }) => run(command),
 })
 
-export const createTriggers = (run: (command: Command) => void) => {
+export const createTriggers = () => {
   const ranked = sig<Ranked[]>([])
   const commands = sig<Command[]>([])
-  const list = derive((): Source[] => {
-    const own = ranked.get().map(({ trigger }) => trigger)
-    return commands.get().length ? [...own, commandTrigger(commands.get(), run)] : own
-  })
 
   const add = <T extends TriggerItem>(trigger: Trigger<T>, order = 0) => {
     const added: Ranked = { trigger, order }
-    ranked.update(all => [...all, added].sort(byOrder))
+    ranked.update(all => [...all, added])
     return () => ranked.update(all => all.filter(other => other !== added))
   }
 
@@ -50,7 +46,22 @@ export const createTriggers = (run: (command: Command) => void) => {
     return () => commands.update(all => all.filter(other => other !== command))
   }
 
-  return { list, add, addCommand, named: (name: string) => commands.get().find(command => command.name === name) }
+  return { ranked, commands, add, addCommand }
 }
 
 export type Triggers = ReturnType<typeof createTriggers>
+
+export const boundTriggers = (registries: Triggers[], run: (command: Command) => void) => {
+  const commands = () => registries.flatMap(registry => registry.commands.get())
+  return {
+    list: derive((): Source[] => {
+      const own = registries
+        .flatMap(registry => registry.ranked.get())
+        .sort(byOrder)
+        .map(({ trigger }) => trigger)
+      const all = commands()
+      return all.length ? [...own, commandTrigger(all, run)] : own
+    }),
+    named: (name: string) => commands().find(command => command.name === name),
+  }
+}

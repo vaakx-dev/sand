@@ -3,7 +3,6 @@ import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
-import type { SendMenu } from './menu'
 
 type Look = 'off' | 'send' | 'steer' | 'stop' | 'busy'
 
@@ -46,16 +45,14 @@ const titleOf = (model: Model, look: Look) => {
 
 const glyphOf = (look: Look): IconName | 'busy' => (look === 'busy' ? 'busy' : icons[look])
 
-const queueAction = (model: Model): NavAction => ({ id: 'queue', label: 'Queue for next turn', icon: 'clock', run: () => model.send('queue') })
-
-const menuOf = (model: Model, menu: SendMenu): MenuSpec | undefined => {
+const menuOf = (model: Model, actions: () => NavAction[]): MenuSpec | undefined => {
   if (model.empty.get() || model.sending.get()) return undefined
-  const actions = [...(model.running.get() ? [queueAction(model)] : []), ...menu.actions.get()]
-  if (!actions.length) return undefined
-  return { title: oneLine(model.text.get(), 60) || 'Message', actions }
+  const shown = actions()
+  if (!shown.length) return undefined
+  return { title: oneLine(model.text.get(), 60) || 'Message', actions: shown }
 }
 
-export const sendControl = (kit: Kit, model: Model, menu: SendMenu) => {
+export const sendControl = (kit: Kit, model: Model, actions: () => NavAction[]) => {
   const { contextMenu, delayed, icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
@@ -70,7 +67,7 @@ export const sendControl = (kit: Kit, model: Model, menu: SendMenu) => {
         'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
         class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
         ...context.target(
-          () => menuOf(model, menu),
+          () => menuOf(model, actions),
           () => void model.send(),
         ),
       },
