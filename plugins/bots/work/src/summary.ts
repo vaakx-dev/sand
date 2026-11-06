@@ -49,7 +49,7 @@ export const summaryLine = (ctx: WorkContext, parts: SummaryParts) => {
       ...counts(kit, totals),
       show(
         () => !counted.get(),
-        () => span('Work and plan'),
+        () => span(() => (parts.startsThreads() ? 'Work and plan' : 'Plan')),
       ),
     )
     return opener

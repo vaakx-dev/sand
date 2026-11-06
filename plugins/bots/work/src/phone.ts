@@ -32,7 +32,7 @@ const cover = (ctx: WorkContext, found: Layout, thread: string, backLabel: strin
 const sheet = (ctx: WorkContext, parts: WorkParts, tab: Sig<Tab>, from: HTMLElement, close: () => void, open: (thread: string) => void) =>
   ctx.kit.bottomSheet(
     { close, from, role: 'dialog', 'aria-label': 'Bot work', class: 'flex max-h-full flex-col' },
-    div({ class: 'flex shrink-0 px-2 pb-2' }, tabSwitch(ctx, tab)),
+    div({ class: 'flex shrink-0 px-2 pb-2' }, tabSwitch(ctx, parts, tab)),
     div({ class: 'flex min-h-0 flex-col overflow-auto overscroll-contain pb-2' }, tabBody(ctx, parts, tab, open)),
   )
 
