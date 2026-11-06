@@ -1,4 +1,4 @@
-import { type BotEntry, shownText } from '@sand/bots/contract'
+import type { BotEntry } from '@sand/bots/contract'
 import { type Message, type Prompt, textOf } from '@sand/chats/contract'
 import type { TurnInfo, TurnOrigin } from '@sand/engine/contract'
 import type { BotAnswer, BotItem, BotPage } from '../contract'
@@ -21,7 +21,7 @@ const messageOf = (entry: BotEntry) => (entry.type === 'message' ? (entry.data a
 
 const itemOf = (entry: BotEntry): BotItem[] => {
   const message = messageOf(entry)
-  const text = message && shownText(message).trim()
+  const text = message && textOf(message.content).trim()
   return message && text ? [{ seq: entry.seq, at: entry.at, role: message.role, text, ...(entry.turn && { turn: entry.turn }) }] : []
 }
 

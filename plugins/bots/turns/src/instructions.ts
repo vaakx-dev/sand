@@ -24,7 +24,7 @@ const abilitiesOf = (tools: ToolSpec[]) =>
 
 export const instructions = async (bot: BotSummary, memory: BotMemory, tools: ToolSpec[]) =>
   [
-    `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above. Each message to you starts with the time it reached you, in <time> tags.`,
+    `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above.`,
     `## Your job\n\n${bot.job.trim() || noJob}`,
     abilitiesOf(tools),
     [

@@ -42,9 +42,7 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('<memory file="habits.md">\nGym on Mondays.\n</memory>')
   expect(first.tools.map((tool: { name: string }) => tool.name)).toContain('memory_write')
-  expect(first.messages).toEqual([
-    { role: 'user', content: [expect.objectContaining({ text: expect.stringMatching(/^<time>.+<\/time>$/) }), expect.objectContaining(said('Lunch with Ana is every Friday'))] },
-  ])
+  expect(first.messages).toEqual([{ role: 'user', content: [expect.objectContaining(said('Lunch with Ana is every Friday'))] }])
 
   const { entries } = await ask(botConversation, { bot: bot.id })
   expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant', 'user', 'assistant'])
@@ -52,10 +50,9 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(sand.sessions.list()).toEqual([])
 })
 
-test('each message reaches the model with the time it was sent, while the system prompt stays the same and holds no date', async () => {
+test('the system prompt holds no date, so it stays the same across days', async () => {
   const { ask, requests } = await start([[said('Noted.')], [said('Sure.')]])
   const bot = await ask(botCreate, { name: 'Diary', models: { main: { model: 'fake/m' }, quick: {} } })
-  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   setSystemTime(new Date(2026, 2, 2, 12))
   await ask(botSend, { bot: bot.id, prompt: 'Monday notes', clientRequestId: 'one' })
@@ -68,14 +65,6 @@ test('each message reaches the model with the time it was sent, while the system
   const [first, second] = requests('fake').map(body => JSON.parse(body))
   expect(second.system).toEqual(first.system)
   expect(first.system[0].text).not.toMatch(/Today is|2026/)
-  const stamps = second.messages
-    .filter((message: Message) => message.role === 'user')
-    .map((message: Message) => (message.content[0] as { text: string }).text)
-  expect(stamps).toEqual([expect.stringContaining('2 Mar 2026'), expect.stringContaining('5 Mar 2026')])
-  expect(stamps[1]).toContain(`(${zone})`)
-  expect(await ask(botGet, { bot: bot.id })).toMatchObject({ last: { role: 'assistant', text: 'Sure.' } })
-  const { entries } = await ask(botConversation, { bot: bot.id })
-  expect(messages(entries)[2]?.content).toEqual([expect.objectContaining({ typed: '' }), said('Thursday notes')])
 })
 
 test('a failed turn marks the bot failed, and deleting a bot forgets its turns', async () => {

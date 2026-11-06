@@ -8,7 +8,6 @@ import type { Context } from 'drydock'
 import { mkdirSync } from 'node:fs'
 import { conversationOf } from './conversation'
 import type { Live } from './live'
-import { stamped } from './stamp'
 
 export const inject = { bots, botMemory, modelSettings, tools, providerThreads }
 
@@ -41,7 +40,6 @@ export const botConversations = (ctx: BotTurnsContext, live: Live): Conversation
       const { model, effort, speed } = ctx.modelSettings.resolve(bot(conversation.id).models.main)
       return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
     },
-    prompt: stamped,
     step: (conversation, turn, signal) => ctx.providerThreads.step(conversation, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),
     overflow: (conversation, turn, error, signal) => ctx.bail(contextOverflow, conversation, turn, error, signal),
