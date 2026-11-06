@@ -1,6 +1,7 @@
 import { sessions } from '@sand/chats/contract'
 import { type Hello, type HelloField, type HelloValues, helloActive, type InputOf, type hello } from '@sand/host-hub/contract'
 import { turnEnd, turnStart } from '@sand/turns-contract/contract'
+import { errorMessage } from '@sand/util'
 import { helloDelta, helloSessions, helloStarted, helloSync } from '../contract/hello'
 import type { HelloOptions, HelloValue } from '../contract/server'
 import type { ServerContext } from '../context'
@@ -35,11 +36,32 @@ export const createHello = (ctx: ServerContext) => {
     [helloStarted.id]: Object.fromEntries(active),
   })
 
-  const answer = async ({ since, known }: InputOf<typeof hello>): Promise<Hello> => {
+  const failed = new WeakSet<Field>()
+
+  const leaveOut = (id: string, field: Field, why: string) => {
+    if (!failed.has(field)) ctx.report(new Error(`The hello field ${id} was left out: ${why}`))
+    failed.add(field)
+    return undefined
+  }
+
+  const read = (id: string, field: Field) => {
+    try {
+      const value: unknown = field.value()
+      if (!(value instanceof Promise)) return value
+      void value.catch(() => {})
+      return leaveOut(id, field, 'it returned a promise, and a hello value has to be ready at once')
+    } catch (error) {
+      return leaveOut(id, field, errorMessage(error))
+    }
+  }
+
+  const answer = ({ since, known }: InputOf<typeof hello>): Hello => {
     const fresh = own(since)
     const shared: HelloValues = {}
-    const values = await Promise.all([...fields].map(async ([id, field]) => [id, field, await field.value()] as const))
-    for (const [id, field, value] of values) if (value !== undefined) (field.fresh ? fresh : shared)[id] = value
+    for (const [id, field] of fields) {
+      const value = read(id, field)
+      if (value !== undefined) (field.fresh ? fresh : shared)[id] = value
+    }
     const tag = Bun.hash(JSON.stringify(shared)).toString(36)
     return known === tag ? { tag, fresh } : { tag, fresh, shared }
   }
