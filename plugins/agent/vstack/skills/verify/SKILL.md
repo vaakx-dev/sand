@@ -29,7 +29,7 @@ Use throwaway data, homes and ports. Leave the user's running services alone.
 
 ## Tests
 
-Where the project allows tests, write one only when it's strong:
+Where the project allows tests, write one only when it's strong. This holds when a brief, a plan or the user asks for tests too: if no test earns its place, say so instead of writing a weak one.
 
 - It guards behavior someone relies on that could break quietly later, like a parser, a calculation, a state change, or a bug that came back once.
 - It can fail. Take the expected value from what the code should do, not from running it.
@@ -38,10 +38,14 @@ Where the project allows tests, write one only when it's strong:
 
 Never write a test that:
 
-- checks a file, function or option was removed, or exists;
-- checks a constant, color, string or setting has the value you just gave it;
-- only checks that mocks were called;
-- repeats what the type checker or build already proves.
+- checks that something exists, was removed or is absent: a file, function, option, field or piece of text;
+- checks a constant, color, string, prompt or setting has the value you just gave it;
+- tests the language, the type checker, the build, a framework or a library instead of this code;
+- works out its expected value with the same logic as the code;
+- only checks that mocks were called, or tests a fake instead of the real code;
+- reaches into internals, or needs something exported only for the test.
+
+Before you finish, reread every test you added or changed against these rules and delete any that breaks one.
 
 Never weaken an existing test to make your code pass, unless the intended behavior changed.
 
