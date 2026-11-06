@@ -3,7 +3,7 @@ import { botName, type BotChatPart, type BotSummary } from '@sand/bots/contract'
 import type { Composer } from '@sand/composer/contract'
 import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, list, onMount, p, show, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, list, onMount, p, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { avatar } from '../avatar'
 import { column, pane, paneHead, type HeadParts } from '../pane'
 import type { Conversation } from './conversation'
@@ -57,14 +57,6 @@ const working = ({ bot }: ChatParts) => {
   return status === 'working' || status === 'waiting'
 }
 
-const keepPlace = async (scroller: HTMLElement, rowList: HTMLElement, load: () => Promise<void>) => {
-  const anchor = rowList.firstElementChild
-  const top = scroller.scrollTop
-  const before = anchor instanceof HTMLElement ? anchor.offsetTop : 0
-  await load()
-  if (anchor instanceof HTMLElement) scroller.scrollTop = top + anchor.offsetTop - before
-}
-
 export const chatView = (kit: Kit, parts: ChatParts) => {
   const { talk, transcript } = parts
   const menu = kit.contextMenu()
@@ -76,21 +68,13 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
     if (talk.entries.get() === undefined) return talk.failure.get() ? 'failed' : 'loading'
     return rows.get().length || working(parts) ? 'rows' : 'empty'
   })
-  const jumpShown = sig(false)
-  let pinned = true
-  let lastTop = 0
-
   const onScroll = () => {
-    const top = scroller.scrollTop
-    if (kit.nearEnd(scroller)) pinned = true
-    else if (top < lastTop) pinned = false
-    lastTop = top
-    jumpShown.set(!pinned)
-    if (scroller.scrollTop < olderEdge) void keepPlace(scroller, rowList, talk.older)
+    follow.scrolled()
+    if (scroller.scrollTop < olderEdge) void kit.loadAbove(scroller, rowList, talk.older)
   }
 
   const watched = (node: HTMLElement) => {
-    onMount(node, () => watchRow(node))
+    onMount(node, () => follow.watch(node))
     return node
   }
 
@@ -116,15 +100,10 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
       kit.dockFade(),
     ),
   )
-  const watchRow = kit.rowSizes(scroller, () => pinned)
-
-  const toLatest = () => {
-    kit.toEnd(scroller)
-    pinned = true
-    jumpShown.set(false)
-  }
+  const follow = kit.followEnd(scroller)
 
   const dock = parts.composer.dock({
+    skills: { bot: talk.bot },
     running: () => working(parts),
     path: () => talk.path.get(),
     send: talk.send,
@@ -138,7 +117,7 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
   const chat = pane(
     { onMount: () => talk.stop },
     chatHead(kit, parts),
-    div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(jumpShown, toLatest), menu.view()),
+    div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(follow.away, follow.toEnd), menu.view()),
     dock.view,
   )
   return div(

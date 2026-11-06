@@ -1,5 +1,5 @@
 import type { Thread } from '@sand/web-client/contract'
-import { div, sig, untrack } from '@vaakx-dev/vrui'
+import { div, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { failed, hero, loading } from './hero'
@@ -20,15 +20,14 @@ const fewestTrimmed = 20
 
 export const chatController = (ctx: ChatContext) => {
   const { kit, transcriptParts: parts } = ctx
-  const { contextMenu, firstRowBelow, jumpButton, keepAnchor, nearEnd, rowSizes, toEnd } = kit
+  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, nearEnd, toEnd } = kit
   const cache = itemCache(parts)
   const states = parts.openStates()
-  const jumpShown = sig(false)
   const slot = slotHost()
   const menu = contextMenu()
   const views = threadViews(
     ctx.kit,
-    node => watchRow(node),
+    node => follow.watch(node),
     id => branchLists(entry => ctx.threads.branches(id, entry)),
   )
   const edge = topEdge(
@@ -37,23 +36,15 @@ export const chatController = (ctx: ChatContext) => {
   )
   const empty = hero(ctx)
   let shown: ThreadView | undefined
-  let pinned = true
 
   const onScroll = () => {
     if (!shown) return
-    pinned = nearEnd(scroller)
-    jumpShown.set(!pinned)
+    follow.scrolled()
     edge.scrolled()
   }
   const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll }, edge.sentinel, slot.node, views.node)
-  const watchRow = rowSizes(scroller, () => pinned)
+  const follow = followEnd(scroller)
   edge.watch(scroller)
-
-  const scrollToEnd = () => {
-    toEnd(scroller)
-    pinned = true
-    jumpShown.set(false)
-  }
 
   const stash = () => {
     if (!shown) return
@@ -64,7 +55,7 @@ export const chatController = (ctx: ChatContext) => {
 
   const showSlot = (key: string, build: () => HTMLElement) => {
     stash()
-    jumpShown.set(false)
+    follow.away.set(false)
     slot.show(key, build)
   }
 
@@ -134,7 +125,7 @@ export const chatController = (ctx: ChatContext) => {
 
   const trim = () => {
     const found = shownThread()
-    if (!found || pinned) return
+    if (!found || follow.pinned()) return
     const { thread, view } = found
     const index = firstRowBelow(view.rowList, scroller.getBoundingClientRect().top - screensKeptAbove * scroller.clientHeight)
     const first = view.rowEntries[index]
@@ -154,14 +145,13 @@ export const chatController = (ctx: ChatContext) => {
     const switching = shown?.id !== thread.id
     const view = showThread(thread.id)
     const saved = switching ? view.scroll : undefined
-    const tail = switching ? saved === undefined : pinned
+    const tail = switching ? saved === undefined : follow.pinned()
     if (tail && view.size > trimAt) resetToEnd(view)
     if (switching || tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
     if (saved !== undefined) scroller.scrollTop = saved
     else if (tail) toEnd(scroller)
-    pinned = nearEnd(scroller)
-    jumpShown.set(!pinned)
+    follow.measure()
     edge.pump()
   }
 
@@ -181,6 +171,6 @@ export const chatController = (ctx: ChatContext) => {
     render()
   }
 
-  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd), menu.view())
+  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
   return { root, render, refresh, forget }
 }

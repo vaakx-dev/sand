@@ -58,7 +58,7 @@ export default definePlugin({
     await refresh()
     ctx.provide(skillsService, skills)
     ctx.effect(() => ctx.tools.register(skillTool(skillsOf)))
-    serveSkills(ctx, skills)
+    serveSkills(ctx, skills, skillsOf)
     for (const root of roots) ctx.effect(() => watchRoot(ctx.watcher, root, () => void refresh()))
     describeForConversation(ctx, skillsOf)
     expandMentions(ctx, skillsOf)

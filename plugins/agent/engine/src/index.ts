@@ -1,7 +1,7 @@
 import { runtimeDrain } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { attachConversations } from './attach'
-import { engine, type Engine, entryViews, type Owner } from './contract'
+import { type Conversation, engine, type Engine, entryViews, type Owner } from './contract'
 import { inject } from './context'
 import { createLeases } from './lifecycle/lease'
 import { openStores } from './store'
@@ -11,9 +11,10 @@ const dispatchEvery = 2_000
 const recoverEvery = 30_000
 const pruneEvery = 60 * 60 * 1000
 
-interface Sweeps {
+interface Attached {
   sweep(): void
   recover(): void
+  open(id: string): Conversation | undefined
 }
 
 export default definePlugin({
@@ -24,7 +25,7 @@ export default definePlugin({
     ctx.provide(entryViews, createViews())
     const stores = openStores(ctx.ledger)
     const leases = createLeases(ctx, stores.turns)
-    const attached = new Map<Owner, Sweeps>()
+    const attached = new Map<Owner, Attached>()
     let stopped = ctx.cli.place !== 'runtime'
     let settled = false
 
@@ -39,11 +40,12 @@ export default definePlugin({
         const { owner } = conversations
         if (attached.has(owner)) throw new Error(`${owner} conversations are already attached`)
         const found = attachConversations(ctx, { stores, leases, stopped: () => stopped, resumes: () => settled && !stopped }, conversations, () => attached.delete(owner))
-        attached.set(owner, found)
+        attached.set(owner, { ...found, open: id => conversations.open(id) })
         found.recover()
         return found.runner
       },
       turn: (owner, id) => stores.turns.get(owner, id),
+      open: ({ owner, id }) => attached.get(owner)?.open(id),
     }
 
     if (!stopped) {

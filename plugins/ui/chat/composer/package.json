@@ -25,6 +25,7 @@
     "@sand/model-panel": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/reactive": "workspace:*",
+    "@sand/skills": "workspace:*",
     "@sand/threads-space": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

@@ -28,6 +28,9 @@ export interface FileIndex {
   grep(query: string, cwd?: string): Promise<GrepMatch[]>
 }
 
+export type SkillPlace = { session: string } | { bot: string }
+
 export interface SkillIndex {
   list(): SkillSummary[]
+  of(place: SkillPlace): Promise<SkillSummary[]>
 }
