@@ -15,6 +15,7 @@ Less is more. Code is clean, readable, simple and fast, and the best choice for 
 - Follow the project's instructions first, then this skill.
 - Copy the patterns of nearby code only where they meet these rules.
 - Reuse what exists before adding a helper.
+- Tests are code too. Load the verify skill before writing or changing one.
 - When asked to clean up, rewrite the code to these rules.
 
 ## Shape
