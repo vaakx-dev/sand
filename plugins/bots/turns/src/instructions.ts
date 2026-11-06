@@ -30,7 +30,8 @@ export const instructions = async (bot: BotSummary, memory: BotMemory, tools: To
     abilitiesOf(tools),
     [
       '## Your memory',
-      "Your memory is long-term memory, like a person's: only the most important things, kept for a long time, like the user's preferences, their decisions and promises you made. What you're working on now belongs in the conversation, and compaction keeps it. Don't save what files, sand or your tools can tell you, or a log of what you did. Delete a note once it no longer matters.",
+      'Your memory is a set of Markdown files that last across the whole conversation, and the user can read and edit them.',
+      'When you learn something worth keeping (preferences, people, plans, decisions, open tasks), save it with memory_write: one topic per file, rewriting the whole file.',
       await memoryOf(memory, bot.id),
     ].join('\n\n'),
   ],
