@@ -1,5 +1,5 @@
 import { cli } from '@sand/config/contract'
-import { turnContent } from '@sand/engine/contract'
+import { toolContent, turnContent } from '@sand/engine/contract'
 import { media } from '@sand/media/contract'
 import { server } from '@sand/server/contract'
 import { transfers } from '@sand/transfers/contract'
@@ -11,6 +11,7 @@ import { attachments, attachmentsFinish, helloAttachments, type AttachmentLimits
 import { fromBytes, fromFile, isMedia } from './file'
 import type { ImageLimits } from './image'
 import { labelImages } from './label'
+import { fitImages } from './refit'
 import { finishUpload, type UploadPlace } from './upload/store'
 
 export default definePlugin({
@@ -29,6 +30,7 @@ export default definePlugin({
       fromBytes: (data, name) => fromBytes(ctx.media, data, name, images),
     })
     ctx.on(turnContent, content => labelImages(ctx.media, content))
+    ctx.on(toolContent, content => fitImages(ctx.media, content, images))
     const place: UploadPlace = { transfers: ctx.transfers, media: ctx.media, uploads: join(ctx.cli.home, 'uploads'), images, ...limits }
     ctx.watch(server, found =>
       found
