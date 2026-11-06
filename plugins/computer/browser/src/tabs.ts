@@ -1,5 +1,4 @@
 import type { Browser, CdpEvent } from '@sand/cdp'
-import { countInputs } from './human'
 
 export type Call = <T>(method: string, params?: object) => Promise<T>
 
@@ -36,8 +35,6 @@ export const openTabs = async (browser: Browser, visible: boolean) => {
     const { sessionId } = await browser.call<{ sessionId: string }>('Target.attachToTarget', { targetId, flatten: true })
     const call: Call = (method, params = {}) => browser.call(method, params, sessionId)
     await Promise.all([call('Page.enable'), call('DOM.enable'), call('Accessibility.enable')])
-    await call('Page.addScriptToEvaluateOnNewDocument', { source: countInputs })
-    await call('Runtime.evaluate', { expression: countInputs })
     if (visible) await call('Page.bringToFront')
     return call
   }
