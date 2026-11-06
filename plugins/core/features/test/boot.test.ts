@@ -10,6 +10,7 @@ import { engine } from '@sand/engine/contract'
 import { gitRepo } from '@sand/git/contract'
 import { gitRunner } from '@sand/git-runner/contract'
 import { startSand } from '@sand/harness'
+import { htmlPages } from '@sand/html/contract'
 import { schedules } from '@sand/schedules/contract'
 import { tools } from '@sand/tools/contract'
 import { expect, test } from 'bun:test'
@@ -19,7 +20,7 @@ const topLevel = ['threads', 'bots', 'calendar', 'computers', 'pcs', 'notificati
 
 const model = { id: 'fake', models: ['m'], replies: [[{ type: 'text' as const, text: 'Hello from the bot' }]] }
 
-const watched = { sessions, bots, calendars, computers, engine, llm, tools, approvals, schedules, connections, gitRepo, gitRunner }
+const watched = { sessions, bots, calendars, computers, engine, llm, tools, approvals, schedules, connections, gitRepo, gitRunner, htmlPages }
 
 type Name = keyof typeof watched
 
@@ -33,11 +34,12 @@ const running = (sand: Awaited<ReturnType<typeof boot>>) =>
 
 const combinations: [string, string[], string[], Name[]][] = [
   ['the kernel alone', [], [], []],
-  ['Threads alone', ['threads'], [], ['sessions', 'engine', 'llm', 'tools', 'approvals', 'gitRepo', 'gitRunner']],
-  ['Threads without git', ['threads'], ['git'], ['sessions', 'engine', 'llm', 'tools', 'approvals']],
-  ['Bots alone', ['bots'], [], ['bots', 'engine', 'llm', 'tools', 'approvals', 'schedules']],
-  ['Bots without notifications, schedules or connections', ['bots'], ['notifications', 'schedules', 'connections'], ['bots', 'engine', 'llm', 'tools', 'approvals']],
-  ['Bots without approvals', ['bots'], ['approvals'], ['bots', 'engine', 'llm', 'tools', 'schedules']],
+  ['Threads alone', ['threads'], [], ['sessions', 'engine', 'llm', 'tools', 'approvals', 'gitRepo', 'gitRunner', 'htmlPages']],
+  ['Threads without git', ['threads'], ['git'], ['sessions', 'engine', 'llm', 'tools', 'approvals', 'htmlPages']],
+  ['Bots alone', ['bots'], [], ['bots', 'engine', 'llm', 'tools', 'approvals', 'schedules', 'htmlPages']],
+  ['Bots without HTML pages', ['bots'], ['html'], ['bots', 'engine', 'llm', 'tools', 'approvals', 'schedules']],
+  ['Bots without notifications, schedules or connections', ['bots'], ['notifications', 'schedules', 'connections'], ['bots', 'engine', 'llm', 'tools', 'approvals', 'htmlPages']],
+  ['Bots without approvals', ['bots'], ['approvals'], ['bots', 'engine', 'llm', 'tools', 'schedules', 'htmlPages']],
   ['Calendar alone', ['calendar'], [], ['calendars', 'connections']],
   ['Computer use alone', ['computers'], [], ['computers', 'engine', 'llm', 'tools']],
   ['Several PCs & phone alone', ['pcs'], [], []],

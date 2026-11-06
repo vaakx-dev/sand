@@ -36,7 +36,8 @@
           "palette",
           "picker",
           "mcp",
-          "extend"
+          "extend",
+          "html"
         ],
         "offer": true
       },
@@ -100,7 +101,8 @@
           "approvals",
           "usage",
           "palette",
-          "mcp"
+          "mcp",
+          "html"
         ],
         "offer": true
       },
@@ -282,6 +284,17 @@
           "markdown"
         ]
       },
+      "html": {
+        "kind": "capability",
+        "label": "HTML pages",
+        "summary": "Charts, tables and mockups agents show inline in the chat",
+        "stops": "Agents can't show pages in the chat.",
+        "needs": [
+          "engine",
+          "media",
+          "transcript"
+        ]
+      },
       "approvals": {
         "kind": "capability",
         "label": "Approvals",
@@ -370,6 +383,7 @@
     "@sand/git": "workspace:*",
     "@sand/git-runner": "workspace:*",
     "@sand/harness": "workspace:*",
+    "@sand/html": "workspace:*",
     "@sand/schedules": "workspace:*",
     "@sand/tools": "workspace:*",
     "playwright": "^1.64.1"
