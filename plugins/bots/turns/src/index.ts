@@ -1,5 +1,6 @@
 import { botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
+import { context } from '@sand/prompt/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
@@ -12,11 +13,11 @@ import { botConversations, inject } from './runner'
 export default definePlugin({
   name: 'bot-turns',
   description: "Runs each bot's turns on the shared engine, with its job and memory as instructions and its main model",
-  inject: { ...inject, engine },
+  inject: { ...inject, engine, context },
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
-    ctx.effect(() => ctx.providerThreads.brief('bot', botBrief(ctx.bots, ctx.botMemory, ctx.tools)))
+    ctx.effect(() => ctx.providerThreads.brief('bot', botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context)))
     ctx.effect(() => ctx.tools.offer('bot', () => offered))
     const conversations = botConversations(ctx, live)
     const runner = ctx.engine.attach(conversations)

@@ -1,10 +1,10 @@
-import type { Session } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import type { Paths } from '@sand/paths/contract'
 import type { Tools } from '@sand/tools/contract'
 import { join } from 'node:path'
 
 export interface Instructions {
-  environment(session: Session, model: string): string
+  environment(conversation: Conversation, model: string): string
   project(cwd: string, project?: string | null): Promise<string>
   additional: string | undefined
 }
@@ -32,7 +32,7 @@ const project = async (root: string) => {
 }
 
 export const createInstructions = (tools: Tools, paths: Paths, additional?: string): Instructions => ({
-  environment: (session, model) => environment(session.cwd, tools.notes(session), model),
+  environment: (conversation, model) => environment(conversation.cwd, tools.notes(conversation), model),
   project: (cwd, projectName) => project(paths.projectFolder(cwd, projectName)),
   additional,
 })

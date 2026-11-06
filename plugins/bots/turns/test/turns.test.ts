@@ -14,7 +14,7 @@ afterEach(() => sand.stop())
 const said = (text: string) => ({ type: 'text', text }) as const
 
 const start = async (replies: Source['replies']) => {
-  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['bots/bots', 'bots/memory', 'bots/turns'] })
+  sand = await startSand([{ id: 'fake', models: ['m'], replies, api: 'anthropic' }], { plugins: ['bots/bots', 'bots/memory', 'bots/turns', 'agent/vstack'] })
   return sand
 }
 
@@ -39,7 +39,9 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
 
   const [first] = requests('fake').map(body => JSON.parse(body))
   const system = first.system[0].text
-  expect(system).toContain('You are Calendar')
+  expect(system).toStartWith('You are Calendar')
+  expect(system).toContain('## Questions are read-only')
+  expect(system).toContain('## Avoid dumb moves')
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('<memory file="habits.md">\nGym on Mondays.\n</memory>')
   expect(first.tools.map((tool: { name: string }) => tool.name)).toContain('memory_write')

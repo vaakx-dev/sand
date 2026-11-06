@@ -1,6 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import type { BotMemory } from '@sand/bot-memory/contract'
 import type { BotSummary } from '@sand/bots/contract'
+import type { Own } from '@sand/prompt/contract'
 
 const noJob = 'You have no job yet. Help with whatever the user asks, and ask what they would like you to take care of.'
 
@@ -22,15 +23,15 @@ const abilitiesOf = (tools: ToolSpec[]) =>
     'You can do nothing else. You act only while you are answering, unless one of your tools sets up something that happens later. Never say you will do something, or that you did something, that none of your tools can do: say plainly that you cannot, and offer what you can do instead.',
   ].join('\n\n')
 
-export const instructions = async (bot: BotSummary, memory: BotMemory, tools: ToolSpec[]) =>
-  [
-    `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above.`,
+export const instructions = async (bot: BotSummary, memory: BotMemory, tools: ToolSpec[]): Promise<Own> => ({
+  intro: `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above.`,
+  parts: [
     `## Your job\n\n${bot.job.trim() || noJob}`,
     abilitiesOf(tools),
     [
       '## Your memory',
-      'Your memory is a set of Markdown files that last across the whole conversation, and the user can read and edit them.',
-      'When you learn something worth keeping (preferences, people, plans, decisions, open tasks), save it with memory_write: one topic per file, rewriting the whole file.',
+      "Your memory is long-term memory, like a person's: only the most important things, kept for a long time, like the user's preferences, their decisions and promises you made. What you're working on now belongs in the conversation, and compaction keeps it. Don't save what files, sand or your tools can tell you, or a log of what you did. Delete a note once it no longer matters.",
       await memoryOf(memory, bot.id),
     ].join('\n\n'),
-  ].join('\n\n')
+  ],
+})
