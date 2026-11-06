@@ -1,8 +1,9 @@
 import type { Prompt } from '@sand/chats/contract'
+import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { request, type Request, type } from '@sand/host-hub/contract'
-import { type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
+import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
-import { service } from 'drydock'
+import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export const outsideOrigins = ['cli', 'mcp'] as const
@@ -55,15 +56,41 @@ export interface StartInput {
   worktree?: boolean
   origin: TurnOrigin
   clientRequestId: string
+  from?: ConversationRef
+}
+
+export interface Notice {
+  text: string
+  clientRequestId: string
+}
+
+export interface SendInput {
+  prompt: Prompt
+  mode?: SendMode
+  origin: TurnOrigin
+  clientRequestId: string
+  from?: ConversationRef
+}
+
+export interface OwnerKind {
+  deliver(id: string, notice: Notice): Promise<unknown> | undefined
+  label(id: string): string | undefined
 }
 
 export interface Orchestrator {
   start(input: StartInput): Promise<Sent>
-  wait(thread: string, until: WaitUntil, signal: AbortSignal): Promise<ThreadState>
+  send(thread: string, input: SendInput): Promise<Sent>
+  wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
   read(thread: string, options: ReadOptions): ThreadPage
+  starterOf(thread: string): ConversationRef | undefined
+  started(owner: Owner): Record<string, string>
+  notify(thread: string, notice: Notice): Promise<boolean>
+  owner(owner: Owner, kind: OwnerKind): Dispose
 }
 
 export const orchestrator = service<Orchestrator>('orchestrator')
+
+export const threadStarted = event<(thread: string, starter: ConversationRef) => void>('thread.started')
 
 export interface ThreadRow {
   thread: string

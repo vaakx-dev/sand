@@ -1,20 +1,17 @@
-import { sessionEntry, sessionRemove } from '@sand/chats/contract'
+import { sessionEntry } from '@sand/chats/contract'
 import { contextKinds } from '@sand/context/contract'
+import { threadStarted } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
-import { turnEnd } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { botStartedWire } from '../contract'
 import { createAsk } from './ask'
 import { inject } from './context'
-import { reportFinished } from './finished'
 import { botContext } from './kind'
 import { routeMentions } from './mention'
 import { serveBridge } from './serve'
-import { openStarts } from './starts'
 import { botTools, group } from './tools/bots'
 import { threadTools } from './tools/threads'
 import { replyView } from './view'
-import { createWaits } from './waits'
 
 export default definePlugin({
   name: 'bot-bridge',
@@ -23,15 +20,18 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const ask = createAsk(ctx)
-    const waits = createWaits()
-    const starts = openStarts(ctx.ledger, (thread, bot) => ctx.get(server)?.broadcast(botStartedWire, [thread, bot]))
     ctx.on(sessionEntry, routeMentions(ctx, ask))
     ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ask)))
-    ctx.on(sessionRemove, thread => starts.remove(thread))
-    ctx.on(turnEnd, reportFinished(ctx, starts, waits))
+    ctx.on(threadStarted, (thread, { owner, id }) => void (owner === 'bot' && ctx.get(server)?.broadcast(botStartedWire, [thread, id])))
+    ctx.effect(() =>
+      ctx.orchestrator.owner('bot', {
+        deliver: (bot, { text, clientRequestId }) => ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId }),
+        label: bot => ctx.bots.get(bot)?.name,
+      }),
+    )
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Bots', summary: "list the user's bots, hand one a task and read its replies", load: 'on-demand' }))
-    for (const tool of [...botTools(ctx, ask, waits), ...threadTools(ctx, starts, waits)]) ctx.effect(() => ctx.tools.register(tool))
-    serveBridge(ctx, ask, starts)
+    for (const tool of [...botTools(ctx, ask), ...threadTools(ctx)]) ctx.effect(() => ctx.tools.register(tool))
+    serveBridge(ctx, ask)
   },
 })

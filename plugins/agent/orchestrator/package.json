@@ -16,7 +16,9 @@
   "dependencies": {
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/project": "workspace:*",

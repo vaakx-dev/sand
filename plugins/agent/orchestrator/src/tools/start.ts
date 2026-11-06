@@ -26,12 +26,13 @@ const adopting = (ctx: OrchestratorContext, parent: Session): Adopt | undefined 
 export const startTool = (ctx: OrchestratorContext, start: Start): Tool<typeof input> => ({
   name: 'threads_start',
   description:
-    'Start a new thread with a first message. It shows in the sidebar like any thread, runs with your tool limits and keeps working after your turn ends. Returns at once with its id; use threads_wait for its reply',
+    "Start a new thread with a first message. It shows in the sidebar like any thread, runs with your tool limits and keeps working after your turn ends. Returns at once with its id; each time it finishes, its final reply reaches you as a <task-notification>, so don't wait or poll for it",
   group,
   input,
   needs: ['thread'],
   async run({ cwd = '.', ...rest }, context) {
-    const request = { ...rest, cwd: resolve(context.cwd, cwd), origin: 'agent', clientRequestId: requestOf(context) } as const
+    const from = { owner: context.conversation.owner, id: context.conversation.id }
+    const request = { ...rest, cwd: resolve(context.cwd, cwd), origin: 'agent', clientRequestId: requestOf(context), from } as const
     return JSON.stringify(await start(request, adopting(ctx, ctx.sessions.require(context.conversation.id))))
   },
 })

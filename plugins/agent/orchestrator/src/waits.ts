@@ -1,11 +1,14 @@
+import type { ConversationRef } from '@sand/engine/contract'
+
+const keyOf = ({ owner, id }: ConversationRef, thread: string) => `${owner}\n${id}\n${thread}`
+
 export const createWaits = () => {
   const counts = new Map<string, number>()
-  const keyOf = (bot: string, thread: string) => `${bot}\n${thread}`
 
   return {
-    has: (bot: string, thread: string) => counts.has(keyOf(bot, thread)),
-    async during<T>(bot: string, thread: string, work: () => Promise<T>): Promise<T> {
-      const key = keyOf(bot, thread)
+    has: (by: ConversationRef, thread: string) => counts.has(keyOf(by, thread)),
+    async during<T>(by: ConversationRef, thread: string, work: () => Promise<T>): Promise<T> {
+      const key = keyOf(by, thread)
       counts.set(key, (counts.get(key) ?? 0) + 1)
       try {
         return await work()
