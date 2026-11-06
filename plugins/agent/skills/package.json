@@ -21,7 +21,6 @@
     "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/watch": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

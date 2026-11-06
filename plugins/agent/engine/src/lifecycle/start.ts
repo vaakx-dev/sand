@@ -1,6 +1,7 @@
 import { type Entry, type Message, type Prompt, promptContent, type ToolCallBlock, type UserContent } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
-import type { Conversation, Conversations, TurnInfo, TurnOrigin } from '../contract'
+import { type Conversation, type Conversations, type TurnInfo, turnContent, type TurnOrigin } from '../contract'
+import type { EngineContext } from '../context'
 import type { Owned } from '../owned'
 
 export interface Opening<C extends Conversation> {
@@ -25,14 +26,14 @@ export interface Resumed<C extends Conversation> {
 
 export type Begun<C extends Conversation> = Started<C> | Resumed<C>
 
-export const expand = async <C extends Conversation>(conversations: Conversations<C>, content: UserContent[], conversation: C) =>
-  (await conversations.prompt?.(content, conversation)) ?? content
+export const expand = async <C extends Conversation>(ctx: EngineContext, conversations: Conversations<C>, content: UserContent[], conversation: C) =>
+  ctx.waterfall(turnContent, (await conversations.prompt?.(content, conversation)) ?? content, conversation)
 
-export const createOpener = <C extends Conversation>({ conversations, stores, leases }: Owned<C>) => ({
+export const createOpener = <C extends Conversation>(ctx: EngineContext, { conversations, stores, leases }: Owned<C>) => ({
   async prepare(conversation: C, prompt: Prompt, origin: TurnOrigin): Promise<Opening<C>> {
     const selection = conversations.select(conversation)
     if (!selection) throw new Error('Pick a model')
-    const user: Message = { role: 'user', content: await expand(conversations, promptContent(prompt), conversation) }
+    const user: Message = { role: 'user', content: await expand(ctx, conversations, promptContent(prompt), conversation) }
     return { conversation, user, selection, origin }
   },
   open({ conversation, user, selection, origin }: Opening<C>, pending?: string): Started<C> {

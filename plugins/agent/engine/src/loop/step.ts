@@ -66,7 +66,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
   const steer = async () => {
     const steers = signal.aborted ? [] : stores.pending.steers(conversation)
     if (!steers.length) return false
-    const expanded = await Promise.all(steers.map(item => expand(conversations, promptContent(item.prompt), conversation)))
+    const expanded = await Promise.all(steers.map(item => expand(ctx, conversations, promptContent(item.prompt), conversation)))
     const taken = ctx.ledger.tx(() => {
       const content = steers.flatMap((item, index) => (stores.pending.remove(conversation, item.id) ? expanded[index]! : []))
       if (content.length) append({ role: 'user', content })

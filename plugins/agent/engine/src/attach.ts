@@ -32,7 +32,7 @@ export const attachConversations = <C extends Conversation>(
   const { owner } = conversations
   const owned: Owned<C> = { conversations, stores, leases, announce: createAnnounce(conversations, stores) }
   const { announce } = owned
-  const opener = createOpener(owned)
+  const opener = createOpener(ctx, owned)
   const drive = createDriver(ctx, owned, conversation => dispatch(conversation).catch(error => ctx.report(error)))
   const dispatch = createDispatch(ctx, owned, { opener, drive, stopped })
   const recover = createRecovery(ctx, owned, { drive, resumes })
