@@ -57,7 +57,7 @@ export default definePlugin({
     ctx.provide(modelsService, models)
     ctx.provide(limits, createLimits(ctx, ctx.wire))
     ctx.provide(fileIndex, createFileIndex(ctx.wire, threads.cwd))
-    ctx.provide(skillIndex, createSkillIndex(ctx, ctx.wire, threads))
+    ctx.provide(skillIndex, createSkillIndex(ctx, ctx.wire, ctx.pcs, threads))
     ctx.provide(projectsService, projects.projects)
   },
 })

@@ -30,3 +30,11 @@ export const keepAnchor = (scroller: HTMLElement, rowList: HTMLElement, change: 
   change()
   if (anchor?.isConnected) shiftBy(scroller, anchor.getBoundingClientRect().top - before)
 }
+
+export const loadAbove = async (scroller: HTMLElement, rowList: HTMLElement, load: () => Promise<void>) => {
+  const anchor = rowList.firstElementChild
+  const top = scroller.scrollTop
+  const before = anchor instanceof HTMLElement ? anchor.offsetTop : 0
+  await load()
+  if (anchor instanceof HTMLElement) scroller.scrollTop = top + anchor.offsetTop - before
+}

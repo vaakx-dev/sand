@@ -1,7 +1,8 @@
-import { botCreate, botGet } from '@sand/bots/contract'
+import { botCreate, botGet, bots } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { startSand, type Sand } from '@sand/harness'
-import { skills } from '@sand/skills/contract'
+import { paths } from '@sand/paths/contract'
+import { skills, skillsList } from '@sand/skills/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { join } from 'node:path'
 
@@ -47,4 +48,30 @@ test('a $mention loads the skill into the prompt for threads and bots alike', as
   expect(thread).toStartWith('<skill name="verify"')
   expect(thread).toContain('Run it.')
   expect(fromBot).toEqual(thread!)
+})
+
+const skillIn = (folder: string, name: string) =>
+  Bun.write(join(folder, '.sand', 'skills', name, 'SKILL.md'), `---
+name: ${name}
+description: ${name} here
+---
+Do ${name}.`)
+
+const names = (list: { name: string }[]) => list.map(skill => skill.name)
+
+test("a bot's skill list is the one its $mentions load from, not the open thread's", async () => {
+  await start()
+  const thread = sand.chat('fake/m')
+  const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })
+  await skillIn(sand.app.get(paths)!.projectFolder(thread.cwd, thread.project), 'deploy')
+  await skillIn(sand.app.get(bots)!.folder(bot.id), 'notes')
+
+  const forThread = names(await sand.ask(skillsList, { session: thread.id }))
+  const forBot = names(await sand.ask(skillsList, { bot: bot.id }))
+  expect(forThread).toEqual(['deploy', 'verify'])
+  expect(forBot).toEqual(['notes', 'verify'])
+
+  await sand.ask(botSend, { bot: bot.id, prompt: 'Take $notes', clientRequestId: 'one' })
+  while ((await sand.ask(botGet, { bot: bot.id }))?.last?.role !== 'assistant') await Bun.sleep(10)
+  expect(firstBlock(JSON.parse(sand.requests('fake').at(-1)!))).toStartWith('<skill name="notes"')
 })

@@ -2,7 +2,7 @@ import type { ContextRecord, Entry, Prompt, UserContent } from '@sand/chats/cont
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName } from '@sand/ui-kit/contract'
-import type { DraftTarget } from '@sand/web-client/contract'
+import type { DraftTarget, SkillPlace } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { event, service, type Context, type Dispose } from 'drydock'
 
@@ -48,6 +48,7 @@ export interface Command {
 }
 
 export interface Chat {
+  skills: SkillPlace
   running(): boolean
   path(): Entry[]
   send(prompt: Prompt): Promise<void>
