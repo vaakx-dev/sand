@@ -1,4 +1,4 @@
-import { addressParam, addressParams, addressState, pushAddress, updateAddress } from '@sand/web-client/contract'
+import { addressParam, addressParams, addressState, backAddress, pushAddress, updateAddress } from '@sand/web-client/contract'
 
 const key = 'settings'
 const opened = 'settingsOpened'
@@ -9,4 +9,4 @@ export const openPage = (id: string) => pushAddress({ ...addressParams(), [key]:
 
 export const switchPage = (id: string) => updateAddress({ [key]: id })
 
-export const leavePage = () => (addressState()[opened] ? history.back() : updateAddress({ [key]: undefined }))
+export const leavePage = () => (addressState()[opened] ? backAddress() : updateAddress({ [key]: undefined }))
