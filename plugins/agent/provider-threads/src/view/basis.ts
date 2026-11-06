@@ -1,5 +1,5 @@
 import type { Entry } from '@sand/chats/contract'
-import type { Segment } from '@sand/turns-contract/contract'
+import type { Segment } from '../contract'
 import { type Path, resetOf } from './path'
 
 export interface Basis {

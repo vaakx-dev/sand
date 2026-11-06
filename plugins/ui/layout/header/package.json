@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Header",
     "summary": "Project and thread title, with a thread menu"
@@ -17,6 +18,7 @@
     "@sand/picker": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",
+    "@sand/threads-space": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

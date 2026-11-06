@@ -1,4 +1,5 @@
-import type { Block, Entry, EntryView, Message } from '@sand/chats/contract'
+import type { Block, Entry, Message } from '@sand/chats/contract'
+import type { EntryView } from '@sand/engine/contract'
 import type { CompactionRecord } from '../contract'
 import { filesText } from '../summarize/files'
 import { messageOf, view } from './view'

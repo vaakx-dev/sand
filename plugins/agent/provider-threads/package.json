@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "description": "Keeps what each model of a chat has seen, so a model keeps its cached prefix and a switch hands over only what fits",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
+    "feature": "engine",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Provider threads",
@@ -15,10 +19,10 @@
     "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/compaction": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/prompt": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

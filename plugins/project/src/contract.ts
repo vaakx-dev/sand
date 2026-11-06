@@ -1,4 +1,4 @@
-import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -113,6 +113,7 @@ const patchInput = z.object({
 const pathInput = z.object({ path: z.string() })
 
 export const projectsList = request('projects.list', { input: z.object({}), output: type<ProjectList>() })
+export const helloProjects = helloField<ProjectList>('projects')
 export const projectsInspect = request('projects.inspect', { input: pathInput, output: type<ProjectFolder>() })
 export const projectsAdd = request('projects.add', { input: z.object({ path: z.string(), project: z.string().optional() }), output: type<Project>() })
 export const projectsUpdate = request('projects.update', { input: z.object({ project: z.string(), patch: patchInput }), output: type<Project>() })

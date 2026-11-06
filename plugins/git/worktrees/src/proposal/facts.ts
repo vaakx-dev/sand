@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { existsSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import { z } from 'zod'

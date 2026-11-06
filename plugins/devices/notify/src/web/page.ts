@@ -2,7 +2,7 @@ import type { Wire } from '@sand/devices-contract'
 import type { Toasts } from '@sand/toasts/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, type Sig, sig } from '@vaakx-dev/vrui'
-import { notifySubscribe, notifyUnsubscribe } from '../contract'
+import { type MomentKind, momentKinds, moments, notifyMoment, notifySubscribe, notifyUnsubscribe } from '../contract'
 import { permission, type Support, subscribe, support, unsubscribe } from './browser'
 
 export interface PageDeps {
@@ -11,6 +11,7 @@ export interface PageDeps {
   toasts: Toasts
   on: Sig<boolean>
   key: Sig<string | undefined>
+  off: Sig<MomentKind[]>
   device(): string
 }
 
@@ -25,7 +26,7 @@ const unavailable: Record<Exclude<Support, 'ready'>, string> = {
 const blocked = 'Blocked for this site. Allow notifications in the browser’s site settings, then turn this on.'
 const ready = 'For threads on any of your PCs, even when sand is closed.'
 
-export const notificationsPage = ({ kit, wire, toasts, on, key, device }: PageDeps): HTMLElement => {
+export const notificationsPage = ({ kit, wire, toasts, on, key, off, device }: PageDeps): HTMLElement => {
   const { settingsRow, settingsSection, toggleSwitch } = kit
   const supported = support()
   const allowed = sig(permission())
@@ -57,14 +58,22 @@ export const notificationsPage = ({ kit, wire, toasts, on, key, device }: PageDe
   })
   const disabled = derive(() => supported !== 'ready' || !key.get() || busy.get() || (allowed.get() === 'denied' && !on.get()))
 
+  const momentRow = (kind: MomentKind) => {
+    const { label, detail } = moments[kind]
+    const wanted = derive(() => !off.get().includes(kind))
+    const choose = () => toasts.attempt(toastId, 'Couldn’t change notifications', () => wire.call(notifyMoment, { kind, on: !wanted.get() }))
+    return settingsRow({ title: label, detail }, toggleSwitch({ on: wanted, 'aria-label': `Notify about ${label}`, onClick: () => void choose() }))
+  }
+
   return div(
     { class: 'flex flex-col gap-6' },
     settingsSection(
       { title: device },
       settingsRow(
-        { title: 'When a turn finishes or fails', detail },
-        toggleSwitch({ on, 'aria-label': 'Notify this device when a turn finishes or fails', disabled, onClick: () => void toggle() }),
+        { title: 'Notify this device', detail },
+        toggleSwitch({ on, 'aria-label': 'Notify this device', disabled, onClick: () => void toggle() }),
       ),
     ),
+    settingsSection({ title: 'Notify every device about' }, ...momentKinds.map(momentRow)),
   )
 }

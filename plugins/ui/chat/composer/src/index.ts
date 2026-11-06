@@ -1,6 +1,7 @@
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, typing as typingService, type Composer } from './contract'
 import { place } from '@sand/layout/contract'
+import { threadsSlot } from '@sand/threads-space/contract'
 import { fileIndex, skillIndex, threadSelect } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
@@ -75,7 +76,7 @@ export default definePlugin({
     session.start()
     place(
       ctx,
-      'main',
+      threadsSlot('main'),
       () => {
         current = card(parts)
         return dock(parts, current)

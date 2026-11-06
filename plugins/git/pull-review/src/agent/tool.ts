@@ -41,8 +41,9 @@ const commentToolFor = (deps: CommentToolDeps): Tool<typeof commentInput> => ({
   description:
     "Add a line comment to the user's pending review of the thread's linked pull request. It waits there for the user to edit and submit; nothing is posted to GitHub yet. Use it for specific, actionable findings on lines that are part of the change.",
   input: commentInput,
-  async run({ number, ...comment }, { session }) {
-    const ref = await linkedPull(deps, session.id, number)
+  needs: ['thread'],
+  async run({ number, ...comment }, { conversation }) {
+    const ref = await linkedPull(deps, conversation.id, number)
     const pending = await deps.reviews.comment(ref, comment, true)
     return `Added to the pending review on ${pullLabel(ref)} at ${comment.path}:${comment.line}. ${plural(pending.comments.length, 'comment')} waiting.`
   },

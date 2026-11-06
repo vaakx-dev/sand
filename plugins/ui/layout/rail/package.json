@@ -1,0 +1,23 @@
+{
+  "name": "@sand/rail",
+  "version": "0.0.0",
+  "description": "The rail at the far left that switches spaces and holds app-wide actions; a tab bar along the bottom on phones",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Rail",
+    "summary": "Switch between spaces such as Threads and Pull requests, and reach Usage and Settings"
+  },
+  "dependencies": {
+    "@sand/layout": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

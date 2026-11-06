@@ -1,7 +1,6 @@
 import type { Session, SessionInfo } from '@sand/chats/contract'
 
-export const isSession = (value: object): value is Session =>
-  'path' in value && typeof value.path === 'function' && 'append' in value && typeof value.append === 'function'
+export const isSession = (value: object): value is Session => 'owner' in value && value.owner === 'thread' && 'path' in value && typeof value.path === 'function'
 
 export const info = (session: Session): SessionInfo => ({
   id: session.id,

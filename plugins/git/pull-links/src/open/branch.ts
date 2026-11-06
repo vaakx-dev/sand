@@ -1,4 +1,5 @@
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { GitHub, PullSummary } from '@sand/github/contract'
 import type { PullActivity } from '../activity/types'
 import { hasBranch, hasCommit, isAncestor, longGitMs } from './git'

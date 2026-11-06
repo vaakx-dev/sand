@@ -1,6 +1,7 @@
 import { sessionRemove, sessions, sessionUpdate } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
-import { gitRepo, gitRunner } from '@sand/git/contract'
+import { gitRepo } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
 import { type Server, server, sessionCarry, sessionOpened, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'

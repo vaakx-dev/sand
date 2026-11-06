@@ -4,6 +4,7 @@
   "description": "The sand release-assets command: writes the release bundle and stamp for a GitHub release",
   "type": "module",
   "sand": {
+    "feature": "git",
     "cli": "./src/index.ts",
     "label": "Release command",
     "summary": "Writes release assets"
@@ -11,7 +12,7 @@
   "dependencies": {
     "@sand/boot": "workspace:*",
     "@sand/cli-commands": "workspace:*",
-    "@sand/git": "workspace:*",
+    "@sand/git-runner": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }

@@ -1,5 +1,6 @@
-import type { Entry, Session } from '@sand/chats/contract'
-import type { HandoffStrategy, ProviderThreadInfo, Segment, TurnInfo } from '@sand/turns-contract/contract'
+import type { Entry } from '@sand/chats/contract'
+import type { Conversation, TurnInfo } from '@sand/engine/contract'
+import type { HandoffStrategy, ProviderThreadInfo, Segment } from '../contract'
 import type { HandoffEntry } from '../entry'
 import type { HandoffStore } from '../store/handoffs'
 import { fullBasis, headOf } from '../view/basis'
@@ -11,7 +12,7 @@ import { readsHistory } from '../tools/thread-read'
 import { select } from './select'
 
 export interface HandoffInput {
-  session: Session
+  conversation: Conversation
   turn: TurnInfo
   path: Path
   thread: ProviderThreadInfo
@@ -30,7 +31,7 @@ const coveredBy = (path: Path, thread: ProviderThreadInfo, strategy: HandoffStra
   return [...summaries, ...path.entries.slice(from, end)]
 }
 
-export const handOff = (handoffs: HandoffStore, { session, turn, path, thread, strategy, made, budget }: HandoffInput): Segment[] | undefined => {
+export const handOff = (handoffs: HandoffStore, { conversation, turn, path, thread, strategy, made, budget }: HandoffInput): Segment[] | undefined => {
   const end = path.index.get(turn.prompt) ?? path.entries.length
   const before = path.entries[end - 1]
   const covered = coveredBy(path, thread, strategy, end)
@@ -43,7 +44,7 @@ export const handOff = (handoffs: HandoffStore, { session, turn, path, thread, s
   const selected = select(items.map(renderItem), coverageText(coverage), budget)
   const text = handoffText(selected.context, selected.items)
   const id = handoffs.create({
-    session: session.id,
+    conversation,
     turn: turn.id,
     thread: thread.id,
     generation: thread.generation,
@@ -64,6 +65,6 @@ export const handOff = (handoffs: HandoffStore, { session, turn, path, thread, s
     omitted: selected.omitted.length,
     tokens: Buffer.byteLength(text),
   }
-  session.append('handoff', entry, { turn: turn.id })
+  conversation.append('handoff', entry, { turn: turn.id })
   return [...(strategy === 'delta' ? thread.seen : []), { handoff: id, to: before.id }]
 }

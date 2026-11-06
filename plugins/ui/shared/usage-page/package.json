@@ -4,6 +4,7 @@
   "description": "Usage page in settings: plan limits, billed cost and tokens per account, across your PCs",
   "type": "module",
   "sand": {
+    "feature": "usage",
     "web": "./src/index.ts",
     "label": "Usage",
     "summary": "Usage page in settings: plan limits, billed cost and tokens per account and PC"
@@ -11,7 +12,7 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/nav": "workspace:*",
+    "@sand/rail": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",

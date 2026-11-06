@@ -1,5 +1,6 @@
 import { llm, llmEvent } from '@sand/accounts/contract'
-import { ledger, type Session } from '@sand/chats/contract'
+import { type Session } from '@sand/chats/contract'
+import { ledger } from '@sand/ledger/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'

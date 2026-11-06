@@ -6,7 +6,7 @@ import type { Path } from './view/path'
 
 export const contextOf = (usage: Usage) => usage.input + usage.cacheRead + usage.cacheWrite
 
-export type Adoption = Omit<NewThread, 'session' | 'system'> & { system?: string }
+export type Adoption = Omit<NewThread, 'conversation' | 'system'> & { system?: string }
 
 export const adoption = (path: Path, target: Selection): Adoption => {
   const usage = path.entries.findLast(entry => entry.type === 'usage')

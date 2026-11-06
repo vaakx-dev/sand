@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "pulls",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
     "web": "./src/web/index.ts",
@@ -18,6 +19,7 @@
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
+    "@sand/git-runner": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",

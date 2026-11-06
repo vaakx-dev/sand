@@ -1,8 +1,10 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { show, type Child } from '@vaakx-dev/vrui'
+import { dynamicChild, show, type Child, type Derive } from '@vaakx-dev/vrui'
 
-const setupSteps = 2
-
-export const screen = ({ progressSteps, setupScreen }: Kit, reached: number, ...children: Child[]) => setupScreen(progressSteps(setupSteps, reached), ...children)
+export const screen = ({ progressSteps, setupScreen }: Kit, total: Derive<number>, reached: number, ...children: Child[]) =>
+  setupScreen(
+    dynamicChild(total, count => progressSteps(count, reached)),
+    ...children,
+  )
 
 export const problem = ({ errorText }: Kit, text: () => string) => show(() => !!text(), () => errorText(text))

@@ -1,3 +1,4 @@
+import type { Sessions } from '@sand/chats/contract'
 import type { WireHost } from '@sand/host-hub/contract'
 import { joinDisposers } from '@sand/util'
 import { existsSync } from 'node:fs'
@@ -15,28 +16,27 @@ import {
   sessionsQuick,
   sessionsCreate,
 } from '../contract/requests'
-import type { ServerContext } from '../context'
 import { info } from '../socket/serialize'
 
-export const sessionRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle'>) => {
-  const session = (id: string) => ctx.sessions.require(id)
+export const sessionRequests = (sessions: Sessions, wire: Pick<WireHost, 'handle'>) => {
+  const session = (id: string) => sessions.require(id)
   const done = () => true
   return joinDisposers(
-    wire.handle(sessionsList, () => ctx.sessions.list()),
+    wire.handle(sessionsList, () => sessions.list()),
     wire.handle(sessionsCreate, ({ cwd }) => {
       if (!existsSync(cwd)) throw new Error(`${cwd} is not a folder on this PC`)
-      return info(ctx.sessions.thread(cwd))
+      return info(sessions.thread(cwd))
     }),
-    wire.handle(sessionsQuick, () => info(ctx.sessions.quick())),
+    wire.handle(sessionsQuick, () => info(sessions.quick())),
     wire.handle(sessionRename, ({ session, title }) => {
-      ctx.sessions.rename(session, title)
+      sessions.rename(session, title)
       return true
     }),
-    wire.handle(sessionRemove, ({ session }) => ctx.sessions.remove(session).then(done)),
-    wire.handle(sessionPin, ({ session, pinned }) => Boolean(ctx.sessions.pin(session, pinned))),
-    wire.handle(sessionSettle, ({ session, settled }) => ctx.sessions.settle(session, settled).then(done)),
-    wire.handle(sessionSnooze, ({ session, until }) => Boolean(ctx.sessions.snooze(session, until))),
-    wire.handle(sessionMove, ({ session, position }) => Boolean(ctx.sessions.move(session, position))),
+    wire.handle(sessionRemove, ({ session }) => sessions.remove(session).then(done)),
+    wire.handle(sessionPin, ({ session, pinned }) => Boolean(sessions.pin(session, pinned))),
+    wire.handle(sessionSettle, ({ session, settled }) => sessions.settle(session, settled).then(done)),
+    wire.handle(sessionSnooze, ({ session, until }) => Boolean(sessions.snooze(session, until))),
+    wire.handle(sessionMove, ({ session, position }) => Boolean(sessions.move(session, position))),
     wire.handle(sessionAppend, ({ session: id, entry }) => {
       session(id).append(entry.type, entry.data, { id: entry.id })
       return true

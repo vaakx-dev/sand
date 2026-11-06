@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { lstatSync } from 'node:fs'
 import { join } from 'node:path'
 import { snapshotFiles, trackedFiles } from '../git/lists'

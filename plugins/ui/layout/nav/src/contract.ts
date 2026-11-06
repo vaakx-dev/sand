@@ -1,14 +1,14 @@
 import type { Derive } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
+export { pendingActions } from './pending'
+
 export interface NavAction {
   id: string
   label: string
   icon?: string
   order?: number
   wide?: boolean
-  place?: 'footer'
-  end?: boolean
   group?: string
   quick?: boolean
   tile?: boolean

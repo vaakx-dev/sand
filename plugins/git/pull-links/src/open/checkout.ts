@@ -1,5 +1,5 @@
 import type { Session } from '@sand/chats/contract'
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { PullSummary } from '@sand/github/contract'
 import { plural } from '@sand/util'
 import { readActivity } from '../activity/read'

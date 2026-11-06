@@ -13,8 +13,10 @@ export const readTool = (store: Store): Tool<typeof input> => ({
   description: "Read a background job's progress since the cursor: an agent's thread messages, or a command's output.",
   group,
   input,
-  async run({ job, cursor }, { session }) {
-    const { spec } = store.own(session, job)
+  effect: 'read',
+  needs: ['thread'],
+  async run({ job, cursor }, { conversation }) {
+    const { spec } = store.own(conversation.id, job)
     if (!spec.read) throw new Error(`${job} has nothing to read`)
     return spec.read(cursor)
   },

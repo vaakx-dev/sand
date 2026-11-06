@@ -7,7 +7,7 @@ import type { Vapid } from './vapid'
 export interface DeliveryDeps {
   registry: Registry
   thisPc: ThisPc
-  peers: Peers
+  peers(): Peers | undefined
   vapid: Vapid
   report(error: unknown): void
 }
@@ -37,8 +37,11 @@ export const createDeliveries = ({ registry, thisPc, peers, vapid, report }: Del
     await Promise.all(sends)
   }
 
-  const handOff = (pc: string, notice: Notice) =>
-    peers.call(pc, notifyDeliver, notice).catch(error => report(new Error(`Couldn't hand a notification to ${peers.get(pc)?.name ?? pc}: ${errorMessage(error)}`)))
+  const handOff = async (pc: string, notice: Notice) => {
+    const found = peers()
+    if (!found) return
+    await found.call(pc, notifyDeliver, notice).catch(error => report(new Error(`Couldn't hand a notification to ${found.get(pc)?.name ?? pc}: ${errorMessage(error)}`)))
+  }
 
   const fanOut = async (notice: Notice) => {
     await Promise.all([...owners()].map(pc => (pc === thisPc.id ? deliver(notice) : handOff(pc, notice))))

@@ -115,6 +115,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
       running: thread.running,
+      waiting: thread.waiting !== undefined,
       streaming: thread.live.length > 0,
       started: thread.started,
       footers: footers.any(),
@@ -165,7 +166,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     const switching = shown?.id !== thread.id
     const view = showThread(thread.id)
     const saved = switching ? view.scroll : undefined
-    const tail = switching ? saved === undefined : nearEnd(scroller)
+    const tail = switching ? saved === undefined : pinned
     if (tail && view.size > trimAt) resetToEnd(view)
     if (switching || tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
@@ -193,5 +194,5 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
   }
 
   const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd), menu.view())
-  return { root, render, refresh, forget, stale: cache.reset }
+  return { root, render, refresh, forget }
 }

@@ -10,12 +10,14 @@ export const describeSkills = (list: Skill[]) => `Load a skill before doing a ta
 Available skills:
 ${list.map(skill => `- ${skill.name}: ${skill.description}`).join('\n')}`
 
-export const skillTool = (skills: Skills, global: Skill[]): Tool<typeof input> => ({
+export const skillTool = (skills: Skills, global: Skill[], threadProject: (id: string) => string | null): Tool<typeof input> => ({
   name: 'skill',
   description: describeSkills(global),
   input,
-  async run({ name }, { cwd, session }) {
-    const list = await skills.list(cwd, session.project)
+  effect: 'read',
+  async run({ name }, { cwd, conversation }) {
+    const project = conversation.owner === 'thread' ? threadProject(conversation.id) : null
+    const list = await skills.list(cwd, project)
     const skill = list.find(item => item.name === name)
     if (!skill) throw new Error(`Unknown skill "${name}". Available: ${list.map(item => item.name).join(', ')}`)
     return skillBlock(skill).text

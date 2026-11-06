@@ -1,13 +1,14 @@
 import { byOrder } from '@sand/util'
 import type { SettingsPage, SettingsSection } from './contract'
-import { sig } from '@vaakx-dev/vrui'
+import { derive, sig } from '@vaakx-dev/vrui'
 
 const matches = (page: SettingsPage, query: string) => page.id === query || page.label.toLowerCase() === query.toLowerCase()
 
 export const pageStore = () => {
-  const pages = sig<SettingsPage[]>([])
+  const registered = sig<SettingsPage[]>([])
   const current = sig<string | undefined>(undefined)
   const sections = sig<SettingsSection[]>([])
+  const pages = derive(() => registered.get().filter(page => page.render || sections.get().some(section => section.page === page.id)))
   let last: string | undefined
 
   const pick = (query?: string) => {
@@ -25,8 +26,8 @@ export const pageStore = () => {
       current.set(id)
     },
     add(page: SettingsPage) {
-      pages.update(all => [...all.filter(other => other.id !== page.id), page].sort(byOrder))
-      return () => pages.update(all => all.filter(other => other !== page))
+      registered.update(all => [...all.filter(other => other.id !== page.id), page].sort(byOrder))
+      return () => registered.update(all => all.filter(other => other !== page))
     },
     addSection(section: SettingsSection) {
       const same = (other: SettingsSection) => other.page === section.page && other.id === section.id

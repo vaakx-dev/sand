@@ -13,7 +13,7 @@ const call = (name: string, input: Record<string, unknown> = {}) => ({ type: 'ca
 
 const start = async (calls: ReturnType<typeof call>[]) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies: calls.flatMap(each => [[each], [{ type: 'text', text: 'ok' }]]) }])
-  sand.app.load(join(import.meta.dir, '..', 'src', 'client', 'index.ts'), {
+  sand.app.load(join(import.meta.dir, '..', 'src', 'index.ts'), {
     servers: { fixture: { command: process.execPath, args: [join(import.meta.dir, 'fixture.ts')] } },
   })
   await sand.app.settled()

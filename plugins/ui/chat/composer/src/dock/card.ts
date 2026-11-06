@@ -119,7 +119,7 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      plusView(ctx.kit, plus, choose),
+      plusView(ctx.kit, plus, choose, () => model.files.attachable.get()),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),

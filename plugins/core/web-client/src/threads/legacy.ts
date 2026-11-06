@@ -20,7 +20,7 @@ export const legacyPending = ({ steers }: QueueState): PendingItem[] => steers.m
 
 export const legacyRunning = (read: HelloRead) => {
   const started = read(helloStarted)
-  return new Map((read(helloActive) ?? []).map(id => [id, started?.[id]]))
+  return new Map((read(helloActive) ?? []).map(id => [id, { started: started?.[id] }]))
 }
 
 export const listenLegacy = (wire: Wire, store: Store) =>

@@ -1,0 +1,35 @@
+{
+  "name": "@sand/bot-turns",
+  "version": "0.0.0",
+  "description": "Runs each bot's turns on the shared engine: its job and memory as instructions, its main model, its conversation as the history",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "bots",
+    "runtime": "./src/index.ts",
+    "label": "Bot turns",
+    "summary": "Lets your bots answer: runs their turns with their job, memory and model"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/bot-memory": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/provider-threads": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

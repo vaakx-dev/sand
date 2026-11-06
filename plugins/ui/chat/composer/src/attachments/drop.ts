@@ -9,12 +9,12 @@ export const catchFiles = (files: Files) => {
   let depth = 0
   listen(document, 'paste', (event: ClipboardEvent) => {
     const pasted = [...(event.clipboardData?.files ?? [])]
-    if (!pasted.length) return
+    if (!pasted.length || !files.attachable.get()) return
     event.preventDefault()
     files.add(pasted)
   })
   listen(document, 'dragenter', (event: DragEvent) => {
-    if (!hasFiles(event)) return
+    if (!hasFiles(event) || !files.attachable.get()) return
     depth++
     dropping.set(true)
   })
@@ -24,10 +24,10 @@ export const catchFiles = (files: Files) => {
     if (!depth) dropping.set(false)
   })
   listen(document, 'dragover', (event: DragEvent) => {
-    if (hasFiles(event)) event.preventDefault()
+    if (hasFiles(event) && files.attachable.get()) event.preventDefault()
   })
   listen(document, 'drop', (event: DragEvent) => {
-    if (!hasFiles(event)) return
+    if (!hasFiles(event) || !files.attachable.get()) return
     event.preventDefault()
     depth = 0
     dropping.set(false)

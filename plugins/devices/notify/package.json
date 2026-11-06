@@ -7,13 +7,15 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "notifications",
     "host": "./src/host/index.ts",
     "runtime": "./src/runtime/index.ts",
     "web": "./src/web/index.ts",
     "label": "Notifications",
-    "summary": "Notifies this phone or browser when a turn finishes or fails on any of your PCs"
+    "summary": "Notifies this phone or browser when a turn finishes, fails or needs you on any of your PCs"
   },
   "dependencies": {
+    "@sand/approvals": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
@@ -29,5 +31,8 @@
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
   }
 }

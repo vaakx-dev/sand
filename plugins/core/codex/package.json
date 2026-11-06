@@ -4,6 +4,7 @@
   "description": "Use the Codex app's own sign-in: sand runs codex app-server on this PC and gives it sand's tools",
   "type": "module",
   "sand": {
+    "feature": "models",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Codex",

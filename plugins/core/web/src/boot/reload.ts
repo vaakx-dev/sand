@@ -1,6 +1,4 @@
-import { wire, wireHello } from '@sand/devices-contract'
-import { runtimeChanged } from '@sand/host-runtimes/contract'
-import { joinDisposers } from '@sand/util'
+import { pageBuild, wire, wireHello } from '@sand/devices-contract'
 import type { Context } from 'drydock'
 import { webBuild } from '../contract'
 
@@ -10,10 +8,13 @@ const latest = async () => {
 }
 
 export const reloadOnNewBuild = (ctx: Context, build: string) => {
-  const check = async (id?: string) => {
-    const current = id ?? (await latest().catch(() => undefined))
-    if (current && current !== build) location.reload()
+  const current = async (id?: string) => {
+    const served = id ?? (await latest().catch(() => undefined))
+    if (!served || served === build) return true
+    location.reload()
+    return false
   }
-  ctx.watch(wire, found => found && joinDisposers(found.on(webBuild, id => void check(id)), found.on(runtimeChanged, () => void check())))
-  ctx.on(wireHello, () => void check())
+  ctx.provide(pageBuild, { current: () => current() })
+  ctx.watch(wire, found => found?.on(webBuild, id => void current(id)))
+  ctx.on(wireHello, () => void current())
 }

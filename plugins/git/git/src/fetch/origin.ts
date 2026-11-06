@@ -1,5 +1,5 @@
 import { errorMessage } from '@sand/util'
-import { gitMaybe, gitOk } from '../run/run'
+import { gitMaybe, gitOk } from '@sand/git-runner/contract'
 
 export type FetchOutcome = { ok: true } | { ok: false; error: string } | undefined
 

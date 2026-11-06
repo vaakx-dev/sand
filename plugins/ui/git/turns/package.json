@@ -4,6 +4,7 @@
   "description": "A card under each reply with the files that turn changed, a Review button that opens the Changes panel on it, restoring files to before or after the turn, and a Turns group in the Changes panel's scope menu",
   "type": "module",
   "sand": {
+    "feature": "git",
     "web": "./src/index.ts",
     "label": "Turn changes",
     "summary": "See and review what each turn changed, and put files back to before or after it"

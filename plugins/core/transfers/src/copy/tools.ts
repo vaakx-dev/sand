@@ -50,6 +50,8 @@ export const pcTools = (home: string, transfers: TransferStore, linked: () => Pe
     description: 'List your paired PCs and whether each can be reached now.',
     group,
     input: listInput,
+    effect: 'read',
+    needs: ['pc'],
     async run() {
       const others = (linked()?.list() ?? []).map(pc => `${pc.name} (${pc.platform ?? 'unknown platform'}, ${reachText(pc)})`)
       return [`this PC (${process.platform})`, ...others].join('\n')
@@ -61,6 +63,7 @@ export const pcTools = (home: string, transfers: TransferStore, linked: () => Pe
     description: 'Copy a file or folder from one PC to another.',
     group,
     input: copyInput,
+    needs: ['pc'],
     timeoutMs: copyTimeout,
     async run({ from, to, from_pc, to_pc }, { cwd }) {
       const source = from_pc ? paired(from_pc) : undefined

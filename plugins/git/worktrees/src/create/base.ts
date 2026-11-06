@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { currentBranch, refExists } from '../repo/refs'
 
 export interface Base {

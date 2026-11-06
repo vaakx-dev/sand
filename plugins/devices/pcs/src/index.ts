@@ -3,6 +3,7 @@ import {
   devicesChange,
   devicesList,
   helloDevice,
+  pageBuild,
   pcHello,
   pcs,
   pcsChange,
@@ -11,6 +12,7 @@ import {
   wire,
   wireHello,
 } from '@sand/devices-contract'
+import { runtimeChanged } from '@sand/host-runtimes/contract'
 import { definePlugin } from 'drydock'
 import { coalesced } from './changes'
 import { createFleet } from './fleet/fleet'
@@ -41,18 +43,25 @@ export default definePlugin({
       pairing.records(list)
     }
 
+    const announce = (pc: string, retagged: boolean) => {
+      if (pc === home) {
+        pairing.greeted(fleet.hello(helloDevice, home))
+        void fleet.connection(home).call(devicesList, {}).then(records, () => {})
+      }
+      ctx.emit(pcHello, pc, retagged)
+      if (pc === home) ctx.emit(wireHello)
+      changed()
+    }
+
+    let pageCurrent = Promise.resolve(true)
+
     const fleet = createFleet({
       home,
       signer: keys.signer,
       since: pc => threads?.since(pc),
       greeted(pc, retagged) {
-        if (pc === home) {
-          pairing.greeted(fleet.hello(helloDevice, home))
-          void fleet.connection(home).call(devicesList, {}).then(records, () => {})
-        }
-        ctx.emit(pcHello, pc, retagged)
-        if (pc === home) ctx.emit(wireHello)
-        changed()
+        if (pc !== home) return announce(pc, retagged)
+        void pageCurrent.then(current => current && announce(pc, retagged))
       },
       changed() {
         pairing.homeChanged(fleet.connection(home).status())
@@ -61,6 +70,11 @@ export default definePlugin({
     })
     ctx.effect(() => () => fleet.close())
     ctx.effect(() => fleet.on(devicesChange, records))
+    ctx.effect(() =>
+      fleet.on(runtimeChanged, () => {
+        pageCurrent = ctx.get(pageBuild)?.current() ?? Promise.resolve(true)
+      }),
+    )
 
     ctx.provide(wire, createWire(fleet, () => threads))
     ctx.provide(pcs, createPcs(fleet, pairing))

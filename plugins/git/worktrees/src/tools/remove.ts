@@ -19,6 +19,7 @@ export const removeTool = (deps: WorktreeDeps, survey: Survey): Tool<typeof inpu
     'Use this instead of git worktree remove.',
   ].join(' '),
   input,
+  needs: ['pc'],
   async run({ path, force }, { cwd }) {
     const folder = resolve(cwd, path)
     const size = survey.known(folder)

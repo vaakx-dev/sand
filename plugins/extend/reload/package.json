@@ -1,7 +1,7 @@
 {
   "name": "@sand/reload",
   "version": "0.0.0",
-  "description": "Restarts the sand plugins from a sidebar button or /reload",
+  "description": "Restarts the sand plugins from a rail button or /reload",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,14 +10,14 @@
     "runtime": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Reload button",
-    "summary": "Restarts the sand plugins from a sidebar button or /reload"
+    "summary": "Restarts the sand plugins from a rail button or /reload"
   },
   "dependencies": {
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
-    "@sand/nav": "workspace:*",
+    "@sand/rail": "workspace:*",
     "@sand/server": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

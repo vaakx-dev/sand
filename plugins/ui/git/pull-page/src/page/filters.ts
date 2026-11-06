@@ -60,6 +60,14 @@ const projectChoices = (parts: PageParts): ChipChoice[] => [
   ...parts.repos.get().map(choice => ({ value: choice.project, label: choice.name })),
 ]
 
+export const filterChips = (parts: PageParts): Child[] => [
+  show(
+    () => parts.query.view.get() !== 'needs',
+    () => filterChip(parts, parts.query.state, () => stateChoices, 'State'),
+  ),
+  filterChip(parts, parts.query.project, () => projectChoices(parts), 'Project'),
+]
+
 export const filtersRow = (parts: PageParts): Child => {
   const { kit, query, narrow } = parts
   return div(
@@ -70,12 +78,7 @@ export const filtersRow = (parts: PageParts): Child => {
     ),
     show(
       () => !narrow.get(),
-      () => span({ class: 'flex-1' }),
+      () => div({ class: 'flex flex-1 items-center justify-end gap-2' }, ...filterChips(parts)),
     ),
-    show(
-      () => query.view.get() !== 'needs',
-      () => filterChip(parts, query.state, () => stateChoices, 'State'),
-    ),
-    filterChip(parts, query.project, () => projectChoices(parts), 'Project'),
   )
 }

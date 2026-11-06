@@ -12,6 +12,6 @@ export const chipView = ({ icon, plainButton }: Kit, kind: ChipKind, link: ChipL
       onMouseDown: prevent,
       onClick: open,
     },
-    span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(kind.icon, 'xs')),
+    span({ class: 'inline-flex shrink-0 text-neutral-400' }, (record && kind.lead?.(record)) || icon(kind.icon, 'xs')),
     span({ class: 'min-w-0 truncate' }, link.label),
   )

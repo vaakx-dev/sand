@@ -20,3 +20,9 @@ export interface Wire {
 export const wire = service<Wire>('wire')
 
 export const wireHello = event<() => void>('wire.hello')
+
+export interface PageBuild {
+  current(): Promise<boolean>
+}
+
+export const pageBuild = service<PageBuild>('pageBuild')

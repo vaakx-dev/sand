@@ -1,0 +1,25 @@
+{
+  "name": "@sand/computer-browser",
+  "version": "0.0.0",
+  "description": "A Chrome or Edge browser the agent sees and drives over CDP, with its own profile under the sand home so logins persist",
+  "type": "module",
+  "sand": {
+    "feature": "browser",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Browser computer",
+    "summary": "A Chrome or Edge browser the agent can see and use, visible or headless"
+  },
+  "dependencies": {
+    "@sand/cdp": "workspace:*",
+    "@sand/computers": "workspace:*",
+    "@sand/config": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/tools": "workspace:*"
+  }
+}

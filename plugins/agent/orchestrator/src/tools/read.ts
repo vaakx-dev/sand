@@ -18,5 +18,6 @@ export const readTool = (ctx: OrchestratorContext): Tool<typeof input> => ({
   description: 'Read what another thread said; each item has a seq to read on from',
   group,
   input,
+  effect: 'read',
   run: ({ thread, ...options }) => JSON.stringify(readThread(findThread(ctx, thread), options)),
 })

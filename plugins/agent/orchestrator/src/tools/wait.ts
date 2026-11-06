@@ -20,9 +20,10 @@ export const waitTool = (ctx: OrchestratorContext): Tool<typeof input> => ({
   description: "Wait until another thread is done or waits on the user, and get its status and reply. The status is running when it timed out",
   group,
   input,
+  effect: 'read',
   timeoutMs: maxTimeout + settleGrace,
-  async run({ thread, until = 'attention', timeout_ms = defaultTimeout }, { session, signal }) {
-    if (thread === session.id) throw new Error("A thread can't wait for itself")
+  async run({ thread, until = 'attention', timeout_ms = defaultTimeout }, { conversation, signal }) {
+    if (thread === conversation.id) throw new Error("A thread can't wait for itself")
     const state = await waitThread(ctx, findThread(ctx, thread), until, AbortSignal.any([signal, AbortSignal.timeout(timeout_ms)]))
     signal.throwIfAborted()
     return JSON.stringify(state)

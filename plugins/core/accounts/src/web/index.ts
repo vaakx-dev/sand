@@ -21,6 +21,6 @@ export default definePlugin({
     if (ctx.wire.ready()) void control.load()
     ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
-    place(ctx, 'main', () => welcomeView(ctx.kit, welcome, control), 0.5)
+    place(ctx, 'overlay', () => welcomeView(ctx.kit, welcome, control), 0.5)
   },
 })

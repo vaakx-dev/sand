@@ -1,5 +1,5 @@
 import { bearer } from '@sand/util/host'
-import type { ModelPrice, PlanModel } from '../contract'
+import { type Effort, efforts, isEffort, type ModelPrice, type PlanModel } from '../contract'
 import { isRecord } from '@sand/util'
 import { listIn, nonEmpty, positive } from './fields'
 import { getJson } from './http'
@@ -23,19 +23,28 @@ const priceOf = (pricing: unknown): ModelPrice | undefined => {
 
 const listOf = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])
 
+const unlisted: Effort[] = ['low', 'medium', 'high']
+
+const reasoningOf = (parameters: unknown[], reasoning: unknown): Pick<PlanModel, 'efforts' | 'defaultEffort'> => {
+  if (!parameters.includes('reasoning')) return { efforts: [] }
+  if (!isRecord(reasoning) || !Array.isArray(reasoning.supported_efforts)) return { efforts: unlisted }
+  const listed: unknown[] = reasoning.supported_efforts
+  const offered = efforts.filter(effort => listed.includes(effort) && !(effort === 'none' && reasoning.mandatory === true))
+  return { efforts: offered, ...(isEffort(reasoning.default_effort) && { defaultEffort: reasoning.default_effort }) }
+}
+
 const describe = (entry: unknown): PlanModel | undefined => {
   if (!isRecord(entry)) return undefined
   const id = nonEmpty(entry.id)
   const parameters = listOf(entry.supported_parameters)
   if (!id || !parameters.includes('tools')) return undefined
-  const reasoning = parameters.includes('reasoning')
   const modalities = listOf(isRecord(entry.architecture) ? entry.architecture.input_modalities : undefined)
   return {
     name: id,
     label: nonEmpty(entry.name)?.replace(/^[^:]+:\s+/, '') ?? id,
     context: positive(entry.context_length),
     images: modalities.includes('image'),
-    efforts: reasoning ? ['low', 'medium', 'high'] : [],
+    ...reasoningOf(parameters, entry.reasoning),
     price: priceOf(entry.pricing),
   }
 }

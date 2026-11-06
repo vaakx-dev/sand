@@ -1,0 +1,21 @@
+{
+  "name": "@sand/ledger",
+  "version": "0.0.0",
+  "description": "Opens sand.db, the SQLite database plugins keep their tables in, and runs each owner's migrations",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Database",
+    "summary": "The SQLite database plugins keep their tables in"
+  },
+  "dependencies": {
+    "@sand/paths": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

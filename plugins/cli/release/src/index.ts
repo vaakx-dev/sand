@@ -1,5 +1,5 @@
 import { cliCommands } from '@sand/cli-commands/contract'
-import { gitRunner } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { definePlugin } from 'drydock'
 
 export default definePlugin({

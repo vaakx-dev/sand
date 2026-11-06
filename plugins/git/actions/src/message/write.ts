@@ -1,4 +1,5 @@
-import type { GitLayout, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { SubModel } from '@sand/sub-model/contract'
 import { errorMessage, oneLine } from '@sand/util'
 import { z } from 'zod'

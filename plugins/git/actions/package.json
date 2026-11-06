@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "git",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
     "web": "./src/web/index.ts",
@@ -16,6 +17,7 @@
   "dependencies": {
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
+    "@sand/git-runner": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sub-model": "workspace:*",

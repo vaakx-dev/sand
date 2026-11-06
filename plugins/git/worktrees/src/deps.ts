@@ -1,5 +1,6 @@
 import type { Sessions } from '@sand/chats/contract'
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { SubModel } from '@sand/sub-model/contract'
 import type { Proposals } from './proposal/proposals'
 import type { RecordStore } from './records/store'

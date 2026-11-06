@@ -9,6 +9,7 @@ import {
   ArrowUp,
   Bell,
   Bot,
+  Calendar,
   ChartColumn,
   Check,
   ChevronDown,
@@ -52,6 +53,7 @@ import {
   Globe,
   GripVertical,
   HardDrive,
+  Inbox,
   Info,
   KeyRound,
   Laptop,
@@ -77,6 +79,7 @@ import {
   Search,
   Server,
   Settings,
+  ShieldCheck,
   SlidersHorizontal,
   Smartphone,
   Sparkles,
@@ -192,6 +195,9 @@ const nodes = {
   cloud: Cloud,
   cpu: Cpu,
   bell: Bell,
+  inbox: Inbox,
+  shield: ShieldCheck,
+  calendar: Calendar,
 } satisfies Record<string, IconNode>
 
 export type IconName = keyof typeof nodes | (string & {})

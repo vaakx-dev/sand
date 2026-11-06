@@ -1,70 +1,42 @@
 import { type PullRef, pullLabel } from '@sand/github/contract'
-import { type Layout, layout } from '@sand/layout/contract'
-import { running } from '@sand/reactive'
-import { onAddressChange, threadSelect } from '@sand/web-client/contract'
-import { collectScope, disposeAll, effect, sig, untrack } from '@vaakx-dev/vrui'
-import { leaveQuery, openQuery, recordQuery, requestedQuery } from '../address/query'
+import { place, spaces, type Spaces } from '@sand/layout/contract'
+import { onAddressChange } from '@sand/web-client/contract'
+import { effect, untrack } from '@vaakx-dev/vrui'
+import { forgetQuery, recordQuery, requestedQuery } from '../address/query'
 import type { QueryState } from '../address/state'
 import type { PageContext } from '../inject'
 
+export const pullsSpace = 'pulls'
+
 export const pageHost = (ctx: PageContext, query: QueryState, build: () => HTMLElement) => {
-  const open = sig(false)
-  let shell: Layout | undefined
-  let uncover: (() => void) | undefined
-
-  const hide = () => {
-    open.set(false)
-    uncover?.()
-    uncover = undefined
-  }
-
-  const render = () => {
-    if (uncover || !shell || !running(ctx)) return
-    const page = collectScope(build)
-    const stop = shell.cover('main', page.value)
-    uncover = () => {
-      void stop()
-      disposeAll(page.scope)
-    }
-    open.set(true)
-  }
-
   const sync = () => {
     const wanted = requestedQuery()
-    if (!wanted) return hide()
-    query.load(wanted)
-    render()
+    if (wanted) query.load(wanted)
   }
+
+  const shown = (found: Spaces) =>
+    effect(() => {
+      if (found.active() !== pullsSpace) return
+      untrack(sync)
+      const record = effect(() => {
+        const current = query.current()
+        untrack(() => recordQuery(current))
+      })
+      const unplace = untrack(() => place(ctx, { space: pullsSpace, region: 'main' }, build))
+      return () => {
+        record()
+        void unplace()
+        forgetQuery()
+      }
+    })
 
   const show = (pull?: PullRef) => {
-    if (open.get()) return query.pull.set(pull && pullLabel(pull))
-    openQuery({ ...query.current(), pull: pull && pullLabel(pull) })
-    sync()
+    ctx.get(spaces)?.open(pullsSpace)
+    query.pull.set(pull && pullLabel(pull))
   }
 
-  const close = () => {
-    if (!open.get()) return
-    hide()
-    leaveQuery()
-  }
-
-  ctx.on(threadSelect, sync)
   ctx.effect(() => onAddressChange(sync))
-  ctx.effect(() =>
-    effect(() => {
-      const current = query.current()
-      if (open.get()) untrack(() => recordQuery(current))
-    }),
-  )
-  ctx.watch(layout, found => {
-    if (!found) return
-    shell = found
-    sync()
-    return () => {
-      hide()
-      shell = undefined
-    }
-  })
+  ctx.watch(spaces, found => (found ? shown(found) : undefined))
 
-  return { open, show, close, toggle: () => (open.get() ? close() : show()) }
+  return { show }
 }

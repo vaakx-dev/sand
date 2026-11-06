@@ -1,0 +1,21 @@
+{
+  "name": "@sand/calendar-google",
+  "version": "0.0.0",
+  "description": "Google Calendar through the user's own Google Cloud OAuth client: incremental sync, edits, invitation answers and free/busy",
+  "type": "module",
+  "sand": {
+    "feature": "calendar-accounts",
+    "runtime": "./src/index.ts",
+    "label": "Google Calendar",
+    "summary": "Your Google calendars in sand"
+  },
+  "dependencies": {
+    "@sand/calendar": "workspace:*",
+    "@sand/connections": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

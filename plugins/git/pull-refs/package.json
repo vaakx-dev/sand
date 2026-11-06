@@ -4,6 +4,7 @@
   "description": "Pull requests as context references: # in the composer links one, the model reads its number, title, state and link",
   "type": "module",
   "sand": {
+    "feature": "pulls",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
     "web": "./src/web/index.ts",

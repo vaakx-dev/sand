@@ -1,6 +1,7 @@
 import { helloAttachments } from '@sand/attachments/contract'
 import type { UserContent } from '@sand/chats/contract'
-import { wire } from '@sand/devices-contract'
+import { wire, wireHello } from '@sand/devices-contract'
+import { pulse } from '@sand/reactive'
 import { bytes, errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
@@ -49,6 +50,7 @@ const heldOf = (items: Attached[]) => items.flatMap((item): Held[] => (item.cont
 export const createFiles = (ctx: ComposerContext) => {
   const items = sig<Attached[]>([])
   const sent = sig(new Map<string, number>())
+  const attachable = pulse(ctx, [wireHello], [wire]).read(() => Boolean(ctx.get(wire)?.hello(helloAttachments)))
   const uploadLimit = () => ctx.get(wire)?.hello(helloAttachments)?.uploadBytes ?? fallbackUploadBytes
   const wrap = (held: Held) => (held instanceof File ? fromFile(held, uploadLimit()) : fromContent(held))
   ctx.effect(() => () => release(items.get()))
@@ -82,6 +84,7 @@ export const createFiles = (ctx: ComposerContext) => {
   return {
     items,
     sent,
+    attachable,
     add: (files: Iterable<File>) => items.update(list => [...list, ...[...files].map(wrap)]),
     async upload(device: string) {
       await Promise.all(items.get().map(item => send(item, device)))

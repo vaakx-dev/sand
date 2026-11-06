@@ -7,7 +7,7 @@ export interface SettingsPage {
   order?: number
   parent?: string
   dot?: () => boolean
-  render(): HTMLElement
+  render?(): HTMLElement
 }
 
 export interface SettingsSection {

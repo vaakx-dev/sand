@@ -4,6 +4,7 @@
   "description": "Marks Settings with a dot when a newer sand is ready and updates all your PCs to it when you click Update",
   "type": "module",
   "sand": {
+    "feature": "updates",
     "web": "./src/index.ts",
     "label": "Sand updates",
     "summary": "Shows what a newer sand changes and updates every PC, with an Updates page in Settings"

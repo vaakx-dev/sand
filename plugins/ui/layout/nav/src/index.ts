@@ -5,7 +5,7 @@ import { navHost } from './host'
 
 export default definePlugin({
   name: 'nav',
-  description: 'Actions that sidebars draw',
+  description: 'Actions that the thread sidebar draws, and the action shape menus share',
   apply(ctx) {
     ctx.provide(
       nav,

@@ -1,4 +1,4 @@
-import { gitMaybe } from '../run/run'
+import { gitMaybe } from '@sand/git-runner/contract'
 
 const originHead = 'refs/remotes/origin/HEAD'
 const originPrefix = 'refs/remotes/origin/'

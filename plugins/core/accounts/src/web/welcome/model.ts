@@ -1,5 +1,5 @@
-import { composer } from '@sand/composer/contract'
 import type { wire } from '@sand/devices-contract'
+import { firstRun, type FirstRun } from '@sand/features/contract'
 import { models, modelsChange, threads, threadSelect, threadsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
@@ -10,12 +10,15 @@ import type { Step } from '../add/steps'
 import type { LoginControl } from '../state'
 import { type JoinedPc, pcJoining } from './joining'
 
+const setupSteps = 2
+
 export type WelcomeStep = 'start' | 'add' | 'join' | 'joined' | 'connected'
 
 export const welcomeModel = (ctx: Context<{ wire: typeof wire }>, control: LoginControl) => {
   const step = sig<WelcomeStep>('start')
   const joined = sig<JoinedPc | undefined>(undefined)
   const setup = sig<ModelSetup | undefined>(undefined)
+  const run = sig<FirstRun | undefined>(undefined)
   const skipped = sig(false)
   const engaged = sig(false)
   const joining = pcJoining(ctx, pc => {
@@ -29,8 +32,14 @@ export const welcomeModel = (ctx: Context<{ wire: typeof wire }>, control: Login
     const state = control.state.get()
     return !!state && !state.accounts.some(account => account.signedIn) && !state.remote.length && !state.pcs.length
   })
-  const active = derive(() => !skipped.get() && (engaged.get() || (fresh.get() && quiet.get())))
   ctx.watch(modelSetup, value => setup.set(value))
+  ctx.watch(firstRun, value => run.set(value))
+  const stage = derive(() => {
+    const found = run.get()
+    return found ? found.stage() : 'done'
+  })
+  const active = derive(() => !skipped.get() && (engaged.get() || stage.get() === 'setup' || (stage.get() === 'done' && fresh.get() && quiet.get())))
+  const total = derive(() => setupSteps + (run.get()?.steps().length ?? 0))
 
   const go = (next: WelcomeStep) => {
     joining.stop()
@@ -67,7 +76,7 @@ export const welcomeModel = (ctx: Context<{ wire: typeof wire }>, control: Login
 
   const finish = () => {
     close()
-    ctx.get(composer)?.focus()
+    run.get()?.start()
   }
 
   const next = () => {
@@ -77,7 +86,7 @@ export const welcomeModel = (ctx: Context<{ wire: typeof wire }>, control: Login
     found.start()
   }
 
-  return { step, joined, joining, setup, active, connected, add, go, pick, back, finish, next }
+  return { step, total, joined, joining, setup, active, connected, add, go, pick, back, finish, next }
 }
 
 export type WelcomeModel = ReturnType<typeof welcomeModel>

@@ -1,5 +1,6 @@
 import { sessions, type Session } from '@sand/chats/contract'
-import { providerThreads, turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
+import { providerThreads } from '@sand/provider-threads/contract'
+import { turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
 import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
 

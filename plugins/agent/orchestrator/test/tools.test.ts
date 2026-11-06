@@ -23,7 +23,7 @@ const use = async (session: Session, name: string, input: Record<string, unknown
   const registry = sand.app.get(tools)
   if (!registry) throw new Error('tools did not start')
   const call = { type: 'tool_call', id: `${name}-call`, name, input } as const
-  const result = await registry.run(call, { cwd: session.cwd, signal: new AbortController().signal, session, turn: 'test', progress() {}, wait: () => () => {} })
+  const result = await registry.run(call, { cwd: session.cwd, signal: new AbortController().signal, conversation: session, turn: 'test', progress() {}, wait: () => () => {} })
   return { isError: Boolean(result.isError), text: textOf(result.content) }
 }
 

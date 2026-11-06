@@ -4,6 +4,7 @@
   "description": "Where a thread works: pick the main checkout or a worktree for a new thread, follow worktree setup, and move or remove a thread's worktree",
   "type": "module",
   "sand": {
+    "feature": "worktrees",
     "web": "./src/index.ts",
     "label": "Worktrees",
     "summary": "Start threads in their own worktree and manage it from the git menu"

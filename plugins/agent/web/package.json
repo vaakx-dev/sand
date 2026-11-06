@@ -4,6 +4,7 @@
   "description": "web_search and web_fetch tools, and their views in the chat",
   "type": "module",
   "sand": {
+    "feature": "web-tools",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",

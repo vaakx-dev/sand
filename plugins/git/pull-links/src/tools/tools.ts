@@ -29,8 +29,10 @@ const statusTool = (deps: ToolDeps): Tool<typeof pickInput> => ({
   description:
     "Show the thread's linked GitHub pull requests: state, checks with the names of failing ones, review, merge state, whether you're watching, and open review conversations. Leave out number to see them all.",
   input: pickInput,
-  async run({ number }, { session }) {
-    const thread = deps.links.thread(session.id)
+  effect: 'read',
+  needs: ['thread'],
+  async run({ number }, { conversation }) {
+    const thread = deps.links.thread(conversation.id)
     if (!deps.links.read(thread.id).links.length) await deps.discovery.now(thread)
     const links = deps.links.read(thread.id)
     const chosen = number === undefined ? links.links : [pickLink(links, number)]
@@ -46,8 +48,9 @@ const linkTool = (deps: ToolDeps): Tool<typeof linkInput> => ({
   group,
   description: 'Link a GitHub pull request to this thread so it shows in the thread and pull_request_status covers it. Pull requests for the thread\'s branch, ones you open with gh pr create and the rest of their stack are linked on their own.',
   input: linkInput,
-  async run({ ref }, { session }) {
-    const pulls = await deps.links.linkText(session.id, ref)
+  needs: ['thread'],
+  async run({ ref }, { conversation }) {
+    const pulls = await deps.links.linkText(conversation.id, ref)
     return `Linked. This thread now has ${pulls.links.map(link => `#${link.number}`).join(', ')}.`
   },
 })
@@ -59,8 +62,9 @@ const unlinkTool = (deps: ToolDeps): Tool<typeof pickInput> => ({
   group,
   description: "Unlink a pull request from this thread. It stays unlinked: the thread's branch and its stack won't link it again.",
   input: pickInput,
-  async run({ number }, { session }) {
-    const thread = deps.links.thread(session.id)
+  needs: ['thread'],
+  async run({ number }, { conversation }) {
+    const thread = deps.links.thread(conversation.id)
     const link = pickLink(deps.links.read(thread.id), number)
     const pulls = await deps.links.unlink(thread.id, link)
     return `Unlinked #${link.number}. ${linkedText(pulls.links.map(each => each.number))}`
@@ -74,8 +78,9 @@ const watchTool = (deps: ToolDeps, on: boolean): Tool<typeof pickInput> => ({
     ? 'Watch a linked pull request. You get a message in this thread when its checks fail or pass, a review or comment arrives, or the branch starts to conflict. Watching stops when it merges or closes.'
     : 'Stop watching a linked pull request. Do this when you hand the pull request back.',
   input: pickInput,
-  async run({ number }, { session }) {
-    const thread = deps.links.thread(session.id)
+  needs: ['thread'],
+  async run({ number }, { conversation }) {
+    const thread = deps.links.thread(conversation.id)
     const link = pickLink(deps.links.read(thread.id), number)
     await deps.links.watch(thread.id, link, on)
     return on

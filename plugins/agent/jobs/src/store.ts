@@ -115,11 +115,11 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     launch(entry, work)
   }
 
-  const list = (parent?: Session) => [...entries.values()].map(({ job }) => job).filter(job => !parent || job.parent === parent.id)
+  const list = (parent?: string) => [...entries.values()].map(({ job }) => job).filter(job => !parent || job.parent === parent)
 
-  const own = (session: Session, id: string) => {
+  const own = (parent: string, id: string) => {
     const entry = entries.get(id)
-    if (!entry || entry.job.parent !== session.id) throw new Error(`No job ${id} in this thread. Call jobs to list yours.`)
+    if (!entry || entry.job.parent !== parent) throw new Error(`No job ${id} in this thread. Call jobs to list yours.`)
     return entry
   }
 

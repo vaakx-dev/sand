@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { plural } from '@sand/util'
 import { existsSync } from 'node:fs'
 import type { RemoveCheck } from '../contract'

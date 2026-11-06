@@ -1,4 +1,5 @@
-import type { GitEnv, GitLayout, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitEnv, GitRunner } from '@sand/git-runner/contract'
 import { literalPaths, pathInput, pathspecFromInput } from '../stage/pathspec'
 
 const patchLines = 4000

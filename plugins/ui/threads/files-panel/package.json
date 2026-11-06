@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "files",
     "web": "./src/index.ts",
     "label": "Files panel",
     "summary": "Browse and read the thread's files, with changed files marked"

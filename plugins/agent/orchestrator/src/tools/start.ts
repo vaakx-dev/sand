@@ -29,8 +29,9 @@ export const startTool = (ctx: OrchestratorContext, start: Start): Tool<typeof i
     'Start a new thread with a first message. It shows in the sidebar like any thread, runs with your tool limits and keeps working after your turn ends. Returns at once with its id; use threads_wait for its reply',
   group,
   input,
-  async run({ cwd = '.', ...rest }, { session, call }) {
-    const request = { ...rest, cwd: resolve(session.cwd, cwd), origin: 'agent', clientRequestId: requestOf(session, call) } as const
-    return JSON.stringify(await start(request, adopting(ctx, session)))
+  needs: ['thread'],
+  async run({ cwd = '.', ...rest }, context) {
+    const request = { ...rest, cwd: resolve(context.cwd, cwd), origin: 'agent', clientRequestId: requestOf(context) } as const
+    return JSON.stringify(await start(request, adopting(ctx, ctx.sessions.require(context.conversation.id))))
   },
 })

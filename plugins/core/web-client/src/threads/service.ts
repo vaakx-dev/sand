@@ -15,9 +15,9 @@ import {
 import type { Pcs, Wire } from '@sand/devices-contract'
 import { uuid } from '@sand/util'
 import type { Context } from 'drydock'
-import { type DraftTarget, onAddressChange, type Thread, type Threads, threadSelect } from '../contract'
+import { type DraftTarget, onAddressChange, type Thread, type Threads, type ThreadVisit, threadSelect } from '../contract'
 import { helloOf, onPcHello } from '../greeted'
-import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink, type Visit } from './address'
+import { type Place, recordPlace, requestedPlace, requestedSession, samePlace, sessionLink } from './address'
 import { threadCreators } from './creators'
 import { applyHello } from './hello'
 import { threadLoader } from './loading'
@@ -45,17 +45,17 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
 
   const place = (): Place => ({ session: store.current, draft: store.draft })
 
-  const show = (id: string | undefined, visit: Visit, draft?: DraftTarget) => {
+  const show = (id: string | undefined, visit: ThreadVisit, draft?: DraftTarget) => {
     const from = place()
     store.current = id
     store.draft = id ? undefined : (draft ?? store.draft ?? { id: uuid(), cwd: cwd(), device: store.here() })
     recordPlace(from, place(), visit)
-    ctx.emit(threadSelect, id)
+    ctx.emit(threadSelect, id, visit)
     store.changed(id, true)
     return id ? store.threads.get(id) : undefined
   }
 
-  const open = async (id: string | undefined, visit: Visit, draft?: DraftTarget) => {
+  const open = async (id: string | undefined, visit: ThreadVisit, draft?: DraftTarget) => {
     const thread = show(id, visit, draft)
     void wire.call(uiFocus, id ? { session: id } : {}).catch(() => {})
     if (id && !thread?.loaded) await load(id)

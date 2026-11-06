@@ -10,8 +10,9 @@ export const stopTool = (store: Store): Tool<typeof input> => ({
   description: "Stop a background agent, or kill a background command's whole process tree. No notice comes back for it.",
   group,
   input,
-  run({ job }, { session }) {
-    const entry = store.own(session, job)
+  needs: ['thread'],
+  run({ job }, { conversation }) {
+    const entry = store.own(conversation.id, job)
     if (entry.job.status !== 'running') return `${job} already ${entry.job.status}.`
     store.stop(entry.job)
     return `Stopped ${job}.`

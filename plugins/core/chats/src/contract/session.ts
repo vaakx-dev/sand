@@ -65,6 +65,7 @@ export interface SyncedSummaries {
 }
 
 export interface Session extends SessionInfo {
+  owner: 'thread'
   append(type: string, data: unknown, meta?: AppendMeta): Entry
   path(): Entry[]
   page(before?: string | null, size?: PageSize): EntryPage

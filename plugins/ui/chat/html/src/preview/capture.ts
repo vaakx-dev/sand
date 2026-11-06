@@ -1,7 +1,9 @@
+import { findBrowser, launch, type Browser, type CdpEvent } from '@sand/cdp'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import type { ConsoleLevel, ConsoleMessage, HtmlPreview } from '../contract'
 import { pageHeight } from '../page/height'
-import { findBrowser } from './browser'
-import { launch, type Browser, type CdpEvent } from './cdp'
 
 const timeout = 20_000
 const viewportHeight = 800
@@ -10,6 +12,21 @@ const maxConsole = 20
 const maxConsoleText = 500
 const settle = 120
 const settleRounds = 12
+
+const flags = [
+  '--headless=new',
+  '--no-first-run',
+  '--no-default-browser-check',
+  '--disable-gpu',
+  '--disable-extensions',
+  '--disable-background-networking',
+  '--disable-component-update',
+  '--disable-sync',
+  '--disable-dev-shm-usage',
+  '--hide-scrollbars',
+  '--mute-audio',
+  'about:blank',
+]
 
 const noBrowser =
   'No Chrome, Edge or Chromium was found on this machine, so this page cannot be checked or measured here. Publish it with html_render and pass a height you estimate, and say it was not checked.'
@@ -93,10 +110,15 @@ export const capture = async (html: string, width: number) => {
   const executable = await findBrowser()
   if (!executable) throw new Error(noBrowser)
   const deadline = Date.now() + timeout
-  const browser = await launch(executable, deadline)
+  const profile = await mkdtemp(join(tmpdir(), 'sand-html-preview-'))
   try {
-    return await render(browser, html, width, deadline)
+    const browser = await launch({ executable, profile, args: flags, deadline })
+    try {
+      return await render(browser, html, width, deadline)
+    } finally {
+      await browser.close()
+    }
   } finally {
-    await browser.close()
+    await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
   }
 }

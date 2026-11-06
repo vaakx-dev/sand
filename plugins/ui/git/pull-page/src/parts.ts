@@ -26,6 +26,4 @@ export interface PageParts {
   selected: Derive<PullRef | undefined>
   thread(session: string): Thread | undefined
   select(pull: PullRef | undefined): void
-  close(): void
-  showSide(): void
 }

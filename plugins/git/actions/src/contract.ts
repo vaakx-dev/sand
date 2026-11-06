@@ -1,5 +1,5 @@
 import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
-import type { GitFailure } from '@sand/git/contract'
+import type { GitFailure } from '@sand/git-runner/contract'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
 

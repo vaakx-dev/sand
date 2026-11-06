@@ -9,6 +9,7 @@ export const modelStep = (kit: Kit, setup: ModelSetupState, models: Models, chan
   const { primaryAction, quietButton, setupColumn, setupFooter, setupHeading, setupNote } = kit
   return screen(
     kit,
+    setup.total,
     2,
     setupHeading('Pick a model'),
     setupNote('You can switch at any time.'),

@@ -1,3 +1,4 @@
+import { sessions } from '@sand/chats/contract'
 import { paths } from '@sand/paths/contract'
 import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
@@ -53,7 +54,7 @@ export default definePlugin({
     })
     await refresh()
     ctx.provide(skillsService, skills)
-    ctx.effect(() => ctx.tools.register(skillTool(skills, global)))
+    ctx.effect(() => ctx.tools.register(skillTool(skills, global, id => ctx.get(sessions)?.require(id).project ?? null)))
     serveSkills(ctx, skills)
     for (const root of roots) ctx.effect(() => watchRoot(ctx.watcher, root, () => void refresh()))
     describePerThread(ctx, skills)

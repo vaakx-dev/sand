@@ -1,11 +1,10 @@
-import { layout, layoutChange } from '@sand/layout/contract'
+import { layout, layoutChange, spaceOpen } from '@sand/layout/contract'
 import { pulse, running } from '@sand/reactive'
-import { nav } from '@sand/nav/contract'
-import { sidebar } from '@sand/sidebar/contract'
+import { rail } from '@sand/rail/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { mount } from '@vaakx-dev/vrui'
 import { definePlugin, type Dispose } from 'drydock'
-import { leavePage, openPage, switchPage } from './address'
+import { dropPage, leavePage, openPage, switchPage } from './address'
 import { settings, settingsChange, type Settings } from './contract'
 import { cover } from './cover'
 import { followAddress } from './follow'
@@ -93,7 +92,11 @@ export default definePlugin({
       return hide
     })
     const dot = () => store.pages.get().some(page => page.dot?.())
-    ctx.watch(nav, found => found?.action({ id: 'settings', label: 'Settings', icon: 'gear', place: 'footer', order: 100, dot, run: toggle }))
-    ctx.watch(sidebar, found => (found ? undefined : floatingButton()))
+    ctx.watch(rail, found => (found ? found.action({ id: 'settings', label: 'Settings', icon: 'gear', order: 110, dot, current: () => Boolean(store.current.get()), run: toggle }) : floatingButton()))
+    ctx.on(spaceOpen, () => {
+      if (!store.current.get()) return
+      dropPage()
+      show(undefined)
+    })
   },
 })

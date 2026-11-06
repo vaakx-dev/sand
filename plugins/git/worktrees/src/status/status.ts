@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { existsSync } from 'node:fs'
 import type { WorktreePulls, WorktreeStatus } from '../contract'
 import type { WorktreeDeps } from '../deps'

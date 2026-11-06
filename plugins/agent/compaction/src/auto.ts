@@ -1,47 +1,45 @@
 import type { LLMRequest } from '@sand/accounts/contract'
-import type { Session } from '@sand/chats/contract'
-import { contextOverflow, stepPrepare, turnEnd } from '@sand/turns-contract/contract'
+import type { Conversation, TurnInfo } from '@sand/engine/contract'
+import { contextOverflow, stepPrepare } from '@sand/provider-threads/contract'
 import type { CompactionReason } from './contract'
 import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
 import { isOverflow } from './overflow'
 
 export const autoCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker) => {
-  const overflowed = new Set<string>()
-  const failed = new Set<string>()
+  const overflowed = new Map<string, string>()
+  const failed = new Map<string, string>()
 
-  const attempt = async (session: Session, request: LLMRequest, reason: CompactionReason, signal: AbortSignal) => {
+  const attempt = async (conversation: Conversation, turn: TurnInfo, request: LLMRequest, reason: CompactionReason, signal: AbortSignal) => {
     try {
-      await compactor.compact(session, request, { reason, signal })
+      await compactor.compact(conversation, request, { reason, signal })
       return true
     } catch {
       if (signal.aborted) return false
-      if (reason === 'threshold') failed.add(session.id)
+      if (reason === 'threshold') failed.set(conversation.id, turn.id)
       return false
     }
   }
 
-  const due = (session: Session, request: LLMRequest): CompactionReason | undefined => {
-    if (overflowed.delete(session.id)) return 'overflow'
-    if (failed.has(session.id)) return undefined
-    return tracker.project(session.id, request) >= compactor.budget(request).limit ? 'threshold' : undefined
+  const due = (conversation: Conversation, turn: TurnInfo, request: LLMRequest): CompactionReason | undefined => {
+    if (overflowed.get(conversation.id) === turn.id) {
+      overflowed.delete(conversation.id)
+      return 'overflow'
+    }
+    if (failed.get(conversation.id) === turn.id) return undefined
+    return tracker.project(conversation.id, request) >= compactor.budget(request).limit ? 'threshold' : undefined
   }
 
-  ctx.on(stepPrepare, async (request, session, signal) => {
-    const reason = due(session, request)
-    if (reason && (await attempt(session, request, reason, signal))) return true
-    tracker.sent(session.id, request)
+  ctx.on(stepPrepare, async (request, conversation, turn, signal) => {
+    const reason = due(conversation, turn, request)
+    if (reason && (await attempt(conversation, turn, request, reason, signal))) return true
+    tracker.sent(conversation.id, request)
     return undefined
   })
 
-  ctx.on(contextOverflow, (session, error) => {
+  ctx.on(contextOverflow, (conversation, turn, error) => {
     if (!isOverflow(error)) return undefined
-    overflowed.add(session.id)
+    overflowed.set(conversation.id, turn.id)
     return true
-  })
-
-  ctx.on(turnEnd, session => {
-    failed.delete(session.id)
-    overflowed.delete(session.id)
   })
 }

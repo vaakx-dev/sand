@@ -14,6 +14,7 @@ import type { LimitStore } from './limits'
 import type { OpenAI } from './openai/client'
 
 const levels: EffortLevel[] = [
+  { id: 'none', label: 'None' },
   { id: 'low', label: 'Low' },
   { id: 'medium', label: 'Medium' },
   { id: 'high', label: 'High' },
@@ -43,7 +44,7 @@ export const createLocal = ({ accounts, plans, catalog, claude, openai, compat, 
   const firstLimits = () => signedInPlans().flatMap(plan => limits.all()[plan.id] ?? [])[0]
 
   const target = async (meta: SourceMeta, model: ModelInfo, name: string): Promise<CompatTarget> => {
-    const common = { model: name, name: meta.label, reasoning: model.efforts.length > 0, images: !!model.images }
+    const common = { model: name, name: meta.label, efforts: model.efforts, images: !!model.images }
     if (meta.kind === 'server') {
       const server = accounts.server(meta.id)
       if (!server) throw signInError(meta.label)

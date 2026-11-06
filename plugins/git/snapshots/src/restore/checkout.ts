@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { removeLeftovers } from './leftovers'
 
 export const checkoutSnapshot = async (git: GitRunner, root: string, snapshot: string, saved: string) => {

@@ -2,10 +2,9 @@ import { type Server, server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { watcher } from '@sand/watch/contract'
 import { definePlugin } from 'drydock'
-import { gitRepo, gitRunner } from './contract'
+import { gitRepo } from './contract'
 import { createGitRepo } from './repo'
 import { serveGit } from './requests'
-import { runner } from './run/runner'
 
 export default definePlugin({
   name: 'git',
@@ -19,7 +18,6 @@ export default definePlugin({
       report: error => ctx.report(error),
     })
     ctx.effect(() => host.close)
-    ctx.provide(gitRunner, runner)
     ctx.provide(gitRepo, host.repo)
     ctx.watch(server, found => {
       if (!found) return

@@ -5,6 +5,7 @@ export interface TurnHead {
   kind: 'turn'
   key: string
   running: boolean
+  waiting: boolean
   start: number | undefined
   end: number
   kinds: string[]
@@ -30,6 +31,7 @@ export type Shown = ShownItem | TurnHead | TurnFoot
 export interface FoldOptions {
   older: boolean
   running: boolean
+  waiting: boolean
   streaming: boolean
   started: number | undefined
   footers: boolean
@@ -74,7 +76,7 @@ const visibleFrom = (body: Item[]) => {
   return answered(body) ? from - 1 : from
 }
 
-const headOf = (turn: Turn, work: Item[], running: boolean, started: number | undefined): TurnHead => {
+const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
   const times = items.flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
@@ -82,7 +84,8 @@ const headOf = (turn: Turn, work: Item[], running: boolean, started: number | un
     kind: 'turn',
     key: `turn:${items[0]!.key}`,
     running,
-    start: running ? (started ?? first) : first,
+    waiting: running && options.waiting,
+    start: running ? (options.started ?? first) : first,
     end: Math.max(0, ...times),
     kinds: kindsIn(work),
     current: currentKind(work),
@@ -94,7 +97,7 @@ const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] 
   const isWork = (item: Item, index: number) => index < from && !pinned(item)
   const work = turn.body.filter(isWork)
   const cut = !turn.head && options.older
-  const head = !cut && (running || work.length) ? headOf(turn, work, running, options.started) : undefined
+  const head = !cut && (running || work.length) ? headOf(turn, work, running, options) : undefined
   const expanded = head !== undefined && options.open(head.key)
   const shown: Shown[] = []
   if (turn.head) shown.push({ kind: 'item', key: turn.head.key, item: turn.head, rail: false })

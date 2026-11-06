@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "threads",
     "host": "./src/host.ts",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
@@ -19,7 +20,8 @@
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
-    "@sand/git": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/git-runner": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/nav": "workspace:*",
@@ -34,5 +36,8 @@
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
   }
 }

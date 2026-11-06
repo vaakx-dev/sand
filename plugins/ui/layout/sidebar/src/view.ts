@@ -45,12 +45,11 @@ const iconActions = (kit: Kit, actions: Sig<NavAction[]>, parts: SidebarParts, c
   )
 
 const topActions = (kit: Kit, parts: SidebarParts, context: ContextMenu) => {
-  const top = derive(() => parts.actions.get().filter(action => action.place !== 'footer'))
   const filtering = sig(false)
   return div(
     { class: 'relative flex shrink-0 items-center gap-1 px-2 pb-2' },
     list(
-      derive(() => top.get().filter(action => action.wide)),
+      derive(() => parts.actions.get().filter(action => action.wide)),
       action => action.id,
       action => wideAction(kit, action, parts),
       div({ class: 'flex min-w-0 flex-1' }),
@@ -58,30 +57,11 @@ const topActions = (kit: Kit, parts: SidebarParts, context: ContextMenu) => {
     filterButton(kit, parts, filtering),
     iconActions(
       kit,
-      derive(() => top.get().filter(action => !action.wide)),
+      derive(() => parts.actions.get().filter(action => !action.wide)),
       parts,
       div({ class: 'flex shrink-0 items-center gap-1' }),
     ),
     filterMenu(kit, parts, filtering, context),
-  )
-}
-
-const footerActions = (kit: Kit, parts: SidebarParts) => {
-  const footer = derive(() => parts.actions.get().filter(action => action.place === 'footer'))
-  return div(
-    { class: () => (footer.get().length ? 'flex shrink-0 items-center gap-1 px-2 pt-1 pb-2' : 'hidden') },
-    iconActions(
-      kit,
-      derive(() => footer.get().filter(action => !action.end)),
-      parts,
-      div({ class: 'flex flex-1 items-center gap-1' }),
-    ),
-    iconActions(
-      kit,
-      derive(() => footer.get().filter(action => action.end)),
-      parts,
-      div({ class: 'flex items-center gap-1' }),
-    ),
   )
 }
 
@@ -110,11 +90,10 @@ export const sidebarView = (kit: Kit, parts: SidebarParts) => {
   const context = contextMenu()
   return sideColumn(
     { narrow: parts.narrow, 'aria-label': 'Threads' },
-    sideHead('Sand', parts.hide),
+    sideHead('Threads', parts.hide),
     topActions(kit, parts, context),
     filterChip(kit, parts, context),
     threadRows(kit, parts),
-    footerActions(kit, parts),
     actionMenu(kit, parts.menu, parts.menuOf, () => parts.menu.set(undefined)),
     context.view(),
   )

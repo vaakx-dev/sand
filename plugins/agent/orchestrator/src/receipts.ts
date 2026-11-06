@@ -1,4 +1,4 @@
-import type { Ledger } from '@sand/chats/contract'
+import type { Ledger } from '@sand/ledger/contract'
 
 const keepFor = 7 * 24 * 60 * 60 * 1000
 

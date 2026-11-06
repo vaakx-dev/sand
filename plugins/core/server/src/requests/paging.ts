@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import type { Session, Sessions } from '@sand/chats/contract'
 import type { WireHost } from '@sand/host-hub/contract'
 import { modelSettings } from '@sand/model/contract'
 import { joinDisposers } from '@sand/util'
@@ -19,8 +19,13 @@ const tailOf = async (ctx: ContextCore, session: Session) => {
   return { entries, partial: true, ...(carried.length && { carried }) }
 }
 
-export const pagingRequests = (ctx: ServerContext, wire: Pick<WireHost, 'handle'>, snapshot: (session: string) => LiveSnapshot | undefined) => {
-  const session = (id: string) => ctx.sessions.require(id)
+export const pagingRequests = (
+  ctx: ServerContext,
+  sessions: Sessions,
+  wire: Pick<WireHost, 'handle'>,
+  snapshot: (session: string) => LiveSnapshot | undefined,
+) => {
+  const session = (id: string) => sessions.require(id)
   const opened = (found: Session, rest: Pick<OpenedSession, 'entries' | 'partial' | 'carried'>) => {
     const settings = ctx.get(modelSettings)?.state(found)
     const base: OpenedSession = { info: info(found), ...rest, settings, ...snapshot(found.id) }

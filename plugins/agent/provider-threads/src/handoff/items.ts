@@ -1,5 +1,5 @@
 import { type Block, type Entry, fileText, type Message, textOf, type ToolReferenceBlock, type ToolResultBlock } from '@sand/chats/contract'
-import type { TurnEnding } from '@sand/turns-contract/contract'
+import type { TurnEnding } from '@sand/engine/contract'
 import type { Path } from '../view/path'
 import { resetOf } from '../view/path'
 import type { Producers } from '../view/producers'

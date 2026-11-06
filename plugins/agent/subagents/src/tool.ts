@@ -50,7 +50,9 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
   get input() {
     return inputSchema(ctx)
   },
-  async run({ label, task, agent, model, effort }, { session, call }) {
+  needs: ['thread'],
+  async run({ label, task, agent, model, effort }, { conversation, call }) {
+    const session = ctx.sessions.require(conversation.id)
     const opened = await open({ parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id })
     const job = ctx.backgroundJobs.start({
       kind: 'agent',

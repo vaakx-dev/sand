@@ -1,5 +1,6 @@
 import type { llm, LLMRequest } from '@sand/accounts/contract'
-import type { Entry, Session } from '@sand/chats/contract'
+import type { Entry } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import type { media } from '@sand/media/contract'
 import { contextUsage, type CompactionReason, type CompactionRecord } from './contract'
 import { usageRecord } from '@sand/usage/contract'
@@ -21,10 +22,10 @@ export interface CompactOptions {
   signal?: AbortSignal
 }
 
-const draft = (session: Session, record: CompactionRecord): Entry => ({
+const draft = (conversation: Conversation, path: Entry[], record: CompactionRecord): Entry => ({
   id: 'draft',
-  session: session.id,
-  parent: session.head,
+  session: conversation.id,
+  parent: path.at(-1)?.id ?? null,
   at: Date.now(),
   type: 'compaction',
   data: record,
@@ -36,13 +37,13 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
 
   const native = (model?: string) => !!model && !!ctx.llm.caps?.(model).native
 
-  const run = async (session: Session, request: LLMRequest, budget: Budget, { reason, signal }: CompactOptions) => {
-    const path = session.path()
+  const run = async (conversation: Conversation, request: LLMRequest, budget: Budget, { reason, signal }: CompactOptions) => {
+    const path = conversation.path()
     const overflow = reason === 'overflow'
     const cut = plan(path, budget.keep) ?? (overflow ? plan(path, 0) : undefined)
     if (!cut) throw new Error('Nothing to compact yet')
-    const before = tracker.project(session.id, request)
-    ctx.emit(contextUsage, session, usageOf(budget, before, true))
+    const before = tracker.project(conversation.id, request)
+    ctx.emit(contextUsage, conversation, usageOf(budget, before, true))
     let after = before
     try {
       const { summary, usage, source } = overflow || native(request.model)
@@ -54,7 +55,7 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
             limit: budget.limit,
             signal,
           })
-        : await summarizeInContext(ctx.llm, { ...request, sessionKind: session.kind }, config.instructions, signal)
+        : await summarizeInContext(ctx.llm, request, config.instructions, signal)
       signal?.throwIfAborted()
       const record: CompactionRecord = {
         summary,
@@ -65,23 +66,23 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
         files: filesOf(cut.dropped, cut.previous?.files),
         ...(request.thread && { thread: request.thread.id }),
       }
-      after = requestTokens({ ...request, messages: compactedMessages([...path, draft(session, record)]) })
-      session.append('compaction', { ...record, after } satisfies CompactionRecord)
-      if (usage) session.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))
-      tracker.reset(session.id)
+      after = requestTokens({ ...request, messages: compactedMessages([...path, draft(conversation, path, record)]) })
+      conversation.append('compaction', { ...record, after } satisfies CompactionRecord)
+      if (usage) conversation.append('usage', usageRecord(ctx.llm.provider?.(request.model), request.model, usage, source))
+      tracker.reset(conversation.id)
       return after
     } finally {
-      ctx.emit(contextUsage, session, usageOf(budget, after))
+      ctx.emit(contextUsage, conversation, usageOf(budget, after))
     }
   }
 
   return {
     budget: (request: LLMRequest) => budgetOf(ctx.llm, config, request.model),
-    compact(session: Session, request: LLMRequest, options: CompactOptions) {
-      const current = running.get(session.id)
+    compact(conversation: Conversation, request: LLMRequest, options: CompactOptions) {
+      const current = running.get(conversation.id)
       if (current) return current
-      const work = run(session, request, budgetOf(ctx.llm, config, request.model), options).finally(() => running.delete(session.id))
-      running.set(session.id, work)
+      const work = run(conversation, request, budgetOf(ctx.llm, config, request.model), options).finally(() => running.delete(conversation.id))
+      running.set(conversation.id, work)
       return work
     },
   }

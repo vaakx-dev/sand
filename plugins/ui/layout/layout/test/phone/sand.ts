@@ -4,7 +4,9 @@ import { join } from 'node:path'
 
 const main = join(import.meta.dir, '../../../../../../apps/sand/src/main.ts')
 
-const replaySettings = (replies: string[]) => `[[plugins.replay.sources]]
+const replaySettings = (replies: string[]) => `[features]
+
+[[plugins.replay.sources]]
 id = "replay"
 models = ["script"]
 replies = [${replies.map(text => `[{ type = "text", text = ${JSON.stringify(text)} }]`).join(', ')}]

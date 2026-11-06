@@ -1,3 +1,4 @@
+import { sessions } from '@sand/chats/contract'
 import { type Hello, type HelloField, type HelloValues, helloActive, type InputOf, type hello } from '@sand/host-hub/contract'
 import { turnEnd, turnStart } from '@sand/turns-contract/contract'
 import { helloDelta, helloSessions, helloStarted, helloSync } from '../contract/hello'
@@ -23,16 +24,16 @@ export const createHello = (ctx: ServerContext) => {
     }
   }
 
-  const own = (since: string | null): HelloValues => {
-    const { sessions, sync, delta } = ctx.sessions.synced(since, [...active.keys()])
-    return {
-      [helloSessions.id]: sessions,
-      [helloSync.id]: sync,
-      [helloDelta.id]: delta,
-      [helloActive.id]: [...active.keys()],
-      [helloStarted.id]: Object.fromEntries(active),
-    }
+  const threads = (since: string | null): HelloValues => {
+    const synced = ctx.get(sessions)?.synced(since, [...active.keys()])
+    return synced ? { [helloSessions.id]: synced.sessions, [helloSync.id]: synced.sync, [helloDelta.id]: synced.delta } : {}
   }
+
+  const own = (since: string | null): HelloValues => ({
+    ...threads(since),
+    [helloActive.id]: [...active.keys()],
+    [helloStarted.id]: Object.fromEntries(active),
+  })
 
   const answer = async ({ since, known }: InputOf<typeof hello>): Promise<Hello> => {
     const fresh = own(since)

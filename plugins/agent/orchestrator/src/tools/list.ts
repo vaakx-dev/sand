@@ -16,5 +16,6 @@ export const listTool = (ctx: OrchestratorContext): Tool<typeof input> => ({
   description: "List sand's threads, newest first, with each one's status",
   group,
   input,
+  effect: 'read',
   run: filter => JSON.stringify(listThreads(ctx, filter)),
 })

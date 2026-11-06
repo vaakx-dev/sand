@@ -32,7 +32,7 @@ export default definePlugin({
     const pages: HtmlPages = { columnWidth, maxHeight, prepare, load, preview: capture }
     ctx.provide(htmlPages, pages)
     ctx.effect(() => ctx.tools.group({ name: 'html', label: 'HTML pages', summary: 'check HTML pages (charts, tables, mockups) and show them in the chat', load: 'on-demand' }))
-    ctx.effect(() => ctx.tools.register(renderTool(store, pages, recent, (session, artifact) => ctx.emit(artifactSaved, session, artifact))))
+    ctx.effect(() => ctx.tools.register(renderTool(store, pages, recent, (conversation, artifact) => ctx.emit(artifactSaved, conversation, artifact))))
     ctx.effect(() => ctx.tools.register(previewTool(pages, ctx.media, recent)))
     ctx.on(promptSections, sections => [...sections, visualReplies])
     ctx.watch(serverService, server =>

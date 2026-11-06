@@ -1,0 +1,21 @@
+{
+  "name": "@sand/calendar-subscription",
+  "version": "0.0.0",
+  "description": "Read-only calendars from an .ics link, refreshed in the background",
+  "type": "module",
+  "sand": {
+    "feature": "calendar-accounts",
+    "runtime": "./src/index.ts",
+    "label": "Calendar links",
+    "summary": "Subscribe to a calendar by its .ics link"
+  },
+  "dependencies": {
+    "@sand/calendar": "workspace:*",
+    "@sand/connections": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

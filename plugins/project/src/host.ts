@@ -1,5 +1,5 @@
 import { peers, thisPc } from '@sand/devices-contract'
-import { gitRunner } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { hostOptions } from '@sand/host-daemon/contract'
 import { hub } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'

@@ -1,23 +1,10 @@
 import type { Session } from '@sand/chats/contract'
-import type { TurnOrigin } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
-import { failure, type Sent } from './contract'
+import { failure, type Sent, type StartInput } from './contract'
 import type { Receipts } from './receipts'
-
-export interface StartInput {
-  cwd?: string
-  project?: string
-  prompt: string
-  title?: string
-  model?: string
-  effort?: string
-  worktree?: boolean
-  origin: TurnOrigin
-  clientRequestId: string
-}
 
 const settingsOf = (ctx: OrchestratorContext, { model, effort }: StartInput) => {
   try {

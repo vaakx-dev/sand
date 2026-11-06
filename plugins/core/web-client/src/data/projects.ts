@@ -1,4 +1,4 @@
-import { fsBrowse, fsMkdir, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsChange as projectsUpdate, projectsCreate, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
+import { fsBrowse, fsMkdir, helloProjects, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsChange as projectsUpdate, projectsCreate, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
@@ -62,7 +62,9 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
   const icons = projectIcons(ctx, wire)
   onPcHello(ctx, wire, pcs, pc => {
     if (pc === store.here()) icons.clear()
-    void refresh(pc)
+    const list = wire.hello(helloProjects, pc)
+    if (list) set(pc, list)
+    else forget(pc)
   })
   ctx.on(pcsChange, icons.retryMissed)
   ctx.effect(() => icons.clear)

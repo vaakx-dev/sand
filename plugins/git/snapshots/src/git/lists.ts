@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 export const listPaths = async (git: GitRunner, root: string, args: string[]) => (await git.output(root, args, { read: true })).split('\0').filter(Boolean)
 

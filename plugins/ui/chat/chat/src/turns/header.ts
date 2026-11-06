@@ -11,14 +11,21 @@ const working = ({ elapsed }: Kit, head: Sig<TurnHead>) =>
 
 const kinds = (head: TurnHead) => (head.running ? (head.current ?? '') : head.kinds.join(' · '))
 
+const phase = ({ running, waiting }: TurnHead) => {
+  if (waiting) return 'waiting'
+  return running ? 'working' : 'done'
+}
+
 export const turnRow = (head: TurnHead, context: RowContext) =>
   row(head.key, head, data => {
     const { chevron, toolCard } = context.kit
     const { open, toggle } = context.states.get(head.key)
-    const label = dynamicChild(
-      data.map(value => value.running),
-      running => (running ? working(context.kit, data) : span(() => took(data.get()))),
-    )
+    const labels = {
+      working: () => working(context.kit, data),
+      waiting: () => span('Waiting for you'),
+      done: () => span(() => took(data.get())),
+    }
+    const label = dynamicChild(data.map(phase), shown => labels[shown]())
     return workFrame(
       toolCard({
         icon: chevron(() => open.get()),

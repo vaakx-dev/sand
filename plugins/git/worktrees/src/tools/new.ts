@@ -19,10 +19,11 @@ export const newTool = (deps: WorktreeDeps, moves: Moves, turns: () => Turns | u
     'Use this instead of running git worktree add yourself: sand sets the worktree up, names its branch and lets the user clean it up later.',
   ].join(' '),
   input,
-  async run({ task, move, branch, from }, { cwd, session }) {
+  needs: ['thread', 'pc'],
+  async run({ task, move, branch, from }, { cwd, conversation }) {
     if (move) {
-      await checkMovable(deps, session)
-      moves.queue(session.id, { ...(branch ? { branch } : {}), ...(task ? { task } : {}) })
+      await checkMovable(deps, deps.sessions.require(conversation.id))
+      moves.queue(conversation.id, { ...(branch ? { branch } : {}), ...(task ? { task } : {}) })
       return [
         'This thread moves into a new worktree when this turn ends, taking the uncommitted changes with it.',
         task ? 'It then carries on with the task there.' : 'The next turn runs there.',

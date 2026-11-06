@@ -29,7 +29,7 @@ export default definePlugin({
     const pill = owned(ctx, () => modelPill(ctx, composerTarget(ctx, actions, changes, problem, shown), changes, shown))
 
     ctx.watch(composerService, composer => composer && joinDisposers(composer.slot('end', pill.view, 0), ctx.provide(modelPillService, { open: pill.open })))
-    ctx.watch(paletteService, palette => palette?.source(modelSource(ctx, actions, shown)))
+    ctx.watch(paletteService, palette => (palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, actions, shown))) : undefined))
     ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>
       settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes, slots) }),

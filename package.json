@@ -7,6 +7,7 @@
     "packages/*",
     "plugins/core/*",
     "plugins/agent/*",
+    "plugins/automation/*",
     "plugins/ui/*/*",
     "plugins/project",
     "plugins/git/*",
@@ -15,13 +16,18 @@
     "plugins/cli/*",
     "plugins/host/*",
     "plugins/devices/*",
+    "plugins/bots/*",
+    "plugins/calendar/*",
+    "plugins/connections/*",
+    "plugins/computer/*",
     "apps/*"
   ],
   "scripts": {
     "check": "tsc && bun --bun vrui-check && bun scripts/deps.ts && bun run test",
     "sand": "bun apps/sand/src/main.ts",
+    "bench:finders": "bun plugins/computer/finders/bench/main.ts",
     "test": "bun test ./apps ./packages ./plugins",
-    "test:phone": "bun test --timeout 30000 ./plugins/ui/layout/layout/test/phone/drawers.ts ./plugins/ui/layout/layout/test/phone/keyboard.ts"
+    "test:phone": "bun test --timeout 30000 ./plugins/ui/layout/layout/test/phone/drawers.ts ./plugins/ui/layout/layout/test/phone/keyboard.ts ./plugins/ui/layout/layout/test/phone/spaces.ts ./plugins/core/features/test/web/matrix.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
@@ -62,7 +68,9 @@
       "plugins/ui/chat/model-panel/src/**",
       "plugins/ui/chat/outbox/src/**",
       "plugins/ui/chat/quote/src/**",
-      "plugins/ui/chat/tool-views/src/**"
+      "plugins/ui/chat/tool-views/src/**",
+      "plugins/bots/space/src/**",
+      "plugins/calendar/calendar-space/src/**"
     ],
     "roles": [
       "orange",
@@ -70,6 +78,19 @@
     ],
     "classes": [
       "chat-row",
+      "face-dot",
+      "face-drift",
+      "face-flip",
+      "face-flop",
+      "face-hop",
+      "face-jitter",
+      "face-look",
+      "face-open",
+      "face-pulse",
+      "face-shut",
+      "face-spin",
+      "face-sway",
+      "face-twinkle",
       "left"
     ],
     "shades": {

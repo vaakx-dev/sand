@@ -1,17 +1,16 @@
-import { sessionUpdate } from '@sand/chats/contract'
+import { sessions } from '@sand/chats/contract'
 import { type ClientMessage, createHandlers, hello, parseInput } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
-import { helloSafe, pagesChange, type Server, server as serverService, uiFocus, userWrote } from './contract'
+import { helloSafe, pagesChange, type Server, server as serverService, uiFocus } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
-import { pagingRequests } from './requests/paging'
-import { sessionRequests } from './requests/sessions'
 import { createRoutes } from './routes'
 import { forwardEvents, type Send } from './socket/forward'
 import { createSockets, eventFrame, everyone, type Socket } from './socket/sockets'
 import { trimForPage } from './socket/trim'
 import { createLiveTracker } from './stream/live'
 import { createStream } from './stream/stream'
+import { markSeen, serveThreads } from './threads'
 
 export default definePlugin({
   name: 'server',
@@ -22,24 +21,13 @@ export default definePlugin({
     const hellos = createHello(ctx)
     const live = createLiveTracker(ctx)
 
-    const markSeen = (session: string) => {
-      if (ctx.sessions.open(session)?.seen === false) ctx.sessions.update(session, { seen: true })
-    }
-
     const focus = async (socket: Socket, request: ClientMessage) => {
       const { session } = await parseInput(uiFocus, request.input)
       stream.focus(socket, session)
-      if (session) markSeen(session)
+      const found = ctx.get(sessions)
+      if (session && found) markSeen(found, session)
       return true
     }
-
-    ctx.on(userWrote, session => {
-      if (session.settled !== null) ctx.sessions.settle(session.id, false).catch(error => ctx.report(error))
-    })
-
-    ctx.on(sessionUpdate, session => {
-      if (!session.seen && stream.focused(session.id)) markSeen(session.id)
-    })
 
     const sockets = createSockets({
       leave: socket => stream.forget(socket),
@@ -62,8 +50,7 @@ export default definePlugin({
     forwardEvents(ctx, send, stream.sees)
     ctx.effect(() => handlers.handle(hello, hellos.answer))
     ctx.effect(() => hellos.register(helloSafe, () => ctx.cli.safe))
-    ctx.effect(() => sessionRequests(ctx, handlers))
-    ctx.effect(() => pagingRequests(ctx, handlers, stream.snapshot))
+    ctx.watch(sessions, found => found && serveThreads(ctx, found, handlers, stream))
 
     const server: Server = {
       route: routes.route,

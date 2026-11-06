@@ -11,6 +11,7 @@ export const catchUp = (thread: Thread, { live, tools, mark }: LiveSnapshot) => 
 
 export const clearTurn = (thread: Thread) => {
   thread.started = undefined
+  thread.waiting = undefined
   thread.live = []
   thread.mark = undefined
   thread.tools = { running: new Set(), results: new Map(), logs: new Map() }

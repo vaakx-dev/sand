@@ -1,0 +1,24 @@
+{
+  "name": "@sand/threads-mcp",
+  "version": "0.0.0",
+  "description": "Outside agents list, read, start, message, wait for and stop sand's threads through the MCP server",
+  "type": "module",
+  "sand": {
+    "feature": "threads-mcp",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Threads over MCP",
+    "summary": "Lets outside agents start, message and read your threads over MCP"
+  },
+  "dependencies": {
+    "@sand/mcp-server": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

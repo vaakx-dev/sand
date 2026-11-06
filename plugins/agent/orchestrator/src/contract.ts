@@ -1,6 +1,8 @@
+import type { Prompt } from '@sand/chats/contract'
 import { request, type Request, type } from '@sand/host-hub/contract'
-import { type SendResult, sendModes, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
+import { type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export const outsideOrigins = ['cli', 'mcp'] as const
@@ -36,6 +38,32 @@ export interface ThreadPage {
   next: number
   more: boolean
 }
+
+export interface ReadOptions {
+  after?: number
+  limit?: number
+  view?: ThreadView
+}
+
+export interface StartInput {
+  cwd?: string
+  project?: string
+  prompt: Prompt
+  title?: string
+  model?: string
+  effort?: string
+  worktree?: boolean
+  origin: TurnOrigin
+  clientRequestId: string
+}
+
+export interface Orchestrator {
+  start(input: StartInput): Promise<Sent>
+  wait(thread: string, until: WaitUntil, signal: AbortSignal): Promise<ThreadState>
+  read(thread: string, options: ReadOptions): ThreadPage
+}
+
+export const orchestrator = service<Orchestrator>('orchestrator')
 
 export interface ThreadRow {
   thread: string

@@ -17,10 +17,12 @@ export const sendTool = (ctx: OrchestratorContext): Tool<typeof input> => ({
   description: 'Send a message to another thread. Returns at once; use threads_wait for its reply',
   group,
   input,
-  async run({ thread, ...rest }, { session, call }) {
+  needs: ['thread'],
+  async run({ thread, ...rest }, context) {
     const target = findThread(ctx, thread)
+    const session = ctx.sessions.require(context.conversation.id)
     if (ctx.get(agentLimits)?.covers(session, target) === false) throw new Error(`Thread ${thread} may use tools you may not, so you can't message it`)
-    const sent = await ctx.turns.send(target, { ...rest, origin: 'agent', clientRequestId: requestOf(session, call) })
+    const sent = await ctx.turns.send(target, { ...rest, origin: 'agent', clientRequestId: requestOf(context) })
     return JSON.stringify({ ...sent, thread })
   },
 })

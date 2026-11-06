@@ -1,6 +1,6 @@
 import type { Block, Entry, Message } from '@sand/chats/contract'
 import { modelSource } from '@sand/model/contract'
-import type { Segment } from '@sand/turns-contract/contract'
+import type { Segment } from '../contract'
 import type { Basis } from './basis'
 import type { Path } from './path'
 import type { Producers } from './producers'

@@ -6,6 +6,9 @@
   "exports": {
     "./contract": "./src/contract/index.ts"
   },
+  "sand": {
+    "feature": "threads"
+  },
   "dependencies": {
     "@sand/chats": "workspace:*",
     "@sand/host-hub": "workspace:*",

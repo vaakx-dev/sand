@@ -14,6 +14,7 @@ export interface ChipKind {
   kind: string
   title: string
   icon: IconName
+  lead?(record: ContextRecord): Child
   details?(record: ContextRecord): Child
   action?: ChipAction
 }

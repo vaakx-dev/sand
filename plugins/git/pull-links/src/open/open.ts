@@ -1,5 +1,6 @@
 import type { Sessions } from '@sand/chats/contract'
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { GitHub } from '@sand/github/contract'
 import type { Worktrees } from '@sand/worktrees/contract'
 import type { PullOpenRequest } from '../contract'

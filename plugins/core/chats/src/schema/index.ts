@@ -1,4 +1,4 @@
-import type { Ledger } from '../contract'
+import type { Ledger } from '@sand/ledger/contract'
 import { v1 } from './v1'
 import { v2 } from './v2'
 
