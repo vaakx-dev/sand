@@ -26,7 +26,7 @@ interface Moved {
 const stopFirst = 'Stop the thread first'
 
 const carryInto = async (deps: WorktreeDeps, local: GitRepoLocal, record: WorktreeRecord, carried: Carried) => {
-  const failed = await applyStash(deps.git, record.path, carried)
+  const failed = await applyStash(deps.git, record.path, carried.commit)
   if (failed) {
     const restored = await rolledBack(failed, () => restoreStash(deps.git, local.root, carried))
     const undone = await rolledBack(restored, () => discardWorktree(deps, record))

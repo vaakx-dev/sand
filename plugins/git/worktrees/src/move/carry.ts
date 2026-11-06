@@ -40,8 +40,8 @@ export const stashChanges = async (git: GitRunner, root: string): Promise<Carrie
   return { message, commit: entry.commit, files }
 }
 
-export const applyStash = async (git: GitRunner, dir: string, carried: Carried) => {
-  const args = ['stash', 'apply', '--index', carried.commit]
+export const applyStash = async (git: GitRunner, dir: string, commit: string) => {
+  const args = ['stash', 'apply', '--index', commit]
   const result = await git.run(dir, args)
   return result.code === 0 ? undefined : new Error(git.classify(result, args, "Couldn't apply the changes").message)
 }
@@ -53,7 +53,7 @@ export const dropStash = async (git: GitRunner, root: string, carried: Carried) 
 }
 
 export const restoreStash = async (git: GitRunner, root: string, carried: Carried) => {
-  const failed = await applyStash(git, root, carried)
+  const failed = await applyStash(git, root, carried.commit)
   if (failed) throw new Error(`${failed.message}\nYour changes are safe in the stash: run "git stash apply ${carried.commit}" in ${root}.`)
   await dropStash(git, root, carried)
 }

@@ -11,7 +11,7 @@ const finished = (status: WorktreeStatus) => status.pull?.state === 'merged' || 
 const preselected = (status: WorktreeStatus) => !status.check.running && !unsaved(status.check) && finished(status)
 
 const confirmLoss = async (ctx: WorkspaceContext, status: WorktreeStatus) => {
-  const picked = await ctx.get(picker)?.choose(`Removing ${nameOf(status)} loses ${unsaved(status.check)}.`, [
+  const picked = await ctx.get(picker)?.choose(`${nameOf(status)} has ${unsaved(status.check)}. Removing it sets that work aside, and restoring the worktree brings it back.`, [
     { label: 'Remove it anyway', tone: 'error', value: true },
     { label: 'Keep it', value: false },
   ])
