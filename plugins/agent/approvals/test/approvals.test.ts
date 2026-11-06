@@ -5,7 +5,7 @@ import { runtimeDrain } from '@sand/host-runtimes/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { Database } from 'bun:sqlite'
-import { afterEach, expect, test } from 'bun:test'
+import { afterEach, expect, setSystemTime, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -17,6 +17,7 @@ let running: Sand[] = []
 let homes: string[] = []
 
 afterEach(async () => {
+  setSystemTime()
   for (const sand of running) await sand.stop()
   for (const home of homes) rmSync(home, { recursive: true, force: true })
   running = []
@@ -107,7 +108,8 @@ test('always allow saves a rule that lets the next call through, and a denied ca
   })
 })
 
-test('reads are free and still recorded, and stopping a waiting turn cancels its ask', async () => {
+test('reads are free and still recorded, newest first even within one millisecond, and stopping a waiting turn cancels its ask', async () => {
+  setSystemTime(Date.now())
   const sand = await started([
     [
       { type: 'call', name: 'look', input: {} },
