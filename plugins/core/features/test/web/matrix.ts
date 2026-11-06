@@ -51,6 +51,8 @@ const combos: Combo[] = [
   { name: 'bots without approvals', off: [...topLevel.filter(id => id !== 'bots'), 'approvals'], spaces: ['Bots'], absent: ['Approvals'] },
 ]
 
+const withModel = '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n'
+
 const together = 3
 let running = 0
 const waiting: (() => void)[] = []
@@ -161,7 +163,7 @@ test.concurrent(
   'turning a feature off reloads the page without errors from the old one',
   async () => {
     const release = await slot()
-    const sand = await startSandbox('[features]\n')
+    const sand = await startSandbox(withModel)
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
     try {
       const page = await context.newPage()
