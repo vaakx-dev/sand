@@ -1,5 +1,7 @@
 import { div, h1, h2, p, read, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 
+export const pageColumn = 'mx-auto w-full max-w-3xl'
+
 type PaneHeadProps = Props<HTMLDivElement> & { led?: MaybeReactive<boolean> }
 
 export const pageHead = (caption?: Child, action?: Child) =>
