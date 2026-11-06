@@ -36,6 +36,7 @@ export default definePlugin({
       starterOf: starters.of,
       started: starters.owned,
       notify: owners.notify,
+      deliver: owners.deliver,
       owner: owners.register,
     }
     ctx.provide(orchestrator, threads)

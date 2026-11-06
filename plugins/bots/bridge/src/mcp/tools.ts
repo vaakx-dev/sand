@@ -13,7 +13,7 @@ const bot = z.string().describe('The bot id')
 const sendInput = z.object({
   bot,
   prompt: z.string().min(1).describe('The task or question, with what the bot needs to know'),
-  timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Stop waiting after this long (default ${waitSeconds}) and get the turn as a handle; the bot keeps working`),
+  timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Outside sand only: stop waiting after this long (default ${waitSeconds}) and get the turn as a handle; the bot keeps working`),
   clientRequestId: z.string().min(1).optional().describe('Any unique string; calling again with the same id returns the first result instead of asking twice'),
 })
 
@@ -41,7 +41,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Hand one of the user's bots a task or question. When you are a bot, it returns at once and the bot's final reply reaches you as a <task-notification>, so don't wait or poll for it. Otherwise it waits for the reply; when that takes longer you get its turn as a handle, and bot_read shows the reply later",
+    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply reaches you as a <task-notification>, so don't wait or poll for it. From outside sand it waits for the reply; when that takes longer you get its turn as a handle, and bot_read shows the reply later",
     input: sendInput,
     access: 'operate',
     group: group.name,

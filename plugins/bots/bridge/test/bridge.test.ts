@@ -99,40 +99,50 @@ const lastReply = (thread: Session) => {
 const seenIn = (request: string) =>
   (JSON.parse(request).messages as { content: { text?: string }[] }[]).flatMap(message => message.content.map(block => block.text ?? '')).join('\n')
 
-test('a thread hands a bot a task and gets its reply, and an @ mention hands the message to the bot with its reply as a card', async () => {
-  await start([[], said('README fixed.')], [said('Tomorrow: dentist at 9.'), said('Noted.'), said('Booked.')])
+const textsOf = (messages: Message[]) => messages.map(message => textOf(message.content))
+
+const botTexts = async (bot: string) => textsOf(userMessages((await sand.ask(botConversation, { bot })).entries))
+
+const noticeIn = async (texts: () => string[] | Promise<string[]>) => {
+  for (let tries = 0; tries < 300; tries++) {
+    const found = (await texts()).find(text => text.startsWith('<task-notification>'))
+    if (found) return found
+    await Bun.sleep(10)
+  }
+  throw new Error('Nothing came back')
+}
+
+const noticeFor = (bot: string) => noticeIn(() => botTexts(bot))
+
+test('a thread hands a bot a task without waiting and hears its reply, and an @ mention hands the message to the bot with its reply as a card', async () => {
+  await start([said('Dentist noted.'), [], said('README fixed.')], [said('Tomorrow: dentist at 9.'), said('Noted.'), said('Booked.')])
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
   expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', project: null }])
-  expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toMatchObject({ bot: bot.id, status: 'completed', reply: 'Tomorrow: dentist at 9.' })
+  expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', reported: true })
   const [asked] = userMessages((await sand.ask(botConversation, { bot: bot.id })).entries)
   expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
+  const notice = await noticeIn(() => textsOf(userMessages(thread.path())))
+  expect(notice).toContain(`<bot>${bot.id}</bot>`)
+  expect(notice).toContain('Tomorrow: dentist at 9.')
+  const hearing = sand.turns.current(thread)
+  if (hearing) await sand.turns.wait(hearing.id, 'end')
+  expect(lastReply(thread)).toBe('Dentist noted.')
 
   await sendAndSettle(thread, mentioning(bot.id, '', ' note the dentist'))
   const first = await cardAt(thread, 0)
   expect(await sand.ask(botAwait, { bot: bot.id, turn: first.turn!, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Noted.' })
-  expect(seenIn(sand.requests('fake')[0]!)).toContain('if nothing is, end your turn without writing anything')
+  expect(seenIn(sand.requests('fake')[1]!)).toContain('if nothing is, end your turn without writing anything')
   expect(lastReply(thread)).toBe('')
 
   await sendAndSettle(thread, mentioning(bot.id, '', ' book Friday, and fix the README'))
   expect(lastReply(thread)).toBe('README fixed.')
-  expect(seenIn(sand.requests('fake')[1]!)).toContain('Calendar replied to the user:\n\nNoted.')
+  expect(seenIn(sand.requests('fake')[2]!)).toContain('Calendar replied to the user:\n\nNoted.')
   const second = await cardAt(thread, 1)
   expect(await sand.ask(botAwait, { bot: bot.id, turn: second.turn!, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked.' })
 })
-
-const botTexts = async (bot: string) => userMessages((await sand.ask(botConversation, { bot })).entries).map(message => textOf(message.content))
-
-const noticeFor = async (bot: string) => {
-  for (let tries = 0; tries < 300; tries++) {
-    const found = (await botTexts(bot)).find(text => text.startsWith('<task-notification>'))
-    if (found) return found
-    await Bun.sleep(10)
-  }
-  throw new Error('The bot heard nothing')
-}
 
 test('a bot starts a thread in its project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
   await start([said('README fixed.'), said('Glad to help.'), said('Hi back.')], [said('The README is fixed.')])

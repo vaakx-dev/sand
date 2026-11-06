@@ -29,8 +29,16 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
     }),
   )
 
+  const deliver = async ({ owner, id }: ConversationRef, notice: Notice) => {
+    const kind = kinds.get(owner)
+    if (!kind) return false
+    await kind.deliver(id, notice)
+    return true
+  }
+
   return {
     register,
+    deliver,
     sign(prompt: Prompt, from: ConversationRef | undefined): Prompt {
       if (!from) return prompt
       const kind = kinds.get(from.owner)
@@ -40,10 +48,7 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
     home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
     async notify(thread: string, notice: Notice) {
       const starter = starters.of(thread)
-      const kind = starter && kinds.get(starter.owner)
-      if (!kind) return false
-      await kind.deliver(starter.id, notice)
-      return true
+      return starter ? deliver(starter, notice) : false
     },
   }
 }

@@ -48,7 +48,7 @@ export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
       found.handle(botAsk, async ({ bot, prompt, origin, clientRequestId }, { actor }) => {
         if (actor?.owner === 'bot' && actor.id === bot) throw failure('invalid_request', "A bot can't message itself")
         const asking = { prompt: promptOf(actor, prompt), origin: originOf(actor, origin), clientRequestId }
-        if (actor?.owner === 'bot') return replies.ask(bot, asking, actor.id)
+        if (actor) return replies.ask(bot, asking, actor)
         return sentAnswer(bot, await ask.send(bot, asking))
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),

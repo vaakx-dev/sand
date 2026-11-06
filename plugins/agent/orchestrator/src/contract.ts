@@ -116,6 +116,7 @@ export interface Orchestrator {
   starterOf(thread: string): ConversationRef | undefined
   started(owner: Owner): Record<string, string>
   notify(thread: string, notice: Notice): Promise<boolean>
+  deliver(to: ConversationRef, notice: Notice): Promise<boolean>
   owner(owner: Owner, kind: OwnerKind): Dispose
 }
 

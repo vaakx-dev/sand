@@ -1,7 +1,7 @@
 import { sessionEntry } from '@sand/chats/contract'
 import { contextKinds } from '@sand/context/contract'
 import { mcpTools } from '@sand/mcp-server/contract'
-import { type OwnerKind, threadStarted } from '@sand/orchestrator/contract'
+import { threadStarted } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { botStartedWire } from '../contract'
@@ -21,20 +21,18 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const ask = createAsk(ctx)
-    const deliver: OwnerKind['deliver'] = (bot, { text, clientRequestId }) =>
-      ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId })
     ctx.on(sessionEntry, routeMentions(ctx, ask))
     ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ask)))
     ctx.on(threadStarted, (thread, { owner, id }) => void (owner === 'bot' && ctx.get(server)?.broadcast(botStartedWire, [thread, id])))
     ctx.effect(() =>
       ctx.orchestrator.owner('bot', {
-        deliver,
+        deliver: (bot, { text, clientRequestId }) => ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId }),
         label: bot => ctx.bots.get(bot)?.name,
         project: bot => ctx.bots.get(bot)?.project ?? undefined,
       }),
     )
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))
     ctx.watch(mcpTools, found => found && offerBotTools(found))
-    serveBridge(ctx, ask, createReplies(ctx, ask, deliver))
+    serveBridge(ctx, ask, createReplies(ctx, ask))
   },
 })
