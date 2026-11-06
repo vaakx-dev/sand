@@ -4,9 +4,10 @@ import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { BotSummary } from '@sand/bots/contract'
 import { botAsk, botAwait, botProject, botRead, botRoster, type BotRow, botStarts, waitLimit } from '../contract'
-import type { Ask } from './ask'
+import { type Ask, sentAnswer } from './ask'
 import type { BridgeContext } from './context'
 import { type Sender, toBot } from './relay'
+import type { Replies } from './replies'
 
 const jobLength = 200
 
@@ -19,7 +20,7 @@ const intro: Record<Sender['kind'], (label: string) => string> = {
 
 const rowOf = ({ id, name, job, status, project }: BotSummary): BotRow => ({ bot: id, name, job: job.slice(0, jobLength), status, project })
 
-export const serveBridge = (ctx: BridgeContext, ask: Ask) => {
+export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
   const senderOf = ({ owner, id }: Actor): Sender =>
     owner === 'bot' ? { kind: 'bot', id, label: ctx.bots.get(id)?.name ?? 'a bot' } : { kind: 'thread', id, label: ctx.sessions.open(id)?.title || 'a thread' }
 
@@ -44,9 +45,11 @@ export const serveBridge = (ctx: BridgeContext, ask: Ask) => {
     if (!found) return
     return joinDisposers(
       found.handle(botRoster, () => ctx.bots.list().map(rowOf)),
-      found.handle(botAsk, ({ bot, prompt, origin, clientRequestId }, { actor }) => {
+      found.handle(botAsk, async ({ bot, prompt, origin, clientRequestId }, { actor }) => {
         if (actor?.owner === 'bot' && actor.id === bot) throw failure('invalid_request', "A bot can't message itself")
-        return ask.ask(bot, { prompt: promptOf(actor, prompt), origin: originOf(actor, origin), clientRequestId })
+        const asking = { prompt: promptOf(actor, prompt), origin: originOf(actor, origin), clientRequestId }
+        if (actor?.owner === 'bot') return replies.ask(bot, asking, actor.id)
+        return sentAnswer(bot, await ask.send(bot, asking))
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),
       found.handle(botRead, ({ bot, ...options }) => ask.read(bot, options)),

@@ -1,29 +1,14 @@
 import type { Session } from '@sand/chats/contract'
 import { backgroundJobs } from '@sand/jobs/contract'
-import { turnEnd, type TurnInfo, type TurnResult, type TurnStatus } from '@sand/turns-contract/contract'
+import { turnEnd, type TurnInfo, type TurnResult } from '@sand/turns-contract/contract'
 import type { OrchestratorContext } from './context'
+import { reportOf } from './contract'
 import type { Owners } from './owners'
 import type { Starters } from './starters'
 import type { Waits } from './waits'
 
-const limit = 30_000
-
-const outcomes: Partial<Record<TurnStatus, string>> = { completed: 'done', interrupted: 'cancelled' }
-
-const clip = (text: string) => (text.length > limit ? `${text.slice(0, limit)}\n… ${text.length - limit} characters truncated` : text)
-
 const noticeOf = (session: Session, result: TurnResult, info: TurnInfo) =>
-  [
-    '<task-notification>',
-    `<thread>${session.id}</thread>`,
-    '<kind>thread</kind>',
-    `<label>${session.title || 'Untitled thread'}</label>`,
-    `<status>${outcomes[info.status] ?? 'failed'}</status>`,
-    '<result>',
-    clip(result.error ?? result.text),
-    '</result>',
-    '</task-notification>',
-  ].join('\n')
+  reportOf({ from: { owner: 'thread', id: session.id }, label: session.title || 'Untitled thread', status: info.status, result: result.error ?? result.text })
 
 export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners) => {
   const busy = (session: Session) =>

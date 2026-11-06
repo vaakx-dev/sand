@@ -167,11 +167,28 @@ test('a bot starts a thread in its project, which says the bot sent it and tells
   expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toEqual({ error: expect.any(String) })
 })
 
-test('a bot cannot message itself, since its turn would wait on its own reply', async () => {
+test('a bot cannot message itself', async () => {
   await start([], [])
   const bot = await createBot('Ping')
 
   expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
+})
+
+test('a bot hands another bot a task without waiting, and hears its reply as a task notification', async () => {
+  await start([], [said('Booked for Friday.'), said('Thanks, noted.')])
+  const asker = await createBot('Planner')
+  const travel = await createBot('Travel')
+
+  const sent = await use(asBot(asker.id), 'bot_send', { bot: travel.id, prompt: 'Book Friday' })
+  expect(sent).toEqual({ bot: travel.id, turn: expect.any(String), status: 'running', reported: true })
+  const [asked] = userMessages((await sand.ask(botConversation, { bot: travel.id })).entries)
+  expect(textOf(asked!.content)).toContain('This message is from Planner, another of the user\'s bots')
+
+  const notice = await noticeFor(asker.id)
+  expect(notice).toContain(`<bot>${travel.id}</bot>`)
+  expect(notice).toContain('<label>Travel</label>')
+  expect(notice).toContain('<status>done</status>')
+  expect(notice).toContain('Booked for Friday.')
 })
 
 test('an outside agent lists bots, hands one a task and reads its reply over MCP', async () => {

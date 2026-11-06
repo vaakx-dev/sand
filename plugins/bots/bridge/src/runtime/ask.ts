@@ -1,6 +1,6 @@
 import type { BotEntry } from '@sand/bots/contract'
 import { type Message, type Prompt, textOf } from '@sand/chats/contract'
-import type { TurnInfo, TurnOrigin } from '@sand/engine/contract'
+import type { SendResult, TurnInfo, TurnOrigin } from '@sand/engine/contract'
 import type { BotAnswer, BotItem, BotPage } from '../contract'
 import type { BridgeContext } from './context'
 
@@ -16,6 +16,8 @@ export interface ReadOptions {
 }
 
 const defaultLimit = 50
+
+export const sentAnswer = (bot: string, sent: SendResult): BotAnswer => (sent.turn ? { bot, turn: sent.turn, status: 'running' } : { bot, status: 'queued' })
 
 const messageOf = (entry: BotEntry) => (entry.type === 'message' ? (entry.data as Message) : undefined)
 
@@ -49,10 +51,7 @@ export const createAsk = (ctx: BridgeContext) => {
     final(bot: string, turn: string) {
       return ctx.engine.turn('bot', turn)?.ended === undefined ? undefined : (replyOf(bot, turn) ?? '')
     },
-    async ask(bot: string, asking: Asking): Promise<BotAnswer> {
-      const sent = await ctx.botTurns.send(known(bot), asking)
-      return sent.turn ? { bot, turn: sent.turn, status: 'running' } : { bot, status: 'queued' }
-    },
+    send: (bot: string, asking: Asking) => ctx.botTurns.send(known(bot), asking),
     async wait(answer: BotAnswer, signal: AbortSignal): Promise<BotAnswer> {
       if (!answer.turn) return answer
       const info = await ctx.botTurns.ended(answer.turn, signal)

@@ -27,6 +27,7 @@ export interface BotAnswer {
   status: TurnStatus | 'queued'
   reply?: string
   error?: string
+  reported?: true
 }
 
 export interface BotItem {
@@ -79,7 +80,7 @@ const answerGrace = 10_000
 
 export const awaitBot = async (call: Call, answer: BotAnswer, deadline: number, signal?: AbortSignal): Promise<BotAnswer> => {
   const { bot, turn } = answer
-  if (!turn) return answer
+  if (!turn || answer.reported) return answer
   for (;;) {
     signal?.throwIfAborted()
     const timeoutMs = Math.max(0, Math.min(waitLimit, deadline - Date.now()))

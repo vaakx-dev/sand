@@ -24,6 +24,7 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",

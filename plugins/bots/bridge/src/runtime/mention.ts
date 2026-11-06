@@ -18,7 +18,7 @@ export const routeMentions = (ctx: BridgeContext, ask: Ask) => (session: Session
   const bots = botsIn(message).filter(bot => ctx.bots.get(bot))
   for (const bot of bots)
     ask
-      .ask(bot, { prompt: promptOf(session, message), origin: 'user', clientRequestId: `${entry.id}:${bot}` })
+      .send(bot, { prompt: promptOf(session, message), origin: 'user', clientRequestId: `${entry.id}:${bot}` })
       .then(({ turn }) => void session.append(botReplyEntry, { bot, ...(turn && { turn }) } satisfies BotReplyEntry))
       .catch(error => ctx.report(error))
 }

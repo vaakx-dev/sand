@@ -68,6 +68,32 @@ export interface Notice {
   clientRequestId: string
 }
 
+export interface Report {
+  from: ConversationRef
+  label: string
+  status: TurnStatus
+  result: string
+}
+
+const reportLimit = 30_000
+
+const outcomes: Partial<Record<TurnStatus, string>> = { completed: 'done', interrupted: 'cancelled' }
+
+const clip = (text: string) => (text.length > reportLimit ? `${text.slice(0, reportLimit)}\n… ${text.length - reportLimit} characters truncated` : text)
+
+export const reportOf = ({ from: { owner, id }, label, status, result }: Report) =>
+  [
+    '<task-notification>',
+    `<${owner}>${id}</${owner}>`,
+    `<kind>${owner}</kind>`,
+    `<label>${label}</label>`,
+    `<status>${outcomes[status] ?? 'failed'}</status>`,
+    '<result>',
+    clip(result),
+    '</result>',
+    '</task-notification>',
+  ].join('\n')
+
 export interface SendInput {
   prompt: Prompt
   mode?: SendMode
