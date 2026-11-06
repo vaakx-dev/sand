@@ -11,11 +11,11 @@ const refOf = ({ session, bot }: { session?: string; bot?: string }): Conversati
   return bot ? { owner: 'bot', id: bot } : undefined
 }
 
-export const serveSkills = (ctx: Context, skills: Skills, skillsOf: (conversation: Conversation) => Promise<Skill[]>) =>
+export const serveSkills = (ctx: Context, skills: Skills, global: () => Skill[], skillsOf: (conversation: Conversation) => Promise<Skill[]>) =>
   ctx.watch(server, found =>
     found
       ? joinDisposers(
-          found.hello(helloSkills, async () => summaries(await skills.list())),
+          found.hello(helloSkills, () => summaries(global())),
           found.handle(skillsList, async input => {
             const ref = refOf(input)
             const conversation = ref && ctx.get(engine)?.open(ref)

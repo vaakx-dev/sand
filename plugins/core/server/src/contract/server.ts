@@ -12,7 +12,7 @@ export interface HelloOptions {
   fresh?: boolean
 }
 
-export type HelloValue<T> = () => T | undefined | Promise<T | undefined>
+export type HelloValue<T> = () => T | undefined
 
 export interface Server extends WireHost {
   route(path: string, handler: RouteHandler, options?: RouteOptions): Dispose
