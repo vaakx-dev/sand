@@ -6,10 +6,8 @@ import type { Own } from '@sand/prompt/contract'
 const noJob = 'You have no job yet. Help with whatever the user asks, and ask what they would like you to take care of.'
 
 const memoryOf = async (memory: BotMemory, bot: string) => {
-  const files = await memory.list(bot)
-  if (!files.length) return 'Your memory is empty so far.'
-  const texts = await Promise.all(files.map(file => memory.read(bot, file.name)))
-  return files.map((file, index) => `<memory file="${file.name}">\n${texts[index]!.trim()}\n</memory>`).join('\n\n')
+  const text = await memory.read(bot)
+  return text.trim() ? `<memory>\n${text.trim()}\n</memory>` : 'Your memory is empty so far.'
 }
 
 const firstSentence = (text: string) => text.trim().split(/(?<=[.!?])\s/)[0]
@@ -30,8 +28,7 @@ export const instructions = async (bot: BotSummary, memory: BotMemory, tools: To
     abilitiesOf(tools),
     [
       '## Your memory',
-      'Your memory is a set of Markdown files that last across the whole conversation, and the user can read and edit them.',
-      'When you learn something worth keeping (preferences, people, plans, decisions, open tasks), save it with memory_write: one topic per file, rewriting the whole file.',
+      "This is your long-term memory: the few things worth knowing months from now, like who the user is, their preferences and rules, decisions and the people in their life. You don't write it as you go. When this conversation grows long, it is compacted: you summarize the work in hand and rewrite this memory from what was said. So when the user asks you to remember something, it will be kept. The user can read and edit your memory too.",
       await memoryOf(memory, bot.id),
     ].join('\n\n'),
   ],

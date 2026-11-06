@@ -31,6 +31,6 @@ const offeredWith = async (computers: Computer[]) => {
 test("a bot gets the tools a thread gets, except the ones that need a thread, whatever its computer", async () => {
   const offered = await offeredWith(['none', 'own', 'this-pc', 'pc:laptop'])
 
-  const ours = (names: string[]) => names.filter(name => name in needing || name === 'memory_write').sort()
-  for (const names of offered) expect(ours(names)).toEqual(['in_folder', 'memory_write', 'on_computer', 'on_pc', 'plain'])
+  const ours = (names: string[]) => names.filter(name => name in needing).sort()
+  for (const names of offered) expect(ours(names)).toEqual(['in_folder', 'on_computer', 'on_pc', 'plain'])
 })

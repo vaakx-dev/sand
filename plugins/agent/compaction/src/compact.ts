@@ -2,7 +2,7 @@ import type { llm, LLMRequest } from '@sand/accounts/contract'
 import type { Entry } from '@sand/chats/contract'
 import type { Conversation } from '@sand/engine/contract'
 import type { media } from '@sand/media/contract'
-import { contextUsage, type CompactionReason, type CompactionRecord } from './contract'
+import { compactionBrief, contextUsage, type CompactionReason, type CompactionRecord } from './contract'
 import { usageRecord } from '@sand/usage/contract'
 import type { Context } from 'drydock'
 import { budgetOf, usageOf, type Budget } from './budget'
@@ -14,6 +14,7 @@ import type { Tracker } from './measure/tracker'
 import { filesOf } from './summarize/files'
 import { summarize } from './summarize'
 import { summarizeInContext } from './summarize/in-context'
+import { summaryBrief } from './summarize/prompt'
 
 export type CompactionContext = Context<{ llm: typeof llm; media: typeof media }>
 
@@ -46,16 +47,18 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
     ctx.emit(contextUsage, conversation, usageOf(budget, before, true))
     let after = before
     try {
+      const brief = (await ctx.bail(compactionBrief, conversation)) ?? summaryBrief
       const { summary, usage, source } = overflow || native(request.model)
         ? await summarize(ctx.llm, ctx.media, {
             model: request.model,
+            brief,
             messages: cut.dropped,
             previous: cut.previous?.summary,
             instructions: config.instructions,
             limit: budget.limit,
             signal,
           })
-        : await summarizeInContext(ctx.llm, request, config.instructions, signal)
+        : await summarizeInContext(ctx.llm, brief, request, config.instructions, signal)
       signal?.throwIfAborted()
       const record: CompactionRecord = {
         summary,

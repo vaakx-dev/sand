@@ -72,6 +72,7 @@ export const createThreadStore = (db: Database) => {
   const activated = db.query("update provider_threads set status = 'active', used = $used, effort = $effort, speed = $speed where id = $id")
   const settled = db.query("update provider_threads set status = 'idle', seen = $seen, context = $context, native = coalesce($native, native) where id = $id")
   const saw = db.query('update provider_threads set seen = $seen where id = $id')
+  const briefed = db.query('update provider_threads set system = $system where id = $id')
   const retired = db.query("update provider_threads set status = 'retired' where id = $id")
   const doubted = db.query("update provider_threads set status = 'uncertain' where id = $id and native is not null and status != 'retired'")
   const removed = db.query('delete from provider_threads where owner = $owner and conversation = $conversation')
@@ -99,6 +100,7 @@ export const createThreadStore = (db: Database) => {
     settle: (id: string, { seen, context, native }: Settled) =>
       void settled.run({ id, seen: JSON.stringify(seen), context, native: native ? JSON.stringify(native) : null }),
     see: (id: string, seen: Segment[]) => void saw.run({ id, seen: JSON.stringify(seen) }),
+    rebrief: (id: string, system: string) => void briefed.run({ id, system }),
     retire: (id: string) => void retired.run({ id }),
     doubt: (id: string) => void doubted.run({ id }),
     remove: (conversation: ConversationRef) => void removed.run(keyOf(conversation)),

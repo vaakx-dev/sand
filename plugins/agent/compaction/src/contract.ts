@@ -28,6 +28,14 @@ export interface CompactionRecord {
   thread?: string
 }
 
+export interface CompactionBrief {
+  format(): Promise<string>
+  check?(reply: string): string | undefined
+  accept(reply: string): Promise<string>
+}
+
+export const compactionBrief = event<(conversation: Conversation) => CompactionBrief | undefined>('compaction.brief')
+
 export interface ContextLimits {
   limit(model: string): number
 }

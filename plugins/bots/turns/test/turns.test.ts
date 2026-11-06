@@ -1,4 +1,4 @@
-import { memoryRead, memoryWrite } from '@sand/bot-memory/contract'
+import { memoryWrite } from '@sand/bot-memory/contract'
 import { botConversation, botCreate, botDelete, botGet, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botLive, botSend } from '@sand/bot-turns/contract'
 import { imageLabel, type Message } from '@sand/chats/contract'
@@ -29,13 +29,13 @@ const settled = async (bot: string, want: BotStatus = 'idle') => {
 
 const messages = (entries: BotEntry[]) => entries.flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : []))
 
-test('a message to a bot runs a turn on its own conversation with its job, memory and model, and it can save to memory', async () => {
-  const { ask, requests } = await start([[said('Noting that.'), { type: 'call', name: 'memory_write', input: { name: 'people.md', text: '# People\n\nAna: lunch Fridays.' } }], [said('Saved.')]])
+test('a message to a bot runs a turn on its own conversation with its job, memory and model', async () => {
+  const { ask, requests } = await start([[said('Noted.')]])
   const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
-  await ask(memoryWrite, { bot: bot.id, name: 'habits.md', text: 'Gym on Mondays.' })
+  await ask(memoryWrite, { bot: bot.id, text: 'Gym on Mondays.' })
 
   expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ disposition: 'started' })
-  expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { role: 'assistant', text: 'Saved.' } })
+  expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { role: 'assistant', text: 'Noted.' } })
 
   const [first] = requests('fake').map(body => JSON.parse(body))
   const system = first.system[0].text
@@ -43,13 +43,11 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(system).toContain('## Questions are read-only')
   expect(system).toContain('## Avoid dumb moves')
   expect(system).toContain('Keep my calendar.')
-  expect(system).toContain('<memory file="habits.md">\nGym on Mondays.\n</memory>')
-  expect(first.tools.map((tool: { name: string }) => tool.name)).toContain('memory_write')
+  expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')
   expect(first.messages).toEqual([{ role: 'user', content: [expect.objectContaining(said('Lunch with Ana is every Friday'))] }])
 
   const { entries } = await ask(botConversation, { bot: bot.id })
-  expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant', 'user', 'assistant'])
-  expect(await ask(memoryRead, { bot: bot.id, name: 'people.md' })).toBe('# People\n\nAna: lunch Fridays.')
+  expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant'])
   expect(sand.sessions.list()).toEqual([])
 })
 

@@ -28,7 +28,6 @@ test('a bot is told it can act only through the tools it has, and never to promi
   const { system, tools: given } = await systemOf([])
 
   expect(system).toContain('## What you can do')
-  expect(system).toContain('- memory_write: Save a file in your memory, replacing what it held.')
   expect(system).toContain(never)
   expect(system).not.toContain('routine_create')
   expect(system).not.toContain('thread_only')
@@ -41,7 +40,7 @@ test('what a bot is told it can do follows the tools its plugins give it', async
   expect(system).toContain('- shell_run: Run a command on the PC.\n')
   expect(system).toContain('- routine_create: Set yourself a reminder or a routine: when it comes due, you get a turn in this conversation')
   expect(system).toContain(never)
-  for (const name of ['memory_write', 'routine_create', 'routine_list', 'shell_run']) {
+  for (const name of ['routine_create', 'routine_list', 'shell_run']) {
     expect(given).toContain(name)
     expect(system).toContain(`- ${name}: `)
   }

@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-memory",
   "version": "0.0.0",
-  "description": "Each bot's memory: Markdown files in the bot's folder that the user can read and edit",
+  "description": "Each bot's long-term memory: one Markdown file the bot rewrites when its conversation compacts, and the user can read and edit",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,18 +10,20 @@
     "feature": "bots",
     "runtime": "./src/index.ts",
     "label": "Bot memory",
-    "summary": "Keeps what each bot remembers as Markdown files you can read and edit"
+    "summary": "Keeps what each bot remembers long-term in one file you can read and edit"
   },
   "dependencies": {
     "@sand/bots": "workspace:*",
+    "@sand/compaction": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@sand/harness": "workspace:*"
+    "@sand/bot-turns": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
   }
 }

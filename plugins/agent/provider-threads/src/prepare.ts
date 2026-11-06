@@ -56,6 +56,12 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
   const create = async ({ conversation, brief }: Step, selection: Selection) =>
     stores.threads.create({ conversation, selection, system: await brief.system(conversation, selection.model), seen: [], used: Date.now() })
 
+  const rebrief = async ({ conversation, brief }: Step, thread: ProviderThreadInfo) => {
+    const system = await brief.system(conversation, thread.model)
+    stores.threads.rebrief(thread.id, system)
+    return { ...thread, system }
+  }
+
   const adopt = async ({ conversation, brief, path }: Step, target: Selection) => {
     const { system, ...found } = adoption(path, target)
     return stores.threads.create({ conversation, ...found, system: system ?? (await brief.system(conversation, found.selection.model)) })
@@ -91,18 +97,22 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     const open = stores.threads.open(conversation)
     const threads = open.length || !history || stores.threads.known(conversation) ? open : [await adopt(step, selection)]
     const target = threads.find(thread => same(thread, selection))
+    const compacted = !!target && compactedSince(target.id, target.seen, path)
     const candidate = target && {
       thread: target,
       last: target === threads[0],
       onPath: onPath(target.seen, path),
-      compacted: compactedSince(target.id, target.seen, path),
+      compacted,
       fits: fits(roomFor(target, target.context, step.current)),
       now: Date.now(),
     }
     const available = !!ctx.llm.find?.(selection.model)
     const transition = decide({ available, caps: capsOf(selection.model), selection, cwd: conversation.cwd, history }, candidate)
     if (transition.type === 'reject') throw new Error(transition.reason)
-    if (transition.type !== 'handoff') return target ?? (await create(step, selection))
+    if (transition.type !== 'handoff') {
+      if (!target) return create(step, selection)
+      return compacted ? rebrief(step, target) : target
+    }
     if (transition.strategy === 'delta' && target) return handOver(step, target, 'delta')
     if (target) retire(target.id)
     return handOver(step, await create(step, selection), 'full')
@@ -111,10 +121,14 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
   const prepare = async (conversation: Conversation, turn: TurnInfo, signal: AbortSignal): Promise<Plan> => {
     const brief = briefOf(conversation)
     const path = currentPath(ctx, conversation)
-    const thread = await choose({ conversation, brief, turn, path, current: currentOf(promptOf(path, turn.prompt)) })
+    const step = { conversation, brief, turn, path, current: currentOf(promptOf(path, turn.prompt)) }
+    let thread = await choose(step)
     const build = () => buildRequest(ctx, stores.handoffs, brief, conversation, thread, turn.selection)
     let built = await build()
-    if (await ctx.bail(stepPrepare, built.request, conversation, turn, signal)) built = await build()
+    if (await ctx.bail(stepPrepare, built.request, conversation, turn, signal)) {
+      thread = await rebrief(step, thread)
+      built = await build()
+    }
     stores.threads.activate(thread.id, turn.selection)
     return { ...built, thread, ...(built.request.handoff && { handoff: built.request.handoff.id }) }
   }
