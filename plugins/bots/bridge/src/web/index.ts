@@ -1,5 +1,5 @@
 import { botViews } from '@sand/bots/contract'
-import { transcript } from '@sand/chat/contract'
+import { transcript } from '@sand/transcript/contract'
 import { composer } from '@sand/composer/contract'
 import { contextChips } from '@sand/context/contract'
 import { sidebar } from '@sand/sidebar/contract'

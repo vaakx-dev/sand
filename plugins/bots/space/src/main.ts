@@ -1,6 +1,5 @@
 import { approvalViews } from '@sand/approvals/contract'
 import type { BotProfileSection, BotSummary, ModelChoice } from '@sand/bots/contract'
-import type { Markdown } from '@sand/markdown/contract'
 import type { ModelPicker } from '@sand/model-picker/contract'
 import { derive, div, dynamicChild, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { newBot, type Address, type Route } from './address'
@@ -28,7 +27,6 @@ export interface MainParts extends Omit<HeadParts, 'close'> {
   store: BotStore
   address: Address
   page: Derive<Page>
-  markdown: Derive<Markdown | undefined>
   picker: Derive<ModelPicker | undefined>
   defaults: Derive<ModelChoice>
   sections: Sig<BotProfileSection[]>
@@ -49,7 +47,7 @@ const render = (parts: MainParts, head: HeadParts, page: Page) => {
   const bot = latest(store, page.bot)
   if (page.kind === 'chat') {
     const approvals = ctx.get(approvalViews)?.card('bot', id)
-    return chatView(ctx.kit, { ...head, bot, talk: conversation(ctx, id), markdown: parts.markdown, profile: address.profile, ...(approvals && { approvals }) })
+    return chatView(ctx.kit, { ...head, bot, talk: conversation(ctx, id), transcript: ctx.transcriptParts, profile: address.profile, ...(approvals && { approvals }) })
   }
   return profileView(ctx, {
     ...head,

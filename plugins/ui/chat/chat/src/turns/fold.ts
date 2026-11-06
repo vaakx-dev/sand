@@ -1,4 +1,4 @@
-import type { Item } from '../parts/contract'
+import type { Item } from '@sand/transcript/contract'
 import { currentKind, kindsIn } from './kinds'
 
 export interface TurnHead {

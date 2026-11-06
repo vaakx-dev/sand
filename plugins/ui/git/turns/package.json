@@ -10,7 +10,6 @@
     "summary": "See and review what each turn changed, and put files back to before or after it"
   },
   "dependencies": {
-    "@sand/chat": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-changes": "workspace:*",
@@ -19,6 +18,7 @@
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/toasts": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

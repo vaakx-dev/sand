@@ -12,12 +12,12 @@
     "summary": "Runs long shell commands like dev servers as background jobs the agent can read, wait for and stop"
   },
   "dependencies": {
-    "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/jobs": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/shell": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

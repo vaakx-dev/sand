@@ -1,10 +1,10 @@
+import type { LiveBlock } from '@sand/accounts/contract'
+import type { ContextUsage } from '@sand/compaction/contract'
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
-import type { MarkdownImage } from '@sand/markdown/contract'
 import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
-import type { SessionSettings } from '@sand/model/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { ContextMenu, Kit, MenuSpec } from '@sand/ui-kit/contract'
-import type { Thread } from '@sand/web-client/contract'
+import type { ToolProgress } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
@@ -37,7 +37,7 @@ export interface ToolRenderer {
   actions?(tool: ToolView): NavAction[]
 }
 
-export type RenderEntry = (entry: Entry, thread: string) => HTMLElement | undefined
+export type RenderEntry = (entry: Entry, conversation: string) => HTMLElement | undefined
 
 export interface TurnInfo {
   session: string
@@ -81,7 +81,22 @@ export type Item = (
   | { kind: 'live'; key: string }
 ) & { opens?: string }
 
-export type DescribeSettings = (settings: SessionSettings) => string | undefined
+export interface Settled {
+  items: Item[]
+  group: ToolGroup | undefined
+  last: number
+  head: string | undefined
+}
+
+export interface Source {
+  id: string
+  live: LiveBlock[]
+  running: boolean
+  tools?: ToolProgress
+  context?: ContextUsage
+}
+
+export type Owner = Pick<Source, 'id' | 'tools'>
 
 export interface OpenState {
   open: Sig<boolean>
@@ -118,21 +133,40 @@ export interface MenuKit {
   more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
 }
 
-export interface ItemCache {
-  items(thread: Thread, path: () => Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Item[]
-  reset(): void
+export interface Row<T = unknown> {
+  key: string
+  data: T
+  view(data: Sig<T>, railed?: Sig<boolean>): HTMLElement
+}
+
+export type UserItem = Extract<Item, { kind: 'user' }>
+
+export interface Surface {
+  conversation: string
+  cwd?: string
+  menu: ContextMenu
+  states: OpenStates
+  jump(from: Element, quote: string): void
+  reply?(text: string): NavAction[]
+  rewrite?(entry: string, text: string): NavAction[]
+  branchSwitch?(entry: string): Child
+}
+
+export interface Rows {
+  item(item: Item): Row[]
+  user(item: UserItem, actions: (text: string) => NavAction[], note?: () => Child): Row
 }
 
 export interface TranscriptParts {
-  items(thread: Thread, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Item[]
-  itemCache(): ItemCache
-  sections(text: string): string[]
-  registry(changed: () => void): RendererRegistry
+  version: Sig<number>
+  footers: Sig<TurnFooter[]>
+  settled(owner: Owner, path: Entry[]): Settled
+  items(settled: Settled, source: Source): Item[]
+  prompt(entry: Entry, parts: UserPart[]): Item[]
+  rows(surface: Surface): Rows
   openStates(): OpenStates
-  menus: MenuKit
-  toolStep(tool: Sig<ToolView>, options: ToolStepOptions): HTMLElement
-  image: MediaImage
-  replyImage(thread: string): MarkdownImage
+  quoteJump(owner: Node): (root: Element, from: Element, quote: string) => void
+  workFrame(...children: Child[]): HTMLElement
 }
 
 export type ImageOptions = Omit<ShownImageOptions, 'open'>
@@ -152,3 +186,4 @@ export interface ToolViews {
 
 export const transcript = service<Transcript>('transcript')
 export const toolViews = service<ToolViews>('toolViews')
+export const transcriptParts = service<TranscriptParts>('transcriptParts')

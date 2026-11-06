@@ -1,7 +1,7 @@
 import type { ToolView, TruncatedAt } from '../contract'
 import { plural } from '@sand/util'
 import { div, el, type Child } from '@vaakx-dev/vrui'
-import { resultText } from '../thread/results'
+import { resultText } from '../items/results'
 
 export const outputText = (text: Child, error: boolean) =>
   el('pre', { class: ['whitespace-pre-wrap wrap-anywhere font-mono text-xs', error ? 'text-danger-400' : 'text-neutral-400'] }, text)

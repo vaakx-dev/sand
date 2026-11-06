@@ -18,7 +18,6 @@
   "dependencies": {
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
-    "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/context": "workspace:*",
@@ -33,6 +32,7 @@
     "@sand/server": "workspace:*",
     "@sand/sidebar": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

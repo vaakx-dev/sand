@@ -1,11 +1,8 @@
 {
   "name": "@sand/chat",
   "version": "0.0.0",
-  "description": "Chat transcript: bubbles, markdown, tool groups under each reply, streamed in place, plus the pieces tool views build on",
+  "description": "The thread chat: a thread transcript with \"Worked for\" turns, branches, queued messages and scrolling that keeps your place",
   "type": "module",
-  "exports": {
-    "./contract": "./src/parts/contract.ts"
-  },
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
@@ -13,20 +10,14 @@
     "summary": "Messages with markdown, and tool steps grouped under each reply"
   },
   "dependencies": {
-    "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/compaction": "workspace:*",
     "@sand/composer": "workspace:*",
-    "@sand/context": "workspace:*",
-    "@sand/images": "workspace:*",
     "@sand/layout": "workspace:*",
-    "@sand/markdown": "workspace:*",
-    "@sand/media": "workspace:*",
-    "@sand/model": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/threads-space": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

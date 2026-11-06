@@ -12,8 +12,8 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const node = div({ class: ['leading-relaxed wrap-anywhere', () => (railed?.get() ? 'text-neutral-400' : 'text-neutral-100')], 'data-quote': '' })
     const render = streamedMarkdown(node, context.markdown, context.image)
     effect(() => render(text.get(), streaming.get()))
-    const { menus } = context.parts
-    const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply(text.get()) })
+    const { menus } = context
+    const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply?.(text.get()) ?? [] })
     const press = menus.text(context.menu, spec)
     return div(
       { class: 'chat-row group mb-3 text-sm', ...press.props },

@@ -1,7 +1,7 @@
 import type { ToolBadge, ToolRenderer, ToolView } from '../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
-import { resultText } from '../thread/results'
+import { resultText } from '../items/results'
 import { toolLabel } from './label'
 import { outputText } from './notes'
 

@@ -1,4 +1,4 @@
-import type { AppendMeta } from '@sand/chats/contract'
+import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
 import { type Dispose, event, service } from 'drydock'
@@ -56,6 +56,10 @@ export interface BotEntry {
   data: unknown
   turn?: string
 }
+
+export const chatEntry = ({ bot, ...entry }: BotEntry, parent: string | null): Entry => ({ ...entry, session: bot, parent })
+
+export const chatPath = (entries: BotEntry[]): Entry[] => entries.map((entry, at) => chatEntry(entry, entries[at - 1]?.id ?? null))
 
 export interface EntryPage {
   entries: BotEntry[]

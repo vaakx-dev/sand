@@ -40,7 +40,7 @@ const rangeIn = (root: Element, wanted: string) => {
 
 const before = (from: Element) => (node: Element) => !node.contains(from) && Boolean(node.compareDocumentPosition(from) & Node.DOCUMENT_POSITION_FOLLOWING)
 
-export const findQuote = (root: Element, from: Element, text: string) => {
+const findQuote = (root: Element, from: Element, text: string) => {
   const wanted = text.replace(/\s+/g, '')
   if (!wanted) return undefined
   const sources = [...root.querySelectorAll('[data-quote]')].filter(before(from)).reverse()
@@ -51,12 +51,20 @@ export const findQuote = (root: Element, from: Element, text: string) => {
   return undefined
 }
 
-export const quoteFlash = (owner: Node) => {
+const quoteFlash = (owner: Node) => {
   let stop: (() => void) | undefined
   return (range: Range) => {
     stop?.()
     range.startContainer.parentElement?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     CSS.highlights.set(highlight, new Highlight(range))
     stop = onTimeout(() => CSS.highlights.delete(highlight), shownFor, owner)
+  }
+}
+
+export const quoteJump = (owner: Node) => {
+  const flash = quoteFlash(owner)
+  return (root: Element, from: Element, quote: string) => {
+    const range = findQuote(root, from, quote)
+    if (range) flash(range)
   }
 }

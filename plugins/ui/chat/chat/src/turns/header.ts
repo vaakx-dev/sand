@@ -1,8 +1,9 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration } from '@sand/util'
 import { dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
-import { row, workFrame, type RowContext } from '../rows/row'
+import type { Row } from '@sand/transcript/contract'
 import type { TurnHead } from './fold'
+import type { TurnContext } from './rows'
 
 const took = (head: TurnHead) => `Worked for ${duration(Math.max(1000, head.end - (head.start ?? head.end)))}`
 
@@ -16,8 +17,10 @@ const phase = ({ running, waiting }: TurnHead) => {
   return running ? 'working' : 'done'
 }
 
-export const turnRow = (head: TurnHead, context: RowContext) =>
-  row(head.key, head, data => {
+export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => ({
+  key: head.key,
+  data: head,
+  view: data => {
     const { chevron, toolCard } = context.kit
     const { open, toggle } = context.states.get(head.key)
     const labels = {
@@ -26,7 +29,7 @@ export const turnRow = (head: TurnHead, context: RowContext) =>
       done: () => span(() => took(data.get())),
     }
     const label = dynamicChild(data.map(phase), shown => labels[shown]())
-    return workFrame(
+    return context.parts.workFrame(
       toolCard({
         icon: chevron(() => open.get()),
         verb: label,
@@ -39,4 +42,5 @@ export const turnRow = (head: TurnHead, context: RowContext) =>
         },
       }),
     )
-  })
+  },
+})

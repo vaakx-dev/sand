@@ -1,4 +1,4 @@
-import { toolViews, transcript } from '@sand/chat/contract'
+import { toolViews, transcript } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { fetchView, searchView } from './views'

@@ -1,4 +1,4 @@
-import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, span } from '@vaakx-dev/vrui'
 

@@ -1,11 +1,10 @@
 import type { Entry, Message, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import type { ToolStatus } from '../contract'
-import type { Thread } from '@sand/web-client/contract'
+import type { Owner, ToolStatus } from '../contract'
 
 export type Results = Map<string, ToolResultBlock>
 
-export const toolResults = (thread: Thread, path: Entry[]): Results => {
-  const found = new Map(thread.tools.results)
+export const toolResults = (owner: Owner, path: Entry[]): Results => {
+  const found = new Map(owner.tools?.results)
   for (const entry of path) {
     if (entry.type !== 'message') continue
     for (const block of (entry.data as Message).content) if (block.type === 'tool_result') found.set(block.callId, block)
@@ -13,10 +12,10 @@ export const toolResults = (thread: Thread, path: Entry[]): Results => {
   return found
 }
 
-export const toolStatus = (call: ToolCallBlock, thread: Thread, results: Results): ToolStatus => {
+export const toolStatus = (call: ToolCallBlock, owner: Owner, results: Results): ToolStatus => {
   const result = results.get(call.id)
   if (result) return result.isError ? 'failed' : 'done'
-  return thread.tools.running.has(call.id) ? 'running' : 'pending'
+  return owner.tools?.running.has(call.id) ? 'running' : 'pending'
 }
 
 export const resultText = (result?: ToolResultBlock) =>

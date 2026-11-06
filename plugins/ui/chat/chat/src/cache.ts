@@ -1,7 +1,6 @@
+import type { Entry } from '@sand/chats/contract'
+import type { Item, Settled, TranscriptParts } from '@sand/transcript/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { ItemCache } from '../contract'
-import { liveItems } from './items'
-import { settledItems, type Settled } from './settled'
 
 const keyOf = (thread: Thread): unknown[] => [
   thread,
@@ -15,13 +14,13 @@ const keyOf = (thread: Thread): unknown[] => [
 
 const sameKey = (a: unknown[], b: unknown[]) => a.length === b.length && a.every((value, index) => value === b[index])
 
-export const itemCache = (): ItemCache => {
+export const itemCache = (parts: TranscriptParts) => {
   let cached: { key: unknown[]; settled: Settled } | undefined
   return {
-    items(thread, path, custom, describe) {
+    items(thread: Thread, path: () => Entry[]): Item[] {
       const key = keyOf(thread)
-      if (!cached || !sameKey(cached.key, key)) cached = { key, settled: settledItems(thread, path(), custom, describe) }
-      return liveItems(cached.settled, thread)
+      if (!cached || !sameKey(cached.key, key)) cached = { key, settled: parts.settled(thread, path()) }
+      return parts.items(cached.settled, thread)
     },
     reset() {
       cached = undefined

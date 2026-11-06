@@ -1,4 +1,4 @@
-import { toolViews } from '@sand/chat/contract'
+import { toolViews } from '@sand/transcript/contract'
 import { wire } from '@sand/devices-contract'
 import { kit } from '@sand/ui-kit/contract'
 import type { Context } from 'drydock'

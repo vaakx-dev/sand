@@ -1,12 +1,18 @@
 import type { LiveBlock } from '@sand/accounts/contract'
 import { botInterrupt, botLive, botSend, botStreamWire } from '@sand/bot-turns/contract'
-import { botConversation, botEntryWire, type BotEntry } from '@sand/bots/contract'
+import { botConversation, botEntryWire, chatPath, type BotEntry } from '@sand/bots/contract'
+import { promptContent, textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { wireHello } from '@sand/devices-contract'
 import { applyLiveEvent } from '@sand/server/contract'
-import { errorMessage, uuid } from '@sand/util'
+import { errorMessage, isRecord, uuid } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
-import { linesOf, type Line } from './entry'
+
+export interface Pending {
+  id: string
+  prompt: Prompt
+  at: number
+}
 
 const pageSize = 50
 
@@ -15,22 +21,35 @@ const merged = (list: BotEntry[], added: BotEntry[]) => {
   return [...list, ...added.filter(entry => !known.has(entry.id))].sort((a, b) => a.seq - b.seq)
 }
 
-const isReply = (entry: BotEntry) => entry.type === 'turn-ending' || (entry.type === 'message' && linesOf([entry]).some(line => line.kind === 'assistant'))
+const isMessage = (data: unknown): data is Message =>
+  isRecord(data) && (data.role === 'user' || data.role === 'assistant') && Array.isArray(data.content)
 
-const withoutDelivered = (pending: Line[], entry: BotEntry) => {
-  const said = linesOf([entry]).find(line => line.kind === 'user')
-  const index = said ? pending.findIndex(line => line.text === said.text) : -1
+const messageOf = ({ type, data }: BotEntry) => (type === 'message' && isMessage(data) ? data : undefined)
+
+const spoken = (message: Message) => textOf(message.content, '\n\n').trim()
+
+const isReply = (entry: BotEntry) => {
+  if (entry.type === 'turn-ending') return true
+  const message = messageOf(entry)
+  return message?.role === 'assistant' && Boolean(spoken(message))
+}
+
+const withoutDelivered = (pending: Pending[], entry: BotEntry) => {
+  const message = messageOf(entry)
+  if (message?.role !== 'user') return pending
+  const said = spoken(message)
+  const index = pending.findIndex(item => textOf(promptContent(item.prompt), '\n\n').trim() === said)
   return index < 0 ? pending : pending.filter((_, at) => at !== index)
 }
 
 export const conversation = (ctx: BotsContext, bot: string) => {
   const entries = sig<BotEntry[] | undefined>(undefined)
-  const pending = sig<Line[]>([])
+  const pending = sig<Pending[]>([])
   const live = sig<LiveBlock[]>([])
   const more = sig(false)
   const loading = sig(false)
   const failure = sig<string | undefined>(undefined)
-  const lines = derive(() => [...linesOf(entries.get() ?? []), ...pending.get()])
+  const path = derive(() => chatPath(entries.get() ?? []))
 
   const add = (added: BotEntry[]) => entries.update(list => merged(list ?? [], added))
 
@@ -72,13 +91,13 @@ export const conversation = (ctx: BotsContext, bot: string) => {
     return fetch(oldest.seq)
   }
 
-  const send = async (text: string) => {
+  const send = async (prompt: Prompt) => {
     const id = uuid()
-    pending.update(list => [...list, { id, kind: 'user', text }])
+    pending.update(list => [...list, { id, prompt, at: Date.now() }])
     try {
-      await ctx.wire.call(botSend, { bot, prompt: text, clientRequestId: id })
+      await ctx.wire.call(botSend, { bot, prompt, clientRequestId: id })
     } catch (error) {
-      pending.update(list => list.filter(line => line.id !== id))
+      pending.update(list => list.filter(item => item.id !== id))
       throw error
     }
   }
@@ -95,8 +114,10 @@ export const conversation = (ctx: BotsContext, bot: string) => {
   refresh()
 
   return {
+    bot,
     entries,
-    lines,
+    path,
+    pending,
     live,
     more,
     loading,

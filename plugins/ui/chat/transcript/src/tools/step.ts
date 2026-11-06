@@ -37,7 +37,7 @@ export const toolStep = (
   tool: Sig<ToolView>,
   { renderer, version, open, toggle, menu }: ToolStepOptions,
   menus: MenuKit,
-  cwdOf: (thread: string) => string | undefined,
+  cwd: string | undefined,
 ) => {
   const { badge, contextMenu, copyButton, icon, shine, toolBody, toolCard } = kit
   const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
@@ -51,7 +51,7 @@ export const toolStep = (
     signature.get()
     const value = untrack(() => tool.get())
     const found = renderer(value.call.name)
-    return { icon: found.icon, verb: found.verb, activeVerb: found.activeVerb, label: relativeTo(cwdOf(value.thread), found.label(value)), meta: found.meta(value), badge: found.badge(value) }
+    return { icon: found.icon, verb: found.verb, activeVerb: found.activeVerb, label: relativeTo(cwd, found.label(value)), meta: found.meta(value), badge: found.badge(value) }
   })
   const running = derive(() => ['running', 'pending'].includes(tool.get().status))
   const label = shown.map(value => value.label)

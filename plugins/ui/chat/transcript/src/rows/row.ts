@@ -1,34 +1,17 @@
 import type { ContextLink, ContextRecord } from '@sand/chats/contract'
 import type { Markdown, MarkdownImage } from '@sand/markdown/contract'
-import type { Item, OpenStates, RendererRegistry, TranscriptParts } from '../parts/contract'
-import type { NavAction } from '@sand/nav/contract'
-import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
-import { div, type Child, type Sig } from '@vaakx-dev/vrui'
-import type { TurnFooters } from '../turns/footers'
+import type { Item, MediaImage, MenuKit, RendererRegistry, Row, Surface } from '../contract'
+import type { Kit } from '@sand/ui-kit/contract'
+import { div, type Child } from '@vaakx-dev/vrui'
 
-export interface Row<T = unknown> {
-  key: string
-  data: T
-  view(data: Sig<T>, railed?: Sig<boolean>): HTMLElement
-}
-
-export interface RowContext {
+export interface RowContext extends Surface {
   kit: Kit
   registry: RendererRegistry
-  states: OpenStates
-  thread: string
-  device: string
-  footers: TurnFooters
-  parts: TranscriptParts
   markdown: Markdown
+  menus: MenuKit
+  media: MediaImage
   image: MarkdownImage
-  menu: ContextMenu
-  rewrite(entry: string, text: string): NavAction[]
-  reply(text: string): NavAction[]
-  branchSwitch(entry: string): Child
-  jump(from: Element, quote: string): void
   chip(link: ContextLink, record?: ContextRecord): Child
-  repaint(): void
 }
 
 export type RowMaker<K extends Item['kind']> = (item: Extract<Item, { kind: K }>, context: RowContext) => Row

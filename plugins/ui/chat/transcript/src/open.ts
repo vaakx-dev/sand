@@ -1,4 +1,4 @@
-import type { OpenStates } from '../contract'
+import type { OpenStates } from './contract'
 import { sig, type Sig } from '@vaakx-dev/vrui'
 
 export const openStates = (): OpenStates => {

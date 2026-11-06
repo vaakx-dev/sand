@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { div, list, media, onMount, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BranchLists } from './branches'
-import type { Row } from './rows/row'
+import type { Row } from '@sand/transcript/contract'
 
 export interface ThreadView {
   id: string

@@ -1,5 +1,4 @@
-import type { Step, ToolGroup } from '../contract'
-import type { Settled } from './settled'
+import type { Settled, Step, ToolGroup } from '../contract'
 
 type Logs = Map<string, string[]>
 

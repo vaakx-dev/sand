@@ -1,13 +1,11 @@
 import { contextLinks, promptLabel, type ContextLink, type ContextRecord, type FileBlock, type UserPart } from '@sand/chats/contract'
 import { contextFormats, copyContext } from '@sand/context/contract'
-import type { Item, TextMenu } from '../parts/contract'
+import type { TextMenu, UserItem } from '../contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { bytes, isArchiveName, quoteBlocks, quotedText } from '@sand/util'
 import { div, show, span, type Child } from '@vaakx-dev/vrui'
 import { actionRow, row, type RowContext, type RowMaker } from './row'
-
-type UserItem = Extract<Item, { kind: 'user' }>
 
 const chip = ({ icon }: Kit, name: string, iconName: IconName, size?: number) =>
   span(
@@ -21,7 +19,7 @@ const fileChip = (kit: Kit, block: FileBlock) => chip(kit, block.name, isArchive
 
 const attachment = (part: UserPart, context: RowContext) => {
   if (part.kind === 'image')
-    return context.parts.image(part.block, context.thread, { class: 'block max-h-32 max-w-48 rounded-md bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
+    return context.media(part.block, context.conversation, { class: 'block max-h-32 max-w-48 rounded-md bg-neutral-800', title: part.block.name ?? '', maxHeight: 128 })
   if (part.kind === 'document') return chip(context.kit, part.block.name ?? 'document', 'file')
   if (part.kind === 'file') return fileChip(context.kit, part.block)
   if (part.kind === 'skill') return chip(context.kit, part.name, 'sparkles')
@@ -92,7 +90,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const records = item.parts.flatMap(part => (part.kind === 'context' ? part.records : []))
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
-    const { menus } = context.parts
+    const { menus } = context
     const spec = () => ({ title: 'Message', subtitle: promptLabel(text).slice(0, 80), actions: actions(text) })
     const press = menus.text(context.menu, spec)
     return message(
@@ -108,10 +106,15 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
             () => menus.more(context.menu, spec),
           ),
         ]),
-        !item.steer && context.branchSwitch(item.key),
+        !item.steer && context.branchSwitch?.(item.key),
       ),
     )
   })
 
-export const userRow: RowMaker<'user'> = (item, context) =>
-  userMessage(item, context, text => [...context.reply(text), ...(item.steer ? [] : context.rewrite(item.key, text))])
+const userActions = (item: UserItem, context: RowContext) => (text: string) => {
+  const replies = context.reply?.(text) ?? []
+  if (item.steer || !context.rewrite) return replies
+  return [...replies, ...context.rewrite(item.key, text)]
+}
+
+export const userRow: RowMaker<'user'> = (item, context) => userMessage(item, context, userActions(item, context))

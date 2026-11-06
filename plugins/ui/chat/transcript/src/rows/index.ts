@@ -1,15 +1,15 @@
-import type { Item } from '../parts/contract'
+import type { Item, Row } from '../contract'
 import { div } from '@vaakx-dev/vrui'
 import { noticeRow } from './notes'
 import { textRow, thinkingRow } from './prose'
-import { row, type Row, type RowContext } from './row'
+import { row, type RowContext } from './row'
 import { toolsRow } from './tools'
 import { userRow } from './user'
 
 const customRow = (item: Extract<Item, { kind: 'custom' }>, context: RowContext): Row[] => {
   const render = context.registry.entryRenderer(item.entry.type)
   if (!render) return []
-  return [row(`custom:${item.key}`, item, () => render(item.entry, context.thread) ?? div())]
+  return [row(`custom:${item.key}`, item, () => render(item.entry, context.conversation) ?? div())]
 }
 
 export const itemRows = (item: Item, context: RowContext): Row[] => {

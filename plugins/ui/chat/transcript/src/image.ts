@@ -3,14 +3,14 @@ import { imageViewer } from '@sand/images/contract'
 import type { MarkdownImage } from '@sand/markdown/contract'
 import { mediaView, type ImageSource, type MediaView } from '@sand/media/web/contract'
 import { dynamicChild, sig, span } from '@vaakx-dev/vrui'
-import type { ChatContext } from '../context'
+import type { TranscriptContext } from './context'
 import type { ImageOptions, MediaImage } from './contract'
 
 const replyHeight = 320
 
 const unshown = (name = 'image') => span({ class: 'text-xs text-neutral-500' }, `▣ ${name}`)
 
-export const chatImages = (ctx: ChatContext) => {
+export const chatImages = (ctx: TranscriptContext) => {
   const view = sig<MediaView | undefined>(undefined)
   ctx.watch(mediaView, found => view.set(found))
 
@@ -28,3 +28,5 @@ export const chatImages = (ctx: ChatContext) => {
 
   return { image, replyImage }
 }
+
+export type Images = ReturnType<typeof chatImages>

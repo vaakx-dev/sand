@@ -1,4 +1,4 @@
-import { toolViews, transcript } from '@sand/chat/contract'
+import { toolViews, transcript } from '@sand/transcript/contract'
 import { wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'

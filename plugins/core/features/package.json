@@ -20,6 +20,7 @@
           "models",
           "media",
           "markdown",
+          "transcript",
           "watch"
         ],
         "uses": [
@@ -85,7 +86,8 @@
         "needs": [
           "engine",
           "models",
-          "markdown"
+          "markdown",
+          "transcript"
         ],
         "uses": [
           "compaction",
@@ -271,6 +273,14 @@
         "kind": "capability",
         "label": "Markdown",
         "summary": "Formatted replies, code and math"
+      },
+      "transcript": {
+        "kind": "capability",
+        "label": "Transcript",
+        "summary": "How conversations show: messages, pages and the work behind them",
+        "needs": [
+          "markdown"
+        ]
       },
       "approvals": {
         "kind": "capability",

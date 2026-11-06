@@ -1,8 +1,9 @@
-import type { OpenState, Step } from '../parts/contract'
+import type { OpenState, Step } from '../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { list, untrack, type Sig } from '@vaakx-dev/vrui'
 import { row, workFrame, type RowContext, type RowMaker } from './row'
 import { thinkingCard } from './thinking'
+import { toolStep } from '../tools/step'
 
 type ThinkingStep = Extract<Step, { kind: 'thinking' }>
 
@@ -13,10 +14,13 @@ const stepView = (step: Sig<Step>, context: RowContext) => {
   const first = untrack(() => step.get())
   const state = context.states.get(first.key)
   if (first.kind === 'thinking') return thinkingView(context.kit, step.map(value => (value.kind === 'thinking' ? value : first)), state)
-  const { registry, parts, menu } = context
-  return parts.toolStep(
+  const { kit, registry, menus, menu, cwd } = context
+  return toolStep(
+    kit,
     step.map(value => (value.kind === 'tool' ? value.tool : first.tool)),
     { renderer: registry.toolRenderer, version: registry.version, ...state, menu },
+    menus,
+    cwd,
   )
 }
 

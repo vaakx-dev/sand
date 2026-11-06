@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
-    "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/jobs": "workspace:*",
     "@sand/model": "workspace:*",
@@ -26,6 +25,7 @@
     "@sand/reactive": "workspace:*",
     "@sand/sub-model": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

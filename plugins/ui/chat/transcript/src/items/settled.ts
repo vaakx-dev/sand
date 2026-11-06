@@ -1,19 +1,14 @@
 import type { CompactionRecord } from '@sand/compaction/contract'
 import type { TurnEnding } from '@sand/turns-contract/contract'
 import type { SessionSettings } from '@sand/model/contract'
-import type { Thread } from '@sand/web-client/contract'
-import type { DescribeSettings, Item, NoticeTone, ToolGroup } from '../contract'
+import type { Item, NoticeTone, Owner, Settled } from '../contract'
 import { type Entry, feedbackLine, hasToolResult, type Message, type ToolCallBlock, type UserPart, userParts } from '@sand/chats/contract'
 import { tokens } from '@sand/util'
 import { itemCollector } from './collect'
 import { toolResults, toolStatus } from './results'
 import { taggedItems, untagged } from './tagged'
 
-export interface Settled {
-  items: Item[]
-  group: ToolGroup | undefined
-  last: number
-}
+export type DescribeSettings = (settings: SessionSettings) => string | undefined
 
 const endings: Record<string, { text: string; tone: NoticeTone }> = {
   interrupted: { text: 'Interrupted', tone: 'dim' },
@@ -31,7 +26,7 @@ const compactedText = ({ before, after }: CompactionRecord) =>
 
 const opening = ([first, ...rest]: Item[], start: string): Item[] => (first ? [{ ...first, opens: start }, ...rest] : [])
 
-const userItems = (entry: Entry, parts: UserPart[], steer: boolean, custom: (type: string) => boolean): Item[] => {
+export const userItems = (entry: Entry, parts: UserPart[], steer: boolean, custom: (type: string) => boolean): Item[] => {
   const shown = untagged(parts, custom).filter(part => part.kind !== 'feedback')
   const feedback = parts.flatMap(part => (part.kind === 'feedback' ? [part.feedback] : []))
   const asked: Item[] = shown.length ? [{ kind: 'user', key: entry.id, parts: shown, steer, at: entry.at }] : []
@@ -43,15 +38,15 @@ const userItems = (entry: Entry, parts: UserPart[], steer: boolean, custom: (typ
   return steer ? items : opening(items, entry.id)
 }
 
-export const settledItems = (thread: Thread, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Settled => {
-  const results = toolResults(thread, path)
+export const settledItems = (owner: Owner, path: Entry[], custom: (type: string) => boolean, describe: DescribeSettings): Settled => {
+  const results = toolResults(owner, path)
   const list = itemCollector()
   let last = path[0]?.at ?? Date.now()
   let talked = Boolean(path[0]?.parent)
   let previousTurn: string | undefined
 
   const tool = (call: ToolCallBlock, at: number) =>
-    list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, thread, results), thread: thread.id } }, last, at)
+    list.step({ kind: 'tool', key: call.id, tool: { call, result: results.get(call.id), status: toolStatus(call, owner, results), thread: owner.id } }, last, at)
 
   const user = (entry: Entry, message: Message) => {
     list.extend(entry.at)
@@ -97,5 +92,5 @@ export const settledItems = (thread: Thread, path: Entry[], custom: (type: strin
     previousTurn = entry.turn ?? previousTurn
   }
 
-  return { items: list.items, group: list.group, last }
+  return { items: list.items, group: list.group, last, head: path.at(-1)?.id }
 }
