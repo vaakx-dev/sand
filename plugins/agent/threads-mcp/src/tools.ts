@@ -87,7 +87,7 @@ const folderOf = ({ cwd, project, pc }: z.output<typeof startInput>, here: strin
   return project ? undefined : here
 }
 
-const reported = "When sand's own thread or bot starts it, each time it finishes its final reply reaches the starter as a <task-notification>, so don't wait or poll for it"
+const reported = "If you are a sand thread or bot, each final reply comes to you as a <task-notification>, so don't wait or poll for it"
 
 export const threadTools: McpTool[] = [
   {
@@ -116,7 +116,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof readInput>,
   {
     name: 'thread_start',
-    description: `Start a new sand thread with a first message. It shows in the sidebar like any thread and keeps working on its own. Returns at once with its id. ${reported}; from outside sand, use thread_wait`,
+    description: `Start a new sand thread with a first message. It works on its own. Returns its id at once. ${reported}; otherwise use thread_wait`,
     input: startInput,
     access: 'operate',
     group: group.name,
@@ -152,7 +152,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof stopInput>,
   {
     name: 'thread_update',
-    description: 'Rename, pin, snooze or settle a thread, as the user can from the sidebar; returns the thread as thread_list shows it',
+    description: 'Rename, pin, snooze or settle a thread; returns the thread as thread_list shows it',
     input: updateInput,
     access: 'operate',
     group: group.name,

@@ -16,7 +16,7 @@ const screenshotFit = { width: 1568, height: 1568 }
 const nothing = z.object({})
 
 const which = z.object({
-  computer: z.string().optional().describe('The id of a computer from computer_list. A bot leaves it out to use the computer chosen for it.'),
+  computer: z.string().optional().describe('The id of a computer from computer_list. As a bot, leave it out to use the computer chosen for you.'),
 })
 
 const round = (value: number) => value.toFixed(3)
@@ -40,7 +40,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
   const list: Tool<typeof nothing> = {
     name: 'computer_list',
     group,
-    description: 'List the computers you can see and use: browsers sand controls and desktops, with their ids.',
+    description: 'List the computers you can see and use, browsers and desktops, with their ids.',
     input: nothing,
     effect: 'read',
     needs: ['computer'],

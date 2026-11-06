@@ -3,7 +3,7 @@ name: sand-plugins
 description: Write or edit a sand plugin.
 ---
 
-A plugin is a folder in `~/.sand/plugins/<name>/` with a `package.json` that says where it runs, and an entry file for each place that default-exports `definePlugin(...)` from `drydock`. New folders load when the user presses Reload plugins or restarts sand.
+A plugin is a folder in `~/.sand/plugins/<name>/` with a `package.json` that says where it runs, and an entry file for each place that default-exports `definePlugin(...)` from `drydock`.
 
 ```json
 { "name": "word-count", "type": "module", "sand": { "runtime": "./index.ts" } }
@@ -43,7 +43,7 @@ export default definePlugin({
 - A throw in `apply` or a hook fails only this plugin.
 - `ctx.hot.data` survives reloads; `ctx.busy()` returns a release function that reloads wait for.
 - `ctx.report(error)` logs an error against this plugin without failing it; `ctx.settled()` waits until every plugin has started.
-- The web UI is the only user surface; `sand -p` is a minimal test runner, so don't build or adapt anything for it.
+- Build for the web UI, the only user surface. Don't build or adapt anything for `sand -p`.
 - Ship skills by putting `skills/<name>/SKILL.md` in the plugin folder and calling `ctx.watch(skills, found => found?.register(dir))` with `skills` from `@sand/skills/contract`.
 
-Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to press the Reload plugins button at the bottom of the sidebar. It starts a fresh sand runtime with every plugin; the page stays connected and running turns finish on the old runtime. Nothing reloads on its own.
+Check your plugin with the `plugin` tool by name. Never reload plugins yourself: it can interrupt running agents. After adding or editing a plugin, ask the user to press the Reload plugins button at the bottom of the sidebar.

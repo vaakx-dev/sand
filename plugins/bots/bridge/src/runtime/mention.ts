@@ -10,7 +10,7 @@ const recordsIn = (message: Message) => message.content.flatMap(block => (block.
 const botsIn = (message: Message) => [...new Set(recordsIn(message).flatMap(record => mentionedBot(record) ?? []))]
 
 const promptOf = (session: Session, message: Message) =>
-  `The user wrote this to you from their thread${session.title ? ` "${session.title}"` : ''}; your reply shows there.\n\n${linkLabels(promptText(message, '\n\n'))}`
+  `The user mentioned you in their thread${session.title ? ` "${session.title}"` : ''}:\n\n${linkLabels(promptText(message, '\n\n'))}`
 
 export const routeMentions = (ctx: BridgeContext, ask: Ask) => (session: Session, entry: Entry) => {
   const message = entry.type === 'message' ? (entry.data as Message) : undefined

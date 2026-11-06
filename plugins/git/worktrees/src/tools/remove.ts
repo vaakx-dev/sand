@@ -15,7 +15,7 @@ export const removeTool = (deps: WorktreeDeps, survey: Survey): Tool<typeof inpu
   name: 'worktree_remove',
   description: [
     'Remove a worktree sand made, with its branch, to free disk space. It refuses when a thread is working there or when work would be lost, unless forced.',
-    'Threads in it move back to the main checkout, and the user can restore it from the palette.',
+    'Threads in it move back to the main checkout, and the user can restore it later.',
     'Use this instead of git worktree remove.',
   ].join(' '),
   input,

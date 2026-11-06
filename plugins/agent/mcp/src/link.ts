@@ -56,7 +56,7 @@ export const openLink = (name: string, config: ServerConfig, events: LinkEvents)
   }
 
   const unavailable = () =>
-    status.state === 'failed' ? `The ${name} MCP server is not connected: ${status.error}. sand reconnects on its own; try again later.` : `The ${name} MCP server is still connecting; try again shortly.`
+    status.state === 'failed' ? `The ${name} MCP server is not connected: ${status.error}. Try again later.` : `The ${name} MCP server is still connecting; try again shortly.`
 
   void connect()
 

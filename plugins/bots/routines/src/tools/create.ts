@@ -18,7 +18,7 @@ const fields = z.object({
     .optional()
     .describe(`To repeat: a five-field cron schedule in local time, like "0 9 * * 1-5" for weekdays at 9:00`),
   zone: z.string().optional().describe(`The time zone for at and repeat, like Europe/Berlin. Default: ${systemZone()}`),
-  if_missed: z.enum(['run', 'skip']).optional().describe('If sand was not running when it was due: run once when it is back (the default), or skip that time'),
+  if_missed: z.enum(['run', 'skip']).optional().describe('If a due time is missed because sand was off: run once when it is back (the default), or skip that time'),
 })
 
 const watchOf = (checks: Check[]) => {
@@ -27,7 +27,7 @@ const watchOf = (checks: Check[]) => {
   return z
     .discriminatedUnion('check', [first, ...rest])
     .optional()
-    .describe('With repeat: a check that runs for free at each due time, so your turn only happens when it finds something')
+    .describe('With repeat: a check that runs at each due time at no cost; you act only when it finds something')
 }
 
 type Input = z.output<typeof fields> & { watch?: { check: string } & Record<string, unknown> }
@@ -46,7 +46,7 @@ export const createTool = (routines: Routines, schedules: Schedules): Tool => {
   return {
     name: 'routine_create',
     description:
-      'Set yourself a reminder or a routine: when it comes due, you get a turn in this conversation with its instructions, even while the user is away, and your reply shows in this chat. Use at or in_minutes for one time, or repeat for a recurring schedule.',
+      'Set yourself a reminder or a routine: when it comes due, you act on its instructions in this chat, even while the user is away. Use at or in_minutes for one time, or repeat for a recurring schedule.',
     needs: ['routines'],
     input: watch ? fields.extend({ watch }) : fields,
     act: ({ name }: Input, { cwd }) => ({ effect: 'write', paths: [cwd], summary: `Set the routine ${name}` }),
@@ -61,7 +61,7 @@ export const createTool = (routines: Routines, schedules: Schedules): Tool => {
         ...(input.watch && { watch: watched(input.watch) }),
       })
       const next = routine.next === undefined ? '' : ` Next: ${timeIn(routine.next, zoneOf(when))}.`
-      return `Set "${routine.name}" (${routine.id}), ${timing(when)}.${next} When it comes due you get a turn here.`
+      return `Set "${routine.name}" (${routine.id}), ${timing(when)}.${next}`
     },
   }
 }

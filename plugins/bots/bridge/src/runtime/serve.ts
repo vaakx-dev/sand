@@ -11,7 +11,7 @@ import type { Replies } from './replies'
 
 const jobLength = 200
 
-const outside = 'This message is from an outside agent connected to sand, not from the user. Your reply goes back to it.'
+const outside = 'This message is from an outside agent, not from the user. Your reply goes back to it.'
 
 const intro: Record<Sender['kind'], (label: string) => string> = {
   bot: label => `This message is from ${label}, another of the user's bots, not from the user. Your reply goes back to it.`,

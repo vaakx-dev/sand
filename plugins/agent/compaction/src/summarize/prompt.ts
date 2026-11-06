@@ -2,9 +2,9 @@ import type { CompactionBrief } from '../contract'
 
 const noReply = "Don't continue the conversation, answer it or call tools."
 
-export const system = `You summarize a conversation between a user and an AI assistant so the assistant can carry on without it. It can be about anything: code, research, planning, writing or everyday chat.
+export const system = `You summarize a conversation between a user and an AI assistant so the assistant can carry on from the summary alone. It can be about anything: code, research, planning, writing or everyday chat.
 
-The summary is the assistant's short-term memory: what it is working on now. Keep what the current work needs and drop work that is finished or stale. Long-term facts belong in a separate memory, not here.
+Keep what the current work needs and drop work that is finished or stale.
 
 ${noReply}`
 
@@ -53,7 +53,7 @@ const fresh = 'Summarize the transcript in <conversation> tags above.'
 
 const update = 'The transcript in <conversation> tags above continues the conversation summarized in <previous-summary>. Update that summary with it.'
 
-const inContext = `Stop here. Summarize this conversation so it can carry on from the summary alone. If it starts with an earlier summary, keep only what the current work still needs. Leave out your system prompt; it stays in place.
+const inContext = `Stop here. Summarize this conversation so you can carry on from the summary and your system prompt alone. Leave out what your system prompt already says. If it starts with an earlier summary, keep only what the current work still needs.
 
 ${noReply}`
 

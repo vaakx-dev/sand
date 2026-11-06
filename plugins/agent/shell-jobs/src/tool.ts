@@ -10,13 +10,13 @@ import { commandWork } from './work'
 
 const input = z.object({
   command: z.string().describe('Command to run'),
-  label: z.string().optional().describe('A few words for the UI (default: the command)'),
+  label: z.string().optional().describe('A short title for the job (default: the command)'),
 })
 
 export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: ShellRunner, sessions: Sessions): Tool<typeof input> => ({
   name: 'run_background',
   description:
-    "Start a shell command that is meant to run long, like a dev server, watcher or long build, as a background job in the working directory. Returns at once with its job id. Read its output with job_read, wait for it with job_wait and stop it with job_stop. When it exits, a <task-notification> brings its exit code and last output. It runs in the same shell as the shell tool; restarting sand stops it.",
+    'Start a long-running shell command, like a dev server, watcher or long build, in the background, in the working directory and the same shell as the shell tool. Returns its job id at once. Read its output with job_read, wait for it with job_wait and stop it with job_stop. When it exits, a <task-notification> brings its exit code and last output.',
   input,
   needs: ['thread', 'pc'],
   act: ({ command }) => ({ effect: 'run', summary: command }),

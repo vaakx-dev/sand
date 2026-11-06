@@ -37,7 +37,7 @@ export const readsHistory = ({ seen: [first] }: ProviderThreadInfo) => !!first &
 export const threadRead = (ctx: ThreadsContext): Tool<typeof input> => ({
   name: threadReadName,
   description:
-    'Read earlier items of this chat that a context handoff left out or shortened. Pass item to read one item in full, or after to list the items that follow a seq.',
+    'Read earlier items of this chat that were left out or shortened. Pass item to read one item in full, or after to list the items that follow a seq.',
   input,
   parallel: true,
   active: conversation => conversation.path().some(entry => entry.type === 'handoff'),

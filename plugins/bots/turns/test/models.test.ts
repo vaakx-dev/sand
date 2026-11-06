@@ -13,7 +13,7 @@ const said = (text: string) => ({ type: 'text', text }) as const
 
 const app = (replies: Source['replies']): Source => ({ id: 'n', models: ['m'], replies })
 
-const handoff = /^Context handoff: this chat continued with another model[^]*\ntwo$/
+const handoff = /^Earlier messages of this chat, [^]*\ntwo$/
 
 const start = async (sources: Source[]) => {
   sand = await startSand(sources, { plugins: ['bots/bots', 'bots/memory', 'bots/turns'] })

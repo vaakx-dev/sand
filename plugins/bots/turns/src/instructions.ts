@@ -10,6 +10,6 @@ const memoryOf = async (memory: BotMemory, bot: string) => {
 const jobOf = (bot: BotSummary) => (bot.job.trim() ? [`## Your job\n\n${bot.job.trim()}`] : [])
 
 export const instructions = async (bot: BotSummary, memory: BotMemory): Promise<Own> => ({
-  intro: `You are ${bot.name}, one of the user's bots in sand. You and the user share one ongoing conversation; everything said before is above.`,
+  intro: `You are ${bot.name}, one of the user's bots in sand.`,
   parts: [...jobOf(bot), `## Your memory\n\n${await memoryOf(memory, bot.id)}`],
 })

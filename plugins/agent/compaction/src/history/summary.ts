@@ -5,9 +5,9 @@ import { filesText } from '../summarize/files'
 import { messageOf, view } from './view'
 
 const summaryText = ({ summary, files }: CompactionRecord) =>
-  [`The earlier part of this conversation was compacted. Summary:\n\n${summary}`, files && filesText(files)].filter(Boolean).join('\n\n')
+  [`Summary of the earlier conversation:\n\n${summary}`, files && filesText(files)].filter(Boolean).join('\n\n')
 
-const pinnedBlocks = (pinned: Message): Block[] => [{ type: 'text', text: 'The user message still being answered, verbatim:' }, ...pinned.content]
+const pinnedBlocks = (pinned: Message): Block[] => [{ type: 'text', text: "The user's message you are answering:" }, ...pinned.content]
 
 export const pinnedMessage = (path: Entry[], id?: string) => {
   const entry = id ? path.find(candidate => candidate.id === id) : undefined

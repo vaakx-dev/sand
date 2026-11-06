@@ -5,12 +5,12 @@ const sections = ['The user', 'Preferences and rules', 'Decisions', 'People']
 
 const current = (text: string) =>
   text
-    ? `Your memory now, ${text.length} of ${memoryLimit} characters. The user may have edited it since you last saw it; their edits stand:\n\n<current-memory>\n${text}\n</current-memory>`
+    ? `Your memory now, ${text.length} of ${memoryLimit} characters. Keep any edits the user made to it:\n\n<current-memory>\n${text}\n</current-memory>`
     : 'Your memory is empty so far.'
 
 const format = (memory: string) => `Reply with exactly two parts, each in its tags, and nothing else.
 
-The summary is your short-term memory: what the current work needs to carry on from here. If there is an earlier summary, keep what the current work still needs, add what's new, and drop work that is now finished, kept promises and anything the user moved on from. Leave out any section with nothing in it.
+The summary is what the current work needs to carry on from here. If there is an earlier summary, keep what the current work still needs, add what's new, and drop work that is now finished, kept promises and anything the user moved on from. Leave out any section with nothing in it.
 
 <summary>
 ## Working on
@@ -25,7 +25,7 @@ The summary is your short-term memory: what the current work needs to carry on f
 
 Leave out finished work. If later work needs a result of it, like a date, a number or a link, keep just that result under Context.
 
-The memory is your long-term memory, rewritten whole from your memory now and everything above. It lasts for months, so only the most important things go in:
+The memory is your long-term memory: rewrite it whole from your memory now and everything above. It lasts for months, so only the most important things go in:
 - Keep what is still true. Fix what changed, and drop what is stale or no longer true.
 - Add what is new and important. The test for each point: would you get something wrong a month from now without it?
 - Always keep what the user asked you to remember, until they say otherwise.

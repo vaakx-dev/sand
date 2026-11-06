@@ -39,7 +39,7 @@ const commentToolFor = (deps: CommentToolDeps): Tool<typeof commentInput> => ({
   name: commentTool,
   group,
   description:
-    "Add a line comment to the user's pending review of the thread's linked pull request. It waits there for the user to edit and submit; nothing is posted to GitHub yet. Use it for specific, actionable findings on lines that are part of the change.",
+    "Add a line comment to the user's pending review of the thread's linked pull request. Use it for specific, actionable findings on lines that are part of the change.",
   input: commentInput,
   needs: ['thread'],
   async run({ number, ...comment }, { conversation }) {

@@ -6,7 +6,7 @@ import { group, jobLine } from './line'
 
 const input = z.object({})
 
-const before = "Jobs from before sand last restarted aren't listed; their results are in this thread's earlier messages."
+const before = "Some earlier jobs may be missing; find their results in this thread's earlier messages."
 
 export const listTool = (sessions: Sessions, store: Store, started: number): Tool<typeof input> => ({
   name: 'jobs',

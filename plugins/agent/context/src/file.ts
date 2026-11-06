@@ -26,7 +26,7 @@ export const fileKind: ContextKind = {
   kind: 'file',
   title: 'File',
   async project({ data }, { cwd }) {
-    if (typeof data.path !== 'string' || !data.path) return { unavailable: 'The record has no path.' }
+    if (typeof data.path !== 'string' || !data.path) return { unavailable: 'No path given.' }
     const path = resolve(cwd, data.path)
     const real = await existing(path)
     if (!real) return { unavailable: 'Not found.' }

@@ -6,7 +6,7 @@ import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus, type
 import type { Delivery } from './deliver'
 import { notification } from './notice'
 
-const restarted = 'Stopped because sand restarted. Start it again if you still need it.'
+const restarted = 'Stopped before it finished. Start it again if you still need it.'
 
 const keptFinished = 100
 

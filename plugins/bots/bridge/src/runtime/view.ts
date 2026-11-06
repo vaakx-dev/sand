@@ -4,7 +4,7 @@ import { botReplyEntry, type BotReplyEntry } from '../contract'
 import type { Ask } from './ask'
 
 const said = (name: string, reply: string | undefined) => {
-  if (reply === undefined) return `${name} had not replied yet; bot_read shows its reply.`
+  if (reply === undefined) return `${name} hadn't replied yet; bot_read shows its reply.`
   return reply ? `${name} replied to the user:\n\n${reply}` : `${name} gave no reply.`
 }
 

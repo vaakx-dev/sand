@@ -17,7 +17,7 @@ const said = (text: string) => ({ type: 'text', text }) as const
 
 const app = (replies: Source['replies'], more: Partial<Source> = {}): Source => ({ id: 'n', models: ['m'], replies, ...more })
 
-const handoff = /^Context handoff: this chat continued with another model[^]*\n(two|three)$/
+const handoff = /^Earlier messages of this chat, [^]*\n(two|three)$/
 
 const query = <T>(sql: string) => sand.app.get(ledger)!.db.query<T, []>(sql).all()
 

@@ -7,11 +7,11 @@ import { routineOf } from './routines'
 import { timeIn, zoneOf } from './time'
 
 const lateness = (routine: Routine, fire: Fire) =>
-  fire.late ? ` It was due ${timeIn(fire.due, zoneOf(routine.when))}, but sand was not running then, so it is late; say so.` : ''
+  fire.late ? ` It was due ${timeIn(fire.due, zoneOf(routine.when))}, so it is late; say so.` : ''
 
 const promptOf = (routine: Routine, fire: Fire): UserContent[] => {
   const text = [
-    `Your routine "${routine.name}" is due now.${lateness(routine, fire)} Do what it says. The user may not be watching, so your reply is what they will read later.`,
+    `Your routine "${routine.name}" is due now.${lateness(routine, fire)} Do what it says. The user may be away, so write your reply for them to read later.`,
     ...(fire.note ? [`Its check found:\n${fire.note}`] : []),
     `<routine>\n${routine.instructions}\n</routine>`,
   ].join('\n\n')

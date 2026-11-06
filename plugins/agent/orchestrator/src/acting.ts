@@ -19,6 +19,6 @@ export const checkSend = (ctx: OrchestratorContext, actor: Actor | undefined, ta
 }
 
 export const checkWait = (actor: Actor | undefined, thread: string) => {
-  if (actor?.owner === 'bot') throw failure('denied', "Bots don't wait on threads: a thread you started tells you when it finishes with a <task-notification>")
+  if (actor?.owner === 'bot') throw failure('denied', "Bots can't wait on threads; a thread you started sends its reply as a <task-notification> when it finishes")
   if (actor?.id === thread) throw failure('invalid_request', "A thread can't wait for itself")
 }

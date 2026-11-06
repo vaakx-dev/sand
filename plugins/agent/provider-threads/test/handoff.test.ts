@@ -32,9 +32,9 @@ test('a handoff keeps whole items, newest and the first prompt first, skips what
   expect(roomy.items.map(found => found.id)).toEqual(['first', 'old', 'ask', 'reply', 'last'])
   expect(roomy.items).toContainEqual(items[1]!)
   expect(roomy.omitted).toEqual(['huge'])
-  expect(roomy.context).toContain('Selected 5 intact items; omitted 1.')
+  expect(roomy.context).toContain(': 5 shown, 1 left out.')
 
   const none = select(items, coverage, 0)
   expect(none.items).toEqual([])
-  expect(none.context).toContain('Selected 0 intact items; omitted 6.')
+  expect(none.context).toContain(': 0 shown, 6 left out.')
 })

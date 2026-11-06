@@ -41,7 +41,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply reaches you as a <task-notification>, so don't wait or poll for it. From outside sand it waits for the reply; when that takes longer you get its turn as a handle, and bot_read shows the reply later",
+    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply comes to you as a <task-notification>; don't wait or poll for it. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with bot_read",
     input: sendInput,
     access: 'operate',
     group: group.name,
@@ -58,7 +58,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof readInput>,
   {
     name: 'bot_project',
-    description: 'Tie a bot to the project it manages: thread_start starts its threads there when it names no folder or project',
+    description: "Set the project a bot manages. The bot's new threads start there unless it names another folder or project",
     input: projectInput,
     access: 'operate',
     group: group.name,

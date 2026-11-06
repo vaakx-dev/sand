@@ -13,7 +13,7 @@ const input = z.object({
 })
 
 const description =
-  'Ask the user for a secret (API key, token, password) in a private card, and wait until they answer. Use this instead of asking for a secret in chat; you never see the value. Saved, it returns the path of an owner-only file holding the value, deleted after 24 hours: read it inside your commands without printing it, e.g. TOKEN="$(cat <path>)" some-cli, or copy it into a git-ignored .env.'
+  'Ask the user for a secret (API key, token, password) in a private card, and wait until they answer. Use this instead of asking for a secret in chat; you never see the value. Saved, it returns the path of a file holding the value, deleted after 24 hours: read it inside your commands without printing it, e.g. TOKEN="$(cat <path>)" some-cli, or copy it into a git-ignored .env.'
 
 const unanswered: Record<Exclude<SecretStatus, 'saved'>, string> = {
   declined: 'The user declined. Go on without it, or ask what to do instead.',
