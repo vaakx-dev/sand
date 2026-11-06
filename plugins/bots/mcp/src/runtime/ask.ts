@@ -2,7 +2,7 @@ import type { BotEntry } from '@sand/bots/contract'
 import { type Message, type Prompt, textOf } from '@sand/chats/contract'
 import type { SendResult, TurnInfo, TurnOrigin } from '@sand/engine/contract'
 import type { BotAnswer, BotItem, BotPage } from '../contract'
-import type { BridgeContext } from './context'
+import type { BotsMcpContext } from './context'
 
 export interface Asking {
   prompt: Prompt
@@ -19,38 +19,24 @@ const defaultLimit = 50
 
 export const sentAnswer = (bot: string, sent: SendResult): BotAnswer => (sent.turn ? { bot, turn: sent.turn, status: 'running' } : { bot, status: 'queued' })
 
-const messageOf = (entry: BotEntry) => (entry.type === 'message' ? (entry.data as Message) : undefined)
-
 const itemOf = (entry: BotEntry): BotItem[] => {
-  const message = messageOf(entry)
+  const message = entry.type === 'message' ? (entry.data as Message) : undefined
   const text = message && textOf(message.content).trim()
   return message && text ? [{ seq: entry.seq, at: entry.at, role: message.role, text, ...(entry.turn && { turn: entry.turn }) }] : []
 }
 
-export const createAsk = (ctx: BridgeContext) => {
+export const createAsk = (ctx: BotsMcpContext) => {
   const known = (bot: string) => {
     if (!ctx.bots.get(bot)) throw new Error(`No bot ${bot}`)
     return bot
   }
 
-  const replyOf = (bot: string, turn: string) => {
-    const last = ctx.bots
-      .conversation(bot)
-      .entries()
-      .findLast(entry => entry.turn === turn && entry.type === 'message')
-    const message = last && messageOf(last)
-    return message?.role === 'assistant' ? textOf(message.content).trim() || undefined : undefined
-  }
-
   const answerOf = (bot: string, info: TurnInfo): BotAnswer => {
-    const reply = replyOf(bot, info.id)
+    const reply = ctx.botTurns.final(bot, info.id)
     return { bot, turn: info.id, status: info.status, ...(reply && { reply }), ...(info.error && { error: info.error }) }
   }
 
   return {
-    final(bot: string, turn: string) {
-      return ctx.engine.turn('bot', turn)?.ended === undefined ? undefined : (replyOf(bot, turn) ?? '')
-    },
     send: (bot: string, asking: Asking) => ctx.botTurns.send(known(bot), asking),
     async wait(answer: BotAnswer, signal: AbortSignal): Promise<BotAnswer> {
       if (!answer.turn) return answer

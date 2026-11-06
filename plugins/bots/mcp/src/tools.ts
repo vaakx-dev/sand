@@ -1,9 +1,9 @@
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botProject, botRead, botRoster, readLimit } from '../contract'
+import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit, readLimit } from './contract'
 
-const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task, read its replies and set the project it manages" }
+const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task and read its replies" }
 
 const waitSeconds = 300
 const mostWaitSeconds = 3600
@@ -25,10 +25,21 @@ const readInput = z.object({
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many items (default 50)'),
 })
 
-const projectInput = z.object({
+const updateInput = z.object({
   bot: z.string().optional().describe('The bot id (default: you, when you are a bot)'),
-  project: z.string().min(1).nullable().describe('The project id, from project_list, or null for none'),
+  name: z.string().min(1).max(60).optional().describe('Rename it'),
+  job: z.string().min(1).max(jobLimit).optional().describe(`Its whole job, replacing the one it has; at most ${jobLimit.toLocaleString('en')} characters`),
+  project: z.string().min(1).nullable().optional().describe('The project its new threads start in, from project_list, or null for none'),
 })
+
+const updateRules = `Rename a bot, write its job or set the project it manages; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
+
+A job is the bot's standing instructions. Write it to the bot in the second person ("You keep the user's calendar and plan their days."): what it takes care of, when to check with the user before it acts, and how to reply. Keep it to a line and a few bullets. Leave out facts about the user, like names, places and preferences; those go in its memory. The user sees each new job in the bot's chat and can edit or undo it.
+
+When you are a bot with no job yet:
+- If the user hasn't said what they want you for, ask, in one or two short questions at most.
+- If their message is a task, do it first, then offer to take on that kind of work as your job.
+- Once you know what you're for, write your job, and a name if you have none. After that, change your job only when the user asks.`
 
 export const botTools: McpTool[] = [
   {
@@ -57,13 +68,12 @@ export const botTools: McpTool[] = [
     run: (input, { call }) => call(botRead, input),
   } satisfies McpTool<typeof readInput>,
   {
-    name: 'bot_project',
-    description: "Set the project a bot manages. The bot's new threads start there unless it names another folder or project",
-    input: projectInput,
+    name: 'bot_update',
+    description: updateRules,
+    input: updateInput,
     access: 'operate',
-    group: group.name,
-    run: (input, { call }) => call(botProject, input),
-  } satisfies McpTool<typeof projectInput>,
+    run: (input, { call }) => call(botSet, input),
+  } satisfies McpTool<typeof updateInput>,
 ]
 
 export const offerBotTools = (found: McpTools) => joinDisposers(found.group(group), ...botTools.map(tool => found.register(tool)))

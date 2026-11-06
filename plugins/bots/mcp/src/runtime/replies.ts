@@ -1,16 +1,21 @@
 import type { ConversationRef, Owner, SendResult } from '@sand/engine/contract'
-import { reportOf } from '@sand/orchestrator/contract'
+import { type Notice, orchestrator, reportOf } from '@sand/orchestrator/contract'
 import type { BotAnswer } from '../contract'
 import { type Ask, type Asking, sentAnswer } from './ask'
-import type { BridgeContext } from './context'
+import type { BotsMcpContext } from './context'
 
 const schema = [
-  ['create table bot_threads (thread text primary key, bot text not null, at integer not null)'],
   [
-    'drop table bot_threads',
-    'create table bot_replies (bot text not null, request text not null, sent text not null, sender text not null, at integer not null, primary key (bot, request))',
+    `create table if not exists bot_replies (
+      bot text not null,
+      request text not null,
+      sent text not null,
+      sender text not null,
+      at integer not null,
+      sender_owner text not null default 'bot',
+      primary key (bot, request)
+    )`,
   ],
-  ["alter table bot_replies add column sender_owner text not null default 'bot'"],
 ]
 
 interface Asked {
@@ -21,8 +26,8 @@ interface Asked {
   sender_owner: Owner
 }
 
-export const createReplies = (ctx: BridgeContext, ask: Ask) => {
-  ctx.ledger.migrate('bot-bridge', schema)
+export const createReplies = (ctx: BotsMcpContext, ask: Ask) => {
+  ctx.ledger.migrate('bots-mcp', schema)
   const { db } = ctx.ledger
   const all = db.query<Asked, []>('select bot, request, sent, sender, sender_owner from bot_replies')
   const written = db.query('insert or ignore into bot_replies (bot, request, sent, sender, sender_owner, at) values ($bot, $request, $sent, $sender, $sender_owner, $at)')
@@ -30,14 +35,19 @@ export const createReplies = (ctx: BridgeContext, ask: Ask) => {
   const unloaded = new AbortController()
   ctx.effect(() => () => unloaded.abort())
 
+  const deliver = async (to: ConversationRef, { text, clientRequestId }: Notice) => {
+    if (to.owner !== 'bot') return ctx.get(orchestrator)?.deliver(to, { text, clientRequestId })
+    if (ctx.bots.get(to.id)) await ctx.botTurns.send(to.id, { prompt: text, origin: 'job', clientRequestId })
+  }
+
   const report = async ({ bot, request, sent, sender, sender_owner }: Asked) => {
     const given: SendResult = JSON.parse(sent)
     const info = ctx.bots.get(bot) && (await ctx.botTurns.follow(bot, given, unloaded.signal))
     if (unloaded.signal.aborted) return
     if (info) {
-      const result = info.error ?? ask.final(bot, info.id) ?? ''
+      const result = info.error ?? ctx.botTurns.final(bot, info.id) ?? ''
       const text = reportOf({ from: { owner: 'bot', id: bot }, label: ctx.bots.get(bot)?.name || 'A bot', status: info.status, result })
-      await ctx.orchestrator.deliver({ owner: sender_owner, id: sender }, { text, clientRequestId: `${bot}@${info.id}` })
+      await deliver({ owner: sender_owner, id: sender }, { text, clientRequestId: `${bot}@${info.id}` })
     }
     removed.run({ bot, request })
   }

@@ -1,11 +1,13 @@
+import { botName, type BotSummary, jobEntry, type JobEntry } from '@sand/bots/contract'
+import { sessions } from '@sand/chats/contract'
 import type { Actor } from '@sand/host-hub/contract'
 import { failure, originOf } from '@sand/orchestrator/contract'
+import { projectFiles } from '@sand/project/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { botName, type BotSummary } from '@sand/bots/contract'
-import { botAsk, botAwait, botProject, botRead, botRoster, type BotRow, botStarts, waitLimit } from '../contract'
+import { botAsk, botAwait, botRead, botRoster, type BotRow, botSet, type BotSet, waitLimit } from '../contract'
 import { type Ask, sentAnswer } from './ask'
-import type { BridgeContext } from './context'
+import type { BotsMcpContext } from './context'
 import { type Sender, toBot } from './relay'
 import type { Replies } from './replies'
 
@@ -20,9 +22,11 @@ const intro: Record<Sender['kind'], (label: string) => string> = {
 
 const rowOf = (bot: BotSummary): BotRow => ({ bot: bot.id, name: botName(bot), job: bot.job.slice(0, jobLength), status: bot.status, project: bot.project })
 
-export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
+export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
   const senderOf = ({ owner, id }: Actor): Sender =>
-    owner === 'bot' ? { kind: 'bot', id, label: ctx.bots.get(id)?.name || 'a bot' } : { kind: 'thread', id, label: ctx.sessions.open(id)?.title || 'a thread' }
+    owner === 'bot'
+      ? { kind: 'bot', id, label: ctx.bots.get(id)?.name || 'a bot' }
+      : { kind: 'thread', id, label: ctx.get(sessions)?.open(id)?.title || 'a thread' }
 
   const promptOf = (actor: Actor | undefined, prompt: string) => {
     if (!actor) return `${outside}\n\n${prompt}`
@@ -31,14 +35,24 @@ export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
   }
 
   const botOf = (bot: string | undefined, actor: Actor | undefined) => {
-    const id = bot ?? (actor?.owner === 'bot' ? actor.id : undefined)
-    if (!id) throw failure('invalid_request', 'Name the bot')
-    return id
+    const found = ctx.bots.get(bot ?? (actor?.owner === 'bot' ? actor.id : ''))
+    if (!found) throw failure(bot ? 'not_found' : 'invalid_request', bot ? `No bot ${bot}` : 'Name the bot')
+    return found
   }
 
   const placed = (project: string | null) => {
-    if (project !== null && !ctx.projectFiles.copies().some(copy => copy.project === project)) throw failure('not_found', `Project ${project} has no folder on this PC`)
+    if (project !== null && !ctx.get(projectFiles)?.copies().some(copy => copy.project === project)) throw failure('not_found', `Project ${project} has no folder on this PC`)
     return project
+  }
+
+  const set = ({ bot, name, job, project }: BotSet, actor: Actor | undefined) => {
+    const before = botOf(bot, actor)
+    const after = ctx.bots.update(before.id, { ...(name && { name }), ...(job && { job }), ...(project !== undefined && { project: placed(project) }) })
+    if (job && job !== before.job) {
+      const turn = ctx.engine.turn('bot', before.id)?.id
+      ctx.bots.conversation(before.id).append(jobEntry, { job, previous: before.job } satisfies JobEntry, turn ? { turn } : {})
+    }
+    return rowOf(after)
   }
 
   return ctx.watch(server, found => {
@@ -53,8 +67,7 @@ export const serveBridge = (ctx: BridgeContext, ask: Ask, replies: Replies) => {
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),
       found.handle(botRead, ({ bot, ...options }) => ask.read(bot, options)),
-      found.handle(botProject, ({ bot, project }, { actor }) => rowOf(ctx.bots.update(botOf(bot, actor), { project: placed(project) }))),
-      found.handle(botStarts, () => ctx.orchestrator.started('bot')),
+      found.handle(botSet, (input, { actor }) => set(input, actor)),
     )
   })
 }

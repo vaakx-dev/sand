@@ -1,28 +1,22 @@
 import { sessionEntry } from '@sand/chats/contract'
 import { contextKinds } from '@sand/context/contract'
-import { mcpTools } from '@sand/mcp-server/contract'
 import { threadStarted } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
-import { botStartedWire } from '../contract'
-import { offerBotTools } from '../mcp/tools'
-import { createAsk } from './ask'
+import { botStartedWire, botStarts } from '../contract'
 import { inject } from './context'
 import { botContext } from './kind'
 import { routeMentions } from './mention'
-import { createReplies } from './replies'
-import { serveBridge } from './serve'
 import { replyView } from './view'
 
 export default definePlugin({
   name: 'bot-bridge',
   description:
-    'Lets threads and bots message each other: threads hand bots tasks and @ them in messages, bots start and message threads and each other and hear back when those threads and bots finish',
+    'Lets threads and bots work together: threads @ bots in messages and see their replies, and bots start threads and hear back when they finish',
   inject,
   apply(ctx) {
-    const ask = createAsk(ctx)
-    ctx.on(sessionEntry, routeMentions(ctx, ask))
-    ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ask)))
+    ctx.on(sessionEntry, routeMentions(ctx))
+    ctx.effect(() => ctx.entryViews.register(replyView(ctx.bots, ctx.botTurns)))
     ctx.on(threadStarted, (thread, { owner, id }) => void (owner === 'bot' && ctx.get(server)?.broadcast(botStartedWire, [thread, id])))
     ctx.effect(() =>
       ctx.orchestrator.owner('bot', {
@@ -32,7 +26,6 @@ export default definePlugin({
       }),
     )
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))
-    ctx.watch(mcpTools, found => found && offerBotTools(found))
-    serveBridge(ctx, ask, createReplies(ctx, ask))
+    ctx.watch(server, found => found?.handle(botStarts, () => ctx.orchestrator.started('bot')))
   },
 })

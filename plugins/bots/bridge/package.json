@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-bridge",
   "version": "0.0.0",
-  "description": "Bots and threads talk: threads hand bots tasks and @ them in messages, bots start and message threads, and outside agents reach bots over MCP",
+  "description": "Bots and threads talk: threads @ bots in messages and see their replies as cards, and bots start threads and hear back when they finish",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,8 +9,6 @@
   "sand": {
     "feature": "bridge",
     "runtime": "./src/runtime/index.ts",
-    "host": "./src/mcp/index.ts",
-    "cli": "./src/mcp/index.ts",
     "web": "./src/web/index.ts",
     "label": "Bots and threads",
     "summary": "Lets threads ask your bots, and your bots start and message threads"
@@ -18,17 +16,15 @@
   "dependencies": {
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
+    "@sand/bots-mcp": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/context": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/ledger": "workspace:*",
     "@sand/markdown": "workspace:*",
-    "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",
-    "@sand/project": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sidebar": "workspace:*",
     "@sand/transcript": "workspace:*",
@@ -40,8 +36,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "^2.4.0",
-    "@modelcontextprotocol/server": "^2.4.0",
     "@sand/harness": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/replay": "workspace:*",

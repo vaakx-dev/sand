@@ -1,16 +1,15 @@
 import { botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
-import { mcpTools } from '@sand/mcp-server/contract'
 import { context } from '@sand/prompt/contract'
 import { stepPrepare } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { botBrief, offered } from './brief'
-import { botInterrupt, botLive, botSend, botSetJob, botStreamWire, botTurns } from './contract'
+import { botInterrupt, botLive, botSend, botStreamWire, botTurns } from './contract'
 import { conversationOf } from './conversation'
-import { jobTool, setJob } from './job'
 import { createLive } from './live'
+import { finalReply } from './reply'
 import { botConversations, inject } from './runner'
 
 export default definePlugin({
@@ -37,6 +36,7 @@ export default definePlugin({
       send: (bot, input) => runner.send(open(bot), input),
       ended: (turn, signal) => runner.wait(turn, 'end', signal),
       follow: (bot, sent, signal) => runner.follow(open(bot), sent, signal),
+      final: finalReply(ctx.bots, ctx.engine),
     })
 
     ctx.on(botRemove, id => {
@@ -44,14 +44,12 @@ export default definePlugin({
       runner.forget(id)
       ctx.providerThreads.forget({ owner: 'bot', id })
     })
-    ctx.watch(mcpTools, found => found?.register(jobTool))
     ctx.watch(server, found => {
       if (!found) return
       return joinDisposers(
         found.handle(botSend, ({ bot, prompt, clientRequestId }) => runner.send(open(bot), { prompt, clientRequestId })),
         found.handle(botInterrupt, ({ bot }) => runner.interrupt(open(bot))),
         found.handle(botLive, ({ bot }) => live.snapshot(bot)),
-        found.handle(botSetJob, (input, { actor }) => setJob(ctx.bots, ctx.engine, actor, input)),
       )
     })
   },

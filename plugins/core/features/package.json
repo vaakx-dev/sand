@@ -114,15 +114,21 @@
           "schedules"
         ]
       },
+      "bots-mcp": {
+        "label": "Bot tools",
+        "summary": "Your threads, your bots and outside agents message, read and update your bots over MCP",
+        "parent": "bots",
+        "needs": [
+          "mcp-server"
+        ]
+      },
       "bridge": {
         "label": "Bots and threads",
         "summary": "Threads ask your bots, and bots start and message threads",
         "parent": "bots",
         "needs": [
-          "threads"
-        ],
-        "uses": [
-          "mcp-server"
+          "threads",
+          "bots-mcp"
         ]
       },
       "calendar": {
