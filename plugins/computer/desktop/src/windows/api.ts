@@ -6,7 +6,6 @@ const loadUser32 = () =>
   dlopen('user32.dll', {
     SendInput: { args: [u32, ptr, i32], returns: u32 },
     GetCursorPos: { args: [ptr], returns: bool },
-    GetLastInputInfo: { args: [ptr], returns: bool },
     GetSystemMetrics: { args: [i32], returns: i32 },
     MapVirtualKeyW: { args: [u32, u32], returns: u32 },
     SetThreadDpiAwarenessContext: { args: [i64], returns: i64 },

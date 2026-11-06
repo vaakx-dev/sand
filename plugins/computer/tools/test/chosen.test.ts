@@ -14,7 +14,6 @@ const fake = (id: string, acted: string[]): Computer => ({
   screenshot: async () => ({ width: 1, height: 1, png: new Uint8Array() }),
   elements: async () => [],
   act: async () => void acted.push(id),
-  humanInput: async () => false,
 })
 
 const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['conversation'] => ({
