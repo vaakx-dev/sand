@@ -32,6 +32,6 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Install Playwright's Chromium
         working-directory: plugins/core/features
-        run: bunx playwright install --with-deps --only-shell chromium
+        run: bunx playwright install --only-shell chromium
       - name: Run every feature setup and the phone layouts in a browser
         run: bun run test:phone
