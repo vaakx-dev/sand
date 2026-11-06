@@ -16,7 +16,6 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/host-runtimes": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/ui-theme": "workspace:*",
     "@sand/util": "workspace:*",

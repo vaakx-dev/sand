@@ -26,11 +26,14 @@ export const createSkillIndex = (ctx: Context, wire: Wire, threads: Threads): Sk
       () => {},
     )
   })
+  const offered = () => wire.hello(helloSkills) !== undefined
   onHomeHello(ctx, wire, () => {
     set(wire.hello(helloSkills) ?? [])
-    refresh()
+    if (offered()) refresh()
   })
-  ctx.on(threadSelect, refresh)
+  ctx.on(threadSelect, () => {
+    if (offered()) refresh()
+  })
   ctx.effect(() => wire.on(skillsUpdate, refresh))
   return { list: () => skills }
 }

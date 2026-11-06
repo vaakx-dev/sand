@@ -46,8 +46,8 @@ export const changesNote = (summary: PullSummary, changes: Change[]) => [heading
 export const wakeNote = (summary: PullSummary, changes: Change[], stopped: boolean, cause?: string) => {
   const quoted = quotes(changes)
   const next = stopped
-    ? `That makes ${quietLimit} wakes in a row that only brought comments, so watching #${summary.number} has stopped. Call watch_pull_request to watch it again.`
-    : 'Run pull_request_status for the full state, fix what needs fixing and push. Call unwatch_pull_request when you hand back.'
+    ? `Stopped watching #${summary.number} after ${quietLimit} updates in a row with only comments. Call watch_pull_request to watch it again.`
+    : 'Run pull_request_status for the full state, fix what needs fixing and push. Call unwatch_pull_request when you hand it back to the user.'
   return [
     heading(summary),
     bullets(summary, changes),

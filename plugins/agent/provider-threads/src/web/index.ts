@@ -1,4 +1,4 @@
-import { transcript } from '@sand/chat/contract'
+import { transcript } from '@sand/transcript/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
 import { span } from '@vaakx-dev/vrui'

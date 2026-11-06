@@ -1,8 +1,9 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration } from '@sand/util'
 import { dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
-import { row, workFrame, type RowContext } from '../rows/row'
+import type { Row } from '@sand/transcript/contract'
 import type { TurnHead } from './fold'
+import type { TurnContext } from './rows'
 
 const took = (head: TurnHead) => `Worked for ${duration(Math.max(1000, head.end - (head.start ?? head.end)))}`
 
@@ -11,15 +12,24 @@ const working = ({ elapsed }: Kit, head: Sig<TurnHead>) =>
 
 const kinds = (head: TurnHead) => (head.running ? (head.current ?? '') : head.kinds.join(' · '))
 
-export const turnRow = (head: TurnHead, context: RowContext) =>
-  row(head.key, head, data => {
+const phase = ({ running, waiting }: TurnHead) => {
+  if (waiting) return 'waiting'
+  return running ? 'working' : 'done'
+}
+
+export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => ({
+  key: head.key,
+  data: head,
+  view: data => {
     const { chevron, toolCard } = context.kit
     const { open, toggle } = context.states.get(head.key)
-    const label = dynamicChild(
-      data.map(value => value.running),
-      running => (running ? working(context.kit, data) : span(() => took(data.get()))),
-    )
-    return workFrame(
+    const labels = {
+      working: () => working(context.kit, data),
+      waiting: () => span('Waiting for you'),
+      done: () => span(() => took(data.get())),
+    }
+    const label = dynamicChild(data.map(phase), shown => labels[shown]())
+    return context.parts.workFrame(
       toolCard({
         icon: chevron(() => open.get()),
         verb: label,
@@ -32,4 +42,5 @@ export const turnRow = (head: TurnHead, context: RowContext) =>
         },
       }),
     )
-  })
+  },
+})

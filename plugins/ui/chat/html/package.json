@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "html",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
@@ -14,10 +15,11 @@
     "summary": "Shows pages the agent builds, like charts, tables and mockups, inline in the chat"
   },
   "dependencies": {
-    "@sand/chat": "workspace:*",
+    "@sand/cdp": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/images": "workspace:*",
     "@sand/keys": "workspace:*",
@@ -27,6 +29,7 @@
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/ui-theme": "workspace:*",
     "@sand/util": "workspace:*",

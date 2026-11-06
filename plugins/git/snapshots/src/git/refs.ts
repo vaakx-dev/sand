@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { SnapshotSide } from '../contract'
 
 const keptTurns = 100

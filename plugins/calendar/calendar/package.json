@@ -1,0 +1,32 @@
+{
+  "name": "@sand/calendar",
+  "version": "0.0.0",
+  "description": "Calendars from every provider in one store: agenda, free time, edits of repeating events, background sync of remote calendars, and agent tools",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "calendar",
+    "runtime": "./src/index.ts",
+    "label": "Calendar",
+    "summary": "Your calendars in one place, for you and your agents"
+  },
+  "dependencies": {
+    "@sand/host-hub": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@sand/approvals",
+  "version": "0.0.0",
+  "description": "Approvals for tool calls: rules and defaults by what each call does, asking you in the chat and the Inbox when needed, and a log of every decision",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "approvals",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Approvals",
+    "summary": "Asks you before an agent or bot sends, spends or deletes, with an Inbox of everything waiting on you"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/rail": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

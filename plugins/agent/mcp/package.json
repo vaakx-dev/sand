@@ -1,36 +1,28 @@
 {
   "name": "@sand/mcp",
   "version": "0.0.0",
-  "description": "MCP both ways: the agent uses the tools of the user's own MCP servers, and sand serves its threads to outside agents with the sand mcp command on stdio and /mcp over HTTP for paired agents",
+  "description": "MCP client: the agent uses the tools of the user's own MCP servers set in sand.toml, with a settings page showing each server's state",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "runtime": "./src/client/index.ts",
-    "print": "./src/client/index.ts",
+    "feature": "mcp",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
     "web": "./src/web/index.ts",
-    "cli": "./src/server/stdio.ts",
-    "host": "./src/server/http/index.ts",
-    "label": "MCP",
-    "summary": "Gives the agent the tools of your own MCP servers, set in sand.toml, and serves sand's threads to outside agents over MCP"
+    "label": "MCP tools",
+    "summary": "Gives the agent the tools of your own MCP servers, set in sand.toml"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
-    "@modelcontextprotocol/server": "^2.4.0",
     "@sand/chats": "workspace:*",
-    "@sand/cli-commands": "workspace:*",
-    "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/host-daemon": "workspace:*",
-    "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",
-    "@sand/orchestrator": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/tools": "workspace:*",
-    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
@@ -38,6 +30,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
     "@sand/harness": "workspace:*"
   }
 }

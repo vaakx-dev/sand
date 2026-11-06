@@ -1,4 +1,4 @@
-import { toolViews, transcript, type ToolBadge, type ToolRenderer, type ToolView } from '@sand/chat/contract'
+import { toolViews, transcript, type ToolBadge, type ToolRenderer, type ToolView } from '@sand/transcript/contract'
 import { jobs, jobsChange, type JobStatus } from '@sand/jobs/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { pulse } from '@sand/reactive'

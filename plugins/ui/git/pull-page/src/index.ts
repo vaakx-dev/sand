@@ -1,9 +1,8 @@
 import { pullLabel } from '@sand/github/contract'
-import { layout, layoutChange } from '@sand/layout/contract'
-import { nav } from '@sand/nav/contract'
+import { layout, layoutChange, spaces } from '@sand/layout/contract'
 import { threadChange, threadsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
-import { derive, effect, untrack } from '@vaakx-dev/vrui'
+import { derive } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { parsePull } from './address/pull'
 import { queryState } from './address/state'
@@ -13,17 +12,17 @@ import { extensionBook } from './extend/book'
 import { needsCount } from './home/count'
 import { hereOf, inject } from './inject'
 import { buildPage, type SharedParts } from './page/build'
-import { pageHost } from './page/host'
+import { pageHost, pullsSpace } from './page/host'
 import { repoChoices } from './projects/repos'
 
 export default definePlugin({
   name: 'git-pull-page',
-  description: 'The Pull requests page: what needs you first, every project’s pull requests, and a detail you can merge, reply and resolve from',
+  description: 'The Pull requests space: what needs you first, every project’s pull requests, and a detail you can merge, reply and resolve from',
   inject,
   apply(ctx) {
     const tabs = extensionBook<PullTab>()
     const menus = extensionBook<PullMenu>()
-    const { host, signedIn, count } = owned(ctx, () => {
+    const { host, count } = owned(ctx, () => {
       const auth = derive(() => ctx.github.authOf(hereOf(ctx)))
       const account = auth.map(found => (found?.state === 'signed-in' ? found.login : ''))
       const query = queryState()
@@ -48,29 +47,11 @@ export default definePlugin({
           return ctx.threads.get(session)
         },
         select: pull => query.pull.set(pull && pullLabel(pull)),
-        close: () => pages.close(),
-        showSide: () => ctx.get(layout)?.toggle('side', true),
       }
-      const pages = pageHost(ctx, query, () => buildPage(shared))
-      return { host: pages, signedIn: account.map(Boolean), count: shared.count }
+      return { host: pageHost(ctx, query, () => buildPage(shared)), count: shared.count }
     })
 
-    const pullsAction = () => ({
-      id: 'pull-requests',
-      label: 'Pull requests',
-      icon: 'pull-request',
-      place: 'footer' as const,
-      order: 105,
-      count: () => count.get(),
-      run: host.toggle,
-    })
-
-    ctx.provide(pullPage, {
-      open: pull => host.show(pull),
-      close: host.close,
-      tab: tabs.add,
-      menu: menus.add,
-    })
-    ctx.watch(nav, found => (found ? effect(() => (signedIn.get() ? untrack(() => found.action(pullsAction())) : undefined)) : undefined))
+    ctx.provide(pullPage, { open: host.show, tab: tabs.add, menu: menus.add })
+    ctx.watch(spaces, found => found?.space({ id: pullsSpace, label: 'Pull requests', icon: 'pull-request', order: 20, count: () => count.get() }))
   },
 })

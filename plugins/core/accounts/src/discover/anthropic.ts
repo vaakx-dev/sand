@@ -1,4 +1,4 @@
-import type { Effort, PlanModel } from '../contract'
+import { efforts, type PlanModel } from '../contract'
 import type { ApiKey } from '../auth/store'
 import { isRecord, trimSlash } from '@sand/util'
 import { listIn, nonEmpty, positive } from './fields'
@@ -7,11 +7,12 @@ import { getJson } from './http'
 const defaultBase = 'https://api.anthropic.com'
 const source = 'Anthropic'
 const pages = 20
-const levels: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
-
 const supported = (value: unknown) => isRecord(value) && value.supported === true
 
-const effortsOf = (effort: unknown) => (isRecord(effort) && supported(effort) ? levels.filter(level => supported(effort[level])) : [])
+const canStopThinking = (thinking: unknown) => isRecord(thinking) && isRecord(thinking.types) && supported(thinking.types.disabled)
+
+const effortsOf = ({ effort, thinking }: Record<string, unknown>) =>
+  efforts.filter(level => (level === 'none' ? canStopThinking(thinking) : isRecord(effort) && supported(effort) && supported(effort[level])))
 
 const describe = (entry: unknown): PlanModel | undefined => {
   if (!isRecord(entry)) return undefined
@@ -23,7 +24,7 @@ const describe = (entry: unknown): PlanModel | undefined => {
     label: nonEmpty(entry.display_name) ?? id,
     context: positive(entry.max_input_tokens),
     maxOutput: positive(entry.max_tokens),
-    efforts: effortsOf(capabilities.effort),
+    efforts: effortsOf(capabilities),
     images: supported(capabilities.image_input),
   }
 }

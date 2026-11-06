@@ -1,5 +1,5 @@
 import { appRoot } from '@sand/boot'
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { bundleAsset, stampAsset } from '@sand/util/release'
 import { mkdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'

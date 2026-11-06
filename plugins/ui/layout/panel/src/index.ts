@@ -1,5 +1,6 @@
 import { place } from '@sand/layout/contract'
 import { kit } from '@sand/ui-kit/contract'
+import { threadsSlot } from '@sand/threads-space/contract'
 import { byOrder } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -48,7 +49,7 @@ export default definePlugin({
 
     const surface = createSurface(ctx, () => ctx.emit(panelsChange, host.current()))
     const toggle = panelToggle(ctx, surface, pages.map(list => shownPages(list).some(page => page.spec.attention)))
-    place(ctx, 'aside', () => panelsView({ kit: ctx.kit, pages, selected, surface, toggle, show: host.show, hide: host.hide }))
+    place(ctx, threadsSlot('aside'), () => panelsView({ kit: ctx.kit, pages, selected, surface, toggle, show: host.show, hide: host.hide }))
 
     ctx.effect(() => () => pages.set([]))
     ctx.provide(panels, host)

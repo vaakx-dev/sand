@@ -1,4 +1,4 @@
-import type { GitEnv, GitRunner } from '@sand/git/contract'
+import type { GitEnv, GitRunner } from '@sand/git-runner/contract'
 
 const maxUntracked = 3000
 

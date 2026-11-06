@@ -4,6 +4,7 @@
   "description": "Sidebar rows show the branch of each thread's folder and its uncommitted line counts",
   "type": "module",
   "sand": {
+    "feature": "git",
     "web": "./src/index.ts",
     "label": "Git in the sidebar",
     "summary": "Branch and uncommitted changes on each thread card"

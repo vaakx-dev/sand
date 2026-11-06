@@ -1,4 +1,4 @@
-import { toolViews, transcript } from '@sand/chat/contract'
+import { toolViews, transcript } from '@sand/transcript/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { threads } from '@sand/web-client/contract'

@@ -1,5 +1,5 @@
 import { comparePaths } from '@sand/util'
-import { gitOk } from '../run/run'
+import { gitOk } from '@sand/git-runner/contract'
 import type { GitFile, GitLayout, GitRepoLocal } from '../contract'
 import { readDefaultBranch } from './default-branch'
 import { type LineCounts, readLineCounts } from './numstat'

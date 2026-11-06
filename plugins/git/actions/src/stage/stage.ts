@@ -1,4 +1,5 @@
-import type { GitLayout, GitOptions, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitOptions, GitRunner } from '@sand/git-runner/contract'
 import { literalPaths, pathInput, pathspecFromInput } from './pathspec'
 
 export interface PathCommand {

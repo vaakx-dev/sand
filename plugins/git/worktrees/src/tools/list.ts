@@ -33,6 +33,8 @@ export const listTool = (survey: Survey): Tool<typeof input> => ({
     'Use this instead of git worktree list.',
   ].join(' '),
   input,
+  effect: 'read',
+  needs: ['pc'],
   async run(_input, { cwd }) {
     const [statuses] = await Promise.all([survey.status(), Promise.race([survey.sizes(), Bun.sleep(sizeWaitMs)])])
     if (!statuses.length) return 'Sand has no worktrees on this PC.'

@@ -1,4 +1,4 @@
-import type { GitResult } from '@sand/git/contract'
+import type { GitResult } from '@sand/git-runner/contract'
 
 const tailLines = 40
 const ansi = /\x1b\[[0-9;?]*[A-Za-z]/g

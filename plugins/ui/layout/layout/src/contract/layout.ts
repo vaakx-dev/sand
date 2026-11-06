@@ -1,6 +1,11 @@
 import { event, service, type Dispose } from 'drydock'
+import type { Slot, SpaceRegion } from './spaces'
 
-export type Region = 'top' | 'side' | 'main' | 'aside' | 'bottom' | 'overlay'
+export type Strip = 'top' | 'rail' | 'bottom' | 'overlay'
+
+export type Region = Strip | SpaceRegion
+
+export type Target = Strip | Slot
 
 export interface LayoutState {
   narrow: boolean
@@ -14,7 +19,7 @@ export interface Swipe {
 }
 
 export interface Layout {
-  mount(region: Region, view: HTMLElement, order?: number): Dispose
+  mount(target: Target, view: HTMLElement, order?: number): Dispose
   cover(region: 'side' | 'main', view: HTMLElement): Dispose
   toggle(region: 'side' | 'aside', open?: boolean): void
   handOff(): void

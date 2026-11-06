@@ -1,4 +1,4 @@
-import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { grouped, plural } from '@sand/util'
 import { div, el, span, type Child } from '@vaakx-dev/vrui'

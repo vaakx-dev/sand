@@ -4,13 +4,14 @@
   "description": "Shows read calls as highlighted code, grep and glob results grouped by file, and shell calls with their output",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Tool views",
     "summary": "Shows the files the agent read, search matches grouped by file, and commands with their output"
   },
   "dependencies": {
-    "@sand/chat": "workspace:*",
     "@sand/markdown": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

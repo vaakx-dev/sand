@@ -1,4 +1,4 @@
-import type { GitProblem, GitResult } from '@sand/git/contract'
+import type { GitProblem, GitResult } from '@sand/git-runner/contract'
 import type { GitActionResult, Switched } from '../contract'
 import { type Explained, failedRun } from '../run/failure'
 import { outputLines } from '../run/output'

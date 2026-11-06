@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import type { Tool } from '@sand/tools/contract'
 import type { Artifact, HtmlPages, HtmlRenderEntry } from '../contract'
 import { maxHeight, maxHtmlChars, maxTitleChars, minHeight } from '../page/limits'
@@ -25,16 +25,18 @@ const checkedOrPassed = async (pages: HtmlPages, recent: RecentPages, { html, pa
   return { page: checked.page, height: height ?? checked.height }
 }
 
-export const renderTool = (store: RenderStore, pages: HtmlPages, recent: RecentPages, saved: (session: Session, artifact: Artifact) => void): Tool<typeof input> => ({
+export const renderTool = (store: RenderStore, pages: HtmlPages, recent: RecentPages, saved: (conversation: Conversation, artifact: Artifact) => void): Tool<typeof input> => ({
   name: 'html_render',
   group: 'html',
   description: renderDescription,
   input,
-  async run(args, { session, cwd }) {
-    const { page, height } = await checkedOrPassed(pages, recent, args, session.id, cwd)
+  effect: 'read',
+  needs: ['folder'],
+  async run(args, { conversation, cwd }) {
+    const { page, height } = await checkedOrPassed(pages, recent, args, conversation.id, cwd)
     const written = await store.write(page.html)
-    session.append(entryType, { id: written.id, title: args.title, ...(height && { height }) } satisfies HtmlRenderEntry)
-    saved(session, { title: args.title, path: written.path })
+    conversation.append(entryType, { id: written.id, title: args.title, ...(height && { height }) } satisfies HtmlRenderEntry)
+    saved(conversation, { title: args.title, path: written.path })
     return `${shownNote}${missingNote(page.missing)}`
   },
 })

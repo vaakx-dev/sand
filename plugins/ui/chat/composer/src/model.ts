@@ -1,3 +1,4 @@
+import { shelves, type Held, type Shelf } from '@sand/attachments/web/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
 import { modelPill } from '@sand/model-panel/contract'
@@ -5,7 +6,6 @@ import { errorMessage } from '@sand/util'
 import { models, modelsChange, outbox, outboxChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { derive, sig } from '@vaakx-dev/vrui'
-import { createFiles } from './attachments/files'
 import { commandChar } from './complete/detect'
 import { createTriggers } from './complete/registry'
 import type { ComposerContext } from './context'
@@ -17,7 +17,7 @@ import { modelMissing, retry, sendDevice, submit } from './send/submit'
 
 interface Typed {
   text: string
-  ids: string
+  items: Held[]
 }
 
 interface Outgoing {
@@ -53,7 +53,10 @@ const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettin
 
 export const createModel = (ctx: ComposerContext) => {
   const text = sig('')
-  const files = createFiles(ctx)
+  const attached = sig<Held[]>([])
+  const shelf = sig<Shelf | undefined>(undefined)
+  ctx.watch(shelves, found => shelf.set(found?.create(attached, { device: () => sendDevice(ctx), thread: () => ctx.threads.current()?.id })))
+  const attachments = derive(() => (shelf.get() ? attached.get() : []))
   const records = createRecords()
   const picked = sig<SessionSettings>({})
   const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
@@ -69,12 +72,12 @@ export const createModel = (ctx: ComposerContext) => {
   const delivery = changes.read(() => deliveryOf(ctx))
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
   const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
-  const empty = derive(() => !text.get().trim() && !files.items.get().length)
-  const blocked = derive(() => files.rejected())
+  const empty = derive(() => !text.get().trim() && !attachments.get().length)
+  const blocked = derive(() => Boolean(shelf.get()?.rejected()))
   const holds = createHolds()
   const clear = () => {
     text.set('')
-    files.set([])
+    attached.set([])
     records.list.set([])
     picked.set({})
   }
@@ -91,12 +94,14 @@ export const createModel = (ctx: ComposerContext) => {
   const couldNotSend = (outgoing: Outgoing, error: unknown) =>
     failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: outgoing })
 
-  const typed = (): Typed => ({ text: text.get(), ids: files.items.get().map(item => item.id).join() })
+  const typed = (): Typed => ({ text: text.get(), items: attached.get() })
 
   const unchanged = (before: Typed) => {
     const now = typed()
-    return now.text === before.text && now.ids === before.ids
+    return now.text === before.text && now.items.length === before.items.length && now.items.every((item, at) => item === before.items[at])
   }
+
+  const upload = () => shelf.get()?.upload() ?? Promise.resolve([])
 
   const attempt = async (busy: boolean, task: () => Promise<void>, failed: (error: unknown) => void) => {
     failure.set(undefined)
@@ -123,7 +128,7 @@ export const createModel = (ctx: ComposerContext) => {
 
   const sendPrompt = (outgoing: Outgoing) => {
     const task = async () => {
-      const items = await files.upload(sendDevice(ctx))
+      const items = await upload()
       const value = outgoing.typed.text.trim()
       await submit(ctx, value, [...items, ...records.content(value)], settings(), outgoing.options)
       if (unchanged(outgoing.typed)) clear()
@@ -134,17 +139,19 @@ export const createModel = (ctx: ComposerContext) => {
   const send = async (mode?: SendOptions['mode']) => {
     if (sending.get() || blocked.get() || holds.reason.get()) return
     const value = text.get().trim()
-    const attached = files.items.get().length > 0
+    const withAttachments = attachments.get().length > 0
     const command = value.startsWith(commandChar) ? triggers.named(value.slice(1)) : undefined
-    if (command && !attached) return runCommand(command)
+    if (command && !withAttachments) return runCommand(command)
     const pill = ctx.get(modelPill)
-    if ((value || attached) && modelMissing(ctx, settings()) && pill) return pill.open()
+    if ((value || withAttachments) && modelMissing(ctx, settings()) && pill) return pill.open()
     return sendPrompt({ typed: typed(), options: { mode, clientRequestId: crypto.randomUUID() } })
   }
 
   return {
     text,
-    files,
+    attached,
+    shelf,
+    upload,
     records,
     triggers,
     picked,
@@ -165,7 +172,7 @@ export const createModel = (ctx: ComposerContext) => {
     resend: sendPrompt,
     clear,
     fail,
-    draft: (): Saved => ({ text: text.get(), items: files.held(), records: records.linked(text.get()), settings: picked.get() }),
+    draft: (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() }),
     retryTurn: () => void retry(ctx).catch(error => fail(errorMessage(error))),
     dismiss: (key: string) => dismissed.update(keys => new Set([...keys, key])),
   }

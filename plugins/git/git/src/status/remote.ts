@@ -1,4 +1,4 @@
-import { gitMaybe } from '../run/run'
+import { gitMaybe } from '@sand/git-runner/contract'
 import type { GitRemote, GitRepoLocal } from '../contract'
 
 export interface FetchInfo {

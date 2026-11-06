@@ -1,4 +1,5 @@
-import type { GitLayout, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 const read = async (git: GitRunner, repo: GitLayout, args: string[]) => (await git.maybe(repo.root, args, { read: true })) || undefined
 

@@ -6,16 +6,18 @@ import { group, jobLine } from './line'
 
 const input = z.object({})
 
-const before = "Jobs from before sand last restarted aren't listed; their results are in this thread's earlier messages."
+const before = "Some earlier jobs may be missing; find their results in this thread's earlier messages."
 
 export const listTool = (sessions: Sessions, store: Store, started: number): Tool<typeof input> => ({
   name: 'jobs',
   description: "List the background agents and commands this thread started: id, kind, status, label, latest note (a command's last output line) and child thread ids.",
   group,
   input,
-  run(_input, { session }) {
-    const jobs = store.list(session)
+  effect: 'read',
+  needs: ['thread'],
+  run(_input, { conversation }) {
+    const jobs = store.list(conversation.id)
     const lines = jobs.length ? jobs.map(job => jobLine(sessions, job)) : ['No background jobs in this thread.']
-    return [...lines, ...(session.created < started ? [before] : [])].join('\n')
+    return [...lines, ...(sessions.require(conversation.id).created < started ? [before] : [])].join('\n')
   },
 })

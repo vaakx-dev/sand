@@ -4,6 +4,7 @@
   "description": "Agents tab in the right panel: the current thread's background jobs and sub-agents, with durations and stop",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Agents panel",
     "summary": "Background jobs and sub-agents of this thread"

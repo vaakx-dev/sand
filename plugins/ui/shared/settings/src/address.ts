@@ -10,3 +10,5 @@ export const openPage = (id: string) => pushAddress({ ...addressParams(), [key]:
 export const switchPage = (id: string) => updateAddress({ [key]: id })
 
 export const leavePage = () => (addressState()[opened] ? backAddress() : updateAddress({ [key]: undefined }))
+
+export const dropPage = () => updateAddress({ [key]: undefined })

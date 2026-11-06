@@ -1,9 +1,10 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
-import { cli } from '@sand/config/contract'
+import { cli, pluginProblems } from '@sand/config/contract'
 import { type Caller, createHandlers, type Request } from '@sand/host-hub/contract'
+import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { modelSettings } from '@sand/model/contract'
-import { projectFiles } from '@sand/project/contract'
+import { type LocalCopy, projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
@@ -16,7 +17,7 @@ import { z } from 'zod'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
-const plugins = ['core/paths', 'core/media', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/turns', 'agent/model', 'agent/orchestrator']
+const plugins = ['core/paths', 'core/media', 'core/ledger', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/engine', 'agent/turns', 'agent/model', 'agent/orchestrator']
 
 const runtimeEntry = async (folder: string) => {
   const dir = join(builtins, folder)
@@ -44,18 +45,57 @@ const modelsReady = (app: ContextCore, ids: string[]) =>
 const signedIn = (sources: Source[]) =>
   Object.fromEntries(sources.flatMap(source => (source.api ? [[source.id, { type: 'oauth', access: 'replay', refresh: 'replay', expires: 8e15 }]] : [])))
 
-const boot = async (app: Context, home: string, sources: Source[], extra: string[]) => {
+const tomlValue = (value: unknown): string => {
+  if (Array.isArray(value)) return `[${value.map(tomlValue).join(', ')}]`
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value)
+  const fields = Object.entries(value).filter(([, field]) => field !== undefined)
+  return `{ ${fields.map(([key, field]) => `${JSON.stringify(key)} = ${tomlValue(field)}`).join(', ')} }`
+}
+
+const settings = (sources: Source[], config: string) =>
+  `[plugins.server]
+enabled = false
+
+[plugins.replay]
+sources = ${tomlValue(sources)}
+
+${config}
+`
+
+const hostStubs = (app: Context) => {
+  app.provide(runtime, { id: 'test', access: () => 'denied', caller: () => undefined, listening() {}, swap() {}, owns: () => true })
+  app.provide(hostChannel, { call: () => Promise.reject(new Error('No host in tests')), on: () => () => {} })
+}
+
+const loadPlugins = async (app: Context, sources: Source[], extra: string[]) => {
+  const entries = await Promise.all([...plugins, ...extra].map(runtimeEntry))
+  const replay = await runtimeEntry('core/replay')
+  for (const entry of entries) app.load(entry, {})
+  app.load(replay, { sources })
+}
+
+const loadConfig = async (app: Context, home: string, sources: Source[], config: string) => {
+  await Bun.write(join(home, 'sand.toml'), settings(sources, config))
+  hostStubs(app)
+  app.load(join(builtins, 'core', 'config', 'src', 'index.ts'))
+}
+
+const copiesStub = (projects: LocalCopy[]) => ({
+  copies: () => projects,
+  ofFolder: (folder: string) => projects.find(copy => resolve(folder).startsWith(resolve(copy.path)))?.project ?? null,
+})
+
+const boot = async (app: Context, home: string, sources: Source[], { plugins: extra = [], projects = [], config }: SandOptions) => {
   await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(sources)))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
-  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: true, args: [], exit() {} })
-  app.provide(projectFiles, { copies: () => [], ofFolder: () => null })
+  app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
+  if (config === undefined) app.provide(projectFiles, copiesStub(projects))
   const wire = createHandlers()
-  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0 })
-  for (const plugin of [...plugins, ...extra]) app.load(await runtimeEntry(plugin), {})
-  app.load(await runtimeEntry('core/replay'), { sources })
+  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0, ask: wire.ask })
+  await (config === undefined ? loadPlugins(app, sources, extra) : loadConfig(app, home, sources, config))
   await app.settled()
-  if (errors.length) throw errors[0]
+  if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)))
   return wire
 }
@@ -63,29 +103,37 @@ const boot = async (app: Context, home: string, sources: Source[], extra: string
 export interface SandOptions {
   home?: string
   plugins?: string[]
+  projects?: LocalCopy[]
+  config?: string
 }
 
-export const startSand = async (sources: Source[], { home: shared, plugins: extra = [] }: SandOptions = {}) => {
+export const startSand = async (sources: Source[], options: SandOptions = {}) => {
+  const shared = options.home
   const home = shared ?? mkdtempSync(join(tmpdir(), 'sand-test-'))
   const app = createApp()
   const stop = async () => {
     await app.dispose()
     if (!shared) rmSync(home, { recursive: true, force: true })
   }
-  const wire = await boot(app, home, sources, extra).catch(async (error: unknown) => {
+  const wire = await boot(app, home, sources, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
   const askAs =
     (caller: Caller) =>
     <I, O>(request: Request<I, O>, input: I) =>
-      wire.answer(request.id, input, caller) as Promise<O>
+      wire.ask(request, input, caller)
 
   return {
     app,
     home,
-    sessions: need(app, sessions),
-    turns: need(app, turns),
+    get sessions() {
+      return need(app, sessions)
+    },
+    get turns() {
+      return need(app, turns)
+    },
+    problems: () => pluginProblems(app),
     chat(model: string): Session {
       const session = need(app, sessions).thread(home)
       need(app, modelSettings).update(session, { model })

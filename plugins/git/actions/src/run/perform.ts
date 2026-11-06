@@ -1,4 +1,5 @@
-import type { GitLayout, GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitLayout, GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { keyedSerial } from '@sand/util'
 import { resolve } from 'node:path'
 import type { GitActionResult, GitProgress } from '../contract'

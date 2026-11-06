@@ -7,6 +7,7 @@
     "./contract": "./src/contract/index.ts"
   },
   "sand": {
+    "feature": "threads",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Chat store",
@@ -15,6 +16,7 @@
   "dependencies": {
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/project": "workspace:*",

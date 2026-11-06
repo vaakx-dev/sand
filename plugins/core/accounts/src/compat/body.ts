@@ -1,11 +1,9 @@
 import type { Media } from '@sand/media/contract'
-import type { Effort, LLMRequest } from '../contract'
+import type { LLMRequest } from '../contract'
 import type { ToolNames } from './names'
 import type { CompatTarget } from './target'
 import { loadedTools } from '../http/deferred'
 import { chatMessages } from './messages'
-
-const effortOf = (effort: Effort) => (effort === 'xhigh' || effort === 'max' ? 'high' : effort)
 
 const functions = (request: LLMRequest, names: ToolNames) =>
   loadedTools(request.tools).map(tool => ({
@@ -17,7 +15,7 @@ export const compatBody = (target: CompatTarget, request: LLMRequest, names: Too
   model: target.model,
   messages: chatMessages(request.system, request.messages, { media, images: !!target.images }, names.safe),
   ...(loadedTools(request.tools).length && { tools: functions(request, names) }),
-  ...(target.reasoning && request.effort && { reasoning: { effort: effortOf(request.effort) } }),
+  ...(request.effort && target.efforts.includes(request.effort) && { reasoning: { effort: request.effort } }),
   stream: true,
   stream_options: { include_usage: true },
 })

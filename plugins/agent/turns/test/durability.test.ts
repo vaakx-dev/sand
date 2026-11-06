@@ -1,4 +1,5 @@
-import { ledger, unrecorded } from '@sand/chats/contract'
+import { unrecorded } from '@sand/chats/contract'
+import { ledger } from '@sand/ledger/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
 import { Database } from 'bun:sqlite'
@@ -105,7 +106,7 @@ test('a turn running in another process is left alone, blocks a second runner an
   const second = await start()
   const same = second.sessions.require(chat.id)
   expect(second.turns.current(same)).toMatchObject({ status: 'running' })
-  await expect(second.turns.run(same, 'again')).rejects.toThrow('A turn is already running in this chat')
+  await expect(second.turns.run(same, 'again')).rejects.toThrow('A turn is already running in this conversation')
 
   expect(second.turns.interrupt(same)).toBe(true)
   expect(await turn).toMatchObject({ stopReason: 'interrupted' })

@@ -4,6 +4,7 @@
   "description": "File tools: read, write, edit, glob and grep",
   "type": "module",
   "sand": {
+    "feature": "file-tools",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "File tools",

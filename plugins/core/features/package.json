@@ -1,0 +1,397 @@
+{
+  "name": "@sand/features",
+  "version": "0.0.0",
+  "description": "Turns sand's features on and off: the Features settings page and the first-run question of what sand is for",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "host": "./src/host.ts",
+    "web": "./src/web/index.ts",
+    "label": "Features",
+    "summary": "Turn whole features like Threads, Git or Bots on and off",
+    "features": {
+      "threads": {
+        "label": "Threads",
+        "summary": "Work with agents in your project folders, with sub-agents and background jobs",
+        "needs": [
+          "engine",
+          "models",
+          "media",
+          "markdown",
+          "transcript",
+          "watch"
+        ],
+        "uses": [
+          "compaction",
+          "skills",
+          "background",
+          "attachments",
+          "file-tools",
+          "shell",
+          "web-tools",
+          "approvals",
+          "usage",
+          "palette",
+          "picker",
+          "mcp",
+          "extend",
+          "html"
+        ],
+        "offer": true
+      },
+      "files": {
+        "label": "Files panel",
+        "summary": "Browse and read a thread's files",
+        "parent": "threads"
+      },
+      "git": {
+        "label": "Git",
+        "summary": "Each thread's branch and changes, commits, and what each turn changed",
+        "parent": "threads",
+        "needs": [
+          "picker",
+          "palette"
+        ],
+        "uses": [
+          "background"
+        ]
+      },
+      "worktrees": {
+        "label": "Worktrees",
+        "summary": "Let a thread work in its own folder and branch",
+        "parent": "git"
+      },
+      "pulls": {
+        "label": "Pull requests",
+        "summary": "Sign in to GitHub, follow your pull requests and link them to threads",
+        "parent": "git"
+      },
+      "reviews": {
+        "label": "Code review",
+        "summary": "Review a pull request's code with line comments and an agent-drafted review",
+        "parent": "pulls"
+      },
+      "threads-mcp": {
+        "label": "Threads for outside agents",
+        "summary": "Outside agents start, message and read threads over MCP",
+        "parent": "threads",
+        "needs": [
+          "mcp-server"
+        ]
+      },
+      "bots": {
+        "label": "Bots",
+        "summary": "Assistants with their own job, memory and model that you chat with",
+        "needs": [
+          "engine",
+          "models",
+          "markdown",
+          "transcript"
+        ],
+        "uses": [
+          "compaction",
+          "skills",
+          "background",
+          "attachments",
+          "file-tools",
+          "shell",
+          "web-tools",
+          "approvals",
+          "usage",
+          "palette",
+          "mcp",
+          "html"
+        ],
+        "offer": true
+      },
+      "routines": {
+        "label": "Routines",
+        "summary": "Bots remind you and do things on a schedule",
+        "parent": "bots",
+        "needs": [
+          "schedules"
+        ]
+      },
+      "bots-mcp": {
+        "label": "Bot tools",
+        "summary": "Your threads, your bots and outside agents message, read and update your bots over MCP",
+        "parent": "bots",
+        "needs": [
+          "mcp-server"
+        ]
+      },
+      "bridge": {
+        "label": "Bots and threads",
+        "summary": "Threads ask your bots, and bots start and message threads",
+        "parent": "bots",
+        "needs": [
+          "threads",
+          "bots-mcp"
+        ]
+      },
+      "calendar": {
+        "label": "Calendar",
+        "summary": "Your calendars in one place, for you and your agents",
+        "offer": true
+      },
+      "calendar-accounts": {
+        "label": "Calendar accounts",
+        "summary": "Google, Microsoft, CalDAV and subscribed calendars",
+        "parent": "calendar",
+        "needs": [
+          "connections"
+        ]
+      },
+      "computers": {
+        "label": "Computer use",
+        "summary": "Let agents see and use a browser or this PC",
+        "needs": [
+          "engine",
+          "models",
+          "media"
+        ],
+        "offer": true
+      },
+      "browser": {
+        "label": "Browser",
+        "summary": "A Chrome or Edge browser agents can use, visible or headless",
+        "parent": "computers"
+      },
+      "desktop": {
+        "label": "This PC's screen",
+        "summary": "Agents see this PC's screen and use its mouse and keyboard",
+        "parent": "computers"
+      },
+      "pcs": {
+        "label": "Several PCs & phone",
+        "summary": "Use sand from your phone and your other PCs",
+        "uses": [
+          "picker"
+        ],
+        "offer": true
+      },
+      "notifications": {
+        "label": "Notifications",
+        "summary": "Tell you when something finishes, fails or needs you",
+        "offer": true
+      },
+      "mcp-server": {
+        "label": "MCP server",
+        "summary": "Outside agents reach sand over MCP"
+      },
+      "updates": {
+        "label": "Updates",
+        "summary": "Install newer sand releases on every PC"
+      },
+      "models": {
+        "kind": "capability",
+        "label": "Models",
+        "summary": "Sign in to AI providers and pick models",
+        "needs": [
+          "media"
+        ]
+      },
+      "media": {
+        "kind": "capability",
+        "label": "Media",
+        "summary": "Images and documents in conversations"
+      },
+      "engine": {
+        "kind": "capability",
+        "label": "Agent engine",
+        "summary": "Runs agent turns: model replies, tool calls and the system prompt",
+        "needs": [
+          "models"
+        ]
+      },
+      "compaction": {
+        "kind": "capability",
+        "label": "Compaction",
+        "summary": "Summarizes a long conversation before its context fills up",
+        "stops": "Long conversations stop when their context fills up instead of being summarized.",
+        "needs": [
+          "engine",
+          "media"
+        ]
+      },
+      "skills": {
+        "kind": "capability",
+        "label": "Skills",
+        "summary": "Skills agents can load",
+        "stops": "Agents can't load skills.",
+        "needs": [
+          "engine",
+          "watch"
+        ]
+      },
+      "watch": {
+        "kind": "capability",
+        "label": "Folder watching",
+        "summary": "Notices changes in folders for other parts"
+      },
+      "background": {
+        "kind": "capability",
+        "label": "Background model",
+        "summary": "A model for titles, summaries and commit messages",
+        "stops": "Titles, summaries and commit messages are no longer written for you.",
+        "needs": [
+          "models"
+        ]
+      },
+      "attachments": {
+        "kind": "capability",
+        "label": "Attachments",
+        "summary": "Files and images attached to messages, and copying files between PCs",
+        "stops": "You can't attach files or images to messages.",
+        "needs": [
+          "media"
+        ]
+      },
+      "file-tools": {
+        "kind": "capability",
+        "label": "File tools",
+        "summary": "Agents read, write, edit and search files",
+        "stops": "Agents can't read, write or search files.",
+        "needs": [
+          "engine",
+          "attachments"
+        ]
+      },
+      "shell": {
+        "kind": "capability",
+        "label": "Shell",
+        "summary": "Agents run commands",
+        "stops": "Agents can't run commands.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "web-tools": {
+        "kind": "capability",
+        "label": "Web tools",
+        "summary": "Agents search the web and read pages",
+        "stops": "Agents can't search the web or read pages.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "markdown": {
+        "kind": "capability",
+        "label": "Markdown",
+        "summary": "Formatted replies, code and math"
+      },
+      "transcript": {
+        "kind": "capability",
+        "label": "Transcript",
+        "summary": "How conversations show: messages, pages and the work behind them",
+        "needs": [
+          "markdown"
+        ]
+      },
+      "html": {
+        "kind": "capability",
+        "label": "HTML pages",
+        "summary": "Charts, tables and mockups agents show inline in the chat",
+        "stops": "Agents can't show pages in the chat.",
+        "needs": [
+          "engine",
+          "media",
+          "transcript"
+        ]
+      },
+      "approvals": {
+        "kind": "capability",
+        "label": "Approvals",
+        "summary": "Asks you before agents act, with an Inbox of what waits on you",
+        "stops": "Agents stop asking before they act; the Inbox empties.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "schedules": {
+        "kind": "capability",
+        "label": "Schedules",
+        "summary": "Runs things at set times, even after a restart"
+      },
+      "connections": {
+        "kind": "capability",
+        "label": "Connections",
+        "summary": "Accounts of outside services, like Google or Microsoft"
+      },
+      "usage": {
+        "kind": "capability",
+        "label": "Usage",
+        "summary": "Plan limits, cost and tokens",
+        "stops": "Plan limits, cost and tokens are no longer shown.",
+        "needs": [
+          "models"
+        ]
+      },
+      "palette": {
+        "kind": "capability",
+        "label": "Command palette",
+        "summary": "Find things and run actions from the keyboard",
+        "stops": "The command palette and its actions go away."
+      },
+      "picker": {
+        "kind": "capability",
+        "label": "Pickers",
+        "summary": "Lists and boxes for choosing, renaming and confirming",
+        "stops": "Boxes for choosing, renaming and confirming go away."
+      },
+      "mcp": {
+        "kind": "capability",
+        "label": "MCP tools",
+        "summary": "Tools from your own MCP servers",
+        "stops": "Agents lose the tools from your own MCP servers.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "extend": {
+        "kind": "capability",
+        "label": "Plugin writing",
+        "summary": "Agents list plugins and write new ones",
+        "stops": "Agents can't list plugins or write new ones.",
+        "needs": [
+          "engine",
+          "skills"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "@sand/config": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/approvals": "workspace:*",
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/calendar": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/computers": "workspace:*",
+    "@sand/connections": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-runner": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/html": "workspace:*",
+    "@sand/schedules": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "playwright": "^1.64.1"
+  }
+}

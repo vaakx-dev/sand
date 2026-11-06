@@ -1,6 +1,6 @@
 import { normalize } from 'node:path'
 import type { GitBase } from '../contract'
-import { gitMaybe } from '../run/run'
+import { gitMaybe } from '@sand/git-runner/contract'
 import { readDefaultBranch } from '../status/default-branch'
 
 export interface Defaults {

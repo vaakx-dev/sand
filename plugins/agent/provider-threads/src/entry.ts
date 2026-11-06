@@ -1,4 +1,4 @@
-import type { HandoffStrategy } from '@sand/turns-contract/contract'
+import type { HandoffStrategy } from './contract'
 
 export interface HandoffEntry {
   handoff: string

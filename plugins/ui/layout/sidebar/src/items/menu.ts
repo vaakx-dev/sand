@@ -30,7 +30,9 @@ const remove = async ({ threads }: MenuParts, thread: Thread) => {
 
 const openActions = (parts: MenuParts, thread: Thread): NavAction[] => [
   { id: 'open-tab', group: 'open', label: 'Open in new tab', icon: 'external', run: () => parts.kit.openTab(parts.threads.link(thread.id)) },
-  { id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(parts.ctx, "Couldn't rename", () => rename(parts, thread)) },
+  ...(parts.ctx.get(palette) || parts.ctx.get(picker)
+    ? [{ id: 'rename', group: 'open', label: 'Rename…', icon: 'pencil', tile: true, run: () => attempt(parts.ctx, "Couldn't rename", () => rename(parts, thread)) }]
+    : []),
 ]
 
 const organiseActions = ({ ctx, threads }: MenuParts, thread: Thread): NavAction[] => {

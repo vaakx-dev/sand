@@ -4,6 +4,7 @@
   "description": "Lets @ in the composer link another thread as a context chip",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Thread links",
     "summary": "Type @ in a message to link another thread"

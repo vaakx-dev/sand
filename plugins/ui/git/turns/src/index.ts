@@ -1,4 +1,4 @@
-import { transcript } from '@sand/chat/contract'
+import { transcript } from '@sand/transcript/contract'
 import { changesPanel } from '@sand/git-changes/contract'
 import { definePlugin } from 'drydock'
 import { turnFooter } from './footer/card'

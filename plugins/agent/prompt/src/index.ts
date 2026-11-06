@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import { paths } from '@sand/paths/contract'
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
@@ -8,7 +8,8 @@ import { context, promptBase, promptSections } from './contract'
 import { createInstructions } from './instructions'
 import { compose } from './system'
 
-const systemFile = Bun.file(join(import.meta.dir, 'system.md')).text()
+const sharedFile = Bun.file(join(import.meta.dir, 'shared.md')).text()
+const threadIntro = "You are sand, an agent with full access to the user's machine."
 
 export default definePlugin({
   name: 'prompt',
@@ -16,12 +17,14 @@ export default definePlugin({
   config: z.object({ instructions: z.string().optional() }),
   apply(ctx, config) {
     const written = createInstructions(ctx.tools, ctx.paths, config.instructions)
-    const base = async (session: Session) => {
-      const sections = await ctx.waterfall(promptSections, [], session)
-      return ctx.waterfall(promptBase, [(await systemFile).trimEnd(), ...sections], session)
-    }
+    const shared = async (conversation: Conversation) => [(await sharedFile).trimEnd(), ...(await ctx.waterfall(promptSections, [], conversation))]
     ctx.provide(context, {
-      system: async (session, model) => compose(written, session, await base(session), model),
+      async thread(session, model) {
+        const base = await ctx.waterfall(promptBase, [threadIntro, ...(await shared(session))], session)
+        const project = await written.project(session.cwd, session.project)
+        return compose(written, session, model, base, [project && `# Project instructions\n\n${project}`])
+      },
+      system: async (conversation, model, { intro, parts }) => compose(written, conversation, model, [intro, ...(await shared(conversation))], parts),
       tools: (session, messages) => ctx.tools.specs(messages, session),
     })
   },

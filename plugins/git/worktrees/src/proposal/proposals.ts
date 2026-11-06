@@ -1,4 +1,5 @@
-import { type GitRunner, pathKey } from '@sand/git/contract'
+import { pathKey } from '@sand/git/contract'
+import { type GitRunner } from '@sand/git-runner/contract'
 import type { SubModel } from '@sand/sub-model/contract'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'

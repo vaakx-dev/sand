@@ -1,0 +1,31 @@
+{
+  "name": "@sand/bots",
+  "version": "0.0.0",
+  "description": "Named, lasting bots: each has a job, models, a computer choice and one ongoing conversation, kept in tables of their own",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "bots",
+    "runtime": "./src/index.ts",
+    "label": "Bots",
+    "summary": "Keeps your bots and each bot's conversation"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sub-model": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

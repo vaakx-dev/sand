@@ -1,3 +1,4 @@
+import type { Sessions } from '@sand/chats/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { answerEntry, requestEntry, type SecretAnswer, type SecretRequest, type SecretStatus } from './contract'
@@ -12,7 +13,7 @@ const input = z.object({
 })
 
 const description =
-  'Ask the user for a secret (API key, token, password) in a private card, and wait until they answer. Use this instead of asking for a secret in chat; you never see the value. Saved, it returns the path of an owner-only file holding the value, deleted after 24 hours: read it inside your commands without printing it, e.g. TOKEN="$(cat <path>)" some-cli, or copy it into a git-ignored .env.'
+  'Ask the user for a secret (API key, token, password) in a private card, and wait until they answer. Use this instead of asking for a secret in chat; you never see the value. Saved, it returns the path of a file holding the value, deleted after 24 hours: read it inside your commands without printing it, e.g. TOKEN="$(cat <path>)" some-cli, or copy it into a git-ignored .env.'
 
 const unanswered: Record<Exclude<SecretStatus, 'saved'>, string> = {
   declined: 'The user declined. Go on without it, or ask what to do instead.',
@@ -23,19 +24,21 @@ const unanswered: Record<Exclude<SecretStatus, 'saved'>, string> = {
 const resultOf = (outcome: Outcome) =>
   outcome.status === 'saved' ? `Saved to ${outcome.file}. Read it inside commands and never print it. It is deleted after 24 hours.` : unanswered[outcome.status]
 
-export const secretTool = (waits: Waits): Tool<typeof input> => ({
+export const secretTool = (waits: Waits, sessions: Sessions): Tool<typeof input> => ({
   name: 'request_secret',
   description,
   input,
-  active: session => session.kind !== 'agent',
+  effect: 'read',
+  needs: ['pc'],
+  active: conversation => conversation.owner !== 'thread' || sessions.require(conversation.id).kind !== 'agent',
   timeoutMs: answerTimeout + settleGrace,
   async run({ title, reason, placeholder }, context) {
-    const { session, signal } = context
+    const { conversation, signal } = context
     const id = Bun.randomUUIDv7()
-    session.append(requestEntry, { id, title, reason, ...(placeholder && { placeholder }) } satisfies SecretRequest)
+    conversation.append(requestEntry, { id, title, reason, ...(placeholder && { placeholder }) } satisfies SecretRequest)
     const done = context.wait({ kind: 'secret', call: context.call.id, title })
-    const outcome = await waits.wait(session.id, id, signal).finally(done)
-    session.append(answerEntry, { id, status: outcome.status } satisfies SecretAnswer)
+    const outcome = await waits.wait(conversation.id, id, signal).finally(done)
+    conversation.append(answerEntry, { id, status: outcome.status } satisfies SecretAnswer)
     return resultOf(outcome)
   },
 })

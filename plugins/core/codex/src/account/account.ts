@@ -1,11 +1,10 @@
-import type { AppStatus, Effort, PlanModel, SignInFlow } from '@sand/accounts/contract'
+import { efforts, type AppStatus, type PlanModel, type SignInFlow } from '@sand/accounts/contract'
 import { capital } from '@sand/util'
 import { findCodex } from '../server/binary'
 import { fieldsOf, type Json } from '../server/rpc'
 import type { Pool } from '../server/pool'
 import { limitsOf } from './limits'
 
-const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 const deviceTimeout = 15 * 60_000
 
 const planOf = (account: Json) => {

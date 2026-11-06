@@ -1,4 +1,4 @@
-import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { WireJob } from '@sand/jobs/contract'
 import type { NavAction } from '@sand/nav/contract'
 import type { Kit } from '@sand/ui-kit/contract'

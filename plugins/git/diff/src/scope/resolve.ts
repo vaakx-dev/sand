@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { DiffScope } from '../contract'
 import { commitOf, type DiffGit, emptyTree, treeOf } from '../git'
 

@@ -1,4 +1,4 @@
-import type { GitOptions, GitResult, GitRunner } from '@sand/git/contract'
+import type { GitOptions, GitResult, GitRunner } from '@sand/git-runner/contract'
 import type { GitActionFailure } from '../contract'
 import { failure } from './failure'
 import { outputTail } from './output'

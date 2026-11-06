@@ -1,0 +1,9 @@
+{
+  "name": "@sand/ical",
+  "version": "0.0.0",
+  "description": "iCalendar events: recurrence rules, time zones and the .ics format",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

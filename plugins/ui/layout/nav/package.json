@@ -1,7 +1,7 @@
 {
   "name": "@sand/nav",
   "version": "0.0.0",
-  "description": "Actions that sidebars draw",
+  "description": "Actions that the thread sidebar draws, and the action shape menus share",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Navigation",
-    "summary": "Keeps the actions that the sidebar shows"
+    "summary": "Keeps the actions that the thread sidebar shows"
   },
   "dependencies": {
     "@sand/reactive": "workspace:*",

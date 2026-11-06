@@ -1,4 +1,5 @@
-import type { GitLayout, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { isMissing } from '@sand/util/fs'
 import { stat } from 'node:fs/promises'
 import { isAbsolute, join } from 'node:path'

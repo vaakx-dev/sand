@@ -1,6 +1,6 @@
 import type { ProviderCapabilities } from '@sand/accounts/contract'
 import type { Selection } from '@sand/model/contract'
-import type { ProviderThreadInfo, Transition } from '@sand/turns-contract/contract'
+import type { ProviderThreadInfo, Transition } from './contract'
 
 export interface Target {
   available: boolean

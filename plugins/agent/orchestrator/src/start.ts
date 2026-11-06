@@ -1,23 +1,12 @@
 import type { Session } from '@sand/chats/contract'
-import type { TurnOrigin } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import { worktrees } from '@sand/worktrees/contract'
 import { existsSync } from 'node:fs'
 import type { OrchestratorContext } from './context'
-import { failure, type Sent } from './contract'
+import { failure, type Sent, type StartInput, threadStarted } from './contract'
+import type { Owners } from './owners'
 import type { Receipts } from './receipts'
-
-export interface StartInput {
-  cwd?: string
-  project?: string
-  prompt: string
-  title?: string
-  model?: string
-  effort?: string
-  worktree?: boolean
-  origin: TurnOrigin
-  clientRequestId: string
-}
+import type { Starters } from './starters'
 
 const settingsOf = (ctx: OrchestratorContext, { model, effort }: StartInput) => {
   try {
@@ -27,7 +16,7 @@ const settingsOf = (ctx: OrchestratorContext, { model, effort }: StartInput) => 
   }
 }
 
-const folderOf = (ctx: OrchestratorContext, { cwd, project }: StartInput) => {
+const folderOf = (ctx: OrchestratorContext, { cwd, project }: Pick<StartInput, 'cwd' | 'project'>) => {
   if ((cwd === undefined) === (project === undefined)) throw failure('invalid_request', 'Give either cwd or project')
   if (cwd !== undefined) {
     if (!existsSync(cwd)) throw failure('invalid_request', `${cwd} is not a folder on this PC`)
@@ -46,11 +35,13 @@ const inWorktree = async (ctx: OrchestratorContext, cwd: string) => {
 
 export type Adopt = (session: Session) => void
 
-export const createStart = (ctx: OrchestratorContext, receipts: Receipts) => {
+export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners) => {
   const opening = new Map<string, Promise<Session>>()
 
+  const placeOf = ({ cwd, project, from }: StartInput) => (cwd === undefined && project === undefined ? { project: owners.home(from) } : { cwd, project })
+
   const open = async (input: StartInput, adopt?: Adopt) => {
-    const { cwd, project } = folderOf(ctx, input)
+    const { cwd, project } = folderOf(ctx, placeOf(input))
     const session = input.worktree ? await inWorktree(ctx, cwd) : ctx.sessions.thread(cwd, project ? { project } : undefined)
     if (input.title) ctx.sessions.rename(session.id, input.title)
     adopt?.(session)
@@ -68,8 +59,10 @@ export const createStart = (ctx: OrchestratorContext, receipts: Receipts) => {
 
   return async (input: StartInput, adopt?: Adopt): Promise<Sent> => {
     const settings = settingsOf(ctx, input)
+    const prompt = owners.sign(input.prompt, input.from)
     const session = await threadFor(input, adopt)
-    const sent = await ctx.turns.send(session, { prompt: input.prompt, origin: input.origin, clientRequestId: input.clientRequestId, ...(settings && { settings }) })
+    if (input.from && starters.put(session.id, input.from)) ctx.emit(threadStarted, session.id, input.from)
+    const sent = await ctx.turns.send(session, { prompt, origin: input.origin, clientRequestId: input.clientRequestId, ...(settings && { settings }) })
     return { ...sent, thread: session.id }
   }
 }

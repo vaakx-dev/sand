@@ -1,14 +1,14 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Message, Session, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
+import type { Message, ToolCallBlock, ToolResultBlock, ToolResultContent } from '@sand/chats/contract'
+import type { Conversation, Owner, WaitReason } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
-import type { WaitReason } from '@sand/turns-contract/contract'
 import { event, service, type Dispose } from 'drydock'
 import { z, type output, type ZodType } from 'zod'
 
 export interface ToolContext {
   cwd: string
   signal: AbortSignal
-  session: Session
+  conversation: Conversation
   call: ToolCallBlock
   turn: string
   progress(text: string): void
@@ -16,6 +16,22 @@ export interface ToolContext {
 }
 
 export type ToolOutput = string | ToolResultContent[]
+
+export const needs = ['thread', 'folder', 'pc', 'computer', 'routines'] as const
+
+export type Need = (typeof needs)[number]
+
+export type Offer = (conversation: Conversation) => readonly Need[]
+
+export const effects = ['read', 'write', 'run', 'send', 'spend', 'delete'] as const
+
+export type Effect = (typeof effects)[number]
+
+export interface Act {
+  effect: Effect
+  paths?: string[]
+  summary?: string
+}
 
 export interface Tool<S extends ZodType = ZodType> {
   name: string
@@ -25,10 +41,15 @@ export interface Tool<S extends ZodType = ZodType> {
   parallel?: boolean
   timeoutMs?: number
   input: S
-  active?(session: Session): boolean
+  needs?: Need[]
+  effect?: Effect
+  act?(input: output<S>, conversation: Conversation): Act
+  active?(conversation: Conversation): boolean
   replaces?: string[]
   run(input: output<S>, context: ToolContext): ToolOutput | Promise<ToolOutput>
 }
+
+export type Gate = (act: Act, tool: Tool, context: ToolContext) => Promise<string | undefined>
 
 export type ToolLoad = 'always' | 'on-demand' | 'off'
 
@@ -36,7 +57,7 @@ export interface ToolGroup {
   name: string
   label: string
   summary: string
-  load: Exclude<ToolLoad, 'off'>
+  load: ToolLoad
 }
 
 export interface GroupState extends ToolGroup {
@@ -47,11 +68,13 @@ export interface GroupState extends ToolGroup {
 export interface Tools {
   register(tool: Tool): Dispose
   group(group: ToolGroup): Dispose
+  offer(owner: Owner, offer: Offer): Dispose
+  gate(gate: Gate): Dispose
   groups(): GroupState[]
   choose(group: string, load: ToolLoad): Promise<void>
-  specs(messages: Message[], session: Session): ToolSpec[]
-  notes(session: Session): string[]
-  parallel(call: ToolCallBlock, session: Session): boolean
+  specs(messages: Message[], conversation: Conversation): ToolSpec[]
+  notes(conversation: Conversation): string[]
+  parallel(call: ToolCallBlock, conversation: Conversation): boolean
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>
 }
 

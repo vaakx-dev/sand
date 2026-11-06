@@ -4,6 +4,7 @@
   "description": "Who can reach this PC, the routes it publishes, Tailscale, and finding other sand PCs nearby",
   "type": "module",
   "sand": {
+    "feature": "pcs",
     "host": "./src/index.ts",
     "label": "Network",
     "summary": "Routes to this PC, Tailscale and finding your other PCs"

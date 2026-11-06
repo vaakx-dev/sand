@@ -14,6 +14,10 @@ const watchMark = z.object({
   since: z.number(),
 })
 
+const phases = ['open', 'merged', 'closed', 'failing'] as const
+
+export type Phase = (typeof phases)[number]
+
 const storedLink = ref.extend({
   source: z.enum(['created', 'branch', 'linked', 'opened', 'stack']),
   linked: z.number(),
@@ -21,6 +25,7 @@ const storedLink = ref.extend({
   mark: watchMark.optional(),
   quiet: z.number().int().min(0).optional(),
   ended: z.number().optional(),
+  told: z.enum(phases).optional(),
 })
 
 const storedLinks = z.object({ links: z.array(storedLink), dismissed: z.array(ref), engaged: z.number().optional() })

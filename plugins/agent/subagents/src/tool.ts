@@ -18,7 +18,7 @@ const effortInput = (ctx: AgentsContext) => {
 
 const inputSchema = (ctx: AgentsContext) =>
   z.object({
-    label: z.string().describe('3 to 6 words for the UI'),
+    label: z.string().describe('A short title, 3 to 6 words'),
     task: z.string().describe("Full instructions. The subagent can't see this chat."),
     agent: z.string().optional().describe('Which agent to use (default: general)'),
     model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
@@ -50,7 +50,9 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
   get input() {
     return inputSchema(ctx)
   },
-  async run({ label, task, agent, model, effort }, { session, call }) {
+  needs: ['thread'],
+  async run({ label, task, agent, model, effort }, { conversation, call }) {
+    const session = ctx.sessions.require(conversation.id)
     const opened = await open({ parent: session, task, label, agent, model, effort: effort as Effort | undefined, origin: call.id })
     const job = ctx.backgroundJobs.start({
       kind: 'agent',
@@ -61,6 +63,6 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
       read: cursor => readThread(opened.session, cursor),
       send: messenger(ctx, opened),
     })
-    return `Started background agent ${job.id} in thread ${opened.session.id}. Its report arrives as a <task-notification>. Keep working or end your turn; it will wake you. Don't sleep or poll.`
+    return `Started background agent ${job.id} in thread ${opened.session.id}. Its report arrives as a <task-notification>. Meanwhile keep working or end your turn; don't sleep or poll for it.`
   },
 })

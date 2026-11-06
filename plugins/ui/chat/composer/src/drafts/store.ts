@@ -1,7 +1,7 @@
 import type { ContextRecord } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { DraftTarget } from '@sand/web-client/contract'
-import type { Held } from '../attachments/files'
+import type { Held } from '@sand/attachments/web/contract'
 import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/draft-db'
 
 export interface Saved {

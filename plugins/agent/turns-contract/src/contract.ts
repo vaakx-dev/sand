@@ -1,101 +1,50 @@
-import type { Usage } from '@sand/accounts/contract'
+import type { ToolSpec } from '@sand/accounts/contract'
 import {
   type Entry,
   type Message,
   type Prompt,
   promptInput,
   type Session,
-  type StopReason,
   type ToolCallBlock,
   type ToolResultBlock,
   type UserContent,
   type WireSession,
   type WireSessionRef,
 } from '@sand/chats/contract'
+import {
+  type PendingItem,
+  type RunOptions,
+  type SendInput as EngineSend,
+  sendModes,
+  type SendResult,
+  type TurnInfo as EngineTurn,
+  turnOrigins,
+  type TurnResult,
+  type WaitUntil,
+} from '@sand/engine/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
-import { type Selection, type SessionSettings, sessionSettings } from '@sand/model/contract'
+import { type SessionSettings, sessionSettings } from '@sand/model/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
-export * from './threads'
+export type {
+  PendingItem,
+  PendingKind,
+  RunOptions,
+  SendMode,
+  SendResult,
+  TurnEnding,
+  TurnOrigin,
+  TurnResult,
+  TurnStatus,
+  WaitReason,
+  WaitUntil,
+} from '@sand/engine/contract'
+export { sendModes, turnOrigins } from '@sand/engine/contract'
 
-export type TurnStatus = 'running' | 'waiting' | 'completed' | 'interrupted' | 'failed' | 'lost'
+export type TurnInfo = Omit<EngineTurn, 'owner' | 'conversation'> & { session: string }
 
-export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'print', 'cli', 'mcp'] as const
-
-export type TurnOrigin = (typeof turnOrigins)[number]
-
-export interface WaitReason {
-  kind: 'secret' | 'question'
-  call: string
-  title: string
-}
-
-export interface TurnResult {
-  stopReason: StopReason | 'interrupted' | 'error'
-  usage: Usage
-  text: string
-  error?: string
-  detail?: string
-}
-
-export interface TurnEnding {
-  stopReason: TurnResult['stopReason'] | 'lost'
-  error?: string
-}
-
-export interface TurnInfo {
-  id: string
-  session: string
-  ordinal: number
-  status: TurnStatus
-  origin: TurnOrigin
-  selection: Selection
-  providerThread?: string
-  prompt: string
-  step: number
-  usage: Usage
-  waiting?: WaitReason
-  stopReason?: TurnEnding['stopReason']
-  error?: string
-  detail?: string
-  started: number
-  ended?: number
-}
-
-export const sendModes = ['auto', 'steer', 'queue'] as const
-
-export type SendMode = (typeof sendModes)[number]
-
-export interface SendInput {
-  prompt: Prompt
-  mode?: SendMode
-  label?: string
-  origin?: TurnOrigin
-  clientRequestId: string
-  settings?: SessionSettings
-}
-
-export type SendResult = { disposition: 'started'; turn: string } | { disposition: 'steered' | 'queued'; pending: string; turn?: string }
-
-export type PendingKind = 'steer' | 'queue'
-
-export interface PendingItem {
-  id: string
-  kind: PendingKind
-  label: string
-  prompt: Prompt
-  origin: TurnOrigin
-  held: boolean
-  at: number
-}
-
-export type WaitUntil = 'end' | 'attention'
-
-export interface RunOptions {
-  origin?: TurnOrigin
-  signal?: AbortSignal
-}
+export type SendInput = EngineSend & { settings?: SessionSettings }
 
 export interface Turns {
   send(session: Session, input: SendInput): Promise<SendResult>
@@ -117,7 +66,7 @@ export const turnEnd = event<(session: Session, result: TurnResult, info: TurnIn
 export const turnChange = event<(info: TurnInfo) => void>('turn.change')
 export const turnPending = event<(session: Session) => void>('turn.pending')
 export const turnPrompt = event<(content: UserContent[], session: Session) => UserContent[]>('turn.prompt')
-export const contextOverflow = event<(session: Session, error: unknown, signal: AbortSignal) => boolean | undefined>('context.overflow')
+export const stepTools = event<(tools: ToolSpec[], session: Session) => ToolSpec[] | Promise<ToolSpec[]>>('step.tools')
 export const toolStart = event<(call: ToolCallBlock, session: Session) => void>('tool.start')
 export const toolProgress = event<(call: ToolCallBlock, text: string, session: Session) => void>('tool.progress')
 export const toolResult = event<(result: ToolResultBlock, call: ToolCallBlock, session: Session) => ToolResultBlock>('tool.result')

@@ -1,6 +1,6 @@
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { LiveBlock } from '@sand/accounts/contract'
-import type { PendingItem, TurnResult } from '@sand/turns-contract/contract'
+import type { PendingItem, TurnResult, WaitReason } from '@sand/turns-contract/contract'
 import type { Branch, Entry, SessionInfo, SessionSummary, ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
 import type { Mark } from '@sand/server/contract'
 import type { Dispose } from 'drydock'
@@ -25,6 +25,7 @@ export interface Thread {
   failed?: string
   running: boolean
   started?: number
+  waiting?: WaitReason
   live: LiveBlock[]
   mark?: Mark
   tools: ToolProgress
@@ -34,6 +35,8 @@ export interface Thread {
   ended?: TurnResult
   version: number
 }
+
+export type ThreadVisit = 'push' | 'replace' | 'restore'
 
 export interface DraftTarget {
   id: string

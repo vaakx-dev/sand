@@ -1,4 +1,4 @@
-import { toolViews as toolViewsService, transcript as transcriptService } from '@sand/chat/contract'
+import { toolViews as toolViewsService, transcript as transcriptService } from '@sand/transcript/contract'
 import { markdown as markdownService } from '@sand/markdown/contract'
 import { kit as kitService } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'

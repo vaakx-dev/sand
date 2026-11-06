@@ -1,4 +1,5 @@
 import { trimSlash } from '@sand/util'
+import type { Effort } from '../contract'
 import { bearer } from '@sand/util/host'
 
 export interface CompatTarget {
@@ -6,7 +7,7 @@ export interface CompatTarget {
   key?: string
   model: string
   name: string
-  reasoning?: boolean
+  efforts: Effort[]
   images?: boolean
 }
 

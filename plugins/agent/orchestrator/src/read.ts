@@ -1,12 +1,6 @@
 import { type Block, type Entry, type Message, type Session, textOf } from '@sand/chats/contract'
 import { oneLine } from '@sand/util'
-import type { ThreadItem, ThreadPage, ThreadView } from './contract'
-
-export interface ReadOptions {
-  after?: number
-  limit?: number
-  view?: ThreadView
-}
+import type { ReadOptions, ThreadItem, ThreadPage, ThreadView } from './contract'
 
 const defaultLimit = 50
 

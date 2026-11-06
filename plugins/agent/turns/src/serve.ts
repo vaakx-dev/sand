@@ -1,4 +1,5 @@
 import type { Session } from '@sand/chats/contract'
+import type { Runner } from '@sand/engine/contract'
 import { server, sessionOpened, userWrote } from '@sand/server/contract'
 import {
   helloTurns,
@@ -19,24 +20,23 @@ import {
 } from '@sand/turns-contract/contract'
 import { joinDisposers } from '@sand/util'
 import type { TurnsContext } from './context'
-import type { TurnStore } from './store/turns'
+import { threadTurn } from './conversations'
 
 export interface Served {
   service: Turns
-  store: TurnStore
-  hold(session: Session, pending: string, held: boolean): boolean
+  runner: Runner<Session>
 }
 
 const waitFor = 25_000
 
-export const serveTurns = (ctx: TurnsContext, { service, store, hold }: Served) => {
+export const serveTurns = (ctx: TurnsContext, { service, runner }: Served) => {
   const session = (id: string) => ctx.sessions.require(id)
   const own = (chat: string, turn: string) => {
-    const info = store.get(turn)
+    const info = service.get(turn)
     if (info?.session !== chat) throw new Error(`No turn ${turn} in this chat`)
     return info
   }
-  const live = () => Object.fromEntries(store.live().map(info => [info.session, info]))
+  const live = () => Object.fromEntries(runner.live().map(info => [info.conversation, threadTurn(info)]))
 
   ctx.on(sessionOpened, (opened, chat) => ({ ...opened, pending: service.pending(chat) }))
   ctx.watch(server, found => {
@@ -53,9 +53,9 @@ export const serveTurns = (ctx: TurnsContext, { service, store, hold }: Served) 
       }),
       found.handle(turnInterrupt, ({ session: id, turn }) => service.interrupt(session(id), turn)),
       found.handle(turnWithdraw, ({ session: id, pending }) => service.withdraw(session(id), pending)),
-      found.handle(turnHold, ({ session: id, pending, held }) => hold(session(id), pending, held)),
-      found.handle(turnGet, ({ session: id, turn }) => (turn ? own(id, turn) : store.list(id, undefined, 1)[0]) ?? null),
-      found.handle(turnList, ({ session: id, before, limit }) => store.list(id, before, limit)),
+      found.handle(turnHold, ({ session: id, pending, held }) => runner.hold(session(id), pending, held)),
+      found.handle(turnGet, ({ session: id, turn }) => (turn ? own(id, turn) : service.list(session(id), undefined, 1)[0]) ?? null),
+      found.handle(turnList, ({ session: id, before, limit }) => service.list(session(id), before, limit)),
       found.handle(turnWait, ({ session: id, turn, until, timeoutMs = waitFor }) => {
         own(id, turn)
         return service.wait(turn, until, AbortSignal.timeout(timeoutMs))

@@ -23,7 +23,7 @@ const kindGrammar = '[a-z][a-z0-9-]{0,39}'
 const idGrammar = '[a-z0-9_-]{1,128}'
 const labelLimit = 200
 const fallbackLabel = 'context'
-const missing: ContextProjection = { unavailable: 'No record was sent for this link.' }
+const missing: ContextProjection = { unavailable: 'Nothing is attached for this link.' }
 
 const kindPattern = new RegExp(`^${kindGrammar}$`)
 const idPattern = new RegExp(`^${idGrammar}$`)

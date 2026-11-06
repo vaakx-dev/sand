@@ -27,7 +27,9 @@ export const createHandlers = () => {
     return entry.handler(await parseInput(entry.request, input), caller)
   }
 
-  return { handle, has, answer }
+  const ask = <I, O>(request: Request<I, O>, input: I, caller: Caller) => answer(request.id, input, caller) as Promise<O>
+
+  return { handle, has, answer, ask }
 }
 
 export type Handlers = ReturnType<typeof createHandlers>

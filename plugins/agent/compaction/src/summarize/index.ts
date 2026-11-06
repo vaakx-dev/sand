@@ -2,6 +2,7 @@ import type { LLM, LLMRequest, SourceRef, Usage } from '@sand/accounts/contract'
 import type { Message } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
 import { sumUsage } from '@sand/usage/contract'
+import type { CompactionBrief } from '../contract'
 import { ask } from './ask'
 import { promptText, system } from './prompt'
 import { serialize } from './serialize'
@@ -11,6 +12,7 @@ const chunkShare = 0.6
 
 export interface SummaryInput {
   model?: string
+  brief: CompactionBrief
   messages: Message[]
   previous?: string
   instructions?: string
@@ -41,13 +43,13 @@ const transcriptRequest = (text: string, model?: string): LLMRequest => ({
   model,
 })
 
-export const summarize = async (llm: LLM, media: Media, { model, messages, previous, instructions, limit, signal }: SummaryInput) => {
+export const summarize = async (llm: LLM, media: Media, { model, brief, messages, previous, instructions, limit, signal }: SummaryInput) => {
   const parts = messages.map(serialize(media)).filter(Boolean)
   let summary = previous
   let usage: Usage | undefined
   let source: SourceRef | undefined
   for (const chunk of chunks(parts, Math.floor(limit * chunkShare * charsPerToken))) {
-    const reply = await ask(llm, transcriptRequest(promptText(chunk.join('\n\n'), summary, instructions), model), signal)
+    const reply = await ask(llm, brief, transcriptRequest(promptText(await brief.format(), chunk.join('\n\n'), summary, instructions), model), signal)
     summary = reply.summary
     usage = usage ? sumUsage(usage, reply.usage) : reply.usage
     source = reply.source ?? source

@@ -64,7 +64,7 @@ export const updateAddress = (params: AddressParams, state: AddressState = {}) =
   covered = { href, restore: () => history.replaceState(page, '', url) }
 }
 
-export const backAddress = () => history.go(addressLayer() ? -2 : -1)
+export const backAddress = (steps = 1) => history.go(-(addressLayer() ? steps + 1 : steps))
 
 export const onAddressChange = (changed: () => void) =>
   listen(window, 'popstate', () => {

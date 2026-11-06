@@ -4,7 +4,8 @@ import { nearestRoot } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { type Paths, paths } from './contract'
 
-const copyOf = (files: ProjectFiles, cwd: string, project?: string | null) => {
+const copyOf = (files: ProjectFiles | undefined, cwd: string, project?: string | null) => {
+  if (!files) return undefined
   const pathOf = (id: string | null | undefined) => (id ? files.copies().find(copy => copy.project === id)?.path : undefined)
   return pathOf(project) ?? pathOf(files.ofFolder(cwd))
 }
@@ -12,11 +13,11 @@ const copyOf = (files: ProjectFiles, cwd: string, project?: string | null) => {
 export default definePlugin({
   name: 'paths',
   description: 'Where sand keeps its files: the home folder and project folders',
-  inject: { cli, projectFiles },
+  inject: { cli },
   apply(ctx) {
     const service: Paths = {
       home: ctx.cli.home,
-      projectFolder: (cwd, project) => copyOf(ctx.projectFiles, cwd, project) ?? nearestRoot(cwd) ?? cwd,
+      projectFolder: (cwd, project) => copyOf(ctx.get(projectFiles), cwd, project) ?? nearestRoot(cwd) ?? cwd,
     }
     ctx.provide(paths, service)
   },

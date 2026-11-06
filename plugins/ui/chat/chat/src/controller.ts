@@ -1,32 +1,30 @@
-import { drawChip } from '@sand/context/contract'
-import { models, type Thread } from '@sand/web-client/contract'
+import type { Thread } from '@sand/web-client/contract'
 import { div, sig, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { failed, hero, loading } from './hero'
-import { findQuote, quoteFlash } from './integrations/quote-jump'
 import { firstRowBelow, keepAnchor, scrollTo, stickToEnd } from './integrations/scroll'
 import { rowSizes } from './integrations/sizes'
 import { topEdge } from './integrations/top-edge'
-import type { OpenStates, RendererRegistry, TranscriptParts } from './parts/contract'
+import { itemCache } from './cache'
 import { branchSwitch } from './rows/branches'
 import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
-import type { RowContext } from './rows/row'
 import { slotHost } from './slot'
 import { foldTurns } from './turns/fold'
-import type { TurnFooters } from './turns/footers'
-import { shownRows } from './turns/rows'
+import { shownRows, type TurnContext } from './turns/rows'
 import { threadViews, type ThreadView } from './view'
 import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
 
 const screensKeptAbove = 3
 const fewestTrimmed = 20
 
-export const chatController = (ctx: ChatContext, parts: TranscriptParts, registry: RendererRegistry, states: OpenStates, footers: TurnFooters) => {
-  const { contextMenu, jumpButton, nearEnd, toEnd } = ctx.kit
-  const cache = parts.itemCache()
+export const chatController = (ctx: ChatContext) => {
+  const { kit, transcriptParts: parts } = ctx
+  const { contextMenu, jumpButton, nearEnd, toEnd } = kit
+  const cache = itemCache(parts)
+  const states = parts.openStates()
   const jumpShown = sig(false)
   const slot = slotHost()
   const menu = contextMenu()
@@ -81,10 +79,9 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     return shown
   }
 
-  const flash = quoteFlash(scroller)
-  const jump = (from: Element, quote: string) => {
-    const range = shown && findQuote(shown.rowList, from, quote)
-    if (range) flash(range)
+  const quote = parts.quoteJump(scroller)
+  const jump = (from: Element, text: string) => {
+    if (shown) quote(shown.rowList, from, text)
   }
 
   const repaint = () => {
@@ -93,38 +90,32 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
   }
 
   const paint = (thread: Thread, view: ThreadView, grow = 0) => {
-    const context: RowContext = {
-      kit: ctx.kit,
-      registry,
-      states,
-      thread: thread.id,
-      device: thread.device,
-      footers,
-      parts,
-      markdown: ctx.markdown,
-      image: parts.replyImage(thread.id),
+    const rows = parts.rows({
+      conversation: thread.id,
+      cwd: thread.info.cwd,
       menu,
-      rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
-      reply: text => replyActions(ctx, text),
-      branchSwitch: entry => branchSwitch(ctx, view, entry),
+      states,
       jump,
-      chip: drawChip(ctx),
-      repaint,
-    }
-    const items = cache.items(thread, () => ctx.threads.path(thread.id), type => Boolean(registry.entryRenderer(type)), settings => ctx.get(models)?.summary(settings))
+      reply: text => replyActions(ctx, text),
+      rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
+      branchSwitch: entry => branchSwitch(ctx, view, entry),
+    })
+    const context: TurnContext = { kit, parts, rows, states, thread: thread.id, device: thread.device, repaint }
+    const items = cache.items(thread, () => ctx.threads.path(thread.id))
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
       running: thread.running,
+      waiting: thread.waiting !== undefined,
       streaming: thread.live.length > 0,
       started: thread.started,
-      footers: footers.any(),
+      footers: untrack(() => parts.footers.get().length > 0),
       open: key => untrack(() => states.get(key).open.get()),
     })
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))
     view.rowEntries = drawn.map(({ entry }) => entry)
     view.more.set(view.above > 0 || ctx.threads.older(thread.id))
     view.branches.follow(thread)
-    view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, context)])
+    view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, rows)])
   }
 
   const shownThread = () => {
@@ -165,7 +156,7 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
     const switching = shown?.id !== thread.id
     const view = showThread(thread.id)
     const saved = switching ? view.scroll : undefined
-    const tail = switching ? saved === undefined : nearEnd(scroller)
+    const tail = switching ? saved === undefined : pinned
     if (tail && view.size > trimAt) resetToEnd(view)
     if (switching || tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
@@ -193,5 +184,5 @@ export const chatController = (ctx: ChatContext, parts: TranscriptParts, registr
   }
 
   const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(jumpShown, scrollToEnd), menu.view())
-  return { root, render, refresh, forget, stale: cache.reset }
+  return { root, render, refresh, forget }
 }

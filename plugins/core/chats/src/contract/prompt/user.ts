@@ -23,3 +23,6 @@ export const promptText = (message: Message, separator = '\n') =>
   userParts(message)
     .flatMap(part => (part.kind === 'text' ? [part.text] : []))
     .join(separator)
+
+export const saidText = (message: Message, separator = '\n') =>
+  promptText(message, separator).trim() || userParts(message).flatMap(part => ('block' in part ? [part.block.name ?? part.kind] : [])).join(', ')

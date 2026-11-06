@@ -1,5 +1,5 @@
 import { type ProviderCapabilities, statelessCaps } from '@sand/accounts/contract'
-import type { ProviderThreadInfo, Transition } from '@sand/turns-contract/contract'
+import type { ProviderThreadInfo, Transition } from '../src/contract'
 import { expect, test } from 'bun:test'
 import { type Candidate, decide, type Target } from '../src/policy'
 
@@ -8,7 +8,8 @@ const native: ProviderCapabilities = { ...api, native: true, resume: true, steer
 
 const thread: ProviderThreadInfo = {
   id: 't',
-  session: 's',
+  owner: 'thread',
+  conversation: 's',
   source: 'a',
   model: 'a/m',
   generation: 1,

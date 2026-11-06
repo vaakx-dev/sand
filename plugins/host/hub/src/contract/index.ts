@@ -57,9 +57,15 @@ export const wireEvent = <P>(id: string): WireEvent<P> => Object.freeze({ kind: 
 
 export const helloField = <T>(id: string): HelloField<T> => Object.freeze({ kind: 'helloField', id })
 
+export interface Actor {
+  owner: 'thread' | 'bot'
+  id: string
+}
+
 export interface Caller {
   device: string
   kind: CallerKind
+  actor?: Actor
 }
 
 export type RequestHandler<I, O> = (input: I, caller: Caller) => O | Promise<O>

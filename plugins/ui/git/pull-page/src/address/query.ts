@@ -1,5 +1,5 @@
 import type { InboxView } from '@sand/pull-inbox/contract'
-import { addressParams, addressState, backAddress, pushAddress, updateAddress } from '@sand/web-client/contract'
+import { addressParams, updateAddress } from '@sand/web-client/contract'
 
 export type StateFilter = 'open' | 'merged' | 'closed' | 'all'
 
@@ -12,8 +12,6 @@ export interface PageQuery {
 }
 
 const keys = { view: 'pulls', state: 'pullState', project: 'pullProject', q: 'pullQuery', pull: 'pull' } as const
-
-const opened = 'pullsOpened'
 
 const views: InboxView[] = ['needs', 'mine', 'reviewing', 'all']
 
@@ -44,11 +42,6 @@ const paramsOf = (query: PageQuery) => ({
   [keys.pull]: query.pull,
 })
 
-export const openQuery = (query: PageQuery) => pushAddress({ ...addressParams(), ...paramsOf(query) }, { ...addressState(), [opened]: true })
-
 export const recordQuery = (query: PageQuery) => updateAddress(paramsOf(query))
 
-export const leaveQuery = () => {
-  if (addressState()[opened]) return backAddress()
-  updateAddress({ [keys.view]: undefined, [keys.state]: undefined, [keys.project]: undefined, [keys.q]: undefined, [keys.pull]: undefined })
-}
+export const forgetQuery = () => updateAddress(Object.fromEntries(Object.values(keys).map(key => [key, undefined])))

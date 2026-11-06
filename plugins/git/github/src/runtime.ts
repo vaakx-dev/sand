@@ -1,4 +1,5 @@
-import { gitRepo, gitRunner } from '@sand/git/contract'
+import { gitRepo } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { type Server, server } from '@sand/server/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { definePlugin } from 'drydock'

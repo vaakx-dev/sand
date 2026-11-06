@@ -1,4 +1,5 @@
-import { ledger, type Session } from '@sand/chats/contract'
+import { type Session } from '@sand/chats/contract'
+import { ledger } from '@sand/ledger/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { modelSettings } from '@sand/model/contract'
 import type { Source } from '@sand/replay/contract'
@@ -89,8 +90,8 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   expect(switched!.system[0]!.text).toContain('- Model: b/m')
   expect(switched!.messages).toHaveLength(1)
   const [handoff, prompt] = switched!.messages[0]!.content
-  expect(handoff!.text).toStartWith('Context handoff: this chat continued with another model (a/m).')
-  expect(handoff!.text).toContain('Selected 2 intact items; omitted 0.')
+  expect(handoff!.text).toMatch(/^Earlier messages of this chat, seq \d+–\d+, with replies from another model \(a\/m\):/)
+  expect(handoff!.text).toContain(': 2 shown, 0 left out.')
   expect(handoff!.text).toMatch(/\[Historical user; prompt; item=[^;]+; seq=\d+; model=a\/m\]\none/)
   expect(handoff!.text).toMatch(/\[Historical assistant; reply; item=[^;]+; seq=\d+; model=a\/m\]\na1/)
   expect(prompt).toEqual(said('two'))
@@ -99,7 +100,7 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   expectPrefix(first!, back!)
   expect(back!.messages).toHaveLength(3)
   const [delta, again] = back!.messages[2]!.content
-  expect(delta!.text).toStartWith('Context handoff: this chat continued with another model (b/m).')
+  expect(delta!.text).toMatch(/^Earlier messages of this chat, seq \d+–\d+, with replies from another model \(b\/m\):/)
   expect(delta!.text).toContain('b1')
   expect(delta!.text).not.toContain(']\na1')
   expect(again).toEqual(said('three'))
@@ -110,7 +111,7 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   await turn('a/m', 'five')
   const cold = sent('a').at(-1)!
   expect(cold.messages).toHaveLength(1)
-  expect(texts(cold)[0]).toStartWith('Context handoff:')
+  expect(texts(cold)[0]).toStartWith('Earlier messages of this chat')
   expect(query("select generation, status from provider_threads where model = 'a/m' order by generation")).toEqual([
     { generation: 1, status: 'retired' },
     { generation: 2, status: 'idle' },
@@ -160,10 +161,10 @@ test('a model whose context overflowed is sent the summary and what compaction k
 
   const [, , , , retried, next] = sent('a')
   expect(chat.latest('compaction')?.data).toMatchObject({ reason: 'overflow', thread })
-  expect(texts(retried!)[0]).toStartWith('The earlier part of this conversation was compacted. Summary:\n\nthe summary')
+  expect(texts(retried!)[0]).toStartWith('Summary of the earlier conversation:\n\nthe summary')
   expectPrefix(retried!, next!)
   const [switched] = sent('b')
-  expect(texts(switched!)[0]).toMatch(/\[Historical user; summary; item=[^\]]+\]\nThe earlier part of this conversation was compacted\. Summary:\n\nthe summary/)
+  expect(texts(switched!)[0]).toMatch(/\[Historical user; summary; item=[^\]]+\]\nSummary of the earlier conversation:\n\nthe summary/)
 })
 
 test('tool ids Anthropic would reject are made safe in what the model is sent back', async () => {

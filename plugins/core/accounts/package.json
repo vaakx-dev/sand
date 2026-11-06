@@ -7,6 +7,7 @@
     "./contract": "./src/contract/index.ts"
   },
   "sand": {
+    "feature": "models",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Accounts",
@@ -15,9 +16,9 @@
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
-    "@sand/composer": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/layout": "workspace:*",

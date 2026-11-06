@@ -1,4 +1,5 @@
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { RepoInfos } from './info'
 import { pushTarget } from './push'
 import { readRemotes } from './remotes'

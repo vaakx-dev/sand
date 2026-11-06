@@ -1,6 +1,7 @@
 import { div, keys, show } from '@vaakx-dev/vrui'
 import type { PageParts } from '../parts'
 import { pageColumn } from './column'
+import { filterChips } from './filters'
 
 const searchBox = ({ kit, query }: PageParts) =>
   kit.searchField({
@@ -15,18 +16,17 @@ export const pageHead = (parts: PageParts) => {
   return div(
     { class: 'flex flex-col' },
     kit.paneHead(
-      { led: narrow, class: pageColumn(parts) },
-      show(narrow, () => kit.showSideButton(narrow, 'Show the sidebar', parts.showSide)),
+      { class: pageColumn(parts) },
       kit.headTitle(1, 'Pull requests'),
       show(
         () => !narrow.get(),
         () => div({ class: 'flex w-64 min-w-0 shrink' }, searchBox(parts)),
       ),
+      show(narrow, () => div({ class: 'flex shrink-0 items-center gap-2' }, ...filterChips(parts))),
       kit.iconButton(
         { title: 'Refresh from GitHub', 'aria-label': 'Refresh from GitHub', disabled: () => list.phase.get() === 'loading', onClick: list.refresh },
         kit.icon('reload'),
       ),
-      kit.closeButton({ title: 'Close pull requests', onClick: parts.close }),
     ),
     show(narrow, () => div({ class: ['flex px-4 pb-2', pageColumn(parts)] }, searchBox(parts))),
   )

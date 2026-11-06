@@ -1,0 +1,25 @@
+{
+  "name": "@sand/threads-mcp",
+  "version": "0.0.0",
+  "description": "sand's thread tools, defined once for its own threads and bots and for outside agents over MCP: list, read, start, message, wait for, stop and manage threads",
+  "type": "module",
+  "sand": {
+    "feature": "threads-mcp",
+    "runtime": "./src/index.ts",
+    "host": "./src/index.ts",
+    "cli": "./src/index.ts",
+    "label": "Thread tools",
+    "summary": "Lets your threads, your bots and outside agents start, message, read and manage your threads"
+  },
+  "dependencies": {
+    "@sand/mcp-server": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

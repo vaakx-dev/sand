@@ -51,12 +51,15 @@ const settle = (ctx: JobsContext, entries: Entry[], session: Session, timeout: n
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Returns early on timeout or when the user sends a message; jobs keep running then. Results returned here are not sent again as notices.",
+    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Returns early on timeout or when the user sends a message; jobs keep running then. Jobs whose results it returns send no <task-notification>.",
   group,
   input,
+  effect: 'read',
   timeoutMs: maxTimeout + settleGrace,
-  async run({ jobs, timeout_ms = defaultTimeout }, { session, signal }) {
-    const entries = jobs.map(id => store.own(session, id))
+  needs: ['thread'],
+  async run({ jobs, timeout_ms = defaultTimeout }, { conversation, signal }) {
+    const session = ctx.sessions.require(conversation.id)
+    const entries = jobs.map(id => store.own(session.id, id))
     const reason = await settle(ctx, entries, session, timeout_ms, signal)
     signal.throwIfAborted()
     const reports = entries.map(({ job, output }) => {

@@ -1,4 +1,4 @@
-import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import { plural } from '@sand/util'
 import { a, div } from '@vaakx-dev/vrui'
 

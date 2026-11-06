@@ -14,8 +14,9 @@ export const sendTool = (store: Store): Tool<typeof input> => ({
     'Message a background agent. Running: steer it. Finished: give it a follow-up task in the same thread; its report comes back as a new <task-notification>. Commands take no messages; start a new one instead.',
   group,
   input,
-  async run({ job, message }, { session }) {
-    const entry = store.own(session, job)
+  needs: ['thread'],
+  async run({ job, message }, { conversation }) {
+    const entry = store.own(conversation.id, job)
     if (!entry.spec.send) throw new Error(`${entry.job.kind} jobs can't take messages`)
     return entry.spec.send(message, entry.job)
   },

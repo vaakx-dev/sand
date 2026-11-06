@@ -26,6 +26,7 @@ import {
 import { sessionHeadWire } from '../contract'
 import type { ServerContext } from '../context'
 import { sessionRef } from '../stream/wire'
+import { isSession } from './serialize'
 import type { Audience, Socket } from './sockets'
 
 export type Send = (event: WireEvent<unknown>, payload: unknown, to?: Audience) => void
@@ -53,7 +54,9 @@ export const forwardEvents = (ctx: ServerContext, send: Send, sees: Sees) => {
   })
   ctx.on(sessionUpdate, session => send(sessionUpdateWire, session))
   ctx.on(sessionRemove, id => send(sessionRemoveWire, id))
-  ctx.on(artifactSaved, (...args) => send(artifactSavedWire, args))
+  ctx.on(artifactSaved, (conversation, artifact) => {
+    if (isSession(conversation)) send(artifactSavedWire, [conversation, artifact])
+  })
   ctx.on(toolStart, (call, session) => send(toolStartWire, [call, sessionRef(session)], watchingFamily(session)))
   ctx.on(toolProgress, (call, text, session) => send(toolProgressWire, [call, text, sessionRef(session)], watching(session)))
   ctx.on(toolResult, (result, call, session) => {

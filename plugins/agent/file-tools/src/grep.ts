@@ -20,6 +20,8 @@ export const grep: Tool<typeof input> = {
     'Search file contents with a regular expression. Returns file:line: text. Skips gitignored files, node_modules, .git and binary files unless include_ignored is set.',
   parallel: true,
   input,
+  effect: 'read',
+  needs: ['pc'],
   async run({ pattern, path = '.', glob = '**/*', ignore_case, include_ignored }, { cwd, signal }) {
     const found: string[] = []
     const query = { pattern, root: resolve(cwd, path), glob, ignoreCase: ignore_case, includeIgnored: include_ignored, signal: withDeadline(signal) }

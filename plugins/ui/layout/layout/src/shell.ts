@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import type { Region } from './contract'
-import { div, list, type Sig, type Store } from '@vaakx-dev/vrui'
+import type { Region, SpaceRegion, Strip } from './contract'
+import { derive, div, list, type Sig, type Store } from '@vaakx-dev/vrui'
 import { grip, sizedStyle, type Widths } from './resize'
 import { showing, type Phone } from './phone'
 import { backdropOpacity, slide } from './slide'
@@ -12,15 +12,25 @@ export type Coverable = 'side' | 'main'
 
 export type Views<K extends string> = Record<K, Sig<HTMLElement[]>>
 
+export interface Shelved {
+  space: string
+  view: HTMLElement
+}
+
+export type Shelves = Record<SpaceRegion, Sig<Shelved[]>>
+
 export interface ShellState {
   narrow: Sig<boolean>
   open: Store<Open>
-  views: Views<Region>
+  strips: Views<Strip>
+  shelves: Shelves
+  active: () => string | undefined
   covers: Views<Coverable>
   filled: Sig<Record<Region, boolean>>
   covered: Sig<Record<Coverable, boolean>>
   phone: Sig<Phone>
   keyboard: Sig<VisibleArea | undefined>
+  typing: Sig<boolean>
   widths: Widths
 }
 
@@ -42,8 +52,21 @@ const stacked = (views: Sig<HTMLElement[]>, container: HTMLElement) =>
     container,
   )
 
-export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled, covered, phone, keyboard, widths }: ShellState, closeSide: () => void) => {
-  const strip = (region: 'top' | 'bottom') => placed(views[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
+const shelved = (shelf: Sig<Shelved[]>, active: () => string | undefined, frame: (visible: () => boolean) => HTMLElement) =>
+  list(
+    derive(() => [...new Set(shelf.get().map(entry => entry.space))]),
+    space => space,
+    space =>
+      placed(
+        derive(() => shelf.get().flatMap(entry => (entry.space === space.get() ? [entry.view] : []))),
+        frame(() => active() === space.get()),
+      ),
+    div({ class: 'contents' }),
+  )
+
+export const buildShell = ({ layer }: Kit, state: ShellState, closeSide: () => void) => {
+  const { narrow, open, strips, shelves, active, covers, filled, covered, phone, keyboard, typing, widths } = state
+  const strip = (region: 'top' | 'bottom') => placed(strips[region], div({ class: () => (filled.get()[region] ? 'flex shrink-0 flex-col' : 'hidden') }))
   const shown = {
     side: () => (narrow.get() ? showing(phone.get(), 'side') : open.side.get() || covered.get().side),
     aside: () => (narrow.get() ? showing(phone.get(), 'aside') : open.aside.get()),
@@ -54,6 +77,17 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   }
   const sideSized = () => !narrow.get() && Boolean(widths.get().side)
   const fill = (visible: () => boolean) => div({ class: () => (visible() ? ['contents', sideSized() && '*:w-full'] : 'hidden') })
+  const contents = (visible: () => boolean) => div({ class: () => (visible() ? 'contents' : 'hidden') })
+  const railShown = () => filled.get().rail && !(narrow.get() && typing.get())
+  const railAtBottom = () => narrow.get() && railShown()
+
+  const rail = placed(
+    strips.rail,
+    div({
+      class: () => (railShown() ? 'flex shrink-0 flex-col' : 'hidden'),
+      style: () => (narrow.get() ? { order: '1' } : null),
+    }),
+  )
 
   const side: HTMLElement = div(
     {
@@ -65,14 +99,14 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
       },
       style: () => (narrow.get() ? { ...drawer, ...slide(phone.get(), 'side') } : sizedStyle(widths, 'side')),
     },
-    placed(views.side, fill(() => !covered.get().side)),
+    shelved(shelves.side, active, visible => fill(() => visible() && !covered.get().side)),
     placed(covers.side, fill(() => covered.get().side)),
     grip('side', () => side, () => aside, widths, () => narrow.get()),
   )
 
   const main = div(
     { class: 'relative isolate flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-900' },
-    placed(views.main, div({ class: 'contents' })),
+    shelved(shelves.main, active, contents),
     stacked(covers.main, div({ class: () => (covered.get().main ? [layer.drawer, 'absolute inset-0 flex flex-col bg-neutral-900'] : 'hidden') })),
   )
 
@@ -86,7 +120,7 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
       },
       style: () => (narrow.get() ? slide(phone.get(), 'aside') : sizedStyle(widths, 'aside')),
     },
-    placed(views.aside, div({ class: 'contents' })),
+    shelved(shelves.aside, active, contents),
     grip('aside', () => aside, () => side, widths, () => narrow.get()),
   )
 
@@ -97,11 +131,11 @@ export const buildShell = ({ layer }: Kit, { narrow, open, views, covers, filled
   })
 
   return div(
-    { class: 'absolute inset-0 flex flex-col bg-neutral-900 px-safe py-safe', style: () => fitArea(keyboard.get()) },
+    { class: ['absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe', () => (railAtBottom() ? null : 'pb-safe')], style: () => fitArea(keyboard.get()) },
     strip('top'),
     backdrop,
-    div({ class: 'flex min-h-0 min-w-0 flex-1' }, side, main, aside),
+    div({ class: ['flex min-h-0 min-w-0 flex-1', () => (narrow.get() ? 'flex-col' : null)] }, rail, side, main, aside),
     strip('bottom'),
-    placed(views.overlay, div({ class: 'contents' })),
+    placed(strips.overlay, div({ class: 'contents' })),
   )
 }

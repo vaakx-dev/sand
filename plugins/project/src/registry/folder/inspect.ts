@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { basename, resolve } from 'node:path'
 import { readProjectToml } from './toml'
 

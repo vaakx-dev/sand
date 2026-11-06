@@ -126,9 +126,9 @@ describe('projectContext', () => {
     expect(await projectContext(content, projectors({ wrong: 'a file body' }))).toEqual([
       marked('[File: gone; ref=gone] [File: moved; ref=moved] [Thread: wrong; ref=wrong]', text),
       envelope(
-        '<record kind="file" id="gone" unavailable="true">\nNo record was sent for this link.\n</record>',
+        '<record kind="file" id="gone" unavailable="true">\nNothing is attached for this link.\n</record>',
         '<record kind="file" id="moved" unavailable="true">\nGone.\n</record>',
-        '<record kind="thread" id="wrong" unavailable="true">\nNo record was sent for this link.\n</record>',
+        '<record kind="thread" id="wrong" unavailable="true">\nNothing is attached for this link.\n</record>',
       ),
       { type: 'context', records: [record('moved', 'file')] },
     ])

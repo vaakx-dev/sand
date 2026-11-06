@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Panel",
     "summary": "Tabs for the right-hand panels"
@@ -15,8 +16,9 @@
     "@sand/header": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/util": "workspace:*",
+    "@sand/threads-space": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }

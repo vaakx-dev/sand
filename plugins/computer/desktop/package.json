@@ -1,0 +1,21 @@
+{
+  "name": "@sand/computer-desktop",
+  "version": "0.0.0",
+  "description": "This PC's desktop as a computer the agent sees and drives with the real mouse and keyboard",
+  "type": "module",
+  "sand": {
+    "feature": "desktop",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Desktop computer",
+    "summary": "Lets the agent see this PC's screen and use its mouse and keyboard"
+  },
+  "dependencies": {
+    "@sand/computers": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/cdp": "workspace:*"
+  }
+}

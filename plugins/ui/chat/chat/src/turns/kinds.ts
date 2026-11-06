@@ -1,4 +1,4 @@
-import type { Item, ToolView } from '../parts/contract'
+import type { Item, ToolView } from '@sand/transcript/contract'
 
 const words: Record<string, string> = {
   read: 'Read',

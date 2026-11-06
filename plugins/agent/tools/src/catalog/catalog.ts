@@ -1,6 +1,7 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Message, Session } from '@sand/chats/contract'
-import type { GroupState, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
+import type { Message } from '@sand/chats/contract'
+import type { Conversation, Owner } from '@sand/engine/contract'
+import type { Gate, GroupState, Offer, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
 import { run } from '../run'
 import type { Choices } from './choices'
@@ -19,6 +20,8 @@ const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
 export const createCatalog = (choices: Choices, changed: () => void) => {
   const tools: Tool[] = []
   const groups = new Map<string, ToolGroup>()
+  const offers = new Map<Owner, Offer>()
+  let gated: Gate | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
 
@@ -65,8 +68,12 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const listed = (scoped: Tool[], load: ToolLoad) => scoped.filter(tool => loadOf(tool) === load).sort(byName)
 
-  const specs = (messages: Message[], session: Session) => {
-    const scoped = inScope(tools, session)
+  const offered = (conversation: Conversation) => offers.get(conversation.owner)?.(conversation) ?? []
+
+  const usable = (conversation: Conversation) => inScope(tools.filter(tool => loadOf(tool) !== 'off'), conversation, offered(conversation))
+
+  const specs = (messages: Message[], conversation: Conversation) => {
+    const scoped = usable(conversation)
     const deferred = listed(scoped, 'on-demand')
     const found = foundIn(messages)
     return [
@@ -76,14 +83,26 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     ]
   }
 
-  const resolve = (name: string, session: Session) => {
-    const scoped = inScope(tools, session)
+  const resolve = (name: string, conversation: Conversation) => {
+    const scoped = usable(conversation)
     return name === findName ? find(scoped) : scoped.find(tool => tool.name === name)
   }
 
   const service: Tools = {
     register,
     group,
+    offer(owner, offer) {
+      if (offers.has(owner)) throw new Error(`${owner} conversations already say what they offer tools`)
+      changes(() => offers.set(owner, offer))
+      return () => changes(() => offers.get(owner) === offer && offers.delete(owner))
+    },
+    gate(gate) {
+      if (gated) throw new Error('Tool calls already have a gate')
+      gated = gate
+      return () => {
+        if (gated === gate) gated = undefined
+      }
+    },
     groups: states,
     async choose(name, load) {
       if (!groups.has(name)) throw new Error(`No tool group named "${name}"`)
@@ -91,9 +110,9 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
       changed()
     },
     specs,
-    notes: session => inScope(tools, session).flatMap(tool => (tool.environment && loadOf(tool) !== 'off' ? [tool.environment] : [])),
-    parallel: (call, session) => resolve(call.name, session)?.parallel === true,
-    run: (call, context) => run(resolve(call.name, context.session), call, context),
+    notes: conversation => usable(conversation).flatMap(tool => (tool.environment ? [tool.environment] : [])),
+    parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
+    run: (call, context) => run(resolve(call.name, context.conversation), call, context, gated),
   }
   return service
 }

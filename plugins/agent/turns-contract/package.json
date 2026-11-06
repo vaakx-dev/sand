@@ -6,9 +6,13 @@
   "exports": {
     "./contract": "./src/contract.ts"
   },
+  "sand": {
+    "feature": "threads"
+  },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

@@ -6,8 +6,6 @@ import { joinedView, joinView } from './join'
 import type { WelcomeModel } from './model'
 import { addView, startView } from './start'
 
-const setupSteps = 2
-
 const body = (kit: Kit, model: WelcomeModel, control: LoginControl) =>
   dynamicChild(model.step, step => {
     const pc = model.joined.get()
@@ -22,7 +20,7 @@ export const welcomeView = (kit: Kit, model: WelcomeModel, control: LoginControl
   return show(model.active, () =>
     setupFrame(
       setupScreen(
-        show(model.setup.map(Boolean), () => progressSteps(setupSteps, 1)),
+        show(model.setup.map(Boolean), () => dynamicChild(model.total, total => progressSteps(total, 1))),
         body(kit, model, control),
       ),
     ),

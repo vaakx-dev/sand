@@ -1,0 +1,9 @@
+{
+  "name": "@sand/cdp",
+  "version": "0.0.0",
+  "description": "Finds Chrome, Edge or Chromium and drives it over the Chrome DevTools Protocol",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

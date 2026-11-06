@@ -1,13 +1,11 @@
 import { Prec } from '@codemirror/state'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
+import { hasFiles } from '@sand/attachments/web/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
-import { BREAKPOINT, div, input, media, span, type Sig } from '@vaakx-dev/vrui'
+import { BREAKPOINT, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import type { Trigger } from '../contract'
-import { pastedFile, pasteLimit } from '../attachments/content'
-import { hasFiles } from '../attachments/drop'
-import { shelf } from '../attachments/shelf'
 import { createCompletion } from '../complete/model'
 import { chipClipboard } from '../editor/chips/clipboard'
 import { chipWidgets } from '../editor/chips/widget'
@@ -27,7 +25,6 @@ export interface CardParts {
   slots: Slots
   menu: SendMenu
   plus: Plus
-  dropping: Sig<boolean>
   typed: () => void
 }
 
@@ -81,12 +78,7 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
     return true
   }
 
-  const paste = (event: ClipboardEvent) => {
-    const pasted = event.clipboardData?.getData('text/plain') ?? ''
-    if (pasted.length <= pasteLimit) return false
-    model.files.add([pastedFile(pasted)])
-    return true
-  }
+  const paste = (event: ClipboardEvent) => model.shelf.get()?.paste(event.clipboardData?.getData('text/plain') ?? '') ?? false
 
   const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
   const editor = createEditor(ctx.kit, model.text, {
@@ -102,30 +94,20 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
     ],
   })
 
-  const picker = input({
-    type: 'file',
-    multiple: true,
-    hidden: true,
-    onChange: () => {
-      model.files.add(picker.files ?? [])
-      picker.value = ''
-    },
-  })
-  const choose = () => picker.click()
+  const choose = () => model.shelf.get()?.pick()
 
   const node = glassPanel(
     { class: 'relative rounded-xl px-3 pt-3' },
-    shelf(ctx, model.files),
+    dynamicChild(model.shelf, shelf => shelf?.view() ?? null),
     editor.node,
     div(
       { class: 'flex h-10 min-w-0 items-center gap-1' },
-      plusView(ctx.kit, plus, choose),
+      plusView(ctx.kit, plus, choose, () => Boolean(model.shelf.get()?.attachable())),
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
       sendControl(ctx.kit, model, menu),
     ),
-    picker,
   )
 
   return { node, editor, completion }

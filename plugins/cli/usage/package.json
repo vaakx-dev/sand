@@ -4,6 +4,7 @@
   "description": "The sand usage command: tokens, API cost and plan limits",
   "type": "module",
   "sand": {
+    "feature": "usage",
     "cli": "./src/index.ts",
     "label": "Usage command",
     "summary": "Shows usage from the terminal"
