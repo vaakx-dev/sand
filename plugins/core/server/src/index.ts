@@ -1,7 +1,7 @@
 import { sessions } from '@sand/chats/contract'
 import { type ClientMessage, createHandlers, hello, parseInput } from '@sand/host-hub/contract'
 import { definePlugin } from 'drydock'
-import { helloSafe, pagesChange, type Server, server as serverService, uiFocus } from './contract'
+import { helloSafe, pagesChange, type Server, server as serverService, uiFocus, uiWatch } from './contract'
 import { inject } from './context'
 import { createHello } from './requests/hello'
 import { createRoutes } from './routes'
@@ -29,11 +29,18 @@ export default definePlugin({
       return true
     }
 
+    const watch = async (socket: Socket, request: ClientMessage) => {
+      const { sessions } = await parseInput(uiWatch, request.input)
+      stream.watch(socket, sessions)
+      return true
+    }
+
     const sockets = createSockets({
       leave: socket => stream.forget(socket),
       counted: pages => ctx.emit(pagesChange, pages),
       answer(socket, request) {
         if (request.type === uiFocus.id) return focus(socket, request)
+        if (request.type === uiWatch.id) return watch(socket, request)
         return handlers.answer(request.type, request.input, socket.data).then(trimForPage)
       },
       settle: () => stream.flush(),

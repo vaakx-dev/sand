@@ -35,3 +35,4 @@ export const sessionAppend = request('session.append', {
 export const sessionCheckout = request('session.checkout', { input: session.extend({ entry: z.string().nullable() }), output: type<boolean>(), place })
 export const sessionBranches = request('session.branches', { input: session.extend({ entry: z.string() }), output: type<Branch[]>(), place })
 export const uiFocus = request('ui.focus', { input: z.object({ session: z.string().optional() }), output: type<boolean>(), place })
+export const uiWatch = request('ui.watch', { input: z.object({ sessions: z.array(z.string()) }), output: type<boolean>(), place })

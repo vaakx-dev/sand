@@ -30,12 +30,22 @@ export const createStream = (ctx: ServerContext, publish: Publish, tracker: Live
     return tracker.snapshot(session)
   }
 
-  const focus = (socket: Socket, session: string | undefined) => {
-    coalescer.flush()
-    watchers.focus(socket, session)
-    const found = session && tracker.snapshot(session)
+  const catchUp = (socket: Socket, session: string) => {
+    const found = tracker.snapshot(session)
     if (found) deliver(socket, eventFrame(liveSnapshot.id, [session, found]))
   }
 
-  return { focus, snapshot, forget: watchers.forget, focused: watchers.focused, sees: watchers.sees, flush: coalescer.flush }
+  const focus = (socket: Socket, session: string | undefined) => {
+    coalescer.flush()
+    watchers.focus(socket, session)
+    if (session) catchUp(socket, session)
+  }
+
+  const watch = (socket: Socket, sessions: string[]) => {
+    coalescer.flush()
+    watchers.watch(socket, sessions)
+    for (const session of sessions) catchUp(socket, session)
+  }
+
+  return { focus, watch, snapshot, forget: watchers.forget, focused: watchers.focused, sees: watchers.sees, flush: coalescer.flush }
 }

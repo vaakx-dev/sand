@@ -1,4 +1,4 @@
-import { botProfile, type BotProfileSection, botViews, jobEntry, type JobEntry } from '@sand/bots/contract'
+import { botChat, botProfile, type BotProfileSection, botViews, jobEntry, type JobEntry } from '@sand/bots/contract'
 import { firstRun } from '@sand/features/contract'
 import { closeDrawer, layout, layoutChange, spaces } from '@sand/layout/contract'
 import { modelPicker } from '@sand/model-picker/contract'
@@ -11,6 +11,7 @@ import { definePlugin } from 'drydock'
 import { createAddress, newBot } from './address'
 import { avatar } from './avatar'
 import { jobCard } from './chat/job'
+import { chatParts } from './chat/parts'
 import { inject } from './context'
 import { firstBot } from './create/first'
 import { css } from './face/motion'
@@ -42,6 +43,7 @@ export default definePlugin({
     }
 
     const sections = sig<BotProfileSection[]>([])
+    const chat = chatParts()
     const main = {
       ctx,
       store,
@@ -52,6 +54,7 @@ export default definePlugin({
       picker: shell.read(() => ctx.get(modelPicker)),
       defaults: shell.read(() => ctx.get(models)?.defaults() ?? {}),
       sections,
+      parts: chat.parts,
     }
 
     ctx.watch(firstRun, found =>
@@ -65,6 +68,8 @@ export default definePlugin({
     )
 
     ctx.watch(transcript, found => found?.entry(jobEntry, (entry, bot) => jobCard(ctx.kit, { store, edit: () => address.profile(bot) }, bot, entry.data as JobEntry)))
+
+    ctx.provide(botChat, chat.host)
 
     ctx.provide(botProfile, {
       section(section) {

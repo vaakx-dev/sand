@@ -144,6 +144,19 @@ export interface BotProfile {
 
 export const botProfile = service<BotProfile>('botProfile')
 
+export interface BotChatPart {
+  id: string
+  order?: number
+  beside?(bot: string): HTMLElement
+  above?(bot: string): HTMLElement
+}
+
+export interface BotChat {
+  part(part: BotChatPart): Dispose
+}
+
+export const botChat = service<BotChat>('botChat')
+
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')
 export const botEntry = event<(entry: BotEntry) => void>('bot.entry')

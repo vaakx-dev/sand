@@ -1,5 +1,5 @@
 import { approvalViews } from '@sand/approvals/contract'
-import type { BotProfileSection, BotSummary, ModelChoice } from '@sand/bots/contract'
+import type { BotChatPart, BotProfileSection, BotSummary, ModelChoice } from '@sand/bots/contract'
 import type { ModelPicker } from '@sand/model-picker/contract'
 import { derive, div, dynamicChild, effect, list, media, sig, untrack, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { newBot, type Address, type Route } from './address'
@@ -37,6 +37,7 @@ export interface MainParts extends Omit<HeadParts, 'close'> {
   picker: Derive<ModelPicker | undefined>
   defaults: Derive<ModelChoice>
   sections: Sig<BotProfileSection[]>
+  parts: Sig<BotChatPart[]>
 }
 
 const keyOf = (page: Page) => (page.kind === 'profile' ? `${page.kind}:${page.bot.id}` : page.kind)
@@ -46,7 +47,7 @@ const loading = ({ ctx }: MainParts, head: HeadParts) =>
 
 const latest = (store: BotStore, shown: BotSummary) => () => store.find(shown.id) ?? shown
 
-const chatPage = ({ ctx, store, address }: MainParts, head: HeadParts, shown: BotSummary) => {
+const chatPage = ({ ctx, store, address, parts }: MainParts, head: HeadParts, shown: BotSummary) => {
   const approvals = ctx.get(approvalViews)?.banner('bot', shown.id)
   return chatView(ctx.kit, {
     ...head,
@@ -54,6 +55,7 @@ const chatPage = ({ ctx, store, address }: MainParts, head: HeadParts, shown: Bo
     talk: conversation(ctx, shown.id),
     transcript: ctx.transcriptParts,
     composer: ctx.composer,
+    parts,
     profile: () => address.profile(shown.id),
     ...(approvals && { approvals }),
   })

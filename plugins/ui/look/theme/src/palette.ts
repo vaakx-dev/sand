@@ -82,4 +82,10 @@ const sky = {
   '500': '#0ea5e9',
 }
 
-export const sandPalette = { accent, neutral, success, warning, danger, orange, sky } satisfies ThemePalette
+const info = {
+  '300': '#93c5fd',
+  '400': '#60a5fa',
+  '500': '#3b82f6',
+}
+
+export const sandPalette = { accent, neutral, success, warning, danger, info, orange, sky } satisfies ThemePalette
