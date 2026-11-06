@@ -63,9 +63,16 @@ export const draftSession = (ctx: ComposerContext, model: Model, switched: () =>
   const promotes = (next: Key | undefined) =>
     Boolean(model.sending.get() && key?.target && next && !next.target && !ctx.threads.get(next.id)?.info.head)
 
+  const settle = (first: Key) => {
+    key = first
+    ready = true
+    keep()
+  }
+
   const open = (id: string | undefined) => {
     const next = keyOf(ctx, id)
     if (next?.id === key?.id) return retarget(next)
+    if (!key && next && !isBlank(model.draft())) return settle(next)
     if (key && next && promotes(next)) {
       drop(key.id)
       if (sent?.id === key.id) sent = { ...sent, id: next.id }
