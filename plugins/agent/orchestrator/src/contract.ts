@@ -212,6 +212,7 @@ export const threadList = request('thread.list', {
     cwd: z.string().optional(),
     project: z.string().optional(),
     mine: z.boolean().optional(),
+    bot: z.string().optional(),
     limit: z.number().int().min(1).max(readLimit).optional(),
   }),
   output: type<ThreadRow[]>(),

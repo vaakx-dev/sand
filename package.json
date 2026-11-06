@@ -71,9 +71,11 @@
       "plugins/ui/chat/tool-views/src/**",
       "plugins/ui/chat/transcript/src/**",
       "plugins/bots/space/src/**",
+      "plugins/bots/work/src/**",
       "plugins/calendar/calendar-space/src/**"
     ],
     "roles": [
+      "info",
       "orange",
       "sky"
     ],

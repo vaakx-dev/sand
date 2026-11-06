@@ -1,5 +1,5 @@
 import type { ApprovalBanner } from '@sand/approvals/contract'
-import { botName, type BotSummary } from '@sand/bots/contract'
+import { botName, type BotChatPart, type BotSummary } from '@sand/bots/contract'
 import type { Composer } from '@sand/composer/contract'
 import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
@@ -7,6 +7,7 @@ import { derive, div, dynamicChild, effect, list, onMount, p, show, sig, span, u
 import { avatar } from '../avatar'
 import { column, pane, paneHead, type HeadParts } from '../pane'
 import type { Conversation } from './conversation'
+import { slotted } from './parts'
 import { statusView } from './status'
 import { transcriptRows } from './transcript'
 
@@ -16,6 +17,7 @@ export interface ChatParts extends HeadParts {
   transcript: TranscriptParts
   composer: Composer
   approvals?: ApprovalBanner
+  parts: Sig<BotChatPart[]>
   profile(): void
 }
 
@@ -131,10 +133,20 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
   const { approvals } = parts
   if (approvals) effect(() => (approvals.asking() ? dock.slot('banner', approvals.view) : undefined))
 
-  return pane(
+  const id = untrack(() => parts.bot().id)
+  const chat = pane(
     { onMount: () => talk.stop },
     chatHead(kit, parts),
     div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, kit.jumpButton(jumpShown, toLatest), menu.view()),
+    slotted(parts.parts, 'above', id, div({ class: 'shrink-0 px-3 md:px-4' })),
     dock.view,
+  )
+  return div(
+    { class: 'flex h-full min-h-0 min-w-0 flex-1' },
+    chat,
+    show(
+      () => !parts.narrow.get(),
+      () => slotted(parts.parts, 'beside', id, div({ class: 'flex h-full min-h-0 shrink-0' })),
+    ),
   )
 }

@@ -6,7 +6,7 @@ import { route } from './route'
 import type { Upstream } from './upstream'
 
 const waitTimeout = 60_000
-const focusType = 'ui.focus'
+const everyRuntime = new Set(['ui.focus', 'ui.watch'])
 
 interface ReceiveOptions {
   runtimes: Runtimes
@@ -33,7 +33,7 @@ export const createReceiver = ({ runtimes, handlers, upstream }: ReceiveOptions)
 
   const target = (request: ClientMessage) => route(request, runtimes.live(), runtimes.current())
 
-  const focus = (client: Client, request: ClientMessage, chosen: RuntimeView) => {
+  const copyToOthers = (client: Client, request: ClientMessage, chosen: RuntimeView) => {
     for (const runtime of runtimes.live()) {
       if (runtime.id === chosen.id) continue
       upstream(client, runtime).send(JSON.stringify({ ...request, id: --copies }))
@@ -51,7 +51,7 @@ export const createReceiver = ({ runtimes, handlers, upstream }: ReceiveOptions)
     client.waiting.set(request.id, runtime.id)
     if (request.type === hello.id) client.hellos.add(request.id)
     upstream(client, runtime).send(raw)
-    if (request.type === focusType) focus(client, request, runtime)
+    if (everyRuntime.has(request.type)) copyToOthers(client, request, runtime)
   }
 
   return (client: Client, raw: string) => {

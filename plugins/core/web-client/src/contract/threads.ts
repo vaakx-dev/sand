@@ -64,6 +64,7 @@ export interface Threads {
   move(id: string, position: number): Promise<void>
   remove(id: string): Promise<void>
   select(id: string | undefined, options?: { replace?: boolean }): Promise<void>
+  watch(id: string): Dispose
   load(id: string): Promise<Thread | undefined>
   path(id: string, options?: { carried?: boolean }): Entry[]
   link(id: string): string

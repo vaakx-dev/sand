@@ -1,12 +1,11 @@
-import { modal } from '../layers/stack'
 import type { NavAction } from '@sand/nav/contract'
 import type { MenuRequest } from '../contract'
-import { div, dynamicChild, event, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { actionTones, plainButton } from '../buttons/button'
 import { headTitle } from '../heads/page-head'
 import { metaLine } from '../heads/text'
 import { icon } from '../icons/lucide'
-import { layer } from '../layer'
+import { bottomSheet } from '../sheets/bottom'
 import { chipButtons, choiceCount } from './chips'
 import { chipHandlers, choose, firstStep, menuItems, stepView, type MenuControl, type MenuStep } from './items'
 import { arrowKeys } from './keyboard'
@@ -78,27 +77,19 @@ export const menuSheet = (request: MenuRequest, close: () => void) => {
     step: next => current.set(next),
     armed: event => pressed || event.detail === 0,
   }
-  return div(
+  return bottomSheet(
     {
-      class: [layer.dialog, 'fixed inset-0 flex items-end bg-black/50 animate-fade'],
-      'data-menu-layer': '',
-      onPointerDown: event(close, { self: true }),
-      onMount: node => modal(node, close, request.from),
-    },
-    div(
-      {
-        role: 'menu',
-        'aria-label': request.title,
-        class: 'w-full rounded-t-xl bg-neutral-800 px-2 pt-2 pb-safe',
-        onPointerDown: () => {
-          pressed = true
-        },
-        onKeyDown: arrowKeys,
+      close,
+      from: request.from,
+      role: 'menu',
+      'aria-label': request.title,
+      onPointerDown: () => {
+        pressed = true
       },
-      div({ class: 'mx-auto mb-2 h-1 w-8 rounded-full bg-neutral-700' }),
-      head(request),
-      dynamicChild(current, step => (step ? div(stepView(step, control, () => current.set(undefined), 'md')) : choices(actions, control, request.expand))),
-      div({ class: 'h-2' }),
-    ),
+      onKeyDown: arrowKeys,
+    },
+    head(request),
+    dynamicChild(current, step => (step ? div(stepView(step, control, () => current.set(undefined), 'md')) : choices(actions, control, request.expand))),
+    div({ class: 'h-2' }),
   )
 }
