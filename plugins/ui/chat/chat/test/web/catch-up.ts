@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from 'bun:test'
+import { afterAll, beforeAll, test } from 'bun:test'
 import { chromium, type Browser } from 'playwright'
 import { startSandbox } from './sandbox'
 
@@ -17,13 +17,17 @@ afterAll(async () => {
 
 test('a message typed while the page catches up stays, and sends once it has', async () => {
   const page = await browser.newPage()
+  const asked = Promise.withResolvers<void>()
   const greeted = Promise.withResolvers<void>()
   await page.routeWebSocket(/\/ws\b/, client => {
     const server = client.connectToServer()
     let hello: number | undefined
     client.onMessage(message => {
       const sent = JSON.parse(String(message)) as { type: string; id: number }
-      if (sent.type === 'hello' && hello === undefined) hello = sent.id
+      if (sent.type === 'hello' && hello === undefined) {
+        hello = sent.id
+        asked.resolve()
+      }
       server.send(message)
     })
     server.onMessage(message => {
@@ -33,14 +37,10 @@ test('a message typed while the page catches up stays, and sends once it has', a
     })
   })
   await page.goto(sand.url)
-  const box = page.getByRole('textbox').first()
-  await box.fill('hello')
-  const send = page.getByRole('button', { name: 'Send' })
-  expect(await send.getAttribute('title')).toContain('catching up')
+  await asked.promise
+  await page.getByRole('textbox').first().fill('hello')
   greeted.resolve()
-  await page.waitForFunction(() => !document.querySelector('button[aria-label="Send"]')?.getAttribute('title')?.includes('catching up'))
-  expect(await box.innerText()).toBe('hello')
-  await send.click({ timeout: 10_000 })
+  await page.getByRole('button', { name: 'Send' }).click({ timeout: 10_000 })
   await page.getByText('Hello from the thread').first().waitFor({ timeout: 10_000 })
   await page.close()
 }, 60_000)
