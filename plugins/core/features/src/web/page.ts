@@ -8,7 +8,7 @@ interface Placed {
   depth: number
 }
 
-const indents = ['', 'w-0', 'w-5', 'w-10']
+const indents = ['', 'w-0', 'w-3', 'w-6']
 
 const tree = (features: Feature[], feature: Feature, depth = 0): Placed[] => [
   { feature, depth },

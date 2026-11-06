@@ -10,7 +10,7 @@ import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
-import { headTitle, pageHead, paneHead } from './heads/page-head'
+import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { sectionHeading } from './heads/section-heading'
 import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
@@ -146,6 +146,7 @@ export const kit = {
   optionProps,
   overlay,
   ownedByNode,
+  pageColumn,
   pageHead,
   paneHead,
   pathLabel,

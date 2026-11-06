@@ -31,7 +31,7 @@ export const inboxSheet = (parts: InboxParts, close: () => void) => {
         {},
         show(
           () => !model.all.get().length,
-          () => emptyState({ text: 'Nothing is waiting on you.' }),
+          () => emptyState({ text: 'Nothing is waiting on you.', flush: true }),
         ),
         list(
           model.all,

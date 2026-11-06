@@ -79,7 +79,7 @@ const threadRows = (kit: Kit, parts: SidebarParts) => {
       () =>
         kit.emptyState({
           text: () => (parts.project.get() ? `No threads in ${parts.label.get()} yet.` : 'No threads yet.'),
-          action: kit.linkButton({ onClick: parts.create }, 'New thread'),
+          action: kit.secondaryAction({ size: 'sm', onClick: parts.create }, 'New thread'),
         }),
     ),
   )

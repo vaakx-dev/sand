@@ -5,7 +5,7 @@ import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, effect, list, onMount, p, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import { avatar } from '../avatar'
-import { column, pane, paneHead, type HeadParts } from '../pane'
+import { pane, paneHead, type HeadParts } from '../pane'
 import type { Conversation } from './conversation'
 import { aboveDock, beside } from './parts'
 import { statusView } from './status'
@@ -89,11 +89,11 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
         () => div({ class: 'flex justify-center py-2 text-neutral-500' }, kit.spinner('sm')),
       ),
       dynamicChild(state, shown => {
-        if (shown === 'loading' || shown === 'failed') return div({ class: [column, 'px-3 py-4 md:px-4'] }, waiting(kit, talk, shown))
+        if (shown === 'loading' || shown === 'failed') return div({ class: [kit.pageColumn, 'px-3 py-4 md:px-4'] }, waiting(kit, talk, shown))
         return shown === 'empty' ? emptyChat(kit, parts) : null
       }),
       div(
-        { class: [column, 'flex flex-col px-3 pt-4 md:px-4'], hidden: () => state.get() !== 'rows' },
+        { class: [kit.pageColumn, 'flex flex-col px-3 pt-4 md:px-4'], hidden: () => state.get() !== 'rows' },
         list(rows, row => row.key, rowNode, rowList),
         watched(div(statusView(kit, talk, () => parts.bot().status))),
       ),
