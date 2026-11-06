@@ -1,7 +1,7 @@
 import type { LiveBlock } from '@sand/accounts/contract'
 import { botInterrupt, botLive, botSend, botStreamWire } from '@sand/bot-turns/contract'
 import { botConversation, botEntryWire, chatPath, type BotEntry } from '@sand/bots/contract'
-import { promptContent, textOf, type Message, type Prompt } from '@sand/chats/contract'
+import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { wireHello } from '@sand/devices-contract'
 import { applyLiveEvent } from '@sand/server/contract'
 import { errorMessage, isRecord, uuid } from '@sand/util'
@@ -37,8 +37,8 @@ const isReply = (entry: BotEntry) => {
 const withoutDelivered = (pending: Pending[], entry: BotEntry) => {
   const message = messageOf(entry)
   if (message?.role !== 'user') return pending
-  const said = spoken(message)
-  const index = pending.findIndex(item => textOf(promptContent(item.prompt), '\n\n').trim() === said)
+  const said = saidText(message)
+  const index = pending.findIndex(item => saidText({ role: 'user', content: promptContent(item.prompt) }) === said)
   return index < 0 ? pending : pending.filter((_, at) => at !== index)
 }
 

@@ -7,7 +7,6 @@ import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
 import { listen } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { catchFiles } from './attachments/drop'
 import { fileTrigger } from './complete/files'
 import { skillTrigger } from './complete/skills'
 import { inject } from './context'
@@ -32,11 +31,11 @@ export default definePlugin({
     const plus = createPlus()
     const typing = createTyping()
     let current: Card | undefined
-    const { model, dropping, session } = owned(ctx, () => {
+    const { model, session } = owned(ctx, () => {
       const model = createModel(ctx)
       const session = draftSession(ctx, model, () => current?.completion.close())
       listen(window, 'pagehide', () => session.keep())
-      return { model, dropping: catchFiles(model.files), session }
+      return { model, session }
     })
 
     const composer: Composer = {
@@ -60,10 +59,10 @@ export default definePlugin({
         if (current) current.editor.quote(text)
         else model.text.update(typed => quotedText([{ kind: 'text', text: typed }, { kind: 'quote', text }]))
       },
-      attach: content => model.files.attach(content),
+      attach: content => model.attached.update(list => [...list, ...content]),
       slot: (where, view, order) => slots.add(where, view, order),
       hold: reason => model.holds.add(reason),
-      ...createHandoff(ctx, model, () => current?.editor.focusEnd()),
+      ...createHandoff(model, () => current?.editor.focusEnd()),
       sendMenu: menu.add,
       plus: plus.add,
       trigger: model.triggers.add,
@@ -72,7 +71,7 @@ export default definePlugin({
       choose: model.choose,
     }
 
-    const parts = { ctx, model, slots, menu, plus, dropping, typed: typing.typed }
+    const parts = { ctx, model, slots, menu, plus, typed: typing.typed }
     session.start()
     place(
       ctx,

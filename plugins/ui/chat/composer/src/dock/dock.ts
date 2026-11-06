@@ -1,13 +1,12 @@
-import { div } from '@vaakx-dev/vrui'
-import { chatDrop } from '../attachments/drop'
+import { div, dynamicChild } from '@vaakx-dev/vrui'
 import { completionView } from '../complete/view'
 import { errorBanners } from '../errors/banners'
-import { parentRect, publishHeight } from '../integrations/measure'
+import { publishHeight } from '../integrations/measure'
 import type { Card, CardParts } from './card'
 import { bannerPanel, completionPopup } from './glass'
 import { tab } from './tab'
 
-export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => {
+export const dock = ({ ctx, model, slots }: CardParts, card: Card) => {
   const completing = () => card.completion.visible.get()
   const completions = completionPopup(() => !completing(), ...completionView(ctx.kit, card.completion))
   const view = div(
@@ -22,7 +21,7 @@ export const dock = ({ ctx, model, slots, dropping }: CardParts, card: Card) => 
         div({ class: 'relative z-10' }, card.node),
       ),
     ),
-    chatDrop(ctx.kit, dropping, () => parentRect(view)),
+    dynamicChild(model.shelf, shelf => shelf?.drops(() => view.parentElement) ?? null),
   )
   publishHeight(view, '--dock-h')
   return view

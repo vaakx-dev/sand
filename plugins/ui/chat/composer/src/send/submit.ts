@@ -1,12 +1,8 @@
-import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type Prompt, type UserContent } from '@sand/chats/contract'
+import { labelOf, promptOf } from '@sand/attachments/web/contract'
+import { feedbackOnly, hasToolResult, promptText, userParts, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import { models, type SendOptions } from '@sand/web-client/contract'
-import { compose, contentName } from '../attachments/content'
 import type { ComposerContext } from '../context'
-
-const prompt = (text: string, attachments: UserContent[]): Prompt => (attachments.length ? compose(text, attachments) : text)
-
-const label = (text: string, attachments: UserContent[]) => text || attachments.map(contentName).join(', ')
 
 export const modelMissing = (ctx: ComposerContext, settings: SessionSettings) => {
   if (!ctx.threads.current()) return !settings.model
@@ -31,7 +27,7 @@ export const submit = async (ctx: ComposerContext, text: string, attachments: Us
   const thread = current ?? (draft && (await ctx.threads.create(draft)))
   if (!thread) throw new Error('Pick a project for a new thread first')
   if (!current) await ctx.threads.select(thread.id, { replace: true })
-  await ctx.turns.send(thread.id, prompt(text, attachments), { label: label(text, attachments), settings: current ? undefined : settings, ...options })
+  await ctx.turns.send(thread.id, promptOf(text, attachments), { label: labelOf(text, attachments), settings: current ? undefined : settings, ...options })
 }
 
 const typedContent = (content: UserContent[]) =>
@@ -59,5 +55,5 @@ export const retry = async (ctx: ComposerContext) => {
   if (!entry) return
   const content = typedContent((entry.data as Message).content as UserContent[])
   await ctx.threads.checkout(thread.id, entry.parent)
-  await ctx.turns.send(thread.id, content, { label: label('', content.filter(block => block.type !== 'text' && block.type !== 'context')) || 'Retry' })
+  await ctx.turns.send(thread.id, content, { label: labelOf('', content.filter(block => block.type !== 'text' && block.type !== 'context')) || 'Retry' })
 }

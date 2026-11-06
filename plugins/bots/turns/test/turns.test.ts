@@ -1,8 +1,9 @@
 import { memoryRead, memoryWrite } from '@sand/bot-memory/contract'
 import { botConversation, botCreate, botDelete, botGet, type BotEntry, type BotStatus } from '@sand/bots/contract'
 import { botInterrupt, botLive, botSend } from '@sand/bot-turns/contract'
-import type { Message } from '@sand/chats/contract'
+import { imageLabel, type Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
+import { media } from '@sand/media/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -91,4 +92,20 @@ test('a bot whose tool waits on the user is waiting until it answers', async () 
   expect(await ask(botGet, { bot: bot.id })).toMatchObject({ status: 'waiting' })
   answered.resolve('Friday')
   expect(await settled(bot.id)).toMatchObject({ status: 'idle', last: { text: 'Thanks.' } })
+})
+
+test('an image sent to a bot reaches its model after a label with the path it is saved at, as in a thread', async () => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies: [[said('A cat.')]], api: 'anthropic' }], {
+    plugins: ['bots/bots', 'bots/memory', 'bots/turns', 'core/transfers', 'agent/attachments'],
+  })
+  const store = sand.app.get(media)
+  if (!store) throw new Error('No media store')
+  const stored = store.put(new Uint8Array([1, 2, 3]), 'image/png')
+  const bot = await sand.ask(botCreate, { name: 'Looker', models: { main: { model: 'fake/m' }, quick: {} } })
+
+  await sand.ask(botSend, { bot: bot.id, prompt: [{ type: 'image', name: 'cat.png', ...stored }, said('What is this?')], clientRequestId: 'one' })
+  await settled(bot.id)
+
+  const [first] = sand.requests('fake').map(body => JSON.parse(body))
+  expect(first.messages[0].content).toMatchObject([said(imageLabel('cat.png', store.path(stored))), { type: 'image' }, said('What is this?')])
 })

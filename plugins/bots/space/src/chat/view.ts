@@ -1,7 +1,8 @@
+import type { Shelves } from '@sand/attachments/web/contract'
 import type { BotSummary } from '@sand/bots/contract'
 import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, list, onRaf, p, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, list, onRaf, p, show, span, untrack, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { avatar } from '../avatar'
 import { column, pane, paneHead, scrollArea, type HeadParts } from '../pane'
 import { composer } from './composer'
@@ -13,6 +14,7 @@ export interface ChatParts extends HeadParts {
   bot: () => BotSummary
   talk: Conversation
   transcript: TranscriptParts
+  shelves: Derive<Shelves | undefined>
   approvals?: HTMLElement
   profile(): void
 }
@@ -109,6 +111,6 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
     scroller,
     menu.view(),
     parts.approvals ? div({ class: 'shrink-0 px-3 md:px-4' }, div({ class: column }, parts.approvals)) : null,
-    composer(kit, { name: () => parts.bot().name, working: () => working(parts), send: talk.send, interrupt: talk.interrupt }),
+    composer(kit, { name: () => parts.bot().name, working: () => working(parts), shelves: parts.shelves, send: talk.send, interrupt: talk.interrupt }),
   )
 }

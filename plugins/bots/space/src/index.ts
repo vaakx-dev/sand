@@ -1,3 +1,4 @@
+import { shelves } from '@sand/attachments/web/contract'
 import { botProfile, type BotProfileSection, botViews } from '@sand/bots/contract'
 import { firstRun } from '@sand/features/contract'
 import { closeDrawer, layout, layoutChange, spaces } from '@sand/layout/contract'
@@ -25,7 +26,7 @@ export default definePlugin({
     ctx.kit.style(ctx, css)
     const store = botStore(ctx)
     const address = createAddress(ctx)
-    const shell = pulse(ctx, [layoutChange, modelsChange], [layout, modelPicker, models])
+    const shell = pulse(ctx, [layoutChange, modelsChange], [layout, modelPicker, models, shelves])
     const narrow = shell.read(() => ctx.get(layout)?.state().narrow ?? false)
     const page = owned(ctx, () => derive(() => pageOf(address.route.get(), store.bots.get())))
     const current = () => {
@@ -47,6 +48,7 @@ export default definePlugin({
       page,
       narrow,
       showSide,
+      shelves: shell.read(() => ctx.get(shelves)),
       picker: shell.read(() => ctx.get(modelPicker)),
       defaults: shell.read(() => ctx.get(models)?.defaults() ?? {}),
       sections,

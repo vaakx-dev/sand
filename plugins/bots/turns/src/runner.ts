@@ -1,3 +1,4 @@
+import { attachments } from '@sand/attachments/contract'
 import { botMemory } from '@sand/bot-memory/contract'
 import { bots, type BotStatus } from '@sand/bots/contract'
 import type { Conversation, Conversations, TurnStatus } from '@sand/engine/contract'
@@ -42,6 +43,7 @@ export const botConversations = (ctx: BotTurnsContext, live: Live): Conversation
     },
     step: (conversation, turn, signal) => ctx.providerThreads.step(conversation, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),
+    prompt: content => ctx.get(attachments)?.label(content) ?? content,
     overflow: (conversation, turn, error, signal) => ctx.bail(contextOverflow, conversation, turn, error, signal),
     changed(turn) {
       if (turn.ended) live.clear(turn.conversation)

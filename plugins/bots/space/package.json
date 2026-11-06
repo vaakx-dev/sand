@@ -12,6 +12,7 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/approvals": "workspace:*",
+    "@sand/attachments": "workspace:*",
     "@sand/bot-memory": "workspace:*",
     "@sand/bot-routines": "workspace:*",
     "@sand/bot-turns": "workspace:*",

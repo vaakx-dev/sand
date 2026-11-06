@@ -1,3 +1,4 @@
+import type { UserContent } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
 import { turnPrompt } from '@sand/turns-contract/contract'
 import { media } from '@sand/media/contract'
@@ -23,12 +24,14 @@ export default definePlugin({
   apply(ctx, config) {
     const images: ImageLimits = { imageEdge: config.max_image_edge, imageBytes: config.max_image_bytes }
     const limits: AttachmentLimits = { uploadBytes: 1024 ** 3 }
+    const label = (content: UserContent[]) => labelImages(ctx.media, content)
     ctx.provide(attachments, {
       isMedia,
       fromFile: path => fromFile(ctx.media, path, images),
       fromBytes: (data, name) => fromBytes(ctx.media, data, name, images),
+      label,
     })
-    ctx.on(turnPrompt, content => labelImages(ctx.media, content))
+    ctx.on(turnPrompt, label)
     const place: UploadPlace = { transfers: ctx.transfers, media: ctx.media, uploads: join(ctx.cli.home, 'uploads'), images, ...limits }
     ctx.watch(server, found =>
       found

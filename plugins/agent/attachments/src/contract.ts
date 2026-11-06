@@ -11,6 +11,7 @@ export interface Attachments {
   isMedia(path: string): boolean
   fromFile(path: string): Promise<ImageBlock | DocumentBlock>
   fromBytes(data: Uint8Array, name: string): Promise<ImageBlock | DocumentBlock>
+  label(content: UserContent[]): UserContent[]
 }
 
 export const attachments = service<Attachments>('attachments')
