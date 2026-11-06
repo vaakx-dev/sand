@@ -11,7 +11,7 @@ export const botBrief = (bots: Bots, memory: BotMemory, tools: Tools, context: C
   async system(conversation, model) {
     const bot = bots.get(conversation.id)
     if (!bot) throw new Error(`No bot ${conversation.id}`)
-    return context.system(conversation, model, await instructions(bot, memory, tools.specs([], conversation)))
+    return context.system(conversation, model, await instructions(bot, memory))
   },
   tools: (conversation, messages) => tools.specs(messages, conversation),
 })
