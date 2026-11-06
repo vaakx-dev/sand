@@ -1,4 +1,5 @@
-import type { Session, WireSession } from '@sand/chats/contract'
+import type { WireSession } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
@@ -42,7 +43,7 @@ export interface HtmlPages {
 
 export const htmlPages = service<HtmlPages>('htmlPages')
 
-export const artifactSaved = event<(session: Session, artifact: Artifact) => void>('artifact.saved')
+export const artifactSaved = event<(conversation: Conversation, artifact: Artifact) => void>('artifact.saved')
 
 export const htmlPage = request('html.page', { input: z.object({ session: z.string(), render: z.string() }), output: type<string>(), place: 'thread' })
 

@@ -4,6 +4,7 @@
   "description": "web_search and web_fetch tools, and their views in the chat",
   "type": "module",
   "sand": {
+    "feature": "web-tools",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
@@ -12,9 +13,9 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "@sand/chat": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

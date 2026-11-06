@@ -1,5 +1,5 @@
 import type { Tool } from '@sand/tools/contract'
-import type { ProviderThreadInfo } from '@sand/turns-contract/contract'
+import type { ProviderThreadInfo } from '../contract'
 import { z } from 'zod'
 import type { ThreadsContext } from '../context'
 import { type Item, itemsOf } from '../handoff/items'
@@ -37,13 +37,13 @@ export const readsHistory = ({ seen: [first] }: ProviderThreadInfo) => !!first &
 export const threadRead = (ctx: ThreadsContext): Tool<typeof input> => ({
   name: threadReadName,
   description:
-    'Read earlier items of this chat that a context handoff left out or shortened. Pass item to read one item in full, or after to list the items that follow a seq.',
+    'Read earlier items of this chat that were left out or shortened. Pass item to read one item in full, or after to list the items that follow a seq.',
   input,
   parallel: true,
-  active: session => !!session.latest('handoff'),
-  run({ item, after, limit, maxChars, offset }, { session }) {
-    const path = currentPath(ctx, session)
-    const items = itemsOf(path, path.entries, madeBy(ctx, path))
+  active: conversation => conversation.path().some(entry => entry.type === 'handoff'),
+  run({ item, after, limit, maxChars, offset }, { conversation }) {
+    const path = currentPath(ctx, conversation)
+    const items = itemsOf(path, path.entries, madeBy(ctx, path, conversation.owner))
     return item ? readItem(items, item, offset, maxChars) : listItems(items, after ?? -1, limit, maxChars)
   },
 })

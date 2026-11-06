@@ -1,5 +1,5 @@
 import type { Markdown } from '@sand/markdown/contract'
-import type { ToolRenderer, ToolView, ToolViews } from '@sand/chat/contract'
+import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import { div, el } from '@vaakx-dev/vrui'

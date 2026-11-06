@@ -1,5 +1,5 @@
 import { isRecord } from '@sand/util'
-import { addressParam, addressState, type DraftTarget, pushAddress, updateAddress } from '../contract'
+import { addressParam, addressState, type DraftTarget, pushAddress, type ThreadVisit, updateAddress } from '../contract'
 
 const key = 'session'
 
@@ -7,8 +7,6 @@ export interface Place {
   session?: string
   draft?: DraftTarget
 }
-
-export type Visit = 'push' | 'replace' | 'restore'
 
 const placeId = ({ session, draft }: Place) => session ?? draft?.id
 
@@ -33,7 +31,7 @@ export const sessionLink = (id: string) => {
   return url.href
 }
 
-export const recordPlace = (from: Place, to: Place, visit: Visit) => {
+export const recordPlace = (from: Place, to: Place, visit: ThreadVisit) => {
   if (visit === 'restore') return
   if (visit === 'push' && moves(from, to)) pushAddress({ [key]: to.session }, { draft: to.draft })
   else updateAddress({ [key]: to.session }, { draft: to.draft })

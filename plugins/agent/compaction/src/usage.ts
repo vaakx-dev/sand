@@ -10,5 +10,7 @@ export const serveUsage = (ctx: Context, server: Server, read: (session: Session
       const session = ctx.get(sessions)?.open(request.session)
       return session ? read(session) : undefined
     }),
-    ctx.on(contextUsage, (session, usage) => server.broadcast(contextChange, [session.id, usage])),
+    ctx.on(contextUsage, (conversation, usage) => {
+      if (conversation.owner === 'thread') server.broadcast(contextChange, [conversation.id, usage])
+    }),
   )

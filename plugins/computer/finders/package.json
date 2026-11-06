@@ -1,0 +1,29 @@
+{
+  "name": "@sand/finders",
+  "version": "0.0.0",
+  "description": "Finds where to click on a screenshot: pluggable finders (any vision model, or a model picking from an element list) and strategies that zoom, grid or mark the screen",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "computers",
+    "runtime": "./src/index.ts",
+    "label": "Finders",
+    "summary": "Finds where to click on a screen with any vision model"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/computers": "workspace:*",
+    "@sand/media": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/cdp": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/project": "workspace:*"
+  }
+}

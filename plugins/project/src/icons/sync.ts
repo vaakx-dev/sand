@@ -1,5 +1,5 @@
 import type { Peers } from '@sand/devices-contract'
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { serial } from '@sand/util'
 import type { Project } from '../contract'
 import { localCopy } from '../registry/list'

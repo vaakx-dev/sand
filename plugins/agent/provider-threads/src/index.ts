@@ -1,8 +1,7 @@
-import { sessionRemove, sessionSettle } from '@sand/chats/contract'
-import { providerThreads } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { inject } from './context'
+import { providerThreads } from './contract'
 import { handoffCap } from './handoff/budget'
 import { createThreads } from './prepare'
 import { createHandoffStore } from './store/handoffs'
@@ -12,7 +11,7 @@ import { threadRead } from './tools/thread-read'
 
 export default definePlugin({
   name: 'provider-threads',
-  description: 'Keeps what each model of a chat has seen, so a model keeps its cached prefix and a switch hands over only what fits',
+  description: 'Keeps what each model of a conversation has seen, so a model keeps its cached prefix and a switch hands over only what fits',
   inject,
   config: z.object({
     handoff_tokens: z
@@ -26,12 +25,5 @@ export default definePlugin({
     const stores = { threads: createThreadStore(ctx.ledger.db), handoffs: createHandoffStore(ctx.ledger.db) }
     ctx.provide(providerThreads, createThreads(ctx, stores, config.handoff_tokens))
     ctx.effect(() => ctx.tools.register(threadRead(ctx)))
-    const release = (session: string) => stores.threads.open(session).forEach(thread => ctx.llm.release?.(thread.id))
-    ctx.on(sessionSettle, session => release(session.id))
-    ctx.on(sessionRemove, session => {
-      release(session)
-      stores.threads.remove(session)
-      stores.handoffs.remove(session)
-    })
   },
 })

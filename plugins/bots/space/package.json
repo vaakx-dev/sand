@@ -1,0 +1,35 @@
+{
+  "name": "@sand/bots-space",
+  "version": "0.0.0",
+  "description": "Bots space: the bot list beside the chosen bot's conversation, a new-bot flow with templates, and each bot's profile and memory",
+  "type": "module",
+  "sand": {
+    "feature": "bots",
+    "web": "./src/index.ts",
+    "label": "Bots space",
+    "summary": "Your bots, their conversations, profiles and memory"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/approvals": "workspace:*",
+    "@sand/attachments": "workspace:*",
+    "@sand/bot-memory": "workspace:*",
+    "@sand/bot-routines": "workspace:*",
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/layout": "workspace:*",
+    "@sand/model-picker": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

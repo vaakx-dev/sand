@@ -3,12 +3,13 @@ import { owned } from '@sand/reactive'
 import { onAddressChange } from '@sand/web-client/contract'
 import { byId, derive, effect, media, mount, setStyle, sig, store, untrack, type Sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { cssOrder, layout, layoutChange, type Layout, type LayoutState, type Region } from './contract'
+import { cssOrder, layout, layoutChange, spaces, type Layout, type LayoutState, type Region, type SpaceRegion, type Strip } from './contract'
 import { layoutMemory } from './memory'
 import { phoneNavigation, type Drawer } from './phone'
 import { savedWidths } from './resize'
-import { buildShell, type Coverable, type Open, type Views } from './shell'
-import { keyboardArea } from './viewport'
+import { buildShell, type Coverable, type Open, type Shelves, type Views } from './shell'
+import { spaceBoard } from './spaces'
+import { keyboardArea, keyboardShown } from './viewport'
 
 const narrowQuery = '(max-width: 760px)'
 
@@ -20,7 +21,7 @@ const blurFocus = () => {
 
 export default definePlugin({
   name: 'layout',
-  description: 'Top strip, side column, main column, aside column and bottom strip; side and aside become drawers on narrow screens',
+  description: 'Spaces and the regions they fill: rail, top strip, side, main and aside columns and bottom strip; on narrow screens side and aside become drawers and the rail a bottom bar',
   inject: { kit },
   apply(ctx) {
     const { remembered, remember } = layoutMemory()
@@ -28,18 +29,24 @@ export default definePlugin({
     const open = store<Open>(remembered())
     const columns = (): Open => ({ side: open.side.get(), aside: open.aside.get() })
 
-    const views: Views<Region> = { top: sig([]), side: sig([]), main: sig([]), aside: sig([]), bottom: sig([]), overlay: sig([]) }
+    const board = spaceBoard(ctx)
+    const strips: Views<Strip> = { top: sig([]), rail: sig([]), bottom: sig([]), overlay: sig([]) }
+    const shelves: Shelves = { side: sig([]), main: sig([]), aside: sig([]) }
     const covers: Views<Coverable> = { side: sig([]), main: sig([]) }
+    const shows = (region: SpaceRegion) => shelves[region].get().some(entry => entry.space === board.active())
     const { covered, filled } = owned(ctx, () => ({
       covered: derive(() => ({ side: has(covers.side), main: has(covers.main) })),
-      filled: derive(() => ({
-        top: has(views.top),
-        side: has(views.side) || has(covers.side),
-        main: has(views.main) || has(covers.main),
-        aside: has(views.aside),
-        bottom: has(views.bottom),
-        overlay: has(views.overlay),
-      })),
+      filled: derive(
+        (): Record<Region, boolean> => ({
+          top: has(strips.top),
+          rail: has(strips.rail),
+          side: shows('side') || has(covers.side),
+          main: shows('main') || has(covers.main),
+          aside: shows('aside'),
+          bottom: has(strips.bottom),
+          overlay: has(strips.overlay),
+        }),
+      ),
     }))
     const available = (drawer: Drawer) => filled.get()[drawer] && !(drawer === 'aside' && covered.get().main)
     const phone = phoneNavigation(available, () => root, () => changed())
@@ -51,25 +58,31 @@ export default definePlugin({
     const state = (): LayoutState => ({ narrow: narrow.get(), open: current(), filled: { ...filled.get() } })
     const changed = () => ctx.emit(layoutChange, state())
 
-    const add = (into: Sig<HTMLElement[]>, view: HTMLElement) => {
-      into.update(list => [...list, view])
+    const add = <T>(into: Sig<T[]>, item: T) => {
+      into.update(list => [...list, item])
       changed()
       return () => {
-        into.update(list => list.filter(other => other !== view))
+        into.update(list => list.filter(other => other !== item))
         changed()
       }
     }
 
     const widths = savedWidths()
     const keyboard = owned(ctx, keyboardArea)
+    const typing = owned(ctx, () => keyboardShown(keyboard))
     const root = owned(ctx, () =>
-      buildShell(ctx.kit, { narrow, open, views, covers, filled, covered, phone: phone.state, keyboard, widths }, () => host.toggle('side', false)),
+      buildShell(
+        ctx.kit,
+        { narrow, open, strips, shelves, active: board.active, covers, filled, covered, phone: phone.state, keyboard, typing, widths },
+        () => host.toggle('side', false),
+      ),
     )
 
     const host: Layout = {
-      mount(region, view, order = 0) {
+      mount(target, view, order = 0) {
         setStyle(view, { order: cssOrder(order) })
-        return add(views[region], view)
+        if (typeof target === 'string') return add(strips[target], view)
+        return add(shelves[target.region], { space: target.space, view })
       },
       cover(region, view) {
         blurFocus()
@@ -118,7 +131,14 @@ export default definePlugin({
         return ctx.kit.dismissible(root, () => phone.show('thread'), { overlay: false })
       })
     })
+    owned(ctx, () =>
+      effect(() => {
+        board.active()
+        untrack(changed)
+      }),
+    )
     ctx.effect(() => mount(byId('stage'), root))
     ctx.provide(layout, host)
+    ctx.provide(spaces, board)
   },
 })

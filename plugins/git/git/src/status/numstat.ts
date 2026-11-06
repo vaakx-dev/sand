@@ -1,4 +1,4 @@
-import { gitOk } from '../run/run'
+import { gitOk } from '@sand/git-runner/contract'
 
 export interface LineCount {
   add: number

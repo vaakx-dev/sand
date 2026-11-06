@@ -1,5 +1,5 @@
 import { llm, llmModels } from '@sand/accounts/contract'
-import { sessionEntry, type sessions } from '@sand/chats/contract'
+import { sessionEntry, sessions, type Sessions } from '@sand/chats/contract'
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
@@ -30,7 +30,21 @@ const hellos = (ctx: Context, server: Server, defaults: Defaults) =>
     server.hello(helloDefaults, () => canonical(ctx.get(llm), defaults.get())),
   )
 
-export const serveSettings = (ctx: Context<{ sessions: typeof sessions }>, server: Server, choices: Choices, defaults: Defaults) => {
+const serveThreadSettings = (ctx: Context, server: Server, choices: Choices, threads: Sessions) => {
+  const shareSettings = (id: string) => {
+    const session = threads.open(id)
+    if (session) server.broadcast(settingsChange, [id, choices.state(session)])
+  }
+  return joinDisposers(
+    server.handle(settingsSet, ({ session, patch }) => choices.change(threads.require(session), knownPatch(patch))),
+    ctx.on(modelSettingsChange, session => shareSettings(session.id)),
+    ctx.on(sessionEntry, (session, entry) => {
+      if (entry.type === 'settings') shareSettings(session.id)
+    }),
+  )
+}
+
+export const serveSettings = (ctx: Context, server: Server, choices: Choices, defaults: Defaults) => {
   const shareModels = () => {
     const current = ctx.get(llm)
     server.broadcast(modelsChange, {
@@ -40,10 +54,6 @@ export const serveSettings = (ctx: Context<{ sessions: typeof sessions }>, serve
       defaults: canonical(current, defaults.get()),
     })
   }
-  const shareSettings = (id: string) => {
-    const session = ctx.sessions.open(id)
-    if (session) server.broadcast(settingsChange, [id, choices.state(session)])
-  }
   const saveDefaults = async (patch: SettingsPatch) => {
     await defaults.save(patch)
     ctx.emit(modelSettingsDefaults)
@@ -51,17 +61,13 @@ export const serveSettings = (ctx: Context<{ sessions: typeof sessions }>, serve
   return joinDisposers(
     hellos(ctx, server, defaults),
     server.handle(settingsGet, ({ session, settings }) => {
-      const opened = session === undefined ? undefined : ctx.sessions.open(session)
+      const opened = session === undefined ? undefined : ctx.get(sessions)?.open(session)
       return opened ? choices.state(opened) : { current: choices.resolved(settings ?? {}) }
     }),
-    server.handle(settingsSet, ({ session, patch }) => choices.change(ctx.sessions.require(session), knownPatch(patch))),
     server.handle(defaultsSet, ({ patch }) => saveDefaults(knownPatch(patch))),
-    ctx.on(modelSettingsChange, session => shareSettings(session.id)),
     ctx.on(modelSettingsDefaults, shareModels),
     ctx.on(llmModels, shareModels),
-    ctx.on(sessionEntry, (session, entry) => {
-      if (entry.type === 'settings') shareSettings(session.id)
-    }),
     ctx.watch(llm, shareModels),
+    ctx.watch(sessions, found => found && serveThreadSettings(ctx, server, choices, found)),
   )
 }

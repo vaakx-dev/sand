@@ -8,7 +8,7 @@ import { checkMovable, type Moves } from './move'
 const input = z.object({
   task: z.string().optional().describe('What to do in the worktree. Needed for a new thread; after a move, this thread carries on with it'),
   move: z.boolean().optional().describe('Move this thread into the new worktree, with the uncommitted changes, instead of starting a new thread. Happens when this turn ends'),
-  branch: z.string().optional().describe('New thread: an existing local branch to check out. Move: a name for the new branch. Default: sand names it from the task'),
+  branch: z.string().optional().describe('New thread: an existing local branch to check out. Move: a name for the new branch. Default: named from the task'),
   from: z.string().optional().describe('New thread only: the branch or commit to start from (default: the default branch)'),
 })
 
@@ -16,13 +16,14 @@ export const newTool = (deps: WorktreeDeps, moves: Moves, turns: () => Turns | u
   name: 'worktree_new',
   description: [
     'Start a new thread in its own git worktree and branch to work on a task in parallel, or move this thread into one.',
-    'Use this instead of running git worktree add yourself: sand sets the worktree up, names its branch and lets the user clean it up later.',
+    'Use this instead of git worktree add: it also sets the worktree up and names its branch.',
   ].join(' '),
   input,
-  async run({ task, move, branch, from }, { cwd, session }) {
+  needs: ['thread', 'pc'],
+  async run({ task, move, branch, from }, { cwd, conversation }) {
     if (move) {
-      await checkMovable(deps, session)
-      moves.queue(session.id, { ...(branch ? { branch } : {}), ...(task ? { task } : {}) })
+      await checkMovable(deps, deps.sessions.require(conversation.id))
+      moves.queue(conversation.id, { ...(branch ? { branch } : {}), ...(task ? { task } : {}) })
       return [
         'This thread moves into a new worktree when this turn ends, taking the uncommitted changes with it.',
         task ? 'It then carries on with the task there.' : 'The next turn runs there.',
@@ -31,9 +32,9 @@ export const newTool = (deps: WorktreeDeps, moves: Moves, turns: () => Turns | u
     }
     if (!task) throw new Error('Give the new thread a task.')
     const running = turns()
-    if (!running) throw new Error("This sand can't run another agent right now.")
+    if (!running) throw new Error("Can't start a thread right now.")
     const thread = await threadIn(deps, { cwd, ...(branch ? { branch } : {}), ...(from ? { from } : {}) })
     running.run(deps.sessions.require(thread.id), task, { origin: 'agent' }).catch(deps.report)
-    return `Started thread ${thread.id} in the worktree ${thread.cwd}. It works on the task on its own; the user sees it in the sidebar.`
+    return `Started thread ${thread.id} in the worktree ${thread.cwd}. It works on the task on its own.`
   },
 })

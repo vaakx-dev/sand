@@ -4,6 +4,7 @@
   "description": "The plugin tool and the sand-plugins skill, so the agent can inspect and write plugins",
   "type": "module",
   "sand": {
+    "feature": "extend",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Extend",

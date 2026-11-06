@@ -1,4 +1,5 @@
-import type { Entry, EntryViews, ViewReset } from '@sand/chats/contract'
+import type { Entry } from '@sand/chats/contract'
+import type { EntryViews, ViewReset } from '@sand/engine/contract'
 
 export interface Path {
   entries: Entry[]

@@ -105,6 +105,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
     broadcast() {},
     hello: () => () => {},
     pages: () => 0,
+    ask: () => Promise.reject(new Error('No requests in this test')),
     route(path, handler) {
       routes.set(path, handler)
       return () => void routes.delete(path)
@@ -178,7 +179,7 @@ test('a borrowed native session gets its thread, delta and handoff, stays on the
   expect((await sand.turns.run(chat, 'go')).text).toBe('first')
   const [opened] = two.asked
   expect(opened!.thread).toMatchObject({ id: expect.stringMatching(/^chat-pc:/), generation: 1, fresh: true })
-  expect(opened!.handoff!.text).toStartWith('Context handoff: this chat continued with another model (other/m).')
+  expect(opened!.handoff!.text).toMatch(/^Earlier messages of this chat, seq \d+–\d+, with replies from another model \(other\/m\):/)
   expect(JSON.stringify(opened!.delta)).toContain('"go"')
 
   down.clear()

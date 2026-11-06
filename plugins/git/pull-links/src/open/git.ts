@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 export const longGitMs = 2 * 60_000
 

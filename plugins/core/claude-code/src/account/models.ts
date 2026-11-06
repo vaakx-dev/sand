@@ -1,8 +1,6 @@
-import type { Effort, PlanModel } from '@sand/accounts/contract'
+import { efforts, type PlanModel } from '@sand/accounts/contract'
 import { fieldsOf, type Json } from '../cli/connection'
 import { probe } from './probe'
-
-const efforts: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 
 const variant = /\[[^\]]*\]$/
 

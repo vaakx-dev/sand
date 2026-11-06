@@ -1,5 +1,6 @@
 import { sessions, sessionSettle, textOf } from '@sand/chats/contract'
-import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
+import { gitRepo, pathKey } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { type Server, server } from '@sand/server/contract'

@@ -61,7 +61,7 @@ export const createModels = (ctx: Context, wire: Wire, pcs: Pcs, threads: Thread
   const useCatalog = (device: string, next: ModelsUpdate) => {
     catalogs.set(device, next)
     for (const thread of [...store.settings.keys()]) if (store.deviceOf(thread) === device) store.settings.delete(thread)
-    if (device === store.device()) refreshDefaults()
+    if (device === store.device() && wire.hello(helloDefaults, device) !== undefined) refreshDefaults()
     changed()
   }
 

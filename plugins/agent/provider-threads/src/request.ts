@@ -1,8 +1,9 @@
 import type { HandoffBlock, LLMRequest, ThreadRef } from '@sand/accounts/contract'
-import type { Entry, Session } from '@sand/chats/contract'
+import type { Entry } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import type { Selection } from '@sand/model/contract'
-import { type ProviderThreadInfo, type Segment, stepTools } from '@sand/turns-contract/contract'
 import type { ThreadsContext } from './context'
+import type { Brief, ProviderThreadInfo, Segment } from './contract'
 import type { HandoffStore } from './store/handoffs'
 import { currentPath, madeBy } from './current'
 import { readsHistory, threadReadName } from './tools/thread-read'
@@ -28,22 +29,24 @@ const refOf = (thread: ProviderThreadInfo, cwd: string, handoff?: HandoffBlock):
   }
 }
 
-const lookupOf = (session: Session) => {
+const lookupOf = (conversation: Conversation) => {
   let all: Map<string, Entry> | undefined
-  return (id: string) => (all ??= new Map(session.entries().map(entry => [entry.id, entry]))).get(id)
+  return (id: string) => (all ??= new Map(conversation.entries().map(entry => [entry.id, entry]))).get(id)
 }
 
 export const buildRequest = async (
   ctx: ThreadsContext,
   handoffs: HandoffStore,
-  session: Session,
+  brief: Brief,
+  conversation: Conversation,
   thread: ProviderThreadInfo,
   { effort, speed }: Selection,
 ): Promise<Built> => {
-  const path = currentPath(ctx, session)
-  const basis = threadBasis(thread.id, thread.seen, path, lookupOf(session))
-  const { messages, delta } = renderView(basis, path, { source: thread.source, made: madeBy(ctx, path), handoff: handoffs.text })
-  const offered = await ctx.waterfall(stepTools, ctx.context.tools(session, messages), session)
+  const path = currentPath(ctx, conversation)
+  const basis = threadBasis(thread.id, thread.seen, path, lookupOf(conversation))
+  const { messages, delta } = renderView(basis, path, { source: thread.source, made: madeBy(ctx, path, conversation.owner), handoff: handoffs.text })
+  const offered = await brief.tools(conversation, messages)
+  const kind = brief.kind?.(conversation)
   const tools = readsHistory(thread) ? offered : offered.filter(tool => tool.name !== threadReadName)
   const handoff = handoffs.pending(thread.id)
   return {
@@ -54,9 +57,9 @@ export const buildRequest = async (
       model: thread.model,
       ...(effort && { effort }),
       speed,
-      session: session.id,
-      sessionKind: session.kind,
-      thread: refOf(thread, session.cwd, handoff),
+      session: conversation.id,
+      ...(kind && { sessionKind: kind }),
+      thread: refOf(thread, conversation.cwd, handoff),
       delta,
       ...(handoff && { handoff }),
     },

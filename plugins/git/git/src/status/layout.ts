@@ -1,5 +1,5 @@
 import type { GitLayout } from '../contract'
-import { gitMaybe } from '../run/run'
+import { gitMaybe } from '@sand/git-runner/contract'
 import { existsSync } from 'node:fs'
 import { normalize } from 'node:path'
 import { readWorktrees } from './worktrees'

@@ -1,0 +1,21 @@
+{
+  "name": "@sand/calendar-microsoft",
+  "version": "0.0.0",
+  "description": "Outlook and Microsoft 365 calendars through Microsoft Graph with the user's own app registration: delta sync, edits, invitation answers and free/busy",
+  "type": "module",
+  "sand": {
+    "feature": "calendar-accounts",
+    "runtime": "./src/index.ts",
+    "label": "Outlook Calendar",
+    "summary": "Your Outlook and Microsoft 365 calendars in sand"
+  },
+  "dependencies": {
+    "@sand/calendar": "workspace:*",
+    "@sand/connections": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

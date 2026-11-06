@@ -1,0 +1,23 @@
+{
+  "name": "@sand/computers",
+  "version": "0.0.0",
+  "description": "The computers the agent can see and use: browsers, desktops and other PCs register here, and a person can take one over at any time",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "computers",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Computers",
+    "summary": "The browsers and desktops the agent can see and use"
+  },
+  "dependencies": {
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

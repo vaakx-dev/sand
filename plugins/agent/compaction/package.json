@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "compaction",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Compaction",
@@ -15,9 +16,11 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/media": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/usage": "workspace:*",

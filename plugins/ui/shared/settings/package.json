@@ -13,9 +13,8 @@
   },
   "dependencies": {
     "@sand/layout": "workspace:*",
-    "@sand/nav": "workspace:*",
+    "@sand/rail": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/sidebar": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

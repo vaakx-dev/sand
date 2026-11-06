@@ -4,6 +4,7 @@
   "description": "Titles a new thread with the fast sub model while its first turn runs",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "runtime": "./src/index.ts",
     "label": "Thread titles",
     "summary": "Swaps a new thread's cut-off first message for a short AI title"

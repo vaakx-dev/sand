@@ -1,5 +1,4 @@
 import { llm } from '@sand/accounts/contract'
-import { sessions } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
 import { turnEnd } from '@sand/turns-contract/contract'
 import { server } from '@sand/server/contract'
@@ -14,7 +13,7 @@ import { updateSettings } from './settings'
 
 export default definePlugin({
   name: 'model',
-  inject: { cli, sessions },
+  inject: { cli },
   async apply(ctx) {
     const defaults = await createDefaults(ctx.cli.home)
     const current = () => ctx.get(llm)

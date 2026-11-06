@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 const candidates = (branch: string) => [`refs/remotes/origin/${branch}`, `refs/remotes/upstream/${branch}`, `refs/heads/${branch}`]
 

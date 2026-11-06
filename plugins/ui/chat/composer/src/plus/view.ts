@@ -9,5 +9,5 @@ const openPanel = (kit: Kit, { entries }: Plus) => {
   return dynamicChild(shown, entry => (entry ? kit.chipPopover(() => entry.open.set(false), { class: 'left-0' }, entry.panel()) : null))
 }
 
-export const plusView = (kit: Kit, plus: Plus, choose: () => void) =>
-  span({ class: 'relative flex min-w-0 shrink items-center gap-1' }, ...plusMenu(kit, plus, choose), awayChip(kit, plus), openPanel(kit, plus))
+export const plusView = (kit: Kit, plus: Plus, choose: () => void, attachable: () => boolean) =>
+  span({ class: 'relative flex min-w-0 shrink items-center gap-1' }, ...plusMenu(kit, plus, choose, attachable), awayChip(kit, plus), openPanel(kit, plus))

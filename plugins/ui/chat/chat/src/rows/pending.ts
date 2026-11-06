@@ -3,11 +3,8 @@ import type { Thread } from '@sand/web-client/contract'
 import type { NavAction } from '@sand/nav/contract'
 import { type Entry, promptContent, userParts } from '@sand/chats/contract'
 import { div } from '@vaakx-dev/vrui'
+import type { Item, Row, Rows } from '@sand/transcript/contract'
 import type { ChatContext } from '../context'
-import { taggedItems, untagged } from '../parts/thread/tagged'
-import { itemRows } from './index'
-import type { Row, RowContext } from './row'
-import { userMessage } from './user'
 
 type Look = 'steer' | 'queued' | 'held'
 
@@ -38,8 +35,8 @@ const resumeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): N
   run: () => ctx.turns.hold(thread.id, pending.id, false).catch(error => ctx.report(error)),
 })
 
-const note = (context: RowContext, caption: string, resume: NavAction | undefined) => () => {
-  const { metaLine, secondaryAction } = context.kit
+const note = (ctx: ChatContext, caption: string, resume: NavAction | undefined) => () => {
+  const { metaLine, secondaryAction } = ctx.kit
   return div(
     { class: 'flex min-w-0 items-center gap-3' },
     metaLine(caption),
@@ -47,21 +44,16 @@ const note = (context: RowContext, caption: string, resume: NavAction | undefine
   )
 }
 
-const rowsOf = (ctx: ChatContext, thread: Thread, pending: PendingItem, context: RowContext): Row[] => {
+const rowsOf = (ctx: ChatContext, thread: Thread, pending: PendingItem, rows: Rows): Row[] => {
   const look = lookOf(pending)
   const caption = captions[look]
   const resume = look === 'held' ? resumeAction(ctx, thread, pending) : undefined
   const actions = [...(resume ? [resume] : []), removeAction(ctx, thread, pending)]
-  const parts = userParts({ role: 'user', content: promptContent(pending.prompt) })
-  const custom = (type: string) => Boolean(context.registry.entryRenderer(type))
   const entry: Entry = { id: pending.id, session: thread.id, parent: null, at: pending.at, type: 'message', data: null, seq: 0 }
-  const shown = untagged(parts, custom)
   const key = [pending.id, look, resume?.label].filter(Boolean).join(':')
-  const asked = shown.length
-    ? [userMessage({ kind: 'user', key, parts: shown, steer: true, at: pending.at }, context, () => actions, caption ? note(context, caption, resume) : undefined)]
-    : []
-  return [...taggedItems(entry, parts, custom).flatMap(item => itemRows(item, context)), ...asked]
+  const shown = (item: Item) =>
+    item.kind === 'user' ? [rows.user({ ...item, key }, () => actions, caption ? note(ctx, caption, resume) : undefined)] : rows.item(item)
+  return ctx.transcriptParts.prompt(entry, userParts({ role: 'user', content: promptContent(pending.prompt) })).flatMap(shown)
 }
 
-export const pendingRows = (ctx: ChatContext, thread: Thread, context: RowContext): Row[] =>
-  thread.pending.flatMap(pending => rowsOf(ctx, thread, pending, context))
+export const pendingRows = (ctx: ChatContext, thread: Thread, rows: Rows): Row[] => thread.pending.flatMap(pending => rowsOf(ctx, thread, pending, rows))

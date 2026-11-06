@@ -1,5 +1,5 @@
 import type { GitWorktree } from '../contract'
-import { gitOk } from '../run/run'
+import { gitOk } from '@sand/git-runner/contract'
 import { normalize } from 'node:path'
 
 const parseBlock = (block: string): GitWorktree | undefined => {

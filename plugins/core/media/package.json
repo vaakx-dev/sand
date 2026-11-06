@@ -8,6 +8,7 @@
     "./web/contract": "./src/web/contract.ts"
   },
   "sand": {
+    "feature": "media",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",

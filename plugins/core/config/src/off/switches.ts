@@ -10,31 +10,29 @@ interface Loaded extends Plugin {
   scope: ScopeView
 }
 
-export const createSwitches = (turnedOff: Plugin[]) => {
-  const offIds = new Set(turnedOff.map(plugin => plugin.id))
-  const offDirs = new Set(turnedOff.map(plugin => plugin.dir))
+export const createSwitches = (turnedOff: () => Plugin[]) => {
   const loaded = new Map<string, Loaded>()
   let owners = new Map<string, string>()
 
-  const rootsOfOwner = (owner: string, seen: ReadonlySet<string>): string[] | undefined => {
+  const rootsOfOwner = (owner: string, offIds: ReadonlySet<string>, seen: ReadonlySet<string>): string[] | undefined => {
     if (offIds.has(owner)) return [owner]
     const scope = loaded.get(owner)?.scope
     if (!scope || scope.status !== 'pending' || seen.has(owner)) return undefined
-    return rootsOf(scope.missing(), new Set([...seen, owner]))
+    return rootsOf(scope.missing(), offIds, new Set([...seen, owner]))
   }
 
-  const rootsOf = (missing: string[], seen: ReadonlySet<string>): string[] | undefined => {
+  const rootsOf = (missing: string[], offIds: ReadonlySet<string>, seen: ReadonlySet<string>): string[] | undefined => {
     const roots = new Set<string>()
     for (const service of missing) {
       const owner = owners.get(service)
-      const found = owner === undefined ? undefined : rootsOfOwner(owner, seen)
+      const found = owner === undefined ? undefined : rootsOfOwner(owner, offIds, seen)
       if (!found) return undefined
       for (const root of found) roots.add(root)
     }
     return roots.size ? [...roots] : undefined
   }
 
-  const needs = (missing: string[]) => rootsOf(missing, new Set())
+  const needs = (missing: string[]) => rootsOf(missing, new Set(turnedOff().map(plugin => plugin.id)), new Set())
 
   const waitingOff = ({ id, dir, scope }: Loaded): PluginOff[] => {
     const found = scope.status === 'pending' ? needs(scope.missing()) : undefined
@@ -42,14 +40,15 @@ export const createSwitches = (turnedOff: Plugin[]) => {
   }
 
   const switches: PluginSwitches = {
-    turnedOff: dir => offDirs.has(dir),
+    turnedOff: dir => turnedOff().some(plugin => plugin.dir === dir),
     needs,
-    off: () => [...turnedOff.map(plugin => ({ ...plugin, needs: [] })), ...[...loaded.values()].flatMap(waitingOff)],
+    off: () => [...turnedOff().map(plugin => ({ ...plugin, needs: [] })), ...[...loaded.values()].flatMap(waitingOff)],
   }
 
   return {
     switches,
     track: (plugin: Loaded) => void loaded.set(plugin.id, plugin),
+    untrack: (id: string) => void loaded.delete(id),
     learnOwners: (found: Map<string, string>) => {
       owners = found
     },

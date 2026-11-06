@@ -27,11 +27,13 @@ export const previewTool = (pages: HtmlPages, media: Media, recent: RecentPages)
   group: 'html',
   description: previewDescription,
   input,
-  async run({ html, path, width = columnWidth }, { session, cwd }) {
+  effect: 'read',
+  needs: ['folder'],
+  async run({ html, path, width = columnWidth }, { conversation, cwd }) {
     const page = await readPage(pages, { html, path }, cwd)
     if (!page) throw new Error('Pass the document as html, or as the path to a .html file.')
     const preview = await pages.preview(page.html, width)
-    recent.remember(session.id, { page, height: preview.height })
+    recent.remember(conversation.id, { page, height: preview.height })
     return [
       {
         type: 'text' as const,

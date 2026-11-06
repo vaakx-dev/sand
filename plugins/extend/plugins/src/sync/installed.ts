@@ -20,16 +20,18 @@ const pluginRow = ({ settingsRow, toggleSwitch }: Kit, source: SyncSource, plugi
 export const installedSection = (kit: Kit, source: SyncSource) => {
   const { emptyState, loadingState, rowList, settingsSection } = kit
   const plugins = derive(() => source.state.get()?.plugins ?? [])
-  return settingsSection(
-    { title: 'Sharing with your other PCs' },
-    rowList(plugins, plugin => plugin.name, plugin => pluginRow(kit, source, plugin)),
-    show(
-      () => source.state.get() === undefined,
-      () => loadingState({ surface: 'group' }),
-    ),
-    show(
-      () => source.state.get()?.plugins.length === 0,
-      () => emptyState({ surface: 'group', text: 'Plugins you customise or add are shared with your other PCs' }),
+  return show(source.shared, () =>
+    settingsSection(
+      { title: 'Sharing with your other PCs' },
+      rowList(plugins, plugin => plugin.name, plugin => pluginRow(kit, source, plugin)),
+      show(
+        () => source.state.get() === undefined,
+        () => loadingState({ surface: 'group' }),
+      ),
+      show(
+        () => source.state.get()?.plugins.length === 0,
+        () => emptyState({ surface: 'group', text: 'Plugins you customise or add are shared with your other PCs' }),
+      ),
     ),
   )
 }

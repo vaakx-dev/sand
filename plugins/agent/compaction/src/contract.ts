@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import type { Conversation } from '@sand/engine/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
@@ -28,13 +28,21 @@ export interface CompactionRecord {
   thread?: string
 }
 
+export interface CompactionBrief {
+  format(): Promise<string>
+  check?(reply: string): string | undefined
+  accept(reply: string): Promise<string>
+}
+
+export const compactionBrief = event<(conversation: Conversation) => CompactionBrief | undefined>('compaction.brief')
+
 export interface ContextLimits {
   limit(model: string): number
 }
 
 export const contextLimits = service<ContextLimits>('contextLimits')
 
-export const contextUsage = event<(session: Session, usage: ContextUsage) => void>('context.usage')
+export const contextUsage = event<(conversation: Conversation, usage: ContextUsage) => void>('context.usage')
 
 export const contextChange = wireEvent<[session: string, usage: ContextUsage]>('context.change')
 

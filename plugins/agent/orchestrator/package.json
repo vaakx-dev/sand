@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "threads",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Thread orchestrator",
@@ -15,12 +16,14 @@
   "dependencies": {
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/subagents": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/worktrees": "workspace:*",
@@ -29,6 +32,7 @@
   },
   "devDependencies": {
     "@sand/harness": "workspace:*",
-    "@sand/replay": "workspace:*"
+    "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*"
   }
 }

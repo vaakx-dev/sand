@@ -1,6 +1,10 @@
 import type { Usage } from './usage'
 
-export type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+export const efforts = ['none', 'low', 'medium', 'high', 'xhigh', 'max'] as const
+
+export type Effort = (typeof efforts)[number]
+
+export const isEffort = (value: unknown): value is Effort => efforts.some(effort => effort === value)
 
 export interface ModelInfo {
   id: string

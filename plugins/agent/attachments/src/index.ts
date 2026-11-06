@@ -1,5 +1,5 @@
 import { cli } from '@sand/config/contract'
-import { turnPrompt } from '@sand/turns-contract/contract'
+import { turnContent } from '@sand/engine/contract'
 import { media } from '@sand/media/contract'
 import { server } from '@sand/server/contract'
 import { transfers } from '@sand/transfers/contract'
@@ -28,7 +28,7 @@ export default definePlugin({
       fromFile: path => fromFile(ctx.media, path, images),
       fromBytes: (data, name) => fromBytes(ctx.media, data, name, images),
     })
-    ctx.on(turnPrompt, content => labelImages(ctx.media, content))
+    ctx.on(turnContent, content => labelImages(ctx.media, content))
     const place: UploadPlace = { transfers: ctx.transfers, media: ctx.media, uploads: join(ctx.cli.home, 'uploads'), images, ...limits }
     ctx.watch(server, found =>
       found

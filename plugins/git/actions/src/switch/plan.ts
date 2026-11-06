@@ -1,4 +1,5 @@
-import type { GitLayout, GitRunner } from '@sand/git/contract'
+import type { GitLayout } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { GitActionResult } from '../contract'
 import { failure } from '../run/failure'
 import { listRemotes, readConfig, refExists } from '../run/refs'

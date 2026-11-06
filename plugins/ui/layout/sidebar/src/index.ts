@@ -4,6 +4,7 @@ import { jobs, jobsChange } from '@sand/jobs/contract'
 import { closeDrawer, layout, layoutChange, place } from '@sand/layout/contract'
 import { nav } from '@sand/nav/contract'
 import { palette } from '@sand/palette/contract'
+import { threadsSlot } from '@sand/threads-space/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -96,7 +97,7 @@ export default definePlugin({
       })
     const own: Sidebar = { decorate: decorations.decorate }
     ctx.provide(sidebar, own)
-    ctx.watch(sidebar, current => (current === own ? place(ctx, 'side', view) : undefined))
+    ctx.watch(sidebar, current => (current === own ? place(ctx, threadsSlot('side'), view) : undefined))
     ctx.effect(() => ctx.nav.action({ id: 'new-thread', label: 'New thread', icon: 'compose', order: 20, run: create }))
     ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.threads)))
     wakeTimer(ctx, () => ctx.threads, changes.bump)

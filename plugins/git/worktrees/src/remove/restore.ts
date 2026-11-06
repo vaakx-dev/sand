@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { isWithin } from '@sand/util/fs'
 import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'

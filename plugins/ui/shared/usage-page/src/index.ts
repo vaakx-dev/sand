@@ -1,5 +1,5 @@
 import { pcs, wire } from '@sand/devices-contract'
-import { nav } from '@sand/nav/contract'
+import { rail } from '@sand/rail/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { limits, limitsChange } from '@sand/web-client/contract'
@@ -29,7 +29,7 @@ export default definePlugin({
           refreshLimits: () => ctx.get(limits)?.refresh().catch(() => {}) ?? Promise.resolve(),
         })
       const page = pages.page({ id: 'usage', label: 'Usage', icon: 'chart', order: 60, render })
-      const action = ctx.watch(nav, found => found?.action({ id: 'usage', label: 'Usage', icon: 'chart', place: 'footer', order: 110, run: () => pages.open('usage') }))
+      const action = ctx.watch(rail, found => found?.action({ id: 'usage', label: 'Usage', icon: 'chart', order: 100, within: 'settings', current: () => pages.current() === 'usage', run: () => pages.open('usage') }))
       return () => {
         void page()
         void action()

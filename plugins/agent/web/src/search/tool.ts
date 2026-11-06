@@ -23,6 +23,7 @@ export const searchTool = (exaApiKey?: string): Tool<typeof input> => {
       'Search the web. Returns numbered results with title, URL and a short snippet. Snippets are only a hint, so read the pages that matter with web_fetch.',
     parallel: true,
     input,
+    effect: 'read',
     async run({ query, count }, { signal }) {
       const hits = (await search(chain, { text: query, count }, signal)).slice(0, count)
       return hits.length ? hits.map(hitText).join('\n\n') : 'No results'

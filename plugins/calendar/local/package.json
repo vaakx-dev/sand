@@ -1,0 +1,28 @@
+{
+  "name": "@sand/calendar-local",
+  "version": "0.0.0",
+  "description": "Sand's own calendar, kept in sand's database: used when no other calendar is connected, with .ics import, export and a feed other apps on your network can subscribe to",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "calendar",
+    "runtime": "./src/index.ts",
+    "label": "Sand calendar",
+    "summary": "A calendar kept by sand itself, with .ics import, export and a subscription link"
+  },
+  "dependencies": {
+    "@sand/calendar": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

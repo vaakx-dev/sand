@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 const read = { read: true }
 const mostTries = 100

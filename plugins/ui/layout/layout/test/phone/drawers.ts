@@ -117,14 +117,14 @@ describe.each(phones)('on a $name', size => {
     expect(await pane(page, 'thread')).toBe('thread')
   })
 
-  test('the sidebar clears the notch and the home indicator', async () => {
+  test('the sidebar clears the notch, and the tab bar clears the home indicator', async () => {
     const { page, cdp } = phone
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 47, bottom: 34, left: 0, right: 0 } })
+    const more = (await page.getByRole('button', { name: 'More', exact: true }).boundingBox())!
+    expect(more.y + more.height).toBeLessThanOrEqual(size.height - 34)
     await page.getByRole('button', { name: 'Threads', exact: true }).click()
     expect(await pane(page, 'side')).toBe('side')
-    const settings = (await page.locator('button:visible[aria-label="Settings"]').boundingBox())!
     const search = (await page.locator('button:visible', { hasText: 'Search' }).boundingBox())!
-    expect(settings.y + settings.height).toBeLessThanOrEqual(size.height - 34)
     expect(search.y).toBeGreaterThanOrEqual(47)
     await page.goBack()
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} })
@@ -139,8 +139,8 @@ describe.each(phones)('settings on a $name', size => {
     const drawer = page.locator('button:visible[aria-label="Show the page"]')
     const closed = () => until(() => drawer.count(), count => count === 0)
 
-    await page.getByRole('button', { name: 'Threads', exact: true }).click()
-    await page.locator('button:visible[aria-label="Settings"]').click()
+    await page.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Settings' }).click()
     await page.getByRole('button', { name: 'Settings pages' }).click()
     await page.getByRole('button', { name: 'MCP servers', exact: true }).click()
     await page.mouse.click(size.width - 10, size.height / 2)

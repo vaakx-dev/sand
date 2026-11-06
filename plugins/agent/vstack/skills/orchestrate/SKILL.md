@@ -43,5 +43,6 @@ Use `explore` for read-only questions and investigations.
 
 - Treat an agent's "done" as a claim. Read its diff before you report it.
 - Look for "simplified", "skipped", "not done", "for now" and stand-ins. Send those back unless the user agreed to them.
+- Check it fixed the cause, not only the example the user gave. Brief the cause too, not just the example.
 - Undo anything the agent did that the user didn't agree to, like editing design docs or adding files outside the project.
 - Tell the user what changed, what's open and what they need to decide.

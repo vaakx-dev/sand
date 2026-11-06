@@ -1,4 +1,4 @@
-import { transcript as transcriptService, type ToolRenderer, type ToolViews } from '@sand/chat/contract'
+import { transcript as transcriptService, type ToolRenderer, type ToolViews } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import type { HtmlRenderEntry } from '../contract'
 import { definePlugin } from 'drydock'

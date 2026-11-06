@@ -8,6 +8,7 @@ import { openaiInput } from './input'
 const reasoningOf = ({ efforts, defaultEffort }: ModelInfo, wanted: Effort | undefined) => {
   if (!efforts.length) return {}
   const effort = wanted && efforts.includes(wanted) ? wanted : defaultEffort
+  if (effort === 'none') return { reasoning: { effort } }
   return { reasoning: { ...(effort && { effort }), summary: 'auto' }, include: ['reasoning.encrypted_content'] }
 }
 

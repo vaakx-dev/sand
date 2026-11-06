@@ -12,6 +12,8 @@ export const write: Tool<typeof input> = {
   name: 'write',
   description: 'Create or overwrite a file with the given contents. Parent directories are created as needed.',
   input,
+  needs: ['pc'],
+  act: ({ path }) => ({ effect: 'write', paths: [path], summary: `Write ${path}` }),
   async run({ path, content }, { cwd }) {
     const full = resolve(cwd, path)
     await exclusive(full, () => Bun.write(full, content))

@@ -2,7 +2,7 @@ import { event, service } from 'drydock'
 import type { FileIndex, LimitsFeed, Models, SkillIndex } from './data'
 import type { Outbox } from './outbox'
 import type { Projects } from './projects'
-import type { Threads } from './threads'
+import type { Threads, ThreadVisit } from './threads'
 import type { Turns } from './turns'
 
 export * from './address'
@@ -23,7 +23,7 @@ export const outbox = service<Outbox>('outbox')
 
 export const threadsChange = event<() => void>('threads.change')
 export const threadChange = event<(id: string) => void>('thread.change')
-export const threadSelect = event<(id: string | undefined) => void>('thread.select')
+export const threadSelect = event<(id: string | undefined, visit: ThreadVisit) => void>('thread.select')
 export const modelsChange = event<() => void>('models.change')
 export const limitsChange = event<() => void>('limits.change')
 export const skillsChange = event<() => void>('skills.change')

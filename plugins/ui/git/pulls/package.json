@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "pulls",
     "web": "./src/index.ts",
     "label": "Pull requests",
     "summary": "See, create, merge and watch a thread's pull requests"

@@ -1,6 +1,6 @@
 import { type PullRef, samePull } from '@sand/github/contract'
 import type { LinkSource } from '../contract'
-import { refOf, type StoredLink, type StoredLinks, type WatchMark } from '../book/record'
+import { type Phase, refOf, type StoredLink, type StoredLinks, type WatchMark } from '../book/record'
 
 export const findLink = (links: StoredLinks, pull: PullRef) => links.links.find(link => samePull(link, pull))
 
@@ -50,6 +50,12 @@ export const withEnded = (links: StoredLinks, pull: PullRef, ended: number | und
   const link = findLink(links, pull)
   if (!link || link.ended === ended) return links
   return replaced(links, pull, link => ({ ...link, ended }))
+}
+
+export const withTold = (links: StoredLinks, pull: PullRef, told: Phase): StoredLinks => {
+  const link = findLink(links, pull)
+  if (!link || (link.told ?? 'open') === told) return links
+  return replaced(links, pull, link => ({ ...link, told }))
 }
 
 const endedAfter = (links: StoredLinks, at: number) => links.links.some(link => link.ended !== undefined && link.ended > at)

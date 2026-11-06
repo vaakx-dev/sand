@@ -1,5 +1,6 @@
 import type { ToolCallBlock, ToolResultBlock } from '@sand/chats/contract'
-import type { Tool, ToolContext } from './contract'
+import type { Conversation } from '@sand/engine/contract'
+import type { Act, Gate, Tool, ToolContext } from './contract'
 import { errorMessage, plural, untilAborted } from '@sand/util'
 import { z } from 'zod'
 
@@ -15,15 +16,20 @@ const result = (call: ToolCallBlock, text: string, isError?: boolean): ToolResul
 const stoppedText = (tool: Tool, timeoutMs: number) =>
   `${tool.name} was stopped after ${plural(timeoutMs / 60_000, 'minute')}, its time limit. Its work may be half done: check what it changed before retrying, and split slow work into smaller steps.`
 
+const actOf = (tool: Tool, input: unknown, conversation: Conversation): Act => tool.act?.(input, conversation) ?? { effect: tool.effect ?? 'run' }
+
 export const run = async (
   tool: Tool | undefined,
   call: ToolCallBlock,
   context: Omit<ToolContext, 'call'>,
+  gate: Gate | undefined,
 ): Promise<ToolResultBlock> => {
   if (!tool) return result(call, `Unknown tool: ${call.name}`, true)
   if (call.malformed !== undefined) return result(call, JSON.stringify({ INVALID_JSON: call.malformed }), true)
   const parsed = tool.input.safeParse(call.input)
   if (!parsed.success) return result(call, `Invalid input:\n${z.prettifyError(parsed.error)}`, true)
+  const refusal = await gate?.(actOf(tool, parsed.data, context.conversation), tool, { ...context, call })
+  if (refusal) return result(call, refusal, true)
   const timeoutMs = tool.timeoutMs ?? defaultTimeoutMs
   const deadline = new AbortController()
   const timer = setTimeout(() => deadline.abort(), timeoutMs)

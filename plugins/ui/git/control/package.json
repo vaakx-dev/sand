@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "git",
     "web": "./src/index.ts",
     "label": "Git control",
     "summary": "Branch, commit, push and pull from the Changes tab"
@@ -21,6 +22,7 @@
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
+    "@sand/settings": "workspace:*",
     "@sand/toasts": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

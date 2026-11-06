@@ -4,6 +4,7 @@
   "description": "Everything you see about your devices: the Devices page, PC details and routes, why a PC can't connect, adding PCs, phones and browsers, Allow prompts, the unpaired page, the composer's PC banner and picker, and status dots for other plugins",
   "type": "module",
   "sand": {
+    "feature": "pcs",
     "web": "./src/index.ts",
     "label": "Devices",
     "summary": "Your PCs, phones and browsers: add, allow, remove, and see how each PC connects"
@@ -11,6 +12,7 @@
   "dependencies": {
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",

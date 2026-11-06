@@ -1,5 +1,6 @@
 import { type Session, sessionClosing, sessionRemove, sessions } from '@sand/chats/contract'
-import { gitRepo, gitRunner, pathKey } from '@sand/git/contract'
+import { gitRepo, pathKey } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { type Server, server, sessionCarry } from '@sand/server/contract'
 import { turnEnd, turnReady, turns } from '@sand/turns-contract/contract'
 import { errorMessage, joinDisposers, keyedSerial } from '@sand/util'

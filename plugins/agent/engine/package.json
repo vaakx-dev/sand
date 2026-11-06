@@ -1,0 +1,33 @@
+{
+  "name": "@sand/engine",
+  "version": "0.0.0",
+  "description": "Runs the turns of every conversation, a thread or a bot: the model replies, the tools it calls run, and it repeats until it is done; every turn is stored, leased to one process and recovered when that process dies",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "engine",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Engine",
+    "summary": "Runs the turns of threads and bots: the model replies, the tools it calls run, and it repeats until it is done"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/host-runtimes": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/usage": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

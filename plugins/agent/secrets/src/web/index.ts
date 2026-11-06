@@ -1,4 +1,4 @@
-import { toolViews, transcript, type ToolRenderer, type ToolViews } from '@sand/chat/contract'
+import { toolViews, transcript, type ToolRenderer, type ToolViews } from '@sand/transcript/contract'
 import { wire } from '@sand/devices-contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'

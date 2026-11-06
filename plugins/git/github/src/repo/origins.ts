@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { folderRepo } from './place'
 
 const keepMs = 30_000

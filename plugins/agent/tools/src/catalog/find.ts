@@ -23,6 +23,7 @@ export const findTool = (groups: GroupState[], candidates: Candidate[]): Tool<ty
   name: findName,
   description: describe(groups),
   parallel: true,
+  effect: 'read',
   input,
   run({ query }) {
     const found = search(candidates, query)

@@ -1,7 +1,7 @@
 import { llm, type ModelInfo } from '@sand/accounts/contract'
 import { modelSettings } from '@sand/model/contract'
 import type { Tool } from '@sand/tools/contract'
-import type { Context } from 'drydock'
+import type { AgentsContext } from './context'
 import { z } from 'zod'
 
 export const group = 'agents'
@@ -23,14 +23,15 @@ const modelLine = (model: ModelInfo, current: string | undefined) =>
     .filter(Boolean)
     .join(' · ')
 
-export const modelsTool = (ctx: Context): Tool<typeof input> => ({
+export const modelsTool = (ctx: AgentsContext): Tool<typeof input> => ({
   name: 'models',
   description: 'List the models you can give agents: id, label, provider, effort levels, context size and fast mode. Marks the model this thread uses.',
   group,
   input,
-  run(_input, { session }) {
+  needs: ['thread'],
+  run(_input, { conversation }) {
     const models = ctx.get(llm)?.models?.().filter(model => !model.hidden) ?? []
-    const current = ctx.get(modelSettings)?.effective(session).model
+    const current = ctx.get(modelSettings)?.effective(ctx.sessions.require(conversation.id)).model
     return models.length ? models.map(model => modelLine(model, current)).join('\n') : 'No models are available.'
   },
 })

@@ -2,9 +2,9 @@ import type { Session, Sessions } from '@sand/chats/contract'
 import type { GitHub, PullRef } from '@sand/github/contract'
 import type { LinkSource, ThreadPulls } from '../contract'
 import type { LinkBook } from '../book/book'
-import { refOf, type StoredLinks, type WatchMark } from '../book/record'
+import { type Phase, refOf, type StoredLinks, type WatchMark } from '../book/record'
 import { isEnded } from '../sweep/cadence'
-import { findLink, withEnded, withEngaged, withLink, withMark, withoutLink, withoutWatching, withWatch } from './edit'
+import { findLink, withEnded, withEngaged, withLink, withMark, withoutLink, withoutWatching, withTold, withWatch } from './edit'
 import { threadOf } from './thread'
 import { threadPulls } from './view'
 
@@ -94,6 +94,7 @@ export const createThreadLinks = (deps: LinkDeps) => {
         if (found) changeUnseen(found, withEnd(id, pull, ended))
       }
     },
+    tell: (found: Session, pull: PullRef, told: Phase) => changeUnseen(found, links => withTold(links, pull, told)),
     engage: (found: Session, at: number) => changeUnseen(found, links => withEngaged(links, at)),
     wrote(found: Session, at: number) {
       writes.set(found.id, at)

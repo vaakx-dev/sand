@@ -1,4 +1,4 @@
-import type { GitEnv, GitRunner } from '@sand/git/contract'
+import type { GitEnv, GitRunner } from '@sand/git-runner/contract'
 import { literalPaths, withUntracked, type WorktreeRead } from '../worktree/untracked'
 import type { Range } from './resolve'
 

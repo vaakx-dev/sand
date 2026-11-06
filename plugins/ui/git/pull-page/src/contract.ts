@@ -24,7 +24,6 @@ export interface PullMenu {
 
 export interface PullPage {
   open(pull?: PullRef): void
-  close(): void
   tab(tab: PullTab): Dispose
   menu(menu: PullMenu): Dispose
 }

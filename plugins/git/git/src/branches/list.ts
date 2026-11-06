@@ -1,4 +1,4 @@
-import { gitMaybe } from '../run/run'
+import { gitMaybe } from '@sand/git-runner/contract'
 import type { GitBranch, GitBranches } from '../contract'
 import { readDefaultBranch } from '../status/default-branch'
 import { readLayout } from '../status/layout'

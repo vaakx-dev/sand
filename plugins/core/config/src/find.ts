@@ -2,9 +2,11 @@ import { isRecord } from '@sand/util'
 import { readdir } from 'node:fs/promises'
 import { basename, isAbsolute, join, resolve } from 'node:path'
 
+type Table = Record<string, unknown>
+
 const skipped = (name: string) => name.startsWith('.') || name === 'node_modules'
 
-const readManifest = async (dir: string): Promise<Record<string, unknown>> => {
+const readManifest = async (dir: string): Promise<Table> => {
   try {
     const manifest: unknown = await Bun.file(join(dir, 'package.json')).json()
     return isRecord(manifest) ? manifest : {}
@@ -49,6 +51,13 @@ const fileIn = (dir: string, table: unknown, key: string) => {
   return typeof file === 'string' ? resolve(dir, file) : undefined
 }
 
-export const entryFor = async (dir: string, place: string) => fileIn(dir, (await readManifest(dir)).sand, place)
+export const sandOf = async (dir: string): Promise<Table> => {
+  const { sand } = await readManifest(dir)
+  return isRecord(sand) ? sand : {}
+}
+
+export const entryIn = (dir: string, sand: Table, place: string) => fileIn(dir, sand, place)
+
+export const runsNowhere = (sand: Table) => !['host', 'runtime', 'print', 'cli', 'web'].some(place => typeof sand[place] === 'string')
 
 export const contractFor = async (dir: string) => fileIn(dir, (await readManifest(dir)).exports, './contract')

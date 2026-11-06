@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "models",
     "web": "./src/index.ts",
     "label": "Model picker",
     "summary": "One panel to pick a model, effort and fast mode, used by the composer and settings"

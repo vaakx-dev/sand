@@ -105,7 +105,7 @@ export const claudeBody = (request: LLMRequest, settings: ClaudeSettings, search
     system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
     messages,
     ...(tools.length && { tools }),
-    ...(effort && { output_config: { effort } }),
+    ...(effort === 'none' ? { thinking: { type: 'disabled' } } : effort && { output_config: { effort } }),
     ...(fast && request.speed === 'fast' && { speed: 'fast' }),
   }
 }

@@ -1,0 +1,25 @@
+{
+  "name": "@sand/computer-tools",
+  "version": "0.0.0",
+  "description": "computer_* tools: the agent lists computers, takes screenshots, reads UI elements and clicks and types, all in fractions of the screenshot",
+  "type": "module",
+  "sand": {
+    "feature": "computers",
+    "runtime": "./src/index.ts",
+    "print": "./src/index.ts",
+    "label": "Computer use tools",
+    "summary": "Lets the agent see and use browsers and desktops; off until you turn the Computer use tools on"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/computers": "workspace:*",
+    "@sand/media": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

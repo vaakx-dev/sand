@@ -28,16 +28,17 @@ const detailColumn = (parts: PageParts) =>
     }),
     key => {
       const chosen = parsePull(key)
-      return chosen ? div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, detailView(parts, chosen)) : null
+      if (!chosen) return null
+      const close = () => parts.select(undefined)
+      return div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: node => parts.kit.dismissible(node, close, { overlay: false }) }, detailView(parts, chosen))
     },
   )
 
 export const pageView = (parts: PageParts) => {
   const { kit } = parts
   const hasDetail = () => Boolean(parts.selected.get())
-  const escape = () => (hasDetail() ? parts.select(undefined) : parts.close())
   return div(
-    { class: 'flex min-h-0 min-w-0 flex-1 flex-col', onMount: node => kit.dismissible(node, escape, { overlay: false }) },
+    { class: 'flex min-h-0 min-w-0 flex-1 flex-col' },
     show(
       () => !(parts.narrow.get() && hasDetail()),
       () => div({ class: 'flex shrink-0 flex-col' }, pageHead(parts), filtersRow(parts)),

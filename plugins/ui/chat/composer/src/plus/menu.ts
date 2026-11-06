@@ -3,7 +3,7 @@ import { show, sig, span } from '@vaakx-dev/vrui'
 import type { PlusEntry } from '../contract'
 import type { Plus } from './entries'
 
-export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void) => {
+export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attachable: () => boolean) => {
   const { icon, iconButton, menuItem, menuSeparator, popover, pressOpens } = kit
   const open = sig(false)
   const close = () => open.set(false)
@@ -31,22 +31,25 @@ export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void) => {
     popover(
       close,
       { class: 'bottom-full left-0 mb-2 w-max max-w-80' },
-      menuItem({ icon: 'paperclip', onClick: attach }, span({ class: 'min-w-0 flex-1 truncate' }, 'Attach files')),
-      menuSeparator(),
+      ...(attachable() ? [menuItem({ icon: 'paperclip', onClick: attach }, span({ class: 'min-w-0 flex-1 truncate' }, 'Attach files')), menuSeparator()] : []),
       ...entries.get().map(row),
     )
 
   return [
-    iconButton(
-      {
-        surface: 'raised',
-        title,
-        'aria-label': title,
-        class: '-ml-2',
-        ...pressOpens(open, toggle),
-        'aria-haspopup': () => (entries.get().length ? 'menu' : 'false'),
-      },
-      icon('plus', 'md'),
+    show(
+      () => attachable() || entries.get().length > 0,
+      () =>
+        iconButton(
+          {
+            surface: 'raised',
+            title,
+            'aria-label': title,
+            class: '-ml-2',
+            ...pressOpens(open, toggle),
+            'aria-haspopup': () => (entries.get().length ? 'menu' : 'false'),
+          },
+          icon('plus', 'md'),
+        ),
     ),
     show(open, menu),
   ]

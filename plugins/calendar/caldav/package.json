@@ -1,0 +1,21 @@
+{
+  "name": "@sand/calendar-caldav",
+  "version": "0.0.0",
+  "description": "CalDAV calendars, like iCloud with an app-specific password, Fastmail or any CalDAV server: discovery, background sync, edits and invitations",
+  "type": "module",
+  "sand": {
+    "feature": "calendar-accounts",
+    "runtime": "./src/index.ts",
+    "label": "CalDAV calendars",
+    "summary": "Your iCloud, Fastmail and other CalDAV calendars in sand"
+  },
+  "dependencies": {
+    "@sand/calendar": "workspace:*",
+    "@sand/connections": "workspace:*",
+    "@sand/ical": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

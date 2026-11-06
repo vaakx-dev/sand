@@ -52,6 +52,8 @@ export const shellTool = (
   ...spec,
   description: `${spec.description} ${rules(limits)}`,
   input: inputOf(limits),
+  needs: ['pc'],
+  act: ({ command }) => ({ effect: 'run', summary: command }),
   timeoutMs: limits.limit_ms + stopGrace,
   async run({ command, silence_ms: silence = limits.silence_ms }, context) {
     await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)

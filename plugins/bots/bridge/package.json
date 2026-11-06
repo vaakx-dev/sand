@@ -1,0 +1,44 @@
+{
+  "name": "@sand/bot-bridge",
+  "version": "0.0.0",
+  "description": "Bots and threads talk: threads @ bots in messages and see their replies as cards, and bots start threads and hear back when they finish",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "bridge",
+    "runtime": "./src/runtime/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Bots and threads",
+    "summary": "Lets threads ask your bots, and your bots start and message threads"
+  },
+  "dependencies": {
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/bots-mcp": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/context": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/sidebar": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*"
+  }
+}

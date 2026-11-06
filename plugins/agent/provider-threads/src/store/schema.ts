@@ -39,4 +39,14 @@ export const schema = [
     'create index handoffs_thread on handoffs (thread, delivery)',
     'create index handoffs_session on handoffs (session)',
   ],
+  [
+    'drop index provider_threads_open',
+    'alter table provider_threads rename column session to conversation',
+    "alter table provider_threads add column owner text not null default 'thread'",
+    "create unique index provider_threads_open on provider_threads (owner, conversation, source, model) where status != 'retired'",
+    'drop index handoffs_session',
+    'alter table handoffs rename column session to conversation',
+    "alter table handoffs add column owner text not null default 'thread'",
+    'create index handoffs_conversation on handoffs (owner, conversation)',
+  ],
 ]

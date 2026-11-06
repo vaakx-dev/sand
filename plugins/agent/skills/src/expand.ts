@@ -1,6 +1,6 @@
 import type { TextBlock, UserContent } from '@sand/chats/contract'
-import { turnPrompt } from '@sand/turns-contract/contract'
-import type { Skill, Skills } from './contract'
+import { type Conversation, turnContent } from '@sand/engine/contract'
+import type { Skill } from './contract'
 import type { Context } from 'drydock'
 
 const mention = /(?:^|[\s(])\$([a-zA-Z0-9][\w.-]*)/g
@@ -11,13 +11,13 @@ export const skillBlock = (skill: Skill): TextBlock => ({
 })
 
 const mentions = (content: UserContent[]) =>
-  new Set(content.flatMap(block => (block.type === 'text' ? [...block.text.matchAll(mention)].map(match => match[1]!) : [])))
+  new Set(content.flatMap(block => (block.type === 'text' ? [...(block.typed ?? block.text).matchAll(mention)].map(match => match[1]!) : [])))
 
-export const expandMentions = (ctx: Context, skills: Skills) =>
-  ctx.on(turnPrompt, async (content, session) => {
+export const expandMentions = (ctx: Context, skillsOf: (conversation: Conversation) => Promise<Skill[]>) =>
+  ctx.on(turnContent, async (content, conversation) => {
     const names = [...mentions(content)]
     if (!names.length) return content
-    const list = await skills.list(session.cwd, session.project)
+    const list = await skillsOf(conversation)
     const mentioned = names.flatMap(name => list.find(skill => skill.name === name) ?? [])
     return mentioned.length ? [...mentioned.map(skillBlock), ...content] : content
   })

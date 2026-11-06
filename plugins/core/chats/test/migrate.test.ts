@@ -1,10 +1,11 @@
 import type { Message } from '@sand/chats/contract'
+import { createLedger } from '@sand/ledger/contract'
 import { Database } from 'bun:sqlite'
 import { afterAll, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { open } from '../src/db'
+import { migrateChats } from '../src/schema'
 import { v1 } from '../src/schema/v1'
 import { createStore } from '../src/store'
 
@@ -29,6 +30,12 @@ const writeUnversioned = (messages: Message[]) => {
   const { seq } = db.query<{ seq: number }, []>('select max(seq) as seq from changes').get()!
   db.close()
   return `${epoch}.${seq}`
+}
+
+const open = (file: string) => {
+  const book = createLedger(new Database(file, { create: true, strict: true }))
+  migrateChats(book)
+  return book
 }
 
 const storeOf = (db: Database) =>

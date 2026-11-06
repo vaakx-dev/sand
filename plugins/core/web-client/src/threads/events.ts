@@ -109,6 +109,7 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
         else {
           found.running = true
           found.started = info.started
+          found.waiting = info.waiting
         }
         store.changed(found.id)
       },

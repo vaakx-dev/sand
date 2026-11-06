@@ -1,5 +1,6 @@
 import type { Session, Sessions } from '@sand/chats/contract'
-import type { GitRepo, GitRunner } from '@sand/git/contract'
+import type { GitRepo } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 
 export interface SnapshotDeps {
   git: GitRunner

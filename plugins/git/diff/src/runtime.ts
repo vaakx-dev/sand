@@ -1,4 +1,5 @@
-import { gitRepo, gitRunner } from '@sand/git/contract'
+import { gitRepo } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { diffHunks } from './contract'

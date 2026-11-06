@@ -4,6 +4,7 @@
   "description": "Select text in a message and press Reply to quote it in your next message",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Quote reply",
     "summary": "Select text in a message and press Reply to quote it in your next message"

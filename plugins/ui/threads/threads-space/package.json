@@ -1,0 +1,20 @@
+{
+  "name": "@sand/threads-space",
+  "version": "0.0.0",
+  "description": "The Threads space that the thread list, the conversation and its panels fill; choosing a thread opens it",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "threads",
+    "web": "./src/index.ts",
+    "label": "Threads space",
+    "summary": "Threads in the rail: the thread list beside the conversation"
+  },
+  "dependencies": {
+    "@sand/layout": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

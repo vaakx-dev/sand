@@ -7,6 +7,7 @@
     "./contract": "./src/contract.ts"
   },
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Composer",
     "summary": "Where you write messages: attachments, pending messages, context, drafts and slots for other controls"
@@ -20,12 +21,11 @@
     "@sand/context": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/layout": "workspace:*",
-    "@sand/media": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/model-panel": "workspace:*",
     "@sand/nav": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/transfers": "workspace:*",
+    "@sand/threads-space": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

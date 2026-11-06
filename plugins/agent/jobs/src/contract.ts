@@ -35,7 +35,7 @@ export interface JobSpec {
 export interface BackgroundJobs {
   start(spec: JobSpec): Job
   resume(job: Job, work: JobWork): void
-  list(parent?: Session): Job[]
+  list(parent?: string): Job[]
 }
 
 export type WireJob = Omit<Job, 'cancel'>

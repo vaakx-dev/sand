@@ -4,6 +4,7 @@
   "description": "Marks each file in the Files panel with its uncommitted git change",
   "type": "module",
   "sand": {
+    "feature": "git",
     "web": "./src/index.ts",
     "label": "Git in the Files panel",
     "summary": "Shows which files are added, changed or deleted in the Files panel"

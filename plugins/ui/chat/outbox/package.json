@@ -4,6 +4,7 @@
   "description": "Shows the messages waiting for the thread's PC above the composer, with Cancel and Send now",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "web": "./src/index.ts",
     "label": "Outbox",
     "summary": "Messages waiting for a PC that can't be reached, sent when it's back"

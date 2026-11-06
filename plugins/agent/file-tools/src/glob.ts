@@ -17,6 +17,8 @@ export const glob: Tool<typeof input> = {
   description: 'Find files by glob pattern. Skips gitignored files, node_modules and .git unless include_ignored is set.',
   parallel: true,
   input,
+  effect: 'read',
+  needs: ['pc'],
   async run({ pattern, path = '.', include_ignored }, { cwd, signal }) {
     const files: string[] = []
     try {

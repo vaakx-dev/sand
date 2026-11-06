@@ -1,4 +1,4 @@
-import type { Effort, EffortLevel, ModelInfo, SourceInfo, Speed } from '@sand/accounts/contract'
+import { efforts, type Effort, type EffortLevel, type ModelInfo, type SourceInfo, type Speed } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import type { CliFlags } from '@sand/config/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
@@ -69,7 +69,7 @@ export const helloSources = helloField<SourceInfo[]>('sources')
 export const helloDefaults = helloField<SessionSettings>('defaults')
 export const helloLevels = helloField<EffortLevel[]>('levels')
 
-const effort = z.enum(['low', 'medium', 'high', 'xhigh', 'max'])
+const effort = z.enum(efforts)
 const speed = z.enum(['normal', 'fast'])
 export const sessionSettings = z.object({ model: z.string().optional(), effort: effort.optional(), speed: speed.optional() })
 const patch = z.object({ model: z.string().nullish(), effort: effort.nullish(), speed: speed.nullish() })

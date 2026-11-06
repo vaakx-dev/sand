@@ -4,14 +4,15 @@
   "description": "After the first sign-in, pick the default model",
   "type": "module",
   "sand": {
+    "feature": "models",
     "web": "./src/index.ts",
     "label": "Model setup",
     "summary": "Asks for a default model after the first sign-in"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
-    "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
     "@sand/layout": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/reactive": "workspace:*",

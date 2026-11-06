@@ -2,26 +2,22 @@ import { media } from '@sand/media/contract'
 import { paths } from '@sand/paths/contract'
 import { projectFiles } from '@sand/project/contract'
 import { runtimeRelease } from '@sand/host-runtimes/contract'
-import { expandHome } from '@sand/util/fs'
+import { ledger } from '@sand/ledger/contract'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
-import { z } from 'zod'
-import { entryViews, ledger, sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
-import { open } from './db'
+import { sessionBusy, sessionClosing, sessionEntry, sessionRemove, sessions, sessionSettle, sessionUpdate } from './contract'
+import { migrateChats } from './schema'
 import { usedMedia } from './media'
 import { createStore } from './store'
-import { createViews } from './views'
 
 export default definePlugin({
   name: 'chats',
   description: "Stores each project's threads, their sub-agents and quick task chats, in SQLite",
-  inject: { paths, projectFiles, media },
-  config: z.object({ path: z.string().optional() }),
-  apply(ctx, config) {
+  inject: { paths, projectFiles, media, ledger },
+  apply(ctx) {
     const { home } = ctx.paths
-    const book = open(config.path ? expandHome(config.path, home) : join(home, 'sand.db'))
-    const { db } = book
-    ctx.effect(() => () => db.close())
+    migrateChats(ctx.ledger)
+    const { db } = ctx.ledger
     ctx.effect(() => ctx.media.inUse(usedMedia(db)))
     const store = createStore(db, {
       hooks: {
@@ -37,8 +33,6 @@ export default definePlugin({
       scratch: id => join(home, 'scratch', id),
     })
     ctx.provide(sessions, store.sessions)
-    ctx.provide(ledger, book)
-    ctx.provide(entryViews, createViews())
     ctx.on(runtimeRelease, ids => ids.forEach(store.forget))
   },
 })

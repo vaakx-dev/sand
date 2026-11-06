@@ -18,6 +18,7 @@ export interface SweepDeps {
   links: ThreadLinks
   viewed: Viewed
   wake: Wake
+  started(thread: string): boolean
   failures: OnceReport
   hold(): () => void
 }
@@ -33,7 +34,8 @@ export const createSweep = (deps: SweepDeps) => {
   const due = new Map<string, number>()
   let running = false
 
-  const wanted = (id: string) => deps.viewed.has(id) || deps.book.read(id).links.some(link => link.watching)
+  const followed = (id: string) => deps.viewed.has(id) || deps.started(id)
+  const wanted = (id: string) => followed(id) || deps.book.read(id).links.some(link => link.watching)
 
   const targets = () => {
     const found = new Map<string, Target>()
@@ -44,9 +46,9 @@ export const createSweep = (deps: SweepDeps) => {
         deps.links.stopWatching(thread)
         continue
       }
-      const viewed = deps.viewed.has(id)
+      const all = followed(id)
       for (const link of deps.book.read(id).links) {
-        if (!link.watching && !viewed) continue
+        if (!link.watching && !all) continue
         const key = pullKey(link)
         const target = found.get(key) ?? { ref: refOf(link), threads: [] }
         target.threads.push(thread)

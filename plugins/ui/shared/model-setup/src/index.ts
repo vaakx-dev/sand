@@ -3,7 +3,7 @@ import { wire } from '@sand/devices-contract'
 import { place } from '@sand/layout/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { models, modelsChange } from '@sand/web-client/contract'
-import { pulse } from '@sand/reactive'
+import { owned, pulse } from '@sand/reactive'
 import { definePlugin } from 'drydock'
 import { setupState } from './setup'
 import { setupView } from './view/view'
@@ -13,9 +13,9 @@ export default definePlugin({
   description: 'After the first sign-in, pick the default model',
   inject: { kit, models, wire },
   apply(ctx) {
-    const setup = setupState(ctx)
+    const setup = owned(ctx, () => setupState(ctx))
     const changes = pulse(ctx, [modelsChange], [models])
     ctx.provide(modelSetup, { start: setup.start })
-    place(ctx, 'main', () => setupView(ctx.kit, setup, ctx.models, changes), 0.5)
+    place(ctx, 'overlay', () => setupView(ctx.kit, setup, ctx.models, changes), 0.5)
   },
 })

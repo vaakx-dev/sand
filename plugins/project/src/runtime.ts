@@ -1,7 +1,7 @@
 import { cli } from '@sand/config/contract'
 import { peers } from '@sand/devices-contract'
 import { loadPcIdentity } from '@sand/devices-identity/pc'
-import { gitRunner } from '@sand/git/contract'
+import { gitRunner } from '@sand/git-runner/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'

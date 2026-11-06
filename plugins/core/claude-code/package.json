@@ -4,6 +4,7 @@
   "description": "Use the Claude Code app's own sign-in: sand runs the claude CLI on this PC and gives it sand's tools",
   "type": "module",
   "sand": {
+    "feature": "models",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Claude Code",

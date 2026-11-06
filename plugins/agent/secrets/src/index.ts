@@ -1,3 +1,4 @@
+import { sessions } from '@sand/chats/contract'
 import { cli } from '@sand/config/contract'
 import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
@@ -14,7 +15,7 @@ const sweepEvery = 60 * 60_000
 export default definePlugin({
   name: 'secrets',
   description: 'request_secret tool: the agent asks the user for a secret in a private card and gets the path of an owner-only file holding it',
-  inject: { tools, cli },
+  inject: { tools, sessions, cli },
   apply(ctx) {
     const files = secretFiles(join(ctx.cli.home, 'secrets'))
     const waits = createWaits()
@@ -25,7 +26,7 @@ export default definePlugin({
       const timer = setInterval(sweep, sweepEvery)
       return () => clearInterval(timer)
     })
-    ctx.effect(() => ctx.tools.register(secretTool(waits)))
+    ctx.effect(() => ctx.tools.register(secretTool(waits, ctx.sessions)))
     ctx.watch(server, found =>
       found
         ? joinDisposers(

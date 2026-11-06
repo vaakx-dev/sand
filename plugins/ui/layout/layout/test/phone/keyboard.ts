@@ -33,6 +33,8 @@ const fakeVisualViewport = () => {
 const showKeyboard = (page: Page, area?: { top: number; height: number }) =>
   page.evaluate(next => Reflect.set(window, 'keyboardArea', next), area)
 
+const tabsShown = (page: Page) => page.getByRole('navigation', { name: 'Spaces' }).isVisible()
+
 const measure = (page: Page) =>
   page.evaluate(() => {
     const box = (selector: string) => [...document.querySelectorAll(selector)].find(node => node.checkVisibility())!.getBoundingClientRect()
@@ -70,6 +72,10 @@ test('the composer stays above a keyboard that resizes the page, and the thread 
   expect(shown.composer).toBeLessThanOrEqual(size.height - keyboardHeight)
   expect(shown.header).toBeGreaterThanOrEqual(0)
   expect(shown.fromBottom).toBeLessThanOrEqual(2)
+  expect(await tabsShown(page)).toBe(false)
+  await page.setViewportSize(size)
+  await Bun.sleep(300)
+  expect(await tabsShown(page)).toBe(true)
   await page.close()
 })
 
@@ -87,8 +93,10 @@ test('the page fits above a keyboard that only shrinks the visual viewport, as o
   expect(shown.header).toBeGreaterThanOrEqual(area.top)
   expect(shown.composer).toBeLessThanOrEqual(area.top + area.height)
   expect(shown.fromBottom).toBeLessThanOrEqual(2)
+  expect(await tabsShown(page)).toBe(false)
   await showKeyboard(page)
   await Bun.sleep(300)
+  expect(await tabsShown(page)).toBe(true)
   expect((await measure(page)).composer).toBeGreaterThan(area.top + area.height)
   await page.close()
 })

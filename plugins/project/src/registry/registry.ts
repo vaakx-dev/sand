@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { isInside } from '@sand/util'
 import type { Project, ProjectFolder, ProjectIconFile, ProjectPatch } from '../contract'
 import { mergeProjects } from '../projects'

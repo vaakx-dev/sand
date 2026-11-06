@@ -4,6 +4,7 @@
   "description": "sand -p: a minimal test runner that runs one prompt without a server and prints the reply",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "print": "./src/index.ts",
     "label": "Headless",
     "summary": "Test runner: one prompt, printed in the terminal"

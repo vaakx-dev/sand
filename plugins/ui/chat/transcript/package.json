@@ -1,0 +1,32 @@
+{
+  "name": "@sand/transcript",
+  "version": "0.0.0",
+  "description": "How conversations look: messages, markdown, tool steps and the entries plugins register, for threads, bots and any other surface",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "transcript",
+    "web": "./src/index.ts",
+    "label": "Transcript",
+    "summary": "Messages with markdown, pages and tool steps, wherever a conversation shows"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/compaction": "workspace:*",
+    "@sand/context": "workspace:*",
+    "@sand/images": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/media": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/nav": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

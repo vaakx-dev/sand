@@ -1,4 +1,4 @@
-import type { TurnInfo } from '@sand/chat/contract'
+import type { TurnInfo } from '@sand/transcript/contract'
 import type { ListedTurn } from '@sand/git-snapshots/contract'
 import { plural } from '@sand/util'
 import { derive, div, show, span, type Child, type Sig } from '@vaakx-dev/vrui'

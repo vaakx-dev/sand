@@ -42,6 +42,7 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
 
   const session: Session = {
     ...info,
+    owner: 'thread',
     append(type, data, meta = {}) {
       const entry = write(type, data, meta)
       all().set(entry.id, entry)

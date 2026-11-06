@@ -1,5 +1,5 @@
 import { helloDelta, helloSessions, helloSync } from '@sand/server/contract'
-import { helloTurns, helloTurnsApi } from '@sand/turns-contract/contract'
+import { helloTurns, helloTurnsApi, type TurnInfo } from '@sand/turns-contract/contract'
 import type { Thread } from '../contract'
 import type { HelloRead } from '../greeted'
 import { legacyRunning } from './legacy'
@@ -11,9 +11,11 @@ export const stale = (thread: Thread) => {
   thread.loaded = false
 }
 
-const runningOf = (read: HelloRead): Map<string, number | undefined> => {
+type Running = Partial<Pick<TurnInfo, 'started' | 'waiting'>>
+
+const runningOf = (read: HelloRead): Map<string, Running> => {
   if (!read(helloTurnsApi)) return legacyRunning(read)
-  return new Map(Object.entries(read(helloTurns) ?? {}).map(([id, turn]) => [id, turn.started]))
+  return new Map(Object.entries(read(helloTurns) ?? {}))
 }
 
 export const applyHello = (store: Store, read: HelloRead, device: string) => {
@@ -27,9 +29,13 @@ export const applyHello = (store: Store, read: HelloRead, device: string) => {
   for (const info of sessions) store.upsert(info, device)
   const running = runningOf(read)
   for (const thread of owned()) {
-    thread.running = running.has(thread.id)
-    if (!thread.running) clearTurn(thread)
-    else thread.started ??= running.get(thread.id)
+    const turn = running.get(thread.id)
+    thread.running = turn !== undefined
+    if (!turn) clearTurn(thread)
+    else {
+      thread.started ??= turn.started
+      thread.waiting = turn.waiting
+    }
     store.changed(thread.id)
   }
   const sync = read(helloSync)

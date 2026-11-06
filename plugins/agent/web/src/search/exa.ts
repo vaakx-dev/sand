@@ -16,7 +16,7 @@ const reply = z.union([
 ])
 
 const nothingFound = 'No search results found'
-const unreadable = 'Exa answered in a format sand does not read'
+const unreadable = 'Exa sent an unexpected reply'
 
 const field = (block: string, name: string) => {
   const value = new RegExp(`^${name}: (.*)$`, 'm').exec(block)?.[1]?.trim() ?? ''

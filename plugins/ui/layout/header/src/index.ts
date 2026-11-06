@@ -1,5 +1,6 @@
 import { pcs, pcsChange } from '@sand/devices-contract'
 import { layout, layoutChange, place } from '@sand/layout/contract'
+import { threadsSlot } from '@sand/threads-space/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -16,7 +17,7 @@ export default definePlugin({
     const changes = pulse(ctx, [threadsChange, threadSelect, layoutChange, pcsChange, projectsChange], [threads, layout, pcs, projects])
     const slots = owned(ctx, createSlots)
     const view = owned(ctx, () => headerView(ctx, changes, slots))
-    place(ctx, 'main', view, 0)
+    place(ctx, threadsSlot('main'), view, 0)
     ctx.provide(header, { slot: (view, order, side) => slots.add(view, order, side) })
   },
 })

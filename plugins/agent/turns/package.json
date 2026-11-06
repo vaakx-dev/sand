@@ -1,30 +1,32 @@
 {
   "name": "@sand/turns",
   "version": "0.0.0",
-  "description": "Runs each turn of a chat: the model replies, the tools it calls run, and it repeats until it is done; every turn is stored, leased to one process and recovered when that process dies",
+  "description": "Runs each chat's turns on the engine and serves them to pages: send, steer, queue, interrupt and follow turns",
   "type": "module",
   "sand": {
+    "feature": "threads",
     "runtime": "./src/index.ts",
     "print": "./src/index.ts",
     "label": "Turns",
-    "summary": "Runs each turn: the model replies, the tools it calls run, and it repeats until it is done"
+    "summary": "Runs each chat's turns on the engine"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/config": "workspace:*",
-    "@sand/host-runtimes": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/loop": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/prompt": "workspace:*",
+    "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/turns-contract": "workspace:*",
-    "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {
     "@sand/harness": "workspace:*",
+    "@sand/ledger": "workspace:*",
     "@sand/replay": "workspace:*"
   }
 }

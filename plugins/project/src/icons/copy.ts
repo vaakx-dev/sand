@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import { fileHash } from '@sand/util/fs'
 import { rm } from 'node:fs/promises'
 import { join } from 'node:path'

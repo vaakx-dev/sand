@@ -2,6 +2,7 @@ import type { SessionInfo } from '@sand/chats/contract'
 import type { Wire, WireListener } from '@sand/devices-contract'
 import type { Request, WireEvent } from '@sand/host-hub/contract'
 import { type LiveSnapshot, liveSnapshot, llmEventWire, type Mark } from '@sand/server/contract'
+import { type TurnInfo, turnChangeWire } from '@sand/turns-contract/contract'
 import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { createApp } from 'drydock'
 import { listenThreads } from '../src/threads/events'
@@ -77,4 +78,33 @@ test('a gap in the live stream is not applied; the page asks for a fresh snapsho
 
   text('x', { turn: 't2', n: 3 })
   expect(shown(store)).toBe('abcdef')
+})
+
+test('a thread knows what its turn waits on until the turn moves on or ends', () => {
+  const { wire, emit } = fakeWire()
+  const store = new Store(createApp(), 'home')
+  store.upsert(info('chat'), pc)
+  listenThreads(wire, store, () => {})
+  const turn: TurnInfo = {
+    id: 't1',
+    session: 'chat',
+    ordinal: 1,
+    status: 'running',
+    origin: 'user',
+    selection: { source: 'a', model: 'a/m', speed: 'normal' },
+    prompt: 'go',
+    step: 1,
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    started: 1,
+  }
+  const change = (info: TurnInfo) => emit(turnChangeWire, [{ $session: { id: 'chat' } }, info])
+  const waiting = { kind: 'question', call: 'c1', title: 'Which day?' } as const
+
+  change({ ...turn, status: 'waiting', waiting })
+  expect(store.threads.get('chat')).toMatchObject({ running: true, waiting })
+  change(turn)
+  expect(store.threads.get('chat')?.waiting).toBeUndefined()
+  change({ ...turn, status: 'waiting', waiting })
+  change({ ...turn, status: 'completed', ended: 2 })
+  expect(store.threads.get('chat')).toMatchObject({ running: false, waiting: undefined })
 })

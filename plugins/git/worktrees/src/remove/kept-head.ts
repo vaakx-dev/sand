@@ -1,4 +1,4 @@
-import type { GitRunner } from '@sand/git/contract'
+import type { GitRunner } from '@sand/git-runner/contract'
 import type { WorktreeRecord } from '../records/schema'
 import { refExists } from '../repo/refs'
 
