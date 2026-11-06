@@ -23,13 +23,20 @@ export const threadConversations = (ctx: TurnsContext): Conversations<Session> =
     if (session.kind !== 'agent') ctx.sessions.update(session.id, { seen: false })
   }
 
+  const reopen = (session: Session) => {
+    if (session.settled !== null) ctx.sessions.update(session.id, { settled: null })
+  }
+
   return {
     owner: 'thread',
     open: id => ctx.sessions.open(id),
     select: session => ctx.modelSettings.select(session),
     step: (session, turn, signal) => ctx.providerThreads.step(session, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),
-    prompt: (content, session) => ctx.waterfall(turnPrompt, content, session),
+    prompt(content, session) {
+      reopen(session)
+      return ctx.waterfall(turnPrompt, content, session)
+    },
     ready: (prompt, session, signal) => ctx.waterfall(turnReady, prompt, session, signal),
     overflow: (session, turn, error, signal) => ctx.bail(contextOverflow, session, turn, error, signal),
     started: (session, prompt, info) => ctx.emit(turnStart, session, prompt, threadTurn(info)),
