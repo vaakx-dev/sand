@@ -8,7 +8,7 @@ export const keepHead = (git: GitRunner, record: WorktreeRecord, head: string) =
   git.ok(record.main, ['update-ref', keptHeadRef(record), head], { what: "Couldn't keep the worktree's last commit safe, so it stays" })
 
 export const keptHead = async (git: GitRunner, record: WorktreeRecord) => {
-  if (await refExists(git, record.main, keptHeadRef(record))) return keptHeadRef(record)
+  if (!record.saved && (await refExists(git, record.main, keptHeadRef(record)))) return keptHeadRef(record)
   return record.head && (await refExists(git, record.main, record.head)) ? record.head : undefined
 }
 

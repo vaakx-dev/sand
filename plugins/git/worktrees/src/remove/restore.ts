@@ -6,6 +6,7 @@ import { dirname } from 'node:path'
 import type { Worktree } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import { recordedWorktree } from '../list/shape'
+import { applyStash } from '../move/carry'
 import type { WorktreeRecord } from '../records/schema'
 import { branchExists } from '../repo/refs'
 import { longGitMs } from '../repo/timeout'
@@ -33,14 +34,22 @@ export const waitingThreads = (deps: WorktreeDeps, record: WorktreeRecord) =>
     return session && isWithin(session.cwd, record.main) && !deps.store.containing(session.cwd)
   })
 
+const appliedSaved = async (deps: WorktreeDeps, record: WorktreeRecord) => {
+  if (!record.saved) return true
+  const failed = await applyStash(deps.git, record.path, record.saved)
+  if (failed) deps.report(new Error(`Restored ${record.path}, but its set-aside changes didn't apply: ${failed.message} Run "git stash apply ${record.saved}" there.`))
+  return !failed
+}
+
 const addBack = async (deps: WorktreeDeps, record: WorktreeRecord) => {
   if (existsSync(record.path)) throw new Error(`${record.path} already exists. Move it away to restore the worktree.`)
   const args = await addArgs(deps.git, record)
   await mkdir(dirname(record.path), { recursive: true })
   await deps.git.ok(record.main, ['worktree', 'add', ...args], { timeoutMs: longGitMs, what: "Couldn't restore the worktree" })
-  await dropKeptHead(deps.git, record).catch(deps.report)
+  if (await appliedSaved(deps, record)) await dropKeptHead(deps.git, record).catch(deps.report)
   delete record.removed
   delete record.head
+  delete record.saved
   delete record.parked
   record.setup = freshSetup(record.path, [doneStep('restore', `Restore ${record.path}`), ...(await planSteps(record.main))])
   await deps.store.save()
