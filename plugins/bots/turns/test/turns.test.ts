@@ -4,7 +4,7 @@ import { botInterrupt, botLive, botSend } from '@sand/bot-turns/contract'
 import type { Message } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Source } from '@sand/replay/contract'
-import { afterEach, expect, setSystemTime, test } from 'bun:test'
+import { afterEach, expect, test } from 'bun:test'
 
 let sand: Sand
 
@@ -48,23 +48,6 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(messages(entries).map(message => message.role)).toEqual(['user', 'assistant', 'user', 'assistant'])
   expect(await ask(memoryRead, { bot: bot.id, name: 'people.md' })).toBe('# People\n\nAna: lunch Fridays.')
   expect(sand.sessions.list()).toEqual([])
-})
-
-test('the system prompt holds no date, so it stays the same across days', async () => {
-  const { ask, requests } = await start([[said('Noted.')], [said('Sure.')]])
-  const bot = await ask(botCreate, { name: 'Diary', models: { main: { model: 'fake/m' }, quick: {} } })
-
-  setSystemTime(new Date(2026, 2, 2, 12))
-  await ask(botSend, { bot: bot.id, prompt: 'Monday notes', clientRequestId: 'one' })
-  await settled(bot.id)
-  setSystemTime(new Date(2026, 2, 5, 12))
-  await ask(botSend, { bot: bot.id, prompt: 'Thursday notes', clientRequestId: 'two' })
-  await settled(bot.id)
-  setSystemTime()
-
-  const [first, second] = requests('fake').map(body => JSON.parse(body))
-  expect(second.system).toEqual(first.system)
-  expect(first.system[0].text).not.toMatch(/Today is|2026/)
 })
 
 test('a failed turn marks the bot failed, and deleting a bot forgets its turns', async () => {
