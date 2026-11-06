@@ -1,6 +1,7 @@
 import { Prec } from '@codemirror/state'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { hasFiles } from '@sand/attachments/web/contract'
+import type { NavAction } from '@sand/nav/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { BREAKPOINT, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
@@ -14,8 +15,7 @@ import type { Model } from '../model'
 import type { Plus } from '../plus/entries'
 import { plusView } from '../plus/view'
 import { sendControl } from '../send/button'
-import type { SendMenu } from '../send/menu'
-import { interrupt, lastPrompt } from '../send/submit'
+import { lastPrompt } from '../send/submit'
 import { glassPanel } from './glass'
 import type { Slots } from './slots'
 
@@ -23,8 +23,8 @@ export interface CardParts {
   ctx: ComposerContext
   model: Model
   slots: Slots
-  menu: SendMenu
   plus: Plus
+  actions: () => NavAction[]
   typed: () => void
 }
 
@@ -49,20 +49,20 @@ const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || eve
 
 const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserEvent('input') || tr.isUserEvent('delete'))
 
-export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
+export const card = ({ ctx, model, slots, plus, actions, typed }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const wide = media(`(min-width: ${BREAKPOINT.md})`)
 
   const escape = () => {
     if (hasOpenLayer() || !model.running.get()) return false
-    void interrupt(ctx).catch(error => model.fail(errorMessage(error)))
+    void model.target.interrupt().catch(error => model.fail(errorMessage(error)))
     return true
   }
 
   const recall = (event: KeyboardEvent) => {
     if (model.text.get() || modified(event)) return false
-    const prompt = lastPrompt(ctx)
+    const prompt = lastPrompt(model.target.path())
     if (!prompt?.text) return false
     model.records.add(prompt.records)
     editor.replace(prompt.text)
@@ -106,7 +106,7 @@ export const card = ({ ctx, model, slots, menu, plus, typed }: CardParts) => {
       slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
       span({ class: 'min-w-2 flex-1' }),
       slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
-      sendControl(ctx.kit, model, menu),
+      sendControl(ctx.kit, model, actions),
     ),
   )
 

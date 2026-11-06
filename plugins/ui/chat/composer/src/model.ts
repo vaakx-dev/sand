@@ -1,77 +1,46 @@
-import { shelves, type Held, type Shelf } from '@sand/attachments/web/contract'
-import { pcs, pcsChange, wire } from '@sand/devices-contract'
+import type { Held, Shelves } from '@sand/attachments/web/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
-import { modelPill } from '@sand/model-panel/contract'
 import { errorMessage } from '@sand/util'
-import { models, modelsChange, outbox, outboxChange, type SendOptions, threadChange, threadSelect } from '@sand/web-client/contract'
-import { pulse } from '@sand/reactive'
-import { derive, sig } from '@vaakx-dev/vrui'
+import type { SendOptions } from '@sand/web-client/contract'
+import { derive, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { commandChar } from './complete/detect'
-import { createTriggers } from './complete/registry'
-import type { ComposerContext } from './context'
+import { boundTriggers, type Triggers } from './complete/registry'
 import type { Command } from './contract'
 import type { Saved } from './drafts/store'
 import { createRecords } from './records'
 import { createHolds } from './send/holds'
-import { modelMissing, retry, sendDevice, submit } from './send/submit'
+import type { Outgoing, Target } from './target'
 
 interface Typed {
   text: string
   items: Held[]
 }
 
-interface Outgoing {
+interface Retry {
   typed: Typed
-  options: Pick<SendOptions, 'mode' | 'clientRequestId'>
+  options: Outgoing
 }
-
-type Delivery = 'now' | 'queued' | 'unreachable'
-
-const deliveryOf = (ctx: ComposerContext): Delivery => {
-  const pc = sendDevice(ctx)
-  if (ctx.get(wire)?.ready(pc) ?? true) return 'now'
-  return ctx.threads.current() && ctx.get(outbox)?.accepts(pc) ? 'queued' : 'unreachable'
-}
-
-const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
-  const thread = ctx.threads.current()
-  if (!thread || thread.running || thread.ended?.stopReason !== 'error') return undefined
-  const key = `${thread.id}:${thread.info.head}`
-  if (dismissed.has(key)) return undefined
-  const known = ctx.get(models)
-  const info = known?.info(known.settings(thread.id)?.model)
-  const source = info?.source ? known?.sources().find(found => found.id === info.source) : undefined
-  return { key, text: thread.ended.error ?? 'Unknown error', detail: thread.ended.detail, via: info?.via, viaOffline: source?.online === false }
-}
-
-export type TurnError = NonNullable<ReturnType<typeof turnErrorOf>>
 
 const applied = (settings: SessionSettings, patch: SettingsPatch): SessionSettings => {
   const { model, effort, speed } = { ...settings, ...patch }
   return { ...(model && { model }), ...(effort && { effort }), ...(speed && { speed }) }
 }
 
-export const createModel = (ctx: ComposerContext) => {
+export const createModel = (target: Target, registries: Triggers[], shelves: Sig<Shelves | undefined>) => {
   const text = sig('')
   const attached = sig<Held[]>([])
-  const shelf = sig<Shelf | undefined>(undefined)
-  ctx.watch(shelves, found => shelf.set(found?.create(attached, { device: () => sendDevice(ctx), thread: () => ctx.threads.current()?.id })))
+  const shelf = derive(() => {
+    const found = shelves.get()
+    return untrack(() => found?.create(attached, target.place))
+  })
   const attachments = derive(() => (shelf.get() ? attached.get() : []))
   const records = createRecords()
   const picked = sig<SessionSettings>({})
-  const failure = sig<{ text: string; retry?: Outgoing } | undefined>(undefined)
+  const failure = sig<{ text: string; retry?: Retry } | undefined>(undefined)
   const sending = sig(false)
-  const dismissed = sig(new Set<string>())
-  const changes = pulse(ctx, [threadSelect, pcsChange, modelsChange, outboxChange], [wire, pcs, outbox])
-  ctx.on(threadChange, id => {
-    if (id === ctx.threads.current()?.id) changes.bump()
-  })
-
-  const running = changes.read(() => Boolean(ctx.threads.current()?.running))
-  const idle = changes.read(() => !ctx.threads.current())
-  const delivery = changes.read(() => deliveryOf(ctx))
-  const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
-  const turnError = changes.read(() => turnErrorOf(ctx, dismissed.get()))
+  const running = derive(() => target.running())
+  const delivery = derive(() => target.delivery())
+  const pcName = derive(() => target.pcName())
   const empty = derive(() => !text.get().trim() && !attachments.get().length)
   const blocked = derive(() => Boolean(shelf.get()?.rejected()))
   const holds = createHolds()
@@ -82,16 +51,9 @@ export const createModel = (ctx: ComposerContext) => {
     picked.set({})
   }
 
-  const settings = (): SessionSettings => {
-    const known = ctx.get(models)
-    const pick = picked.get()
-    const usable = Boolean(pick.model && known?.info(pick.model))
-    return { ...known?.defaults(), ...(usable && pick) }
-  }
-
   const fail = (message: string) => failure.set({ text: message })
 
-  const couldNotSend = (outgoing: Outgoing, error: unknown) =>
+  const couldNotSend = (outgoing: Retry, error: unknown) =>
     failure.set({ text: `Couldn't send: ${errorMessage(error).replace(/\.$/, '')}. Your message is still here.`, retry: outgoing })
 
   const typed = (): Typed => ({ text: text.get(), items: attached.get() })
@@ -124,13 +86,13 @@ export const createModel = (ctx: ComposerContext) => {
     })
   }
 
-  const triggers = createTriggers(command => void runCommand(command))
+  const triggers = boundTriggers(registries, command => void runCommand(command))
 
-  const sendPrompt = (outgoing: Outgoing) => {
+  const sendPrompt = (outgoing: Retry) => {
     const task = async () => {
       const items = await upload()
       const value = outgoing.typed.text.trim()
-      await submit(ctx, value, [...items, ...records.content(value)], settings(), outgoing.options)
+      await target.send(value, [...items, ...records.content(value)], picked.get(), outgoing.options)
       if (unchanged(outgoing.typed)) clear()
     }
     return attempt(true, task, error => couldNotSend(outgoing, error))
@@ -142,12 +104,13 @@ export const createModel = (ctx: ComposerContext) => {
     const withAttachments = attachments.get().length > 0
     const command = value.startsWith(commandChar) ? triggers.named(value.slice(1)) : undefined
     if (command && !withAttachments) return runCommand(command)
-    const pill = ctx.get(modelPill)
-    if ((value || withAttachments) && modelMissing(ctx, settings()) && pill) return pill.open()
+    if (!value && !withAttachments) return target.interrupt().catch(error => fail(errorMessage(error)))
+    if ((value || withAttachments) && !target.ready(picked.get())) return
     return sendPrompt({ typed: typed(), options: { mode, clientRequestId: crypto.randomUUID() } })
   }
 
   return {
+    target,
     text,
     attached,
     shelf,
@@ -155,26 +118,20 @@ export const createModel = (ctx: ComposerContext) => {
     records,
     triggers,
     picked,
-    settings,
     choose: (patch: SettingsPatch) => picked.update(current => applied(current, patch)),
     failure,
     sending,
     running,
-    idle,
     delivery,
     pcName,
     empty,
     blocked,
     holds,
-    changes,
-    turnError,
     send,
     resend: sendPrompt,
     clear,
     fail,
     draft: (): Saved => ({ text: text.get(), items: attached.get(), records: records.linked(text.get()), settings: picked.get() }),
-    retryTurn: () => void retry(ctx).catch(error => fail(errorMessage(error))),
-    dismiss: (key: string) => dismissed.update(keys => new Set([...keys, key])),
   }
 }
 

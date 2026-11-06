@@ -66,7 +66,8 @@ import { ownedByNode } from './page/owned'
 import { isMac } from './page/platform'
 import { style } from './page/style'
 import { openTab } from './page/tab'
-import { nearEnd, toEnd } from './scroll/end'
+import { firstRowBelow, keepAnchor, nearEnd, toEnd } from './scroll/end'
+import { rowSizes } from './scroll/sizes'
 
 const gesture = { canScrollToward, direction, editing, follow, selecting }
 
@@ -107,6 +108,7 @@ export const kit = {
   expandToggle,
   floatButton,
   fileKindMark,
+  firstRowBelow,
   fold,
   gesture,
   hasOpenLayer,
@@ -115,6 +117,7 @@ export const kit = {
   iconButton,
   isMac,
   jumpButton,
+  keepAnchor,
   layer,
   lineStat,
   linkButton,
@@ -161,6 +164,7 @@ export const kit = {
   rowDetail,
   rowList,
   rowTitle,
+  rowSizes,
   rowWarning,
   searchField,
   searchRow,

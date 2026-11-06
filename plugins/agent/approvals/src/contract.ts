@@ -76,8 +76,13 @@ export const approvalsChange = event<(waiting: Decision[]) => void>('approvals.c
 
 export const approvalSettingsChange = event<() => void>('approvals.settings.change')
 
+export interface ApprovalBanner {
+  asking(): boolean
+  view(): HTMLElement
+}
+
 export interface ApprovalViews {
-  card(owner: Owner, conversation: string): HTMLElement
+  banner(owner: Owner, conversation: string): ApprovalBanner
 }
 
 export const approvalViews = service<ApprovalViews>('approvalViews')

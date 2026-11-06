@@ -12,12 +12,12 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/approvals": "workspace:*",
-    "@sand/attachments": "workspace:*",
     "@sand/bot-memory": "workspace:*",
     "@sand/bot-routines": "workspace:*",
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/features": "workspace:*",
     "@sand/layout": "workspace:*",
@@ -31,5 +31,8 @@
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }
