@@ -1,16 +1,16 @@
 import { sessionEntry } from '@sand/chats/contract'
 import { contextKinds } from '@sand/context/contract'
+import { mcpTools } from '@sand/mcp-server/contract'
 import { threadStarted } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { definePlugin } from 'drydock'
 import { botStartedWire } from '../contract'
+import { offerBotTools } from '../mcp/tools'
 import { createAsk } from './ask'
 import { inject } from './context'
 import { botContext } from './kind'
 import { routeMentions } from './mention'
 import { serveBridge } from './serve'
-import { botTools, group } from './tools/bots'
-import { threadTools } from './tools/threads'
 import { replyView } from './view'
 
 export default definePlugin({
@@ -27,11 +27,11 @@ export default definePlugin({
       ctx.orchestrator.owner('bot', {
         deliver: (bot, { text, clientRequestId }) => ctx.bots.get(bot) && ctx.botTurns.send(bot, { prompt: text, origin: 'job', clientRequestId }),
         label: bot => ctx.bots.get(bot)?.name,
+        project: bot => ctx.bots.get(bot)?.project ?? undefined,
       }),
     )
     ctx.watch(contextKinds, found => found?.register(botContext(ctx.bots)))
-    ctx.effect(() => ctx.tools.group({ name: group, label: 'Bots', summary: "list the user's bots, hand one a task and read its replies", load: 'on-demand' }))
-    for (const tool of [...botTools(ctx, ask), ...threadTools(ctx)]) ctx.effect(() => ctx.tools.register(tool))
+    ctx.watch(mcpTools, found => found && offerBotTools(found))
     serveBridge(ctx, ask)
   },
 })

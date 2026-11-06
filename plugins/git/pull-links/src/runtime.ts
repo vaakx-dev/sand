@@ -3,6 +3,7 @@ import { cli } from '@sand/config/contract'
 import { gitRepo } from '@sand/git/contract'
 import { gitRunner } from '@sand/git-runner/contract'
 import { github, pullChanged, pullCreated, type PullSummary } from '@sand/github/contract'
+import { orchestrator } from '@sand/orchestrator/contract'
 import { type Server, server, sessionCarry, sessionOpened, userWrote } from '@sand/server/contract'
 import { skills } from '@sand/skills/contract'
 import { subModel } from '@sand/sub-model/contract'
@@ -27,6 +28,7 @@ import { isRunning } from './settle/running'
 import { type AutoSettleDeps, startAutoSettle } from './settle/settle'
 import { loadSettleSetting } from './settle/setting'
 import { followStacks } from './stack/follow'
+import { tellStarters } from './starter/tell'
 import { createSweep } from './sweep/sweep'
 import { createViewed } from './sweep/viewed'
 import { pullTools } from './tools/tools'
@@ -69,9 +71,11 @@ export default definePlugin({
       links,
       viewed,
       wake: watch.wake,
+      started: thread => Boolean(ctx.get(orchestrator)?.starterOf(thread)),
       failures,
       hold: () => ctx.busy(),
     })
+    const starters = { sessions: ctx.sessions, book, links, orchestrator: () => ctx.get(orchestrator), report }
     const setting = await loadSettleSetting(ctx.cli.home)
     const settleDeps: AutoSettleDeps = {
       github: ctx.github,
@@ -136,6 +140,7 @@ export default definePlugin({
     ctx.on(pullChanged, summary => {
       links.recordEnd(summary, summary.ended)
       for (const id of links.linking(summary)) announce(id)
+      tellStarters(starters, summary)
     })
     ctx.on(pullCreated, (summary, session) => void linkCreated(summary, session).catch(report))
     ctx.on(toolResult, (result, call, session) => {

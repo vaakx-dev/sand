@@ -22,6 +22,7 @@
     "@sand/git-runner": "workspace:*",
     "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/skills": "workspace:*",
     "@sand/sub-model": "workspace:*",
@@ -34,5 +35,8 @@
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
   }
 }

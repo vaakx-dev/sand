@@ -1,6 +1,9 @@
-import type { McpTool } from '@sand/mcp-server/contract'
+import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
+import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botRead, botRoster, readLimit } from '../contract'
+import { awaitBot, botAsk, botProject, botRead, botRoster, readLimit } from '../contract'
+
+const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task, read its replies and set the project it manages" }
 
 const waitSeconds = 300
 const mostWaitSeconds = 3600
@@ -22,27 +25,45 @@ const readInput = z.object({
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many items (default 50)'),
 })
 
-export const botMcpTools: McpTool[] = [
+const projectInput = z.object({
+  bot: z.string().optional().describe('The bot id (default: you, when you are a bot)'),
+  project: z.string().min(1).nullable().describe('The project id, from project_list, or null for none'),
+})
+
+export const botTools: McpTool[] = [
   {
     name: 'bot_list',
-    description: "List the user's sand bots with each one's job and whether it is working",
+    description: "List the user's bots with each one's job, whether it is working and the project it manages",
     input: listInput,
     access: 'read',
+    group: group.name,
     run: (_, { call }) => call(botRoster, {}),
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Hand one of the user's sand bots a task or question and wait for its reply; when it takes longer you get its turn as a handle, and bot_read shows the reply later",
+    description: "Hand one of the user's bots a task or question and wait for its reply; when it takes longer you get its turn as a handle, and bot_read shows the reply later",
     input: sendInput,
     access: 'operate',
-    run: async ({ bot, prompt, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call }) =>
-      awaitBot(call, await call(botAsk, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000),
+    group: group.name,
+    run: async ({ bot, prompt, timeoutSeconds = waitSeconds, clientRequestId = Bun.randomUUIDv7() }, { call, signal }) =>
+      awaitBot(call, await call(botAsk, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_read',
-    description: "Read a sand bot's conversation; each item has a seq to read on from and the turn it belongs to",
+    description: "Read a bot's conversation; each item has a seq to read on from and the turn it belongs to",
     input: readInput,
     access: 'read',
+    group: group.name,
     run: (input, { call }) => call(botRead, input),
   } satisfies McpTool<typeof readInput>,
+  {
+    name: 'bot_project',
+    description: 'Tie a bot to the project it manages: thread_start starts its threads there when it names no folder or project',
+    input: projectInput,
+    access: 'operate',
+    group: group.name,
+    run: (input, { call }) => call(botProject, input),
+  } satisfies McpTool<typeof projectInput>,
 ]
+
+export const offerBotTools = (found: McpTools) => joinDisposers(found.group(group), ...botTools.map(tool => found.register(tool)))

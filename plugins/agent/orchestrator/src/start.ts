@@ -16,7 +16,7 @@ const settingsOf = (ctx: OrchestratorContext, { model, effort }: StartInput) => 
   }
 }
 
-const folderOf = (ctx: OrchestratorContext, { cwd, project }: StartInput) => {
+const folderOf = (ctx: OrchestratorContext, { cwd, project }: Pick<StartInput, 'cwd' | 'project'>) => {
   if ((cwd === undefined) === (project === undefined)) throw failure('invalid_request', 'Give either cwd or project')
   if (cwd !== undefined) {
     if (!existsSync(cwd)) throw failure('invalid_request', `${cwd} is not a folder on this PC`)
@@ -38,8 +38,10 @@ export type Adopt = (session: Session) => void
 export const createStart = (ctx: OrchestratorContext, receipts: Receipts, starters: Starters, owners: Owners) => {
   const opening = new Map<string, Promise<Session>>()
 
+  const placeOf = ({ cwd, project, from }: StartInput) => (cwd === undefined && project === undefined ? { project: owners.home(from) } : { cwd, project })
+
   const open = async (input: StartInput, adopt?: Adopt) => {
-    const { cwd, project } = folderOf(ctx, input)
+    const { cwd, project } = folderOf(ctx, placeOf(input))
     const session = input.worktree ? await inWorktree(ctx, cwd) : ctx.sessions.thread(cwd, project ? { project } : undefined)
     if (input.title) ctx.sessions.rename(session.id, input.title)
     adopt?.(session)

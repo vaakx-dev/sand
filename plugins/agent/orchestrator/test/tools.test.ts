@@ -13,13 +13,13 @@ const said = (text: string): Reply => [{ type: 'text', text }]
 
 const start = async (replies = [said('child done'), said('Noted.'), said('Noted again.')]) => {
   sand = await startSand([{ id: 'fake', models: ['m'], replies }], {
-    plugins: ['core/watch', 'agent/jobs', 'agent/subagents'],
+    plugins: ['core/watch', 'agent/jobs', 'agent/subagents', 'agent/mcp-server', 'agent/threads-mcp'],
   })
 }
 
 const agent = (depth: number) => {
   const chat = sand.chat('fake/m')
-  chat.append('agent', { name: 'general', depth, tools: ['threads_start', 'threads_send', 'threads_wait'] })
+  chat.append('agent', { name: 'general', depth, tools: ['thread_start', 'thread_send', 'thread_wait'] })
   return chat
 }
 
@@ -35,13 +35,13 @@ test("a thread an agent starts runs with the agent's tool limits one level deepe
   await start()
   const parent = agent(2)
 
-  const started = await use(parent, 'threads_start', { prompt: 'child work', model: 'fake/m' })
+  const started = await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })
   expect(started.isError).toBe(false)
   const sent = JSON.parse(started.text)
-  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['threads_start', 'threads_send', 'threads_wait'] })
+  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['thread_start', 'thread_send', 'thread_wait'] })
   expect(sand.turns.get(sent.turn)?.origin).toBe('agent')
 
-  const waited = await use(parent, 'threads_wait', { thread: sent.thread })
+  const waited = await use(parent, 'thread_wait', { thread: sent.thread })
   expect(JSON.parse(waited.text)).toMatchObject({ thread: sent.thread, status: 'completed', reply: 'child done' })
 })
 
@@ -49,8 +49,8 @@ test('an agent can neither start a thread past the deepest nesting nor message a
   await start()
   const wide = sand.chat('fake/m')
 
-  expect(await use(agent(6), 'threads_start', { prompt: 'too deep' })).toEqual({ isError: true, text: expect.stringContaining('only nest 6 levels deep') })
-  expect(await use(agent(1), 'threads_send', { thread: wide.id, prompt: 'do more' })).toEqual({
+  expect(await use(agent(6), 'thread_start', { prompt: 'too deep' })).toEqual({ isError: true, text: expect.stringContaining('only nest 6 levels deep') })
+  expect(await use(agent(1), 'thread_send', { thread: wide.id, prompt: 'do more' })).toEqual({
     isError: true,
     text: expect.stringContaining("you can't message it"),
   })
@@ -71,7 +71,7 @@ test('a thread tells the thread that started it its final reply when it finishes
   const parent = agent(2)
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
 
-  const { thread } = JSON.parse((await use(parent, 'threads_start', { prompt: 'child work', model: 'fake/m' })).text)
+  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })).text)
   const [notice] = await heard(parent, 1)
   expect(notice).toContain(`<thread>${thread}</thread>`)
   expect(notice).toContain('<status>done</status>')
@@ -91,8 +91,8 @@ test('a thread waiting on a thread it started gets the reply from the wait, not 
   const parent = agent(2)
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
 
-  const { thread } = JSON.parse((await use(parent, 'threads_start', { prompt: 'child work', model: 'fake/m' })).text)
-  const waited = use(parent, 'threads_wait', { thread })
+  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })).text)
+  const waited = use(parent, 'thread_wait', { thread })
   await Bun.sleep(50)
   sand.turns.interrupt(sand.sessions.require(thread))
   expect(JSON.parse((await waited).text)).toMatchObject({ thread, status: 'interrupted' })

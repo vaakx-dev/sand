@@ -23,13 +23,15 @@ const start = async (home?: string) => {
 test('a bot is created with defaults, listed, updated and deleted along with its folder', async () => {
   const { ask, home } = await start()
   const bot = await ask(botCreate, { name: 'calendar', job: 'Keep my calendar.' })
-  expect(bot).toMatchObject({ name: 'calendar', initial: 'C', color: 'gold', computer: 'none', models: { main: {}, quick: {} }, status: 'idle' })
+  expect(bot).toMatchObject({ name: 'calendar', initial: 'C', color: 'gold', computer: 'none', project: null, models: { main: {}, quick: {} }, status: 'idle' })
   expect(await ask(botList, {})).toEqual([bot])
 
-  const updated = await ask(botUpdate, { bot: bot.id, patch: { color: 'sky', computer: 'pc:laptop', models: { main: { model: 'fake/m', effort: 'high' }, quick: {} } } })
-  expect(updated).toMatchObject({ color: 'sky', computer: 'pc:laptop', models: { main: { model: 'fake/m', effort: 'high' } } })
+  const updated = await ask(botUpdate, { bot: bot.id, patch: { color: 'sky', computer: 'pc:laptop', project: 'veld', models: { main: { model: 'fake/m', effort: 'high' }, quick: {} } } })
+  expect(updated).toMatchObject({ color: 'sky', computer: 'pc:laptop', project: 'veld', models: { main: { model: 'fake/m', effort: 'high' } } })
   expect(updated.updated).toBeGreaterThanOrEqual(bot.updated)
   await expect(ask(botUpdate, { bot: bot.id, patch: { computer: 'somewhere' as 'none' } })).rejects.toThrow('Invalid input')
+  await expect(ask(botUpdate, { bot: bot.id, patch: { project: '' } })).rejects.toThrow('Invalid input')
+  expect(await ask(botUpdate, { bot: bot.id, patch: { project: null } })).toMatchObject({ project: null })
 
   const folder = join(home, 'bots', bot.id)
   mkdirSync(folder, { recursive: true })

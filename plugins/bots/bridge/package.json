@@ -30,11 +30,10 @@
     "@sand/project": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sidebar": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/transcript": "workspace:*",
-    "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
@@ -44,6 +43,7 @@
     "@modelcontextprotocol/server": "^2.4.0",
     "@sand/harness": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/replay": "workspace:*"
+    "@sand/replay": "workspace:*",
+    "@sand/tools": "workspace:*"
   }
 }

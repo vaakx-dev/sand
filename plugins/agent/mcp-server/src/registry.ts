@@ -11,6 +11,7 @@ export const provideTools = (ctx: Context) => {
         if (tools.get(tool.name) === tool) tools.delete(tool.name)
       }
     },
+    group: () => () => {},
   }
   ctx.provide(mcpTools, registry)
   return () => [...tools.values()]

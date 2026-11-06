@@ -58,6 +58,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
         color: freshColor(records.list()),
         job: '',
         computer: 'none',
+        project: null,
         ...spec,
         models: { main, quick: spec.models?.quick.model ? spec.models.quick : quick(main) },
         created: now,

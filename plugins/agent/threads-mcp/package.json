@@ -1,14 +1,15 @@
 {
   "name": "@sand/threads-mcp",
   "version": "0.0.0",
-  "description": "Outside agents list, read, start, message, wait for and stop sand's threads through the MCP server",
+  "description": "sand's thread tools, defined once for its own threads and bots and for outside agents over MCP: list, read, start, message, wait for, stop and manage threads",
   "type": "module",
   "sand": {
     "feature": "threads-mcp",
+    "runtime": "./src/index.ts",
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
-    "label": "Threads over MCP",
-    "summary": "Lets outside agents start, message and read your threads over MCP"
+    "label": "Thread tools",
+    "summary": "Lets your threads, your bots and outside agents start, message, read and manage your threads"
   },
   "dependencies": {
     "@sand/mcp-server": "workspace:*",

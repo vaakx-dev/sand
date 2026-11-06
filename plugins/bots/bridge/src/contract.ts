@@ -18,6 +18,7 @@ export interface BotRow {
   name: string
   job: string
   status: BotStatus
+  project: string | null
 }
 
 export interface BotAnswer {
@@ -65,16 +66,22 @@ export const botRead = request('bot.read', {
   output: type<BotPage>(),
   callers,
 })
+export const botProject = request('bot.project', {
+  input: z.object({ bot: z.string().optional(), project: z.string().min(1).nullable() }),
+  output: type<BotRow>(),
+  callers,
+})
 export const botStarts = request('bot.starts', { input: z.object({}), output: type<Record<string, string>>() })
 
 export const botStartedWire = wireEvent<[thread: string, bot: string]>('bot.started')
 
 const answerGrace = 10_000
 
-export const awaitBot = async (call: Call, answer: BotAnswer, deadline: number): Promise<BotAnswer> => {
+export const awaitBot = async (call: Call, answer: BotAnswer, deadline: number, signal?: AbortSignal): Promise<BotAnswer> => {
   const { bot, turn } = answer
   if (!turn) return answer
   for (;;) {
+    signal?.throwIfAborted()
     const timeoutMs = Math.max(0, Math.min(waitLimit, deadline - Date.now()))
     const found = await call(botAwait, { bot, turn, timeoutMs }, { timeout: timeoutMs + answerGrace })
     if (found.status !== 'running' || Date.now() >= deadline) return found

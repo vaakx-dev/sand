@@ -30,6 +30,7 @@ export interface Bot {
   job: string
   models: ModelPolicy
   computer: Computer
+  project: string | null
   created: number
   updated: number
 }
@@ -83,6 +84,7 @@ const botFields = z.object({
   job: z.string().max(20_000),
   models: z.object({ main: modelChoice, quick: modelChoice }),
   computer,
+  project: z.string().min(1).nullable(),
 })
 
 export const newBot = botFields.partial().required({ name: true }).extend({ id: z.uuid().optional() })

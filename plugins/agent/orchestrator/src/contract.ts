@@ -1,12 +1,16 @@
 import type { Prompt } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
-import { request, type Request, type } from '@sand/host-hub/contract'
+import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
 import { errorMessage } from '@sand/util'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
 export const outsideOrigins = ['cli', 'mcp'] as const
+
+const actorOrigins: Record<Actor['owner'], TurnOrigin> = { thread: 'agent', bot: 'bot' }
+
+export const originOf = (actor: Actor | undefined, outside: TurnOrigin) => (actor ? actorOrigins[actor.owner] : outside)
 
 export type ThreadStatus = TurnStatus | 'idle'
 
@@ -75,6 +79,7 @@ export interface SendInput {
 export interface OwnerKind {
   deliver(id: string, notice: Notice): Promise<unknown> | undefined
   label(id: string): string | undefined
+  project?(id: string): string | undefined
 }
 
 export interface Orchestrator {
@@ -99,8 +104,15 @@ export interface ThreadRow {
   project: string | null
   updated: number
   status: ThreadStatus
+  pinned: boolean
   settled: boolean
+  snoozed?: number
   pc?: string
+}
+
+export interface ProjectRow {
+  project: string
+  folder: string
 }
 
 export const failureCodes = ['not_found', 'invalid_request', 'unavailable', 'denied', 'failed'] as const
@@ -170,11 +182,28 @@ export const threadRead = request('thread.read', {
   place,
 })
 export const threadList = request('thread.list', {
-  input: z.object({ cwd: z.string().optional(), project: z.string().optional(), limit: z.number().int().min(1).max(readLimit).optional() }),
+  input: z.object({
+    cwd: z.string().optional(),
+    project: z.string().optional(),
+    mine: z.boolean().optional(),
+    limit: z.number().int().min(1).max(readLimit).optional(),
+  }),
   output: type<ThreadRow[]>(),
   callers,
 })
 export const threadStop = request('thread.stop', { input: session, output: type<boolean>(), callers, place })
+export const threadUpdate = request('thread.update', {
+  input: session.extend({
+    title: z.string().min(1).optional(),
+    pinned: z.boolean().optional(),
+    snoozed: z.number().int().positive().nullable().optional(),
+    settled: z.boolean().optional(),
+  }),
+  output: type<ThreadRow>(),
+  callers,
+  place,
+})
+export const threadProjects = request('thread.projects', { input: z.object({}), output: type<ProjectRow[]>(), callers })
 
 export const settled = (status: ThreadStatus, until: WaitUntil) => status !== 'running' && (until === 'attention' || status !== 'waiting')
 
@@ -183,8 +212,9 @@ export type Call = <I, O>(request: Request<I, O>, input: I, options?: { timeout?
 const slice = 20_000
 export const answerGrace = 10_000
 
-export const waitThread = async (call: Call, session: string, until: WaitUntil, deadline = Infinity): Promise<ThreadState> => {
+export const waitThread = async (call: Call, session: string, until: WaitUntil, deadline = Infinity, signal?: AbortSignal): Promise<ThreadState> => {
   for (;;) {
+    signal?.throwIfAborted()
     const timeoutMs = Math.max(0, Math.min(slice, deadline - Date.now()))
     const state = await call(threadWait, { session, until, timeoutMs }, { timeout: timeoutMs + answerGrace })
     if (settled(state.status, until) || Date.now() >= deadline) return state

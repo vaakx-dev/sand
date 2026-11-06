@@ -4,10 +4,8 @@ import { sessions } from '@sand/chats/contract'
 import { engine, entryViews } from '@sand/engine/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
 import { projectFiles } from '@sand/project/contract'
-import { tools } from '@sand/tools/contract'
-import { turns } from '@sand/turns-contract/contract'
 import type { Context } from 'drydock'
 
-export const inject = { bots, botTurns, engine, entryViews, sessions, turns, orchestrator, projectFiles, tools }
+export const inject = { bots, botTurns, engine, entryViews, sessions, orchestrator, projectFiles }
 
 export type BridgeContext = Context<typeof inject>

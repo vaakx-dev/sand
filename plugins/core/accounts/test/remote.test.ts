@@ -105,6 +105,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
     broadcast() {},
     hello: () => () => {},
     pages: () => 0,
+    ask: () => Promise.reject(new Error('No requests in this test')),
     route(path, handler) {
       routes.set(path, handler)
       return () => void routes.delete(path)

@@ -10,6 +10,7 @@ const bot = (id: string): BotSummary => ({
   job: '',
   models: { main: {}, quick: {} },
   computer: 'none',
+  project: null,
   created: 0,
   updated: 0,
   status: 'idle',

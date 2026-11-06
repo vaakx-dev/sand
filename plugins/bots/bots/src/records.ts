@@ -9,6 +9,7 @@ type Row = {
   job: string
   models: string
   computer: string
+  project: string | null
   created: number
   updated: number
 }
@@ -26,8 +27,8 @@ export const createRecords = (db: Database) => {
   const all = db.query<Row, []>('select * from bots order by created')
   const one = db.query<Row, { id: string }>('select * from bots where id = $id')
   const save = db.query<unknown, Row>(
-    `insert or replace into bots (id, name, initial, color, job, models, computer, created, updated)
-     values ($id, $name, $initial, $color, $job, $models, $computer, $created, $updated)`,
+    `insert or replace into bots (id, name, initial, color, job, models, computer, project, created, updated)
+     values ($id, $name, $initial, $color, $job, $models, $computer, $project, $created, $updated)`,
   )
   const remove = db.query<unknown, { id: string }>('delete from bots where id = $id')
 

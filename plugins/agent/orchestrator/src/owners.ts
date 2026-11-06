@@ -37,6 +37,7 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
       if (!kind) throw failure('invalid_request', `Nothing speaks for ${from.owner} conversations`)
       return signed(prompt, { v: 1, id: uuid(), kind: from.owner, label: kind.label(from.id) || from.owner, data: { id: from.id, sent: true } })
     },
+    home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
     async notify(thread: string, notice: Notice) {
       const starter = starters.of(thread)
       const kind = starter && kinds.get(starter.owner)

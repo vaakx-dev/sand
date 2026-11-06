@@ -92,7 +92,7 @@ const boot = async (app: Context, home: string, sources: Source[], { plugins: ex
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
   if (config === undefined) app.provide(projectFiles, copiesStub(projects))
   const wire = createHandlers()
-  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0 })
+  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, sources, extra) : loadConfig(app, home, sources, config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
@@ -122,7 +122,7 @@ export const startSand = async (sources: Source[], options: SandOptions = {}) =>
   const askAs =
     (caller: Caller) =>
     <I, O>(request: Request<I, O>, input: I) =>
-      wire.answer(request.id, input, caller) as Promise<O>
+      wire.ask(request, input, caller)
 
   return {
     app,

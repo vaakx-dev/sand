@@ -22,4 +22,5 @@ export const schema = [
       unique (bot, seq)
     )`,
   ],
+  ['alter table bots add column project text'],
 ]

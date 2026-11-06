@@ -14,7 +14,6 @@ import { serveThreads } from './serve'
 import { createStart } from './start'
 import { openStarters } from './starters'
 import { waitThread } from './state'
-import { threadTools } from './tools'
 import { createWaits } from './waits'
 
 export default definePlugin({
@@ -42,7 +41,6 @@ export default definePlugin({
     ctx.provide(orchestrator, threads)
     ctx.on(sessionRemove, starters.remove)
     reportFinished(ctx, starters, waits, owners)
-    serveThreads(ctx, start, createPcs(ctx))
-    threadTools(ctx, start, threads)
+    serveThreads(ctx, threads, start, createPcs(ctx))
   },
 })

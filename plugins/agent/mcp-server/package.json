@@ -1,27 +1,31 @@
 {
   "name": "@sand/mcp-server",
   "version": "0.0.0",
-  "description": "sand as an MCP server for outside agents: the sand mcp command on stdio and /mcp over HTTP for paired agents, serving the tools other features register",
+  "description": "sand's tools for threads and bots, defined once: sand's own threads and bots use them, and outside agents reach them with the sand mcp command on stdio and at /mcp over HTTP",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
   },
   "sand": {
     "feature": "mcp-server",
+    "runtime": "./src/agents/index.ts",
     "host": "./src/http/index.ts",
     "cli": "./src/stdio.ts",
     "label": "MCP server",
-    "summary": "Lets outside agents reach sand over MCP, with the sand mcp command or at /mcp for agents paired in Settings → Devices"
+    "summary": "Gives sand's threads and bots its thread and bot tools, and lets outside agents use the same tools over MCP, with the sand mcp command or at /mcp for agents paired in Settings → Devices"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.4.0",
     "@sand/cli-commands": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/engine": "workspace:*",
     "@sand/host-daemon": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/orchestrator": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/tools": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

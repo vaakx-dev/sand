@@ -33,8 +33,8 @@ export const mcpServer = (use: Use, tools: McpTool[], { access, here }: ServerOp
   const server = new McpServer({ name: 'sand', version: '1.0.0' })
   for (const tool of tools) {
     const allowed = tool.access === 'read' || access === 'operate'
-    server.registerTool(tool.name, { description: tool.description, inputSchema: tool.input, annotations: annotations[tool.access] }, input =>
-      respond(allowed ? () => use(call => tool.run(input, { call, ...(here && { here }) })) : deny),
+    server.registerTool(tool.name, { description: tool.description, inputSchema: tool.input, annotations: annotations[tool.access] }, (input, { mcpReq: { signal } }) =>
+      respond(allowed ? () => use(call => tool.run(input, { call, signal, ...(here && { here }) })) : deny),
     )
   }
   return server

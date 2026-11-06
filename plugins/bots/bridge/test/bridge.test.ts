@@ -13,7 +13,7 @@ import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { botMcpTools } from '../src/mcp/tools'
+import { botTools } from '../src/mcp/tools'
 
 let sand: Sand
 let folder: string
@@ -32,7 +32,10 @@ const start = async (thread: Reply[], bot: Reply[]) => {
       { id: 'fake', models: ['t'], replies: thread, api: 'anthropic' },
       { id: 'botsrc', models: ['b'], replies: bot, api: 'anthropic' },
     ],
-    { plugins: ['agent/context', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/bridge'], projects: [{ project: 'p1', path: folder }] },
+    {
+      plugins: ['agent/context', 'agent/mcp-server', 'agent/threads-mcp', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/bridge'],
+      projects: [{ project: 'p1', path: folder }],
+    },
   )
   return sand
 }
@@ -101,8 +104,8 @@ test('a thread hands a bot a task and gets its reply, and an @ mention hands the
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
-  expect(await use(thread, 'bots_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle' }])
-  expect(await use(thread, 'bots_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toMatchObject({ bot: bot.id, status: 'completed', reply: 'Tomorrow: dentist at 9.' })
+  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', project: null }])
+  expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toMatchObject({ bot: bot.id, status: 'completed', reply: 'Tomorrow: dentist at 9.' })
   const [asked] = userMessages((await sand.ask(botConversation, { bot: bot.id })).entries)
   expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")
   expect(recordsOf(asked!)).toEqual([expect.objectContaining({ kind: 'thread', data: { id: thread.id, sent: true } })])
@@ -131,12 +134,14 @@ const noticeFor = async (bot: string) => {
   throw new Error('The bot heard nothing')
 }
 
-test('a bot starts a thread in a project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
+test('a bot starts a thread in its project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
   await start([said('README fixed.'), said('Glad to help.'), said('Hi back.')], [said('The README is fixed.')])
   await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
   const bot = await createBot('Builder')
 
-  const started = await use(asBot(bot.id), 'thread_start', { project: 'p1', prompt: 'Fix the README' })
+  expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })).toEqual({ error: expect.stringContaining('Give either cwd or project') })
+  expect(await use(asBot(bot.id), 'bot_project', { project: 'p1' })).toMatchObject({ bot: bot.id, project: 'p1' })
+  const started = await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })
   const thread = sand.sessions.require(started.thread)
   expect(thread.project).toBe('p1')
   expect(sand.turns.get(started.turn)?.origin).toBe('bot')
@@ -151,22 +156,22 @@ test('a bot starts a thread in a project, which says the bot sent it and tells t
   await Bun.sleep(100)
   expect(await botTexts(bot.id)).toHaveLength(1)
 
-  expect(await use(asBot(bot.id), 'thread_list', {})).toEqual([{ project: 'p1', folder, threads: [expect.objectContaining({ thread: thread.id })] }])
+  expect(await use(asBot(bot.id), 'project_list', {})).toEqual([{ project: 'p1', folder }])
   const other = sand.chat('fake/t')
   const sent = await use(asBot(bot.id), 'thread_send', { thread: other.id, prompt: 'Hi' })
   await sand.turns.wait(sent.turn, 'end')
   expect(lastReply(other)).toBe('Hi back.')
   expect(recordsOf(userMessages(other.path())[0]!)).toEqual([expect.objectContaining({ kind: 'bot', data: { id: bot.id, sent: true } })])
-  const names = (conversation: Conversation) => registry().specs([], conversation).map(spec => spec.name)
-  expect(names(asBot(bot.id))).toContain('thread_start')
-  expect(names(other)).not.toContain('thread_start')
+  expect(await use(asBot(bot.id), 'thread_list', { mine: true })).toEqual([expect.objectContaining({ thread: thread.id, project: 'p1', status: 'completed' })])
+  expect(await use(asBot(bot.id), 'thread_update', { thread: thread.id, settled: true })).toMatchObject({ thread: thread.id, settled: true })
+  expect(await use(asBot(bot.id), 'thread_wait', { thread: thread.id })).toEqual({ error: expect.any(String) })
 })
 
 test('a bot cannot message itself, since its turn would wait on its own reply', async () => {
   await start([], [])
   const bot = await createBot('Ping')
 
-  expect(await use(asBot(bot.id), 'bots_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
+  expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
 })
 
 test('an outside agent lists bots, hands one a task and reads its reply over MCP', async () => {
@@ -174,7 +179,7 @@ test('an outside agent lists bots, hands one a task and reads its reply over MCP
   const bot = await createBot('Travel')
   const call: Call = sand.askAs({ device: 'outside', kind: 'agent' })
   const server = new McpServer({ name: 'sand', version: '1.0.0' })
-  for (const tool of botMcpTools)
+  for (const tool of botTools)
     server.registerTool(tool.name, { description: tool.description, inputSchema: tool.input }, async input => ({
       content: [{ type: 'text', text: JSON.stringify(await tool.run(input, { call })) }],
     }))
@@ -187,9 +192,9 @@ test('an outside agent lists bots, hands one a task and reads its reply over MCP
     return first?.type === 'text' ? JSON.parse(first.text) : undefined
   }
 
-  expect(Object.fromEntries(botMcpTools.map(tool => [tool.name, tool.access]))).toEqual({ bot_list: 'read', bot_send: 'operate', bot_read: 'read' })
-  expect((await client.listTools()).tools.map(tool => tool.name)).toEqual(['bot_list', 'bot_send', 'bot_read'])
-  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle' }])
+  expect(Object.fromEntries(botTools.map(tool => [tool.name, tool.access]))).toEqual({ bot_list: 'read', bot_send: 'operate', bot_read: 'read', bot_project: 'operate' })
+  expect((await client.listTools()).tools.map(tool => tool.name)).toEqual(['bot_list', 'bot_send', 'bot_read', 'bot_project'])
+  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', project: null }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
   const page = await value('bot_read', { bot: bot.id })
   expect(page.items.map(({ role }: { role: string }) => role)).toEqual(['user', 'assistant'])

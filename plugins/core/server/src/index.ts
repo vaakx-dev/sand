@@ -58,6 +58,7 @@ export default definePlugin({
       broadcast: (event, payload) => send(event, payload),
       hello: hellos.register,
       pages: sockets.pages,
+      ask: handlers.ask,
     }
     ctx.provide(serverService, server)
     ctx.runtime.listening(`http://127.0.0.1:${listener.port}`)
