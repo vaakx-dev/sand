@@ -3,7 +3,7 @@ import { service } from 'drydock'
 
 export * from './palette'
 
-export type ThemeRole = 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'orange' | 'sky'
+export type ThemeRole = 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'orange' | 'sky'
 
 export type ThemePalette = ColorThemeInput & Record<ThemeRole, ColorThemeInput[string]>
 

@@ -87,7 +87,7 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
   }
 
   ctx.on(threadChange, id => {
-    const thread = id === store.current ? store.threads.get(id) : undefined
+    const thread = store.open(id) ? store.threads.get(id) : undefined
     const head = thread?.info.head
     if (thread?.loaded && head && !thread.entries.has(head)) void load(id)
   })

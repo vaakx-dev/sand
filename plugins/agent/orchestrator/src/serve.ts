@@ -57,8 +57,9 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
     return new Set(Object.keys(started).filter(id => started[id] === actor.id))
   }
 
-  const list = ({ mine, ...filter }: InputOf<typeof threadList>, caller: Caller) => {
+  const list = ({ mine, bot, ...filter }: InputOf<typeof threadList>, caller: Caller) => {
     if (mine) return listThreads(ctx, { ...filter, ids: startedBy(caller.actor) })
+    if (bot) return listThreads(ctx, { ...filter, ids: startedBy({ owner: 'bot', id: bot }) })
     return forwarded(caller) ? listThreads(ctx, filter) : pcs.list(filter)
   }
 

@@ -1,7 +1,7 @@
 import { sessionEntryWire, sessionRemoveWire, sessionUpdateWire, type WireSession } from '@sand/chats/contract'
 import { contextChange } from '@sand/compaction/contract'
 import { artifactSavedWire } from '@sand/html/contract'
-import { applyLiveEvent, type EntryHead, liveSnapshot, llmEventWire, type Mark, sessionHeadWire, uiFocus } from '@sand/server/contract'
+import { applyLiveEvent, type EntryHead, liveSnapshot, llmEventWire, type Mark, sessionHeadWire, uiFocus, uiWatch } from '@sand/server/contract'
 import {
   toolProgressWire,
   toolResultWire,
@@ -41,12 +41,10 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
   const resyncing = new Set<string>()
 
   const resync = ({ id, device }: Thread) => {
-    if (id !== store.current || resyncing.has(id)) return
+    if (!store.open(id) || resyncing.has(id)) return
     resyncing.add(id)
-    void wire
-      .call(uiFocus, { session: id }, device)
-      .catch(() => {})
-      .finally(() => resyncing.delete(id))
+    const request = id === store.current ? wire.call(uiFocus, { session: id }, device) : wire.call(uiWatch, { sessions: store.watchedOn(device) }, device)
+    void request.catch(() => {}).finally(() => resyncing.delete(id))
   }
 
   return joinDisposers(
@@ -59,7 +57,7 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
       sessionEntryWire,
       ([session, entry], device) => {
         const found = thread(session, device)
-        const open = found.id === store.current
+        const open = store.open(found.id)
         if (found.loaded || open) found.entries.set(entry.id, entry)
         advance(found, entry)
         if (!found.loaded && open) load(found.id)
@@ -73,7 +71,7 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
         const found = thread(session, device)
         stale(found)
         advance(found, entry)
-        if (found.id === store.current) load(found.id)
+        if (store.open(found.id)) load(found.id)
         store.changed(found.id)
       },
       everyPc,

@@ -24,6 +24,7 @@ import { threadLoader } from './loading'
 import { threadPages } from './pages'
 import { hasOlder, pathOf } from './path'
 import type { Store } from './store'
+import { threadWatches } from './watch'
 
 export interface ThreadService extends Threads {
   adopt(opened: OpenedSession, device: string): Thread
@@ -34,6 +35,7 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
   const creators = threadCreators()
+  const watches = threadWatches(wire, store, id => void load(id))
   let greeted = false
 
   const recentFolder = () =>
@@ -92,6 +94,7 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
 
   const greetedBy = (pc: string) => {
     applyHello(store, helloOf(wire, pc), pc)
+    watches.greeted(pc)
     if (pc === store.here() && !greeted) {
       greeted = true
       return void openRequested()
@@ -145,6 +148,7 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
       store.remove(id)
     },
     select,
+    watch: watches.watch,
     load,
     path: (id, options) => {
       const thread = store.threads.get(id)

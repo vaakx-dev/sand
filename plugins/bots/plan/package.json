@@ -1,0 +1,32 @@
+{
+  "name": "@sand/bot-plan",
+  "version": "0.0.0",
+  "description": "Each bot's project plan: one Markdown file of what's ready, in progress, waiting and next, that the bot keeps through sand's tools and the user can read and edit",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "bots",
+    "runtime": "./src/index.ts",
+    "host": "./src/host.ts",
+    "cli": "./src/host.ts",
+    "label": "Bot plans",
+    "summary": "Keeps each bot's plan of its work in one file you can read and edit"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/bot-turns": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

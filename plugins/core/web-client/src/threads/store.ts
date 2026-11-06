@@ -61,8 +61,18 @@ export class Store {
     private home: string,
   ) {}
 
+  readonly watched = new Map<string, number>()
+
   currentThread() {
     return this.current ? this.threads.get(this.current) : undefined
+  }
+
+  open(id: string) {
+    return id === this.current || this.watched.has(id)
+  }
+
+  watchedOn(device: string) {
+    return [...this.watched.keys()].filter(id => this.deviceOf(id) === device)
   }
 
   here() {

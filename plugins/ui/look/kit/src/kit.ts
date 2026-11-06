@@ -45,6 +45,7 @@ import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
+import { bottomSheet } from './sheets/bottom'
 import { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
@@ -76,6 +77,7 @@ export const kit = {
   appIcon,
   badge,
   bannerTitle,
+  bottomSheet,
   callout,
   checkMark,
   checkRow,
