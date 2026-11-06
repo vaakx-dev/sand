@@ -35,7 +35,7 @@ const decisionOf = ({ by, rule, decided, ...row }: Row): Decision => ({
 
 const listSql = `select * from approvals
   where ($owner is null or owner = $owner) and ($conversation is null or conversation = $conversation) and at < $before
-  order by at desc limit $limit`
+  order by at desc, rowid desc limit $limit`
 
 export const createDecisions = (db: Database) => {
   const inserted = db.query(
@@ -44,7 +44,7 @@ export const createDecisions = (db: Database) => {
   )
   const byCall = db.query<Row, { turn: string; call: string }>('select * from approvals where turn = $turn and call = $call')
   const byId = db.query<Row, { id: string }>('select * from approvals where id = $id')
-  const waiting = db.query<Row, []>("select * from approvals where outcome = 'waiting' order by at")
+  const waiting = db.query<Row, []>("select * from approvals where outcome = 'waiting' order by at, rowid")
   const settled = db.query<Row, Record<string, string | number | null>>(
     "update approvals set outcome = $outcome, by = $by, rule = $rule, decided = $decided where id = $id and outcome = 'waiting' returning *",
   )
