@@ -35,6 +35,7 @@ export interface ModelMenuInput {
   makeDefault?: () => void
   toggleFavourite?: () => void
   toggleHidden?: () => void
+  togglePaid?: () => void
   remove?: () => void
 }
 
