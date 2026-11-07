@@ -4,7 +4,7 @@ import { botConversation, botEntryWire, chatPath, type BotEntry } from '@sand/bo
 import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { wireHello } from '@sand/devices-contract'
 import { applyLiveEvent } from '@sand/server/contract'
-import { errorMessage, isRecord, uuid } from '@sand/util'
+import { errorMessage, isRecord } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 
@@ -100,8 +100,7 @@ export const conversation = (ctx: BotsContext, bot: string) => {
     return fetch(oldest.seq)
   }
 
-  const send = async (prompt: Prompt) => {
-    const id = uuid()
+  const send = async (prompt: Prompt, id: string) => {
     sending.update(list => [...list, { id, prompt, at: Date.now() }])
     try {
       await ctx.wire.call(botSend, { bot, prompt, clientRequestId: id })

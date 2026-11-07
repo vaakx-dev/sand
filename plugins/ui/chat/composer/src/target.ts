@@ -6,7 +6,7 @@ import type { Chat } from './contract'
 
 export type Delivery = 'now' | 'queued' | 'unreachable'
 
-export type Outgoing = Pick<SendOptions, 'mode' | 'clientRequestId'>
+export type Outgoing = Pick<SendOptions, 'mode'> & { clientRequestId: string }
 
 export interface Target {
   place: ShelfPlace
@@ -28,6 +28,6 @@ export const chatTarget = (chat: Chat): Target => ({
   pcName: () => 'sand',
   path: chat.path,
   ready: () => true,
-  send: (text, content) => chat.send(promptOf(text, content)),
+  send: (text, content, _picked, { clientRequestId }) => chat.send(promptOf(text, content), clientRequestId),
   interrupt: chat.interrupt,
 })

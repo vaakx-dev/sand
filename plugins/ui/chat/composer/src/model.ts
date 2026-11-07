@@ -63,6 +63,11 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     return now.text === before.text && now.items.length === before.items.length && now.items.every((item, at) => item === before.items[at])
   }
 
+  const requestId = () => {
+    const failed = failure.get()?.retry
+    return failed && unchanged(failed.typed) ? failed.options.clientRequestId : crypto.randomUUID()
+  }
+
   const upload = () => shelf.get()?.upload() ?? Promise.resolve([])
 
   const attempt = async (busy: boolean, task: () => Promise<void>, failed: (error: unknown) => void) => {
@@ -106,7 +111,7 @@ export const createModel = (target: Target, registries: Triggers[], shelves: Sig
     if (command && !withAttachments) return runCommand(command)
     if (!value && !withAttachments) return target.interrupt().catch(error => fail(errorMessage(error)))
     if ((value || withAttachments) && !target.ready(picked.get())) return
-    return sendPrompt({ typed: typed(), options: { mode, clientRequestId: crypto.randomUUID() } })
+    return sendPrompt({ typed: typed(), options: { mode, clientRequestId: requestId() } })
   }
 
   return {
