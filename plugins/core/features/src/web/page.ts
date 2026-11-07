@@ -8,8 +8,6 @@ interface Placed {
   depth: number
 }
 
-const indents = ['', 'w-0', 'w-3', 'w-6']
-
 const tree = (features: Feature[], feature: Feature, depth = 0): Placed[] => [
   { feature, depth },
   ...features.filter(child => child.parent === feature.id).flatMap(child => tree(features, child, depth + 1)),
@@ -67,7 +65,7 @@ const row = (kit: Kit, store: FeatureStore, confirming: Sig<string | undefined>,
   return div(
     { class: 'contents' },
     settingsRow(
-      { title: label, detail: detail(summary, status(features, feature)), lead: depth ? span({ class: ['shrink-0', indents[depth]] }) : null },
+      { title: label, detail: detail(summary, status(features, feature)), lead: depth ? span({ class: 'w-0 shrink-0' }) : null },
       show(() => id in (store.applying.get() ?? {}), () => spinner()),
       toggleSwitch({ on, disabled: () => Boolean(store.applying.get()) || blocked(features, feature), 'aria-label': label, onClick: flip }),
     ),

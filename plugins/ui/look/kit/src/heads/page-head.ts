@@ -14,5 +14,12 @@ export const pageHead = (caption?: Child, action?: Child) =>
 export const paneHead = ({ led = false, class: extra, ...props }: PaneHeadProps, ...children: Child[]) =>
   div({ ...props, class: ['flex h-12 shrink-0 items-center gap-2 pr-3', () => (read(led) ? 'pl-2' : 'pl-4'), extra] }, ...children)
 
-export const headTitle = (level: 1 | 2, title: Child) =>
-  (level === 1 ? h1 : h2)({ class: 'min-w-0 flex-1 truncate text-base font-medium text-neutral-100' }, title)
+const titles = {
+  1: { tag: h1, size: 'text-lg font-semibold' },
+  2: { tag: h2, size: 'text-base font-medium' },
+}
+
+export const headTitle = (level: 1 | 2, title: Child) => {
+  const { tag, size } = titles[level]
+  return tag({ class: ['min-w-0 flex-1 truncate text-neutral-100', size] }, title)
+}

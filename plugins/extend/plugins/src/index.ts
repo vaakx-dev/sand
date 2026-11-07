@@ -34,7 +34,7 @@ export default definePlugin({
       keep: plugin => library.keep(plugin.name),
     }
     ctx.watch(settings, found =>
-      found?.page({ id: page, label: 'Plugins', icon: 'puzzle', order: 45, render: () => pluginsPage(ctx.kit, { sync, library, versions, actions }) }),
+      found?.page({ id: page, label: 'Plugins', icon: 'puzzle', group: 'app', order: 45, render: () => pluginsPage(ctx.kit, { sync, library, versions, actions }) }),
     )
   },
 })

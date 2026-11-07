@@ -19,7 +19,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [projectsChange, pcsChange], [palette])
-    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', icon: 'folder', order: 30, render: () => projectsPage(ctx, changes) }))
+    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', icon: 'folder', group: 'workspace', order: 30, render: () => projectsPage(ctx, changes) }))
     ctx.watch(palette, found => found?.source(projectSource(ctx)))
     ctx.watch(palette, found => found?.source(newThreadSource(ctx)))
     ctx.watch(palette, found => found?.source(findSource(ctx)))
