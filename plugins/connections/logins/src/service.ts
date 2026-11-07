@@ -49,6 +49,8 @@ interface Pointed extends Common {
 
 export type Saved = Held | Pointed
 
+type Allowed = Pick<Saved, 'bots' | 'threads'>
+
 export interface Data {
   saved: Saved[]
   credentials?: Credentials
@@ -65,6 +67,7 @@ type ValueChange = Pick<InputOf<typeof loginChange>, 'username' | 'password' | '
 
 const usesKept = 100
 const codeLife = 10 * 60_000
+export const onceLife = 10 * 60_000
 
 const markOf = (name: string) => `[secret: ${name}]`
 
@@ -115,7 +118,8 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
   let saved = data?.saved ?? []
   let held: Print[] = []
   const fetched = new Map<string, Print[]>()
-  let codes: (Print & { at: number })[] = []
+  const once = new Map<string, { entry: Held; until: number }>()
+  let passing: (Print & { until: number })[] = []
   const persist = serial()
 
   const printsOf = (values: string[], name: string) => values.filter(value => value.length >= shortest).map(value => redactor.print(value, markOf(name)))
@@ -134,10 +138,15 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     return persist(() => (saved.length || Object.keys(credentials).length ? vault.write({ saved, credentials }) : vault.clear()))
   }
 
+  const prune = () => {
+    const now = Date.now()
+    passing = passing.filter(print => print.until > now)
+    for (const [id, { until }] of once) if (until <= now) once.delete(id)
+  }
+
   const redact = (text: string) => {
-    const cutoff = Date.now() - codeLife
-    codes = codes.filter(code => code.at > cutoff)
-    return redactor.redact(text, [...held, ...[...fetched.values()].flat(), ...codes])
+    prune()
+    return redactor.redact(text, [...held, ...[...fetched.values()].flat(), ...passing])
   }
 
   const sources = createSources(deps.commands, data?.credentials ?? {}, { redact, save: write, changed: deps.changed })
@@ -154,7 +163,8 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
   }
 
   const find = (id: string) => {
-    const found = saved.find(entry => entry.id === id)
+    prune()
+    const found = saved.find(entry => entry.id === id) ?? once.get(id)?.entry
     if (!found) throw new Error(`No saved login "${id}". Call logins for the ids.`)
     return found
   }
@@ -168,7 +178,8 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
 
   const accessOf = (entry: Saved, conversation: ConversationRef): Access => (grantOf(entry, conversation) ? 'allowed' : 'ask')
 
-  const record = (entry: Saved, { conversation, action, site }: UseRequest, grant: Grant) => {
+  const record = async (entry: Saved, { conversation, action, site }: UseRequest, grant: Grant) => {
+    if (once.has(entry.id)) return
     const { bot } = deps.responsible(conversation)
     const shown = site ?? entry.site
     const use: Use = {
@@ -206,6 +217,11 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
 
   const use = async (id: string, request: UseRequest) => {
     const entry = find(id)
+    const one = once.get(id)
+    if (one) {
+      once.delete(id)
+      return one.entry.values
+    }
     const values = await valuesOf(entry)
     await record(entry, request, grantOf(entry, request.conversation) ?? 'user')
     return values
@@ -218,11 +234,13 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     return found
   }
 
-  const remember = (found: string, name: string) => {
-    codes = [...codes, ...printsOf([found], name).map(print => ({ ...print, at: Date.now() }))]
+  const pass = (values: string[], name: string, until: number) => {
+    passing = [...passing, ...printsOf(values, name).map(print => ({ ...print, until }))]
   }
 
-  const common = (name: string, access: Pick<Saved, 'bots' | 'threads'>) => ({
+  const remember = (found: string, name: string) => pass([found], name, Date.now() + codeLife)
+
+  const common = (name: string, access: Allowed) => ({
     id: `login-${crypto.randomUUID().slice(0, 8)}`,
     name,
     ...access,
@@ -231,17 +249,27 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     uses: [],
   })
 
-  const add = async (input: InputOf<typeof loginAdd>, access: Pick<Saved, 'bots' | 'threads'> = { bots: [], threads: [] }) => {
-    const entry: Held =
-      input.kind === 'website'
-        ? {
-            ...common(input.name, access),
-            site: siteOf(input.site),
-            values: { kind: 'website', username: input.username, password: input.password },
-            ...(input.totp && { totp: totpSecret(input.totp) }),
-          }
-        : { ...common(input.name, access), values: { kind: 'key', value: input.value } }
+  const heldOf = (input: InputOf<typeof loginAdd>, access: Allowed): Held =>
+    input.kind === 'website'
+      ? {
+          ...common(input.name, access),
+          site: siteOf(input.site),
+          values: { kind: 'website', username: input.username, password: input.password },
+          ...(input.totp && { totp: totpSecret(input.totp) }),
+        }
+      : { ...common(input.name, access), values: { kind: 'key', value: input.value } }
+
+  const add = async (input: InputOf<typeof loginAdd>, access: Allowed = { bots: [], threads: [] }) => {
+    const entry = heldOf(input, access)
     await commit([...saved, entry])
+    return loginOf(entry)
+  }
+
+  const hold = (input: InputOf<typeof loginAdd>, access: Allowed) => {
+    const entry = heldOf(input, access)
+    const until = Date.now() + onceLife
+    once.set(entry.id, { entry, until })
+    pass(valuesIn(entry.values), entry.name, until + codeLife)
     return loginOf(entry)
   }
 
@@ -313,6 +341,7 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
     record,
     remember,
     add,
+    hold,
     pick,
     change,
     remove,

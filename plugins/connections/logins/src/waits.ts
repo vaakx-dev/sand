@@ -35,6 +35,6 @@ export const createWaits = <T>() => {
 
 export type Waits<T> = ReturnType<typeof createWaits<T>>
 
-export type SecretAnswer = { value: string } | { username: string; password: string }
+export type SecretAnswer = { save: boolean } & ({ value: string } | { username: string; password: string })
 
 export type CodeAnswer = { code: string } | { approved: true }

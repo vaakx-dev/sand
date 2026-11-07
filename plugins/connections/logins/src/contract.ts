@@ -144,7 +144,7 @@ export const loginRemove = request('logins.remove', { input: z.object({ id }), o
 
 export const loginUses = request('logins.uses', { input: z.object({ id }), output: type<Use[]>() })
 
-export type AskStatus = 'saved' | 'filled' | 'approved' | 'declined' | 'timed_out' | 'cancelled'
+export type AskStatus = 'saved' | 'held' | 'filled' | 'approved' | 'declined' | 'timed_out' | 'cancelled'
 
 export interface SecretRequest {
   id: string
@@ -152,6 +152,7 @@ export interface SecretRequest {
   reason: string
   placeholder?: string
   site?: string
+  once?: boolean
 }
 
 export interface CodeRequest {
@@ -177,7 +178,7 @@ const target = { session: id, id }
 export const askWaiting = request('logins.waiting', { input: z.object(target), output: type<boolean>(), place: 'thread' })
 export const askDecline = request('logins.decline', { input: z.object(target), output: type<void>(), place: 'thread' })
 export const secretSave = request('logins.secret', {
-  input: z.union([z.object({ ...target, value: secret }), z.object({ ...target, username: secret, password: secret })]),
+  input: z.union([z.object({ ...target, save: z.boolean(), value: secret }), z.object({ ...target, save: z.boolean(), username: secret, password: secret })]),
   output: type<void>(),
   place: 'thread',
 })
