@@ -19,5 +19,5 @@ export const sideHead = (title: string, hide?: () => void) =>
   paneHead(
     { led: true },
     hide ? sidebarToggle({ title: 'Hide the sidebar', 'aria-label': 'Hide the sidebar', onClick: hide }) : iconSlot(),
-    headTitle(1, title),
+    headTitle(2, title),
   )

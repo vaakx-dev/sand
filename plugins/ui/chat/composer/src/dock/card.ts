@@ -6,11 +6,11 @@ import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { BREAKPOINT, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import type { Trigger } from '../contract'
 import { createCompletion } from '../complete/model'
 import { chipClipboard } from '../editor/chips/clipboard'
 import { chipWidgets } from '../editor/chips/widget'
 import { createEditor } from '../editor/view'
+import type { Trigger } from '../contract'
 import type { Model } from '../model'
 import type { Plus } from '../plus/entries'
 import { plusView } from '../plus/view'
@@ -28,21 +28,22 @@ export interface CardParts {
   typed: () => void
 }
 
-const labelsByChar = (triggers: Trigger[]) => {
-  const labels = new Map<string, string[]>()
-  for (const { char, label } of triggers) labels.set(char, [...(labels.get(char) ?? []), label])
+const firstLabels = (triggers: Trigger[]) => {
+  const labels = new Map<string, string>()
+  for (const { char, label } of triggers) if (!labels.has(char)) labels.set(char, label)
   return labels
 }
 
-const hints = (labels: Map<string, string[]>, wide: boolean) => {
-  if (!labels.size) return []
-  if (!wide) return [`or type ${[...labels.keys()].join(' ')}`]
-  return [...labels].map(([char, names]) => `${char} ${names.join(' and ')}`)
+const hints = (triggers: Trigger[], wide: boolean) => {
+  const labels = firstLabels(triggers)
+  if (!labels.size) return 'Ask anything'
+  if (!wide) return `Ask anything, or type ${[...labels.keys()].join(' ')}`
+  return ['Ask anything', ...[...labels].map(([char, label]) => `${char} ${label}`)].join(' · ')
 }
 
 const placeholder = (model: Model, wide: () => boolean) => () => {
   if (model.running.get()) return 'Add to the running turn'
-  return ['Ask anything', ...hints(labelsByChar(model.triggers.list.get()), wide())].join(', ')
+  return hints(model.triggers.list.get(), wide())
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey

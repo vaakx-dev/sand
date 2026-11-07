@@ -1,6 +1,5 @@
-import { div, read, section, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { div, h2, read, section, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
 import { quietButton } from '../buttons/button'
-import { sectionHeading } from '../heads/section-heading'
 
 export interface SectionProps {
   title?: Child
@@ -18,7 +17,9 @@ export interface Choice<T> {
 export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[]) =>
   section(
     { class: 'flex flex-col gap-2' },
-    title || action ? div({ class: 'px-2' }, sectionHeading(span({ class: 'min-w-0 flex-1 truncate' }, title ?? ''), action ?? null)) : null,
+    title || action
+      ? h2({ class: 'flex min-h-8 min-w-0 items-center gap-2 text-sm font-semibold text-neutral-100' }, span({ class: 'min-w-0 flex-1 truncate' }, title ?? ''), action ?? null)
+      : null,
     div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-xl bg-neutral-700' }, ...rows),
   )
 

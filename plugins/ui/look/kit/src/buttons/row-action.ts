@@ -10,7 +10,9 @@ export interface RowActionProps {
   run(): void
 }
 
-const dangerLook = (armed: Sig<boolean>) => () => (armed.get() ? 'bg-danger-950 text-danger-400' : 'text-danger-400 hover:bg-neutral-700')
+const idleLook = 'text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100'
+
+const dangerLook = (armed: Sig<boolean>) => () => (armed.get() ? 'bg-danger-950 text-danger-400' : idleLook)
 
 export const rowAction = ({ label, danger, disabled, run }: RowActionProps) => {
   const armed = sig(false)

@@ -69,7 +69,7 @@ const more = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTMLInpu
 export const headView = (kit: Kit, model: CalendarModel, parts: HeadParts) => {
   const picker = fileInput(model, parts.report)
   return kit.paneHead(
-    {},
+    { class: () => (model.mode.get() === 'agenda' ? kit.pageColumn : '') },
     kit.headTitle(1, () => title(model, parts.narrow.get())),
     kit.secondaryAction({ size: 'sm', onClick: model.today }, 'Today'),
     kit.iconButton({ title: 'Earlier', 'aria-label': 'Earlier', onClick: model.earlier }, kit.icon('left')),

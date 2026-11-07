@@ -32,7 +32,7 @@ export default definePlugin({
     ctx.watch(paletteService, palette => (palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, actions, shown))) : undefined))
     ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>
-      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', order: 20, render: () => modelsPage(ctx, changes, slots) }),
+      settings?.page({ id: 'models', label: 'Models', icon: 'sparkles', group: 'agents', order: 20, render: () => modelsPage(ctx, changes, slots) }),
     )
   },
 })

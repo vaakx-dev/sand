@@ -1,6 +1,6 @@
-import { div, show, span, type Child } from '@vaakx-dev/vrui'
+import { div, p, show, span, type Child } from '@vaakx-dev/vrui'
 import { secondaryAction } from '../buttons/button'
-import { errorText } from '../notes/notes'
+import { icon, type IconName } from '../icons/lucide'
 import { delayed } from '../page/delayed'
 import type { Surface } from '../surface'
 
@@ -32,6 +32,23 @@ export const emptyState = ({ text, action, ...where }: EmptyProps) =>
 export const errorState = ({ text, retry, ...where }: ErrorProps) =>
   div(
     { role: 'alert', class: [padOf(where), 'flex flex-wrap items-center gap-3'] },
-    div({ class: 'min-w-0 flex-1' }, errorText(text)),
+    span({ class: 'inline-flex shrink-0 text-danger-400' }, icon('alert', 16)),
+    div({ class: 'min-w-0 flex-1 text-sm wrap-anywhere text-neutral-100' }, text),
     retry ? secondaryAction({ size: 'sm', onClick: retry }, 'Retry') : null,
+  )
+
+export interface BlockProps {
+  icon: IconName
+  title: Child
+  text: Child
+  action?: Child
+}
+
+export const emptyBlock = ({ icon: name, title, text, action }: BlockProps) =>
+  div(
+    { class: 'flex flex-col items-center gap-2 px-4 py-12 text-center' },
+    span({ class: 'mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-neutral-400' }, icon(name, 20)),
+    p({ class: 'text-sm font-semibold text-neutral-100' }, title),
+    p({ class: 'max-w-sm text-sm text-neutral-400' }, text),
+    action ? div({ class: 'mt-2 flex' }, action) : null,
   )

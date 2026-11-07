@@ -10,7 +10,7 @@ import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
-import { headTitle, pageHead, paneHead } from './heads/page-head'
+import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { sectionHeading } from './heads/section-heading'
 import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
@@ -21,6 +21,7 @@ import { fileKindMark } from './marks/file-kind'
 import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
+import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
 import { stepMark } from './marks/state-marks'
@@ -40,16 +41,16 @@ import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { segmented, settingsSection } from './rows/settings'
-import { dockFade } from './scroll/fade'
+import { dockFade, topFade } from './scroll/fade'
 import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { bottomSheet } from './sheets/bottom'
-import { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
+import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
-import { emptyState, errorState, loadingState } from './states/states'
+import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
 import { diffRow } from './tools/diff'
 import { fold, toolBody, toolCard } from './tools/tool-card'
 import { editing, selecting } from './gesture/busy'
@@ -103,6 +104,7 @@ export const kit = {
   dot,
   dropdown,
   elapsed,
+  emptyBlock,
   emptyState,
   errorState,
   errorText,
@@ -121,6 +123,7 @@ export const kit = {
   isMac,
   jumpButton,
   keepAnchor,
+  keycap,
   layer,
   lineStat,
   linkButton,
@@ -146,6 +149,7 @@ export const kit = {
   optionProps,
   overlay,
   ownedByNode,
+  pageColumn,
   pageHead,
   paneHead,
   pathLabel,
@@ -162,6 +166,7 @@ export const kit = {
   providerIcon,
   quietButton,
   quoteButton,
+  railOverlay,
   returnFocus,
   rowAction,
   rowButton,
@@ -211,6 +216,7 @@ export const kit = {
   toneText,
   toolBody,
   toolCard,
+  topFade,
   viewerBar,
   viewerShell,
   waitingLine,

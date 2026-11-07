@@ -10,8 +10,6 @@ export interface ThreadActions {
   backLabel: string
 }
 
-const column = 'mx-auto w-full max-w-3xl'
-
 const olderEdge = 240
 
 const waitingText = 'Waiting for you'
@@ -53,9 +51,9 @@ const statusView = (kit: Kit, source: ThreadSource) => {
 
 const stateView = (kit: Kit, source: ThreadSource) =>
   dynamicChild(source.state, shown => {
-    if (shown === 'loading') return div({ class: [column, 'px-4 py-4'] }, kit.loadingState())
-    if (shown === 'failed') return div({ class: [column, 'px-4 py-4'] }, kit.errorState({ text: () => source.failure.get() ?? '', retry: source.retry }))
-    if (shown === 'empty') return div({ class: [column, 'px-4 py-12 text-center text-sm text-neutral-500'] }, 'Nothing in this thread yet.')
+    if (shown === 'loading') return div({ class: [kit.pageColumn, 'px-4 py-4'] }, kit.loadingState())
+    if (shown === 'failed') return div({ class: [kit.pageColumn, 'px-4 py-4'] }, kit.errorState({ text: () => source.failure.get() ?? '', retry: source.retry }))
+    if (shown === 'empty') return div({ class: [kit.pageColumn, 'px-4 py-12 text-center text-sm text-neutral-500'] }, 'Nothing in this thread yet.')
     return null
   })
 
@@ -90,12 +88,13 @@ export const threadView = (ctx: WorkContext, thread: string, actions: ThreadActi
 
   const scroller: HTMLElement = div(
     { class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
+    kit.topFade(),
     div(
       { class: 'flex min-h-full flex-col' },
       show(paging, () => div({ class: 'flex justify-center py-2 text-neutral-500' }, kit.spinner('sm'))),
       stateView(kit, source),
       div(
-        { class: [column, 'flex flex-col px-3 pt-4'], hidden: () => source.state.get() !== 'rows' },
+        { class: [kit.pageColumn, 'flex flex-col px-3 pt-4'], hidden: () => source.state.get() !== 'rows' },
         list(rows, row => row.key, rowNode, rowList),
         watched(div(statusView(kit, source))),
       ),

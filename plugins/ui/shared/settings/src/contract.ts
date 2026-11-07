@@ -1,9 +1,12 @@
 import { event, service, type Dispose } from 'drydock'
 
+export type SettingsGroup = 'agents' | 'accounts' | 'workspace' | 'app'
+
 export interface SettingsPage {
   id: string
   label: string
   icon?: string
+  group?: SettingsGroup
   order?: number
   parent?: string
   dot?: () => boolean

@@ -62,8 +62,8 @@ export const agendaView = (kit: Kit, model: CalendarModel, parts: AgendaParts) =
       ({ shown, calendars }) => {
         if (shown?.mode !== 'agenda') return waiting(kit, model)
         const groups = grouped(shown)
-        if (!groups.length) return div({ class: 'px-4 py-4' }, kit.emptyState({ text: 'Nothing planned for these four weeks.', action: kit.secondaryAction({ size: 'sm', onClick: parts.add }, 'New event') }))
-        return div({ class: 'mx-auto flex w-full max-w-3xl flex-col gap-6 px-2 pt-3 pb-16 md:px-4' }, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
+        if (!groups.length) return div({ class: kit.pageColumn }, kit.emptyBlock({ icon: 'calendar', title: 'Nothing planned for these four weeks', text: 'Events from your calendars, and the ones your bots add, show up here.', action: kit.secondaryAction({ size: 'sm', onClick: parts.add }, 'New event') }))
+        return div({ class: [kit.pageColumn, 'flex flex-col gap-6 px-2 pt-3 pb-16'] }, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
       },
     ),
   )

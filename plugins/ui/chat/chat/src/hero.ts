@@ -33,11 +33,17 @@ const mark = (ctx: ChatContext, changes: Pulse) => {
   )
 }
 
+const question = (ctx: ChatContext, changes: Pulse) => {
+  const project = changes.read(() => currentProject(ctx)?.name)
+  return ctx.kit.setupHeading(() => (project.get() ? `What should we work on in ${project.get()}?` : 'What should we work on?'))
+}
+
 export const hero = (ctx: ChatContext) => {
   const changes = pulse(ctx, [threadsChange, threadSelect, projectsChange], [threads, projects, palette])
   return div(
-    { class: 'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-6 px-5 pb-32 text-center' },
+    { class: 'pointer-events-none absolute inset-0 flex flex-col items-center justify-end gap-4 px-5 text-center', style: { paddingBottom: 'calc(var(--dock-h, 0px) + 2rem)' } },
     div({ class: 'flex' }, mark(ctx, changes)),
+    question(ctx, changes),
     dynamicChild(
       changes.read(() => !ctx.threads.current()),
       idle => (idle ? searchHint(ctx) : null),

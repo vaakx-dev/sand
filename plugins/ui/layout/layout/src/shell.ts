@@ -116,7 +116,7 @@ export const buildShell = ({ layer }: Kit, state: ShellState, closeSide: () => v
         if (!filled.get().aside || !shown.aside() || covered.get().main) return 'hidden'
         return narrow.get()
           ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950 px-safe py-safe', animated('animate-slide')]
-          : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col bg-neutral-950 lg:w-96 xl:w-full xl:max-w-lg'
+          : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col border-l border-neutral-800 bg-neutral-950 lg:w-96'
       },
       style: () => (narrow.get() ? slide(phone.get(), 'aside') : sizedStyle(widths, 'aside')),
     },
@@ -131,7 +131,7 @@ export const buildShell = ({ layer }: Kit, state: ShellState, closeSide: () => v
   })
 
   return div(
-    { class: ['absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe', () => (railAtBottom() ? null : 'pb-safe')], style: () => fitArea(keyboard.get()) },
+    { class: ['absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe', () => (railAtBottom() ? null : 'pb-safe')], style: () => ({ overflow: 'clip', ...fitArea(keyboard.get()) }) },
     strip('top'),
     backdrop,
     div({ class: ['flex min-h-0 min-w-0 flex-1', () => (narrow.get() ? 'flex-col' : null)] }, rail, side, main, aside),
