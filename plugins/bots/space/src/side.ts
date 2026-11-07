@@ -31,7 +31,7 @@ const sideHead = ({ headTitle, icon, iconButton, paneHead }: Kit, { create, clos
   paneHead(
     { led: Boolean(close) },
     close ? iconButton({ title: 'Close bots', 'aria-label': 'Close bots', onClick: close }, icon('back')) : null,
-    headTitle(1, 'Bots'),
+    headTitle(2, 'Bots'),
     iconButton({ title: 'New bot', 'aria-label': 'New bot', onClick: create }, icon('compose')),
     drawer && hide ? iconButton({ title: 'Show the bot', 'aria-label': 'Show the bot', onClick: hide }, icon('sidebar')) : null,
   )

@@ -36,19 +36,19 @@ export const templates: Template[] = [
     id: 'calendar',
     label: 'Calendar',
     summary: 'Keeps your calendar, plans your days and reminds you',
-    start: { name: 'Calendar', job: calendar },
+    start: { name: 'Calendar', job: calendar, color: 'sky' },
   },
   {
     id: 'researcher',
     label: 'Researcher',
     summary: 'Digs into questions, cites sources and keeps notes',
-    start: { name: 'Researcher', job: researcher },
+    start: { name: 'Researcher', job: researcher, color: 'green' },
   },
   {
     id: 'errands',
     label: 'Errands',
     summary: 'Tracks to-dos and small tasks and follows up',
-    start: { name: 'Errands', job: errands },
+    start: { name: 'Errands', job: errands, color: 'orange' },
   },
   { id: 'blank', label: 'Blank', summary: "Tell it in chat what it's for", start: {} },
 ]

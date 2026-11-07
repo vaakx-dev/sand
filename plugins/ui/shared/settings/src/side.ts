@@ -43,7 +43,7 @@ const sideHead = ({ headTitle, icon, iconButton, paneHead }: Kit, back: () => vo
   paneHead(
     { led: true },
     iconButton({ title: 'Close settings', 'aria-label': 'Close settings', onClick: back }, icon('back')),
-    headTitle(1, 'Settings'),
+    headTitle(2, 'Settings'),
     hide ? iconButton({ title: 'Show the page', 'aria-label': 'Show the page', onClick: hide }, icon('sidebar')) : null,
   )
 
