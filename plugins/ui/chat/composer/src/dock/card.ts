@@ -4,12 +4,13 @@ import { hasFiles } from '@sand/attachments/web/contract'
 import type { NavAction } from '@sand/nav/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
-import { div, dynamicChild, media, span } from '@vaakx-dev/vrui'
+import { BREAKPOINT, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { createCompletion } from '../complete/model'
 import { chipClipboard } from '../editor/chips/clipboard'
 import { chipWidgets } from '../editor/chips/widget'
 import { createEditor } from '../editor/view'
+import type { Trigger } from '../contract'
 import type { Model } from '../model'
 import type { Plus } from '../plus/entries'
 import { plusView } from '../plus/view'
@@ -27,10 +28,22 @@ export interface CardParts {
   typed: () => void
 }
 
-const placeholder = (model: Model) => () => {
+const firstLabels = (triggers: Trigger[]) => {
+  const labels = new Map<string, string>()
+  for (const { char, label } of triggers) if (!labels.has(char)) labels.set(char, label)
+  return labels
+}
+
+const hints = (triggers: Trigger[], wide: boolean) => {
+  const labels = firstLabels(triggers)
+  if (!labels.size) return 'Ask anything'
+  if (!wide) return `Ask anything, or type ${[...labels.keys()].join(' ')}`
+  return ['Ask anything', ...[...labels].map(([char, label]) => `${char} ${label}`)].join(' · ')
+}
+
+const placeholder = (model: Model, wide: () => boolean) => () => {
   if (model.running.get()) return 'Add to the running turn'
-  const chars = [...new Set(model.triggers.list.get().map(trigger => trigger.char))]
-  return chars.length ? `Ask anything, or type ${chars.join(' ')}` : 'Ask anything'
+  return hints(model.triggers.list.get(), wide())
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
@@ -40,6 +53,7 @@ const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserE
 export const card = ({ ctx, model, slots, plus, actions, typed }: CardParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
+  const wide = media(`(min-width: ${BREAKPOINT.md})`)
 
   const escape = () => {
     if (hasOpenLayer() || !model.running.get()) return false
@@ -69,7 +83,7 @@ export const card = ({ ctx, model, slots, plus, actions, typed }: CardParts) => 
 
   const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
   const editor = createEditor(ctx.kit, model.text, {
-    placeholder: placeholder(model),
+    placeholder: placeholder(model, () => wide.get()),
     extensions: [
       completion.extension,
       chipWidgets(model.records, drawChip(ctx)),

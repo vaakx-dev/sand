@@ -21,7 +21,7 @@ const where = ({ kit, openThread }: InboxParts, { decision }: Waiting, close: ()
 
 export const inboxSheet = (parts: InboxParts, close: () => void) => {
   const { kit, model } = parts
-  const { emptyState, railOverlay, sheet, sheetBody, sheetHead } = kit
+  const { emptyBlock, railOverlay, sheet, sheetBody, sheetHead } = kit
   return railOverlay(
     close,
     sheet(
@@ -31,7 +31,7 @@ export const inboxSheet = (parts: InboxParts, close: () => void) => {
         {},
         show(
           () => !model.all.get().length,
-          () => emptyState({ text: 'Nothing is waiting on you.', flush: true }),
+          () => emptyBlock({ icon: 'inbox', title: 'Nothing is waiting on you', text: 'Approvals and questions from your agents show up here.' }),
         ),
         list(
           model.all,

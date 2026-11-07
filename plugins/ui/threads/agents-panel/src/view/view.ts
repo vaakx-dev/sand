@@ -69,7 +69,7 @@ export const agentsView = (kit: Kit, state: AgentsState, actions: Actions) => {
     ),
     show(
       state.runs.map(runs => !runs.length),
-      () => kit.emptyState({ text: state.empty }),
+      () => kit.emptyBlock({ icon: 'bot', title: 'No agents yet', text: state.empty }),
     ),
     rows.menu.view(),
   )
