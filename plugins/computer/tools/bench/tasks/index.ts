@@ -1,17 +1,71 @@
 import { desktop } from './desktop'
+import { auditCount } from './local/audit-count'
+import { booking } from './local/booking'
+import { canvasChart } from './local/canvas-chart'
+import { canvasEditor } from './local/canvas-editor'
+import { combobox } from './local/combobox'
+import { compareTabs } from './local/compare-tabs'
+import { dashboardPopups } from './local/dashboard-popups'
+import { datePicker } from './local/date-picker'
 import { reference } from './local/docs'
+import { filesMenu } from './local/files-menu'
 import { contact } from './local/form'
+import { invoiceEntry } from './local/invoice-entry'
+import { popupAuth } from './local/popup-auth'
+import { toastCode } from './local/toast-code'
 import { gallery } from './local/gallery'
+import { holdRevoke } from './local/hold-revoke'
+import { kanban } from './local/kanban'
 import { mail } from './local/mail'
 import { news } from './local/news'
+import { playlistDnd } from './local/playlist-dnd'
+import { priceSlider } from './local/price-slider'
+import { richText } from './local/rich-text'
 import { settings } from './local/settings'
+import { shapeCount } from './local/shape-count'
+import { sheet } from './local/sheet'
+import { shiftingList } from './local/shifting-list'
 import { shop } from './local/shop'
+import { storeMap } from './local/store-map'
+import { supportIframe } from './local/support-iframe'
+import { virtualList } from './local/virtual-list'
 import type { LocalTask, Task, TaskSet } from './task'
 import { account, web } from './web'
 
-export type { Place, Seen, Tab, Task, TaskSet, Verdict } from './task'
+export { kinds, type Kind, type Place, type Seen, type Tab, type Task, type TaskSet, type Verdict } from './task'
 
-const local: LocalTask[] = [shop, news, contact, reference, mail, settings, gallery]
+const local: LocalTask[] = [
+  shop,
+  news,
+  contact,
+  reference,
+  mail,
+  settings,
+  gallery,
+  booking,
+  virtualList,
+  sheet,
+  kanban,
+  priceSlider,
+  filesMenu,
+  datePicker,
+  combobox,
+  dashboardPopups,
+  storeMap,
+  supportIframe,
+  canvasChart,
+  canvasEditor,
+  richText,
+  playlistDnd,
+  compareTabs,
+  shiftingList,
+  invoiceEntry,
+  auditCount,
+  toastCode,
+  popupAuth,
+  holdRevoke,
+  shapeCount,
+]
 
 export const tasks: Task[] = [...local, ...web, ...account, ...desktop]
 

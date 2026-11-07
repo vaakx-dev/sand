@@ -1,5 +1,7 @@
 import { bars, escape, mean, page, percentile, seconds, table } from '@sand/report'
+import { causes } from './judge'
 import type { Outcome } from './run'
+import { kinds } from './tasks'
 
 export interface Report {
   title: string
@@ -25,7 +27,11 @@ const metrics: Record<string, (outcomes: Outcome[]) => string> = {
   'Tokens per task, in / out': outcomes => `${Math.round(mean(outcomes.map(outcome => outcome.inputTokens))).toLocaleString('en-US')} / ${Math.round(mean(outcomes.map(outcome => outcome.outputTokens))).toLocaleString('en-US')}`,
   'Cost per task': outcomes => {
     const spent = costs(outcomes)
-    return spent ? dollars(mean(spent)) : '�'
+    return spent ? dollars(mean(spent)) : '—'
+  },
+  'Total cost': outcomes => {
+    const spent = costs(outcomes)
+    return spent ? dollars(total(spent)) : '—'
   },
   'Cost per pass': outcomes => {
     const passes = outcomes.filter(outcome => outcome.pass).length
@@ -34,6 +40,13 @@ const metrics: Record<string, (outcomes: Outcome[]) => string> = {
   },
 }
 
+const kindOf = (label: string) => Object.entries(kinds).find(([, each]) => each === label)?.[0]
+
+const causeOf = (label: string) => Object.entries(causes).find(([, each]) => each === label)?.[0]
+
+const failureLine = (outcome: Outcome) =>
+  `<li><b>${escape(outcome.model)}</b> · ${escape(outcome.task)} · <i>${outcome.cause ? causes[outcome.cause] : 'no diagnosis'}</i>: ${escape(outcome.evidence ?? '')} <small>check: ${escape(outcome.why)}</small></li>`
+
 const cell = (outcome: Outcome) =>
   `<span title="${escape(outcome.why).replaceAll('"', '&quot;')}">${outcome.pass ? '✓' : '✗'} ${seconds(outcome.ms)}<small> ${outcome.steps} steps</small></span>`
 
@@ -41,6 +54,8 @@ export const reportHtml = ({ title, notes, models, tasks, outcomes }: Report) =>
   const byModel = Map.groupBy(outcomes, outcome => outcome.model)
   const find = (model: string, task: string) => outcomes.find(outcome => outcome.model === model && outcome.task === task)
   const places = [...new Set(outcomes.map(outcome => outcome.place))]
+  const kindLabels = Object.entries(kinds).flatMap(([kind, label]) => (outcomes.some(outcome => outcome.kind === kind) ? [label] : []))
+  const causeLabels = Object.entries(causes).flatMap(([cause, label]) => (outcomes.some(outcome => outcome.cause === cause) ? [label] : []))
   const rate = (part: Outcome[]) => part.filter(outcome => outcome.pass).length / part.length
   const ranked = models
     .filter(model => byModel.has(model))
@@ -51,6 +66,20 @@ export const reportHtml = ({ title, notes, models, tasks, outcomes }: Report) =>
     { title: 'Tasks passed', html: bars(ranked, 1) },
     { title: 'Models', html: table(models, Object.keys(metrics), (model, metric) => byModel.has(model) ? { html: metrics[metric]!(byModel.get(model)!) } : undefined) },
     {
+      title: 'Pass rate by kind of task',
+      html: table(kindLabels, models, (label, model) => {
+        const part = outcomes.filter(outcome => outcome.model === model && outcome.kind === kindOf(label))
+        return part.length ? { html: `${Math.round(rate(part) * 100)}%<small> ${part.length}</small>`, shade: rate(part) } : undefined
+      }),
+    },
+    {
+      title: 'Why tasks failed',
+      html: table(causeLabels, models, (label, model) => {
+        const count = failures.filter(outcome => outcome.model === model && outcome.cause === causeOf(label)).length
+        return { html: String(count), shade: count ? 0 : 1 }
+      }),
+    },
+    {
       title: 'Each task (hover a cell for why)',
       html: table(tasks, models, (task, model) => {
         const outcome = find(model, task)
@@ -58,7 +87,7 @@ export const reportHtml = ({ title, notes, models, tasks, outcomes }: Report) =>
       }),
     },
     {
-      title: 'Pass rate by kind of task',
+      title: 'Pass rate by place',
       html: table(places, models, (place, model) => {
         const part = outcomes.filter(outcome => outcome.model === model && outcome.place === place)
         return part.length ? { html: `${Math.round(rate(part) * 100)}%<small> ${part.length}</small>`, shade: rate(part) } : undefined
@@ -67,7 +96,7 @@ export const reportHtml = ({ title, notes, models, tasks, outcomes }: Report) =>
     {
       title: 'Failures',
       html: failures.length
-        ? `<ul>${failures.map(outcome => `<li><b>${escape(outcome.model)}</b> · ${escape(outcome.task)}: ${escape(outcome.why)}</li>`).join('')}</ul>`
+        ? `<ul>${failures.map(failureLine).join('')}</ul>`
         : '<p>None.</p>',
     },
   ])

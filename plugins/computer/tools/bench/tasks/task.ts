@@ -4,6 +4,24 @@ export type TaskSet = 'browser' | 'desktop'
 
 export type Place = 'local' | 'web' | 'account' | 'app'
 
+export const kinds = {
+  basic: 'Simple lookups and forms',
+  flow: 'Long multi-step flows',
+  scroll: 'Scrolling inside a widget',
+  drag: 'Drag and drop',
+  menu: 'Nested and right-click menus',
+  picker: 'Date pickers and custom dropdowns',
+  interrupt: 'Popups that interrupt',
+  tiny: 'Tiny or unlabeled targets',
+  embedded: 'Iframes and canvas',
+  tabs: 'Comparing across tabs',
+  recovery: 'Recovering from a wrong click',
+  gesture: 'Press-and-hold and multi-select',
+  app: 'Desktop app navigation',
+} as const
+
+export type Kind = keyof typeof kinds
+
 export interface Tab {
   url: string
   title: string
@@ -27,8 +45,11 @@ export interface Task {
   id: string
   set: TaskSet
   place: Place
+  kind: Kind
   prompt(site: string): string
   check(seen: Seen): Verdict | Promise<Verdict>
+  apps?: string[]
+  prepare?(): Promise<() => Promise<void>>
 }
 
 export interface LocalTask extends Task {
