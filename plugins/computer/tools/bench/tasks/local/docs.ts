@@ -29,6 +29,7 @@ export const reference: LocalTask = {
   id: 'docs',
   set: 'browser',
   place: 'local',
+  kind: 'basic',
   prompt: site => `On the API documentation at ${site}/docs/, find how many requests per month the Team plan allows, and reply with that number.`,
   check: seen => all(tabAt(seen, /\/docs\//), answered(seen, String(team.perMonth))),
   page: path => (path === '/' ? docs : undefined),

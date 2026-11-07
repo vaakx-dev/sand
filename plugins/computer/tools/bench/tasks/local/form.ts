@@ -34,6 +34,7 @@ export const contact: LocalTask = {
   id: 'form',
   set: 'browser',
   place: 'local',
+  kind: 'basic',
   prompt: site =>
     `Open ${site}/form/ and fill in the contact form: full name "${wanted.name}", email "${wanted.email}", topic "Bug report", message "${wanted.message}", and leave the newsletter box unticked. Do not send the form.`,
   check: seen => all(noTabAt(seen, /\/form\/sent/, 'sent the form'), filled(seen)),

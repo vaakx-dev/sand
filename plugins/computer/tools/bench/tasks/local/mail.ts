@@ -58,6 +58,7 @@ export const mail: LocalTask = {
   id: 'mail',
   set: 'browser',
   place: 'local',
+  kind: 'basic',
   prompt: site => `In the webmail at ${site}/mail/, open the email from Dana Whitfield about the March invoice, and reply with the invoice number it mentions.`,
   check: seen => all(tabAt(seen, new RegExp(`/mail/message/${wanted.id}$`)), answered(seen, invoice)),
   page(path, query) {
