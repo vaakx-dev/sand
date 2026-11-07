@@ -1,7 +1,7 @@
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit, readLimit } from './contract'
+import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit, readLimit, readViews } from './contract'
 
 const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task and read its replies" }
 
@@ -19,14 +19,19 @@ const sendInput = z.object({
 
 const listInput = z.object({})
 
+const self = z.string().optional().describe('The bot id (default: you, when you are a bot)')
+
 const readInput = z.object({
-  bot,
-  after: z.number().int().min(0).optional().describe('Return the items after this seq, oldest first; leave it out for the latest items'),
+  bot: self,
+  query: z.string().min(1).optional().describe('Only items whose text holds this, ignoring case'),
+  view: z.enum(readViews).optional().describe('messages (default): what was said, notifications included; activity: tool calls and results too'),
+  after: z.number().int().min(0).optional().describe('Return the items after this seq, oldest first'),
+  before: z.number().int().min(1).optional().describe('Return the items before this seq; without after, the newest of them'),
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many items (default 50)'),
 })
 
 const updateInput = z.object({
-  bot: z.string().optional().describe('The bot id (default: you, when you are a bot)'),
+  bot: self,
   name: z.string().min(1).max(60).optional().describe('Rename it'),
   job: z.string().min(1).max(jobLimit).optional().describe(`Its whole job, replacing the one it has; at most ${jobLimit.toLocaleString('en')} characters`),
   project: z.string().min(1).nullable().optional().describe('The project its new threads start in, from project_list, or null for none'),
@@ -61,7 +66,8 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'bot_read',
-    description: "Read a bot's conversation; each item has a seq to read on from and the turn it belongs to",
+    description:
+      "Read or search a bot's whole conversation, including what compaction took out of its context. Each item has its seq, when it happened and its turn. A bot leaves out bot to look up its own past: what the user said and when, what it did, and the notifications it got. more says there are items past the page: older ones, or newer ones when after is set",
     input: readInput,
     access: 'read',
     group: group.name,

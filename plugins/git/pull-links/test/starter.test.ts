@@ -1,6 +1,7 @@
 import { type GitHub, github, pullChanged, type PullRef, type PullSummary } from '@sand/github/contract'
 import { startSand, type Sand } from '@sand/harness'
 import { type Notice, orchestrator } from '@sand/orchestrator/contract'
+import { timestamp } from '@sand/util'
 import { afterEach, expect, test } from 'bun:test'
 import { join } from 'node:path'
 import { parseLinks } from '../src/book/record'
@@ -98,6 +99,7 @@ test("a thread's starter hears once when its pull request's checks fail, again a
       '<kind>pull request</kind>',
       '<label>#12 Fix login</label>',
       '<status>checks failed</status>',
+      `<at>${timestamp(1)}</at>`,
       '<result>',
       'acme/app#12 https://github.com/acme/app/pull/12',
       'Failed checks: build',

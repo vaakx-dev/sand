@@ -66,7 +66,7 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
         return sentAnswer(bot, await ask.send(bot, asking))
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),
-      found.handle(botRead, ({ bot, ...options }) => ask.read(bot, options)),
+      found.handle(botRead, ({ bot, ...reading }, { actor }) => ask.read(botOf(bot, actor).id, reading)),
       found.handle(botSet, (input, { actor }) => set(input, actor)),
     )
   })

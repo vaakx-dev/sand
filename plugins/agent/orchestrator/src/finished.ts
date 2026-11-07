@@ -8,7 +8,7 @@ import type { Starters } from './starters'
 import type { Waits } from './waits'
 
 const noticeOf = (session: Session, result: TurnResult, info: TurnInfo) =>
-  reportOf({ from: { owner: 'thread', id: session.id }, label: session.title || 'Untitled thread', status: info.status, result: result.error ?? result.text })
+  reportOf({ from: { owner: 'thread', id: session.id }, label: session.title || 'Untitled thread', status: info.status, at: info.ended ?? Date.now(), result: result.error ?? result.text })
 
 export const reportFinished = (ctx: OrchestratorContext, starters: Starters, waits: Waits, owners: Owners) => {
   const busy = (session: Session) =>
