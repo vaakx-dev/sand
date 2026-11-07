@@ -39,7 +39,7 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
   const borrowed = () => peers.limits().filter(found => !accounts.signedIn(found.source))
 
   const metaOf = (model?: string) => {
-    const found = view.route(model)
+    const found = view.resolve(model)
     return found?.source ? view.entry(found.source)?.meta : undefined
   }
 
@@ -51,12 +51,11 @@ export const mergeLLM = (local: LocalLLM, peers: Peers, accounts: Accounts, cata
   const llm: Required<LLM> = {
     models: view.models,
     find: view.find,
-    route: view.route,
     sources: view.sources,
     levels: local.levels,
     async *stream(request, signal) {
       await Promise.all([accounts.ready, catalog.ready, peers.ready])
-      const model = view.route(request.model)
+      const model = view.resolve(request.model)
       if (!model?.source) throw view.missing(request.model)
       if (model.via) yield* remote(model, request, signal)
       else yield* local.stream({ ...request, model: model.id }, signal)

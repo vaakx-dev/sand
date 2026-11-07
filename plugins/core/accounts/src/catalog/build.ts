@@ -23,7 +23,7 @@ export const unknownModel = (meta: SourceMeta, name: string) => modelOf(meta, { 
 
 export const shownByDefault = (meta: SourceMeta) => !!meta.via || newModelsOf(meta.kind) === 'show'
 
-const strip = ({ hidden: _, favourite: __, fresh: ___, added: ____, coveredBy: _____, paid: ______, ...model }: ModelInfo): ModelInfo => model
+const strip = ({ hidden: _, favourite: __, fresh: ___, added: ____, ...model }: ModelInfo): ModelInfo => model
 
 export const decorate = (meta: SourceMeta, bases: ModelInfo[], prefs: Prefs): ModelInfo[] => {
   const added = prefs.added[meta.id] ?? []
@@ -32,7 +32,6 @@ export const decorate = (meta: SourceMeta, bases: ModelInfo[], prefs: Prefs): Mo
   const extra = added.filter(name => !names.has(name)).map(name => ({ ...unknownModel(meta, name), added: true }))
   const hide = new Set(prefs.hide)
   const show = new Set(prefs.show)
-  const paid = new Set(prefs.paid)
   const byDefault = shownByDefault(meta)
   return [...bases.map(strip), ...extra].map(model => {
     const name = model.name ?? model.id
@@ -43,7 +42,6 @@ export const decorate = (meta: SourceMeta, bases: ModelInfo[], prefs: Prefs): Mo
       ...(!visible && { hidden: true }),
       ...(favourite >= 0 && { favourite }),
       ...(fresh.has(name) && { fresh: true }),
-      ...(paid.has(model.id) && { paid: true }),
     }
   })
 }
