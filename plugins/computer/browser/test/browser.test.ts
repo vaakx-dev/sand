@@ -22,6 +22,7 @@ const page = `<!doctype html>
   <body>
     <div id="top">
       <button id="add">Add one</button>
+      <a href="/other" target="_blank">Open other</a>
       <form id="form"><input id="name" aria-label="Name" /></form>
       <p id="count">Count: 0</p>
       <p id="echo">Echo: none</p>
@@ -88,7 +89,12 @@ const page = `<!doctype html>
   </body>
 </html>`
 
-const server = Bun.serve({ port: 0, fetch: () => new Response(page, { headers: { 'content-type': 'text/html' } }) })
+const other = '<!doctype html><title>Other page</title><p>Other content</p>'
+
+const server = Bun.serve({
+  port: 0,
+  fetch: request => new Response(new URL(request.url).pathname === '/other' ? other : page, { headers: { 'content-type': 'text/html' } }),
+})
 const url = server.url.href
 const profile = mkdtempSync(join(tmpdir(), 'sand-browser-computer-'))
 const open = () => browserComputer({ id: 'test', label: 'Test browser', profile, headless: true })
@@ -109,6 +115,14 @@ const eventually = async (text: string) => {
 }
 
 const click = async (element: UiElement) => computer.act({ type: 'click', at: center(element.box) })
+
+const press = (combo: string) => computer.act({ type: 'key', keys: parseKeys(combo) })
+
+const tabsShow = async (...lines: string[]) => {
+  const note = async () => (await computer.screenshot()).note?.split('\n').slice(1)
+  for (let tries = 0; tries < 40 && !Bun.deepEquals(await note(), lines); tries++) await Bun.sleep(50)
+  expect(await note()).toEqual(lines)
+}
 
 describe.skipIf(!(await findBrowser()))('browser computer', () => {
   beforeAll(() => computer.act({ type: 'open', url }), 30_000)
@@ -195,6 +209,30 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     await eventually('Dropped: too soon')
     await computer.act({ type: 'drag', from: card, to: bin, ms: 1000 })
     await eventually('Dropped: after a rest')
+  })
+
+  test('follows a link into a new tab, switches back and closes it', async () => {
+    const first = `Computer test page — ${url}`
+    const second = `Other page — ${url}other`
+    await click(await find('link', 'Open other'))
+    await tabsShow(`1. ${first}`, `2. [active] ${second}`)
+    await eventually('Other content')
+    await press('ctrl+1')
+    await tabsShow(`1. [active] ${first}`, `2. ${second}`)
+    await find('button', 'Add one')
+    await press('ctrl+tab')
+    await tabsShow(`1. ${first}`, `2. [active] ${second}`)
+    await press('ctrl+w')
+    await tabsShow(`1. [active] ${first}`)
+    await find('button', 'Add one')
+  })
+
+  test('opens a blank tab with ctrl+t, and closing the first tab activates the next', async () => {
+    await press('ctrl+t')
+    await tabsShow(`1. Computer test page — ${url}`, '2. [active] about:blank — about:blank')
+    await press('ctrl+shift+tab')
+    await press('ctrl+w')
+    await tabsShow('1. [active] about:blank — about:blank')
   })
 
   test('keeps cookies in its profile across restarts', async () => {

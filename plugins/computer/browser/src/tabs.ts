@@ -5,21 +5,36 @@ export type Call = <T>(method: string, params?: object) => Promise<T>
 interface TargetInfo {
   targetId: string
   type: string
+  title: string
+  url: string
 }
 
 type TargetEvent = { method: 'Target.targetCreated'; params: { targetInfo: TargetInfo } } | { method: 'Target.targetDestroyed'; params: { targetId: string } }
 
-export const openTabs = async (browser: Browser, visible: boolean) => {
+export interface Tab {
+  title: string
+  url: string
+  active: boolean
+}
+
+export const openTabs = async (browser: Browser) => {
   const pages: string[] = []
   const attached = new Map<string, Promise<Call>>()
+  let active: string | undefined
+  let front: string | undefined
 
-  const add = ({ targetId, type }: TargetInfo) => {
-    if (type === 'page' && !pages.includes(targetId)) pages.push(targetId)
+  const add = ({ targetId, type }: Pick<TargetInfo, 'targetId' | 'type'>) => {
+    if (type !== 'page' || pages.includes(targetId)) return
+    pages.push(targetId)
+    active = targetId
   }
 
   const remove = (targetId: string) => {
-    if (pages.includes(targetId)) pages.splice(pages.indexOf(targetId), 1)
+    const index = pages.indexOf(targetId)
+    if (index < 0) return
+    pages.splice(index, 1)
     attached.delete(targetId)
+    if (active === targetId) active = pages[Math.max(0, index - 1)]
   }
 
   browser.on((event: CdpEvent) => {
@@ -35,23 +50,50 @@ export const openTabs = async (browser: Browser, visible: boolean) => {
     const { sessionId } = await browser.call<{ sessionId: string }>('Target.attachToTarget', { targetId, flatten: true })
     const call: Call = (method, params = {}) => browser.call(method, params, sessionId)
     await Promise.all([call('Page.enable'), call('DOM.enable'), call('Accessibility.enable')])
-    if (visible) await call('Page.bringToFront')
     return call
   }
 
-  const newTab = async () => {
+  const create = async () => {
     const { targetId } = await browser.call<{ targetId: string }>('Target.createTarget', { url: 'about:blank' })
     add({ targetId, type: 'page' })
     return targetId
   }
 
+  const select = (index: number) => {
+    active = pages.at(index) ?? active
+  }
+
   return {
     browser,
     async current(): Promise<Call> {
-      const targetId = pages.at(-1) ?? (await newTab())
+      const targetId = active ?? (await create())
       const call = attached.get(targetId) ?? attach(targetId)
       attached.set(targetId, call)
+      if (front !== targetId) {
+        front = targetId
+        await browser.call('Target.activateTarget', { targetId })
+      }
       return call
+    },
+    async list(): Promise<Tab[]> {
+      const { targetInfos } = await browser.call<{ targetInfos: TargetInfo[] }>('Target.getTargets')
+      const infos = new Map(targetInfos.map(info => [info.targetId, info]))
+      return pages.flatMap(targetId => {
+        const info = infos.get(targetId)
+        return info ? [{ title: info.title, url: info.url, active: targetId === active }] : []
+      })
+    },
+    select,
+    step(by: number) {
+      if (active) select((pages.indexOf(active) + by) % pages.length)
+    },
+    create,
+    async closeCurrent() {
+      if (!active) return
+      const targetId = active
+      if (pages.length === 1) await create()
+      await browser.call('Target.closeTarget', { targetId })
+      remove(targetId)
     },
   }
 }
