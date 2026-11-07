@@ -1,7 +1,21 @@
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import type { Context } from 'drydock'
-import { askDecline, askWaiting, codeAnswer, loginAdd, loginChange, loginRemove, loginsState, loginUses, secretSave } from './contract'
+import {
+  askDecline,
+  askWaiting,
+  codeAnswer,
+  loginAdd,
+  loginChange,
+  loginPick,
+  loginRemove,
+  loginsState,
+  loginUses,
+  secretSave,
+  sourceConnect,
+  sourceDisconnect,
+  sourceSearch,
+} from './contract'
 import type { LoginsRuntime } from './service'
 import type { CodeAnswer, SecretAnswer, Waits } from './waits'
 
@@ -14,8 +28,15 @@ export const serveLogins = (ctx: Context, logins: LoginsRuntime, { secrets, code
   ctx.watch(server, found => {
     if (!found) return
     return joinDisposers(
-      found.handle(loginsState, () => logins.state()),
+      found.handle(loginsState, async () => {
+        await logins.refresh()
+        return logins.state()
+      }),
       found.handle(loginAdd, input => logins.add(input)),
+      found.handle(loginPick, input => logins.pick(input)),
+      found.handle(sourceConnect, ({ source, secret }) => logins.connect(source, secret)),
+      found.handle(sourceDisconnect, ({ source }) => logins.disconnect(source)),
+      found.handle(sourceSearch, ({ source, query }) => logins.search(source, query)),
       found.handle(loginChange, input => logins.change(input)),
       found.handle(loginRemove, ({ id }) => logins.remove(id)),
       found.handle(loginUses, ({ id }) => logins.uses(id)),

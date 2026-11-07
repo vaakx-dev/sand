@@ -17,9 +17,10 @@ export const fillTool = (deps: ToolDeps): Tool<typeof input> => ({
   needs: ['computer'],
   act: ({ login }, conversation) => loginAct(deps, login, conversation),
   async run({ login, computer }, { conversation }) {
-    const { site } = websiteOf(deps.logins.find(login))
+    const site = websiteOf(deps.logins.find(login))
     const fill = fillerOf(deps, computer)
-    const { username, password } = websiteOf(await deps.logins.take(login, { conversation, action: 'fill', site }))
-    return filledText(await fill({ site, username, password }))
+    const values = await deps.logins.service.use(login, { conversation, action: 'fill', site })
+    if (values.kind === 'key') throw new Error(`${login} holds a key, not a website login`)
+    return filledText(await fill({ site, username: values.username, password: values.password }))
   },
 })

@@ -2,7 +2,7 @@ import type { ConversationRef } from '@sand/engine/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { answerEntry, type AskAnswer, type Login, secretEntry, type SecretRequest } from '../contract'
-import { siteOf } from '../service'
+import { siteOf } from '../site'
 import type { SecretAnswer, Unanswered } from '../waits'
 import { group, type ToolDeps } from './deps'
 

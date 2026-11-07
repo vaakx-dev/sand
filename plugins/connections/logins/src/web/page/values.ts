@@ -2,13 +2,14 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { show, sig, type Derive } from '@vaakx-dev/vrui'
 import type { Login } from '../../contract'
 import { task } from '../task'
+import { managers } from './managers/catalog'
 import type { LoginPatch, LoginsModel } from './model'
 import { editForm, field, formRow, rowProblem } from './parts'
 
 type Change = (patch: LoginPatch) => Promise<unknown>
 
 const credentialsRow = (kit: Kit, change: Change) =>
-  formRow(kit, { title: 'Username and password', detail: 'Saved. Type new ones to replace them.', open: 'Replace' }, close => {
+  formRow(kit, { title: 'Username and password', detail: 'Saved in sand. Type new ones to replace them.', open: 'Replace' }, close => {
     const username = sig('')
     const password = sig('')
     return editForm(
@@ -20,7 +21,7 @@ const credentialsRow = (kit: Kit, change: Change) =>
   })
 
 const valueRow = (kit: Kit, change: Change) =>
-  formRow(kit, { title: 'Value', detail: 'Saved. Type a new one to replace it.', open: 'Replace' }, close => {
+  formRow(kit, { title: 'Value', detail: 'Saved in sand. Type a new one to replace it.', open: 'Replace' }, close => {
     const value = sig('')
     return editForm(
       kit,
@@ -56,7 +57,18 @@ const totpRows = (kit: Kit, login: Derive<Login>, change: Change) => {
   ]
 }
 
+const keptSection = ({ settingsRow, settingsSection }: Kit, { kind, totp }: Login, manager: string) =>
+  kind === 'key'
+    ? settingsSection({ title: 'Key' }, settingsRow({ title: 'Value', detail: `Kept in ${manager} and fetched each time a command uses it. Change it in ${manager}.` }))
+    : settingsSection(
+        { title: 'Sign-in' },
+        settingsRow({ title: 'Username and password', detail: `Kept in ${manager} and fetched each time a bot signs in. Change them in ${manager}.` }),
+        totp ? settingsRow({ title: 'Authenticator', detail: `Kept in ${manager}. Agents get the sign-in codes from it.` }) : null,
+      )
+
 export const valuesSection = (kit: Kit, model: LoginsModel, login: Derive<Login>) => {
+  const { source } = login.get()
+  if (source !== 'sand') return keptSection(kit, login.get(), managers[source].name)
   const change: Change = patch => model.change(login.get().id, patch)
   if (login.get().kind === 'key') return kit.settingsSection({ title: 'Key' }, valueRow(kit, change))
   return kit.settingsSection({ title: 'Sign-in' }, credentialsRow(kit, change), ...totpRows(kit, login, change))

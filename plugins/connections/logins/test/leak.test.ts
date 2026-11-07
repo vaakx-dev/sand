@@ -1,18 +1,16 @@
 import { botCreate } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
-import { type Message, textOf } from '@sand/chats/contract'
 import type { Fill } from '@sand/computers/contract'
 import type { Reply } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
-import { readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
 import { codeAnswer, codeEntry, loginAdd, loginChange, secretEntry, secretSave } from '../src/contract'
 import { totpCode } from '../src/totp'
-import { answer, botEntries, browser, call, idle, models, plugins, said, type Sand, start, threadEntries } from './fixture'
+import { answer, botEntries, browser, call, idle, leaksIn, leaksInText, models, plugins, resultText, said, type Sand, start, threadEntries } from './fixture'
 
 let folders: string[] = []
 
@@ -43,27 +41,6 @@ const values = {
   botSecret: `rs_bot_${tag}_Fresh`,
   botCode: `BC${tag.toUpperCase()}`,
 }
-
-const forms = (value: string) => {
-  const shifted = [0, 1, 2].map(pad => Buffer.concat([Buffer.alloc(pad), Buffer.from(value)]).toString('base64').slice(pad ? 4 : 0, -4))
-  return [value, value.toLowerCase(), ...shifted].map(text => Buffer.from(text)).concat(Buffer.from(value, 'utf16le'))
-}
-
-const leaksIn = async (home: string) => {
-  const entries = await readdir(home, { withFileTypes: true, recursive: true })
-  const found: string[] = []
-  for (const entry of entries.filter(item => item.isFile())) {
-    const path = join(entry.parentPath, entry.name)
-    const bytes = Buffer.from(await Bun.file(path).arrayBuffer())
-    for (const [name, value] of Object.entries(values)) if (forms(value).some(form => bytes.includes(form))) found.push(`${name} in ${path}`)
-  }
-  return { files: entries.filter(item => item.isFile()).map(item => item.name), found }
-}
-
-const leaksInText = (text: string, codes: string[]) => [
-  ...Object.entries(values).flatMap(([name, value]) => (text.toLowerCase().includes(value.toLowerCase()) ? [name] : [])),
-  ...codes.filter(code => new RegExp(`(?<!\\d)${code}(?!\\d)`).test(text)).map(code => `totp code ${code}`),
-]
 
 const sha = (text: string) => new Bun.CryptoHasher('sha256').update(text).digest('hex')
 
@@ -136,12 +113,6 @@ const expectedFills = (code: string, totp: string): Fill[] => [
   { site: 'shop.example', code },
 ]
 
-const resultText = (entries: { type: string; data: unknown }[], tool: string) => {
-  const blocks = entries.flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
-  const ids = new Set(blocks.flatMap(block => (block.type === 'tool_call' && block.name === tool ? [block.id] : [])))
-  return blocks.flatMap(block => (block.type === 'tool_result' && ids.has(block.callId) ? [textOf(block.content)] : [])).join('\n')
-}
-
 test('no saved value, typed secret or code reaches the model, a transcript, compaction, bot memory or any file in the home', async () => {
   const home = folder()
   const work = folder()
@@ -200,17 +171,17 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
       expect(resultText(entries, 'fails')).toContain('Rejected [secret: Deploy key] for [secret: Northbank]:[secret: Northbank], then [secret:')
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Shop]"')
       expect(resultText(entries, 'page')).toContain('"code":"[secret: Northbank]"')
-      expect(leaksInText(JSON.stringify(entries), codes)).toEqual([])
+      expect(leaksInText(JSON.stringify(entries), codes, values)).toEqual([])
     }
     expect(transcripts.bot.some(entry => entry.type === 'compaction')).toBe(true)
 
     const sent = sand.requests('fake')
     expect(sent.some(body => body.includes('Banks at Northbank') || body.includes('Bot summary.'))).toBe(true)
-    expect(sent.flatMap(body => leaksInText(body, codes))).toEqual([])
-    expect((await leaksIn(home)).found).toEqual([])
+    expect(sent.flatMap(body => leaksInText(body, codes, values))).toEqual([])
+    expect((await leaksIn(home, values)).found).toEqual([])
     await sand.stop()
     stopped = true
-    const after = await leaksIn(home)
+    const after = await leaksIn(home, values)
     expect(after.files).toContain('logins.vault')
     expect(after.files).toContain('sand.db')
     expect(after.found).toEqual([])
