@@ -51,7 +51,7 @@ export interface Chat {
   skills: SkillPlace
   running(): boolean
   path(): Entry[]
-  send(prompt: Prompt): Promise<void>
+  send(prompt: Prompt, clientRequestId: string): Promise<void>
   interrupt(): Promise<void>
 }
 

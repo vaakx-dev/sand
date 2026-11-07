@@ -107,7 +107,7 @@ export const threadView = (ctx: WorkContext, thread: string, actions: ThreadActi
     skills: { session: thread },
     running: () => source.running.get(),
     path: () => ctx.threads.path(thread),
-    send: prompt => ctx.turns.send(thread, prompt),
+    send: (prompt, clientRequestId) => ctx.turns.send(thread, prompt, { clientRequestId }),
     interrupt: () => ctx.turns.interrupt(thread).then(() => undefined),
   })
   const approvals = ctx.get(approvalViews)?.banner('thread', thread)
