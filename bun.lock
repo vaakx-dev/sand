@@ -601,6 +601,7 @@
         "@sand/harness": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/replay": "workspace:*",
+        "zod": "^4.6.5",
       },
     },
     "plugins/agent/turns-contract": {

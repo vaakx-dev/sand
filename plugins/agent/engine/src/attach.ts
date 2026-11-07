@@ -13,8 +13,7 @@ import type { Stores } from './store'
 export interface Shared {
   stores: Stores
   leases: Leases
-  stopped(): boolean
-  resumes(): boolean
+  running(): boolean
 }
 
 export interface Attached<C extends Conversation> {
@@ -25,7 +24,7 @@ export interface Attached<C extends Conversation> {
 
 export const attachConversations = <C extends Conversation>(
   ctx: EngineContext,
-  { stores, leases, stopped, resumes }: Shared,
+  { stores, leases, running }: Shared,
   conversations: Conversations<C>,
   detach: () => void,
 ): Attached<C> => {
@@ -34,8 +33,8 @@ export const attachConversations = <C extends Conversation>(
   const { announce } = owned
   const opener = createOpener(ctx, owned)
   const drive = createDriver(ctx, owned, conversation => dispatch(conversation).catch(error => ctx.report(error)))
-  const dispatch = createDispatch(ctx, owned, { opener, drive, stopped })
-  const recover = createRecovery(ctx, owned, { drive, resumes })
+  const dispatch = createDispatch(ctx, owned, { opener, drive, running })
+  const recover = createRecovery(ctx, owned, { drive, running })
 
   const runner: Runner<C> = {
     send: createSend(ctx, owned, { opener, drive, dispatch, recover }),

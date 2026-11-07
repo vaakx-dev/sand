@@ -25,6 +25,11 @@ export interface TurnHooks {
   parked(): boolean
 }
 
+export interface Resumption {
+  calls: ToolCallBlock[]
+  replied: boolean
+}
+
 export interface Turn {
   signal: AbortSignal
   hooks: TurnHooks
