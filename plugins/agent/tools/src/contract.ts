@@ -75,6 +75,7 @@ export interface Tools {
   specs(messages: Message[], conversation: Conversation): ToolSpec[]
   notes(conversation: Conversation): string[]
   parallel(call: ToolCallBlock, conversation: Conversation): boolean
+  effect(call: ToolCallBlock, conversation: Conversation): Effect | undefined
   run(call: ToolCallBlock, context: Omit<ToolContext, 'call'>): Promise<ToolResultBlock>
 }
 

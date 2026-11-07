@@ -120,7 +120,9 @@ test('sends into a bot conversation start, steer and queue its turns, and a repe
   await opened.promise
   expect(await runner.send(memory, { prompt: 'and this', clientRequestId: 'b' })).toMatchObject({ disposition: 'steered' })
   expect(await runner.send(memory, { prompt: 'then that', mode: 'queue', clientRequestId: 'c' })).toMatchObject({ disposition: 'queued' })
-  expect(runner.pending(memory).map(item => item.kind)).toEqual(['steer', 'queue'])
+  const waiting = runner.pending(memory)
+  expect(waiting.map(item => item.kind)).toEqual(['steer', 'queue'])
+  await Bun.sleep(20)
   gate.resolve('open')
 
   if (first.disposition !== 'started') throw new Error('The first send should start a turn')
@@ -140,10 +142,12 @@ test('sends into a bot conversation start, steer and queue its turns, and a repe
     said('and this'),
     said('then that'),
   ])
+  const sentAt = (text: string) => memory.path().find(entry => entry.type === 'message' && Bun.deepEquals((entry.data as Message).content, [said(text)]))?.at
+  expect([sentAt('and this'), sentAt('then that')]).toEqual(waiting.map(item => item.at))
   expect(runner.pending(memory)).toEqual([])
 })
 
-test('a bot turn whose process stopped answering is marked lost when bots attach again, keeping what the model said', async () => {
+test('a bot turn whose process stopped mid-reply carries on when bots attach again, and the same request again gets that turn', async () => {
   const home = mkdtempSync(join(tmpdir(), 'sand-engine-'))
   homes.push(home)
   const memory = remember('grok', home)
@@ -160,17 +164,18 @@ test('a bot turn whose process stopped answering is marked lost when bots attach
   const sent = await runner.send(memory, { prompt: 'think', clientRequestId: 'a' })
   if (sent.disposition !== 'started') throw new Error('The send should start a turn')
   await spoke.promise
-  await Bun.sleep(2_500)
   const db = new Database(join(home, 'sand.db'))
   db.run('update turns set lease = 0 where ended is null')
   db.close()
 
-  const second = await start([], { home })
+  const second = await start([[said('Whole thought.')]], { home })
   const again = attachBots(second, memories)
-  const recovered = again.get(sent.turn)
 
-  expect(recovered).toMatchObject({ owner: 'bot', status: 'lost', stopReason: 'lost' })
-  expect(memory.messages().at(-1)).toEqual({ role: 'assistant', content: [said('Half a thought')] })
-  expect(memory.path().at(-1)).toMatchObject({ type: 'turn-ending', data: { stopReason: 'lost' }, turn: sent.turn })
-  expect(again.current(memory)).toBeUndefined()
+  expect(await again.send(memory, { prompt: 'think', clientRequestId: 'a' })).toEqual(sent)
+  expect(await again.wait(sent.turn, 'end')).toMatchObject({ owner: 'bot', status: 'completed' })
+  expect(memory.messages()).toEqual([
+    { role: 'user', content: [said('think')] },
+    { role: 'assistant', content: [said('Whole thought.')] },
+  ])
+  expect(again.list(memory)).toHaveLength(1)
 })

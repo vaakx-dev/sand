@@ -1,5 +1,5 @@
 import type { LLMEvent } from '@sand/accounts/contract'
-import { type Message, promptContent, textOf, type ToolResultBlock } from '@sand/chats/contract'
+import { type Message, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 import type { Conversation, Step } from '../contract'
 import type { EngineContext } from '../context'
@@ -20,7 +20,7 @@ interface Sent {
 export const createHooks = <C extends Conversation>(ctx: EngineContext, { conversations, stores, leases, announce }: Owned<C>, run: TurnRun<C>): TurnHooks => {
   const { conversation, signal, info } = run
   const turn = { turn: info.id }
-  const open = new Set<string>()
+  const open = new Map<string, string>()
   const waiting = createWaiting(stores.turns, info.id, leases.holder, () => {
     announce.turn(info.id)
     leases.check(info.id)
@@ -33,6 +33,12 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
       open.delete(result.callId)
       append({ role: 'user', content: [result] })
     })
+
+  const output = (call: ToolCallBlock, text: string) => {
+    if (!open.has(call.id)) return
+    open.set(call.id, text)
+    stores.turns.outputs(info.id, open)
+  }
 
   const retries = async (step: Step, error: unknown, again: boolean) => {
     if (signal.aborted) return false
@@ -68,9 +74,9 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     if (!steers.length) return false
     const expanded = await Promise.all(steers.map(item => expand(ctx, conversations, promptContent(item.prompt), conversation)))
     const taken = ctx.ledger.tx(() => {
-      const content = steers.flatMap((item, index) => (stores.pending.remove(conversation, item.id) ? expanded[index]! : []))
-      if (content.length) append({ role: 'user', content })
-      return content.length > 0
+      const kept = steers.flatMap((item, index) => (stores.pending.remove(conversation, item.id) ? [{ at: item.at, content: expanded[index]! }] : []))
+      for (const { at, content } of kept) conversation.append('message', { role: 'user', content }, { ...turn, at })
+      return kept.length > 0
     })
     if (taken) announce.pending(conversation)
     return taken
@@ -87,11 +93,11 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
       return { message, stopReason }
     },
     tools(calls) {
-      for (const call of calls) open.add(call.id)
-      return runTools(ctx, conversations, calls, { cwd: conversation.cwd, signal, conversation, turn: info.id, wait: waiting.wait }, result => answer([result]))
+      for (const call of calls) open.set(call.id, '')
+      return runTools(ctx, conversations, calls, { cwd: conversation.cwd, signal, conversation, turn: info.id, wait: waiting.wait }, { answer: result => answer([result]), output })
     },
     answer,
     steer,
-    parked: () => waiting.durable(open),
+    parked: () => waiting.durable([...open.keys()]),
   }
 }
