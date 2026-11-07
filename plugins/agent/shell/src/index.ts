@@ -1,4 +1,6 @@
+import { logins } from '@sand/logins/contract'
 import { tools } from '@sand/tools/contract'
+import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { shellRunner } from './contract'
@@ -18,35 +20,29 @@ export default definePlugin({
   apply(ctx, config) {
     const shell = detect(config.shell)
     ctx.provide(shellRunner, shellRunnerOf(shell))
-    ctx.effect(() =>
-      ctx.tools.register(
-        shellTool(
-          ctx,
-          {
-            name: 'shell',
-            description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
-            environment: `Shell: ${shell.name}`,
-          },
-          shell,
-          config,
-        ),
-      ),
-    )
     const powerShell = sidePowerShell(shell)
-    if (!powerShell) return
-    ctx.effect(() =>
-      ctx.tools.register(
-        shellTool(
-          ctx,
-          {
-            name: 'powershell',
-            description:
-              'Run PowerShell commands from the working directory. Use this for PowerShell instead of calling powershell through shell. Returns combined output and the exit code. Each call is a fresh process.',
-          },
-          powerShell,
-          config,
-        ),
-      ),
-    )
+    const shells = [
+      {
+        spec: {
+          name: 'shell',
+          description: 'Run a shell command from the working directory. Returns combined output and the exit code. Each call is a fresh process.',
+          environment: `Shell: ${shell.name}`,
+        },
+        shell,
+      },
+      ...(powerShell
+        ? [
+            {
+              spec: {
+                name: 'powershell',
+                description:
+                  'Run PowerShell commands from the working directory. Use this for PowerShell instead of calling powershell through shell. Returns combined output and the exit code. Each call is a fresh process.',
+              },
+              shell: powerShell,
+            },
+          ]
+        : []),
+    ]
+    ctx.watch(logins, found => joinDisposers(...shells.map(entry => ctx.tools.register(shellTool(ctx, entry.spec, entry.shell, config, found)))))
   },
 })

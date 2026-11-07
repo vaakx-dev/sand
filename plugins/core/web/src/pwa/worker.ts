@@ -68,9 +68,14 @@ self.addEventListener('push', event => {
   event.waitUntil(showPush(event.data ? event.data.json() : { title: 'sand' }))
 })
 
+const addressOf = notice => {
+  if (notice.thread) return '/?session=' + encodeURIComponent(notice.thread)
+  return notice.bot ? '/?bot=' + encodeURIComponent(notice.bot) : '/'
+}
+
 const openNotice = async notice => {
   const [page] = await pages()
-  if (!page) return self.clients.openWindow(notice.thread ? '/?session=' + encodeURIComponent(notice.thread) : '/')
+  if (!page) return self.clients.openWindow(addressOf(notice))
   page.postMessage({ notice })
   return page.focus()
 }

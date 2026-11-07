@@ -2,7 +2,11 @@ import { expect, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { openVault, type Keychain } from '../src/vault'
+import { openVault, type Keychain } from '../src'
+
+interface Data {
+  clients: Record<string, { id: string }>
+}
 
 const fakeKeychain = () => {
   const saved = new Map<string, string>()
@@ -23,16 +27,29 @@ test('the vault key lives in the keychain only while the vault holds something',
   const home = mkdtempSync(join(tmpdir(), 'sand-vault-'))
   const { saved, keychain } = fakeKeychain()
   try {
-    const vault = await openVault(home, keychain)
+    const vault = await openVault<Data>(home, 'connections', keychain)
     expect(saved.size).toBe(0)
-    await vault.write({ entries: [], clients: { google: { id: 'client-1' } } })
+    await vault.write({ clients: { google: { id: 'client-1' } } })
     expect(vault.keychain()).toBe(true)
-    expect(saved.size).toBe(1)
+    expect([...saved.keys()]).toEqual([`sand/connections ${home}`])
     expect(await Bun.file(join(home, 'connections.key')).exists()).toBe(false)
-    expect(await (await openVault(home, keychain)).read()).toEqual({ entries: [], clients: { google: { id: 'client-1' } } })
-    await vault.write({ entries: [], clients: {} })
+    expect(await (await openVault<Data>(home, 'connections', keychain)).read()).toEqual({ clients: { google: { id: 'client-1' } } })
+    await vault.clear()
     expect(saved.size).toBe(0)
     expect(await Bun.file(join(home, 'connections.vault')).exists()).toBe(false)
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
+test('without a keychain the key goes in an owner-only file named after the vault', async () => {
+  const home = mkdtempSync(join(tmpdir(), 'sand-vault-'))
+  try {
+    const vault = await openVault<Data>(home, 'logins', undefined)
+    await vault.write({ clients: {} })
+    expect(vault.keychain()).toBe(false)
+    expect(await Bun.file(join(home, 'logins.key')).exists()).toBe(true)
+    expect(await (await openVault<Data>(home, 'logins', undefined)).read()).toEqual({ clients: {} })
   } finally {
     rmSync(home, { recursive: true, force: true })
   }

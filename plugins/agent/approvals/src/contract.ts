@@ -35,6 +35,7 @@ export interface Decision {
   tool: string
   effect: Effect
   summary: string
+  once?: boolean
   outcome: Outcome
   by?: Decider
   rule?: string

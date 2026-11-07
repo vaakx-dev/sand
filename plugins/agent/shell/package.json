@@ -14,7 +14,10 @@
     "summary": "Runs shell commands for the agent"
   },
   "dependencies": {
+    "@sand/engine": "workspace:*",
+    "@sand/logins": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   }

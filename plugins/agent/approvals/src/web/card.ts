@@ -32,11 +32,13 @@ export const approvalCard = (kit: Kit, model: Model, item: Waiting, where?: Chil
     div(
       { class: 'flex flex-wrap justify-end gap-2' },
       quietButton({ size: 'sm', disabled: busy, onClick: () => send('deny') }, 'Deny'),
-      secondaryAction(
-        { size: 'sm', disabled: busy, title: `Allow ${decision.tool} in ${scopes[decision.owner]} from now on`, onClick: () => send('always') },
-        'Always allow',
-      ),
-      primaryAction({ size: 'sm', disabled: busy, onClick: () => send('once') }, 'Allow once'),
+      decision.once
+        ? null
+        : secondaryAction(
+            { size: 'sm', disabled: busy, title: `Allow ${decision.tool} in ${scopes[decision.owner]} from now on`, onClick: () => send('always') },
+            'Always allow',
+          ),
+      primaryAction({ size: 'sm', disabled: busy, onClick: () => send('once') }, decision.once ? 'Allow' : 'Allow once'),
     ),
   )
 }

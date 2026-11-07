@@ -34,10 +34,17 @@ export const showNotice = async (notice: Notice) => {
   await registration.showNotification(notice.title, { body: notice.body, tag: notice.tag, icon, data: notice })
 }
 
-const threadOf = (data: unknown) => (isRecord(data) && isRecord(data.notice) && typeof data.notice.thread === 'string' ? data.notice.thread : undefined)
+export type Target = { thread: string } | { bot: string }
 
-export const onNoticeOpen = (open: (thread: string) => void) =>
+const targetOf = (data: unknown): Target | undefined => {
+  if (!isRecord(data) || !isRecord(data.notice)) return undefined
+  const { thread, bot } = data.notice
+  if (typeof thread === 'string') return { thread }
+  return typeof bot === 'string' ? { bot } : undefined
+}
+
+export const onNoticeOpen = (open: (target: Target) => void) =>
   listen<MessageEvent>(navigator.serviceWorker, 'message', event => {
-    const thread = threadOf(event.data)
-    if (thread) open(thread)
+    const target = targetOf(event.data)
+    if (target) open(target)
   })

@@ -13,6 +13,7 @@ interface Row {
   tool: string
   effect: Effect
   summary: string
+  once: number
   outcome: Outcome
   by: Decider | null
   rule: string | null
@@ -26,8 +27,9 @@ export interface Settled {
   rule?: string
 }
 
-const decisionOf = ({ by, rule, decided, ...row }: Row): Decision => ({
+const decisionOf = ({ once, by, rule, decided, ...row }: Row): Decision => ({
   ...row,
+  ...(once === 1 && { once: true }),
   ...(by !== null && { by }),
   ...(rule !== null && { rule }),
   ...(decided !== null && { decided }),
@@ -39,8 +41,8 @@ const listSql = `select * from approvals
 
 export const createDecisions = (db: Database) => {
   const inserted = db.query(
-    `insert into approvals (id, owner, conversation, title, turn, call, tool, effect, summary, outcome, by, rule, at, decided)
-      values ($id, $owner, $conversation, $title, $turn, $call, $tool, $effect, $summary, $outcome, $by, $rule, $at, $decided)`,
+    `insert into approvals (id, owner, conversation, title, turn, call, tool, effect, summary, once, outcome, by, rule, at, decided)
+      values ($id, $owner, $conversation, $title, $turn, $call, $tool, $effect, $summary, $once, $outcome, $by, $rule, $at, $decided)`,
   )
   const byCall = db.query<Row, { turn: string; call: string }>('select * from approvals where turn = $turn and call = $call')
   const byId = db.query<Row, { id: string }>('select * from approvals where id = $id')
@@ -53,7 +55,7 @@ export const createDecisions = (db: Database) => {
 
   return {
     add(decision: Decision) {
-      inserted.run({ by: null, rule: null, decided: null, ...decision })
+      inserted.run({ by: null, rule: null, decided: null, ...decision, once: decision.once ? 1 : 0 })
       return decision
     },
     find(turn: string, call: string) {

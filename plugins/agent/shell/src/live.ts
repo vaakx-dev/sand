@@ -1,8 +1,9 @@
 const interval = 250
 const tailLines = 4
 const lineLength = 300
+const partialLength = 8_192
 
-export const liveTail = (progress: (text: string) => void) => {
+export const liveTail = (progress: (text: string) => void, redact: (text: string) => string) => {
   let partial = ''
   let lines: string[] = []
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -14,8 +15,8 @@ export const liveTail = (progress: (text: string) => void) => {
   return {
     add: (text: string) => {
       const parts = (partial + text).split(/\r\n|\r|\n/)
-      partial = (parts.pop() ?? '').slice(0, lineLength)
-      const fresh = parts.filter(line => line.trim()).map(line => line.slice(0, lineLength))
+      partial = (parts.pop() ?? '').slice(0, partialLength)
+      const fresh = parts.filter(line => line.trim()).map(line => redact(line).slice(0, lineLength))
       if (!fresh.length) return
       lines = [...lines, ...fresh].slice(-tailLines)
       timer ??= setTimeout(flush, interval)

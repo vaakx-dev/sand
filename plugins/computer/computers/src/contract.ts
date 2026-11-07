@@ -92,6 +92,16 @@ export interface Found {
   box?: Box
 }
 
+export interface Fill {
+  site: string
+  username?: string
+  password?: string
+  code?: string
+  ref?: string
+}
+
+export type Filled = 'username' | 'password' | 'code'
+
 export interface Computer {
   info: ComputerInfo
   screenshot(fit?: Size): Promise<Screenshot>
@@ -99,6 +109,7 @@ export interface Computer {
   act(action: Action): Promise<void>
   settle(): Promise<void>
   find?(text: string, match: number): Promise<Found>
+  fill?(fill: Fill): Promise<Filled[]>
 }
 
 export interface Computers {

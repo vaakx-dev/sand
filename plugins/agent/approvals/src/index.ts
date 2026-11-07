@@ -42,16 +42,16 @@ export default definePlugin({
         const settled = ctx.ledger.tx(() => {
           const found = stores.decisions.get(id)
           if (!found) throw new Error('No such approval')
-          const { owner, conversation, title, tool, effect } = found
-          const rule = answer === 'always' ? stores.rules.add({ owner, conversation, title, tool, effect, verdict: 'allow' }) : undefined
+          const { owner, conversation, title, tool, effect, once } = found
+          const rule = answer === 'always' && !once ? stores.rules.add({ owner, conversation, title, tool, effect, verdict: 'allow' }) : undefined
           const done = stores.decisions.settle(id, { outcome: answer === 'deny' ? 'denied' : 'allowed', by: 'user', ...(rule && { rule: rule.id }) })
           if (!done) throw new Error('This call is no longer waiting for an answer')
-          return done
+          return { decision: done, ruled: rule !== undefined }
         })
         waiters.wake()
         changed()
-        if (answer === 'always') settingsChanged()
-        return settled
+        if (settled.ruled) settingsChanged()
+        return settled.decision
       },
       decisions: query => stores.decisions.list(query),
       rules: () => stores.rules.list(),

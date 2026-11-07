@@ -12,7 +12,10 @@ const promptItems = (parts: TranscriptParts, bot: string, { id, prompt, at }: Pe
 
 export const transcriptRows = (parts: TranscriptParts, rows: Rows, talk: Conversation, working: () => boolean) => {
   const { bot } = talk
-  const settled = derive(() => parts.settled({ id: bot }, talk.path.get()))
+  const settled = derive(() => {
+    parts.version.get()
+    return parts.settled({ id: bot }, talk.path.get())
+  })
   return derive(() => {
     const said = parts.items(settled.get(), { id: bot, live: talk.live.get(), running: working() })
     const asked = talk.pending.get().flatMap(pending => promptItems(parts, bot, pending))

@@ -32,6 +32,7 @@
           "file-tools",
           "shell",
           "web-tools",
+          "logins",
           "approvals",
           "usage",
           "palette",
@@ -100,6 +101,7 @@
           "file-tools",
           "shell",
           "web-tools",
+          "logins",
           "approvals",
           "usage",
           "palette",
@@ -284,6 +286,15 @@
         "label": "Web tools",
         "summary": "Agents search the web and read pages",
         "stops": "Agents can't search the web or read pages.",
+        "needs": [
+          "engine"
+        ]
+      },
+      "logins": {
+        "kind": "capability",
+        "label": "Saved logins",
+        "summary": "Agents sign in and use keys you saved, without seeing them",
+        "stops": "Agents can't use your saved logins or ask you for passwords and keys.",
         "needs": [
           "engine"
         ]

@@ -1,9 +1,10 @@
 import { serial } from '@sand/util'
+import type { Vault } from '@sand/vault'
 import type { Dispose } from 'drydock'
 import type { Account, Client, Connections, ConnectionState, FlowEnd, Kind, KindInfo, OAuth } from './contract'
 import { createFlows } from './flows'
 import { bearer, refresh, TokenError } from './oauth'
-import type { Data, Entry, Secret, Tokens, Vault } from './vault'
+import type { Data, Entry, Secret, Tokens } from './vault'
 
 export interface Events {
   changed(): void
@@ -22,14 +23,14 @@ const info = (kind: Kind, client: Client | undefined): KindInfo => {
   return { id: kind.id, label: kind.label, method: 'form', client: false, readOnly: false, fields: kind.form.fields, ...(kind.form.help && { help: kind.form.help }) }
 }
 
-export const createConnections = (vault: Vault, data: Data, events: Events) => {
+export const createConnections = (vault: Vault<Data>, data: Data, events: Events) => {
   const kinds = new Map<string, Kind>()
   const renewing = new Map<string, Promise<Tokens>>()
   let { entries, clients } = data
   const persist = serial()
   const flows = createFlows(events.ended)
 
-  const save = () => persist(() => vault.write({ entries, clients }))
+  const save = () => persist(() => (entries.length || Object.keys(clients).length ? vault.write({ entries, clients }) : vault.clear()))
 
   const entry = (id: string) => {
     const found = entries.find(item => item.account.id === id)

@@ -92,6 +92,10 @@
       "name": "@sand/util",
       "version": "0.0.0",
     },
+    "packages/vault": {
+      "name": "@sand/vault",
+      "version": "0.0.0",
+    },
     "plugins/agent/approvals": {
       "name": "@sand/approvals",
       "version": "0.0.0",
@@ -401,26 +405,6 @@
         "@sand/replay": "workspace:*",
       },
     },
-    "plugins/agent/secrets": {
-      "name": "@sand/secrets",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/chats": "workspace:*",
-        "@sand/composer": "workspace:*",
-        "@sand/config": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/server": "workspace:*",
-        "@sand/tools": "workspace:*",
-        "@sand/transcript": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
-      },
-    },
     "plugins/agent/settled-status": {
       "name": "@sand/settled-status",
       "version": "0.0.0",
@@ -442,7 +426,10 @@
       "name": "@sand/shell",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/engine": "workspace:*",
+        "@sand/logins": "workspace:*",
         "@sand/tools": "workspace:*",
+        "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -1206,12 +1193,46 @@
         "@sand/settings": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
+        "@sand/vault": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
       "devDependencies": {
         "@sand/harness": "workspace:*",
+      },
+    },
+    "plugins/connections/logins": {
+      "name": "@sand/logins",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/bots": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/computers": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/devices-notify": "workspace:*",
+        "@sand/engine": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/orchestrator": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/settings": "workspace:*",
+        "@sand/tools": "workspace:*",
+        "@sand/transcript": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/vault": "workspace:*",
+        "@sand/web-client": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/approvals": "workspace:*",
+        "@sand/bot-turns": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
       },
     },
     "plugins/core/accounts": {
@@ -1538,6 +1559,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/approvals": "workspace:*",
+        "@sand/bots": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/devices-identity": "workspace:*",
@@ -3000,6 +3022,8 @@
 
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
 
+    "@sand/logins": ["@sand/logins@workspace:plugins/connections/logins"],
+
     "@sand/loop": ["@sand/loop@workspace:plugins/agent/loop"],
 
     "@sand/markdown": ["@sand/markdown@workspace:plugins/ui/chat/markdown"],
@@ -3074,8 +3098,6 @@
 
     "@sand/schedules": ["@sand/schedules@workspace:plugins/automation/schedules"],
 
-    "@sand/secrets": ["@sand/secrets@workspace:plugins/agent/secrets"],
-
     "@sand/server": ["@sand/server@workspace:plugins/core/server"],
 
     "@sand/settings": ["@sand/settings@workspace:plugins/ui/shared/settings"],
@@ -3129,6 +3151,8 @@
     "@sand/usage-page": ["@sand/usage-page@workspace:plugins/ui/shared/usage-page"],
 
     "@sand/util": ["@sand/util@workspace:packages/util"],
+
+    "@sand/vault": ["@sand/vault@workspace:packages/vault"],
 
     "@sand/vstack": ["@sand/vstack@workspace:plugins/agent/vstack"],
 

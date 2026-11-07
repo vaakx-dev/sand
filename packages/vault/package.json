@@ -1,0 +1,9 @@
+{
+  "name": "@sand/vault",
+  "version": "0.0.0",
+  "description": "A JSON file kept encrypted under the sand home, with its key in the system keychain or, without one, in an owner-only key file",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

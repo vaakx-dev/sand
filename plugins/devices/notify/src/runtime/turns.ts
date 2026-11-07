@@ -19,7 +19,7 @@ export const turnMoment = (session: Session, result: TurnResult): Moment | undef
 
 export const askMoment = ({ owner, conversation, title, tool, summary }: Decision): Moment => ({
   kind: 'needs',
-  ...(owner === 'thread' && { thread: conversation }),
+  ...(owner === 'thread' ? { thread: conversation } : { bot: conversation }),
   title,
   text: oneLine(`${tool}: ${summary}`, mostChars),
 })

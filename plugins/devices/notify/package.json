@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@sand/approvals": "workspace:*",
+    "@sand/bots": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/devices-identity": "workspace:*",
