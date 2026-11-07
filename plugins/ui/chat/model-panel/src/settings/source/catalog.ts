@@ -75,6 +75,11 @@ export const createCatalog = (page: Page, source: string) => {
     return send(page.call(modelsPref, { model: model.id, favourite }))
   }
 
+  const setPaid = (model: ModelInfo, paid: boolean) => {
+    patch(model.id, found => ({ ...found, paid }))
+    return send(page.call(modelsPref, { model: model.id, paid }))
+  }
+
   const remove = (model: ModelInfo) => {
     patch(model.id, () => undefined)
     return send(page.call(modelsRemove, { model: model.id }))
@@ -95,6 +100,7 @@ export const createCatalog = (page: Page, source: string) => {
         keep(model.id)
         void setHidden(model, !model.hidden)
       },
+      ...(model.coveredBy && { togglePaid: () => void setPaid(model, !model.paid) }),
       ...(model.added && { remove: () => void remove(model) }),
     })
 

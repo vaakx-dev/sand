@@ -14,7 +14,7 @@ const isPlanModel = (model: unknown): model is PlanModel => isRecord(model) && t
 
 const lists = (value: unknown) => Object.fromEntries(Object.entries(record(value)).map(([key, list]) => [key, names(list)]))
 
-export const emptyPrefs = (): Prefs => ({ hide: [], show: [], favourites: [], added: {}, newModels: {}, seen: {}, fresh: {} })
+export const emptyPrefs = (): Prefs => ({ hide: [], show: [], favourites: [], paid: [], added: {}, newModels: {}, seen: {}, fresh: {} })
 
 const prefsOf = (value: unknown): Prefs => {
   const raw = record(value)
@@ -22,6 +22,7 @@ const prefsOf = (value: unknown): Prefs => {
     hide: names(raw.hide),
     show: names(raw.show),
     favourites: names(raw.favourites),
+    paid: names(raw.paid),
     added: lists(raw.added),
     newModels: Object.fromEntries(Object.entries(record(raw.newModels)).filter((entry): entry is [string, NewModels] => isNewModels(entry[1]))),
     seen: lists(raw.seen),
