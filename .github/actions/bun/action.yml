@@ -13,6 +13,4 @@ runs:
         key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
         restore-keys: bun-${{ runner.os }}-
     - shell: bash
-      run: echo '0.0.0.0 github.com codeload.github.com api.github.com registry.npmjs.org' | sudo tee -a /etc/hosts && ! curl -sf --max-time 5 https://codeload.github.com
-    - shell: bash
       run: bun install --frozen-lockfile
