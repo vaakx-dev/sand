@@ -144,11 +144,17 @@ export interface BotProfile {
 
 export const botProfile = service<BotProfile>('botProfile')
 
+export interface BotChatDrawer {
+  view: HTMLElement
+  shown(): boolean
+}
+
 export interface BotChatPart {
   id: string
   order?: number
   beside?(bot: string): HTMLElement
   above?(bot: string): HTMLElement
+  drawer?(bot: string): BotChatDrawer
 }
 
 export interface BotChat {

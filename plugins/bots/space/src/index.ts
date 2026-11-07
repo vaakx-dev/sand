@@ -10,6 +10,7 @@ import { byOrder } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { createAddress, newBot } from './address'
 import { avatar } from './avatar'
+import { chatDrawer } from './chat/drawer'
 import { jobCard } from './chat/job'
 import { chatParts } from './chat/parts'
 import { inject } from './context'
@@ -35,6 +36,12 @@ export default definePlugin({
       const shown = page.get()
       return shown.kind === 'chat' || shown.kind === 'profile' ? shown.bot.id : undefined
     }
+    const phoneChat = owned(ctx, () =>
+      derive(() => {
+        const shown = page.get()
+        return narrow.get() && shown.kind === 'chat' ? shown.bot.id : undefined
+      }),
+    )
     const first = () => store.bots.get()?.[0]?.id ?? newBot
     const showSide = () => ctx.get(layout)?.toggle('side', true)
     const choose = (id: string) => {
@@ -70,6 +77,7 @@ export default definePlugin({
     ctx.watch(transcript, found => found?.entry(jobEntry, (entry, bot) => jobCard(ctx.kit, { store, edit: () => address.profile(bot) }, bot, entry.data as JobEntry)))
 
     ctx.provide(botChat, chat.host)
+    chatDrawer(ctx, { space, region: 'aside' }, chat.parts, phoneChat)
 
     ctx.provide(botProfile, {
       section(section) {

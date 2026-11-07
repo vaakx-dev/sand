@@ -115,7 +115,7 @@ export const buildShell = ({ layer }: Kit, state: ShellState, closeSide: () => v
       class: () => {
         if (!filled.get().aside || !shown.aside() || covered.get().main) return 'hidden'
         return narrow.get()
-          ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950 px-safe py-safe']
+          ? [layer.drawer, 'fixed inset-0 flex flex-col bg-neutral-950 px-safe py-safe', animated('animate-slide')]
           : 'relative flex min-h-0 min-w-0 w-80 shrink-0 flex-col bg-neutral-950 lg:w-96 xl:w-full xl:max-w-lg'
       },
       style: () => (narrow.get() ? slide(phone.get(), 'aside') : sizedStyle(widths, 'aside')),
