@@ -1,4 +1,4 @@
-import { findBrowser, launch } from '@sand/cdp'
+import { findBrowser, launch, type Launch } from '@sand/cdp'
 import { fitInside, osOf, type Computer, type Screenshot, type Size } from '@sand/computers/contract'
 import { tabCommand, tabsNote } from './chords'
 import { pageElements } from './elements'
@@ -19,13 +19,20 @@ const startTimeout = 20_000
 
 const noBrowser = 'No Chrome, Edge or Chromium was found on this machine. Install one, or set CHROME_PATH to its executable.'
 
-const flagsFor = (headless: boolean) => [
-  '--no-first-run',
-  '--no-default-browser-check',
-  '--disable-smooth-scrolling',
-  ...(headless ? ['--headless=new', '--window-size=1280,800', '--hide-scrollbars'] : []),
-  'about:blank',
-]
+type Start = Omit<Launch, 'args'>
+
+const flags = ['--no-first-run', '--no-default-browser-check', '--disable-smooth-scrolling', '--disable-blink-features=AutomationControlled', '--test-type']
+
+const headlessFlags = [...flags, '--headless=new', '--window-size=1280,800', '--screen-info={0,0 1920x1080 workAreaBottom=48}']
+
+const headlessAgent = async (start: Start) => {
+  const probe = await launch({ ...start, args: headlessFlags })
+  const { userAgent } = await probe.call<{ userAgent: string }>('Browser.getVersion')
+  await probe.close()
+  return userAgent.replace('HeadlessChrome/', 'Chrome/')
+}
+
+const flagsFor = async (start: Start, headless: boolean) => (headless ? [...headlessFlags, `--user-agent=${await headlessAgent(start)}`] : flags)
 
 export const pngSize = (png: Uint8Array) => {
   const view = new DataView(png.buffer, png.byteOffset, png.byteLength)
@@ -60,7 +67,8 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
   const start = async () => {
     const executable = await findBrowser()
     if (!executable) throw new Error(noBrowser)
-    const browser = await launch({ executable, profile, args: flagsFor(headless), deadline: Date.now() + startTimeout })
+    const options = { executable, profile, deadline: Date.now() + startTimeout }
+    const browser = await launch({ ...options, args: [...(await flagsFor(options, headless)), 'about:blank'] })
     return openTabs(browser).catch(async (error: unknown) => {
       await browser.close()
       throw error
