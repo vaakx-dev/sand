@@ -17,7 +17,6 @@ export interface SummaryInput {
   previous?: string
   instructions?: string
   limit: number
-  signal?: AbortSignal
 }
 
 const chunks = (parts: string[], max: number) => {
@@ -43,13 +42,13 @@ const transcriptRequest = (text: string, model?: string): LLMRequest => ({
   model,
 })
 
-export const summarize = async (llm: LLM, media: Media, { model, brief, messages, previous, instructions, limit, signal }: SummaryInput) => {
+export const summarize = async (llm: LLM, media: Media, { model, brief, messages, previous, instructions, limit }: SummaryInput) => {
   const parts = messages.map(serialize(media)).filter(Boolean)
   let summary = previous
   let usage: Usage | undefined
   let source: SourceRef | undefined
   for (const chunk of chunks(parts, Math.floor(limit * chunkShare * charsPerToken))) {
-    const reply = await ask(llm, brief, transcriptRequest(promptText(await brief.format(), chunk.join('\n\n'), summary, instructions), model), signal)
+    const reply = await ask(llm, brief, transcriptRequest(promptText(await brief.format(), chunk.join('\n\n'), summary, instructions), model))
     summary = reply.summary
     usage = usage ? sumUsage(usage, reply.usage) : reply.usage
     source = reply.source ?? source

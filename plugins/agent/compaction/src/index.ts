@@ -1,9 +1,9 @@
-import { llm, llmEvent } from '@sand/accounts/contract'
+import { llm } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
 import { entryViews } from '@sand/engine/contract'
 import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
-import { providerThreads } from '@sand/provider-threads/contract'
+import { providerThreads, stepSettle } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
 import { tokensOf } from '@sand/usage/contract'
 import { definePlugin } from 'drydock'
@@ -30,11 +30,10 @@ export default definePlugin({
     ctx.provide(contextLimits, { limit: model => budgetOf(ctx.llm, config, model).limit })
     const budget = (session: Session) => budgetOf(ctx.llm, config, ctx.get(modelSettings)?.effective(session).model)
 
-    ctx.on(llmEvent, (event, session) => {
-      if (event.type !== 'done') return
-      const used = tokensOf(event.usage)
-      tracker.done(session.id, used)
-      ctx.emit(contextUsage, session, usageOf(budget(session), used))
+    ctx.on(stepSettle, (request, conversation, _turn, usage) => {
+      const used = tokensOf(usage)
+      tracker.done(conversation.id, request, used)
+      ctx.emit(contextUsage, conversation, usageOf(compactor.budget(request), used))
     })
 
     const read = async (session: Session) => {
