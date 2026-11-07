@@ -7,6 +7,7 @@ const fake = (id: string): Computer => ({
   screenshot: async () => ({ png: new Uint8Array(), width: 1, height: 1 }),
   elements: async () => [],
   act: async () => {},
+  settle: async () => {},
 })
 
 test('computers register, list and unregister', () => {

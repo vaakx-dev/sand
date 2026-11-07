@@ -6,6 +6,7 @@ import { foreground, refusal, windowAt, type WindowFacts } from './guard'
 import { encode, inputSize, pack, pauseAfter, pointsOf, type Input, type InputAction } from './input'
 import { pixelOf, virtualScreen } from './screen'
 
+const settlePause = 400
 const vkToScanCode = 0
 
 const blocked = 'Windows blocked the input. An app running as administrator may have focus, or the screen is locked.'
@@ -69,6 +70,7 @@ export const windowsDesktop = () => {
       if (action.type === 'open') return openUrl(action.url)
       await press(action)
     },
+    settle: () => Bun.sleep(settlePause),
     close: uia.close,
   } satisfies Computer & { close(): void }
 }

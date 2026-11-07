@@ -2,7 +2,9 @@ import { findBrowser, launch } from '@sand/cdp'
 import { fitInside, osOf, type Computer, type Screenshot, type Size } from '@sand/computers/contract'
 import { tabCommand, tabsNote } from './chords'
 import { pageElements } from './elements'
+import { findText } from './find'
 import { dispatch, type Viewport } from './input'
+import { settle } from './settle'
 import { openTabs, type Call, type Tabs } from './tabs'
 
 export interface BrowserOptions {
@@ -77,7 +79,7 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
 
   const page = async () => (await tabs()).current()
 
-  const computer: Computer & { close(): Promise<void> } = {
+  const computer: Required<Computer> & { close(): Promise<void> } = {
     info: { id, kind: 'browser', label, os: osOf(process.platform) },
     async screenshot(fit): Promise<Screenshot> {
       const open = await tabs()
@@ -97,6 +99,13 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
       }
       const call = await open.current()
       await dispatch(call, await viewportOf(call), action)
+    },
+    async settle() {
+      await settle(await page())
+    },
+    async find(text, match) {
+      const call = await page()
+      return findText(call, await viewportOf(call), text, match)
     },
     async close() {
       const open = running

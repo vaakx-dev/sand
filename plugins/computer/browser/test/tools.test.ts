@@ -19,8 +19,8 @@ const call = (name: string, input: Record<string, unknown>) => ({ type: 'call', 
 const script = [
   call('computer_list', {}),
   call('computer_act', { computer: 'browser', action: { type: 'open', url: server.url.href } }),
-  call('computer_act', { computer: 'browser', action: { type: 'click', at: { x: 0.25, y: 0.25 } } }),
-  call('computer_elements', { computer: 'browser' }),
+  call('computer_act', { computer: 'browser', action: { type: 'click', at: { x: 0.25, y: 0.25 } }, screenshot: false }),
+  call('computer_elements', { computer: 'browser', find: 'count' }),
   call('computer_screenshot', { computer: 'browser' }),
   call('computer_act', { computer: 'browser', action: { type: 'click', at: { ref: 'nope' } } }),
 ]
@@ -61,10 +61,13 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
 
   test('a thread lists computers, opens a page, clicks at fractions and reads the result', async () => {
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: `browser: Test browser (browser, ${osOf(process.platform)})` }] })
-    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: open.' }] })
+    expect(await turn()).toMatchObject({
+      content: [{ type: 'text', text: 'Done: open.' }, { type: 'text', text: expect.stringContaining('pixels') }, { type: 'image', mediaType: 'image/png' }],
+    })
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: 'Done: click.' }] })
     const elements = await turn()
     const listed = elements?.type === 'tool_result' && elements.content[0]?.type === 'text' ? elements.content[0].text : ''
+    expect(listed).toStartWith('Match 1 of 1 for "count", scrolled into view at [0.000, 0.6')
     expect(listed).toMatch(/^\d+ button "Add one" \[0\.000, 0\.000, 0\.500, 0\.500\]$/m)
     expect(listed).toMatch(/^\d+ text "Count: 1" \[/m)
     expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringMatching(/pixels\.\nTabs .*\n1\. \[active\] .* — http/) }, { type: 'image', mediaType: 'image/png' }] })
