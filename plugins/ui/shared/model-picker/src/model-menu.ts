@@ -2,7 +2,7 @@ import type { NavAction } from '@sand/nav/contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ModelMenuInput } from './contract'
 
-export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {
+export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault, toggleFavourite, toggleHidden, togglePaid, remove }: ModelMenuInput): MenuSpec => {
   const favourite = model.favourite !== undefined
   const copy = () => copyText(model.name ?? model.id)
   const actions: (NavAction | false)[] = [
@@ -18,6 +18,13 @@ export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault
       run: toggleFavourite,
     },
     toggleHidden !== undefined && { id: 'hidden', label: model.hidden ? 'Show in picker' : 'Hide from picker', icon: 'eye', group: 'list', run: toggleHidden },
+    togglePaid !== undefined && {
+      id: 'paid',
+      label: model.paid ? 'Use your subscription instead' : 'Pay per token instead',
+      icon: 'tag',
+      group: 'list',
+      run: togglePaid,
+    },
     { id: 'copy-id', label: 'Copy model id', icon: 'copy', group: 'copy', run: copy },
     remove !== undefined && { id: 'remove', label: 'Remove', icon: 'trash', group: 'remove', danger: true, run: remove },
   ]
