@@ -97,6 +97,25 @@ test('a bot hands another bot a task without waiting, and hears its reply as a t
   expect(notice).toContain('<label>Travel</label>')
   expect(notice).toContain('<status>done</status>')
   expect(notice).toContain('Booked for Friday.')
+  expect(notice).toMatch(/<at>\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d<\/at>/)
+})
+
+test('a bot looks up its own past: what was said and done, and when', async () => {
+  await start([[{ type: 'call', name: 'bot_list', input: {} }], said('You have one bot.'), said('Noted.')])
+  const bot = await createBot('Clerk')
+  await answered(bot.id, 'Which bots do I have?')
+  await answered(bot.id, 'Thanks')
+  const read = (input: Record<string, unknown>) => use(asBot(bot.id), 'bot_read', input)
+
+  const talk = await read({})
+  expect(talk.items.map(({ text }: { text: string }) => text)).toEqual(['Which bots do I have?', 'You have one bot.', 'Thanks', 'Noted.'])
+  expect(talk.items[0].at).toMatch(/^\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d$/)
+
+  const done = await read({ view: 'activity', query: 'bot_list' })
+  expect(done.items.map(({ text }: { text: string }) => text)).toEqual(['[bot_list] {}', expect.stringMatching(/^\[bot_list result\] .*Clerk/)])
+
+  const older = await read({ before: talk.items[2].seq, limit: 1 })
+  expect(older).toMatchObject({ items: [{ text: 'You have one bot.' }], more: true })
 })
 
 test('a bot with no job writes its own job, works to it from its next step, and keeps the jobs it replaced', async () => {

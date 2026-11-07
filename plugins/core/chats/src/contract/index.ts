@@ -8,6 +8,7 @@ import type { Session, SessionInfo, Sessions } from './session'
 
 export type * from './entry'
 export type * from './message'
+export * from './notification'
 export type * from './parts'
 export * from './prompt'
 export type * from './session'

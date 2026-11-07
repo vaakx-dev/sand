@@ -23,7 +23,7 @@ export interface BotAnswer {
 
 export interface BotItem {
   seq: number
-  at: number
+  at: string
   role: 'user' | 'assistant'
   text: string
   turn?: string
@@ -32,13 +32,27 @@ export interface BotItem {
 export interface BotPage {
   bot: string
   items: BotItem[]
-  next: number
   more: boolean
 }
 
 export const waitLimit = 25_000
 export const readLimit = 200
 export const jobLimit = 2_000
+
+export const readViews = ['messages', 'activity'] as const
+
+export type ReadView = (typeof readViews)[number]
+
+const readInput = z.object({
+  bot: z.string().optional(),
+  query: z.string().min(1).optional(),
+  view: z.enum(readViews).optional(),
+  after: z.number().int().min(0).optional(),
+  before: z.number().int().min(1).optional(),
+  limit: z.number().int().min(1).max(readLimit).optional(),
+})
+
+export type BotReading = Omit<z.infer<typeof readInput>, 'bot'>
 
 const callers = 'any'
 const one = z.object({ bot: z.string() })
@@ -55,7 +69,7 @@ export const botAwait = request('bot.await', {
   callers,
 })
 export const botRead = request('bot.read', {
-  input: one.extend({ after: z.number().int().min(0).optional(), limit: z.number().int().min(1).max(readLimit).optional() }),
+  input: readInput,
   output: type<BotPage>(),
   callers,
 })

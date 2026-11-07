@@ -46,7 +46,7 @@ export const createReplies = (ctx: BotsMcpContext, ask: Ask) => {
     if (unloaded.signal.aborted) return
     if (info) {
       const result = info.error ?? ctx.botTurns.final(bot, info.id) ?? ''
-      const text = reportOf({ from: { owner: 'bot', id: bot }, label: ctx.bots.get(bot)?.name || 'A bot', status: info.status, result })
+      const text = reportOf({ from: { owner: 'bot', id: bot }, label: ctx.bots.get(bot)?.name || 'A bot', status: info.status, at: info.ended ?? Date.now(), result })
       await deliver({ owner: sender_owner, id: sender }, { text, clientRequestId: `${bot}@${info.id}` })
     }
     removed.run({ bot, request })
