@@ -5,7 +5,7 @@ import { encodePng } from '../src/png'
 import { bgraToRgb } from '../src/windows/capture'
 import { parseLine, toElements } from '../src/windows/elements'
 import { refusal, type WindowFacts } from '../src/windows/guard'
-import { encode, inputSize, pack, pointsOf } from '../src/windows/input'
+import { encode, inputSize, pack, pauseAfter, pointsOf } from '../src/windows/input'
 import { fractionBox, normalizedOf, pixelOf, type Screen } from '../src/windows/screen'
 
 const screen: Screen = { left: -1920, top: 0, width: 3840, height: 1080 }
@@ -64,6 +64,17 @@ describe('input encoding', () => {
       { x: 0.9, y: 0.1 },
     ])
     expect(pointsOf({ type: 'type', text: 'a' })).toEqual([])
+  })
+
+  test('holds press at the point, wait the hold time, then release in a second batch', () => {
+    const hold = { type: 'hold', at: { x: 0.25, y: 0.5 }, ms: 1500 } as const
+    const batches = encode(hold, screen, scan)
+    expect(batches.map(batch => batch.map(input => input.flags))).toEqual([[moveFlags, 0x2], [0x4]])
+    const { x, y } = normalizedOf(pixelOf(hold.at, screen), screen)
+    expect(batches[0]?.[0]).toMatchObject({ dx: x, dy: y })
+    expect(batches.map((_, index) => pauseAfter(hold, index))).toEqual([1500, 20])
+    expect(pauseAfter({ type: 'click', at: hold.at }, 0)).toBe(20)
+    expect(pointsOf(hold)).toEqual([hold.at])
   })
 
   test('text types as unicode, with newlines and tabs as their keys', () => {

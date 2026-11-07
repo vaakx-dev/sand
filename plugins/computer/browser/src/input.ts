@@ -70,6 +70,13 @@ const drag = async (input: PageInput, { from, to }: ActionOf<'drag'>) => {
   await input.mouse('mouseReleased', to, { button: 'left', buttons: 0, clickCount: 1 })
 }
 
+const hold = async (input: PageInput, { at, ms }: ActionOf<'hold'>) => {
+  await input.mouse('mouseMoved', at)
+  await input.mouse('mousePressed', at, { button: 'left', buttons: 1, clickCount: 1 })
+  await Bun.sleep(ms)
+  await input.mouse('mouseReleased', at, { button: 'left', buttons: 0, clickCount: 1 })
+}
+
 const type = async (input: PageInput, call: Call, text: string) => {
   for (const [index, line] of text.split(/\r?\n/).entries()) {
     if (index > 0) await input.keys([enter])
@@ -99,6 +106,8 @@ export const dispatch = async (call: Call, viewport: Viewport, action: Action) =
       return click(input, action.at, 'left', 2)
     case 'right_click':
       return click(input, action.at, 'right', 1)
+    case 'hold':
+      return hold(input, action)
     case 'drag':
       return drag(input, action)
     case 'scroll':

@@ -12,6 +12,7 @@ const keyFlags = { extended: 0x1, up: 0x2, unicode: 0x4 }
 const extendedKeys = new Set([0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x2d, 0x2e, 0x5b])
 const wheelDelta = 120
 const dragSteps = 8
+const batchPause = 20
 const enter = 0x0d
 const tab = 0x09
 export const inputSize = 40
@@ -80,6 +81,8 @@ export const encode = (action: InputAction, screen: Screen, scan: ScanCode): Inp
       return clicks(action.at, screen, 'left', 2)
     case 'right_click':
       return clicks(action.at, screen, 'right', 1)
+    case 'hold':
+      return [[moveTo(action.at, screen), mouse(mouseFlags.leftDown)], [mouse(mouseFlags.leftUp)]]
     case 'drag':
       return drag(action.from, action.to, screen)
     case 'scroll':
@@ -90,6 +93,8 @@ export const encode = (action: InputAction, screen: Screen, scan: ScanCode): Inp
       return [chord(action.keys, scan)]
   }
 }
+
+export const pauseAfter = (action: InputAction, batch: number) => (action.type === 'hold' && batch === 0 ? action.ms : batchPause)
 
 export const pointsOf = (action: InputAction): Point[] => {
   if (action.type === 'drag') return [action.from, action.to]
