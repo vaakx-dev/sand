@@ -121,6 +121,7 @@ export interface Conversations<C extends Conversation> {
   owner: Owner
   open(id: string): C | undefined
   select(conversation: C): Selection | undefined
+  held?(conversation: C): boolean
   step(conversation: C, turn: TurnInfo, signal: AbortSignal): Promise<Step>
   abandon?(thread: string): void
   prompt?(content: UserContent[], conversation: C): UserContent[] | Promise<UserContent[]>

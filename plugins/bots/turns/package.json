@@ -29,6 +29,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@sand/devices-notify": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/media": "workspace:*",

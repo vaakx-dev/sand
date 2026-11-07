@@ -1,10 +1,12 @@
 import type { AppOutput, AppPlan, AppSession, AppSetup, ProviderCapabilities } from '@sand/accounts/contract'
 import type { ToolResultContent } from '@sand/chats/contract'
 import type { NativeCall, Reply, Script } from './contract'
+import { planModels } from './models'
 
 const textOf = (content: ToolResultContent[]) => content.map(block => (block.type === 'text' ? block.text : `[${block.type}]`)).join('\n')
 
-export const replayApp = ({ id, label = id, models, replies, resume, inject }: Script) => {
+export const replayApp = (script: Script) => {
+  const { id, label = id, replies, resume, inject } = script
   const queue = [...replies]
   const injects = [...inject]
   const calls: NativeCall[] = []
@@ -92,7 +94,7 @@ export const replayApp = ({ id, label = id, models, replies, resume, inject }: S
     status: async () => ({ installed: true, signedIn: true }),
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),
     signOut: async () => {},
-    models: async () => models.map(name => ({ name, label: name })),
+    models: async () => planModels(script),
     async open(setup, out, reopened) {
       calls.push({ type: 'open', cwd: setup.cwd, ...(reopened && { resume: reopened }) })
       return session(setup, out, reopened)

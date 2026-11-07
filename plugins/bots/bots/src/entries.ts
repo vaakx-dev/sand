@@ -1,5 +1,6 @@
 import type { Database } from 'bun:sqlite'
 import { uuid } from '@sand/util'
+import type { UsageRecord } from '@sand/accounts/contract'
 import type { AppendMeta } from '@sand/chats/contract'
 import type { BotEntry, EntryPage } from './contract'
 
@@ -28,6 +29,9 @@ export const createEntries = (db: Database) => {
   const newest = db.query<Row, { bot: string; type: string; limit: number }>(
     'select * from bot_entries where bot = $bot and type = $type order by seq desc limit $limit',
   )
+  const since = db.query<{ data: string }, { bot: string; type: string; at: number }>(
+    'select data from bot_entries where bot = $bot and type = $type and at >= $at',
+  )
 
   return {
     append(bot: string, type: string, data: unknown, meta: AppendMeta = {}): BotEntry {
@@ -50,6 +54,7 @@ export const createEntries = (db: Database) => {
     },
     remove: (bot: string) => void removed.run({ bot }),
     newest: (bot: string, type: string, limit: number) => newest.all({ bot, type, limit }).map(toEntry),
+    usage: (bot: string, at: number): UsageRecord[] => since.all({ bot, type: 'usage', at }).map(row => JSON.parse(row.data)),
   }
 }
 

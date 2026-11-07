@@ -11,9 +11,12 @@ const bot = (id: string): BotSummary => ({
   models: { main: {}, quick: {} },
   computer: 'none',
   project: null,
+  paused: false,
+  budget: null,
   created: 0,
   updated: 0,
   status: 'idle',
+  spent: 0,
 })
 
 test('the address picks the page, falling back to the newest bot or the new-bot flow', () => {

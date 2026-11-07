@@ -1,5 +1,5 @@
 import type { ApprovalBanner } from '@sand/approvals/contract'
-import { botName, type BotChatPart, type BotSummary } from '@sand/bots/contract'
+import { botName, type BotChatPart } from '@sand/bots/contract'
 import type { Composer } from '@sand/composer/contract'
 import type { Row, TranscriptParts } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
@@ -7,18 +7,17 @@ import { derive, div, dynamicChild, effect, list, onMount, p, show, span, untrac
 import { avatar } from '../avatar'
 import { pane, paneHead, type HeadParts } from '../pane'
 import type { Conversation } from './conversation'
+import { holdSlot, type HoldParts } from './hold'
 import { aboveDock, beside } from './parts'
 import { statusView } from './status'
 import { transcriptRows } from './transcript'
 
-export interface ChatParts extends HeadParts {
-  bot: () => BotSummary
+export interface ChatParts extends HeadParts, HoldParts {
   talk: Conversation
   transcript: TranscriptParts
   composer: Composer
   approvals?: ApprovalBanner
   parts: Sig<BotChatPart[]>
-  profile(): void
 }
 
 const olderEdge = 240
@@ -112,6 +111,7 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
   })
   const { approvals } = parts
   if (approvals) effect(() => (approvals.asking() ? dock.slot('banner', approvals.view) : undefined))
+  holdSlot(kit, parts, dock)
 
   const id = untrack(() => parts.bot().id)
   aboveDock(parts.parts, id, dock)

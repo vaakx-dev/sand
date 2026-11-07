@@ -57,6 +57,7 @@ const chatPage = ({ ctx, store, address, parts }: MainParts, head: HeadParts, sh
     composer: ctx.composer,
     parts,
     profile: () => address.profile(shown.id),
+    resume: () => store.update(shown.id, { paused: false }),
     ...(approvals && { approvals }),
   })
 }

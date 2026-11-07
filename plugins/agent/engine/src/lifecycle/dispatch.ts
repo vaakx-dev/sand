@@ -10,7 +10,7 @@ export interface DispatchDeps<C extends Conversation> {
   running(): boolean
 }
 
-export const createDispatch = <C extends Conversation>(ctx: EngineContext, { stores, announce }: Owned<C>, { opener, drive, running }: DispatchDeps<C>) => {
+export const createDispatch = <C extends Conversation>(ctx: EngineContext, { conversations, stores, announce }: Owned<C>, { opener, drive, running }: DispatchDeps<C>) => {
   const hold = (conversation: C, item: string) => {
     stores.pending.hold(conversation, item, true)
     announce.pending(conversation)
@@ -18,6 +18,7 @@ export const createDispatch = <C extends Conversation>(ctx: EngineContext, { sto
 
   return async (conversation: C) => {
     if (!running() || stores.turns.current(conversation)) return
+    if (conversations.held?.(conversation)) return
     const next = stores.pending.next(conversation)
     if (!next) return
     const opening = await opener.prepare(conversation, next.prompt, next.origin).catch(() => undefined)
