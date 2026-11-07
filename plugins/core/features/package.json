@@ -116,6 +116,15 @@
           "schedules"
         ]
       },
+      "bot-watches": {
+        "label": "Bot watches",
+        "summary": "Bots listen to pages, folders, webhooks and repos, and wake only when something changed",
+        "parent": "bots",
+        "needs": [
+          "watches",
+          "mcp-server"
+        ]
+      },
       "bots-mcp": {
         "label": "Bot tools",
         "summary": "Your threads, your bots and outside agents message, read and update your bots over MCP",
@@ -321,6 +330,11 @@
         "kind": "capability",
         "label": "Schedules",
         "summary": "Runs things at set times, even after a restart"
+      },
+      "watches": {
+        "kind": "capability",
+        "label": "Watches",
+        "summary": "Notices when something you follow changes, without spending tokens to check"
       },
       "connections": {
         "kind": "capability",

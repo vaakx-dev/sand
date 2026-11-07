@@ -16,7 +16,7 @@ const promptOf = (routine: Routine, fire: Fire) =>
     label: routine.name,
     status: fire.late ? 'late' : 'due',
     at: fire.due,
-    result: [guide(fire), ...(fire.note ? [`Its check found:\n${fire.note}`] : []), `<instructions>\n${routine.instructions}\n</instructions>`].join('\n\n'),
+    result: [guide(fire), `<instructions>\n${routine.instructions}\n</instructions>`].join('\n\n'),
   })
 
 const moments: Partial<Record<string, MomentKind>> = { completed: 'routine', failed: 'failed', lost: 'failed' }

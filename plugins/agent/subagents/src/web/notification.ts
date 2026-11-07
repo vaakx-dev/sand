@@ -1,48 +1,15 @@
-import { type Entry, notificationField } from '@sand/chats/contract'
+import { notificationField } from '@sand/chats/contract'
+import type { NoticeKind } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { capital } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
-import { div, show, sig } from '@vaakx-dev/vrui'
 import type { JobWatch } from './jobs'
 import { subAgentOf } from './tool'
 
-const outcomes: Record<string, string> = {
-  done: 'finished',
-  failed: 'failed',
-  cancelled: 'stopped',
-}
-
-const prose = ({ fold }: Kit, text: string) =>
-  fold({ lines: text.split('\n').length, chars: text.length }, div({ class: 'whitespace-pre-wrap wrap-anywhere text-neutral-400' }, text))
-
-export const notificationRenderer = (kit: Kit, watch: JobWatch, chats: () => Threads | undefined) => (entry: Entry, thread: string) => {
-  const text = String(entry.data)
-  const job = notificationField(text, 'job')
-  const kind = notificationField(text, 'kind') || 'job'
-  const label = notificationField(text, 'label')
-  const status = notificationField(text, 'status')
-  const result = notificationField(text, 'result')
-  const open = sig(false)
-  const opener = () => {
-    const origin = watch.find(job)?.origin
+export const jobNotice = (kit: Kit, watch: JobWatch, chats: () => Threads | undefined): NoticeKind => ({
+  icon: 'bot',
+  actions(text, thread) {
+    const origin = watch.find(notificationField(text, 'job'))?.origin
     const found = origin ? subAgentOf(chats(), thread, origin) : undefined
     return found && kit.iconButton({ size: 'sm', title: 'Open sub-agent', 'aria-label': 'Open sub-agent', onClick: () => void chats()?.select(found.id) }, kit.icon('right', 'sm'))
-  }
-  return div(
-    { class: '-mx-2 mb-2' },
-    kit.toolCard(
-      {
-        icon: kit.icon('bot', 'sm'),
-        verb: `${capital(kind)} ${outcomes[status] ?? status}`,
-        target: label,
-        targetClass: 'text-neutral-400',
-        targetTitle: label,
-        failed: status === 'failed',
-        expanded: open,
-        actions: [result && kit.copyButton({ text: () => result }), opener()],
-        onToggle: () => open.update(value => !value),
-      },
-      show(open, () => kit.toolBody(prose(kit, result || 'No reply'))),
-    ),
-  )
-}
+  },
+})

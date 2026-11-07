@@ -1,11 +1,10 @@
-import { notificationTag } from '@sand/chats/contract'
 import { toolViews, transcript } from '@sand/transcript/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { jobWatch } from './jobs'
-import { notificationRenderer } from './notification'
+import { jobNotice } from './notification'
 import { agentRenderer } from './tool'
 
 export default definePlugin({
@@ -21,7 +20,7 @@ export default definePlugin({
         found &&
         joinDisposers(
           found.tool('agent', agentRenderer(ctx.kit, ctx.toolViews, watch, chats)),
-          found.entry(notificationTag, notificationRenderer(ctx.kit, watch, chats)),
+          found.notice('job', jobNotice(ctx.kit, watch, chats)),
         ),
     )
   },

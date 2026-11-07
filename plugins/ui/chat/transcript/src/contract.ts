@@ -3,7 +3,7 @@ import type { ContextUsage } from '@sand/compaction/contract'
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
 import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
 import type { NavAction } from '@sand/nav/contract'
-import type { ContextMenu, Kit, MenuSpec } from '@sand/ui-kit/contract'
+import type { ContextMenu, IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ToolProgress } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
@@ -39,6 +39,11 @@ export interface ToolRenderer {
 
 export type RenderEntry = (entry: Entry, conversation: string) => HTMLElement | undefined
 
+export interface NoticeKind {
+  icon?: IconName
+  actions?(text: string, conversation: string): Child
+}
+
 export interface TurnInfo {
   session: string
   device: string
@@ -55,6 +60,7 @@ export interface TurnFooter {
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
+  notice(from: string, kind: NoticeKind): Dispose
   turnFooter(footer: TurnFooter): Dispose
 }
 
@@ -111,8 +117,10 @@ export interface RendererRegistry {
   readonly version: Sig<number>
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
+  notice(from: string, kind: NoticeKind): Dispose
   toolRenderer(name: string): Required<ToolRenderer>
   entryRenderer(type: string): RenderEntry | undefined
+  noticeKind(from: string): NoticeKind | undefined
 }
 
 export interface ToolStepOptions {

@@ -1,4 +1,4 @@
-import type { Missed, Schedule, Schedules, Watch, When } from '@sand/schedules/contract'
+import type { Missed, Schedule, Schedules, When } from '@sand/schedules/contract'
 import { z } from 'zod'
 import type { Routine } from './contract'
 
@@ -11,12 +11,11 @@ export interface NewRoutine {
   instructions: string
   when: When
   missed?: Missed
-  watch?: Watch
 }
 
 export const routineOf = (schedule: Schedule): Routine => {
-  const { id, subject, when, missed, watch, paused, next, last } = schedule
-  return { id, bot: subject, ...content.parse(schedule.data), when, missed, ...(watch && { watch }), paused, ...(next !== undefined && { next }), ...(last && { last }) }
+  const { id, subject, when, missed, paused, next, last } = schedule
+  return { id, bot: subject, ...content.parse(schedule.data), when, missed, paused, ...(next !== undefined && { next }), ...(last && { last }) }
 }
 
 export const createRoutines = (schedules: Schedules) => {

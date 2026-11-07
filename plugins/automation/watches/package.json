@@ -1,0 +1,28 @@
+{
+  "name": "@sand/watches",
+  "version": "0.0.0",
+  "description": "Durable watches other plugins register: cheap watchers that run with no model and wake the owner with a batch of changes only when something changed",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "watches",
+    "runtime": "./src/index.ts",
+    "label": "Watches",
+    "summary": "Notices when something you follow changes, without spending tokens to check"
+  },
+  "dependencies": {
+    "@sand/boot": "workspace:*",
+    "@sand/config": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/ledger": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/watch": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

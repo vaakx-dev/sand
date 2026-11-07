@@ -3,9 +3,12 @@ import { layout, layoutChange } from '@sand/layout/contract'
 import { markdown } from '@sand/markdown/contract'
 import { pullLinksClient } from '@sand/pull-links/contract'
 import { pulse } from '@sand/reactive'
+import { byOrder } from '@sand/util'
 import { threadChange, threadsChange } from '@sand/web-client/contract'
+import { derive, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
+import { botWork, type WorkSection } from './contract'
 import { workDrawer } from './drawer'
 import { workPanel } from './panel'
 import { followRunning } from './follow'
@@ -29,8 +32,18 @@ export default definePlugin({
     const sources = { pullsOf: (thread: string) => ctx.get(pullLinksClient)?.of(thread) ?? [], earlierFailure: roster.failure }
     const tasksFor = (bot: string) => shell.read(() => tasksOf(startedBy(bot), sources))
 
+    const sections = sig<WorkSection[]>([])
+    ctx.provide(botWork, {
+      section(section) {
+        sections.update(all => [...all, section].sort(byOrder))
+        return () => sections.update(all => all.filter(other => other !== section))
+      },
+    })
+
     const partsFor = (bot: string) => ({
+      bot,
       tasks: tasksFor(bot),
+      sections: derive(() => sections.get().filter(section => section.has(bot))),
       started: () => roster.startedBy(bot).length > 0,
       startsThreads: roster.startsThreads,
       plan: createPlan(ctx, bot),
