@@ -77,6 +77,29 @@ describe('input encoding', () => {
     expect(pointsOf(hold)).toEqual([hold.at])
   })
 
+  test('drags with a rest keep the button down at the end, nudging the pointer by a pixel, before releasing', () => {
+    const drag = { type: 'drag', from: { x: 0.1, y: 0.1 }, to: { x: 0.5, y: 0.5 }, ms: 800 } as const
+    const batches = encode(drag, screen, scan)
+    const rest = batches.slice(9, -1)
+    expect(rest).toHaveLength(40)
+    expect(rest.map((_, index) => pauseAfter(drag, 9 + index)).reduce((sum, ms) => sum + ms, 0)).toBe(800)
+    const to = normalizedOf(pixelOf(drag.to, screen), screen)
+    const nudged = normalizedOf({ x: -1, y: 540 }, screen)
+    expect(rest.map(([move]) => move?.type === 'mouse' && move.dx)).toEqual(Array.from({ length: 40 }, (_, index) => (index % 2 === 0 ? nudged.x : to.x)))
+    expect(batches.at(-1)?.map(input => input.flags)).toEqual([0x4])
+  })
+
+  test('held keys go down before the first mouse input and up after the last, in the same batches', () => {
+    const keys = parseKeys('ctrl+shift')
+    const [click] = encode({ type: 'click', at: { x: 0.5, y: 0.5 }, keys }, screen, scan)
+    expect(click?.map(input => (input.type === 'key' ? [input.vk, input.flags] : input.flags))).toEqual([[0x11, 0], [0x10, 0], moveFlags, 0x2, 0x4, [0x10, 0x2], [0x11, 0x2]])
+    const drag = encode({ type: 'drag', from: { x: 0.1, y: 0.1 }, to: { x: 0.9, y: 0.1 }, keys: parseKeys('alt') }, screen, scan)
+    expect(drag[0]?.map(input => input.type)).toEqual(['key', 'mouse', 'mouse'])
+    expect(drag.slice(1, -1).flat().every(input => input.type === 'mouse')).toBe(true)
+    expect(drag.at(-1)).toEqual([{ type: 'mouse', dx: 0, dy: 0, data: 0, flags: 0x4 }, { type: 'key', vk: 0x12, scan: 1018, flags: 0x2 }])
+    expect(encode({ type: 'key', keys }, screen, scan).flat()).toHaveLength(4)
+  })
+
   test('text types as unicode, with newlines and tabs as their keys', () => {
     const [batch] = encode({ type: 'type', text: 'a\n😀\r\t' }, screen, scan)
     expect(batch).toEqual([
