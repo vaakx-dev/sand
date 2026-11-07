@@ -17,11 +17,15 @@ const page = `<!doctype html>
       #card { position: absolute; left: 600px; top: 260px; width: 100px; height: 60px; background: #edc; }
       #bin { position: absolute; left: 800px; top: 260px; width: 150px; height: 100px; background: #dec; }
       button, input { font-size: 20px; margin: 4px; }
+      #rows { position: fixed; left: 0; bottom: 0; width: 400px; height: 150px; overflow: auto; background: #fff; }
+      #rows p { margin: 0; }
     </style>
   </head>
   <body>
+    <div id="rows"><p hidden>Row 32 hidden</p></div>
     <div id="top">
       <button id="add">Add one</button>
+      <button id="later">Later</button>
       <a href="/other" target="_blank">Open other</a>
       <form id="form"><input id="name" aria-label="Name" /></form>
       <p id="count">Count: 0</p>
@@ -41,6 +45,8 @@ const page = `<!doctype html>
     </div>
     <script>
       const show = (id, text) => (document.getElementById(id).textContent = text)
+      for (let row = 1; row <= 400; row++) document.getElementById('rows').append(Object.assign(document.createElement('p'), { textContent: 'Row ' + row }))
+      document.getElementById('later').onclick = () => setTimeout(() => show('count', 'Count: later'), 150)
       let count = 0
       document.getElementById('add').onclick = () => show('count', 'Count: ' + ++count)
       document.getElementById('name').oninput = event => show('echo', 'Echo: ' + event.target.value)
@@ -209,6 +215,20 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     await eventually('Dropped: too soon')
     await computer.act({ type: 'drag', from: card, to: bin, ms: 1000 })
     await eventually('Dropped: after a rest')
+  })
+
+  test('settles until a late update shows', async () => {
+    await click(await find('button', 'Later'))
+    await computer.settle()
+    expect(await texts()).toContain('Count: later')
+  })
+
+  test('finds visible text inside a scrolling panel and scrolls the chosen match into view', async () => {
+    const found = await computer.find('row 32', 2)
+    expect(found.count).toBe(11)
+    expect(found.box?.top).toBeGreaterThan(0.8)
+    expect((await find('text', 'Row 320')).box.top).toBeCloseTo(found.box?.top ?? 0, 2)
+    expect(await computer.find('row 32', 12)).toEqual({ count: 11 })
   })
 
   test('follows a link into a new tab, switches back and closes it', async () => {
