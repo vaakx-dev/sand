@@ -47,6 +47,7 @@ export const shop: LocalTask = {
   id: 'shop',
   set: 'browser',
   place: 'local',
+  kind: 'basic',
   prompt: site => `In the shop at ${site}/shop/, find the product "Copper Kettle 1.7L", open its product page, and reply with its price.`,
   check: seen => all(tabAt(seen, new RegExp(`/shop/item/${wanted.id}$`)), answered(seen, wanted.price)),
   page(path, query) {

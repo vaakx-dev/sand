@@ -34,6 +34,7 @@ export const news: LocalTask = {
   id: 'news',
   set: 'browser',
   place: 'local',
+  kind: 'basic',
   prompt: site => `On the news site at ${site}/news/, find the article titled "${wanted.title}". It is not on the first page. Open it and reply with the name of its author.`,
   check: seen => all(tabAt(seen, new RegExp(`/news/article/${wanted.id}$`)), answered(seen, wanted.author)),
   page(path, query) {

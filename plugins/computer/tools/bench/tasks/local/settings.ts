@@ -33,6 +33,7 @@ export const settings: LocalTask = {
   id: 'settings',
   set: 'browser',
   place: 'local',
+  kind: 'interrupt',
   prompt: site => `Open ${site}/settings/ and find the API key in the Developer section. Reply with the full key. Don't change any setting.`,
   check: seen => all(answered(seen, key), unchanged(seen)),
   page: path => (path === '/' ? page : undefined),

@@ -40,6 +40,7 @@ export const gallery: LocalTask = {
   id: 'gallery',
   set: 'browser',
   place: 'local',
+  kind: 'tiny',
   prompt: site => `The photo gallery at ${site}/gallery/ has unlabeled pictures. Open the picture of the red bicycle at full size.`,
   check: async seen => all(tabAt(seen, new RegExp(`/gallery/#photo-${wanted.id}$`)), await seen.judge('A large picture of a red bicycle fills the view on its own, not as one small thumbnail among many.')),
   page: path => (path === '/' ? page : undefined),
