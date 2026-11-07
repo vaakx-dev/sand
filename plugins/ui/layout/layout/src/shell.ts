@@ -131,7 +131,7 @@ export const buildShell = ({ layer }: Kit, state: ShellState, closeSide: () => v
   })
 
   return div(
-    { class: ['absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe', () => (railAtBottom() ? null : 'pb-safe')], style: () => fitArea(keyboard.get()) },
+    { class: ['absolute inset-0 flex flex-col bg-neutral-900 px-safe pt-safe', () => (railAtBottom() ? null : 'pb-safe')], style: () => ({ overflow: 'clip', ...fitArea(keyboard.get()) }) },
     strip('top'),
     backdrop,
     div({ class: ['flex min-h-0 min-w-0 flex-1', () => (narrow.get() ? 'flex-col' : null)] }, rail, side, main, aside),
