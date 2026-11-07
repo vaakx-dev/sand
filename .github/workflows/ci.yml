@@ -14,10 +14,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Load Chrome from disk while the job sets up
         run: google-chrome --headless=new --dump-dom about:blank > /dev/null 2>&1 & echo $! > "$RUNNER_TEMP/chrome.pid"
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-      - run: bun install --frozen-lockfile
+      - uses: ./.github/actions/bun
       - name: Wait for Chrome to finish loading, so the browser tests start it warm
         run: timeout 60 tail --pid="$(cat "$RUNNER_TEMP/chrome.pid")" -f /dev/null
       - run: bun run check
@@ -26,10 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-      - run: bun install --frozen-lockfile
+      - uses: ./.github/actions/bun
       - name: Install Playwright's Chromium
         working-directory: plugins/core/features
         run: bunx playwright install --only-shell chromium
