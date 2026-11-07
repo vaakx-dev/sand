@@ -62,13 +62,17 @@ interface At<T extends string> {
   at: Point
 }
 
+interface Held {
+  keys?: Key[]
+}
+
 export type Action =
-  | At<'click'>
-  | At<'double_click'>
-  | At<'right_click'>
+  | (At<'click'> & Held)
+  | (At<'double_click'> & Held)
+  | (At<'right_click'> & Held)
   | At<'move'>
-  | { type: 'hold'; at: Point; ms: number }
-  | { type: 'drag'; from: Point; to: Point }
+  | ({ type: 'hold'; at: Point; ms: number } & Held)
+  | ({ type: 'drag'; from: Point; to: Point; ms?: number } & Held)
   | { type: 'scroll'; at: Point; dx: number; dy: number }
   | { type: 'type'; text: string }
   | { type: 'key'; keys: Key[] }
@@ -76,6 +80,11 @@ export type Action =
   | { type: 'open'; url: string }
 
 export type ActionOf<T extends Action['type']> = Extract<Action, { type: T }>
+
+export const heldKeys = (action: Action): Key[] => {
+  if (action.type === 'key' || !('keys' in action)) return []
+  return action.keys ?? []
+}
 
 export interface Computer {
   info: ComputerInfo
