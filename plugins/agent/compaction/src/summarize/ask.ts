@@ -5,8 +5,8 @@ import type { CompactionBrief } from '../contract'
 
 const said = (role: Message['role'], text: string): Message => ({ role, content: [{ type: 'text', text }] })
 
-const reply = async (llm: LLM, request: LLMRequest, signal?: AbortSignal) => {
-  for await (const event of llm.stream(request, signal)) {
+const reply = async (llm: LLM, request: LLMRequest) => {
+  for await (const event of llm.stream(request)) {
     if (event.type !== 'done') continue
     if (event.stopReason === 'max_tokens') throw new Error('The summary hit the output token limit')
     const text = textOf(event.message.content).trim()
@@ -16,10 +16,10 @@ const reply = async (llm: LLM, request: LLMRequest, signal?: AbortSignal) => {
   throw new Error('The summary stream ended without a reply')
 }
 
-export const ask = async (llm: LLM, brief: CompactionBrief, request: LLMRequest, signal?: AbortSignal) => {
-  const first = await reply(llm, request, signal)
+export const ask = async (llm: LLM, brief: CompactionBrief, request: LLMRequest) => {
+  const first = await reply(llm, request)
   const problem = brief.check?.(first.text)
   if (!problem) return { summary: await brief.accept(first.text), usage: first.usage, source: first.source }
-  const second = await reply(llm, { ...request, messages: [...request.messages, said('assistant', first.text), said('user', problem)] }, signal)
+  const second = await reply(llm, { ...request, messages: [...request.messages, said('assistant', first.text), said('user', problem)] })
   return { summary: await brief.accept(second.text), usage: sumUsage(first.usage, second.usage), source: second.source ?? first.source }
 }

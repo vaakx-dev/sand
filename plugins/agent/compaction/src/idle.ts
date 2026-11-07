@@ -1,37 +1,39 @@
-import { sessions, type Session } from '@sand/chats/contract'
-import { providerThreads } from '@sand/provider-threads/contract'
-import { turnEnd, turnStart, turns } from '@sand/turns-contract/contract'
+import { type ChatKind, sessionSettle } from '@sand/chats/contract'
+import { type ConversationRef, engine } from '@sand/engine/contract'
+import { providerThreads, stepSettle } from '@sand/provider-threads/contract'
 import type { CompactionContext, Compactor } from './compact'
 import type { Tracker } from './measure/tracker'
 
-const cacheExpiry = 55 * 60_000
+const beforeExpiry = 0.9
 const worthCompacting = 50_000
+const shortLived = new Set<ChatKind | undefined>(['agent', 'quick'])
 
 export const idleCompact = (ctx: CompactionContext, compactor: Compactor, tracker: Tracker) => {
   const timers = new Map<string, Timer>()
 
-  const cancel = (session: Session) => {
-    clearTimeout(timers.get(session.id))
-    timers.delete(session.id)
-  }
-
-  const compact = async (id: string) => {
+  const cancel = (id: string) => {
+    clearTimeout(timers.get(id))
     timers.delete(id)
-    const session = ctx.get(sessions)?.open(id)
-    if (!session || session.settled || ctx.get(turns)?.current(session)) return
-    const request = await ctx.get(providerThreads)?.view(session)
-    if (!request || tracker.project(id, request) < worthCompacting) return
-    const release = ctx.busy()
-    await compactor
-      .compact(session, request, { reason: 'idle' })
-      .catch(error => ctx.report(error))
-      .finally(release)
   }
 
-  ctx.on(turnStart, cancel)
-  ctx.on(turnEnd, session => {
-    cancel(session)
-    if (session.kind === 'thread') timers.set(session.id, setTimeout(() => void compact(session.id), cacheExpiry))
+  const cacheTtl = (model?: string) => (model && ctx.llm.caps?.(model).cacheTtlMs) || 0
+
+  const compact = async (ref: ConversationRef, turn: string) => {
+    timers.delete(ref.id)
+    const found = ctx.get(engine)
+    if (!found?.turn(ref.owner, turn)?.ended) return
+    const conversation = found.open(ref)
+    const request = conversation && (await ctx.get(providerThreads)?.view(conversation))
+    if (!request || tracker.project(ref.id, request) < worthCompacting) return
+    void compactor.start(conversation, request, 'idle')
+  }
+
+  ctx.on(stepSettle, (request, { owner, id }, turn) => {
+    cancel(id)
+    const ttl = cacheTtl(request.model)
+    if (!ttl || shortLived.has(request.sessionKind)) return
+    timers.set(id, setTimeout(() => void compact({ owner, id }, turn.id), ttl * beforeExpiry))
   })
+  ctx.on(sessionSettle, session => cancel(session.id))
   ctx.effect(() => () => timers.forEach(clearTimeout))
 }

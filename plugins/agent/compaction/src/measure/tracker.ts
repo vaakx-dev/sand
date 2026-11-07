@@ -1,29 +1,20 @@
 import type { LLMRequest } from '@sand/accounts/contract'
 import { messagesTokens, requestTokens } from './estimate'
 
-interface Sent {
+interface Known {
   thread?: string
   count: number
-}
-
-interface Known extends Sent {
   tokens: number
 }
 
 export const createTracker = () => {
-  const sent = new Map<string, Sent>()
   const known = new Map<string, Known>()
 
   return {
-    sent(session: string, request: LLMRequest) {
-      sent.set(session, { ...(request.thread && { thread: request.thread.id }), count: request.messages.length })
-    },
-    done(session: string, tokens: number) {
-      const last = sent.get(session)
-      if (last) known.set(session, { ...last, tokens, count: last.count + 1 })
+    done(session: string, request: LLMRequest, tokens: number) {
+      known.set(session, { ...(request.thread && { thread: request.thread.id }), count: request.messages.length + 1, tokens })
     },
     reset(session: string) {
-      sent.delete(session)
       known.delete(session)
     },
     project(session: string, request: LLMRequest) {
