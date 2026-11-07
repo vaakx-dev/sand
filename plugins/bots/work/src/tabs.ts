@@ -12,7 +12,10 @@ export interface WorkParts {
   plan: Plan
   markdown: Derive<Markdown | undefined>
   startsThreads: () => boolean
+  started: () => boolean
 }
+
+export const hasWork = (parts: WorkParts) => parts.started() || parts.plan.filled.get()
 
 const tabs: { value: Tab; label: string }[] = [
   { value: 'work', label: 'Work' },
