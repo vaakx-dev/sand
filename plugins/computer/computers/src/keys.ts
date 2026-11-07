@@ -74,6 +74,44 @@ const aliases: Record<string, string> = {
 
 const keys = new Map([...named, ...functionKeys, ...letters, ...digits].map(key => [key.name, key]))
 
+const shifted: Record<string, string> = {
+  '!': '1',
+  '@': '2',
+  '#': '3',
+  $: '4',
+  '%': '5',
+  '^': '6',
+  '&': '7',
+  '*': '8',
+  '(': '9',
+  ')': '0',
+  _: '-',
+  '+': '=',
+  '{': '[',
+  '}': ']',
+  '|': '\\',
+  ':': ';',
+  '"': "'",
+  '<': ',',
+  '>': '.',
+  '?': '/',
+  '~': '`',
+}
+
+const shiftedKeys = Object.entries(shifted).flatMap(([text, base]) => {
+  const key = keys.get(base)
+  return key ? [{ ...key, name: text, key: text, text }] : []
+})
+
+const capitals = letters.map((key): Key => {
+  const text = key.key.toUpperCase()
+  return { ...key, name: text, key: text, text }
+})
+
+const typing = new Map([...keys.values(), ...shiftedKeys, ...capitals].flatMap(key => (key.text ? [[key.text.replace('\r', '\n'), key] as const] : [])))
+
+export const typedKey = (char: string): Key | undefined => typing.get(char)
+
 export const parseKeys = (combo: string): Key[] =>
   combo
     .toLowerCase()

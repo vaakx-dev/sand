@@ -87,8 +87,9 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
       return { png, ...pngSize(png), note: tabsNote(await open.list()) }
     },
     async elements() {
-      const call = await page()
-      return pageElements(call, await viewportOf(call))
+      const { current, framesIn } = await tabs()
+      const call = await current()
+      return pageElements(call, framesIn, await viewportOf(call))
     },
     async act(action) {
       const open = await tabs()
