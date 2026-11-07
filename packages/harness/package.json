@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
+    "@sand/boot": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/config": "workspace:*",
     "@sand/host-hub": "workspace:*",

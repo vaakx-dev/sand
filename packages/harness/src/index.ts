@@ -15,6 +15,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
+import { userPlugins } from './user'
 
 const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
@@ -24,10 +25,10 @@ const liveSources = ['core/claude-code', 'core/codex']
 
 const readyMs = 60_000
 
-const runtimeEntry = async (folder: string) => {
+const builtin = async (folder: string) => {
   const dir = join(builtins, folder)
-  const { sand } = await Bun.file(join(dir, 'package.json')).json()
-  return resolve(dir, sand.runtime)
+  const { name, sand } = await Bun.file(join(dir, 'package.json')).json()
+  return [name.replace(/^@sand\//, ''), resolve(dir, sand.runtime)] as const
 }
 
 const need = <T>(app: ContextCore, token: Service<T>) => {
@@ -84,9 +85,10 @@ const hostStubs = (app: Context) => {
 }
 
 const loadPlugins = async (app: Context, { replay }: Models, extra: string[]) => {
-  const entries = await Promise.all([...plugins, ...(replay ? [] : liveSources), ...extra].map(runtimeEntry))
-  for (const entry of entries) app.load(entry, {})
-  if (replay) app.load(await runtimeEntry('core/replay'), { sources: replay })
+  const own = await Promise.all([...plugins, ...(replay ? [] : liveSources), ...extra].map(builtin))
+  const found = new Map([...own, ...(replay ? [] : await userPlugins(builtins))])
+  for (const entry of found.values()) app.load(entry, {})
+  if (replay) app.load((await builtin('core/replay'))[1], { sources: replay })
 }
 
 const loadConfig = async (app: Context, home: string, sources: Source[], config: string) => {
