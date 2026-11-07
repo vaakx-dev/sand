@@ -1,7 +1,7 @@
-import { botName, type BotSummary } from '@sand/bots/contract'
+import { botName, type BotHold, type BotSummary } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { ago } from '@sand/util'
-import { derive, div, dynamicChild, list, type Derive, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, span, type Derive, type Sig } from '@vaakx-dev/vrui'
 import { avatar } from './avatar'
 import { scrollArea } from './pane'
 
@@ -15,6 +15,14 @@ export interface SideParts {
   hide?: () => void
 }
 
+const holds: Record<BotHold, string> = { paused: 'Paused', limit: 'At limit' }
+
+const trail = (kit: Kit, bot: Sig<BotSummary>) =>
+  dynamicChild(
+    derive(() => bot.get().hold),
+    hold => (hold ? kit.badge('warning', holds[hold]) : span({}, () => ago(bot.get().last?.at))),
+  )
+
 const botRow = (kit: Kit, bot: Sig<BotSummary>, { current, choose }: SideParts) =>
   kit.listRow({
     current: () => current() === bot.get().id,
@@ -23,7 +31,7 @@ const botRow = (kit: Kit, bot: Sig<BotSummary>, { current, choose }: SideParts) 
     lead: avatar(() => bot.get(), 32),
     title: () => botName(bot.get()),
     meta: () => bot.get().last?.text ?? '',
-    trail: () => ago(bot.get().last?.at),
+    trail: trail(kit, bot),
     onClick: () => choose(bot.get().id),
   })
 

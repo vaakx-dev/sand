@@ -15,12 +15,14 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/devices-notify": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sub-model": "workspace:*",
+    "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"

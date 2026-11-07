@@ -18,7 +18,7 @@ test('every moment is wanted until its kind is turned off, and the choice outliv
 
     const restarted = await loadMoments(home)
     expect(restarted.off()).toEqual(['finished'])
-    expect(momentKinds.filter(restarted.wanted)).toEqual(['needs', 'failed', 'routine'])
+    expect(momentKinds.filter(restarted.wanted)).toEqual(momentKinds.filter(kind => kind !== 'finished'))
   } finally {
     rmSync(home, { recursive: true, force: true })
   }

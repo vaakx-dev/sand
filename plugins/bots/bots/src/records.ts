@@ -10,6 +10,8 @@ type Row = {
   models: string
   computer: string
   project: string | null
+  paused: number
+  budget: number | null
   created: number
   updated: number
 }
@@ -19,16 +21,17 @@ const toBot = (row: Row): Bot => ({
   color: row.color as BotColor,
   computer: row.computer as Computer,
   models: JSON.parse(row.models),
+  paused: row.paused === 1,
 })
 
-const toRow = (bot: Bot): Row => ({ ...bot, models: JSON.stringify(bot.models) })
+const toRow = (bot: Bot): Row => ({ ...bot, models: JSON.stringify(bot.models), paused: Number(bot.paused) })
 
 export const createRecords = (db: Database) => {
   const all = db.query<Row, []>('select * from bots order by created')
   const one = db.query<Row, { id: string }>('select * from bots where id = $id')
   const save = db.query<unknown, Row>(
-    `insert or replace into bots (id, name, initial, color, job, models, computer, project, created, updated)
-     values ($id, $name, $initial, $color, $job, $models, $computer, $project, $created, $updated)`,
+    `insert or replace into bots (id, name, initial, color, job, models, computer, project, paused, budget, created, updated)
+     values ($id, $name, $initial, $color, $job, $models, $computer, $project, $paused, $budget, $created, $updated)`,
   )
   const remove = db.query<unknown, { id: string }>('delete from bots where id = $id')
 

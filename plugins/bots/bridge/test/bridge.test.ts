@@ -116,7 +116,7 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
-  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', project: null }])
+  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', project: null, budget: null, spent: 0 }])
   expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', reported: true })
   const [asked] = userMessages((await sand.ask(botConversation, { bot: bot.id })).entries)
   expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")

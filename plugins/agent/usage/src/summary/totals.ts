@@ -1,4 +1,4 @@
-import type { Billing, ModelPrice, Usage } from '@sand/accounts/contract'
+import type { ModelPrice, Usage } from '@sand/accounts/contract'
 import type { UsageTotals } from '../contract'
 import { costOf } from '../records'
 
@@ -17,5 +17,3 @@ export const addUsage = <T extends UsageTotals>(totals: T, usage: Usage, price: 
   if (billed) totals.billed += cost
   return totals
 }
-
-export const isBilled = (billing: Billing) => billing === 'api' || billing === 'credits'

@@ -82,6 +82,16 @@ test('a bot cannot message itself', async () => {
   expect(await use(asBot(bot.id), 'bot_send', { bot: bot.id, prompt: 'me' })).toEqual({ error: expect.stringContaining("can't message itself") })
 })
 
+test('a bot can pause another bot and set its limit, but not change its own limit', async () => {
+  await start([])
+  const planner = await createBot('Planner')
+  const travel = await createBot('Travel')
+
+  expect(await use(asBot(planner.id), 'bot_update', { bot: travel.id, paused: true, budget: 5 })).toMatchObject({ bot: travel.id, hold: 'paused', budget: 5, spent: 0 })
+  expect(await use(asBot(planner.id), 'bot_update', { budget: 50 })).toEqual({ error: expect.stringContaining("can't change its own spend limit") })
+  expect(await sand.ask(botGet, { bot: planner.id })).toMatchObject({ budget: null })
+})
+
 test('a bot hands another bot a task without waiting, and hears its reply as a task notification', async () => {
   await start([said('Booked for Friday.'), said('Thanks, noted.')])
   const asker = await createBot('Planner')
@@ -154,7 +164,7 @@ test('an outside agent lists bots, hands one a task, reads its reply and renames
     return first?.type === 'text' ? JSON.parse(first.text) : undefined
   }
 
-  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', project: null }])
+  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', project: null, budget: null, spent: 0 }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
   const page = await value('bot_read', { bot: bot.id })
   expect(page.items.map(({ role }: { role: string }) => role)).toEqual(['user', 'assistant'])

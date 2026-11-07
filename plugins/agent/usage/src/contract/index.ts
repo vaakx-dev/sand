@@ -3,6 +3,7 @@ import { request, type } from '@sand/host-hub/contract'
 import { z } from 'zod'
 
 export * from '../records'
+export { billedCost } from './billed'
 export { usageCost } from './cost'
 export { periodLabel, periodTitle } from './period'
 

@@ -3,7 +3,7 @@ import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
-export const momentKinds = ['needs', 'finished', 'failed', 'routine'] as const
+export const momentKinds = ['needs', 'finished', 'failed', 'routine', 'paused'] as const
 
 export type MomentKind = (typeof momentKinds)[number]
 
@@ -12,6 +12,7 @@ export const moments: Record<MomentKind, { label: string; detail: string }> = {
   finished: { label: 'Finished', detail: 'A turn in a thread finished' },
   failed: { label: 'Failed', detail: 'A turn or a routine failed' },
   routine: { label: 'Routine', detail: 'A bot ran one of its reminders or routines' },
+  paused: { label: 'Paused', detail: 'A bot reached its monthly spend limit and paused' },
 }
 
 export interface Moment {
