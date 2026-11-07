@@ -42,7 +42,7 @@ export const chatController = (ctx: ChatContext) => {
     follow.scrolled()
     edge.scrolled()
   }
-  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll }, edge.sentinel, slot.node, views.node)
+  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll }, kit.topFade(), edge.sentinel, slot.node, views.node)
   const follow = followEnd(scroller)
   edge.watch(scroller)
 

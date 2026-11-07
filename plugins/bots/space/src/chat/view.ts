@@ -82,6 +82,7 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
 
   const scroller: HTMLElement = div(
     { class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
+    kit.topFade(),
     div(
       { class: 'flex min-h-full flex-col' },
       show(
