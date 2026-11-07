@@ -1,3 +1,4 @@
+import { notificationText } from '@sand/chats/contract'
 import type { PullSummary } from '@sand/github/contract'
 import type { Notice } from '@sand/orchestrator/contract'
 import type { Phase } from '../book/record'
@@ -14,16 +15,14 @@ const resultOf = (summary: PullSummary, phase: Told) => {
 }
 
 export const noticeOf = (thread: string, summary: PullSummary, phase: Told): Notice => ({
-  text: [
-    '<task-notification>',
-    `<thread>${thread}</thread>`,
-    '<kind>pull request</kind>',
-    `<label>#${summary.number} ${summary.title}</label>`,
-    `<status>${statuses[phase]}</status>`,
-    '<result>',
-    resultOf(summary, phase),
-    '</result>',
-    '</task-notification>',
-  ].join('\n'),
+  text: notificationText({
+    from: 'thread',
+    id: thread,
+    kind: 'pull request',
+    label: `#${summary.number} ${summary.title}`,
+    status: statuses[phase],
+    at: summary.ended ?? summary.updated,
+    result: resultOf(summary, phase),
+  }),
   clientRequestId: `${thread}@${summary.repo}#${summary.number}:${phase}:${summary.head}`,
 })

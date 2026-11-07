@@ -1,4 +1,4 @@
-import type { Session } from '@sand/chats/contract'
+import { clipResult, type Session } from '@sand/chats/contract'
 import type { Tool } from '@sand/tools/contract'
 import { turnPending } from '@sand/turns-contract/contract'
 import { duration } from '@sand/util'
@@ -6,7 +6,6 @@ import { z } from 'zod'
 import type { JobsContext } from '../context'
 import { jobEnd } from '../contract'
 import type { Delivery } from '../deliver'
-import { clip } from '../notice'
 import type { Entry, Store } from '../store'
 import { group, jobLine } from './line'
 
@@ -65,7 +64,7 @@ export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): To
     const reports = entries.map(({ job, output }) => {
       if (job.status === 'running') return jobLine(ctx.sessions, job)
       delivery.withdraw(job.id)
-      return `${jobLine(ctx.sessions, job)}\n${clip(output ?? '')}`
+      return `${jobLine(ctx.sessions, job)}\n${clipResult(output ?? '')}`
     })
     return [reason, ...reports].join('\n\n')
   },

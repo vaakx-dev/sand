@@ -1,4 +1,4 @@
-import type { Prompt } from '@sand/chats/contract'
+import { notificationText, type Prompt } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
@@ -74,27 +74,14 @@ export interface Report {
   from: ConversationRef
   label: string
   status: TurnStatus
+  at: number
   result: string
 }
 
-const reportLimit = 30_000
-
 const outcomes: Partial<Record<TurnStatus, string>> = { completed: 'done', interrupted: 'cancelled' }
 
-const clip = (text: string) => (text.length > reportLimit ? `${text.slice(0, reportLimit)}\n… ${text.length - reportLimit} characters truncated` : text)
-
-export const reportOf = ({ from: { owner, id }, label, status, result }: Report) =>
-  [
-    '<task-notification>',
-    `<${owner}>${id}</${owner}>`,
-    `<kind>${owner}</kind>`,
-    `<label>${label}</label>`,
-    `<status>${outcomes[status] ?? 'failed'}</status>`,
-    '<result>',
-    clip(result),
-    '</result>',
-    '</task-notification>',
-  ].join('\n')
+export const reportOf = ({ from: { owner, id }, label, status, at, result }: Report) =>
+  notificationText({ from: owner, id, kind: owner, label, status: outcomes[status] ?? 'failed', at, result })
 
 export interface SendInput {
   prompt: Prompt

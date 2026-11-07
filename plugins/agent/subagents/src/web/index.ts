@@ -1,10 +1,11 @@
+import { notificationTag } from '@sand/chats/contract'
 import { toolViews, transcript } from '@sand/transcript/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { jobWatch } from './jobs'
-import { notificationRenderer, notificationTag } from './notification'
+import { notificationRenderer } from './notification'
 import { agentRenderer } from './tool'
 
 export default definePlugin({
