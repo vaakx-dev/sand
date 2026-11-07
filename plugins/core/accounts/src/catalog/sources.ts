@@ -2,6 +2,7 @@ import type { SourceInfo, SourceRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import { billingOf } from '../auth/kinds'
 import { capsOf } from './caps'
+import { runsOnPlan } from './cover'
 import type { Entry, SourceMeta } from './types'
 
 export const localMeta = (accounts: Accounts, id: string): SourceMeta | undefined => {
@@ -30,7 +31,7 @@ const searchable = new Set(['openrouter', 'openai'])
 
 export const sourceInfo = ({ meta: { api: _, ...meta }, models, newModels, checked, error }: Entry): SourceInfo => ({
   ...meta,
-  shown: models.filter(model => !model.hidden).length,
+  shown: models.filter(model => !model.hidden && !runsOnPlan(model)).length,
   total: models.length,
   fresh: models.filter(model => model.fresh).length,
   newModels,

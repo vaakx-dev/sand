@@ -3,7 +3,7 @@ import { joinDisposers } from '@sand/util'
 import { modelsAdd, modelsCatalog, modelsNewModels, modelsPref, modelsRefresh, modelsRemove, modelsSeen, type ModelInfo } from '../contract'
 import type { Catalog } from '../catalog'
 import { qualify, split } from '../catalog/build'
-import { added, favourite, hidden, newModels, removed, seen } from '../catalog/prefs'
+import { added, favourite, hidden, newModels, paid, removed, seen } from '../catalog/prefs'
 import type { Prefs } from '../catalog/types'
 import type { View } from '../catalog/view'
 
@@ -40,10 +40,11 @@ export const serveModels = (server: Server, { view, catalog, refreshPeers }: Mod
 
   return joinDisposers(
     server.handle(modelsCatalog, async request => view.list(await source(request.source))),
-    server.handle(modelsPref, async ({ model: wanted, hidden: hide, favourite: star }) => {
+    server.handle(modelsPref, async ({ model: wanted, hidden: hide, favourite: star, paid: pay }) => {
       const { id } = await model(wanted)
       if (hide !== undefined) update(prefs => hidden(prefs, id, hide))
       if (star !== undefined) update(prefs => favourite(prefs, id, star))
+      if (pay !== undefined) update(prefs => paid(prefs, id, pay))
     }),
     server.handle(modelsAdd, async request => {
       const name = request.name.trim()

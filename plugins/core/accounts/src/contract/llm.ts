@@ -112,6 +112,7 @@ export interface Limits {
 export interface LLM {
   models?(): ModelInfo[]
   find?(id: string): ModelInfo | undefined
+  route?(id: string): ModelInfo | undefined
   sources?(): SourceInfo[]
   levels?(): EffortLevel[]
   stream(request: LLMRequest, signal?: AbortSignal): AsyncIterable<LLMEvent>

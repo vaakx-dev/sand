@@ -31,6 +31,8 @@ export const hidden = (prefs: Prefs, id: string, value: boolean): Prefs =>
 export const favourite = (prefs: Prefs, id: string, value: boolean): Prefs =>
   value ? { ...hidden(prefs, id, false), favourites: withItem(prefs.favourites, id) } : { ...prefs, favourites: without(prefs.favourites, id) }
 
+export const paid = (prefs: Prefs, id: string, value: boolean): Prefs => ({ ...prefs, paid: value ? withItem(prefs.paid, id) : without(prefs.paid, id) })
+
 export const added = (prefs: Prefs, source: string, name: string): Prefs => ({
   ...prefs,
   added: { ...prefs.added, [source]: withItem(prefs.added[source] ?? [], name) },
@@ -45,6 +47,7 @@ export const removed = (prefs: Prefs, source: string, name: string): Prefs => {
     show: without(prefs.show, id),
     hide: without(prefs.hide, id),
     favourites: without(prefs.favourites, id),
+    paid: without(prefs.paid, id),
   }
 }
 
@@ -61,6 +64,7 @@ export const forgotten = (prefs: Prefs, source: string): Prefs => {
     hide: prefs.hide.filter(id => !owned(id)),
     show: prefs.show.filter(id => !owned(id)),
     favourites: prefs.favourites.filter(id => !owned(id)),
+    paid: prefs.paid.filter(id => !owned(id)),
     added: dropKey(prefs.added, source),
     newModels: dropKey(prefs.newModels, source),
     seen: dropKey(prefs.seen, source),

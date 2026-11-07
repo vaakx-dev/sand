@@ -1,5 +1,5 @@
 import { emptyTotals, periodTitle, type UsageTotals } from '@sand/usage/contract'
-import { grouped } from '@sand/util'
+import { dollars, grouped } from '@sand/util'
 import type { Kit } from '@sand/ui-kit/contract'
 import { addTotals, including } from '../../data/totals'
 import type { Merged } from '../../data/types'
@@ -33,7 +33,7 @@ const modelRows = ({ usage }: RowSource): Row[] => {
     addTotals(row.totals, model)
     including(row.accounts, [model.account])
   }
-  return [...byModel.values()]
+  return [...byModel.values()].map(row => (row.totals.billed > 0 ? { ...row, note: `${dollars(row.totals.billed)} billed to you` } : row))
 }
 
 const accountRows = ({ usage }: RowSource): Row[] =>

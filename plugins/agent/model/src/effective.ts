@@ -3,7 +3,7 @@ import type { EffectiveSettings, SessionSettings } from './contract'
 
 export const modelOf = (llm: LLM | undefined, id?: string) => {
   if (!id) return undefined
-  return llm?.find?.(id) ?? llm?.models?.().find(info => info.id === id)
+  return llm?.route?.(id) ?? llm?.find?.(id) ?? llm?.models?.().find(info => info.id === id)
 }
 
 export const canonical = (llm: LLM | undefined, settings: SessionSettings): SessionSettings => {

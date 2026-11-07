@@ -1,3 +1,4 @@
+import { isMetered } from '@sand/accounts/contract'
 import type { PickerTarget } from '@sand/model-picker/contract'
 import type { Pulse } from '@sand/reactive'
 import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
@@ -32,9 +33,10 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
     const pc = source.get()?.pc
     return pc ? ctx.modelPicker.online(pc) === false : false
   }
+  const metered = source.map(found => !!found && isMetered(found.billing))
   const pillTip = () => {
     if (!current.get()) return ''
-    return [modelLabel(), offline() && 'offline', effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
+    return [modelLabel(), offline() && 'offline', metered.get() && 'Pay per token', effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
   }
 
   const view = () =>
@@ -55,6 +57,7 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
           current.map(value => value?.speed === 'fast'),
           () => span({ class: 'inline-flex shrink-0' }, icon('zap', 'sm')),
         ),
+        show(metered, () => span({ class: 'inline-flex shrink-0' }, icon('tag', 'sm'))),
       ),
       show(next.map(Boolean), () =>
         span(
