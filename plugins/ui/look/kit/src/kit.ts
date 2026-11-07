@@ -50,7 +50,7 @@ import { bottomSheet } from './sheets/bottom'
 import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
-import { emptyState, errorState, loadingState } from './states/states'
+import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
 import { diffRow } from './tools/diff'
 import { fold, toolBody, toolCard } from './tools/tool-card'
 import { editing, selecting } from './gesture/busy'
@@ -104,6 +104,7 @@ export const kit = {
   dot,
   dropdown,
   elapsed,
+  emptyBlock,
   emptyState,
   errorState,
   errorText,
