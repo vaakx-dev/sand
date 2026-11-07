@@ -41,7 +41,7 @@ import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { segmented, settingsSection } from './rows/settings'
-import { dockFade } from './scroll/fade'
+import { dockFade, topFade } from './scroll/fade'
 import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
@@ -215,6 +215,7 @@ export const kit = {
   toneText,
   toolBody,
   toolCard,
+  topFade,
   viewerBar,
   viewerShell,
   waitingLine,
