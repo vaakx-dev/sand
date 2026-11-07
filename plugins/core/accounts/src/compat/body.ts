@@ -1,7 +1,7 @@
 import type { Media } from '@sand/media/contract'
 import type { LLMRequest } from '../contract'
 import type { ToolNames } from './names'
-import type { CompatTarget } from './target'
+import { type CompatTarget, isOpenRouter } from './target'
 import { loadedTools } from '../http/deferred'
 import { chatMessages } from './messages'
 
@@ -18,4 +18,5 @@ export const compatBody = (target: CompatTarget, request: LLMRequest, names: Too
   ...(request.effort && target.efforts.includes(request.effort) && { reasoning: { effort: request.effort } }),
   stream: true,
   stream_options: { include_usage: true },
+  ...(isOpenRouter(target.base) && { cache_control: { type: 'ephemeral' } }),
 })

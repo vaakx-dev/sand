@@ -11,7 +11,7 @@ export interface CompatTarget {
   images?: boolean
 }
 
-const isOpenRouter = (base: string) => {
+export const isOpenRouter = (base: string) => {
   try {
     const host = new URL(base).hostname
     return host === 'openrouter.ai' || host.endsWith('.openrouter.ai')

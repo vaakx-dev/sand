@@ -8,8 +8,6 @@ import { messageBlock } from './content'
 import { createReader } from './stream'
 import { serverName, toolServer } from './tools'
 
-const cacheTtl = (setup: AppSetup) => (setup.sessionKind === 'thread' ? '1h' : '5m')
-
 const savedOf = (setup: AppSetup, resume?: string) => {
   if (resume) return { id: resume, resume: true }
   return setup.persist ? { id: crypto.randomUUID(), resume: false } : undefined
@@ -68,7 +66,7 @@ export const openSession = async (setup: AppSetup, output: AppOutput, { media, r
 
   const connection = await connect({
     args: claudeArgs({ ...setup, saved }),
-    env: { ...claudeEnv(), CLAUDE_CODE_PROMPT_CACHE_TTL: cacheTtl(setup) },
+    env: { ...claudeEnv(), CLAUDE_CODE_PROMPT_CACHE_TTL: '5m' },
     cwd: setup.cwd,
     handle,
     onMessage,

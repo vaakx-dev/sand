@@ -6,7 +6,7 @@ export type Signal =
   | { type: 'text'; text: string }
   | { type: 'thinking'; text: string }
   | { type: 'call'; call: AppCall }
-  | { type: 'usage'; usage: Partial<Usage> }
+  | { type: 'usage'; usage: Partial<Usage>; cacheTtlMs?: number }
   | { type: 'pause' }
   | { type: 'finish'; stopReason: StopReason }
   | { type: 'fail'; error: unknown }
@@ -30,7 +30,7 @@ export const createSignals = (onExit: () => void = () => {}) => {
     text: text => push({ type: 'text', text }),
     thinking: text => push({ type: 'thinking', text }),
     call: call => push({ type: 'call', call }),
-    usage: usage => push({ type: 'usage', usage }),
+    usage: (usage, cacheTtlMs) => push({ type: 'usage', usage, ...(cacheTtlMs && { cacheTtlMs }) }),
     pause: () => push({ type: 'pause' }),
     finish: (stopReason = 'end_turn') => push({ type: 'finish', stopReason }),
     fail: error => push({ type: 'fail', error }),

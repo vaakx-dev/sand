@@ -1,5 +1,5 @@
 import type { Block, StopReason } from '@sand/chats/contract'
-import type { LLMEvent, Usage } from '../contract'
+import { cacheLifetimes, type LLMEvent, type Usage, writtenTtl } from '../contract'
 import { ApiError } from '../http/error'
 import { parseToolInput } from '../http/tool-input'
 import type { ClaudeEvent, RawBlock, RawUsage } from './events'
@@ -22,6 +22,7 @@ const merge = (usage: Usage, raw: RawUsage | undefined) => {
   if (raw?.output_tokens != null) usage.output = raw.output_tokens
   if (raw?.cache_read_input_tokens != null) usage.cacheRead = raw.cache_read_input_tokens
   if (raw?.cache_creation_input_tokens != null) usage.cacheWrite = raw.cache_creation_input_tokens
+  if (raw?.cache_creation?.ephemeral_1h_input_tokens) usage.cacheWriteLong = raw.cache_creation.ephemeral_1h_input_tokens
 }
 
 export async function* read(stream: AsyncIterable<ClaudeEvent>): AsyncIterable<LLMEvent> {
@@ -75,7 +76,8 @@ export async function* read(stream: AsyncIterable<ClaudeEvent>): AsyncIterable<L
         merge(usage, event.usage)
         break
       case 'message_stop':
-        yield { type: 'done', message: { role: 'assistant', content: blocks.filter(Boolean) }, stopReason, usage }
+        const cacheTtlMs = writtenTtl(usage, cacheLifetimes.anthropic)
+        yield { type: 'done', message: { role: 'assistant', content: blocks.filter(Boolean) }, stopReason, usage, ...(cacheTtlMs && { cacheTtlMs }) }
         return
       case 'error':
         throw new ApiError(undefined, event.error?.type ?? 'api_error', event.error?.message ?? 'stream error')

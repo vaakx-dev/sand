@@ -26,7 +26,7 @@ export interface ModelInfo {
   added?: boolean
 }
 
-export type ModelPrice = Record<keyof Usage, number>
+export type ModelPrice = { [K in keyof Usage]: number }
 
 export type Billing = 'plan' | 'api' | 'credits' | 'local'
 

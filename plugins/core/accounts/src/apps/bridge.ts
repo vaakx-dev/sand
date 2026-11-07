@@ -103,7 +103,6 @@ export const createBridge = (plan: AppPlan, home: string) => {
     tools: thread ? loadedTools(request.tools) : [],
     cwd: thread && (await isFolder(thread.cwd)) ? thread.cwd : home,
     persist: !!thread,
-    ...(request.sessionKind && { sessionKind: request.sessionKind }),
   })
 
   const open = async (key: string, thread: string, setup: AppSetup, tools: string, resume?: string): Promise<Live> => {
