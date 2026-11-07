@@ -1,25 +1,23 @@
 import type { BotTurns } from '@sand/bot-turns/contract'
-import type { UserContent } from '@sand/chats/contract'
+import { notificationText } from '@sand/chats/contract'
 import type { Moment, MomentKind } from '@sand/devices-notify/contract'
 import type { Fire, Handler } from '@sand/schedules/contract'
-import { type Routine, routineRecord } from './contract'
+import type { Routine } from './contract'
 import { routineOf } from './routines'
-import { timeIn, zoneOf } from './time'
 
-const lateness = (routine: Routine, fire: Fire) =>
-  fire.late ? ` It was due ${timeIn(fire.due, zoneOf(routine.when))}, so it is late; say so.` : ''
+const guide = (fire: Fire) =>
+  `Do what these instructions say.${fire.late ? ' It is late, so say so.' : ''} The user may be away, so write your reply for them to read later.`
 
-const promptOf = (routine: Routine, fire: Fire): UserContent[] => {
-  const text = [
-    `Your routine "${routine.name}" is due now.${lateness(routine, fire)} Do what it says. The user may be away, so write your reply for them to read later.`,
-    ...(fire.note ? [`Its check found:\n${fire.note}`] : []),
-    `<routine>\n${routine.instructions}\n</routine>`,
-  ].join('\n\n')
-  return [
-    { type: 'text', text },
-    { type: 'context', records: [{ v: 1, id: routine.id, kind: routineRecord, label: routine.name, data: { repeats: routine.when.kind === 'cron' } }] },
-  ]
-}
+const promptOf = (routine: Routine, fire: Fire) =>
+  notificationText({
+    from: 'routine',
+    id: routine.id,
+    kind: routine.when.kind === 'cron' ? 'routine' : 'reminder',
+    label: routine.name,
+    status: fire.late ? 'late' : 'due',
+    at: fire.due,
+    result: [guide(fire), ...(fire.note ? [`Its check found:\n${fire.note}`] : []), `<instructions>\n${routine.instructions}\n</instructions>`].join('\n\n'),
+  })
 
 const moments: Partial<Record<string, MomentKind>> = { completed: 'routine', failed: 'failed', lost: 'failed' }
 
