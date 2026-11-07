@@ -1,7 +1,7 @@
 {
   "name": "@sand/schedules",
   "version": "0.0.0",
-  "description": "Durable schedules other plugins register: one-off or cron times in a time zone that last across restarts, with token-free checks run before anything wakes",
+  "description": "Durable schedules other plugins register: one-off or cron times in a time zone that last across restarts",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -15,8 +15,7 @@
   "dependencies": {
     "@sand/ledger": "workspace:*",
     "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   },
   "devDependencies": {
     "@sand/harness": "workspace:*"

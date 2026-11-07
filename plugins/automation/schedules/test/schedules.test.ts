@@ -4,7 +4,6 @@ import { afterEach, expect, setSystemTime, test } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { z } from 'zod'
 
 let sand: Sand | undefined
 let home: string | undefined
@@ -71,35 +70,6 @@ test('a one-off runs at its time and is then gone', async () => {
   await until(() => service.get(once.id) === undefined)
 })
 
-test('a check runs first without waking anyone, and the handler runs only when it finds a change', async () => {
-  setSystemTime(at('2026-11-06T08:59:59Z'))
-  const service = await start()
-  let price = 10
-  service.check({
-    name: 'price',
-    description: 'Fires when the price changes',
-    input: z.object({ item: z.string() }),
-    run: async ({ item }, state) => (state === undefined || state === price ? { fire: false, state: price } : { fire: true, state: price, note: `${item} now costs ${price}` }),
-  })
-  const fires = handled(service)
-  const watched = service.create({ owner: 'test', subject: 'a', when: { kind: 'cron', cron: '*/5 * * * *', zone: 'UTC' }, watch: { check: 'price', input: { item: 'milk' } } })
-  const step = async (iso: string) => {
-    setSystemTime(at(iso))
-    await until(() => service.get(watched.id)?.last?.at === at(iso))
-  }
-
-  await step('2026-11-06T09:00:00Z')
-  await step('2026-11-06T09:05:00Z')
-  expect(fires).toEqual([])
-  expect(service.get(watched.id)?.last?.outcome).toBe('quiet')
-
-  price = 12
-  await step('2026-11-06T09:10:00Z')
-  expect(fires).toEqual([{ key: `${watched.id}@${at('2026-11-06T09:10:00Z')}`, due: at('2026-11-06T09:10:00Z'), late: false, note: 'milk now costs 12' }])
-  await step('2026-11-06T09:15:00Z')
-  expect(fires).toHaveLength(1)
-})
-
 test('a failed one-off stays with its error and runs again when resumed, and a failing schedule keeps running', async () => {
   setSystemTime(at('2026-11-06T08:59:59Z'))
   const service = await start()
@@ -120,7 +90,7 @@ test('a failed one-off stays with its error and runs again when resumed, and a f
   expect(service.pause(once.id, false)).toMatchObject({ next: at('2026-11-06T09:03:00Z') })
 })
 
-test('schedules in the past, that never come due or on unknown checks are refused, and any number may run every minute', async () => {
+test('schedules in the past, or that never come due are refused, and any number may run every minute', async () => {
   setSystemTime(at('2026-11-06T08:00:00Z'))
   const service = await start()
   const create = (when: When) => service.create({ owner: 'test', subject: 'a', when })
@@ -128,7 +98,6 @@ test('schedules in the past, that never come due or on unknown checks are refuse
   expect(() => create({ kind: 'cron', cron: '0 9 * * *', zone: 'Nowhere/Land' })).toThrow('not a time zone')
   expect(() => create({ kind: 'cron', cron: '0 0 31 2 *', zone: 'UTC' })).toThrow('never comes due')
   expect(() => create({ kind: 'once', at: at('2026-11-06T07:00:00Z') })).toThrow('already passed')
-  expect(() => service.create({ owner: 'test', subject: 'a', when: daily, watch: { check: 'weather', input: {} } })).toThrow('No check named weather')
 
   for (let count = 0; count < 30; count++) create({ kind: 'cron', cron: '* * * * *', zone: 'UTC' })
   expect(service.list('test', 'a')).toHaveLength(30)

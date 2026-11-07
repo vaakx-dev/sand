@@ -1,5 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
-import type { LastRun, Missed, Watch, When } from '@sand/schedules/contract'
+import type { LastRun, Missed, When } from '@sand/schedules/contract'
 import { z } from 'zod'
 
 export interface Routine {
@@ -9,13 +9,10 @@ export interface Routine {
   instructions: string
   when: When
   missed: Missed
-  watch?: Watch
   paused: boolean
   next?: number
   last?: LastRun
 }
-
-export const routineRecord = 'routine'
 
 export const routinesChangeWire = wireEvent<[bot: string, routines: Routine[]]>('routines.change')
 

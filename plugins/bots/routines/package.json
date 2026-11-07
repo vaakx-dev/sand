@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-routines",
   "version": "0.0.0",
-  "description": "Bot reminders and routines: a schedule or a check plus what to do, run as a turn in the bot's own conversation when due",
+  "description": "Bot reminders and routines: a schedule plus what to do, run as a turn in the bot's own conversation when due",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -23,6 +23,7 @@
     "@sand/schedules": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

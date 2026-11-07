@@ -8,14 +8,14 @@ import { openStore } from './store'
 
 export default definePlugin({
   name: 'schedules',
-  description: 'Keeps durable schedules for other plugins, one-off or cron in a time zone, runs them when due even after a restart, and runs their token-free checks first',
+  description: 'Keeps durable schedules for other plugins, one-off or cron in a time zone, runs them when due even after a restart',
   inject: { ledger },
   apply(ctx) {
     const book = createBook(ctx, openStore(ctx.ledger))
-    const registry: Registry = { handlers: new Map(), checks: new Map() }
+    const registry: Registry = { handlers: new Map() }
     const runner = createRunner(book, registry)
     ctx.effect(() => runner.stop)
-    ctx.provide(schedules, createSchedules(ctx, book, registry, runner.plan))
+    ctx.provide(schedules, createSchedules(book, registry, runner.plan))
     runner.plan()
   },
 })

@@ -4,7 +4,7 @@ import { plural } from '@sand/util'
 import { derive, div, dynamicChild, show, span, type Child, type Derive } from '@vaakx-dev/vrui'
 import type { WorkContext } from './context'
 import { stageMark } from './marks'
-import { hasWork, type WorkParts } from './tabs'
+import { hasWork, showsWork, type WorkParts } from './tabs'
 import { tally, type Tally } from './tasks'
 
 export interface SummaryParts extends WorkParts {
@@ -45,7 +45,7 @@ export const summaryLine = (ctx: WorkContext, parts: SummaryParts) => {
       ...counts(kit, totals),
       show(
         () => !counted.get(),
-        () => span(() => (parts.startsThreads() ? 'Work and plan' : 'Plan')),
+        () => span(() => (showsWork(parts) ? 'Work and plan' : 'Plan')),
       ),
     )
   const line = (narrow: boolean) =>

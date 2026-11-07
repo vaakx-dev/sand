@@ -84,10 +84,10 @@ const hostStubs = (app: Context) => {
   app.provide(hostChannel, { call: () => Promise.reject(new Error('No host in tests')), on: () => () => {} })
 }
 
-const loadPlugins = async (app: Context, { replay }: Models, extra: string[]) => {
+const loadPlugins = async (app: Context, { replay }: Models, extra: string[], options: PluginOptions) => {
   const own = await Promise.all([...plugins, ...(replay ? [] : liveSources), ...extra].map(builtin))
   const found = new Map([...own, ...(replay ? [] : await userPlugins(builtins))])
-  for (const entry of found.values()) app.load(entry, {})
+  for (const [id, entry] of found) app.load(entry, options[id] ?? {})
   if (replay) app.load((await builtin('core/replay'))[1], { sources: replay })
 }
 
@@ -102,7 +102,7 @@ const copiesStub = (projects: LocalCopy[]) => ({
   ofFolder: (folder: string) => projects.find(copy => resolve(folder).startsWith(resolve(copy.path)))?.project ?? null,
 })
 
-const boot = async (app: Context, home: string, models: Models, { plugins: extra = [], projects = [], sections = {}, config }: SandOptions) => {
+const boot = async (app: Context, home: string, models: Models, { plugins: extra = [], options = {}, projects = [], sections = {}, config }: SandOptions) => {
   if (models.replay) await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(models.replay)))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
@@ -113,16 +113,19 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
   }
   const wire = createHandlers()
   app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0, ask: wire.ask })
-  await (config === undefined ? loadPlugins(app, models, extra) : loadConfig(app, home, models.replay ?? [], config))
+  await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, models.ids)
   return wire
 }
 
+type PluginOptions = Record<string, Record<string, unknown>>
+
 export interface SandOptions {
   home?: string
   plugins?: string[]
+  options?: PluginOptions
   projects?: LocalCopy[]
   sections?: Record<string, unknown>
   config?: string

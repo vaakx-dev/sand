@@ -1,4 +1,4 @@
-import type { RenderEntry, RendererRegistry, RenderTool, ToolRenderer } from './contract'
+import type { NoticeKind, RenderEntry, RendererRegistry, RenderTool, ToolRenderer } from './contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
@@ -7,6 +7,7 @@ import { resolveRenderer } from './tools/resolve'
 export const rendererRegistry = (kit: Kit): RendererRegistry => {
   const tools = new Map<string, RenderTool | ToolRenderer>()
   const entries = new Map<string, RenderEntry>()
+  const notices = new Map<string, NoticeKind>()
   const resolved = new Map<string, Required<ToolRenderer>>()
   const version = sig(0)
 
@@ -34,7 +35,9 @@ export const rendererRegistry = (kit: Kit): RendererRegistry => {
     version,
     tool: (name, render) => add(tools, name, render),
     entry: (type, render) => add(entries, type, render),
+    notice: (from, kind) => add(notices, from, kind),
     toolRenderer,
     entryRenderer: type => entries.get(type),
+    noticeKind: from => notices.get(from),
   }
 }

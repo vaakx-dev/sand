@@ -6,7 +6,6 @@ import { server } from '@sand/server/contract'
 import { tools } from '@sand/tools/contract'
 import { definePlugin } from 'drydock'
 import { fireRoutine } from './fire'
-import { pageCheck } from './page'
 import { createRoutines, owner } from './routines'
 import { serveRoutines } from './serve'
 import { registerTools } from './tools'
@@ -20,10 +19,9 @@ export default definePlugin({
     const lastSaid = (bot: string) => ctx.get(bots)?.get(bot)?.last?.text ?? ''
     const tell = (moment: Moment) => void ctx.get(notify)?.send(moment).catch(error => ctx.report(error))
     ctx.effect(() => ctx.schedules.handle(owner, fireRoutine({ turns: ctx.botTurns, lastSaid, tell })))
-    ctx.effect(() => ctx.schedules.check(pageCheck))
     ctx.on(botRemove, bot => routines.forget(bot))
     ctx.watch(tools, found => {
-      if (found) return registerTools(ctx, found, ctx.schedules, routines)
+      if (found) return registerTools(found, routines)
     })
     ctx.watch(server, found => {
       if (found) return serveRoutines(ctx, found, routines)

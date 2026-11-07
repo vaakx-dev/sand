@@ -16,7 +16,7 @@ const lastOf = ({ last }: Routine) => {
 }
 
 const lineOf = (routine: Routine) =>
-  `- ${routine.id} "${routine.name}": ${timing(routine.when)}${routine.watch ? `, checking ${routine.watch.check} first` : ''}; ${stateOf(routine)}${lastOf(routine)}\n  ${routine.instructions}`
+  `- ${routine.id} "${routine.name}": ${timing(routine.when)}; ${stateOf(routine)}${lastOf(routine)}\n  ${routine.instructions}`
 
 export const listTool = (routines: Routines): Tool => ({
   name: 'routine_list',

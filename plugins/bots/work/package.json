@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "A bot's work beside its chat: the threads it started by state, a summary line above the composer, its project plan, and each thread opened in place",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "feature": "bots",
     "web": "./src/index.ts",

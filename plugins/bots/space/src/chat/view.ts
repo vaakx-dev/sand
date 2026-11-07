@@ -62,7 +62,7 @@ export const chatView = (kit: Kit, parts: ChatParts) => {
   const rowList = div({ class: 'pb-6' })
   const quote = transcript.quoteJump(rowList)
   const surface = { conversation: talk.bot, menu, states: transcript.openStates(), jump: (from: Element, text: string) => quote(rowList, from, text) }
-  const rows = transcriptRows(kit, transcript, transcript.rows(surface), talk, () => working(parts))
+  const rows = transcriptRows(transcript, transcript.rows(surface), talk, () => working(parts))
   const state = derive(() => {
     if (talk.entries.get() === undefined) return talk.failure.get() ? 'failed' : 'loading'
     return rows.get().length || working(parts) ? 'rows' : 'empty'

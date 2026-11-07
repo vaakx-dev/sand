@@ -1,11 +1,10 @@
 import { errorMessage } from '@sand/util'
 import type { Book } from './book'
-import type { Check, Handler, Outcome, Schedule } from './contract'
+import type { Handler, Outcome, Schedule } from './contract'
 import { nextRun } from './time/next'
 
 export interface Registry {
   handlers: Map<string, Handler>
-  checks: Map<string, Check>
 }
 
 interface Result {
@@ -17,29 +16,20 @@ interface Result {
 const grace = 2 * 60_000
 const longestWait = 1_000
 
-export const createRunner = (book: Book, { handlers, checks }: Registry) => {
+export const createRunner = (book: Book, { handlers }: Registry) => {
   const running = new Set<string>()
   const stopped = new AbortController()
   let timer: Timer | undefined
 
   const ready = (schedule: Schedule) => !schedule.paused && schedule.next !== undefined && !running.has(schedule.id) && handlers.has(schedule.owner)
 
-  const watched = async (schedule: Schedule, state: unknown) => {
-    if (!schedule.watch) return undefined
-    const check = checks.get(schedule.watch.check)
-    if (!check) throw new Error(`No check named ${schedule.watch.check} is loaded`)
-    return check.run(check.input.parse(schedule.watch.input), state, stopped.signal)
-  }
-
   const attempt = async (schedule: Schedule, handler: Handler, state: unknown, now: number): Promise<Result> => {
     const due = schedule.next!
     const late = now - due > grace
     if (late && schedule.missed === 'skip') return { outcome: 'missed', state }
     try {
-      const checked = await watched(schedule, state)
-      if (checked && !checked.fire) return { outcome: 'quiet', state: checked.state }
-      await handler(schedule, { key: `${schedule.id}@${due}`, due, late, ...(checked?.fire && { note: checked.note }) }, stopped.signal)
-      return { outcome: 'ran', state: checked ? checked.state : state }
+      await handler(schedule, { key: `${schedule.id}@${due}`, due, late }, stopped.signal)
+      return { outcome: 'ran', state }
     } catch (error) {
       return { outcome: 'failed', state, error: errorMessage(error) }
     }
