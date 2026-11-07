@@ -28,7 +28,7 @@ export default definePlugin({
           },
           refreshLimits: () => ctx.get(limits)?.refresh().catch(() => {}) ?? Promise.resolve(),
         })
-      const page = pages.page({ id: 'usage', label: 'Usage', icon: 'chart', order: 60, render })
+      const page = pages.page({ id: 'usage', label: 'Usage', icon: 'chart', group: 'app', order: 60, render })
       const action = ctx.watch(rail, found => found?.action({ id: 'usage', label: 'Usage', icon: 'chart', order: 100, within: 'settings', current: () => pages.current() === 'usage', run: () => pages.open('usage') }))
       return () => {
         void page()

@@ -14,6 +14,7 @@ const sessionItem = (ctx: Context, threads: Threads, thread: Thread, group: stri
   id: `session:${thread.id}`,
   group,
   busy: thread.running,
+  icon: 'message',
   label: thread.info.title || 'Untitled thread',
   detail: detail(ctx, thread, mixed && project),
   meta: ago(thread.info.updated),

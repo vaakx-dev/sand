@@ -10,7 +10,10 @@ const took = (head: TurnHead) => `Worked for ${duration(Math.max(1000, head.end 
 const working = ({ elapsed }: Kit, head: Sig<TurnHead>) =>
   span({ class: 'whitespace-pre' }, span(() => (head.get().start ? 'Working for ' : 'Working')), elapsed(head.map(value => value.start)))
 
-const kinds = (head: TurnHead) => (head.running ? (head.current ?? '') : head.kinds.join(' · '))
+const kinds = (head: TurnHead) => {
+  const shown = head.running ? (head.current ?? '') : head.kinds.join(', ')
+  return shown && `· ${shown}`
+}
 
 const phase = ({ running, waiting }: TurnHead) => {
   if (waiting) return 'waiting'
@@ -34,7 +37,7 @@ export const turnRow = (head: TurnHead, context: TurnContext): Row<TurnHead> => 
         icon: chevron(() => open.get()),
         verb: label,
         target: () => kinds(data.get()),
-        targetClass: 'text-xs text-neutral-500',
+        targetClass: 'text-neutral-500',
         expanded: open,
         onToggle: () => {
           toggle()

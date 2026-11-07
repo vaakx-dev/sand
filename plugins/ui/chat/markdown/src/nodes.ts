@@ -51,7 +51,7 @@ export const tableCell = (head: boolean, align: Align | undefined, children: Inl
   )
 
 export const tableBlock = (head: HTMLElement[], rows: HTMLElement[][]) =>
-  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
+  div({ class: [block, 'overflow-auto'] }, table({ class: 'w-full border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
 
 export const inlineCode = (value: string, error?: string) =>
   el('code', { class: ['rounded-md bg-neutral-800 px-1 py-px font-mono text-xs', error && 'text-danger-400'], ...(error && { title: error }) }, value)

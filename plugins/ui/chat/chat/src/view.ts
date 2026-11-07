@@ -43,7 +43,7 @@ const moreRow = ({ spinner }: Kit) => div({ class: 'flex h-10 items-center justi
 
 const column = (kit: Kit, view: ThreadView, watch: WatchRow) =>
   div(
-    { class: 'mx-auto w-full max-w-3xl px-3 pt-4 md:px-4', hidden: view.visible.map(value => !value) },
+    { class: [kit.pageColumn, 'px-3 pt-4 md:px-4'], hidden: view.visible.map(value => !value) },
     show(view.more, () => moreRow(kit)),
     list(view.rows, row => row.key, rowNode(watch), view.rowList),
     kit.dockFade(),

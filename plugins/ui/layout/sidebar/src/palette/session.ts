@@ -33,7 +33,6 @@ export const sessionActions = (kit: Kit, threads: Threads, thread: Thread): Pale
       group,
       icon: 'copy',
       label: 'Copy thread ID',
-      detail: thread.id,
       search: 'copy thread id reference',
       run: () => void kit.copyText(thread.id),
     },

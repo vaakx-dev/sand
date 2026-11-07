@@ -38,12 +38,15 @@ export default definePlugin({
     ctx.watch(composer, found => found && effect(() => (asking.get() ? found.slot('banner', () => cards(here)) : undefined)))
 
     let unplace: Dispose | undefined
+    const opened = sig(false)
     const close = () => {
       void unplace?.()
       unplace = undefined
+      opened.set(false)
     }
     const open = () => {
       unplace = place(ctx, 'overlay', () => inboxSheet({ kit, model, openThread: id => void ctx.threads.select(id) }, close), 100)
+      opened.set(true)
     }
     ctx.watch(rail, found =>
       found?.action({
@@ -52,6 +55,7 @@ export default definePlugin({
         icon: 'inbox',
         order: 90,
         count: () => model.all.get().length,
+        current: () => opened.get(),
         run: () => (unplace ? close() : open()),
       }),
     )
@@ -72,6 +76,6 @@ export default definePlugin({
       setMode: (mode: Mode) => keep(ctx.wire.call(approvalMode, { mode })),
       remove: (id: string) => keep(ctx.wire.call(approvalRuleRemove, { id })),
     }
-    ctx.watch(settings, found => found?.page({ id: 'approvals', label: 'Approvals', icon: 'shield', order: 24, render: () => approvalsPage(page) }))
+    ctx.watch(settings, found => found?.page({ id: 'approvals', label: 'Approvals', icon: 'shield', group: 'agents', order: 24, render: () => approvalsPage(page) }))
   },
 })

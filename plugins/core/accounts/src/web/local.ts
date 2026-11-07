@@ -67,10 +67,10 @@ const emptyText = (state: LoginState) =>
   state.remote.length ? 'No accounts on this PC yet. The ones from your PCs below work too.' : 'No accounts on this PC yet. Add one to start using sand.'
 
 export const localSection = (kit: Kit, control: LoginControl, add: () => void, fix: Fix) => {
-  const { contextMenu, emptyState, icon, loadingState, quietButton, settingsSection } = kit
+  const { contextMenu, emptyState, icon, loadingState, secondaryAction, settingsSection } = kit
   const menu = contextMenu()
   return settingsSection(
-    { title: 'On this PC', action: quietButton({ size: 'sm', onClick: add }, icon('plus', 'sm'), 'Add an account') },
+    { title: 'On this PC', action: secondaryAction({ size: 'sm', onClick: add }, icon('plus', 'sm'), 'Add an account') },
     menu.view(),
     dynamicChild(
       derive(() => {

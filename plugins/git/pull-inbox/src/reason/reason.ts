@@ -14,7 +14,7 @@ const yours = (pull: PullSummary): InboxReason => {
   if (pull.review === 'required') return reason('waiting', 'Waiting on review', 'neutral')
   if (pull.merge === 'behind') return reason('turn', 'Branch is out of date', 'warning')
   if (pull.merge === 'clean') return reason('ready', pull.review === 'approved' ? 'Approved' : 'Ready to merge', 'success')
-  if (pull.merge === 'blocked') return reason('waiting', 'Blocked by branch rules', 'neutral')
+  if (pull.merge === 'blocked') return reason('waiting', 'Blocked by branch rules', 'warning')
   return reason('waiting', 'Checking if it can merge', 'neutral')
 }
 

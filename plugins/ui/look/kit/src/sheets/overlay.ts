@@ -21,17 +21,23 @@ export interface SheetHeadProps {
 
 const sheetWidths: Record<SheetSize, string> = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-xl' }
 
-export const overlay = (close: () => void, ...children: Child[]) => {
-  const previous = document.activeElement
-  return div(
-    {
-      class: [layer.dialog, 'fixed inset-0 flex items-start justify-center bg-black/50 px-3 pt-10 pb-3 animate-fade md:pt-20'],
-      onMouseDown: event(close, { self: true }),
-      onMount: node => modal(node, close, previous),
-    },
-    ...children,
-  )
-}
+const backdrop =
+  (placement: string) =>
+  (close: () => void, ...children: Child[]) => {
+    const previous = document.activeElement
+    return div(
+      {
+        class: [layer.dialog, 'fixed inset-0 flex bg-black/50 px-3 pt-10 pb-3 animate-fade', placement],
+        onMouseDown: event(close, { self: true }),
+        onMount: node => modal(node, close, previous),
+      },
+      ...children,
+    )
+  }
+
+export const overlay = backdrop('items-start justify-center md:pt-20')
+
+export const railOverlay = backdrop('items-start justify-center md:items-end md:justify-start md:pt-3 md:pl-16')
 
 export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...children: Child[]) =>
   div(
