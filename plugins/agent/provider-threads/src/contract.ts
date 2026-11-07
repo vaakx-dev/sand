@@ -57,7 +57,7 @@ export const briefTools = event<(tools: ToolSpec[], conversation: Conversation) 
 export const stepPrepare = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, signal: AbortSignal) => Promise<boolean | undefined>>(
   'step.prepare',
 )
-export const stepSettle = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, usage: Usage) => void>('step.settle')
+export const stepSettle = event<(request: LLMRequest, conversation: Conversation, turn: TurnInfo, usage: Usage, cacheTtlMs: number | undefined) => void>('step.settle')
 export const contextOverflow = event<(conversation: Conversation, turn: TurnInfo, error: unknown, signal: AbortSignal) => boolean | undefined>(
   'context.overflow',
 )

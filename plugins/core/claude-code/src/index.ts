@@ -15,7 +15,7 @@ const caps: ProviderCapabilities = {
   steer: true,
   reconfigure: [],
   processScope: 'thread',
-  cacheTtlMs: 60 * 60_000,
+  cacheTtlMs: 5 * 60_000,
 }
 
 const claudePlan = (needs: SessionNeeds): AppPlan => {

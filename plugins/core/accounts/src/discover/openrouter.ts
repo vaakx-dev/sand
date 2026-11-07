@@ -18,7 +18,8 @@ const priceOf = (pricing: unknown): ModelPrice | undefined => {
   const input = perToken(pricing.prompt)
   const output = perToken(pricing.completion)
   if (input === undefined || output === undefined) return undefined
-  return { input, output, cacheRead: perToken(pricing.input_cache_read) ?? 0, cacheWrite: perToken(pricing.input_cache_write) ?? 0 }
+  const cacheWriteLong = perToken(pricing.input_cache_write_1h)
+  return { input, output, cacheRead: perToken(pricing.input_cache_read) ?? 0, cacheWrite: perToken(pricing.input_cache_write) ?? 0, ...(cacheWriteLong !== undefined && { cacheWriteLong }) }
 }
 
 const listOf = (value: unknown): unknown[] => (Array.isArray(value) ? value : [])

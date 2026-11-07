@@ -107,6 +107,7 @@ export interface StepDone {
   native?: NativeRef
   delivered?: Delivery
   usage: Usage
+  cacheTtlMs?: number
   reply: string
 }
 

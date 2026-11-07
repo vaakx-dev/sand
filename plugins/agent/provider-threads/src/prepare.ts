@@ -163,7 +163,7 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
         thread: plan.thread.id,
         settle(done) {
           settle(plan, done)
-          ctx.emit(stepSettle, plan.request, conversation, turn, done.usage)
+          ctx.emit(stepSettle, plan.request, conversation, turn, done.usage, done.cacheTtlMs)
         },
         lost: error => lost(plan, error),
       }

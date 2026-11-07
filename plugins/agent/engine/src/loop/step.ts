@@ -57,14 +57,14 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     }
   }
 
-  const record = ({ step, done: { message, usage, source, native, delivered } }: Sent) => {
+  const record = ({ step, done: { message, usage, cacheTtlMs, source, native, delivered } }: Sent) => {
     const { model } = step.request
     ctx.ledger.tx(() => {
       const reply = append(message)
       if (tokensOf(usage)) conversation.append('usage', usageRecord(ctx.llm.provider?.(model), model, usage, source), turn)
       run.usage = sumUsage(run.usage, usage)
       stores.turns.usage(info.id, run.usage)
-      step.settle({ usage, reply: reply.id, ...(native && { native }), ...(delivered && { delivered }) })
+      step.settle({ usage, reply: reply.id, ...(cacheTtlMs && { cacheTtlMs }), ...(native && { native }), ...(delivered && { delivered }) })
     })
     announce.turn(info.id)
   }

@@ -1,5 +1,5 @@
 import type { Block, StopReason } from '@sand/chats/contract'
-import type { LLMEvent, Usage } from '../contract'
+import { cacheLifetimes, type LLMEvent, type Usage, writtenTtl } from '../contract'
 import { parseToolInput } from '../http/tool-input'
 import { encodeReasoning } from '../reasoning'
 import type { OpenAIEvent, OpenAIItem, OpenAIResponse, OpenAIUsage } from './events'
@@ -24,8 +24,17 @@ const blockOf = (item: OpenAIItem | undefined): Block | undefined => {
 const texts = (parts: { text?: string }[] | undefined) => (parts ?? []).map(part => part?.text ?? '').join('\n\n')
 
 const usageOf = (raw: OpenAIUsage | undefined): Usage => {
-  const cached = raw?.input_tokens_details?.cached_tokens ?? 0
-  return { input: Math.max(0, (raw?.input_tokens ?? 0) - cached), output: raw?.output_tokens ?? 0, cacheRead: cached, cacheWrite: 0 }
+  const details = raw?.input_tokens_details
+  const cached = details?.cached_tokens ?? 0
+  const written = details?.cache_write_tokens ?? 0
+  const long = details?.cache_write_tokens_details?.ttl_12h_tokens ?? 0
+  return {
+    input: Math.max(0, (raw?.input_tokens ?? 0) - cached - written),
+    output: raw?.output_tokens ?? 0,
+    cacheRead: cached,
+    cacheWrite: written,
+    ...(long && { cacheWriteLong: long }),
+  }
 }
 
 const stopOf = (response: OpenAIResponse | undefined, calls: boolean): StopReason => {
@@ -135,7 +144,9 @@ export async function* readOpenAI(stream: AsyncIterable<OpenAIEvent>, model: str
           }
         }
         const calls = blocks.some(block => block.type === 'tool_call')
-        yield { type: 'done', message: { role: 'assistant', content: blocks }, stopReason: stopOf(event.response, calls), usage: usageOf(event.response?.usage) }
+        const usage = usageOf(event.response?.usage)
+        const cacheTtlMs = writtenTtl(usage, cacheLifetimes.openai)
+        yield { type: 'done', message: { role: 'assistant', content: blocks }, stopReason: stopOf(event.response, calls), usage, ...(cacheTtlMs && { cacheTtlMs }) }
         return
       }
       case 'response.failed':

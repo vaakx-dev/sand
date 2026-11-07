@@ -18,6 +18,7 @@ export type * from './plans'
 export type * from './setup'
 export { statelessCaps, ThreadLost } from './threads'
 export type * from './usage'
+export { cacheLifetimes, writtenTtl } from './usage'
 export { windowText } from './window'
 
 export const llm = service<LLM>('llm')

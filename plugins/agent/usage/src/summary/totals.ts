@@ -7,6 +7,7 @@ export const addUsage = <T extends UsageTotals>(totals: T, usage: Usage, price: 
   totals.usage.output += usage.output
   totals.usage.cacheRead += usage.cacheRead
   totals.usage.cacheWrite += usage.cacheWrite
+  if (usage.cacheWriteLong) totals.usage.cacheWriteLong = (totals.usage.cacheWriteLong ?? 0) + usage.cacheWriteLong
   totals.turns++
   if (!price) {
     totals.unpriced++

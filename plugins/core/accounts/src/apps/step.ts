@@ -9,19 +9,22 @@ const add = (total: Usage, more: Partial<Usage>) => {
   total.output += more.output ?? 0
   total.cacheRead += more.cacheRead ?? 0
   total.cacheWrite += more.cacheWrite ?? 0
+  const long = (total.cacheWriteLong ?? 0) + (more.cacheWriteLong ?? 0)
+  if (long) total.cacheWriteLong = long
 }
 
 export async function* readStep(next: () => Promise<Signal>, model: string): AsyncGenerator<LLMEvent> {
   const blocks: Block[] = []
   const usage = emptyUsage()
   let open: Block | undefined
+  let cacheTtlMs: number | undefined
 
   const close = function* (): Generator<LLMEvent> {
     if (open) yield { type: 'block', index: blocks.length - 1, block: open }
     open = undefined
   }
 
-  const done = (stopReason: StopReason): LLMEvent => ({ type: 'done', message: { role: 'assistant', content: blocks }, stopReason, usage })
+  const done = (stopReason: StopReason): LLMEvent => ({ type: 'done', message: { role: 'assistant', content: blocks }, stopReason, usage, ...(cacheTtlMs && { cacheTtlMs }) })
 
   yield { type: 'start', model }
   for (;;) {
@@ -56,6 +59,7 @@ export async function* readStep(next: () => Promise<Signal>, model: string): Asy
       }
       case 'usage':
         add(usage, signal.usage)
+        cacheTtlMs = signal.cacheTtlMs ?? cacheTtlMs
         break
       case 'pause':
         if (!blocks.some(block => block.type === 'tool_call')) break

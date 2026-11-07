@@ -17,7 +17,7 @@ interface OpenAIError {
 export interface OpenAIUsage {
   input_tokens?: number
   output_tokens?: number
-  input_tokens_details?: { cached_tokens?: number }
+  input_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number; cache_write_tokens_details?: { ttl_12h_tokens?: number } }
 }
 
 export interface OpenAIResponse {

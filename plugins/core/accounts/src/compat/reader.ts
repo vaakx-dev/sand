@@ -1,13 +1,16 @@
 import type { StopReason } from '@sand/chats/contract'
-import type { LLMEvent, Usage } from '../contract'
+import { cacheLifetimes, type LLMEvent, type Usage, writtenTtl } from '../contract'
 import { isRecord } from '@sand/util'
 import type { CompatChunk, CompatUsage } from './chunks'
 import { Collector } from './collect'
 
 const usageOf = (raw: CompatUsage | null | undefined): Usage => {
   const cached = raw?.prompt_tokens_details?.cached_tokens ?? 0
-  return { input: Math.max(0, (raw?.prompt_tokens ?? 0) - cached), output: raw?.completion_tokens ?? 0, cacheRead: cached, cacheWrite: 0 }
+  const written = raw?.prompt_tokens_details?.cache_write_tokens ?? 0
+  return { input: Math.max(0, (raw?.prompt_tokens ?? 0) - cached - written), output: raw?.completion_tokens ?? 0, cacheRead: cached, cacheWrite: written }
 }
+
+const lifetimesOf = (model: string) => (model.startsWith('openai/') ? cacheLifetimes.openai : cacheLifetimes.anthropic)
 
 const stopOf = (reason: string, calls: boolean): StopReason => {
   if (calls || reason === 'tool_calls' || reason === 'function_call') return 'tool_use'
@@ -56,10 +59,13 @@ export async function* readCompat(stream: AsyncIterable<CompatChunk>, model: str
   if (!started) throw new Error(`${name} sent an empty response`)
   if (!finish) throw new Error(`${name} stream ended before the response finished`)
   yield* collector.finish()
+  const used = usageOf(usage)
+  const cacheTtlMs = writtenTtl(used, lifetimesOf(model))
   yield {
     type: 'done',
     message: { role: 'assistant', content: collector.blocks },
     stopReason: stopOf(finish, collector.hasCalls),
-    usage: usageOf(usage),
+    usage: used,
+    ...(cacheTtlMs && { cacheTtlMs }),
   }
 }
