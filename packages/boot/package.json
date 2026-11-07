@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./build": "./src/build/index.ts",
     "./setup": "./src/setup/index.ts",
-    "./updates": "./src/updates.ts"
+    "./updates": "./src/updates.ts",
+    "./modules": "./src/modules.ts"
   },
   "dependencies": {
     "@sand/host-dist": "workspace:*",
@@ -15,6 +16,8 @@
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
     "@sand/host-updates": "workspace:*",
-    "@sand/util": "workspace:*"
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }

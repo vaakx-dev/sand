@@ -35,6 +35,8 @@
         "@sand/host-runtimes": "workspace:*",
         "@sand/host-updates": "workspace:*",
         "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
       },
     },
     "packages/cdp": {
@@ -46,6 +48,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/boot": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/config": "workspace:*",
         "@sand/host-hub": "workspace:*",
