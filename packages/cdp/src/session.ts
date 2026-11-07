@@ -45,7 +45,7 @@ const connect = (endpoint: string) =>
 
 const graceMs = 5_000
 
-const session = (socket: WebSocket, process: Bun.Subprocess) => {
+const session = (socket: WebSocket, process?: Bun.Subprocess) => {
   let last = 0
   const waiting = new Map<number, Waiting>()
   const listeners = new Set<(event: CdpEvent) => void>()
@@ -85,6 +85,10 @@ const session = (socket: WebSocket, process: Bun.Subprocess) => {
       return () => void listeners.delete(listener)
     },
     async close() {
+      if (!process) {
+        socket.close()
+        return closed.promise
+      }
       if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ id: ++last, method: 'Browser.close' }))
       await Promise.race([process.exited, Bun.sleep(graceMs)])
       process.kill()
@@ -106,3 +110,5 @@ export const launch = async ({ executable, profile, args, deadline }: Launch): P
     throw error
   }
 }
+
+export const attach = async (profile: string, deadline: number): Promise<Browser> => session(await connect(await endpointOf(profile, deadline)))
