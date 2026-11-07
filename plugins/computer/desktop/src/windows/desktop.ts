@@ -3,10 +3,9 @@ import { win32, type Win32 } from './api'
 import { captureScreen } from './capture'
 import { uiAutomation } from './elements'
 import { foreground, refusal, windowAt, type WindowFacts } from './guard'
-import { encode, inputSize, pack, pointsOf, type Input, type InputAction } from './input'
+import { encode, inputSize, pack, pauseAfter, pointsOf, type Input, type InputAction } from './input'
 import { pixelOf, virtualScreen } from './screen'
 
-const batchPause = 20
 const vkToScanCode = 0
 
 const blocked = 'Windows blocked the input. An app running as administrator may have focus, or the screen is locked.'
@@ -48,9 +47,9 @@ export const windowsDesktop = () => {
   const press = async (action: InputAction) => {
     check(action)
     const screen = virtualScreen(api)
-    for (const batch of encode(action, screen, scanCode)) {
+    for (const [index, batch] of encode(action, screen, scanCode).entries()) {
       send(api, batch)
-      await Bun.sleep(batchPause)
+      await Bun.sleep(pauseAfter(action, index))
     }
     look()
   }

@@ -9,6 +9,11 @@ const target = z
 
 export const actionInput = z.discriminatedUnion('type', [
   z.object({ type: z.enum(['click', 'double_click', 'right_click', 'move']), at: target }),
+  z.object({
+    type: z.literal('hold'),
+    at: target,
+    ms: z.number().int().min(100).max(10_000).describe('How long to keep the left button down, in milliseconds.'),
+  }),
   z.object({ type: z.literal('drag'), from: target, to: target }),
   z.object({
     type: z.literal('scroll'),
@@ -38,6 +43,7 @@ export const resolveAction = (input: ActionInput, find: FindElement): Action => 
   switch (input.type) {
     case 'drag':
       return { type: 'drag', from: pointOf(input.from, find), to: pointOf(input.to, find) }
+    case 'hold':
     case 'scroll':
       return { ...input, at: pointOf(input.at, find) }
     case 'key':
