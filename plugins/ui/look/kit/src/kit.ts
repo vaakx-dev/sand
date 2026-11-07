@@ -21,6 +21,7 @@ import { fileKindMark } from './marks/file-kind'
 import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
+import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
 import { stepMark } from './marks/state-marks'
@@ -46,7 +47,7 @@ import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { bottomSheet } from './sheets/bottom'
-import { overlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
+import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyState, errorState, loadingState } from './states/states'
@@ -121,6 +122,7 @@ export const kit = {
   isMac,
   jumpButton,
   keepAnchor,
+  keycap,
   layer,
   lineStat,
   linkButton,
@@ -163,6 +165,7 @@ export const kit = {
   providerIcon,
   quietButton,
   quoteButton,
+  railOverlay,
   returnFocus,
   rowAction,
   rowButton,

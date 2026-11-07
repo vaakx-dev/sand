@@ -21,11 +21,11 @@ const where = ({ kit, openThread }: InboxParts, { decision }: Waiting, close: ()
 
 export const inboxSheet = (parts: InboxParts, close: () => void) => {
   const { kit, model } = parts
-  const { emptyState, overlay, sheet, sheetBody, sheetHead } = kit
-  return overlay(
+  const { emptyState, railOverlay, sheet, sheetBody, sheetHead } = kit
+  return railOverlay(
     close,
     sheet(
-      { 'aria-label': 'Inbox', size: 'md' },
+      { 'aria-label': 'Inbox', size: 'sm' },
       sheetHead({ title: 'Inbox', close }),
       sheetBody(
         {},
