@@ -1,9 +1,9 @@
 import type { ToolSpec } from '@sand/accounts/contract'
-import type { Message } from '@sand/chats/contract'
+import type { Message, ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
 import type { Gate, GroupState, Offer, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
-import { run } from '../run'
+import { actOf, run } from '../run'
 import type { Choices } from './choices'
 import { findName, findTool } from './find'
 import { foundIn } from './found'
@@ -88,6 +88,13 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return name === findName ? find(scoped) : scoped.find(tool => tool.name === name)
   }
 
+  const effect = (call: ToolCallBlock, conversation: Conversation) => {
+    const tool = resolve(call.name, conversation)
+    if (!tool || call.malformed !== undefined) return undefined
+    const parsed = tool.input.safeParse(call.input)
+    return parsed.success ? actOf(tool, parsed.data, conversation).effect : undefined
+  }
+
   const service: Tools = {
     register,
     group,
@@ -112,6 +119,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     specs,
     notes: conversation => usable(conversation).flatMap(tool => (tool.environment ? [tool.environment] : [])),
     parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
+    effect,
     run: (call, context) => run(resolve(call.name, context.conversation), call, context, gated),
   }
   return service

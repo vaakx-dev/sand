@@ -44,7 +44,7 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     try {
       if ('entry' in begun) await conversations.ready?.(begun.entry, run.conversation, run.signal)
       run.signal.throwIfAborted()
-      return await runReact({ signal: run.signal, hooks }, 'calls' in begun ? begun.calls : [])
+      return await runReact({ signal: run.signal, hooks }, 'calls' in begun ? begun : undefined)
     } catch (error) {
       return run.signal.aborted ? { stopReason: 'interrupted' } : { stopReason: 'error', failure: { error } }
     }
