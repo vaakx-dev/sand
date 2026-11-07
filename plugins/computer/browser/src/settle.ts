@@ -1,3 +1,4 @@
+import { evaluate } from './evaluate'
 import type { Call } from './tabs'
 
 const quiet = 300
@@ -11,7 +12,7 @@ const painted = `new Promise(done => {
 })`
 
 const isPainted = (call: Call) =>
-  call<{ result: { value?: unknown } }>('Runtime.evaluate', { expression: painted, awaitPromise: true, returnByValue: true }).then(
+  evaluate<unknown>(call, { expression: painted, awaitPromise: true }).then(
     ({ result }) => result.value === true,
     () => false,
   )

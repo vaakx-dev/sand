@@ -1,5 +1,6 @@
 import type { Found } from '@sand/computers/contract'
 import { quadsBox } from './elements'
+import { evaluate } from './evaluate'
 import type { Viewport } from './input'
 import type { Call } from './tabs'
 
@@ -29,10 +30,7 @@ const script = (text: string, match: number) => `(() => {
 })()`
 
 export const findText = async (call: Call, viewport: Viewport, text: string, match: number): Promise<Found> => {
-  const { result, exceptionDetails } = await call<{ result: { value: Hits }; exceptionDetails?: { text: string } }>('Runtime.evaluate', {
-    expression: script(text, match),
-    returnByValue: true,
-  })
+  const { result, exceptionDetails } = await evaluate<Hits>(call, { expression: script(text, match) })
   if (exceptionDetails) throw new Error(`Could not search the page: ${exceptionDetails.text}`)
   const { count, quad } = result.value
   return { count, box: quad && quadsBox([quad], viewport) }

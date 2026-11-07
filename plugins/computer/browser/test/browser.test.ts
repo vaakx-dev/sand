@@ -37,6 +37,7 @@ const page = `<!doctype html>
       <p id="scrolled">Scrolled: 0</p>
       <p id="mouse">Mouse: none</p>
       <p id="seen"></p>
+      <p id="automated"></p>
       <button id="revoke">Hold to revoke</button>
       <p id="revoked">Revoked: no</p>
       <button id="pick">Pick</button>
@@ -107,6 +108,8 @@ const page = `<!doctype html>
       document.getElementById('fruit').onchange = event => show('fruited', 'Fruit: ' + event.target.value)
       document.getElementById('area').oninput = event => show('wrote', 'Area: ' + JSON.stringify(event.target.value))
       document.getElementById('note').oninput = event => show('noted', 'Note: ' + JSON.stringify(event.target.innerText))
+      const headless = /Headless/.test(navigator.userAgent + JSON.stringify(navigator.userAgentData.brands))
+      show('automated', 'Automated: ' + (navigator.webdriver || headless || screen.width < outerWidth ? 'shows' : 'hidden'))
       show('seen', document.cookie.includes('seen=1') ? 'Seen: before' : 'Seen: first')
       document.cookie = 'seen=1; max-age=3600; path=/'
     </script>
@@ -193,6 +196,10 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     expect(button.box.bottom).toBeLessThan(0.1)
     expect(await texts()).toContain('Count: 0')
     expect(await texts()).not.toContain('Add one')
+  })
+
+  test('shows pages no sign of automation, even headless', async () => {
+    expect(await texts()).toContain('Automated: hidden')
   })
 
   test('clicks a button', async () => {
