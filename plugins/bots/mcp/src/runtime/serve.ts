@@ -20,7 +20,18 @@ const intro: Record<Sender['kind'], (label: string) => string> = {
   thread: label => `This message is from the agent working in the user's thread "${label}", not from the user. Your reply goes back to it.`,
 }
 
-const rowOf = (bot: BotSummary): BotRow => ({ bot: bot.id, name: botName(bot), job: bot.job.slice(0, jobLength), status: bot.status, project: bot.project })
+const cents = (value: number) => Math.round(value * 100) / 100
+
+const rowOf = (bot: BotSummary): BotRow => ({
+  bot: bot.id,
+  name: botName(bot),
+  job: bot.job.slice(0, jobLength),
+  status: bot.status,
+  ...(bot.hold && { hold: bot.hold }),
+  project: bot.project,
+  budget: bot.budget,
+  spent: cents(bot.spent),
+})
 
 export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
   const senderOf = ({ owner, id }: Actor): Sender =>
@@ -45,9 +56,16 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
     return project
   }
 
-  const set = ({ bot, name, job, project }: BotSet, actor: Actor | undefined) => {
+  const set = ({ bot, name, job, project, paused, budget }: BotSet, actor: Actor | undefined) => {
     const before = botOf(bot, actor)
-    const after = ctx.bots.update(before.id, { ...(name && { name }), ...(job && { job }), ...(project !== undefined && { project: placed(project) }) })
+    if (budget !== undefined && actor?.owner === 'bot' && actor.id === before.id) throw failure('denied', "A bot can't change its own spend limit")
+    const after = ctx.bots.update(before.id, {
+      ...(name && { name }),
+      ...(job && { job }),
+      ...(project !== undefined && { project: placed(project) }),
+      ...(paused !== undefined && { paused }),
+      ...(budget !== undefined && { budget }),
+    })
     if (job && job !== before.job) {
       const turn = ctx.engine.turn('bot', before.id)?.id
       ctx.bots.conversation(before.id).append(jobEntry, { job, previous: before.job } satisfies JobEntry, turn ? { turn } : {})

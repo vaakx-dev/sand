@@ -22,7 +22,7 @@ const statuses: Record<TurnStatus, BotStatus> = {
   lost: 'failed',
 }
 
-export const botConversations = (ctx: BotTurnsContext, live: Live): Conversations<Conversation> => {
+export const botConversations = (ctx: BotTurnsContext, live: Live, queued: (bot: string) => void): Conversations<Conversation> => {
   const bot = (id: string) => {
     const found = ctx.bots.get(id)
     if (!found) throw new Error(`No bot ${id}`)
@@ -40,6 +40,7 @@ export const botConversations = (ctx: BotTurnsContext, live: Live): Conversation
       const { model, effort, speed } = ctx.modelSettings.resolve(bot(conversation.id).models.main)
       return model ? { source: modelSource(model), model, ...(effort && { effort }), speed } : undefined
     },
+    held: conversation => ctx.bots.get(conversation.id)?.hold !== undefined,
     step: (conversation, turn, signal) => ctx.providerThreads.step(conversation, turn, signal),
     abandon: thread => ctx.providerThreads.abandon(thread),
     overflow: (conversation, turn, error, signal) => ctx.bail(contextOverflow, conversation, turn, error, signal),
@@ -48,5 +49,6 @@ export const botConversations = (ctx: BotTurnsContext, live: Live): Conversation
       ctx.bots.status(turn.conversation, statuses[turn.status])
     },
     streamed: (event, conversation) => live.push(conversation.id, event),
+    queued: conversation => queued(conversation.id),
   }
 }

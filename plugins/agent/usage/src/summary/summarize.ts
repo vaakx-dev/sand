@@ -1,4 +1,4 @@
-import type { LLM } from '@sand/accounts/contract'
+import { isMetered, type LLM } from '@sand/accounts/contract'
 import type { Sessions } from '@sand/chats/contract'
 import type { UsageQuery, UsageSummary } from '../contract'
 import { emptyTotals } from '../records'
@@ -7,7 +7,7 @@ import { identityResolver } from './identity'
 import { modelBook } from './models'
 import { periodBook } from './periods'
 import { projectBook } from './projects'
-import { addUsage, isBilled } from './totals'
+import { addUsage } from './totals'
 import { turnsOf } from './turns'
 
 export interface UsageSources {
@@ -35,7 +35,7 @@ export const summarize = ({ sessions, llm }: UsageSources, query: UsageQuery): U
       ...periods.add(turn.at, id.key),
       projects.add(turn.session, id.key),
     ]
-    for (const totals of groups) addUsage(totals, turn.usage, price, isBilled(id.billing))
+    for (const totals of groups) addUsage(totals, turn.usage, price, isMetered(id.billing))
   }
 
   const limits = llm?.limits?.()

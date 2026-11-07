@@ -31,9 +31,13 @@ export interface Bot {
   models: ModelPolicy
   computer: Computer
   project: string | null
+  paused: boolean
+  budget: number | null
   created: number
   updated: number
 }
+
+export type BotHold = 'paused' | 'limit'
 
 export type BotStatus = 'idle' | 'working' | 'waiting' | 'failed'
 
@@ -59,6 +63,8 @@ export interface JobEntry {
 
 export interface BotSummary extends Bot {
   status: BotStatus
+  spent: number
+  hold?: BotHold
   last?: LastLine
 }
 
@@ -99,6 +105,8 @@ const botFields = z.object({
   models: z.object({ main: modelChoice, quick: modelChoice }),
   computer,
   project: z.string().min(1).nullable(),
+  paused: z.boolean(),
+  budget: z.number().positive().max(1_000_000).nullable(),
 })
 
 export const newBot = botFields.partial().extend({ id: z.uuid().optional() })

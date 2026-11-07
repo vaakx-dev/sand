@@ -1,4 +1,4 @@
-import type { BotStatus } from '@sand/bots/contract'
+import type { BotHold, BotStatus } from '@sand/bots/contract'
 import type { TurnStatus } from '@sand/engine/contract'
 import { request, type } from '@sand/host-hub/contract'
 import { type Call, outsideOrigins } from '@sand/orchestrator/contract'
@@ -9,7 +9,10 @@ export interface BotRow {
   name: string
   job: string
   status: BotStatus
+  hold?: BotHold
   project: string | null
+  budget: number | null
+  spent: number
 }
 
 export interface BotAnswer {
@@ -78,6 +81,8 @@ const setInput = z.object({
   name: z.string().trim().min(1).max(60).optional(),
   job: z.string().trim().min(1).max(jobLimit).optional(),
   project: z.string().min(1).nullable().optional(),
+  paused: z.boolean().optional(),
+  budget: z.number().positive().max(1_000_000).nullable().optional(),
 })
 
 export type BotSet = z.infer<typeof setInput>

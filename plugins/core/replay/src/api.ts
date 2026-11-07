@@ -1,8 +1,10 @@
 import type { Plan } from '@sand/accounts/contract'
 import { anthropicStream } from './anthropic'
 import type { Reply, Script } from './contract'
+import { planModels } from './models'
 
-export const replayApi = ({ id, label = id, models, replies }: Script, base: () => string) => {
+export const replayApi = (script: Script, base: () => string) => {
+  const { id, label = id, replies } = script
   const queue = [...replies]
   const bodies: string[] = []
   let calls = 0
@@ -16,7 +18,7 @@ export const replayApi = ({ id, label = id, models, replies }: Script, base: () 
     signIn: () => Promise.reject(new Error(`${label} needs no sign-in`)),
     refresh: async tokens => tokens,
     call: (_, payload) => ({ url: `${base()}/${id}`, payload, headers: () => ({ 'content-type': 'application/json' }) }),
-    models: async () => models.map(name => ({ name, label: name })),
+    models: async () => planModels(script),
   }
   const answer = async (request: Request) => {
     const body = await request.text()

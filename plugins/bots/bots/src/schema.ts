@@ -31,4 +31,9 @@ export const schema = [
     )`,
     'create index bot_jobs_bot on bot_jobs (bot, replaced)',
   ],
+  [
+    'alter table bots add column paused integer not null default 0',
+    'alter table bots add column budget real',
+    'create index bot_entries_type on bot_entries (bot, type, at)',
+  ],
 ]

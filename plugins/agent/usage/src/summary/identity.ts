@@ -14,6 +14,8 @@ export interface AccountId {
   pcName?: string
 }
 
+type Tagged = Omit<Turn, 'at' | 'session' | 'usage'>
+
 const prefixOf = (model: string) => {
   const at = model.indexOf('/')
   return at > 0 ? model.slice(0, at) : undefined
@@ -21,9 +23,9 @@ const prefixOf = (model: string) => {
 
 export const identityResolver = (llm?: LLM) => {
   const sources = new Map((llm?.sources?.() ?? []).map(found => [found.id, found]))
-  const sourceOf = (turn: Turn) => turn.source ?? prefixOf(turn.model) ?? llm?.find?.(turn.model)?.source ?? unknownSource
+  const sourceOf = (turn: Tagged) => turn.source ?? prefixOf(turn.model) ?? llm?.find?.(turn.model)?.source ?? unknownSource
 
-  return (turn: Turn): AccountId => {
+  return (turn: Tagged): AccountId => {
     const source = sourceOf(turn)
     const current = turn.pc ? undefined : sources.get(source)
     const facts = factsOf(source)

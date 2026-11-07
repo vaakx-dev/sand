@@ -1,5 +1,5 @@
 import type { LiveBlock } from '@sand/accounts/contract'
-import { botInterrupt, botLive, botSend, botStreamWire } from '@sand/bot-turns/contract'
+import { botInterrupt, botLive, botPending, botPendingWire, botSend, botStreamWire } from '@sand/bot-turns/contract'
 import { botConversation, botEntryWire, chatPath, type BotEntry } from '@sand/bots/contract'
 import { promptContent, saidText, textOf, type Message, type Prompt } from '@sand/chats/contract'
 import { wireHello } from '@sand/devices-contract'
@@ -44,7 +44,9 @@ const withoutDelivered = (pending: Pending[], entry: BotEntry) => {
 
 export const conversation = (ctx: BotsContext, bot: string) => {
   const entries = sig<BotEntry[] | undefined>(undefined)
-  const pending = sig<Pending[]>([])
+  const queued = sig<Pending[]>([])
+  const sending = sig<Pending[]>([])
+  const pending = derive(() => [...queued.get(), ...sending.get()])
   const live = sig<LiveBlock[]>([])
   const more = sig(false)
   const loading = sig(false)
@@ -55,7 +57,7 @@ export const conversation = (ctx: BotsContext, bot: string) => {
 
   const arrived = (entry: BotEntry) => {
     add([entry])
-    pending.update(list => withoutDelivered(list, entry))
+    sending.update(list => withoutDelivered(list, entry))
     if (isReply(entry)) live.set([])
   }
 
@@ -80,9 +82,16 @@ export const conversation = (ctx: BotsContext, bot: string) => {
       error => ctx.report(error),
     )
 
+  const waiting = () =>
+    ctx.wire.call(botPending, { bot }).then(
+      items => queued.set(items),
+      error => ctx.report(error),
+    )
+
   const refresh = () => {
     void fetch()
     void catchUp()
+    void waiting()
   }
 
   const older = () => {
@@ -93,18 +102,20 @@ export const conversation = (ctx: BotsContext, bot: string) => {
 
   const send = async (prompt: Prompt) => {
     const id = uuid()
-    pending.update(list => [...list, { id, prompt, at: Date.now() }])
+    sending.update(list => [...list, { id, prompt, at: Date.now() }])
     try {
       await ctx.wire.call(botSend, { bot, prompt, clientRequestId: id })
-    } catch (error) {
-      pending.update(list => list.filter(item => item.id !== id))
-      throw error
+    } finally {
+      sending.update(list => list.filter(item => item.id !== id))
     }
   }
 
   const stops = [
     ctx.wire.on(botEntryWire, entry => {
       if (entry.bot === bot) arrived(entry)
+    }),
+    ctx.wire.on(botPendingWire, ([from, items]) => {
+      if (from === bot) queued.set(items)
     }),
     ctx.wire.on(botStreamWire, ([from, event]) => {
       if (from === bot) live.update(blocks => applyLiveEvent(blocks, event))

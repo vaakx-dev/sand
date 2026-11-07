@@ -5,6 +5,7 @@ import type { BotsContext } from '../context'
 import { avatar } from '../avatar'
 import { pane, paneHead, scrollBody, type HeadParts } from '../pane'
 import { computerSection } from './computer'
+import { holdSection } from './hold'
 import { draftOf, identityFields } from './identity'
 import { jobsSection } from './jobs'
 import { memorySection } from './memory'
@@ -46,6 +47,7 @@ export const profileView = (ctx: BotsContext, parts: ProfileParts) => {
       }),
       modelSection(kit, { ...parts, save }),
       computerSection(kit, bot, save),
+      holdSection(kit, bot, save),
       memorySection(ctx, id),
       dynamicChild(parts.sections, found => div({ class: 'contents' }, ...found.map(section => section.render(id)))),
       settingsSection({}, settingsRow({ title: 'Delete bot' }, confirmButton(kit, { label: 'Delete', confirm: 'Delete for good', run: discard }))),
