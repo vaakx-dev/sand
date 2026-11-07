@@ -69,6 +69,24 @@ test('when a bot compacts, it rewrites its memory from all it drops and summariz
   expect(firstText(next)).not.toContain('<memory>')
 })
 
+test('near its context limit, a bot rewrites its memory and summarizes on the side, and its next turn starts from both', async () => {
+  const notes = 'Ana and I keep our notes here. '.repeat(3000)
+  const full = { type: 'usage', input: 160_000, output: 10 } as const
+  sand = await start([[said('Noted.')], [said('Noted.'), full], [said(`<summary>\n${summary}\n</summary>\n\n<memory>\n${remembered}\n</memory>`)], [said('Booked.')]])
+  const bot = await sand.ask(botCreate, { name: 'Calendar', models: { main: { model: 'fake/m' }, quick: {} } })
+
+  await talk(bot.id, `Remember: no meetings before 10.\n${notes}`)
+  await talk(bot.id, `More notes.\n${notes}`)
+  for (let tries = 0; tries < 300 && (await sand.ask(memoryRead, { bot: bot.id })) !== `${remembered}\n`; tries++) await Bun.sleep(10)
+  await talk(bot.id, 'Book lunch with Ana on Friday')
+
+  const [, last, compaction, next] = bodies()
+  expect(compaction.system).toEqual(last.system)
+  expect(compaction.messages[0].content[0].text).toBe(last.messages[0].content[0].text)
+  expect(next.system[0].text).toContain(`<memory>\n${remembered}\n</memory>`)
+  expect(firstText(next)).toContain(summary)
+})
+
 test('a memory over the size limit is sent back once to be cut to fit', async () => {
   const long = `## Decisions\n${'- Something minor.\n'.repeat(300)}`
   const reply = (memory: string) => said(`<summary>\n${summary}\n</summary>\n<memory>\n${memory}\n</memory>`)

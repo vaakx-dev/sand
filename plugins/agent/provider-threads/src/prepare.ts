@@ -6,7 +6,7 @@ import type { Selection } from '@sand/model/contract'
 import type { Dispose } from 'drydock'
 import { adoption, contextOf } from './adopt'
 import type { ThreadsContext } from './context'
-import { type Brief, briefTools, type HandoffStrategy, type ProviderThreadInfo, type ProviderThreads, stepPrepare } from './contract'
+import { type Brief, briefTools, type HandoffStrategy, type ProviderThreadInfo, type ProviderThreads, stepPrepare, stepSettle } from './contract'
 import { budgetOf, currentOf, fits, nativeOf, windowOf } from './handoff/budget'
 import { handOff } from './handoff/deliver'
 import { decide } from './policy'
@@ -158,7 +158,15 @@ export const createThreads = (ctx: ThreadsContext, stores: Stores, cap: number):
     },
     async step(conversation, turn, signal) {
       const plan = await prepare(conversation, turn, signal)
-      return { request: plan.request, thread: plan.thread.id, settle: done => settle(plan, done), lost: error => lost(plan, error) }
+      return {
+        request: plan.request,
+        thread: plan.thread.id,
+        settle(done) {
+          settle(plan, done)
+          ctx.emit(stepSettle, plan.request, conversation, turn, done.usage)
+        },
+        lost: error => lost(plan, error),
+      }
     },
     abandon: thread => stores.threads.doubt(thread),
     active: conversation => stores.threads.open(conversation)[0],
