@@ -1,5 +1,6 @@
 import { findBrowser, launch } from '@sand/cdp'
 import { fitInside, osOf, type Computer, type Screenshot, type Size } from '@sand/computers/contract'
+import { tabCommand, tabsNote } from './chords'
 import { pageElements } from './elements'
 import { dispatch, type Viewport } from './input'
 import { openTabs, type Call, type Tabs } from './tabs'
@@ -57,7 +58,7 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
     const executable = await findBrowser()
     if (!executable) throw new Error(noBrowser)
     const browser = await launch({ executable, profile, args: flagsFor(headless), deadline: Date.now() + startTimeout })
-    return openTabs(browser, !headless).catch(async (error: unknown) => {
+    return openTabs(browser).catch(async (error: unknown) => {
       await browser.close()
       throw error
     })
@@ -79,15 +80,22 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
   const computer: Computer & { close(): Promise<void> } = {
     info: { id, kind: 'browser', label, os: osOf(process.platform) },
     async screenshot(fit): Promise<Screenshot> {
-      const png = await capture(await page(), fit)
-      return { png, ...pngSize(png) }
+      const open = await tabs()
+      const png = await capture(await open.current(), fit)
+      return { png, ...pngSize(png), note: tabsNote(await open.list()) }
     },
     async elements() {
       const call = await page()
       return pageElements(call, await viewportOf(call))
     },
     async act(action) {
-      const call = await page()
+      const open = await tabs()
+      const command = action.type === 'key' ? tabCommand(action.keys) : undefined
+      if (command) {
+        await command(open)
+        return
+      }
+      const call = await open.current()
       await dispatch(call, await viewportOf(call), action)
     },
     async close() {

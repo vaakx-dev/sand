@@ -31,6 +31,7 @@ export interface Size {
 
 export interface Screenshot extends Size {
   png: Uint8Array
+  note?: string
 }
 
 export const fitInside = (size: Size, fit: Size | undefined): Size => {
