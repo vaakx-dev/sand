@@ -1,4 +1,4 @@
-import type { Action, Key, Point } from '@sand/computers/contract'
+import { heldKeys, type Action, type ActionOf, type Key, type Point } from '@sand/computers/contract'
 import { normalizedOf, pixelOf, type Screen } from './screen'
 
 export type Input = { type: 'mouse'; dx: number; dy: number; data: number; flags: number } | { type: 'key'; vk: number; scan: number; flags: number }
@@ -24,10 +24,12 @@ const button = {
 
 const mouse = (flags: number, data = 0): Input => ({ type: 'mouse', dx: 0, dy: 0, data, flags })
 
-const moveTo = (at: Point, screen: Screen): Input => {
-  const { x, y } = normalizedOf(pixelOf(at, screen), screen)
+const moveToPixel = (pixel: Point, screen: Screen): Input => {
+  const { x, y } = normalizedOf(pixel, screen)
   return { type: 'mouse', dx: x, dy: y, data: 0, flags: mouseFlags.move | mouseFlags.absolute | mouseFlags.virtualDesk }
 }
+
+const moveTo = (at: Point, screen: Screen) => moveToPixel(pixelOf(at, screen), screen)
 
 const clicks = (at: Point, screen: Screen, which: keyof typeof button, count: number): Input[][] => [
   [moveTo(at, screen), ...Array.from({ length: count }, () => [mouse(button[which].down), mouse(button[which].up)]).flat()],
@@ -56,22 +58,36 @@ const typed: Record<string, (scan: ScanCode) => Input[]> = {
 const typeText = (text: string, scan: ScanCode) =>
   [...text].flatMap(char => typed[char]?.(scan) ?? Array.from({ length: char.length }, (_, index) => unicode(char.charCodeAt(index))).flat())
 
-const chord = (keys: Key[], scan: ScanCode) => [...keys.map(key => virtualKey(key.vk, false, scan)), ...keys.toReversed().map(key => virtualKey(key.vk, true, scan))]
+const keysDown = (keys: Key[], scan: ScanCode) => keys.map(key => virtualKey(key.vk, false, scan))
+
+const keysUp = (keys: Key[], scan: ScanCode) => keys.toReversed().map(key => virtualKey(key.vk, true, scan))
+
+const chord = (keys: Key[], scan: ScanCode) => [...keysDown(keys, scan), ...keysUp(keys, scan)]
+
+const holding = (batches: Input[][], keys: Key[], scan: ScanCode) =>
+  batches.map((batch, index) => [...(index === 0 ? keysDown(keys, scan) : []), ...batch, ...(index === batches.length - 1 ? keysUp(keys, scan) : [])])
 
 const scroll = (dx: number, dy: number) => [
   ...Array.from({ length: Math.abs(dy) }, () => mouse(mouseFlags.wheel, -Math.sign(dy) * wheelDelta)),
   ...Array.from({ length: Math.abs(dx) }, () => mouse(mouseFlags.hwheel, Math.sign(dx) * wheelDelta)),
 ]
 
-const drag = (from: Point, to: Point, screen: Screen): Input[][] => {
+const dwell = (at: Point, ms: number, screen: Screen): Input[][] => {
+  const pixel = pixelOf(at, screen)
+  const nudged = { x: pixel.x > screen.left ? pixel.x - 1 : pixel.x + 1, y: pixel.y }
+  const moves = Math.ceil(ms / batchPause)
+  return Array.from({ length: moves }, (_, index) => [moveToPixel((moves - index) % 2 === 0 ? nudged : pixel, screen)])
+}
+
+const drag = ({ from, to, ms = 0 }: ActionOf<'drag'>, screen: Screen): Input[][] => {
   const path = Array.from({ length: dragSteps }, (_, index) => {
     const t = (index + 1) / dragSteps
     return moveTo({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }, screen)
   })
-  return [[moveTo(from, screen), mouse(mouseFlags.leftDown)], ...path.map(move => [move]), [mouse(mouseFlags.leftUp)]]
+  return [[moveTo(from, screen), mouse(mouseFlags.leftDown)], ...path.map(move => [move]), ...dwell(to, ms, screen), [mouse(mouseFlags.leftUp)]]
 }
 
-export const encode = (action: InputAction, screen: Screen, scan: ScanCode): Input[][] => {
+const batchesOf = (action: InputAction, screen: Screen, scan: ScanCode): Input[][] => {
   switch (action.type) {
     case 'move':
       return [[moveTo(action.at, screen)]]
@@ -84,7 +100,7 @@ export const encode = (action: InputAction, screen: Screen, scan: ScanCode): Inp
     case 'hold':
       return [[moveTo(action.at, screen), mouse(mouseFlags.leftDown)], [mouse(mouseFlags.leftUp)]]
     case 'drag':
-      return drag(action.from, action.to, screen)
+      return drag(action, screen)
     case 'scroll':
       return [[moveTo(action.at, screen), ...scroll(action.dx, action.dy)]]
     case 'type':
@@ -93,6 +109,8 @@ export const encode = (action: InputAction, screen: Screen, scan: ScanCode): Inp
       return [chord(action.keys, scan)]
   }
 }
+
+export const encode = (action: InputAction, screen: Screen, scan: ScanCode) => holding(batchesOf(action, screen, scan), heldKeys(action), scan)
 
 export const pauseAfter = (action: InputAction, batch: number) => (action.type === 'hold' && batch === 0 ? action.ms : batchPause)
 

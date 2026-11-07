@@ -1,4 +1,4 @@
-import { center, parseKeys, type Action, type Point, type UiElement } from '@sand/computers/contract'
+import { center, parseKeys, type Action, type Key, type Point, type UiElement } from '@sand/computers/contract'
 import { z } from 'zod'
 
 const fraction = z.number().min(0).max(1)
@@ -7,14 +7,26 @@ const target = z
   .union([z.object({ x: fraction, y: fraction }), z.object({ ref: z.string().describe('An element ref from computer_elements.') })])
   .describe('Where: x and y as fractions 0..1 of the screenshot from the left and top, or the ref of an element.')
 
+const held = z
+  .string()
+  .optional()
+  .describe('Modifier keys to keep down for the whole mouse action, like ctrl, shift or ctrl+shift: ctrl+click or shift+click to select several items.')
+
+const holdTime = z.number().int().min(100).max(10_000)
+
 export const actionInput = z.discriminatedUnion('type', [
-  z.object({ type: z.enum(['click', 'double_click', 'right_click', 'move']), at: target }),
+  z.object({ type: z.enum(['click', 'double_click', 'right_click']), at: target, keys: held }),
+  z.object({ type: z.literal('move'), at: target }),
+  z.object({ type: z.literal('hold'), at: target, ms: holdTime.describe('How long to keep the left button down, in milliseconds.'), keys: held }),
   z.object({
-    type: z.literal('hold'),
-    at: target,
-    ms: z.number().int().min(100).max(10_000).describe('How long to keep the left button down, in milliseconds.'),
+    type: z.literal('drag'),
+    from: target,
+    to: target,
+    ms: holdTime
+      .optional()
+      .describe('How long to keep the button down at to before releasing, in milliseconds, nudging the pointer so hover and dragover keep firing: lets a folder spring open or a list auto-scroll.'),
+    keys: held,
   }),
-  z.object({ type: z.literal('drag'), from: target, to: target }),
   z.object({
     type: z.literal('scroll'),
     at: target,
@@ -39,11 +51,20 @@ const pointOf = (at: Target, find: FindElement): Point => {
   return center(element.box)
 }
 
+const modifiersOf = (combo: string | undefined): Key[] => {
+  if (!combo) return []
+  const keys = parseKeys(combo)
+  const other = keys.find(key => !key.modifier)
+  if (other) throw new Error(`Only ctrl, shift, alt and meta can be held during a mouse action, not ${other.name}.`)
+  return keys
+}
+
 export const resolveAction = (input: ActionInput, find: FindElement): Action => {
   switch (input.type) {
+    case 'move':
+      return { type: 'move', at: pointOf(input.at, find) }
     case 'drag':
-      return { type: 'drag', from: pointOf(input.from, find), to: pointOf(input.to, find) }
-    case 'hold':
+      return { ...input, from: pointOf(input.from, find), to: pointOf(input.to, find), keys: modifiersOf(input.keys) }
     case 'scroll':
       return { ...input, at: pointOf(input.at, find) }
     case 'key':
@@ -53,6 +74,6 @@ export const resolveAction = (input: ActionInput, find: FindElement): Action => 
     case 'open':
       return input
     default:
-      return { type: input.type, at: pointOf(input.at, find) }
+      return { ...input, at: pointOf(input.at, find), keys: modifiersOf(input.keys) }
   }
 }
