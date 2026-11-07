@@ -1,4 +1,4 @@
-import { heldKeys, type Action, type ActionOf, type Key, type Point } from '@sand/computers/contract'
+import { heldKeys, typedKey, type Action, type ActionOf, type Key, type Point } from '@sand/computers/contract'
 import type { Call } from './tabs'
 
 export interface Viewport {
@@ -33,8 +33,6 @@ export const keyEvents = (keys: Key[]) => {
   })
   return { down, up }
 }
-
-const enter: Key = { name: 'enter', key: 'Enter', code: 'Enter', vk: 0x0d, text: '\r' }
 
 const pageInput = (call: Call, viewport: Viewport, modifiers: number) => {
   const mouse = (type: string, at: Point, extra: object = {}) => call('Input.dispatchMouseEvent', { type, ...toPixels(at, viewport), modifiers, ...extra })
@@ -94,11 +92,25 @@ const hold = async (input: PageInput, { at, ms }: ActionOf<'hold'>) => {
   await input.mouse('mouseReleased', at, { button: 'left', buttons: 0, clickCount: 1 })
 }
 
+const keyedLength = 200
+
+const lineKey = (char: string) => (char === '\n' ? typedKey(char) : undefined)
+
 const type = async (input: PageInput, call: Call, text: string) => {
-  for (const [index, line] of text.split(/\r?\n/).entries()) {
-    if (index > 0) await input.keys([enter])
-    if (line) await call('Input.insertText', { text: line })
+  const lines = text.replace(/\r\n?/g, '\n')
+  const keyOf = lines.length > keyedLength ? lineKey : typedKey
+  let unkeyed = ''
+  for (const char of lines) {
+    const key = keyOf(char)
+    if (!key) {
+      unkeyed += char
+      continue
+    }
+    if (unkeyed) await call('Input.insertText', { text: unkeyed })
+    unkeyed = ''
+    await input.keys([key])
   }
+  if (unkeyed) await call('Input.insertText', { text: unkeyed })
 }
 
 const open = async (call: Call, url: string) => {

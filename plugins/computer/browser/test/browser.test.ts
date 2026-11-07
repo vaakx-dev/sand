@@ -13,9 +13,12 @@ const page = `<!doctype html>
     <style>
       body { margin: 0; font: 16px sans-serif; height: 3000px; }
       #top { position: fixed; top: 0; left: 0; right: 0; height: 400px; background: #eee; padding: 8px; }
-      #pad { position: absolute; left: 600px; top: 40px; width: 300px; height: 200px; background: #cde; }
+      #pad { position: absolute; left: 600px; top: 40px; width: 300px; height: 200px; background: #cde; user-select: none; }
       #card { position: absolute; left: 600px; top: 260px; width: 100px; height: 60px; background: #edc; }
       #bin { position: absolute; left: 800px; top: 260px; width: 150px; height: 100px; background: #dec; }
+      #fields { position: absolute; left: 420px; top: 420px; width: 300px; }
+      #frames { position: absolute; left: 960px; top: 0; }
+      #frames iframe { display: block; width: 300px; height: 230px; margin: 8px; }
       button, input { font-size: 20px; margin: 4px; }
       #rows { position: fixed; left: 0; bottom: 0; width: 400px; height: 150px; overflow: auto; background: #fff; }
       #rows p { margin: 0; }
@@ -42,6 +45,18 @@ const page = `<!doctype html>
       <div id="card" draggable="true" aria-label="Card" role="region"></div>
       <div id="bin" aria-label="Bin" role="region"></div>
       <div id="pad" aria-label="Pad" role="region"></div>
+      <div id="fields">
+        <select id="fruit" aria-label="Fruit"><option>Apple</option><option>Banana</option><option>Cherry</option></select>
+        <textarea id="area" aria-label="Area"></textarea>
+        <div id="note" aria-label="Note" role="textbox" contenteditable></div>
+        <p id="fruited">Fruit: Apple</p>
+        <p id="noted">Note: ""</p>
+        <p id="wrote">Area: ""</p>
+      </div>
+      <div id="frames">
+        <iframe src="/local"></iframe>
+        <iframe src="REMOTE"></iframe>
+      </div>
     </div>
     <script>
       const show = (id, text) => (document.getElementById(id).textContent = text)
@@ -89,6 +104,9 @@ const page = `<!doctype html>
         show('dropped', 'Dropped: ' + (performance.now() - entered >= 800 ? 'after a rest' : 'too soon'))
         entered = undefined
       }
+      document.getElementById('fruit').onchange = event => show('fruited', 'Fruit: ' + event.target.value)
+      document.getElementById('area').oninput = event => show('wrote', 'Area: ' + JSON.stringify(event.target.value))
+      document.getElementById('note').oninput = event => show('noted', 'Note: ' + JSON.stringify(event.target.innerText))
       show('seen', document.cookie.includes('seen=1') ? 'Seen: before' : 'Seen: first')
       document.cookie = 'seen=1; max-age=3600; path=/'
     </script>
@@ -97,11 +115,32 @@ const page = `<!doctype html>
 
 const other = '<!doctype html><title>Other page</title><p>Other content</p>'
 
+const counter = (label: string, child = '') => `<!doctype html>
+<body style="margin: 0; font: 16px sans-serif">
+  <button id="add">${label} add</button>
+  <p id="count">${label}: 0</p>
+  ${child && `<iframe src="${child}" style="width: 280px; height: 110px"></iframe>`}
+  <script>
+    let clicks = 0
+    document.getElementById('add').onclick = () => (document.getElementById('count').textContent = '${label}: ' + ++clicks)
+  </script>
+</body>`
+
 const server = Bun.serve({
   port: 0,
-  fetch: request => new Response(new URL(request.url).pathname === '/other' ? other : page, { headers: { 'content-type': 'text/html' } }),
+  fetch: request => {
+    const pages: Record<string, string> = {
+      '/': page.replace('REMOTE', `http://127.0.0.1:${server.port}/remote`),
+      '/local': counter('Local', '/local-nested'),
+      '/local-nested': counter('Local nested'),
+      '/remote': counter('Remote', `${url}remote-nested`),
+      '/remote-nested': counter('Remote nested'),
+      '/other': other,
+    }
+    return new Response(pages[new URL(request.url).pathname], { headers: { 'content-type': 'text/html' } })
+  },
 })
-const url = server.url.href
+const url = `http://localhost:${server.port}/`
 const profile = mkdtempSync(join(tmpdir(), 'sand-browser-computer-'))
 const open = () => browserComputer({ id: 'test', label: 'Test browser', profile, headless: true })
 
@@ -173,9 +212,40 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     await eventually('Submitted: sand')
   })
 
+  test('types an option name into a select', async () => {
+    await click(await find('combobox', 'Fruit'))
+    await computer.act({ type: 'type', text: 'Cherry' })
+    await computer.act({ type: 'key', keys: parseKeys('enter') })
+    await eventually('Fruit: Cherry')
+  })
+
+  test('types lines and keyless characters into a textarea and an editable div', async () => {
+    await click(await find('textbox', 'Area'))
+    await computer.act({ type: 'type', text: 'One!\nTwo ✓ é' })
+    await eventually('Area: "One!\\nTwo ✓ é"')
+    const long = 'Long. '.repeat(50)
+    await computer.act({ type: 'type', text: `\n${long}\n.` })
+    await eventually(`Area: "One!\\nTwo ✓ é\\n${long}\\n."`)
+    await click(await find('textbox', 'Note'))
+    await computer.act({ type: 'type', text: 'A\nb' })
+    await eventually('Note: "A\\nb"')
+  })
+
   test('scrolls by wheel notches', async () => {
     await computer.act({ type: 'scroll', at: { x: 0.5, y: 0.8 }, dx: 0, dy: 3 })
     await eventually('Scrolled: 300')
+  })
+
+  test('lists and clicks buttons inside iframes of a scrolled page, nested and cross-origin', async () => {
+    const found = await computer.elements()
+    expect(new Set(found.map(element => element.ref)).size).toBe(found.length)
+    for (const label of ['Local', 'Local nested', 'Remote', 'Remote nested']) {
+      const button = await find('button', `${label} add`)
+      expect(button.box.left).toBeGreaterThan(0.7)
+      expect(button.box.right).toBeLessThanOrEqual(1)
+      await click(button)
+      await eventually(`${label}: 1`)
+    }
   })
 
   test('double clicks, right clicks and drags', async () => {
