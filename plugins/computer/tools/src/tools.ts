@@ -88,7 +88,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
     name: 'computer_act',
     group,
     description:
-      'Act on a computer: click, double_click, right_click, hold (press and keep the left button down for ms, for press-and-hold buttons and long-press), move, drag, scroll, type, key, wait or open a link. Positions are x and y fractions 0..1 of the screenshot, or an element ref. Take a new screenshot to see the result.',
+      'Act on a computer: click, double_click, right_click, hold (press and keep the left button down for ms, for press-and-hold buttons and long-press), move, drag (with ms to rest at the end before dropping, for spring-loaded folders and auto-scrolling lists), scroll, type, key, wait or open a link. Clicks, hold and drag take keys like ctrl or shift to keep down meanwhile, for ctrl+click and shift+click multi-select. Positions are x and y fractions 0..1 of the screenshot, or an element ref. Take a new screenshot to see the result.',
     input: actInput,
     needs: ['computer'],
     async run({ computer, action }, context) {

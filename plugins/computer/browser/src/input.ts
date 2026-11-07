@@ -1,4 +1,4 @@
-import type { Action, ActionOf, Key, Point } from '@sand/computers/contract'
+import { heldKeys, type Action, type ActionOf, type Key, type Point } from '@sand/computers/contract'
 import type { Call } from './tabs'
 
 export interface Viewport {
@@ -10,15 +10,17 @@ type Button = 'left' | 'right'
 
 const wheelPixels = 100
 const dragSteps = 8
+const dwellStep = 50
 const loadTimeout = 15_000
 const buttonBits: Record<Button, number> = { left: 1, right: 2 }
 const shift = 8
 
 export const toPixels = ({ x, y }: Point, viewport: Viewport) => ({ x: x * viewport.width, y: y * viewport.height })
 
+const maskOf = (keys: Key[]) => keys.reduce((mask, key) => mask | (key.modifier ?? 0), 0)
+
 export const keyEvents = (keys: Key[]) => {
-  const modifiers = keys.reduce((mask, key) => mask | (key.modifier ?? 0), 0)
-  const typesText = (modifiers & ~shift) === 0
+  const typesText = (maskOf(keys) & ~shift) === 0
   let held = 0
   const down = keys.map(key => {
     held |= key.modifier ?? 0
@@ -29,21 +31,27 @@ export const keyEvents = (keys: Key[]) => {
     held &= ~(key.modifier ?? 0)
     return { type: 'keyUp', key: key.key, code: key.code, windowsVirtualKeyCode: key.vk, modifiers: held }
   })
-  return [...down, ...up]
+  return { down, up }
 }
 
 const enter: Key = { name: 'enter', key: 'Enter', code: 'Enter', vk: 0x0d, text: '\r' }
 
-const pageInput = (call: Call, viewport: Viewport) => {
-  const mouse = (type: string, at: Point, extra: object = {}) => call('Input.dispatchMouseEvent', { type, ...toPixels(at, viewport), ...extra })
+const pageInput = (call: Call, viewport: Viewport, modifiers: number) => {
+  const mouse = (type: string, at: Point, extra: object = {}) => call('Input.dispatchMouseEvent', { type, ...toPixels(at, viewport), modifiers, ...extra })
   const press = async (at: Point, button: Button, clickCount: number) => {
     await mouse('mousePressed', at, { button, buttons: buttonBits[button], clickCount })
     await mouse('mouseReleased', at, { button, buttons: 0, clickCount })
   }
-  const keys = async (keys: Key[]) => {
-    for (const params of keyEvents(keys)) await call('Input.dispatchKeyEvent', params)
+  const send = async (events: object[]) => {
+    for (const params of events) await call('Input.dispatchKeyEvent', params)
   }
-  return { mouse, press, keys }
+  const keys = async (keys: Key[]) => {
+    const { down, up } = keyEvents(keys)
+    await send(down)
+    await send(up)
+  }
+  const nudged = (at: Point) => ({ x: at.x + 1 / viewport.width, y: at.y })
+  return { mouse, press, send, keys, nudged }
 }
 
 type PageInput = ReturnType<typeof pageInput>
@@ -63,10 +71,19 @@ const steps = (from: Point, to: Point) =>
     return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }
   })
 
-const drag = async (input: PageInput, { from, to }: ActionOf<'drag'>) => {
+const dwell = async (input: PageInput, at: Point, ms: number) => {
+  const moves = Math.ceil(ms / dwellStep)
+  for (let left = moves; left > 0; left--) {
+    await Bun.sleep(dwellStep)
+    await input.mouse('mouseMoved', left % 2 === 0 ? input.nudged(at) : at, { button: 'left', buttons: 1 })
+  }
+}
+
+const drag = async (input: PageInput, { from, to, ms = 0 }: ActionOf<'drag'>) => {
   await input.mouse('mouseMoved', from)
   await input.mouse('mousePressed', from, { button: 'left', buttons: 1, clickCount: 1 })
   for (const at of steps(from, to)) await input.mouse('mouseMoved', at, { button: 'left', buttons: 1 })
+  await dwell(input, to, ms)
   await input.mouse('mouseReleased', to, { button: 'left', buttons: 0, clickCount: 1 })
 }
 
@@ -95,8 +112,7 @@ const click = async (input: PageInput, at: Point, button: Button, clicks: number
   for (let count = 1; count <= clicks; count++) await input.press(at, button, count)
 }
 
-export const dispatch = async (call: Call, viewport: Viewport, action: Action) => {
-  const input = pageInput(call, viewport)
+const perform = async (input: PageInput, call: Call, action: Action) => {
   switch (action.type) {
     case 'move':
       return input.mouse('mouseMoved', action.at)
@@ -122,4 +138,13 @@ export const dispatch = async (call: Call, viewport: Viewport, action: Action) =
     case 'open':
       return open(call, action.url)
   }
+}
+
+export const dispatch = async (call: Call, viewport: Viewport, action: Action) => {
+  const held = heldKeys(action)
+  const input = pageInput(call, viewport, maskOf(held))
+  const { down, up } = keyEvents(held)
+  await input.send(down)
+  await perform(input, call, action)
+  await input.send(up)
 }

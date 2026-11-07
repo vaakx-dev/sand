@@ -14,6 +14,8 @@ const page = `<!doctype html>
       body { margin: 0; font: 16px sans-serif; height: 3000px; }
       #top { position: fixed; top: 0; left: 0; right: 0; height: 400px; background: #eee; padding: 8px; }
       #pad { position: absolute; left: 600px; top: 40px; width: 300px; height: 200px; background: #cde; }
+      #card { position: absolute; left: 600px; top: 260px; width: 100px; height: 60px; background: #edc; }
+      #bin { position: absolute; left: 800px; top: 260px; width: 150px; height: 100px; background: #dec; }
       button, input { font-size: 20px; margin: 4px; }
     </style>
   </head>
@@ -29,6 +31,11 @@ const page = `<!doctype html>
       <p id="seen"></p>
       <button id="revoke">Hold to revoke</button>
       <p id="revoked">Revoked: no</p>
+      <button id="pick">Pick</button>
+      <p id="picked">Picked: none</p>
+      <p id="dropped">Dropped: none</p>
+      <div id="card" draggable="true" aria-label="Card" role="region"></div>
+      <div id="bin" aria-label="Bin" role="region"></div>
       <div id="pad" aria-label="Pad" role="region"></div>
     </div>
     <script>
@@ -59,6 +66,21 @@ const page = `<!doctype html>
       revoke.onpointerup = () => {
         if (pressed !== undefined && performance.now() - pressed >= 1000) show('revoked', 'Revoked: yes')
         pressed = undefined
+      }
+      document.getElementById('pick').onclick = event => {
+        const held = [event.ctrlKey && 'ctrl', event.shiftKey && 'shift'].filter(Boolean)
+        show('picked', 'Picked: ' + (held.join('+') || 'plain'))
+      }
+      document.getElementById('card').ondragstart = event => event.dataTransfer.setData('text/plain', 'card')
+      const bin = document.getElementById('bin')
+      let entered
+      bin.ondragenter = () => (entered ??= performance.now())
+      bin.ondragover = event => event.preventDefault()
+      bin.ondragleave = () => (entered = undefined)
+      bin.ondrop = event => {
+        event.preventDefault()
+        show('dropped', 'Dropped: ' + (performance.now() - entered >= 800 ? 'after a rest' : 'too soon'))
+        entered = undefined
       }
       show('seen', document.cookie.includes('seen=1') ? 'Seen: before' : 'Seen: first')
       document.cookie = 'seen=1; max-age=3600; path=/'
@@ -154,6 +176,25 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     expect(await texts()).toContain('Revoked: no')
     await computer.act({ type: 'hold', at: center(revoke.box), ms: 1200 })
     await eventually('Revoked: yes')
+  })
+
+  test('holds modifier keys down through a click', async () => {
+    const pick = center((await find('button', 'Pick')).box)
+    await computer.act({ type: 'click', at: pick, keys: parseKeys('ctrl') })
+    await eventually('Picked: ctrl')
+    await computer.act({ type: 'click', at: pick, keys: parseKeys('ctrl+shift') })
+    await eventually('Picked: ctrl+shift')
+    await computer.act({ type: 'click', at: pick })
+    await eventually('Picked: plain')
+  })
+
+  test('rests over a drop target before dropping when asked to', async () => {
+    const card = center((await find('region', 'Card')).box)
+    const bin = center((await find('region', 'Bin')).box)
+    await computer.act({ type: 'drag', from: card, to: bin })
+    await eventually('Dropped: too soon')
+    await computer.act({ type: 'drag', from: card, to: bin, ms: 1000 })
+    await eventually('Dropped: after a rest')
   })
 
   test('keeps cookies in its profile across restarts', async () => {
