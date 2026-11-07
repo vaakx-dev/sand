@@ -20,6 +20,10 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@sand/harness": "workspace:*"
+    "@sand/accounts": "workspace:*",
+    "@sand/cdp": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/report": "workspace:*",
+    "@sand/usage": "workspace:*"
   }
 }
