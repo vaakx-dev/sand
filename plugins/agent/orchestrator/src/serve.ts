@@ -21,7 +21,6 @@ import {
 import { findThread } from './find'
 import { listThreads } from './list'
 import type { Pcs } from './pcs'
-import { readThread } from './read'
 import type { Start } from './start'
 import { updateThread } from './update'
 
@@ -63,14 +62,19 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
     return forwarded(caller) ? listThreads(ctx, filter) : pcs.list(filter)
   }
 
-  const onOwner = <I extends { session: string }, O>(
+  const ownThread = (actor: Actor | undefined) => {
+    if (actor?.owner !== 'thread') throw failure('invalid_request', 'Name the thread')
+    return actor.id
+  }
+
+  const onOwner = <I extends { session?: string }, O>(
     found: Server,
     request: Request<I, O>,
     here: (input: I, caller: Caller) => O | Promise<O>,
     timeout?: (input: I) => number,
   ) =>
     found.handle(request, async (input, caller) => {
-      const pc = forwarded(caller) ? undefined : await pcs.ownerOf(input.session)
+      const pc = forwarded(caller) || !input.session ? undefined : await pcs.ownerOf(input.session)
       return pc ? pcs.call(pc, request, input, timeout?.(input)) : here(input, caller)
     })
 
@@ -89,7 +93,7 @@ export const serveThreads = (ctx: OrchestratorContext, threads: Orchestrator, st
         },
         ({ timeoutMs = waitLimit }) => timeoutMs + answerGrace,
       ),
-      onOwner(found, threadRead, ({ session: id, ...options }) => readThread(thread(id), options)),
+      onOwner(found, threadRead, ({ session, ...reading }, { actor }) => threads.read(session ?? ownThread(actor), reading)),
       onOwner(found, threadStop, ({ session: id }) => stop(thread(id))),
       onOwner(found, threadUpdate, input => updateThread(ctx, input)),
     )

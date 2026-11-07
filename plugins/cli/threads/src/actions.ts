@@ -1,9 +1,9 @@
 import type { CliValues } from '@sand/config/contract'
 import {
   type Call,
-  readLimit,
   type Sent,
   threadList,
+  type ThreadPage,
   threadRead,
   threadSend,
   threadStart,
@@ -68,11 +68,11 @@ const wait: Parse = ([session, ...rest], flags) => {
 const show: Parse = ([session, ...rest], flags) => {
   if (!session || rest.length) return undefined
   return async call => {
-    let page = await call(threadRead, { session, after: 0, limit: readLimit })
-    const items = [...page.items]
-    while (page.more) {
-      page = await call(threadRead, { session, after: page.next, limit: readLimit })
+    const items: ThreadPage['items'] = []
+    for (let more = true; more; ) {
+      const page = await call(threadRead, { session, after: items.at(-1)?.seq ?? 0 })
       items.push(...page.items)
+      more = page.more
     }
     printItems(items, flags.json)
     return 0

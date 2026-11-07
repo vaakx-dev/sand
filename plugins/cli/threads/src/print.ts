@@ -1,4 +1,6 @@
-import type { ThreadItem, ThreadRow, ThreadState, ThreadStatus } from '@sand/orchestrator/contract'
+import type { ThreadPage, ThreadRow, ThreadState, ThreadStatus } from '@sand/orchestrator/contract'
+
+type Item = ThreadPage['items'][number]
 
 const exits: Record<ThreadStatus, number> = { idle: 0, running: 0, completed: 0, waiting: 3, interrupted: 130, failed: 1, lost: 1 }
 
@@ -9,7 +11,7 @@ const notes: Partial<Record<ThreadStatus, (state: ThreadState) => string>> = {
   lost: state => `${state.thread} lost its turn when sand stopped`,
 }
 
-const speakers: Record<ThreadItem['role'], string> = { user: 'you', assistant: 'sand' }
+const speakers: Record<Item['role'], string> = { user: 'you', assistant: 'sand' }
 
 export const printState = (state: ThreadState, json: boolean) => {
   if (json) console.log(JSON.stringify(state))
@@ -22,7 +24,7 @@ export const printState = (state: ThreadState, json: boolean) => {
   return exits[state.status]
 }
 
-export const printItems = (items: ThreadItem[], json: boolean) => {
+export const printItems = (items: Item[], json: boolean) => {
   if (json) return console.log(JSON.stringify(items))
   console.log(items.map(item => `${speakers[item.role]}:\n${item.text}`).join('\n\n'))
 }

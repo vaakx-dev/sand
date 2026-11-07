@@ -2,9 +2,7 @@ import { memoryChangeWire, memoryLimit, memoryRead, memoryWrite } from '@sand/bo
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
-
-const changedNote = ({ linkButton }: BotsContext['kit'], reload: () => void) =>
-  div({ class: 'flex flex-wrap items-center gap-2 text-xs text-neutral-400' }, span('The bot rewrote its memory.'), linkButton({ onClick: reload }, 'Load its version'))
+import { changedNote } from './changed'
 
 export const memorySection = (ctx: BotsContext, bot: string) => {
   const { errorText, loadingState, primaryAction, rowDetail, settingsSection, textArea } = ctx.kit
@@ -44,7 +42,7 @@ export const memorySection = (ctx: BotsContext, bot: string) => {
       div(
         { class: 'flex flex-col gap-2 pt-3' },
         textArea({ bindValue: draft, rows: 14, placeholder: 'Nothing yet. The bot writes here when its conversation is compacted.', 'aria-label': 'Memory', class: 'font-mono' }),
-        show(outdated, () => changedNote(ctx.kit, reload)),
+        show(outdated, () => changedNote(ctx.kit, 'The bot rewrote its memory.', reload)),
         div(
           { class: 'flex flex-wrap items-center justify-between gap-2' },
           span({ class: 'text-xs text-neutral-400' }, () => `${draft.get().trim().length.toLocaleString()} of ${memoryLimit.toLocaleString()} characters`),

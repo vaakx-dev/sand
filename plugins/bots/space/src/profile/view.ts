@@ -10,6 +10,7 @@ import { draftOf, identityFields } from './identity'
 import { jobsSection } from './jobs'
 import { memorySection } from './memory'
 import { modelSection, type ModelParts } from './models'
+import { notesSection } from './notes'
 
 export interface ProfileParts extends HeadParts, ModelParts {
   sections: Sig<BotProfileSection[]>
@@ -49,6 +50,7 @@ export const profileView = (ctx: BotsContext, parts: ProfileParts) => {
       computerSection(kit, bot, save),
       holdSection(kit, bot, save),
       memorySection(ctx, id),
+      notesSection(ctx, id),
       dynamicChild(parts.sections, found => div({ class: 'contents' }, ...found.map(section => section.render(id)))),
       settingsSection({}, settingsRow({ title: 'Delete bot' }, confirmButton(kit, { label: 'Delete', confirm: 'Delete for good', run: discard }))),
     ),

@@ -12,6 +12,7 @@
     "summary": "Lets your threads, your bots and outside agents start, message, read and manage your threads"
   },
   "dependencies": {
+    "@sand/chats": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/turns-contract": "workspace:*",

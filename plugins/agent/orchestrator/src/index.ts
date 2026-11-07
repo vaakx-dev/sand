@@ -1,4 +1,4 @@
-import { sessionRemove } from '@sand/chats/contract'
+import { readHistory, sessionRemove } from '@sand/chats/contract'
 import type { WaitUntil } from '@sand/turns-contract/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
@@ -7,7 +7,6 @@ import { findThread } from './find'
 import { reportFinished } from './finished'
 import { createOwners } from './owners'
 import { createPcs } from './pcs'
-import { readThread } from './read'
 import { openReceipts } from './receipts'
 import { schema } from './schema'
 import { serveThreads } from './serve'
@@ -32,7 +31,7 @@ export default definePlugin({
       start: input => start(input),
       send: async (thread, { prompt, from, ...input }) => ({ ...(await ctx.turns.send(findThread(ctx, thread), { ...input, prompt: owners.sign(prompt, from) })), thread }),
       wait: (thread, until, signal, by) => (by ? waits.during(by, thread, () => wait(thread, until, signal)) : wait(thread, until, signal)),
-      read: (thread, options) => readThread(findThread(ctx, thread), options),
+      read: (thread, reading) => ({ thread, ...readHistory(findThread(ctx, thread).path(), reading) }),
       starterOf: starters.of,
       started: starters.owned,
       notify: owners.notify,

@@ -1,15 +1,6 @@
+import { historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
-import {
-  readLimit,
-  threadList,
-  threadRead,
-  threadSend,
-  threadStart,
-  threadStop,
-  threadUpdate,
-  threadViews,
-  waitThread,
-} from '@sand/orchestrator/contract'
+import { readLimit, threadList, threadRead, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
@@ -34,12 +25,7 @@ const listInput = z.object({
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 
-const readInput = z.object({
-  thread,
-  after: z.number().int().min(0).optional().describe('Return the items after this seq, oldest first; leave it out for the latest items'),
-  limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many items (default 50)'),
-  view: z.enum(threadViews).optional().describe('messages: what was said (default); activity: also the tool calls and their results'),
-})
+const readInput = z.object({ thread: z.string().optional().describe('The thread id (default: you, when you are a thread)'), ...historyReading.shape })
 
 const startInput = z.object({
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
@@ -104,7 +90,8 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'thread_read',
-    description: 'Read what a thread said; each item has a seq to read on from',
+    description:
+      "Read or search a thread's whole conversation, including what compaction took out of its context. Each item has its seq, when it happened and its turn. A thread leaves out thread to look up its own past: what the user said and when, what it did, and the notifications it got. more says there are items past the page: older ones, or newer ones when after is set",
     input: readInput,
     access: 'read',
     group: group.name,

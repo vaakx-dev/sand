@@ -1,7 +1,8 @@
+import { historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit, readLimit, readViews } from './contract'
+import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit } from './contract'
 
 const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task and read its replies" }
 
@@ -21,14 +22,7 @@ const listInput = z.object({})
 
 const self = z.string().optional().describe('The bot id (default: you, when you are a bot)')
 
-const readInput = z.object({
-  bot: self,
-  query: z.string().min(1).optional().describe('Only items whose text holds this, ignoring case'),
-  view: z.enum(readViews).optional().describe('messages (default): what was said, notifications included; activity: tool calls and results too'),
-  after: z.number().int().min(0).optional().describe('Return the items after this seq, oldest first'),
-  before: z.number().int().min(1).optional().describe('Return the items before this seq; without after, the newest of them'),
-  limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many items (default 50)'),
-})
+const readInput = z.object({ bot: self, ...historyReading.shape })
 
 const updateInput = z.object({
   bot: self,
