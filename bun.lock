@@ -548,6 +548,7 @@
       "name": "@sand/threads-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/chats": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
         "@sand/turns-contract": "workspace:*",
@@ -759,6 +760,7 @@
         "@sand/compaction": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/server": "workspace:*",
+        "@sand/tools": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",

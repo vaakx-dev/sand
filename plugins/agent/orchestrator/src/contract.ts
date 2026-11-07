@@ -1,4 +1,4 @@
-import { notificationText, type Prompt } from '@sand/chats/contract'
+import { type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
@@ -25,29 +25,8 @@ export interface ThreadState {
 
 export type Sent = SendResult & { thread: string }
 
-export const threadViews = ['messages', 'activity'] as const
-
-export type ThreadView = (typeof threadViews)[number]
-
-export interface ThreadItem {
-  seq: number
-  at: number
-  role: 'user' | 'assistant'
-  text: string
-  turn?: string
-}
-
-export interface ThreadPage {
+export interface ThreadPage extends HistoryPage {
   thread: string
-  items: ThreadItem[]
-  next: number
-  more: boolean
-}
-
-export interface ReadOptions {
-  after?: number
-  limit?: number
-  view?: ThreadView
 }
 
 export interface StartInput {
@@ -101,7 +80,7 @@ export interface Orchestrator {
   start(input: StartInput): Promise<Sent>
   send(thread: string, input: SendInput): Promise<Sent>
   wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
-  read(thread: string, options: ReadOptions): ThreadPage
+  read(thread: string, reading: HistoryReading): ThreadPage
   starterOf(thread: string): ConversationRef | undefined
   started(owner: Owner): Record<string, string>
   notify(thread: string, notice: Notice): Promise<boolean>
@@ -185,11 +164,7 @@ export const threadWait = request('thread.wait', {
   place,
 })
 export const threadRead = request('thread.read', {
-  input: session.extend({
-    after: z.number().int().min(0).optional(),
-    limit: z.number().int().min(1).max(readLimit).optional(),
-    view: z.enum(threadViews).optional(),
-  }),
+  input: historyReading.extend({ session: z.string().optional() }),
   output: type<ThreadPage>(),
   callers,
   place,

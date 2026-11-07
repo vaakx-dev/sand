@@ -7,6 +7,7 @@ import { isContextRecord } from './prompt/context'
 import type { Session, SessionInfo, Sessions } from './session'
 
 export type * from './entry'
+export * from './history'
 export type * from './message'
 export * from './notification'
 export type * from './parts'

@@ -1,4 +1,5 @@
 import type { BotHold, BotStatus } from '@sand/bots/contract'
+import { type HistoryPage, historyReading } from '@sand/chats/contract'
 import type { TurnStatus } from '@sand/engine/contract'
 import { request, type } from '@sand/host-hub/contract'
 import { type Call, outsideOrigins } from '@sand/orchestrator/contract'
@@ -24,38 +25,12 @@ export interface BotAnswer {
   reported?: true
 }
 
-export interface BotItem {
-  seq: number
-  at: string
-  role: 'user' | 'assistant'
-  text: string
-  turn?: string
-}
-
-export interface BotPage {
+export interface BotPage extends HistoryPage {
   bot: string
-  items: BotItem[]
-  more: boolean
 }
 
 export const waitLimit = 25_000
-export const readLimit = 200
 export const jobLimit = 2_000
-
-export const readViews = ['messages', 'activity'] as const
-
-export type ReadView = (typeof readViews)[number]
-
-const readInput = z.object({
-  bot: z.string().optional(),
-  query: z.string().min(1).optional(),
-  view: z.enum(readViews).optional(),
-  after: z.number().int().min(0).optional(),
-  before: z.number().int().min(1).optional(),
-  limit: z.number().int().min(1).max(readLimit).optional(),
-})
-
-export type BotReading = Omit<z.infer<typeof readInput>, 'bot'>
 
 const callers = 'any'
 const one = z.object({ bot: z.string() })
@@ -72,7 +47,7 @@ export const botAwait = request('bot.await', {
   callers,
 })
 export const botRead = request('bot.read', {
-  input: readInput,
+  input: historyReading.extend({ bot: z.string().optional() }),
   output: type<BotPage>(),
   callers,
 })

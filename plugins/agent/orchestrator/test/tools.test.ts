@@ -57,6 +57,20 @@ test('an agent can neither start a thread past the deepest nesting nor message a
   expect(sand.sessions.list().filter(chat => chat.kind === 'thread')).toHaveLength(3)
 })
 
+test('a thread looks up its own past: what it did, and when', async () => {
+  await start()
+  const chat = sand.chat('fake/m')
+  chat.append('message', { role: 'user', content: [{ type: 'text', text: 'Find otters' }] })
+  chat.append('message', { role: 'assistant', content: [{ type: 'tool_call', id: 'search-1', name: 'web_search', input: { query: 'otters' } }] })
+  chat.append('message', { role: 'user', content: [{ type: 'tool_result', callId: 'search-1', content: [{ type: 'text', text: 'Otters hold hands.' }] }] })
+  chat.append('message', { role: 'assistant', content: [{ type: 'text', text: 'They hold hands.' }] })
+
+  const found = JSON.parse((await use(chat, 'thread_read', { view: 'activity', query: 'otters' })).text)
+  expect(found).toMatchObject({ thread: chat.id, more: false })
+  expect(found.items.map(({ text }: { text: string }) => text)).toEqual(['Find otters', '[web_search] {"query":"otters"}', '[web_search result] Otters hold hands.'])
+  expect(found.items[0].at).toMatch(/^\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d$/)
+})
+
 const heard = async (session: Session, count: number) => {
   for (let tries = 0; tries < 300; tries++) {
     const said = session.path().flatMap(entry => (entry.type === 'message' && (entry.data as Message).role === 'user' ? [textOf((entry.data as Message).content)] : []))

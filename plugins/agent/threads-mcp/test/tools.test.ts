@@ -45,6 +45,7 @@ test('an outside agent starts a thread where it is once per request id, waits fo
   })
   expect(await run('thread_list', {})).toEqual([expect.objectContaining({ thread, status: 'completed', cwd: sand.home })])
   await expect(run('thread_send', { thread: 'missing', prompt: 'hello' })).rejects.toThrow('No thread missing')
+  await expect(run('thread_read', {})).rejects.toThrow('Name the thread')
 
   const later = '2030-01-02T03:04:05Z'
   expect(await run('thread_update', { thread, title: 'Ping', pinned: true })).toMatchObject({ thread, title: 'Ping', pinned: true, settled: false })
