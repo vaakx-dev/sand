@@ -1,16 +1,14 @@
+import { layout } from '@sand/layout/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import { derive, div, dynamicChild, show, span, type Child, type Derive } from '@vaakx-dev/vrui'
 import type { WorkContext } from './context'
 import { stageMark } from './marks'
-import { phoneWork } from './phone'
-import type { WorkParts } from './tabs'
+import { hasWork, type WorkParts } from './tabs'
 import { tally, type Tally } from './tasks'
 
 export interface SummaryParts extends WorkParts {
-  started: () => boolean
   narrow: Derive<boolean>
-  name: () => string
 }
 
 const look = 'mx-auto flex w-full max-w-3xl items-center gap-4 px-2 pb-2 text-xs text-neutral-400'
@@ -41,22 +39,18 @@ export const summaryLine = (ctx: WorkContext, parts: SummaryParts) => {
   const { kit } = ctx
   const totals = derive(() => tally(parts.tasks.get()))
   const counted = derive(() => totals.get().run + totals.get().need + totals.get().pulls > 0)
-  const reachable = derive(() => counted.get() || parts.started() || parts.plan.filled.get())
-  const phone = phoneWork(ctx, parts, parts.name)
-  const button = () => {
-    const opener: HTMLElement = kit.plainButton(
-      { class: [look, 'rounded-md'], title: 'Show work and plan', onClick: () => phone.list(opener) },
+  const button = () =>
+    kit.plainButton(
+      { class: [look, 'rounded-md'], title: 'Show work and plan', onClick: () => ctx.get(layout)?.toggle('aside', true) },
       ...counts(kit, totals),
       show(
         () => !counted.get(),
         () => span(() => (parts.startsThreads() ? 'Work and plan' : 'Plan')),
       ),
     )
-    return opener
-  }
   const line = (narrow: boolean) =>
     narrow
-      ? show(reachable, button)
+      ? show(() => hasWork(parts), button)
       : show(counted, () => div({ class: look }, ...counts(kit, totals)))
-  return div({ class: 'contents', onMount: parts.plan.listen }, dynamicChild(parts.narrow, line), phone.view())
+  return div({ class: 'contents', onMount: parts.plan.listen }, dynamicChild(parts.narrow, line))
 }

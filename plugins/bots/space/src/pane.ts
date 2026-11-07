@@ -18,7 +18,7 @@ export const paneHead = (kit: Kit, { narrow, showSide, close }: HeadParts, ...ch
   )
 
 export const pane = (props: Props<HTMLDivElement>, head: HTMLElement, ...body: Child[]) =>
-  div({ ...props, class: 'flex h-full min-h-0 flex-1 flex-col' }, head, ...body)
+  div({ ...props, class: 'flex h-full min-h-0 min-w-0 flex-1 flex-col' }, head, ...body)
 
 export const scrollArea = (kit: Kit, props: Props<HTMLDivElement>, ...children: Child[]) =>
   div({ ...props, class: 'flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain', style: kit.stableGutter }, ...children)
