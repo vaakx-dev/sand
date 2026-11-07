@@ -14,6 +14,7 @@ const fake = (id: string, acted: string[]): Computer => ({
   screenshot: async () => ({ width: 1, height: 1, png: new Uint8Array() }),
   elements: async () => [],
   act: async () => void acted.push(id),
+  settle: async () => {},
 })
 
 const conversation = (owner: 'thread' | 'bot', id: string): ToolContext['conversation'] => ({
@@ -34,7 +35,7 @@ test("a bot's computer_* calls act on its chosen computer unless it names one, a
   const registry = sand.app.get(tools)!
   await registry.choose('computer', 'always')
   const act = async (on: ToolContext['conversation'], computer?: string) => {
-    const call = { type: 'tool_call', id: Bun.randomUUIDv7(), name: 'computer_act', input: { action: { type: 'wait', ms: 0 }, ...(computer && { computer }) } } as const
+    const call = { type: 'tool_call', id: Bun.randomUUIDv7(), name: 'computer_act', input: { action: { type: 'wait', ms: 0 }, screenshot: false, ...(computer && { computer }) } } as const
     const result = await registry.run(call, { cwd: sand.home, signal: new AbortController().signal, conversation: on, turn: 't', progress() {}, wait: () => () => {} })
     return textOf(result.content)
   }

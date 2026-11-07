@@ -87,11 +87,18 @@ export const heldKeys = (action: Action): Key[] => {
   return action.keys ?? []
 }
 
+export interface Found {
+  count: number
+  box?: Box
+}
+
 export interface Computer {
   info: ComputerInfo
   screenshot(fit?: Size): Promise<Screenshot>
   elements(): Promise<UiElement[]>
   act(action: Action): Promise<void>
+  settle(): Promise<void>
+  find?(text: string, match: number): Promise<Found>
 }
 
 export interface Computers {
