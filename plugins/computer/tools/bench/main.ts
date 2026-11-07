@@ -2,11 +2,18 @@ import { mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
+import { userPrices } from './prices'
 import { reportHtml } from './report'
 import { openLab, runTask, type Lab, type LabOptions, type Model, type Outcome } from './run'
 import { serveSite, tasks, type Task, type TaskSet } from './tasks'
 
-const defaultModels = ['Haiku=openrouter/anthropic/claude-haiku-5.5', 'Luna=openrouter/openai/gpt-6-luna', 'DeepSeek=openrouter/deepseek/deepseek-v4.1-flash-1017']
+const defaultModels = [
+  'Opus=claude/claude-opus-5-5',
+  'Sonnet=claude/claude-sonnet-5-5',
+  'Haiku=claude/claude-haiku-5-5',
+  'Luna=codex/gpt-6-luna',
+  'DeepSeek=openrouter/deepseek/deepseek-v4.1-flash-1017',
+]
 
 const sets: TaskSet[] = ['browser', 'desktop']
 
@@ -15,7 +22,7 @@ const { values } = parseArgs({
     set: { type: 'string', default: 'browser' },
     models: { type: 'string', default: defaultModels.join(',') },
     tasks: { type: 'string' },
-    judge: { type: 'string', default: 'openrouter/anthropic/claude-sonnet-5.5' },
+    judge: { type: 'string', default: 'claude/claude-sonnet-5-5' },
     profile: { type: 'string' },
     headed: { type: 'boolean', default: false },
     minutes: { type: 'string', default: '5' },
@@ -42,7 +49,7 @@ const chosen = inSet.filter(task => task.place !== 'account' || values.profile)
 const notes: string[] = []
 if (chosen.length < inSet.length) notes.push(`Skipped the tasks that need a signed-in browser (${inSet.filter(task => !chosen.includes(task)).map(task => task.id).join(', ')}); pass --profile with a copy of a signed-in browser profile to run them.`)
 
-const options: LabOptions = { set, judge: values.judge, headless: !values.headed, profile: values.profile, limitMs: Number(values.minutes) * 60_000 }
+const options: LabOptions = { set, judge: values.judge, headless: !values.headed, profile: values.profile, limitMs: Number(values.minutes) * 60_000, prices: await userPrices() }
 const budget = { cap: Number(values.cap), spent: 0 }
 const site = serveSite()
 const outcomes: Outcome[] = []
@@ -53,6 +60,7 @@ const failed = (model: Model, task: Task, error: unknown): Outcome => ({
   model: model.label,
   task: task.id,
   place: task.place,
+  kind: task.kind,
   pass: false,
   why: `error: ${messageOf(error)}`,
   ms: 0,
@@ -62,7 +70,27 @@ const failed = (model: Model, task: Task, error: unknown): Outcome => ({
   judgeUsd: 0,
   answer: '',
   stopReason: 'error',
+  cause: 'error',
+  transcript: [],
+  left: [],
 })
+
+const setupNotes = [
+  `Models through sand's LLM service, each in its own in-process sand with only the computer tools: ${models.map(model => `${model.label} = ${model.id}`).join(', ')}.`,
+  set === 'browser'
+    ? `Browser tasks run in ${options.headless ? 'a headless' : 'a visible'} Chrome per model; local tasks use pages the bench serves itself, with values drawn fresh each run.`
+    : 'Desktop tasks ran one model at a time on this PC with the real mouse and keyboard.',
+  `Checks read the browser's tabs (URL, text, form fields), the screen's UI elements, the model's final reply where the answer is only on the page, or a screenshot judged by ${options.judge}. A task stops after ${values.minutes} minutes.`,
+  "Cost is the model's own tokens at its price; for a model on a subscription that is the list price, not money spent. The judge's cost counts toward the cap only.",
+]
+
+const save = async () => {
+  const title = `Computer use bench: ${chosen.length} ${set} tasks, ${models.length} models, $${budget.spent.toFixed(2)} spent`
+  const ids = chosen.map(task => task.id)
+  const shown = [...notes, ...setupNotes]
+  await Bun.write(join(values.out, 'results.json'), JSON.stringify({ title, notes: shown, models, tasks: ids, budget, outcomes }, null, 2))
+  await Bun.write(join(values.out, 'report.html'), reportHtml({ title, notes: shown, models: models.map(model => model.label), tasks: ids, outcomes }))
+}
 
 const runTasks = async (lab: Lab) => {
   const { model } = lab
@@ -75,6 +103,7 @@ const runTasks = async (lab: Lab) => {
       const outcome = await runTask(lab, task, site.url.origin).catch((error: unknown) => failed(model, task, error))
       budget.spent += (outcome.costUsd ?? 0) + outcome.judgeUsd
       outcomes.push(outcome)
+      await save()
       console.log(`  ${model.label} ${task.id}: ${outcome.pass ? 'pass' : 'fail'} in ${(outcome.ms / 1000).toFixed(0)}s, ${outcome.steps} steps (${outcome.why})`)
     }
   } finally {
@@ -99,17 +128,6 @@ try {
   await site.stop(true)
 }
 
-const title = `Computer use bench: ${chosen.length} ${set} tasks, ${models.length} models, $${budget.spent.toFixed(2)} spent`
-notes.push(
-  `Models through sand's LLM service, each in its own in-process sand with only the computer tools: ${models.map(model => `${model.label} = ${model.id}`).join(', ')}.`,
-  set === 'browser'
-    ? `Browser tasks run in ${options.headless ? 'a headless' : 'a visible'} Chrome per model; local tasks use pages the bench serves itself, with values drawn fresh each run.`
-    : 'Desktop tasks ran one model at a time on this PC with the real mouse and keyboard.',
-  `Checks read the browser's tabs (URL, text, form fields), the screen's UI elements, the model's final reply where the answer is only on the page, or a screenshot judged by ${options.judge}. A task stops after ${values.minutes} minutes.`,
-  'Cost is the model\'s own tokens at its price; the judge\'s cost counts toward the cap only.',
-)
-const order = models.map(model => model.label)
-await Bun.write(join(values.out, 'results.json'), JSON.stringify({ title, notes, models, tasks: chosen.map(task => task.id), budget, outcomes }, null, 2))
-await Bun.write(join(values.out, 'report.html'), reportHtml({ title, notes, models: order, tasks: chosen.map(task => task.id), outcomes }))
+await save()
 console.log(`results: ${join(values.out, 'results.json')}\nreport: ${join(values.out, 'report.html')}`)
 process.exit(0)
