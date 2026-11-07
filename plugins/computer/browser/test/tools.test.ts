@@ -67,7 +67,7 @@ describe.skipIf(!(await findBrowser()))('computer tools on a headless browser', 
     const listed = elements?.type === 'tool_result' && elements.content[0]?.type === 'text' ? elements.content[0].text : ''
     expect(listed).toMatch(/^\d+ button "Add one" \[0\.000, 0\.000, 0\.500, 0\.500\]$/m)
     expect(listed).toMatch(/^\d+ text "Count: 1" \[/m)
-    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringContaining('pixels') }, { type: 'image', mediaType: 'image/png' }] })
+    expect(await turn()).toMatchObject({ content: [{ type: 'text', text: expect.stringMatching(/pixels\.\nTabs .*\n1\. \[active\] .* — http/) }, { type: 'image', mediaType: 'image/png' }] })
     expect(await turn()).toMatchObject({ isError: true, content: [{ type: 'text', text: expect.stringContaining('No element nope') }] })
   })
 })
