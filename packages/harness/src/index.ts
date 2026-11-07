@@ -1,8 +1,9 @@
 import { llm, llmModels } from '@sand/accounts/contract'
 import { sessions, type Session } from '@sand/chats/contract'
-import { cli, pluginProblems } from '@sand/config/contract'
+import { cli, pluginProblems, sandConfig } from '@sand/config/contract'
 import { type Caller, createHandlers, type Request } from '@sand/host-hub/contract'
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
+import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
 import { type LocalCopy, projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
@@ -19,6 +20,10 @@ const builtins = resolve(import.meta.dir, '..', '..', '..', 'plugins')
 
 const plugins = ['core/paths', 'core/media', 'core/ledger', 'core/chats', 'core/accounts', 'agent/tools', 'agent/prompt', 'agent/compaction', 'agent/provider-threads', 'agent/engine', 'agent/turns', 'agent/model', 'agent/orchestrator']
 
+const liveSources = ['core/claude-code', 'core/codex']
+
+const readyMs = 60_000
+
 const runtimeEntry = async (folder: string) => {
   const dir = join(builtins, folder)
   const { sand } = await Bun.file(join(dir, 'package.json')).json()
@@ -32,15 +37,26 @@ const need = <T>(app: ContextCore, token: Service<T>) => {
 }
 
 const modelsReady = (app: ContextCore, ids: string[]) =>
-  new Promise<void>(resolve => {
+  new Promise<void>((resolve, reject) => {
+    const missing = () => ids.filter(id => !app.get(llm)?.find?.(id))
+    const timer = setTimeout(() => {
+      stop()
+      reject(new Error(`sand never offered ${missing().join(', ')}; sign in to their accounts in your sand`))
+    }, readyMs)
     const check = () => {
-      if (!ids.every(id => app.get(llm)?.find?.(id))) return
+      if (missing().length) return
+      clearTimeout(timer)
       stop()
       resolve()
     }
     const stop = app.on(llmModels, check)
     check()
   })
+
+interface Models {
+  ids: string[]
+  replay?: Source[]
+}
 
 const signedIn = (sources: Source[]) =>
   Object.fromEntries(sources.flatMap(source => (source.api ? [[source.id, { type: 'oauth', access: 'replay', refresh: 'replay', expires: 8e15 }]] : [])))
@@ -67,11 +83,10 @@ const hostStubs = (app: Context) => {
   app.provide(hostChannel, { call: () => Promise.reject(new Error('No host in tests')), on: () => () => {} })
 }
 
-const loadPlugins = async (app: Context, sources: Source[], extra: string[]) => {
-  const entries = await Promise.all([...plugins, ...extra].map(runtimeEntry))
-  const replay = await runtimeEntry('core/replay')
+const loadPlugins = async (app: Context, { replay }: Models, extra: string[]) => {
+  const entries = await Promise.all([...plugins, ...(replay ? [] : liveSources), ...extra].map(runtimeEntry))
   for (const entry of entries) app.load(entry, {})
-  app.load(replay, { sources })
+  if (replay) app.load(await runtimeEntry('core/replay'), { sources: replay })
 }
 
 const loadConfig = async (app: Context, home: string, sources: Source[], config: string) => {
@@ -85,18 +100,21 @@ const copiesStub = (projects: LocalCopy[]) => ({
   ofFolder: (folder: string) => projects.find(copy => resolve(folder).startsWith(resolve(copy.path)))?.project ?? null,
 })
 
-const boot = async (app: Context, home: string, sources: Source[], { plugins: extra = [], projects = [], config }: SandOptions) => {
-  await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(sources)))
+const boot = async (app: Context, home: string, models: Models, { plugins: extra = [], projects = [], sections = {}, config }: SandOptions) => {
+  if (models.replay) await Bun.write(join(home, 'auth.json'), JSON.stringify(signedIn(models.replay)))
   const errors: unknown[] = []
   app.on(scopeError, (_, error) => void errors.push(error))
   app.provide(cli, { place: 'runtime', home, cwd: home, builtins, safe: config === undefined, args: [], exit() {} })
-  if (config === undefined) app.provide(projectFiles, copiesStub(projects))
+  if (config === undefined) {
+    app.provide(projectFiles, copiesStub(projects))
+    app.provide(sandConfig, { path: join(home, 'sand.toml'), section: name => sections[name] })
+  }
   const wire = createHandlers()
   app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0, ask: wire.ask })
-  await (config === undefined ? loadPlugins(app, sources, extra) : loadConfig(app, home, sources, config))
+  await (config === undefined ? loadPlugins(app, models, extra) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
-  await modelsReady(app, sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)))
+  await modelsReady(app, models.ids)
   return wire
 }
 
@@ -104,10 +122,11 @@ export interface SandOptions {
   home?: string
   plugins?: string[]
   projects?: LocalCopy[]
+  sections?: Record<string, unknown>
   config?: string
 }
 
-export const startSand = async (sources: Source[], options: SandOptions = {}) => {
+const start = async (models: Models, options: SandOptions) => {
   const shared = options.home
   const home = shared ?? mkdtempSync(join(tmpdir(), 'sand-test-'))
   const app = createApp()
@@ -115,7 +134,7 @@ export const startSand = async (sources: Source[], options: SandOptions = {}) =>
     await app.dispose()
     if (!shared) rmSync(home, { recursive: true, force: true })
   }
-  const wire = await boot(app, home, sources, options).catch(async (error: unknown) => {
+  const wire = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
@@ -133,6 +152,12 @@ export const startSand = async (sources: Source[], options: SandOptions = {}) =>
     get turns() {
       return need(app, turns)
     },
+    get llm() {
+      return need(app, llm)
+    },
+    get media() {
+      return need(app, media)
+    },
     problems: () => pluginProblems(app),
     chat(model: string): Session {
       const session = need(app, sessions).thread(home)
@@ -149,5 +174,10 @@ export const startSand = async (sources: Source[], options: SandOptions = {}) =>
     stop,
   }
 }
+
+export const startSand = (sources: Source[], options: SandOptions = {}) =>
+  start({ ids: sources.flatMap(source => source.models.map(name => `${source.id}/${name}`)), replay: sources }, options)
+
+export const startLiveSand = (models: string[], options: SandOptions = {}) => start({ ids: models }, options)
 
 export type Sand = Awaited<ReturnType<typeof startSand>>

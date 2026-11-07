@@ -1,4 +1,5 @@
 import { efforts, isEffort, type Effort, type LLM } from '@sand/accounts/contract'
+import { startLiveSand } from '@sand/harness'
 import { mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -8,7 +9,6 @@ import { createFinders } from '../src/make'
 import { generate, type Sample } from './dataset'
 import { reportHtml } from './report'
 import { runAll, type Variant } from './run'
-import { startSand } from './sand'
 import { buckets, type Outcome } from './score'
 
 const presets: Record<string, { finder: FinderSpec['kind']; strategy: StrategySpec; needsElements: boolean }> = {
@@ -88,9 +88,9 @@ console.log('building the dataset…')
 const samples = await generate(Number(values['per-bucket']), Number(values.screenspot), Number(values.seed))
 console.log(`${samples.length} targets: ${counts(samples)}`)
 
-const sand = await startSand(models.map(model => model.id))
+const sand = await startLiveSand(models.map(model => model.id))
 try {
-  const variants = variantsOf(sand.llm, createFinders(sand).make)
+  const variants = variantsOf(sand.llm, createFinders({ llm: sand.llm, media: sand.media }).make)
   for (const note of notes) console.log(note)
   let done = 0
   const progress = (outcome: Outcome) => {

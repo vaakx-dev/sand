@@ -1,0 +1,64 @@
+import type { UiElement } from '@sand/computers/contract'
+
+export type TaskSet = 'browser' | 'desktop'
+
+export type Place = 'local' | 'web' | 'account' | 'app'
+
+export interface Tab {
+  url: string
+  title: string
+  text: string
+  fields: Record<string, string | boolean>
+}
+
+export interface Verdict {
+  pass: boolean
+  why: string
+}
+
+export interface Seen {
+  answer: string
+  tabs: Tab[]
+  elements: UiElement[]
+  judge(goal: string): Promise<Verdict>
+}
+
+export interface Task {
+  id: string
+  set: TaskSet
+  place: Place
+  prompt(site: string): string
+  check(seen: Seen): Verdict | Promise<Verdict>
+}
+
+export interface LocalTask extends Task {
+  place: 'local'
+  page(path: string, query: URLSearchParams): string | undefined
+}
+
+const plain = (text: string) => text.toLowerCase().replace(/[\s,]/g, '')
+
+export const all = (...verdicts: Verdict[]): Verdict => {
+  const failed = verdicts.filter(verdict => !verdict.pass)
+  return { pass: !failed.length, why: (failed.length ? failed : verdicts).map(verdict => verdict.why).join('; ') }
+}
+
+export const tabAt = ({ tabs }: Seen, pattern: RegExp): Verdict => {
+  const tab = tabs.find(tab => pattern.test(tab.url))
+  return tab ? { pass: true, why: `open at ${tab.url}` } : { pass: false, why: `no tab at ${pattern.source}; open: ${tabs.map(tab => tab.url).join(', ') || 'none'}` }
+}
+
+export const noTabAt = ({ tabs }: Seen, pattern: RegExp, what: string): Verdict => {
+  const tab = tabs.find(tab => pattern.test(tab.url))
+  return tab ? { pass: false, why: `${what}: ${tab.url}` } : { pass: true, why: `not ${what}` }
+}
+
+export const answered = ({ answer }: Seen, ...accepted: string[]): Verdict =>
+  accepted.some(value => plain(answer).includes(plain(value)))
+    ? { pass: true, why: `answered ${accepted[0]}` }
+    : { pass: false, why: `answer lacks ${accepted.join(' or ')}: "${answer.slice(0, 120)}"` }
+
+export const onScreen = ({ elements }: Seen, ...accepted: string[]): Verdict =>
+  elements.some(element => accepted.some(value => plain(element.name).includes(plain(value))))
+    ? { pass: true, why: `screen shows ${accepted[0]}` }
+    : { pass: false, why: `screen lacks ${accepted.join(' or ')}` }

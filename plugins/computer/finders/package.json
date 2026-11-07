@@ -22,8 +22,7 @@
   },
   "devDependencies": {
     "@sand/cdp": "workspace:*",
-    "@sand/config": "workspace:*",
-    "@sand/paths": "workspace:*",
-    "@sand/project": "workspace:*"
+    "@sand/harness": "workspace:*",
+    "@sand/report": "workspace:*"
   }
 }

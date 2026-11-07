@@ -1,4 +1,5 @@
 import type { Box, UiElement } from '@sand/computers/contract'
+import { mean, percentile } from '@sand/report'
 import { pointOf, type Located } from '../src/contract'
 import { contains } from '../src/frame'
 
@@ -35,10 +36,6 @@ export const outcomeOf = (located: Located, target: Box, elements: UiElement[]) 
   const point = pointOf(located.hit, elements)
   return { hit: point !== null && contains(target, point), point }
 }
-
-const percentile = (sorted: number[], share: number) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.ceil(share * sorted.length) - 1)]! : 0)
-
-const mean = (values: number[]) => (values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0)
 
 export interface Summary {
   key: string
