@@ -1,10 +1,13 @@
 import { botConversation, botGet } from '@sand/bots/contract'
+import { type Message, textOf } from '@sand/chats/contract'
 import type { Computer, Fill, Filled } from '@sand/computers/contract'
 import { computers } from '@sand/computers/contract'
 import { type SandOptions, startSand } from '@sand/harness'
 import type { Request } from '@sand/host-hub/contract'
 import type { Source } from '@sand/replay/contract'
 import { tools } from '@sand/tools/contract'
+import { readdir } from 'node:fs/promises'
+import { join } from 'node:path'
 import { z } from 'zod'
 import { askWaiting } from '../src/contract'
 
@@ -68,6 +71,35 @@ export const answer = async <I>(sand: Sand, session: string, entries: Entries, t
     return asked && (await sand.ask(askWaiting, { session, id: asked.id })) ? asked.id : undefined
   }, type)
   await sand.ask(request, reply(id))
+}
+
+type Values = Record<string, string>
+
+const forms = (value: string) => {
+  const shifted = [0, 1, 2].map(pad => Buffer.concat([Buffer.alloc(pad), Buffer.from(value)]).toString('base64').slice(pad ? 4 : 0, -4))
+  return [value, value.toLowerCase(), ...shifted].map(text => Buffer.from(text)).concat(Buffer.from(value, 'utf16le'))
+}
+
+export const leaksIn = async (home: string, values: Values) => {
+  const entries = await readdir(home, { withFileTypes: true, recursive: true })
+  const found: string[] = []
+  for (const entry of entries.filter(item => item.isFile())) {
+    const path = join(entry.parentPath, entry.name)
+    const bytes = Buffer.from(await Bun.file(path).arrayBuffer())
+    for (const [name, value] of Object.entries(values)) if (forms(value).some(form => bytes.includes(form))) found.push(`${name} in ${path}`)
+  }
+  return { files: entries.filter(item => item.isFile()).map(item => item.name), found }
+}
+
+export const leaksInText = (text: string, codes: string[], values: Values) => [
+  ...Object.entries(values).flatMap(([name, value]) => (text.toLowerCase().includes(value.toLowerCase()) ? [name] : [])),
+  ...codes.filter(code => new RegExp(`(?<!\\d)${code}(?!\\d)`).test(text)).map(code => `totp code ${code}`),
+]
+
+export const resultText = (entries: { type: string; data: unknown }[], tool: string) => {
+  const blocks = entries.flatMap(entry => (entry.type === 'message' ? (entry.data as Message).content : []))
+  const ids = new Set(blocks.flatMap(block => (block.type === 'tool_call' && block.name === tool ? [block.id] : [])))
+  return blocks.flatMap(block => (block.type === 'tool_result' && ids.has(block.callId) ? [textOf(block.content)] : [])).join('\n')
 }
 
 export const idle = (sand: Sand, bot: string) =>

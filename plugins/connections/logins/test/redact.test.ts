@@ -27,11 +27,13 @@ test('redact blanks every saved value, the longest first, and follows changes', 
     totp: 'JBSWY3DPEHPK3PXP',
   })
   await sand.ask(loginAdd, { kind: 'key', name: 'Wrapped key', value: 'xxabcd1234yy' })
+  await sand.ask(loginAdd, { kind: 'key', name: 'Tail key', value: '1234zz9' })
   const service = sand.app.get(logins)!
 
   expect(service.redact('user ana@example.com pass abcd1234 key xxabcd1234yy seed JBSWY3DPEHPK3PXP')).toBe(
     'user [secret: Northbank] pass [secret: Northbank] key [secret: Wrapped key] seed [secret: Northbank]',
   )
+  expect(service.redact('overlap abcd1234zz9.')).toBe('overlap [secret: Northbank].')
 
   await sand.ask(loginChange, { id: bank.id, password: 'new-password-9' })
   expect(service.redact('new-password-9 and abcd1234')).toBe('[secret: Northbank] and abcd1234')

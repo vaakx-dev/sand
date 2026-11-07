@@ -7,7 +7,8 @@ import { loadedRows, rowProblem } from './parts'
 
 const toggled = (list: string[], id: string) => (list.includes(id) ? list.filter(other => other !== id) : [...list, id])
 
-const botRows = ({ kit, wire }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
+const botRows = ({ kit, wire, bots: botsOn }: PageParts, login: Derive<Login>, change: (patch: LoginPatch) => void) => {
+  if (!botsOn()) return kit.settingsRow({ title: 'Bots are off', detail: 'Turn on Bots in Settings → Features to choose which bots can use this login.' })
   const bots = resource(() => wire.call(botList, {}))
   const listed = derive(() => bots.data.get() ?? [])
   const botRow = (bot: Sig<BotSummary>) =>

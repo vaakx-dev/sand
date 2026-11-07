@@ -1,6 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, show, sig } from '@vaakx-dev/vrui'
-import { loginKinds, type Login, type LoginKind } from '../../contract'
+import { div, show, sig, type FlowNode } from '@vaakx-dev/vrui'
+import { externalSources, loginKinds, type External, type Login, type LoginKind } from '../../contract'
+import { managers } from './managers/catalog'
+import { pickRows } from './managers/pick'
 import type { LoginsModel, NewLogin } from './model'
 import { editForm, field } from './parts'
 
@@ -8,6 +10,8 @@ export interface AddParts {
   model: LoginsModel
   added(login: Login): void
 }
+
+type Adding = LoginKind | External
 
 const kinds: Record<LoginKind, { title: string; detail: string }> = {
   website: { title: 'Website login', detail: 'A username and password, and an authenticator key if the site asks for codes' },
@@ -52,26 +56,36 @@ const forms = { website: websiteForm, key: keyForm }
 
 export const addSection = (kit: Kit, { model, added }: AddParts) => {
   const { rowDetail, secondaryAction, settingsRow, settingsSection } = kit
-  const opened = sig<LoginKind | undefined>(undefined)
+  const opened = sig<Adding | undefined>(undefined)
   const close = () => opened.set(undefined)
-  const save = async (login: NewLogin) => {
-    const made = await model.add(login)
+  const finish = (made: Login) => {
     close()
     added(made)
   }
-  const kindRow = (kind: LoginKind) => {
-    const open = opened.map(chosen => chosen === kind)
+  const save = async (login: NewLogin) => finish(await model.add(login))
+  const addRow = (adding: Adding, title: string, detail: string, body: () => FlowNode) => {
+    const open = opened.map(chosen => chosen === adding)
     return div(
       { class: 'contents' },
       settingsRow(
-        { title: kinds[kind].title, detail: kinds[kind].detail },
+        { title, detail },
         show(
           () => !open.get(),
-          () => secondaryAction({ size: 'sm', onClick: () => opened.set(kind) }, 'Add'),
+          () => secondaryAction({ size: 'sm', onClick: () => opened.set(adding) }, 'Add'),
         ),
       ),
-      show(open, () => rowDetail(forms[kind](kit, save, close))),
+      show(open, body),
     )
   }
-  return settingsSection({ title: 'Add' }, ...loginKinds.map(kindRow))
+  const ready = (source: External) => model.state.get()?.sources[source].status === 'ready'
+  return settingsSection(
+    { title: 'Add' },
+    ...loginKinds.map(kind => addRow(kind, kinds[kind].title, kinds[kind].detail, () => rowDetail(forms[kind](kit, save, close)))),
+    ...externalSources.map(source =>
+      show(
+        () => ready(source),
+        () => addRow(source, `From ${managers[source].name}`, `${managers[source].pick}. sand only points at it and fetches it when a bot uses it.`, () => pickRows(kit, model, source, finish, close)),
+      ),
+    ),
+  )
 }

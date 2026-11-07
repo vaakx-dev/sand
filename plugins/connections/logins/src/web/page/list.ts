@@ -2,25 +2,26 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, type Sig } from '@vaakx-dev/vrui'
 import type { Login, LoginsState } from '../../contract'
 import { addSection, type AddParts } from './add'
+import { placeOf } from './managers/catalog'
+import { managersSection } from './managers/section'
+import { kindIcons } from './parts'
 
 export interface ListParts extends AddParts {
   open(login: string): void
 }
 
-const kindIcons = { website: 'globe', key: 'key' } as const
-
 const counted = (count: number, one: string) => (count ? `${count} ${one}${count === 1 ? '' : 's'}` : '')
 
 const summaryOf = (login: Login) => {
   const users = [counted(login.bots.length, 'bot'), counted(login.threads.length, 'thread')].filter(Boolean).join(', ')
-  return [login.site ?? 'Key', users || 'No one can use it yet', login.ask ? 'asks every time' : ''].filter(Boolean).join(' · ')
+  return [login.site ?? 'Key', `in ${placeOf(login.source)}`, users || 'No one can use it yet', login.ask ? 'asks every time' : ''].filter(Boolean).join(' · ')
 }
 
 export const storageNote = ({ sheetText }: Kit, state: Sig<LoginsState | undefined>) =>
   sheetText(() =>
     state.get()?.keychain
-      ? 'Kept encrypted, with the key in the system keychain. Saved values are never shown again, only replaced.'
-      : 'Kept encrypted, with the key in a key file in the sand home. Saved values are never shown again, only replaced.',
+      ? 'Logins saved in sand are kept encrypted, with the key in the system keychain. Saved values are never shown again, only replaced.'
+      : 'Logins saved in sand are kept encrypted, with the key in a key file in the sand home. Saved values are never shown again, only replaced.',
   )
 
 const loginRow = ({ chevron, icon, listRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
@@ -47,10 +48,11 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
       ),
       show(
         () => !logins.get().length,
-        () => emptyState({ surface: 'group', text: 'None yet. Add a website login or a key below.' }),
+        () => emptyState({ surface: 'group', text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
       ),
     ),
     addSection(kit, parts),
+    managersSection(kit, parts.model),
     storageNote(kit, state),
   )
 }

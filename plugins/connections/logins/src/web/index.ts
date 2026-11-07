@@ -1,3 +1,4 @@
+import { botViews } from '@sand/bots/contract'
 import { wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
 import { toolViews, transcript } from '@sand/transcript/contract'
@@ -24,7 +25,7 @@ export default definePlugin({
     ctx.on(wireHello, () => void load())
     if (ctx.wire.ready()) void load()
     ctx.effect(() => ctx.wire.on(loginsWire, value => model.state.set(value)))
-    ctx.watch(settings, found => found && loginsPages(found, { kit: ctx.kit, wire: ctx.wire, threads: ctx.threads, model }))
+    ctx.watch(settings, found => found && loginsPages(found, { kit: ctx.kit, wire: ctx.wire, threads: ctx.threads, model, bots: () => ctx.get(botViews) !== undefined }))
 
     const answers = answerBook()
     const steps = Object.entries(toolSteps(ctx.toolViews, id => model.find(id)?.name))

@@ -7,7 +7,18 @@ export const loginKinds = ['website', 'key'] as const
 
 export type LoginKind = (typeof loginKinds)[number]
 
-export interface Login {
+export const externalSources = ['bitwarden', 'bitwarden-secrets', '1password'] as const
+
+export type External = (typeof externalSources)[number]
+
+export type Source = 'sand' | External
+
+export type Pointer =
+  | { source: 'bitwarden'; item: string }
+  | { source: 'bitwarden-secrets'; item: string }
+  | { source: '1password'; item: string; vault: string; account?: string }
+
+export type Login = {
   id: string
   kind: LoginKind
   name: string
@@ -17,6 +28,18 @@ export interface Login {
   ask: boolean
   totp: boolean
   added: number
+} & ({ source: 'sand' } | Pointer)
+
+export type SignIn = { status: 'signed-out' | 'locked' | 'ready'; account?: string }
+
+export type SourceStatus = { status: 'missing' } | ({ saved: boolean } & (SignIn | { status: 'failed'; message: string }))
+
+export type SourceItem = Pointer & {
+  name: string
+  kind: LoginKind
+  sites: string[]
+  totp?: boolean
+  place?: string
 }
 
 export type LoginValues = { kind: 'website'; username: string; password: string } | { kind: 'key'; value: string }
@@ -59,6 +82,7 @@ export const logins = service<Logins>('logins')
 export interface LoginsState {
   logins: Login[]
   keychain: boolean
+  sources: Record<External, SourceStatus>
 }
 
 export const loginsWire = wireEvent<LoginsState>('logins.state')
@@ -91,6 +115,28 @@ export const loginChange = request('logins.change', {
     threads: z.array(id).optional(),
     ask: z.boolean().optional(),
   }),
+  output: type<Login>(),
+})
+
+const external = z.enum(externalSources)
+const ref = z.string().regex(/^[A-Za-z0-9][\w.@-]{0,199}$/, 'Not an item id')
+const picked = { name: name.optional(), site: site.optional(), kind: z.enum(loginKinds).optional() }
+
+export const sourceConnect = request('logins.connect', { input: z.object({ source: external, secret }), output: type<LoginsState>() })
+
+export const sourceDisconnect = request('logins.disconnect', { input: z.object({ source: external }), output: type<LoginsState>() })
+
+export const sourceSearch = request('logins.search', {
+  input: z.object({ source: external, query: z.string().trim().max(200) }),
+  output: type<SourceItem[]>(),
+})
+
+export const loginPick = request('logins.pick', {
+  input: z.discriminatedUnion('source', [
+    z.object({ source: z.literal('bitwarden'), item: ref, ...picked }),
+    z.object({ source: z.literal('bitwarden-secrets'), item: ref, ...picked }),
+    z.object({ source: z.literal('1password'), item: ref, vault: ref, account: ref.optional(), ...picked }),
+  ]),
   output: type<Login>(),
 })
 
