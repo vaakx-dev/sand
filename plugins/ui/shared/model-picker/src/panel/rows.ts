@@ -1,14 +1,11 @@
-import { isMetered, type ModelInfo } from '@sand/accounts/contract'
+import type { ModelInfo } from '@sand/accounts/contract'
 import { tokens } from '@sand/util'
 import { span } from '@vaakx-dev/vrui'
 import type { Scene } from './scene'
-import { sourceDetail } from './source'
 
 const facts = (model: ModelInfo, scene: Scene, mixed: boolean) => {
-  const source = scene.source(model)
-  const via = mixed ? source?.via : undefined
-  const cost = mixed && source && isMetered(source.billing) ? sourceDetail(source) : undefined
-  return [via && `On ${via}`, cost, model.id === scene.defaults.model && 'Default', model.context && tokens(model.context)].filter(Boolean).join(' · ')
+  const via = mixed ? scene.source(model)?.via : undefined
+  return [via && `On ${via}`, model.id === scene.defaults.model && 'Default', model.context && tokens(model.context)].filter(Boolean).join(' · ')
 }
 
 export const modelRow = (model: ModelInfo, scene: Scene, mixed = false) => {

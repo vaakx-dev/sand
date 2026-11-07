@@ -2,7 +2,6 @@ import { canonicalModel, type ModelInfo } from '../contract'
 import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
 import { split, unknownModel } from './build'
 import { cached } from './cached'
-import { coverOf, covered, plansOf, runsOnPlan } from './cover'
 import { sourceInfo } from './sources'
 import type { Entry } from './types'
 
@@ -18,14 +17,12 @@ const firstBy = <T>(items: T[], key: (item: T) => string) => {
   return map
 }
 
-const indexOf = (offered: Entry[]) => {
-  const plans = plansOf(offered)
-  const entries = covered(offered, plans)
+const indexOf = (entries: Entry[]) => {
   const all = entries.flatMap(entry => entry.models)
-  const shown = all.filter(model => !model.hidden && !runsOnPlan(model))
+  const shown = all.filter(model => !model.hidden)
   const ids = firstBy(all, model => model.id)
   const sources = firstBy(entries, entry => entry.meta.id)
-  return { entries, all, shown, ids, sources, plans }
+  return { entries, all, shown, ids, sources }
 }
 
 export const viewOf = (entries: () => Entry[]) => {
@@ -51,13 +48,6 @@ export const viewOf = (entries: () => Entry[]) => {
     return owner && unknownModel(owner.meta, parts.name)
   }
 
-  const route = (wanted?: string) => {
-    const found = resolve(wanted)
-    const meta = found?.source ? entry(found.source)?.meta : undefined
-    if (!found || !meta || found.paid) return found
-    return coverOf(index.get().plans, meta, found) ?? found
-  }
-
   const missing = (id?: string) => {
     const source = id ? split(id)?.source : undefined
     if (source && isKeyKind(source)) return signInError(keyLabels[source])
@@ -71,7 +61,6 @@ export const viewOf = (entries: () => Entry[]) => {
     models,
     find,
     resolve,
-    route,
     missing,
     reset: index.reset,
     sources: () => index.get().entries.map(sourceInfo),

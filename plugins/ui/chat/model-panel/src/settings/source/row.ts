@@ -29,7 +29,6 @@ export const modelRow = (kit: Kit, row: Sig<ModelInfo>, catalog: Catalog, keep: 
       trail: [
         show(row.map(catalog.isNew), () => badge('accent', 'New')),
         show(added, () => badge('neutral', 'Added')),
-        show(row.map(model => !!model.coveredBy && !model.paid), () => badge('neutral', 'Uses your subscription')),
         span({ class: 'tabular-nums' }, () => {
           const context = row.get().context
           return context ? tokens(context) : ''

@@ -21,8 +21,8 @@ const presets: Record<string, { finder: FinderSpec['kind']; strategy: StrategySp
 }
 
 const defaultModels = [
-  'Luna=codex/gpt-6-luna',
-  'Haiku=claude/claude-haiku-5-5',
+  'Luna=openrouter/openai/gpt-6-luna',
+  'Haiku=openrouter/anthropic/claude-haiku-5.5',
   'DeepSeek=openrouter/deepseek/deepseek-v4.1-flash-1017',
   'GLM=openrouter/z-ai/glm-5.3-flash',
 ]
