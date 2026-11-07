@@ -7,13 +7,13 @@ const unbroken = 'x'.repeat(300)
 const reply = [
   'Wide content:',
   '',
-  `https://my.gov.au/mygov/content/html/services.html?${unbroken}`,
+  `https://example.com/report?${unbroken}`,
   '',
   `\`${unbroken}\``,
   '',
-  '| Apprenticeships Group Australia, 1 Jul 2025 to 27 Feb 2026 | What the ATO has | What it should be |',
+  '| Item | Before | After |',
   '| --- | --- | --- |',
-  `| ${unbroken} | 5 Howitt Av, Eastwood VIC 3875 | 29A Pinewood Dr, Carrum Downs VIC 3201 |`,
+  `| ${unbroken} | 12 Sample St, Springfield | 34 Example Rd, Shelbyville |`,
 ].join('\n')
 
 let sand: Awaited<ReturnType<typeof startSandbox>>
