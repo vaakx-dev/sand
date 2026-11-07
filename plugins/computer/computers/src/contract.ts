@@ -3,7 +3,7 @@ import { event, service, type Dispose } from 'drydock'
 import { z } from 'zod'
 import type { Key } from './keys'
 
-export { parseKeys, type Key } from './keys'
+export { parseKeys, typedKey, type Key } from './keys'
 
 export type ComputerKind = 'browser' | 'desktop'
 
