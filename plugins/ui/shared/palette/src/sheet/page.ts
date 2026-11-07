@@ -1,6 +1,6 @@
 import type { PalettePage } from '../contract'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, keys, list, show, untrack } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, keys, list, show, span, untrack } from '@vaakx-dev/vrui'
 import { cardView, reviewView } from './card'
 import { paletteHead } from './head'
 import { pageModel, type PageModel } from './model'
@@ -55,6 +55,17 @@ const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
   )
 }
 
+const hint = ({ keycap }: Kit, presses: string[], label: string) => span({ class: 'flex items-center gap-1' }, ...presses.map(keycap), span({ class: 'ml-1' }, label))
+
+const keyHints = (kit: Kit, model: PageModel) =>
+  div(
+    { class: 'flex shrink-0 items-center gap-4 border-t border-neutral-700 px-3 py-2 text-xs text-neutral-500' },
+    hint(kit, ['↑', '↓'], 'Move'),
+    hint(kit, ['Enter'], 'Open'),
+    model.nested ? hint(kit, ['Backspace'], 'Back') : null,
+    hint(kit, ['Esc'], 'Close'),
+  )
+
 export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = '') => {
   const { contextMenu, emptyState } = kit
   const model = pageModel(kit, page, nav, initial)
@@ -79,5 +90,6 @@ export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = ''
       model.empty.map(Boolean),
       () => div({ class: 'px-2' }, emptyState({ surface: 'raised', text: () => model.empty.get() })),
     ),
+    page.review ? null : keyHints(kit, model),
   )
 }
