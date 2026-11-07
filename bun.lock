@@ -50,6 +50,7 @@
         "@sand/config": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/host-runtimes": "workspace:*",
+        "@sand/media": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",
         "@sand/replay": "workspace:*",
@@ -79,6 +80,10 @@
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
+    },
+    "packages/report": {
+      "name": "@sand/report",
+      "version": "0.0.0",
     },
     "packages/util": {
       "name": "@sand/util",
@@ -1114,9 +1119,8 @@
       },
       "devDependencies": {
         "@sand/cdp": "workspace:*",
-        "@sand/config": "workspace:*",
-        "@sand/paths": "workspace:*",
-        "@sand/project": "workspace:*",
+        "@sand/harness": "workspace:*",
+        "@sand/report": "workspace:*",
       },
     },
     "plugins/computer/tools": {
@@ -1132,7 +1136,11 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
+        "@sand/accounts": "workspace:*",
+        "@sand/cdp": "workspace:*",
         "@sand/harness": "workspace:*",
+        "@sand/report": "workspace:*",
+        "@sand/usage": "workspace:*",
       },
     },
     "plugins/connections/connections": {
@@ -3005,6 +3013,8 @@
     "@sand/reload": ["@sand/reload@workspace:plugins/extend/reload"],
 
     "@sand/replay": ["@sand/replay@workspace:plugins/core/replay"],
+
+    "@sand/report": ["@sand/report@workspace:packages/report"],
 
     "@sand/safe-mode": ["@sand/safe-mode@workspace:plugins/ui/shared/safe-mode"],
 
