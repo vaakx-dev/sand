@@ -36,7 +36,7 @@ export const rowButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, 
 
 export const actionTones = {
   primary: 'font-medium bg-accent-500 text-accent-950 hover:bg-accent-400 disabled:bg-neutral-700',
-  secondary: 'bg-neutral-700/60 text-neutral-100 hover:bg-neutral-700',
+  secondary: 'bg-neutral-600 text-neutral-100 hover:bg-neutral-600/70',
   danger: 'bg-danger-500 text-white hover:bg-danger-400 disabled:bg-neutral-700',
 }
 
