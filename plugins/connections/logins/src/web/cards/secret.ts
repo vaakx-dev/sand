@@ -3,18 +3,20 @@ import { askDecline, secretSave, type AskStatus, type SecretRequest } from '../.
 import { problem, task } from '../task'
 import { askCard, cardActions, cardFrame, cardHead, cardText, type CardContext, type Target } from './ask'
 
-const note = 'Saved encrypted as a login, which you can manage in Settings → Logins. It never shows in the chat, and agents use it without seeing it.'
+const savedNote = 'Saved encrypted as a login, which you can manage in Settings → Logins. It never shows in the chat, and agents use it without seeing it.'
+const onceNote = 'Used once, then forgotten: it is never saved and never shows in the chat, and the agent uses it without seeing it.'
 
 const pendingCard = ({ kit, wire }: CardContext, target: Target, request: SecretRequest) => {
-  const { primaryAction, secondaryAction, textInput } = kit
-  const { site } = request
+  const { checkRow, primaryAction, secondaryAction, textInput } = kit
+  const { site, once } = request
   const username = sig('')
   const value = sig('')
+  const keep = sig(!once)
   const work = task()
   const ready = () => !work.busy.get() && Boolean(value.get()) && (!site || Boolean(username.get()))
   const save = () => {
     const values = site ? { username: username.get(), password: value.get() } : { value: value.get() }
-    return work.run(() => wire.call(secretSave, { ...target, ...values }))
+    return work.run(() => wire.call(secretSave, { ...target, save: keep.get(), ...values }))
   }
   const fields = site
     ? [
@@ -32,10 +34,11 @@ const pendingCard = ({ kit, wire }: CardContext, target: Target, request: Secret
     cardText(request.reason),
     ...fields,
     problem(kit, work),
-    div({ class: 'text-xs text-neutral-500' }, note),
+    once ? checkRow({ checked: keep, onToggle: () => keep.update(on => !on), title: 'Save for later', surface: 'raised', disabled: work.busy }) : null,
+    div({ class: 'text-xs text-neutral-500' }, () => (keep.get() ? savedNote : onceNote)),
     cardActions(
       secondaryAction({ disabled: work.busy, onClick: () => void work.run(() => wire.call(askDecline, target)) }, 'Decline'),
-      primaryAction({ type: 'submit', disabled: () => !ready() }, 'Save'),
+      primaryAction({ type: 'submit', disabled: () => !ready() }, () => (keep.get() ? 'Save' : 'Send')),
     ),
   )
 }

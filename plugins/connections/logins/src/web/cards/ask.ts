@@ -17,6 +17,7 @@ type Shown = AskStatus | 'pending' | 'checking'
 
 const statusText: Record<AskStatus, string> = {
   saved: 'saved as a login',
+  held: 'held for one use, not saved',
   filled: 'code sent',
   approved: 'approved in the app',
   declined: 'declined',

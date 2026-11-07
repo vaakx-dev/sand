@@ -82,7 +82,7 @@ const setUp = async (home: string) => {
 const overflow = { type: 'error', message: 'prompt is too long' } as const
 
 const signIn = (ids: Ids, work: string, who: string): Reply[] => [
-  [call('request_secret', { title: `${who} deploy token`, reason: 'To deploy' })],
+  [call('request_secret', { title: `${who} deploy token`, reason: 'To deploy', once: false })],
   [call('logins')],
   [call('shell', { command: `bun ${join(work, 'print.ts').replaceAll('\\', '/')} ${who}`, logins: { TOKEN: ids.key, USER: `${ids.bank}/username`, PASS: ids.bank } })],
   [call('fails', { who })],
@@ -140,7 +140,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
     const chat = sand.sessions.require(ids.chat)
     const thread = threadEntries(sand, chat.id)
     const ran = sand.turns.run(chat, 'Sign in to the bank and the shop')
-    await answer(sand, chat.id, thread, secretEntry, secretSave, id => ({ session: chat.id, id, value: values.threadSecret }))
+    await answer(sand, chat.id, thread, secretEntry, secretSave, id => ({ session: chat.id, id, save: true, value: values.threadSecret }))
     await answer(sand, chat.id, thread, codeEntry, codeAnswer, id => ({ session: chat.id, id, code: ` ${values.threadCode} ` }))
     expect(await ran).toMatchObject({ text: 'thread signed in.' })
     expect(await sand.turns.run(chat, 'Carry on')).toMatchObject({ text: 'Thread carried on.' })
@@ -148,7 +148,7 @@ test('no saved value, typed secret or code reaches the model, a transcript, comp
 
     const bot = botEntries(sand, ids.bot)
     await sand.ask(botSend, { bot: ids.bot, prompt: 'Sign in to the bank and the shop', clientRequestId: 'sign-in' })
-    await answer(sand, ids.bot, bot, secretEntry, secretSave, id => ({ session: ids.bot, id, value: values.botSecret }))
+    await answer(sand, ids.bot, bot, secretEntry, secretSave, id => ({ session: ids.bot, id, save: true, value: values.botSecret }))
     await answer(sand, ids.bot, bot, codeEntry, codeAnswer, id => ({ session: ids.bot, id, code: values.botCode }))
     await idle(sand, ids.bot)
     await sand.ask(botSend, { bot: ids.bot, prompt: 'Carry on', clientRequestId: 'carry-on' })
