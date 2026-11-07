@@ -67,6 +67,7 @@ export type Action =
   | At<'double_click'>
   | At<'right_click'>
   | At<'move'>
+  | { type: 'hold'; at: Point; ms: number }
   | { type: 'drag'; from: Point; to: Point }
   | { type: 'scroll'; at: Point; dx: number; dy: number }
   | { type: 'type'; text: string }

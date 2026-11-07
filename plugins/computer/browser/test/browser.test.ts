@@ -27,6 +27,8 @@ const page = `<!doctype html>
       <p id="scrolled">Scrolled: 0</p>
       <p id="mouse">Mouse: none</p>
       <p id="seen"></p>
+      <button id="revoke">Hold to revoke</button>
+      <p id="revoked">Revoked: no</p>
       <div id="pad" aria-label="Pad" role="region"></div>
     </div>
     <script>
@@ -50,6 +52,13 @@ const page = `<!doctype html>
       pad.onmouseup = event => {
         if (from !== undefined && event.offsetX - from > 50) show('mouse', 'Mouse: dragged right')
         from = undefined
+      }
+      const revoke = document.getElementById('revoke')
+      let pressed
+      revoke.onpointerdown = () => (pressed = performance.now())
+      revoke.onpointerup = () => {
+        if (pressed !== undefined && performance.now() - pressed >= 1000) show('revoked', 'Revoked: yes')
+        pressed = undefined
       }
       show('seen', document.cookie.includes('seen=1') ? 'Seen: before' : 'Seen: first')
       document.cookie = 'seen=1; max-age=3600; path=/'
@@ -136,6 +145,15 @@ describe.skipIf(!(await findBrowser()))('browser computer', () => {
     const y = center(pad).y
     await computer.act({ type: 'drag', from: { x: pad.left + 0.01, y }, to: { x: pad.right - 0.01, y } })
     await eventually('Mouse: dragged right')
+  })
+
+  test('holds a press-and-hold button long enough that a click does not', async () => {
+    const revoke = await find('button', 'Hold to revoke')
+    await click(revoke)
+    await Bun.sleep(100)
+    expect(await texts()).toContain('Revoked: no')
+    await computer.act({ type: 'hold', at: center(revoke.box), ms: 1200 })
+    await eventually('Revoked: yes')
   })
 
   test('keeps cookies in its profile across restarts', async () => {
