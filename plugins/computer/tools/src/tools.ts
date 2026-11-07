@@ -60,7 +60,7 @@ export const computerTools = (computers: Computers, media: Media, chosen: Chosen
       const id = idOf(computer, context)
       const shot = await need(id).screenshot(screenshotFit)
       const image: ImageBlock = { ...media.put(shot.png, 'image/png'), type: 'image', mediaType: 'image/png', name: `${id}.png` }
-      return [{ type: 'text' as const, text: `${shot.width}×${shot.height} pixels.` }, image]
+      return [{ type: 'text' as const, text: [`${shot.width}×${shot.height} pixels.`, shot.note].filter(Boolean).join('\n') }, image]
     },
   }
 
