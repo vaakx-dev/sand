@@ -13,7 +13,7 @@ export type * from './llm'
 export type * from './login'
 export * from './match'
 export type * from './models'
-export { efforts, isEffort, isMetered } from './models'
+export { efforts, isEffort } from './models'
 export type * from './plans'
 export type * from './setup'
 export { statelessCaps, ThreadLost } from './threads'
@@ -64,7 +64,7 @@ export const loginShared = request('login.shared', { input: account.extend({ sha
 
 export const modelsCatalog = request('models.catalog', { input: source, output: type<ModelInfo[]>() })
 export const modelsPref = request('models.pref', {
-  input: model.extend({ hidden: z.boolean().optional(), favourite: z.boolean().optional(), paid: z.boolean().optional() }),
+  input: model.extend({ hidden: z.boolean().optional(), favourite: z.boolean().optional() }),
   output: type<void>(),
 })
 export const modelsAdd = request('models.add', { input: source.extend({ name: z.string() }), output: type<ModelInfo>() })

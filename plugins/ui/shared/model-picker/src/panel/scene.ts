@@ -62,7 +62,6 @@ export const readScene = ({ ctx, pcs }: Picker, target: PickerTarget, view: View
         ...(ctx.get(wire) && {
           toggleFavourite: () => send(ctx, modelsPref, { model: model.id, favourite: model.favourite === undefined }),
           toggleHidden: () => send(ctx, modelsPref, { model: model.id, hidden: !model.hidden }),
-          ...(model.coveredBy && { togglePaid: () => send(ctx, modelsPref, { model: model.id, paid: !model.paid }) }),
         }),
       }),
     ...(settings && {

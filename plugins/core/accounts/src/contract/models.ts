@@ -24,15 +24,11 @@ export interface ModelInfo {
   favourite?: number
   fresh?: boolean
   added?: boolean
-  coveredBy?: string
-  paid?: boolean
 }
 
 export type ModelPrice = Record<keyof Usage, number>
 
 export type Billing = 'plan' | 'api' | 'credits' | 'local'
-
-export const isMetered = (billing: Billing) => billing === 'api' || billing === 'credits'
 
 export interface ProviderInfo {
   id: string

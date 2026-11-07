@@ -34,7 +34,6 @@ export interface Prefs {
   hide: string[]
   show: string[]
   favourites: string[]
-  paid: string[]
   added: Record<string, string[]>
   newModels: Record<string, NewModels>
   seen: Record<string, string[]>
