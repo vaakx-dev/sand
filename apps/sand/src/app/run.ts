@@ -1,10 +1,10 @@
+import { sharedModules } from '@sand/boot/modules'
 import { cli, type CliPlace } from '@sand/config/contract'
 import { errorMessage } from '@sand/util'
 import { inspectorPlugin, scopeError } from 'drydock'
 import { join } from 'node:path'
 import { problems } from './diagnose'
 import { builtins, loaderFolder, runsUserPlugins } from './loader'
-import { sharedModules } from './modules'
 import { startApp } from './start'
 import { writeTypings } from './typings'
 
@@ -17,7 +17,7 @@ interface RunOptions {
 }
 
 export const run = async (options: RunOptions) => {
-  const modules = await sharedModules()
+  const modules = await sharedModules(builtins)
   const { ctx, exit } = startApp(modules)
   if (runsUserPlugins(options))
     await writeTypings(join(options.home, 'plugins'), modules).catch(error => console.error(`could not write plugin typings: ${errorMessage(error)}`))
