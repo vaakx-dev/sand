@@ -6,6 +6,7 @@ import { pulse } from '@sand/reactive'
 import { threadChange, threadsChange } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { inject } from './context'
+import { workDrawer } from './drawer'
 import { workPanel } from './panel'
 import { followRunning } from './follow'
 import { createPlan } from './plan'
@@ -44,8 +45,9 @@ export default definePlugin({
         above: bot => {
           const parts = partsFor(bot)
           followRunning(ctx, parts.tasks)
-          return summaryLine(ctx, { ...parts, narrow, name: () => roster.name(bot) })
+          return summaryLine(ctx, { ...parts, narrow })
         },
+        drawer: bot => workDrawer(ctx, { ...partsFor(bot), name: () => roster.name(bot) }),
       }),
     )
   },
