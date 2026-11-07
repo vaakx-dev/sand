@@ -11,7 +11,7 @@ export interface Report {
 
 export type CallContext<C extends Conversation> = Omit<ToolContext, 'call' | 'progress' | 'conversation'> & { conversation: C }
 
-const runCall = async <C extends Conversation>(
+const settle = async <C extends Conversation>(
   ctx: EngineContext,
   conversations: Conversations<C>,
   call: ToolCallBlock,
@@ -23,13 +23,23 @@ const runCall = async <C extends Conversation>(
     conversations.toolProgress?.(call, text, context.conversation)
   }
   try {
-    const result = await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
-    return { ...result, content: await ctx.waterfall(toolContent, result.content, context.conversation) }
+    return await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
   } catch (error) {
     if (context.signal.reason instanceof HandedOver) throw error
     if (context.signal.aborted) return errorResult(call, 'Interrupted: the user stopped the turn before this call finished.')
     return errorResult(call, errorMessage(error))
   }
+}
+
+const runCall = async <C extends Conversation>(
+  ctx: EngineContext,
+  conversations: Conversations<C>,
+  call: ToolCallBlock,
+  context: CallContext<C>,
+  report: Report,
+) => {
+  const result = await settle(ctx, conversations, call, context, report)
+  return { ...result, content: await ctx.waterfall(toolContent, result.content, context.conversation) }
 }
 
 const runTool = async <C extends Conversation>(

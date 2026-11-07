@@ -41,6 +41,7 @@ export default definePlugin({
       tag: uuid(),
       pc: thisPc.id,
       ...(moment.thread && { thread: moment.thread }),
+      ...(moment.bot && { bot: moment.bot }),
     })
 
     const send = async (moment: Moment) => {

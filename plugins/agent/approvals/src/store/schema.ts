@@ -34,4 +34,5 @@ export const schema = [
       value text not null
     )`,
   ],
+  ['alter table approvals add column once integer not null default 0'],
 ]

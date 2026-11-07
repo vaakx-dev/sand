@@ -31,6 +31,7 @@ export interface Act {
   effect: Effect
   paths?: string[]
   summary?: string
+  ask?: boolean
 }
 
 export interface Tool<S extends ZodType = ZodType> {

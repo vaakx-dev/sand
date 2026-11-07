@@ -4,6 +4,7 @@ import { tabCommand, tabsNote } from './chords'
 import { pageElements } from './elements'
 import { findText } from './find'
 import { dispatch, type Viewport } from './input'
+import { fillLogin } from './login'
 import { settle } from './settle'
 import { openTabs, type Call, type Tabs } from './tabs'
 
@@ -107,6 +108,10 @@ export const browserComputer = ({ id, label, profile, headless }: BrowserOptions
     async find(text, match) {
       const call = await page()
       return findText(call, await viewportOf(call), text, match)
+    },
+    async fill(fill) {
+      const { current, framesIn } = await tabs()
+      return fillLogin(await current(), framesIn, fill)
     },
     async close() {
       const open = running

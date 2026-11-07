@@ -1,11 +1,12 @@
 import { paths } from '@sand/paths/contract'
 import { server } from '@sand/server/contract'
+import { openVault } from '@sand/vault'
 import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { connectionFlowWire, connectionRemoved, connections, connectionsChange } from './contract'
 import { serveConnections } from './serve'
 import { createConnections } from './service'
-import { openVault } from './vault'
+import type { Data } from './vault'
 
 export default definePlugin({
   name: 'connections',
@@ -13,8 +14,8 @@ export default definePlugin({
   inject: { paths },
   config: z.object({ keychain: z.boolean().default(true) }).default({ keychain: true }),
   async apply(ctx, { keychain }) {
-    const vault = await openVault(ctx.paths.home, keychain && Bun.env.SAND_KEYCHAIN !== 'off' ? Bun.secrets : undefined)
-    const runtime = createConnections(vault, await vault.read(), {
+    const vault = await openVault<Data>(ctx.paths.home, 'connections', keychain && Bun.env.SAND_KEYCHAIN !== 'off' ? Bun.secrets : undefined)
+    const runtime = createConnections(vault, (await vault.read()) ?? { entries: [], clients: {} }, {
       changed: () => ctx.emit(connectionsChange, runtime.service.accounts()),
       removed: account => ctx.emit(connectionRemoved, account),
       ended: end => ctx.get(server)?.broadcast(connectionFlowWire, end),

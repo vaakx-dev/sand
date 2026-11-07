@@ -1,3 +1,4 @@
+import { botViews } from '@sand/bots/contract'
 import { pcs, pcsChange, wire, wireHello } from '@sand/devices-contract'
 import { settings } from '@sand/settings/contract'
 import { toasts } from '@sand/toasts/contract'
@@ -11,7 +12,7 @@ import { notificationsPage } from './page'
 
 export default definePlugin({
   name: 'devices-notify',
-  description: 'Notifications on this device: the Settings page that turns them on, a notification when the page is hidden, and opening the thread when one is tapped',
+  description: 'Notifications on this device: the Settings page that turns them on, a notification when the page is hidden, and opening the thread or bot when one is tapped',
   inject: { wire, pcs, kit, toasts },
   apply(ctx) {
     const record = () => {
@@ -42,6 +43,11 @@ export default definePlugin({
         { from: 'all' },
       ),
     )
-    ctx.effect(() => onNoticeOpen(thread => void ctx.get(threads)?.select(thread)))
+    ctx.effect(() =>
+      onNoticeOpen(target => {
+        if ('thread' in target) void ctx.get(threads)?.select(target.thread)
+        else ctx.get(botViews)?.open(target.bot)
+      }),
+    )
   },
 })

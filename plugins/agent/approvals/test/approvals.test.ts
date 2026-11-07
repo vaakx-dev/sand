@@ -108,6 +108,44 @@ test('always allow saves a rule that lets the next call through, and a denied ca
   })
 })
 
+test('a call that asks every time waits even past an allow rule, and always allow lets only that call through', async () => {
+  const sand = await started([
+    [{ type: 'call', name: 'sign_in', input: { to: 'bank' } }],
+    [said('Signed in.')],
+    [{ type: 'call', name: 'sign_in', input: { to: 'bank' } }],
+    [said('Signed in again.')],
+  ])
+  const signed: string[] = []
+  sand.app.get(tools)!.register({
+    name: 'sign_in',
+    description: 'Sign in',
+    input: z.object({ to: z.string() }),
+    act: ({ to }) => ({ effect: 'read', ask: true, summary: `Sign in to ${to}` }),
+    run({ to }) {
+      signed.push(to)
+      return 'Signed in'
+    },
+  })
+  const chat = sand.chat('fake/m')
+  service(sand).addRule({ owner: 'thread', tool: 'sign_in', verdict: 'allow' })
+  const asked = nextAsk(sand)
+  const first = sand.turns.run(chat, 'sign in')
+  const decision = await asked
+
+  expect(decision).toMatchObject({ tool: 'sign_in', summary: 'Sign in to bank', once: true, outcome: 'waiting' })
+  expect(service(sand).answer(decision.id, 'always')).toMatchObject({ outcome: 'allowed', by: 'user', once: true })
+  await first
+  expect(signed).toEqual(['bank'])
+  expect(service(sand).rules()).toHaveLength(1)
+  expect(service(sand).decisions()[0]).not.toHaveProperty('rule')
+
+  const again = nextAsk(sand)
+  const second = sand.turns.run(chat, 'sign in again')
+  service(sand).answer((await again).id, 'once')
+  expect(await second).toMatchObject({ text: 'Signed in again.' })
+  expect(signed).toEqual(['bank', 'bank'])
+})
+
 test('reads are free and still recorded, newest first even within one millisecond, and stopping a waiting turn cancels its ask', async () => {
   setSystemTime(Date.now())
   const sand = await started([

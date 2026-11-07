@@ -58,6 +58,16 @@ test('saved rules beat the defaults, deny beats ask and ask beats allow', () => 
   expect(decide([deny], 'trusted', asked('bot', { effect: 'read' }, 'web_fetch'))).toEqual({ verdict: 'allow', by: 'default' })
 })
 
+test('a call that asks every time asks in any mode and past allow rules, and a deny rule still denies it', () => {
+  const run = asked('bot', { effect: 'run', ask: true }, 'shell')
+  const allow = rule({ verdict: 'allow', tool: 'shell' })
+  const deny = rule({ verdict: 'deny', effect: 'run' })
+
+  expect(decide([], 'trusted', asked('bot', { effect: 'read', ask: true }))).toEqual({ verdict: 'ask', by: 'default' })
+  expect(decide([allow], 'trusted', run)).toEqual({ verdict: 'ask', by: 'default' })
+  expect(decide([allow, deny], 'careful', run)).toEqual({ verdict: 'deny', by: 'rule', rule: 'deny' })
+})
+
 test('a rule matches only its own owner, conversation, tool and effect', () => {
   const allow = rule({ verdict: 'allow', conversation: 'c1', tool: 'mail', effect: 'send' })
 

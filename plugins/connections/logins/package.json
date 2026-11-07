@@ -1,0 +1,45 @@
+{
+  "name": "@sand/logins",
+  "version": "0.0.0",
+  "description": "Saved logins: website logins with an optional authenticator, and keys or tokens, kept encrypted and used by the bots and threads you allow without the agent ever seeing a value",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "logins",
+    "runtime": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Saved logins",
+    "summary": "Save website logins and keys once, choose which bots may use each, and let them sign in without seeing the values"
+  },
+  "dependencies": {
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/computers": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-notify": "workspace:*",
+    "@sand/engine": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/orchestrator": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/settings": "workspace:*",
+    "@sand/tools": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/vault": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/approvals": "workspace:*",
+    "@sand/bot-turns": "workspace:*",
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
+  }
+}

@@ -46,6 +46,7 @@ export const createGate = ({ stores, waiters, title, asked, cancel }: GateDeps):
       tool: tool.name,
       effect: act.effect,
       summary: oneLine(act.summary ?? JSON.stringify(call.input), summaryMax),
+      ...(act.ask && { once: true }),
       outcome,
       at,
       ...(outcome !== 'waiting' && { by: ruling.by, decided: at, ...(ruling.rule && { rule: ruling.rule }) }),

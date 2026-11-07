@@ -18,6 +18,7 @@ export const moments: Record<MomentKind, { label: string; detail: string }> = {
 export interface Moment {
   kind: MomentKind
   thread?: string
+  bot?: string
   title: string
   text: string
 }
@@ -28,6 +29,7 @@ export interface Notice {
   tag: string
   pc: string
   thread?: string
+  bot?: string
 }
 
 export interface Notify {
@@ -41,11 +43,19 @@ export const momentKindSchema = z.enum(momentKinds)
 const momentSchema = z.object({
   kind: momentKindSchema,
   thread: z.string().min(1).optional(),
+  bot: z.string().min(1).optional(),
   title: z.string(),
   text: z.string(),
 })
 
-const noticeSchema = z.object({ title: z.string(), body: z.string(), tag: z.string().min(1), pc: z.string().min(1), thread: z.string().min(1).optional() })
+const noticeSchema = z.object({
+  title: z.string(),
+  body: z.string(),
+  tag: z.string().min(1),
+  pc: z.string().min(1),
+  thread: z.string().min(1).optional(),
+  bot: z.string().min(1).optional(),
+})
 
 export const notifySend = request('notify.send', { input: momentSchema, output: type<void>(), callers: 'runtime' })
 export const notifyDeliver = request('notify.deliver', { input: noticeSchema, output: type<void>(), callers: 'pc' })

@@ -41,6 +41,8 @@ const byDefault = (asked: Asked, mode: Mode): Verdict => {
 
 export const decide = (rules: Rule[], mode: Mode, asked: Asked): Ruling => {
   const [rule] = rules.filter(found => matches(found, asked)).sort((a, b) => strength[a.verdict] - strength[b.verdict])
+  if (rule?.verdict === 'deny') return { verdict: 'deny', by: 'rule', rule: rule.id }
+  if (asked.act.ask) return { verdict: 'ask', by: 'default' }
   if (rule) return { verdict: rule.verdict, by: 'rule', rule: rule.id }
   return { verdict: byDefault(asked, mode), by: 'default' }
 }
