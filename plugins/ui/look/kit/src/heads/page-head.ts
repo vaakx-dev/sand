@@ -6,7 +6,7 @@ type PaneHeadProps = Props<HTMLDivElement> & { led?: MaybeReactive<boolean> }
 
 export const pageHead = (caption?: Child, action?: Child) =>
   div(
-    { class: 'flex flex-wrap items-center justify-end gap-3 px-1' },
+    { class: 'flex flex-wrap items-center justify-end gap-3' },
     caption ? p({ class: 'min-w-48 flex-1 text-sm text-neutral-400' }, caption) : null,
     action ?? null,
   )
