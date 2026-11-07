@@ -1,7 +1,6 @@
 import { div, p, show, span, type Child } from '@vaakx-dev/vrui'
 import { secondaryAction } from '../buttons/button'
 import { icon, type IconName } from '../icons/lucide'
-import { errorText } from '../notes/notes'
 import { delayed } from '../page/delayed'
 import type { Surface } from '../surface'
 
@@ -33,7 +32,8 @@ export const emptyState = ({ text, action, ...where }: EmptyProps) =>
 export const errorState = ({ text, retry, ...where }: ErrorProps) =>
   div(
     { role: 'alert', class: [padOf(where), 'flex flex-wrap items-center gap-3'] },
-    div({ class: 'min-w-0 flex-1' }, errorText(text)),
+    span({ class: 'inline-flex shrink-0 text-danger-400' }, icon('alert', 16)),
+    div({ class: 'min-w-0 flex-1 text-sm wrap-anywhere text-neutral-100' }, text),
     retry ? secondaryAction({ size: 'sm', onClick: retry }, 'Retry') : null,
   )
 
