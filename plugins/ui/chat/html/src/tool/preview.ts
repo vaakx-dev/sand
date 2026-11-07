@@ -10,7 +10,7 @@ import type { RecentPages } from './recent'
 import { z } from 'zod'
 
 const input = z.object({
-  html: z.string().max(maxHtmlChars).optional().describe('A complete, self-contained HTML document.'),
+  html: z.string().max(maxHtmlChars).optional().describe('The markup of a complete, self-contained HTML document, not a file path.'),
   path: z.string().optional().describe('Path to a .html file to check instead of html.'),
   width: z.number().int().min(240).max(1600).optional().describe(`CSS pixels. Default ${columnWidth}. About 390 checks a phone.`),
 })

@@ -11,7 +11,7 @@ import { z } from 'zod'
 const entryType = 'html-render'
 
 const input = z.object({
-  html: z.string().max(maxHtmlChars).optional().describe('A complete, self-contained HTML document. Leave this out to publish the page html_preview just checked.'),
+  html: z.string().max(maxHtmlChars).optional().describe('The markup of a complete, self-contained HTML document, not a file path. Leave this out to publish the page html_preview just checked.'),
   path: z.string().optional().describe('Path to a .html file. Leave both this and html out to publish the page html_preview just checked.'),
   title: z.string().min(1).max(maxTitleChars).describe('Short name for the page, shown above it.'),
   height: z.number().int().min(minHeight).max(maxHeight).optional().describe(heightNote),
