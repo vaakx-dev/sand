@@ -1,7 +1,8 @@
-import { type Entry, type Message, type Prompt, promptContent, type ToolCallBlock, type UserContent } from '@sand/chats/contract'
+import { type Entry, type Message, type Prompt, promptContent, type UserContent } from '@sand/chats/contract'
 import type { Selection } from '@sand/model/contract'
-import { type Conversation, type Conversations, type TurnInfo, turnContent, type TurnOrigin } from '../contract'
+import { type Conversation, type Conversations, type PendingItem, type TurnInfo, turnContent, type TurnOrigin } from '../contract'
 import type { EngineContext } from '../context'
+import type { Resumption } from '../loop/turn'
 import type { Owned } from '../owned'
 
 export interface Opening<C extends Conversation> {
@@ -18,10 +19,9 @@ export interface Started<C extends Conversation> {
   user: Message
 }
 
-export interface Resumed<C extends Conversation> {
+export interface Resumed<C extends Conversation> extends Resumption {
   conversation: C
   info: TurnInfo
-  calls: ToolCallBlock[]
 }
 
 export type Begun<C extends Conversation> = Started<C> | Resumed<C>
@@ -36,9 +36,10 @@ export const createOpener = <C extends Conversation>(ctx: EngineContext, { conve
     const user: Message = { role: 'user', content: await expand(ctx, conversations, promptContent(prompt), conversation) }
     return { conversation, user, selection, origin }
   },
-  open({ conversation, user, selection, origin }: Opening<C>, pending?: string): Started<C> {
+  open({ conversation, user, selection, origin }: Opening<C>, queued?: Pick<PendingItem, 'id' | 'at'>): Started<C> {
     const id = Bun.randomUUIDv7()
-    const entry = conversation.append('message', user, { turn: id })
+    const started = Date.now()
+    const entry = conversation.append('message', user, { turn: id, at: queued?.at ?? started })
     const info = stores.turns.open({
       id,
       conversation,
@@ -47,8 +48,8 @@ export const createOpener = <C extends Conversation>(ctx: EngineContext, { conve
       prompt: entry.id,
       holder: leases.holder,
       lease: leases.until(),
-      started: entry.at,
-      ...(pending && { pending }),
+      started,
+      ...(queued && { pending: queued.id }),
     })
     return { conversation, info, entry, user }
   },

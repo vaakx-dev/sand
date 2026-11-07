@@ -18,7 +18,7 @@ export const createWaiting = (store: TurnStore, turn: string, holder: string, ch
         write()
       }
     },
-    durable: (calls: Set<string>) =>
-      calls.size > 0 && reasons.every(reason => reason.durable) && [...calls].every(call => reasons.some(reason => reason.call === call)),
+    durable: (calls: string[]) =>
+      calls.length > 0 && reasons.every(reason => reason.durable) && calls.every(call => reasons.some(reason => reason.call === call)),
   }
 }

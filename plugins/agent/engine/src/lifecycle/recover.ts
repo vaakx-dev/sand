@@ -1,35 +1,39 @@
-import { type Entry, errorResult, type Message, toolCalls, unrecorded } from '@sand/chats/contract'
+import { type Entry, errorResult, type Message, type ToolCallBlock, toolCalls, unrecorded } from '@sand/chats/contract'
 import type { Conversation, TurnEnding } from '../contract'
 import type { EngineContext } from '../context'
 import type { Owned } from '../owned'
 import type { Stale } from '../store/turns'
 import type { Drive } from './run'
 
+const mostRecoveries = 3
+
 export interface RecoveryDeps<C extends Conversation> {
   drive: Drive<C>
-  resumes(): boolean
+  running(): boolean
 }
+
+const messages = (entries: Entry[]) => entries.flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : []))
 
 const unanswered = (entries: Entry[]) => {
   const calls = toolCalls(entries)
-  for (const entry of entries) {
-    if (entry.type !== 'message') continue
-    for (const block of (entry.data as Message).content) if (block.type === 'tool_result') calls.delete(block.callId)
-  }
+  for (const message of messages(entries)) for (const block of message.content) if (block.type === 'tool_result') calls.delete(block.callId)
   return [...calls.values()]
 }
+
+const interrupted = (call: ToolCallBlock, output: string | undefined) =>
+  errorResult(call, output ? `${unrecorded}\n\nIts last output:\n${output}` : unrecorded)
 
 export const createRecovery = <C extends Conversation>(
   ctx: EngineContext,
   { conversations, stores, leases, announce }: Owned<C>,
-  { drive, resumes }: RecoveryDeps<C>,
+  { drive, running }: RecoveryDeps<C>,
 ) => {
-  const settle = (conversation: C, stale: Stale, keep: Set<string>) => {
-    const turn = { turn: stale.id }
-    if (stale.partial) conversation.append('message', stale.partial, turn)
-    const calls = unanswered(conversation.path().filter(entry => entry.turn === stale.id))
-    for (const call of calls) if (!keep.has(call.id)) conversation.append('message', { role: 'user', content: [errorResult(call, unrecorded)] }, turn)
-    return calls.filter(call => keep.has(call.id))
+  const settle = (conversation: C, stale: Stale, rerun: (call: ToolCallBlock) => boolean) => {
+    const entries = conversation.path().filter(entry => entry.turn === stale.id)
+    const calls = unanswered(entries)
+    for (const call of calls)
+      if (!rerun(call)) conversation.append('message', { role: 'user', content: [interrupted(call, stale.outputs[call.id])] }, { turn: stale.id })
+    return { calls, replied: !calls.length && messages(entries).at(-1)?.role === 'assistant' }
   }
 
   const lose = (stale: Stale) => {
@@ -38,7 +42,8 @@ export const createRecovery = <C extends Conversation>(
       if (!stores.turns.lose(stale.id)) return false
       if (stale.thread) conversations.abandon?.(stale.thread)
       if (!conversation) return true
-      settle(conversation, stale, new Set())
+      if (stale.partial) conversation.append('message', stale.partial, { turn: stale.id })
+      settle(conversation, stale, () => false)
       conversation.append('turn-ending', { stopReason: 'lost' } satisfies TurnEnding, { turn: stale.id })
       stores.pending.settle(conversation, 'user')
       return true
@@ -50,22 +55,27 @@ export const createRecovery = <C extends Conversation>(
     announce.pending(conversation)
   }
 
-  const resume = (stale: Stale, durable: Set<string>) => {
+  const rerunnable = (conversation: C, stale: Stale) => {
+    const durable = new Set(stale.waits.flatMap(reason => (reason.durable ? [reason.call] : [])))
+    return (call: ToolCallBlock) => durable.has(call.id) || ctx.tools.effect(call, conversation) === 'read'
+  }
+
+  const resume = (stale: Stale) => {
     const conversation = conversations.open(stale.conversation)
-    if (!conversation) return lose(stale)
+    if (!conversation || stale.recoveries >= mostRecoveries) return lose(stale)
     const resumed = ctx.ledger.tx(() => {
       const info = stores.turns.adopt(stale.id, leases.holder, leases.until())
-      return info && { conversation, info, calls: settle(conversation, stale, durable) }
+      if (!info) return undefined
+      const rerun = rerunnable(conversation, stale)
+      const { calls, replied } = settle(conversation, stale, rerun)
+      if (stale.thread && !calls.length && !replied) conversations.abandon?.(stale.thread)
+      return { conversation, info, calls: calls.filter(rerun), replied }
     })
     if (!resumed) return lose(stale)
     drive.start(resumed)
   }
 
-  const recover = (stale: Stale) => {
-    const durable = new Set(stale.waits.flatMap(reason => (reason.durable ? [reason.call] : [])))
-    if (!durable.size) return lose(stale)
-    if (resumes()) resume(stale, durable)
+  return () => {
+    if (running()) stores.turns.expired(conversations.owner, leases.holder).forEach(resume)
   }
-
-  return () => stores.turns.expired(conversations.owner, leases.holder).forEach(recover)
 }

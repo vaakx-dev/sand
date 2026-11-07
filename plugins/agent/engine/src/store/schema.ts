@@ -101,4 +101,5 @@ export const schema = [
   ],
   [`update turns set waiting = '[' || waiting || ']' where waiting is not null`],
   ['alter table turns add column pending text'],
+  ['alter table turns add column outputs text', 'alter table turns add column recoveries integer not null default 0'],
 ]

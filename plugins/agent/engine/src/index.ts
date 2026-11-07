@@ -39,7 +39,7 @@ export default definePlugin({
       attach(conversations) {
         const { owner } = conversations
         if (attached.has(owner)) throw new Error(`${owner} conversations are already attached`)
-        const found = attachConversations(ctx, { stores, leases, stopped: () => stopped, resumes: () => settled && !stopped }, conversations, () => attached.delete(owner))
+        const found = attachConversations(ctx, { stores, leases, running: () => settled && !stopped }, conversations, () => attached.delete(owner))
         attached.set(owner, { ...found, open: id => conversations.open(id) })
         found.recover()
         return found.runner
