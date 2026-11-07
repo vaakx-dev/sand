@@ -1,10 +1,13 @@
+import type { LLM } from '@sand/accounts/contract'
 import type { AppendMeta } from '@sand/chats/contract'
+import { notify } from '@sand/devices-notify/contract'
 import type { Ledger } from '@sand/ledger/contract'
-import { uuid } from '@sand/util'
+import { billedCost } from '@sand/usage/contract'
+import { dollars, uuid } from '@sand/util'
 import type { Context } from 'drydock'
 import { rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Bot, botChange, botEntry, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, type ModelChoice, type NewBot } from './contract'
+import { type Bot, botChange, botEntry, type BotHold, botName, botRemove, type Bots, type BotStatus, type BotSummary, freshColor, type ModelChoice, type NewBot } from './contract'
 import { createEntries } from './entries'
 import { createJobs } from './jobs'
 import { lastLine } from './last'
@@ -14,7 +17,20 @@ const scanned = 20
 
 const initialOf = (name = '') => [...name.trim()][0]?.toUpperCase() ?? ''
 
-export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick: (main: ModelChoice) => ModelChoice): Bots => {
+const monthStart = () => {
+  const date = new Date()
+  date.setHours(0, 0, 0, 0)
+  date.setDate(1)
+  return date.getTime()
+}
+
+const holdOf = ({ paused, budget }: Bot, spent: number): BotHold | undefined => {
+  if (paused) return 'paused'
+  if (budget !== null && spent >= budget) return 'limit'
+  return undefined
+}
+
+export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: LLM, quick: (main: ModelChoice) => ModelChoice): Bots => {
   const records = createRecords(db)
   const entries = createEntries(db)
   const jobs = createJobs(db)
@@ -22,7 +38,9 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
 
   const summary = (bot: Bot): BotSummary => {
     const last = lastLine(entries.newest(bot.id, 'message', scanned))
-    return { ...bot, status: statuses.get(bot.id) ?? 'idle', ...(last ? { last } : {}) }
+    const spent = billedCost(entries.usage(bot.id, monthStart()), llm)
+    const hold = holdOf(bot, spent)
+    return { ...bot, status: statuses.get(bot.id) ?? 'idle', spent, ...(hold && { hold }), ...(last ? { last } : {}) }
   }
 
   const known = (id: string) => {
@@ -37,10 +55,19 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
     return found
   }
 
+  const reached = (bot: BotSummary) => {
+    const month = new Date().toLocaleDateString('en', { month: 'long' })
+    const text = `Reached its monthly limit with ${dollars(bot.spent)} spent in ${month}. It starts again next month, or when you raise the limit.`
+    ctx.get(notify)?.send({ kind: 'paused', title: botName(bot), text }).catch(error => ctx.report(error))
+  }
+
   const append = (bot: string, type: string, data: unknown, meta?: AppendMeta) => {
+    const before = type === 'usage' ? summary(known(bot)).hold : undefined
     const entry = entries.append(known(bot).id, type, data, meta)
     ctx.emit(botEntry, entry)
-    if (type === 'message') changed(bot)
+    if (type !== 'message' && type !== 'usage') return entry
+    const after = changed(bot)
+    if (type === 'usage' && after.hold === 'limit' && before !== 'limit') reached(after)
     return entry
   }
 
@@ -62,6 +89,8 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, quick
         job: '',
         computer: 'none',
         project: null,
+        paused: false,
+        budget: null,
         ...spec,
         models: { main, quick: spec.models?.quick.model ? spec.models.quick : quick(main) },
         created: now,

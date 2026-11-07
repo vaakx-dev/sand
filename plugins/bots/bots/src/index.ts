@@ -26,7 +26,7 @@ export default definePlugin({
       const catalog = { models: ctx.llm.models?.() ?? [], price: (model: string) => ctx.llm.price?.(model) }
       return quickChoice(catalog, main.model ?? ctx.get(modelSettings)?.defaults().model)
     }
-    const service = createBots(ctx, ctx.ledger, join(ctx.paths.home, 'bots'), quick)
+    const service = createBots(ctx, ctx.ledger, join(ctx.paths.home, 'bots'), ctx.llm, quick)
     ctx.provide(bots, service)
     serveBots(ctx, service)
   },

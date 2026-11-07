@@ -16,6 +16,7 @@ export const sourceSchema = z.object({
   label: z.string().optional(),
   api: z.literal('anthropic').optional(),
   models: z.array(z.string()).min(1),
+  price: z.object({ input: z.number(), output: z.number(), cacheRead: z.number(), cacheWrite: z.number() }).optional(),
   replies: z.array(z.array(part)).default([]),
   resume: z.boolean().default(true),
   inject: z.array(z.enum(['ok', 'missing', 'error'])).default([]),

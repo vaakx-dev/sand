@@ -108,7 +108,7 @@ export default definePlugin({
             hide: () => ctx.get(layout)?.toggle('side', false),
           }),
         main: close => mainView(main, close),
-        attention: () => store.bots.get()?.some(bot => bot.status === 'failed' || bot.status === 'waiting') ?? false,
+        attention: () => store.bots.get()?.some(bot => bot.status === 'failed' || bot.status === 'waiting' || bot.hold === 'limit') ?? false,
         requested: () => Boolean(address.route.get().bot),
         left: address.drop,
       },

@@ -1,4 +1,4 @@
-import { botRemove } from '@sand/bots/contract'
+import { botChange, botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
 import { context } from '@sand/prompt/contract'
 import { stepPrepare } from '@sand/provider-threads/contract'
@@ -6,7 +6,7 @@ import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
 import { botBrief, offered } from './brief'
-import { botInterrupt, botLive, botSend, botStreamWire, botTurns } from './contract'
+import { botInterrupt, botLive, botPending, botPendingWire, botSend, botStreamWire, botTurns } from './contract'
 import { conversationOf } from './conversation'
 import { createLive } from './live'
 import { finalReply } from './reply'
@@ -23,7 +23,8 @@ export default definePlugin({
     ctx.effect(() => ctx.providerThreads.brief('bot', brief))
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && stale(conversation.id)) || undefined)
     ctx.effect(() => ctx.tools.offer('bot', () => offered))
-    const conversations = botConversations(ctx, live)
+    const queued = (bot: string) => ctx.get(server)?.broadcast(botPendingWire, [bot, runner.pending(conversationOf(ctx.bots, bot))])
+    const conversations = botConversations(ctx, live, queued)
     const runner = ctx.engine.attach(conversations)
     ctx.effect(() => runner.detach)
 
@@ -39,6 +40,9 @@ export default definePlugin({
       final: finalReply(ctx.bots, ctx.engine),
     })
 
+    ctx.on(botChange, bot => {
+      if (bot.hold) runner.interrupt(conversationOf(ctx.bots, bot.id))
+    })
     ctx.on(botRemove, id => {
       runner.interrupt(conversationOf(ctx.bots, id))
       runner.forget(id)
@@ -50,6 +54,7 @@ export default definePlugin({
         found.handle(botSend, ({ bot, prompt, clientRequestId }) => runner.send(open(bot), { prompt, clientRequestId })),
         found.handle(botInterrupt, ({ bot }) => runner.interrupt(open(bot))),
         found.handle(botLive, ({ bot }) => live.snapshot(bot)),
+        found.handle(botPending, ({ bot }) => runner.pending(open(bot))),
       )
     })
   },

@@ -18,7 +18,7 @@ export interface SendDeps<C extends Conversation> {
   recover(): void
 }
 
-export const createSend = <C extends Conversation>(ctx: EngineContext, { stores, announce }: Owned<C>, { opener, drive, dispatch, recover }: SendDeps<C>) => {
+export const createSend = <C extends Conversation>(ctx: EngineContext, { conversations, stores, announce }: Owned<C>, { opener, drive, dispatch, recover }: SendDeps<C>) => {
   const route = (conversation: C, input: SendInput, opening: Opening<C> | undefined): Routed<C> => {
     const running = stores.turns.current(conversation)
     if (!running && opening) {
@@ -45,8 +45,10 @@ export const createSend = <C extends Conversation>(ctx: EngineContext, { stores,
     const earlier = stores.receipts.get(conversation, input.clientRequestId)
     if (earlier) return earlier
     recover()
-    const opening = stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')
-    const routed = store(conversation, input, opening)
+    const held = conversations.held?.(conversation)
+    const routing: SendInput = held ? { ...input, mode: 'queue' } : input
+    const opening = held || stores.turns.current(conversation) ? undefined : await opener.prepare(conversation, input.prompt, input.origin ?? 'user')
+    const routed = store(conversation, routing, opening)
     if (routed.kind === 'started') drive.start(routed.started)
     if (routed.kind === 'pending') {
       announce.pending(conversation)
