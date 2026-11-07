@@ -20,6 +20,6 @@ export default definePlugin({
     ctx.on(wireHello, () => void load())
     if (ctx.wire.ready()) void load()
     ctx.effect(() => ctx.wire.on(mcpServersWire, value => servers.set(value)))
-    ctx.watch(settings, found => found?.page({ id: 'mcp', label: 'MCP servers', icon: 'server', order: 23, render: () => serversPage(ctx.kit, servers) }))
+    ctx.watch(settings, found => found?.page({ id: 'mcp', label: 'MCP servers', icon: 'server', group: 'agents', order: 23, render: () => serversPage(ctx.kit, servers) }))
   },
 })

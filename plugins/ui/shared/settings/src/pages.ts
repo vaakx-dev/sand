@@ -1,6 +1,19 @@
 import { byOrder } from '@sand/util'
-import type { SettingsPage, SettingsSection } from './contract'
+import type { SettingsGroup, SettingsPage, SettingsSection } from './contract'
 import { derive, sig } from '@vaakx-dev/vrui'
+
+export const groups: { id: SettingsGroup; label: string }[] = [
+  { id: 'agents', label: 'Agents' },
+  { id: 'accounts', label: 'Accounts and devices' },
+  { id: 'workspace', label: 'Workspace' },
+  { id: 'app', label: 'App' },
+]
+
+export const groupOf = (page: SettingsPage) => page.group ?? 'app'
+
+const rank = (page: SettingsPage) => groups.findIndex(group => group.id === groupOf(page))
+
+const byGroup = (a: SettingsPage, b: SettingsPage) => rank(a) - rank(b) || byOrder(a, b)
 
 const matches = (page: SettingsPage, query: string) => page.id === query || page.label.toLowerCase() === query.toLowerCase()
 
@@ -26,7 +39,7 @@ export const pageStore = () => {
       current.set(id)
     },
     add(page: SettingsPage) {
-      registered.update(all => [...all.filter(other => other.id !== page.id), page].sort(byOrder))
+      registered.update(all => [...all.filter(other => other.id !== page.id), page].sort(byGroup))
       return () => registered.update(all => all.filter(other => other !== page))
     },
     addSection(section: SettingsSection) {

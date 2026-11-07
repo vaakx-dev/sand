@@ -19,7 +19,7 @@ export default definePlugin({
     ctx.provide(gitControl, { menu: { section: sections.section }, actions: { register: registry.register }, moves, switchBranch })
     ctx.on(threadSelect, () => commit.close())
     ctx.watch(changesPanel, found => found && joinDisposers(found.slot(() => controlRow(parts), 'top'), found.slot(() => startButton(parts), 'no-repo')))
-    ctx.watch(settings, found => found?.page({ id: 'git', label: 'Git', icon: 'branch', order: 35 }))
+    ctx.watch(settings, found => found?.page({ id: 'git', label: 'Git', icon: 'branch', group: 'workspace', order: 35 }))
     ctx.watch(keys, found =>
       found?.bind({
         key: 'mod+shift+return',

@@ -72,6 +72,6 @@ export default definePlugin({
       setMode: (mode: Mode) => keep(ctx.wire.call(approvalMode, { mode })),
       remove: (id: string) => keep(ctx.wire.call(approvalRuleRemove, { id })),
     }
-    ctx.watch(settings, found => found?.page({ id: 'approvals', label: 'Approvals', icon: 'shield', order: 24, render: () => approvalsPage(page) }))
+    ctx.watch(settings, found => found?.page({ id: 'approvals', label: 'Approvals', icon: 'shield', group: 'agents', order: 24, render: () => approvalsPage(page) }))
   },
 })
