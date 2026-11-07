@@ -52,6 +52,7 @@ const wideRow = (parts: PageParts, pull: Sig<InboxPull>, minute: Derive<number>,
     trail: trail(parts, pull, minute),
     actions: actions(parts, pull),
     current,
+    class: 'min-h-12',
     onClick: open,
   })
 
