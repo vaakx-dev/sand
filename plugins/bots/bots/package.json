@@ -22,6 +22,7 @@
     "@sand/paths": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sub-model": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

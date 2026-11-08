@@ -1,0 +1,14 @@
+{
+  "name": "@sand/ui-shell",
+  "version": "0.0.0",
+  "description": "The app's frame: sidebar, screens and their routes, the phone stack, sheets and the chips above composers",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "dependencies": {
+    "@sand/reactive": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

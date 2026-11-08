@@ -32,7 +32,7 @@ export default definePlugin({
         icon: 'bot',
         lead(record) {
           const bot = botOf(record.data)
-          return bot ? botFace(ctx, roster, bot, 14) : null
+          return bot ? botFace(ctx, roster, bot, 16) : null
         },
         action: {
           label: 'Open in Bots',
