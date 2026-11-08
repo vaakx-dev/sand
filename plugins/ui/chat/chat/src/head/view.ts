@@ -43,16 +43,15 @@ const below = (event: MouseEvent): PressAt | undefined => {
 }
 
 const titleMenu = (ctx: ChatContext, shell: Shell, id: string, title: Sig<string>) => {
-  const { barTitle, contextMenu, navButton } = ctx.kit
+  const { barTitle, contextMenu, plainButton } = ctx.kit
   const menu = contextMenu()
   const spec = () => ({ title: title.get(), actions: threadActions(ctx, shell, id) })
   const openBelow = (event: MouseEvent) => {
     const at = below(event)
     if (at) menu.open({ ...at, ...spec() })
   }
-  return span(
-    { class: 'flex min-w-0' },
-    navButton({ class: '-ml-2', title, 'aria-haspopup': 'menu', ...menu.target(spec, openBelow) }, barTitle(title)),
+  return barTitle(
+    plainButton({ class: 'max-w-full truncate rounded-sm', title, 'aria-haspopup': 'menu', ...menu.target(spec, openBelow) }, title),
     menu.view(),
   )
 }
