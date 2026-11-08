@@ -18,7 +18,7 @@ const otherProjects = (ctx: ProjectsContext, groups: Derive<ProjectGroup[]>, bri
     listRow({
       surface: 'raised',
       touch: true,
-      lead: () => projectMark(group.get().name, ctx.projects.groupIcon(group.get())),
+      lead: projectMark(group.get().name, ctx.projects.groupIcon(group.get())),
       title: () => group.get().name,
       onClick: () => bring(group.get().id),
     })
@@ -30,10 +30,10 @@ const otherProjects = (ctx: ProjectsContext, groups: Derive<ProjectGroup[]>, bri
 
 export const folderStep = (ctx: ProjectsContext, changes: Pulse, pc: PcView, bring: (project: string) => void): Step => {
   const { errorText, sheetText, textInput } = ctx.kit
-  const form = folderForm(ctx, pc)
+  const form = folderForm(ctx.projects, pc)
   const start = form.path.get()
   const others = changes.read(() => (form.path.get() === start ? elsewhere(ctx, pc.id) : []))
-  const step = changes.read(() => plan(ctx, form))
+  const step = changes.read(() => plan(ctx.projects, form))
   const note = dynamicChild(step, ({ note: text, error }) => {
     if (!text) return null
     return error ? errorText(text) : sheetText(text)

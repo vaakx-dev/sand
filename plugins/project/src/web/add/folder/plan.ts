@@ -1,8 +1,9 @@
 import type { AddedProject } from '../../../contract'
-import type { ProjectGroup } from '@sand/web-client/contract'
-import type { ProjectsContext } from '../../context'
+import type { ProjectGroup, Projects } from '@sand/web-client/contract'
 import { absolute, join, short, split } from '../paths'
 import { keepNew, type FolderForm } from './form'
+
+type PlanProjects = Pick<Projects, 'get' | 'add' | 'mkdir'>
 
 export interface Matches {
   target: string
@@ -34,35 +35,35 @@ const chosenMatch = (form: FolderForm, target: string, groups: ProjectGroup[]) =
   return groups.find(group => !hasCopyOn(group, form.pc.id))?.id ?? keepNew
 }
 
-const matched = (ctx: ProjectsContext, form: FolderForm, target: string, groups: ProjectGroup[]): Plan => {
+const matched = (projects: PlanProjects, form: FolderForm, target: string, groups: ProjectGroup[]): Plan => {
   const { pc } = form
   const chosen = chosenMatch(form, target, groups)
   const matches = { target, groups, chosen }
-  if (chosen === keepNew) return { label: labels.add, matches, run: () => ctx.projects.add(target, pc.id) }
-  const here = ctx.projects.get(chosen)?.locations.find(entry => entry.device === pc.id)
+  if (chosen === keepNew) return { label: labels.add, matches, run: () => projects.add(target, pc.id) }
+  const here = projects.get(chosen)?.locations.find(entry => entry.device === pc.id)
   return {
     label: labels.copy,
     matches,
     note: here ? `Replaces its copy at ${here.path}.` : undefined,
-    run: () => ctx.projects.add(target, pc.id, chosen),
+    run: () => projects.add(target, pc.id, chosen),
   }
 }
 
-const inspected = (ctx: ProjectsContext, form: FolderForm, target: string): Plan => {
+const inspected = (projects: PlanProjects, form: FolderForm, target: string): Plan => {
   const { pc } = form
   const folder = form.folder(target)
   if (folder.state === 'loading') return { label: labels.add }
   if (folder.state === 'failed') return { label: labels.add, error: true, note: `Couldn’t look inside ${target} (${folder.error}). Check that ${pc.name} is online and try again.` }
   const { path, project, restores, matches } = folder.value
-  const name = (id: string) => ctx.projects.get(id)?.name ?? 'a project'
+  const name = (id: string) => projects.get(id)?.name ?? 'a project'
   if (project) return { label: labels.open, note: `Already added as ${name(project)}.`, opens: true, run: async () => ({ path, device: pc.id }) }
-  if (restores) return { label: labels.copy, note: `Adds it back as a copy of ${name(restores)}.`, run: () => ctx.projects.add(target, pc.id, restores) }
-  const groups = matches.flatMap(id => ctx.projects.get(id) ?? [])
-  if (groups.length) return matched(ctx, form, target, groups)
-  return { label: labels.add, run: () => ctx.projects.add(target, pc.id) }
+  if (restores) return { label: labels.copy, note: `Adds it back as a copy of ${name(restores)}.`, run: () => projects.add(target, pc.id, restores) }
+  const groups = matches.flatMap(id => projects.get(id) ?? [])
+  if (groups.length) return matched(projects, form, target, groups)
+  return { label: labels.add, run: () => projects.add(target, pc.id) }
 }
 
-export const plan = (ctx: ProjectsContext, form: FolderForm): Plan => {
+export const plan = (projects: PlanProjects, form: FolderForm): Plan => {
   const { pc, place } = form
   const { sep } = place
   const { dir, leaf } = split(form.path.get().trim(), sep)
@@ -75,13 +76,13 @@ export const plan = (ctx: ProjectsContext, form: FolderForm): Plan => {
   if (absolute(target, place) === place.home) return { label: labels.add, note: 'Your home folder can’t be a project. Pick a folder inside it.' }
   if (leaf === '.' || leaf === '..') return { label: labels.add }
   const exists = leaf ? listing.value.folders.includes(leaf) : listing.value.exists
-  if (exists) return inspected(ctx, form, target)
+  if (exists) return inspected(projects, form, target)
   return {
     label: labels.create,
-    note: `Creates ${target}.`,
+    note: 'Creates this folder.',
     run: async () => {
-      await ctx.projects.mkdir(target, pc.id)
-      return ctx.projects.add(target, pc.id)
+      await projects.mkdir(target, pc.id)
+      return projects.add(target, pc.id)
     },
   }
 }

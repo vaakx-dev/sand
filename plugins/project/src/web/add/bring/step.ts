@@ -121,7 +121,7 @@ const filesView = (ctx: ProjectsContext, form: BringForm) =>
   })
 
 const sourceLine = (ctx: ProjectsContext, source: Derive<ProjectEntry | undefined>) =>
-  dynamicChild(source, from => (from ? ctx.kit.sheetText(`From ${ctx.pcs.name(from.device)}, ${from.path}`) : null))
+  dynamicChild(source, from => (from ? ctx.kit.sheetText(`From ${ctx.pcs.name(from.device)}, ${short(from.path, ctx.projects.place(from.device))}`) : null))
 
 const howChoice = (ctx: ProjectsContext, how: Sig<How>, remote: string | undefined) => (remote ? ctx.kit.segmented(hows, how, value => how.set(value), { label: 'How to bring it', fill: true }) : null)
 

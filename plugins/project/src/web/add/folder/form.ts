@@ -1,6 +1,6 @@
 import type { PcView } from '@sand/devices-contract'
 import { sig } from '@vaakx-dev/vrui'
-import type { ProjectsContext } from '../../context'
+import type { Projects } from '@sand/web-client/contract'
 import { cache } from '../cache'
 import { join, short } from '../paths'
 
@@ -11,15 +11,15 @@ export interface Match {
   project: string
 }
 
-export const folderForm = (ctx: ProjectsContext, pc: PcView) => {
-  const place = ctx.projects.place(pc.id)
+export const folderForm = (projects: Pick<Projects, 'place' | 'browse' | 'inspect'>, pc: Pick<PcView, 'id' | 'name'>) => {
+  const place = projects.place(pc.id)
   return {
     pc,
     place,
     path: sig(join(short(place.root, place), '', place.sep)),
     match: sig<Match | undefined>(undefined),
-    listing: cache(dir => ctx.projects.browse(dir, pc.id)),
-    folder: cache(path => ctx.projects.inspect(path, pc.id)),
+    listing: cache(dir => projects.browse(dir, pc.id)),
+    folder: cache(path => projects.inspect(path, pc.id)),
   }
 }
 

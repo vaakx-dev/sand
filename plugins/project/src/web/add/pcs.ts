@@ -5,15 +5,13 @@ import type { Step } from './run'
 
 const platforms: Record<string, string> = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }
 
-const isThisPc = (pc: PcView) => pc.status.phase === 'connected' && pc.status.route.kind === 'local'
-
 const describe = (pc: PcView) => {
   if (!pc.online) return 'Offline'
-  if (isThisPc(pc)) return 'This PC'
+  if (pc.home) return 'This PC'
   return [pc.platform && (platforms[pc.platform] ?? pc.platform), pc.address].filter(Boolean).join(' · ')
 }
 
-const order = (a: PcView, b: PcView) => Number(isThisPc(b)) - Number(isThisPc(a)) || Number(b.online) - Number(a.online) || a.name.localeCompare(b.name)
+const order = (a: PcView, b: PcView) => Number(b.home) - Number(a.home) || Number(b.online) - Number(a.online) || a.name.localeCompare(b.name)
 
 export const pcsStep = (ctx: ProjectsContext, pcs: Derive<PcView[]>, choose: (device: string) => void): Step => {
   const { listRow, rowList } = ctx.kit
