@@ -317,8 +317,8 @@
       "approvals": {
         "kind": "capability",
         "label": "Approvals",
-        "summary": "Asks you before agents act, with an Inbox of what waits on you",
-        "stops": "Agents stop asking before they act; the Inbox empties.",
+        "summary": "Asks you before agents act",
+        "stops": "Agents stop asking before they act.",
         "needs": [
           "engine"
         ]
