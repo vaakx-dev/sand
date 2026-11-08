@@ -3,7 +3,7 @@ import { badge, type Tone } from './marks'
 export type RunStatus = 'running' | 'done' | 'failed' | 'cancelled' | 'stopped'
 
 const statuses: Record<RunStatus, { label: string; tone: Tone }> = {
-  running: { label: 'Running', tone: 'neutral' },
+  running: { label: 'Running', tone: 'run' },
   done: { label: 'Done', tone: 'success' },
   failed: { label: 'Failed', tone: 'danger' },
   cancelled: { label: 'Stopped', tone: 'neutral' },

@@ -1,4 +1,4 @@
-import { type Child, derive, div, dynamicChild, effect, untrack } from '@vaakx-dev/vrui'
+import { type Child, derive, div, dynamicChild, effect, show, untrack } from '@vaakx-dev/vrui'
 import { pcSettings } from '../data/pc-settings'
 import { anywhereRows } from '../switches/anywhere'
 import { networkRows } from '../switches/network'
@@ -14,9 +14,15 @@ export const pcSwitches = (ui: Ui, pc: string) => {
     if (online.get()) untrack(() => void settings.refresh())
   })
   const whenOnline = (rows: () => Child[]) =>
-    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ surface: 'group', text: `Connect to ${name()} to change this.` })))
+    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ flush: true, text: `Connect to ${name()} to change this.` })))
   return [
-    settingsSection({ title: 'Reach from anywhere' }, whenOnline(() => anywhereRows(ui, settings, name))),
-    settingsSection({ title: 'Network' }, whenOnline(() => networkRows(ui, settings, name))),
+    show(
+      () => !settings.tailscale.missing.get(),
+      () => settingsSection({ title: 'Reach from anywhere' }, whenOnline(() => anywhereRows(ui, settings, name, 'raised'))),
+    ),
+    show(
+      () => !settings.network.missing.get(),
+      () => settingsSection({ title: 'Network' }, whenOnline(() => networkRows(ui, settings, name))),
+    ),
   ]
 }

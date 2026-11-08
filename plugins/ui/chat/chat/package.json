@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "The thread chat: a thread transcript with \"Worked for\" turns, branches, queued messages and scrolling that keeps your place",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
@@ -10,16 +13,18 @@
     "summary": "Messages with markdown, and tool steps grouped under each reply"
   },
   "dependencies": {
+    "@sand/changes": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
-    "@sand/layout": "workspace:*",
-    "@sand/nav": "workspace:*",
-    "@sand/palette": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/threads-space": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

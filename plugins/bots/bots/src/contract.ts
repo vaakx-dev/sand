@@ -1,6 +1,7 @@
 import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
+import type { MenuAction, Status } from '@sand/ui-shell/contract'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -30,7 +31,7 @@ export interface Bot {
   job: string
   models: ModelPolicy
   computer: Computer
-  project: string | null
+  projects: string[]
   paused: boolean
   budget: number | null
   created: number
@@ -97,6 +98,8 @@ const modelChoice = sessionSettings.pick({ model: true, effort: true })
 
 const computer = z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])])
 
+export const projectIds = z.array(z.string().min(1)).transform(ids => [...new Set(ids)])
+
 const botFields = z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
@@ -104,7 +107,7 @@ const botFields = z.object({
   job: z.string().max(20_000),
   models: z.object({ main: modelChoice, quick: modelChoice }),
   computer,
-  project: z.string().min(1).nullable(),
+  projects: projectIds,
   paused: z.boolean(),
   budget: z.number().positive().max(1_000_000).nullable(),
 })
@@ -131,14 +134,52 @@ export interface Bots {
 
 export const bots = service<Bots>('bots')
 
-export type BotFace = Pick<Bot, 'id' | 'color'> & { status?: BotStatus }
+/**
+ * The shell route of a bot's screen: `{ kind: botRoute, id: bot, tab }`. With no `tab` it shows the bot's own chat;
+ * `tab` is a `<scheme>:<id>` reference from a `BotTabSource`, such as `thread:abc`.
+ */
+export const botRoute = 'bot'
 
+/** Opens the bots UI. Provided by it, so it is absent with bots off. */
 export interface BotViews {
-  open(bot: string): void
-  avatar(face: () => BotFace, size: number): HTMLElement
+  /** Opens a bot's screen, on one of its tabs when `tab` is given; on phones a tab opens on its own screen. */
+  open(bot: string, tab?: string): void
 }
 
 export const botViews = service<BotViews>('botViews')
+
+/** One piece of a bot's work as its tab, the Project page and its sidebar row show it. */
+export interface BotTab {
+  /** A `<scheme>:<id>` reference, as plan links write it. */
+  ref: string
+  title: string
+  status: Status
+  note: string
+  /** When `status` began, in epoch ms. */
+  at: number
+  /** The project it works in, if any; the Project page groups work by it. */
+  project?: string | null
+}
+
+/**
+ * Work that opens as tabs in a bot's screen, such as the threads it started. The bots UI keeps which tabs are
+ * open; a source only describes its work and draws it. Plan links in `scheme` group on the Project page by
+ * their live status, and the bot's sidebar row shows its most urgent one. Reads are reactive.
+ */
+export interface BotTabSource {
+  scheme: string
+  /** The bot's work, newest first. */
+  list(bot: string): BotTab[]
+  get(ref: string): BotTab | undefined
+  /** The tab's body. Call inside a scope the caller owns; disposing it removes the view. */
+  render(ref: string): HTMLElement
+}
+
+export interface BotTabs {
+  source(source: BotTabSource): Dispose
+}
+
+export const botTabs = service<BotTabs>('botTabs')
 
 export interface BotProfileSection {
   id: string
@@ -152,24 +193,35 @@ export interface BotProfile {
 
 export const botProfile = service<BotProfile>('botProfile')
 
-export interface BotChatDrawer {
-  view: HTMLElement
-  shown(): boolean
+/** Something that wakes a bot by itself, such as a routine on a schedule or a watch on a page. */
+export interface BotAutomation {
+  id: string
+  /** A kit icon name, such as `clock` for routines and `eye` for watches. */
+  icon: string
+  title: string
+  /** When it wakes the bot, short enough for a chip's list: "Weekdays 9:00", "On changes". */
+  when: string
+  /** What it does or follows, in one line. */
+  detail?: string
+  paused?: boolean
+  /** Why it stopped working, when it did. */
+  error?: string
+  actions(): MenuAction[]
 }
 
-export interface BotChatPart {
+/** A kind of automation, such as routines. Sources sort by `order`; `list` is read reactively. */
+export interface BotAutomationSource {
   id: string
   order?: number
-  beside?(bot: string): HTMLElement
-  above?(bot: string): HTMLElement
-  drawer?(bot: string): BotChatDrawer
+  list(bot: string): BotAutomation[]
 }
 
-export interface BotChat {
-  part(part: BotChatPart): Dispose
+/** Collects every bot's automations for its profile, the Automations page and the Listening chip. Provided by the bots UI. */
+export interface BotAutomations {
+  source(source: BotAutomationSource): Dispose
 }
 
-export const botChat = service<BotChat>('botChat')
+export const botAutomations = service<BotAutomations>('botAutomations')
 
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')

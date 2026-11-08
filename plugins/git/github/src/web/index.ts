@@ -1,33 +1,28 @@
-import { pcs, wire } from '@sand/devices-contract'
-import { projects } from '@sand/web-client/contract'
+import { wire } from '@sand/devices-contract'
+import { folderFacts, threadRows } from '@sand/threads-home/contract'
+import { kit } from '@sand/ui-kit/contract'
+import { threads } from '@sand/web-client/contract'
+import { dynamicChild } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
-import { githubClient, githubLoginCode, pullsChange, pullsCreate, pullsForBranch, pullsMerge, pullsReady, pullsResolve, pullsSummary, pullsText } from '../contract'
-import { authBook } from './auth'
-import { localCopies } from './local-copy'
-import { repoBook } from './repos'
+import { githubPulls } from '../contract'
+import { pullsView } from './pulls'
 
 export default definePlugin({
-  name: 'github',
-  description:
-    "Reaches GitHub for the page through each PC's sign-in: signing in and out, which repository a folder is and where a repository is checked out, and reading, creating, merging and readying pull requests",
-  inject: { wire, pcs, projects },
+  name: 'github-web',
+  description: "Shows the pull requests of each thread's branch on its row",
+  inject: { wire, threads, kit },
   apply(ctx) {
-    const { wire } = ctx
-    const auth = authBook(ctx, wire)
-    const { folderRepo, repoOf } = repoBook(ctx, wire)
-    ctx.provide(githubClient, {
-      ...auth,
-      repoOf,
-      localCopy: localCopies(ctx, { pcs: ctx.pcs, projects: ctx.projects, folderRepo }),
-      forBranch: (input, device) => wire.call(pullsForBranch, input, device),
-      summary: (input, device) => wire.call(pullsSummary, input, device),
-      resolve: (input, device) => wire.call(pullsResolve, input, device),
-      text: (input, device) => wire.call(pullsText, input, device),
-      create: (input, device) => wire.call(pullsCreate, input, device),
-      merge: (input, device) => wire.call(pullsMerge, input, device),
-      ready: (input, device) => wire.call(pullsReady, input, device),
-      onLoginCode: listener => wire.on(githubLoginCode, listener, { from: 'all' }),
-      onPullChange: listener => wire.on(pullsChange, listener, { from: 'all' }),
-    })
+    const pulls = folderFacts(ctx, ctx.threads, ({ cwd, device }) => ctx.wire.call(githubPulls, { cwd }, device))
+    ctx.watch(threadRows, rows =>
+      rows?.part({
+        id: 'pulls',
+        order: 20,
+        render: thread =>
+          dynamicChild(
+            () => pulls.get(thread) ?? [],
+            found => pullsView(ctx.kit, found),
+          ),
+      }),
+    )
   },
 })

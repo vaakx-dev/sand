@@ -1,34 +1,35 @@
+import { advanced as advancedService, type Advanced } from '@sand/advanced/contract'
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
-import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer } from './contract'
-import { place } from '@sand/layout/contract'
-import { threadsSlot } from '@sand/threads-space/contract'
+import { modelButton, type ModelButton } from '@sand/model-panel/contract'
+import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions } from './contract'
 import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
-import { owned } from '@sand/reactive'
+import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
-import { listen, sig } from '@vaakx-dev/vrui'
+import { listen, onMount, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { fileTrigger } from './complete/files'
 import { createTriggers } from './complete/registry'
 import { skillTrigger } from './complete/skills'
 import { inject } from './context'
-import { card, type Card } from './dock/card'
 import { dock } from './dock/dock'
+import { field, type Field } from './dock/field'
 import { createSlots } from './dock/slots'
 import { draftSession } from './drafts/session'
 import { spacedLink } from './editor/chips/place'
 import { createTurnErrors, turnErrorBanner } from './errors/turn'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
+import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
 import { createSendMenu } from './send/menu'
 import { chatTarget } from './target'
-import { threadSettings, threadTarget } from './thread'
+import { chooseSettings, nextSettings, threadTarget } from './thread'
 import { createTyping } from './typing'
 
 export default definePlugin({
   name: 'composer',
-  description: 'Floating prompt card: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls',
+  description: 'Prompt field: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls',
   inject,
   apply(ctx) {
     const slots = createSlots()
@@ -39,70 +40,111 @@ export default definePlugin({
     const threadOnly = createTriggers()
     const skills = sig<SkillIndex | undefined>(undefined)
     const shelf = sig<Shelves | undefined>(undefined)
+    const button = sig<ModelButton | undefined>(undefined)
+    const advanced = sig<Advanced | undefined>(undefined)
     ctx.watch(shelves, found => {
       shelf.set(found)
     })
-    let current: Card | undefined
-    const { model, session, errors } = owned(ctx, () => {
-      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf)
-      const session = draftSession(ctx, model, () => current?.completion.close())
-      listen(window, 'pagehide', () => session.keep())
-      return { model, session, errors: createTurnErrors(ctx) }
+    ctx.watch(modelButton, found => {
+      button.set(found)
+    })
+    ctx.watch(advancedService, found => {
+      advanced.set(found)
     })
 
-    const chatDock = (chat: Chat): ChatDock => {
+    const mounted: Field[] = []
+    const live = () => mounted.at(-1)
+    const track = (built: Field) =>
+      onMount(built.node, () => {
+        mounted.push(built)
+        return () => {
+          mounted.splice(mounted.indexOf(built), 1)
+        }
+      })
+
+    const { model, session, errors, placeholders } = owned(ctx, () => {
+      const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf)
+      const session = draftSession(ctx, model, () => mounted.forEach(built => built.completion.close()))
+      const inThread = pulse(ctx, [threadSelect]).read(() => Boolean(ctx.threads.current()))
+      listen(window, 'pagehide', () => session.keep())
+      return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
+    })
+
+    const chatDock = (chat: Chat, { kind = 'thread', placeholder }: DockOptions = {}): ChatDock => {
       const own = createSlots()
       const chatOnly = createTriggers()
       chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
-      const parts = { ctx, model: createModel(chatTarget(chat), [triggers, chatOnly], shelf), slots: own, plus: createPlus(), actions: () => [], typed: typing.typed }
-      return { view: dock(parts, card(parts)), slot: own.add }
+      const shown = () => kind !== 'bot' || Boolean(advanced.get()?.on())
+      const parts = {
+        ctx,
+        model: createModel(chatTarget(chat), [triggers, chatOnly], shelf),
+        slots: own,
+        plus: createPlus(),
+        actions: () => [],
+        typed: typing.typed,
+        placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
+        ...(chat.settings && chat.choose && { choice: { target: { settings: chat.settings, choose: chat.choose, running: chat.running }, button: () => (shown() ? button.get() : undefined) } }),
+      }
+      return { view: dock(parts, field(parts)), slot: own.add }
+    }
+
+    const settings = () => nextSettings(ctx, model.picked.get())
+    const choose = chooseSettings(ctx, model)
+    const parts = {
+      ctx,
+      model,
+      slots,
+      plus,
+      actions: menu.actions(model),
+      typed: typing.typed,
+      placeholder: () => placeholders.text.get(),
+      choice: { target: { settings, choose, running: () => model.running.get() }, button: () => button.get() },
     }
 
     const composer: Composer = {
-      focus: () => current?.editor.focus(),
+      view() {
+        const built = field(parts)
+        track(built)
+        return dock(parts, built, turnErrorBanner(ctx, model, errors))
+      },
+      focus: () => live()?.editor.focus(),
       value: () => model.text.get(),
       set(value) {
         model.text.set(value)
-        current?.editor.focusEnd()
+        live()?.editor.focusEnd()
       },
       insert(value) {
-        if (current) current.editor.insert(value)
+        const shown = live()
+        if (shown) shown.editor.insert(value)
         else model.text.update(text => text + value)
       },
       reference(record) {
         model.records.add([record])
         const link = contextLink(record)
-        if (current) current.editor.reference(link)
+        const shown = live()
+        if (shown) shown.editor.reference(link)
         else model.text.update(text => text + spacedLink(link, text.slice(-1), ''))
       },
       quote(text) {
-        if (current) current.editor.quote(text)
+        const shown = live()
+        if (shown) shown.editor.quote(text)
         else model.text.update(typed => quotedText([{ kind: 'text', text: typed }, { kind: 'quote', text }]))
       },
       attach: content => model.attached.update(list => [...list, ...content]),
       slot: (where, view, order) => slots.add(where, view, order),
+      placeholder: placeholders.add,
       hold: reason => model.holds.add(reason),
-      ...createHandoff(model, () => current?.editor.focusEnd()),
+      ...createHandoff(model, () => live()?.editor.focusEnd()),
       sendMenu: menu.add,
       plus: plus.add,
       trigger: triggers.add,
       command: triggers.addCommand,
-      settings: () => threadSettings(ctx, model.picked.get()),
-      choose: model.choose,
+      settings,
+      choose,
       dock: chatDock,
     }
 
-    const parts = { ctx, model, slots, plus, actions: menu.actions(model), typed: typing.typed }
     session.start()
-    place(
-      ctx,
-      threadsSlot('main'),
-      () => {
-        current = card(parts)
-        return dock(parts, current, turnErrorBanner(ctx, model, errors))
-      },
-      2,
-    )
     ctx.on(threadSelect, session.open)
     ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))
     ctx.watch(skillIndex, found => {

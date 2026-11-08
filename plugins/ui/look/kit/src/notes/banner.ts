@@ -1,5 +1,5 @@
 import { div, type Child, type Props } from '@vaakx-dev/vrui'
-import { rowTitle } from '../heads/text'
+import { rowName } from '../heads/text'
 
 export type BannerTone = 'neutral' | 'accent'
 
@@ -15,9 +15,9 @@ export const statusBanner = ({ tone = 'neutral', class: extra, ...props }: Banne
     {
       role: 'status',
       ...props,
-      class: ['flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-neutral-100', bannerTones[tone], extra],
+      class: ['flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-100', bannerTones[tone], extra],
     },
     ...children,
   )
 
-export const bannerTitle = (text: Child) => rowTitle(text)
+export const bannerTitle = (text: Child) => rowName(text)

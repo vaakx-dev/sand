@@ -2,7 +2,7 @@ import type { LiveBlock } from '@sand/accounts/contract'
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
 import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { ContextMenu, IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ToolProgress } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
@@ -34,7 +34,7 @@ export interface ToolRenderer {
   badge?(tool: ToolView): ToolBadge | undefined
   copy?(tool: ToolView): string
   body?(tool: ToolView): HTMLElement | undefined
-  actions?(tool: ToolView): NavAction[]
+  actions?(tool: ToolView): MenuAction[]
 }
 
 export type RenderEntry = (entry: Entry, conversation: string) => HTMLElement | undefined
@@ -44,24 +44,10 @@ export interface NoticeKind {
   actions?(text: string, conversation: string): Child
 }
 
-export interface TurnInfo {
-  session: string
-  device: string
-  startEntry: string
-  running: boolean
-}
-
-export interface TurnFooter {
-  id: string
-  order?: number
-  view(turn: TurnInfo): Child | null
-}
-
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
   notice(from: string, kind: NoticeKind): Dispose
-  turnFooter(footer: TurnFooter): Dispose
 }
 
 export type Step = { kind: 'tool'; key: string; tool: ToolView } | { kind: 'thinking'; key: string; text: string; streaming: boolean }
@@ -141,10 +127,15 @@ export interface MenuKit {
   more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
 }
 
+export interface Place {
+  railed: boolean
+  last: boolean
+}
+
 export interface Row<T = unknown> {
   key: string
   data: T
-  view(data: Sig<T>, railed?: Sig<boolean>): HTMLElement
+  view(data: Sig<T>, place?: Sig<Place>): HTMLElement
 }
 
 export type UserItem = Extract<Item, { kind: 'user' }>
@@ -155,26 +146,25 @@ export interface Surface {
   menu: ContextMenu
   states: OpenStates
   jump(from: Element, quote: string): void
-  reply?(text: string): NavAction[]
-  rewrite?(entry: string, text: string): NavAction[]
+  reply?(text: string): MenuAction[]
+  rewrite?(entry: string, text: string): MenuAction[]
   branchSwitch?(entry: string): Child
+  sender?(entry: string): string | undefined
 }
 
 export interface Rows {
   item(item: Item): Row[]
-  user(item: UserItem, actions: (text: string) => NavAction[], note?: () => Child): Row
+  user(item: UserItem, actions: (text: string) => MenuAction[], note?: () => Child): Row
 }
 
 export interface TranscriptParts {
   version: Sig<number>
-  footers: Sig<TurnFooter[]>
   settled(owner: Owner, path: Entry[]): Settled
   items(settled: Settled, source: Source): Item[]
   prompt(entry: Entry, parts: UserPart[]): Item[]
   rows(surface: Surface): Rows
   openStates(): OpenStates
   quoteJump(owner: Node): (root: Element, from: Element, quote: string) => void
-  workFrame(...children: Child[]): HTMLElement
 }
 
 export type ImageOptions = Omit<ShownImageOptions, 'open'>

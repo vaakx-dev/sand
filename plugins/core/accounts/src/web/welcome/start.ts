@@ -10,7 +10,7 @@ const signedInKey = (control: LoginControl) => derive(() => JSON.stringify(contr
 const elsewhere = ({ icon, listRow, settingsSection }: Kit, model: WelcomeModel) =>
   settingsSection(
     { title: 'Elsewhere' },
-    listRow({ surface: 'group', lead: icon('link'), title: 'I use sand on another PC', meta: 'Connect to it and use its accounts', onClick: () => model.go('join') }),
+    listRow({ lead: icon('link'), title: 'I use sand on another PC', meta: 'Connect to it and use its accounts', onClick: () => model.go('join') }),
   )
 
 export const startView = (kit: Kit, model: WelcomeModel, control: LoginControl) => {
@@ -19,7 +19,7 @@ export const startView = (kit: Kit, model: WelcomeModel, control: LoginControl) 
     setupHeading('Welcome to sand'),
     setupNote('Sign in to the AI you want to use.'),
     setupColumn(
-      dynamicChild(signedInKey(control), () => chooseStep(kit, control.state.get(), model.pick)),
+      dynamicChild(signedInKey(control), () => chooseStep(kit, control.state.get(), model.pick, 'page')),
       elsewhere(kit, model),
     ),
     dynamicChild(model.connected, connected =>
@@ -33,7 +33,7 @@ export const addView = (kit: Kit, model: WelcomeModel) => {
   return setupScreen(
     setupHeading(() => model.add.title.get()),
     setupColumn(
-      div({ class: 'flex flex-col overflow-hidden rounded-xl bg-neutral-800 pt-3' }, model.add.view(kit)),
+      div({ class: '-mx-4 flex flex-col' }, model.add.view(kit, 'page')),
       div({ class: 'flex' }, quietButton({ onClick: model.back }, 'Back')),
     ),
   )

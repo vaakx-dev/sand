@@ -1,5 +1,5 @@
 import type { ContextRecord } from '@sand/chats/contract'
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { threads } from '@sand/web-client/contract'
 import { definePlugin, type Dispose } from 'drydock'

@@ -9,7 +9,7 @@
   "sand": {
     "web": "./src/index.ts",
     "label": "Sand",
-    "summary": "Sand's colors on a dark page"
+    "summary": "Sand's colors, light or dark to follow the system"
   },
   "dependencies": {
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

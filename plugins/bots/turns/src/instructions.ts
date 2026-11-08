@@ -1,5 +1,6 @@
 import { type BotMemory, noteAbout } from '@sand/bot-memory/contract'
 import type { BotSummary } from '@sand/bots/contract'
+import type { ProjectFiles } from '@sand/project/contract'
 import type { Own } from '@sand/prompt/contract'
 import { oneLine } from '@sand/util'
 
@@ -19,9 +20,20 @@ const notesOf = async (memory: BotMemory, bot: string) => {
 
 const jobOf = (bot: BotSummary) => (bot.job.trim() ? [`## Your job\n\n${bot.job.trim()}`] : [])
 
+const projectsOf = ({ projects }: BotSummary, files: ProjectFiles | undefined) => {
+  if (!projects.length) return []
+  const placeOf = (project: string) => files?.copies().find(copy => copy.project === project)?.path ?? 'no folder on this PC'
+  const labelOf = (project: string) => {
+    const name = files?.name(project)
+    return name ? `${name} (id ${project})` : project
+  }
+  const list = projects.map(project => `- ${labelOf(project)}: ${placeOf(project)}`).join('\n')
+  return [`## Your projects\n\nYou manage these projects. Plan the work in them and start threads to do it, passing the project id to thread_start:\n\n${list}`]
+}
+
 const whoOf = (name: string) => (name ? `You are ${name}, one of the user's bots in sand.` : "You are one of the user's bots in sand, with no name yet.")
 
-export const instructions = async (bot: BotSummary, memory: BotMemory): Promise<Own> => ({
+export const instructions = async (bot: BotSummary, memory: BotMemory, files: ProjectFiles | undefined): Promise<Own> => ({
   intro: whoOf(bot.name),
-  parts: [...jobOf(bot), `## Your memory\n\n${await memoryOf(memory, bot.id)}`, `## Your notes\n\n${await notesOf(memory, bot.id)}`],
+  parts: [...jobOf(bot), ...projectsOf(bot, files), `## Your memory\n\n${await memoryOf(memory, bot.id)}`, `## Your notes\n\n${await notesOf(memory, bot.id)}`],
 })

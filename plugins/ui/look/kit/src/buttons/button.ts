@@ -36,7 +36,7 @@ export const rowButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, 
 
 export const actionTones = {
   primary: 'font-medium bg-accent-500 text-accent-950 hover:bg-accent-400 disabled:bg-neutral-700',
-  secondary: 'bg-neutral-600 text-neutral-100 hover:bg-neutral-600/70',
+  secondary: 'bg-neutral-700/50 text-neutral-100 hover:bg-neutral-700 disabled:bg-neutral-700/50',
   danger: 'bg-danger-500 text-white hover:bg-danger-400 disabled:bg-neutral-700',
 }
 
@@ -49,12 +49,13 @@ export const dangerAction = (props: ButtonProps, ...children: Child[]) => contro
 export const quietButton = ({ active = false, surface, ...props }: ToggleProps, ...children: Child[]) =>
   controlButton(placeLook(active, surface), props, ...children)
 
-export const navButton = ({ active = false, surface, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
+export const navButton = ({ size = 'md', active = false, surface, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
   plainButton(
     {
       ...props,
       class: [
-        'flex h-8 min-w-0 items-center gap-2 rounded-md px-2 text-sm transition-colors aria-current:font-medium',
+        'flex min-w-0 items-center gap-2 rounded-md px-2 font-medium transition-colors',
+        size === 'lg' ? 'h-10 text-base' : 'h-8 text-sm',
         placeLook(active, surface),
         extra,
       ],
@@ -77,4 +78,4 @@ export const iconButton = ({ size = 'md', active = false, surface, class: extra,
   )
 
 export const linkButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, ...children: Child[]) =>
-  plainButton({ ...props, class: ['shrink-0 rounded-sm text-neutral-400 underline hover:text-neutral-100', extra] }, ...children)
+  plainButton({ ...props, class: ['shrink-0 rounded-sm text-neutral-400 hover:text-neutral-100', extra] }, ...children)

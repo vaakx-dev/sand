@@ -39,7 +39,7 @@ const emphasisRun: Parser = (source, index) => {
 const bracket: Parser = (source, index, scope) =>
   source[index] === '[' || source.startsWith('![', index) ? bracketed(source, index, scope, inline) : undefined
 
-const autolink: Parser = (source, index) => (source[index] === '<' || source[index] === 'h' ? autolinkAt(source, index) : undefined)
+const autolink: Parser = (source, index, scope) => (source[index] === '<' || source[index] === 'h' ? autolinkAt(source, index, scope) : undefined)
 
 const entity: Parser = (source, index) => {
   if (source[index] !== '&') return undefined

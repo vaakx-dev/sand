@@ -1,21 +1,21 @@
 {
   "name": "@sand/usage-page",
   "version": "0.0.0",
-  "description": "Usage page in settings: plan limits, billed cost and tokens per account, across your PCs",
+  "description": "Usage page, opened from the sidebar foot: plan limits, billed cost and tokens per account, across your PCs",
   "type": "module",
   "sand": {
     "feature": "usage",
     "web": "./src/index.ts",
     "label": "Usage",
-    "summary": "Usage page in settings: plan limits, billed cost and tokens per account and PC"
+    "summary": "A Usage page in the sidebar: plan limits, billed cost and tokens per account and PC"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/rail": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/usage": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",

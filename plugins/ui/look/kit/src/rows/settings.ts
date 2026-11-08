@@ -1,10 +1,5 @@
-import { div, h2, read, section, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
-import { quietButton } from '../buttons/button'
-
-export interface SectionProps {
-  title?: Child
-  action?: Child
-}
+import { div, read, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { controlButton } from '../buttons/button'
 
 export interface Choice<T> {
   value: T
@@ -14,15 +9,6 @@ export interface Choice<T> {
   mark?: Child
 }
 
-export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[]) =>
-  section(
-    { class: 'flex flex-col gap-2' },
-    title || action
-      ? h2({ class: 'flex min-h-8 min-w-0 items-center gap-2 text-sm font-semibold text-neutral-100' }, span({ class: 'min-w-0 flex-1 truncate' }, title ?? ''), action ?? null)
-      : null,
-    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-xl bg-neutral-700' }, ...rows),
-  )
-
 export interface SegmentedOptions {
   label?: string
   inset?: boolean
@@ -30,26 +16,22 @@ export interface SegmentedOptions {
   class?: ClassValue
 }
 
-export const segmented = <T>(
-  choices: Choice<T>[],
-  active: MaybeReactive<T | undefined>,
-  choose: (value: T) => void,
-  { label, inset = false, fill = false, class: extra }: SegmentedOptions = {},
-) =>
+const picked = 'bg-neutral-700 text-neutral-100'
+
+export const segmented = <T>(choices: Choice<T>[], active: MaybeReactive<T | undefined>, choose: (value: T) => void, { label, fill = false, class: extra }: SegmentedOptions = {}) =>
   div(
     {
-      class: ['flex flex-wrap gap-1 rounded-md p-1', inset ? 'bg-neutral-900' : 'bg-neutral-800', extra],
+      class: ['flex flex-wrap rounded-lg bg-neutral-950 p-px', extra],
       role: 'radiogroup',
       ...(label && { 'aria-label': label }),
     },
     choices.map(choice =>
-      quietButton(
+      controlButton(
+        ['gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-100', () => (read(active) === choice.value ? picked : '')],
         {
           size: 'sm',
-          surface: inset ? 'page' : 'raised',
           role: 'radio',
           'aria-checked': () => String(read(active) === choice.value),
-          active: () => read(active) === choice.value,
           ...(choice.title && { title: choice.title }),
           ...(choice.disabled && { disabled: true }),
           ...(fill && { class: 'flex-1' }),

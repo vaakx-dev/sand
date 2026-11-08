@@ -1,13 +1,13 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
-import { copyEntries, projectEntries, openAt, startable, visibilityEntry, type Entry } from './actions'
+import { bringEntry, copyEntries, projectEntries, openAt, startable, visibilityEntry, type Entry } from './actions'
 import { shorten } from './places'
 
 const quietly = (work: () => void | Promise<unknown>) => () => (async () => work())().catch(() => {})
 
-const fromEntries = (entries: Entry[], group: string): NavAction[] =>
+const fromEntries = (entries: Entry[], group: string): MenuAction[] =>
   entries.filter(entry => !entry.disabled).map(entry => ({ id: `${group}:${entry.label}`, group, label: entry.label, icon: entry.icon, run: quietly(entry.run) }))
 
 export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entry[] = []): MenuSpec => ({
@@ -16,7 +16,7 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entr
   actions: [
     ...fromEntries(projectEntries(ctx, group), 'project'),
     ...fromEntries(looks, 'look'),
-    ...fromEntries(copyEntries(ctx, group), 'copies'),
+    ...fromEntries([...bringEntry(ctx, group), ...copyEntries(ctx, group)], 'copies'),
     ...fromEntries([visibilityEntry(ctx, group)], 'manage'),
     {
       id: 'delete',
@@ -30,7 +30,7 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entr
   ],
 })
 
-const openChatHere = (ctx: ProjectsContext, entry: ProjectEntry): NavAction[] =>
+const openChatHere = (ctx: ProjectsContext, entry: ProjectEntry): MenuAction[] =>
   startable(ctx, entry) ? [{ id: 'new-thread', group: 'use', label: 'New thread here', icon: 'message', run: quietly(() => openAt(ctx, entry)) }] : []
 
 export const copySpec = (ctx: ProjectsContext, entry: ProjectEntry): MenuSpec => ({

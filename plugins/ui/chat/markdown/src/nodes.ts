@@ -8,22 +8,15 @@ export type Emphasis = 'em' | 'strong' | 'del'
 
 const block = 'mb-3 last:mb-0'
 
-const headings = [
-  { tag: h1, size: 'text-xl' },
-  { tag: h2, size: 'text-lg' },
-  { tag: h3, size: 'text-base' },
-  { tag: h4 },
-  { tag: h5 },
-  { tag: h6 },
-]
+const headings = [h1, h2, h3, h4, h5, h6]
 
 const alignments: Record<Align, string> = { left: 'text-left', center: 'text-center', right: 'text-right' }
 
 export const paragraph = (children: Inline[]) => p({ class: block }, children)
 
 export const heading = (level: number, children: Inline[]) => {
-  const { tag, size } = headings[level - 1] ?? { tag: h6 }
-  return tag({ class: ['mt-5 mb-2 first:mt-0 last:mb-0 font-semibold', size] }, children)
+  const tag = headings[level - 1] ?? h6
+  return tag({ class: 'mt-5 mb-1.5 text-base leading-snug font-semibold first:mt-0 last:mb-0' }, children)
 }
 
 export const thematicBreak = () => el('hr', { class: 'my-5 border-t border-neutral-800 first:mt-0 last:mb-0' })
@@ -31,14 +24,14 @@ export const thematicBreak = () => el('hr', { class: 'my-5 border-t border-neutr
 export const blockquote = (children: Node[]) => el('blockquote', { class: [block, 'border-l border-neutral-700 pl-3 text-neutral-400'] }, children)
 
 export const listBlock = (ordered: boolean, start: number, tasks: boolean, items: HTMLElement[]) => {
-  const indent = [block, tasks ? 'list-none pl-1' : 'pl-6']
+  const indent = [block, tasks ? 'list-none pl-1' : 'pl-5']
   return ordered ? ol({ class: indent, ...(start !== 1 && { start }) }, items) : ul({ class: indent }, items)
 }
 
-export const listItem = (children: Node[]) => li({ class: 'my-1 marker:text-neutral-500' }, children)
+export const listItem = (children: Node[]) => li({ class: 'marker:text-neutral-500' }, children)
 
 export const taskItem = (done: boolean, children: Node[]) =>
-  li({ class: 'my-1 list-none' }, span({ class: 'mr-2 text-neutral-500' }, done ? '☑' : '☐'), children)
+  li({ class: 'list-none' }, span({ class: 'mr-2 text-neutral-500' }, done ? '☑' : '☐'), children)
 
 const cellText = (children: Inline[]) => children.map(child => (typeof child === 'string' ? child : child.textContent)).join('')
 
@@ -46,15 +39,15 @@ const cellWidth = (children: Inline[]) => (cellText(children).length <= 32 ? 'wh
 
 export const tableCell = (head: boolean, align: Align | undefined, children: Inline[]) =>
   (head ? th : td)(
-    { class: ['border-b border-neutral-800 px-3 py-2 align-top', cellWidth(children), alignments[align ?? 'left'], head && 'font-medium'] },
+    { class: ['py-1.5 pr-6 align-top last:pr-0', cellWidth(children), alignments[align ?? 'left'], head && 'font-semibold'] },
     children,
   )
 
 export const tableBlock = (head: HTMLElement[], rows: HTMLElement[][]) =>
-  div({ class: [block, 'overflow-auto'] }, table({ class: 'w-full border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
+  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr({ class: 'border-t border-neutral-800' }, cells)))))
 
 export const inlineCode = (value: string, error?: string) =>
-  el('code', { class: ['rounded-md bg-neutral-800 px-1 py-px font-mono text-xs', error && 'text-danger-400'], ...(error && { title: error }) }, value)
+  el('code', { class: ['rounded-md bg-neutral-700 px-1 py-px font-mono text-xs', error && 'text-danger-400'], ...(error && { title: error }) }, value)
 
 export const lineBreak = () => el('br')
 
@@ -67,4 +60,4 @@ export const emphasis = (kind: Emphasis, children: Inline[]) => {
 export const anchor = (href: string, title: string | undefined, children: Inline[]) =>
   a({ class: 'underline hover:text-neutral-400', href, target: '_blank', rel: 'noopener noreferrer', referrerPolicy: 'no-referrer', ...(title && { title }) }, children)
 
-export const blockedLink = (href: string, children: Inline[]) => el('s', { class: 'text-neutral-500', title: `Blocked link: ${href}` }, children)
+export const linkLabel = (href: string, children: Inline[]) => span({ title: href }, children)

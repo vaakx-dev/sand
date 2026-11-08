@@ -19,7 +19,7 @@ import { calendarExport, calendarFeed, calendarImport } from '@sand/calendar-loc
 import { wireHello } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
 import { errorMessage, joinDisposers } from '@sand/util'
-import { a, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
+import { a, derive, effect, onInterval, sig, stored, untrack } from '@vaakx-dev/vrui'
 import type { CalendarContext } from './context'
 import { addDays, browserZone, startOfDay, startOfWeek } from './days'
 
@@ -32,9 +32,24 @@ export interface Shown {
   events: Occurrence[]
 }
 
-const spans: Record<Mode, number> = { agenda: 28, week: 7 }
+const modes: Mode[] = ['agenda', 'week']
 
-const firstDay: Record<Mode, (at: number) => number> = { agenda: startOfDay, week: startOfWeek }
+const upcomingCount = 3
+
+const upcomingEvery = 5 * 60_000
+
+export const eventKey = (event: Occurrence) => `${event.from}:${event.calendar}:${event.id}`
+
+interface Span {
+  first(at: number): number
+  days: number
+  step: number
+}
+
+const spanOf = (mode: Mode, narrow: boolean): Span => {
+  if (mode === 'agenda') return { first: startOfDay, days: 28, step: 7 }
+  return narrow ? { first: startOfDay, days: 3, step: 3 } : { first: startOfWeek, days: 7, step: 7 }
+}
 
 const download = (name: string, text: string) => {
   const href = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }))
@@ -44,14 +59,17 @@ const download = (name: string, text: string) => {
 
 export const calendarModel = (ctx: CalendarContext) => {
   const calendars = sig<Calendar[]>([])
-  const mode = sig<Mode>('agenda')
+  const mode = stored<Mode>('sand.calendar.view', 'agenda', value => modes.includes(value as Mode))
+  const narrow = sig(false)
   const anchor = sig(startOfDay(Date.now()))
+  const span = derive(() => spanOf(mode.get(), narrow.get()))
   const range = derive(() => {
-    const from = firstDay[mode.get()](anchor.get())
-    return { from, to: addDays(from, spans[mode.get()]) }
+    const from = span.get().first(anchor.get())
+    return { from, to: addDays(from, span.get().days) }
   })
   const shown = sig<Shown | undefined>(undefined)
   const failure = sig<string | undefined>(undefined)
+  const upcoming = sig<Occurrence[]>([])
 
   let asked = 0
   const load = () => {
@@ -67,10 +85,21 @@ export const calendarModel = (ctx: CalendarContext) => {
       (error: unknown) => failure.set(errorMessage(error)),
     )
   }
+  const loadUpcoming = () => {
+    const from = startOfDay(Date.now())
+    void ctx.wire.call(calendarAgenda, { from, to: addDays(from, 2), zone: browserZone() }).then(
+      events => upcoming.set(events.filter(({ to }) => to > Date.now()).slice(0, upcomingCount)),
+      (error: unknown) => ctx.report(error),
+    )
+  }
+  const reload = () => {
+    load()
+    loadUpcoming()
+  }
   const loadCalendars = () => void ctx.wire.call(calendarList, {}).then(list => calendars.set(list), (error: unknown) => ctx.report(error))
   const refresh = () => {
     loadCalendars()
-    load()
+    reload()
   }
 
   owned(ctx, () =>
@@ -80,19 +109,26 @@ export const calendarModel = (ctx: CalendarContext) => {
     }),
   )
   ctx.on(wireHello, refresh)
-  if (ctx.wire.ready()) loadCalendars()
-  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, load), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
+  if (ctx.wire.ready()) {
+    loadCalendars()
+    loadUpcoming()
+  }
+  ctx.effect(() => onInterval(loadUpcoming, upcomingEvery))
+  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, reload), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
 
-  const step = (direction: 1 | -1) => anchor.update(at => addDays(at, direction * 7))
+  const step = (direction: 1 | -1) => anchor.update(at => addDays(span.get().first(at), direction * span.get().step))
 
   return {
     calendars,
     writable: derive(() => calendars.get().filter(calendar => calendar.capabilities.includes('write'))),
     mode,
+    narrow,
     anchor,
     range,
     shown,
     failure,
+    upcoming,
+    find: (key: string) => [...upcoming.get(), ...(shown.get()?.events ?? [])].find(event => eventKey(event) === key),
     retry: load,
     show: (next: Mode) => mode.set(next),
     today: () => anchor.set(startOfDay(Date.now())),

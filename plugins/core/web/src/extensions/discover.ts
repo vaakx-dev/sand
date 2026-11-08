@@ -28,11 +28,14 @@ const modulesOf = (dir: string, name: unknown, exports: unknown): Record<string,
       )
     : {}
 
+const idOf = (dir: string, builtin: boolean, name: string | undefined) => (builtin && name ? name.replace(/^@sand\//, '') : basename(dir))
+
 const webManifest = async (dir: string) => {
   try {
     const { name, exports, sand } = (await Bun.file(join(dir, 'package.json')).json()) ?? {}
     return typeof sand?.web === 'string'
       ? {
+          name: text(name),
           entry: resolve(dir, sand.web),
           modules: modulesOf(dir, name, exports),
           label: text(sand.label),
@@ -51,13 +54,13 @@ export const discover = async (parents: Folder[], extra: Folder[]) => {
   const all = [...listed.flat(), ...extra]
   const candidates = [...all.filter(candidate => !candidate.builtin), ...all.filter(candidate => candidate.builtin)]
   const read = await Promise.all(candidates.map(candidate => webManifest(candidate.dir)))
-  const claimed = new Set(candidates.filter(candidate => !candidate.builtin).map(candidate => basename(candidate.dir)))
   const found = new Map<string, Extension>()
   candidates.forEach(({ dir, builtin }, index) => {
     const manifest = read[index]
-    const id = basename(dir)
-    if (!manifest || found.has(id) || (builtin && claimed.has(id))) return
-    found.set(id, { id, dir, ...manifest, builtin })
+    if (!manifest) return
+    const { name, ...rest } = manifest
+    const id = idOf(dir, builtin, name)
+    if (!found.has(id)) found.set(id, { id, dir, ...rest, builtin })
   })
   return [...found.values()]
 }

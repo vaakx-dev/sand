@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { exactTime, plural } from '@sand/util'
-import { derive, div, dynamicChild, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { changesRow } from '../changes'
 import type { Fleet, PcView } from '../fleet/model'
 import { canUpdate, changesFor } from '../fleet/status'
@@ -18,7 +18,7 @@ const pcChoice = (kit: Kit, row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<st
     selected.set(next)
   }
   return listRow({
-    surface: 'group',
+    surface: 'raised',
     role: 'checkbox',
     'aria-checked': () => String(checked()),
     disabled: () => !pickable(),
@@ -30,7 +30,7 @@ const pcChoice = (kit: Kit, row: Sig<PcView>, fleet: Fleet, selected: Sig<Set<st
 }
 
 export const chooseBody = (kit: Kit, fleet: Fleet, close: () => void) => {
-  const { primaryAction, rowList, secondaryAction, settingsSection, sheetBody, sheetFoot } = kit
+  const { metaLine, primaryAction, rowList, secondaryAction, settingsSection, sheetBody, sheetFoot } = kit
   const selected = sig(new Set(untrack(() => fleet.pending.get().map(pc => pc.key))))
   const chosen = derive(() => fleet.pcs.get().filter(pc => canUpdate(pc.status) && selected.get().has(pc.key)))
   const changes = derive(() => changesFor(fleet.target.get(), (chosen.get().length ? chosen.get() : fleet.pending.get()).map(pc => pc.status)))
@@ -45,8 +45,8 @@ export const chooseBody = (kit: Kit, fleet: Fleet, close: () => void) => {
   const whatsNew = () =>
     changes.get().length
       ? settingsSection(
-          { title: "What's new", action: span(published) },
-          changesRow(kit, changes.get()),
+          { title: "What's new", action: metaLine(published) },
+          changesRow(kit, changes.get(), 'raised'),
         )
       : null
   return div(

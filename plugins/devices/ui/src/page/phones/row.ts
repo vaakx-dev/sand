@@ -21,17 +21,17 @@ const seenWords = (ui: Ui, device: DeviceRecord, self: boolean) => {
 const remove = (ui: Ui, device: DeviceRecord) => void ui.toasts.attempt(`Couldn’t remove ${device.name}`, ui.data.devices.remove(device.id))
 
 export const phoneRow = (ui: Ui, device: Sig<DeviceRecord>) => {
-  const { badge, icon, iconButton, settingsRow, statusLine } = ui.kit
+  const { icon, iconButton, settingsRow, statusLine } = ui.kit
   const self = device.get().id === ui.ctx.pcs.self()
   const status = () => seenWords(ui, device.get(), self)
-  const words = () => [status().text, reachWords(device.get())].filter(Boolean).join(' · ')
+  const words = () => [self && ui.device(), status().text, reachWords(device.get())].filter(Boolean).join(' · ')
   return settingsRow(
     {
       lead: span({ class: 'inline-flex text-neutral-400' }, icon(kindIcon(device.get().kind), 'md')),
-      title: span({ class: 'flex min-w-0 items-center gap-2' }, span({ class: 'min-w-0 truncate' }, () => device.get().name), self ? badge('accent', ui.device()) : null),
+      title: () => device.get().name,
       detail: statusLine({ mark: toneDot(ui.kit, () => (status().online ? 'ok' : 'off'), words), text: words, title: words }),
     },
-    canRename(ui) ? iconButton({ size: 'sm', surface: 'group', title: 'Rename', 'aria-label': 'Rename', onClick: () => void renameDevice(ui, device.get()) }, icon('pencil', 'sm')) : null,
+    canRename(ui) ? iconButton({ size: 'sm', title: 'Rename', 'aria-label': 'Rename', onClick: () => void renameDevice(ui, device.get()) }, icon('pencil', 'sm')) : null,
     removeButton(ui.kit, 'Remove', () => remove(ui, device.get())),
   )
 }

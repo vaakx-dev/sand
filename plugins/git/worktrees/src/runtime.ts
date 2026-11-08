@@ -13,14 +13,12 @@ import { expandHome } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { config } from './config'
-import { worktreePulls, worktrees, worktreesChange, worktreesProgress, worktreesProposed } from './contract'
+import { worktrees, worktreesChange, worktreesProgress, worktreesProposed } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
-import { branchJob } from './naming/ask'
 import { nameOnFirstTurn } from './naming/name'
 import { createParking } from './park/park'
 import { startSweep } from './park/sweep'
-import { setupJob } from './proposal/ask'
 import { createProposals } from './proposal/proposals'
 import { createStore } from './records/store'
 import { serveWorktrees } from './requests'
@@ -80,17 +78,14 @@ export default definePlugin({
       report,
     }
 
-    const pulls = () => ctx.get(worktreePulls)
-    const survey = createSurvey(deps, pulls)
+    const survey = createSurvey(deps)
     const moves = createMoves(deps, () => ctx.get(turns), () => ctx.busy())
 
     ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
-    ctx.watch(subModel, found => found?.job(branchJob))
-    ctx.watch(subModel, found => found?.job(setupJob))
     ctx.on(turnEnd, (session, result) => moves.ended(session, result))
     ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(turns)) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
-    const parking = createParking(deps, pulls)
+    const parking = createParking(deps)
     ctx.on(sessionSettle, parking.settled)
     ctx.on(turnPrompt, (_content, session) => parking.resume(session).catch(report), { priority: 100 })
     ctx.on(turnStart, (session, prompt) => {
@@ -103,7 +98,7 @@ export default definePlugin({
     ctx.watch(server, found => {
       if (!found) return
       live = found
-      return joinDisposers(serveWorktrees(found, deps, survey), startSweep(deps, pulls, () => ctx.busy()), () => {
+      return joinDisposers(serveWorktrees(found, deps, survey), startSweep(deps, () => ctx.busy()), () => {
         live = undefined
       })
     })

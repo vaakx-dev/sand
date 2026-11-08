@@ -1,7 +1,10 @@
-import type { MenuKit, ToolBadge, ToolStepOptions, ToolView } from '../contract'
+import type { MenuKit, ToolBadge, ToolStatus, ToolStepOptions, ToolView } from '../contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { stepBody, stepLine, stepMark, type StepState } from '../rows/line'
 import { relativeTo } from './relative'
+
+const states: Record<ToolStatus, StepState> = { pending: 'running', running: 'running', done: 'done', failed: 'failed' }
 
 const countTone = (part: string) => {
   if (/^[+]\d+$/.test(part)) return 'text-success-400'
@@ -30,7 +33,7 @@ const inputSize = () => {
   }
 }
 
-const metaView = (text: string) => span({ class: 'max-w-1/2 shrink-0 truncate text-xs text-neutral-500', title: text }, counts(text))
+const metaView = ({ metaLine }: Kit, text: string) => span({ class: 'flex max-w-1/2 shrink-0', title: text }, metaLine(counts(text)))
 
 export const toolStep = (
   kit: Kit,
@@ -39,7 +42,7 @@ export const toolStep = (
   menus: MenuKit,
   cwd: string | undefined,
 ) => {
-  const { badge, contextMenu, copyButton, icon, shine, toolBody, toolCard } = kit
+  const { badge, contextMenu, copyButton, shine } = kit
   const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
   const current = () => renderer(tool.get().call.name)
   const sizeOf = inputSize()
@@ -51,21 +54,25 @@ export const toolStep = (
     signature.get()
     const value = untrack(() => tool.get())
     const found = renderer(value.call.name)
-    return { icon: found.icon, verb: found.verb, activeVerb: found.activeVerb, label: relativeTo(cwd, found.label(value)), meta: found.meta(value), badge: found.badge(value) }
+    return { verb: found.verb, activeVerb: found.activeVerb, label: relativeTo(cwd, found.label(value)), meta: found.meta(value), badge: found.badge(value) }
   })
-  const running = derive(() => ['running', 'pending'].includes(tool.get().status))
-  const label = shown.map(value => value.label)
+  const state = derive(() => states[tool.get().status])
+  const running = derive(() => state.get() === 'running')
+  const label = derive(() => {
+    const { verb, activeVerb, label } = shown.get()
+    return [running.get() ? activeVerb : verb, label].filter(Boolean).join(' ')
+  })
   const copy = () => current().copy(tool.get())
   const body = dynamicChild(
     derive(() => (open.get() ? signature.get() : '')),
     value => {
       const content = value ? current().body(tool.get()) : undefined
-      return content && toolBody(content)
+      return content && stepBody(content)
     },
   )
   const tail = dynamicChild(
     derive(() => (running.get() ? tool.get().progress : undefined)),
-    lines => (lines?.length ? toolBody(progressTail(lines)) : undefined),
+    lines => (lines?.length ? stepBody(progressTail(lines)) : undefined),
   )
   const own = menu ?? contextMenu()
   const spec = (): MenuSpec => ({
@@ -77,27 +84,22 @@ export const toolStep = (
     ],
   })
   const press = menus.text(own, spec)
-  const card = toolCard(
+  const line = stepLine(
+    kit,
     {
-      icon: dynamicChild(
-        shown.map(value => value.icon),
-        name => icon(name, 'sm'),
-      ),
-      verb: () => (running.get() ? shown.get().activeVerb : shown.get().verb),
-      target: dynamicChild(running, live => (live ? shine(label) : span(label))),
-      targetClass: 'font-mono text-neutral-400',
-      targetTitle: label,
+      mark: dynamicChild(state, value => stepMark(kit, value)),
+      label: dynamicChild(running, live => (live ? shine(label) : span(label))),
+      title: label,
       meta: [
         dynamicChild(
           shown.map(value => value.meta),
-          metaView,
+          text => metaView(kit, text),
         ),
         dynamicChild(
           shown.map(value => value.badge),
           badgeView,
         ),
       ],
-      failed: derive(() => tool.get().status === 'failed'),
       expanded: open,
       actions: [
         copyButton({ text: copy }),
@@ -114,5 +116,5 @@ export const toolStep = (
     body,
     tail,
   )
-  return menu ? card : div(card, own.view())
+  return menu ? line : div(line, own.view())
 }

@@ -8,6 +8,8 @@ const toneIcons: Record<Tone, IconName> = {
   success: 'check',
   warning: 'alert',
   danger: 'alert',
+  run: 'info',
+  merged: 'check',
 }
 
 export const toneMark = (kit: Kit, tone: Tone) => span({ class: ['inline-flex h-5 shrink-0 items-center', kit.toneText[tone]] }, kit.icon(toneIcons[tone], 'md'))

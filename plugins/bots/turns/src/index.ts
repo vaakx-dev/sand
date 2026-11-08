@@ -1,5 +1,6 @@
 import { botChange, botRemove } from '@sand/bots/contract'
 import { engine } from '@sand/engine/contract'
+import { projectFiles } from '@sand/project/contract'
 import { context } from '@sand/prompt/contract'
 import { stepPrepare } from '@sand/provider-threads/contract'
 import { server } from '@sand/server/contract'
@@ -19,7 +20,7 @@ export default definePlugin({
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
-    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context)
+    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context, () => ctx.get(projectFiles))
     ctx.effect(() => ctx.providerThreads.brief('bot', brief))
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && stale(conversation.id)) || undefined)
     ctx.effect(() => ctx.tools.offer('bot', () => offered))

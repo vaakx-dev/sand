@@ -1,5 +1,5 @@
 import { wire, wireHello } from '@sand/devices-contract'
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
@@ -19,7 +19,7 @@ export default definePlugin({
     const add = addAccount(ctx, control)
     ctx.on(wireHello, () => void control.load())
     if (ctx.wire.ready()) void control.load()
-    ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', icon: 'lock', group: 'accounts', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
+    ctx.watch(settings, found => found?.page({ id: 'accounts', label: 'Accounts', intro: 'The sign-ins and API keys your models run on.', icon: 'lock', group: 'accounts', order: 25, render: () => accountsPage(ctx.kit, control, add) }))
     const welcome = owned(ctx, () => welcomeModel(ctx, control))
     place(ctx, 'overlay', () => welcomeView(ctx.kit, welcome, control), 0.5)
   },

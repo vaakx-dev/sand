@@ -4,6 +4,7 @@ import { settings } from '@sand/settings/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
+import { projectAdd } from '../../contract'
 import type { ProjectsContext } from '../context'
 import { byRecent } from './places'
 
@@ -21,7 +22,7 @@ const rename = async (ctx: ProjectsContext, ask: Picker, group: ProjectGroup) =>
 
 export const startable = (ctx: ProjectsContext, entry: ProjectEntry) => !entry.missing && ctx.pcs.online(entry.device)
 
-export const openAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
+export const openAt = async (ctx: ProjectsContext, entry: Pick<ProjectEntry, 'path' | 'device'>) => {
   await ctx.threads.draft(entry.path, entry.device)
   ctx.get(settings)?.close()
   ctx.get(composer)?.focus()
@@ -41,6 +42,13 @@ export const projectEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry
   { label: 'New thread', icon: 'message', disabled: !group.locations.some(entry => startable(ctx, entry)), run: () => openThread(ctx, group) },
   ...renameEntry(ctx, group),
 ]
+
+const lacksCopy = (ctx: ProjectsContext, group: ProjectGroup) => ctx.pcs.list().some(pc => !group.locations.some(entry => entry.device === pc.id))
+
+export const bringEntry = (ctx: ProjectsContext, group: ProjectGroup): Entry[] => {
+  const adder = ctx.get(projectAdd)
+  return adder && lacksCopy(ctx, group) ? [{ label: 'Add to another PC…', icon: 'plus', run: () => adder.open({ project: group.id, added: () => {} }) }] : []
+}
 
 export const copyEntries = (ctx: ProjectsContext, group: ProjectGroup): Entry[] =>
   group.locations.map(entry => ({

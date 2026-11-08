@@ -13,7 +13,7 @@ export const commandSheet = (ui: Ui, install: string, close: () => void) => {
       sheetBody(
         {},
         grant
-          ? field('Run this on the new PC', copyBox(ui.kit, grant.command))
+          ? field(ui.kit, 'Run this on the new PC', copyBox(ui.kit, grant.command))
           : emptyState({ text: 'This command is no longer here. Make a new one with Add a PC.' }),
         grant ? sheetText(`It works once, until ${clockWords(grant.expires)}. Progress shows in your PCs list.`) : null,
       ),

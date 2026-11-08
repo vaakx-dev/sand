@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-plan",
   "version": "0.0.0",
-  "description": "Each bot's project plan: one Markdown file of what's ready, in progress, waiting and next, that the bot keeps through sand's tools and the user can read and edit",
+  "description": "Each bot's project plan: one Markdown file of its work, each item linked to its thread, that the bot keeps through sand's tools and the user can read and edit",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@sand/bots": "workspace:*",
+    "@sand/chat": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",

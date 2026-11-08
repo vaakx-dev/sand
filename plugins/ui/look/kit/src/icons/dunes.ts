@@ -27,8 +27,10 @@ const dune = (random: () => number, base: number, height: number) => {
   return `M${ridge.join('L')}L16 16L0 16Z`
 }
 
+const seedOf = (name: string, shape?: number) => hash(shape ? `${name}#${shape}` : name)
+
 export const duneIcon = (name: string, { shape, hue }: ProjectIcon = {}) => {
-  const seed = hash(shape ? `${name}#${shape}` : name)
+  const seed = seedOf(name, shape)
   const tint = hue ?? seed % 360
   const random = randomFrom(seed)
   const dunes = layers.map(layer => `<path d="${dune(random, layer.base, layer.height)}" fill="oklch(${layer.lightness} ${layer.chroma} ${tint})"/>`)

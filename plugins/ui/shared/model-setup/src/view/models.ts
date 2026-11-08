@@ -46,7 +46,6 @@ const modelChoice = ({ listRow }: Kit, picked: Picked, model: ModelInfo) => {
     role: 'radio',
     'aria-checked': () => String(on()),
     tabIndex: () => (on() || !picked.get() ? 0 : -1),
-    surface: 'group',
     selected: on,
     title: model.label,
     trail: span({ class: 'tabular-nums' }, model.context ? tokens(model.context) : ''),

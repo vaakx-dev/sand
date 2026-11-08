@@ -57,7 +57,9 @@ export const localCopies = (home: string, device: string) => {
     return samePath(copy.path, path) || !nearestRoot(path, copy.path) ? copy.project : null
   }
 
-  return { projects: () => load().projects, copies, ofFolder }
+  const name = (project: string) => load().projects.find(found => found.id === project)?.name
+
+  return { projects: () => load().projects, copies, ofFolder, name }
 }
 
 export type LocalCopies = ReturnType<typeof localCopies>

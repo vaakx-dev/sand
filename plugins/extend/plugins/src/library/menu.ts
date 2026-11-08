@@ -1,20 +1,20 @@
 import type { PluginEntry } from '@sand/host-plugin-library/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { Sig } from '@vaakx-dev/vrui'
 import { originLabels } from './filter'
 import type { RowActions } from './row'
 
-const history = (plugin: PluginEntry, actions: RowActions, open: Sig<boolean>): NavAction[] =>
+const history = (plugin: PluginEntry, actions: RowActions, open: Sig<boolean>): MenuAction[] =>
   plugin.origin !== 'builtin' && actions.hasHistory(`plugins/${plugin.name}`)
     ? [{ id: 'history', label: open.get() ? 'Hide history' : 'Show history', icon: 'clock', group: 'history', run: open.toggle() }]
     : []
 
-const change = (plugin: PluginEntry, actions: RowActions): NavAction[] => {
+const change = (plugin: PluginEntry, actions: RowActions): MenuAction[] => {
   const whenIdle = (run: () => void) => () => {
     if (!actions.busy()) run()
   }
-  const found: NavAction[] = []
+  const found: MenuAction[] = []
   if (plugin.origin === 'builtin') found.push({ id: 'customise', label: 'Customise', icon: 'duplicate', group: 'change', run: whenIdle(() => actions.customise(plugin)) })
   if (plugin.origin === 'customised')
     found.push({ id: 'restore', label: 'Use built-in', icon: 'reload', group: 'change', danger: true, run: whenIdle(() => actions.restore(plugin)) })

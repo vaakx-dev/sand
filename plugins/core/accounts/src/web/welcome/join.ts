@@ -15,7 +15,6 @@ const foundRows = (kit: Kit, joining: PcJoining) => {
   if (!unpaired.length) return emptyState({ flush: true, text: 'Looking for sand on your home wifi and Tailscale…' })
   const row = (pc: DiscoveredPc) =>
     listRow({
-      surface: 'group',
       lead: icon('link'),
       title: `Join ${pc.name}`,
       meta: pc.via === 'lan' ? 'Home wifi' : 'Tailscale',

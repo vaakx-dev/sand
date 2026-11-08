@@ -13,4 +13,4 @@ const devicesPage = (ui: Ui) => {
 }
 
 export const devicesSettings = (ui: Ui) =>
-  ui.ctx.watch(settings, found => found?.page({ id: 'devices', label: 'Devices', icon: 'laptop', group: 'accounts', order: 27, dot: () => ui.data.requests.live(Date.now()).length > 0, render: () => devicesPage(ui) }))
+  ui.ctx.watch(settings, found => found?.page({ id: 'devices', label: 'Devices', intro: 'Your PCs and phones, and how they reach each other.', icon: 'laptop', group: 'accounts', order: 27, dot: () => ui.data.requests.live(Date.now()).length > 0, render: () => devicesPage(ui) }))

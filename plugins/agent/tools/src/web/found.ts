@@ -1,9 +1,10 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { textOf } from '@sand/chats/contract'
 
 const references = (tool: ToolView) => tool.result?.content.flatMap(block => (block.type === 'tool_reference' ? [block.name] : [])) ?? []
 
-export const foundRenderer = (views: ToolViews): ToolRenderer => ({
+export const foundRenderer = ({ codeBlock }: Kit, views: ToolViews): ToolRenderer => ({
   icon: 'search',
   verb: 'Found tools',
   activeVerb: 'Finding tools',
@@ -12,6 +13,6 @@ export const foundRenderer = (views: ToolViews): ToolRenderer => ({
   body(tool) {
     if (!tool.result) return undefined
     if (tool.result.isError) return views.errorBody(tool)
-    return views.outputText(textOf(tool.result.content), false)
+    return codeBlock({}, textOf(tool.result.content))
   },
 })

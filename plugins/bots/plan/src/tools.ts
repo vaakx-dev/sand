@@ -1,3 +1,4 @@
+import { threadScheme } from '@sand/chat/contract'
 import type { McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
@@ -16,16 +17,12 @@ const readRules = `Read your plan: the Markdown file of your work that the user 
 
 const writeRules = `Write your plan, replacing the whole file. The plan is what the user reads to see where your work stands, so keep it current: update it when you start work, finish it, or wait on someone or something. Drop items that are done and no longer matter. A bot leaves out bot to write its own.
 
-Use this shape, one bullet per item with a short status, naming the thread or PR it lives in:
+Write one bullet per item. Link each item that has a thread to it as [title](${threadScheme}:<thread id>), with a short note after it. Don't sort items under status headings like Working, Ready or Done: the Project page groups linked items by each thread's live state. An item with no thread yet stays plain, with what it waits on:
 
-## Ready
-- Flight options for Lisbon: in thread "Lisbon trip", for you to pick
-## In progress
-- Fixing the login bug: PR #42, tests running
-## Waiting
+- [Fix the login bug](${threadScheme}:0b6c2e1a): tests running
+- [Lisbon flight options](${threadScheme}:7f3d9a40): for you to pick one
 - Hotel quote: asked the hotel, reply due Friday
-## Next
-- Book the airport transfer`
+- Book the airport transfer once the flights are picked`
 
 export const planTools: McpTool[] = [
   {

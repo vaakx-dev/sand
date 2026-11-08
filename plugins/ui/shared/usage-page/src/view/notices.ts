@@ -17,8 +17,8 @@ const noticeText = (notice: Notice, now: Sig<number>) => {
   })
 }
 
-export const offlineNotices = ({ dot }: Kit, notices: Notice[], now: Sig<number>) =>
-  notices.map(notice => div({ class: 'flex items-center gap-2' }, dot('neutral'), noticeText(notice, now)))
+export const offlineNotices = ({ dot, secondaryText }: Kit, notices: Notice[], now: Sig<number>) =>
+  notices.map(notice => div({ class: 'flex items-center gap-2' }, dot('neutral'), secondaryText(noticeText(notice, now))))
 
 export const unpricedRow = ({ settingsRow }: Kit, item: UnpricedModel) =>
   settingsRow({

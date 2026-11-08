@@ -27,11 +27,8 @@ export const createRoster = (ctx: BridgeWeb) => {
   return {
     list: () => bots.get(),
     find: (id: string) => bots.get().find(bot => bot.id === id),
+    starterOf: (thread: string) => starts.get()[thread],
     startedBy: (bot: string) => Object.entries(starts.get()).flatMap(([thread, starter]) => (starter === bot ? [thread] : [])),
-    starterOf: (thread: string) => {
-      const bot = starts.get()[thread]
-      return bot === undefined ? undefined : bots.get().find(found => found.id === bot)
-    },
   }
 }
 

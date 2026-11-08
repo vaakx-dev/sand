@@ -1,6 +1,7 @@
 import type { Caller, Request, RequestHandler } from '.'
 import { callerAllowed } from './callers'
 import { parseInput } from './input'
+import { nothingAnswers } from './unanswered'
 
 interface Entry {
   request: Request<unknown, unknown>
@@ -22,7 +23,7 @@ export const createHandlers = () => {
 
   const answer = async (type: string, input: unknown, caller: Caller) => {
     const entry = entries.get(type)
-    if (!entry) throw new Error(`Nothing answers ${type}`)
+    if (!entry) throw nothingAnswers(type)
     if (!callerAllowed(entry.request.callers, caller.kind)) throw new Error(`A ${caller.kind} can't ask for ${type}`)
     return entry.handler(await parseInput(entry.request, input), caller)
   }

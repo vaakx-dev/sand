@@ -5,6 +5,8 @@ export type SettingsGroup = 'agents' | 'accounts' | 'workspace' | 'app'
 export interface SettingsPage {
   id: string
   label: string
+  /** One line under the page title on what the page is for. */
+  intro?: string
   icon?: string
   group?: SettingsGroup
   order?: number

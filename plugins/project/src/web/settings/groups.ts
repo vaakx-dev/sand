@@ -1,11 +1,10 @@
-import { palette } from '@sand/palette/contract'
 import type { ContextMenu } from '@sand/ui-kit/contract'
 import { plural } from '@sand/util'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import type { Pulse } from '@sand/reactive'
 import { derive, dynamicChild, sig, type Sig } from '@vaakx-dev/vrui'
+import { projectAdd } from '../../contract'
 import type { ProjectsContext } from '../context'
-import { sourcesPage } from '../new/sources'
 import type { Picking } from './icon'
 import { groupRow } from './row'
 
@@ -16,8 +15,8 @@ const heading = (groups: ProjectGroup[]) => {
 
 const addButton = (ctx: ProjectsContext) => {
   const { icon, quietButton } = ctx.kit
-  const found = ctx.get(palette)
-  return found ? quietButton({ size: 'sm', onClick: () => found.open(sourcesPage(ctx)) }, icon('plus', 'sm'), 'Add a project') : null
+  const adder = ctx.get(projectAdd)
+  return adder ? quietButton({ size: 'sm', 'aria-label': 'Add a project', onClick: () => adder.open({ added: () => {} }) }, icon('plus', 'sm'), 'Add') : null
 }
 
 const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) => {
@@ -39,7 +38,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
     const groups = ctx.projects.groups({ hidden })
     return settingsSection(
       { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx)] },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ surface: 'group', text: 'No projects yet' })]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ text: 'No projects yet. Add a project to start threads in its folder.' })]),
     )
   })
 }

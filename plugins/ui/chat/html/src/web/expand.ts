@@ -45,7 +45,7 @@ export const expandedPage = (ctx: FrameContext, data: HtmlRenderEntry, html: str
       close,
       onKeyDown: keys({ '+': zoom.zoomIn, '=': zoom.zoomIn, '-': zoom.zoomOut, '0': zoom.fit }),
     },
-    kit.viewerBar(close, div({ class: 'min-w-0 flex-1 truncate text-sm text-neutral-400' }, data.title), kit.zoomControls(zoom)),
+    kit.viewerBar(close, kit.headTitle(2, data.title), kit.zoomControls(zoom)),
     div(
       {
         class: 'flex min-h-0 flex-1 overflow-auto',

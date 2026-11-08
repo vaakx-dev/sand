@@ -18,7 +18,7 @@ export const routeBook = (pc: string, seeds: Route[], store: RouteStore): RouteB
   let routes = mergeRoutes(seeds, saved?.routes.filter(route => route.source !== 'seed') ?? [])
   let prefs = saved?.prefs ?? noPrefs
 
-  const save = () => store.save(pc, { routes, prefs })
+  const save = () => store.save(pc, { routes: routes.filter(route => route.source !== 'seed'), prefs })
 
   const replace = (next: Route[]) => {
     if (sameRoutes(routes, next)) return false

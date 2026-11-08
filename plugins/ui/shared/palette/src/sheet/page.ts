@@ -1,10 +1,7 @@
-import type { PalettePage } from '../contract'
 import type { ContextMenu, Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, keys, list, show, span, untrack } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, keys, list, show, untrack } from '@vaakx-dev/vrui'
 import { cardView, reviewView } from './card'
-import { paletteHead } from './head'
-import { pageModel, type PageModel } from './model'
-import type { PageNav } from './nav'
+import type { PageModel } from './model'
 import { rowView } from './row'
 
 const typedIn = (event: KeyboardEvent) => (event.target instanceof HTMLInputElement ? event.target.value : '')
@@ -17,9 +14,9 @@ const caretAtEnd = (event: KeyboardEvent) =>
 const opensActions = (event: KeyboardEvent, model: PageModel) =>
   event.key === 'ArrowRight' && !event.shiftKey && caretAtEnd(event) && model.openActions()
 
-const keyHandler = (model: PageModel) => {
+export const pageKeys = (model: PageModel) => {
   const { box, nav, nested, enter } = model
-  const listMap = { ...box.keyMap, Enter: enter, Escape: nav.dismiss }
+  const listMap = { ...box.keyMap, Enter: enter }
   const listKeys = keys(listMap, { stop: true })
   const backKeys = keys({ ...listMap, Backspace: () => nav.back() }, { stop: true })
   return (event: KeyboardEvent) => {
@@ -37,59 +34,40 @@ const keyHandler = (model: PageModel) => {
 const failureLine = ({ errorState }: Kit, model: PageModel, onReview: boolean) =>
   show(
     derive(() => Boolean(model.failure.get()) && Boolean(model.page.review) === onReview),
-    () => div({ class: 'px-2' }, errorState({ surface: 'raised', text: () => model.failure.get() })),
+    () => errorState({ surface: 'raised', text: () => model.failure.get() }),
   )
 
-const results = (kit: Kit, model: PageModel, menu: ContextMenu) => {
-  const { sectionHeading } = kit
-  return list(
+const results = (kit: Kit, model: PageModel, menu: ContextMenu) =>
+  list(
     model.rows,
     entry => entry.key,
     entry => {
       const first = untrack(() => entry.get())
-      if ('group' in first) return sectionHeading(first.group)
+      if ('group' in first) return kit.sectionHeading(first.group)
       const position = entry.map(current => ('position' in current ? current.position : -1))
       return rowView(kit, first.item, position, model, menu)
     },
-    div({ class: 'max-h-96 overflow-auto overscroll-contain px-2 pb-2' }),
-  )
-}
-
-const hint = ({ keycap }: Kit, presses: string[], label: string) => span({ class: 'flex items-center gap-1' }, ...presses.map(keycap), span({ class: 'ml-1' }, label))
-
-const keyHints = (kit: Kit, model: PageModel) =>
-  div(
-    { class: 'flex shrink-0 items-center gap-4 border-t border-neutral-700 px-3 py-2 text-xs text-neutral-500' },
-    hint(kit, ['↑', '↓'], 'Move'),
-    hint(kit, ['Enter'], 'Open'),
-    model.nested ? hint(kit, ['Backspace'], 'Back') : null,
-    hint(kit, ['Esc'], 'Close'),
+    div({ class: 'flex flex-col' }),
   )
 
-export const pageView = (kit: Kit, page: PalettePage, nav: PageNav, initial = '') => {
-  const { contextMenu, emptyState } = kit
-  const model = pageModel(kit, page, nav, initial)
-  const menu = contextMenu()
+export const pageBody = (kit: Kit, model: PageModel) => {
+  const menu = kit.contextMenu()
+  const { page } = model
   return div(
     {
       tabIndex: -1,
       class: 'flex min-h-0 flex-col outline-none',
-      onKeyDown: keyHandler(model),
+      onKeyDown: pageKeys(model),
       onMount: node => {
         if (page.review) node.focus()
       },
     },
-    paletteHead(kit, model),
     failureLine(kit, model, false),
     dynamicChild(model.card, found => (found ? cardView(kit, found) : null)),
     page.review ? reviewView(kit, page.review, model.busy, model.progress, () => void model.confirm()) : null,
     failureLine(kit, model, true),
     results(kit, model, menu),
     menu.view(),
-    show(
-      model.empty.map(Boolean),
-      () => div({ class: 'px-2' }, emptyState({ surface: 'raised', text: () => model.empty.get() })),
-    ),
-    page.review ? null : keyHints(kit, model),
+    show(model.empty.map(Boolean), () => kit.emptyState({ surface: 'raised', text: () => model.empty.get() })),
   )
 }

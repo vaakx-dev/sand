@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { periodLabel } from '@sand/usage/contract'
-import { dynamicChild, path, sig, span } from '@vaakx-dev/vrui'
+import { dynamicChild, path, sig } from '@vaakx-dev/vrui'
 import type { Merged } from '../../data/types'
 import { tickText, type Metric } from '../../format'
 import { curve } from './curve'
@@ -39,12 +39,12 @@ const strokes = (drawn: Series[], toY: (value: number) => number, step: number) 
     }
   })
 
-const periodTicks = (usage: Merged, keys: string[]) => {
+const periodTicks = ({ metaLine }: Kit, usage: Merged, keys: string[]) => {
   const middle = Math.floor((keys.length - 1) / 2)
   return [
-    span(periodLabel(keys[0]!, usage.bucket)),
-    keys.length > 2 ? span(periodLabel(keys[middle]!, usage.bucket)) : null,
-    keys.length > 1 ? span(periodLabel(keys.at(-1)!, usage.bucket)) : null,
+    metaLine(periodLabel(keys[0]!, usage.bucket)),
+    keys.length > 2 ? metaLine(periodLabel(keys[middle]!, usage.bucket)) : null,
+    keys.length > 1 ? metaLine(periodLabel(keys.at(-1)!, usage.bucket)) : null,
   ]
 }
 
@@ -56,6 +56,7 @@ export const plot = (kit: Kit, usage: Merged, keys: string[], series: Series[], 
   const hover = sig<Hover | undefined>(undefined)
 
   return chartFrame(
+    kit,
     {
       width,
       height,
@@ -71,6 +72,6 @@ export const plot = (kit: Kit, usage: Merged, keys: string[], series: Series[], 
       guideLine(() => (hover.get()?.index ?? 0) * step, top, height, () => Boolean(hover.get())),
     ],
     [dynamicChild(hover, current => (current ? tooltip(kit, current, keys[current.index]!, usage.bucket, series, metric) : null))],
-    periodTicks(usage, keys),
+    periodTicks(kit, usage, keys),
   )
 }

@@ -1,5 +1,5 @@
 import type { FileKind } from '@sand/git/contract'
-import { type InputOf, request, type } from '@sand/host-hub/contract'
+import { request, type } from '@sand/host-hub/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -61,15 +61,16 @@ export const gitPatch = request('git.patch', {
   place: 'thread',
 })
 
-export interface DiffHunks {
-  parse(patch: string): DiffHunk[]
+export interface PatchInput {
+  cwd: string
+  scope: DiffScope
+  path: string
+  from?: string
 }
 
-export const diffHunks = service<DiffHunks>('diffHunks')
-
-export interface GitDiffClient {
-  diff(input: InputOf<typeof gitDiff>, device: string): Promise<DiffList>
-  patch(input: InputOf<typeof gitPatch>, device: string): Promise<DiffPatch>
+export interface GitDiffs {
+  list(cwd: string, scope: DiffScope): Promise<DiffList>
+  patch(input: PatchInput): Promise<DiffPatch>
 }
 
-export const gitDiffClient = service<GitDiffClient>('gitDiffClient')
+export const gitDiffs = service<GitDiffs>('gitDiffs')

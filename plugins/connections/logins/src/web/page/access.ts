@@ -13,7 +13,6 @@ const botRows = ({ kit, wire, bots: botsOn }: PageParts, login: Derive<Login>, c
   const listed = derive(() => bots.data.get() ?? [])
   const botRow = (bot: Sig<BotSummary>) =>
     kit.checkRow({
-      surface: 'group',
       title: () => botName(bot.get()),
       checked: () => login.get().bots.includes(bot.get().id),
       onToggle: () => change({ bots: toggled(login.get().bots, bot.get().id) }),
@@ -26,9 +25,9 @@ const threadRows = ({ kit, threads }: PageParts, login: Derive<Login>, change: (
   const given = derive(() => login.get().threads)
   const threadRow = (thread: Sig<string>) =>
     settingsRow(
-      { title: () => threads.get(thread.get())?.info.title || 'Untitled thread' },
+      { title: () => threads()?.get(thread.get())?.info.title || 'Untitled thread' },
       quietButton(
-        { size: 'sm', surface: 'group', onClick: () => change({ threads: login.get().threads.filter(other => other !== thread.get()) }) },
+        { size: 'sm', onClick: () => change({ threads: login.get().threads.filter(other => other !== thread.get()) }) },
         'Remove',
       ),
     )

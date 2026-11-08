@@ -36,7 +36,7 @@ const websiteForm = (kit: Kit, save: (login: NewLogin) => Promise<unknown>, canc
     field(kit, 'Name', { type: 'text', placeholder: 'Same as the site', bindValue: name }),
     field(kit, 'Username or email', { type: 'text', autocomplete: 'username', bindValue: username }),
     field(kit, 'Password', { type: 'password', autocomplete: 'current-password', bindValue: password }),
-    field(kit, 'Authenticator setup key or otpauth:// link, if the site asks for codes', { type: 'password', bindValue: totp }),
+    field(kit, 'Authenticator setup key or otpauth:// link', { type: 'password', placeholder: 'Only if the site asks for codes', bindValue: totp }),
   )
 }
 

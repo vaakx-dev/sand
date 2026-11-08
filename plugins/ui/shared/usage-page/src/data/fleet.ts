@@ -1,5 +1,6 @@
 import { usageSummary, type UsageQuery, type UsageSummary } from '@sand/usage/contract'
 import type { Wire } from '@sand/devices-contract'
+import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { derive, sig } from '@vaakx-dev/vrui'
 import { readCache, writeCache, type Cached } from '../integrations/cache'
@@ -46,7 +47,7 @@ export const fleetLoader = (wire: Wire, pcs: () => Pc[], view: () => FleetView) 
         put(pc.id, { ...cached, failure: '', busy: false })
       })
       .catch(error => {
-        if (run === generation) put(pc.id, { failure: errorMessage(error), busy: false })
+        if (run === generation) put(pc.id, { failure: unanswered(error) ? '' : errorMessage(error), busy: false })
       })
   }
 

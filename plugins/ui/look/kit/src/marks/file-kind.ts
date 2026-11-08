@@ -7,9 +7,9 @@ export type FileChangeKind = 'added' | 'modified' | 'deleted' | 'renamed' | 'unt
 const looks: Record<FileChangeKind, { letter: string; tone: Tone; title: string }> = {
   added: { letter: 'A', tone: 'success', title: 'Added' },
   untracked: { letter: 'U', tone: 'success', title: 'New file (not tracked yet)' },
-  modified: { letter: 'M', tone: 'warning', title: 'Modified' },
+  modified: { letter: 'M', tone: 'neutral', title: 'Modified' },
   deleted: { letter: 'D', tone: 'danger', title: 'Deleted' },
-  renamed: { letter: 'R', tone: 'accent', title: 'Renamed' },
+  renamed: { letter: 'R', tone: 'neutral', title: 'Renamed' },
   conflicted: { letter: '!', tone: 'danger', title: 'Conflict' },
 }
 

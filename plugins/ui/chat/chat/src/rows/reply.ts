@@ -1,8 +1,8 @@
 import { composer as composerService } from '@sand/composer/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { ChatContext } from '../context'
 
-export const replyActions = (ctx: ChatContext, text: string): NavAction[] => {
+export const replyActions = (ctx: ChatContext, text: string): MenuAction[] => {
   const composer = ctx.get(composerService)
   if (!composer || !text.trim()) return []
   return [{ id: 'reply', label: 'Quote in reply', icon: 'reply', run: () => composer.quote(text) }]

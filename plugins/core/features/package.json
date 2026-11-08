@@ -43,19 +43,10 @@
         ],
         "offer": true
       },
-      "files": {
-        "label": "Files panel",
-        "summary": "Browse and read a thread's files",
-        "parent": "threads"
-      },
       "git": {
         "label": "Git",
-        "summary": "Each thread's branch and changes, commits, and what each turn changed",
+        "summary": "Git status and diffs for each thread's folder",
         "parent": "threads",
-        "needs": [
-          "picker",
-          "palette"
-        ],
         "uses": [
           "background"
         ]
@@ -65,15 +56,10 @@
         "summary": "Let a thread work in its own folder and branch",
         "parent": "git"
       },
-      "pulls": {
-        "label": "Pull requests",
-        "summary": "Sign in to GitHub, follow your pull requests and link them to threads",
-        "parent": "git"
-      },
-      "reviews": {
-        "label": "Code review",
-        "summary": "Review a pull request's code with line comments and an agent-drafted review",
-        "parent": "pulls"
+      "merge": {
+        "label": "Merge",
+        "summary": "See which threads have work ready to merge, and merge it into the project on this PC",
+        "parent": "worktrees"
       },
       "threads-mcp": {
         "label": "Threads for outside agents",
@@ -184,6 +170,11 @@
           "picker"
         ],
         "offer": true
+      },
+      "ssh": {
+        "label": "SSH machines",
+        "summary": "Use machines you reach over SSH as your PCs, and set sand up on them",
+        "parent": "pcs"
       },
       "notifications": {
         "label": "Notifications",
@@ -331,8 +322,8 @@
       "approvals": {
         "kind": "capability",
         "label": "Approvals",
-        "summary": "Asks you before agents act, with an Inbox of what waits on you",
-        "stops": "Agents stop asking before they act; the Inbox empties.",
+        "summary": "Asks you before agents act",
+        "stops": "Agents stop asking before they act.",
         "needs": [
           "engine"
         ]
@@ -399,10 +390,10 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/host-runtimes": "workspace:*",
-    "@sand/layout": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",

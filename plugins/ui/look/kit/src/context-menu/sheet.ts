@@ -1,9 +1,8 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuRequest } from '../contract'
 import { div, dynamicChild, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { actionTones, plainButton } from '../buttons/button'
-import { headTitle } from '../heads/page-head'
-import { metaLine } from '../heads/text'
+import { metaLine, sheetTitle } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { bottomSheet } from '../sheets/bottom'
 import { chipButtons, choiceCount } from './chips'
@@ -17,13 +16,13 @@ const columns = (count: number) => ({ gridTemplateColumns: `repeat(${count}, min
 const head = ({ title, subtitle }: MenuRequest) =>
   div(
     { class: 'px-3 pt-1 pb-3' },
-    div({ class: 'flex' }, headTitle(2, title)),
+    div({ class: 'flex' }, sheetTitle(title)),
     subtitle ? div({ class: 'flex' }, metaLine(subtitle)) : null,
   )
 
-const tileText = (action: NavAction) => (action.danger ? 'text-danger-400' : 'text-neutral-100')
+const tileText = (action: MenuAction) => (action.danger ? 'text-danger-400' : 'text-neutral-100')
 
-const tile = (action: NavAction, control: MenuControl, expanded: Expanded) => {
+const tile = (action: MenuAction, control: MenuControl, expanded: Expanded) => {
   const open = () => expanded.get() === action.id
   return plainButton(
     {
@@ -44,10 +43,10 @@ const tile = (action: NavAction, control: MenuControl, expanded: Expanded) => {
   )
 }
 
-const tiles = (actions: NavAction[], control: MenuControl, expanded: Expanded) =>
+const tiles = (actions: MenuAction[], control: MenuControl, expanded: Expanded) =>
   div({ class: 'grid gap-2 px-1 pb-2', style: columns(actions.length) }, ...actions.map(action => tile(action, control, expanded)))
 
-const expandedChips = (actions: NavAction[], control: MenuControl, expanded: Expanded) =>
+const expandedChips = (actions: MenuAction[], control: MenuControl, expanded: Expanded) =>
   dynamicChild(expanded, id => {
     const action = actions.find(candidate => candidate.id === id)
     if (!action) return null
@@ -57,14 +56,14 @@ const expandedChips = (actions: NavAction[], control: MenuControl, expanded: Exp
     )
   })
 
-const choices = (actions: NavAction[], control: MenuControl, expand?: string) => {
+const choices = (actions: MenuAction[], control: MenuControl, expand?: string) => {
   const expanded = sig<string | undefined>(expand)
   const big = actions.filter(action => action.quick || action.tile)
   const rest = actions.filter(action => !action.quick && !action.tile)
   return div(
     big.length ? tiles(big, control, expanded) : null,
     expandedChips(big, control, expanded),
-    rest.length ? div({ class: ['flex flex-col', big.length ? 'border-t border-neutral-700 pt-1' : ''] }, ...menuItems(rest, control, 'md')) : null,
+    rest.length ? div({ class: ['flex flex-col', big.length ? 'pt-2' : ''] }, ...menuItems(rest, control, 'md')) : null,
   )
 }
 

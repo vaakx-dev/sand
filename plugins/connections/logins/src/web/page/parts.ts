@@ -7,8 +7,8 @@ export const kindIcons = { website: 'globe', key: 'key' } as const
 
 export const rowProblem = (kit: Kit, { failure }: Task) => show(() => Boolean(failure.get()), () => kit.rowDetail(kit.errorText(() => failure.get())))
 
-export const field = ({ textInput }: Kit, name: string, props: Props<HTMLInputElement>) =>
-  label({ class: 'flex flex-col gap-1 text-xs text-neutral-400' }, name, textInput(props))
+export const field = ({ metaLine, textInput }: Kit, name: string, props: Props<HTMLInputElement>) =>
+  label({ class: 'flex min-w-0 flex-col gap-1' }, metaLine(name), textInput(props))
 
 export interface FormParts {
   save: string
@@ -25,7 +25,7 @@ export const editForm = (kit: Kit, { save, ready, submit, done, cancel }: FormPa
   }
   return form(
     {
-      class: 'flex flex-col gap-2',
+      class: 'flex max-w-md flex-col gap-3',
       onSubmit: preventThen(() => {
         if (ready() && !work.busy.get()) void send()
       }),
@@ -48,14 +48,12 @@ export const loadedRows = <S, T>(kit: Kit, source: Resource<S>, items: Derive<T[
     return items.get().length ? 'rows' : 'empty'
   })
   return dynamicChild(phase, shown => {
-    if (shown === 'loading') return loadingState({ surface: 'group' })
-    if (shown === 'failed') return errorState({ surface: 'group', text: () => errorMessage(source.error.get()), retry: source.refetch })
-    if (shown === 'empty') return emptyState({ surface: 'group', text: empty })
+    if (shown === 'loading') return loadingState({ flush: true })
+    if (shown === 'failed') return errorState({ flush: true, text: () => errorMessage(source.error.get()), retry: source.refetch })
+    if (shown === 'empty') return emptyState({ flush: true, text: empty })
     return rows()
   })
 }
-
-export const panel = (...children: Child[]) => div({ class: 'flex flex-col gap-3 bg-neutral-800 px-4 py-3' }, ...children)
 
 export interface FormRowParts {
   title: Child

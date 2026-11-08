@@ -5,14 +5,16 @@ import { floatButton } from './buttons/float'
 import { quoteButton } from './buttons/quote'
 import { rowAction } from './buttons/row-action'
 import { toggleSwitch } from './buttons/toggle'
+import { card } from './cards/card'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
-import { searchField, searchRow, textArea, textInput } from './fields/field'
+import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
+import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
-import { sectionHeading } from './heads/section-heading'
-import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
+import { groupHeading, sectionHeading } from './heads/section-heading'
+import { barTitle, colorLabel, countMark, metaLine, monoMeta, pageTitle, pathLabel, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
@@ -20,15 +22,20 @@ import { layer } from './layer'
 import { fileKindMark } from './marks/file-kind'
 import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
+import { monogram } from './marks/monogram'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
+import { stateIcon } from './marks/state-icon'
 import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
 import { toneText } from './marks/tones'
 import { chipButton, chipPopover } from './menus/chip'
+import { chipRow } from './menus/chip-row'
+import { countChip } from './menus/count-chip'
 import { dropdown } from './menus/dropdown'
+import { pickerButton } from './menus/picker'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
 import { menuLabel, menuReason } from './menus/reason'
@@ -37,21 +44,25 @@ import { sideColumn } from './nav/side-column'
 import { bannerTitle, statusBanner } from './notes/banner'
 import { callout, errorText } from './notes/notes'
 import { checkRow } from './rows/check-row'
+import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
+import { dayDivider, shortAge, workRow, workRowBody, workStatus } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
-import { segmented, settingsSection } from './rows/settings'
+import { pageSection } from './rows/section'
+import { segmented } from './rows/settings'
 import { dockFade, topFade } from './scroll/fade'
 import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { bottomSheet } from './sheets/bottom'
-import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
-import { sheetText } from './sheets/text'
+import { overlay, railOverlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
+import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
+import { diffBlock } from './tools/diff-block'
 import { fold, toolBody, toolCard } from './tools/tool-card'
 import { editing, selecting } from './gesture/busy'
 import { direction } from './gesture/direction'
@@ -78,25 +89,33 @@ export const kit = {
   appIcon,
   badge,
   bannerTitle,
+  barTitle,
   bottomSheet,
   callout,
+  card,
   checkMark,
   checkRow,
   chevron,
   chipButton,
   chipPopover,
+  chipRow,
   choiceCheck,
   choiceChips,
   choiceItem,
+  choiceList,
   closeButton,
   codeBlock,
+  colorLabel,
   contextMenu,
   controlButton,
   copyButton,
   copyText,
+  countChip,
   countMark,
+  dayDivider,
   delayed,
   deviceCode,
+  diffBlock,
   diffRow,
   dismissible,
   dockFade,
@@ -116,6 +135,7 @@ export const kit = {
   followEnd,
   fold,
   gesture,
+  groupHeading,
   hasOpenLayer,
   headTitle,
   icon,
@@ -140,6 +160,8 @@ export const kit = {
   metaLine,
   modal,
   modelLogo,
+  monogram,
+  monoMeta,
   navActionIcon,
   navButton,
   nearEnd,
@@ -148,11 +170,16 @@ export const kit = {
   openTab,
   optionProps,
   overlay,
+  screenOverlay,
   ownedByNode,
+  pageBody,
   pageColumn,
   pageHead,
+  pageSection,
+  pageTitle,
   paneHead,
   pathLabel,
+  pickerButton,
   plainButton,
   popover,
   popupTrigger,
@@ -172,16 +199,20 @@ export const kit = {
   rowButton,
   rowDetail,
   rowList,
+  rowName,
   rowTitle,
   rowWarning,
   searchField,
+  searchLine,
   searchRow,
   secondaryAction,
+  secondaryText,
   sectionHeading,
   sectionRow,
+  sectionTitle,
   segmented,
   settingsRow,
-  settingsSection,
+  settingsSection: pageSection,
   setupColumn,
   setupFooter,
   setupFrame,
@@ -193,8 +224,11 @@ export const kit = {
   sheetFoot,
   sheetHead,
   sheetStep,
-  sheetText,
+  sheetText: secondaryText,
+  sheetTitle,
   shine,
+  shortAge,
+  shortcutHint,
   showSideButton,
   shrinkBadge,
   sideColumn,
@@ -202,12 +236,15 @@ export const kit = {
   spinner,
   stableGutter,
   starMark,
+  stateIcon,
   statusBadge,
   statusBanner,
   statusLabel,
   statusLine,
   stepMark,
   style,
+  tab,
+  tabStrip,
   textArea,
   textInput,
   textRule,
@@ -221,6 +258,9 @@ export const kit = {
   viewerShell,
   waitingLine,
   withDot,
+  workRow,
+  workRowBody,
+  workStatus,
   working,
   zoomControls,
 }

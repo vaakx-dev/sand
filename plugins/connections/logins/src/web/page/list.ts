@@ -26,7 +26,6 @@ export const storageNote = ({ sheetText }: Kit, state: Sig<LoginsState | undefin
 
 const loginRow = ({ chevron, icon, listRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
   listRow({
-    surface: 'group',
     lead: icon(kindIcons[login.get().kind], 'sm'),
     title: () => login.get().name,
     meta: () => summaryOf(login.get()),
@@ -48,7 +47,7 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
       ),
       show(
         () => !logins.get().length,
-        () => emptyState({ surface: 'group', text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
+        () => emptyState({ flush: true, text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
       ),
     ),
     addSection(kit, parts),
@@ -60,7 +59,6 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
 export const listPage = (kit: Kit, parts: ListParts) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.pageHead('Website logins and keys your bots and threads can use. Agents sign in and run commands with them without ever seeing a password or key.'),
     dynamicChild(
       parts.model.state.map(value => value === undefined),
       loading => (loading ? kit.loadingState() : content(kit, parts, parts.model.state)),

@@ -1,6 +1,4 @@
-import { div, span, type Child } from '@vaakx-dev/vrui'
+import { div, type Child } from '@vaakx-dev/vrui'
+import { metaLook } from '../heads/text'
 
-const ruleLine = () => span({ class: 'h-px min-w-4 flex-1 bg-neutral-800' })
-
-export const textRule = (...children: Child[]) =>
-  div({ class: 'my-4 flex items-center gap-3 text-xs text-neutral-500' }, ruleLine(), ...children, ruleLine())
+export const textRule = (...children: Child[]) => div({ class: ['my-4 flex min-w-0 items-center justify-center', metaLook] }, ...children)

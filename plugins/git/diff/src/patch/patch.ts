@@ -1,4 +1,4 @@
-import type { DiffPatch, DiffScope } from '../contract'
+import type { DiffPatch, PatchInput } from '../contract'
 import type { DiffGit } from '../git'
 import { diffArgs, readRange } from '../scope/read'
 import { resolveScope } from '../scope/resolve'
@@ -7,16 +7,9 @@ import { parsePatch } from './parse'
 const maxLines = 20_000
 const maxChars = 1024 * 1024
 
-export interface PatchRequest {
-  cwd: string
-  scope: DiffScope
-  path: string
-  from?: string
-}
-
 const size = (lines: string[]) => lines.reduce((sum, line) => sum + line.length + 1, 0)
 
-export const readPatch = async (tools: DiffGit, { cwd, scope, path, from }: PatchRequest): Promise<DiffPatch> => {
+export const readPatch = async (tools: DiffGit, { cwd, scope, path, from }: PatchInput): Promise<DiffPatch> => {
   const { git } = tools
   const range = await resolveScope(tools, cwd, scope)
   const renamed = from && from !== path ? from : undefined

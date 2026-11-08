@@ -58,7 +58,7 @@ export const secretTool = (deps: ToolDeps): Tool<typeof input> => ({
   description,
   input,
   effect: 'read',
-  active: conversation => conversation.owner !== 'thread' || deps.sessions.require(conversation.id).kind !== 'agent',
+  active: conversation => conversation.owner !== 'thread' || deps.sessions()?.open(conversation.id)?.kind !== 'agent',
   timeoutMs: answerTimeout + settleGrace,
   async run({ title, reason, placeholder, site: given, once }, context) {
     const { conversation, signal } = context

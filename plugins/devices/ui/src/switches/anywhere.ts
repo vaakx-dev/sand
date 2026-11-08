@@ -1,4 +1,5 @@
 import type { TailscaleState } from '@sand/devices-contract'
+import type { Surface } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, show, sig } from '@vaakx-dev/vrui'
 import type { PcSettings } from '../data/pc-settings'
 import type { Ui } from '../ui'
@@ -16,14 +17,14 @@ const problemRow = (ui: Ui, problem: TailscaleProblem) => {
   )
 }
 
-const addressRow = (ui: Ui, url: string) => {
+const addressRow = (ui: Ui, url: string, surface: Surface) => {
   const { copyButton, settingsRow } = ui.kit
-  return settingsRow({ title: 'Address for phones', detail: div({ class: 'font-mono wrap-anywhere' }, url) }, copyButton({ text: () => url, label: 'Copy', surface: 'group' }))
+  return settingsRow({ title: 'Address for phones', detail: div({ class: 'font-mono wrap-anywhere' }, url) }, copyButton({ text: () => url, label: 'Copy', surface }))
 }
 
 const switchable = (state: TailscaleState | undefined) => Boolean(state?.installed && (state.running || state.https))
 
-export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string) => {
+export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string, surface: Surface) => {
   const { errorState, loadingState, settingsRow, toggleSwitch } = ui.kit
   const { tailscale } = settings
   const busy = sig(false)
@@ -41,10 +42,10 @@ export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string) =
   return [
     show(
       () => !tailscale.loaded.get() && !tailscale.error.get(),
-      () => loadingState({ surface: 'group' }),
+      () => loadingState({ flush: true }),
     ),
     dynamicChild(tailscale.error, error =>
-      error ? errorState({ surface: 'group', text: `Couldn’t check Tailscale on ${name()}: ${error}`, retry: () => void tailscale.refresh() }) : null,
+      error ? errorState({ flush: true, text: `Couldn’t check Tailscale on ${name()}: ${error}`, retry: () => void tailscale.refresh() }) : null,
     ),
     show(tailscale.loaded, () =>
       settingsRow(
@@ -59,7 +60,7 @@ export const anywhereRows = (ui: Ui, settings: PcSettings, name: () => string) =
     ),
     dynamicChild(
       state.map(current => (current?.serving && current.httpsUrl) || ''),
-      url => (url ? addressRow(ui, url) : null),
+      url => (url ? addressRow(ui, url, surface) : null),
     ),
     dynamicChild(problem, found => (found ? problemRow(ui, found) : null)),
   ]

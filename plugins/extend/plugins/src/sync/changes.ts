@@ -14,7 +14,7 @@ const detail = (offer: PluginOffer) => {
 const offerRow = ({ quietButton, settingsRow }: Kit, source: SyncSource, offer: Sig<PluginOffer>, busy: () => boolean) =>
   settingsRow(
     { title: () => offer.get().plugin, detail: () => detail(offer.get()) },
-    quietButton({ size: 'sm', surface: 'group', disabled: busy, onClick: () => void source.apply(offer.get().peer, [offer.get().plugin]) }, 'Apply'),
+    quietButton({ size: 'sm', disabled: busy, onClick: () => void source.apply(offer.get().peer, [offer.get().plugin]) }, 'Apply'),
   )
 
 const groupActions = ({ quietButton }: Kit, source: SyncSource, group: Sig<OfferGroup>, busy: () => boolean) => {

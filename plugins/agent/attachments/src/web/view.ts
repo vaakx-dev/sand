@@ -83,9 +83,9 @@ const thumb = (parts: ViewParts, menu: ContextMenu, item: Held) => {
     picture(parts, item),
     show(
       () => Boolean(error()),
-      () => span({ class: 'absolute inset-0 flex items-center justify-center bg-black/50 text-danger-400' }, kit.icon('alert', 'md')),
+      () => span({ class: 'absolute inset-0 flex items-center justify-center bg-neutral-900/60 text-danger-400' }, kit.icon('alert', 'md')),
     ),
-    kit.closeButton({ title: 'Remove', size: 'sm', class: 'absolute top-1 right-1 bg-black/50', onClick: () => tray.remove(item) }),
+    kit.closeButton({ title: 'Remove', size: 'sm', class: 'absolute top-1 right-1 bg-neutral-900/60', onClick: () => tray.remove(item) }),
     progressBar(item, sent),
   )
 }
@@ -122,18 +122,18 @@ export const shelfView = (parts: ViewParts) => {
   const menu = parts.kit.contextMenu()
   const thumbed = isThumb(parts.media)
   return div(
-    { class: 'flex flex-col', hidden: items.map(held => !held.length) },
+    { class: 'flex flex-col gap-2', hidden: items.map(held => !held.length) },
     list(
       items.map(held => held.filter(thumbed)),
       item => item,
       item => thumb(parts, menu, item.get()),
-      div({ class: 'mb-3 flex flex-wrap gap-2', hidden: items.map(held => !held.some(thumbed)) }),
+      div({ class: 'flex flex-wrap gap-2', hidden: items.map(held => !held.some(thumbed)) }),
     ),
     list(
       items.map(held => held.filter(item => !thumbed(item))),
       item => item,
       item => fileRow(parts, menu, item.get()),
-      div({ class: 'mb-2 flex flex-col', hidden: items.map(held => held.every(thumbed)) }),
+      div({ class: 'flex flex-col', hidden: items.map(held => held.every(thumbed)) }),
     ),
     menu.view(),
     parts.picker,

@@ -19,7 +19,6 @@ const facts = (status: WorktreeStatus, size: number | undefined, cwd: string) =>
   [
     status.branch ? `branch ${status.branch}` : 'no branch',
     size === undefined ? 'size still counting' : bytes(size),
-    status.pull ? `PR #${status.pull.number} ${status.pull.state}` : 'no linked PR',
     status.ahead === undefined ? '' : `${plural(status.ahead, 'commit')} beyond ${status.base}`,
     saved(status.check),
     status.check.running ? 'a thread is working in it' : '',
@@ -29,7 +28,7 @@ const facts = (status: WorktreeStatus, size: number | undefined, cwd: string) =>
 export const listTool = (survey: Survey): Tool<typeof input> => ({
   name: 'worktree_list',
   description: [
-    'List every worktree sand made on this PC, biggest first, with its size on disk, branch, linked PR state and whether it has unsaved work.',
+    'List every worktree sand made on this PC, biggest first, with its size on disk, branch and whether it has unsaved work.',
     'Use this instead of git worktree list.',
   ].join(' '),
   input,

@@ -3,7 +3,7 @@ import { quietButton } from '../buttons/button'
 import { chevron } from '../marks/marks'
 
 export const expandRow = ({ class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
-  div({ ...props, class: ['flex flex-col bg-neutral-800', extra] }, ...children)
+  div({ ...props, class: ['flex flex-col', extra] }, ...children)
 
 export const expandToggle = (open: Sig<boolean>, label: Child) =>
   quietButton(

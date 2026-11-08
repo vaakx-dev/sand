@@ -1,6 +1,6 @@
 import type { ContextRecord, Entry, Prompt, UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget, SkillPlace } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
@@ -24,7 +24,8 @@ export interface ComposerContent {
   content: UserContent[]
 }
 
-export type SlotView = HTMLElement | (() => HTMLElement)
+/** Builds the slot's content; called once for each composer view. */
+export type SlotView = () => HTMLElement
 
 export interface TriggerItem {
   label: string
@@ -53,6 +54,14 @@ export interface Chat {
   path(): Entry[]
   send(prompt: Prompt, clientRequestId: string): Promise<void>
   interrupt(): Promise<void>
+  settings?(): SessionSettings
+  choose?(patch: SettingsPatch): void
+}
+
+export interface DockOptions {
+  /** A bot dock shows the model button only while advanced controls are on. */
+  kind?: 'thread' | 'bot'
+  placeholder?: () => string
 }
 
 export interface ChatDock {
@@ -61,6 +70,8 @@ export interface ChatDock {
 }
 
 export interface Composer {
+  /** A new thread composer view for each call, built in the caller's scope; every view shares one draft, its settings and its errors. */
+  view(): HTMLElement
   focus(): void
   value(): string
   set(text: string): void
@@ -69,17 +80,21 @@ export interface Composer {
   quote(text: string): void
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  /** Shows its text instead of the default placeholder while it returns one; the latest source wins. */
+  placeholder(text: () => string | undefined): Dispose
   hold(reason: SendHold): Dispose
   snapshot(): Promise<ComposerContent | undefined>
   restore(saved: ComposerContent): void
   clear(): void
-  sendMenu(action: NavAction): Dispose
+  sendMenu(action: MenuAction): Dispose
   plus(entry: PlusEntry, order?: number): Dispose
   trigger<T extends TriggerItem>(trigger: Trigger<T>, order?: number): Dispose
   command(command: Command): Dispose
+  /** The settings the next message uses: the current thread's, or the draft's. */
   settings(): SessionSettings
+  /** Changes the current thread's settings, or the draft's. */
   choose(patch: SettingsPatch): void
-  dock(chat: Chat): ChatDock
+  dock(chat: Chat, options?: DockOptions): ChatDock
 }
 
 export interface Typing {

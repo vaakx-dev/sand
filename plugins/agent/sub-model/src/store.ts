@@ -4,7 +4,6 @@ import { chosenModel, tiers } from './contract'
 
 const saved = z.object({
   models: z.partialRecord(z.enum(tiers), chosenModel).default({}),
-  skills: z.record(z.string(), z.string()).default({}),
 })
 
 export type Saved = z.output<typeof saved>

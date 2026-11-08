@@ -11,7 +11,6 @@ export interface PageNav {
   push(page: PalettePage): void
   back(to?: number): void
   close(page?: PalettePage): void
-  dismiss(): void
   fail(error: unknown): void
   isTop(page: PalettePage): boolean
   hold(page: PalettePage): () => void

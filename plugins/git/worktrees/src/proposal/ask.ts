@@ -7,8 +7,6 @@ const system = `You set up fresh git worktrees so a coding agent's first command
 
 const chosen = z.object({ copy: z.array(z.string()), run: z.array(z.string()) })
 
-export const setupJob = { id: 'worktree-setup', label: 'Worktree setup' }
-
 const describe = ({ files, commands }: Facts) =>
   [
     'Local files in the main checkout:',
@@ -18,8 +16,8 @@ const describe = ({ files, commands }: Facts) =>
     ...(commands.length ? commands.map(({ command, why }) => `- ${command} (${why})`) : ['(none)']),
   ].join('\n')
 
-export const askSetup = async (sub: SubModel, main: string, facts: Facts, session: string | undefined): Promise<SetupLines> => {
-  const request: JobRequest = { job: setupJob.id, tier: 'fast', system, prompt: describe(facts), cwd: main, ...(session ? { session } : {}) }
+export const askSetup = async (sub: SubModel, facts: Facts, session: string | undefined): Promise<SetupLines> => {
+  const request: JobRequest = { tier: 'fast', system, prompt: describe(facts), ...(session ? { session } : {}) }
   const answer = await sub.json(request, chosen)
   return {
     copy: facts.files.filter(file => answer.copy.includes(file)),

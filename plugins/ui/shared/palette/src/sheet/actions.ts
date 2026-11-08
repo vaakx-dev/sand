@@ -4,7 +4,8 @@ import type { MenuSpec } from '@sand/ui-kit/contract'
 export const actionsPage = (item: PaletteItem): PalettePage => ({
   id: `actions:${item.id}`,
   title: item.label,
-  placeholder: 'Search actions…',
+  placeholder: 'Search actions',
+  browse: true,
   items: () =>
     (item.actions ?? []).map((action, index) => ({
       id: `action:${index}`,

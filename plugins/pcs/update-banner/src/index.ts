@@ -1,5 +1,5 @@
 import { pcs, wire } from '@sand/devices-contract'
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'
@@ -25,7 +25,7 @@ export default definePlugin({
     }
     const dot = () => fleet.pending.get().some(pc => !pc.state?.later)
     ctx.watch(settings, found =>
-      found?.page({ id: 'updates', label: 'Updates', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),
+      found?.page({ id: 'updates', label: 'Updates', intro: 'Keep sand current on every PC.', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),
     )
   },
 })

@@ -83,7 +83,7 @@ export const tooltipModel = () => {
   return {
     tip,
     close,
-    track(at: Point) {
+    track(at: Point | undefined) {
       point = at
     },
     over(target: Element, at: Point) {

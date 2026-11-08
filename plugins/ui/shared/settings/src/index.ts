@@ -1,102 +1,70 @@
-import { layout, layoutChange, spaceOpen } from '@sand/layout/contract'
-import { pulse, running } from '@sand/reactive'
-import { rail } from '@sand/rail/contract'
+import { owned, pulse } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
-import { mount } from '@vaakx-dev/vrui'
-import { definePlugin, type Dispose } from 'drydock'
-import { dropPage, leavePage, openPage, switchPage } from './address'
+import { shell } from '@sand/ui-shell/contract'
+import { derive, effect, untrack } from '@vaakx-dev/vrui'
+import { definePlugin } from 'drydock'
 import { settings, settingsChange, type Settings } from './contract'
-import { cover } from './cover'
-import { followAddress } from './follow'
-import { pageView } from './page'
 import { pageStore } from './pages'
-import { sideView } from './side'
+import { settingsScreen } from './screen'
+
+const kind = 'settings'
 
 export default definePlugin({
   name: 'settings',
-  description: 'Settings: the sidebar lists the settings pages and the main column shows the chosen one',
+  description: 'Settings: a sidebar item that opens the settings pages; their list takes over the sidebar while one is open',
   inject: { kit },
   apply(ctx) {
     const store = pageStore()
-    const shell = pulse(ctx, [layoutChange], [layout])
-    const narrow = shell.read(() => ctx.get(layout)?.state().narrow ?? false)
-    let uncover: Dispose | undefined
-
-    const hide = () => {
-      void uncover?.()
-      uncover = undefined
-    }
-
-    const choose = (id: string) => host.open(id)
-    const close = () => host.close()
-    const showPages = () => ctx.get(layout)?.toggle('side', true)
-
-    const render = () => {
-      hide()
-      if (!store.current.get() || !running(ctx)) return
-      const found = ctx.get(layout)
-      uncover = cover(
-        ctx.kit,
-        found,
-        () => sideView(ctx.kit, { store, narrow, choose, back: close, hide: found && (() => found.toggle('side', false)) }),
-        () => pageView(ctx.kit, { store, narrow, showPages, choose, close }),
-      )
-    }
-
-    const show = (id: string | undefined) => {
-      const before = store.current.get()
-      if (before === id) return
-      store.show(id)
-      if (!before || !id) render()
-      ctx.emit(settingsChange, id)
-    }
-
-    const go = (id: string | undefined) => {
-      const before = store.current.get()
-      if (before === id) return
-      if (!id) leavePage()
-      else if (before) switchPage(id)
-      else openPage(id)
-      show(id)
-    }
+    const found = pulse(ctx, [], [shell])
+    const at = found.read(() => {
+      const frame = ctx.get(shell)
+      const route = frame?.current()
+      return frame && route?.kind === kind ? { id: route.id, phone: frame.state() === 'phone' } : undefined
+    })
+    const current = owned(ctx, () =>
+      derive(() => {
+        const shown = at.get()
+        if (!shown || (shown.phone && !shown.id)) return undefined
+        return store.pick(shown.id)?.id
+      }),
+    )
 
     const host: Settings = {
-      page(page) {
-        const remove = store.add(page)
-        restore()
-        return () => {
-          remove()
-          if (store.current.get() === page.id) go(store.pick()?.id)
-        }
-      },
+      page: page => store.add(page),
       section: section => store.addSection(section),
       pages: () => store.pages.get(),
-      open: id => go(store.pick(id)?.id),
-      close: () => go(undefined),
-      current: () => store.current.get(),
+      open(id) {
+        const page = id ? store.pick(id)?.id : undefined
+        const replace = Boolean(at.get() && !at.get()?.phone)
+        ctx.get(shell)?.open({ kind, ...(page && { id: page }) }, { replace })
+      },
+      close() {
+        if (at.get()) ctx.get(shell)?.back()
+      },
+      current: () => current.get(),
     }
 
-    const restore = followAddress(ctx, host.pages, show)
-    const toggle = () => (store.current.get() ? host.close() : host.open())
-    const floatingButton = () => {
-      const { icon, layer, secondaryAction } = ctx.kit
-      return mount(
-        document.body,
-        secondaryAction({ size: 'sm', class: [layer.drawer, 'fixed bottom-3 left-3 opacity-75'], onClick: toggle }, icon('gear', 14), 'Settings'),
-      )
-    }
-
+    owned(ctx, () =>
+      effect(() => {
+        const id = current.get()
+        untrack(() => {
+          if (id) store.remember(id)
+          ctx.emit(settingsChange, id)
+        })
+      }),
+    )
     ctx.provide(settings, host)
-    ctx.watch(layout, () => {
-      render()
-      return hide
-    })
+
     const dot = () => store.pages.get().some(page => page.dot?.())
-    ctx.watch(rail, found => (found ? found.action({ id: 'settings', label: 'Settings', icon: 'gear', order: 110, dot, current: () => Boolean(store.current.get()), run: toggle }) : floatingButton()))
-    ctx.on(spaceOpen, () => {
-      if (!store.current.get()) return
-      dropPage()
-      show(undefined)
+    ctx.watch(shell, frame => {
+      if (!frame) return
+      const stops = [
+        frame.nav({ id: 'settings', label: 'Settings', icon: 'gear', order: 100, place: 'foot', dot, to: { kind } }),
+        frame.route({ kind, render: route => settingsScreen(ctx.kit, { store, shell: frame, choose: host.open }, route) }),
+      ]
+      return () => {
+        for (const stop of stops) void stop()
+      }
     })
   },
 })

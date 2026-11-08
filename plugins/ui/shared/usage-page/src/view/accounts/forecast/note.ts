@@ -1,5 +1,6 @@
 import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
+import type { Kit } from '@sand/ui-kit/contract'
 import { span } from '@vaakx-dev/vrui'
 import type { Forecast } from '../../../data/forecast/project'
 
@@ -17,7 +18,7 @@ const missingText = (window: LimitWindow) => {
   return `There isn't enough usage in sand yet to forecast the ${name}.`
 }
 
-export const missingNote = (window: LimitWindow) => span({ class: 'text-sm text-neutral-400' }, missingText(window))
+export const missingNote = ({ secondaryText }: Kit, window: LimitWindow) => secondaryText(missingText(window))
 
 export const verdict = (forecast: Forecast) =>
   forecast.outAt

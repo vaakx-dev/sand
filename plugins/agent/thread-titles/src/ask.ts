@@ -10,8 +10,6 @@ const system = `You title chat threads. Given the first message a developer sent
 
 const titled = z.object({ title: z.string() })
 
-export const titleJob = { id: 'thread-title', label: 'Thread titles' }
-
 const partLine = (part: Exclude<UserPart, { kind: 'context' }>) => {
   if (part.kind === 'text') return part.text
   if (part.kind === 'skill') return `[skill: ${part.name}]`
@@ -29,7 +27,7 @@ const cleaned = (title: string) => oneLine(title.replace(/^[\s"'`]+|[\s"'`.]+$/g
 
 export const askTitle = async (sub: SubModel, session: Session, message: Message, signal: AbortSignal) => {
   const reply = await sub.json(
-    { job: titleJob.id, tier: 'fast', system, prompt: messageText(message), cwd: session.cwd, session: session.id, signal },
+    { tier: 'fast', system, prompt: messageText(message), session: session.id, signal },
     titled,
   )
   const title = cleaned(reply.title)

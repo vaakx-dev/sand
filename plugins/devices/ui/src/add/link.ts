@@ -1,7 +1,7 @@
 import { type OutgoingJoin, type PairLink, pairJoined } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, effect, keys, sig } from '@vaakx-dev/vrui'
-import { copyBox, field, note } from '../shared/parts'
+import { copyBox, field } from '../shared/parts'
 import { pinCode } from '../shared/pin'
 import type { Ui } from '../ui'
 import type { AddDone } from './done'
@@ -19,7 +19,7 @@ const ownLink = (ui: Ui, link: PairLink | undefined, error: string, retry: () =>
   if (!link) return loadingState({})
   const url = pcUrl(link)
   if (!url) return errorState({ text: 'Other PCs can’t reach this one yet. Turn on Open to your network or Reach from anywhere first.' })
-  return div({ class: 'flex flex-col gap-1.5' }, copyBox(ui.kit, url), note(`Works once, within ${minutesLeft(link)} minutes.`))
+  return div({ class: 'flex flex-col gap-1.5' }, copyBox(ui.kit, url), ui.kit.sheetText(`Works once, within ${minutesLeft(link)} minutes.`))
 }
 
 const waitingFor = (ui: Ui, join: OutgoingJoin) =>
@@ -60,6 +60,7 @@ export const linkStep = (ui: Ui, done: (result: AddDone) => void) => {
     { class: 'flex flex-col gap-4' },
     sheetText('For a PC that isn’t found. Do this on one of the two PCs only.'),
     field(
+      ui.kit,
       'Copy this link to the other PC',
       dynamicChild(
         derive(() => ({ link: live.link.get(), failed: live.error.get() })),
@@ -67,6 +68,7 @@ export const linkStep = (ui: Ui, done: (result: AddDone) => void) => {
       ),
     ),
     field(
+      ui.kit,
       'Or paste the other PC’s link',
       div(
         { class: 'flex gap-2' },

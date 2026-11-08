@@ -10,10 +10,10 @@ const shortUrl = (url: string) => url.replace(/^https?:\/\//, '').replace(/\/v1\
 const isAdded = (control: LoginControl, server: DetectedServer) => !!control.state.get()?.accounts.some(account => account.kind === 'server' && account.url === server.url)
 
 const foundRow = (kit: Kit, control: LoginControl, server: DetectedServer, add: (server: DetectedServer) => void) => {
-  const { badge, secondaryAction, settingsRow } = kit
+  const { metaLine, secondaryAction, settingsRow } = kit
   return settingsRow(
     { lead: accountLogo(kit, server.provider), title: server.name, detail: `${shortUrl(server.url)} · ${plural(server.models, 'model')}` },
-    isAdded(control, server) ? badge('neutral', 'Added') : secondaryAction({ size: 'sm', onClick: () => add(server) }, 'Add'),
+    isAdded(control, server) ? metaLine('Added') : secondaryAction({ size: 'sm', onClick: () => add(server) }, 'Add'),
   )
 }
 

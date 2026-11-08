@@ -1,7 +1,7 @@
 {
   "name": "@sand/approvals",
   "version": "0.0.0",
-  "description": "Approvals for tool calls: rules and defaults by what each call does, asking you in the chat and the Inbox when needed, and a log of every decision",
+  "description": "Approvals for tool calls: rules and defaults by what each call does, asking you in the chat when needed, and a log of every decision",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,7 +12,7 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Approvals",
-    "summary": "Asks you before an agent or bot sends, spends or deletes, with an Inbox of everything waiting on you"
+    "summary": "Asks you before an agent or bot sends, spends or deletes, and shows what's waiting on you"
   },
   "dependencies": {
     "@sand/bots": "workspace:*",
@@ -21,14 +21,13 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/layout": "workspace:*",
     "@sand/ledger": "workspace:*",
-    "@sand/rail": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/tools": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

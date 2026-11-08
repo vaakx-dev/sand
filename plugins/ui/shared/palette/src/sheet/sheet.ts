@@ -1,12 +1,13 @@
+import type { Kit } from '@sand/ui-kit/contract'
+import type { SheetLook, Shell } from '@sand/ui-shell/contract'
+import { collectScope, disposeAll, div, dynamicChild, effect, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { PalettePage } from '../contract'
-import type { kit } from '@sand/ui-kit/contract'
-import { dynamicChild, type Sig } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
+import { formHead, paletteHead } from './head'
+import { pageModel, type PageModel } from './model'
 import type { PageMemory, PageNav } from './nav'
-import { pageView } from './page'
+import { pageBody, pageKeys } from './page'
 
-export const paletteSheet = (ctx: Context<{ kit: typeof kit }>, stack: Sig<PalettePage[]>, query: () => string) => {
-  const { overlay, sheet } = ctx.kit
+const pageNav = (stack: Sig<PalettePage[]>): PageNav => {
   const held = new Set<PalettePage>()
   const memories = new WeakMap<PalettePage, PageMemory>()
   const top = () => stack.get().at(-1)
@@ -14,20 +15,15 @@ export const paletteSheet = (ctx: Context<{ kit: typeof kit }>, stack: Sig<Palet
     const page = top()
     return page !== undefined && held.has(page)
   }
-  const close = (page?: PalettePage) => {
-    if (!page || top() === page) stack.set([])
-  }
-  const dismiss = () => {
-    if (!locked()) close()
-  }
-  const nav: PageNav = {
+  return {
     trail: () => stack.get(),
     push: page => stack.set([...stack.get(), page]),
     back(to = stack.get().length - 2) {
       if (to >= 0 && !locked()) stack.set(stack.get().slice(0, to + 1))
     },
-    close,
-    dismiss,
+    close(page) {
+      if (!page || top() === page) stack.set([])
+    },
     fail: error => console.error(error),
     isTop: page => top() === page,
     hold(page) {
@@ -40,13 +36,57 @@ export const paletteSheet = (ctx: Context<{ kit: typeof kit }>, stack: Sig<Palet
       return memory
     },
   }
+}
+
+const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string) => {
+  const nav = pageNav(stack)
+  const model = sig<PageModel | undefined>(undefined)
   let opening = true
-  const view = (pages: PalettePage[]) => {
-    const page = pages.at(-1)
-    if (!page) return null
-    const initial = opening ? query() : ''
+  effect(() => {
+    const page = stack.get().at(-1)
+    if (!page) {
+      opening = true
+      return model.set(undefined)
+    }
+    const initial = opening ? untrack(query) : ''
     opening = false
-    return pageView(ctx.kit, page, nav, initial)
+    const { value, scope } = collectScope(() => untrack(() => pageModel(kit, page, nav, initial)))
+    model.set(value)
+    return () => disposeAll(scope)
+  })
+  return model
+}
+
+const lookOf = (page: PalettePage): SheetLook => {
+  if (page.browse) return 'list'
+  return page.field || page.review ? 'form' : 'search'
+}
+
+const scrolled = (look: SheetLook, model: PageModel, body: HTMLElement) =>
+  look === 'form'
+    ? body
+    : div({ class: () => ['flex min-h-0 flex-col overflow-y-auto overscroll-contain px-2 pb-2', look === 'list' && model.searching.get() && 'h-screen sm:h-auto'] }, body)
+
+export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, query: () => string) => {
+  const model = shownModel(kit, stack, query)
+  const shown = (render: (found: PageModel) => HTMLElement) => dynamicChild(model, found => (found ? render(found) : null))
+  const closedByShell = () => () => {
+    if (stack.get().length) stack.set([])
   }
-  return overlay(dismiss, sheet({ 'aria-label': 'Command palette' }, dynamicChild(stack, view)))
+  const first = stack.map(pages => pages[0])
+  effect(() => {
+    const page = first.get()
+    if (!page) return
+    const look = lookOf(page)
+    const head = (found: PageModel) => (look === 'form' ? formHead(kit, found) : paletteHead(kit, found))
+    const handle = untrack(() =>
+      shell.sheet({
+        label: page.title,
+        look,
+        head: () => shown(found => span({ class: look === 'form' ? 'flex min-w-0 flex-1' : 'flex shrink-0 flex-col', onKeyDown: pageKeys(found) }, head(found))),
+        body: () => div({ class: 'flex min-h-0 flex-col', onMount: closedByShell }, shown(found => scrolled(look, found, pageBody(kit, found)))),
+      }),
+    )
+    return () => handle.close()
+  })
 }

@@ -1,5 +1,5 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { exactTime } from '@sand/util'
 import { derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
@@ -15,7 +15,7 @@ const sources: Record<VersionSource, string> = {
 }
 
 const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarget | undefined, version: Sig<Version>) => {
-  const { badge, choiceCheck, contextMenu, metaLine, quietButton } = kit
+  const { choiceCheck, contextMenu, metaLine, quietButton, rowTitle } = kit
   const current = derive(() => target()?.current === version.get().id)
   const good = derive(() => target()?.good === version.get().id)
   const busy = () => source.busy.get() !== undefined
@@ -26,7 +26,7 @@ const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarge
   const menu = contextMenu()
   const spec = (): MenuSpec => {
     const { at, hash, source: from } = version.get()
-    const restoreAction: NavAction = { id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: restore }
+    const restoreAction: MenuAction = { id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: restore }
     return {
       title: exactTime(at),
       subtitle: sources[from],
@@ -38,12 +38,12 @@ const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarge
     menu.view(),
     div(
       { class: 'flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2' },
-      span({ class: 'tabular-nums text-sm text-neutral-100' }, () => exactTime(version.get().at)),
+      span({ class: 'tabular-nums' }, rowTitle(() => exactTime(version.get().at))),
       metaLine(() => sources[version.get().source]),
     ),
-    show(good, () => badge('neutral', 'Last good start')),
+    show(good, () => metaLine('Last good start')),
     dynamicChild(current, isCurrent =>
-      isCurrent ? choiceCheck(true) : quietButton({ size: 'sm', surface: 'group', disabled: busy, onClick: restore }, 'Restore'),
+      isCurrent ? choiceCheck(true) : quietButton({ size: 'sm', disabled: busy, onClick: restore }, 'Restore'),
     ),
   )
 }

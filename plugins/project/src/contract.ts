@@ -1,4 +1,5 @@
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import type { OfferedPath } from '@sand/transfers/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -95,9 +96,29 @@ export interface LocalCopy {
 export interface ProjectFiles {
   copies(): LocalCopy[]
   ofFolder(dir: string): string | null
+  name(project: string): string | undefined
 }
 
 export const projectFiles = service<ProjectFiles>('projectFiles')
+
+export interface AddedProject {
+  path: string
+  device: string
+}
+
+export interface ProjectAddOptions {
+  /** A project id: brings that project to another PC by git clone or a file copy, instead of adding a folder. */
+  project?: string
+  /** Runs once the project is added. Without it, a new chat opens in the project. */
+  added?(project: AddedProject): unknown
+}
+
+/** Opens the Add project sheet: the PC to add it on (asked only with several PCs), then its folder or how to bring it there. Missing while the shell is off. */
+export interface ProjectAdd {
+  open(options?: ProjectAddOptions): void
+}
+
+export const projectAdd = service<ProjectAdd>('projectAdd')
 
 export interface ProjectRow {
   project: string
@@ -118,6 +139,23 @@ export interface RemovedProject {
   removed: true
 }
 
+export interface LocalFile {
+  path: string
+  size: number
+}
+
+export interface IgnoredFiles {
+  files: LocalFile[]
+  folders: string[]
+  truncated: boolean
+}
+
+export interface BringStep {
+  project: string
+  path: string
+  step: string
+}
+
 const iconInput = z.object({
   shape: z.number().int().positive().optional(),
   hue: z.number().min(0).lt(360).optional(),
@@ -130,6 +168,16 @@ const patchInput = z.object({
 })
 
 const pathInput = z.object({ path: z.string() })
+
+const bringHow = z.enum(['clone', 'copy'])
+
+const bringInput = z.object({ project: z.string(), from: z.string().min(1), path: z.string().trim().min(1), how: bringHow, files: z.array(z.string()) })
+
+export type BringInput = z.infer<typeof bringInput>
+
+const offerInput = z.object({ project: z.string(), how: bringHow, files: z.array(z.string()) })
+
+export type ProjectOffer = z.infer<typeof offerInput>
 
 export const projectsList = request('projects.list', { input: z.object({}), output: type<ProjectList>() })
 export const helloProjects = helloField<ProjectList>('projects')
@@ -170,5 +218,9 @@ export const filesGrep = request('files.grep', { input: z.object({ cwd: z.string
 export const filesRead = request('files.read', { input: z.object({ cwd: z.string(), path: z.string() }), output: type<FileContent>(), place: 'thread' })
 export const fsBrowse = request('fs.browse', { input: pathInput, output: type<FolderListing>() })
 export const fsMkdir = request('fs.mkdir', { input: pathInput, output: type<void>() })
+export const projectsIgnored = request('projects.ignored', { input: pathInput, output: type<IgnoredFiles>() })
+export const projectsBring = request('projects.bring', { input: bringInput, output: type<ProjectRow>() })
+export const projectsOffer = request('projects.offer', { input: offerInput, output: type<OfferedPath>(), callers: 'pc' })
 
 export const projectsChange = wireEvent<ProjectList>('projects.change')
+export const projectsBringing = wireEvent<BringStep>('projects.bringing')

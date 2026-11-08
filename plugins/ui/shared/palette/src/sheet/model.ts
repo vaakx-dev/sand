@@ -5,6 +5,7 @@ import { batch, derive, effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'
+import { wide } from './wide'
 
 export type PageModel = ReturnType<typeof pageModel>
 
@@ -33,6 +34,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
   const busy = sig(false)
   const failure = sig('')
   const progress = sig('')
+  const searching = sig(!page.browse)
 
   const reload = () => reloads.update(count => count + 1)
 
@@ -72,10 +74,12 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
 
   const box = listbox({ count: () => results.get().length, choose: index => choose(results.get()[index]), start: field ? -1 : 0, wrap: true })
 
+  const unselected = () => Boolean(field) || (Boolean(page.browse) && !searching.get() && !wide.get())
+
   const present = (items: PaletteItem[]) =>
     batch(() => {
       results.set(items)
-      const index = restored ?? (field ? -1 : 0)
+      const index = restored ?? (unselected() ? -1 : 0)
       restored = undefined
       if (index < 0) box.clear()
       else box.select(index)
@@ -99,7 +103,6 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     }
   })
 
-  const more = (item: PaletteItem) => advance(actionsPage(item))
 
   const runAction = (action: PaletteItemAction) => {
     if (!action.returnAfter) return closeAndRun(() => action.run())
@@ -113,7 +116,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
   const openActions = () => {
     const item = untrack(() => results.get()[box.selected.get()])
     if (!item?.actions?.length) return false
-    more(item)
+    advance(actionsPage(item))
     return true
   }
 
@@ -180,7 +183,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     action,
     card,
     nested: nav.trail().length > 1,
-    more,
+    searching,
     runAction,
     openActions,
     submit,

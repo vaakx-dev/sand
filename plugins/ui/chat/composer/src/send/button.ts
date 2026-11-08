@@ -1,7 +1,7 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
-import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, SPACE, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'steer' | 'stop' | 'busy'
@@ -16,10 +16,18 @@ const titles: Record<Look, string> = {
   busy: 'Sending',
 }
 
-const tone = (kit: Kit, look: Look) => {
-  const { actionTones } = kit
-  if (look === 'busy' || look === 'off') return 'cursor-default bg-neutral-700/60 text-neutral-500'
-  return look === 'stop' ? actionTones.secondary : actionTones.primary
+const circle = `calc(${SPACE['6']} + ${SPACE['1']})`
+
+const fill = 'bg-neutral-100 text-neutral-900'
+
+const idle = `cursor-default opacity-40 ${fill}`
+
+const tones: Record<Look, string> = {
+  off: idle,
+  busy: idle,
+  send: fill,
+  steer: fill,
+  stop: fill,
 }
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
@@ -45,14 +53,14 @@ const titleOf = (model: Model, look: Look) => {
 
 const glyphOf = (look: Look): IconName | 'busy' => (look === 'busy' ? 'busy' : icons[look])
 
-const menuOf = (model: Model, actions: () => NavAction[]): MenuSpec | undefined => {
+const menuOf = (model: Model, actions: () => MenuAction[]): MenuSpec | undefined => {
   if (model.empty.get() || model.sending.get()) return undefined
   const shown = actions()
   if (!shown.length) return undefined
   return { title: oneLine(model.text.get(), 60) || 'Message', actions: shown }
 }
 
-export const sendControl = (kit: Kit, model: Model, actions: () => NavAction[]) => {
+export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[]) => {
   const { contextMenu, delayed, icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
@@ -65,13 +73,14 @@ export const sendControl = (kit: Kit, model: Model, actions: () => NavAction[]) 
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
-        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
+        class: ['inline-flex shrink-0 items-center justify-center rounded-full transition-colors', () => tones[look.get()]],
+        style: { width: circle, height: circle },
         ...context.target(
           () => menuOf(model, actions),
           () => void model.send(),
         ),
       },
-      dynamicChild(glyph, value => (value === 'busy' ? spinner('md') : icon(value, 'md', value === 'stop'))),
+      dynamicChild(glyph, value => (value === 'busy' ? spinner('sm') : icon(value, 14, value === 'stop'))),
     ),
     context.view(),
   )

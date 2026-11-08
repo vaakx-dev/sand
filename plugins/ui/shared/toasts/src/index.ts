@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { toasts } from './contract'

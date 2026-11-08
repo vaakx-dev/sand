@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import type { Kit, kit } from '@sand/ui-kit/contract'
 import type { Context, Dispose } from 'drydock'
 import type { LoginControl } from '../state'
@@ -21,7 +21,7 @@ const sheetView = (kit: Kit, control: LoginControl, done: () => void, first?: St
     sheet(
       { 'aria-label': 'Add an account', size: 'md' },
       sheetHead({ title: add.title, close, back: add.back, backShown: () => add.step.get().kind !== 'choose' }),
-      add.view(kit),
+      add.view(kit, 'raised'),
     ),
   )
 }

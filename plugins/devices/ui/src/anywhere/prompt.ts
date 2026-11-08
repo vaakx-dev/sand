@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { derive, div, effect, span, stored, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { overlaySlot } from '../shared/overlay'
@@ -10,13 +10,13 @@ const recent = 10 * 60_000
 const homeWifiPage = () => location.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
 
 const banner = (ui: Ui, tone: 'accent' | 'neutral', mark: HTMLElement, title: string, text: string, dismiss: () => void, action?: HTMLElement) => {
-  const { closeButton, statusBanner } = ui.kit
+  const { bannerTitle, closeButton, secondaryText, statusBanner } = ui.kit
   return div(
     { class: 'px-3 pt-2' },
     statusBanner(
       { tone },
       mark,
-      div({ class: 'flex min-w-0 flex-1 flex-col' }, span({ class: 'text-sm' }, title), span({ class: 'text-xs text-neutral-400' }, text)),
+      div({ class: 'flex min-w-0 flex-1 flex-col' }, bannerTitle(title), secondaryText(text)),
       action ?? null,
       closeButton({ title: 'Dismiss', size: 'sm', surface: 'raised', onClick: dismiss }),
     ),
