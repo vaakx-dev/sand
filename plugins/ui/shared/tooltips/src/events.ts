@@ -1,13 +1,12 @@
-import { listen } from '@vaakx-dev/vrui'
+import { listen, media, untrack } from '@vaakx-dev/vrui'
 import type { TooltipModel } from './model'
 
 const element = (target: EventTarget | null) => (target instanceof Element ? target : null)
 
-const hovers = matchMedia('(any-hover: hover)')
-
-const pointer = ({ pointerType, clientX, clientY }: PointerEvent) => (pointerType === 'touch' || !hovers.matches ? undefined : { x: clientX, y: clientY })
-
 export const followEvents = (model: TooltipModel) => {
+  const hovers = media('(any-hover: hover)')
+  const pointer = ({ pointerType, clientX, clientY }: PointerEvent) =>
+    pointerType === 'touch' || !untrack(() => hovers.get()) ? undefined : { x: clientX, y: clientY }
   let typing = false
   listen<PointerEvent>(document, 'pointerover', event => {
     const target = element(event.target)
