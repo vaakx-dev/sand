@@ -1,10 +1,10 @@
-import { composer } from '@sand/composer/contract'
+import { composer, type Composer } from '@sand/composer/contract'
 import type { Pulse } from '@sand/reactive'
 import type { Kit } from '@sand/ui-kit/contract'
 import { homeRoute, type Screen, type Shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
-import { derive, div, dynamicChild, effect, onTimeout, sig, untrack, type Child } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, sig, untrack, type Child } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { places } from '../palette/places'
 import { openDraft } from '../palette/projects'
@@ -17,8 +17,6 @@ export interface LaunchParts {
   threads: Threads
   pulse: Pulse
 }
-
-type Holder = 'phone' | 'wide'
 
 const homeScreen = ({ kit }: LaunchParts, composerHere: Child): Screen => ({
   head: () => kit.headTitle(2, 'New chat'),
@@ -56,27 +54,16 @@ const draftingSlots = ({ ctx, kit, shell, threads, pulse }: LaunchParts) => {
 
 export const launch = (parts: LaunchParts) => {
   const { ctx, shell } = parts
-  const taken = sig<{ view: HTMLElement } | undefined>(undefined)
-  const holder = derive((): Holder | undefined => {
-    if (shell.current().kind !== homeRoute) return undefined
-    return shell.state() === 'phone' ? 'phone' : 'wide'
-  })
-  const composerIn = (place: Holder) =>
-    dynamicChild(
-      () => (holder.get() === place ? taken.get() : undefined),
-      found => (found ? div({ class: 'contents' }, found.view) : null),
-    )
-  ctx.watch(composer, found => {
-    if (!found) return taken.set(undefined)
-    return onTimeout(() => taken.set({ view: found.view() }), 0)
-  })
+  const found = sig<Composer | undefined>(undefined)
+  const composerView = () => dynamicChild(found, composer => composer?.view() ?? null)
+  ctx.watch(composer, service => found.set(service))
   ctx.effect(() =>
     effect(() => {
       parts.pulse.version.get()
-      if (holder.get()) untrack(() => leaveThreadFolder(parts))
+      if (shell.current().kind === homeRoute) untrack(() => leaveThreadFolder(parts))
     }),
   )
-  ctx.effect(() => shell.mount('home', div({ class: 'flex shrink-0 flex-col' }, composerIn('phone'))))
-  ctx.effect(() => shell.route({ kind: homeRoute, render: () => homeScreen(parts, composerIn('wide')) }))
+  ctx.effect(() => shell.mount('home', div({ class: 'flex shrink-0 flex-col' }, composerView())))
+  ctx.effect(() => shell.route({ kind: homeRoute, render: () => homeScreen(parts, composerView()) }))
   draftingSlots(parts)
 }

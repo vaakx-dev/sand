@@ -1,3 +1,4 @@
+import { pcHello } from '@sand/devices-contract'
 import { threadChange, type Threads } from '@sand/web-client/contract'
 import { sig, untrack, type Child } from '@vaakx-dev/vrui'
 import { service, type Context, type Dispose } from 'drydock'
@@ -31,7 +32,7 @@ const keyOf = ({ cwd, device }: RowThread) => `${device}\0${cwd}`
 
 /**
  * Facts about a thread's folder that a row part shows, such as its branch. A folder is loaded the first time a
- * row asks for it, again when a turn in it ends, and on `reload`. A load that fails shows as nothing.
+ * row asks for it, again when its PC connects or a turn in it ends, and on `reload`. A load that fails shows as nothing.
  */
 export const folderFacts = <T>(ctx: Context, threads: Threads, load: (folder: RowThread) => Promise<T>) => {
   const facts = sig<ReadonlyMap<string, T>>(new Map())
@@ -56,6 +57,9 @@ export const folderFacts = <T>(ctx: Context, threads: Threads, load: (folder: Ro
     running.set(id, thread.running)
     const folder = { id, cwd: thread.info.cwd, device: thread.device }
     if (ended && asked.has(keyOf(folder))) fetch(folder)
+  })
+  ctx.on(pcHello, pc => {
+    for (const folder of asked.values()) if (folder.device === pc) fetch(folder)
   })
   return {
     get(folder: RowThread) {

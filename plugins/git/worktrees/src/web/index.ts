@@ -1,5 +1,6 @@
 import { wire } from '@sand/devices-contract'
 import { threadRows } from '@sand/threads-home/contract'
+import { kit } from '@sand/ui-kit/contract'
 import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import {
@@ -24,7 +25,7 @@ import { branchPart } from './branch'
 export default definePlugin({
   name: 'worktrees',
   description: "Reaches thread worktrees for the page: lists, creates, moves into, removes, restores, sizes and sets them up on the PC that holds the repo, with their progress; shows each thread's branch on its row",
-  inject: { wire, threads },
+  inject: { wire, threads, kit },
   apply(ctx) {
     ctx.provide(worktreesClient, {
       list: (input, device) => ctx.wire.call(worktreesList, input, device),
@@ -42,7 +43,7 @@ export default definePlugin({
       onProposal: listener => ctx.wire.on(worktreesProposed, listener, { from: 'all' }),
       onChange: listener => ctx.wire.on(worktreesChange, listener, { from: 'all' }),
     })
-    const branch = branchPart(ctx, ctx.wire, ctx.threads)
+    const branch = branchPart(ctx, ctx.kit, ctx.wire, ctx.threads)
     ctx.watch(threadRows, rows => rows?.part(branch))
   },
 })

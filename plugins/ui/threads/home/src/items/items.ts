@@ -48,7 +48,7 @@ export interface RowSources {
 
 const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
   label: [project.quick ? 'No project' : project.name, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
-  mark: () => parts.kit.projectIcon(project.name, project.icon),
+  mark: () => parts.kit.projectMark(project.name, project.icon),
 })
 
 const trailOf = (trail: RowPart[], folder: RowThread) => (trail.length ? () => trail.map(part => part.render(folder)) : undefined)

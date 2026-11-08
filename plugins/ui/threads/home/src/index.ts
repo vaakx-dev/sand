@@ -39,7 +39,7 @@ export default definePlugin({
     const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get() }), limit.get(), more)))
     const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
-    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, phone: false, to: { kind: homeRoute } }))
+    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, to: { kind: homeRoute } }))
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
     launch({ ...parts, pulse: events })
     ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.shell, ctx.threads)))
