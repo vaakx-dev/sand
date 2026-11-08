@@ -60,15 +60,13 @@ const empty = (kit: Kit, add: () => void) =>
   })
 
 export const agendaView = (kit: Kit, model: CalendarModel, parts: AgendaParts) =>
-  div(
-    { class: 'flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain', style: kit.stableGutter },
-    dynamicChild(
-      derive(() => ({ shown: model.shown.get(), calendars: model.calendars.get() })),
-      ({ shown, calendars }) => {
-        if (shown?.mode !== 'agenda') return waiting(kit, model)
-        const groups = grouped(shown)
-        if (!groups.length) return div({ class: kit.pageColumn }, empty(kit, parts.add))
-        return div({ class: [kit.pageColumn, 'flex flex-col gap-4 px-2 pt-2 pb-16'] }, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
-      },
-    ),
+  dynamicChild(
+    derive(() => ({ shown: model.shown.get(), calendars: model.calendars.get() })),
+    ({ shown, calendars }) => {
+      if (shown?.mode !== 'agenda') return waiting(kit, model)
+      const groups = grouped(shown)
+      if (!groups.length) return kit.pageBody({}, empty(kit, parts.add))
+      return kit.pageBody({}, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
+    },
+    div({ class: 'flex min-h-0 flex-1 flex-col' }),
   )

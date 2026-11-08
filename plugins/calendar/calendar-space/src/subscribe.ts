@@ -6,7 +6,7 @@ export const subscribeSheet = (kit: Kit, link: Sig<string | undefined>): SheetSp
   label: 'Subscription link',
   head: () => kit.headTitle(2, 'Subscription link'),
   body: () => [
-    kit.sheetText('Calendar apps on this computer or your own network can subscribe to this link and stay up to date. Anyone with the link can read the calendar.'),
+    kit.secondaryText('Calendar apps on this computer or your own network can subscribe to this link and stay up to date. Anyone with the link can read the calendar.'),
     dynamicChild(link, url =>
       url
         ? div(

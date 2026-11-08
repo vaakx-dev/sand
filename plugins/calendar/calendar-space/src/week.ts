@@ -2,7 +2,7 @@ import type { Occurrence } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { clock, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import { waiting } from './agenda'
-import { addDays, clockLabel, days, hourLabel, isAllDay, startOfDay, weekdayLabel } from './days'
+import { addDays, clockLabel, dayMs, days, hourLabel, isAllDay, startOfDay, weekdayLabel } from './days'
 import type { CalendarModel, Shown } from './model'
 
 export interface WeekParts {
@@ -94,7 +94,7 @@ const overlapping = (events: Occurrence[], day: number) => events.filter(event =
 const column = (kit: Kit, day: number, events: Occurrence[], parts: WeekParts) => {
   const node: HTMLElement = div(
     {
-      class: 'relative min-w-0 flex-1 border-l border-neutral-800',
+      class: 'relative min-w-0 flex-1',
       style: { height: `${24 * hour}px` },
       onClick: event => {
         if (event.target !== node) return
@@ -117,8 +117,8 @@ const hours = (kit: Kit) =>
     ),
   )
 
-const grid = (kit: Kit, { from, events }: Shown, parts: WeekParts, scroll: { top: number }) => {
-  const week = days(from, 7)
+const grid = (kit: Kit, { from, to, events }: Shown, parts: WeekParts, scroll: { top: number }) => {
+  const week = days(from, Math.round((to - from) / dayMs))
   const allDay = events.filter(event => isAllDay(event.start))
   const timed = events.filter(event => !isAllDay(event.start))
   const body: HTMLElement = div(
@@ -137,7 +137,7 @@ const grid = (kit: Kit, { from, events }: Shown, parts: WeekParts, scroll: { top
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
     div(
-      { class: 'flex shrink-0 flex-col border-b border-neutral-800 pr-2' },
+      { class: 'flex shrink-0 flex-col pr-2 pb-1' },
       div({ class: 'flex' }, div({ class: 'w-12 shrink-0' }), ...week.map(day => dayHead(kit, day))),
       allDay.length
         ? div(

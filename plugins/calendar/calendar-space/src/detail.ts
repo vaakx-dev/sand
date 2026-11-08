@@ -43,7 +43,7 @@ const answering = (kit: Kit, { event, respond }: DetailParts) => {
   }
   return div(
     { class: 'flex flex-col gap-2 pt-2' },
-    kit.sheetText('Going?'),
+    kit.secondaryText('Going?'),
     kit.segmented(
       order.map(value => ({ value, label: answerLabels[value] })),
       chosen,
@@ -91,7 +91,7 @@ export const detailSheet = (kit: Kit, parts: DetailParts): SheetSpec => {
       event.location ? line(kit, 'pin', event.location) : null,
       guests.length ? line(kit, 'users', ...guests) : null,
       calendar && parts.showCalendar ? line(kit, 'calendar', calendar.name) : null,
-      event.notes ? div({ class: 'whitespace-pre-wrap' }, kit.sheetText(event.notes)) : null,
+      event.notes ? div({ class: 'whitespace-pre-wrap' }, kit.secondaryText(event.notes)) : null,
       invited && writable ? answering(kit, parts) : null,
     ],
     ...(writable && { foot: (close: () => void) => removal(kit, parts, close) }),

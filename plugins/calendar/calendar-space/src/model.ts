@@ -34,9 +34,16 @@ export interface Shown {
 
 const modes: Mode[] = ['agenda', 'week']
 
-const spans: Record<Mode, number> = { agenda: 28, week: 7 }
+interface Span {
+  first(at: number): number
+  days: number
+  step: number
+}
 
-const firstDay: Record<Mode, (at: number) => number> = { agenda: startOfDay, week: startOfWeek }
+const spanOf = (mode: Mode, narrow: boolean): Span => {
+  if (mode === 'agenda') return { first: startOfDay, days: 28, step: 7 }
+  return narrow ? { first: startOfDay, days: 3, step: 3 } : { first: startOfWeek, days: 7, step: 7 }
+}
 
 const download = (name: string, text: string) => {
   const href = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }))
@@ -47,10 +54,12 @@ const download = (name: string, text: string) => {
 export const calendarModel = (ctx: CalendarContext) => {
   const calendars = sig<Calendar[]>([])
   const mode = stored<Mode>('sand.calendar.view', 'agenda', value => modes.includes(value as Mode))
+  const narrow = sig(false)
   const anchor = sig(startOfDay(Date.now()))
+  const span = derive(() => spanOf(mode.get(), narrow.get()))
   const range = derive(() => {
-    const from = firstDay[mode.get()](anchor.get())
-    return { from, to: addDays(from, spans[mode.get()]) }
+    const from = span.get().first(anchor.get())
+    return { from, to: addDays(from, span.get().days) }
   })
   const shown = sig<Shown | undefined>(undefined)
   const failure = sig<string | undefined>(undefined)
@@ -85,12 +94,13 @@ export const calendarModel = (ctx: CalendarContext) => {
   if (ctx.wire.ready()) loadCalendars()
   ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, load), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
 
-  const step = (direction: 1 | -1) => anchor.update(at => addDays(at, direction * 7))
+  const step = (direction: 1 | -1) => anchor.update(at => addDays(span.get().first(at), direction * span.get().step))
 
   return {
     calendars,
     writable: derive(() => calendars.get().filter(calendar => calendar.capabilities.includes('write'))),
     mode,
+    narrow,
     anchor,
     range,
     shown,

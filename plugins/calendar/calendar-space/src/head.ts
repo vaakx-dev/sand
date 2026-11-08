@@ -1,18 +1,18 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { input, span, type Sig } from '@vaakx-dev/vrui'
+import { input, span } from '@vaakx-dev/vrui'
 import { addDays, monthsLabel } from './days'
 import type { CalendarModel, Mode } from './model'
 
 export interface HeadParts {
-  phone: Sig<boolean>
+  phone(): boolean
   add(): void
   subscribe(): void
   report(error: unknown): void
 }
 
-const modes: { value: Mode; label: string }[] = [
-  { value: 'agenda', label: 'Agenda' },
-  { value: 'week', label: 'Week' },
+const modes: { value: Mode; label: string; narrow: string }[] = [
+  { value: 'agenda', label: 'Agenda', narrow: 'Agenda' },
+  { value: 'week', label: 'Week', narrow: '3 days' },
 ]
 
 const title = (model: CalendarModel, short: boolean) => {
@@ -46,7 +46,7 @@ const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTML
     const calendar = ownCalendar(model)
     if (calendar) model.exportFile(calendar).catch(parts.report)
   }
-  const heading = () => title(model, parts.phone.get())
+  const heading = () => title(model, parts.phone())
   return dropdown({
     class: 'flex-1',
     trigger: (press, open) =>
@@ -56,8 +56,8 @@ const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTML
         span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
       ),
     items: close => [
-      ...modes.map(({ value, label }) =>
-        choiceItem({ selected: () => model.mode.get() === value, onClick: run(close, () => model.show(value)) }, span({ class: 'flex-1' }, label)),
+      ...modes.map(({ value, label, narrow }) =>
+        choiceItem({ selected: () => model.mode.get() === value, onClick: run(close, () => model.show(value)) }, span({ class: 'flex-1' }, model.narrow.get() ? narrow : label)),
       ),
       menuSeparator(),
       menuItem({ onClick: run(close, () => picker.click()) }, 'Import .ics'),
@@ -74,9 +74,9 @@ export const headView = (kit: Kit, model: CalendarModel, parts: HeadParts) => {
     viewMenu(kit, model, parts, picker),
     span(
       { class: 'flex shrink-0 items-center' },
-      iconButton({ title: 'Previous week', 'aria-label': 'Previous week', onClick: model.earlier }, icon('left')),
+      iconButton({ title: 'Earlier', 'aria-label': 'Earlier', onClick: model.earlier }, icon('left')),
       quietButton({ onClick: model.today }, 'Today'),
-      iconButton({ title: 'Next week', 'aria-label': 'Next week', onClick: model.later }, icon('right')),
+      iconButton({ title: 'Later', 'aria-label': 'Later', onClick: model.later }, icon('right')),
     ),
     iconButton({ title: 'New event', 'aria-label': 'New event', onClick: parts.add }, icon('plus')),
     picker,

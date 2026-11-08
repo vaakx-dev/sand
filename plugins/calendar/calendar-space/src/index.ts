@@ -1,7 +1,7 @@
 import type { Occurrence, Target } from '@sand/calendar/contract'
-import { shell, type Shell } from '@sand/ui-shell/contract'
+import { homeRoute, shell, type Shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
-import { derive, div, dynamicChild, sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, resizeObserver, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { agendaView } from './agenda'
 import { inject } from './context'
@@ -13,6 +13,10 @@ import { subscribeSheet } from './subscribe'
 import { weekView } from './week'
 
 const calendarKind = 'calendar'
+
+const narrowBelow = 560
+
+const homeOrder = 500
 
 const targetOf = (event: Occurrence): Target => ({ calendar: event.calendar, id: event.id, ...(event.original && { original: event.original }) })
 
@@ -49,12 +53,16 @@ export default definePlugin({
         found.sheet(subscribeSheet(kit, link))
       }
 
-      const phone = derive(() => found.state() === 'phone')
       return {
-        head: () => headView(kit, model, { phone, add: () => add(), subscribe, report }),
+        head: () => headView(kit, model, { phone: () => found.state() === 'phone', add: () => add(), subscribe, report }),
         main: () =>
           div(
-            { class: 'flex h-full min-h-0 flex-1 flex-col' },
+            {
+              class: 'flex h-full min-h-0 flex-1 flex-col',
+              onMount: node => {
+                resizeObserver(node, ([entry]) => model.narrow.set((entry?.contentRect.width ?? narrowBelow) < narrowBelow))
+              },
+            },
             dynamicChild(model.mode, mode => (mode === 'agenda' ? agendaView(kit, model, { open, add: () => add() }) : weekView(kit, model, { open, addAt: add }))),
           ),
       }
@@ -65,6 +73,7 @@ export default definePlugin({
         ? joinDisposers(
             found.nav({ id: 'calendar', label: 'Calendar', icon: 'calendar', order: 20, to: { kind: calendarKind } }),
             found.route({ kind: calendarKind, render: () => screen(found) }),
+            found.route({ kind: homeRoute, order: homeOrder, render: () => screen(found) }),
           )
         : undefined,
     )
