@@ -52,7 +52,7 @@ const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTML
     trigger: (press, open) =>
       navButton(
         { active: open, title: 'Views and calendar files', ...press },
-        span({ class: 'min-w-0 truncate font-medium text-neutral-100' }, heading),
+        kit.barTitle(heading),
         span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
       ),
     items: close => [

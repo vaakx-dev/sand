@@ -142,7 +142,7 @@ export const formSheet = (kit: Kit, parts: FormParts): SheetSpec => {
   }
   return {
     label: event ? 'Edit event' : 'New event',
-    head: () => kit.headTitle(2, event ? 'Edit event' : 'New event'),
+    head: () => kit.sheetTitle(event ? 'Edit event' : 'New event'),
     body: close => [
       kit.textInput(
         {

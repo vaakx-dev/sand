@@ -83,7 +83,7 @@ export const detailSheet = (kit: Kit, parts: DetailParts): SheetSpec => {
   return {
     label: event.title,
     head: () => [
-      kit.headTitle(2, event.title),
+      kit.sheetTitle(event.title),
       writable ? kit.iconButton({ title: 'Edit', 'aria-label': 'Edit', surface: 'raised', onClick: edit }, kit.icon('pencil')) : null,
     ],
     body: () => [

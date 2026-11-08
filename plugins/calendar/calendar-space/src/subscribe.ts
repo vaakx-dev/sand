@@ -4,7 +4,7 @@ import { div, dynamicChild, type Sig } from '@vaakx-dev/vrui'
 
 export const subscribeSheet = (kit: Kit, link: Sig<string | undefined>): SheetSpec => ({
   label: 'Subscription link',
-  head: () => kit.headTitle(2, 'Subscription link'),
+  head: () => kit.sheetTitle('Subscription link'),
   body: () => [
     kit.secondaryText('Calendar apps on this computer or your own network can subscribe to this link and stay up to date. Anyone with the link can read the calendar.'),
     dynamicChild(link, url =>
