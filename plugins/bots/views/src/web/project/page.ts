@@ -118,7 +118,15 @@ export const projectPage = (parts: Parts, bot: string) => {
     const source = text.get()
     return source === undefined ? undefined : parsePlan(source, parts.work.schemes())
   })
-  const shown = derive(() => shownItems(parts, plan.get()?.items ?? []))
+  const shown = derive(() => {
+    const items = plan.get()?.items ?? []
+    const planned = new Set(items.map(item => item.ref))
+    const unplanned = parts.work
+      .list(bot)
+      .filter(tab => !settled(tab.status) && !planned.has(tab.ref))
+      .map(tab => ({ title: tab.title, note: '', ref: tab.ref }))
+    return shownItems(parts, [...items, ...unplanned])
+  })
   const inGroup = (group: Group) => () => shown.get().filter(item => (item.live ? groupOf[item.live.status] : 'Next') === group)
   const empty = () => plan.get() !== undefined && !shown.get().length && !plan.get()?.rest
 

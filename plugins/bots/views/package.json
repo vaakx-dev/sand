@@ -1,5 +1,5 @@
 {
-  "name": "@sand/bots-ui",
+  "name": "@sand/bot-views",
   "version": "0.0.0",
   "description": "Bots in the sidebar, each bot's screen with its chat, work tabs and Project page, its profile, New bot and Automations",
   "type": "module",

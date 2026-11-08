@@ -37,7 +37,7 @@ const listening = (parts: Parts): ChipSource => ({
 })
 
 export default definePlugin({
-  name: 'bots-ui',
+  name: 'bot-views',
   description: "Bots in the sidebar; each bot's screen with its chat, work tabs and Project page; its profile, New bot, Automations and the Listening chip",
   inject,
   apply(ctx) {

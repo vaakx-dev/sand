@@ -827,8 +827,8 @@
         "@sand/replay": "workspace:*",
       },
     },
-    "plugins/bots/ui": {
-      "name": "@sand/bots-ui",
+    "plugins/bots/views": {
+      "name": "@sand/bot-views",
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
@@ -2406,13 +2406,13 @@
 
     "@sand/bot-turns": ["@sand/bot-turns@workspace:plugins/bots/turns"],
 
+    "@sand/bot-views": ["@sand/bot-views@workspace:plugins/bots/views"],
+
     "@sand/bot-watches": ["@sand/bot-watches@workspace:plugins/bots/watches"],
 
     "@sand/bots": ["@sand/bots@workspace:plugins/bots/bots"],
 
     "@sand/bots-mcp": ["@sand/bots-mcp@workspace:plugins/bots/mcp"],
-
-    "@sand/bots-ui": ["@sand/bots-ui@workspace:plugins/bots/ui"],
 
     "@sand/calendar": ["@sand/calendar@workspace:plugins/calendar/calendar"],
 
