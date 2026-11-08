@@ -27,8 +27,8 @@ const navRow = (model: Model, item: Sig<NavItem>) => {
     return Boolean(to && model.isCurrent(to))
   }
   return navButton(
-    { active: current, 'aria-current': () => (current() ? 'page' : 'false'), class: 'w-full shrink-0', onClick: () => activate(model, item.get()) },
-    icon(item.get().icon),
+    { active: current, 'aria-current': () => (current() ? 'page' : 'false'), class: 'group w-full shrink-0', onClick: () => activate(model, item.get()) },
+    span({ class: 'inline-flex shrink-0 text-neutral-500 group-hover:text-neutral-100 group-aria-current:text-neutral-100' }, icon(item.get().icon)),
     span({ class: 'min-w-0 flex-1 truncate text-left' }, () => item.get().label),
     show(
       () => (item.get().count?.() ?? 0) > 0,
@@ -84,14 +84,14 @@ const navList = (model: Model, place: 'top' | 'foot', into: HTMLElement) =>
 export const sidebar = (model: Model, { class: extra, ...props }: Props<HTMLElement>) => {
   const menu = model.kit.contextMenu()
   return nav(
-    { ...props, 'aria-label': 'Sidebar', class: ['flex h-full w-64 shrink-0 flex-col border-r border-neutral-800 bg-neutral-900', extra] },
-    div({ class: 'flex h-12 shrink-0 items-center px-4 text-sm font-semibold text-neutral-100' }, 'sand'),
+    { ...props, 'aria-label': 'Sidebar', class: ['flex h-full w-64 shrink-0 flex-col bg-neutral-950', extra] },
+    div({ class: 'flex h-12 shrink-0 items-center px-4' }, model.kit.barTitle('sand')),
     div(
-      { class: 'flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-3' },
+      { class: 'flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-4' },
       navList(model, 'top', div({ class: 'flex flex-col gap-px' })),
       list(groupsOf(model), listed => listed.key, listed => groupView(model, menu, listed), div({ class: 'flex flex-col' })),
     ),
-    navList(model, 'foot', div({ class: 'flex shrink-0 flex-col gap-px px-2 py-2' })),
+    navList(model, 'foot', div({ class: 'flex shrink-0 flex-col gap-px p-2' })),
     menu.view(),
   )
 }

@@ -1,5 +1,6 @@
 import { div, span, type Child } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
+import { metaLook } from '../heads/text'
 import { surfaceFill } from '../surface'
 
 export interface ChipRowProps {
@@ -18,7 +19,7 @@ export const chipRow = ({ title, lead, meta, action, onClick }: ChipRowProps) =>
   const body = [
     lead ? span({ class: 'inline-flex shrink-0 text-neutral-400' }, lead) : null,
     span({ class: 'min-w-0 flex-1 truncate' }, title),
-    meta ? span({ class: 'flex shrink-0 items-center text-xs text-neutral-500 tabular-nums' }, meta) : null,
+    meta ? span({ class: ['flex shrink-0 items-center tabular-nums', metaLook] }, meta) : null,
   ]
   const main = onClick ? rowButton({ role: 'menuitem', class: [rowShape, fill.hover], onClick: () => onClick() }, ...body) : div({ class: rowShape }, ...body)
   return div(

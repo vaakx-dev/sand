@@ -49,10 +49,9 @@ const chipView = (kit: Kit, chip: Sig<Chip>, scope: ChipScope) => {
             status => (status ? statusIcon(kit, status) : null),
           ),
           items: close => [
-            div(
-              { class: 'flex items-center gap-2 pl-2 text-xs text-neutral-500' },
+            kit.sectionHeading(
               span({ class: 'min-w-0 flex-1 truncate' }, () => head().title),
-              kit.closeButton({ size: 'sm', surface: 'raised', onClick: close }),
+              kit.closeButton({ size: 'sm', surface: 'raised', class: '-mr-1', onClick: close }),
             ),
             list(
               items,

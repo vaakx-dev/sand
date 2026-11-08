@@ -102,8 +102,8 @@ export interface GroupAction {
 
 /**
  * A row in a sidebar group. Wide screens show the monogram, the label and the status icon on one line.
- * Phones show two lines: monogram, label, `meta`, then the status (with its name when it draws attention) or `at`;
- * below them `detail`.
+ * Phones show two lines: monogram, label, then the status (with its name when it draws attention) or `at`;
+ * below them `meta` and `detail`.
  */
 export interface ShellRow {
   id: string

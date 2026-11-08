@@ -1,9 +1,11 @@
 import { div, event, read, show, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'
-import { headTitle, paneHead } from '../heads/page-head'
+import { paneHead } from '../heads/page-head'
+import { barTitle } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { stableGutter } from '../scroll/gutter'
+import { floatingEdge } from '../surface'
 import { scrim } from './scrim'
 
 export type SheetSize = 'sm' | 'md' | 'lg'
@@ -35,7 +37,8 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
       role: 'dialog',
       ...props,
       class: [
-        'flex max-h-full w-full flex-col overflow-hidden rounded-t-xl bg-neutral-800 pb-safe shadow-xl ring-1 ring-neutral-700 animate-rise sm:rounded-xl sm:pb-0 sm:animate-none',
+        'flex max-h-full w-full flex-col overflow-hidden rounded-t-xl bg-neutral-800 pb-safe animate-rise sm:rounded-xl sm:pb-0 sm:animate-none',
+        floatingEdge,
         sheetWidths[size],
         extra,
       ],
@@ -46,9 +49,9 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
 export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
   const led = () => Boolean(back) && read(backShown)
   return paneHead(
-    { led, class: 'overflow-hidden border-b border-neutral-700', style: stableGutter },
+    { led, class: 'overflow-hidden', style: stableGutter },
     back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
-    headTitle(2, title),
+    barTitle(title),
     actions ?? null,
     close ? closeButton({ surface: 'raised', onClick: close }) : null,
   )
@@ -58,7 +61,7 @@ export const sheetBody = ({ class: extra, ...props }: Props<HTMLDivElement>, ...
   div({ style: stableGutter, ...props, class: ['flex min-h-0 flex-col gap-4 overflow-auto px-4 pt-1 pb-4', extra] }, ...children)
 
 export const sheetFoot = (...children: Child[]) =>
-  div({ class: 'flex shrink-0 items-center justify-end gap-2 overflow-hidden border-t border-neutral-700 px-4 py-3', style: stableGutter }, ...children)
+  div({ class: 'flex shrink-0 items-center justify-end gap-2 overflow-hidden px-4 py-3', style: stableGutter }, ...children)
 
 export const sheetStep = (body: Child, ...foot: Child[]) =>
   div({ class: 'flex min-h-0 flex-1 flex-col' }, sheetBody({}, body), foot.length ? sheetFoot(...foot) : null)

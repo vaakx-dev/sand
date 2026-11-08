@@ -4,8 +4,8 @@ import { type Context, inspector } from 'drydock'
 
 const paint = ({ palette, mode, page }: Theme) => {
   const colors = theme(palette)
-  const bar = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-  if (bar) bar.content = colors.colors.neutral?.['900'] ?? bar.content
+  const background = colors.colors.neutral?.['900']
+  if (background) for (const bar of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) bar.content = background
   setStyle(document.documentElement, { colorScheme: mode })
   return mount(document.body, { theme: colors, mode, class: page })
 }

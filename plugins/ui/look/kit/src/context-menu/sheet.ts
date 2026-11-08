@@ -2,8 +2,7 @@ import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuRequest } from '../contract'
 import { div, dynamicChild, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { actionTones, plainButton } from '../buttons/button'
-import { headTitle } from '../heads/page-head'
-import { metaLine } from '../heads/text'
+import { barTitle, metaLine } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { bottomSheet } from '../sheets/bottom'
 import { chipButtons, choiceCount } from './chips'
@@ -17,7 +16,7 @@ const columns = (count: number) => ({ gridTemplateColumns: `repeat(${count}, min
 const head = ({ title, subtitle }: MenuRequest) =>
   div(
     { class: 'px-3 pt-1 pb-3' },
-    div({ class: 'flex' }, headTitle(2, title)),
+    div({ class: 'flex' }, barTitle(title)),
     subtitle ? div({ class: 'flex' }, metaLine(subtitle)) : null,
   )
 
@@ -64,7 +63,7 @@ const choices = (actions: MenuAction[], control: MenuControl, expand?: string) =
   return div(
     big.length ? tiles(big, control, expanded) : null,
     expandedChips(big, control, expanded),
-    rest.length ? div({ class: ['flex flex-col', big.length ? 'border-t border-neutral-700 pt-1' : ''] }, ...menuItems(rest, control, 'md')) : null,
+    rest.length ? div({ class: ['flex flex-col', big.length ? 'pt-2' : ''] }, ...menuItems(rest, control, 'md')) : null,
   )
 }
 

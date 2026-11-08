@@ -1,8 +1,8 @@
 import { div, list, span, type Child, type Derive, type Props, type Sig } from '@vaakx-dev/vrui'
-import { rowTitle } from '../heads/text'
+import { metaLook, rowTitle } from '../heads/text'
 import { callout } from '../notes/notes'
 
-const rowShell = 'min-h-12 gap-3 bg-neutral-900 px-4 py-2'
+const rowShell = 'min-h-12 gap-3 py-2'
 
 export type SettingsRowProps = Omit<Props<HTMLDivElement>, 'title'> & {
   title: Child
@@ -12,9 +12,9 @@ export type SettingsRowProps = Omit<Props<HTMLDivElement>, 'title'> & {
 
 const rowLabel = (title: Child, detail?: Child) =>
   div(
-    { class: 'flex min-w-24 flex-1 flex-col' },
+    { class: 'flex min-w-24 flex-1 flex-col gap-1' },
     rowTitle(title),
-    detail ? div({ class: 'text-xs text-neutral-400' }, detail) : null,
+    detail ? div({ class: metaLook }, detail) : null,
   )
 
 export const settingsRow = ({ title, detail, lead, class: extra, ...props }: SettingsRowProps, ...controls: Child[]) => {
@@ -32,7 +32,7 @@ export const sectionRow = (props: Props<HTMLDivElement>, ...children: Child[]) =
 export const rowList = <T, K>(items: Sig<T[]> | Derive<T[]>, key: (item: T) => K, row: (item: Sig<T>) => HTMLElement) =>
   list(items, key, row, div({ class: 'contents' }))
 
-export const rowDetail = (...children: Child[]) => div({ class: 'flex min-w-0 flex-col gap-2 bg-neutral-900 px-4 pb-3' }, ...children)
+export const rowDetail = (...children: Child[]) => div({ class: 'flex min-w-0 flex-col gap-2 pb-3' }, ...children)
 
 export const rowWarning = (text: Child, ...actions: Child[]) =>
   rowDetail(

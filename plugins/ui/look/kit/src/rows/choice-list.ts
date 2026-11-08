@@ -32,7 +32,7 @@ const choiceField = ({ value, placeholder }: ChoiceInput) =>
 
 export const choiceList = <T>(choices: ListChoice<T>[], active: MaybeReactive<T | undefined>, choose: (value: T) => void, label: string) =>
   div(
-    { role: 'radiogroup', 'aria-label': label, class: 'flex flex-col gap-px rounded-lg border border-neutral-800 p-1' },
+    { role: 'radiogroup', 'aria-label': label, class: 'flex flex-col' },
     choices.map(choice => {
       const chosen = () => read(active) === choice.value
       const field = choice.input

@@ -11,9 +11,10 @@ import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
+import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
-import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
+import { barTitle, countMark, metaLine, pageTitle, pathLabel, rowTitle, secondaryText, sectionTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
@@ -46,7 +47,8 @@ import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
-import { segmented, settingsSection } from './rows/settings'
+import { pageSection } from './rows/section'
+import { segmented } from './rows/settings'
 import { dockFade, topFade } from './scroll/fade'
 import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
@@ -54,7 +56,6 @@ import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { bottomSheet } from './sheets/bottom'
 import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
-import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
@@ -86,6 +87,7 @@ export const kit = {
   appIcon,
   badge,
   bannerTitle,
+  barTitle,
   bottomSheet,
   callout,
   card,
@@ -164,8 +166,11 @@ export const kit = {
   optionProps,
   overlay,
   ownedByNode,
+  pageBody,
   pageColumn,
   pageHead,
+  pageSection,
+  pageTitle,
   paneHead,
   pathLabel,
   plainButton,
@@ -192,11 +197,13 @@ export const kit = {
   searchField,
   searchRow,
   secondaryAction,
+  secondaryText,
   sectionHeading,
   sectionRow,
+  sectionTitle,
   segmented,
   settingsRow,
-  settingsSection,
+  settingsSection: pageSection,
   setupColumn,
   setupFooter,
   setupFrame,
@@ -208,7 +215,7 @@ export const kit = {
   sheetFoot,
   sheetHead,
   sheetStep,
-  sheetText,
+  sheetText: secondaryText,
   shine,
   showSideButton,
   shrinkBadge,

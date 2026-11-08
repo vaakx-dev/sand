@@ -2,15 +2,16 @@ import { onPressOutside } from '../layers/outside'
 import { dismissible } from '../layers/stack'
 import { disposeAll, div, type Child, type Props } from '@vaakx-dev/vrui'
 import { layer } from '../layer'
+import { floatingEdge } from '../surface'
 
-export const menuSeparator = () => div({ role: 'separator', class: 'mx-2 my-1 h-px bg-neutral-700' })
+export const menuSeparator = () => div({ role: 'separator', class: 'h-2' })
 
 export const popover = (close: () => void, { class: extra, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
   div(
     {
       role: 'menu',
       ...props,
-      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-lg bg-neutral-800 p-1 shadow-xl ring-1 ring-neutral-700 animate-fade', extra],
+      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-lg bg-neutral-800 p-1 animate-fade', floatingEdge, extra],
       onMount: node => {
         const stops = [dismissible(node, close), onPressOutside(node, close)]
         return () => disposeAll(stops)

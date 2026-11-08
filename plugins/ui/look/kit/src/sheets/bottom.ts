@@ -1,4 +1,5 @@
 import { div, event, type Child } from '@vaakx-dev/vrui'
+import { floatingEdge } from '../surface'
 import { scrim, type ScrimProps } from './scrim'
 
 export type BottomSheetProps = ScrimProps
@@ -7,7 +8,7 @@ export const bottomSheet = ({ close, from, class: extra, ...props }: BottomSheet
   scrim(
     { close, from, class: 'items-end', 'data-menu-layer': '', onPointerDown: event(close, { self: true }) },
     div(
-      { ...props, class: ['w-full rounded-t-xl bg-neutral-800 px-2 pt-2 pb-safe ring-1 ring-neutral-700', extra] },
+      { ...props, class: ['w-full rounded-t-xl bg-neutral-800 px-2 pt-2 pb-safe', floatingEdge, extra] },
       div({ class: 'mx-auto mb-2 h-1 w-8 shrink-0 rounded-full bg-neutral-700' }),
       ...children,
     ),

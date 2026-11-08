@@ -12,7 +12,7 @@ export const diffBlock = (path: string, lines: DiffLine[], highlight?: Highlight
     div({ class: 'flex min-w-0 items-center justify-between gap-3 font-mono text-xs' }, pathLabel(() => path), lineStat(countOf(lines, 'add'), countOf(lines, 'del'))),
     lines.length > 0
       ? div(
-          { class: 'scrollbars-thin overflow-x-auto rounded-md border border-neutral-800 font-mono text-xs leading-relaxed' },
+          { class: 'scrollbars-thin overflow-x-auto rounded-md font-mono text-xs leading-relaxed' },
           div({ class: 'w-max min-w-full py-1.5' }, lines.map(line => diffRow(line, highlight))),
         )
       : null,
