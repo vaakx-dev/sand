@@ -3,10 +3,10 @@ import { threadScheme, type ThreadView } from '@sand/chat/contract'
 import { threadOfRef, threadRef } from './refs'
 import type { Roster } from './roster'
 
-export const threadTabs = (roster: Roster, view: ThreadView): BotTabSource => {
+export const threadTabs = (roster: Roster, view: ThreadView, projectOf: (thread: string) => string | null): BotTabSource => {
   const tabOf = (thread: string): BotTab | undefined => {
     const live = view.live(thread)
-    return live && { ref: threadRef(thread), title: live.title, status: live.status, note: live.note, at: live.at }
+    return live && { ref: threadRef(thread), title: live.title, status: live.status, note: live.note, at: live.at, project: projectOf(thread) }
   }
   return {
     scheme: threadScheme,

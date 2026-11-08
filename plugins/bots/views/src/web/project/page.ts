@@ -4,8 +4,8 @@ import { changesMerge } from '@sand/changes/contract'
 import { featureState } from '@sand/features/contract'
 import type { Status } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, li, list, show, sig, span, ul, type Sig } from '@vaakx-dev/vrui'
-import { botMark, statusLabel } from '../marks'
-import { projectNames, type Parts } from '../parts'
+import { statusLabel } from '../marks'
+import { projectName, type Parts } from '../parts'
 import { settled } from '../work'
 import { parsePlan, type PlanItem } from './plan'
 
@@ -15,6 +15,12 @@ interface Shown {
   key: string
   item: PlanItem
   live?: BotTab
+}
+
+interface Block {
+  key: string
+  title?: string
+  items: Shown[]
 }
 
 const order: Group[] = ['Ready', 'Waiting', 'In progress', 'Next', 'Done']
@@ -108,9 +114,34 @@ const shownItems = (parts: Parts, items: PlanItem[]): Shown[] =>
     return { key: item.ref ?? `${index}:${item.title}`, item, ...(live && { live }) }
   })
 
+const blocksOf = (projects: string[], shown: Shown[], name: (project: string) => string): Block[] => {
+  if (!projects.length) return [{ key: '', items: shown }]
+  const projectOf = ({ live }: Shown) => (live ? (live.project ?? null) : projects.length === 1 ? (projects[0] ?? null) : null)
+  const blocks = projects.map(project => ({ key: project, title: name(project), items: shown.filter(item => projectOf(item) === project) }))
+  const other = shown.filter(item => {
+    const project = projectOf(item)
+    return project === null || !projects.includes(project)
+  })
+  return other.length ? [...blocks, { key: 'other', title: 'Other', items: other }] : blocks
+}
+
+const blockView = (parts: Parts, bot: string, block: Sig<Block>) => {
+  const { kit } = parts.ctx
+  const inGroup = (group: Group) => () => block.get().items.filter(item => (item.live ? groupOf[item.live.status] : 'Next') === group)
+  const title = block.get().title
+  return div(
+    { class: 'flex flex-col gap-6' },
+    title ? kit.pageTitle(() => block.get().title ?? '') : null,
+    ...order.map(group => groupView(parts, bot, group, inGroup(group))),
+    show(
+      () => !block.get().items.length,
+      () => kit.emptyState({ text: () => `Nothing planned yet. Work ${botName(parts.store.find(bot) ?? { name: '' })} starts shows here.`, flush: true }),
+    ),
+  )
+}
+
 export const projectPage = (parts: Parts, bot: string) => {
   const { kit, markdown } = parts.ctx
-  const found = () => parts.store.find(bot)
   const { text, stop } = planText(parts, bot)
   const plan = derive(() => {
     const source = text.get()
@@ -125,26 +156,18 @@ export const projectPage = (parts: Parts, bot: string) => {
       .map(tab => ({ title: tab.title, note: '', ref: tab.ref }))
     return shownItems(parts, [...items, ...unplanned])
   })
-  const inGroup = (group: Group) => () => shown.get().filter(item => (item.live ? groupOf[item.live.status] : 'Next') === group)
-  const empty = () => plan.get() !== undefined && !shown.get().length && !plan.get()?.rest
+  const blocks = derive(() => (plan.get() === undefined ? [] : blocksOf(parts.store.find(bot)?.projects ?? [], shown.get(), project => projectName(parts, project))))
 
   return kit.pageBody(
-    {
-      onMount: () => stop,
-      title: span({ class: 'flex items-center gap-3' }, botMark(kit, found, 20), span({ class: 'truncate' }, () => botName(found() ?? { name: '' }))),
-      action: kit.metaLine(() => projectNames(parts, found()?.projects ?? [])),
-    },
+    { onMount: () => stop },
     dynamicChild(
-        derive(() => plan.get()?.rest ?? ''),
-        rest => (rest ? div({ class: 'text-sm text-neutral-400' }, ...markdown.nodes(rest)) : null),
-      ),
-      ...order.map(group => groupView(parts, bot, group, inGroup(group))),
-      show(
-        () => plan.get() === undefined,
-        () => kit.loadingState(),
-      ),
-      show(empty, () =>
-        kit.emptyState({ text: () => `Nothing planned yet. Work ${botName(found() ?? { name: '' })} starts shows here.`, flush: true }),
-      ),
+      derive(() => plan.get()?.rest ?? ''),
+      rest => (rest ? div({ class: 'text-sm text-neutral-400' }, ...markdown.nodes(rest)) : null),
+    ),
+    list(blocks, block => block.key, block => blockView(parts, bot, block), div({ class: 'flex flex-col gap-10' })),
+    show(
+      () => plan.get() === undefined,
+      () => kit.loadingState(),
+    ),
   )
 }

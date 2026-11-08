@@ -3,7 +3,6 @@ import { botName, type BotSummary } from '@sand/bots/contract'
 import { homeRoute } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
 import { automationRow } from '../automations/row'
-import { botMark } from '../marks'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
 import { editable } from './editable'
 import { createProject, projectChecklist } from './projects'
@@ -186,7 +185,6 @@ export const openProfile = (parts: Parts, id: string) => {
     head: () =>
       div(
         { class: 'flex min-w-0 flex-1 items-center gap-3' },
-        botMark(kit, bot, 20),
         nameField(parts, id, bot),
         kit.metaLine(() => projectNames(parts, bot()?.projects ?? [])),
       ),

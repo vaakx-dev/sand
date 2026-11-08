@@ -31,9 +31,9 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   return {
     id: bot.id,
     label: botName(bot),
-    mark: { initial: bot.initial, color: bot.color },
     to: { kind: botRoute, id: bot.id },
     menu: () => menuOf(parts, bot),
+    ...(parts.ctx.shell.state() !== 'phone' && { mark: { initial: bot.initial, color: bot.color } }),
     ...(detail && { detail }),
     ...(bot.projects.length && { meta: projectNames(parts, bot.projects) }),
     ...(status && { status }),

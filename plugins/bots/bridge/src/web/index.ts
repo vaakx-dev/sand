@@ -6,6 +6,7 @@ import { markdownLinks } from '@sand/markdown/contract'
 import { transcript } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
+import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { botKind, botReplyEntry, type BotReplyEntry } from '../contract'
 import { replyCard } from './card'
@@ -36,7 +37,7 @@ export default definePlugin({
       view =>
         view &&
         joinDisposers(
-          ctx.watch(botTabs, found => found?.source(threadTabs(roster, view))),
+          ctx.watch(botTabs, found => found?.source(threadTabs(roster, view, thread => ctx.get(threads)?.get(thread)?.info.project ?? null))),
           ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view))),
         ),
     )

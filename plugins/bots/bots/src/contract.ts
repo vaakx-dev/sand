@@ -157,6 +157,8 @@ export interface BotTab {
   note: string
   /** When `status` began, in epoch ms. */
   at: number
+  /** The project it works in, if any; the Project page groups work by it. */
+  project?: string | null
 }
 
 /**

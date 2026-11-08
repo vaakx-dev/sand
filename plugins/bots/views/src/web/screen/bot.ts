@@ -2,7 +2,7 @@ import { botName, botRoute } from '@sand/bots/contract'
 import type { Route, Screen } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, effect, list, show, sig, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
-import { botMark, statusIcon } from '../marks'
+import { statusIcon } from '../marks'
 import { projectPage } from '../project/page'
 import type { Parts } from '../parts'
 
@@ -10,7 +10,6 @@ const fill = 'flex min-h-0 min-w-0 flex-1 flex-col'
 
 const tabStrip = (parts: Parts, id: string, current: () => string | undefined, refs: () => string[]) => {
   const { kit, shell } = parts.ctx
-  const bot = () => parts.store.find(id)
   const close = (ref: string) => {
     parts.tabs.close(id, ref)
     if (current() === ref) shell.open({ kind: botRoute, id }, { replace: true })
@@ -18,8 +17,7 @@ const tabStrip = (parts: Parts, id: string, current: () => string | undefined, r
   return kit.tabStrip(
     'Bot',
     kit.tab({
-      title: () => botName(bot() ?? { name: '' }),
-      lead: botMark(kit, bot),
+      title: 'Chat',
       selected: () => current() === undefined,
       onSelect: () => shell.open({ kind: botRoute, id }),
     }),
@@ -47,7 +45,6 @@ const phoneHead = (parts: Parts, id: string) => {
   const bot = () => parts.store.find(id)
   return kit.plainButton(
     { class: 'flex min-w-0 items-center gap-2 rounded-md px-1', title: 'Profile', onClick: () => parts.profile(id) },
-    botMark(kit, bot),
     kit.barTitle(() => botName(bot() ?? { name: '' })),
     kit.icon('down', 'sm'),
   )

@@ -1,7 +1,6 @@
 import { botName, type BotSummary } from '@sand/bots/contract'
 import type { Screen } from '@sand/ui-shell/contract'
-import { derive, div, list, show, span, type Sig } from '@vaakx-dev/vrui'
-import { botMark } from '../marks'
+import { derive, div, list, show, type Sig } from '@vaakx-dev/vrui'
 import { automationsOf, type Parts } from '../parts'
 import { automationRow } from './row'
 
@@ -12,9 +11,8 @@ const botBlock = (parts: Parts, bot: Sig<BotSummary>) => {
   return kit.pageSection(
     {
       title: kit.plainButton(
-        { class: 'flex items-center gap-2 rounded-md', title: `Open ${botName(bot.get())}`, onClick: () => parts.open(id) },
-        botMark(kit, () => bot.get()),
-        span({}, () => botName(bot.get())),
+        { class: 'rounded-md', title: `Open ${botName(bot.get())}`, onClick: () => parts.open(id) },
+        () => botName(bot.get()),
       ),
     },
     list(
