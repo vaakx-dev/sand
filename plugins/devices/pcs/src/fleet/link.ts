@@ -16,6 +16,7 @@ export interface LinkOptions {
   pc: string
   name?: string
   seeds: Route[]
+  onPc: boolean
   signer: Signer
   relay(through: string): ViaRelay
   since(): string | undefined
@@ -46,6 +47,7 @@ export const openPcLink = (options: LinkOptions): PcLink => {
     wake,
     store: routes,
     secure: securePage(),
+    onPc: options.onPc,
     visible: pageVisible,
     greeting,
     greeted: reply => options.greeted(hellos.take(reply)),

@@ -61,6 +61,7 @@ export interface ConnectOptions {
   wake: WakeSource
   store: RouteStore
   secure: boolean
+  onPc: boolean
   visible(): boolean
   greeting(): InputOf<typeof hello>
   greeted(reply: Hello, retagged: boolean): void
