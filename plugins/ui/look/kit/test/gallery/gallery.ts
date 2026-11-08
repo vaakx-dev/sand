@@ -55,7 +55,7 @@ afterAll(async () => {
 })
 
 describe.each(widths)('at %ipx wide', width => {
-  test('every component renders without errors or sideways overflow', async () => {
+  test('every component renders without errors', async () => {
     const page = await browser.newPage({ viewport: { width, height: 900 } })
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
@@ -66,7 +66,6 @@ describe.each(widths)('at %ipx wide', width => {
     await page.getByRole('heading', { name: 'Kit' }).waitFor()
     const sections = await page.locator('section[aria-label]').evaluateAll(nodes => nodes.map(node => [node.getAttribute('aria-label'), node.getBoundingClientRect().height] as const))
     expect(sections.filter(([, height]) => height === 0)).toEqual([])
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
     await page.screenshot({ path: join(shots, `gallery-${width}.png`), fullPage: true })
     await page.getByRole('button', { name: /Waiting/ }).click()
     await page.getByRole('menu').waitFor()

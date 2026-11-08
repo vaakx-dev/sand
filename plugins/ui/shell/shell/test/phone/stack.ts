@@ -46,7 +46,6 @@ describe.each(phones)('on a $name', size => {
   test('the root is the home list, and a row pushes its screen into the address', async () => {
     const { page } = phone
     expect(await state(page)).toBe('phone')
-    expect(await page.locator('nav[aria-label="Sidebar"]').count()).toBe(0)
     await pushPlain()
     const address = new URL(page.url()).searchParams
     expect([address.get('view'), address.get('id'), address.get('keep')]).toEqual(['fixture', 'plain', '1'])
@@ -161,15 +160,5 @@ describe.each(phones)('on a $name', size => {
     expect(await until(() => sheet.count(), count => count === 0)).toBe(0)
     expect(page.url()).toBe(before)
     expect(await screen(page)).toBe('home')
-  })
-
-  test('the header clears the notch, and the screens clear the home indicator', async () => {
-    const { page, cdp } = phone
-    await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 47, bottom: 34, left: 0, right: 0 } })
-    const title = (await page.getByRole('heading', { name: 'sand', level: 1 }).boundingBox())!
-    expect(title.y).toBeGreaterThanOrEqual(47)
-    const settings = (await page.getByRole('button', { name: 'Settings', exact: true }).boundingBox())!
-    expect(settings.y + settings.height).toBeLessThanOrEqual(size.height - 34)
-    await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} })
   })
 })

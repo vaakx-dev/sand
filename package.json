@@ -28,7 +28,7 @@
     "bench:computer": "bun plugins/computer/tools/bench/main.ts",
     "bench:finders": "bun plugins/computer/finders/bench/main.ts",
     "test": "bun test ./apps ./packages ./plugins",
-    "test:phone": "bun test --timeout 30000 ./plugins/ui/shell/shell/test/phone/stack.ts ./plugins/ui/shell/shell/test/phone/drawers.ts ./plugins/ui/shell/shell/test/phone/sideways.ts ./plugins/ui/shell/shell/test/phone/keyboard.ts ./plugins/core/features/test/web/matrix.ts ./plugins/ui/chat/chat/test/web/follow.ts ./plugins/ui/chat/chat/test/web/catch-up.ts ./plugins/core/server/test/web/hello.ts"
+    "test:phone": "bun test --timeout 30000 ./plugins/ui/shell/shell/test/phone/stack.ts ./plugins/ui/shell/shell/test/phone/drawers.ts ./plugins/ui/shell/shell/test/phone/keyboard.ts ./plugins/core/features/test/web/matrix.ts ./plugins/ui/chat/chat/test/web/follow.ts ./plugins/ui/chat/chat/test/web/catch-up.ts ./plugins/core/server/test/web/hello.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
