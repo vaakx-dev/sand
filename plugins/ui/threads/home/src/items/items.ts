@@ -19,6 +19,7 @@ export interface Entry {
   moved: number
   snoozed?: number
   settled?: boolean
+  pinned?: boolean
 }
 
 const positionOf = (thread: Thread) => thread.info.position ?? thread.info.created
@@ -63,6 +64,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
     moved: isBack(thread) ? Math.max(thread.info.updated, thread.info.snoozed ?? 0) : thread.info.updated,
     snoozed,
     settled: Boolean(thread.info.settled),
+    pinned: Boolean(thread.info.pinned),
   }
 }
 
