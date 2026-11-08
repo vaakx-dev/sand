@@ -2335,9 +2335,11 @@
       "name": "@sand/threads-home",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/changes": "workspace:*",
         "@sand/chat": "workspace:*",
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
+        "@sand/features": "workspace:*",
         "@sand/jobs": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",

@@ -1,18 +1,20 @@
 {
   "name": "@sand/threads-home",
   "version": "0.0.0",
-  "description": "Threads in the sidebar, pinned first, then by day, then snoozed; New chat, the home screen, and threads and projects in the palette",
+  "description": "Threads in the sidebar by day with pin and snooze, Home with the launch composer and a project picker, the Waiting, Ready and Working chips, and threads and projects in Search",
   "type": "module",
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",
     "label": "Threads home",
-    "summary": "Your threads in the sidebar by day, with pin and snooze, and New chat"
+    "summary": "Your threads in the sidebar by day, New chat with a project picker, and chips for what's waiting, ready or working"
   },
   "dependencies": {
+    "@sand/changes": "workspace:*",
     "@sand/chat": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
     "@sand/jobs": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/picker": "workspace:*",
