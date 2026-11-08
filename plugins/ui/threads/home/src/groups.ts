@@ -3,7 +3,7 @@ import type { Entry } from './items/items'
 
 export const pageSize = 50
 
-const newest = (entries: Entry[]) => entries.toSorted((a, b) => b.moved - a.moved)
+const newest = (entries: Entry[]) => entries.toSorted((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.moved - a.moved)
 
 const group = (id: string, label: string, entries: Entry[], extra?: Partial<ShellGroup>): ShellGroup[] =>
   entries.length ? [{ id, label, rows: entries.map(entry => entry.row), ...extra }] : []

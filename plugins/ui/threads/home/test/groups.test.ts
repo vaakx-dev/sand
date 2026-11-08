@@ -27,3 +27,11 @@ test('settled pages behind a show-more action', () => {
   expect(group?.rows.map(row => row.id)).toEqual(['s2', 's1'])
   expect(group?.action?.label).toBe('Show 1 more')
 })
+
+test('pinned threads lead their group, newest first, then the rest', () => {
+  const entries = [entry('a', 4), entry('p1', 1, { pinned: true }), entry('b', 3), entry('p2', 2, { pinned: true }), entry('s', 5, { settled: true, pinned: true }), entry('t', 6, { settled: true })]
+  expect(shape(threadGroups(entries, 50, () => {}))).toEqual([
+    ['active', false, ['p2', 'p1', 'a', 'b']],
+    ['settled', true, ['s', 't']],
+  ])
+})
