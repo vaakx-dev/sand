@@ -10,7 +10,7 @@ const atEnd = (input: HTMLInputElement) => {
 const backButton = ({ icon, iconButton }: Kit, model: PageModel) =>
   model.nested ? iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: () => model.nav.back() }, icon('back', 16)) : null
 
-const pageLabel = ({ page }: PageModel) => span({ class: 'max-w-40 shrink-0 truncate text-sm font-medium text-neutral-100', title: page.title }, page.title)
+const pageLabel = ({ barTitle }: Kit, { page }: PageModel) => span({ class: 'flex max-w-40 shrink-0', title: page.title }, barTitle(page.title))
 
 const fieldProps = ({ page, text, fills }: PageModel): Props<HTMLInputElement> => ({
   placeholder: page.field?.placeholder ?? page.placeholder ?? 'Search…',
@@ -31,12 +31,14 @@ const submitButton = ({ delayed, primaryAction, spinner }: Kit, { busy, action, 
     () => action.get()?.label ?? '',
   )
 
-export const paletteHead = (kit: Kit, model: PageModel) => {
-  const { headTitle, paneHead, searchField, searchRow, textInput } = kit
-  const { page, nested } = model
+const parts = (kit: Kit, model: PageModel) => {
+  const { barTitle, searchField, textInput } = kit
+  const { page } = model
   const back = backButton(kit, model)
-  if (page.review) return paneHead({ led: nested }, back, headTitle(2, page.title))
-  const title = page.id === 'root' ? null : pageLabel(model)
-  if (page.field) return paneHead({ led: nested }, back, title, textInput(fieldProps(model)), submitButton(kit, model))
-  return title ? paneHead({ led: nested }, back, title, searchField(fieldProps(model))) : searchRow(fieldProps(model), back ?? undefined)
+  if (page.review) return [back, barTitle(page.title)]
+  const title = page.id === 'root' ? null : pageLabel(kit, model)
+  if (page.field) return [back, title, textInput(fieldProps(model)), submitButton(kit, model)]
+  return [back, title, searchField(fieldProps(model))]
 }
+
+export const paletteHead = (kit: Kit, model: PageModel) => span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, ...parts(kit, model))

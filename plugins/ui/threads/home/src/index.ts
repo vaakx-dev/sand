@@ -34,7 +34,7 @@ export default definePlugin({
     ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, phone: false, to: { kind: homeRoute } }))
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
     launch({ ...parts, pulse: events })
-    ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.threads)))
+    ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.shell, ctx.threads)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },
 })
