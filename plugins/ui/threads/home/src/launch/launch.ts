@@ -22,8 +22,7 @@ const homeScreen = ({ kit }: LaunchParts, composerHere: Child): Screen => ({
   head: () => kit.headTitle(2, 'New chat'),
   main: () =>
     div(
-      { class: 'flex min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto px-4 pb-24' },
-      div({ class: 'flex items-center gap-2 text-neutral-100' }, kit.appIcon(20), kit.rowTitle('Sand')),
+      { class: 'flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-24' },
       div({ class: [kit.pageColumn, 'flex flex-col'] }, composerHere),
     ),
 })
@@ -44,8 +43,8 @@ const draftingSlots = ({ ctx, kit, shell, threads, pulse }: LaunchParts) => {
     return effect(() => {
       if (!drafting.get()) return
       const off = joinDisposers(
-        found.slot('start', () => projectPicker(ctx, kit, threads, pulse)),
-        found.slot('above', () => shell.chipBar({ kind: 'general' })),
+        found.slot('above', () => div({ class: 'flex' }, projectPicker(ctx, kit, threads, pulse)), 0),
+        found.slot('above', () => shell.chipBar({ kind: 'general' }), 1),
       )
       return () => void off()
     })

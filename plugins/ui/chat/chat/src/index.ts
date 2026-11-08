@@ -22,7 +22,7 @@ export default definePlugin({
     const changes = pulse(ctx, [threadsChange, threadSelect, projectsChange], [projects, threadOwners])
     const live = threadLive(ctx)
     const dock = sig<Composer | undefined>(undefined)
-    const screens = threadScreens(ctx, changes, dock)
+    const screens = threadScreens(ctx, dock)
     const followUp = () => {
       changes.version.get()
       const current = ctx.threads.current()

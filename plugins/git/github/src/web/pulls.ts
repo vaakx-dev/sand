@@ -4,5 +4,6 @@ import type { Pull, PullState } from '../contract'
 
 const tones: Record<PullState, Tone> = { open: 'success', merged: 'merged', draft: 'neutral', closed: 'neutral' }
 
-export const pullsView = (kit: Kit, pulls: Pull[]) =>
-  pulls.length ? kit.monoMeta(...pulls.map(pull => span({ class: kit.toneText[tones[pull.state]], title: pull.title }, `#${pull.number}`))) : null
+const pullView = (kit: Kit, pull: Pull) => span({ class: 'shrink-0', title: pull.title }, kit.monoMeta(span({ class: kit.toneText[tones[pull.state]] }, `#${pull.number}`)))
+
+export const pullsView = (kit: Kit, pulls: Pull[]) => (pulls.length ? span({ class: 'flex shrink-0 gap-2' }, ...pulls.map(pull => pullView(kit, pull))) : null)

@@ -1,8 +1,8 @@
 import { palette } from '@sand/palette/contract'
 import type { Pulse } from '@sand/reactive'
 import type { Kit } from '@sand/ui-kit/contract'
-import type { Threads } from '@sand/web-client/contract'
-import { span } from '@vaakx-dev/vrui'
+import { projects, type Threads } from '@sand/web-client/contract'
+import { dynamicChild, span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { currentPlace, places, type Place } from '../palette/places'
 import { newThreadPage, openDraft } from '../palette/projects'
@@ -44,16 +44,24 @@ const choices = (ctx: Context, kit: Kit, threads: Threads, close: () => void) =>
   ]
 }
 
+const chosenView = (ctx: Context, kit: Kit, place: Place | undefined) => {
+  if (!place) return kit.icon('folder', 'sm')
+  const look = place.group && ctx.get(projects)?.groupIcon(place.group)
+  return span({ class: 'flex min-w-0 items-center gap-2' }, kit.projectMark(place.name, look || undefined), span({ class: 'max-w-40 truncate' }, place.name))
+}
+
 export const projectPicker = (ctx: Context, kit: Kit, threads: Threads, pulse: Pulse) => {
-  const name = pulse.read(() => currentPlace(ctx, threads).name)
+  const chosen = pulse.read(() => {
+    const place = currentPlace(ctx, threads)
+    return place.path ? place : undefined
+  })
   return kit.dropdown({
     placement: 'above-left',
     items: close => choices(ctx, kit, threads, close),
     trigger: (press, open) =>
       kit.quietButton(
-        { ...press, size: 'sm', active: open, title: 'Project for the new chat', 'aria-label': () => `Project: ${name.get()}` },
-        kit.icon('folder', 'sm'),
-        span({ class: 'max-w-24 truncate sm:max-w-40' }, name),
+        { ...press, size: 'sm', active: open, 'aria-label': () => (chosen.get() ? `Project: ${chosen.get()?.name}` : 'Choose a project') },
+        dynamicChild(chosen, place => chosenView(ctx, kit, place)),
         kit.icon('down', 'sm'),
       ),
   })

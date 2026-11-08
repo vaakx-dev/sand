@@ -1,15 +1,13 @@
 import type { Composer } from '@sand/composer/contract'
-import type { Pulse } from '@sand/reactive'
 import type { Route } from '@sand/ui-shell/contract'
 import { div, dynamicChild, type Child, type Sig } from '@vaakx-dev/vrui'
 import { claims } from './claims'
 import type { ChatContext } from './context'
 import { threadRoute } from './contract'
 import { chatController } from './controller'
-import { draftLine } from './draft'
 import { claimRoute } from './route/select'
 
-export const threadScreens = (ctx: ChatContext, changes: Pulse, composer: Sig<Composer | undefined>) => {
+export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefined>) => {
   const claim = claims()
   const dock = () => dynamicChild(composer, found => found?.view() ?? null)
 
@@ -21,7 +19,7 @@ export const threadScreens = (ctx: ChatContext, changes: Pulse, composer: Sig<Co
 
   return {
     thread: (id: string) => screen({ kind: threadRoute, id }, '', chatController(ctx, id)),
-    draft: (route: Route) => screen(route, 'justify-center', draftLine(ctx, changes)),
+    draft: (route: Route) => screen(route, 'justify-center'),
   }
 }
 
