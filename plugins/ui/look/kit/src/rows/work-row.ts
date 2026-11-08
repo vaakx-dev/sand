@@ -59,8 +59,8 @@ const secondLine = (large: boolean, place?: RowPlaceProps, trail?: Child) =>
     ? div(
         { class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] },
         place?.mark ?? null,
-        span({ class: 'min-w-0 flex-1 truncate' }, place?.label ?? ''),
-        trail ? span({ class: 'flex shrink-0 items-center gap-2' }, trail) : null,
+        span({ class: 'max-w-1/2 shrink-0 truncate' }, place?.label ?? ''),
+        trail ? span({ class: 'ml-auto flex min-w-0 items-center justify-end gap-2' }, trail) : null,
       )
     : null
 
