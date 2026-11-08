@@ -2,7 +2,7 @@ import { dynamicChild, img, span, type Props, type Sig } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 import { paneHead } from './page-head'
-import { barTitle } from './text'
+import { sheetTitle } from './text'
 
 export const appIcon = (size = 20) =>
   img({ src: `/icons/${size > 32 ? '128x128@2x.png' : '64x64.png'}`, alt: '', width: size, height: size, draggable: false, class: 'shrink-0' })
@@ -20,5 +20,5 @@ export const sideHead = (title: string, hide?: () => void) =>
   paneHead(
     { led: true },
     hide ? sidebarToggle({ title: 'Hide the sidebar', 'aria-label': 'Hide the sidebar', onClick: hide }) : iconSlot(),
-    barTitle(title),
+    sheetTitle(title),
   )

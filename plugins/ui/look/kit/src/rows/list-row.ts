@@ -1,6 +1,6 @@
 import { div, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
-import { metaLine, metaLook, rowTitle } from '../heads/text'
+import { metaLine, metaLook, plainRowTitle, rowName, rowTitle } from '../heads/text'
 import { choiceCheck } from '../menus/menu-item'
 import { placeLook, type Surface } from '../surface'
 
@@ -21,7 +21,9 @@ export type ListRowProps = Omit<Props<HTMLButtonElement>, 'title'> & {
 
 const compact = 'min-h-8 rounded-md px-2'
 
-const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'min-h-12 rounded-md px-3' }
+const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'rounded-md px-3 py-3' }
+
+const titleOf = (surface: Surface, tone: ListRowProps['tone']) => (tone === 'danger' ? plainRowTitle : surface === 'group' ? rowName : rowTitle)
 
 const dangerText = 'text-danger-400 hover:text-danger-400 aria-current:text-danger-400 aria-selected:text-danger-400 aria-pressed:text-danger-400'
 
@@ -52,7 +54,7 @@ export const listRow = ({ title, overline, meta, lead, trail, actions, current, 
       ],
     },
     lead ? span({ class: 'inline-flex shrink-0 text-neutral-400' }, lead) : null,
-    div({ class: 'flex min-w-0 flex-1 flex-col' }, overline ? metaLine(overline) : null, rowTitle(title), meta ? metaLine(meta) : null),
+    div({ class: 'flex min-w-0 flex-1 flex-col' }, overline ? metaLine(overline) : null, titleOf(surface, tone)(title), meta ? metaLine(meta) : null),
     trail ? span({ class: ['flex shrink-0 items-center gap-2', metaLook] }, trail) : null,
     selected === undefined ? null : choiceCheck(selected),
   )

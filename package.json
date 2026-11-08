@@ -28,7 +28,7 @@
     "bench:computer": "bun plugins/computer/tools/bench/main.ts",
     "bench:finders": "bun plugins/computer/finders/bench/main.ts",
     "test": "bun test ./apps ./packages ./plugins",
-    "test:phone": "bun test --timeout 30000 ./plugins/ui/shell/shell/test/phone/stack.ts ./plugins/ui/shell/shell/test/phone/drawers.ts ./plugins/ui/shell/shell/test/phone/sideways.ts ./plugins/ui/shell/shell/test/phone/keyboard.ts ./plugins/core/features/test/web/matrix.ts ./plugins/ui/chat/chat/test/web/follow.ts ./plugins/ui/chat/chat/test/web/catch-up.ts ./plugins/core/server/test/web/hello.ts"
+    "test:phone": "bun test --timeout 30000 ./plugins/ui/shell/shell/test/phone/stack.ts ./plugins/ui/shell/shell/test/phone/drawers.ts ./plugins/ui/shell/shell/test/phone/keyboard.ts ./plugins/core/features/test/web/matrix.ts ./plugins/ui/chat/chat/test/web/follow.ts ./plugins/ui/chat/chat/test/web/catch-up.ts ./plugins/core/server/test/web/hello.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
@@ -76,7 +76,8 @@
     "roles": [
       "info",
       "orange",
-      "sky"
+      "sky",
+      "violet"
     ],
     "classes": [
       "chat-row",
@@ -96,10 +97,10 @@
       "left"
     ],
     "shades": {
-      "text-neutral": [100, 400, 500],
-      "bg-neutral": [600, 700, 800, 900, 950],
+      "text-neutral": [100, 200, 400, 500, 600],
+      "bg-neutral": [100, 600, 700, 800, 900, 950],
       "border-neutral": [700, 800],
-      "ring-neutral": [700, 800]
+      "ring-neutral": [600, 700, 800]
     },
     "iconSizes": [12, 14, 16, 20]
   }

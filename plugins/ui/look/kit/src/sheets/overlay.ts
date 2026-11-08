@@ -2,7 +2,7 @@ import { div, event, read, show, type Child, type MaybeReactive, type Props } fr
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'
 import { paneHead } from '../heads/page-head'
-import { barTitle } from '../heads/text'
+import { sheetTitle } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { stableGutter } from '../scroll/gutter'
 import { floatingEdge } from '../surface'
@@ -51,7 +51,7 @@ export const sheetHead = ({ title, close, back, backShown = true, actions }: She
   return paneHead(
     { led, class: 'overflow-hidden', style: stableGutter },
     back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
-    barTitle(title),
+    sheetTitle(title),
     actions ?? null,
     close ? closeButton({ surface: 'raised', onClick: close }) : null,
   )

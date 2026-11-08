@@ -1,7 +1,9 @@
-import { collectScope, derive, disposeAll, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import { collectScope, derive, disposeAll, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { screenKey } from './address'
-import type { Route, RouteSpec, SideFrame } from './contract'
+import type { Route, RouteSpec, ScreenNav, SideFrame } from './contract'
+
+type Title = (text: string) => HTMLElement
 
 export interface Side {
   label: string
@@ -10,11 +12,17 @@ export interface Side {
   body: HTMLElement
 }
 
+export interface Nav {
+  label: string
+  body: HTMLElement
+}
+
 export interface Built {
   key: string
   spec: RouteSpec
   head: HTMLElement
   main: HTMLElement
+  nav?: Nav
   side?: Side
   split: boolean
   showing: Sig<'main' | 'side'>
@@ -28,7 +36,11 @@ const sideOf = ({ label, mainLabel, actions, render }: SideFrame): Side => ({
   body: render(),
 })
 
-export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, routeOf: (key: string) => Route | undefined) => {
+const navOf = ({ label, render }: ScreenNav): Nav => ({ label, body: render() })
+
+const headOf = (head: Child, title: Title) => (typeof head === 'string' ? (head ? title(head) : null) : head)
+
+export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, routeOf: (key: string) => Route | undefined, title: Title) => {
   const built = new Map<string, Built>()
 
   const drop = (entry: Built) => {
@@ -42,8 +54,9 @@ export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, ro
       const route = derive(() => (last = routeOf(key) ?? last))
       const screen = spec.render(() => route.get())
       return {
-        head: span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, screen.head()),
+        head: span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, headOf(screen.head(), title)),
         main: screen.main(),
+        ...(screen.nav && { nav: navOf(screen.nav) }),
         split: Boolean(screen.split),
         ...(screen.side && { side: sideOf(screen.side) }),
       }

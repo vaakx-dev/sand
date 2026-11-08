@@ -14,8 +14,8 @@ import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
-import { barTitle, countMark, metaLine, pageTitle, pathLabel, rowTitle, secondaryText, sectionTitle } from './heads/text'
-import { projectAvatar, projectIcon } from './icons/avatar'
+import { barTitle, colorLabel, countMark, metaLine, monoMeta, pageTitle, pathLabel, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
+import { projectAvatar, projectIcon, projectMark } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
@@ -35,6 +35,7 @@ import { chipButton, chipPopover } from './menus/chip'
 import { chipRow } from './menus/chip-row'
 import { countChip } from './menus/count-chip'
 import { dropdown } from './menus/dropdown'
+import { pickerButton } from './menus/picker'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
 import { menuLabel, menuReason } from './menus/reason'
@@ -46,6 +47,7 @@ import { checkRow } from './rows/check-row'
 import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
+import { dayDivider, shortAge, workRow, workRowBody, workStatus } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { pageSection } from './rows/section'
 import { segmented } from './rows/settings'
@@ -103,12 +105,14 @@ export const kit = {
   choiceList,
   closeButton,
   codeBlock,
+  colorLabel,
   contextMenu,
   controlButton,
   copyButton,
   copyText,
   countChip,
   countMark,
+  dayDivider,
   delayed,
   deviceCode,
   diffBlock,
@@ -157,6 +161,7 @@ export const kit = {
   modal,
   modelLogo,
   monogram,
+  monoMeta,
   navActionIcon,
   navButton,
   nearEnd,
@@ -173,6 +178,7 @@ export const kit = {
   pageTitle,
   paneHead,
   pathLabel,
+  pickerButton,
   plainButton,
   popover,
   popupTrigger,
@@ -182,6 +188,7 @@ export const kit = {
   progressSteps,
   projectAvatar,
   projectIcon,
+  projectMark,
   providerColor,
   providerIcon,
   quietButton,
@@ -192,6 +199,7 @@ export const kit = {
   rowButton,
   rowDetail,
   rowList,
+  rowName,
   rowTitle,
   rowWarning,
   searchField,
@@ -216,7 +224,10 @@ export const kit = {
   sheetHead,
   sheetStep,
   sheetText: secondaryText,
+  sheetTitle,
   shine,
+  shortAge,
+  shortcutHint,
   showSideButton,
   shrinkBadge,
   sideColumn,
@@ -246,6 +257,9 @@ export const kit = {
   viewerShell,
   waitingLine,
   withDot,
+  workRow,
+  workRowBody,
+  workStatus,
   working,
   zoomControls,
 }

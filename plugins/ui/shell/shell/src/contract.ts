@@ -83,10 +83,13 @@ interface NavBase {
   label: string
   icon: string
   order?: number
-  /** `top` (default) sits above the groups; `foot` sits at the bottom of the sidebar, as Settings does. */
-  place?: 'top' | 'foot'
-  /** On phones, nav items are icon buttons in the home header. False leaves one out, as New chat is, since the home screen is the new chat. */
-  phone?: boolean
+  /**
+   * `top` (default) is a row above the groups. `foot` and `foot-end` are icon buttons in one row at the bottom of
+   * the sidebar, labelled by a tooltip: `foot` from the left, as Settings is, and `foot-end` from the right, as Reload is.
+   */
+  place?: 'top' | 'foot' | 'foot-end'
+  /** The item's shortcut as a vrui chord, such as `mod+k`, shown dimmed at the end of its row. */
+  keys?: string
   count?(): number
   dot?(): boolean
 }
@@ -100,10 +103,17 @@ export interface GroupAction {
   run(): void
 }
 
+/** Where a row's work lives, such as its project: the left of the row's second line. */
+export interface RowPlace {
+  label: string
+  /** A small mark before the label, such as the project's icon; built in the row's scope. */
+  mark?(): Child
+}
+
 /**
- * A row in a sidebar group. Wide screens show the monogram, the label and the status icon on one line.
- * Phones show two lines: monogram, label, then the status (with its name when it draws attention) or `at`;
- * below them `meta` and `detail`.
+ * A row in a sidebar group, drawn the same in the sidebar and on the phone home. Line one: monogram, label and
+ * the status (phones add its name when it draws attention, or `at`). Line two, shown when the row has any of
+ * them: `place` on the left (phones fall back to `meta` and `detail`) and `trail` on the right.
  */
 export interface ShellRow {
   id: string
@@ -114,6 +124,9 @@ export interface ShellRow {
   at?: number
   mark?: Monogram
   status?: Status
+  place?: RowPlace
+  /** The right of the second line, such as a branch and its pull requests; built in the row's scope. */
+  trail?(): Child
   to: Route
   menu?(): MenuAction[]
 }
@@ -149,14 +162,25 @@ export interface SideFrame {
 }
 
 /**
- * What a route draws. `head` fills the header: a title, a breadcrumb or a tab strip. The shell adds the
+ * What a route draws. `head` fills the header: a title, a breadcrumb or a tab strip. A plain string becomes the
+ * screen's title and its one `h1`; a richer head should name the screen with `kit.barTitle`. The shell adds the
  * back button on phones, the sidebar toggle in the `drawer` state and the show-side button while the side
  * frame is hidden. Each function is called once per screen; return reactive children for anything that changes,
  * reading `state()` to differ between phones and wide screens.
  */
+/**
+ * A list that takes over the sidebar while its screen is open on wide screens, such as Settings' pages. The shell
+ * adds a back button before `label` that returns to where the user was before; phones don't show it.
+ */
+export interface ScreenNav {
+  label: string
+  render(): HTMLElement
+}
+
 export interface Screen {
   head(): Child
   main(): HTMLElement
+  nav?: ScreenNav
   side?: SideFrame
   /** True when `main` lays out its own columns, such as a list beside a page; like a side frame, it makes room by turning the sidebar into a drawer. */
   split?: boolean

@@ -2,7 +2,7 @@ import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuRequest } from '../contract'
 import { div, dynamicChild, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { actionTones, plainButton } from '../buttons/button'
-import { barTitle, metaLine } from '../heads/text'
+import { metaLine, sheetTitle } from '../heads/text'
 import { icon } from '../icons/lucide'
 import { bottomSheet } from '../sheets/bottom'
 import { chipButtons, choiceCount } from './chips'
@@ -16,7 +16,7 @@ const columns = (count: number) => ({ gridTemplateColumns: `repeat(${count}, min
 const head = ({ title, subtitle }: MenuRequest) =>
   div(
     { class: 'px-3 pt-1 pb-3' },
-    div({ class: 'flex' }, barTitle(title)),
+    div({ class: 'flex' }, sheetTitle(title)),
     subtitle ? div({ class: 'flex' }, metaLine(subtitle)) : null,
   )
 

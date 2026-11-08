@@ -49,12 +49,13 @@ export const dangerAction = (props: ButtonProps, ...children: Child[]) => contro
 export const quietButton = ({ active = false, surface, ...props }: ToggleProps, ...children: Child[]) =>
   controlButton(placeLook(active, surface), props, ...children)
 
-export const navButton = ({ active = false, surface, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
+export const navButton = ({ size = 'md', active = false, surface, class: extra, ...props }: ToggleProps, ...children: Child[]) =>
   plainButton(
     {
       ...props,
       class: [
-        'flex h-8 min-w-0 items-center gap-2 rounded-md px-2 text-sm transition-colors aria-current:font-medium',
+        'flex min-w-0 items-center gap-2 rounded-md px-2 font-medium transition-colors',
+        size === 'lg' ? 'h-10 text-base' : 'h-8 text-sm',
         placeLook(active, surface),
         extra,
       ],
