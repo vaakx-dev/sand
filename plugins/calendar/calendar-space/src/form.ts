@@ -1,7 +1,8 @@
 import type { Calendar, EventDraft, EventPatch, Occurrence, Scope, When } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import type { SheetSpec } from '@sand/ui-shell/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, label, show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, label, show, sig, type Child, type Sig } from '@vaakx-dev/vrui'
 import { addDays, browserZone, dateInput, fromInputs, isAllDay, timeInput } from './days'
 
 export interface Edit {
@@ -13,7 +14,6 @@ export interface FormParts {
   edit?: Edit
   at?: number
   calendars: Calendar[]
-  close(): void
   create(event: EventDraft, calendar?: string): Promise<unknown>
 }
 
@@ -93,8 +93,8 @@ const patchOf = (fields: Fields, before: Fields): EventPatch => {
   }
 }
 
-const row = (title: string, ...controls: Child[]) =>
-  label({ class: 'flex flex-col gap-1.5' }, span({ class: 'text-xs text-neutral-400' }, title), div({ class: 'flex flex-wrap items-center gap-2' }, ...controls))
+const row = (kit: Kit, title: string, ...controls: Child[]) =>
+  label({ class: 'flex flex-col gap-1.5' }, kit.metaLine(title), div({ class: 'flex flex-wrap items-center gap-2' }, ...controls))
 
 const moment = (kit: Kit, fields: Fields, date: Sig<string>, time: Sig<string>, changed: () => void = () => undefined) => [
   kit.textInput({ type: 'date', bindValue: date, class: 'w-40', 'aria-label': 'Date', onChange: changed }),
@@ -118,8 +118,8 @@ const keepDuration = (fields: Fields) => {
   }
 }
 
-export const formSheet = (kit: Kit, parts: FormParts) => {
-  const { edit, close } = parts
+export const formSheet = (kit: Kit, parts: FormParts): SheetSpec => {
+  const { edit } = parts
   const event = edit?.event
   const fields = fieldsOf(parts)
   const before = fieldsOf(parts)
@@ -131,7 +131,7 @@ export const formSheet = (kit: Kit, parts: FormParts) => {
   const custom = !repeatChoices.some(choice => choice.value === fields.repeat.get())
   const choices = custom ? [...repeatChoices, { value: fields.repeat.get(), label: 'Custom' }] : repeatChoices
   const valid = derive(() => Boolean(fields.title.get().trim()))
-  const save = () => {
+  const save = (close: () => void) => {
     if (!valid.get() || saving.get()) return
     saving.set(true)
     const done = edit ? edit.update(patchOf(fields, before), scope.get()) : parts.create(draftOf(fields), calendar.get())
@@ -140,50 +140,46 @@ export const formSheet = (kit: Kit, parts: FormParts) => {
       failure.set(errorMessage(error))
     })
   }
-  return kit.overlay(
-    close,
-    kit.sheet(
-      { size: 'sm', 'aria-label': event ? 'Edit event' : 'New event' },
-      kit.sheetHead({ title: event ? 'Edit event' : 'New event', close }),
-      kit.sheetBody(
-        {},
-        kit.textInput(
-          {
-            bindValue: fields.title,
-            placeholder: 'Title',
-            'aria-label': 'Title',
-            onMount: node => {
-              node.focus()
-            },
-            onKeyDown: key => {
-              if (key.key === 'Enter') save()
-            },
+  return {
+    label: event ? 'Edit event' : 'New event',
+    head: () => kit.headTitle(2, event ? 'Edit event' : 'New event'),
+    body: close => [
+      kit.textInput(
+        {
+          bindValue: fields.title,
+          placeholder: 'Title',
+          'aria-label': 'Title',
+          onMount: node => {
+            node.focus()
           },
-          'md',
-        ),
-        label(
-          { class: 'flex items-center justify-between gap-3 text-sm text-neutral-100' },
-          'All day',
-          kit.toggleSwitch({ on: fields.allDay, 'aria-label': 'All day', onClick: () => fields.allDay.update(on => !on) }),
-        ),
-        row('Starts', ...moment(kit, fields, fields.startDate, fields.startTime, keepDuration(fields))),
-        row('Ends', ...moment(kit, fields, fields.endDate, fields.endTime)),
-        row('Repeats', kit.segmented(choices, fields.repeat, value => fields.repeat.set(value), { label: 'Repeats' })),
-        kit.textInput({ bindValue: fields.location, placeholder: 'Location', 'aria-label': 'Location' }),
-        kit.textArea({ bindValue: fields.notes, rows: 3, placeholder: 'Notes', 'aria-label': 'Notes' }),
-        !event && parts.calendars.length > 1
-          ? row('Calendar', kit.segmented(parts.calendars.map(one => ({ value: one.id, label: one.name })), calendar, value => calendar.set(value)))
-          : null,
-        repeating ? row('Change', kit.segmented(scopeChoices, scope, value => scope.set(value), { label: 'Change' })) : null,
-        show(
-          () => Boolean(failure.get()),
-          () => kit.errorText(() => failure.get() ?? ''),
-        ),
+          onKeyDown: key => {
+            if (key.key === 'Enter') save(close)
+          },
+        },
+        'md',
       ),
-      kit.sheetFoot(
-        kit.secondaryAction({ onClick: close }, 'Cancel'),
-        kit.primaryAction({ disabled: () => !valid.get() || saving.get(), onClick: save }, 'Save'),
+      label(
+        { class: 'flex items-center justify-between gap-3' },
+        'All day',
+        kit.toggleSwitch({ on: fields.allDay, 'aria-label': 'All day', onClick: () => fields.allDay.update(on => !on) }),
       ),
-    ),
-  )
+      row(kit, 'Starts', ...moment(kit, fields, fields.startDate, fields.startTime, keepDuration(fields))),
+      row(kit, 'Ends', ...moment(kit, fields, fields.endDate, fields.endTime)),
+      row(kit, 'Repeats', kit.segmented(choices, fields.repeat, value => fields.repeat.set(value), { label: 'Repeats' })),
+      kit.textInput({ bindValue: fields.location, placeholder: 'Location', 'aria-label': 'Location' }),
+      kit.textArea({ bindValue: fields.notes, rows: 3, placeholder: 'Notes', 'aria-label': 'Notes' }),
+      !event && parts.calendars.length > 1
+        ? row(kit, 'Calendar', kit.segmented(parts.calendars.map(one => ({ value: one.id, label: one.name })), calendar, value => calendar.set(value)))
+        : null,
+      repeating ? row(kit, 'Change', kit.segmented(scopeChoices, scope, value => scope.set(value), { label: 'Change' })) : null,
+      show(
+        () => Boolean(failure.get()),
+        () => kit.errorText(() => failure.get() ?? ''),
+      ),
+    ],
+    foot: close => [
+      kit.quietButton({ onClick: close }, 'Cancel'),
+      kit.primaryAction({ disabled: () => !valid.get() || saving.get(), onClick: () => save(close) }, 'Save'),
+    ],
+  }
 }

@@ -1,6 +1,6 @@
 import type { Occurrence } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { clock, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
 import { waiting } from './agenda'
 import { addDays, clockLabel, days, hourLabel, isAllDay, startOfDay, weekdayLabel } from './days'
 import type { CalendarModel, Shown } from './model'
@@ -13,6 +13,8 @@ export interface WeekParts {
 const hour = 48
 
 const minute = 60_000
+
+const blockLook = 'rounded-md bg-neutral-800 text-left text-neutral-100 hover:bg-neutral-700'
 
 interface Placed {
   event: Occurrence
@@ -48,28 +50,44 @@ const block = (kit: Kit, { event, lane, lanes }: Placed, day: number, open: (eve
   const height = Math.max(20, ((bottom - top) * hour) / 60 - 2)
   return kit.plainButton(
     {
-      class: 'absolute flex flex-col overflow-hidden rounded-md bg-accent-500/25 px-1.5 py-px text-left text-xs text-neutral-100 hover:bg-accent-500/40',
+      class: [blockLook, 'absolute flex flex-col overflow-hidden px-1.5 py-px'],
       style: { top: `${(top * hour) / 60}px`, height: `${height}px`, left: `${(lane / lanes) * 100}%`, width: `calc(${100 / lanes}% - 2px)` },
       title: event.title,
       onClick: () => open(event),
     },
-    span({ class: 'truncate font-medium' }, event.title),
-    height > 36 ? span({ class: 'truncate text-neutral-400' }, clockLabel(event.from)) : null,
+    kit.rowTitle(event.title),
+    height > 40 ? kit.metaLine(clockLabel(event.from)) : null,
   )
 }
 
-const dayHead = (day: number) =>
+const isToday = (day: number) => startOfDay(Date.now()) === day
+
+const dayHead = (kit: Kit, day: number) =>
   div(
-    { class: 'flex min-w-0 flex-1 flex-col items-center py-1 text-xs' },
-    span({ class: 'text-neutral-400' }, weekdayLabel(day)),
+    { class: 'flex min-w-0 flex-1 flex-col items-center gap-1 pt-1 pb-2' },
+    kit.metaLine(weekdayLabel(day)),
     span(
-      { class: ['flex h-8 w-8 items-center justify-center rounded-full text-sm', startOfDay(Date.now()) === day ? 'bg-accent-500 font-medium text-accent-950' : 'text-neutral-100'] },
+      { class: ['flex h-6 w-6 items-center justify-center rounded-full tabular-nums', isToday(day) ? 'bg-accent-500 font-medium text-accent-950' : 'text-neutral-100'] },
       String(new Date(day).getDate()),
     ),
   )
 
 const allDayChip = (kit: Kit, event: Occurrence, open: (event: Occurrence) => void) =>
-  kit.plainButton({ class: 'truncate rounded-md bg-accent-500/25 px-1.5 py-px text-left text-xs text-neutral-100 hover:bg-accent-500/40', onClick: () => open(event) }, event.title)
+  kit.plainButton({ class: [blockLook, 'flex min-w-0 px-1.5'], title: event.title, onClick: () => open(event) }, kit.rowTitle(event.title))
+
+const nowLine = (day: number) => {
+  const now = clock(60_000)
+  const offset = () => ((now.get() - day) / minute / 60) * hour
+  return show(
+    () => isToday(day),
+    () =>
+      div(
+        { class: 'pointer-events-none absolute inset-x-0 flex items-center', style: () => ({ top: `${offset()}px` }) },
+        span({ class: '-ml-1 h-2 w-2 shrink-0 rounded-full bg-accent-500' }),
+        span({ class: 'h-px flex-1 bg-accent-500' }),
+      ),
+  )
+}
 
 const overlapping = (events: Occurrence[], day: number) => events.filter(event => event.from < addDays(day, 1) && event.to > day)
 
@@ -86,18 +104,16 @@ const column = (kit: Kit, day: number, events: Occurrence[], parts: WeekParts) =
     },
     ...Array.from({ length: 23 }, (_, index) => div({ class: 'pointer-events-none absolute inset-x-0 border-t border-neutral-800', style: { top: `${(index + 1) * hour}px` } })),
     ...lanesOf(events).map(one => block(kit, one, day, parts.open)),
+    nowLine(day),
   )
   return node
 }
 
-const hours = () =>
+const hours = (kit: Kit) =>
   div(
     { class: 'relative w-12 shrink-0', style: { height: `${24 * hour}px` } },
     ...Array.from({ length: 23 }, (_, index) =>
-      span(
-        { class: 'absolute right-2 -translate-y-1/2 text-xs text-neutral-500', style: { top: `${(index + 1) * hour}px` } },
-        hourLabel(new Date(2000, 0, 1, index + 1).getTime()),
-      ),
+      span({ class: 'absolute right-2 flex -translate-y-1/2', style: { top: `${(index + 1) * hour}px` } }, kit.metaLine(hourLabel(new Date(2000, 0, 1, index + 1).getTime()))),
     ),
   )
 
@@ -115,19 +131,22 @@ const grid = (kit: Kit, { from, events }: Shown, parts: WeekParts, scroll: { top
         node.scrollTop = scroll.top
       },
     },
-    hours(),
+    hours(kit),
     ...week.map(day => column(kit, day, overlapping(timed, day), parts)),
   )
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    div({ class: 'flex shrink-0 border-b border-neutral-800 pr-2' }, div({ class: 'w-12 shrink-0' }), ...week.map(dayHead)),
-    allDay.length
-      ? div(
-          { class: 'flex shrink-0 border-b border-neutral-800 py-1 pr-2' },
-          div({ class: 'w-12 shrink-0' }),
-          ...week.map(day => div({ class: 'flex min-w-0 flex-1 flex-col gap-px px-px' }, ...overlapping(allDay, day).map(event => allDayChip(kit, event, parts.open)))),
-        )
-      : null,
+    div(
+      { class: 'flex shrink-0 flex-col border-b border-neutral-800 pr-2' },
+      div({ class: 'flex' }, div({ class: 'w-12 shrink-0' }), ...week.map(day => dayHead(kit, day))),
+      allDay.length
+        ? div(
+            { class: 'flex pb-1' },
+            div({ class: 'w-12 shrink-0' }),
+            ...week.map(day => div({ class: 'flex min-w-0 flex-1 flex-col gap-px px-px' }, ...overlapping(allDay, day).map(event => allDayChip(kit, event, parts.open)))),
+          )
+        : null,
+    ),
     body,
   )
 }

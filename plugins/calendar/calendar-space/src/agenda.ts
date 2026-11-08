@@ -1,7 +1,7 @@
 import type { Calendar, Occurrence } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, h2, section, span } from '@vaakx-dev/vrui'
-import { addDays, clockLabel, dayLabel, dayMs, days, isAllDay, startOfDay } from './days'
+import { derive, div, dynamicChild, section, span } from '@vaakx-dev/vrui'
+import { addDays, clockLabel, dayHeading, dayMs, days, isAllDay } from './days'
 import type { CalendarModel, Shown } from './model'
 
 export interface AgendaParts {
@@ -11,35 +11,32 @@ export interface AgendaParts {
 
 const timeOf = (event: Occurrence, day: number) => {
   if (isAllDay(event.start)) return 'All day'
-  if (event.from < day) return event.to < addDays(day, 1) ? `until ${clockLabel(event.to)}` : 'All day'
+  if (event.from < day) return event.to < addDays(day, 1) ? `– ${clockLabel(event.to)}` : 'All day'
   return clockLabel(event.from)
 }
 
 const metaOf = (event: Occurrence, calendars: Calendar[]) => {
   const source = calendars.length > 1 ? calendars.find(calendar => calendar.id === event.calendar)?.name : undefined
-  return [event.location, source].filter(Boolean).join(' · ') || undefined
+  const invited = event.response === 'needs-action' ? 'Invited' : undefined
+  return [invited, event.location, source].filter(Boolean).join(' · ') || undefined
 }
 
-const row = (kit: Kit, event: Occurrence, day: number, calendars: Calendar[], open: (event: Occurrence) => void) =>
-  kit.listRow({
+const row = (kit: Kit, event: Occurrence, day: number, calendars: Calendar[], open: (event: Occurrence) => void) => {
+  const meta = metaOf(event, calendars)
+  return kit.listRow({
     touch: true,
-    lead: span({ class: 'w-16 text-xs tabular-nums' }, timeOf(event, day)),
-    title: event.title,
-    meta: metaOf(event, calendars),
-    trail: event.response === 'needs-action' ? kit.badge('accent', 'Invited') : null,
+    title: span(
+      { class: ['flex gap-4', event.to <= Date.now() && 'text-neutral-500'] },
+      span({ class: ['w-20 shrink-0 tabular-nums', event.to > Date.now() && 'text-neutral-400'] }, timeOf(event, day)),
+      span({ class: 'min-w-0 truncate' }, event.title),
+    ),
+    meta: meta ? span({ class: 'pl-24' }, meta) : undefined,
     onClick: () => open(event),
   })
+}
 
 const dayGroup = (kit: Kit, day: number, events: Occurrence[], calendars: Calendar[], open: (event: Occurrence) => void) =>
-  section(
-    { class: 'flex flex-col gap-1' },
-    h2(
-      { class: 'flex items-baseline gap-2 px-2 text-sm font-medium text-neutral-100' },
-      dayLabel(day),
-      startOfDay(Date.now()) === day ? span({ class: 'text-xs text-accent-400' }, 'Today') : null,
-    ),
-    div({ class: 'flex flex-col' }, ...events.map(event => row(kit, event, day, calendars, open))),
-  )
+  section({ class: 'flex flex-col' }, kit.groupHeading(dayHeading(day)), ...events.map(event => row(kit, event, day, calendars, open)))
 
 export const waiting = (kit: Kit, model: CalendarModel) =>
   div(
@@ -54,6 +51,14 @@ const grouped = ({ from, to, events }: Shown) =>
     return found.length ? [{ day, events: found }] : []
   })
 
+const empty = (kit: Kit, add: () => void) =>
+  kit.emptyBlock({
+    icon: 'calendar',
+    title: 'Nothing in the next four weeks',
+    text: 'Add an event, or connect a calendar in Settings.',
+    action: kit.secondaryAction({ onClick: add }, 'New event'),
+  })
+
 export const agendaView = (kit: Kit, model: CalendarModel, parts: AgendaParts) =>
   div(
     { class: 'flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain', style: kit.stableGutter },
@@ -62,8 +67,8 @@ export const agendaView = (kit: Kit, model: CalendarModel, parts: AgendaParts) =
       ({ shown, calendars }) => {
         if (shown?.mode !== 'agenda') return waiting(kit, model)
         const groups = grouped(shown)
-        if (!groups.length) return div({ class: kit.pageColumn }, kit.emptyBlock({ icon: 'calendar', title: 'Nothing planned for these four weeks', text: 'Events from your calendars, and the ones your bots add, show up here.', action: kit.secondaryAction({ size: 'sm', onClick: parts.add }, 'New event') }))
-        return div({ class: [kit.pageColumn, 'flex flex-col gap-6 px-2 pt-3 pb-16'] }, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
+        if (!groups.length) return div({ class: kit.pageColumn }, empty(kit, parts.add))
+        return div({ class: [kit.pageColumn, 'flex flex-col gap-4 px-2 pt-2 pb-16'] }, ...groups.map(({ day, events }) => dayGroup(kit, day, events, calendars, parts.open)))
       },
     ),
   )

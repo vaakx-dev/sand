@@ -1,12 +1,13 @@
 import { type Answer, type Attendee, type Calendar, type Occurrence, type Person, type Response, type Scope } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, dynamicChild, p, sig, span, type Child } from '@vaakx-dev/vrui'
+import type { SheetSpec } from '@sand/ui-shell/contract'
+import { div, dynamicChild, sig, span, type Child } from '@vaakx-dev/vrui'
 import { spanLabel } from './days'
 
 export interface DetailParts {
   event: Occurrence
   calendar?: Calendar
-  close(): void
+  showCalendar: boolean
   edit(): void
   remove(scope: Scope): Promise<unknown>
   respond(response: Answer): Promise<unknown>
@@ -22,9 +23,12 @@ const answerLabels: Record<Answer, string> = { accepted: 'Going', tentative: 'Ma
 
 const order: Answer[] = ['accepted', 'tentative', 'declined']
 
-const line = (kit: Kit, glyph: string, ...text: Child[]) => div({ class: 'flex items-start gap-3 text-sm text-neutral-100' }, span({ class: 'mt-1 text-neutral-400' }, kit.icon(glyph, 'sm')), div({ class: 'min-w-0 flex-1' }, ...text))
+const line = (kit: Kit, glyph: string, ...text: Child[]) =>
+  div({ class: 'flex items-start gap-3' }, span({ class: 'flex h-5 shrink-0 items-center text-neutral-500' }, kit.icon(glyph, 'sm')), div({ class: 'flex min-w-0 flex-1 flex-col' }, ...text))
 
-const person = (who: Person, note: string) => div({ class: 'truncate' }, who.name ?? who.email, span({ class: 'text-neutral-400' }, ` · ${note}`))
+const quiet = (...text: Child[]) => span({ class: 'text-neutral-400' }, ...text)
+
+const person = (who: Person, note: string) => div({ class: 'truncate' }, who.name ?? who.email, quiet(` · ${note}`))
 
 const people = ({ organizer, attendees = [] }: Occurrence) => [
   ...(organizer ? [person(organizer, 'organizer')] : []),
@@ -38,8 +42,8 @@ const answering = (kit: Kit, { event, respond }: DetailParts) => {
     void respond(response)
   }
   return div(
-    { class: 'flex flex-col gap-2' },
-    span({ class: 'text-sm text-neutral-400' }, 'Going?'),
+    { class: 'flex flex-col gap-2 pt-2' },
+    kit.sheetText('Going?'),
     kit.segmented(
       order.map(value => ({ value, label: answerLabels[value] })),
       chosen,
@@ -55,46 +59,41 @@ const scopes: { value: Scope; label: string }[] = [
   { value: 'series', label: 'All events' },
 ]
 
-const removal = (kit: Kit, { event, remove, close }: DetailParts) => {
+const removal = (kit: Kit, { event, remove }: DetailParts, close: () => void) => {
   const asking = sig(false)
   const run = (scope: Scope) => () => void remove(scope).then(close)
-  const danger = (scope: Scope, label: string) => kit.controlButton(kit.actionTones.danger, { size: 'sm', onClick: run(scope) }, label)
+  const danger = (scope: Scope, label: string) => kit.controlButton(kit.actionTones.danger, { onClick: run(scope) }, label)
   const repeating = Boolean(event.recurrence || event.series)
   return dynamicChild(asking, ask =>
     ask
       ? div(
           { class: 'flex flex-wrap items-center justify-end gap-2' },
-          kit.secondaryAction({ size: 'sm', onClick: () => asking.set(false) }, 'Cancel'),
+          kit.quietButton({ onClick: () => asking.set(false) }, 'Cancel'),
           ...(repeating ? scopes.map(scope => danger(scope.value, scope.label)) : [danger('occurrence', 'Delete')]),
         )
-      : kit.secondaryAction({ size: 'sm', onClick: () => asking.set(true) }, 'Delete'),
+      : kit.secondaryAction({ onClick: () => asking.set(true) }, 'Delete'),
   )
 }
 
-export const detailSheet = (kit: Kit, parts: DetailParts) => {
-  const { event, calendar, close, edit } = parts
+export const detailSheet = (kit: Kit, parts: DetailParts): SheetSpec => {
+  const { event, calendar, edit } = parts
   const writable = calendar?.capabilities.includes('write') ?? false
   const invited = event.response !== undefined
   const guests = people(event)
-  return kit.overlay(
-    close,
-    kit.sheet(
-      { size: 'sm', 'aria-label': event.title },
-      kit.sheetHead({
-        title: event.title,
-        close,
-        actions: writable ? kit.iconButton({ title: 'Edit', 'aria-label': 'Edit', surface: 'raised', onClick: edit }, kit.icon('pencil')) : null,
-      }),
-      kit.sheetBody(
-        {},
-        line(kit, 'clock', spanLabel(event), event.recurrence ? p({ class: 'text-neutral-400' }, repeatText(event.recurrence.rule)) : null),
-        event.location ? line(kit, 'pin', event.location) : null,
-        calendar ? line(kit, 'calendar', calendar.name) : null,
-        guests.length ? line(kit, 'users', ...guests) : null,
-        event.notes ? p({ class: 'whitespace-pre-wrap text-sm text-neutral-400' }, event.notes) : null,
-        invited && writable ? answering(kit, parts) : null,
-      ),
-      writable ? kit.sheetFoot(removal(kit, parts)) : null,
-    ),
-  )
+  return {
+    label: event.title,
+    head: () => [
+      kit.headTitle(2, event.title),
+      writable ? kit.iconButton({ title: 'Edit', 'aria-label': 'Edit', surface: 'raised', onClick: edit }, kit.icon('pencil')) : null,
+    ],
+    body: () => [
+      line(kit, 'clock', spanLabel(event), event.recurrence ? quiet(repeatText(event.recurrence.rule)) : null),
+      event.location ? line(kit, 'pin', event.location) : null,
+      guests.length ? line(kit, 'users', ...guests) : null,
+      calendar && parts.showCalendar ? line(kit, 'calendar', calendar.name) : null,
+      event.notes ? div({ class: 'whitespace-pre-wrap' }, kit.sheetText(event.notes)) : null,
+      invited && writable ? answering(kit, parts) : null,
+    ],
+    ...(writable && { foot: (close: () => void) => removal(kit, parts, close) }),
+  }
 }

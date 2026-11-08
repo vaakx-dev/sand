@@ -19,7 +19,7 @@ import { calendarExport, calendarFeed, calendarImport } from '@sand/calendar-loc
 import { wireHello } from '@sand/devices-contract'
 import { owned } from '@sand/reactive'
 import { errorMessage, joinDisposers } from '@sand/util'
-import { a, derive, effect, sig, untrack } from '@vaakx-dev/vrui'
+import { a, derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import type { CalendarContext } from './context'
 import { addDays, browserZone, startOfDay, startOfWeek } from './days'
 
@@ -32,9 +32,7 @@ export interface Shown {
   events: Occurrence[]
 }
 
-const upcomingCount = 3
-
-export const eventKey = (event: Occurrence) => `${event.from}:${event.calendar}:${event.id}`
+const modes: Mode[] = ['agenda', 'week']
 
 const spans: Record<Mode, number> = { agenda: 28, week: 7 }
 
@@ -48,7 +46,7 @@ const download = (name: string, text: string) => {
 
 export const calendarModel = (ctx: CalendarContext) => {
   const calendars = sig<Calendar[]>([])
-  const mode = sig<Mode>('agenda')
+  const mode = stored<Mode>('sand.calendar.view', 'agenda', value => modes.includes(value as Mode))
   const anchor = sig(startOfDay(Date.now()))
   const range = derive(() => {
     const from = firstDay[mode.get()](anchor.get())
@@ -56,7 +54,6 @@ export const calendarModel = (ctx: CalendarContext) => {
   })
   const shown = sig<Shown | undefined>(undefined)
   const failure = sig<string | undefined>(undefined)
-  const upcoming = sig<Occurrence[]>([])
 
   let asked = 0
   const load = () => {
@@ -72,21 +69,10 @@ export const calendarModel = (ctx: CalendarContext) => {
       (error: unknown) => failure.set(errorMessage(error)),
     )
   }
-  const loadUpcoming = () => {
-    const from = startOfDay(Date.now())
-    void ctx.wire.call(calendarAgenda, { from, to: addDays(from, 2), zone: browserZone() }).then(
-      events => upcoming.set(events.filter(({ to }) => to > Date.now()).slice(0, upcomingCount)),
-      (error: unknown) => ctx.report(error),
-    )
-  }
   const loadCalendars = () => void ctx.wire.call(calendarList, {}).then(list => calendars.set(list), (error: unknown) => ctx.report(error))
-  const reload = () => {
-    load()
-    loadUpcoming()
-  }
   const refresh = () => {
     loadCalendars()
-    reload()
+    load()
   }
 
   owned(ctx, () =>
@@ -96,11 +82,8 @@ export const calendarModel = (ctx: CalendarContext) => {
     }),
   )
   ctx.on(wireHello, refresh)
-  if (ctx.wire.ready()) {
-    loadCalendars()
-    loadUpcoming()
-  }
-  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, reload), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
+  if (ctx.wire.ready()) loadCalendars()
+  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, load), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
 
   const step = (direction: 1 | -1) => anchor.update(at => addDays(at, direction * 7))
 
@@ -111,10 +94,8 @@ export const calendarModel = (ctx: CalendarContext) => {
     anchor,
     range,
     shown,
-    upcoming,
     failure,
     retry: load,
-    find: (key: string) => [...upcoming.get(), ...(shown.get()?.events ?? [])].find(event => eventKey(event) === key),
     show: (next: Mode) => mode.set(next),
     today: () => anchor.set(startOfDay(Date.now())),
     earlier: () => step(-1),

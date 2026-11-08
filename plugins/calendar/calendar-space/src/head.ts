@@ -1,36 +1,24 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { dynamicChild, input, type Sig } from '@vaakx-dev/vrui'
-import { monthLabel, rangeLabel, shortMonthLabel } from './days'
+import { input, span, type Sig } from '@vaakx-dev/vrui'
+import { addDays, monthsLabel } from './days'
 import type { CalendarModel, Mode } from './model'
 
 export interface HeadParts {
-  narrow: Sig<boolean>
+  phone: Sig<boolean>
   add(): void
   subscribe(): void
   report(error: unknown): void
 }
 
-const modes = [
-  { value: 'agenda' as Mode, label: 'Agenda' },
-  { value: 'week' as Mode, label: 'Week' },
+const modes: { value: Mode; label: string }[] = [
+  { value: 'agenda', label: 'Agenda' },
+  { value: 'week', label: 'Week' },
 ]
 
-const title = (model: CalendarModel, narrow: boolean) => {
+const title = (model: CalendarModel, short: boolean) => {
   const { from, to } = model.range.get()
-  if (narrow) return shortMonthLabel(from)
-  return model.mode.get() === 'agenda' ? monthLabel(from) : rangeLabel(from, to)
+  return model.mode.get() === 'agenda' ? monthsLabel(from, addDays(from, 1), short) : monthsLabel(from, to, short)
 }
-
-const other: Record<Mode, { mode: Mode; label: string; icon: string }> = {
-  agenda: { mode: 'week', label: 'Show the week', icon: 'calendar' },
-  week: { mode: 'agenda', label: 'Show the agenda', icon: 'menu' },
-}
-
-const modeToggle = (kit: Kit, model: CalendarModel) =>
-  dynamicChild(model.mode, mode => {
-    const next = other[mode]
-    return kit.iconButton({ title: next.label, 'aria-label': next.label, onClick: () => model.show(next.mode) }, kit.icon(next.icon))
-  })
 
 const fileInput = (model: CalendarModel, report: (error: unknown) => void) => {
   const picker: HTMLInputElement = input({
@@ -46,37 +34,51 @@ const fileInput = (model: CalendarModel, report: (error: unknown) => void) => {
   return picker
 }
 
-const more = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTMLInputElement) => {
+const ownCalendar = (model: CalendarModel) => model.writable.get().find(calendar => calendar.provider === 'sand' && calendar.primary)
+
+const viewMenu = (kit: Kit, model: CalendarModel, parts: HeadParts, picker: HTMLInputElement) => {
+  const { choiceItem, dropdown, icon, menuItem, menuSeparator, navButton } = kit
   const run = (close: () => void, action: () => void) => () => {
     close()
     action()
   }
   const exportOwn = () => {
-    const calendar = model.writable.get().find(other => other.provider === 'sand' && other.primary)
+    const calendar = ownCalendar(model)
     if (calendar) model.exportFile(calendar).catch(parts.report)
   }
-  return kit.dropdown({
-    placement: 'below-right',
-    trigger: (press, open) => kit.iconButton({ title: 'More', 'aria-label': 'More', active: open, ...press }, kit.icon('more')),
+  const heading = () => title(model, parts.phone.get())
+  return dropdown({
+    class: 'flex-1',
+    trigger: (press, open) =>
+      navButton(
+        { active: open, title: 'Views and calendar files', ...press },
+        span({ class: 'min-w-0 truncate font-medium text-neutral-100' }, heading),
+        span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
+      ),
     items: close => [
-      kit.menuItem({ onClick: run(close, () => picker.click()) }, 'Import .ics'),
-      kit.menuItem({ onClick: run(close, exportOwn) }, 'Export .ics'),
-      kit.menuItem({ onClick: run(close, parts.subscribe) }, 'Subscription link'),
+      ...modes.map(({ value, label }) =>
+        choiceItem({ selected: () => model.mode.get() === value, onClick: run(close, () => model.show(value)) }, span({ class: 'flex-1' }, label)),
+      ),
+      menuSeparator(),
+      menuItem({ onClick: run(close, () => picker.click()) }, 'Import .ics'),
+      ownCalendar(model) ? menuItem({ onClick: run(close, exportOwn) }, 'Export .ics') : null,
+      ownCalendar(model) ? menuItem({ onClick: run(close, parts.subscribe) }, 'Subscription link') : null,
     ],
   })
 }
 
 export const headView = (kit: Kit, model: CalendarModel, parts: HeadParts) => {
+  const { icon, iconButton, quietButton } = kit
   const picker = fileInput(model, parts.report)
-  return kit.paneHead(
-    { class: () => (model.mode.get() === 'agenda' ? kit.pageColumn : '') },
-    kit.headTitle(1, () => title(model, parts.narrow.get())),
-    kit.secondaryAction({ size: 'sm', onClick: model.today }, 'Today'),
-    kit.iconButton({ title: 'Earlier', 'aria-label': 'Earlier', onClick: model.earlier }, kit.icon('left')),
-    kit.iconButton({ title: 'Later', 'aria-label': 'Later', onClick: model.later }, kit.icon('right')),
-    dynamicChild(parts.narrow, narrow => (narrow ? modeToggle(kit, model) : kit.segmented(modes, model.mode, model.show, { label: 'View' }))),
-    kit.iconButton({ title: 'New event', 'aria-label': 'New event', onClick: parts.add }, kit.icon('plus')),
+  return [
+    viewMenu(kit, model, parts, picker),
+    span(
+      { class: 'flex shrink-0 items-center' },
+      iconButton({ title: 'Previous week', 'aria-label': 'Previous week', onClick: model.earlier }, icon('left')),
+      quietButton({ onClick: model.today }, 'Today'),
+      iconButton({ title: 'Next week', 'aria-label': 'Next week', onClick: model.later }, icon('right')),
+    ),
+    iconButton({ title: 'New event', 'aria-label': 'New event', onClick: parts.add }, icon('plus')),
     picker,
-    more(kit, model, parts, picker),
-  )
+  ]
 }
