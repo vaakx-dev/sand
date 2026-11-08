@@ -13,6 +13,7 @@ export interface DropdownProps {
   keepFocus?: boolean
   class?: ClassValue
   menuClass?: ClassValue
+  flat?: boolean
 }
 
 const anchors: Record<Placement, string> = {
@@ -31,7 +32,7 @@ const shiftOnScreen = (node: HTMLElement, shift: number) => {
   return Math.max(margin, Math.min(base, innerWidth - width - margin)) - base
 }
 
-export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus = false, class: extra, menuClass }: DropdownProps) => {
+export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus = false, class: extra, menuClass, flat }: DropdownProps) => {
   const open = sig(false)
   const close = () => open.set(false)
   return div(
@@ -42,6 +43,7 @@ export const dropdown = ({ trigger, items, placement = 'below-left', keepFocus =
       return popover(
         close,
         {
+          flat,
           class: [anchors[placement], 'w-max max-w-80', menuClass],
           style: () => ({ translate: `${shift.get()}px 0` }),
           onMount: node => {
