@@ -56,7 +56,7 @@ export const createProposals = ({ git, store, setups, file, sub, send }: Proposa
       if (existsSync(join(record.main, setupFileName)) || (await declined.has(project))) return
       const facts = await gatherFacts(git, record.main)
       if (!facts.files.length && !facts.commands.length) return
-      const lines = await askSetup(model, record.main, facts, record.sessions[0])
+      const lines = await askSetup(model, facts, record.sessions[0])
       if (!lines.copy.length && !lines.run.length) return
       shown.set(pathKey(record.path), lines)
       publish(record, lines)

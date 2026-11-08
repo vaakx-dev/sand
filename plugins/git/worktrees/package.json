@@ -19,7 +19,6 @@
     "@sand/devices-contract": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-runner": "workspace:*",
-    "@sand/github": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/project": "workspace:*",

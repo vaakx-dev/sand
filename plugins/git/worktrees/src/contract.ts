@@ -1,5 +1,4 @@
 import type { SessionInfo } from '@sand/chats/contract'
-import type { PullState } from '@sand/github/contract'
 import { type InputOf, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type Dispose, service } from 'drydock'
 import { z } from 'zod'
@@ -53,17 +52,6 @@ export interface RemoveCheck {
 
 export type RemoveResult = { removed: true } | { removed: false; check: RemoveCheck; message: string }
 
-export interface WorktreePull {
-  number: number
-  state: PullState
-}
-
-export interface WorktreePulls {
-  primary(sessions: string[]): Promise<WorktreePull | undefined>
-}
-
-export const worktreePulls = service<WorktreePulls>('worktreePulls')
-
 export interface WorktreeStatus {
   path: string
   main: string
@@ -71,7 +59,6 @@ export interface WorktreeStatus {
   base?: string
   ahead?: number
   check: RemoveCheck
-  pull?: WorktreePull
 }
 
 const cwd = z.string()
