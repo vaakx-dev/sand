@@ -57,7 +57,7 @@ export const replyCard = (ctx: BridgeWeb, roster: Roster, { bot, turn }: BotRepl
     },
     div(
       { class: 'mb-1.5 flex h-6 items-center gap-2 text-xs text-neutral-400' },
-      botFace(ctx, roster, bot, 20) ?? ctx.kit.icon('bot', 14),
+      botFace(ctx, roster, bot, 20),
       span({ class: 'min-w-0 flex-1 truncate font-medium text-neutral-100' }, () => roster.find(bot)?.name || 'Bot'),
       openButton(ctx, bot),
     ),

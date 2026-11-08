@@ -132,8 +132,6 @@ export interface Bots {
 
 export const bots = service<Bots>('bots')
 
-export type BotFace = Pick<Bot, 'id' | 'color'> & { status?: BotStatus }
-
 /**
  * The shell route of a bot's screen: `{ kind: botRoute, id: bot, tab }`. With no `tab` it shows the bot's own chat;
  * `tab` is a `<scheme>:<id>` reference from a `BotTabSource`, such as `thread:abc`.
@@ -144,8 +142,6 @@ export const botRoute = 'bot'
 export interface BotViews {
   /** Opens a bot's screen, on one of its tabs when `tab` is given; on phones a tab opens on its own screen. */
   open(bot: string, tab?: string): void
-  /** @deprecated Draw a bot's monogram with the kit from its `initial` and `color`. */
-  avatar(face: () => BotFace, size: number): HTMLElement
 }
 
 export const botViews = service<BotViews>('botViews')
