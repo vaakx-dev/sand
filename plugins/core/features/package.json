@@ -171,6 +171,11 @@
         ],
         "offer": true
       },
+      "ssh": {
+        "label": "SSH machines",
+        "summary": "Use machines you reach over SSH as your PCs, and set sand up on them",
+        "parent": "pcs"
+      },
       "notifications": {
         "label": "Notifications",
         "summary": "Tell you when something finishes, fails or needs you",

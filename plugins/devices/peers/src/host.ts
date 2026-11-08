@@ -1,6 +1,7 @@
 import {
   devicePaths,
   network,
+  peerRoutes,
   peers as peersService,
   peersChange,
   type PublishedRoute,
@@ -64,5 +65,6 @@ export default definePlugin({
     for (const register of registrations) ctx.effect(register)
 
     ctx.provide(peersService, peers)
+    ctx.provide(peerRoutes, { add: links.addRoute, advertise: announcer.advertise })
   },
 })

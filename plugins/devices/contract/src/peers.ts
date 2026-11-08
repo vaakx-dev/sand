@@ -40,6 +40,13 @@ export interface Peers {
 
 export const peers = service<Peers>('peers')
 
+export interface PeerRoutes {
+  add(pc: string, url: string): Dispose
+  advertise(pc: string, url: string): Dispose
+}
+
+export const peerRoutes = service<PeerRoutes>('peerRoutes')
+
 export const peersList = request('peers.list', { input: z.object({}), output: type<PeerView[]>() })
 export const peersChange = wireEvent<PeerView[]>('peers.change')
 
