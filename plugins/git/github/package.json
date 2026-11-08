@@ -1,32 +1,20 @@
 {
   "name": "@sand/github",
   "version": "0.0.0",
-  "description": "GitHub for a thread's folder: this PC's gh sign-in, pull request summaries with a cache, and creating, merging and readying pull requests",
+  "description": "GitHub's API through this PC's gh sign-in or GH_TOKEN",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
   },
   "sand": {
-    "feature": "pulls",
+    "feature": "git",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
-    "web": "./src/web/index.ts",
     "label": "GitHub",
-    "summary": "Signs in to GitHub and keeps pull requests up to date"
+    "summary": "Reaches GitHub with this PC's sign-in"
   },
   "dependencies": {
-    "@sand/devices-contract": "workspace:*",
-    "@sand/git": "workspace:*",
-    "@sand/git-runner": "workspace:*",
-    "@sand/host-hub": "workspace:*",
-    "@sand/reactive": "workspace:*",
-    "@sand/server": "workspace:*",
-    "@sand/sub-model": "workspace:*",
-    "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/web-client": "workspace:*",
-    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-    "zod": "^4.6.5"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }
 }

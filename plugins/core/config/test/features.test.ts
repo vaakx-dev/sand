@@ -12,7 +12,7 @@ const capability = (id: string, more: Partial<FeatureDefinition> = {}) => featur
 const definitions = [
   feature('threads', { needs: ['engine'], uses: ['approvals'] }),
   feature('git', { parent: 'threads' }),
-  feature('pulls', { parent: 'git' }),
+  feature('worktrees', { parent: 'git' }),
   feature('bots', { needs: ['engine'] }),
   feature('calendar'),
   capability('engine', { needs: ['models'] }),
@@ -28,7 +28,7 @@ test('a feature that is off turns off its children and their children, and comin
   expect(onIds(catalog)).toEqual(['bots', 'calendar', 'engine', 'models'])
   expect(catalog.list().find(found => found.id === 'git')?.chosen).toBe(true)
   catalog.choose({ threads: true })
-  expect(onIds(catalog)).toEqual(['threads', 'git', 'pulls', 'bots', 'calendar', 'engine', 'models', 'approvals'])
+  expect(onIds(catalog)).toEqual(['threads', 'git', 'worktrees', 'bots', 'calendar', 'engine', 'models', 'approvals'])
 })
 
 test('a capability loads only while an enabled feature needs or uses it', () => {
@@ -43,14 +43,14 @@ test('switching off a capability turns off the features that need it, but not th
   const catalog = createCatalog(definitions, { models: false })
   expect(onIds(catalog)).toEqual(['calendar'])
   catalog.choose({ models: true, approvals: false })
-  expect(onIds(catalog)).toEqual(['threads', 'git', 'pulls', 'bots', 'calendar', 'engine', 'models'])
+  expect(onIds(catalog)).toEqual(['threads', 'git', 'worktrees', 'bots', 'calendar', 'engine', 'models'])
 })
 
 test('plugins of no feature, or of a feature nobody defines, stay on', () => {
   const catalog = createCatalog(definitions, { threads: false })
   expect(catalog.on(undefined)).toBe(true)
   expect(catalog.on('unknown')).toBe(true)
-  expect(catalog.on('pulls')).toBe(false)
+  expect(catalog.on('worktrees')).toBe(false)
 })
 
 test('the person was asked once sand.toml has a [features] table', () => {

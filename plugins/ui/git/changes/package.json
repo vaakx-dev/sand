@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@sand/composer": "workspace:*",
-    "@sand/files-panel": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-diff": "workspace:*",
     "@sand/git-diff-view": "workspace:*",

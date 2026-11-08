@@ -1,46 +1,15 @@
-import { gitRepo } from '@sand/git/contract'
-import { gitRunner } from '@sand/git-runner/contract'
-import { type Server, server } from '@sand/server/contract'
-import { subModel } from '@sand/sub-model/contract'
 import { definePlugin } from 'drydock'
-import { authChanged, github, githubAuthChange, githubLoginCode, pullChanged, pullCreated, pullsChange } from './contract'
-import { serveGitHub } from './requests'
-import { createGitHub } from './service'
-import { pullTextJob } from './text/write'
+import { createClient } from './api/client'
+import { githubHost } from './api/endpoint'
+import { createAuth } from './auth/auth'
+import { github } from './contract'
 
 export default definePlugin({
   name: 'github',
-  description: "Signs in to GitHub with this PC's gh login, keeps a cache of pull request summaries, and creates, merges and readies pull requests for a thread's folder",
-  inject: { gitRunner, gitRepo },
+  description: "Calls GitHub's API with this PC's gh sign-in or GH_TOKEN",
   apply(ctx) {
-    let live: Server | undefined
-    const host = createGitHub({
-      git: ctx.gitRunner,
-      repos: ctx.gitRepo,
-      sub: () => ctx.get(subModel),
-      authChanged(auth) {
-        live?.broadcast(githubAuthChange, auth)
-        ctx.emit(authChanged, auth)
-      },
-      loginCode: code => live?.broadcast(githubLoginCode, code),
-      pullChanged(summary) {
-        live?.broadcast(pullsChange, summary)
-        ctx.emit(pullChanged, summary)
-      },
-      pullCreated: (summary, session) => ctx.emit(pullCreated, summary, session),
-      report: error => ctx.report(error),
-    })
-    ctx.effect(() => host.stop)
-    ctx.provide(github, host.service)
-    ctx.watch(subModel, found => found?.job(pullTextJob))
-    ctx.watch(server, found => {
-      if (!found) return
-      live = found
-      const stop = serveGitHub(found, host)
-      return () => {
-        live = undefined
-        stop()
-      }
-    })
+    const auth = createAuth(githubHost)
+    const client = createClient({ token: auth.token, rejected: auth.invalidate })
+    ctx.provide(github, { rest: client.rest })
   },
 })
