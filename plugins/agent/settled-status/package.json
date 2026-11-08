@@ -17,7 +17,6 @@
     "@sand/chats": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/host-hub": "workspace:*",
-    "@sand/pull-links": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/sidebar": "workspace:*",
     "@sand/sub-model": "workspace:*",

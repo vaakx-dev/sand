@@ -38,17 +38,17 @@ const alone = (id: string, spaces: string[], pages: string[] = []): Combo => ({
 
 const combos: Combo[] = [
   { name: 'kernel only', off: topLevel, spaces: [], pages: kernelPages, exact: true },
-  alone('threads', ['Threads', 'Pull requests'], ['Models', 'Projects', 'Git']),
-  alone('bots', ['Bots'], ['Models', 'Approvals']),
+  alone('threads', ['Threads'], ['Models', 'Projects']),
+  alone('bots', [], ['Models', 'Approvals']),
   alone('calendar', ['Calendar'], ['Connections']),
   alone('computers', [], ['Models']),
   alone('pcs', [], ['Devices']),
   alone('notifications', [], ['Notifications']),
   alone('mcp-server', []),
   alone('updates', [], ['Updates']),
-  { name: 'threads without git', off: [...topLevel.filter(id => id !== 'threads'), 'git'], spaces: ['Threads'], absent: ['Git'] },
-  { name: 'bots without notifications, schedules and connections', off: [...topLevel.filter(id => id !== 'bots'), 'schedules', 'connections'], spaces: ['Bots'], absent: ['Notifications', 'Connections'] },
-  { name: 'bots without approvals', off: [...topLevel.filter(id => id !== 'bots'), 'approvals'], spaces: ['Bots'], absent: ['Approvals'] },
+  { name: 'threads without git', off: [...topLevel.filter(id => id !== 'threads'), 'git'], spaces: ['Threads'] },
+  { name: 'bots without notifications, schedules and connections', off: [...topLevel.filter(id => id !== 'bots'), 'schedules', 'connections'], spaces: [], absent: ['Notifications', 'Connections'] },
+  { name: 'bots without approvals', off: [...topLevel.filter(id => id !== 'bots'), 'approvals'], spaces: [], absent: ['Approvals'] },
 ]
 
 const withModel = '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n'

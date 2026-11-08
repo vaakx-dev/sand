@@ -43,18 +43,12 @@
         ],
         "offer": true
       },
-      "files": {
-        "label": "Files panel",
-        "summary": "Browse and read a thread's files",
-        "parent": "threads"
-      },
       "git": {
         "label": "Git",
-        "summary": "Each thread's branch and changes, commits, and what each turn changed",
+        "summary": "Each thread's changes, and what each turn changed",
         "parent": "threads",
         "needs": [
-          "picker",
-          "palette"
+          "picker"
         ],
         "uses": [
           "background"
@@ -64,16 +58,6 @@
         "label": "Worktrees",
         "summary": "Let a thread work in its own folder and branch",
         "parent": "git"
-      },
-      "pulls": {
-        "label": "Pull requests",
-        "summary": "Sign in to GitHub, follow your pull requests and link them to threads",
-        "parent": "git"
-      },
-      "reviews": {
-        "label": "Code review",
-        "summary": "Review a pull request's code with line comments and an agent-drafted review",
-        "parent": "pulls"
       },
       "threads-mcp": {
         "label": "Threads for outside agents",

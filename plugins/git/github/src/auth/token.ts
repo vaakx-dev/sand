@@ -3,7 +3,7 @@ import { ghPath, runGh } from './gh'
 
 export type TokenSource = { token: string; from: 'env' | 'gh' } | { token?: undefined; gh: boolean; failed?: string }
 
-export const envToken = () => process.env.GH_TOKEN?.trim() || process.env.GITHUB_TOKEN?.trim() || undefined
+const envToken = () => process.env.GH_TOKEN?.trim() || process.env.GITHUB_TOKEN?.trim() || undefined
 
 const fromGh = async (gh: string, host: string): Promise<TokenSource> => {
   try {

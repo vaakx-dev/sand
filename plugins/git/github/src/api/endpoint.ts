@@ -1,6 +1,5 @@
 export const githubHost = 'github.com'
 export const apiUrl = 'https://api.github.com'
-export const graphqlUrl = `${apiUrl}/graphql`
 
 export const apiHeaders = (token: string): Record<string, string> => ({
   authorization: `Bearer ${token}`,

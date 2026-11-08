@@ -1,7 +1,5 @@
 import { GitHubError } from './errors'
 
-export type Resource = 'core' | 'graphql'
-
 const resetAt = (headers: Headers) => {
   const after = Number(headers.get('retry-after'))
   if (after > 0) return Date.now() + after * 1000
@@ -16,28 +14,23 @@ const refused = (response: Response) =>
 
 const clock = (at: number) => new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-const limitError = (resource: Resource, until: number) =>
-  new GitHubError(`This PC has used up its GitHub ${resource === 'graphql' ? 'GraphQL ' : ''}rate limit until ${clock(until)}; try again then.`, { status: 429 })
+const limitError = (until: number) => new GitHubError(`This PC has used up its GitHub rate limit until ${clock(until)}; try again then.`)
 
 export const createRate = () => {
-  const blocked = new Map<Resource, number>()
+  let blocked: number | undefined
 
-  const check = (resource: Resource) => {
-    const until = blocked.get(resource)
-    if (until === undefined) return
-    if (until > Date.now()) throw limitError(resource, until)
-    blocked.delete(resource)
+  const check = () => {
+    if (blocked === undefined) return
+    if (blocked > Date.now()) throw limitError(blocked)
+    blocked = undefined
   }
 
-  const note = (resource: Resource, response: Response) => {
-    const named = response.headers.get('x-ratelimit-resource')
-    const bucket: Resource = named === 'graphql' || named === 'core' ? named : resource
+  const note = (response: Response) => {
     if (refused(response)) {
-      const until = resetAt(response.headers)
-      blocked.set(bucket, until)
-      throw limitError(bucket, until)
+      blocked = resetAt(response.headers)
+      throw limitError(blocked)
     }
-    if (response.ok && exhausted(response)) blocked.set(bucket, resetAt(response.headers))
+    if (response.ok && exhausted(response)) blocked = resetAt(response.headers)
   }
 
   return { check, note }

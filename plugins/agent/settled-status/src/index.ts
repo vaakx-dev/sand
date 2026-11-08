@@ -1,5 +1,4 @@
 import { type Session, sessionRemove, sessions, sessionSettle } from '@sand/chats/contract'
-import { pullLinksService } from '@sand/pull-links/contract'
 import { server } from '@sand/server/contract'
 import { type SubModel, subModel } from '@sand/sub-model/contract'
 import { definePlugin } from 'drydock'
@@ -20,7 +19,7 @@ export default definePlugin({
     }
 
     const write = async (sub: SubModel, session: Session, settled: number) => {
-      const text = await askStatus(sub, session, ctx.get(pullLinksService))
+      const text = await askStatus(sub, session)
       if (text && ctx.sessions.open(session.id)?.settled === settled) save(session, text)
     }
 

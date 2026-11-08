@@ -1,5 +1,4 @@
 import { composer } from '@sand/composer/contract'
-import { filesPanel } from '@sand/files-panel/contract'
 import { keys } from '@sand/keys/contract'
 import { panels } from '@sand/panel/contract'
 import { effect, mount, sig, type Sig } from '@vaakx-dev/vrui'
@@ -25,7 +24,7 @@ export default definePlugin({
       return found
     }
     const slots = createSlots()
-    const services = { writer: followed(composer), files: followed(filesPanel), diff: ctx.diff, slots }
+    const services = { writer: followed(composer), diff: ctx.diff, slots }
     const look = () => ({ badge: model.badge.get(), hidden: !model.visible.get() })
 
     ctx.watch(panels, host => {
