@@ -1,7 +1,7 @@
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
-import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, dynamicChild, SPACE, span, type Sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
 
 type Look = 'off' | 'send' | 'steer' | 'stop' | 'busy'
@@ -16,15 +16,19 @@ const titles: Record<Look, string> = {
   busy: 'Sending',
 }
 
-const idle = 'cursor-default bg-neutral-700 text-neutral-500 dark:bg-neutral-600'
+const circle = `calc(${SPACE['6']} + ${SPACE['1']})`
 
-const tones = ({ actionTones }: Kit): Record<Look, string> => ({
+const fill = 'bg-neutral-100 text-neutral-900'
+
+const idle = `cursor-default opacity-40 ${fill}`
+
+const tones: Record<Look, string> = {
   off: idle,
   busy: idle,
-  send: actionTones.primary,
-  steer: actionTones.primary,
-  stop: 'bg-neutral-700 text-neutral-100 dark:bg-neutral-600',
-})
+  send: fill,
+  steer: fill,
+  stop: fill,
+}
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
@@ -62,7 +66,6 @@ export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[])
   const look = derive(() => lookOf(model, sending))
   const glyph = derive(() => glyphOf(look.get()))
   const context = contextMenu()
-  const tone = tones(kit)
   return span(
     { class: 'ml-1 inline-flex shrink-0' },
     plainButton(
@@ -70,13 +73,14 @@ export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[])
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
-        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone[look.get()]],
+        class: ['inline-flex shrink-0 items-center justify-center rounded-full transition-colors', () => tones[look.get()]],
+        style: { width: circle, height: circle },
         ...context.target(
           () => menuOf(model, actions),
           () => void model.send(),
         ),
       },
-      dynamicChild(glyph, value => (value === 'busy' ? spinner('sm') : icon(value, 'sm', value === 'stop'))),
+      dynamicChild(glyph, value => (value === 'busy' ? spinner('sm') : icon(value, 14, value === 'stop'))),
     ),
     context.view(),
   )
