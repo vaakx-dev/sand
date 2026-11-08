@@ -1,0 +1,34 @@
+{
+  "name": "@sand/changes",
+  "version": "0.0.0",
+  "description": "Knows which threads in their own worktree have work ready to merge, shows what they changed and merges it into the project folder's branch on this PC",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "merge",
+    "runtime": "./src/runtime.ts",
+    "host": "./src/mcp.ts",
+    "cli": "./src/mcp.ts",
+    "label": "Merge",
+    "summary": "Shows which threads have work ready to merge, and merges it into the project on this PC"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/git-runner": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/mcp-server": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/turns-contract": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

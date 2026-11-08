@@ -1633,6 +1633,27 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/git/changes": {
+      "name": "@sand/changes",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/git": "workspace:*",
+        "@sand/git-diff": "workspace:*",
+        "@sand/git-runner": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/mcp-server": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/turns-contract": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/git/diff": {
       "name": "@sand/git-diff",
       "version": "0.0.0",
@@ -2466,6 +2487,8 @@
     "@sand/calendar-subscription": ["@sand/calendar-subscription@workspace:plugins/calendar/subscription"],
 
     "@sand/cdp": ["@sand/cdp@workspace:packages/cdp"],
+
+    "@sand/changes": ["@sand/changes@workspace:plugins/git/changes"],
 
     "@sand/chat": ["@sand/chat@workspace:plugins/ui/chat/chat"],
 
