@@ -108,7 +108,7 @@ const roles = () =>
     kit.sectionHeading('Group label'),
     kit.secondaryText('Secondary text for descriptions and captions.'),
     line(kit.metaLine('Meta line, 3m ago'), kit.countMark(12)),
-    line(kit.projectMark('harbor'), kit.metaLine('harbor'), kit.monoMeta('tide-retry', ' ', kit.badge('success', '#214')), kit.monoMeta(kit.badge('merged', '#209')), kit.shortcutHint('mod+k')),
+    line(kit.projectIcon('harbor', {}, 14), kit.metaLine('harbor'), kit.monoMeta('tide-retry', ' ', kit.badge('success', '#214')), kit.monoMeta(kit.badge('merged', '#209')), kit.shortcutHint('mod+k')),
     kit.textRule('Using script'),
   )
 
@@ -149,7 +149,7 @@ const gallery = () =>
         kit.workRowBody({
           title: 'Add retry with backoff to the tide table fetcher',
           end: kit.workStatus('ready'),
-          place: { label: 'harbor', mark: kit.projectMark('harbor') },
+          place: { label: 'harbor', mark: kit.projectIcon('harbor', {}, 14) },
           trail: [kit.monoMeta('sand/tide-table-retry-with-backoff'), kit.badge('success', '#214')],
         }),
       ),

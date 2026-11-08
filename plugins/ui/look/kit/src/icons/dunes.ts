@@ -29,8 +29,6 @@ const dune = (random: () => number, base: number, height: number) => {
 
 const seedOf = (name: string, shape?: number) => hash(shape ? `${name}#${shape}` : name)
 
-export const duneHue = (name: string, { shape, hue }: ProjectIcon = {}) => hue ?? seedOf(name, shape) % 360
-
 export const duneIcon = (name: string, { shape, hue }: ProjectIcon = {}) => {
   const seed = seedOf(name, shape)
   const tint = hue ?? seed % 360

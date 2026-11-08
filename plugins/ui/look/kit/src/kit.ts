@@ -15,7 +15,7 @@ import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
 import { barTitle, colorLabel, countMark, metaLine, monoMeta, pageTitle, pathLabel, rowName, rowTitle, secondaryText, sectionTitle, sheetTitle, shortcutHint } from './heads/text'
-import { projectAvatar, projectIcon, projectMark } from './icons/avatar'
+import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
 import { layer } from './layer'
@@ -188,7 +188,6 @@ export const kit = {
   progressSteps,
   projectAvatar,
   projectIcon,
-  projectMark,
   providerColor,
   providerIcon,
   quietButton,
