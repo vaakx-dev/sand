@@ -42,15 +42,15 @@ describe('on a phone', () => {
   test('the spaces sit in a tab bar along the bottom', async () => {
     const bar = (await spacesBar(phone.page).boundingBox())!
     expect(bar.y + bar.height).toBe(size.height)
-    expect(await spacesBar(phone.page).innerText()).toContain('Pull requests')
+    expect(await spacesBar(phone.page).innerText()).toContain('Calendar')
     expect(await current(phone.page)).toBe('threads')
   })
 
   test('a space shows its own main column without the thread drawers, and Back returns to the thread', async () => {
     const { page } = phone
-    await spacesBar(page).getByRole('link', { name: 'Pull requests' }).click()
-    await page.getByRole('heading', { name: 'Pull requests' }).waitFor()
-    expect(new URL(page.url()).searchParams.get('space')).toBe('pulls')
+    await spacesBar(page).getByRole('link', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: 'New event', exact: true }).first().waitFor()
+    expect(new URL(page.url()).searchParams.get('space')).toBe('calendar')
     expect(await page.getByText('Hello from the thread').isVisible()).toBe(false)
     await swipe(phone, [60, size.height / 2], [size.width - 60, size.height / 2])
     expect(await pane(page)).toBe('thread')
@@ -92,14 +92,14 @@ describe('on a desktop', () => {
   })
 
   test('switching spaces swaps the side and main columns and keeps the thread for later', async () => {
-    await spacesBar(page).getByRole('link', { name: 'Pull requests' }).click()
-    await page.getByRole('heading', { name: 'Pull requests' }).waitFor()
+    await spacesBar(page).getByRole('link', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: 'New event', exact: true }).first().waitFor()
     expect(await page.getByRole('heading', { name: 'Threads' }).isVisible()).toBe(false)
-    expect(await current(page)).toBe('pulls')
+    expect(await current(page)).toBe('calendar')
     await spacesBar(page).getByRole('link', { name: 'Threads' }).click()
     await page.getByText('Hello from the thread').waitFor()
     expect(new URL(page.url()).searchParams.get('session')).toBe(new URL(thread).searchParams.get('session'))
-    expect(new URL(page.url()).searchParams.get('pulls')).toBeNull()
+    expect(new URL(page.url()).searchParams.get('calendar')).toBeNull()
   })
 
   test('Settings covers the space until a space is chosen, and the rail marks it instead of the space', async () => {
@@ -115,8 +115,8 @@ describe('on a desktop', () => {
   })
 
   test('choosing a thread from another space lands in Threads', async () => {
-    await spacesBar(page).getByRole('link', { name: 'Pull requests' }).click()
-    await page.getByRole('heading', { name: 'Pull requests' }).waitFor()
+    await spacesBar(page).getByRole('link', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: 'New event', exact: true }).first().waitFor()
     await page.keyboard.press('Control+k')
     await page.keyboard.type('hello')
     await page.getByRole('option', { name: /hello/ }).first().click()
@@ -126,10 +126,10 @@ describe('on a desktop', () => {
   })
 
   test('the space survives a reload', async () => {
-    await spacesBar(page).getByRole('link', { name: 'Pull requests' }).click()
-    await page.getByRole('heading', { name: 'Pull requests' }).waitFor()
+    await spacesBar(page).getByRole('link', { name: 'Calendar' }).click()
+    await page.getByRole('button', { name: 'New event', exact: true }).first().waitFor()
     await page.reload()
-    await page.getByRole('heading', { name: 'Pull requests' }).waitFor()
-    expect(await current(page)).toBe('pulls')
+    await page.getByRole('button', { name: 'New event', exact: true }).first().waitFor()
+    expect(await current(page)).toBe('calendar')
   })
 })
