@@ -1586,6 +1586,9 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
+      "devDependencies": {
+        "@sand/devices-identity": "workspace:*",
+      },
     },
     "plugins/devices/registry": {
       "name": "@sand/devices-registry",
@@ -1597,6 +1600,24 @@
         "@sand/host-dist": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+    },
+    "plugins/devices/ssh": {
+      "name": "@sand/devices-ssh",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/devices-contract": "workspace:*",
+        "@sand/devices-identity": "workspace:*",
+        "@sand/host-daemon": "workspace:*",
+        "@sand/host-gateway": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@sand/vault": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -2527,6 +2548,8 @@
     "@sand/devices-peers": ["@sand/devices-peers@workspace:plugins/devices/peers"],
 
     "@sand/devices-registry": ["@sand/devices-registry@workspace:plugins/devices/registry"],
+
+    "@sand/devices-ssh": ["@sand/devices-ssh@workspace:plugins/devices/ssh"],
 
     "@sand/devices-ui": ["@sand/devices-ui@workspace:plugins/devices/ui"],
 

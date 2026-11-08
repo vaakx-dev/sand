@@ -1,7 +1,8 @@
-import type { ViaRelay } from '@sand/devices-connect'
+import { directRoute, type ViaRelay } from '@sand/devices-connect'
 import { pcWake } from '@sand/devices-connect/pc'
 import { type CallOptions, type DeviceRecord, PcUnavailable, type Route, type RouteStore, type Signer, viaFrame } from '@sand/devices-contract'
 import type { Request } from '@sand/host-hub/contract'
+import type { Dispose } from 'drydock'
 import type { Events } from './events'
 import { type LinkSetup, openPeerLink, type PeerLink } from './link'
 import { pinnedKey, seedsFor } from './seeds'
@@ -22,14 +23,16 @@ interface Wanted {
 
 export const notPaired = (pc: string) => new PcUnavailable(pc, pc, { phase: 'blocked', reason: 'not-paired' })
 
-const wantedOf = (record: DeviceRecord, pcs: DeviceRecord[]): Wanted => {
-  const seeds = seedsFor(record, pcs)
+const wantedOf = (record: DeviceRecord, pcs: DeviceRecord[], added: Route[]): Wanted => {
+  const seeds = [...added, ...seedsFor(record, pcs)]
   return { record, seeds, key: JSON.stringify({ name: record.name, publicKey: pinnedKey(record), seeds }) }
 }
 
 export const createPeerLinks = ({ signer, store, events, opened, changed }: LinksOptions) => {
   const links = new Map<string, PeerLink>()
   const wanted = new Map<string, Wanted>()
+  const added = new Map<string, Route[]>()
+  let records: DeviceRecord[] = []
   let closed = false
 
   const call = <I, O>(pc: string, request: Request<I, O>, input: I, options?: CallOptions): Promise<O> => {
@@ -76,11 +79,28 @@ export const createPeerLinks = ({ signer, store, events, opened, changed }: Link
     if (link.key !== want.key && !link.open()) replace(pc)
   }
 
+  const reconcile = () => {
+    wanted.clear()
+    for (const record of records) wanted.set(record.id, wantedOf(record, records, added.get(record.id) ?? []))
+    for (const pc of new Set([...links.keys(), ...wanted.keys()])) settle(pc)
+  }
+
+  const setAdded = (pc: string, routes: Route[]) => {
+    if (routes.length) added.set(pc, routes)
+    else added.delete(pc)
+    reconcile()
+  }
+
   return {
-    sync(records: DeviceRecord[]) {
-      wanted.clear()
-      for (const record of records) wanted.set(record.id, wantedOf(record, records))
-      for (const pc of new Set([...links.keys(), ...wanted.keys()])) settle(pc)
+    sync(next: DeviceRecord[]) {
+      records = next
+      reconcile()
+    },
+    addRoute(pc: string, url: string): Dispose {
+      const route = directRoute(url, 'seed')
+      if (!route) throw new Error(`${url} isn't an http or https address`)
+      setAdded(pc, [...(added.get(pc) ?? []), route])
+      return () => setAdded(pc, added.get(pc)?.filter(known => known !== route) ?? [])
     },
     renew(pc: string) {
       const link = links.get(pc)

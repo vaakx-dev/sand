@@ -1,0 +1,30 @@
+{
+  "name": "@sand/devices-ssh",
+  "version": "0.0.0",
+  "description": "Uses hosts from your SSH config, or ones you type, as your PCs, and sets sand up on them over SSH",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "ssh",
+    "host": "./src/host/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "SSH machines",
+    "summary": "Adds machines you reach over SSH as your PCs and keeps them connected"
+  },
+  "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/devices-identity": "workspace:*",
+    "@sand/host-daemon": "workspace:*",
+    "@sand/host-gateway": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/vault": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}
