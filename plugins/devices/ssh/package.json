@@ -19,6 +19,7 @@
     "@sand/host-daemon": "workspace:*",
     "@sand/host-gateway": "workspace:*",
     "@sand/host-hub": "workspace:*",
+    "@sand/settings": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/vault": "workspace:*",
     "@sand/ui-kit": "workspace:*",

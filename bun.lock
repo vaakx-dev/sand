@@ -1613,6 +1613,7 @@
         "@sand/host-daemon": "workspace:*",
         "@sand/host-gateway": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/settings": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
