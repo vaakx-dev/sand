@@ -6,7 +6,7 @@ import { palette } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
-import { homeRoute, shell } from '@sand/ui-shell/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { clock, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -15,7 +15,7 @@ import { threadRows, type RowPart } from './contract'
 import { chipSources } from './chips'
 import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
-import { launch } from './launch/launch'
+import { launch, newChat } from './launch/launch'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 
@@ -39,9 +39,10 @@ export default definePlugin({
     const groups = owned(ctx, () => events.read(() => threadGroups(threadEntries(parts, { changes, trail: trail.get() }), limit.get(), more)))
     const now = owned(ctx, () => clock(1000))
     ctx.effect(() => ctx.shell.section({ id: 'threads', order: 20, groups: () => groups.get() }))
-    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, to: { kind: homeRoute } }))
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
-    launch({ ...parts, pulse: events })
+    const launched = { ...parts, pulse: events }
+    launch(launched)
+    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, run: () => newChat(launched) }))
     ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.shell, ctx.threads)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },

@@ -1,12 +1,13 @@
+import { draftRoute } from '@sand/chat/contract'
 import { composer, type Composer } from '@sand/composer/contract'
 import type { Pulse } from '@sand/reactive'
 import type { Kit } from '@sand/ui-kit/contract'
 import { homeRoute, type Screen, type Shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
-import { div, dynamicChild, effect, sig, untrack, type Child } from '@vaakx-dev/vrui'
+import { div, dynamicChild, effect, h1, sig, untrack, type Child } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { places } from '../palette/places'
+import { currentPlace, places } from '../palette/places'
 import { openDraft } from '../palette/projects'
 import { projectPicker } from './picker'
 
@@ -19,7 +20,7 @@ export interface LaunchParts {
 }
 
 const homeScreen = ({ kit }: LaunchParts, composerHere: Child): Screen => ({
-  head: () => kit.headTitle(2, 'New chat'),
+  head: () => h1({ class: 'sr-only' }, 'New chat'),
   main: () =>
     div(
       { class: 'flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-24' },
@@ -51,6 +52,15 @@ const draftingSlots = ({ ctx, kit, shell, threads, pulse }: LaunchParts) => {
   })
 }
 
+export const newChat = ({ ctx, shell, threads }: LaunchParts) => {
+  if (shell.state() !== 'phone') return shell.open({ kind: homeRoute })
+  const here = currentPlace(ctx, threads)
+  void openDraft(ctx, threads, here.path, here.device).then(() => {
+    const draft = threads.drafting()
+    if (draft) shell.open({ kind: draftRoute, id: draft.id })
+  })
+}
+
 export const launch = (parts: LaunchParts) => {
   const { ctx, shell } = parts
   const found = sig<Composer | undefined>(undefined)
@@ -62,7 +72,6 @@ export const launch = (parts: LaunchParts) => {
       if (shell.current().kind === homeRoute) untrack(() => leaveThreadFolder(parts))
     }),
   )
-  ctx.effect(() => shell.mount('home', div({ class: 'flex shrink-0 flex-col' }, composerView())))
   ctx.effect(() => shell.route({ kind: homeRoute, render: () => homeScreen(parts, composerView()) }))
   draftingSlots(parts)
 }
