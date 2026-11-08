@@ -7,7 +7,7 @@ export interface RemoteCommand {
 
 type Shell = 'posix' | 'windows'
 
-export const markers = { missing: 'sand:missing', server: 'sand:server ' } as const
+export const markers = { missing: 'sand:missing', server: 'sand:server ', done: 'sand:done ' } as const
 
 const posixQuoted = (value: string) => `'${value.replaceAll("'", `'\\''`)}'`
 
@@ -70,8 +70,10 @@ const ensureScripts: Record<Shell, string> = {
 }
 
 const installScripts = (command: string): Record<Shell, string> => ({
-  posix: ['BROWSER=true', 'export BROWSER', command, ''].join('\n'),
-  windows: ["$ProgressPreference = 'SilentlyContinue'", "$env:BROWSER = 'true'", command].join('\n'),
+  posix: ['BROWSER=true', 'export BROWSER', command, 'code=$?', `printf '\\n%s%s\\n' '${markers.done}' "$code"`, 'exit $code', ''].join('\n'),
+  windows: ["$ProgressPreference = 'SilentlyContinue'", "$env:BROWSER = 'true'", command, '$code = [int](-not $?)', `'${markers.done}' + $code`, 'exit $code'].join(
+    '\n',
+  ),
 })
 
 const joinScripts = (link: string): Record<Shell, string> => ({
