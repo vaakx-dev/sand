@@ -68,8 +68,3 @@ export const awayPcName = (ctx: Context, device: string) => {
 export const pcName = (ctx: Context, device: string) => ctx.get(pcs)?.name(device) ?? 'This PC'
 
 export const pcNames = (ctx: Context, place: Place) => [...new Set((place.group?.locations ?? [place]).map(location => pcName(ctx, location.device)))]
-
-export const shortPath = (ctx: Context, path: string, device: string) => {
-  const home = ctx.get(projects)?.place(device).home
-  return home && home !== '~' && path.startsWith(home) ? `~${path.slice(home.length)}` : path
-}
