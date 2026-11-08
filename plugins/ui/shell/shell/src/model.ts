@@ -147,7 +147,7 @@ export const shellModel = (kit: Kit) => {
     },
     sideHidden,
     showSide,
-    isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())),
+    isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())) && (to.tab === undefined || to.tab === current.get().tab),
     open,
     leaveNav: () => open(before.get()),
     back: nav.back,

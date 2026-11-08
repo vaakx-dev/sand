@@ -1,6 +1,6 @@
-import type { Occurrence } from '@sand/calendar/contract'
+import type { Calendar, Occurrence } from '@sand/calendar/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { clock, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
+import { clock, derive, div, dynamicChild, show, span, type Child } from '@vaakx-dev/vrui'
 import { waiting } from './agenda'
 import { addDays, clockLabel, dayMs, days, hourLabel, isAllDay, startOfDay, weekdayLabel } from './days'
 import type { CalendarModel, Shown } from './model'
@@ -10,11 +10,29 @@ export interface WeekParts {
   addAt(at: number): void
 }
 
+type Tint = (event: Occurrence) => string | undefined
+
 const hour = 48
 
 const minute = 60_000
 
-const blockLook = 'rounded-md bg-neutral-800 text-left text-neutral-100 hover:bg-neutral-700'
+const shortest = 30 * minute
+
+const blockLook = 'group overflow-hidden rounded-md text-left text-neutral-100'
+
+const tintOf = (calendars: Calendar[]): Tint => {
+  const colors = new Map(calendars.flatMap(calendar => (calendar.color ? [[calendar.id, calendar.color] as const] : [])))
+  return event => colors.get(event.calendar)
+}
+
+const fill = (color: string | undefined) => (color ? { background: `color-mix(in srgb, ${color} 32%, transparent)` } : {})
+
+const blockButton = (kit: Kit, color: string | undefined, props: { class: string; style?: Record<string, string>; title: string; onClick(): void }, ...children: Child[]) =>
+  kit.plainButton(
+    { ...props, class: [blockLook, !color && 'bg-neutral-800', props.class], style: { ...props.style, ...fill(color) } },
+    span({ class: 'pointer-events-none absolute inset-0 group-hover:bg-neutral-700/40' }),
+    span({ class: 'relative flex min-w-0 flex-col' }, ...children),
+  )
 
 interface Placed {
   event: Occurrence
@@ -31,11 +49,12 @@ const lanesOf = (events: Occurrence[]): Placed[] => {
     cluster = []
     ends = []
   }
-  for (const event of events) {
+  const shownEnd = (event: Occurrence) => Math.max(event.to, event.from + shortest)
+  for (const event of events.toSorted((a, b) => a.from - b.from || b.to - a.to)) {
     if (cluster.length && event.from >= Math.max(...ends)) close()
     const free = ends.findIndex(end => end <= event.from)
     const lane = free < 0 ? ends.length : free
-    ends[lane] = event.to
+    ends[lane] = shownEnd(event)
     const one = { event, lane, lanes: 1 }
     cluster.push(one)
     placed.push(one)
@@ -44,19 +63,30 @@ const lanesOf = (events: Occurrence[]): Placed[] => {
   return placed
 }
 
-const block = (kit: Kit, { event, lane, lanes }: Placed, day: number, open: (event: Occurrence) => void) => {
+const lineHeight = 20
+
+const clamps = ['line-clamp-1', 'line-clamp-2', 'line-clamp-3', 'line-clamp-4', 'line-clamp-5', 'line-clamp-6']
+
+const blockText = (kit: Kit, event: Occurrence, lines: number) => {
+  const timed = lines >= 3
+  const titleLines = Math.min(clamps.length, timed ? lines - 1 : lines)
+  return [span({ class: ['min-w-0 break-words', clamps[titleLines - 1]] }, event.title), timed ? kit.metaLine(clockLabel(event.from)) : null]
+}
+
+const block = (kit: Kit, { event, lane, lanes }: Placed, day: number, tint: Tint, open: (event: Occurrence) => void) => {
   const top = Math.max(0, (event.from - day) / minute)
-  const bottom = Math.min(24 * 60, (event.to - day) / minute)
-  const height = Math.max(20, ((bottom - top) * hour) / 60 - 2)
-  return kit.plainButton(
+  const bottom = Math.min(24 * 60, (Math.max(event.to, event.from + shortest) - day) / minute)
+  const height = ((bottom - top) * hour) / 60 - 2
+  return blockButton(
+    kit,
+    tint(event),
     {
-      class: [blockLook, 'absolute flex flex-col overflow-hidden px-1.5 py-px'],
+      class: 'absolute flex flex-col px-1.5 py-px',
       style: { top: `${(top * hour) / 60}px`, height: `${height}px`, left: `${(lane / lanes) * 100}%`, width: `calc(${100 / lanes}% - 2px)` },
       title: event.title,
       onClick: () => open(event),
     },
-    kit.rowTitle(event.title),
-    height > 40 ? kit.metaLine(clockLabel(event.from)) : null,
+    ...blockText(kit, event, Math.max(1, Math.floor(height / lineHeight))),
   )
 }
 
@@ -72,8 +102,8 @@ const dayHead = (kit: Kit, day: number) =>
     ),
   )
 
-const allDayChip = (kit: Kit, event: Occurrence, open: (event: Occurrence) => void) =>
-  kit.plainButton({ class: [blockLook, 'flex min-w-0 px-1.5'], title: event.title, onClick: () => open(event) }, kit.rowTitle(event.title))
+const allDayChip = (kit: Kit, event: Occurrence, tint: Tint, open: (event: Occurrence) => void) =>
+  blockButton(kit, tint(event), { class: 'relative flex min-w-0 px-1.5', title: event.title, onClick: () => open(event) }, kit.rowTitle(event.title))
 
 const nowLine = (day: number) => {
   const now = clock(60_000)
@@ -91,7 +121,7 @@ const nowLine = (day: number) => {
 
 const overlapping = (events: Occurrence[], day: number) => events.filter(event => event.from < addDays(day, 1) && event.to > day)
 
-const column = (kit: Kit, day: number, events: Occurrence[], parts: WeekParts) => {
+const column = (kit: Kit, day: number, events: Occurrence[], tint: Tint, parts: WeekParts) => {
   const node: HTMLElement = div(
     {
       class: 'relative min-w-0 flex-1',
@@ -103,7 +133,7 @@ const column = (kit: Kit, day: number, events: Occurrence[], parts: WeekParts) =
       },
     },
     ...Array.from({ length: 23 }, (_, index) => div({ class: 'pointer-events-none absolute inset-x-0 border-t border-neutral-800', style: { top: `${(index + 1) * hour}px` } })),
-    ...lanesOf(events).map(one => block(kit, one, day, parts.open)),
+    ...lanesOf(events).map(one => block(kit, one, day, tint, parts.open)),
     nowLine(day),
   )
   return node
@@ -117,7 +147,7 @@ const hours = (kit: Kit) =>
     ),
   )
 
-const grid = (kit: Kit, { from, to, events }: Shown, parts: WeekParts, scroll: { top: number }) => {
+const grid = (kit: Kit, { from, to, events }: Shown, tint: Tint, parts: WeekParts, scroll: { top: number }) => {
   const week = days(from, Math.round((to - from) / dayMs))
   const allDay = events.filter(event => isAllDay(event.start))
   const timed = events.filter(event => !isAllDay(event.start))
@@ -132,7 +162,7 @@ const grid = (kit: Kit, { from, to, events }: Shown, parts: WeekParts, scroll: {
       },
     },
     hours(kit),
-    ...week.map(day => column(kit, day, overlapping(timed, day), parts)),
+    ...week.map(day => column(kit, day, overlapping(timed, day), tint, parts)),
   )
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
@@ -143,7 +173,7 @@ const grid = (kit: Kit, { from, to, events }: Shown, parts: WeekParts, scroll: {
         ? div(
             { class: 'flex pb-1' },
             div({ class: 'w-12 shrink-0' }),
-            ...week.map(day => div({ class: 'flex min-w-0 flex-1 flex-col gap-px px-px' }, ...overlapping(allDay, day).map(event => allDayChip(kit, event, parts.open)))),
+            ...week.map(day => div({ class: 'flex min-w-0 flex-1 flex-col gap-px px-px' }, ...overlapping(allDay, day).map(event => allDayChip(kit, event, tint, parts.open)))),
           )
         : null,
     ),
@@ -154,7 +184,7 @@ const grid = (kit: Kit, { from, to, events }: Shown, parts: WeekParts, scroll: {
 export const weekView = (kit: Kit, model: CalendarModel, parts: WeekParts) => {
   const scroll = { top: 7 * hour - 12 }
   return dynamicChild(
-    () => model.shown.get(),
-    shown => (shown?.mode === 'week' ? grid(kit, shown, parts, scroll) : waiting(kit, model)),
+    derive(() => ({ shown: model.shown.get(), calendars: model.calendars.get() })),
+    ({ shown, calendars }) => (shown?.mode === 'week' ? grid(kit, shown, tintOf(calendars), parts, scroll) : waiting(kit, model)),
   )
 }
