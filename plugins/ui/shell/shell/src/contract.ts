@@ -200,12 +200,18 @@ export interface RouteSpec {
 }
 
 /**
- * A sheet: a bottom sheet on phones, a centred one on wide screens. The shell adds the close button after
- * `head`, keeps `foot` in view while `body` scrolls, and closes it on Escape and browser back. One shows at a time;
- * opening another replaces it.
+ * A sheet: a bottom sheet on phones, a centred one on wide screens. It closes on Escape and browser back. One shows
+ * at a time; opening another replaces it.
+ * - `form` (the default): the shell adds the close button after `head`, keeps `foot` in view while `body` scrolls.
+ * - `list`: a bottom sheet with a grab handle on phones.
+ * - `search`: full screen on phones.
+ * `list` and `search` have no close button, and their `head` and `body` lay themselves out.
  */
+export type SheetLook = 'form' | 'list' | 'search'
+
 export interface SheetSpec {
   label: string
+  look?: SheetLook
   head(close: () => void): Child
   body(close: () => void): Child
   foot?(close: () => void): Child

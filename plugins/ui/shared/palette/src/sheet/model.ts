@@ -33,6 +33,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
   const busy = sig(false)
   const failure = sig('')
   const progress = sig('')
+  const searching = sig(!page.browse)
 
   const reload = () => reloads.update(count => count + 1)
 
@@ -99,7 +100,6 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     }
   })
 
-  const more = (item: PaletteItem) => advance(actionsPage(item))
 
   const runAction = (action: PaletteItemAction) => {
     if (!action.returnAfter) return closeAndRun(() => action.run())
@@ -113,7 +113,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
   const openActions = () => {
     const item = untrack(() => results.get()[box.selected.get()])
     if (!item?.actions?.length) return false
-    more(item)
+    advance(actionsPage(item))
     return true
   }
 
@@ -180,7 +180,7 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
     action,
     card,
     nested: nav.trail().length > 1,
-    more,
+    searching,
     runAction,
     openActions,
     submit,

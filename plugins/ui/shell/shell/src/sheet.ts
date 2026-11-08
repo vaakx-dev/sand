@@ -1,10 +1,12 @@
+import type { Kit } from '@sand/ui-kit/contract'
 import { div, dynamicChild } from '@vaakx-dev/vrui'
-import type { SheetSpec } from './contract'
+import type { SheetLook, SheetSpec } from './contract'
 import type { Model } from './model'
 
-const sheetView = ({ kit, closeSheet }: Model, spec: SheetSpec) => {
-  const close = () => closeSheet(spec)
-  return kit.overlay(
+type SheetView = (kit: Kit, spec: SheetSpec, close: () => void) => HTMLElement
+
+const formSheet: SheetView = (kit, spec, close) =>
+  kit.overlay(
     close,
     kit.sheet(
       { size: 'md', 'aria-label': spec.label },
@@ -17,6 +19,14 @@ const sheetView = ({ kit, closeSheet }: Model, spec: SheetSpec) => {
       spec.foot ? kit.sheetFoot(spec.foot(close)) : null,
     ),
   )
-}
+
+const listSheet: SheetView = (kit, spec, close) => kit.overlay(close, kit.sheet({ grab: close, 'aria-label': spec.label }, spec.head(close), spec.body(close)))
+
+const searchSheet: SheetView = (kit, spec, close) =>
+  kit.screenOverlay(close, kit.sheet({ phone: 'screen', 'aria-label': spec.label }, spec.head(close), spec.body(close)))
+
+const views: Record<SheetLook, SheetView> = { form: formSheet, list: listSheet, search: searchSheet }
+
+const sheetView = ({ kit, closeSheet }: Model, spec: SheetSpec) => views[spec.look ?? 'form'](kit, spec, () => closeSheet(spec))
 
 export const sheetHost = (model: Model) => dynamicChild(model.sheetShown, spec => (spec ? sheetView(model, spec) : null))

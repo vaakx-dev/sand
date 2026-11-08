@@ -22,7 +22,7 @@ export const sessionSource = (parts: StartParts, kit: Kit): PaletteSource => ({
     if (query.startsWith('/')) return []
     const current = threads.current()
     const actions = current ? sessionActions(kit, threads, current) : []
-    if (!query.trim()) return [newChatItem(parts, ''), ...actions, ...sessionItems(ctx, shell, threads, 'Recent threads').slice(0, 5)]
-    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts), ...sessionItems(ctx, shell, threads, 'Threads')]
+    if (!query.trim()) return [...actions, ...sessionItems(ctx, shell, threads, 'Recent').slice(0, 5)]
+    return [newChatItem(parts, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(parts), ...sessionItems(ctx, shell, threads, 'Chats')]
   },
 })
