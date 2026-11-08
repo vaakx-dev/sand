@@ -2092,106 +2092,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
-    "plugins/ui/layout/gesture": {
-      "name": "@sand/gesture",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/layout": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/layout/header": {
-      "name": "@sand/header",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/devices-contract": "workspace:*",
-        "@sand/layout": "workspace:*",
-        "@sand/picker": "workspace:*",
-        "@sand/project": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/threads-space": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/layout/layout": {
-      "name": "@sand/layout",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/reactive": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-      "devDependencies": {
-        "playwright": "^1.64.1",
-      },
-    },
-    "plugins/ui/layout/nav": {
-      "name": "@sand/nav",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/reactive": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/layout/panel": {
-      "name": "@sand/panel",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/header": "workspace:*",
-        "@sand/layout": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/threads-space": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/layout/rail": {
-      "name": "@sand/rail",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/layout": "workspace:*",
-        "@sand/nav": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/layout/sidebar": {
-      "name": "@sand/sidebar",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/composer": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
-        "@sand/jobs": "workspace:*",
-        "@sand/layout": "workspace:*",
-        "@sand/nav": "workspace:*",
-        "@sand/palette": "workspace:*",
-        "@sand/picker": "workspace:*",
-        "@sand/project": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/threads-space": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
     "plugins/ui/look/kit": {
       "name": "@sand/ui-kit",
       "version": "0.0.0",
@@ -2393,15 +2293,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
-    "plugins/ui/threads/threads-space": {
-      "name": "@sand/threads-space",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/layout": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
   },
   "overrides": {
     "htmlparser2": "^12.0.0",
@@ -2551,8 +2442,6 @@
 
     "@sand/finders": ["@sand/finders@workspace:plugins/computer/finders"],
 
-    "@sand/gesture": ["@sand/gesture@workspace:plugins/ui/layout/gesture"],
-
     "@sand/git": ["@sand/git@workspace:plugins/git/git"],
 
     "@sand/git-diff": ["@sand/git-diff@workspace:plugins/git/diff"],
@@ -2564,8 +2453,6 @@
     "@sand/github": ["@sand/github@workspace:plugins/git/github"],
 
     "@sand/harness": ["@sand/harness@workspace:packages/harness"],
-
-    "@sand/header": ["@sand/header@workspace:plugins/ui/layout/header"],
 
     "@sand/host-daemon": ["@sand/host-daemon@workspace:plugins/host/daemon"],
 
@@ -2599,8 +2486,6 @@
 
     "@sand/keys": ["@sand/keys@workspace:plugins/ui/shared/keys"],
 
-    "@sand/layout": ["@sand/layout@workspace:plugins/ui/layout/layout"],
-
     "@sand/ledger": ["@sand/ledger@workspace:plugins/core/ledger"],
 
     "@sand/logins": ["@sand/logins@workspace:plugins/connections/logins"],
@@ -2625,15 +2510,11 @@
 
     "@sand/model-setup": ["@sand/model-setup@workspace:plugins/ui/shared/model-setup"],
 
-    "@sand/nav": ["@sand/nav@workspace:plugins/ui/layout/nav"],
-
     "@sand/orchestrator": ["@sand/orchestrator@workspace:plugins/agent/orchestrator"],
 
     "@sand/outbox": ["@sand/outbox@workspace:plugins/ui/chat/outbox"],
 
     "@sand/palette": ["@sand/palette@workspace:plugins/ui/shared/palette"],
-
-    "@sand/panel": ["@sand/panel@workspace:plugins/ui/layout/panel"],
 
     "@sand/paths": ["@sand/paths@workspace:plugins/core/paths"],
 
@@ -2655,8 +2536,6 @@
 
     "@sand/quote": ["@sand/quote@workspace:plugins/ui/chat/quote"],
 
-    "@sand/rail": ["@sand/rail@workspace:plugins/ui/layout/rail"],
-
     "@sand/reactive": ["@sand/reactive@workspace:packages/reactive"],
 
     "@sand/reload": ["@sand/reload@workspace:plugins/extend/reload"],
@@ -2677,8 +2556,6 @@
 
     "@sand/shell-jobs": ["@sand/shell-jobs@workspace:plugins/agent/shell-jobs"],
 
-    "@sand/sidebar": ["@sand/sidebar@workspace:plugins/ui/layout/sidebar"],
-
     "@sand/skills": ["@sand/skills@workspace:plugins/agent/skills"],
 
     "@sand/sub-model": ["@sand/sub-model@workspace:plugins/agent/sub-model"],
@@ -2692,8 +2569,6 @@
     "@sand/threads-home": ["@sand/threads-home@workspace:plugins/ui/threads/home"],
 
     "@sand/threads-mcp": ["@sand/threads-mcp@workspace:plugins/agent/threads-mcp"],
-
-    "@sand/threads-space": ["@sand/threads-space@workspace:plugins/ui/threads/threads-space"],
 
     "@sand/toasts": ["@sand/toasts@workspace:plugins/ui/shared/toasts"],
 
