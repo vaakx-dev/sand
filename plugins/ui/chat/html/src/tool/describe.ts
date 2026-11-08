@@ -16,7 +16,7 @@ const themeGuide = [
 
 const pageRules = `Inline <style> and <script>. Local images as absolute paths, or paths relative to the thread folder, are inlined; remote URLs load as they are. At most ${maxHtmlChars} characters.`
 
-export const renderDescription = `Show a finished HTML page (chart, diagram, table, mockup) inline in this thread, above your final reply. The frame fits the page's height. Pass the page's markup as html, or the path of a .html file as path; pass neither to publish the page html_preview just checked. ${layoutGuide} ${themeGuide} ${pageRules}`
+export const renderDescription = `Show a finished HTML page (chart, diagram, table, mockup) inline in this thread, above your final reply. The frame fits the page's height. Pass the document as html, or the path of a .html file or an image as path; pass neither to publish the page html_preview just checked. ${layoutGuide} ${themeGuide} ${pageRules}`
 
 export const previewDescription = `Check an HTML page before html_render. Returns a PNG of the page, its real height and its console output, to catch a broken or clipped page. Only you see this; html_render shows the page to the reader. ${layoutGuide} ${pageRules}`
 
