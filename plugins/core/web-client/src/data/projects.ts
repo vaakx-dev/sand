@@ -1,4 +1,4 @@
-import { fsBrowse, fsMkdir, helloProjects, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsChange as projectsUpdate, projectsCreate, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
+import { type BringInput, fsBrowse, fsMkdir, helloProjects, type Project, type ProjectList, type ProjectLook, type ProjectPatch, projectsAdd, projectsBring, projectsChange as projectsUpdate, projectsCreate, projectsIgnored, projectsInspect, projectsList, projectsRemove, projectsRoot, projectsUpdate as projectsPatch, sandHomeProject } from '@sand/project/contract'
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import type { Context } from 'drydock'
@@ -10,6 +10,8 @@ import { projectIcons } from './icons'
 import { keptLists } from './kept'
 
 const fallback = { home: '~', sep: '/', root: '~' }
+
+const bringTimeout = 60 * 60_000
 
 export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store) => {
   const lists: Lists = new Map()
@@ -89,6 +91,14 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
     return entryFor(project, device)
   }
 
+  const brought = async ({ to, ...input }: BringInput & { to: string }) => {
+    const { project } = await wire.call(projectsBring, input, to, { timeout: bringTimeout })
+    await refresh(to)
+    const found = lists.get(to)?.projects.find(listed => listed.id === project)
+    if (!found) throw new Error("The copy was added, but this page couldn't load it yet. Reload to see it.")
+    return entryFor(found, to)
+  }
+
   const update = async (target: ProjectGroup, patch: ProjectPatch) => {
     await wire.call(projectsPatch, { project: target.id, patch }, store.here())
     await refreshHere()
@@ -110,6 +120,8 @@ export const createProjects = (ctx: Context, wire: Wire, pcs: Pcs, store: Store)
     mkdir: (path, device) => wire.call(fsMkdir, { path }, device),
     inspect: (path, device) => wire.call(projectsInspect, { path }, device),
     add: (path, device, project) => registered(wire.call(projectsAdd, { path, ...(project ? { project } : {}) }, device), device),
+    ignoredFiles: (path, device) => wire.call(projectsIgnored, { path }, device),
+    bring: brought,
     rename: (target, name) => update(target, { name }),
     hide: (target, hidden) => update(target, { hidden }),
     setIcon: (target, icon) => update(target, { icon }),

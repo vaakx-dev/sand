@@ -7,17 +7,17 @@ import { projectsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
 import { definePlugin } from 'drydock'
+import { projectAdd, type ProjectAdd } from '../contract'
 import { firstProject } from './add/first'
 import { addSheet } from './add/sheet'
 import { newThreadSource, projectSource } from './add/source'
 import { inject } from './context'
 import { findSource } from './find/source'
-import { openAt } from './settings/actions'
 import { projectsPage } from './settings/page'
 
 export default definePlugin({
   name: 'project',
-  description: 'Projects settings page and its Add a project sheet, the first-run project step, and palette items to add a project, go to a file or search the project',
+  description: 'Projects settings page, the Add project sheet with the first-run project step, and palette items to add a project, go to a file or search the project',
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [projectsChange, pcsChange], [shell])
@@ -25,12 +25,12 @@ export default definePlugin({
     ctx.watch(palette, found => found?.source(findSource(ctx)))
     ctx.watch(shell, frame => {
       if (!frame) return
-      const addAndStart = () => {
-        frame.sheet(addSheet(ctx, changes, target => openAt(ctx, target)))
-      }
+      const adder: ProjectAdd = { open: options => void frame.sheet(addSheet(ctx, changes, options)) }
+      const add = () => adder.open()
       return joinDisposers(
-        ctx.watch(palette, found => found?.source(projectSource(addAndStart))),
-        ctx.watch(palette, found => found?.source(newThreadSource(addAndStart))),
+        ctx.provide(projectAdd, adder),
+        ctx.watch(palette, found => found?.source(projectSource(add))),
+        ctx.watch(palette, found => found?.source(newThreadSource(add))),
         ctx.watch(firstRun, run =>
           run?.step({
             feature: 'threads',
@@ -38,7 +38,7 @@ export default definePlugin({
               firstProject(
                 ctx.kit,
                 changes.read(() => ctx.projects.list().length),
-                addAndStart,
+                add,
                 next,
               ),
           }),

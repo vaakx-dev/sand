@@ -1,90 +1,133 @@
+import type { PcView } from '@sand/devices-contract'
 import type { Pulse } from '@sand/reactive'
 import type { SheetSpec } from '@sand/ui-shell/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, dynamicChild, show, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, sig, type Derive } from '@vaakx-dev/vrui'
+import type { ProjectAddOptions } from '../../contract'
 import type { ProjectsContext } from '../context'
 import { openAt } from '../settings/actions'
-import { matchChoice, pcChoice, sourceChoice } from './choices'
-import { folderList } from './folders'
-import { addForm } from './form'
-import { plan, type Target } from './plan'
+import { bringStep } from './bring/step'
+import { folderStep } from './folder/step'
+import { pcsStep } from './pcs'
+import type { Action, Step } from './run'
 
-export type Added = (target: Target) => unknown
+type Place = { kind: 'pcs' } | { kind: 'folder'; device: string } | { kind: 'bring'; device: string; project: string }
 
-interface Failure {
-  typed: string
-  text: string
+const holds = (ctx: ProjectsContext, project: string, device: string) => Boolean(ctx.projects.get(project)?.locations.some(entry => entry.device === device))
+
+const startAt = (pcs: PcView[], project: string | undefined): Place => {
+  const [only, ...rest] = pcs
+  if (!only || rest.length) return { kind: 'pcs' }
+  return project ? { kind: 'bring', device: only.id, project } : { kind: 'folder', device: only.id }
 }
 
-const addModel = (ctx: ProjectsContext, changes: Pulse, added?: Added) => {
-  const form = addForm(ctx, changes)
-  const step = derive(() => plan(ctx, form))
+const addModel = (ctx: ProjectsContext, changes: Pulse, options: ProjectAddOptions) => {
+  const { project } = options
+  const pcs = changes.read(() => ctx.pcs.list().filter(pc => !project || !holds(ctx, project, pc.id)))
+  const trail = sig<Place[]>([startAt(pcs.get(), project)])
+  const place = derive(() => trail.get().at(-1) ?? { kind: 'pcs' as const })
+  const action = sig<Derive<Action> | undefined>(undefined)
   const busy = sig(false)
-  const failure = sig<Failure | undefined>(undefined)
-  const typed = derive(() => {
-    const device = form.device.get()
-    const draft = device ? form.draftOf(device) : undefined
-    return [device, form.kind.get(), draft?.path.get(), draft?.name.get(), form.match.get()?.project].join('\n')
-  })
-  const note = derive(() => {
-    const failed = failure.get()
-    if (failed?.typed === typed.get()) return { text: failed.text, error: true }
-    const { note: text, error = false } = step.get()
-    return text ? { text, error } : undefined
-  })
-  const go = async (close: () => void) => {
-    const { run, opens, label } = step.get()
-    if (!run || busy.get()) return
+  const failure = sig('')
+  const go = (next: Place) => {
+    failure.set('')
+    trail.update(list => [...list, next])
+  }
+  const back = () => {
+    failure.set('')
+    trail.update(list => list.slice(0, -1))
+  }
+  const finish = async (close: () => void) => {
+    const current = action.get()?.get()
+    if (!current?.run || busy.get()) return
     busy.set(true)
-    const at = typed.get()
-    const target = await run().catch((error: unknown) => {
-      failure.set({ typed: at, text: `Couldn’t ${label.toLowerCase()} (${errorMessage(error)}). Check what you entered and try again.` })
+    failure.set('')
+    const added = await current.run().catch((error: unknown) => {
+      failure.set(errorMessage(error))
       return undefined
     })
     busy.set(false)
-    if (!target) return
+    if (!added) return
     close()
-    await (opens ? openAt(ctx, target) : added?.(target))
+    await (current.opens || !options.added ? openAt(ctx, added) : options.added(added))
   }
-  return { form, step, busy, note, go }
+  return { pcs, project, trail, place, action, busy, failure, go, back, finish }
 }
 
 type AddModel = ReturnType<typeof addModel>
 
-const noteView = (ctx: ProjectsContext, { note }: AddModel) =>
-  dynamicChild(note, shown => {
-    if (!shown) return null
-    return shown.error ? ctx.kit.errorText(shown.text) : ctx.kit.sheetText(shown.text)
-  })
+const pcName = (ctx: ProjectsContext, device: string) => ctx.pcs.name(device)
 
-const body = (ctx: ProjectsContext, model: AddModel, close: () => void) => {
-  const submit = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) void model.go(close)
+const projectName = (ctx: ProjectsContext, project: string) => ctx.projects.get(project)?.name ?? 'project'
+
+const titleOf = (ctx: ProjectsContext, model: AddModel, place: Place) => {
+  const several = model.trail.get()[0]?.kind === 'pcs'
+  if (place.kind === 'pcs') return model.project ? `Add ${projectName(ctx, model.project)} to another PC` : 'Add project'
+  if (place.kind === 'bring') return `Add ${projectName(ctx, place.project)} to ${pcName(ctx, place.device)}`
+  return several ? `Add project on ${pcName(ctx, place.device)}` : 'Add project'
+}
+
+const stepOf = (ctx: ProjectsContext, changes: Pulse, model: AddModel, place: Place): Step => {
+  if (place.kind === 'pcs') {
+    return pcsStep(ctx, model.pcs, device => model.go(model.project ? { kind: 'bring', device, project: model.project } : { kind: 'folder', device }))
   }
-  return div(
-    { class: 'contents', onKeyDown: submit },
-    pcChoice(ctx.kit, model.form),
-    sourceChoice(ctx.kit, model.form),
-    matchChoice(ctx.kit, model.form, model.step),
-    noteView(ctx, model),
-    folderList(ctx, model.form),
+  const pc = ctx.pcs.get(place.device) ?? ctx.pcs.here()
+  if (place.kind === 'bring') {
+    const group = ctx.projects.get(place.project)
+    return group ? bringStep(ctx, changes, pc, group) : { body: ctx.kit.errorText('This project is gone.') }
+  }
+  return folderStep(ctx, changes, pc, project => model.go({ kind: 'bring', device: place.device, project }))
+}
+
+const head = (ctx: ProjectsContext, model: AddModel) => {
+  const { icon, iconButton, sheetTitle } = ctx.kit
+  return dynamicChild(model.place, place =>
+    div(
+      { class: 'flex min-w-0 items-center gap-1' },
+      show(
+        () => model.trail.get().length > 1,
+        () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: model.back }, icon('back', 'md')),
+      ),
+      sheetTitle(titleOf(ctx, model, place)),
+    ),
   )
 }
 
-const foot = (ctx: ProjectsContext, { busy, step, go }: AddModel, close: () => void) =>
-  ctx.kit.primaryAction(
-    { disabled: () => busy.get() || !step.get().run, onClick: () => void go(close) },
-    show(busy, () => ctx.kit.spinner()),
-    () => step.get().label,
+const body = (ctx: ProjectsContext, changes: Pulse, model: AddModel, close: () => void) => {
+  const submit = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) void model.finish(close)
+  }
+  return div(
+    { class: 'flex flex-col gap-4', onKeyDown: submit },
+    show(
+      () => Boolean(model.failure.get()),
+      () => ctx.kit.errorText(() => model.failure.get()),
+    ),
+    dynamicChild(model.place, place => {
+      const step = stepOf(ctx, changes, model, place)
+      model.action.set(step.action)
+      return step.body
+    }),
   )
+}
 
-export const addSheet = (ctx: ProjectsContext, changes: Pulse, added?: Added): SheetSpec => {
-  let model: AddModel | undefined
-  const shown = () => (model ??= addModel(ctx, changes, added))
+const foot = (ctx: ProjectsContext, model: AddModel, close: () => void) => {
+  const { primaryAction, spinner } = ctx.kit
+  const button = (action: Derive<Action>) =>
+    primaryAction(
+      { disabled: () => model.busy.get() || !action.get().run, onClick: () => void model.finish(close) },
+      show(model.busy, () => spinner()),
+      () => (model.busy.get() ? (action.get().busy ?? action.get().label) : action.get().label),
+    )
+  return dynamicChild(model.action, action => (action ? button(action) : null))
+}
+
+export const addSheet = (ctx: ProjectsContext, changes: Pulse, options: ProjectAddOptions = {}): SheetSpec => {
+  const model = addModel(ctx, changes, options)
   return {
-    label: 'Add a project',
-    head: () => ctx.kit.headTitle(2, 'Add a project'),
-    body: close => body(ctx, shown(), close),
-    foot: close => foot(ctx, shown(), close),
+    label: 'Add project',
+    head: () => head(ctx, model),
+    body: close => body(ctx, changes, model, close),
+    foot: close => foot(ctx, model, close),
   }
 }

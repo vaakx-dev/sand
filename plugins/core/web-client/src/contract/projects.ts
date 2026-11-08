@@ -1,4 +1,6 @@
-import type { FolderListing, ProjectFolder, ProjectIcon, ProjectIconFile, ProjectLook, ProjectPlace } from '@sand/project/contract'
+import type { BringInput, FolderListing, IgnoredFiles, ProjectFolder, ProjectIcon, ProjectIconFile, ProjectLook, ProjectPlace } from '@sand/project/contract'
+
+export type { IgnoredFiles, LocalFile } from '@sand/project/contract'
 
 export interface ProjectEntry {
   project: string
@@ -34,6 +36,8 @@ export interface Projects {
   mkdir(path: string, device: string): Promise<void>
   inspect(path: string, device: string): Promise<ProjectFolder>
   add(path: string, device: string, project?: string): Promise<ProjectEntry>
+  ignoredFiles(path: string, device: string): Promise<IgnoredFiles>
+  bring(input: BringInput & { to: string }): Promise<ProjectEntry>
   removeCopy(entry: ProjectEntry): Promise<void>
   remove(group: ProjectGroup): Promise<void>
   rename(group: ProjectGroup, name: string): Promise<void>

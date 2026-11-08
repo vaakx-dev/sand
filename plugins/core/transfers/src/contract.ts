@@ -12,6 +12,8 @@ export interface Transfers {
   offer(file: string): ChunkedFile
   received(transfer: string, chunks: number, size: number): Promise<string | undefined>
   release(transfer: string): Promise<void>
+  offerPath(input: OfferInput): Promise<OfferedPath>
+  savePath(input: SaveInput): Promise<void>
 }
 
 export const transfers = service<Transfers>('transfers')
@@ -25,9 +27,13 @@ const offered = chunked.extend({ folder: z.boolean() })
 
 export type OfferedPath = z.infer<typeof offered>
 
-export const transfersOffer = request('transfers.offer', { input: z.object({ path: z.string() }), output: type<OfferedPath>(), callers: 'pc' })
-export const transfersSave = request('transfers.save', {
-  input: offered.extend({ from: z.string().optional(), path: z.string() }),
-  output: type<void>(),
-  callers: 'pc',
-})
+const offerInput = z.object({ path: z.string(), files: z.array(z.string()).optional() })
+
+export type OfferInput = z.infer<typeof offerInput>
+
+const saveInput = offered.extend({ from: z.string().optional(), path: z.string() })
+
+export type SaveInput = z.infer<typeof saveInput>
+
+export const transfersOffer = request('transfers.offer', { input: offerInput, output: type<OfferedPath>(), callers: 'pc' })
+export const transfersSave = request('transfers.save', { input: saveInput, output: type<void>(), callers: 'pc' })

@@ -1,13 +1,13 @@
 import type { Peers } from '@sand/devices-contract'
 import { mkdir } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
-import type { OfferedPath } from '../contract'
+import type { SaveInput } from '../contract'
 import { pullFrom } from '../pull'
 import type { TransferStore } from '../transfers'
 
 export const saveFrom = (transfers: TransferStore, peers: () => Peers | undefined) => {
   const pull = pullFrom(transfers, peers)
-  return async ({ path, folder, ...file }: OfferedPath & { from?: string; path: string }) => {
+  return async ({ path, folder, ...file }: SaveInput) => {
     if (!isAbsolute(path)) throw new Error(`${path} is not an absolute path`)
     await pull(file)
     try {

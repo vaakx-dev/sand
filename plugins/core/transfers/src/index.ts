@@ -24,7 +24,9 @@ export default definePlugin({
     const { home } = ctx.cli
     const linked = () => ctx.get(peers)
     const transfers = createTransfers(join(home, 'transfers'))
-    ctx.provide(transfersService, transfers)
+    const offer = offerPath(transfers)
+    const save = saveFrom(transfers, linked)
+    ctx.provide(transfersService, { ...transfers, offerPath: offer, savePath: save })
     ctx.effect(() => {
       const sweep = () => void transfers.sweep().catch(error => ctx.report(error))
       sweep()
@@ -37,8 +39,8 @@ export default definePlugin({
             found.route(transferPath, transferRoute(transfers)),
             found.handle(transfersPull, pullFrom(transfers, linked)),
             found.handle(transfersStatus, ({ transfer }) => transfers.arrived(transfer)),
-            found.handle(transfersOffer, offerPath(transfers)),
-            found.handle(transfersSave, saveFrom(transfers, linked)),
+            found.handle(transfersOffer, offer),
+            found.handle(transfersSave, save),
           )
         : undefined,
     )
