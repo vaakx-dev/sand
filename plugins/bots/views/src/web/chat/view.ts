@@ -1,9 +1,10 @@
 import { approvalViews } from '@sand/approvals/contract'
-import { type BotStatus, type BotSummary } from '@sand/bots/contract'
+import { botName, type BotPatch, type BotStatus, type BotSummary, type ModelChoice } from '@sand/bots/contract'
 import type { Row } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, effect, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
+import { applyChoice, effective } from '../models'
 import { conversation, type Conversation } from './conversation'
 import { holdSlot } from './hold'
 import { chatRows } from './rows'
@@ -14,6 +15,8 @@ export interface ChatParts {
   bot: () => BotSummary | undefined
   profile(): void
   resume(): void
+  save(patch: BotPatch): void
+  defaults(): ModelChoice
 }
 
 const olderEdge = 240
@@ -98,13 +101,21 @@ export const chatView = (parts: ChatParts) => {
   )
   const follow = kit.followEnd(scroller)
 
-  const dock = ctx.composer.dock({
-    skills: { bot: id },
-    running: busy,
-    path: () => talk.path.get(),
-    send: talk.send,
-    interrupt: talk.interrupt,
-  })
+  const dock = ctx.composer.dock(
+    {
+      skills: { bot: id },
+      running: busy,
+      path: () => talk.path.get(),
+      send: talk.send,
+      interrupt: talk.interrupt,
+      settings: () => effective(bot()?.models.main ?? {}, parts.defaults()),
+      choose: patch => {
+        const models = bot()?.models
+        if (models) parts.save({ models: { ...models, main: applyChoice(models.main, patch) } })
+      },
+    },
+    { kind: 'bot', placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
+  )
   dock.slot('above', () => ctx.shell.chipBar({ kind: 'owner', owner: id }))
   const approvals = ctx.get(approvalViews)?.banner('bot', id)
   if (approvals) effect(() => (approvals.asking() ? dock.slot('banner', approvals.view) : undefined))

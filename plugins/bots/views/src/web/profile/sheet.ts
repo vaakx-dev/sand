@@ -4,6 +4,7 @@ import { homeRoute } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/vrui'
 import { automationRow } from '../automations/row'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
+import { advancedBlock } from './advanced'
 import { editable } from './editable'
 import { createProject, projectChecklist } from './projects'
 
@@ -195,6 +196,7 @@ export const openProfile = (parts: Parts, id: string) => {
         projectsBlock(parts, id, bot),
         automationsBlock(parts, id, bot),
         memoryBlock(parts, id, bot),
+        advancedBlock(parts, id, bot),
         list(parts.sections.items, section => section.id, section => section.get().render(id), div({ class: 'flex flex-col gap-6' })),
       ),
     foot: close => foot(parts, id, bot, close),
