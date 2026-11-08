@@ -11,7 +11,7 @@ The page sits inside your reply on the chat's background: build it as part of th
 2. Check it with `html_preview`. It returns a screenshot, the page's real height and its console output. Fix what the screenshot or the console shows, and check again.
 3. Publish it with `html_render` and only a `title`. That shows exactly the page you last checked, at the height preview measured.
 
-Pass the page's markup as `html`, or write it to a file and pass that file's path as `path`, never as `html`.
+Pass the document itself as `html`, or write it to a file and pass `path`. A `path` to an image shows that image as the page.
 
 If no browser is installed, `html_preview` says so. Publish anyway, pass a height you estimate, and tell the reader it was not checked.
 

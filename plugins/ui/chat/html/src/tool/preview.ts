@@ -10,8 +10,8 @@ import type { RecentPages } from './recent'
 import { z } from 'zod'
 
 const input = z.object({
-  html: z.string().max(maxHtmlChars).optional().describe('The markup of a complete, self-contained HTML document, not a file path.'),
-  path: z.string().optional().describe('Path to a .html file to check instead of html.'),
+  html: z.string().max(maxHtmlChars).optional().describe('A complete, self-contained HTML document.'),
+  path: z.string().optional().describe('Path to a .html file or an image, to check instead of html.'),
   width: z.number().int().min(240).max(1600).optional().describe(`CSS pixels. Default ${columnWidth}. About 390 checks a phone.`),
 })
 
@@ -31,7 +31,7 @@ export const previewTool = (pages: HtmlPages, media: Media, recent: RecentPages)
   needs: ['folder'],
   async run({ html, path, width = columnWidth }, { conversation, cwd }) {
     const page = await readPage(pages, { html, path }, cwd)
-    if (!page) throw new Error('Pass the document as html, or as the path to a .html file.')
+    if (!page) throw new Error('Pass the document as html, or the path to a .html file or an image as path.')
     const preview = await pages.preview(page.html, width)
     recent.remember(conversation.id, { page, height: preview.height })
     return [

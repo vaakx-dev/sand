@@ -38,7 +38,7 @@ const locate = async (path: string, base: string): Promise<ImageFile> => {
   return { path, full, relative: !isAbsolute(path) && !fileUrl.test(path), exists: await file.exists(), size: file.size }
 }
 
-const dataUrl = async (path: string) => {
+export const dataUrl = async (path: string) => {
   const file = Bun.file(path)
   return `data:${file.type};base64,${(await file.bytes()).toBase64()}`
 }
