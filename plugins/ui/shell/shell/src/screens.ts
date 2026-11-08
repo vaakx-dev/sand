@@ -16,6 +16,7 @@ export interface Built {
   head: HTMLElement
   main: HTMLElement
   side?: Side
+  split: boolean
   showing: Sig<'main' | 'side'>
   scope: Dispose[]
 }
@@ -43,6 +44,7 @@ export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, ro
       return {
         head: span({ class: 'flex min-w-0 flex-1 items-center gap-2' }, screen.head()),
         main: screen.main(),
+        split: Boolean(screen.split),
         ...(screen.side && { side: sideOf(screen.side) }),
       }
     })

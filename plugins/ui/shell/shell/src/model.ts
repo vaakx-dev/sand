@@ -58,7 +58,8 @@ export const shellModel = (kit: Kit) => {
   const state = derive<ShellState>(() => {
     const size = width.get()
     if (size < phoneWidth) return 'phone'
-    return size < deskWidth && screen.get()?.side ? 'drawer' : 'wide'
+    const built = screen.get()
+    return size < deskWidth && (built?.side || built?.split) ? 'drawer' : 'wide'
   })
 
   const sideHidden = (kind: string) => hiddenSides.get().includes(kind)

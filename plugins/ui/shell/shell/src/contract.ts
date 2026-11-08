@@ -4,8 +4,8 @@ import { event, service, type Context, type Dispose } from 'drydock'
 
 /**
  * How the shell lays itself out, from the width of the app (not the viewport):
- * - `wide` (1000 px and up, or 600 px and up while the open screen has no side frame): the sidebar beside one screen.
- * - `drawer` (600–999 px while the open screen has a side frame): the sidebar becomes a drawer behind a toggle in the screen's header.
+ * - `wide` (1000 px and up, or 600 px and up while the open screen has no side frame and isn't split): the sidebar beside one screen.
+ * - `drawer` (600–999 px while the open screen has a side frame or is split): the sidebar becomes a drawer behind a toggle in the screen's header.
  * - `phone` (under 600 px): a push/back stack of screens with no sidebar; the root screen is the home list.
  */
 export type ShellState = 'phone' | 'drawer' | 'wide'
@@ -158,6 +158,8 @@ export interface Screen {
   head(): Child
   main(): HTMLElement
   side?: SideFrame
+  /** True when `main` lays out its own columns, such as a list beside a page; like a side frame, it makes room by turning the sidebar into a drawer. */
+  split?: boolean
 }
 
 /**

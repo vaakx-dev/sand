@@ -19,6 +19,7 @@ export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, 
   const current = () => page.get()?.id
   const list = (look: string) => listView(kit, { store, current, choose, class: look })
   return {
+    split: true,
     head: () => span({ class: 'ml-2 flex min-w-0 flex-1' }, kit.headTitle(2, () => (phone.get() && id ? (page.get()?.label ?? '') : 'Settings'))),
     main: () =>
       div(
