@@ -1,11 +1,11 @@
-import { palette } from '@sand/palette/contract'
 import type { ContextMenu } from '@sand/ui-kit/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import type { Pulse } from '@sand/reactive'
 import { derive, dynamicChild, sig, type Sig } from '@vaakx-dev/vrui'
+import { addSheet } from '../add/sheet'
 import type { ProjectsContext } from '../context'
-import { sourcesPage } from '../new/sources'
 import type { Picking } from './icon'
 import { groupRow } from './row'
 
@@ -14,10 +14,10 @@ const heading = (groups: ProjectGroup[]) => {
   return groups.length ? `${plural(groups.length, 'project')} on ${plural(pcs, 'PC')}` : 'Your projects'
 }
 
-const addButton = (ctx: ProjectsContext) => {
+const addButton = (ctx: ProjectsContext, changes: Pulse) => {
   const { icon, quietButton } = ctx.kit
-  const found = ctx.get(palette)
-  return found ? quietButton({ size: 'sm', onClick: () => found.open(sourcesPage(ctx)) }, icon('plus', 'sm'), 'Add a project') : null
+  const frame = ctx.get(shell)
+  return frame ? quietButton({ size: 'sm', onClick: () => frame.sheet(addSheet(ctx, changes)) }, icon('plus', 'sm'), 'Add a project') : null
 }
 
 const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) => {
@@ -38,7 +38,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
   return dynamicChild(source, ({ hidden }) => {
     const groups = ctx.projects.groups({ hidden })
     return settingsSection(
-      { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx)] },
+      { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx, changes)] },
       ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ surface: 'group', text: 'No projects yet' })]),
     )
   })

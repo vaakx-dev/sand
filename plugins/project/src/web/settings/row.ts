@@ -34,7 +34,7 @@ const details = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup) =
   )
 
 export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: ProjectGroup, picking: Sig<Picking>) => {
-  const { badge, projectIcon, settingsRow } = ctx.kit
+  const { metaLine, projectIcon, settingsRow } = ctx.kit
   const spec = () => groupSpec(ctx, group, iconEntries(ctx, group, picking))
   return settingsRow(
     {
@@ -43,7 +43,7 @@ export const groupRow = (ctx: ProjectsContext, menu: ContextMenu, group: Project
       title: group.name,
       detail: details(ctx, menu, group),
     },
-    group.hidden ? badge('neutral', 'Hidden') : null,
+    group.hidden ? metaLine('Hidden') : null,
     menuButton(ctx.kit, menu, spec),
     iconSheet(ctx, group, picking),
   )

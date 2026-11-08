@@ -21,7 +21,7 @@ const rename = async (ctx: ProjectsContext, ask: Picker, group: ProjectGroup) =>
 
 export const startable = (ctx: ProjectsContext, entry: ProjectEntry) => !entry.missing && ctx.pcs.online(entry.device)
 
-export const openAt = async (ctx: ProjectsContext, entry: ProjectEntry) => {
+export const openAt = async (ctx: ProjectsContext, entry: Pick<ProjectEntry, 'path' | 'device'>) => {
   await ctx.threads.draft(entry.path, entry.device)
   ctx.get(settings)?.close()
   ctx.get(composer)?.focus()

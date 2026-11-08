@@ -1,7 +1,7 @@
 {
   "name": "@sand/project",
   "version": "0.0.0",
-  "description": "Projects: the registry and its sync across PCs, project files and folders, icons, and the New button and palette items",
+  "description": "Projects: the registry and its sync across PCs, project files and folders, icons, the Projects page with its Add a project sheet, and palette items",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

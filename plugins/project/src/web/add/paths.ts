@@ -15,5 +15,3 @@ export const join = (dir: string, name: string, sep: string) => (dir.endsWith(se
 export const short = (path: string, place: ProjectPlace) => (path.startsWith(place.home) ? `~${path.slice(place.home.length)}` : path)
 
 export const absolute = (path: string, place: ProjectPlace) => (path === '~' || path.startsWith(`~${place.sep}`) ? `${place.home}${path.slice(1)}` : path)
-
-export const leafName = (path: string, sep: string) => path.split(sep).filter(Boolean).at(-1) ?? path
