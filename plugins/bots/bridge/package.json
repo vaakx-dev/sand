@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-bridge",
   "version": "0.0.0",
-  "description": "Bots and threads talk: threads @ bots in messages and see their replies as cards, and bots start threads and hear back when they finish",
+  "description": "Bots and threads work together: threads @ bots and see their replies, bots start threads and hear back, and a bot's threads open as tabs on its screen with their live state",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -17,6 +17,7 @@
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/bots-mcp": "workspace:*",
+    "@sand/chat": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/context": "workspace:*",
@@ -25,9 +26,11 @@
     "@sand/host-hub": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/orchestrator": "workspace:*",
+    "@sand/prompt": "workspace:*",
     "@sand/server": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
