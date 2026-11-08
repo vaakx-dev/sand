@@ -1,12 +1,9 @@
 import type { Server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { gitDiff, gitPatch } from './contract'
-import type { DiffGit } from './git'
-import { listDiff } from './list/list'
-import { readPatch } from './patch/patch'
+import { type GitDiffs, gitDiff, gitPatch } from './contract'
 
-export const serveDiff = (server: Server, tools: DiffGit) =>
+export const serveDiff = (server: Server, diffs: GitDiffs) =>
   joinDisposers(
-    server.handle(gitDiff, ({ cwd, scope }) => listDiff(tools, cwd, scope)),
-    server.handle(gitPatch, request => readPatch(tools, request)),
+    server.handle(gitDiff, ({ cwd, scope }) => diffs.list(cwd, scope)),
+    server.handle(gitPatch, request => diffs.patch(request)),
   )

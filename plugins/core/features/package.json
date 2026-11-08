@@ -56,6 +56,11 @@
         "summary": "Let a thread work in its own folder and branch",
         "parent": "git"
       },
+      "merge": {
+        "label": "Merge",
+        "summary": "See which threads have work ready to merge, and merge it into the project on this PC",
+        "parent": "worktrees"
+      },
       "threads-mcp": {
         "label": "Threads for outside agents",
         "summary": "Outside agents start, message and read threads and manage projects over MCP",
