@@ -103,27 +103,24 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const press = menus.text(context.menu, spec)
     const reveal = tapReveal()
     return div(
-      { class: 'chat-row group mt-2 mb-6 flex flex-col items-end gap-2 pl-16 md:pl-32' },
+      { class: 'chat-row group mt-2 mb-2 flex flex-col items-end gap-2 pl-16 md:pl-32' },
       show(
         () => Boolean(from.get()),
         () => div({ class: '-mb-1 flex min-w-0 max-w-full px-1' }, metaLine(() => `From ${from.get()}`)),
       ),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
-      div(
-        { class: 'relative min-w-0 max-w-full' },
-        actionRow(
-          () => reveal.tapped.get(),
-          'absolute right-full bottom-0 mr-1',
-          show(
-            () => Boolean(shown.get()),
-            () => copyButton({ text: () => shown.get(), formats: () => contextFormats(shown.get(), records), size: 'sm' }),
-          ),
-          show(
-            () => spec().actions.length > 0,
-            () => menus.more(context.menu, spec),
-          ),
+      div({ class: 'min-w-0 max-w-full' }, dynamicChild(shown, value => (value ? bubble(value, records, { ...press.props, onClick: reveal.onClick }, context) : null))),
+      actionRow(
+        () => reveal.tapped.get(),
+        '-mt-1',
+        show(
+          () => Boolean(shown.get()),
+          () => copyButton({ text: () => shown.get(), formats: () => contextFormats(shown.get(), records), size: 'sm' }),
         ),
-        dynamicChild(shown, value => (value ? bubble(value, records, { ...press.props, onClick: reveal.onClick }, context) : null)),
+        show(
+          () => spec().actions.length > 0,
+          () => menus.more(context.menu, spec),
+        ),
       ),
       note?.(),
       !item.steer && context.branchSwitch?.(item.key),
