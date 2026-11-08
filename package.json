@@ -97,7 +97,7 @@
       "left"
     ],
     "shades": {
-      "text-neutral": [100, 200, 400, 500, 600],
+      "text-neutral": [100, 200, 400, 500, 600, 900],
       "bg-neutral": [100, 600, 700, 800, 900, 950],
       "border-neutral": [700, 800],
       "ring-neutral": [600, 700, 800]

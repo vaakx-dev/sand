@@ -1,5 +1,5 @@
 import type { Pulse } from '@sand/reactive'
-import { div, dynamicChild, onMount, show, sig, SPACE, span } from '@vaakx-dev/vrui'
+import { div, onMount, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
 import type { ModelButton, ModelTarget } from './contract'
 import { pickerTarget } from './target'
@@ -7,7 +7,7 @@ import { pickerTarget } from './target'
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
 const buttonView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, mounted: (open: () => void) => () => void) => {
-  const { chipPopover, metaLine, pressOpens, quietButton } = ctx.kit
+  const { chipPopover, plainButton, pressOpens } = ctx.kit
   const open = sig(false)
   const close = () => open.set(false)
   const picker = pickerTarget(ctx, changes, target)
@@ -28,9 +28,13 @@ const buttonView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, moun
 
   const node = div(
     { class: 'flex min-w-0 items-center' },
-    quietButton(
-      { surface: 'raised', active: open, title: tip, class: 'min-w-0 shrink px-2', ...pressOpens(open, () => open.update(value => !value)) },
-      dynamicChild(chosen, picked => (picked ? metaLine(label) : span({ class: 'min-w-0 truncate text-xs text-warning-400' }, label))),
+    plainButton(
+      {
+        title: tip,
+        class: ['flex min-w-0 shrink items-center rounded-md px-2 py-1 text-xs transition-colors', () => (open.get() ? 'text-neutral-200' : 'text-neutral-500 hover:text-neutral-200')],
+        ...pressOpens(open, () => open.update(value => !value)),
+      },
+      span({ class: ['min-w-0 truncate', () => (chosen.get() ? '' : 'text-warning-400')] }, label),
     ),
     show(open, () => chipPopover(close, { class: 'right-0', width: panelWidth }, ctx.modelPicker.panel(picker, close))),
   )

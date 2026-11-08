@@ -104,17 +104,17 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, ch
     {
       class: [
         'flex rounded-2xl bg-neutral-800',
-        () => (rest.get() ? 'items-center' : 'flex-col'),
+        () => (rest.get() ? 'items-center' : 'flex-col px-4 pt-3 pb-2'),
         () => (coarse.get() ? 'text-base' : 'text-sm'),
       ],
       onMouseDown: keepFocus,
       onFocusIn: () => within.set(true),
       onFocusOut: leave,
     },
-    dynamicChild(model.shelf, shelf => (shelf ? div({ class: 'px-4 pt-3', hidden: model.attached.map(held => !held.length) }, shelf.view()) : null)),
-    div({ class: ['min-w-0 flex-1 cursor-text', () => (rest.get() ? 'py-3 pr-2 pl-4' : 'min-h-16 px-4 pt-3 pb-1')], onMouseDown: focusText }, editor.node),
+    dynamicChild(model.shelf, shelf => (shelf ? div({ class: () => (rest.get() ? 'px-4 pt-3' : 'pb-3'), hidden: model.attached.map(held => !held.length) }, shelf.view()) : null)),
+    div({ class: ['min-w-0 flex-1 cursor-text', () => (rest.get() ? 'py-3 pr-2 pl-4' : '')], onMouseDown: focusText }, editor.node),
     div(
-      { class: ['flex min-w-0 items-center gap-1', () => (rest.get() ? 'pr-2' : 'px-2 pb-2')] },
+      { class: ['flex min-w-0 items-center gap-1', () => (rest.get() ? 'pr-2' : '-ml-2 mt-4')] },
       span(
         { class: 'contents', hidden: rest },
         plusView(ctx.kit, plus, choose, () => Boolean(model.shelf.get()?.attachable())),
