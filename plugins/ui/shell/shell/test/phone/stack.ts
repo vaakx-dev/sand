@@ -166,10 +166,10 @@ describe.each(phones)('on a $name', size => {
   test('the header clears the notch, and the screens clear the home indicator', async () => {
     const { page, cdp } = phone
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 47, bottom: 34, left: 0, right: 0 } })
+    const title = (await page.getByRole('heading', { name: 'sand', level: 1 }).boundingBox())!
+    expect(title.y).toBeGreaterThanOrEqual(47)
     const settings = (await page.getByRole('button', { name: 'Settings', exact: true }).boundingBox())!
-    expect(settings.y).toBeGreaterThanOrEqual(47)
-    const bottom = await page.evaluate(() => [...document.querySelectorAll('header')].find(node => node.checkVisibility())!.parentElement!.getBoundingClientRect().bottom)
-    expect(bottom).toBeLessThanOrEqual(size.height - 34)
+    expect(settings.y + settings.height).toBeLessThanOrEqual(size.height - 34)
     await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: {} })
   })
 })
