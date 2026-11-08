@@ -10,7 +10,7 @@ export interface RowActionProps {
   run(): void
 }
 
-const idleLook = 'text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100'
+const idleLook = 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100'
 
 const dangerLook = (armed: Sig<boolean>) => () => (armed.get() ? 'bg-danger-950 text-danger-400' : idleLook)
 

@@ -36,7 +36,7 @@ export const rowButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, 
 
 export const actionTones = {
   primary: 'font-medium bg-accent-500 text-accent-950 hover:bg-accent-400 disabled:bg-neutral-700',
-  secondary: 'bg-neutral-600 text-neutral-100 hover:bg-neutral-600/70',
+  secondary: 'text-neutral-100 ring-1 ring-inset ring-neutral-700 hover:bg-neutral-700',
   danger: 'bg-danger-500 text-white hover:bg-danger-400 disabled:bg-neutral-700',
 }
 
@@ -77,4 +77,4 @@ export const iconButton = ({ size = 'md', active = false, surface, class: extra,
   )
 
 export const linkButton = ({ class: extra, ...props }: Props<HTMLButtonElement>, ...children: Child[]) =>
-  plainButton({ ...props, class: ['shrink-0 rounded-sm text-neutral-400 underline hover:text-neutral-100', extra] }, ...children)
+  plainButton({ ...props, class: ['shrink-0 rounded-sm text-neutral-400 hover:text-neutral-100', extra] }, ...children)

@@ -1,6 +1,5 @@
 import { definePlugin } from 'drydock'
-import { theme } from './contract'
-import { sand } from './sand'
+import { sand, theme } from './contract'
 
 export default definePlugin({
   name: 'theme',

@@ -15,7 +15,7 @@ export const statusBanner = ({ tone = 'neutral', class: extra, ...props }: Banne
     {
       role: 'status',
       ...props,
-      class: ['flex min-h-10 w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-neutral-100', bannerTones[tone], extra],
+      class: ['flex min-h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-100', bannerTones[tone], extra],
     },
     ...children,
   )

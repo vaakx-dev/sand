@@ -5,19 +5,11 @@ import { toneText, type Tone } from './tones'
 
 export type { Tone } from './tones'
 
-const badgeFills: Record<Tone, string> = {
-  neutral: 'bg-neutral-700',
-  accent: 'bg-accent-950',
-  success: 'bg-success-950',
-  warning: 'bg-warning-950',
-  danger: 'bg-danger-950',
-}
+const badgeLook = 'inline-flex items-center gap-1 text-xs whitespace-nowrap'
 
-const badgeLook = 'inline-flex items-center gap-1 rounded-md px-2 text-xs whitespace-nowrap'
+export const badge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'shrink-0', toneText[tone]] }, ...children)
 
-export const badge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'shrink-0', badgeFills[tone], toneText[tone]] }, ...children)
-
-export const shrinkBadge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'min-w-0 max-w-full', badgeFills[tone], toneText[tone]] }, ...children)
+export const shrinkBadge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'min-w-0 max-w-full', toneText[tone]] }, ...children)
 
 export const dot = (tone: Tone) => span({ class: ['h-2 w-2 shrink-0 rounded-full bg-current', toneText[tone]] })
 
@@ -61,8 +53,8 @@ export const checkMark = (on: () => boolean, extra?: ClassValue) =>
   span(
     {
       class: [
-        'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md',
-        () => (on() ? 'bg-neutral-700 text-neutral-100' : 'bg-neutral-900 text-transparent ring-1 ring-inset ring-neutral-700'),
+        'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm',
+        () => (on() ? 'bg-accent-500 text-accent-950' : 'bg-neutral-900 text-transparent ring-1 ring-inset ring-neutral-700'),
         extra,
       ],
     },

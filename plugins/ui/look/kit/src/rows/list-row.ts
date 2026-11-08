@@ -21,7 +21,7 @@ export type ListRowProps = Omit<Props<HTMLButtonElement>, 'title'> & {
 
 const compact = 'min-h-8 rounded-md px-2'
 
-const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'min-h-12 bg-neutral-800 px-4' }
+const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'min-h-12 bg-neutral-900 px-4' }
 
 const dangerText = 'text-danger-400 hover:text-danger-400 aria-current:text-danger-400 aria-selected:text-danger-400 aria-pressed:text-danger-400'
 
@@ -29,7 +29,7 @@ const flag = (name: string, value: MaybeReactive<boolean> | undefined) => (value
 
 const withActions = (row: HTMLElement, surface: Surface, actions: Child) =>
   div(
-    { class: ['flex min-w-0 items-center gap-1', surface === 'group' && 'bg-neutral-800 pr-4'] },
+    { class: ['flex min-w-0 items-center gap-1', surface === 'group' && 'bg-neutral-900 pr-4'] },
     row,
     span({ class: 'flex shrink-0 items-center gap-1' }, actions),
   )

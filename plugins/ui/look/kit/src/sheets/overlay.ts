@@ -1,11 +1,10 @@
-import { modal } from '../layers/stack'
 import { div, event, read, show, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'
 import { headTitle, paneHead } from '../heads/page-head'
 import { icon } from '../icons/lucide'
-import { layer } from '../layer'
 import { stableGutter } from '../scroll/gutter'
+import { scrim } from './scrim'
 
 export type SheetSize = 'sm' | 'md' | 'lg'
 
@@ -19,32 +18,27 @@ export interface SheetHeadProps {
   actions?: Child
 }
 
-const sheetWidths: Record<SheetSize, string> = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-xl' }
+const sheetWidths: Record<SheetSize, string> = { sm: 'sm:max-w-md', md: 'sm:max-w-lg', lg: 'sm:max-w-xl' }
 
 const backdrop =
   (placement: string) =>
-  (close: () => void, ...children: Child[]) => {
-    const previous = document.activeElement
-    return div(
-      {
-        class: [layer.dialog, 'fixed inset-0 flex bg-black/50 px-3 pt-10 pb-3 animate-fade', placement],
-        onMouseDown: event(close, { self: true }),
-        onMount: node => modal(node, close, previous),
-      },
-      ...children,
-    )
-  }
+  (close: () => void, ...children: Child[]) =>
+    scrim({ close, from: document.activeElement, class: placement, onMouseDown: event(close, { self: true }) }, ...children)
 
-export const overlay = backdrop('items-start justify-center md:pt-20')
+export const overlay = backdrop('items-end sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
 
-export const railOverlay = backdrop('items-start justify-center md:items-end md:justify-start md:pt-3 md:pl-16')
+export const railOverlay = backdrop('items-end sm:items-start sm:justify-center sm:px-3 sm:pb-3 md:items-end md:justify-start md:pt-3 md:pl-16')
 
 export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...children: Child[]) =>
   div(
     {
       role: 'dialog',
       ...props,
-      class: ['flex max-h-full w-full flex-col overflow-hidden rounded-xl bg-neutral-800 shadow-xl', sheetWidths[size], extra],
+      class: [
+        'flex max-h-full w-full flex-col overflow-hidden rounded-t-xl bg-neutral-800 pb-safe shadow-xl ring-1 ring-neutral-700 animate-rise sm:rounded-xl sm:pb-0 sm:animate-none',
+        sheetWidths[size],
+        extra,
+      ],
     },
     ...children,
   )
@@ -52,7 +46,7 @@ export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...ch
 export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
   const led = () => Boolean(back) && read(backShown)
   return paneHead(
-    { led, class: 'overflow-hidden', style: stableGutter },
+    { led, class: 'overflow-hidden border-b border-neutral-700', style: stableGutter },
     back ? show(led, () => iconButton({ title: 'Back', 'aria-label': 'Back', surface: 'raised', onClick: back }, icon('back', 'md'))) : null,
     headTitle(2, title),
     actions ?? null,

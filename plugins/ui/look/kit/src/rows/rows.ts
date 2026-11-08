@@ -2,7 +2,7 @@ import { div, list, span, type Child, type Derive, type Props, type Sig } from '
 import { rowTitle } from '../heads/text'
 import { callout } from '../notes/notes'
 
-const rowShell = 'min-h-12 gap-3 bg-neutral-800 px-4 py-2'
+const rowShell = 'min-h-12 gap-3 bg-neutral-900 px-4 py-2'
 
 export type SettingsRowProps = Omit<Props<HTMLDivElement>, 'title'> & {
   title: Child
@@ -32,7 +32,7 @@ export const sectionRow = (props: Props<HTMLDivElement>, ...children: Child[]) =
 export const rowList = <T, K>(items: Sig<T[]> | Derive<T[]>, key: (item: T) => K, row: (item: Sig<T>) => HTMLElement) =>
   list(items, key, row, div({ class: 'contents' }))
 
-export const rowDetail = (...children: Child[]) => div({ class: 'flex min-w-0 flex-col gap-2 bg-neutral-800 px-4 pb-3' }, ...children)
+export const rowDetail = (...children: Child[]) => div({ class: 'flex min-w-0 flex-col gap-2 bg-neutral-900 px-4 pb-3' }, ...children)
 
 export const rowWarning = (text: Child, ...actions: Child[]) =>
   rowDetail(

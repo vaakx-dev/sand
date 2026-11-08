@@ -20,7 +20,7 @@ export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[
     title || action
       ? h2({ class: 'flex min-h-8 min-w-0 items-center gap-2 text-sm font-semibold text-neutral-100' }, span({ class: 'min-w-0 flex-1 truncate' }, title ?? ''), action ?? null)
       : null,
-    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-xl bg-neutral-700' }, ...rows),
+    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-lg bg-neutral-800 ring-1 ring-neutral-800' }, ...rows),
   )
 
 export interface SegmentedOptions {
