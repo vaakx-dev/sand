@@ -1,11 +1,10 @@
 import type { Attempt, BlockReason, Route } from '@sand/devices-contract'
 import { errorMessage } from '@sand/util'
 import { TicketRefused } from '../errors/ticket-refused'
-import { headStart } from '../timing'
 import { attemptResultOf } from './classify'
 import type { DialContext, DialRun } from './context'
-import { passedInOrder } from './in-order'
 import { type Opened, openRoute } from './open'
+import { passedAsTheyCome } from './passed'
 import { type Probe, probeRoute } from './probe'
 
 export interface Blocked {
@@ -39,7 +38,7 @@ export const dial = async (routes: Route[], context: DialContext, run: DialRun, 
     }),
   )
 
-  for await (const probe of passedInOrder(probes, headStart)) {
+  for await (const probe of passedAsTheyCome(probes)) {
     if (run.stopped) return { ok: false, cause: 'stopped' }
     context.identified(probe.identity)
     const started = Date.now()

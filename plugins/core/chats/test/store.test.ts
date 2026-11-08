@@ -114,3 +114,16 @@ test('catching up from a cursor returns what came after it, until the chat moves
   chat.append('message', said('assistant', 'another answer'))
   expect(chat.since(answer!.id)).toBeUndefined()
 })
+
+test('a chat open in two runtimes reads what the other one appended', async () => {
+  chat.append('message', said('user', 'hi'))
+  chat.append('message', said('assistant', 'hello'))
+  expect(chat.messages()).toEqual([said('user', 'hi'), said('assistant', 'hello')])
+
+  const other = await startSand([], { home: sand.home })
+  const prompt = other.sessions.require(chat.id).append('message', said('user', 'next'))
+  await other.stop()
+
+  expect(chat.head).toBe(prompt.id)
+  expect(chat.messages()).toEqual([said('user', 'hi'), said('assistant', 'hello'), said('user', 'next')])
+})

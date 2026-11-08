@@ -1,10 +1,10 @@
 import type { PublishedRoute, Route, RouteEntry, RoutePrefs, RouteStore } from '@sand/devices-contract'
 import { mergeRoutes, sameRoutes } from './merge'
-import { orderRoutes } from './order'
+import { orderRoutes, type Reach } from './order'
 import { directRoute, publishedRoutes } from './route'
 
 export interface RouteBook {
-  entries(secure: boolean): RouteEntry[]
+  entries(reach: Reach): RouteEntry[]
   publish(published: PublishedRoute[]): boolean
   add(url: string): Route
   remove(key: string): boolean
@@ -28,7 +28,7 @@ export const routeBook = (pc: string, seeds: Route[], store: RouteStore): RouteB
   }
 
   return {
-    entries: secure => orderRoutes(routes, prefs, secure),
+    entries: reach => orderRoutes(routes, prefs, reach),
     publish: published =>
       replace(
         mergeRoutes(

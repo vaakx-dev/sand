@@ -1,6 +1,7 @@
 import { directRoute, type ViaRelay, viaRoute } from '@sand/devices-connect'
 import { type DeviceRecord, helloPc, PcUnavailable, type PcView, type Signer, viaFrame } from '@sand/devices-contract'
 import type { HelloField } from '@sand/host-hub/contract'
+import { servedFromThisPc } from '../page/home'
 import { knownPcs } from './known'
 import { openPcLink, type PcLink } from './link'
 import { wireListeners } from './listeners'
@@ -54,6 +55,7 @@ export const createFleet = (options: FleetOptions) => {
         pc,
         ...(name && { name }),
         seeds: pc === home ? homeSeeds() : [viaRoute(home)],
+        onPc: pc === home && servedFromThisPc(),
         signer: options.signer,
         relay,
         since: () => options.since(pc),

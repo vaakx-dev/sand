@@ -16,7 +16,7 @@ import type { LinkListener } from '../link/link'
 import type { RouteBook } from '../routes/book'
 import { isPublishedRoutes } from '../routes/valid'
 import { timer } from '../time/timer'
-import { drainMax, steadyAfter } from '../timing'
+import { drainMax, restartRetry, restartWindow, steadyAfter } from '../timing'
 import { transportOf } from '../transport/pick'
 import { type Active, connectedStatus } from './active'
 import type { attemptLog } from './attempts'
@@ -35,6 +35,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   let identity: PcIdentity | undefined
   let lastTag: string | undefined
   let failures = 0
+  let lostAt: number | undefined
   let dialing: DialRun | undefined
   let closed = false
 
@@ -48,7 +49,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
 
   const usableRoutes = () =>
     book
-      .entries(options.secure)
+      .entries(options)
       .filter(entry => entry.usable)
       .map(entry => entry.route)
 
@@ -120,12 +121,18 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
 
   const noteBlockedRoutes = () => {
     const at = Date.now()
-    for (const entry of book.entries(options.secure))
+    for (const entry of book.entries(options))
       if (entry.blocked === 'blocked-https') attempts.add({ route: entry.route, result: 'blocked-https', at })
   }
 
+  const retryDelay = () => {
+    const restarting = lostAt !== undefined && Date.now() - lostAt < restartWindow
+    return restarting ? restartRetry : backoffDelay(failures)
+  }
+
   const scheduleRetry = (cause: string) => {
-    const delay = backoffDelay(failures++)
+    const delay = retryDelay()
+    failures++
     setStatus({ phase: 'reconnecting', attempt: failures, retryAt: Date.now() + delay, cause })
     retryTimer.set(delay, () => void dialNow())
   }
@@ -158,6 +165,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
     const retagged = lastTag !== undefined && lastTag !== opened.hello.tag
     lastTag = opened.hello.tag
     active = { opened, since: previous?.since ?? Date.now(), latency: opened.ms }
+    lostAt = undefined
     previous?.opened.link.retire(drainMax)
     if (!previous)
       steadyTimer.set(steadyAfter, () => {
@@ -174,6 +182,7 @@ export const lifecycle = (options: ConnectOptions, book: RouteBook, attempts: Re
   const drop = () => {
     const link = active?.opened.link
     heard = link?.heard() ?? heard
+    lostAt ??= Date.now()
     active = undefined
     upgrade.stop()
     health.stop()

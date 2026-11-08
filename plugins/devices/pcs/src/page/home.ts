@@ -1,3 +1,4 @@
+import { kindOfUrl } from '@sand/devices-connect'
 import { homePcMeta } from '@sand/devices-contract'
 
 export const homePcId = () => {
@@ -9,3 +10,5 @@ export const homePcId = () => {
 export const pageUrl = (path: string) => `${location.origin}${path}`
 
 export const securePage = () => location.protocol === 'https:'
+
+export const servedFromThisPc = () => kindOfUrl(location.origin) === 'local'
