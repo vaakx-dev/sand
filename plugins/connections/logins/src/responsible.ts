@@ -14,7 +14,7 @@ export const responsibleFor =
     let at: ConversationRef | undefined = conversation
     while (at?.owner === 'thread' && !threads.includes(at.id)) {
       threads.push(at.id)
-      const session = sessions()?.open(at.id)
+      const session: ReturnType<Sessions['open']> = sessions()?.open(at.id)
       at = session?.kind === 'agent' && session.parent ? { owner: 'thread', id: session.parent } : orchestrator()?.starterOf(at.id)
     }
     return { ...(at?.owner === 'bot' && { bot: at.id }), threads }
