@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { chromium, type Browser, type BrowserContextOptions, type Page } from 'playwright'
-import { startSandbox, type Reply } from './sandbox'
+import { newChat, startSandbox, type Reply } from './sandbox'
 
 interface Place {
   fromEnd: number
@@ -64,7 +64,7 @@ beforeAll(async () => {
   const pairing = await browser.newContext(sizes[0]!.options)
   other = await pairing.newPage()
   await other.goto(sand.url)
-  await other.getByRole('textbox').first().waitFor()
+  await newChat(other)
   await Bun.sleep(1000)
   state = JSON.stringify(await pairing.storageState())
   await replied(other, 'message 1')

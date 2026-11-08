@@ -1,4 +1,4 @@
-import type { Swipe } from '@sand/layout/contract'
+import type { Swipe } from '@sand/ui-shell/contract'
 
 const idleMs = 80
 

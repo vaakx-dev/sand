@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, test } from 'bun:test'
 import { chromium, type Browser } from 'playwright'
-import { startSandbox } from './sandbox'
+import { newChat, startSandbox } from './sandbox'
 
 let sand: Awaited<ReturnType<typeof startSandbox>>
 let browser: Browser
@@ -38,6 +38,7 @@ test('a message typed while the page catches up stays, and sends once it has', a
   })
   await page.goto(sand.url)
   await asked.promise
+  await newChat(page)
   await page.getByRole('textbox').first().fill('hello')
   greeted.resolve()
   await page.getByRole('button', { name: 'Send' }).click({ timeout: 10_000 })

@@ -1,8 +1,8 @@
 import { keys } from '@sand/keys/contract'
-import { floating } from '@sand/reactive'
-import { nav } from '@sand/nav/contract'
+import { floating, owned } from '@sand/reactive'
 import { kit } from '@sand/ui-kit/contract'
-import { show, sig } from '@vaakx-dev/vrui'
+import { shell } from '@sand/ui-shell/contract'
+import { effect, show, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { palette, type Palette, type PalettePage, type PaletteSource } from './contract'
 import { merged, rootPage } from './root'
@@ -33,9 +33,14 @@ export default definePlugin({
 
     const isOpen = stack.map(pages => pages.length > 0)
     floating(ctx, () => show(isOpen, () => paletteSheet(ctx, stack, () => query)))
+    owned(ctx, () =>
+      effect(() => {
+        if (isOpen.get()) return untrack(() => ctx.get(shell)?.cover(host.close))
+      }),
+    )
     const toggle = () => (isOpen.get() ? host.close() : host.open())
     ctx.provide(palette, host)
     ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, passthrough: true, run: toggle }))
-    ctx.watch(nav, found => found?.action({ id: 'search', label: 'Search', icon: 'search', order: 0, wide: true, run: () => host.open() }))
+    ctx.watch(shell, found => found?.nav({ id: 'search', label: 'Search', icon: 'search', order: 0, run: () => host.open() }))
   },
 })

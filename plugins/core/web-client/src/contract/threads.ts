@@ -49,7 +49,7 @@ export type ThreadCreator = (target: DraftTarget) => Promise<SessionInfo> | unde
 export interface Threads {
   cwd(): string
   device(): string
-  draft(cwd: string, device: string, id?: string): Promise<void>
+  draft(cwd: string, device: string, id?: string, options?: { replace?: boolean }): Promise<void>
   drafting(): DraftTarget | undefined
   list(): Thread[]
   get(id: string): Thread | undefined

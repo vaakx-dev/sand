@@ -12,7 +12,6 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/rail": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",

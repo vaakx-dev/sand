@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { derive, div, effect, span, stored, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { overlaySlot } from '../shared/overlay'

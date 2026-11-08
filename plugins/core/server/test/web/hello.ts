@@ -72,6 +72,9 @@ afterAll(async () => {
 test('the page works while a plugin never answers its part of the hello, or throws', async () => {
   const page = await browser.newPage()
   await page.goto(url)
+  await page.getByRole('button', { name: 'New chat' }).first().click()
+  await page.getByLabel('Command palette').getByText('Quick thread', { exact: true }).click()
+  await page.waitForURL(/view=draft/)
   await page.getByRole('textbox').first().fill('hello')
   await page.getByRole('button', { name: 'Send' }).click({ timeout: 10_000 })
   await page.getByText('Hello from the thread').first().waitFor({ timeout: 10_000 })

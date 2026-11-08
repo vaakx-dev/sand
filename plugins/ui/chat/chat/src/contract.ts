@@ -5,6 +5,9 @@ import { service } from 'drydock'
 /** The shell route that shows one thread full width: `{ kind: threadRoute, id: thread }`. */
 export const threadRoute = 'thread'
 
+/** The shell route of a new thread before its first send: `{ kind: draftRoute, id: draft }`, with the draft's id from `threads.drafting()`. */
+export const draftRoute = 'draft'
+
 /** The link scheme for threads: `[title](thread:<id>)` in any markdown links to a thread. */
 export const threadScheme = 'thread'
 

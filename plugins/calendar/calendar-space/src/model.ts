@@ -32,6 +32,10 @@ export interface Shown {
   events: Occurrence[]
 }
 
+const upcomingCount = 3
+
+export const eventKey = (event: Occurrence) => `${event.from}:${event.calendar}:${event.id}`
+
 const spans: Record<Mode, number> = { agenda: 28, week: 7 }
 
 const firstDay: Record<Mode, (at: number) => number> = { agenda: startOfDay, week: startOfWeek }
@@ -52,6 +56,7 @@ export const calendarModel = (ctx: CalendarContext) => {
   })
   const shown = sig<Shown | undefined>(undefined)
   const failure = sig<string | undefined>(undefined)
+  const upcoming = sig<Occurrence[]>([])
 
   let asked = 0
   const load = () => {
@@ -67,10 +72,21 @@ export const calendarModel = (ctx: CalendarContext) => {
       (error: unknown) => failure.set(errorMessage(error)),
     )
   }
+  const loadUpcoming = () => {
+    const from = startOfDay(Date.now())
+    void ctx.wire.call(calendarAgenda, { from, to: addDays(from, 2), zone: browserZone() }).then(
+      events => upcoming.set(events.filter(({ to }) => to > Date.now()).slice(0, upcomingCount)),
+      (error: unknown) => ctx.report(error),
+    )
+  }
   const loadCalendars = () => void ctx.wire.call(calendarList, {}).then(list => calendars.set(list), (error: unknown) => ctx.report(error))
+  const reload = () => {
+    load()
+    loadUpcoming()
+  }
   const refresh = () => {
     loadCalendars()
-    load()
+    reload()
   }
 
   owned(ctx, () =>
@@ -80,8 +96,11 @@ export const calendarModel = (ctx: CalendarContext) => {
     }),
   )
   ctx.on(wireHello, refresh)
-  if (ctx.wire.ready()) loadCalendars()
-  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, load), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
+  if (ctx.wire.ready()) {
+    loadCalendars()
+    loadUpcoming()
+  }
+  ctx.effect(() => joinDisposers(ctx.wire.on(calendarChangeWire, reload), ctx.wire.on(calendarsChangeWire, list => calendars.set(list))))
 
   const step = (direction: 1 | -1) => anchor.update(at => addDays(at, direction * 7))
 
@@ -92,8 +111,10 @@ export const calendarModel = (ctx: CalendarContext) => {
     anchor,
     range,
     shown,
+    upcoming,
     failure,
     retry: load,
+    find: (key: string) => [...upcoming.get(), ...(shown.get()?.events ?? [])].find(event => eventKey(event) === key),
     show: (next: Mode) => mode.set(next),
     today: () => anchor.set(startOfDay(Date.now())),
     earlier: () => step(-1),

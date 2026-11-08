@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Fleet, PcView } from './fleet/model'
 import type { RunStatus } from './fleet/run'
@@ -19,10 +19,10 @@ export const runActionKind = (status: RunStatus): ActionKind | undefined => {
   return undefined
 }
 
-export const fleetAction = (fleet: Fleet, key: string, kind: ActionKind): NavAction => {
+export const fleetAction = (fleet: Fleet, key: string, kind: ActionKind): MenuAction => {
   if (kind === 'update') return { id: 'update', label: 'Update', icon: 'up', run: () => fleet.update([key]) }
   if (kind === 'retry') return { id: 'retry', label: 'Retry', icon: 'retry', run: () => fleet.retry(key) }
   return { id: 'restart', label: 'Restart now', icon: 'reload', run: () => fleet.restartNow(key) }
 }
 
-export const actionButton = ({ secondaryAction }: Kit, { label, run }: NavAction) => secondaryAction({ size: 'sm', onClick: () => void run() }, label)
+export const actionButton = ({ secondaryAction }: Kit, { label, run }: MenuAction) => secondaryAction({ size: 'sm', onClick: () => void run() }, label)

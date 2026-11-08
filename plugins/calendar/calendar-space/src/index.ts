@@ -1,8 +1,7 @@
 import type { Occurrence, Target } from '@sand/calendar/contract'
-import { layout, layoutChange, place, spaces } from '@sand/layout/contract'
-import { pulse } from '@sand/reactive'
+import { place, shell, type Shell } from '@sand/ui-shell/contract'
 import { joinDisposers } from '@sand/util'
-import { div, dynamicChild, sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { definePlugin, type Dispose } from 'drydock'
 import { agendaView } from './agenda'
 import { inject } from './context'
@@ -10,21 +9,19 @@ import { detailSheet } from './detail'
 import { formSheet, type FormParts } from './form'
 import { headView } from './head'
 import { calendarModel } from './model'
+import { calendarKind, calendarSection } from './section'
 import { subscribeSheet } from './subscribe'
 import { weekView } from './week'
-
-const space = 'calendar'
 
 const targetOf = (event: Occurrence): Target => ({ calendar: event.calendar, id: event.id, ...(event.original && { original: event.original }) })
 
 export default definePlugin({
   name: 'calendar-space',
-  description: 'The Calendar space: your events as an agenda or a week, quick add, and the details of each event',
+  description: 'The Calendar section and screen: your events as an agenda or a week, quick add, and the details of each event',
   inject,
   apply(ctx) {
     const { kit } = ctx
     const model = calendarModel(ctx)
-    const narrow = pulse(ctx, [layoutChange], [layout]).read(() => ctx.get(layout)?.state().narrow ?? false)
     const report = (error: unknown) => ctx.report(error)
 
     let closeSheet: Dispose | undefined
@@ -61,15 +58,40 @@ export default definePlugin({
       sheet(() => subscribeSheet(kit, link, hide))
     }
 
-    const main = () =>
-      div(
+    const main = (found: Shell) => {
+      const narrow = derive(() => found.state() === 'phone')
+      return div(
         { class: 'flex h-full min-h-0 flex-1 flex-col' },
         headView(kit, model, { narrow, add: () => add(), subscribe, report }),
         dynamicChild(model.mode, mode => (mode === 'agenda' ? agendaView(kit, model, { open, add: () => add() }) : weekView(kit, model, { open, addAt: add }))),
       )
+    }
 
-    ctx.watch(spaces, found =>
-      found ? joinDisposers(found.space({ id: space, label: 'Calendar', icon: 'calendar', order: 30 }), place(ctx, { space, region: 'main' }, main)) : undefined,
+    const openRouted = (tab: () => string | undefined) => {
+      let opened: string | undefined
+      effect(() => {
+        const key = tab()
+        if (key === opened) return
+        const event = key && model.find(key)
+        if (key && !event) return
+        opened = key
+        if (event) untrack(() => open(event))
+      })
+    }
+
+    ctx.watch(shell, found =>
+      found
+        ? joinDisposers(
+            found.section(calendarSection(found, model)),
+            found.route({
+              kind: calendarKind,
+              render: route => {
+                openRouted(() => route().tab)
+                return { head: () => 'Calendar', main: () => main(found) }
+              },
+            }),
+          )
+        : undefined,
     )
   },
 })

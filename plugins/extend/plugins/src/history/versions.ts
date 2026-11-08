@@ -1,5 +1,5 @@
 import type { Version, VersionSource, VersionTarget } from '@sand/host-plugin-versions/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { exactTime } from '@sand/util'
 import { derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
@@ -26,7 +26,7 @@ const versionRow = (kit: Kit, source: VersionsSource, target: () => VersionTarge
   const menu = contextMenu()
   const spec = (): MenuSpec => {
     const { at, hash, source: from } = version.get()
-    const restoreAction: NavAction = { id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: restore }
+    const restoreAction: MenuAction = { id: 'restore', label: 'Restore', icon: 'reload', group: 'version', run: restore }
     return {
       title: exactTime(at),
       subtitle: sources[from],

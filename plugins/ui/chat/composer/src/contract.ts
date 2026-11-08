@@ -1,6 +1,6 @@
 import type { ContextRecord, Entry, Prompt, UserContent } from '@sand/chats/contract'
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName } from '@sand/ui-kit/contract'
 import type { DraftTarget, SkillPlace } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
@@ -61,6 +61,8 @@ export interface ChatDock {
 }
 
 export interface Composer {
+  /** The thread composer, one element for the app, built on first call; the thread route moves it into the screen that shows. */
+  view(): HTMLElement
   focus(): void
   value(): string
   set(text: string): void
@@ -73,7 +75,7 @@ export interface Composer {
   snapshot(): Promise<ComposerContent | undefined>
   restore(saved: ComposerContent): void
   clear(): void
-  sendMenu(action: NavAction): Dispose
+  sendMenu(action: MenuAction): Dispose
   plus(entry: PlusEntry, order?: number): Dispose
   trigger<T extends TriggerItem>(trigger: Trigger<T>, order?: number): Dispose
   command(command: Command): Dispose

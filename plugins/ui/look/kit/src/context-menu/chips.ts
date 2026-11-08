@@ -1,4 +1,4 @@
-import type { NavAction, NavChoice } from '@sand/nav/contract'
+import type { MenuAction, MenuChoice } from '@sand/ui-shell/contract'
 import { span, stopThen } from '@vaakx-dev/vrui'
 import { actionTones, controlButton } from '../buttons/button'
 import { placeLook, type Surface } from '../surface'
@@ -6,7 +6,7 @@ import { placeLook, type Surface } from '../surface'
 export type ChipSize = 'sm' | 'lg'
 
 export interface ChipHandlers {
-  pick(choice: NavChoice, event: MouseEvent): void
+  pick(choice: MenuChoice, event: MouseEvent): void
   ask(event: MouseEvent): void
 }
 
@@ -31,12 +31,12 @@ const chip = (label: string, title: string, size: ChipSize, onClick: (event: Mou
     label,
   )
 
-export const choiceCount = (action: NavAction) => (action.choices?.length ?? 0) + (action.ask ? 1 : 0)
+export const choiceCount = (action: MenuAction) => (action.choices?.length ?? 0) + (action.ask ? 1 : 0)
 
-export const chipButtons = (action: NavAction, handlers: ChipHandlers, size: ChipSize) => [
+export const chipButtons = (action: MenuAction, handlers: ChipHandlers, size: ChipSize) => [
   ...(action.choices ?? []).map(choice => chip(choice.label, choice.tip?.() ?? '', size, event => handlers.pick(choice, event))),
   action.ask ? chip('…', action.ask.tip, size, handlers.ask) : null,
 ]
 
-export const choiceChips = (action: NavAction, handlers: ChipHandlers, size: ChipSize) =>
+export const choiceChips = (action: MenuAction, handlers: ChipHandlers, size: ChipSize) =>
   span({ class: 'flex items-center gap-px' }, ...chipButtons(action, handlers, size))

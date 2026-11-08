@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { Page } from 'playwright'
 
 const main = join(import.meta.dir, '../../../../../../apps/sand/src/main.ts')
 
@@ -38,4 +39,10 @@ export const startSandbox = async (replies: Reply[]) => {
       rmSync(box, { recursive: true, force: true })
     },
   }
+}
+
+export const newChat = async (page: Page) => {
+  await page.getByRole('button', { name: 'New chat' }).first().click()
+  await page.getByLabel('Command palette').getByText('Quick thread', { exact: true }).click()
+  await page.waitForURL(/view=draft/)
 }

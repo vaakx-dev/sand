@@ -19,7 +19,6 @@ const matches = (page: SettingsPage, query: string) => page.id === query || page
 
 export const pageStore = () => {
   const registered = sig<SettingsPage[]>([])
-  const current = sig<string | undefined>(undefined)
   const sections = sig<SettingsSection[]>([])
   const pages = derive(() => registered.get().filter(page => page.render || sections.get().some(section => section.page === page.id)))
   let last: string | undefined
@@ -31,12 +30,10 @@ export const pageStore = () => {
 
   return {
     pages,
-    current,
     sections,
     pick,
-    show(id: string | undefined) {
-      if (id) last = id
-      current.set(id)
+    remember(id: string) {
+      last = id
     },
     add(page: SettingsPage) {
       registered.update(all => [...all.filter(other => other.id !== page.id), page].sort(byGroup))

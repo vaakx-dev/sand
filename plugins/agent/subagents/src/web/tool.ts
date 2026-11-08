@@ -1,6 +1,6 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import type { WireJob } from '@sand/jobs/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration, oneLine } from '@sand/util'
 import type { Threads } from '@sand/web-client/contract'
@@ -25,9 +25,9 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
 
   const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)
 
-  const stop = (job: WireJob): NavAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
+  const stop = (job: WireJob): MenuAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
 
-  const open = (tool: ToolView): NavAction[] => {
+  const open = (tool: ToolView): MenuAction[] => {
     const chat = subAgentOf(chats(), tool.thread, tool.call.id)
     return chat ? [{ id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => chats()?.select(chat.id) }] : []
   }

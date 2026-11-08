@@ -1,5 +1,5 @@
 import { pcs, wire } from '@sand/devices-contract'
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { owned } from '@sand/reactive'

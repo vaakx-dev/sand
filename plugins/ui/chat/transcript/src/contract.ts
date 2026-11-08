@@ -2,7 +2,7 @@ import type { LiveBlock } from '@sand/accounts/contract'
 import type { ContextUsage } from '@sand/compaction/contract'
 import type { Entry, ImageBlock, ToolCallBlock, ToolResultBlock, UserPart } from '@sand/chats/contract'
 import type { ImageOptions as ShownImageOptions } from '@sand/media/web/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { ContextMenu, IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ToolProgress } from '@sand/web-client/contract'
 import type { Child, Sig } from '@vaakx-dev/vrui'
@@ -34,7 +34,7 @@ export interface ToolRenderer {
   badge?(tool: ToolView): ToolBadge | undefined
   copy?(tool: ToolView): string
   body?(tool: ToolView): HTMLElement | undefined
-  actions?(tool: ToolView): NavAction[]
+  actions?(tool: ToolView): MenuAction[]
 }
 
 export type RenderEntry = (entry: Entry, conversation: string) => HTMLElement | undefined
@@ -141,14 +141,14 @@ export interface Surface {
   menu: ContextMenu
   states: OpenStates
   jump(from: Element, quote: string): void
-  reply?(text: string): NavAction[]
-  rewrite?(entry: string, text: string): NavAction[]
+  reply?(text: string): MenuAction[]
+  rewrite?(entry: string, text: string): MenuAction[]
   branchSwitch?(entry: string): Child
 }
 
 export interface Rows {
   item(item: Item): Row[]
-  user(item: UserItem, actions: (text: string) => NavAction[], note?: () => Child): Row
+  user(item: UserItem, actions: (text: string) => MenuAction[], note?: () => Child): Row
 }
 
 export interface TranscriptParts {

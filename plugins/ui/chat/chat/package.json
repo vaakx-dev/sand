@@ -15,11 +15,10 @@
   "dependencies": {
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
-    "@sand/layout": "workspace:*",
-    "@sand/nav": "workspace:*",
     "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",
-    "@sand/threads-space": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/ui-kit": "workspace:*",

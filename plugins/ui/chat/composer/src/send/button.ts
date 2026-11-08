@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit, MenuSpec } from '@sand/ui-kit/contract'
 import { oneLine } from '@sand/util'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
@@ -45,14 +45,14 @@ const titleOf = (model: Model, look: Look) => {
 
 const glyphOf = (look: Look): IconName | 'busy' => (look === 'busy' ? 'busy' : icons[look])
 
-const menuOf = (model: Model, actions: () => NavAction[]): MenuSpec | undefined => {
+const menuOf = (model: Model, actions: () => MenuAction[]): MenuSpec | undefined => {
   if (model.empty.get() || model.sending.get()) return undefined
   const shown = actions()
   if (!shown.length) return undefined
   return { title: oneLine(model.text.get(), 60) || 'Message', actions: shown }
 }
 
-export const sendControl = (kit: Kit, model: Model, actions: () => NavAction[]) => {
+export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[]) => {
   const { contextMenu, delayed, icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))

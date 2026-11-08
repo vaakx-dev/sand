@@ -1,4 +1,4 @@
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import type { Context, Dispose } from 'drydock'
 
 export const overlaySlot = (ctx: Context, order = 100) => {

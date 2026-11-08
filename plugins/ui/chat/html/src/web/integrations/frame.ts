@@ -1,4 +1,4 @@
-import type { Swipe } from '@sand/layout/contract'
+import type { Swipe } from '@sand/ui-shell/contract'
 import { el, listen, type Props } from '@vaakx-dev/vrui'
 import { hostContext, openImage, openLink, pressKey, shortcutKeys, showPage, sizeChanged, swipeEnd, swipeMove, swipeStart } from '../../page/protocol'
 
