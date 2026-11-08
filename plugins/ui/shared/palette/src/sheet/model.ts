@@ -5,6 +5,7 @@ import { batch, derive, effect, onTimeout, sig, untrack } from '@vaakx-dev/vrui'
 import { actionsPage } from './actions'
 import { entries, loadItems } from './load'
 import type { PageMemory, PageNav } from './nav'
+import { wide } from './wide'
 
 export type PageModel = ReturnType<typeof pageModel>
 
@@ -73,10 +74,12 @@ export const pageModel = ({ listbox }: Kit, page: PalettePage, nav: PageNav, ini
 
   const box = listbox({ count: () => results.get().length, choose: index => choose(results.get()[index]), start: field ? -1 : 0, wrap: true })
 
+  const unselected = () => Boolean(field) || (Boolean(page.browse) && !searching.get() && !wide.get())
+
   const present = (items: PaletteItem[]) =>
     batch(() => {
       results.set(items)
-      const index = restored ?? (field ? -1 : 0)
+      const index = restored ?? (unselected() ? -1 : 0)
       restored = undefined
       if (index < 0) box.clear()
       else box.select(index)
