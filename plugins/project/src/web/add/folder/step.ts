@@ -13,12 +13,12 @@ const elsewhere = (ctx: ProjectsContext, device: string) =>
   ctx.projects.groups().filter(group => !group.locations.some(entry => entry.device === device) && group.locations.some(entry => !entry.missing))
 
 const otherProjects = (ctx: ProjectsContext, groups: Derive<ProjectGroup[]>, bring: (project: string) => void) => {
-  const { listRow, projectMark, rowList, sectionHeading } = ctx.kit
+  const { listRow, projectIcon, rowList, sectionHeading } = ctx.kit
   const row = (group: Sig<ProjectGroup>) =>
     listRow({
       surface: 'raised',
       touch: true,
-      lead: projectMark(group.get().name, ctx.projects.groupIcon(group.get())),
+      lead: projectIcon(group.get().name, ctx.projects.groupIcon(group.get())),
       title: () => group.get().name,
       onClick: () => bring(group.get().id),
     })
