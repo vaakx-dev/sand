@@ -33,7 +33,7 @@ export const routesSection = (ui: Ui, pc: string) => {
   }
 
   return settingsSection(
-    { title: 'Ways to connect', action: quietButton({ size: 'sm', surface: 'raised', onClick: () => ui.ctx.pcs.retry(pc) }, icon('reload', 'sm'), 'Test again') },
+    { title: 'Ways to connect', note: 'sand tries these from the top and uses the first that answers. Drag to change the order.', action: quietButton({ size: 'sm', surface: 'raised', onClick: () => ui.ctx.pcs.retry(pc) }, icon('reload', 'sm'), 'Test again') },
     div(
       { class: 'contents', onMount: drag.bind },
       rowList(

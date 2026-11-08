@@ -73,4 +73,4 @@ const managerRow = (kit: Kit, model: LoginsModel, source: External) => {
 }
 
 export const managersSection = (kit: Kit, model: LoginsModel) =>
-  kit.settingsSection({ title: 'Password managers' }, ...externalSources.map(source => managerRow(kit, model, source)))
+  kit.settingsSection({ title: 'Password managers', note: 'Use items from a password manager without copying them into sand.' }, ...externalSources.map(source => managerRow(kit, model, source)))

@@ -45,6 +45,7 @@ export const loginsPages = (host: Settings, parts: PageParts) => {
   const list = host.page({
     id: listId,
     label: 'Logins',
+    intro: 'Passwords and keys agents can use without seeing them.',
     icon: 'key',
     group: 'accounts',
     order: 29,

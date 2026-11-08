@@ -26,7 +26,7 @@ export default definePlugin({
       start: steps.start,
     })
     ctx.provide(featureState, { on: id => store.feature(id)?.on })
-    ctx.watch(settings, found => found?.page({ id: 'features', label: 'Features', icon: 'sliders', group: 'app', order: 15, render: () => featuresPage(ctx.kit, store) }))
+    ctx.watch(settings, found => found?.page({ id: 'features', label: 'Features', intro: 'Turn parts of sand on or off. Each works without the others.', icon: 'sliders', group: 'app', order: 15, render: () => featuresPage(ctx.kit, store) }))
     place(
       ctx,
       'overlay',

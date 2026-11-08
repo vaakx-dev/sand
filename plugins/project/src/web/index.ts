@@ -21,7 +21,7 @@ export default definePlugin({
   inject,
   apply(ctx) {
     const changes = pulse(ctx, [projectsChange, pcsChange], [shell])
-    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', icon: 'folder', group: 'workspace', order: 30, render: () => projectsPage(ctx, changes) }))
+    ctx.watch(settings, found => found?.page({ id: 'projects', label: 'Projects', intro: 'Folders your threads work in, on each of your PCs.', icon: 'folder', group: 'workspace', order: 30, render: () => projectsPage(ctx, changes) }))
     ctx.watch(palette, found => found?.source(findSource(ctx)))
     ctx.watch(shell, frame => {
       if (!frame) return

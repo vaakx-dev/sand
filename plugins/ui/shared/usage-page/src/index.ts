@@ -4,11 +4,14 @@ import { shell } from '@sand/ui-shell/contract'
 import { limits, limitsChange } from '@sand/web-client/contract'
 import { pulse } from '@sand/reactive'
 import { joinDisposers } from '@sand/util'
+import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { pcList } from './pcs'
 import { usagePage } from './view/page'
 
 const kind = 'usage'
+const label = 'Usage'
+const intro = 'Plan limits, cost and tokens for each account, across your PCs.'
 
 export default definePlugin({
   name: 'usage-page',
@@ -31,8 +34,17 @@ export default definePlugin({
     ctx.watch(shell, frame =>
       frame
         ? joinDisposers(
-            frame.nav({ id: 'usage', label: 'Usage', icon: 'chart', order: 150, place: 'foot', to: { kind } }),
-            frame.route({ kind, render: () => ({ head: () => 'Usage', main: () => ctx.kit.pageBody({}, render()) }) }),
+            frame.nav({ id: 'usage', label, icon: 'chart', order: 150, place: 'foot', to: { kind } }),
+            frame.route({
+              kind,
+              render: () => {
+                const phone = derive(() => frame.state() === 'phone')
+                return {
+                  head: () => dynamicChild(phone, onPhone => (onPhone ? ctx.kit.barTitle(label) : null)),
+                  main: () => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, dynamicChild(phone, onPhone => ctx.kit.pageBody(onPhone ? {} : { title: label, intro }, render()))),
+                }
+              },
+            }),
           )
         : undefined,
     )

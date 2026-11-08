@@ -25,7 +25,7 @@ export const pageView = (kit: Kit, { store, page, titled, choose }: PageParts) =
   const body = (shown: SettingsPage | undefined) =>
     kit.pageBody(
       {
-        ...(titled() && shown && { title: shown.label }),
+        ...(titled() && shown && { title: shown.label, intro: shown.intro }),
         lead: dynamicChild(parent, found => (found ? backButton(kit, found, choose) : null)),
       },
       sections(true),
