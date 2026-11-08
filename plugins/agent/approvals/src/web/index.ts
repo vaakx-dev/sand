@@ -3,6 +3,7 @@ import { pcs, wire, wireHello } from '@sand/devices-contract'
 import { owned, pulse } from '@sand/reactive'
 import { settings } from '@sand/settings/contract'
 import { kit } from '@sand/ui-kit/contract'
+import { shell } from '@sand/ui-shell/contract'
 import { threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { derive, div, effect, sig, type Derive } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -10,10 +11,11 @@ import { approvalMode, approvalRuleRemove, type ApprovalSettings, approvalSettin
 import { approvalCards } from './card'
 import { createModel, type Waiting } from './model'
 import { approvalsPage } from './page'
+import { botWaiting } from './waiting'
 
 export default definePlugin({
   name: 'approvals-web',
-  description: 'Approval cards in the thread and bot chats, the Inbox of everything waiting on you, and the Approvals settings page',
+  description: 'Approval cards in the thread and bot chats, bot approvals in the Waiting chip, and the Approvals settings page',
   inject: { wire, pcs, kit, threads },
   apply(ctx) {
     const { kit } = ctx
@@ -32,6 +34,7 @@ export default definePlugin({
         return { asking: () => items.get().length > 0, view: () => cards(items) }
       },
     })
+    ctx.watch(shell, found => found?.chip(botWaiting(ctx, model)))
     ctx.watch(composer, found => found && effect(() => (asking.get() ? found.slot('banner', () => cards(here)) : undefined)))
 
     const saved = sig<ApprovalSettings | undefined>(undefined)

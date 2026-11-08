@@ -1,6 +1,5 @@
 import { botName, botRoute, type BotSummary } from '@sand/bots/contract'
 import type { MenuAction, ShellGroup, ShellRow } from '@sand/ui-shell/contract'
-import { oneLine } from '@sand/util'
 import { projectNames, type Parts } from './parts'
 
 const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
@@ -26,7 +25,6 @@ const menuOf = (parts: Parts, bot: BotSummary): MenuAction[] => [
 const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
   const lead = parts.work.lead(bot.id)
   const status = parts.work.status(bot)
-  const detail = lead?.title ?? (bot.last ? oneLine(bot.last.text) : '')
   const at = lead?.at ?? bot.last?.at
   return {
     id: bot.id,
@@ -34,8 +32,7 @@ const rowOf = (parts: Parts, bot: BotSummary): ShellRow => {
     to: { kind: botRoute, id: bot.id },
     menu: () => menuOf(parts, bot),
     ...(parts.ctx.shell.state() !== 'phone' && { mark: { initial: bot.initial, color: bot.color } }),
-    ...(detail && { detail }),
-    ...(bot.projects.length && { meta: projectNames(parts, bot.projects) }),
+    ...(bot.projects.length && { place: { label: projectNames(parts, bot.projects) } }),
     ...(status && { status }),
     ...(at !== undefined && { at }),
   }

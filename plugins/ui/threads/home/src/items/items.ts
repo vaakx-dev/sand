@@ -1,9 +1,12 @@
+import type { ThreadChanges } from '@sand/changes/contract'
 import { draftRoute, threadRoute } from '@sand/chat/contract'
 import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
 import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { Thread } from '@sand/web-client/contract'
-import type { Context } from 'drydock'
+import { changeStatus, type Changes } from '../changes'
+import type { RowPart, RowThread } from '../contract'
+import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
@@ -22,24 +25,26 @@ const positionOf = (thread: Thread) => thread.info.position ?? thread.info.creat
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort((a, b) => positionOf(b) - positionOf(a))
 
-const statusOf = (thread: Thread, agents: number): Status | undefined => {
+const statusOf = (thread: Thread, agents: number, change: ThreadChanges | undefined): Status | undefined => {
   if (thread.waiting) return 'waiting'
   if (thread.running || agents) return 'running'
-  return thread.info.settled ? 'done' : undefined
+  return changeStatus(change)
 }
 
-const noteOf = (thread: Thread, agents: number, snoozed: number | undefined) => {
-  if (thread.waiting) return thread.waiting.title
-  if (snoozed) return backLabel(snoozed)
-  if (isBack(thread)) return 'Back from snooze'
-  if (!thread.running && agents) return agents === 1 ? '1 agent running' : `${agents} agents running`
-  return undefined
+export interface RowSources {
+  changes: Changes
+  trail: RowPart[]
 }
 
-const metaOf = (ctx: Context, project: ProjectInfo, device: string) =>
-  [project.quick ? undefined : project.name, awayPcName(ctx, device)].filter(Boolean).join(' · ') || undefined
+const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
+  label: [project.quick ? 'No project' : project.name, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
+  mark: () => parts.kit.projectMark(project.name, project.icon),
+})
 
-const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, agentsOf: AgentsOf): Entry => {
+const trailOf = (trail: RowPart[], folder: RowThread) => (trail.length ? () => trail.map(part => part.render(folder)) : undefined)
+
+const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, agentsOf: AgentsOf, { changes, trail }: RowSources): Entry => {
+  const change = changes.get(thread.id)
   const project = thread.info.kind === 'quick' ? quick(thread.device) : lookup(thread.info.cwd, thread.device, thread.info.project)
   const { agents, since } = agentsOf(thread.id)
   const snoozed = snoozedUntil(thread)
@@ -48,10 +53,10 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
     row: {
       id: thread.id,
       label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
-      detail: noteOf(thread, agents, snoozed),
-      meta: metaOf(parts.ctx, project, thread.device),
-      at: snoozed ? undefined : (started ?? thread.info.updated),
-      status: statusOf(thread, agents),
+      place: placeOf(parts, project, thread.device),
+      trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
+      ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
+      status: statusOf(thread, agents, change),
       to: { kind: threadRoute, id: thread.id },
       menu: () => threadMenu(parts, thread.id),
     },
@@ -63,12 +68,12 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
 
 const draftTitle = (draft: ThreadDraft) => draft.text.trim().split('\n', 1)[0]?.trim() || plural(draft.attachments, 'attachment')
 
-const draftEntry = (ctx: Context, saved: Drafts, draft: ThreadDraft, lookup: ProjectLookup): Entry => ({
+const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup: ProjectLookup): Entry => ({
   row: {
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
-    detail: 'Draft',
-    meta: metaOf(ctx, lookup(draft.cwd, draft.device), draft.device),
+    end: 'Draft',
+    place: placeOf(parts, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device), draft.device),
     at: draft.updated,
     to: { kind: draftRoute, id: draft.id },
     menu: () => draftMenu(saved, draft.id),
@@ -76,10 +81,11 @@ const draftEntry = (ctx: Context, saved: Drafts, draft: ThreadDraft, lookup: Pro
   moved: draft.updated,
 })
 
-export const threadEntries = (parts: MenuParts): Entry[] => {
+export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] => {
   const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
-  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts.ctx, saved, draft, lookup)) : []
+  const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
   const agentsOf = runningAgents(parts.ctx, parts.threads)
-  return [...draftEntries, ...visibleThreads(parts.threads.list()).map(thread => threadEntry(parts, thread, lookup, agentsOf))]
+  const unowned = visibleThreads(parts.threads.list()).filter(thread => !owned(parts.ctx, thread.id))
+  return [...draftEntries, ...unowned.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
 }

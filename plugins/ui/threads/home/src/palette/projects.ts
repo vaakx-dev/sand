@@ -8,7 +8,10 @@ import type { Context } from 'drydock'
 import { quickName } from '../items/lookup'
 import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
 
-export const openDraft = (ctx: Context, threads: Threads, path: string, device: string) => threads.draft(path, device).then(() => ctx.get(composer)?.focus())
+export const openDraft = (ctx: Context, threads: Threads, path: string, device: string) => {
+  const drafting = threads.drafting()
+  return threads.draft(path, device, drafting?.id, { replace: Boolean(drafting) }).then(() => ctx.get(composer)?.focus())
+}
 
 const awayDetail = (ctx: Context, threads: Threads, place: Place) => {
   const here = pcName(ctx, threads.device())

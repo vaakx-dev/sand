@@ -1,7 +1,7 @@
 {
   "name": "@sand/palette",
   "version": "0.0.0",
-  "description": "Command palette (mod+k): threads, projects, models and other actions, with pages you step through and go back from",
+  "description": "Search (mod+k) as a sheet: threads, projects, models and other actions, with pages you step through and go back from",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,7 +9,7 @@
   "sand": {
     "feature": "palette",
     "web": "./src/index.ts",
-    "label": "Command palette",
+    "label": "Search",
     "summary": "Find threads, projects, models and actions in one place"
   },
   "dependencies": {

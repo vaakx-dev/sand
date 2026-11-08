@@ -1,5 +1,6 @@
 import type { PaletteItem, PaletteSource } from '@sand/palette/contract'
 import type { Kit } from '@sand/ui-kit/contract'
+import type { Shell } from '@sand/ui-shell/contract'
 import type { Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { currentPlace } from './places'
@@ -22,14 +23,14 @@ const startActions = (ctx: Context, threads: Threads, group: string): PaletteIte
   ]
 }
 
-export const sessionSource = (ctx: Context, kit: Kit, threads: Threads): PaletteSource => ({
+export const sessionSource = (ctx: Context, kit: Kit, shell: Shell, threads: Threads): PaletteSource => ({
   id: 'sessions',
   order: 10,
   items(query) {
     if (query.startsWith('/')) return []
     const current = threads.current()
     const actions = current ? sessionActions(kit, threads, current) : []
-    if (!query.trim()) return [...startActions(ctx, threads, ''), ...actions, ...sessionItems(ctx, threads, 'Recent threads').slice(0, 5)]
-    return [...startActions(ctx, threads, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(ctx, threads), ...sessionItems(ctx, threads, 'Threads')]
+    if (!query.trim()) return [...startActions(ctx, threads, ''), ...actions, ...sessionItems(ctx, shell, threads, 'Recent threads').slice(0, 5)]
+    return [...startActions(ctx, threads, 'Actions'), ...actions.map(item => ({ ...item, group: 'Actions' })), ...projectItems(ctx, threads), ...sessionItems(ctx, shell, threads, 'Threads')]
   },
 })

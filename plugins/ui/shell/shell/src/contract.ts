@@ -92,9 +92,11 @@ interface NavBase {
   keys?: string
   count?(): number
   dot?(): boolean
+  /** Whether the item is marked current, for one that runs but stands for a screen, such as New chat. */
+  current?(): boolean
 }
 
-/** A sidebar nav item. One that opens a route is marked current while that route is open; one that runs, such as Search, isn't. */
+/** A sidebar nav item. One that opens a route is marked current while that route is open; one that runs, such as Search, isn't unless `current` says so. */
 export type NavItem = NavBase & ({ to: Route; run?: never } | { run(): void; to?: never })
 
 export interface GroupAction {
@@ -113,14 +115,12 @@ export interface RowPlace {
 /**
  * A row in a sidebar group, drawn the same in the sidebar and on the phone home. Line one: monogram, label and
  * the status (phones add its name when it draws attention, or `at`). Line two, shown when the row has any of
- * them: `place` on the left (phones fall back to `meta` and `detail`) and `trail` on the right.
+ * them: `place` on the left and `trail` on the right.
  */
 export interface ShellRow {
   id: string
   label: string
-  detail?: string
-  meta?: string
-  /** A short label at the right of the title line, such as an event's time; drawn as meta. */
+  /** A short label at the right of the title line, such as an event's time. */
   end?: string
   /** When the row's state began, in epoch ms; drawn as a short age such as "4m". */
   at?: number
