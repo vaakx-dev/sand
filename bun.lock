@@ -1653,7 +1653,6 @@
       "name": "@sand/git-diff",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/devices-contract": "workspace:*",
         "@sand/git": "workspace:*",
         "@sand/git-runner": "workspace:*",
         "@sand/host-hub": "workspace:*",
@@ -1667,15 +1666,11 @@
       "name": "@sand/git",
       "version": "0.0.0",
       "dependencies": {
-        "@sand/devices-contract": "workspace:*",
         "@sand/git-runner": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/watch": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
@@ -1694,22 +1689,6 @@
       "dependencies": {
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/git/snapshots": {
-      "name": "@sand/git-snapshots",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/chats": "workspace:*",
-        "@sand/devices-contract": "workspace:*",
-        "@sand/git": "workspace:*",
-        "@sand/git-runner": "workspace:*",
-        "@sand/host-hub": "workspace:*",
-        "@sand/server": "workspace:*",
-        "@sand/turns-contract": "workspace:*",
-        "@sand/util": "workspace:*",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-        "zod": "^4.6.5",
       },
     },
     "plugins/git/worktrees": {
@@ -2125,24 +2104,6 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
-    "plugins/ui/git/changes": {
-      "name": "@sand/git-changes",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/composer": "workspace:*",
-        "@sand/git": "workspace:*",
-        "@sand/git-diff": "workspace:*",
-        "@sand/git-diff-view": "workspace:*",
-        "@sand/keys": "workspace:*",
-        "@sand/panel": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
     "plugins/ui/git/diff-view": {
       "name": "@sand/git-diff-view",
       "version": "0.0.0",
@@ -2151,26 +2112,6 @@
         "@sand/markdown": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/util": "workspace:*",
-        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
-      },
-    },
-    "plugins/ui/git/turns": {
-      "name": "@sand/git-turns",
-      "version": "0.0.0",
-      "dependencies": {
-        "@sand/devices-contract": "workspace:*",
-        "@sand/git": "workspace:*",
-        "@sand/git-changes": "workspace:*",
-        "@sand/git-diff": "workspace:*",
-        "@sand/git-snapshots": "workspace:*",
-        "@sand/picker": "workspace:*",
-        "@sand/reactive": "workspace:*",
-        "@sand/toasts": "workspace:*",
-        "@sand/transcript": "workspace:*",
-        "@sand/ui-kit": "workspace:*",
-        "@sand/util": "workspace:*",
-        "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
@@ -2603,17 +2544,11 @@
 
     "@sand/git": ["@sand/git@workspace:plugins/git/git"],
 
-    "@sand/git-changes": ["@sand/git-changes@workspace:plugins/ui/git/changes"],
-
     "@sand/git-diff": ["@sand/git-diff@workspace:plugins/git/diff"],
 
     "@sand/git-diff-view": ["@sand/git-diff-view@workspace:plugins/ui/git/diff-view"],
 
     "@sand/git-runner": ["@sand/git-runner@workspace:plugins/git/runner"],
-
-    "@sand/git-snapshots": ["@sand/git-snapshots@workspace:plugins/git/snapshots"],
-
-    "@sand/git-turns": ["@sand/git-turns@workspace:plugins/ui/git/turns"],
 
     "@sand/github": ["@sand/github@workspace:plugins/git/github"],
 

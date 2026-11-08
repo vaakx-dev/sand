@@ -44,24 +44,10 @@ export interface NoticeKind {
   actions?(text: string, conversation: string): Child
 }
 
-export interface TurnInfo {
-  session: string
-  device: string
-  startEntry: string
-  running: boolean
-}
-
-export interface TurnFooter {
-  id: string
-  order?: number
-  view(turn: TurnInfo): Child | null
-}
-
 export interface Transcript {
   tool(name: string, render: RenderTool | ToolRenderer): Dispose
   entry(type: string, render: RenderEntry): Dispose
   notice(from: string, kind: NoticeKind): Dispose
-  turnFooter(footer: TurnFooter): Dispose
 }
 
 export type Step = { kind: 'tool'; key: string; tool: ToolView } | { kind: 'thinking'; key: string; text: string; streaming: boolean }
@@ -167,7 +153,6 @@ export interface Rows {
 
 export interface TranscriptParts {
   version: Sig<number>
-  footers: Sig<TurnFooter[]>
   settled(owner: Owner, path: Entry[]): Settled
   items(settled: Settled, source: Source): Item[]
   prompt(entry: Entry, parts: UserPart[]): Item[]

@@ -2,7 +2,6 @@ import { notificationTag } from '@sand/chats/contract'
 import { definePlugin } from 'drydock'
 import { toolViews, transcript, transcriptParts } from './contract'
 import { inject } from './context'
-import { turnFooters } from './footers'
 import { chatImages } from './image'
 import { createParts, createToolViews } from './parts'
 import { rendererRegistry } from './registry'
@@ -16,11 +15,10 @@ export default definePlugin({
   apply(ctx) {
     ctx.kit.style(ctx, css)
     const registry = rendererRegistry(ctx.kit)
-    const footers = turnFooters()
     const images = chatImages(ctx)
     ctx.effect(() => registry.entry(notificationTag, notificationRenderer(ctx.kit, registry)))
-    ctx.provide(transcript, { tool: registry.tool, entry: registry.entry, notice: registry.notice, turnFooter: footers.add })
+    ctx.provide(transcript, { tool: registry.tool, entry: registry.entry, notice: registry.notice })
     ctx.provide(toolViews, createToolViews(images.image))
-    ctx.provide(transcriptParts, createParts(ctx, registry, footers.list, images))
+    ctx.provide(transcriptParts, createParts(ctx, registry, images))
   },
 })

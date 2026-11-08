@@ -89,7 +89,7 @@ export const chatController = (ctx: ChatContext) => {
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       branchSwitch: entry => branchSwitch(ctx, view, entry),
     })
-    const context: TurnContext = { kit, parts, rows, states, thread: thread.id, device: thread.device, repaint }
+    const context: TurnContext = { kit, parts, rows, states, repaint }
     const items = cache.items(thread, () => ctx.threads.path(thread.id))
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
@@ -97,7 +97,6 @@ export const chatController = (ctx: ChatContext) => {
       waiting: thread.waiting !== undefined,
       streaming: thread.live.length > 0,
       started: thread.started,
-      footers: untrack(() => parts.footers.get().length > 0),
       open: key => untrack(() => states.get(key).open.get()),
     })
     const drawn = windowed(view, folded, grow).flatMap(entry => shownRows(entry, context).map(row => ({ row, entry: entry.key })))
