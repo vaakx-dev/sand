@@ -4,7 +4,7 @@ import type { Parts } from '../parts'
 import { createProject, projectChecklist } from '../profile/projects'
 
 const field = (parts: Parts, text: string, control: HTMLElement) =>
-  label({ class: 'flex flex-col gap-2' }, parts.ctx.kit.headTitle(2, text), control)
+  label({ class: 'flex flex-col gap-2' }, parts.ctx.kit.sectionTitle(text), control)
 
 export const openNewBot = (parts: Parts) => {
   const { kit } = parts.ctx
@@ -34,7 +34,7 @@ export const openNewBot = (parts: Parts) => {
 
   parts.ctx.shell.sheet({
     label: 'New bot',
-    head: () => kit.headTitle(2, 'New bot'),
+    head: () => kit.barTitle('New bot'),
     body: () =>
       div(
         { class: 'flex flex-col gap-6 pt-2' },
@@ -45,7 +45,7 @@ export const openNewBot = (parts: Parts) => {
         ),
         div(
           { class: 'flex flex-col gap-2' },
-          kit.headTitle(2, 'Projects'),
+          kit.sectionTitle('Projects'),
           div({ class: '-mx-2' }, projectChecklist(parts, { chosen: () => chosen.get(), toggle, fresh })),
         ),
         field(parts, 'Name', kit.textInput({ bindValue: name, maxLength: 60, placeholder: 'Optional; it picks one if you leave this empty' })),

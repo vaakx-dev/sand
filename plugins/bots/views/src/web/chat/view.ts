@@ -2,7 +2,7 @@ import { approvalViews } from '@sand/approvals/contract'
 import { botName, type BotStatus, type BotSummary } from '@sand/bots/contract'
 import type { Row } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, list, onMount, p, show, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 import { botMark } from '../marks'
 import { conversation, type Conversation } from './conversation'
@@ -43,9 +43,10 @@ const emptyChat = (kit: Kit, bot: () => BotSummary | undefined) =>
   div(
     { class: 'flex flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center' },
     botMark(kit, bot, 20),
-    kit.headTitle(2, () => botName(bot() ?? { name: '' })),
-    p({ class: 'max-w-sm text-sm text-neutral-400' }, () =>
-      bot()?.job.trim() ? 'Send a message to start.' : 'Say what it should take care of, and it writes that down as its job.',
+    kit.sectionTitle(() => botName(bot() ?? { name: '' })),
+    div(
+      { class: 'max-w-sm' },
+      kit.secondaryText(() => (bot()?.job.trim() ? 'Send a message to start.' : 'Say what it should take care of, and it writes that down as its job.')),
     ),
   )
 

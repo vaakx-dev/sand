@@ -1,6 +1,6 @@
 import type { JobEntry } from '@sand/bots/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, p, show, span } from '@vaakx-dev/vrui'
+import { div, show, span } from '@vaakx-dev/vrui'
 import type { BotStore } from '../store'
 
 export interface JobParts {
@@ -29,6 +29,6 @@ export const jobNote = (kit: Kit, { store, edit, report }: JobParts, bot: string
         () => kit.linkButton({ class: 'text-xs', onClick: restore }, 'Undo'),
       ),
     ),
-    p({ class: 'text-sm whitespace-pre-wrap wrap-anywhere text-neutral-400' }, job),
+    div({ class: 'whitespace-pre-wrap wrap-anywhere' }, kit.secondaryText(job)),
   )
 }

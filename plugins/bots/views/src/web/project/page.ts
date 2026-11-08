@@ -3,8 +3,8 @@ import { planChangeWire, planRead } from '@sand/bot-plan/contract'
 import { changesMerge } from '@sand/changes/contract'
 import { featureState } from '@sand/features/contract'
 import type { Status } from '@sand/ui-shell/contract'
-import { derive, div, dynamicChild, li, list, section, show, sig, span, ul, type Sig } from '@vaakx-dev/vrui'
-import { botMark, statusIcon } from '../marks'
+import { derive, div, dynamicChild, li, list, show, sig, span, ul, type Sig } from '@vaakx-dev/vrui'
+import { botMark, statusLabel } from '../marks'
 import { projectNames, type Parts } from '../parts'
 import { settled } from '../work'
 import { parsePlan, type PlanItem } from './plan'
@@ -57,37 +57,39 @@ const mergeButton = (parts: Parts, ref: string, live: () => BotTab | undefined) 
 const itemRow = (parts: Parts, bot: string, shown: Sig<Shown>) => {
   const { kit, markdown } = parts.ctx
   const { item } = shown.get()
-  const live = () => shown.get().live
   const ref = item.ref
+  const live = () => shown.get().live
   const note = () => live()?.note || item.note
-  const status = () => live()?.status
-  const done = () => {
-    const found = status()
-    return found !== undefined && settled(found)
-  }
-  const title = () => span({ class: ['font-medium', () => (done() ? 'text-neutral-400' : 'text-neutral-100')] }, ...markdown.inline(item.title))
-  const linked = derive(() => Boolean(ref && live()))
   const canMerge = () => {
-    const found = status()
-    return found !== undefined && groupOf[found] === 'Ready' && parts.ctx.get(featureState)?.on('merge') !== false
+    const status = live()?.status
+    return status !== undefined && groupOf[status] === 'Ready' && parts.ctx.get(featureState)?.on('merge') !== false
+  }
+  const settledNow = () => {
+    const status = live()?.status
+    return status !== undefined && settled(status)
   }
   return li(
-    { class: 'flex items-start gap-3 py-1.5 text-sm' },
-    span(
-      { class: 'flex h-5 shrink-0 items-center' },
-      dynamicChild(derive(status), found => (found ? statusIcon(kit, found) : kit.stateIcon('idle'))),
-    ),
-    div(
-      { class: 'min-w-0 flex-1 leading-5' },
-      dynamicChild(linked, open =>
-        open && ref ? kit.linkButton({ class: 'text-left hover:underline', onClick: () => parts.open(bot, ref) }, title()) : title(),
+    { class: '-mx-2 flex' },
+    kit.listRow({
+      class: 'flex-1',
+      title: span({ class: ['font-medium', () => (settledNow() ? 'text-neutral-400' : 'text-neutral-100')] }, ...markdown.inline(item.title)),
+      meta: span({}, note),
+      trail: dynamicChild(
+        derive(() => {
+          const found = live()
+          return found ? `${found.status}:${found.at}` : ''
+        }),
+        () => {
+          const found = live()
+          return found ? statusLabel(kit, found.status, found.at) : null
+        },
       ),
-      show(
-        () => Boolean(note()),
-        () => span({ class: 'text-neutral-400' }, ' — ', () => note()),
-      ),
-    ),
-    ref ? show(canMerge, () => mergeButton(parts, ref, live)) : null,
+      ...(ref && { actions: show(canMerge, () => mergeButton(parts, ref, live)) }),
+      disabled: () => !(ref && live()),
+      onClick: () => {
+        if (ref) parts.open(bot, ref)
+      },
+    }),
   )
 }
 
@@ -96,11 +98,7 @@ const groupView = (parts: Parts, bot: string, group: Group, items: () => Shown[]
   return show(
     () => items().length > 0,
     () =>
-      section(
-        { class: 'flex flex-col gap-1' },
-        kit.headTitle(2, group),
-        list(derive(items), shown => shown.key, shown => itemRow(parts, bot, shown), ul({ class: 'flex flex-col' })),
-      ),
+      kit.pageSection({ title: group }, list(derive(items), shown => shown.key, shown => itemRow(parts, bot, shown), ul({ class: 'flex flex-col' }))),
   )
 }
 
@@ -130,17 +128,13 @@ export const projectPage = (parts: Parts, bot: string) => {
   const inGroup = (group: Group) => () => shown.get().filter(item => (item.live ? groupOf[item.live.status] : 'Next') === group)
   const empty = () => plan.get() !== undefined && !shown.get().length && !plan.get()?.rest
 
-  return div(
-    { class: 'min-h-0 flex-1 overflow-y-auto overscroll-contain', onMount: () => stop },
-    div(
-      { class: 'flex flex-col gap-6 px-4 py-5' },
-      div(
-        { class: 'flex items-center gap-3' },
-        botMark(kit, found, 20),
-        kit.headTitle(1, () => botName(found() ?? { name: '' })),
-        kit.metaLine(() => projectNames(parts, found()?.projects ?? [])),
-      ),
-      dynamicChild(
+  return kit.pageBody(
+    {
+      onMount: () => stop,
+      title: span({ class: 'flex items-center gap-3' }, botMark(kit, found, 20), span({ class: 'truncate' }, () => botName(found() ?? { name: '' }))),
+      action: kit.metaLine(() => projectNames(parts, found()?.projects ?? [])),
+    },
+    dynamicChild(
         derive(() => plan.get()?.rest ?? ''),
         rest => (rest ? div({ class: 'text-sm text-neutral-400' }, ...markdown.nodes(rest)) : null),
       ),
@@ -152,6 +146,5 @@ export const projectPage = (parts: Parts, bot: string) => {
       show(empty, () =>
         kit.emptyState({ text: () => `Nothing planned yet. Work ${botName(found() ?? { name: '' })} starts shows here.`, flush: true }),
       ),
-    ),
   )
 }

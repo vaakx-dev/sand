@@ -10,7 +10,7 @@ export const homeScreen = (parts: Parts): Screen => {
     if (first && shell.state() !== 'phone' && shell.current().kind === homeRoute) untrack(() => shell.open({ kind: botRoute, id: first.id }, { replace: true }))
   })
   return {
-    head: () => kit.headTitle(1, 'Bots'),
+    head: () => kit.barTitle('Bots'),
     main: () =>
       div(
         { class: 'flex min-h-0 flex-1 flex-col items-center justify-center' },

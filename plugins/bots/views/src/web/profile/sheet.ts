@@ -5,7 +5,7 @@ import { derive, div, dynamicChild, list, p, show, sig, span } from '@vaakx-dev/
 import { automationRow } from '../automations/row'
 import { botMark } from '../marks'
 import { automationsOf, projectName, projectNames, type Parts } from '../parts'
-import { block, editable } from './editable'
+import { editable } from './editable'
 import { createProject, projectChecklist } from './projects'
 
 type Bot = () => BotSummary | undefined
@@ -39,7 +39,7 @@ const nameField = (parts: Parts, id: string, bot: Bot) => {
             if (event.key === 'Escape') editing.set(false)
           },
         })
-      : kit.plainButton({ title: 'Rename', class: 'min-w-0 rounded-sm', onClick: start }, kit.headTitle(2, () => nameOf(bot))),
+      : kit.plainButton({ title: 'Rename', class: 'min-w-0 rounded-sm', onClick: start }, kit.barTitle(() => nameOf(bot))),
   )
 }
 
@@ -82,14 +82,12 @@ const projectsBlock = (parts: Parts, id: string, bot: Bot) => {
       span({ class: 'min-w-0 flex-1 truncate text-neutral-100' }, () => projectName(parts, project)),
       kit.iconButton({ size: 'sm', title: 'Remove', 'aria-label': `Remove ${projectName(parts, project)}`, onClick: () => save(chosen().filter(other => other !== project)) }, kit.icon('x', 'sm')),
     )
-  return block(
-    kit,
-    'Projects',
-    kit.linkButton({ class: 'text-sm', onClick: () => adding.update(open => !open) }, () => (adding.get() ? 'Done' : 'Add')),
+  return kit.pageSection(
+    { title: 'Projects', action: kit.linkButton({ class: 'text-sm', onClick: () => adding.update(open => !open) }, () => (adding.get() ? 'Done' : 'Add')) },
     list(derive(chosen), project => project, project => row(project.get()), div({ class: 'flex flex-col' })),
     show(
       () => !chosen().length && !adding.get(),
-      () => p({ class: 'text-sm text-neutral-400' }, 'None. Without a project it works in chat and starts threads anywhere.'),
+      () => kit.secondaryText('None. Without a project it works in chat and starts threads anywhere.'),
     ),
     show(
       () => adding.get(),
@@ -122,14 +120,12 @@ const automationsBlock = (parts: Parts, id: string, bot: Bot) => {
   return show(
     () => parts.automationSources.items.get().length > 0,
     () =>
-      block(
-        kit,
-        'Automations',
-        null,
+      kit.pageSection(
+        { title: 'Automations' },
         list(items, item => item.id, item => automationRow(kit, menu, item, 'raised'), div({ class: '-mx-2 flex flex-col' })),
         show(
           () => !items.get().length,
-          () => p({ class: 'text-sm text-neutral-400' }, () => `Nothing yet. Ask ${nameOf(bot)} to check something on a schedule, or to watch a page or folder.`),
+          () => kit.secondaryText(() => `Nothing yet. Ask ${nameOf(bot)} to check something on a schedule, or to watch a page or folder.`),
         ),
         menu.view(),
       ),

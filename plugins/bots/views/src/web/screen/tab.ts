@@ -21,7 +21,7 @@ export const tabScreen = (parts: Parts, route: () => Route): Screen => {
           derive(() => live()?.status ?? 'done'),
           status => statusIcon(kit, status),
         ),
-        kit.headTitle(2, () => live()?.title ?? ''),
+        kit.barTitle(() => live()?.title ?? ''),
       ),
     main: () =>
       div(

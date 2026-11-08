@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { errorMessage } from '@sand/util'
-import { div, dynamicChild, section, show, sig, type Child } from '@vaakx-dev/vrui'
+import { div, dynamicChild, show, sig, type Child } from '@vaakx-dev/vrui'
 
 export interface EditableProps {
   title: string
@@ -11,13 +11,6 @@ export interface EditableProps {
   maxLength: number
   placeholder: string
 }
-
-export const block = (kit: Kit, title: string, action: Child, ...children: Child[]) =>
-  section(
-    { class: 'flex flex-col gap-1' },
-    div({ class: 'flex min-h-8 items-center gap-2' }, kit.headTitle(2, title), action),
-    ...children,
-  )
 
 export const editable = (kit: Kit, props: EditableProps) => {
   const editing = sig(false)
@@ -53,13 +46,14 @@ export const editable = (kit: Kit, props: EditableProps) => {
         kit.primaryAction({ size: 'sm', disabled: () => saving.get() || draft.get() === props.text(), onClick: save }, 'Save'),
       ),
     )
-  return block(
-    kit,
-    props.title,
-    show(
-      () => !editing.get(),
-      () => kit.linkButton({ class: 'text-sm', onClick: start }, 'Edit'),
-    ),
+  return kit.pageSection(
+    {
+      title: props.title,
+      action: show(
+        () => !editing.get(),
+        () => kit.linkButton({ class: 'text-sm', onClick: start }, 'Edit'),
+      ),
+    },
     dynamicChild(editing, open => (open ? editor() : div({ class: 'text-sm text-neutral-400' }, props.view()))),
   )
 }

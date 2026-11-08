@@ -48,7 +48,7 @@ const phoneHead = (parts: Parts, id: string) => {
   return kit.plainButton(
     { class: 'flex min-w-0 items-center gap-2 rounded-md px-1', title: 'Profile', onClick: () => parts.profile(id) },
     botMark(kit, bot),
-    kit.headTitle(2, () => botName(bot() ?? { name: '' })),
+    kit.barTitle(() => botName(bot() ?? { name: '' })),
     kit.icon('down', 'sm'),
   )
 }
@@ -117,7 +117,11 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
     side: {
       label: 'Project',
       mainLabel: 'Chat',
-      actions: () => kit.iconButton({ title: 'Profile', 'aria-label': 'Profile', onClick: () => parts.profile(id) }, kit.icon('sliders')),
+      actions: () =>
+        show(
+          () => shell.state() !== 'phone',
+          () => kit.iconButton({ title: 'Profile', 'aria-label': 'Profile', onClick: () => parts.profile(id) }, kit.icon('sliders')),
+        ),
       render: () => projectPage(parts, id),
     },
   }
