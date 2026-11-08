@@ -1,6 +1,6 @@
 import type { ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
 import { plural } from '@sand/util'
-import { a, div } from '@vaakx-dev/vrui'
+import { a, div, p } from '@vaakx-dev/vrui'
 
 interface Link {
   title: string
@@ -40,12 +40,30 @@ export const searchView = (views: ToolViews): ToolRenderer => {
   }
 }
 
+const excerptParagraphs = 3
+
+const page = (text: string) => {
+  const [head = '', ...rest] = text.split('\n\n')
+  const paragraphs = rest.filter(part => part.trim())
+  return { title: /^Title: (.*)$/m.exec(head)?.[1], shown: paragraphs.slice(0, excerptParagraphs), hidden: Math.max(0, paragraphs.length - excerptParagraphs) }
+}
+
 export const fetchView = (views: ToolViews): ToolRenderer => ({
-  icon: 'link',
-  verb: 'Read',
-  activeVerb: 'Reading',
-  label: tool => views.field(tool.call.input, 'url'),
-  meta: tool => (done(tool) ? (/^Title: (.*)$/m.exec(views.resultText(tool.result))?.[1] ?? '') : ''),
+  icon: 'globe',
+  verb: 'Fetched',
+  activeVerb: 'Fetching',
+  label: tool => views.field(tool.call.input, 'url').replace(/^https?:\/\//, ''),
+  meta: () => '',
   copy: tool => views.field(tool.call.input, 'url'),
-  body: tool => (tool.result?.isError ? views.errorBody(tool) : undefined),
+  body(tool) {
+    if (!tool.result) return undefined
+    if (tool.result.isError) return views.errorBody(tool)
+    const { title, shown, hidden } = page(views.resultText(tool.result))
+    return div(
+      { class: 'text-sm text-neutral-400' },
+      title && div({ class: 'mb-1 font-semibold text-neutral-100' }, title),
+      shown.map(part => p({ class: 'mb-2 whitespace-pre-line wrap-anywhere' }, part)),
+      hidden > 0 && div({ class: 'text-xs text-neutral-500' }, `${plural(hidden, 'more paragraph')} not shown`),
+    )
+  },
 })

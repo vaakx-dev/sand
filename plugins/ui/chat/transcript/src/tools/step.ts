@@ -33,7 +33,11 @@ const inputSize = () => {
   }
 }
 
-const metaView = ({ metaLine }: Kit, text: string) => span({ class: 'flex max-w-1/2 shrink-0', title: text }, metaLine(counts(text)))
+const metaView = (text: string) => span({ class: 'truncate', title: text }, counts(text))
+
+const badgeTones: Record<ToolBadge['tone'], string> = { danger: 'text-danger-400', neutral: 'text-neutral-500' }
+
+const badgeView = (found: ToolBadge | undefined) => found && span({ class: ['shrink-0', badgeTones[found.tone]] }, found.text)
 
 export const toolStep = (
   kit: Kit,
@@ -42,8 +46,7 @@ export const toolStep = (
   menus: MenuKit,
   cwd: string | undefined,
 ) => {
-  const { badge, contextMenu, copyButton, shine } = kit
-  const badgeView = (found: ToolBadge | undefined) => found && badge(found.tone, found.text)
+  const { contextMenu, copyButton, shine } = kit
   const current = () => renderer(tool.get().call.name)
   const sizeOf = inputSize()
   const signature = derive(() => {
@@ -58,10 +61,8 @@ export const toolStep = (
   })
   const state = derive(() => states[tool.get().status])
   const running = derive(() => state.get() === 'running')
-  const label = derive(() => {
-    const { verb, activeVerb, label } = shown.get()
-    return [running.get() ? activeVerb : verb, label].filter(Boolean).join(' ')
-  })
+  const verb = derive(() => (running.get() ? shown.get().activeVerb : shown.get().verb))
+  const label = derive(() => [verb.get(), shown.get().label].filter(Boolean).join(' '))
   const copy = () => current().copy(tool.get())
   const body = dynamicChild(
     derive(() => (open.get() ? signature.get() : '')),
@@ -87,19 +88,23 @@ export const toolStep = (
   const line = stepLine(
     kit,
     {
-      mark: dynamicChild(state, value => stepMark(kit, value)),
-      label: dynamicChild(running, live => (live ? shine(label) : span(label))),
+      mark: dynamicChild(state, value => stepMark(kit, value, current().icon)),
+      label: [
+        dynamicChild(running, live => (live ? shine(verb) : span({ class: 'shrink-0' }, verb))),
+        span({ class: 'min-w-0 truncate font-mono text-xs text-neutral-100' }, () => shown.get().label),
+      ],
       title: label,
-      meta: [
-        dynamicChild(
-          shown.map(value => value.meta),
-          text => metaView(kit, text),
-        ),
+      meta: span(
+        { class: 'ml-auto flex max-w-1/2 shrink-0 gap-2 pl-2 text-xs text-neutral-500 tabular-nums' },
         dynamicChild(
           shown.map(value => value.badge),
           badgeView,
         ),
-      ],
+        dynamicChild(
+          shown.map(value => value.meta),
+          metaView,
+        ),
+      ),
       expanded: open,
       actions: [
         copyButton({ text: copy }),

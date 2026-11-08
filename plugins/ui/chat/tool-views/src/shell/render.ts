@@ -27,8 +27,8 @@ export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, {
       if (!tool.result) return undefined
       if (tool.result.isError) return { text: statusLabel('failed'), tone: 'danger' }
       const { code, stopped } = parse(resultText(tool.result))
-      if (stopped) return { text: 'Stopped', tone: 'danger' }
-      return code === undefined || code === 0 ? undefined : { text: `Exit ${code}`, tone: 'danger' }
+      if (stopped) return { text: 'stopped', tone: 'danger' }
+      return code === undefined || code === 0 ? undefined : { text: `exit ${code}`, tone: 'danger' }
     },
     copy: command,
     body(tool) {

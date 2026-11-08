@@ -15,15 +15,15 @@ export interface StepLineProps {
   headProps?: Props<HTMLDivElement>
 }
 
-const marks: Record<StepState, (kit: Kit) => HTMLElement> = {
-  done: ({ icon }) => span({ class: 'inline-flex text-neutral-500' }, icon('check', 'xs')),
-  failed: ({ icon }) => span({ class: 'inline-flex text-danger-400' }, icon('x', 'xs')),
+const marks: Record<StepState, (kit: Kit, name?: string) => HTMLElement> = {
+  done: ({ icon }, name = 'check') => span({ class: 'inline-flex text-neutral-500' }, icon(name, 'xs')),
+  failed: ({ icon }, name = 'x') => span({ class: 'inline-flex text-danger-400' }, icon(name, 'xs')),
   running: ({ spinner }) => spinner('xs'),
 }
 
-export const stepMark = (kit: Kit, state: StepState) => marks[state](kit)
+export const stepMark = (kit: Kit, state: StepState, name?: string) => marks[state](kit, name)
 
-export const stepBody = (...content: Child[]) => div({ class: 'mt-1 mb-2 min-w-0 text-xs' }, ...content)
+export const stepBody = (...content: Child[]) => div({ class: 'mt-1 mb-3 min-w-0 text-xs sm:pl-5' }, ...content)
 
 export const stepLine = ({ rowButton }: Kit, { mark, label, title = '', meta, actions, expanded, onToggle, headProps }: StepLineProps, ...body: Child[]) =>
   div(
@@ -38,7 +38,7 @@ export const stepLine = ({ rowButton }: Kit, { mark, label, title = '', meta, ac
           onClick: onToggle,
         },
         span({ class: 'inline-flex w-3 shrink-0 justify-center' }, mark),
-        span({ class: 'min-w-0 truncate' }, label),
+        span({ class: 'flex min-w-0 items-baseline gap-2' }, label),
         meta,
       ),
       actions && actionRow(() => read(expanded), '', actions),
