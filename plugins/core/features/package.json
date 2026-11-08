@@ -45,11 +45,8 @@
       },
       "git": {
         "label": "Git",
-        "summary": "Each thread's changes, and what each turn changed",
+        "summary": "Git status and diffs for each thread's folder",
         "parent": "threads",
-        "needs": [
-          "picker"
-        ],
         "uses": [
           "background"
         ]

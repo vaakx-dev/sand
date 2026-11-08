@@ -14,10 +14,9 @@ export default definePlugin({
   apply(ctx) {
     const chat = owned(ctx, () => {
       const controller = chatController(ctx)
-      const { version, footers } = ctx.transcriptParts
+      const { version } = ctx.transcriptParts
       effect(() => {
         version.get()
-        footers.get()
         untrack(controller.refresh)
       })
       return controller

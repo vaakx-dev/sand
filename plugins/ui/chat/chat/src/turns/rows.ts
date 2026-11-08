@@ -2,7 +2,6 @@ import type { Kit } from '@sand/ui-kit/contract'
 import type { OpenStates, Row, Rows, TranscriptParts } from '@sand/transcript/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Shown } from './fold'
-import { footRow } from './footer'
 import { turnRow } from './header'
 
 export interface TurnContext {
@@ -10,8 +9,6 @@ export interface TurnContext {
   parts: TranscriptParts
   rows: Rows
   states: OpenStates
-  thread: string
-  device: string
   repaint(): void
 }
 
@@ -30,6 +27,5 @@ const railed = (inner: Row, rail: boolean): Row<{ inner: unknown; rail: boolean 
 
 export const shownRows = (entry: Shown, context: TurnContext): Row[] => {
   if (entry.kind === 'turn') return [turnRow(entry, context)]
-  if (entry.kind === 'foot') return [footRow(entry, context)]
   return context.rows.item(entry.item).map(inner => railed(inner, entry.rail))
 }
