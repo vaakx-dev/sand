@@ -1,4 +1,4 @@
-import { div, event, read, show, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { div, event, read, show, sig, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { iconButton } from '../buttons/button'
 import { closeButton } from '../buttons/close'
 import { paneHead } from '../heads/page-head'
@@ -10,7 +10,11 @@ import { scrim } from './scrim'
 
 export type SheetSize = 'sm' | 'md' | 'lg'
 
-export type SheetProps = Props<HTMLDivElement> & { size?: SheetSize }
+export type SheetProps = Props<HTMLDivElement> & {
+  size?: SheetSize
+  phone?: 'sheet' | 'screen'
+  grab?: () => void
+}
 
 export interface SheetHeadProps {
   title: Child
@@ -27,24 +31,57 @@ const backdrop =
   (close: () => void, ...children: Child[]) =>
     scrim({ close, from: document.activeElement, class: placement, onMouseDown: event(close, { self: true }) }, ...children)
 
-export const overlay = backdrop('items-end sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
+export const overlay = backdrop('items-end pt-12 sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
 
-export const railOverlay = backdrop('items-end sm:items-start sm:justify-center sm:px-3 sm:pb-3 md:items-end md:justify-start md:pt-3 md:pl-16')
+export const railOverlay = backdrop('items-end pt-12 sm:items-start sm:justify-center sm:px-3 sm:pb-3 md:items-end md:justify-start md:pt-3 md:pl-16')
 
-export const sheet = ({ size = 'lg', class: extra, ...props }: SheetProps, ...children: Child[]) =>
-  div(
+export const screenOverlay = backdrop('pt-safe sm:items-start sm:justify-center sm:px-3 sm:pt-20 sm:pb-3')
+
+const phoneFrames = {
+  sheet: 'max-h-full rounded-t-xl bg-neutral-800 animate-rise',
+  screen: 'h-full bg-neutral-900 animate-fade sm:h-auto sm:max-h-full sm:bg-neutral-800',
+}
+
+const dragDown = (close: () => void) => {
+  const offset = sig(0)
+  let start: number | undefined
+  const release = () => {
+    if (start === undefined) return
+    start = undefined
+    if (offset.get() > 80) close()
+    else offset.set(0)
+  }
+  const handle = div(
+    {
+      class: 'flex h-5 shrink-0 cursor-grab touch-none items-center justify-center sm:hidden',
+      onPointerDown: (pressed: PointerEvent) => {
+        start = pressed.clientY
+        if (pressed.target instanceof Element) pressed.target.setPointerCapture(pressed.pointerId)
+      },
+      onPointerMove: (moved: PointerEvent) => {
+        if (start !== undefined) offset.set(Math.max(0, moved.clientY - start))
+      },
+      onPointerUp: release,
+      onPointerCancel: release,
+    },
+    div({ class: 'h-1 w-8 rounded-full bg-neutral-600' }),
+  )
+  return { handle, style: () => (offset.get() ? { transform: `translateY(${offset.get()}px)` } : {}) }
+}
+
+export const sheet = ({ size = 'lg', phone = 'sheet', grab, class: extra, ...props }: SheetProps, ...children: Child[]) => {
+  const drag = grab ? dragDown(grab) : undefined
+  return div(
     {
       role: 'dialog',
+      ...(drag && { style: drag.style }),
       ...props,
-      class: [
-        'flex max-h-full w-full flex-col overflow-hidden rounded-t-xl bg-neutral-800 pb-safe animate-rise sm:rounded-xl sm:pb-0 sm:animate-none',
-        floatingEdge,
-        sheetWidths[size],
-        extra,
-      ],
+      class: ['flex w-full flex-col overflow-hidden pb-safe sm:rounded-xl sm:pb-0 sm:animate-none', phoneFrames[phone], floatingEdge, sheetWidths[size], extra],
     },
+    drag?.handle ?? null,
     ...children,
   )
+}
 
 export const sheetHead = ({ title, close, back, backShown = true, actions }: SheetHeadProps) => {
   const led = () => Boolean(back) && read(backShown)

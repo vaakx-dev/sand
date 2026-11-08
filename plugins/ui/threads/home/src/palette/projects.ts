@@ -83,8 +83,9 @@ const noProjectItem = (parts: StartParts): PaletteItem => ({
 export const newChatPage = (parts: StartParts): PalettePage => ({
   id: 'new-thread',
   title: 'New chat',
-  placeholder: 'Search projects…',
-  empty: 'No matches',
+  placeholder: 'Search projects',
+  browse: true,
+  empty: query => `No projects match “${query.trim()}”`,
   items: query => [
     ...projectItems(parts).map(item => ({ ...item, group: undefined })),
     noProjectItem(parts),

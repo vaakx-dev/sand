@@ -73,7 +73,7 @@ test('the page works while a plugin never answers its part of the hello, or thro
   const page = await browser.newPage()
   await page.goto(url)
   await page.getByRole('button', { name: 'New chat' }).first().click()
-  await page.getByRole('dialog', { name: 'Search' }).getByText('No project', { exact: true }).click()
+  await page.getByRole('dialog', { name: 'New chat' }).getByText('No project', { exact: true }).click()
   await page.waitForURL(/view=draft/)
   await page.getByRole('textbox').first().waitFor()
   await page.getByRole('textbox').first().fill('hello')

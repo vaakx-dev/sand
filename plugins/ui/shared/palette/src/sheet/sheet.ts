@@ -1,8 +1,8 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import type { Shell } from '@sand/ui-shell/contract'
+import type { SheetLook, Shell } from '@sand/ui-shell/contract'
 import { collectScope, disposeAll, div, dynamicChild, effect, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { PalettePage } from '../contract'
-import { paletteHead } from './head'
+import { formHead, paletteHead } from './head'
 import { pageModel, type PageModel } from './model'
 import type { PageMemory, PageNav } from './nav'
 import { pageBody, pageKeys } from './page'
@@ -57,20 +57,34 @@ const shownModel = (kit: Kit, stack: Sig<PalettePage[]>, query: () => string) =>
   return model
 }
 
+const lookOf = (page: PalettePage): SheetLook => {
+  if (page.browse) return 'list'
+  return page.field || page.review ? 'form' : 'search'
+}
+
+const scrolled = (look: SheetLook, model: PageModel, body: HTMLElement) =>
+  look === 'form'
+    ? body
+    : div({ class: () => ['flex min-h-0 flex-col overflow-y-auto overscroll-contain px-2 pb-2', look === 'list' && model.searching.get() && 'h-screen sm:h-auto'] }, body)
+
 export const searchSheet = (kit: Kit, shell: Shell, stack: Sig<PalettePage[]>, query: () => string) => {
   const model = shownModel(kit, stack, query)
   const shown = (render: (found: PageModel) => HTMLElement) => dynamicChild(model, found => (found ? render(found) : null))
   const closedByShell = () => () => {
     if (stack.get().length) stack.set([])
   }
-  const open = stack.map(pages => pages.length > 0)
+  const first = stack.map(pages => pages[0])
   effect(() => {
-    if (!open.get()) return
+    const page = first.get()
+    if (!page) return
+    const look = lookOf(page)
+    const head = (found: PageModel) => (look === 'form' ? formHead(kit, found) : paletteHead(kit, found))
     const handle = untrack(() =>
       shell.sheet({
-        label: 'Search',
-        head: () => shown(found => span({ class: 'flex min-w-0 flex-1', onKeyDown: pageKeys(found) }, paletteHead(kit, found))),
-        body: () => div({ class: 'flex min-h-0 flex-col', onMount: closedByShell }, shown(found => pageBody(kit, found))),
+        label: page.title,
+        look,
+        head: () => shown(found => span({ class: look === 'form' ? 'flex min-w-0 flex-1' : 'flex shrink-0 flex-col', onKeyDown: pageKeys(found) }, head(found))),
+        body: () => div({ class: 'flex min-h-0 flex-col', onMount: closedByShell }, shown(found => scrolled(look, found, pageBody(kit, found)))),
       }),
     )
     return () => handle.close()

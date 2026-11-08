@@ -9,7 +9,7 @@ import { card } from './cards/card'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
-import { searchField, searchRow, textArea, textInput } from './fields/field'
+import { searchField, searchLine, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
@@ -57,7 +57,7 @@ import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
 import { setupColumn, setupFooter, setupFrame, setupHeading, setupNote, setupScreen } from './setup/setup'
 import { bottomSheet } from './sheets/bottom'
-import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
+import { overlay, railOverlay, screenOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep } from './sheets/overlay'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
 import { tab, tabStrip } from './tabs/tabs'
@@ -170,6 +170,7 @@ export const kit = {
   openTab,
   optionProps,
   overlay,
+  screenOverlay,
   ownedByNode,
   pageBody,
   pageColumn,
@@ -202,6 +203,7 @@ export const kit = {
   rowTitle,
   rowWarning,
   searchField,
+  searchLine,
   searchRow,
   secondaryAction,
   secondaryText,

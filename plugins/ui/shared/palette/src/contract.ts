@@ -67,6 +67,7 @@ export interface PalettePage {
   id: string
   title: string
   placeholder?: string
+  browse?: boolean
   empty?: string | ((query: string) => string)
   filter?: boolean
   delay?: number

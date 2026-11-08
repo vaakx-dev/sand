@@ -24,17 +24,23 @@ export const textArea = ({ rows = 4, class: extra, ...props }: TextAreaProps) =>
     class: [fieldLook, 'block resize-none py-2 text-base leading-relaxed md:text-sm', extra],
   })
 
-export const searchField = ({ class: extra, ...props }: Props<HTMLInputElement>) =>
+const searchInput = ({ class: extra, ...props }: Props<HTMLInputElement>, size?: string) =>
+  input({
+    enterKeyHint: 'search',
+    autocomplete: 'off',
+    spellcheck: false,
+    ...props,
+    class: ['min-w-0 flex-1 bg-transparent text-base text-neutral-100 outline-none placeholder:text-neutral-500', size, extra],
+  })
+
+export const searchField = (props: Props<HTMLInputElement>) =>
   label(
     { class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-neutral-950 px-3 text-neutral-500 ring-1 ring-neutral-700 focus-visible-within:ring-accent-800' },
     icon('search', 'md'),
-    input({
-      enterKeyHint: 'search',
-      autocomplete: 'off',
-      spellcheck: false,
-      ...props,
-      class: ['min-w-0 flex-1 text-base text-neutral-100 outline-none placeholder:text-neutral-500 md:text-sm', extra],
-    }),
+    searchInput(props, 'md:text-sm'),
   )
+
+export const searchLine = (props: Props<HTMLInputElement>) =>
+  label({ class: 'flex h-12 min-w-0 flex-1 items-center gap-3 text-neutral-500' }, icon('search', 'md'), searchInput(props))
 
 export const searchRow = (props: Props<HTMLInputElement>, lead?: Child) => paneHead({ led: Boolean(lead) }, lead ?? null, searchField(props))
