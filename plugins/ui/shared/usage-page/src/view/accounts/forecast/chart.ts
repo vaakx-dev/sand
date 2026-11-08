@@ -87,7 +87,7 @@ export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast,
         () => hovered.get() !== undefined,
         () =>
           div({
-            class: 'pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-neutral-900',
+            class: 'pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full',
             style: { backgroundColor: color, left: () => at(marked().at), top: () => cssPercent(toY(marked().left) / height) },
           }),
       ),

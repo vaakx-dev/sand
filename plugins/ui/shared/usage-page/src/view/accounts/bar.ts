@@ -44,7 +44,7 @@ const paceTick = (window: LimitWindow, now: Sig<number>) =>
     () => elapsedOf(window, now.get()) !== undefined,
     () =>
       span({
-        class: 'absolute -inset-y-1 w-1 -translate-x-1/2 rounded-full bg-current text-neutral-100 ring-2 ring-neutral-900',
+        class: 'absolute -inset-y-1 w-1 -translate-x-1/2 rounded-full bg-current text-neutral-100',
         title: 'Even pace',
         style: { left: () => `${(1 - (elapsedOf(window, now.get()) ?? 0)) * 100}%` },
       }),

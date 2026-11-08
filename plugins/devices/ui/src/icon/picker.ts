@@ -25,7 +25,7 @@ export const iconPicker = (ui: Ui, view: Sig<PcView>, close: () => void) => {
     if (kind !== view.get().icon) void ui.toasts.attempt(`Couldn’t change ${name}’s icon`, ui.data.devices.setIcon(id, kind))
   }
   return div(
-    { class: 'pb-3 pl-11' },
+    { class: 'pb-3 pl-12' },
     div(
       { class: 'grid max-w-80 grid-cols-4 gap-1.5', role: 'group', 'aria-label': 'Icon' },
       ...pcIconSchema.options.map(kind => option(ui, view, kind, choose)),
