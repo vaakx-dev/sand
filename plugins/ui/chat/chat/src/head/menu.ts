@@ -1,8 +1,10 @@
 import { picker } from '@sand/picker/contract'
 import { homeRoute, type MenuAction, type Shell } from '@sand/ui-shell/contract'
 import { oneLine } from '@sand/util'
+import type { Thread } from '@sand/web-client/contract'
 import type { ChatContext } from '../context'
-import { threadTitle } from './place'
+
+export const threadTitle = (thread: Thread) => thread.info.title || 'Untitled thread'
 
 const renameThread = async (ctx: ChatContext, id: string) => {
   const thread = ctx.threads.get(id)

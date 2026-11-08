@@ -1,5 +1,5 @@
 import { label } from '../blocks/refs'
-import { anchor, blockedLink, type Inline } from '../nodes'
+import { anchor, linkLabel, type Inline } from '../nodes'
 import type { Scope } from '../scope'
 import { closingBracket, inlineDestination, matchAt } from './syntax'
 
@@ -27,7 +27,7 @@ const link = (href: string, children: Inline[], scope: Scope, title?: string): N
   if (url) return anchor(url, title, children)
   const [, name = '', target = ''] = schemed.exec(href.trim()) ?? []
   const found = name && scope.scheme(name.toLowerCase())
-  return found ? found.render(target, children) : blockedLink(href, children)
+  return found ? found.render(target, children) : linkLabel(href, children)
 }
 
 const imageLink = (src: string, alt: string, scope: Scope, title?: string) => link(src, [`▣ ${alt || 'image'}`], scope, title ?? src)

@@ -1,4 +1,5 @@
 import type { Item } from '@sand/transcript/contract'
+import { summaryOf } from './summary'
 
 export type TurnPhase = 'thinking' | 'working' | 'waiting' | 'done'
 
@@ -8,6 +9,7 @@ export interface TurnHead {
   phase: TurnPhase
   start: number | undefined
   end: number
+  summary: string
 }
 
 export interface ShownItem {
@@ -75,7 +77,7 @@ const phaseOf = (body: Item[], running: boolean, options: FoldOptions): TurnPhas
   return begun(body) ? 'working' : 'thinking'
 }
 
-const headOf = (turn: Turn, running: boolean, options: FoldOptions): TurnHead => {
+const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
   const times = items.flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
@@ -85,14 +87,16 @@ const headOf = (turn: Turn, running: boolean, options: FoldOptions): TurnHead =>
     phase: phaseOf(turn.body, running, options),
     start: running ? (options.started ?? first) : first,
     end: Math.max(0, ...times),
+    summary: summaryOf(work),
   }
 }
 
 const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] => {
   const from = visibleFrom(turn.body)
   const isWork = (item: Item, index: number) => index < from && !pinned(item)
+  const work = turn.body.filter(isWork)
   const cut = !turn.head && options.older
-  const head = !cut && (running || turn.body.some(isWork)) ? headOf(turn, running, options) : undefined
+  const head = !cut && (running || work.length) ? headOf(turn, work, running, options) : undefined
   const expanded = head !== undefined && options.open(head.key)
   const shown: Shown[] = []
   if (turn.head) shown.push({ kind: 'item', key: turn.head.key, item: turn.head, rail: false, last: false })

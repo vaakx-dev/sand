@@ -24,7 +24,8 @@ export interface ComposerContent {
   content: UserContent[]
 }
 
-export type SlotView = HTMLElement | (() => HTMLElement)
+/** Builds the slot's content; called once for each composer view. */
+export type SlotView = () => HTMLElement
 
 export interface TriggerItem {
   label: string
@@ -53,6 +54,14 @@ export interface Chat {
   path(): Entry[]
   send(prompt: Prompt, clientRequestId: string): Promise<void>
   interrupt(): Promise<void>
+  settings?(): SessionSettings
+  choose?(patch: SettingsPatch): void
+}
+
+export interface DockOptions {
+  /** A bot dock shows the model button only while advanced controls are on. */
+  kind?: 'thread' | 'bot'
+  placeholder?: () => string
 }
 
 export interface ChatDock {
@@ -61,7 +70,7 @@ export interface ChatDock {
 }
 
 export interface Composer {
-  /** The thread composer, one element for the app, built on first call; the thread route moves it into the screen that shows. */
+  /** A new thread composer view for each call, built in the caller's scope; every view shares one draft, its settings and its errors. */
   view(): HTMLElement
   focus(): void
   value(): string
@@ -81,9 +90,11 @@ export interface Composer {
   plus(entry: PlusEntry, order?: number): Dispose
   trigger<T extends TriggerItem>(trigger: Trigger<T>, order?: number): Dispose
   command(command: Command): Dispose
+  /** The settings the next message uses: the current thread's, or the draft's. */
   settings(): SessionSettings
+  /** Changes the current thread's settings, or the draft's. */
   choose(patch: SettingsPatch): void
-  dock(chat: Chat): ChatDock
+  dock(chat: Chat, options?: DockOptions): ChatDock
 }
 
 export interface Typing {

@@ -33,7 +33,7 @@ const inputSize = () => {
   }
 }
 
-const metaView = (text: string) => span({ class: 'max-w-1/2 shrink-0 truncate text-xs text-neutral-500', title: text }, counts(text))
+const metaView = ({ metaLine }: Kit, text: string) => span({ class: 'flex max-w-1/2 shrink-0', title: text }, metaLine(counts(text)))
 
 export const toolStep = (
   kit: Kit,
@@ -93,7 +93,7 @@ export const toolStep = (
       meta: [
         dynamicChild(
           shown.map(value => value.meta),
-          metaView,
+          text => metaView(kit, text),
         ),
         dynamicChild(
           shown.map(value => value.badge),

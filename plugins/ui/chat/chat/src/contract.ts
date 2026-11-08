@@ -29,9 +29,10 @@ export interface ThreadLive {
 /** Shows threads. Provided by the chat; reads are reactive. */
 export interface ThreadView {
   /**
-   * A place for the thread's transcript and composer, without a header, for the thread route and other surfaces such as a bot's tab.
-   * One thread shows at a time: while the returned element is on screen it selects its thread and holds the app's one transcript
-   * and composer. When several are on screen, the latest to appear holds them; when it leaves, another one on screen takes over.
+   * The thread's transcript and a composer, without a header, for the thread route and other surfaces such as a bot's tab.
+   * Each call is an independent transcript that keeps its thread live while mounted. The composers share one draft and
+   * target the selected thread, so while the returned element is on screen it selects its thread; when several are on screen,
+   * the latest to appear wins, and when it leaves another one on screen takes over.
    * Call it inside a scope you own and dispose that scope to remove it.
    */
   render(thread: string): HTMLElement

@@ -20,7 +20,6 @@
     "@sand/features": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/picker": "workspace:*",
-    "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",

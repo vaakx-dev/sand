@@ -42,6 +42,7 @@ export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attach
         iconButton(
           {
             surface: 'raised',
+            class: 'text-neutral-500',
             title,
             'aria-label': title,
             ...pressOpens(open, toggle),
@@ -49,7 +50,7 @@ export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attach
           },
           dynamicChild(
             entries.map((list): IconName => (list.length ? 'plus' : 'paperclip')),
-            glyph => icon(glyph, 'md'),
+            glyph => icon(glyph, 'sm'),
           ),
         ),
     ),

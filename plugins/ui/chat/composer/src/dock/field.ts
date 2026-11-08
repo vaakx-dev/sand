@@ -3,6 +3,7 @@ import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { hasFiles } from '@sand/attachments/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
+import type { ModelButton, ModelTarget } from '@sand/model-panel/contract'
 import { errorMessage } from '@sand/util'
 import { derive, div, dynamicChild, media, sig, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
@@ -17,6 +18,11 @@ import { sendControl } from '../send/button'
 import { lastPrompt } from '../send/submit'
 import type { Slots } from './slots'
 
+export interface ModelChoice {
+  target: ModelTarget
+  button(): ModelButton | undefined
+}
+
 export interface FieldParts {
   ctx: ComposerContext
   model: Model
@@ -25,6 +31,7 @@ export interface FieldParts {
   actions: () => MenuAction[]
   typed: () => void
   placeholder: () => string
+  choice?: ModelChoice
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
@@ -33,7 +40,7 @@ const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserE
 
 const onButton = (event: MouseEvent) => event.target instanceof Element && Boolean(event.target.closest('button'))
 
-export const field = ({ ctx, model, slots, plus, actions, typed, placeholder }: FieldParts) => {
+export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, choice }: FieldParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const within = sig(false)
@@ -96,7 +103,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder }: 
   const node = div(
     {
       class: [
-        'flex rounded-2xl bg-neutral-800 ring-1 ring-neutral-700 transition-shadow focus-within:ring-accent-900',
+        'flex rounded-2xl bg-neutral-800',
         () => (rest.get() ? 'items-center' : 'flex-col'),
         () => (coarse.get() ? 'text-base' : 'text-sm'),
       ],
@@ -114,6 +121,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder }: 
         slots.host('start', 'flex min-w-0 shrink items-center gap-1'),
         span({ class: 'min-w-2 flex-1' }),
         slots.host('end', 'flex min-w-0 shrink items-center gap-1'),
+        choice ? dynamicChild(derive(choice.button), found => (found ? found.view(choice.target) : null)) : null,
       ),
       sendControl(ctx.kit, model, actions),
     ),

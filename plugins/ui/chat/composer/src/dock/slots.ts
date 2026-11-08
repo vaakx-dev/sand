@@ -25,10 +25,7 @@ export const createSlots = () => {
     list(
       entries.map(all => all.filter(entry => entry.where === where).sort(byOrder)),
       entry => entry.id,
-      entry => {
-        const { view } = entry.get()
-        return wrap(typeof view === 'function' ? view() : view)
-      },
+      entry => wrap(entry.get().view()),
       div({ class: className, hidden: empty(where) }),
     )
 

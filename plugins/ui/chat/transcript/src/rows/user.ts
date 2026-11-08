@@ -103,7 +103,7 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
     const press = menus.text(context.menu, spec)
     const reveal = tapReveal()
     return div(
-      { class: 'chat-row group mt-5 mb-3 flex flex-col items-end gap-2 pl-12 md:pl-24' },
+      { class: 'chat-row group mt-2 mb-6 flex flex-col items-end gap-2 pl-16 md:pl-32' },
       show(
         () => Boolean(from.get()),
         () => div({ class: '-mb-1 flex min-w-0 max-w-full px-1' }, metaLine(() => `From ${from.get()}`)),

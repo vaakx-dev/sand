@@ -55,15 +55,25 @@ export const createShelf = (ctx: ShelfContext, attachable: Derive<boolean>, item
     }
   }
 
-  const picker = input({
-    type: 'file',
-    multiple: true,
-    hidden: true,
-    onChange: () => {
-      add(picker.files ?? [])
-      picker.value = ''
-    },
-  })
+  const pickers: HTMLInputElement[] = []
+  const filePicker = () => {
+    const picker = input({
+      type: 'file',
+      multiple: true,
+      hidden: true,
+      onChange: () => {
+        add(picker.files ?? [])
+        picker.value = ''
+      },
+      onMount: () => {
+        pickers.push(picker)
+        return () => {
+          pickers.splice(pickers.indexOf(picker), 1)
+        }
+      },
+    })
+    return picker
+  }
 
   return {
     attachable: () => attachable.get(),
@@ -75,13 +85,13 @@ export const createShelf = (ctx: ShelfContext, attachable: Derive<boolean>, item
       if (content.length < held.length) throw new Error('a file could not be uploaded')
       return content
     },
-    pick: () => picker.click(),
+    pick: () => pickers.at(-1)?.click(),
     paste(text) {
       if (text.length <= pasteLimit || !attachable.get()) return false
       add([pastedFile(text)])
       return true
     },
-    view: () => shelfView({ kit: ctx.kit, media: ctx.get(mediaView), tray, picker }),
+    view: () => shelfView({ kit: ctx.kit, media: ctx.get(mediaView), tray, picker: filePicker() }),
     drops: area => drops(ctx.kit, { attachable: () => attachable.get(), add }, area),
   }
 }

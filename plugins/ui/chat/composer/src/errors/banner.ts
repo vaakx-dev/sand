@@ -17,7 +17,7 @@ const details = ({ codeBlock, expandToggle }: Kit, detail: string) => {
 }
 
 export const errorBanner = (kit: Kit, { text, hint, retry, actions = [], detail, dismiss }: ErrorBanner) => {
-  const { closeButton, icon, secondaryAction } = kit
+  const { closeButton, icon, secondaryAction, secondaryText } = kit
   const more = detail ? details(kit, detail) : undefined
   const buttons = [retry && secondaryAction({ size: 'sm', onClick: retry }, 'Retry'), ...actions, more?.toggle].filter(Boolean)
   return bannerRow(
@@ -29,7 +29,7 @@ export const errorBanner = (kit: Kit, { text, hint, retry, actions = [], detail,
         span({ class: 'min-w-0 flex-1 leading-6' }, text),
         closeButton({ title: 'Dismiss', size: 'sm', onClick: dismiss }),
       ),
-      hint ? div({ class: 'pl-6 text-neutral-400' }, hint) : null,
+      hint ? div({ class: 'pl-6' }, secondaryText(hint)) : null,
       buttons.length ? div({ class: 'flex flex-wrap items-center gap-2 pl-6' }, ...buttons) : null,
       more?.block,
     ),

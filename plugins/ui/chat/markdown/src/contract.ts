@@ -10,7 +10,7 @@ export type MarkdownImage = (src: string, alt: string) => Node | undefined
 
 /**
  * Turns markdown into nodes. Web and mail links open in a new tab; a link in a scheme registered through
- * `markdownLinks` renders through its handler; any other link shows its label as plain text.
+ * `markdownLinks` renders through its handler; any other link shows its label as plain text, with the target as its tooltip.
  */
 export interface Markdown {
   nodes(source: string, image?: MarkdownImage): Node[]

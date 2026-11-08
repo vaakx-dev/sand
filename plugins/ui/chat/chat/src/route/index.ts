@@ -5,24 +5,28 @@ import type { Dispose } from 'drydock'
 import type { ChatContext } from '../context'
 import { draftRoute, threadRoute } from '../contract'
 import { breadcrumb } from '../head/view'
-import type { Stage } from '../stage'
-import { claimRoute, clearOnHome } from './select'
+import type { ThreadScreens } from '../screens'
+import { clearOnHome } from './select'
 
-export const threadRoutes = (ctx: ChatContext, shell: Shell, stage: Stage, changes: Pulse): Dispose => {
-  const screen = (route: () => Route): Screen => {
-    const shown = untrack(route)
+export const threadRoutes = (ctx: ChatContext, shell: Shell, screens: ThreadScreens, changes: Pulse): Dispose => {
+  const threadScreen = (route: () => Route): Screen => {
+    const id = untrack(route).id ?? ''
     return {
-      head: () => breadcrumb(ctx, shell, changes, shown.kind === threadRoute ? shown.id : undefined),
-      main: () => stage.host(() => claimRoute(ctx, shown)),
+      head: () => breadcrumb(ctx, shell, changes, id),
+      main: () => screens.thread(id),
     }
   }
+  const draftScreen = (route: () => Route): Screen => ({
+    head: () => null,
+    main: () => screens.draft(untrack(route)),
+  })
   let first = true
   const stop = effect(() => {
     const route = shell.current()
     untrack(() => clearOnHome(ctx, route, first))
     first = false
   })
-  const routes = [threadRoute, draftRoute].map(kind => shell.route({ kind, render: screen }))
+  const routes = [shell.route({ kind: threadRoute, render: threadScreen }), shell.route({ kind: draftRoute, render: draftScreen })]
   return () => {
     stop()
     for (const off of routes) void off()

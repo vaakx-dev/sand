@@ -33,7 +33,7 @@ const matchers = new Map(
 )
 
 const tones: Record<Kind, string> = {
-  keyword: 'text-accent-300',
+  keyword: 'text-sky-300',
   string: 'text-success-300',
   number: 'text-orange-300',
   comment: 'italic text-neutral-500',

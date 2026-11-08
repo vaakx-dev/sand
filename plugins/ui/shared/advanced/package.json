@@ -1,0 +1,20 @@
+{
+  "name": "@sand/advanced",
+  "version": "0.0.0",
+  "description": "One Advanced controls switch other plugins read to show advanced controls",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Advanced controls",
+    "summary": "A switch in Settings that shows advanced controls, such as model choice in bot chats"
+  },
+  "dependencies": {
+    "@sand/settings": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

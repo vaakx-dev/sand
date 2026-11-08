@@ -1,5 +1,5 @@
 import type { IconName } from '@sand/ui-kit/contract'
-import { div, effect, show, span } from '@vaakx-dev/vrui'
+import { div, effect, show } from '@vaakx-dev/vrui'
 import type { ChatContext } from '../context'
 import type { ThreadView } from '../view'
 
@@ -31,9 +31,9 @@ export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) 
     () => all().length > 1,
     () =>
       div(
-        { class: '-mr-1 flex items-center text-xs text-neutral-500 tabular-nums' },
+        { class: '-mr-1 flex items-center tabular-nums' },
         arrow(-1, 'left', 'Previous version'),
-        span(() => `${index() + 1}/${all().length}`),
+        ctx.kit.metaLine(() => `${index() + 1}/${all().length}`),
         arrow(1, 'right', 'Next version'),
       ),
   )

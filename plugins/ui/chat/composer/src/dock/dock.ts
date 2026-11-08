@@ -17,7 +17,7 @@ export const dock = ({ ctx, model, slots }: FieldParts, field: Field, ...banners
       { class: ['relative px-3 md:px-4', ctx.kit.pageColumn] },
       slots.host('above', 'flex flex-col'),
       div({ class: 'flex flex-col', hidden: completing }, slots.host('banner', 'contents', bannerRow), failureBanner(ctx, model), ...banners),
-      tab(slots, completing),
+      tab(ctx.kit, slots, completing),
       div(
         { class: 'relative', onMount: () => ctx.kit.onPressOutside(completions, field.completion.close, [completions, field.editor.node]) },
         completions,
