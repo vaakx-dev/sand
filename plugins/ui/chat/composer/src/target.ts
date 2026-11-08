@@ -13,6 +13,7 @@ export interface Target {
   running(): boolean
   delivery(): Delivery
   pcName(): string
+  name(): string
   path(): Entry[]
   ready(picked: SessionSettings): boolean
   send(text: string, content: UserContent[], picked: SessionSettings, options: Outgoing): Promise<void>
@@ -26,6 +27,7 @@ export const chatTarget = (chat: Chat): Target => ({
   running: chat.running,
   delivery: () => 'now',
   pcName: () => 'sand',
+  name: chat.name,
   path: chat.path,
   ready: () => true,
   send: (text, content, _picked, { clientRequestId }) => chat.send(promptOf(text, content), clientRequestId),

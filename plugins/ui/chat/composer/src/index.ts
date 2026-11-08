@@ -2,7 +2,7 @@ import { advanced as advancedService, type Advanced } from '@sand/advanced/contr
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
 import { modelButton, type ModelButton } from '@sand/model-panel/contract'
-import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions } from './contract'
+import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
 import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
 import { quotedText } from '@sand/util'
@@ -15,6 +15,7 @@ import { inject } from './context'
 import { dock } from './dock/dock'
 import { field, type Field } from './dock/field'
 import { createSlots } from './dock/slots'
+import { dockDrafts } from './drafts/dock'
 import { draftSession } from './drafts/session'
 import { spacedLink } from './editor/chips/place'
 import { createTurnErrors, turnErrorBanner } from './errors/turn'
@@ -22,6 +23,7 @@ import { createHandoff } from './handoff'
 import { createModel } from './model'
 import { createPlaceholders } from './placeholder'
 import { createPlus } from './plus/entries'
+import { createAsides } from './send/aside'
 import { createSendMenu } from './send/menu'
 import { chatTarget } from './target'
 import { chooseSettings, nextSettings, threadTarget } from './thread'
@@ -32,7 +34,10 @@ export default definePlugin({
   description: 'Prompt field: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls',
   inject,
   apply(ctx) {
-    const slots = createSlots()
+    const shared = createSlots()
+    const slots = createSlots(shared)
+    const asides = createAsides()
+    const store = sig<DraftStore | undefined>(undefined)
     const menu = createSendMenu()
     const plus = createPlus()
     const typing = createTyping()
@@ -64,24 +69,27 @@ export default definePlugin({
 
     const { model, session, errors, placeholders } = owned(ctx, () => {
       const model = createModel(threadTarget(ctx), [triggers, threadOnly], shelf)
-      const session = draftSession(ctx, model, () => mounted.forEach(built => built.completion.close()))
+      const session = draftSession(ctx, model, () => store.get(), () => mounted.forEach(built => built.completion.close()))
       const inThread = pulse(ctx, [threadSelect]).read(() => Boolean(ctx.threads.current()))
       listen(window, 'pagehide', () => session.keep())
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
     })
 
     const chatDock = (chat: Chat, { kind = 'thread', placeholder }: DockOptions = {}): ChatDock => {
-      const own = createSlots()
+      const own = createSlots(shared)
       const chatOnly = createTriggers()
       chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
+      const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf)
+      dockDrafts(chat.key, model, () => store.get())
       const shown = () => kind !== 'bot' || Boolean(advanced.get()?.on())
       const parts = {
         ctx,
-        model: createModel(chatTarget(chat), [triggers, chatOnly], shelf),
+        model,
         slots: own,
         plus: createPlus(),
         actions: () => [],
         typed: typing.typed,
+        asides,
         placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
         ...(chat.settings && chat.choose && { choice: { target: { settings: chat.settings, choose: chat.choose, running: chat.running }, button: () => (shown() ? button.get() : undefined) } }),
       }
@@ -97,6 +105,7 @@ export default definePlugin({
       plus,
       actions: menu.actions(model),
       typed: typing.typed,
+      asides,
       placeholder: () => placeholders.text.get(),
       choice: { target: { settings, choose, running: () => model.running.get() }, button: () => button.get() },
     }
@@ -132,6 +141,8 @@ export default definePlugin({
       },
       attach: content => model.attached.update(list => [...list, ...content]),
       slot: (where, view, order) => slots.add(where, view, order),
+      shared: shared.add,
+      aside: asides.add,
       placeholder: placeholders.add,
       hold: reason => model.holds.add(reason),
       ...createHandoff(model, () => live()?.editor.focusEnd()),
@@ -145,6 +156,10 @@ export default definePlugin({
     }
 
     session.start()
+    ctx.watch(draftStore, found => {
+      store.set(found)
+      if (found) session.start()
+    })
     ctx.on(threadSelect, session.open)
     ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))
     ctx.watch(skillIndex, found => {

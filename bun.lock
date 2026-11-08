@@ -1448,6 +1448,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/html": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/loop": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",
@@ -2046,6 +2047,25 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/chat/drafts": {
+      "name": "@sand/drafts",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/model": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/util": "workspace:*",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
+    },
     "plugins/ui/chat/html": {
       "name": "@sand/html",
       "version": "0.0.0",
@@ -2152,6 +2172,27 @@
         "@sand/ui-kit": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
+    "plugins/ui/chat/stash": {
+      "name": "@sand/stash",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/attachments": "workspace:*",
+        "@sand/chats": "workspace:*",
+        "@sand/composer": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/host-hub": "workspace:*",
+        "@sand/paths": "workspace:*",
+        "@sand/server": "workspace:*",
+        "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+        "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
       },
     },
     "plugins/ui/chat/tool-views": {
@@ -2560,6 +2601,8 @@
 
     "@sand/devices-ui": ["@sand/devices-ui@workspace:plugins/devices/ui"],
 
+    "@sand/drafts": ["@sand/drafts@workspace:plugins/ui/chat/drafts"],
+
     "@sand/engine": ["@sand/engine@workspace:plugins/agent/engine"],
 
     "@sand/extend": ["@sand/extend@workspace:plugins/extend/extend"],
@@ -2685,6 +2728,8 @@
     "@sand/shell-jobs": ["@sand/shell-jobs@workspace:plugins/agent/shell-jobs"],
 
     "@sand/skills": ["@sand/skills@workspace:plugins/agent/skills"],
+
+    "@sand/stash": ["@sand/stash@workspace:plugins/ui/chat/stash"],
 
     "@sand/sub-model": ["@sand/sub-model@workspace:plugins/agent/sub-model"],
 

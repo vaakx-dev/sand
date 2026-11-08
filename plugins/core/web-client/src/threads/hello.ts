@@ -1,4 +1,5 @@
 import { helloDelta, helloSessions, helloSync } from '@sand/server/contract'
+import { helloJobs } from '@sand/jobs/contract'
 import { helloTurns, helloTurnsApi, type TurnInfo } from '@sand/turns-contract/contract'
 import type { Thread } from '../contract'
 import type { HelloRead } from '../greeted'
@@ -28,9 +29,11 @@ export const applyHello = (store: Store, read: HelloRead, device: string) => {
   }
   for (const info of sessions) store.upsert(info, device)
   const running = runningOf(read)
+  const jobs = Map.groupBy((read(helloJobs) ?? []).filter(job => job.status === 'running'), job => job.parent)
   for (const thread of owned()) {
+    thread.jobs = new Set(jobs.get(thread.id)?.map(job => job.id))
     const turn = running.get(thread.id)
-    thread.running = turn !== undefined
+    thread.turn = turn !== undefined
     if (!turn) clearTurn(thread)
     else {
       thread.started ??= turn.started

@@ -24,8 +24,8 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     thread.cursor = opened.info.head ?? undefined
     thread.loaded = true
     thread.failed = undefined
-    if (opened.live || !thread.running) catchUp(thread, { live: opened.live ?? [], tools: opened.tools ?? [], mark: opened.mark })
-    if (thread.running) thread.started ??= turnStart(thread)
+    if (opened.live || !thread.turn) catchUp(thread, { live: opened.live ?? [], tools: opened.tools ?? [], mark: opened.mark })
+    if (thread.turn) thread.started ??= turnStart(thread)
     const pending = opened.pending ?? (opened.queue && legacyPending(opened.queue))
     if (pending) store.pending(thread.id, pending)
     if (opened.settings) store.settings.set(thread.id, opened.settings)

@@ -1,33 +1,45 @@
-import type { ContextRecord } from '@sand/chats/contract'
-import type { SessionSettings } from '@sand/model/contract'
-import type { DraftTarget } from '@sand/web-client/contract'
+import type { UserContent } from '@sand/chats/contract'
 import type { Held } from '@sand/attachments/web/contract'
-import { deleteDraft, readDraft, readDrafts, writeDraft } from '../integrations/draft-db'
+import type { Draft, DraftStore } from '../contract'
 
-export interface Saved {
-  text: string
+export interface Saved extends Omit<Draft, 'items'> {
   items: Held[]
-  records?: ContextRecord[]
-  settings?: SessionSettings
-  target?: DraftTarget
-  updated?: number
 }
 
 const empty: Saved = { text: '', items: [] }
 
 export const isBlank = (saved: Saved) => !saved.text.trim() && !saved.items.length
 
-export const createStore = () => {
+const newer = (local: Saved | undefined, far: Draft | undefined) => ((far?.updated ?? 0) > (local?.updated ?? 0) ? far : local)
+
+export const createStore = (remote: () => DraftStore | undefined, upload: () => Promise<UserContent[]>) => {
   const memory = new Map<string, Saved>()
-  const save = (key: string, saved: Saved) => {
-    memory.set(key, saved)
-    void (isBlank(saved) ? deleteDraft(key) : writeDraft(key, saved)).catch(() => {})
+  const versions = new Map<string, number>()
+
+  const send = async (key: string, saved: Saved, version: number) => {
+    const found = remote()
+    if (!found) return
+    const draft = isBlank(saved) ? undefined : { ...saved, items: await upload() }
+    if (versions.get(key) === version) await found.write(key, draft)
   }
+
+  const save = (key: string, saved: Saved) => {
+    const version = (versions.get(key) ?? 0) + 1
+    versions.set(key, version)
+    memory.set(key, { ...saved, updated: saved.updated ?? Date.now() })
+    void send(key, saved, version).catch(() => {})
+  }
+
   return {
     save,
     remove: (key: string) => save(key, empty),
     peek: (key: string) => memory.get(key),
-    load: async (key: string) => memory.get(key) ?? (await readDraft(key).catch(() => undefined)) ?? empty,
-    all: () => readDrafts().catch((): Saved[] => []),
+    async load(key: string): Promise<Saved> {
+      const far = await remote()
+        ?.read(key)
+        .catch(() => undefined)
+      return newer(memory.get(key), far) ?? empty
+    },
+    all: async () => (await remote()?.all().catch(() => undefined)) ?? [],
   }
 }

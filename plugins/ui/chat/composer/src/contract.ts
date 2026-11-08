@@ -24,8 +24,33 @@ export interface ComposerContent {
   content: UserContent[]
 }
 
+export interface ComposerView {
+  restore(saved: ComposerContent): void
+}
+
 /** Builds the slot's content; called once for each composer view. */
-export type SlotView = () => HTMLElement
+export type SlotView = (here: ComposerView) => HTMLElement
+
+export interface Aside extends ComposerContent {
+  chat: string
+}
+
+export type AsideRun = (aside: Aside) => Promise<void>
+
+export interface Draft {
+  text: string
+  items: UserContent[]
+  records?: ContextRecord[]
+  settings?: SessionSettings
+  target?: DraftTarget
+  updated?: number
+}
+
+export interface DraftStore {
+  read(key: string): Promise<Draft | undefined>
+  all(): Promise<Draft[]>
+  write(key: string, draft: Draft | undefined): Promise<void>
+}
 
 export interface TriggerItem {
   label: string
@@ -49,6 +74,8 @@ export interface Command {
 }
 
 export interface Chat {
+  key: string
+  name(): string
   skills: SkillPlace
   running(): boolean
   path(): Entry[]
@@ -80,6 +107,10 @@ export interface Composer {
   quote(text: string): void
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  /** Adds the slot to every composer view, including chat docks. */
+  shared(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  /** Long-pressing send, holding Enter or pressing Ctrl+S hands the message to the latest run, then clears it. */
+  aside(run: AsideRun): Dispose
   /** Shows its text instead of the default placeholder while it returns one; the latest source wins. */
   placeholder(text: () => string | undefined): Dispose
   hold(reason: SendHold): Dispose
@@ -114,6 +145,7 @@ export interface Drafts {
 
 export const composer = service<Composer>('composer')
 export const drafts = service<Drafts>('drafts')
+export const draftStore = service<DraftStore>('drafts.store')
 export const typing = service<Typing>('typing')
 export const draftsChange = event<() => void>('drafts.change')
 

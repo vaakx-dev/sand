@@ -60,14 +60,14 @@ const menuOf = (model: Model, actions: () => MenuAction[]): MenuSpec | undefined
   return { title: oneLine(model.text.get(), 60) || 'Message', actions: shown }
 }
 
-export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[]) => {
+export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[], aside: () => (() => void) | undefined) => {
   const { contextMenu, delayed, icon, plainButton, spinner } = kit
   const sending = delayed(model.sending)
   const look = derive(() => lookOf(model, sending))
   const glyph = derive(() => glyphOf(look.get()))
   const context = contextMenu()
   return span(
-    { class: 'ml-1 inline-flex shrink-0' },
+    { class: 'ml-1 inline-flex h-8 shrink-0 items-center' },
     plainButton(
       {
         title: () => titleOf(model, look.get()),
@@ -76,7 +76,12 @@ export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[])
         class: ['inline-flex shrink-0 items-center justify-center rounded-full transition-colors', () => tones[look.get()]],
         style: { width: circle, height: circle },
         ...context.target(
-          () => menuOf(model, actions),
+          ({ touch }) => {
+            const found = touch && !model.empty.get() ? aside() : undefined
+            if (!found) return menuOf(model, actions)
+            found()
+            return undefined
+          },
           () => void model.send(),
         ),
       },

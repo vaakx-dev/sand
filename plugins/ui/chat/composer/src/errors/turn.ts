@@ -10,7 +10,7 @@ import { errorBanner } from './banner'
 
 const turnErrorOf = (ctx: ComposerContext, dismissed: Set<string>) => {
   const thread = ctx.threads.current()
-  if (!thread || thread.running || thread.ended?.stopReason !== 'error') return undefined
+  if (!thread || thread.turn || thread.ended?.stopReason !== 'error') return undefined
   const key = `${thread.id}:${thread.info.head}`
   if (dismissed.has(key)) return undefined
   const known = ctx.get(models)

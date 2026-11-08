@@ -2,6 +2,7 @@ import { icon as lucideIcon, type IconNode, type IconSize as AnyIconSize } from 
 import {
   AlarmClock,
   AlarmClockOff,
+  Archive,
   ArrowDown,
   ArrowDownToLine,
   ArrowLeft,
@@ -133,6 +134,7 @@ const nodes = {
   alert: CircleAlert,
   back: ArrowLeft,
   'file-archive': FileArchive,
+  archive: Archive,
   'file-text': FileText,
   'file-image': FileImage,
   'file-code': FileCode,

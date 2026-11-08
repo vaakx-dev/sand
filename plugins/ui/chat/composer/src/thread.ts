@@ -41,15 +41,17 @@ export const threadTarget = (ctx: ComposerContext): Target => {
   ctx.on(threadChange, id => {
     if (id === ctx.threads.current()?.id) changes.bump()
   })
-  const running = changes.read(() => Boolean(ctx.threads.current()?.running))
+  const running = changes.read(() => Boolean(ctx.threads.current()?.turn))
   const delivery = changes.read(() => deliveryOf(ctx))
   const pcName = changes.read(() => ctx.get(pcs)?.name(sendDevice(ctx)) ?? 'sand')
+  const name = changes.read(() => ctx.threads.current()?.info.title || 'New chat')
 
   return {
     place: { device: () => sendDevice(ctx), thread: () => ctx.threads.current()?.id },
     running: () => running.get(),
     delivery: () => delivery.get(),
     pcName: () => pcName.get(),
+    name: () => name.get(),
     path() {
       const thread = ctx.threads.current()
       return thread ? ctx.threads.path(thread.id) : []

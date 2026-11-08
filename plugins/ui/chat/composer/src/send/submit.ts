@@ -18,7 +18,7 @@ export const sendDevice = (ctx: ComposerContext) => {
 
 export const interrupt = async (ctx: ComposerContext) => {
   const current = ctx.threads.current()
-  if (current?.running) await ctx.turns.interrupt(current.id)
+  if (current?.turn) await ctx.turns.interrupt(current.id)
 }
 
 export const submit = async (ctx: ComposerContext, text: string, attachments: UserContent[], settings: SessionSettings, options: Outgoing) => {
@@ -49,7 +49,7 @@ export const lastPrompt = (path: Entry[]) => {
 
 export const retry = async (ctx: ComposerContext) => {
   const thread = ctx.threads.current()
-  if (!thread || thread.running) return
+  if (!thread || thread.turn) return
   const entry = await ctx.threads.findLast(thread.id, prompted)
   if (!entry) return
   const content = typedContent((entry.data as Message).content as UserContent[])

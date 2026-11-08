@@ -23,7 +23,10 @@ export interface Thread {
   loaded: boolean
   cached?: boolean
   failed?: string
+  /** A turn is going or a background job it launched is still running. */
   running: boolean
+  turn: boolean
+  jobs: Set<string>
   started?: number
   waiting?: WaitReason
   live: LiveBlock[]

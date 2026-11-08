@@ -1,0 +1,33 @@
+{
+  "name": "@sand/stash",
+  "version": "0.0.0",
+  "description": "Set a message aside with Ctrl+S, a held Enter or a long-press on send, and bring it back into any chat later",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "composer",
+    "runtime": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Stash",
+    "summary": "Messages set aside for later, synced between your devices"
+  },
+  "dependencies": {
+    "@sand/attachments": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

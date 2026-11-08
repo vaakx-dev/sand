@@ -1,0 +1,31 @@
+{
+  "name": "@sand/drafts",
+  "version": "0.0.0",
+  "description": "Keeps what you type in each chat's composer on the server, so it follows you between devices",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "feature": "composer",
+    "runtime": "./src/index.ts",
+    "web": "./src/web/index.ts",
+    "label": "Drafts",
+    "summary": "Unsent messages kept per chat and synced between your devices"
+  },
+  "dependencies": {
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/model": "workspace:*",
+    "@sand/paths": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/util": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*"
+  }
+}

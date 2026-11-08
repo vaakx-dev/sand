@@ -9,6 +9,8 @@ const sandLosingFirstAnswer = () => {
   const delivered = new Map<string, Prompt>()
   let answers = 0
   const chat: Chat = {
+    key: 'bot:helper',
+    name: () => 'helper',
     skills: { bot: 'helper' },
     running: () => false,
     path: () => [],
