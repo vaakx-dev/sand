@@ -687,6 +687,7 @@
         "@sand/paths": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/sub-model": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/usage": "workspace:*",
         "@sand/util": "workspace:*",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1950,6 +1951,7 @@
         "@sand/transcript": "workspace:*",
         "@sand/turns-contract": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
@@ -2434,6 +2436,15 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },
     },
+    "plugins/ui/shell/shell": {
+      "name": "@sand/ui-shell",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sand/reactive": "workspace:*",
+        "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/ui/threads/thread-refs": {
       "name": "@sand/thread-refs",
       "version": "0.0.0",
@@ -2770,6 +2781,8 @@
     "@sand/turns-contract": ["@sand/turns-contract@workspace:plugins/agent/turns-contract"],
 
     "@sand/ui-kit": ["@sand/ui-kit@workspace:plugins/ui/look/kit"],
+
+    "@sand/ui-shell": ["@sand/ui-shell@workspace:plugins/ui/shell/shell"],
 
     "@sand/ui-theme": ["@sand/ui-theme@workspace:plugins/ui/look/theme"],
 
