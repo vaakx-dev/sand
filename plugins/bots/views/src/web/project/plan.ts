@@ -58,6 +58,9 @@ export const parsePlan = (source: string, schemes: string[]): Plan => {
   }
   return {
     items: items.filter(Boolean).map(text => itemOf(text, schemes)),
-    rest: withoutBareHeadings(rest).join('\n').trim(),
+    rest: withoutBareHeadings(rest)
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim(),
   }
 }
