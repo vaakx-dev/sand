@@ -8,7 +8,7 @@ const drawerLook = (model: Model) => {
   if (model.state.get() !== 'drawer') return 'relative'
   return [
     kit.layer.drawer,
-    'absolute inset-y-0 left-0 shadow-xl',
+    'absolute inset-y-0 left-0 shadow-xl dark:ring-1 dark:ring-neutral-700',
     drawerDrag.get() === undefined ? 'transition-transform duration-300 ease-out' : 'transition-none',
     drawerOpen.get() ? '' : '-translate-x-full',
   ]

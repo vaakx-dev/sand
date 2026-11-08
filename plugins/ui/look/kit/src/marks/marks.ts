@@ -1,5 +1,6 @@
 import { duration } from '@sand/util'
 import { clock, div, dynamicChild, read, show, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { metaLook } from '../heads/text'
 import { icon, type IconSize } from '../icons/lucide'
 import { toneText, type Tone } from './tones'
 
@@ -74,4 +75,4 @@ export interface StatusLineProps {
 }
 
 export const statusLine = ({ mark, text, title }: StatusLineProps, ...extra: Child[]) =>
-  div({ class: 'flex min-w-0 items-center gap-2 text-xs text-neutral-400', title }, mark, span({ class: 'min-w-0 truncate' }, text), ...extra)
+  div({ class: ['flex min-w-0 items-center gap-2', metaLook], title }, mark, span({ class: 'min-w-0 truncate' }, text), ...extra)

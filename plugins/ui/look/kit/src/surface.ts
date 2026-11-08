@@ -23,7 +23,14 @@ const onRaised: SurfaceFill = {
   on: 'bg-neutral-700',
 }
 
-const fills: Record<Surface, SurfaceFill> = { page: onPage, raised: onRaised, group: onPage }
+const inSection: SurfaceFill = {
+  hover: 'hover:bg-neutral-700/50',
+  marked: 'aria-current:bg-neutral-700/50 aria-selected:bg-neutral-700/50 aria-pressed:bg-neutral-700/50',
+  opened: 'aria-expanded:bg-neutral-700/50',
+  on: 'bg-neutral-700/50',
+}
+
+const fills: Record<Surface, SurfaceFill> = { page: onPage, raised: onRaised, group: inSection }
 
 export const surfaceFill = (surface: Surface) => fills[surface]
 
@@ -37,3 +44,5 @@ export const placeLook = (active: MaybeReactive<boolean>, surface: Surface = 'pa
 }
 
 export const focusRing = 'outline-none focus-visible:ring-1 focus-visible:ring-accent-700'
+
+export const floatingEdge = 'shadow-xl dark:ring-1 dark:ring-neutral-700'

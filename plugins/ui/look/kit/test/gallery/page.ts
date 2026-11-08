@@ -1,11 +1,11 @@
 import { sand, sandPalette } from '@sand/ui-theme/contract'
-import { div, h1, h2, mount, p, section, sig, span, theme, type Child } from '@vaakx-dev/vrui'
+import { div, h2, mount, p, section, sig, span, theme, type Child } from '@vaakx-dev/vrui'
 import { kit } from '../../src/kit'
 import type { DiffLine } from '../../src/tools/lcs'
 
 const block = (name: string, ...children: Child[]) =>
   section(
-    { 'aria-label': name, class: 'flex flex-col gap-3 border-t border-neutral-800 py-6' },
+    { 'aria-label': name, class: 'flex flex-col gap-3' },
     h2({ class: 'text-xs font-medium text-neutral-500' }, name),
     ...children,
   )
@@ -93,13 +93,38 @@ const settings = () => {
     { title: 'Notifications' },
     kit.settingsRow({ title: 'Ask before merging', detail: 'Each bot asks first' }, kit.toggleSwitch({ on, onClick: () => on.set(!on.get()), 'aria-label': 'Ask before merging' })),
     kit.settingsRow({ title: 'Sound' }, kit.segmented([{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }], 'on', () => {}, { label: 'Sound' })),
+    kit.listRow({ surface: 'group', title: 'Quiet hours', meta: 'From 22:00 to 7:00', trail: kit.chevron(() => false), onClick: () => {} }),
+    kit.emptyState({ surface: 'group', text: 'No devices muted' }),
   )
 }
 
-const gallery = () =>
+const roles = () =>
   div(
-    { class: 'mx-auto flex w-full max-w-2xl flex-col px-4 py-8' },
-    h1({ class: 'pb-6 text-lg font-semibold' }, 'Kit'),
+    { class: 'flex flex-col gap-2' },
+    kit.pageTitle('Page title'),
+    div({ class: 'flex' }, kit.barTitle('Bar title')),
+    kit.sectionTitle('Section title'),
+    kit.sectionHeading('Group label'),
+    kit.secondaryText('Secondary text for descriptions and captions.'),
+    line(kit.metaLine('Meta line, 3m ago'), kit.countMark(12)),
+    kit.textRule('Using script'),
+  )
+
+const pageSections = () =>
+  div(
+    { class: 'flex flex-col gap-8' },
+    kit.pageSection(
+      { title: 'Accounts', action: kit.secondaryAction({ size: 'sm' }, 'Add') },
+      kit.listRow({ surface: 'group', title: 'Claude', meta: 'Signed in', onClick: () => {} }),
+      kit.listRow({ surface: 'group', title: 'OpenAI', meta: 'Needs sign-in', actions: kit.rowAction({ label: 'Remove', danger: true, run: () => {} }), onClick: () => {} }),
+    ),
+    settings(),
+  )
+
+const gallery = () =>
+  kit.pageBody(
+    { title: 'Kit' },
+    block('Type roles', roles()),
     block(
       'Buttons',
       line(kit.primaryAction({}, 'Save'), kit.secondaryAction({}, 'Cancel'), kit.quietButton({}, 'Quiet'), kit.primaryAction({ size: 'sm' }, 'Small')),
@@ -128,7 +153,7 @@ const gallery = () =>
     block('Card', kit.card({ meta: 'Weekdays at 9:00', actions: [kit.secondaryAction({ size: 'sm' }, 'Edit'), kit.primaryAction({ size: 'sm' }, 'Run now')] }, p({ class: 'text-sm' }, 'Triage new issues'))),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),
     block('Sheet', sheetSample()),
-    block('Settings', settings()),
+    block('Page sections', pageSections()),
     block(
       'Notes',
       kit.callout('warning', 'This PC is offline.'),

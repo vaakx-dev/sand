@@ -1,4 +1,5 @@
-import { div, h2, p, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { div, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { pageTitle, secondaryText } from '../heads/text'
 import { layer } from '../layer'
 
 export const setupFrame = (...children: Child[]) =>
@@ -11,9 +12,9 @@ export const setupFrame = (...children: Child[]) =>
 
 export const setupScreen = (...children: Child[]) => div({ class: 'flex w-full flex-col items-center gap-6' }, ...children)
 
-export const setupHeading = (text: MaybeReactive<string>) => h2({ class: 'text-xl font-medium text-neutral-100' }, text)
+export const setupHeading = (text: MaybeReactive<string>) => pageTitle(text)
 
-export const setupNote = (text: MaybeReactive<string>) => p({ class: '-mt-4 text-sm text-neutral-400' }, text)
+export const setupNote = (text: MaybeReactive<string>) => div({ class: '-mt-4' }, secondaryText(text))
 
 export const setupColumn = (...children: Child[]) => div({ class: 'flex w-full max-w-sm flex-col gap-3 text-left' }, ...children)
 

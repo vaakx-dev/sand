@@ -1,10 +1,5 @@
-import { div, h2, read, section, span, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
-import { quietButton } from '../buttons/button'
-
-export interface SectionProps {
-  title?: Child
-  action?: Child
-}
+import { div, read, type Child, type ClassValue, type MaybeReactive } from '@vaakx-dev/vrui'
+import { controlButton } from '../buttons/button'
 
 export interface Choice<T> {
   value: T
@@ -14,21 +9,14 @@ export interface Choice<T> {
   mark?: Child
 }
 
-export const settingsSection = ({ title, action }: SectionProps, ...rows: Child[]) =>
-  section(
-    { class: 'flex flex-col gap-2' },
-    title || action
-      ? h2({ class: 'flex min-h-8 min-w-0 items-center gap-2 text-sm font-semibold text-neutral-100' }, span({ class: 'min-w-0 flex-1 truncate' }, title ?? ''), action ?? null)
-      : null,
-    div({ class: 'flex flex-col gap-y-px overflow-hidden rounded-lg bg-neutral-800 ring-1 ring-neutral-800' }, ...rows),
-  )
-
 export interface SegmentedOptions {
   label?: string
   inset?: boolean
   fill?: boolean
   class?: ClassValue
 }
+
+const picked = (inset: boolean) => (inset ? 'bg-neutral-700 text-neutral-100' : 'bg-neutral-900 text-neutral-100 shadow-xs dark:bg-neutral-600')
 
 export const segmented = <T>(
   choices: Choice<T>[],
@@ -43,13 +31,12 @@ export const segmented = <T>(
       ...(label && { 'aria-label': label }),
     },
     choices.map(choice =>
-      quietButton(
+      controlButton(
+        ['text-neutral-400 hover:text-neutral-100', () => (read(active) === choice.value ? picked(inset) : '')],
         {
           size: 'sm',
-          surface: inset ? 'page' : 'raised',
           role: 'radio',
           'aria-checked': () => String(read(active) === choice.value),
-          active: () => read(active) === choice.value,
           ...(choice.title && { title: choice.title }),
           ...(choice.disabled && { disabled: true }),
           ...(fill && { class: 'flex-1' }),

@@ -1,6 +1,6 @@
 import { div, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
-import { metaLine, overLine, rowTitle } from '../heads/text'
+import { metaLine, metaLook, rowTitle } from '../heads/text'
 import { choiceCheck } from '../menus/menu-item'
 import { placeLook, type Surface } from '../surface'
 
@@ -21,17 +21,17 @@ export type ListRowProps = Omit<Props<HTMLButtonElement>, 'title'> & {
 
 const compact = 'min-h-8 rounded-md px-2'
 
-const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'min-h-12 bg-neutral-900 px-4' }
+const shapes: Record<Surface, string> = { page: compact, raised: compact, group: 'min-h-12 rounded-md px-3' }
 
 const dangerText = 'text-danger-400 hover:text-danger-400 aria-current:text-danger-400 aria-selected:text-danger-400 aria-pressed:text-danger-400'
 
 const flag = (name: string, value: MaybeReactive<boolean> | undefined) => (value === undefined ? {} : { [name]: () => String(read(value)) })
 
-const withActions = (row: HTMLElement, surface: Surface, actions: Child) =>
+const wrap = (row: HTMLElement, surface: Surface, actions: Child | undefined) =>
   div(
-    { class: ['flex min-w-0 items-center gap-1', surface === 'group' && 'bg-neutral-900 pr-4'] },
+    { class: ['flex min-w-0 items-center gap-1', surface === 'group' && ['-mx-3', actions !== undefined && 'pr-3']] },
     row,
-    span({ class: 'flex shrink-0 items-center gap-1' }, actions),
+    actions === undefined ? null : span({ class: 'flex shrink-0 items-center gap-1' }, actions),
   )
 
 export const listRow = ({ title, overline, meta, lead, trail, actions, current, selected, expanded, tone, touch, surface = 'page', class: extra, ...props }: ListRowProps) => {
@@ -52,9 +52,9 @@ export const listRow = ({ title, overline, meta, lead, trail, actions, current, 
       ],
     },
     lead ? span({ class: 'inline-flex shrink-0 text-neutral-400' }, lead) : null,
-    div({ class: 'flex min-w-0 flex-1 flex-col' }, overline ? overLine(overline) : null, rowTitle(title), meta ? metaLine(meta) : null),
-    trail ? span({ class: 'flex shrink-0 items-center gap-2 text-xs text-neutral-500' }, trail) : null,
+    div({ class: 'flex min-w-0 flex-1 flex-col' }, overline ? metaLine(overline) : null, rowTitle(title), meta ? metaLine(meta) : null),
+    trail ? span({ class: ['flex shrink-0 items-center gap-2', metaLook] }, trail) : null,
     selected === undefined ? null : choiceCheck(selected),
   )
-  return actions === undefined ? row : withActions(row, surface, actions)
+  return actions === undefined && surface !== 'group' ? row : wrap(row, surface, actions)
 }

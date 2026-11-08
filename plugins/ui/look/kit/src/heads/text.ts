@@ -1,10 +1,22 @@
-import { read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { h1, h2, p, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+
+export const pageTitleLook = 'min-w-0 text-xl font-semibold tracking-tight text-neutral-100'
+
+export const pageTitle = (...children: Child[]) => h1({ class: pageTitleLook }, ...children)
+
+export const barTitle = (...children: Child[]) => h2({ class: 'min-w-0 flex-1 truncate text-sm font-medium text-neutral-100' }, ...children)
+
+export const sectionTitle = (...children: Child[]) => h2({ class: 'min-w-0 text-sm font-semibold text-neutral-100' }, ...children)
+
+export const secondaryLook = 'text-sm text-neutral-400'
+
+export const secondaryText = (...children: Child[]) => p({ class: secondaryLook }, ...children)
 
 export const rowTitle = (...children: Child[]) => span({ class: 'min-w-0 truncate text-sm group-aria-current:font-medium' }, ...children)
 
-export const overLine = (...children: Child[]) => span({ class: 'min-w-0 text-xs text-neutral-500' }, ...children)
+export const metaLook = 'text-xs text-neutral-500'
 
-export const metaLine = (...children: Child[]) => span({ class: 'min-w-0 truncate text-xs text-neutral-400' }, ...children)
+export const metaLine = (...children: Child[]) => span({ class: ['min-w-0 truncate', metaLook] }, ...children)
 
 const splitPath = (path: string) => {
   const cut = path.lastIndexOf('/') + 1
@@ -18,4 +30,4 @@ export const pathLabel = (path: () => string) =>
     span({ class: 'shrink-0 text-neutral-100' }, () => splitPath(path()).name),
   )
 
-export const countMark = (value: MaybeReactive<number>) => span({ class: 'shrink-0 text-xs font-normal text-neutral-500 tabular-nums' }, () => String(read(value)))
+export const countMark = (value: MaybeReactive<number>) => span({ class: ['shrink-0 font-normal tabular-nums', metaLook] }, () => String(read(value)))

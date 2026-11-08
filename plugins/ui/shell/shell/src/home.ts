@@ -1,4 +1,4 @@
-import { clock, derive, div, dynamicChild, h1, list, span, type Sig } from '@vaakx-dev/vrui'
+import { clock, derive, div, dynamicChild, list, span, type Sig } from '@vaakx-dev/vrui'
 import type { ContextMenu } from '@sand/ui-kit/contract'
 import type { NavItem, ShellRow } from './contract'
 import { bar } from './frames'
@@ -21,13 +21,16 @@ const trail = (model: Model, row: ShellRow, now: () => number) => {
   return [status ? statusIcon(model.kit, status) : null, at === undefined ? null : span({ class: 'tabular-nums' }, () => age(now() - at))]
 }
 
+const metaOf = ({ meta, detail }: ShellRow) => [meta, detail].filter(Boolean).join(' · ') || undefined
+
 const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, now: () => number) =>
   div(
     { class: 'contents' },
     dynamicChild(row, shown =>
       model.kit.listRow({
-        title: [shown.label, shown.meta ? span({ class: 'ml-2 text-xs text-neutral-500' }, shown.meta) : null],
-        meta: shown.detail,
+        title: shown.label,
+        meta: metaOf(shown),
+        touch: true,
         lead: shown.mark ? monogramOf(model.kit, shown.mark) : undefined,
         trail: trail(model, shown, now),
         ...rowMenu(menu, () => row.get(), () => model.open(row.get().to)),
@@ -38,7 +41,7 @@ const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, now: () =>
 const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, now: () => number) => {
   const action = listed.get().group.action
   return div(
-    { class: 'mt-3 flex flex-col first:mt-0' },
+    { class: 'mt-6 flex flex-col first:mt-0' },
     model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
     list(
       derive(() => listed.get().group.rows),
@@ -55,7 +58,7 @@ export const homeScreen = (model: Model) => {
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
     bar(
-      h1({ class: 'ml-2 min-w-0 flex-1 truncate text-base font-semibold text-neutral-100' }, 'sand'),
+      div({ class: 'ml-2 min-w-0 flex-1 truncate' }, model.kit.barTitle('sand')),
       list(
         derive(() => model.navs.items.get().filter(item => item.phone !== false)),
         item => item.id,

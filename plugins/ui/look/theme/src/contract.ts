@@ -2,6 +2,7 @@ import type { ColorMode, ColorThemeInput } from '@vaakx-dev/vrui'
 import { service } from 'drydock'
 
 export * from './palette'
+export * from './palette-light'
 
 export type ThemeRole = 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'orange' | 'sky'
 
@@ -15,4 +16,6 @@ export interface Theme {
 
 export const theme = service<Theme>('theme')
 
-export { sand } from './sand'
+export const lightScheme = '(prefers-color-scheme: light)'
+
+export { sand, sandLight } from './sand'
