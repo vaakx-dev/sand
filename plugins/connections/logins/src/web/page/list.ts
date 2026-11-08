@@ -26,7 +26,6 @@ export const storageNote = ({ sheetText }: Kit, state: Sig<LoginsState | undefin
 
 const loginRow = ({ chevron, icon, listRow }: Kit, login: Sig<Login>, open: (id: string) => void) =>
   listRow({
-    surface: 'group',
     lead: icon(kindIcons[login.get().kind], 'sm'),
     title: () => login.get().name,
     meta: () => summaryOf(login.get()),
@@ -48,7 +47,7 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
       ),
       show(
         () => !logins.get().length,
-        () => emptyState({ surface: 'group', text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
+        () => emptyState({ flush: true, text: 'None yet. Add a website login or a key below, or pick one from a password manager.' }),
       ),
     ),
     addSection(kit, parts),

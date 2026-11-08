@@ -2,21 +2,24 @@ import type { Kit, Tone } from '@sand/ui-kit/contract'
 import type { ServerState, ServerStatus } from '../contract'
 import { div, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 
-const looks: Record<ServerStatus['state'], { tone: Tone; label: string }> = {
-  off: { tone: 'neutral', label: 'Off' },
-  connecting: { tone: 'neutral', label: 'Connecting' },
-  ready: { tone: 'success', label: 'Connected' },
+const looks: Record<ServerStatus['state'], { tone?: Tone; label: string }> = {
+  off: { label: 'Off' },
+  connecting: { label: 'Connecting' },
+  ready: { label: 'Connected' },
   failed: { tone: 'danger', label: 'Failed' },
 }
 
-const serverDetail = (kit: Kit, { address, status }: ServerState) =>
-  div(span({ class: 'font-mono text-neutral-500' }, address), status.state === 'failed' ? kit.errorText(status.error) : null)
+const serverDetail = ({ errorText, toneText }: Kit, { address, status }: ServerState) => {
+  const { tone, label } = looks[status.state]
+  return div(
+    { class: 'flex min-w-0 flex-col gap-1' },
+    div(span({ class: tone && toneText[tone] }, label), ' · ', span({ class: 'font-mono wrap-anywhere' }, address)),
+    status.state === 'failed' ? errorText(status.error) : null,
+  )
+}
 
 const serverRow = (kit: Kit, server: Sig<ServerState>) =>
-  kit.settingsRow(
-    { title: server.map(value => value.name), detail: dynamicChild(server, value => serverDetail(kit, value)) },
-    dynamicChild(server, ({ status }) => kit.badge(looks[status.state].tone, looks[status.state].label)),
-  )
+  kit.settingsRow({ title: server.map(value => value.name), detail: dynamicChild(server, value => serverDetail(kit, value)) })
 
 const serverRows = (kit: Kit, servers: Sig<ServerState[] | undefined>) =>
   dynamicChild(

@@ -11,14 +11,14 @@ const grants: Record<Grant, string> = { bot: 'the bot may use it', thread: 'give
 
 const detailOf = ({ action, site, grant }: Use) => `${actions[action]}${site ? ` on ${site}` : ''} · ${grants[grant]}`
 
-const useRow = ({ icon, settingsRow }: Kit, use: Sig<Use>) =>
+const useRow = ({ icon, metaLine, settingsRow }: Kit, use: Sig<Use>) =>
   settingsRow(
     {
       lead: span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(use.get().owner === 'bot' ? 'bot' : 'message', 'sm')),
       title: () => use.get().title,
       detail: () => detailOf(use.get()),
     },
-    span({ class: 'text-xs text-neutral-500', title: () => exactTime(use.get().at) }, () => ago(use.get().at)),
+    span({ title: () => exactTime(use.get().at) }, metaLine(() => ago(use.get().at))),
   )
 
 export const usesSection = (kit: Kit, wire: Wire, login: string) => {

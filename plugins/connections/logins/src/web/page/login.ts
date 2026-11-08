@@ -5,7 +5,7 @@ import { accessSections } from './access'
 import { storageNote } from './list'
 import { managers } from './managers/catalog'
 import type { PageParts } from './model'
-import { confirmButton, editForm, field, panel, rowProblem } from './parts'
+import { confirmButton, editForm, field, rowProblem } from './parts'
 import { usesSection } from './uses'
 import { valuesSection } from './values'
 
@@ -19,7 +19,7 @@ const detailsSection = ({ kit, model }: PageParts, login: Derive<Login>) => {
   const submit = () => model.change(id, { name: name.get().trim(), ...(website && { site: site.get().trim() }) })
   return kit.settingsSection(
     { title: 'Details' },
-    panel(
+    kit.rowDetail(
       editForm(
         kit,
         { save: 'Save', ready, submit },

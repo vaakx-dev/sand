@@ -38,18 +38,17 @@ export const answerBook = () => {
 
 export type AnswerBook = ReturnType<typeof answerBook>
 
-export const cardFrame = (props: Props<HTMLFormElement>, ...children: Child[]) =>
-  form({ ...props, class: 'mb-3 flex flex-col gap-3 rounded-xl bg-neutral-900 p-3 ring-1 ring-neutral-800' }, ...children)
+export const cardFrame = (props: Props<HTMLFormElement>, ...children: Child[]) => form({ ...props, class: 'mb-3 flex min-w-0 flex-col gap-3 px-2 py-2' }, ...children)
 
-export const cardHead = ({ icon }: Kit, glyph: IconName, title: string, site?: string) =>
+export const cardHead = ({ icon, metaLine, sectionTitle }: Kit, glyph: IconName, title: string, site?: string) =>
   div(
-    { class: 'flex items-center gap-2 text-sm text-neutral-100' },
-    icon(glyph, 'sm'),
-    span({ class: 'min-w-0 truncate font-medium' }, title),
-    site ? span({ class: 'min-w-0 truncate text-neutral-500' }, site) : null,
+    { class: 'flex min-w-0 items-center gap-2' },
+    span({ class: 'inline-flex shrink-0 text-neutral-400' }, icon(glyph, 'sm')),
+    sectionTitle(title),
+    site ? metaLine(site) : null,
   )
 
-export const cardText = (text: string) => div({ class: 'text-sm whitespace-pre-wrap wrap-anywhere text-neutral-400' }, text)
+export const cardText = ({ secondaryText }: Kit, text: string) => div({ class: 'whitespace-pre-wrap wrap-anywhere' }, secondaryText(text))
 
 export const cardActions = (...children: Child[]) => div({ class: 'flex flex-wrap justify-end gap-2' }, ...children)
 

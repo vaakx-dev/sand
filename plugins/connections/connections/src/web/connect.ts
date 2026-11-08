@@ -3,7 +3,7 @@ import { div, dynamicChild, label, show, sig, type Child, type Sig } from '@vaak
 import type { Field, KindInfo, Setup } from '../contract'
 import type { ConnectionsModel } from './model'
 
-const stack = (...children: Child[]) => div({ class: 'flex flex-col gap-2' }, ...children)
+const stack = (...children: Child[]) => div({ class: 'flex max-w-md flex-col gap-3' }, ...children)
 
 const actions = (...children: Child[]) => div({ class: 'flex flex-wrap items-center gap-3' }, ...children)
 
@@ -11,8 +11,8 @@ const problem = ({ errorText }: Kit, model: ConnectionsModel) => show(() => !!mo
 
 const howTo = ({ linkButton, openTab }: Kit, url: string) => linkButton({ onClick: () => openTab(url) }, 'How to')
 
-const field = ({ textInput }: Kit, { label: name, secret, placeholder }: Field, value: Sig<string>) =>
-  label({ class: 'flex flex-col gap-1 text-xs text-neutral-400' }, name, textInput({ type: secret ? 'password' : 'text', placeholder: placeholder ?? '', bindValue: value }))
+const field = ({ metaLine, textInput }: Kit, { label: name, secret, placeholder }: Field, value: Sig<string>) =>
+  label({ class: 'flex min-w-0 flex-col gap-1' }, metaLine(name), textInput({ type: secret ? 'password' : 'text', placeholder: placeholder ?? '', bindValue: value }))
 
 const clientStep = (kit: Kit, model: ConnectionsModel, kind: KindInfo, setup: Setup, done: () => void) => {
   const { primaryAction, secondaryAction, sheetText } = kit

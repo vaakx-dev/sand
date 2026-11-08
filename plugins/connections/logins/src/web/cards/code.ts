@@ -16,7 +16,7 @@ const pendingCard = ({ kit, wire }: CardContext, target: Target, request: CodeRe
       }),
     },
     cardHead(kit, 'shield', request.name, request.site),
-    cardText(request.prompt),
+    cardText(kit, request.prompt),
     textInput(
       {
         type: 'text',
