@@ -3,6 +3,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { ago, capital, exactTime } from '@sand/util'
 import { div, show, sig, span } from '@vaakx-dev/vrui'
 import type { RendererRegistry } from '../contract'
+import { stepBody, stepLine } from './line'
 
 const outcomes: Record<string, string> = { done: 'finished', cancelled: 'stopped' }
 
@@ -31,22 +32,22 @@ export const notificationRenderer = (kit: Kit, registry: Pick<RendererRegistry, 
   const result = notificationField(text, 'result')
   const at = instantOf(notificationField(text, 'at'), entry.at)
   const open = sig(false)
+  const failed = status.endsWith('failed')
+  const title = [`${capital(kind)} ${outcomes[status] ?? status}`, label].filter(Boolean).join(' ')
   return div(
-    { class: '-mx-2 mb-2' },
-    kit.toolCard(
+    { class: 'my-2' },
+    stepLine(
+      kit,
       {
-        icon: kit.icon(shape?.icon ?? 'bell', 'sm'),
-        verb: `${capital(kind)} ${outcomes[status] ?? status}`,
-        target: label,
-        targetClass: 'text-neutral-400',
-        targetTitle: label,
-        meta: span({ class: 'shrink-0 text-xs text-neutral-500', title: exactTime(at) }, ago(at)),
-        failed: status.endsWith('failed'),
+        mark: span({ class: ['inline-flex', failed ? 'text-danger-400' : 'text-neutral-500'] }, kit.icon(shape?.icon ?? 'bell', 'xs')),
+        label: title,
+        title,
+        meta: span({ class: 'flex shrink-0', title: exactTime(at) }, kit.metaLine(ago(at))),
         expanded: open,
         actions: [result && kit.copyButton({ text: () => result }), shape?.actions?.(text, conversation)],
         onToggle: () => open.update(value => !value),
       },
-      show(open, () => kit.toolBody(prose(kit, result || 'No reply'))),
+      show(open, () => stepBody(prose(kit, result || 'No reply'))),
     ),
   )
 }

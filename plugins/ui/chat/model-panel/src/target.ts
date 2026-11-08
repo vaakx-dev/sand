@@ -1,39 +1,29 @@
 import type { Picked, PickerTarget } from '@sand/model-picker/contract'
-import type { CalloutLook, Kit } from '@sand/ui-kit/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import type { Pulse } from '@sand/reactive'
-import { div, span, type Sig } from '@vaakx-dev/vrui'
-import type { Actions } from './actions'
+import { div, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
-import type { ShownState } from './shown'
-
-const banner = ({ callout }: Kit, look: CalloutLook, text: string) => div({ class: 'mt-1' }, callout(look, span(text)))
+import type { ModelTarget } from './contract'
 
 const usesDefaults = (shown: Picked, defaults: Picked) =>
   shown.model === defaults.model && shown.effort === defaults.effort && shown.speed === defaults.speed
 
-const footer = ({ secondaryAction }: Kit, actions: Actions) =>
-  div({ class: 'mt-1 flex items-center justify-end gap-2 p-1' }, secondaryAction({ size: 'sm', onClick: actions.reset }, 'Reset'))
+const runningNote = ({ callout }: Kit) => div({ class: 'mt-1' }, callout({ tone: 'neutral', icon: 'clock' }, span('A turn is running. Changes apply when it finishes.')))
 
-export const composerTarget = (ctx: PanelContext, actions: Actions, changes: Pulse, problem: Sig<string>, shownState: ShownState): PickerTarget => {
+const footer = ({ secondaryAction }: Kit, reset: () => void) =>
+  div({ class: 'mt-1 flex items-center justify-end gap-2 p-1' }, secondaryAction({ size: 'sm', onClick: reset }, 'Reset'))
+
+export const pickerTarget = (ctx: PanelContext, changes: Pulse, target: ModelTarget): PickerTarget => {
   const { kit } = ctx
-  const { badge } = kit
-  const state = changes.read(shownState)
-  const shown = () => state.get()?.next ?? state.get()?.current
+  const shown = changes.read(() => ctx.modelPicker.resolve(target.settings()))
+  const reset = () => target.choose({ model: null, effort: null, speed: null })
   return {
-    shown,
-    set: actions.set,
-    key: () => `${changes.version.get()}:${problem.get()}`,
-    badge: model => {
-      const now = state.get()
-      return now?.next && model.id === now.next.model && model.id !== now.current.model ? badge('neutral', 'Next') : null
-    },
-    extra: () => {
-      const settings = shown()
-      return [
-        ctx.threads.current()?.running && banner(kit, { tone: 'neutral', icon: 'clock' }, 'A turn is running. Changes apply when it finishes.'),
-        problem.get() && banner(kit, 'danger', problem.get()),
-        settings && !usesDefaults(settings, ctx.modelPicker.resolve(ctx.models.defaults())) && footer(kit, actions),
-      ]
-    },
+    shown: () => shown.get(),
+    set: target.choose,
+    key: () => String(changes.version.get()),
+    extra: () => [
+      target.running?.() && runningNote(kit),
+      !usesDefaults(shown.get(), ctx.modelPicker.resolve(ctx.models.defaults())) && footer(kit, reset),
+    ],
   }
 }

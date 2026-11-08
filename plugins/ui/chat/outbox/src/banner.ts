@@ -27,14 +27,14 @@ const row = ({ quietButton, secondaryAction, spinner }: Kit, model: OutboxModel)
     ),
     show(
       () => !busy(),
-      () => quietButton({ surface: 'raised', onClick: () => model.outbox.cancel(item.get().id) }, 'Cancel'),
+      () => quietButton({ onClick: () => model.outbox.cancel(item.get().id) }, 'Cancel'),
     ),
   )
 }
 
 export const outboxBanner = (kit: Kit, model: OutboxModel) =>
   div(
-    { role: 'status', class: 'flex flex-col pb-1' },
+    { role: 'status', class: 'flex flex-col' },
     div(
       { class: 'flex min-h-6 items-start gap-2' },
       span({ class: ['inline-flex h-6 shrink-0 items-center', () => (model.ready.get() ? 'text-neutral-400' : 'text-warning-400')] }, kit.icon('clock', 'md')),

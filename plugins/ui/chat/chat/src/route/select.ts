@@ -6,7 +6,7 @@ import { draftRoute, threadRoute } from '../contract'
 
 const shows = (route: Route) => route.kind === threadRoute || route.kind === draftRoute
 
-export const same = (a: Route, b: Route) => a.kind === b.kind && a.id === b.id
+const same = (a: Route, b: Route) => a.kind === b.kind && a.id === b.id
 
 const selected = (ctx: ChatContext): Route | undefined => {
   const id = ctx.threads.current()?.id
@@ -21,12 +21,15 @@ const openDraft = (ctx: ChatContext, id: string) => {
   else void ctx.threads.select(undefined, { replace: true })
 }
 
-export const selectRoute = (ctx: ChatContext, route: Route, first: boolean) => {
-  if (route.kind === homeRoute && !first && ctx.threads.current()) return void ctx.threads.select(undefined, { replace: true })
+export const claimRoute = (ctx: ChatContext, route: Route) => {
   const now = selected(ctx)
   if (!shows(route) || !route.id || (now && same(now, route))) return
   if (route.kind === threadRoute) void ctx.threads.select(route.id, { replace: true })
   else openDraft(ctx, route.id)
+}
+
+export const clearOnHome = (ctx: ChatContext, route: Route, first: boolean) => {
+  if (route.kind === homeRoute && !first && ctx.threads.current()) void ctx.threads.select(undefined, { replace: true })
 }
 
 export const followSelect = (ctx: ChatContext, shell: Shell, visit: ThreadVisit) => {

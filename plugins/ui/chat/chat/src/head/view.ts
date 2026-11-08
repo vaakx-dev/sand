@@ -1,10 +1,11 @@
 import type { Pulse } from '@sand/reactive'
+import type { PressAt } from '@sand/ui-kit/contract'
+import type { Shell } from '@sand/ui-shell/contract'
 import type { Thread } from '@sand/web-client/contract'
-import { tildeHome } from '@sand/util'
 import { div, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { ChatContext } from '../context'
-import { renameThread, threadMenu } from './menu'
-import { placeOf, projectLook, projectName, threadTitle, type Place } from './place'
+import { threadRoute } from '../contract'
+import { threadActions, threadTitle } from './menu'
 
 interface ParentLink {
   id: string
@@ -17,56 +18,54 @@ const parentOf = (ctx: ChatContext, thread: Thread | undefined): ParentLink | un
   return { id: info.parent, title: ctx.threads.get(info.parent)?.info.title || 'Untitled thread' }
 }
 
-const parentCrumb = (ctx: ChatContext, parent: Sig<ParentLink | undefined>, open: (thread: string) => void) => {
-  const { icon, quietButton } = ctx.kit
-  return show(parent.map(Boolean), () =>
-    quietButton(
+const parentCrumb = (ctx: ChatContext, shell: Shell, parent: Sig<ParentLink | undefined>) =>
+  span(
+    { class: 'flex shrink-0 items-center gap-2' },
+    ctx.kit.linkButton(
       {
-        size: 'sm',
-        class: 'max-w-48 shrink',
+        class: 'flex max-w-32 md:max-w-40',
         title: () => `Back to ${parent.get()?.title ?? 'the parent thread'}`,
-        'aria-label': () => `Sub-agent of ${parent.get()?.title ?? 'the parent thread'}`,
         onClick: () => {
           const link = parent.get()
-          if (link) open(link.id)
+          if (link) shell.open({ kind: threadRoute, id: link.id })
         },
       },
-      icon('up', 14),
-      span({ class: 'hidden min-w-0 truncate md:inline' }, () => `Sub-agent of ${parent.get()?.title ?? ''}`),
+      ctx.kit.rowTitle(() => parent.get()?.title ?? ''),
     ),
+    span({ class: 'shrink-0' }, '/'),
+  )
+
+const below = (event: MouseEvent): PressAt | undefined => {
+  const from = event.currentTarget
+  if (!(from instanceof HTMLElement)) return undefined
+  const box = from.getBoundingClientRect()
+  return { x: box.left, y: box.bottom + 4, touch: event instanceof PointerEvent && event.pointerType === 'touch', from }
+}
+
+const titleMenu = (ctx: ChatContext, shell: Shell, id: string, title: Sig<string>) => {
+  const { barTitle, contextMenu, plainButton } = ctx.kit
+  const menu = contextMenu()
+  const spec = () => ({ title: title.get(), actions: threadActions(ctx, shell, id) })
+  const openBelow = (event: MouseEvent) => {
+    const at = below(event)
+    if (at) menu.open({ ...at, ...spec() })
+  }
+  return barTitle(
+    plainButton({ class: 'max-w-full truncate rounded-sm', title, 'aria-haspopup': 'menu', ...menu.target(spec, openBelow) }, title),
+    menu.view(),
   )
 }
 
-const projectCrumb = (ctx: ChatContext, changes: Pulse, place: Sig<Place | undefined>, name: Sig<string>) =>
-  span(
-    { class: 'hidden max-w-48 shrink-0 items-center gap-2 text-neutral-400 md:flex', title: place.map(at => tildeHome(at?.cwd ?? '')) },
-    ctx.kit.projectAvatar(name, changes.read(() => projectLook(ctx, place.get()))),
-    span({ class: 'truncate' }, name),
-  )
-
-const titleMenu = (ctx: ChatContext, id: string | undefined, title: Sig<string>) => {
-  const { dropdown, icon, navButton } = ctx.kit
-  return dropdown({
-    trigger: (press, open) =>
-      navButton(
-        { active: open, title, ...press, onDblClick: () => void renameThread(ctx, id) },
-        span({ class: 'min-w-0 truncate font-medium text-neutral-100' }, title),
-        span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 14)),
-      ),
-    items: close => threadMenu(ctx, id, close),
-  })
-}
-
-export const breadcrumb = (ctx: ChatContext, changes: Pulse, id: string | undefined, open: (thread: string) => void) => {
-  const thread = () => (id ? ctx.threads.get(id) : undefined)
-  const place = changes.read(() => placeOf(ctx, thread()))
-  const name = changes.read(() => projectName(ctx, place.get()))
+export const breadcrumb = (ctx: ChatContext, shell: Shell, changes: Pulse, id: string) => {
+  const thread = () => ctx.threads.get(id)
   const parent = changes.read(() => parentOf(ctx, thread()))
+  const title = changes.read(() => {
+    const found = thread()
+    return found ? threadTitle(found) : ''
+  })
   return div(
-    { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm' },
-    show(name.map(Boolean), () => projectCrumb(ctx, changes, place, name)),
-    show(name.map(Boolean), () => span({ class: 'hidden text-neutral-500 md:inline' }, '/')),
-    parentCrumb(ctx, parent, open),
-    titleMenu(ctx, id, changes.read(() => threadTitle(thread()))),
+    { class: 'flex min-w-0 flex-1 items-center gap-2 text-sm text-neutral-500' },
+    show(parent.map(Boolean), () => parentCrumb(ctx, shell, parent)),
+    titleMenu(ctx, shell, id, title),
   )
 }

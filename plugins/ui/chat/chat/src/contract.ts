@@ -20,7 +20,7 @@ export interface ThreadLive {
   id: string
   title: string
   status: Status
-  /** One line: the wait's title, "Working" or the current tool, the diffstat when ready, else the first line of the last reply. */
+  /** One line: the wait's title or why the merge failed, "Working" while running, the diffstat when ready, else the first line of the last reply. */
   note: string
   /** When `status` began, in epoch ms: the turn's start while running, else the last activity. */
   at: number
@@ -29,8 +29,11 @@ export interface ThreadLive {
 /** Shows threads. Provided by the chat; reads are reactive. */
 export interface ThreadView {
   /**
-   * The thread's transcript and composer, without a header, for the thread route and for any other surface,
-   * such as a bot's tab. Each call is an independent view; call it inside a scope you own and dispose that scope to remove it.
+   * The thread's transcript and a composer, without a header, for the thread route and other surfaces such as a bot's tab.
+   * Each call is an independent transcript that keeps its thread live while mounted. The composers share one draft and
+   * target the selected thread, so while the returned element is on screen it selects its thread; when several are on screen,
+   * the latest to appear wins, and when it leaves another one on screen takes over.
+   * Call it inside a scope you own and dispose that scope to remove it.
    */
   render(thread: string): HTMLElement
   live(thread: string): ThreadLive | undefined

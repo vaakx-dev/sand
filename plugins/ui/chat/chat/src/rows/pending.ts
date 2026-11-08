@@ -36,11 +36,11 @@ const resumeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): M
 })
 
 const note = (ctx: ChatContext, caption: string, resume: MenuAction | undefined) => () => {
-  const { metaLine, secondaryAction } = ctx.kit
+  const { linkButton, metaLine } = ctx.kit
   return div(
-    { class: 'flex min-w-0 items-center gap-3' },
+    { class: 'flex min-w-0 items-center gap-3 px-1' },
     metaLine(caption),
-    resume && secondaryAction({ size: 'sm', onClick: () => void resume.run() }, resume.label),
+    resume && linkButton({ class: 'text-xs', onClick: () => void resume.run() }, resume.label),
   )
 }
 

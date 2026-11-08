@@ -1,7 +1,7 @@
 {
   "name": "@sand/model-panel",
   "version": "0.0.0",
-  "description": "One pill for model, effort and fast mode that opens one panel, plus palette rows",
+  "description": "One button for model, effort and fast mode that opens one panel, plus palette rows",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -9,8 +9,8 @@
   "sand": {
     "feature": "models",
     "web": "./src/index.ts",
-    "label": "Model pill",
-    "summary": "One pill in the composer that opens the model picker, plus the Models settings page"
+    "label": "Model button",
+    "summary": "One button in the composer that opens the model picker, plus the Models settings page"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",

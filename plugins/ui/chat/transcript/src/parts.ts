@@ -1,4 +1,5 @@
 import { drawChip } from '@sand/context/contract'
+import type { Kit } from '@sand/ui-kit/contract'
 import { models } from '@sand/web-client/contract'
 import type { MediaImage, RendererRegistry, ToolViews, TranscriptParts } from './contract'
 import type { TranscriptContext } from './context'
@@ -10,7 +11,7 @@ import { settledItems, userItems, type DescribeSettings } from './items/settled'
 import { menuKit } from './menus'
 import { openStates } from './open'
 import { itemRows } from './rows'
-import { workFrame, type RowContext } from './rows/row'
+import type { RowContext } from './rows/row'
 import { userMessage } from './rows/user'
 import { errorBody, outputText, truncatedNote } from './tools/notes'
 
@@ -34,8 +35,14 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
     },
     openStates,
     quoteJump,
-    workFrame,
   }
 }
 
-export const createToolViews = (image: MediaImage): ToolViews => ({ field, resultText, errorBody, outputText, truncatedNote, image })
+export const createToolViews = (kit: Kit, image: MediaImage): ToolViews => ({
+  field,
+  resultText,
+  errorBody,
+  outputText,
+  truncatedNote: (count, position) => truncatedNote(kit, count, position),
+  image,
+})

@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { div, list, media, onMount, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
+import { div, list, onMount, show, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BranchLists } from './branches'
 import type { Row } from '@sand/transcript/contract'
 
@@ -11,7 +11,6 @@ export interface ThreadView {
   visible: Sig<boolean>
   more: Sig<boolean>
   branches: BranchLists
-  scroll: number | undefined
   first: string | undefined
   above: number
   size: number
@@ -19,7 +18,7 @@ export interface ThreadView {
 
 export type WatchRow = (node: Element) => () => void
 
-const threadView = (id: string, branches: BranchLists): ThreadView => ({
+export const threadView = (id: string, branches: BranchLists): ThreadView => ({
   id,
   rows: sig<Row[]>([]),
   rowList: div({ class: 'pb-6' }),
@@ -27,7 +26,6 @@ const threadView = (id: string, branches: BranchLists): ThreadView => ({
   visible: sig(false),
   more: sig(false),
   branches,
-  scroll: undefined,
   first: undefined,
   above: 0,
   size: 0,
@@ -41,39 +39,10 @@ const rowNode = (watch: WatchRow) => (row: Sig<Row>) => {
 
 const moreRow = ({ spinner }: Kit) => div({ class: 'flex h-10 items-center justify-center text-neutral-500' }, spinner())
 
-const column = (kit: Kit, view: ThreadView, watch: WatchRow) =>
+export const threadColumn = (kit: Kit, view: ThreadView, watch: WatchRow) =>
   div(
     { class: [kit.pageColumn, 'px-3 pt-4 md:px-4'], hidden: view.visible.map(value => !value) },
     show(view.more, () => moreRow(kit)),
     list(view.rows, row => row.key, rowNode(watch), view.rowList),
     kit.dockFade(),
   )
-
-export const threadViews = (kit: Kit, watch: WatchRow, branches: (id: string) => BranchLists) => {
-  const recent = new Map<string, ThreadView>()
-  const mounted = sig<ThreadView[]>([])
-  const phone = media('(max-width: 767px)')
-  const kept = () => (phone.get() ? 2 : 6)
-
-  const drop = (id: string) => {
-    recent.delete(id)
-    mounted.update(views => views.filter(view => view.id !== id))
-  }
-
-  const get = (id: string) => {
-    const view = recent.get(id) ?? threadView(id, branches(id))
-    if (!recent.has(id)) mounted.update(views => [...views, view])
-    recent.delete(id)
-    recent.set(id, view)
-    for (const old of [...recent.keys()].slice(0, -untrack(kept))) drop(old)
-    return view
-  }
-
-  const node = list(
-    mounted,
-    view => view.id,
-    view => column(kit, untrack(() => view.get()), watch),
-  )
-
-  return { node, get, drop, ids: () => [...recent.keys()] }
-}

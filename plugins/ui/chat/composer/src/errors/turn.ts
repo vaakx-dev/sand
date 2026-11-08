@@ -1,4 +1,4 @@
-import { modelPill } from '@sand/model-panel/contract'
+import { modelButton } from '@sand/model-panel/contract'
 import { pulse } from '@sand/reactive'
 import { errorMessage } from '@sand/util'
 import { models, modelsChange, threadChange, threadSelect } from '@sand/web-client/contract'
@@ -52,13 +52,13 @@ const pcHint = ({ via, viaOffline, text }: TurnError) => {
 const banner = (ctx: ComposerContext, model: Model, errors: TurnErrors, error: TurnError) => {
   const { secondaryAction } = ctx.kit
   const hint = pcHint(error)
-  const pill = ctx.get(modelPill)
-  const pick = hint && pill && ctx.get(models)?.list().some(model => !model.via)
+  const button = ctx.get(modelButton)
+  const pick = hint && button && ctx.get(models)?.list().some(model => !model.via)
   return errorBanner(ctx.kit, {
     text: error.text,
     ...(hint && { hint }),
     retry: () => void retry(ctx).catch(failed => model.fail(errorMessage(failed))),
-    actions: pick ? [secondaryAction({ size: 'sm', onClick: () => pill.open() }, 'Use a model on this PC')] : [],
+    actions: pick ? [secondaryAction({ size: 'sm', onClick: () => button.open() }, 'Use a model on this PC')] : [],
     ...(error.detail && { detail: error.detail }),
     dismiss: () => errors.dismiss(error.key),
   })

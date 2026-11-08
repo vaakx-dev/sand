@@ -1,8 +1,9 @@
-import type { Thread } from '@sand/web-client/contract'
-import { div, untrack } from '@vaakx-dev/vrui'
+import { joinDisposers } from '@sand/util'
+import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/web-client/contract'
+import { div, effect, onMount, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
-import { failed, hero, loading } from './hero'
+import { threadOwners } from './contract'
 import { topEdge } from './integrations/top-edge'
 import { itemCache } from './cache'
 import { branchSwitch } from './rows/branches'
@@ -10,75 +11,69 @@ import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
+import { failed, loading } from './states'
 import { foldTurns } from './turns/fold'
 import { shownRows, type TurnContext } from './turns/rows'
-import { threadViews, type ThreadView } from './view'
+import { threadColumn, threadView, type ThreadView } from './view'
 import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
 
 const screensKeptAbove = 3
 const fewestTrimmed = 20
 
-export const chatController = (ctx: ChatContext) => {
+export const chatController = (ctx: ChatContext, id: string) => {
   const { kit, transcriptParts: parts } = ctx
-  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, nearEnd, toEnd } = kit
+  const { contextMenu, firstRowBelow, followEnd, jumpButton, keepAnchor, toEnd } = kit
   const cache = itemCache(parts)
   const states = parts.openStates()
   const slot = slotHost()
   const menu = contextMenu()
-  const views = threadViews(
-    ctx.kit,
-    node => follow.watch(node),
-    id => branchLists(entry => ctx.threads.branches(id, entry)),
-  )
+  const view = threadView(id, branchLists(entry => ctx.threads.branches(id, entry)))
   const edge = topEdge(
     () => reveal(),
     () => trim(),
   )
-  const empty = hero(ctx)
-  let shown: ThreadView | undefined
+  const showing = () => untrack(() => view.visible.get())
 
   const onScroll = () => {
-    if (!shown) return
+    if (!showing()) return
     follow.scrolled()
     edge.scrolled()
   }
-  const scroller = div({ class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll }, kit.topFade(), edge.sentinel, slot.node, views.node)
+  const scroller = div(
+    { class: 'relative z-0 min-h-0 flex-1 overflow-auto overscroll-contain', onScroll },
+    kit.topFade(),
+    edge.sentinel,
+    slot.node,
+    threadColumn(kit, view, node => follow.watch(node)),
+  )
   const follow = followEnd(scroller)
   edge.watch(scroller)
 
-  const stash = () => {
-    if (!shown) return
-    shown.scroll = nearEnd(scroller) ? undefined : scroller.scrollTop
-    shown.visible.set(false)
-    shown = undefined
+  const hideThread = () => {
+    view.visible.set(false)
+    follow.away.set(false)
   }
 
   const showSlot = (key: string, build: () => HTMLElement) => {
-    stash()
-    follow.away.set(false)
+    hideThread()
     slot.show(key, build)
   }
 
-  const showThread = (id: string) => {
-    if (shown?.id === id) return shown
-    stash()
-    slot.clear()
-    shown = views.get(id)
-    shown.visible.set(true)
-    return shown
-  }
-
   const quote = parts.quoteJump(scroller)
-  const jump = (from: Element, text: string) => {
-    if (shown) quote(shown.rowList, from, text)
+  const jump = (from: Element, text: string) => quote(view.rowList, from, text)
+
+  const shownThread = () => {
+    const thread = ctx.threads.get(id)
+    return thread && showing() ? thread : undefined
   }
 
   const repaint = () => {
-    const thread = ctx.threads.current()
-    if (thread && shown?.id === thread.id) paint(thread, shown)
+    const thread = shownThread()
+    if (thread) paint(thread, view)
   }
 
   const paint = (thread: Thread, view: ThreadView, grow = 0) => {
+    const owners = ctx.get(threadOwners)
     const rows = parts.rows({
       conversation: thread.id,
       cwd: thread.info.cwd,
@@ -88,8 +83,12 @@ export const chatController = (ctx: ChatContext) => {
       reply: text => replyActions(ctx, text),
       rewrite: (entry, text) => rewriteActions(ctx, thread.id, entry, text),
       branchSwitch: entry => branchSwitch(ctx, view, entry),
+      sender: entry => {
+        const found = thread.entries.get(entry)
+        return found && owners?.sender(thread.id, found)?.label
+      },
     })
-    const context: TurnContext = { kit, parts, rows, states, repaint }
+    const context: TurnContext = { kit, rows, states, repaint }
     const items = cache.items(thread, () => ctx.threads.path(thread.id))
     const folded = foldTurns(items, {
       older: ctx.threads.older(thread.id),
@@ -106,26 +105,18 @@ export const chatController = (ctx: ChatContext) => {
     view.rows.set([...drawn.map(({ row }) => row), ...pendingRows(ctx, thread, rows)])
   }
 
-  const shownThread = () => {
-    const thread = ctx.threads.current()
-    const view = shown
-    return thread && view?.id === thread.id ? { thread, view } : undefined
-  }
-
   const reveal = () => {
-    const found = shownThread()
-    if (!found || !scroller.clientHeight) return false
-    const { thread, view } = found
-    if (view.above < fetchWithin && ctx.threads.older(thread.id)) void ctx.threads.page(thread.id)
+    const thread = shownThread()
+    if (!thread || !scroller.clientHeight) return false
+    if (view.above < fetchWithin && ctx.threads.older(id)) void ctx.threads.page(id)
     if (!view.above) return false
     keepAnchor(scroller, view.rowList, () => paint(thread, view, growStep))
     return true
   }
 
   const trim = () => {
-    const found = shownThread()
-    if (!found || follow.pinned()) return
-    const { thread, view } = found
+    const thread = shownThread()
+    if (!thread || follow.pinned()) return
     const index = firstRowBelow(view.rowList, scroller.getBoundingClientRect().top - screensKeptAbove * scroller.clientHeight)
     const first = view.rowEntries[index]
     if (index < fewestTrimmed || !first) return
@@ -134,35 +125,25 @@ export const chatController = (ctx: ChatContext) => {
   }
 
   const render = (): void => {
-    const thread = ctx.threads.current()
-    if (!thread || (thread.loaded && !thread.entries.size && !thread.live.length)) return showSlot('empty', () => empty)
-    if (!thread.loaded && !thread.entries.size) {
-      const problem = thread.failed
-      if (!problem) return showSlot('loading', () => loading(ctx.kit))
-      return showSlot(`failed:${thread.id}:${problem}`, () => failed(ctx.kit, problem, () => void ctx.threads.load(thread.id)))
+    const thread = ctx.threads.get(id)
+    if (thread?.loaded && !thread.entries.size && !thread.live.length) {
+      hideThread()
+      return slot.clear()
     }
-    const switching = shown?.id !== thread.id
-    const view = showThread(thread.id)
-    const saved = switching ? view.scroll : undefined
-    const tail = switching ? saved === undefined : follow.pinned()
+    if (!thread || (!thread.loaded && !thread.entries.size)) {
+      const problem = thread?.failed
+      if (!problem) return showSlot('loading', () => loading(kit))
+      return showSlot(`failed:${problem}`, () => failed(kit, problem, () => void ctx.threads.load(id)))
+    }
+    const tail = !showing() || follow.pinned()
+    slot.clear()
+    view.visible.set(true)
     if (tail && view.size > trimAt) resetToEnd(view)
-    if (switching || tail) paint(thread, view)
+    if (tail) paint(thread, view)
     else keepAnchor(scroller, view.rowList, () => paint(thread, view))
-    if (saved !== undefined) scroller.scrollTop = saved
-    else if (tail) toEnd(scroller)
+    if (tail) toEnd(scroller)
     follow.measure()
     edge.pump()
-  }
-
-  const forget = () => {
-    const current = ctx.threads.current()?.id
-    const gone = views.ids().filter(id => id !== current && !ctx.threads.get(id)?.entries.size)
-    if (!gone.length) return
-    for (const id of gone) {
-      if (shown?.id === id) shown = undefined
-      views.drop(id)
-    }
-    render()
   }
 
   const refresh = () => {
@@ -171,5 +152,20 @@ export const chatController = (ctx: ChatContext) => {
   }
 
   const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
-  return { root, render, refresh, forget }
+  onMount(root, () =>
+    joinDisposers(
+      ctx.threads.watch(id),
+      ctx.on(threadChange, changed => {
+        if (changed === id) render()
+      }),
+      ctx.on(threadsChange, render),
+      ctx.on(modelsChange, refresh),
+      ctx.watch(threadOwners, () => refresh()),
+      effect(() => {
+        parts.version.get()
+        untrack(refresh)
+      }),
+    ),
+  )
+  return root
 }

@@ -10,9 +10,9 @@ const parse = (text: string) => {
   return { output: found ? text.slice(0, found.index) : text, code: found ? Number(found[1]) : undefined, stopped: found?.[2] }
 }
 
-export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, outputText, resultText, truncatedNote }: ToolViews): ToolRenderer => {
+export const shellRenderer = ({ codeBlock, fold, metaLine, statusLabel }: Kit, { errorBody, field, resultText, truncatedNote }: ToolViews): ToolRenderer => {
   const command = (tool: ToolView) => field(tool.call.input, 'command')
-  const multiline = (tool: ToolView) => command(tool).includes('\n') && div({ class: 'mb-2' }, outputText([span({ class: 'text-neutral-500' }, '$ '), command(tool)], false))
+  const multiline = (tool: ToolView) => command(tool).includes('\n') && div({ class: 'mb-2' }, codeBlock({}, span({ class: 'text-neutral-500' }, '$ '), command(tool)))
   return {
     icon: 'term',
     verb: 'Ran',
@@ -37,12 +37,12 @@ export const shellRenderer = ({ fold, statusLabel }: Kit, { errorBody, field, ou
       const { output, stopped } = parse(resultText(tool.result))
       const lines = output.split('\n')
       const hidden = Math.max(0, lines.length - shownLines)
-      const shown = lines.slice(hidden).join('\n') || 'No output'
+      const shown = lines.slice(hidden).join('\n')
       return div(
         multiline(tool),
         hidden > 0 && truncatedNote(hidden, 'before'),
-        fold({ lines: lines.length - hidden, chars: shown.length }, outputText(shown, false)),
-        stopped && div({ class: 'mt-1 text-xs text-neutral-500' }, `Stopped: ${stopped}`),
+        shown ? fold({ lines: lines.length - hidden, chars: shown.length }, codeBlock({}, shown)) : div({ class: 'flex' }, metaLine('No output')),
+        stopped && div({ class: 'mt-1 flex' }, metaLine(`Stopped: ${stopped}`)),
       )
     },
   }
