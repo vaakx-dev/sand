@@ -1,6 +1,6 @@
 import type { PendingItem } from '@sand/turns-contract/contract'
 import type { Thread } from '@sand/web-client/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { type Entry, promptContent, userParts } from '@sand/chats/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { Item, Row, Rows } from '@sand/transcript/contract'
@@ -19,7 +19,7 @@ const lookOf = ({ kind, held }: PendingItem): Look => {
   return kind === 'steer' ? 'steer' : 'queued'
 }
 
-const removeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): NavAction => ({
+const removeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): MenuAction => ({
   id: 'remove',
   label: 'Remove',
   icon: 'x',
@@ -28,14 +28,14 @@ const removeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): N
   run: () => ctx.turns.withdraw(thread.id, pending.id).catch(error => ctx.report(error)),
 })
 
-const resumeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): NavAction => ({
+const resumeAction = (ctx: ChatContext, thread: Thread, pending: PendingItem): MenuAction => ({
   id: 'resume',
   label: thread.running ? 'Resume' : 'Send now',
   icon: 'up',
   run: () => ctx.turns.hold(thread.id, pending.id, false).catch(error => ctx.report(error)),
 })
 
-const note = (ctx: ChatContext, caption: string, resume: NavAction | undefined) => () => {
+const note = (ctx: ChatContext, caption: string, resume: MenuAction | undefined) => () => {
   const { metaLine, secondaryAction } = ctx.kit
   return div(
     { class: 'flex min-w-0 items-center gap-3' },

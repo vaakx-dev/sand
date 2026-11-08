@@ -1,7 +1,7 @@
 {
   "name": "@sand/settings",
   "version": "0.0.0",
-  "description": "Settings: the sidebar lists the settings pages and the main column shows the chosen one",
+  "description": "Settings: a sidebar item that opens the settings pages, listed beside the chosen one",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -12,12 +12,10 @@
     "summary": "The settings pages"
   },
   "dependencies": {
-    "@sand/layout": "workspace:*",
-    "@sand/rail": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
-    "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
   }

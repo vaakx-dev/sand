@@ -1,0 +1,132 @@
+import type { Kit } from '@sand/ui-kit/contract'
+import { addressLayer, leaveLayer, pushLayer } from '@sand/web-client/contract'
+import { derive, sig, stored, untrack } from '@vaakx-dev/vrui'
+import { sameScreen, screenKey } from './address'
+import { homeRoute, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState } from './contract'
+import { navigation } from './navigation'
+import { registry } from './registry'
+import { screenCache } from './screens'
+
+export interface Placed {
+  view: HTMLElement
+  order: number
+}
+
+export type Drag = number | 'back' | undefined
+
+export const phoneWidth = 600
+
+export const deskWidth = 1000
+
+export const drawerReach = 256
+
+const layers = { drawer: 'drawer', sheet: 'sheet' } as const
+
+const home: Route = { kind: homeRoute }
+
+export const shellModel = (kit: Kit) => {
+  const navs = registry<NavItem>()
+  const sections = registry<ShellSection>()
+  const routes = registry<RouteSpec>()
+  const chips = registry<ChipSource>()
+  const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry(), home: registry() }
+
+  const width = sig(window.innerWidth)
+  const layer = sig(addressLayer())
+  const sheet = sig<SheetSpec | undefined>(undefined)
+  const hiddenSides = stored<string[]>('sand.shell.hidden-sides', [])
+  const drawerDrag = sig<number | undefined>(undefined)
+  const backDrag = sig<Drag>(undefined)
+  const leaving = sig<Route[]>([])
+
+  const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
+  const known = (kind: string) => Boolean(specFor(kind))
+  const phone = derive(() => width.get() < phoneWidth)
+  const nav = navigation(kind => untrack(() => known(kind)), () => untrack(() => phone.get()))
+
+  const current = derive(() => {
+    const { route } = nav.place.get()
+    return known(route.kind) ? route : home
+  })
+  const pushed = derive(() => (current.get().kind === homeRoute ? [] : nav.place.get().stack.filter(route => known(route.kind))))
+
+  const routeOf = (key: string) => (phone.get() ? pushed.get() : [current.get()]).find(route => screenKey(route) === key)
+  const screens = screenCache(specFor, routeOf)
+  const screen = derive(() => screens.get(current.get()))
+  const alive = derive(() => new Set((phone.get() ? [...pushed.get(), ...leaving.get()] : [current.get()]).map(screenKey)))
+
+  const state = derive<ShellState>(() => {
+    const size = width.get()
+    if (size < phoneWidth) return 'phone'
+    return size < deskWidth && screen.get()?.side ? 'drawer' : 'wide'
+  })
+
+  const sideHidden = (kind: string) => hiddenSides.get().includes(kind)
+  const showSide = (kind: string, shown: boolean) => hiddenSides.update(kinds => [...kinds.filter(other => other !== kind), ...(shown ? [] : [kind])])
+
+  const enter = (name: string) => {
+    pushLayer(name)
+    layer.set(addressLayer())
+  }
+
+  const leave = () => {
+    sheet.set(undefined)
+    leaveLayer()
+  }
+
+  const drawerOpen = derive(() => state.get() === 'drawer' && layer.get() === layers.drawer)
+  const setDrawer = (open: boolean) => {
+    if (open === drawerOpen.get()) return
+    if (open) enter(layers.drawer)
+    else leave()
+  }
+
+  const showSheet = (spec: SheetSpec) => {
+    if (layer.get() !== layers.sheet) enter(layers.sheet)
+    sheet.set(spec)
+  }
+  const sheetShown = derive(() => (layer.get() === layers.sheet ? sheet.get() : undefined))
+
+  return {
+    kit,
+    navs,
+    sections,
+    routes,
+    chips,
+    places,
+    width,
+    phone,
+    state,
+    current,
+    pushed,
+    screen,
+    screens,
+    alive,
+    leaving,
+    backDrag,
+    drawerDrag,
+    drawerOpen,
+    setDrawer,
+    sheetShown,
+    showSheet,
+    closeSheet: (spec: SheetSpec) => {
+      if (sheet.get() === spec) leave()
+    },
+    sideHidden,
+    showSide,
+    isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())),
+    open(route: Route, replace = false) {
+      if (layer.get()) leave()
+      nav.go(route, replace)
+    },
+    back: nav.back,
+    follow() {
+      layer.set(addressLayer())
+      if (!layer.get()) sheet.set(undefined)
+      backDrag.set(undefined)
+      nav.follow()
+    },
+  }
+}
+
+export type Model = ReturnType<typeof shellModel>

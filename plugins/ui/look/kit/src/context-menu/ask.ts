@@ -1,9 +1,9 @@
-import type { NavAsk } from '@sand/nav/contract'
+import type { MenuAsk } from '@sand/ui-shell/contract'
 import { derive, div, keys, sig, span } from '@vaakx-dev/vrui'
 import { primaryAction } from '../buttons/button'
 import { textInput } from '../fields/field'
 
-export const askView = (ask: NavAsk, done: () => void, size: 'sm' | 'md') => {
+export const askView = (ask: MenuAsk, done: () => void, size: 'sm' | 'md') => {
   const text = sig('')
   const preview = derive(() => (text.get().trim() ? ask.preview(text.get()) : undefined))
   const submit = () => {

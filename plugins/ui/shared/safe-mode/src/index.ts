@@ -1,5 +1,5 @@
 import { wire } from '@sand/devices-contract'
-import { place } from '@sand/layout/contract'
+import { place } from '@sand/ui-shell/contract'
 import { kit } from '@sand/ui-kit/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'

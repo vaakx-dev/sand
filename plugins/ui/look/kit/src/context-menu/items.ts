@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { div, p, span, type Child } from '@vaakx-dev/vrui'
 import { dangerAction, secondaryAction } from '../buttons/button'
 import { menuSeparator } from '../menus/menu'
@@ -8,7 +8,7 @@ import { choiceChips, type ChipHandlers } from './chips'
 
 export type ItemSize = 'sm' | 'md'
 
-export type MenuStep = { kind: 'confirm' | 'ask'; action: NavAction }
+export type MenuStep = { kind: 'confirm' | 'ask'; action: MenuAction }
 
 export interface MenuControl {
   close(): void
@@ -21,19 +21,19 @@ const finish = (control: MenuControl, run: () => void | Promise<unknown>) => {
   void run()
 }
 
-export const firstStep = (actions: NavAction[], ask?: string): MenuStep | undefined => {
+export const firstStep = (actions: MenuAction[], ask?: string): MenuStep | undefined => {
   const action = ask ? actions.find(candidate => candidate.id === ask && candidate.ask) : undefined
   return action ? { kind: 'ask', action } : undefined
 }
 
-export const choose = (control: MenuControl, action: NavAction) => (event: MouseEvent) => {
+export const choose = (control: MenuControl, action: MenuAction) => (event: MouseEvent) => {
   if (!control.armed(event)) return
   if (action.confirm) return control.step({ kind: 'confirm', action })
   if (action.ask && !action.choices) return control.step({ kind: 'ask', action })
   finish(control, () => action.run())
 }
 
-export const chipHandlers = (control: MenuControl, action: NavAction): ChipHandlers => ({
+export const chipHandlers = (control: MenuControl, action: MenuAction): ChipHandlers => ({
   pick(choice, event) {
     if (control.armed(event)) finish(control, () => choice.run())
   },
@@ -42,15 +42,15 @@ export const chipHandlers = (control: MenuControl, action: NavAction): ChipHandl
   },
 })
 
-const label = (action: NavAction) => span({ class: 'min-w-0 flex-1 truncate' }, action.label)
+const label = (action: MenuAction) => span({ class: 'min-w-0 flex-1 truncate' }, action.label)
 
-const item = (action: NavAction, control: MenuControl, size: ItemSize) =>
+const item = (action: MenuAction, control: MenuControl, size: ItemSize) =>
   menuItem(
     { role: 'menuitem', size, tone: action.danger ? 'danger' : undefined, icon: action.icon, onClick: choose(control, action) },
     label(action),
   )
 
-const choiceRow = (action: NavAction, control: MenuControl, size: ItemSize) =>
+const choiceRow = (action: MenuAction, control: MenuControl, size: ItemSize) =>
   div(
     { class: ['flex items-center gap-3 rounded-md text-neutral-100', menuSizes[size]] },
     action.icon ? menuIcon(action.icon) : null,
@@ -58,13 +58,13 @@ const choiceRow = (action: NavAction, control: MenuControl, size: ItemSize) =>
     choiceChips(action, chipHandlers(control, action), 'sm'),
   )
 
-export const menuItems = (actions: NavAction[], control: MenuControl, size: ItemSize): Child[] =>
+export const menuItems = (actions: MenuAction[], control: MenuControl, size: ItemSize): Child[] =>
   actions.flatMap((action, index) => [
     index > 0 && action.group !== actions[index - 1]?.group ? menuSeparator() : null,
     action.choices ? choiceRow(action, control, size) : item(action, control, size),
   ])
 
-const confirmView = (action: NavAction, control: MenuControl, back: () => void, size: ItemSize) =>
+const confirmView = (action: MenuAction, control: MenuControl, back: () => void, size: ItemSize) =>
   div(
     { class: 'flex flex-col gap-3 p-2' },
     p({ class: 'text-sm text-neutral-100' }, action.confirm),

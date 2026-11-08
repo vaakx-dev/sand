@@ -1,0 +1,28 @@
+{
+  "name": "@sand/threads-home",
+  "version": "0.0.0",
+  "description": "Threads in the sidebar, pinned first, then by day, then snoozed; New chat, the home screen, and threads and projects in the palette",
+  "type": "module",
+  "sand": {
+    "feature": "threads",
+    "web": "./src/index.ts",
+    "label": "Threads home",
+    "summary": "Your threads in the sidebar by day, with pin and snooze, and New chat"
+  },
+  "dependencies": {
+    "@sand/chat": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/picker": "workspace:*",
+    "@sand/project": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

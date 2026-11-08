@@ -1,6 +1,6 @@
 import { userParts, type Block, type Entry, type Message, type UserContent } from '@sand/chats/contract'
 import { composer as composerService } from '@sand/composer/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { ChatContext } from '../context'
 
 const isAttachment = (block: Block): block is Exclude<UserContent, { type: 'text' | 'context' }> =>
@@ -14,7 +14,7 @@ const contentOf = (entry?: Entry): UserContent[] => {
   return [...message.content.filter(isAttachment), ...context]
 }
 
-export const rewriteActions = (ctx: ChatContext, thread: string, entry: string, text: string): NavAction[] => {
+export const rewriteActions = (ctx: ChatContext, thread: string, entry: string, text: string): MenuAction[] => {
   const composer = ctx.get(composerService)
   if (!composer || ctx.threads.get(thread)?.running) return []
   const found = () => ctx.threads.path(thread).find(candidate => candidate.id === entry)

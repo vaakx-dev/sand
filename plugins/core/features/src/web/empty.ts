@@ -1,9 +1,11 @@
-import { layout, spaces } from '@sand/layout/contract'
-import { owned, pulse } from '@sand/reactive'
-import { settings, settingsChange } from '@sand/settings/contract'
+import { settings } from '@sand/settings/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { effect, sig, untrack } from '@vaakx-dev/vrui'
+import { homeRoute, shell } from '@sand/ui-shell/contract'
+import { derive, div, show } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
+import type { FeatureStore } from './store'
+
+const fillingShell = ['threads', 'bots', 'calendar']
 
 const emptyView = ({ primaryAction, setupFrame, setupHeading, setupNote, setupScreen }: Kit, open: () => void) =>
   setupFrame(
@@ -14,21 +16,19 @@ const emptyView = ({ primaryAction, setupFrame, setupHeading, setupNote, setupSc
     ),
   )
 
-export const emptyMain = (ctx: Context, kit: Kit) => {
-  const settled = sig(false)
-  void ctx.settled().then(() => settled.set(true))
-  const shell = pulse(ctx, [settingsChange], [layout, spaces, settings])
-  const bare = shell.read(() => {
-    if (!settled.get() || ctx.get(spaces)?.list().length !== 0 || ctx.get(settings)?.current()) return undefined
-    return ctx.get(layout)
-  })
+export const emptyHome = (ctx: Context, kit: Kit, store: FeatureStore) => {
   const open = () => ctx.get(settings)?.open('features')
-  owned(ctx, () =>
-    effect(() => {
-      const found = bare.get()
-      if (!found) return
-      const uncover = untrack(() => found.cover('main', emptyView(kit, open)))
-      return () => void uncover()
+  ctx.watch(shell, found =>
+    found?.route({
+      kind: homeRoute,
+      order: 1000,
+      render: () => ({
+        head: () => '',
+        main() {
+          const bare = derive(() => store.choice.get() !== undefined && fillingShell.every(id => !store.feature(id)?.on))
+          return div({ class: 'h-full w-full' }, show(bare, () => emptyView(kit, open)))
+        },
+      }),
     }),
   )
 }

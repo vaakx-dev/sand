@@ -63,7 +63,9 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     if (id && !thread?.loaded) await load(id)
   }
 
-  const select = (id: string | undefined, options?: { replace?: boolean }) => open(id, options?.replace ? 'replace' : 'push')
+  const visitOf = (options?: { replace?: boolean }): ThreadVisit => (options?.replace ? 'replace' : 'push')
+
+  const select = (id: string | undefined, options?: { replace?: boolean }) => open(id, visitOf(options))
 
   const refocus = (device: string) => {
     const current = store.currentThread()
@@ -115,7 +117,7 @@ export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, 
     },
     cwd,
     device: () => store.device(),
-    draft: (folder, device, id = uuid()) => open(undefined, 'push', { id, cwd: folder, device }),
+    draft: (folder, device, id = uuid(), options) => open(undefined, visitOf(options), { id, cwd: folder, device }),
     drafting: () => (store.current ? undefined : store.draft),
     list: () => [...store.threads.values()],
     get: id => store.threads.get(id),

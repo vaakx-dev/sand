@@ -1,7 +1,7 @@
 import { Prec } from '@codemirror/state'
 import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { hasFiles } from '@sand/attachments/web/contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
 import { errorMessage } from '@sand/util'
 import { BREAKPOINT, div, dynamicChild, media, span } from '@vaakx-dev/vrui'
@@ -24,7 +24,7 @@ export interface CardParts {
   model: Model
   slots: Slots
   plus: Plus
-  actions: () => NavAction[]
+  actions: () => MenuAction[]
   typed: () => void
 }
 

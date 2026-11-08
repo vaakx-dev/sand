@@ -1,21 +1,21 @@
 {
   "name": "@sand/calendar-space",
   "version": "0.0.0",
-  "description": "Calendar space: your events as an agenda or a week, quick add, event details, and .ics import, export and subscription",
+  "description": "Calendar section and screen: your events as an agenda or a week, quick add, event details, and .ics import, export and subscription",
   "type": "module",
   "sand": {
     "feature": "calendar",
     "web": "./src/index.ts",
     "label": "Calendar space",
-    "summary": "Your calendar in the rail: agenda, week, quick add and event details"
+    "summary": "Your calendar in the sidebar: agenda, week, quick add and event details"
   },
   "dependencies": {
     "@sand/calendar": "workspace:*",
     "@sand/calendar-local": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/layout": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"

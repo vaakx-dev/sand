@@ -26,7 +26,6 @@
     "@sand/markdown": "workspace:*",
     "@sand/orchestrator": "workspace:*",
     "@sand/server": "workspace:*",
-    "@sand/sidebar": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/util": "workspace:*",

@@ -1,10 +1,10 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuSpec } from '@sand/ui-kit/contract'
 import { loginLogout, loginShared, type LoginAccount } from '../contract'
 import { removeLabel } from './names'
 import type { LoginControl } from './state'
 
-const shareAction = (account: LoginAccount, control: LoginControl): NavAction[] =>
+const shareAction = (account: LoginAccount, control: LoginControl): MenuAction[] =>
   account.app
     ? []
     : [

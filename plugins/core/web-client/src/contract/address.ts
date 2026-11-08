@@ -45,7 +45,10 @@ const write = (change: () => void) => {
 export const pushLayer = (layer: string) => write(() => history.pushState({ ...addressState(), [layerKey]: layer }, '', location.href))
 
 export const leaveLayer = () => {
-  if (!waiting && addressLayer()) history.back()
+  if (waiting || !addressLayer()) return
+  waiting = []
+  listen(window, 'popstate', settle, { once: true })
+  history.back()
 }
 
 export const pushAddress = (params: AddressParams, state: AddressState) => {

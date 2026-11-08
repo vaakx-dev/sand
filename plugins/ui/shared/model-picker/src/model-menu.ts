@@ -1,11 +1,11 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit, MenuSpec } from '@sand/ui-kit/contract'
 import type { ModelMenuInput } from './contract'
 
 export const modelMenu = ({ copyText }: Kit, { model, subtitle, use, makeDefault, toggleFavourite, toggleHidden, remove }: ModelMenuInput): MenuSpec => {
   const favourite = model.favourite !== undefined
   const copy = () => copyText(model.name ?? model.id)
-  const actions: (NavAction | false)[] = [
+  const actions: (MenuAction | false)[] = [
     use !== undefined && { id: 'use', label: 'Use this model', icon: 'check', group: 'use', quick: true, run: use },
     makeDefault !== undefined && { id: 'default', label: 'Make default', icon: 'pin', group: 'use', run: makeDefault },
     toggleFavourite !== undefined && {

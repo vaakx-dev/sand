@@ -1,11 +1,11 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { derive, dynamicChild, span, type Sig } from '@vaakx-dev/vrui'
 import { icon, type IconSize } from '../icons/lucide'
 import { spinner, withDot } from '../marks/marks'
 
-const glyphOf = (action: NavAction, busy: boolean): string => (busy ? 'busy' : (action.icon ?? ''))
+const glyphOf = (action: MenuAction, busy: boolean): string => (busy ? 'busy' : (action.icon ?? ''))
 
-export const navActionIcon = (action: Sig<NavAction>, busy: (id: string) => boolean, size: IconSize = 'md') => {
+export const navActionIcon = (action: Sig<MenuAction>, busy: (id: string) => boolean, size: IconSize = 'md') => {
   const count = () => action.get().count?.() ?? 0
   const marked = () => count() > 0 || (action.get().dot?.() ?? false)
   const title = () => (count() > 0 ? `${action.get().label} · ${count()}` : action.get().label)

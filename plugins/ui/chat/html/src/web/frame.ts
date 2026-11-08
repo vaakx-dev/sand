@@ -1,5 +1,5 @@
 import { pcHello } from '@sand/devices-contract'
-import { layout } from '@sand/layout/contract'
+import { shell } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { joinDisposers } from '@sand/util'
 import { htmlPage, type HtmlRenderEntry } from '../contract'
@@ -39,7 +39,7 @@ const framedPage = (ctx: FrameContext, thread: string, data: HtmlRenderEntry, re
       loads.update(count => count + 1)
     },
   })
-  const connection = connectPage(ctx, frame, { resize, swipe: () => ctx.get(layout)?.swipe() })
+  const connection = connectPage(ctx, frame, { resize, swipe: () => ctx.get(shell)?.swipe() })
 
   const retry = () => {
     if (!failed.get()) return

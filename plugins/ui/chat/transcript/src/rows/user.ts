@@ -1,7 +1,7 @@
 import { contextLinks, promptLabel, type ContextLink, type ContextRecord, type FileBlock, type UserPart } from '@sand/chats/contract'
 import { contextFormats, copyContext } from '@sand/context/contract'
 import type { TextMenu, UserItem } from '../contract'
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { bytes, isArchiveName, quoteBlocks, quotedText } from '@sand/util'
 import { div, show, span, type Child } from '@vaakx-dev/vrui'
@@ -85,7 +85,7 @@ const bubble = (text: string, records: ContextRecord[], press: TextMenu, context
 const message = (...children: Child[]) =>
   div({ class: 'chat-row group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
 
-export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => NavAction[], note?: () => Child) =>
+export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => MenuAction[], note?: () => Child) =>
   row(`user:${item.key}`, item, () => {
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const records = item.parts.flatMap(part => (part.kind === 'context' ? part.records : []))

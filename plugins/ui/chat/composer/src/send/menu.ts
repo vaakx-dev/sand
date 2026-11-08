@@ -1,12 +1,12 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { sig } from '@vaakx-dev/vrui'
 import type { Model } from '../model'
 
-const queueAction = (model: Model): NavAction => ({ id: 'queue', label: 'Queue for next turn', icon: 'clock', run: () => model.send('queue') })
+const queueAction = (model: Model): MenuAction => ({ id: 'queue', label: 'Queue for next turn', icon: 'clock', run: () => model.send('queue') })
 
 export const createSendMenu = () => {
-  const actions = sig<NavAction[]>([])
-  const add = (action: NavAction) => {
+  const actions = sig<MenuAction[]>([])
+  const add = (action: MenuAction) => {
     actions.update(list => [...list, action])
     return () => actions.update(list => list.filter(other => other !== action))
   }

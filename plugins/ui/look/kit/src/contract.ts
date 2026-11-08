@@ -1,4 +1,4 @@
-import type { NavAction } from '@sand/nav/contract'
+import type { MenuAction } from '@sand/ui-shell/contract'
 import { service } from 'drydock'
 import type { kit as kitImpl } from './kit'
 
@@ -16,7 +16,7 @@ export interface PressAt {
 export interface MenuSpec {
   title: string
   subtitle?: string
-  actions: NavAction[]
+  actions: MenuAction[]
 }
 
 export interface MenuRequest extends PressAt, MenuSpec {

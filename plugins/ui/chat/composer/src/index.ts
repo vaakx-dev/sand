@@ -1,12 +1,10 @@
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
 import { composer as composerService, drafts, typing as typingService, type Chat, type ChatDock, type Composer } from './contract'
-import { place } from '@sand/layout/contract'
-import { threadsSlot } from '@sand/threads-space/contract'
 import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
 import { owned } from '@sand/reactive'
 import { quotedText } from '@sand/util'
-import { listen, sig } from '@vaakx-dev/vrui'
+import { collectScope, disposeAll, listen, sig, type ScopedValue } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { fileTrigger } from './complete/files'
 import { createTriggers } from './complete/registry'
@@ -58,7 +56,20 @@ export default definePlugin({
       return { view: dock(parts, card(parts)), slot: own.add }
     }
 
+    const parts = { ctx, model, slots, plus, actions: menu.actions(model), typed: typing.typed }
+    let built: ScopedValue<HTMLElement> | undefined
+    ctx.effect(() => () => {
+      if (built) disposeAll(built.scope)
+    })
+
     const composer: Composer = {
+      view() {
+        built ??= collectScope(() => {
+          current = card(parts)
+          return dock(parts, current, turnErrorBanner(ctx, model, errors))
+        })
+        return built.value
+      },
       focus: () => current?.editor.focus(),
       value: () => model.text.get(),
       set(value) {
@@ -92,17 +103,7 @@ export default definePlugin({
       dock: chatDock,
     }
 
-    const parts = { ctx, model, slots, plus, actions: menu.actions(model), typed: typing.typed }
     session.start()
-    place(
-      ctx,
-      threadsSlot('main'),
-      () => {
-        current = card(parts)
-        return dock(parts, current, turnErrorBanner(ctx, model, errors))
-      },
-      2,
-    )
     ctx.on(threadSelect, session.open)
     ctx.watch(fileIndex, found => found && threadOnly.add(fileTrigger(found, ctx.threads)))
     ctx.watch(skillIndex, found => {
