@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { addressLayer, leaveLayer, pushLayer } from '@sand/web-client/contract'
+import { addressLayer, addressSettled, leaveLayer, pushLayer } from '@sand/web-client/contract'
 import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import { sameScreen, screenKey } from './address'
 import { homeRoute, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState } from './contract'
@@ -82,13 +82,14 @@ export const shellModel = (kit: Kit) => {
 
   const enter = (name: string) => {
     pushLayer(name)
-    layer.set(addressLayer())
+    layer.set(addressSettled() ? addressLayer() : undefined)
     followCover()
   }
 
   const leave = () => {
     sheet.set(undefined)
     leaveLayer()
+    layer.set(undefined)
   }
 
   const drawerOpen = derive(() => state.get() === 'drawer' && layer.get() === layers.drawer)
