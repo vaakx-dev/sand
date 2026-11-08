@@ -1,0 +1,149 @@
+import { botName, type BotTab } from '@sand/bots/contract'
+import { planChangeWire, planRead } from '@sand/bot-plan/contract'
+import { changesMerge } from '@sand/changes/contract'
+import { featureState } from '@sand/features/contract'
+import type { Status } from '@sand/ui-shell/contract'
+import { derive, div, dynamicChild, li, list, section, show, sig, span, ul, type Sig } from '@vaakx-dev/vrui'
+import { botMark, statusIcon } from '../marks'
+import { projectNames, type Parts } from '../parts'
+import { settled } from '../work'
+import { parsePlan, type PlanItem } from './plan'
+
+type Group = 'Ready' | 'Waiting' | 'In progress' | 'Next' | 'Done'
+
+interface Shown {
+  key: string
+  item: PlanItem
+  live?: BotTab
+}
+
+const order: Group[] = ['Ready', 'Waiting', 'In progress', 'Next', 'Done']
+
+const groupOf: Record<Status, Group> = { ready: 'Ready', merging: 'Ready', waiting: 'Waiting', running: 'In progress', merged: 'Done', done: 'Done' }
+
+const threadOf = (ref: string) => (ref.startsWith('thread:') ? ref.slice('thread:'.length) : undefined)
+
+const planText = (parts: Parts, bot: string) => {
+  const text = sig<string | undefined>(undefined)
+  void parts.ctx.wire.call(planRead, { bot }).then(
+    found => text.set(found),
+    error => parts.ctx.report(error),
+  )
+  const stop = parts.ctx.wire.on(planChangeWire, ([changed, found]) => {
+    if (changed === bot) text.set(found)
+  })
+  return { text, stop }
+}
+
+const mergeButton = (parts: Parts, ref: string, live: () => BotTab | undefined) => {
+  const { kit } = parts.ctx
+  const session = threadOf(ref)
+  const sending = sig(false)
+  const merging = () => sending.get() || live()?.status === 'merging'
+  const merge = () => {
+    if (!session) return
+    sending.set(true)
+    parts.ctx.wire
+      .call(changesMerge, { session })
+      .catch(error => parts.ctx.report(error))
+      .finally(() => sending.set(false))
+  }
+  return kit.secondaryAction(
+    { size: 'sm', class: 'shrink-0', disabled: merging, onClick: merge },
+    dynamicChild(derive(merging), busy => (busy ? span({ class: 'flex items-center gap-2' }, kit.spinner('sm'), 'Merging') : span({}, 'Merge'))),
+  )
+}
+
+const itemRow = (parts: Parts, bot: string, shown: Sig<Shown>) => {
+  const { kit, markdown } = parts.ctx
+  const { item } = shown.get()
+  const live = () => shown.get().live
+  const ref = item.ref
+  const note = () => live()?.note || item.note
+  const status = () => live()?.status
+  const done = () => {
+    const found = status()
+    return found !== undefined && settled(found)
+  }
+  const title = () => span({ class: ['font-medium', () => (done() ? 'text-neutral-400' : 'text-neutral-100')] }, ...markdown.inline(item.title))
+  const linked = derive(() => Boolean(ref && live()))
+  const canMerge = () => {
+    const found = status()
+    return found !== undefined && groupOf[found] === 'Ready' && parts.ctx.get(featureState)?.on('merge') !== false
+  }
+  return li(
+    { class: 'flex items-start gap-3 py-1.5 text-sm' },
+    span(
+      { class: 'flex h-5 shrink-0 items-center' },
+      dynamicChild(derive(status), found => (found ? statusIcon(kit, found) : kit.stateIcon('idle'))),
+    ),
+    div(
+      { class: 'min-w-0 flex-1 leading-5' },
+      dynamicChild(linked, open =>
+        open && ref ? kit.linkButton({ class: 'text-left hover:underline', onClick: () => parts.open(bot, ref) }, title()) : title(),
+      ),
+      show(
+        () => Boolean(note()),
+        () => span({ class: 'text-neutral-400' }, ' — ', () => note()),
+      ),
+    ),
+    ref ? show(canMerge, () => mergeButton(parts, ref, live)) : null,
+  )
+}
+
+const groupView = (parts: Parts, bot: string, group: Group, items: () => Shown[]) => {
+  const { kit } = parts.ctx
+  return show(
+    () => items().length > 0,
+    () =>
+      section(
+        { class: 'flex flex-col gap-1' },
+        kit.headTitle(2, group),
+        list(derive(items), shown => shown.key, shown => itemRow(parts, bot, shown), ul({ class: 'flex flex-col' })),
+      ),
+  )
+}
+
+const shownItems = (parts: Parts, items: PlanItem[]): Shown[] =>
+  items.map((item, index) => {
+    const live = item.ref ? parts.work.get(item.ref) : undefined
+    return { key: item.ref ?? `${index}:${item.title}`, item, ...(live && { live }) }
+  })
+
+export const projectPage = (parts: Parts, bot: string) => {
+  const { kit, markdown } = parts.ctx
+  const found = () => parts.store.find(bot)
+  const { text, stop } = planText(parts, bot)
+  const plan = derive(() => {
+    const source = text.get()
+    return source === undefined ? undefined : parsePlan(source, parts.work.schemes())
+  })
+  const shown = derive(() => shownItems(parts, plan.get()?.items ?? []))
+  const inGroup = (group: Group) => () => shown.get().filter(item => (item.live ? groupOf[item.live.status] : 'Next') === group)
+  const empty = () => plan.get() !== undefined && !shown.get().length && !plan.get()?.rest
+
+  return div(
+    { class: 'min-h-0 flex-1 overflow-y-auto overscroll-contain', onMount: () => stop },
+    div(
+      { class: 'flex flex-col gap-6 px-4 py-5' },
+      div(
+        { class: 'flex items-center gap-3' },
+        botMark(kit, found, 20),
+        kit.headTitle(1, () => botName(found() ?? { name: '' })),
+        kit.metaLine(() => projectNames(parts, found()?.projects ?? [])),
+      ),
+      dynamicChild(
+        derive(() => plan.get()?.rest ?? ''),
+        rest => (rest ? div({ class: 'text-sm text-neutral-400' }, ...markdown.nodes(rest)) : null),
+      ),
+      ...order.map(group => groupView(parts, bot, group, inGroup(group))),
+      show(
+        () => plan.get() === undefined,
+        () => kit.loadingState(),
+      ),
+      show(empty, () =>
+        kit.emptyState({ text: () => `Nothing planned yet. Work ${botName(found() ?? { name: '' })} starts shows here.`, flush: true }),
+      ),
+    ),
+  )
+}

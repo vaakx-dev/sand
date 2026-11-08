@@ -1,7 +1,7 @@
 import type { AppendMeta, Entry } from '@sand/chats/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { sessionSettings, type SessionSettings } from '@sand/model/contract'
-import type { Status } from '@sand/ui-shell/contract'
+import type { MenuAction, Status } from '@sand/ui-shell/contract'
 import { type Dispose, event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -190,6 +190,36 @@ export interface BotProfile {
 }
 
 export const botProfile = service<BotProfile>('botProfile')
+
+/** Something that wakes a bot by itself, such as a routine on a schedule or a watch on a page. */
+export interface BotAutomation {
+  id: string
+  /** A kit icon name, such as `clock` for routines and `eye` for watches. */
+  icon: string
+  title: string
+  /** When it wakes the bot, short enough for a chip's list: "Weekdays 9:00", "On changes". */
+  when: string
+  /** What it does or follows, in one line. */
+  detail?: string
+  paused?: boolean
+  /** Why it stopped working, when it did. */
+  error?: string
+  actions(): MenuAction[]
+}
+
+/** A kind of automation, such as routines. Sources sort by `order`; `list` is read reactively. */
+export interface BotAutomationSource {
+  id: string
+  order?: number
+  list(bot: string): BotAutomation[]
+}
+
+/** Collects every bot's automations for its profile, the Automations page and the Listening chip. Provided by the bots UI. */
+export interface BotAutomations {
+  source(source: BotAutomationSource): Dispose
+}
+
+export const botAutomations = service<BotAutomations>('botAutomations')
 
 export const botChange = event<(bot: BotSummary) => void>('bot.change')
 export const botRemove = event<(id: string) => void>('bot.remove')
