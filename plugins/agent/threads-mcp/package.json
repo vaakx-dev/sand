@@ -9,14 +9,17 @@
     "host": "./src/index.ts",
     "cli": "./src/index.ts",
     "label": "Thread tools",
-    "summary": "Lets your threads, your bots and outside agents start, message, read and manage your threads"
+    "summary": "Lets your threads, your bots and outside agents start, message, read and manage your threads",
+    "web": "./src/web/index.ts"
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
     "@sand/mcp-server": "workspace:*",
     "@sand/orchestrator": "workspace:*",
+    "@sand/transcript": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   },

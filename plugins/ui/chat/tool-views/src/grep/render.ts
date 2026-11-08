@@ -31,8 +31,13 @@ const output = (tool: ToolView, { resultText }: ToolViews) => {
   return { rows: all.filter(row => !row.startsWith('…')), stop: all.find(row => row.startsWith('…')) }
 }
 
+const pathView = (path: string) => {
+  const cut = path.lastIndexOf('/') + 1
+  return div({ class: 'font-sans wrap-anywhere text-neutral-100' }, span({ class: 'text-neutral-500' }, path.slice(0, cut)), path.slice(cut))
+}
+
 const hitRow = (line: string, text: string, pattern: RegExp | undefined) =>
-  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, line), span({ class: 'text-neutral-400 wrap-anywhere' }, marked(text, pattern)))
+  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-600 select-none' }, line), span({ class: 'text-neutral-400 wrap-anywhere' }, marked(text, pattern)))
 
 const matches = (tool: ToolView, views: ToolViews) => {
   const pattern = regex(tool, views)
@@ -47,7 +52,7 @@ const matches = (tool: ToolView, views: ToolViews) => {
     const [, file = '', line = '', text = ''] = found
     grouped(files, file, () => []).push(hitRow(line, text, pattern))
   }
-  return [...[...files].map(([file, hits]) => div({ class: 'mt-2 first:mt-0' }, div({ class: 'mb-1 text-neutral-100 wrap-anywhere' }, file), hits)), ...loose]
+  return [...[...files].map(([file, hits]) => div({ class: 'mt-3 first:mt-0' }, div({ class: 'mb-1 font-medium' }, pathView(file)), hits)), ...loose]
 }
 
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
