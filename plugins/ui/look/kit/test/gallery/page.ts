@@ -142,6 +142,18 @@ const gallery = () =>
       line(...(['running', 'waiting', 'ready', 'merged', 'settled', 'idle'] as const).map(state => span({ class: 'flex items-center gap-1 text-xs text-neutral-400' }, kit.stateIcon(state), state))),
     ),
     block('Count chips', chips()),
+    block(
+      'Work row',
+      kit.workRow(
+        { current: true },
+        kit.workRowBody({
+          title: 'Add retry with backoff to the tide table fetcher',
+          end: kit.workStatus('ready'),
+          place: { label: 'harbor', mark: kit.projectMark('harbor') },
+          trail: [kit.monoMeta('sand/tide-table-retry-with-backoff'), kit.badge('success', '#214')],
+        }),
+      ),
+    ),
     block('Group heading', kit.groupHeading('Bots', { icon: 'plus', label: 'New bot', onClick: () => {} })),
     block(
       'Rows',
