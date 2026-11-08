@@ -36,7 +36,7 @@ export const actionRow = (onTouch: () => boolean, extra: string, ...children: Ch
     {
       class: [
         'flex h-6 shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible-within:opacity-100',
-        () => (onTouch() ? 'touch:opacity-100' : 'touch:hidden'),
+        () => (onTouch() ? 'touch:opacity-100' : 'touch:pointer-events-none'),
         extra,
       ],
     },

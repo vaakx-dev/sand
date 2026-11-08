@@ -18,14 +18,14 @@ export const textRow: RowMaker<'text'> = (item, context) =>
     const press = menus.text(context.menu, spec)
     const reveal = tapReveal()
     return div(
-      { class: ['group relative text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-3')], ...press.props, onClick: reveal.onClick },
+      { class: ['group relative text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-1')], ...press.props, onClick: reveal.onClick },
       div({ class: 'chat-row' }, node),
       show(
         () => !railed() && !streaming.get(),
         () =>
           actionRow(
             () => (place?.get().last ?? false) || reveal.tapped.get(),
-            'absolute top-full -left-1 z-10',
+            '-ml-1',
             copyButton({ text: () => text.get(), size: 'sm' }),
             show(
               () => spec().actions.length > 0,
