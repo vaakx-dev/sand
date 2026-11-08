@@ -12,7 +12,7 @@ export interface Placed {
   order: number
 }
 
-export type Drag = number | 'back' | undefined
+export type StackDrag = number | 'back' | undefined
 
 export const phoneWidth = 600
 
@@ -36,7 +36,7 @@ export const shellModel = (kit: Kit) => {
   const sheet = sig<SheetSpec | undefined>(undefined)
   const hiddenSides = stored<string[]>('sand.shell.hidden-sides', [])
   const drawerDrag = sig<number | undefined>(undefined)
-  const backDrag = sig<Drag>(undefined)
+  const stackDrag = sig<StackDrag>(undefined)
   const leaving = sig<Route[]>([])
 
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
@@ -81,6 +81,7 @@ export const shellModel = (kit: Kit) => {
   }
 
   const enter = (name: string) => {
+    nav.ahead.set(0)
     pushLayer(name)
     layer.set(addressSettled() ? addressLayer() : undefined)
     followCover()
@@ -136,7 +137,7 @@ export const shellModel = (kit: Kit) => {
     screens,
     alive,
     leaving,
-    backDrag,
+    stackDrag,
     drawerDrag,
     drawerOpen,
     setDrawer,
@@ -152,11 +153,13 @@ export const shellModel = (kit: Kit) => {
     open,
     leaveNav: () => open(before.get()),
     back: nav.back,
+    ahead: nav.ahead,
+    forward: nav.forward,
     follow() {
       layer.set(addressLayer())
       if (!layer.get()) sheet.set(undefined)
       followCover()
-      backDrag.set(undefined)
+      stackDrag.set(undefined)
       nav.follow()
     },
   }

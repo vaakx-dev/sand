@@ -11,7 +11,6 @@ export const homeScreen = (model: Model) => {
       h1({ class: [brandLook, 'text-lg'] }, 'sand'),
       navList(model, true),
       groupList(model, menu, { phone: true }),
-      div({ class: 'mt-auto pb-2' }, footRow(model, true)),
     ),
     list(
       model.places.home.items,
@@ -19,6 +18,7 @@ export const homeScreen = (model: Model) => {
       placed => placed.get().view,
       div({ class: 'flex shrink-0 flex-col' }),
     ),
+    div({ class: 'shrink-0 px-2 pb-2' }, footRow(model, true)),
     menu.view(),
   )
 }

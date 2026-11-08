@@ -86,6 +86,6 @@ export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] =>
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
   const agentsOf = runningAgents(parts.ctx, parts.threads)
-  const unowned = visibleThreads(parts.threads.list()).filter(thread => !owned(parts.ctx, thread.id))
-  return [...draftEntries, ...unowned.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
+  const listed = visibleThreads(parts.threads.list()).filter(thread => !thread.info.settled && !owned(parts.ctx, thread.id))
+  return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
 }

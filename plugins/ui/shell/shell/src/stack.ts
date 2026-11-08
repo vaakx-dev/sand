@@ -18,7 +18,7 @@ const settleMs = 300
 const without = (routes: Route[], gone: Route[]) => routes.filter(route => !gone.some(other => sameScreen(other, route)))
 
 const motion = (model: Model, depth: number) => {
-  const drag = model.backDrag.get()
+  const drag = model.stackDrag.get()
   return [
     typeof drag === 'number' ? 'transition-none' : 'transition-transform duration-300 ease-out',
     depth < 0 ? 'translate-x-full' : depth > 0 ? '-translate-x-1/4' : '',
@@ -26,8 +26,9 @@ const motion = (model: Model, depth: number) => {
 }
 
 const offset = (model: Model, depth: number) => {
-  const drag = model.backDrag.get()
+  const drag = model.stackDrag.get()
   if (drag === undefined || depth < 0 || depth > 1) return null
+  if (typeof drag === 'number' && drag < 0) return depth === 0 ? { translate: `${drag / 4}px 0` } : null
   if (drag === 'back') return { translate: depth === 0 ? '100% 0' : '0 0' }
   return { translate: depth === 0 ? `${drag}px 0` : `calc(${drag / 4}px - 25%) 0` }
 }
@@ -77,7 +78,7 @@ export const phoneView = (model: Model) => {
       const gone = without(before, now)
       for (const route of without(now, before)) fresh.add(screenKey(route))
       before = now
-      model.backDrag.set(undefined)
+      model.stackDrag.set(undefined)
       if (!gone.length) return
       model.leaving.update(leaving => [...without(leaving, gone), ...gone])
       onTimeout(() => model.leaving.update(leaving => without(leaving, gone)), settleMs, view)

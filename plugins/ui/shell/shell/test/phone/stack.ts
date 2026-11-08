@@ -90,6 +90,20 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page)).toBe('home')
   })
 
+  test('a swipe left goes forward to the screen just left, and a short one springs back', async () => {
+    const { page } = phone
+    await pushPlain()
+    await tap(page, 'Back')
+    expect(await screen(page, 'home')).toBe('home')
+    await swipe(phone, [size.width - 60, mid()], [size.width - 110, mid()])
+    expect(await screen(page)).toBe('home')
+    await swipe(phone, [size.width - 60, mid()], [30, mid()])
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await swipe(phone, [size.width - 60, mid()], [30, mid()])
+    expect(await screen(page)).toBe('fixture/plain')
+    await tap(page, 'Back')
+  })
+
   test('the screen edge belongs to the browser in a tab, and swipes back in the installed app', async () => {
     await pushPlain()
     await swipe(phone, [4, mid()], [size.width - 30, mid()])

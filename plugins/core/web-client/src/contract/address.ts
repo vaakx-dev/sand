@@ -76,6 +76,8 @@ export const updateAddress = (params: AddressParams, state: AddressState = {}) =
 
 export const backAddress = (steps = 1) => history.go(-(addressLayer() ? steps + 1 : steps))
 
+export const forwardAddress = () => history.forward()
+
 export const onAddressChange = (changed: () => void) =>
   listen(window, 'popstate', () => {
     settle()
