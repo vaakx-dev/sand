@@ -160,6 +160,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
       }),
       ctx.on(threadsChange, render),
       ctx.on(modelsChange, refresh),
+      ctx.watch(threadOwners, () => refresh()),
       effect(() => {
         parts.version.get()
         untrack(refresh)
