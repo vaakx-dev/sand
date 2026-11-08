@@ -15,7 +15,7 @@ export const page = (build: string, pc: string, off: string[]) => `<!doctype htm
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="sand">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="${homePcMeta}" content="${attribute(pc)}">
   <meta name="${pluginsOffMeta}" content="${attribute(off.join(' '))}">
   <title>sand</title>

@@ -51,7 +51,7 @@ export const shellModel = (kit: Kit) => {
   const pushed = derive(() => (current.get().kind === homeRoute ? [] : nav.place.get().stack.filter(route => known(route.kind))))
 
   const routeOf = (key: string) => (phone.get() ? pushed.get() : [current.get()]).find(route => screenKey(route) === key)
-  const screens = screenCache(specFor, routeOf)
+  const screens = screenCache(specFor, routeOf, text => kit.barTitle(text))
   const screen = derive(() => screens.get(current.get()))
   const alive = derive(() => new Set((phone.get() ? [...pushed.get(), ...leaving.get()] : [current.get()]).map(screenKey)))
 

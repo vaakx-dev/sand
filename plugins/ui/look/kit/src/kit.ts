@@ -14,7 +14,7 @@ import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { pageBody } from './heads/page-body'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
 import { groupHeading, sectionHeading } from './heads/section-heading'
-import { barTitle, countMark, metaLine, pageTitle, pathLabel, rowTitle, secondaryText, sectionTitle } from './heads/text'
+import { barTitle, countMark, metaLine, pageTitle, pathLabel, rowTitle, secondaryText, sectionTitle, sheetTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
 import { modelLogo, providerColor, providerIcon } from './icons/providers'
@@ -216,6 +216,7 @@ export const kit = {
   sheetHead,
   sheetStep,
   sheetText: secondaryText,
+  sheetTitle,
   shine,
   showSideButton,
   shrinkBadge,

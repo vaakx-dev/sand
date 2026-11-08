@@ -13,7 +13,7 @@ import { headers } from './page/headers'
 import { iconRoutes } from './page/icons'
 import { page } from './page/page'
 import { scriptResponse } from './page/script'
-import { manifestRoute } from './pwa/manifest'
+import { manifestRoute, schemeHint } from './pwa/manifest'
 import { workerRoute } from './pwa/worker'
 
 export default definePlugin({
@@ -38,7 +38,7 @@ export default definePlugin({
     ctx.provide(webExtensions, { list: states.list })
     const { id: pc } = await loadPcIdentity(home)
     const routes = {
-      '/': () => new Response(page(site.current().id, pc, states.unmounted()), { headers: headers('text/html') }),
+      '/': () => new Response(page(site.current().id, pc, states.unmounted()), { headers: { ...headers('text/html'), 'accept-ch': schemeHint } }),
       '/app.js': (request: Request) => scriptResponse(request, site.current()),
       '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,

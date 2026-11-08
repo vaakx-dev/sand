@@ -149,7 +149,8 @@ export interface SideFrame {
 }
 
 /**
- * What a route draws. `head` fills the header: a title, a breadcrumb or a tab strip. The shell adds the
+ * What a route draws. `head` fills the header: a title, a breadcrumb or a tab strip. A plain string becomes the
+ * screen's title and its one `h1`; a richer head should name the screen with `kit.barTitle`. The shell adds the
  * back button on phones, the sidebar toggle in the `drawer` state and the show-side button while the side
  * frame is hidden. Each function is called once per screen; return reactive children for anything that changes,
  * reading `state()` to differ between phones and wide screens.

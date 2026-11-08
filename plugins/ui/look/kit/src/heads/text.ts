@@ -1,12 +1,16 @@
-import { h1, h2, p, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
+import { h1, h2, h3, p, read, span, type Child, type MaybeReactive } from '@vaakx-dev/vrui'
 
 export const pageTitleLook = 'min-w-0 text-xl font-semibold tracking-tight text-neutral-100'
 
-export const pageTitle = (...children: Child[]) => h1({ class: pageTitleLook }, ...children)
+export const pageTitle = (...children: Child[]) => h2({ class: pageTitleLook }, ...children)
 
-export const barTitle = (...children: Child[]) => h2({ class: 'min-w-0 flex-1 truncate text-sm font-medium text-neutral-100' }, ...children)
+const barTitleLook = 'min-w-0 flex-1 truncate text-sm font-medium text-neutral-100'
 
-export const sectionTitle = (...children: Child[]) => h2({ class: 'min-w-0 text-sm font-semibold text-neutral-100' }, ...children)
+export const barTitle = (...children: Child[]) => h1({ class: barTitleLook }, ...children)
+
+export const sheetTitle = (...children: Child[]) => h2({ class: barTitleLook }, ...children)
+
+export const sectionTitle = (...children: Child[]) => h3({ class: 'min-w-0 text-sm font-semibold text-neutral-100' }, ...children)
 
 export const secondaryLook = 'text-sm text-neutral-400'
 

@@ -85,7 +85,7 @@ export const sidebar = (model: Model, { class: extra, ...props }: Props<HTMLElem
   const menu = model.kit.contextMenu()
   return nav(
     { ...props, 'aria-label': 'Sidebar', class: ['flex h-full w-64 shrink-0 flex-col bg-neutral-950', extra] },
-    div({ class: 'flex h-12 shrink-0 items-center px-4' }, model.kit.barTitle('sand')),
+    div({ class: 'flex h-12 shrink-0 items-center px-4 text-sm font-semibold text-neutral-100' }, 'sand'),
     div(
       { class: 'flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-4' },
       navList(model, 'top', div({ class: 'flex flex-col gap-px' })),

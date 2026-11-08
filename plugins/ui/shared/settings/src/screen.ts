@@ -20,14 +20,14 @@ export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, 
   const list = (look: string) => listView(kit, { store, current, choose, class: look })
   return {
     split: true,
-    head: () => span({ class: 'ml-2 flex min-w-0 flex-1' }, kit.headTitle(2, () => (phone.get() && id ? (page.get()?.label ?? '') : 'Settings'))),
+    head: () => span({ class: 'ml-2 flex min-w-0 flex-1' }, kit.barTitle(() => (phone.get() && id ? (page.get()?.label ?? '') : 'Settings'))),
     main: () =>
       div(
         { class: 'flex min-h-0 min-w-0 flex-1' },
         dynamicChild(phone, onPhone => {
           if (onPhone && !id) return list('flex-1')
           const shown = pageView(kit, { store, page, titled, choose })
-          return onPhone ? shown : div({ class: 'flex min-h-0 min-w-0 flex-1' }, list('w-48 shrink-0 border-r border-neutral-800 lg:w-64'), shown)
+          return onPhone ? shown : div({ class: 'flex min-h-0 min-w-0 flex-1' }, list('w-48 shrink-0 lg:w-64'), shown)
         }),
       ),
   }
