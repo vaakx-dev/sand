@@ -47,7 +47,7 @@ const row = (kit: Kit, live: Live, label: string, open: () => void) =>
 
 const inline = (kit: Kit, live: Live, label: string, open: () => void) =>
   kit.plainButton(
-    { class: 'inline-flex max-w-full items-center gap-1 align-bottom underline hover:text-neutral-400', onClick: open },
+    { class: 'inline-flex max-w-full items-center gap-1 underline hover:text-neutral-400', onClick: open },
     stateMark(kit, live),
     span({ class: 'min-w-0 truncate' }, label),
   )
