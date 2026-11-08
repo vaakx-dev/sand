@@ -32,6 +32,8 @@ const blank = (info: SessionSummary, device: string): Thread => ({
   entries: new Map(),
   loaded: false,
   running: false,
+  turn: false,
+  jobs: new Set(),
   live: [],
   tools: { running: new Set(), results: new Map(), logs: new Map() },
   pending: [],
@@ -144,6 +146,7 @@ export class Store {
   changed(id?: string, list = false) {
     const thread = id ? this.threads.get(id) : undefined
     if (thread) {
+      thread.running = thread.turn || thread.jobs.size > 0
       thread.version++
       this.dirty.add(thread.id)
       for (const watcher of this.watchers) watcher.changed(thread.id)

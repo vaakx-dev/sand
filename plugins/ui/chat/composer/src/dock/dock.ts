@@ -15,9 +15,9 @@ export const dock = ({ ctx, model, slots }: FieldParts, field: Field, ...banners
     { class: 'shrink-0 pt-2 pb-3' },
     div(
       { class: ['relative px-3 md:px-4', ctx.kit.pageColumn] },
-      slots.host('above', 'flex flex-col'),
-      div({ class: 'flex flex-col', hidden: completing }, slots.host('banner', 'contents', bannerRow), failureBanner(ctx, model), ...banners),
-      tab(ctx.kit, slots, completing),
+      slots.host('above', 'flex items-center gap-1.5', field.here),
+      div({ class: 'flex flex-col', hidden: completing }, slots.host('banner', 'contents', field.here, bannerRow), failureBanner(ctx, model), ...banners),
+      tab(ctx.kit, slots, completing, field.here),
       div(
         { class: 'relative', onMount: () => ctx.kit.onPressOutside(completions, field.completion.close, [completions, field.editor.node]) },
         completions,

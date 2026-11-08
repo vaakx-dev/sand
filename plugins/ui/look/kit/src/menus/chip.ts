@@ -2,7 +2,6 @@ import { read, SPACE, span, type Child, type ClassValue, type MaybeReactive, typ
 import { plainButton } from '../buttons/button'
 import { icon } from '../icons/lucide'
 import { popover } from './menu'
-import { pickerLook } from './picker'
 
 export type ChipProps = Props<HTMLButtonElement> & { active: MaybeReactive<boolean>; menu?: boolean; warning?: MaybeReactive<boolean> }
 
@@ -16,7 +15,11 @@ export const chipButton = ({ active, menu = false, warning = false, class: extra
   return plainButton(
     {
       ...props,
-      class: ['inline-flex h-6 min-w-0 items-center gap-1.5 px-2', pickerLook(active, idle), extra],
+      class: [
+        'inline-flex h-6 min-w-0 items-center gap-1.5 rounded-full px-3 text-xs transition-colors hover:bg-neutral-800 hover:text-neutral-100',
+        () => (read(active) ? 'bg-neutral-800 text-neutral-100' : idle()),
+        extra,
+      ],
     },
     ...children,
     menu ? span({ class: 'inline-flex shrink-0' }, icon('down', 'sm')) : null,

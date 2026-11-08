@@ -3,6 +3,7 @@ import type { Wire, WireListener } from '@sand/devices-contract'
 import type { Request, WireEvent } from '@sand/host-hub/contract'
 import { type LiveSnapshot, liveSnapshot, llmEventWire, type Mark } from '@sand/server/contract'
 import { type TurnInfo, turnChangeWire } from '@sand/turns-contract/contract'
+import { jobEndWire, jobStartWire, type WireJob } from '@sand/jobs/contract'
 import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { createApp } from 'drydock'
 import { listenThreads } from '../src/threads/events'
@@ -107,4 +108,18 @@ test('a thread knows what its turn waits on until the turn moves on or ends', ()
   change({ ...turn, status: 'waiting', waiting })
   change({ ...turn, status: 'completed', ended: 2 })
   expect(store.threads.get('chat')).toMatchObject({ running: false, waiting: undefined })
+})
+
+test('a thread between turns counts as running while a background job it launched is still going', () => {
+  const { wire, emit } = fakeWire()
+  const store = new Store(createApp(), 'home')
+  store.upsert(info('chat'), pc)
+  listenThreads(wire, store, () => {})
+  const job: WireJob = { id: 'job-1', kind: 'command', label: 'bun test', parent: 'chat', status: 'running', started: 1 }
+
+  emit(jobStartWire, job)
+  expect(store.threads.get('chat')?.running).toBe(true)
+
+  emit(jobEndWire, [{ ...job, status: 'done', ended: 2 }, 'ok'])
+  expect(store.threads.get('chat')?.running).toBe(false)
 })

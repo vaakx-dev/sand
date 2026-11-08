@@ -45,7 +45,7 @@ export const listenLegacy = (wire: Wire, store: Store) =>
 export const legacyTurns = (wire: Wire, store: Store): Turns => {
   const run = async (id: string, prompt: Prompt, settings?: SessionSettings) => {
     const thread = store.threads.get(id)!
-    thread.running = true
+    thread.turn = true
     thread.started = Date.now()
     store.changed(id, true)
     const started = store.whenStarted(id)
@@ -54,7 +54,7 @@ export const legacyTurns = (wire: Wire, store: Store): Turns => {
     try {
       await Promise.race([started, running])
     } catch (error) {
-      thread.running = false
+      thread.turn = false
       thread.started = undefined
       store.changed(id, true)
       throw error

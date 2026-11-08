@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
-import type { ChipItem, ChipScope, ChipSource } from './contract'
+import type { ChipItem, ChipScope, ChipSource, Status } from './contract'
 import { statusIcon } from './marks'
 
 interface Chip {
@@ -33,6 +33,11 @@ const itemRow = (kit: Kit, item: ChipItem, close: () => void) => {
   })
 }
 
+const leadIcon = (kit: Kit, status: Status) =>
+  status === 'running'
+    ? span({ role: 'img', 'aria-label': 'Running', class: 'inline-flex shrink-0 animate-spin motion-reduce:animate-none', style: { animationDuration: '2.4s' } }, kit.icon('working', 'sm'))
+    : statusIcon(kit, status)
+
 const chipView = (kit: Kit, chip: Sig<Chip>, scope: ChipScope) => {
   const items = derive(() => chip.get().sources.flatMap(source => source.items(scope)))
   const head = () => chip.get().head
@@ -46,7 +51,7 @@ const chipView = (kit: Kit, chip: Sig<Chip>, scope: ChipScope) => {
           count: () => items.get().length,
           lead: dynamicChild(
             () => head().status,
-            status => (status ? statusIcon(kit, status) : null),
+            status => (status ? leadIcon(kit, status) : null),
           ),
           items: close => [
             kit.sectionHeading(

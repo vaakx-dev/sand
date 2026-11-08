@@ -1,7 +1,7 @@
 import type { DraftTarget } from '@sand/web-client/contract'
 import { effect, onTimeout, untrack } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
-import type { Drafts } from '../contract'
+import type { DraftStore, Drafts } from '../contract'
 import type { Model } from '../model'
 import { createListed } from './listed'
 import { createStore, isBlank, type Saved } from './store'
@@ -17,8 +17,8 @@ const keyOf = (ctx: ComposerContext, id: string | undefined): Key | undefined =>
   return target && { id: target.id, target }
 }
 
-export const draftSession = (ctx: ComposerContext, model: Model, switched: () => void) => {
-  const store = createStore()
+export const draftSession = (ctx: ComposerContext, model: Model, remote: () => DraftStore | undefined, switched: () => void) => {
+  const store = createStore(remote, model.upload)
   const listed = createListed(ctx)
   let key = keyOf(ctx, ctx.threads.current()?.id)
   let ready = false
@@ -45,7 +45,7 @@ export const draftSession = (ctx: ComposerContext, model: Model, switched: () =>
   const restore = async (next: Key) => {
     const saved = await store.load(next.id)
     if (next !== key) return
-    if (!isBlank(saved)) {
+    if (!isBlank(saved) && model.empty.get()) {
       model.records.list.set(saved.records ?? [])
       model.text.set(saved.text)
       model.attached.set(saved.items)

@@ -16,6 +16,7 @@ import { joinDisposers } from '@sand/util'
 import type { Thread } from '../contract'
 import { stale } from './hello'
 import { listenLegacy } from './legacy'
+import { jobEndWire, jobStartWire } from '@sand/jobs/contract'
 import { addLog, catchUp, clearTurn } from './live'
 import type { Store } from './store'
 
@@ -30,7 +31,7 @@ const advance = (thread: Thread, entry: EntryHead) => {
 const follows = (last: Mark | undefined, mark: Mark) => (last?.turn === mark.turn ? mark.n === last.n + 1 : mark.n === 1)
 
 const stop = (thread: Thread) => {
-  thread.running = false
+  thread.turn = false
   clearTurn(thread)
   thread.step = undefined
 }
@@ -77,10 +78,29 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
       everyPc,
     ),
     wire.on(
+      jobStartWire,
+      job => {
+        const found = known(job.parent)
+        if (!found) return
+        found.jobs.add(job.id)
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
+      jobEndWire,
+      ([job]) => {
+        const found = known(job.parent)
+        if (!found?.jobs.delete(job.id)) return
+        store.changed(found.id)
+      },
+      everyPc,
+    ),
+    wire.on(
       turnStartWire,
       ([session], device) => {
         const found = thread(session, device)
-        found.running = true
+        found.turn = true
         found.started ??= Date.now()
         found.ended = undefined
         store.started(found.id)
@@ -105,7 +125,7 @@ export const listenThreads = (wire: Wire, store: Store, load: (id: string) => vo
         if (!found) return
         if (info.ended) stop(found)
         else {
-          found.running = true
+          found.turn = true
           found.started = info.started
           found.waiting = info.waiting
         }

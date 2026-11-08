@@ -1,5 +1,5 @@
 import { pressMenu } from '../menus/press'
-import type { MenuRequest, MenuSpec } from '../contract'
+import type { MenuRequest, MenuSpec, PressAt } from '../contract'
 import { dynamicChild, portal, sig } from '@vaakx-dev/vrui'
 import { menuPopup } from './popup'
 import { menuSheet } from './sheet'
@@ -13,9 +13,9 @@ export const contextMenu = () => {
     if (request.actions.length) opened.set(request)
   }
 
-  const target = (spec: () => MenuSpec | undefined, onClick?: (event: MouseEvent) => void) => {
+  const target = (spec: (at: PressAt) => MenuSpec | undefined, onClick?: (event: MouseEvent) => void) => {
     const press = pressMenu(at => {
-      const found = spec()
+      const found = spec(at)
       if (found) open({ ...at, ...found })
     })
     return {
