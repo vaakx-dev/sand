@@ -8,7 +8,7 @@ export type CodeBlockProps = Props<HTMLPreElement> & {
 
 export const codeBlock = ({ copy, danger = false, class: extra, ...props }: CodeBlockProps, ...children: Child[]) =>
   div(
-    { class: 'flex min-w-0 items-start gap-2 rounded-xl bg-neutral-800 p-3' },
+    { class: 'flex min-w-0 items-start gap-2 rounded-lg bg-neutral-800 p-3' },
     el(
       'pre',
       {

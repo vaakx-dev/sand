@@ -1,6 +1,10 @@
-export const background = '#0e0e0f'
-export const text = '#f2f2f3'
-export const muted = '#a3a3a9'
-export const raised = '#202023'
-export const accent = '#c89d5e'
+import { sandPalette } from '@sand/ui-theme/contract'
+
+const { neutral, accent: accents } = sandPalette
+
+export const background = neutral['900']
+export const text = neutral['100']
+export const muted = neutral['400']
+export const raised = neutral['800']
+export const accent = accents['500']
 export const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", sans-serif'

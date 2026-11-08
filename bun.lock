@@ -2287,6 +2287,10 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "lucide": "^1.52.0",
       },
+      "devDependencies": {
+        "@sand/ui-theme": "workspace:*",
+        "playwright": "^1.64.1",
+      },
     },
     "plugins/ui/look/theme": {
       "name": "@sand/ui-theme",

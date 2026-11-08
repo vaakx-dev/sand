@@ -15,8 +15,8 @@ export const paneHead = ({ led = false, class: extra, ...props }: PaneHeadProps,
   div({ ...props, class: ['flex h-12 shrink-0 items-center gap-2 pr-3', () => (read(led) ? 'pl-2' : 'pl-4'), extra] }, ...children)
 
 const titles = {
-  1: { tag: h1, size: 'text-xl font-semibold' },
-  2: { tag: h2, size: 'text-base font-medium' },
+  1: { tag: h1, size: 'text-lg font-semibold' },
+  2: { tag: h2, size: 'text-sm font-medium' },
 }
 
 export const headTitle = (level: 1 | 2, title: Child) => {

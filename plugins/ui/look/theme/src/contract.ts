@@ -14,3 +14,5 @@ export interface Theme {
 }
 
 export const theme = service<Theme>('theme')
+
+export { sand } from './sand'

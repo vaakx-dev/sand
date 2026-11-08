@@ -15,5 +15,5 @@ export const toggleSwitch = ({ on, class: extra, ...props }: Props<HTMLButtonEle
         extra,
       ],
     },
-    span({ class: 'h-3 w-3 rounded-full bg-white group-disabled:bg-white/40' }),
+    span({ class: ['h-3 w-3 rounded-full group-disabled:bg-white/40', () => (read(on) ? 'bg-accent-950' : 'bg-white')] }),
   )

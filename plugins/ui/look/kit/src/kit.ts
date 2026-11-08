@@ -5,13 +5,14 @@ import { floatButton } from './buttons/float'
 import { quoteButton } from './buttons/quote'
 import { rowAction } from './buttons/row-action'
 import { toggleSwitch } from './buttons/toggle'
+import { card } from './cards/card'
 import { codeBlock } from './code/code-block'
 import { choiceChips } from './context-menu/chips'
 import { contextMenu, menuLayer } from './context-menu/menu'
 import { searchField, searchRow, textArea, textInput } from './fields/field'
 import { appIcon, showSideButton, sideHead } from './heads/app-icon'
 import { headTitle, pageColumn, pageHead, paneHead } from './heads/page-head'
-import { sectionHeading } from './heads/section-heading'
+import { groupHeading, sectionHeading } from './heads/section-heading'
 import { countMark, metaLine, pathLabel, rowTitle } from './heads/text'
 import { projectAvatar, projectIcon } from './icons/avatar'
 import { icon } from './icons/lucide'
@@ -20,14 +21,18 @@ import { layer } from './layer'
 import { fileKindMark } from './marks/file-kind'
 import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
+import { monogram } from './marks/monogram'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
 import { keycap } from './marks/keycap'
 import { textRule } from './marks/rule'
 import { shine } from './marks/shine'
+import { stateIcon } from './marks/state-icon'
 import { stepMark } from './marks/state-marks'
 import { statusBadge, statusLabel } from './marks/status'
 import { toneText } from './marks/tones'
 import { chipButton, chipPopover } from './menus/chip'
+import { chipRow } from './menus/chip-row'
+import { countChip } from './menus/count-chip'
 import { dropdown } from './menus/dropdown'
 import { menuSeparator, popover } from './menus/menu'
 import { choiceCheck, choiceItem, menuItem } from './menus/menu-item'
@@ -37,6 +42,7 @@ import { sideColumn } from './nav/side-column'
 import { bannerTitle, statusBanner } from './notes/banner'
 import { callout, errorText } from './notes/notes'
 import { checkRow } from './rows/check-row'
+import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
@@ -51,7 +57,9 @@ import { overlay, railOverlay, sheet, sheetBody, sheetFoot, sheetHead, sheetStep
 import { sheetText } from './sheets/text'
 import { viewerBar, viewerShell, zoomControls } from './sheets/viewer'
 import { emptyBlock, emptyState, errorState, loadingState } from './states/states'
+import { tab, tabStrip } from './tabs/tabs'
 import { diffRow } from './tools/diff'
+import { diffBlock } from './tools/diff-block'
 import { fold, toolBody, toolCard } from './tools/tool-card'
 import { editing, selecting } from './gesture/busy'
 import { direction } from './gesture/direction'
@@ -80,23 +88,28 @@ export const kit = {
   bannerTitle,
   bottomSheet,
   callout,
+  card,
   checkMark,
   checkRow,
   chevron,
   chipButton,
   chipPopover,
+  chipRow,
   choiceCheck,
   choiceChips,
   choiceItem,
+  choiceList,
   closeButton,
   codeBlock,
   contextMenu,
   controlButton,
   copyButton,
   copyText,
+  countChip,
   countMark,
   delayed,
   deviceCode,
+  diffBlock,
   diffRow,
   dismissible,
   dockFade,
@@ -116,6 +129,7 @@ export const kit = {
   followEnd,
   fold,
   gesture,
+  groupHeading,
   hasOpenLayer,
   headTitle,
   icon,
@@ -140,6 +154,7 @@ export const kit = {
   metaLine,
   modal,
   modelLogo,
+  monogram,
   navActionIcon,
   navButton,
   nearEnd,
@@ -202,12 +217,15 @@ export const kit = {
   spinner,
   stableGutter,
   starMark,
+  stateIcon,
   statusBadge,
   statusBanner,
   statusLabel,
   statusLine,
   stepMark,
   style,
+  tab,
+  tabStrip,
   textArea,
   textInput,
   textRule,

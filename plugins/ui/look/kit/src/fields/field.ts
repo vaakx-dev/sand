@@ -4,7 +4,7 @@ import { icon } from '../icons/lucide'
 
 const inputSizes = { sm: 'h-8 text-sm', md: 'h-12 text-base' }
 
-const fieldLook = 'w-full min-w-0 rounded-md bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-700 placeholder:text-neutral-500 focus-visible:ring-accent-500'
+const fieldLook = 'w-full min-w-0 rounded-md bg-neutral-900 px-3 text-neutral-100 outline-none ring-1 ring-neutral-700 placeholder:text-neutral-500 focus-visible:ring-accent-800'
 
 export type TextAreaProps = Props<HTMLTextAreaElement> & { bindValue: Sig<string>; rows?: number }
 
@@ -26,7 +26,7 @@ export const textArea = ({ rows = 4, class: extra, ...props }: TextAreaProps) =>
 
 export const searchField = ({ class: extra, ...props }: Props<HTMLInputElement>) =>
   label(
-    { class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-neutral-900 px-3 text-neutral-500 ring-1 ring-neutral-700 focus-visible-within:ring-accent-500' },
+    { class: 'flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-neutral-900 px-3 text-neutral-500 ring-1 ring-neutral-700 focus-visible-within:ring-accent-800' },
     icon('search', 'md'),
     input({
       enterKeyHint: 'search',

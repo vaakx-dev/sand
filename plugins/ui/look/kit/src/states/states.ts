@@ -19,7 +19,7 @@ export interface ErrorProps extends StateProps {
   retry?: () => void
 }
 
-const pads: Record<Surface, string> = { page: 'px-2 py-2', raised: 'px-2 py-2', group: 'min-h-12 bg-neutral-800 px-4 py-3' }
+const pads: Record<Surface, string> = { page: 'px-2 py-2', raised: 'px-2 py-2', group: 'min-h-12 bg-neutral-900 px-4 py-3' }
 
 const padOf = ({ surface = 'page', flush = false }: StateProps) => (flush ? 'py-2' : pads[surface])
 
@@ -47,7 +47,7 @@ export interface BlockProps {
 export const emptyBlock = ({ icon: name, title, text, action }: BlockProps) =>
   div(
     { class: 'flex flex-col items-center gap-2 px-4 py-12 text-center' },
-    span({ class: 'mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-800 text-neutral-400' }, icon(name, 20)),
+    span({ class: 'mb-1 inline-flex text-neutral-500' }, icon(name, 20)),
     p({ class: 'text-sm font-semibold text-neutral-100' }, title),
     p({ class: 'max-w-sm text-sm text-neutral-400' }, text),
     action ? div({ class: 'mt-2 flex' }, action) : null,
