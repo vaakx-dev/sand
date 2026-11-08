@@ -1601,6 +1601,13 @@
         "zod": "^4.6.5",
       },
     },
+    "plugins/devices/ssh": {
+      "name": "@sand/devices-ssh",
+      "version": "0.0.0",
+      "dependencies": {
+        "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+      },
+    },
     "plugins/devices/ui": {
       "name": "@sand/devices-ui",
       "version": "0.0.0",
@@ -2527,6 +2534,8 @@
     "@sand/devices-peers": ["@sand/devices-peers@workspace:plugins/devices/peers"],
 
     "@sand/devices-registry": ["@sand/devices-registry@workspace:plugins/devices/registry"],
+
+    "@sand/devices-ssh": ["@sand/devices-ssh@workspace:plugins/devices/ssh"],
 
     "@sand/devices-ui": ["@sand/devices-ui@workspace:plugins/devices/ui"],
 

@@ -1,0 +1,12 @@
+{
+  "name": "@sand/devices-ssh",
+  "version": "0.0.0",
+  "description": "Uses hosts from your SSH config, or ones you type, as your PCs, and sets sand up on them over SSH",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "dependencies": {
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}
