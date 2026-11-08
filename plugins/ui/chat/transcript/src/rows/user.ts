@@ -110,10 +110,10 @@ export const userMessage = (item: UserItem, context: RowContext, actions: (text:
       ),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
       div(
-        { class: 'flex min-w-0 max-w-full items-end gap-1' },
+        { class: 'relative min-w-0 max-w-full' },
         actionRow(
           () => reveal.tapped.get(),
-          '',
+          'absolute right-full bottom-0 mr-1',
           show(
             () => Boolean(shown.get()),
             () => copyButton({ text: () => shown.get(), formats: () => contextFormats(shown.get(), records), size: 'sm' }),
