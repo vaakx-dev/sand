@@ -3,9 +3,12 @@ import type { TooltipModel } from './model'
 
 const element = (target: EventTarget | null) => (target instanceof Element ? target : null)
 
-const pointer = ({ pointerType, clientX, clientY }: PointerEvent) => (pointerType === 'touch' ? undefined : { x: clientX, y: clientY })
+const hovers = matchMedia('(any-hover: hover)')
+
+const pointer = ({ pointerType, clientX, clientY }: PointerEvent) => (pointerType === 'touch' || !hovers.matches ? undefined : { x: clientX, y: clientY })
 
 export const followEvents = (model: TooltipModel) => {
+  let typing = false
   listen<PointerEvent>(document, 'pointerover', event => {
     const target = element(event.target)
     const at = pointer(event)
@@ -21,12 +24,22 @@ export const followEvents = (model: TooltipModel) => {
     { passive: true },
   )
   listen<PointerEvent>(document, 'pointerout', event => model.out(event.relatedTarget))
-  listen(document, 'pointerdown', event => model.press(element(event.target)), true)
+  listen<PointerEvent>(
+    document,
+    'pointerdown',
+    event => {
+      typing = false
+      if (!pointer(event)) model.track(undefined)
+      model.press(element(event.target))
+    },
+    true,
+  )
   listen(document, 'focusin', event => {
     const target = element(event.target)
-    if (target) model.focus(target)
+    if (target && typing) model.focus(target)
   })
   listen(document, 'focusout', event => model.blur(event.target))
+  listen(document, 'keydown', () => (typing = true), true)
   listen<KeyboardEvent>(document, 'keydown', ({ key, target }) => {
     if (key === 'Escape') model.escape()
     else if (key === 'Enter' || key === ' ') model.activate(target)
