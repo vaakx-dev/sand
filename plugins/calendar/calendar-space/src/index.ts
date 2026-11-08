@@ -60,7 +60,10 @@ export default definePlugin({
             {
               class: 'flex h-full min-h-0 flex-1 flex-col',
               onMount: node => {
-                resizeObserver(node, ([entry]) => model.narrow.set((entry?.contentRect.width ?? narrowBelow) < narrowBelow))
+                resizeObserver(node, ([entry]) => {
+                  const width = entry?.contentRect.width ?? 0
+                  if (width > 0) model.narrow.set(width < narrowBelow)
+                })
               },
             },
             dynamicChild(model.mode, mode => (mode === 'agenda' ? agendaView(kit, model, { open, add: () => add() }) : weekView(kit, model, { open, addAt: add }))),
