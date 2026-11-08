@@ -31,7 +31,7 @@ export interface Bot {
   job: string
   models: ModelPolicy
   computer: Computer
-  project: string | null
+  projects: string[]
   paused: boolean
   budget: number | null
   created: number
@@ -98,6 +98,8 @@ const modelChoice = sessionSettings.pick({ model: true, effort: true })
 
 const computer = z.union([z.enum(['none', 'own', 'this-pc']), z.templateLiteral(['pc:', z.string().min(1)])])
 
+export const projectIds = z.array(z.string().min(1)).transform(ids => [...new Set(ids)])
+
 const botFields = z.object({
   name: z.string().trim().min(1).max(60),
   initial: z.string().trim().min(1).max(2),
@@ -105,7 +107,7 @@ const botFields = z.object({
   job: z.string().max(20_000),
   models: z.object({ main: modelChoice, quick: modelChoice }),
   computer,
-  project: z.string().min(1).nullable(),
+  projects: projectIds,
   paused: z.boolean(),
   budget: z.number().positive().max(1_000_000).nullable(),
 })

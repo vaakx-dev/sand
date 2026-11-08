@@ -88,7 +88,7 @@ export const createBots = (ctx: Context, { db, tx }: Ledger, root: string, llm: 
         color: freshColor(records.list()),
         job: '',
         computer: 'none',
-        project: null,
+        projects: [],
         paused: false,
         budget: null,
         ...spec,

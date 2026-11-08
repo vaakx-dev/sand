@@ -31,7 +31,7 @@ const messages = (entries: BotEntry[]) => entries.flatMap(entry => (entry.type =
 
 test('a message to a bot runs a turn on its own conversation with its job, memory and model', async () => {
   const { ask, requests } = await start([[said('Noted.')]])
-  const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
+  const bot = await ask(botCreate, { name: 'Calendar', job: 'Keep my calendar.', projects: ['family'], models: { main: { model: 'fake/m', effort: 'low' }, quick: {} } })
   await ask(memoryWrite, { bot: bot.id, text: 'Gym on Mondays.' })
 
   expect(await ask(botSend, { bot: bot.id, prompt: 'Lunch with Ana is every Friday', clientRequestId: 'one' })).toMatchObject({ disposition: 'started' })
@@ -44,6 +44,8 @@ test('a message to a bot runs a turn on its own conversation with its job, memor
   expect(system).toContain('## Avoid dumb moves')
   expect(system).toContain('Keep my calendar.')
   expect(system).toContain('<memory>\nGym on Mondays.\n</memory>')
+  expect(system).toContain('## Your projects')
+  expect(system).toContain('- family: no folder on this PC')
   expect(first.messages).toEqual([{ role: 'user', content: [expect.objectContaining(said('Lunch with Ana is every Friday'))] }])
 
   const { entries } = await ask(botConversation, { bot: bot.id })

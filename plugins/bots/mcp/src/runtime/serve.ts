@@ -28,7 +28,7 @@ const rowOf = (bot: BotSummary): BotRow => ({
   job: bot.job.slice(0, jobLength),
   status: bot.status,
   ...(bot.hold && { hold: bot.hold }),
-  project: bot.project,
+  projects: bot.projects,
   budget: bot.budget,
   spent: cents(bot.spent),
 })
@@ -51,18 +51,20 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
     return found
   }
 
-  const placed = (project: string | null) => {
-    if (project !== null && !ctx.get(projectFiles)?.copies().some(copy => copy.project === project)) throw failure('not_found', `Project ${project} has no folder on this PC`)
-    return project
+  const placed = (projects: string[], before: string[]) => {
+    const here = new Set(ctx.get(projectFiles)?.copies().map(copy => copy.project))
+    const missing = projects.find(project => !before.includes(project) && !here.has(project))
+    if (missing) throw failure('not_found', `Project ${missing} has no folder on this PC`)
+    return projects
   }
 
-  const set = ({ bot, name, job, project, paused, budget }: BotSet, actor: Actor | undefined) => {
+  const set = ({ bot, name, job, projects, paused, budget }: BotSet, actor: Actor | undefined) => {
     const before = botOf(bot, actor)
     if (budget !== undefined && actor?.owner === 'bot' && actor.id === before.id) throw failure('denied', "A bot can't change its own spend limit")
     const after = ctx.bots.update(before.id, {
       ...(name && { name }),
       ...(job && { job }),
-      ...(project !== undefined && { project: placed(project) }),
+      ...(projects && { projects: placed(projects, before.projects) }),
       ...(paused !== undefined && { paused }),
       ...(budget !== undefined && { budget }),
     })
