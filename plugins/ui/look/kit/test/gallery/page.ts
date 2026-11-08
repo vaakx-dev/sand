@@ -82,7 +82,7 @@ const sheetSample = () =>
     kit.sheetBody(
       {},
       kit.sheetText('Keeps the exporter fast and its tests green.'),
-      kit.checkRow({ title: 'Merge without asking', meta: 'When the tests pass', checked: sig(true), onToggle: () => {} }),
+      kit.checkRow({ title: 'Notify me', meta: 'When a thread needs you', checked: sig(true), onToggle: () => {} }),
     ),
     kit.sheetFoot(kit.secondaryAction({}, 'Pause'), kit.primaryAction({}, 'Save')),
   )
@@ -102,7 +102,7 @@ const gallery = () =>
     h1({ class: 'pb-6 text-lg font-semibold' }, 'Kit'),
     block(
       'Buttons',
-      line(kit.primaryAction({}, 'Merge'), kit.secondaryAction({}, 'View'), kit.quietButton({}, 'Quiet'), kit.primaryAction({ size: 'sm' }, 'Small')),
+      line(kit.primaryAction({}, 'Save'), kit.secondaryAction({}, 'Cancel'), kit.quietButton({}, 'Quiet'), kit.primaryAction({ size: 'sm' }, 'Small')),
       line(kit.iconButton({ 'aria-label': 'Search', title: 'Search' }, kit.icon('search')), kit.closeButton({}), kit.linkButton({}, '3 files'), kit.navButton({ active: true }, kit.icon('clock'), 'Automations')),
     ),
     block('Tab strip', tabs()),
@@ -120,12 +120,12 @@ const gallery = () =>
       'Rows',
       kit.listRow({ title: 'Fix the flaky cache test', meta: 'tests pass, ready to merge', lead: kit.stateIcon('ready', 'sm', true), trail: '12m' }),
       kit.listRow({ title: 'How HTTP caching headers work', trail: 'Tue', current: true }),
-      kit.checkRow({ title: 'Merge without asking', meta: 'Only for bots with a project', checked: sig(false), onToggle: () => {} }),
+      kit.checkRow({ title: 'Run on a schedule', meta: 'Every weekday at 9:00', checked: sig(false), onToggle: () => {} }),
     ),
     block('Choice list', choices()),
     block('Segmented', kit.segmented([{ value: 'chat', label: 'Chat' }, { value: 'project', label: 'Project' }], 'chat', () => {}, { label: 'View' })),
     block('Fields', kit.textInput({ placeholder: 'Name' }), line(kit.searchField({ placeholder: 'Search bots and chats' }))),
-    block('Card', kit.card({ meta: kit.lineStat(42, 7), actions: [kit.secondaryAction({ size: 'sm' }, 'View'), kit.primaryAction({ size: 'sm' }, 'Merge')] }, p({ class: 'text-sm' }, 'Fixed the flaky cache test.'))),
+    block('Card', kit.card({ meta: 'Weekdays at 9:00', actions: [kit.secondaryAction({ size: 'sm' }, 'Edit'), kit.primaryAction({ size: 'sm' }, 'Run now')] }, p({ class: 'text-sm' }, 'Triage new issues'))),
     block('Diff block', kit.diffBlock('src/cache/store.ts', diff)),
     block('Sheet', sheetSample()),
     block('Settings', settings()),
