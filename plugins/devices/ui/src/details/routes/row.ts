@@ -24,18 +24,18 @@ const latencyOf = (diagnosis: Diagnosis | undefined, key: string) => {
   return diagnosis?.attempts.findLast(attempt => attempt.route.key === key && attempt.result === 'ok')?.ms
 }
 
-const detailOf = (entry: RouteEntry, diagnosis: Diagnosis | undefined) => {
-  if (entry.blocked === 'disabled') return 'Off'
-  if (entry.blocked === 'blocked-https') return 'Blocked on secure pages'
-  return [routeAddress(entry.route), msWords(latencyOf(diagnosis, entry.route.key))].filter(Boolean).join(' · ') || ' '
-}
-
 const inUse = (entry: RouteEntry, diagnosis: Diagnosis | undefined) => {
   const status = diagnosis?.status
   return status?.phase === 'connected' && status.route.key === entry.route.key
 }
 
-const dropLine = () => div({ class: 'mx-3 h-1 rounded-full bg-accent-500' })
+const detailOf = (entry: RouteEntry, diagnosis: Diagnosis | undefined) => {
+  if (entry.blocked === 'disabled') return 'Off'
+  if (entry.blocked === 'blocked-https') return 'Blocked on secure pages'
+  return [inUse(entry, diagnosis) && 'In use', routeAddress(entry.route), msWords(latencyOf(diagnosis, entry.route.key))].filter(Boolean).join(' · ') || ' '
+}
+
+const dropLine = () => div({ class: 'h-1 rounded-full bg-accent-500' })
 
 export const dropMarker = (dragging: Sig<Dragging | undefined>, at: () => number) =>
   show(() => {
@@ -45,7 +45,7 @@ export const dropMarker = (dragging: Sig<Dragging | undefined>, at: () => number
 
 export const routeRow = (parts: RouteRowParts, entry: Sig<RouteEntry>) => {
   const { ui, diagnosis, dragging, index } = parts
-  const { badge, icon, plainButton, settingsRow, toggleSwitch } = ui.kit
+  const { icon, plainButton, settingsRow, toggleSwitch } = ui.kit
   const words = () => routeWords(entry.get().route, ui.data.nameOf)
   const off = () => entry.get().blocked === 'disabled'
   const lifted = () => dragging.get()?.from === index()
@@ -65,14 +65,7 @@ export const routeRow = (parts: RouteRowParts, entry: Sig<RouteEntry>) => {
     settingsRow(
       {
         lead: span({ class: 'flex items-center gap-3 text-neutral-400' }, grip, icon(routeIcons[entry.get().route.kind], 'md')),
-        title: span(
-          { class: ['flex min-w-0 items-center gap-2', () => (off() ? 'opacity-50' : '')] },
-          span({ class: 'min-w-0 truncate' }, words),
-          show(
-            () => inUse(entry.get(), diagnosis()),
-            () => badge('success', 'In use'),
-          ),
-        ),
+        title: span({ class: () => (off() ? 'opacity-50' : '') }, words),
         detail: () => detailOf(entry.get(), diagnosis()),
       },
       toggleSwitch({ on: () => !off(), 'aria-label': () => `Use ${words()}`, onClick: parts.toggle }),

@@ -37,8 +37,8 @@ export const installRow = (ui: Ui, entry: Sig<InstallProgress>) => {
       entry.map(current => current.step === 'failed'),
       failed =>
         failed
-          ? quietButton({ size: 'sm', surface: 'group', onClick: () => ui.data.installs.dismiss(install) }, 'Dismiss')
-          : quietButton({ size: 'sm', surface: 'group', onClick: cancel(ui, install) }, 'Cancel'),
+          ? quietButton({ size: 'sm', onClick: () => ui.data.installs.dismiss(install) }, 'Dismiss')
+          : quietButton({ size: 'sm', onClick: cancel(ui, install) }, 'Cancel'),
     ),
   )
 }
@@ -51,7 +51,7 @@ export const waitingRow = (ui: Ui, grant: Sig<InstallGrant>) => {
       title: span({ class: 'text-neutral-400' }, 'Waiting for new PC…'),
       detail: statusLine({ mark: icon('clock', 'xs'), text: `Run the command on it · works until ${clockWords(expires)}`, title: '' }),
     },
-    quietButton({ size: 'sm', surface: 'group', onClick: () => ui.open.command(id) }, 'Show command'),
-    quietButton({ size: 'sm', surface: 'group', onClick: cancel(ui, id) }, 'Cancel'),
+    quietButton({ size: 'sm', onClick: () => ui.open.command(id) }, 'Show command'),
+    quietButton({ size: 'sm', onClick: cancel(ui, id) }, 'Cancel'),
   )
 }

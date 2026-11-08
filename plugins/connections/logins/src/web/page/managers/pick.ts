@@ -66,7 +66,6 @@ const pickForm = (kit: Kit, item: SourceItem, save: (login: PickedLogin) => Prom
 
 const itemRow = ({ icon, listRow }: Kit, item: Sig<SourceItem>, choose: (item: SourceItem) => void) =>
   listRow({
-    surface: 'group',
     lead: icon(kindIcons[item.get().kind], 'sm'),
     title: () => item.get().name,
     meta: () => metaOf(item.get()),
@@ -82,9 +81,9 @@ const resultRows = (kit: Kit, { items, failure, retry }: Search, texts: { lookin
     return shown.get().length ? 'rows' : 'empty'
   })
   return dynamicChild(phase, current => {
-    if (current === 'failed') return errorState({ surface: 'group', text: () => failure.get(), retry })
-    if (current === 'loading') return loadingState({ surface: 'group', text: texts.looking })
-    if (current === 'empty') return emptyState({ surface: 'group', text: texts.empty })
+    if (current === 'failed') return errorState({ flush: true, text: () => failure.get(), retry })
+    if (current === 'loading') return loadingState({ flush: true, text: texts.looking })
+    if (current === 'empty') return emptyState({ flush: true, text: texts.empty })
     return div(
       { class: 'contents' },
       rowList(
@@ -94,7 +93,7 @@ const resultRows = (kit: Kit, { items, failure, retry }: Search, texts: { lookin
       ),
       show(
         () => (items.get()?.length ?? 0) > shownItems,
-        () => emptyState({ surface: 'group', text: `Showing the first ${shownItems}. Type to narrow it down.` }),
+        () => emptyState({ flush: true, text: `Showing the first ${shownItems}. Type to narrow it down.` }),
       ),
     )
   })

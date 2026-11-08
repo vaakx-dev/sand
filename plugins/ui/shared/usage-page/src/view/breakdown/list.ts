@@ -30,7 +30,7 @@ const rowView = (row: Row, parts: ListParts) =>
   parts.kit.settingsRow(
     { title: span({ title: row.hint }, row.name), detail: row.note },
     shareBar(row, parts),
-    span({ class: 'w-20 text-right text-sm text-neutral-100 tabular-nums' }, valueText(row, parts.metric)),
+    span({ class: 'w-20 text-right tabular-nums' }, parts.kit.rowTitle(valueText(row, parts.metric))),
   )
 
 export const breakdownList = (kit: Kit, rows: Row[], accounts: Account[], metric: Metric) => {

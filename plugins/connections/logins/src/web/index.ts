@@ -18,14 +18,14 @@ import { loginsPages } from './page/pages'
 export default definePlugin({
   name: 'logins-web',
   description: "Logins page in settings, and the chat cards where you hand the agent a password or a sign-in code without it seeing them",
-  inject: { wire, kit, threads, toolViews },
+  inject: { wire, kit, toolViews },
   apply(ctx) {
     const model = loginsModel(ctx.wire)
     const load = () => model.load().catch((error: unknown) => ctx.report(error))
     ctx.on(wireHello, () => void load())
     if (ctx.wire.ready()) void load()
     ctx.effect(() => ctx.wire.on(loginsWire, value => model.state.set(value)))
-    ctx.watch(settings, found => found && loginsPages(found, { kit: ctx.kit, wire: ctx.wire, threads: ctx.threads, model, bots: () => ctx.get(botViews) !== undefined }))
+    ctx.watch(settings, found => found && loginsPages(found, { kit: ctx.kit, wire: ctx.wire, threads: () => ctx.get(threads), model, bots: () => ctx.get(botViews) !== undefined }))
 
     const answers = answerBook()
     const steps = Object.entries(toolSteps(ctx.toolViews, id => model.find(id)?.name))

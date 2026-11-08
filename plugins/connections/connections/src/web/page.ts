@@ -10,6 +10,11 @@ const detailOf = (account: Account, kinds: KindInfo[]) => {
   return account.readOnly ? `${kind} · Read only` : kind
 }
 
+const methodDetails: Record<KindInfo['method'], string> = {
+  oauth: 'Sign in on its own page; sand never sees your password',
+  form: 'Enter the key or details the service gives you',
+}
+
 const accountRow = (kit: Kit, model: ConnectionsModel, account: Sig<Account>) => {
   const { primaryAction, secondaryAction, settingsRow, toneText } = kit
   return settingsRow(
@@ -31,7 +36,7 @@ const kindRow = (kit: Kit, model: ConnectionsModel, kind: Sig<KindInfo>) => {
   return div(
     { class: 'contents' },
     settingsRow(
-      { title: kind.map(value => value.label) },
+      { title: kind.map(value => value.label), detail: kind.map(value => methodDetails[value.method]) },
       show(
         () => !opened(),
         () => secondaryAction({ size: 'sm', onClick: () => model.choose(kind.get().id) }, 'Connect'),
@@ -67,7 +72,7 @@ const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState |
       any =>
         any
           ? settingsSection({ title: 'Connect' }, rowList(kinds, kind => kind.id, kind => kindRow(kit, model, kind)))
-          : emptyState({ text: 'No plugin offers connections yet.' }),
+          : emptyState({ flush: true, text: 'No plugin offers connections yet. Turn on one that does, like Calendar, in Settings → Features.' }),
     ),
     sheetText(() =>
       state.get()?.keychain ? 'Kept encrypted, with the key in the system keychain.' : 'Kept encrypted, with the key in connections.key in the sand home.',
@@ -78,7 +83,6 @@ const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState |
 export const connectionsPage = (kit: Kit, model: ConnectionsModel) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.pageHead('Accounts at other services that plugins like Calendar use. Agents work through them without ever seeing a password or token.'),
     dynamicChild(
       model.state.map(value => value === undefined),
       loading => (loading ? kit.loadingState() : content(kit, model, model.state)),

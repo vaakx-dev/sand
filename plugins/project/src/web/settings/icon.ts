@@ -1,7 +1,7 @@
 import type { ProjectIcon } from '../../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
-import { div, dynamicChild, portal, show, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { div, dynamicChild, portal, show, type Child, type Sig } from '@vaakx-dev/vrui'
 import type { ProjectsContext } from '../context'
 import type { Entry } from './actions'
 
@@ -25,8 +25,6 @@ const iconOf = (shape: number, hue?: number): ProjectIcon | null => {
   return { ...(shape ? { shape } : {}), ...(hue === undefined ? {} : { hue }) }
 }
 
-const pickedMark = ({ icon }: Kit) => span({ class: 'absolute -top-1 -right-1 inline-flex rounded-full bg-neutral-900 p-px text-neutral-100' }, icon('check', 'xs'))
-
 const tileProps = ({ chosen, label, pick }: Tile) => ({
   surface: 'raised' as const,
   active: chosen,
@@ -37,12 +35,10 @@ const tileProps = ({ chosen, label, pick }: Tile) => ({
 })
 
 const shapeTile = (kit: Kit, group: ProjectGroup, tile: Tile) =>
-  kit.quietButton({ size: 'lg', ...tileProps(tile), class: 'relative px-1' }, kit.projectIcon(group.name, tile.look, 32), tile.chosen ? pickedMark(kit) : null)
+  kit.quietButton({ size: 'lg', ...tileProps(tile), class: 'px-1' }, kit.projectIcon(group.name, tile.look, 32))
 
 const hueTile = (kit: Kit, group: ProjectGroup, tile: Tile) =>
-  kit.iconButton({ ...tileProps(tile), class: 'relative w-full' }, kit.projectIcon(group.name, tile.look, 20), tile.chosen ? pickedMark(kit) : null)
-
-const label = (text: string) => span({ class: 'text-xs text-neutral-500' }, text)
+  kit.iconButton({ ...tileProps(tile), class: 'w-full' }, kit.projectIcon(group.name, tile.look, 20))
 
 const tiles = (...children: Child[]) => div({ class: 'grid grid-cols-6 gap-2' }, ...children)
 
@@ -66,12 +62,12 @@ const iconPicker = (ctx: ProjectsContext, group: ProjectGroup, picking: Sig<Pick
       kit.sheetHead({ title: `Icon for ${group.name}`, close }),
       kit.sheetBody(
         {},
-        div({ class: 'flex items-center justify-between gap-2' }, label('Shape'), kit.quietButton({ size: 'sm', surface: 'raised', onClick: moreIdeas }, 'More shapes')),
+        div({ class: 'flex items-center justify-between gap-2' }, kit.metaLine('Shape'), kit.quietButton({ size: 'sm', surface: 'raised', onClick: moreIdeas }, 'More shapes')),
         dynamicChild(
           picking.map(value => value?.page ?? 0),
           shapeTiles,
         ),
-        label('Colour'),
+        kit.metaLine('Colour'),
         tiles(
           ...hues.map(option =>
             hueTile(kit, group, { look: { shape, hue: option.hue }, chosen: option.hue === hue, label: option.name, pick: () => save(iconOf(shape, option.hue)) }),

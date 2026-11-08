@@ -34,7 +34,7 @@ const totpRows = (kit: Kit, login: Derive<Login>, change: Change) => {
   const removing = task()
   const set = () => login.get().totp
   const remove = () =>
-    kit.quietButton({ size: 'sm', surface: 'group', disabled: removing.busy, onClick: () => void removing.run(() => change({ totp: null })) }, 'Remove')
+    kit.quietButton({ size: 'sm', disabled: removing.busy, onClick: () => void removing.run(() => change({ totp: null })) }, 'Remove')
   return [
     formRow(
       kit,

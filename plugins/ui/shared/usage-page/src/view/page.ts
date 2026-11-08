@@ -10,7 +10,7 @@ import { toolbar } from './toolbar'
 
 type BodyState = Merged | 'waiting' | 'empty' | 'missing'
 
-const noUsage = ({ emptyState, settingsSection }: Kit) => settingsSection({}, emptyState({ surface: 'group', text: 'No usage yet' }))
+const noUsage = ({ emptyState, settingsSection }: Kit) => settingsSection({}, emptyState({ text: 'No usage yet' }))
 
 const pending = ({ loadingState }: Kit) => loadingState()
 

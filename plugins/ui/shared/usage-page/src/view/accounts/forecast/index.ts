@@ -16,8 +16,8 @@ export interface PanelProps {
   color: string
 }
 
-const legend = (color: string) =>
-  legendRow(legendItem(color, false, 'Left'), legendItem(color, true, 'Forecast'), legendItem(colorVar('neutral', 500), true, 'Even pace'))
+const legend = (kit: Kit, color: string) =>
+  legendRow(legendItem(kit, color, false, 'Left'), legendItem(kit, color, true, 'Forecast'), legendItem(kit, colorVar('neutral', 500), true, 'Even pace'))
 
 const outFirst = (forecasts: Forecasts) => (a: LimitWindow, b: LimitWindow) =>
   (forecasts.get(a.id)?.outAt ?? Infinity) - (forecasts.get(b.id)?.outAt ?? Infinity) || (b.duration ?? 0) - (a.duration ?? 0)
@@ -25,27 +25,27 @@ const outFirst = (forecasts: Forecasts) => (a: LimitWindow, b: LimitWindow) =>
 const urgentWindow = (windows: LimitWindow[], forecasts: Forecasts) => windows.toSorted(outFirst(forecasts))[0]
 
 export const forecastPanel = (kit: Kit, { windows, forecasts, chosen, choose, color }: PanelProps) => {
-  const { segmented } = kit
+  const { metaLine, segmented } = kit
   const window = windows.find(found => found.id === chosen) ?? urgentWindow(windows, forecasts)
   if (!window) return null
   const forecast = forecasts.get(window.id)
   const hovered = sig<number | undefined>(undefined)
   return div(
-    { class: 'flex flex-col gap-3 border-t border-neutral-700 pt-4' },
+    { class: 'flex flex-col gap-3 pt-4' },
     div(
       { class: 'flex flex-wrap items-center gap-x-4 gap-y-2' },
-      forecast ? readout(forecast, hovered) : span({ class: 'text-xs text-neutral-500' }, 'Forecast'),
+      forecast ? readout(kit, forecast, hovered) : metaLine('Forecast'),
       span({ class: 'flex-1' }),
       windows.length > 1
         ? segmented(
             windows.map(found => ({ value: found.id, label: found.label })),
             window.id,
             choose,
-            { label: 'Limit', inset: true },
+            { label: 'Limit' },
           )
         : null,
     ),
-    forecast ? forecastChart(window, forecast, color, hovered) : missingNote(window),
-    forecast ? legend(color) : null,
+    forecast ? forecastChart(kit, window, forecast, color, hovered) : missingNote(kit, window),
+    forecast ? legend(kit, color) : null,
   )
 }

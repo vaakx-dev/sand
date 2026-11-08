@@ -1,4 +1,4 @@
-import type { Kit } from '@sand/ui-kit/contract'
+import type { Kit, Surface } from '@sand/ui-kit/contract'
 import { derive, dynamicChild, sig, untrack } from '@vaakx-dev/vrui'
 import type { LoginAccount, ServerDraft } from '../../contract'
 import { planName } from '../names'
@@ -54,19 +54,19 @@ export const addFlow = (control: LoginControl, done: () => void) => {
     return `sign-in:${current.account}:${phaseOf(found)}:${found?.pending?.url ?? ''}`
   })
 
-  const body = (kit: Kit) => {
+  const body = (kit: Kit, surface: Surface) => {
     const { sheetStep } = kit
     const current = untrack(() => step.get())
-    if (current.kind === 'choose') return sheetStep(chooseStep(kit, untrack(() => control.state.get()), go))
+    if (current.kind === 'choose') return sheetStep(chooseStep(kit, untrack(() => control.state.get()), go, surface))
     if (current.kind === 'key') return keyStep(kit, control, current.account, done)
     if (current.kind === 'detect')
       return detectStep(kit, control, server => go({ kind: 'server', draft: { name: server.name, url: server.url, provider: server.provider } }), () => go(customServer))
     if (current.kind === 'server') return serverStep(kit, control, current.draft, done)
     const phase = phaseOf(untrack(() => control.account(current.account)))
-    return signInView(kit, current.account, phase, control, flow.actionsFor(current.account), flow.busy)
+    return signInView(kit, current.account, phase, control, flow.actionsFor(current.account), flow.busy, surface)
   }
 
-  return { step, title, go, back, cancel: flow.cancel, view: (kit: Kit) => dynamicChild(bodyKey, () => body(kit)) }
+  return { step, title, go, back, cancel: flow.cancel, view: (kit: Kit, surface: Surface) => dynamicChild(bodyKey, () => body(kit, surface)) }
 }
 
 export type AddFlow = ReturnType<typeof addFlow>

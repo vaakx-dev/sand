@@ -24,7 +24,7 @@ const overview = (kit: Kit, usage: Merged, metric: Metric) =>
 export const spendView = (kit: Kit, usage: Merged, model: UsageModel, metric: Metric) => {
   const { emptyState, settingsSection } = kit
   const head = { title: `${usage.bucket === 'hour' ? 'Hourly' : 'Daily'} ${metric}`, action: periodPicker(kit, model) }
-  if (!usage.total.turns) return settingsSection(head, emptyState({ surface: 'group', text: 'No usage in this range' }))
+  if (!usage.total.turns) return settingsSection(head, emptyState({ text: 'No usage in this range' }))
   return div(
     { class: 'flex flex-col gap-6' },
     settingsSection(head, overview(kit, usage, metric), metric === 'cost' ? usage.unpriced.map(item => unpricedRow(kit, item)) : null),

@@ -18,7 +18,7 @@ const whyButton = (ui: Ui, view: Sig<PcView>) => {
     derive(() => whyLook(view.get())),
     look => {
       if (look === 'strong') return secondaryAction({ size: 'sm', onClick: open }, 'Why?')
-      return look ? quietButton({ size: 'sm', surface: 'group', onClick: open }, 'Why?') : null
+      return look ? quietButton({ size: 'sm', onClick: open }, 'Why?') : null
     },
   )
 }
@@ -30,7 +30,6 @@ export const pcRow = (ui: Ui, view: Sig<PcView>) => {
     ui,
     view,
     listRow({
-      surface: 'group',
       title: () => ui.data.nameOf(view.get().id),
       meta: statusLine({ mark: toneDot(ui.kit, () => toneOf(view.get().status), words), text: words, title: words }),
       trail: chevron(() => false),

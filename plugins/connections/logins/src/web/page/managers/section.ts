@@ -36,8 +36,8 @@ const connectForm = (kit: Kit, { label, save, note, autocomplete }: Manager['con
   return editForm(
     kit,
     { save, ready: () => Boolean(secret.get()), submit: () => connect(secret.get()), done: close, cancel: close },
+    kit.secondaryText(note),
     field(kit, label, { type: 'password', autocomplete, bindValue: secret, onMount: node => node.focus() }),
-    div({ class: 'text-xs text-neutral-400' }, note),
   )
 }
 
@@ -73,4 +73,4 @@ const managerRow = (kit: Kit, model: LoginsModel, source: External) => {
 }
 
 export const managersSection = (kit: Kit, model: LoginsModel) =>
-  kit.settingsSection({ title: 'Password managers' }, ...externalSources.map(source => managerRow(kit, model, source)))
+  kit.settingsSection({ title: 'Password managers', note: 'Use items from a password manager without copying them into sand.' }, ...externalSources.map(source => managerRow(kit, model, source)))

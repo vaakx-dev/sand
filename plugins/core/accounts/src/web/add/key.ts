@@ -1,5 +1,5 @@
 import type { Kit } from '@sand/ui-kit/contract'
-import { keys, label, sig } from '@vaakx-dev/vrui'
+import { keys, sig } from '@vaakx-dev/vrui'
 import { loginKey, loginShared, type KeyKind } from '../../contract'
 import { problem, whileBusy } from '../parts'
 import type { LoginControl } from '../state'
@@ -11,7 +11,7 @@ const placeholders: Record<KeyKind, string> = { anthropic: 'sk-ant-…', openai:
 const takesBaseUrl = (kind: KeyKind) => kind !== 'openrouter'
 
 export const keyStep = (kit: Kit, control: LoginControl, kind: KeyKind, saved: () => void) => {
-  const { primaryAction, sheetStep, textInput, toggleSwitch } = kit
+  const { primaryAction, settingsRow, sheetStep, textInput, toggleSwitch } = kit
   const key = sig('')
   const baseUrl = sig('')
   const share = sig(true)
@@ -45,7 +45,10 @@ export const keyStep = (kit: Kit, control: LoginControl, kind: KeyKind, saved: (
       }),
       takesBaseUrl(kind) ? textInput({ type: 'url', placeholder: 'Base URL (optional)', 'aria-label': 'Base URL', bindValue: baseUrl, onKeyDown: keys({ Enter: submit }) }) : null,
       problem(kit, () => error.get()),
-      label({ class: 'flex items-center gap-2 text-xs text-neutral-400' }, toggleSwitch({ on: share, 'aria-label': 'Share with my PCs', onClick: share.toggle() }), 'Share with my PCs'),
+      settingsRow(
+        { title: 'Share with my PCs', detail: 'Your other PCs can use this key too' },
+        toggleSwitch({ on: share, 'aria-label': 'Share with my PCs', onClick: share.toggle() }),
+      ),
     ],
     primaryAction({ disabled: () => !ready(), onClick: submit }, 'Save'),
   )

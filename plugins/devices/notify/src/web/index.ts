@@ -30,7 +30,7 @@ export default definePlugin({
     ctx.effect(() => ctx.wire.on(notifyMomentsOff, kinds => off.set(kinds)))
 
     const page = { kit: ctx.kit, wire: ctx.wire, toasts: ctx.toasts, on, key, off, device: () => record()?.name ?? 'This device' }
-    ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', icon: 'bell', group: 'accounts', order: 26, render: () => notificationsPage(page) }))
+    ctx.watch(settings, found => found?.page({ id: 'notifications', label: 'Notifications', intro: 'When sand tells you that something needs you, and on which devices.', icon: 'bell', group: 'accounts', order: 26, render: () => notificationsPage(page) }))
 
     if (support() !== 'ready') return
     const shows = () => on.get() && document.visibilityState === 'hidden' && permission() === 'granted'

@@ -1,4 +1,4 @@
-import type { Kit } from '@sand/ui-kit/contract'
+import type { Kit, Surface } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import type { LoginAccount, LoginState } from '../../contract'
 import { accountLogo } from '../names'
@@ -54,7 +54,7 @@ const whereFound = (state: LoginState | undefined, step: Step) => {
   return shared ? `On ${shared.pc}` : null
 }
 
-export const chooseStep = (kit: Kit, state: LoginState | undefined, go: (step: Step) => void) => {
+export const chooseStep = (kit: Kit, state: LoginState | undefined, go: (step: Step) => void, surface: Surface) => {
   const { listRow, settingsSection } = kit
   return div(
     { class: 'flex flex-col gap-4' },
@@ -63,7 +63,7 @@ export const chooseStep = (kit: Kit, state: LoginState | undefined, go: (step: S
         { title: group.label },
         ...group.options.map(option =>
           listRow({
-            surface: 'group',
+            surface,
             lead: accountLogo(kit, option.logo),
             title: option.title,
             meta: option.detail,

@@ -13,6 +13,7 @@
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/features": "workspace:*",
+    "@sand/host-hub": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",

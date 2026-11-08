@@ -50,7 +50,7 @@ const status = (features: Feature[], feature: Feature) => {
   return feature.usedBy.length ? `Used by ${listed(labels(features, feature.usedBy))}` : 'Not used, so not loaded'
 }
 
-const detail = (summary: string, line: string) => (line ? [div(summary), div({ class: 'text-neutral-500' }, line)] : summary)
+const detail = (summary: string, line: string) => (line ? [div(summary), div(line)] : summary)
 
 const row = (kit: Kit, store: FeatureStore, confirming: Sig<string | undefined>, features: Feature[], { feature, depth }: Placed) => {
   const { actionTones, controlButton, quietButton, rowWarning, settingsRow, spinner, toggleSwitch } = kit

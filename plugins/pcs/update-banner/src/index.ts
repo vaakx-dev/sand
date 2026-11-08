@@ -25,7 +25,7 @@ export default definePlugin({
     }
     const dot = () => fleet.pending.get().some(pc => !pc.state?.later)
     ctx.watch(settings, found =>
-      found?.page({ id: 'updates', label: 'Updates', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),
+      found?.page({ id: 'updates', label: 'Updates', intro: 'Keep sand current on every PC.', icon: 'reload', group: 'app', order: 70, dot, render: () => updatesPage(ctx.kit, fleet, open) }),
     )
   },
 })

@@ -1,5 +1,5 @@
 import type { Attempt, RouteEntry } from '@sand/devices-contract'
-import type { IconName } from '@sand/ui-kit/contract'
+import type { IconName, Tone } from '@sand/ui-kit/contract'
 import { span } from '@vaakx-dev/vrui'
 import { routeIcons } from '../details/routes/row'
 import { agoWords } from '../shared/time'
@@ -16,7 +16,7 @@ interface Outcome {
   detail?: string
 }
 
-const toneText: Record<ResultTone, string> = { ok: 'text-success-400', bad: 'text-danger-400', warn: 'text-warning-400', none: 'text-neutral-500' }
+const tones: Record<ResultTone, Tone> = { ok: 'neutral', bad: 'danger', warn: 'warning', none: 'neutral' }
 
 const seconds = (ms: number | undefined) => `${Math.max(1, Math.round((ms ?? 0) / 1000))} s`
 
@@ -35,7 +35,7 @@ const outcomeOf = (entry: RouteEntry, attempt: Attempt | undefined): Outcome => 
 }
 
 const attemptRow = (ui: Ui, facts: Facts, entry: RouteEntry, attempt: Attempt | undefined) => {
-  const { icon, settingsRow } = ui.kit
+  const { badge, icon, settingsRow } = ui.kit
   const outcome = outcomeOf(entry, attempt)
   return settingsRow(
     {
@@ -43,11 +43,7 @@ const attemptRow = (ui: Ui, facts: Facts, entry: RouteEntry, attempt: Attempt | 
       title: routeWords(entry.route, facts.nameOf),
       detail: outcome.detail ?? routeAddress(entry.route) ?? '',
     },
-    span(
-      { class: ['inline-flex items-center gap-1.5 text-xs whitespace-nowrap', toneText[outcome.tone]] },
-      outcome.icon ? icon(outcome.icon, 'sm') : null,
-      outcome.text,
-    ),
+    badge(tones[outcome.tone], outcome.icon ? icon(outcome.icon, 'sm') : null, outcome.text),
   )
 }
 
@@ -60,6 +56,6 @@ export const attemptsSection = (ui: Ui, facts: Facts) => {
     { title: last ? `What sand tried · ${agoWords(last)}` : 'What sand tried' },
     ...(routes.length
       ? routes.map(entry => attemptRow(ui, facts, entry, latest.get(entry.route.key)))
-      : [emptyState({ surface: 'group', text: 'sand doesn’t know any address for it yet.' })]),
+      : [emptyState({ flush: true, text: 'sand doesn’t know any address for it yet.' })]),
   )
 }

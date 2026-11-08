@@ -30,7 +30,7 @@ const metaOf = (account: Account, nameOf: (id: string) => string) => {
 
 export const limitCard = (account: Account, props: CardProps) => {
   const { kit } = props
-  const { expandRow, loadingState, providerIcon, rowDetail, settingsRow } = kit
+  const { expandRow, loadingState, modelLogo, rowDetail, settingsRow } = kit
   const windows = account.limits?.windows ?? []
   const color = props.colorOf(account.provider)
   const canForecast = windows.some(window => window.resetsAt)
@@ -41,13 +41,13 @@ export const limitCard = (account: Account, props: CardProps) => {
   const panel = derive(() => ({ found: forecasts.get(), chosen: props.windows.get().get(account.key) }))
   return expandRow(
     {},
-    settingsRow({ lead: providerIcon(account.provider, 16), title: account.label, detail: metaOf(account, props.nameOf) }),
+    settingsRow({ lead: modelLogo(account.provider, 16), title: account.label, detail: metaOf(account, props.nameOf) }),
     windows.length ? rowDetail(dynamicChild(forecasts, found => limitBars(kit, windows, color, props.now, found))) : null,
     canForecast
       ? dynamicChild(panel, ({ found, chosen }) =>
           found
             ? rowDetail(forecastPanel(kit, { windows, forecasts: found, chosen, choose: window => props.setWindow(account.key, window), color }))
-            : loadingState({ surface: 'group' }),
+            : loadingState(),
         )
       : null,
   )

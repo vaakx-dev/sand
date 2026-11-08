@@ -10,7 +10,7 @@ export const group = 'logins'
 
 export interface ToolDeps {
   logins: LoginsRuntime
-  sessions: Sessions
+  sessions(): Sessions | undefined
   computers(): Computers | undefined
   secrets: Waits<SecretAnswer>
   codes: Waits<CodeAnswer>

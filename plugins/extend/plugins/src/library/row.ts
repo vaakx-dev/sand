@@ -19,7 +19,7 @@ export interface RowActions {
 }
 
 const control = ({ quietButton, rowAction }: Kit, plugin: PluginEntry, actions: RowActions) => {
-  if (plugin.origin === 'builtin') return quietButton({ size: 'sm', surface: 'group', disabled: actions.busy, onClick: () => actions.customise(plugin) }, 'Customise')
+  if (plugin.origin === 'builtin') return quietButton({ size: 'sm', disabled: actions.busy, onClick: () => actions.customise(plugin) }, 'Customise')
   if (plugin.origin === 'customised' && !plugin.changed) return rowAction({ label: 'Use built-in', danger: true, disabled: actions.busy, run: () => actions.restore(plugin) })
   return null
 }
@@ -52,11 +52,11 @@ const offReason = (plugin: PluginEntry, actions: RowActions) => {
   )
 }
 
-const marks = ({ badge }: Kit, plugin: PluginEntry, actions: RowActions) => [
-  plugin.origin === 'builtin' ? null : badge('neutral', originLabels[plugin.origin]),
+const marks = ({ badge, metaLine }: Kit, plugin: PluginEntry, actions: RowActions) => [
+  plugin.origin === 'builtin' ? null : metaLine(originLabels[plugin.origin]),
   show(
     () => actions.offNeeds(plugin.name) !== undefined,
-    () => badge('neutral', 'Off'),
+    () => metaLine('Off'),
   ),
   show(
     () => actions.failure(plugin.name) !== undefined,

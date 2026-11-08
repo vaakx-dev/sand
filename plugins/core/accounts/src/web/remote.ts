@@ -33,7 +33,7 @@ export const remoteSection = (kit: Kit, control: LoginControl) => {
       return settingsSection(
         { title: 'From your PCs' },
         state.remote.map(account => remoteRow(kit, state, account)),
-        problems(state).map(problem => errorState({ surface: 'group', text: problem })),
+        problems(state).map(problem => errorState({ text: problem })),
       )
     },
   )

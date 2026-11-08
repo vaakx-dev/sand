@@ -3,7 +3,7 @@ import { div, dynamicChild } from '@vaakx-dev/vrui'
 import { deciding } from '../requests/decide'
 import { kindIcon, viaTailscale } from '../requests/words'
 import { alertDialog } from '../shared/dialog'
-import { centered, heading } from '../shared/parts'
+import { centered } from '../shared/parts'
 import { pinCode } from '../shared/pin'
 import { leftWords } from '../shared/time'
 import type { Ui } from '../ui'
@@ -14,19 +14,19 @@ const askedText = (request: JoinRequest) => {
 }
 
 const decision = (ui: Ui, request: JoinRequest, close: () => void) => {
-  const { icon, primaryAction, quietButton, sheetText } = ui.kit
+  const { icon, metaLine, primaryAction, quietButton, sectionTitle, sheetText } = ui.kit
   const { busy, allow, deny } = deciding(ui, () => request, device => {
     ui.toasts.ok(`Allowed ${device.name}`)
     close()
   })
   return centered(
     div({ class: 'text-neutral-400' }, icon(kindIcon(request.kind, request.platform), 'lg')),
-    heading(`Allow ${request.name}?`),
+    sectionTitle(`Allow ${request.name}?`),
     sheetText(askedText(request)),
     div({ class: 'py-2' }, pinCode(request.code)),
     primaryAction({ size: 'lg', class: 'w-full', disabled: busy, onClick: () => void allow() }, 'Allow'),
     quietButton({ size: 'lg', surface: 'raised', class: 'w-full', disabled: busy, onClick: deny }, 'Deny'),
-    div({ class: 'text-xs text-neutral-400 tabular-nums' }, () => leftWords(request.expires, ui.data.now.get())),
+    div({ class: 'flex max-w-full tabular-nums' }, metaLine(() => leftWords(request.expires, ui.data.now.get()))),
   )
 }
 

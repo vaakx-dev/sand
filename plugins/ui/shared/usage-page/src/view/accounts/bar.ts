@@ -33,14 +33,10 @@ const outlook = (window: LimitWindow, now: Sig<number>, forecast?: Forecast) => 
   )
 }
 
-const resetLine = (window: LimitWindow, now: Sig<number>, forecast?: Forecast) => {
+const resetLine = ({ metaLine }: Kit, window: LimitWindow, now: Sig<number>, forecast?: Forecast) => {
   const { resetsAt } = window
-  if (!resetsAt) return span({ class: 'text-xs text-neutral-500' }, 'Not started')
-  return span(
-    { class: 'text-xs text-neutral-500 tabular-nums' },
-    () => `Resets in ${coarseDuration(Math.max(0, resetsAt - now.get()))}`,
-    outlook(window, now, forecast),
-  )
+  if (!resetsAt) return metaLine('Not started')
+  return metaLine(() => `Resets in ${coarseDuration(Math.max(0, resetsAt - now.get()))}`, outlook(window, now, forecast))
 }
 
 const paceTick = (window: LimitWindow, now: Sig<number>) =>
@@ -48,7 +44,7 @@ const paceTick = (window: LimitWindow, now: Sig<number>) =>
     () => elapsedOf(window, now.get()) !== undefined,
     () =>
       span({
-        class: 'absolute -inset-y-1 w-1 -translate-x-1/2 rounded-full bg-current text-neutral-100 ring-2 ring-neutral-800',
+        class: 'absolute -inset-y-1 w-1 -translate-x-1/2 rounded-full bg-current text-neutral-100',
         title: 'Even pace',
         style: { left: () => `${(1 - (elapsedOf(window, now.get()) ?? 0)) * 100}%` },
       }),
@@ -69,7 +65,7 @@ const limitBar = (kit: Kit, window: LimitWindow, color: string, now: Sig<number>
   const left = leftOf(window)
   return div(
     {
-      class: 'flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:min-w-48 sm:max-w-64 sm:flex-1',
+      class: 'flex w-full min-w-0 flex-col gap-2 tabular-nums sm:w-auto sm:min-w-48 sm:max-w-64 sm:flex-1',
       title: window.resetsAt ? `${percent(left)} left · resets ${exactTime(window.resetsAt)}` : `${percent(left)} left`,
     },
     div(
@@ -77,13 +73,13 @@ const limitBar = (kit: Kit, window: LimitWindow, color: string, now: Sig<number>
       metaLine(window.label),
       statusBadge(kit, window.status),
       span(
-        { class: 'ml-auto shrink-0 text-2xl font-semibold whitespace-nowrap text-neutral-100 tabular-nums' },
-        percent(left),
-        span({ class: 'ml-1 text-sm font-normal text-neutral-400' }, 'left'),
+        { class: 'ml-auto flex shrink-0 items-baseline gap-1 whitespace-nowrap' },
+        span({ class: 'text-2xl font-semibold text-neutral-100' }, percent(left)),
+        metaLine('left'),
       ),
     ),
     meter(window, left, color, now),
-    resetLine(window, now, forecast),
+    resetLine(kit, window, now, forecast),
   )
 }
 

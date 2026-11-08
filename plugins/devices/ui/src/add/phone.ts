@@ -1,6 +1,6 @@
 import { type PairLink, pairJoined } from '@sand/devices-contract'
 import { derive, div, dynamicChild, effect, sig, span } from '@vaakx-dev/vrui'
-import { centered, copyBox, note } from '../shared/parts'
+import { centered, copyBox } from '../shared/parts'
 import { qrCode } from '../shared/qr'
 import type { Ui } from '../ui'
 import type { AddDone } from './done'
@@ -36,7 +36,7 @@ const linkView = (ui: Ui, link: PairLink, reach: Reach, url: string) =>
     { class: 'flex flex-col gap-4' },
     centered(qrCode(url), ui.kit.sheetText('Scan with the phone’s camera, or open the link on it.')),
     copyBox(ui.kit, url),
-    div({ class: 'flex flex-col gap-1' }, ui.kit.waitingLine('Waiting for a device…'), note(`Works once, within ${minutesLeft(link)} minutes. ${reachNote(reach)}`)),
+    div({ class: 'flex flex-col gap-1' }, ui.kit.waitingLine('Waiting for a device…'), ui.kit.sheetText(`Works once, within ${minutesLeft(link)} minutes. ${reachNote(reach)}`)),
   )
 
 export const phoneStep = (ui: Ui, done: (result: AddDone) => void) => {

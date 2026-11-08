@@ -8,12 +8,12 @@ import type { LoginControl } from './state'
 
 type Fix = (account: LoginAccount) => void
 
-const shareSwitch = ({ toggleSwitch }: Kit, account: LoginAccount, control: LoginControl) => {
+const shareSwitch = ({ metaLine, toggleSwitch }: Kit, account: LoginAccount, control: LoginControl) => {
   const busy = sig(false)
   const toggle = () => whileBusy(busy, () => control.run(loginShared, { account: account.id, shared: !account.shared }))
   return label(
-    { class: 'flex items-center gap-2 text-xs text-neutral-400' },
-    'Share with my PCs',
+    { class: 'flex items-center gap-2' },
+    metaLine('Share with my PCs'),
     toggleSwitch({ on: account.shared, 'aria-label': `Share ${account.label} with my PCs`, disabled: busy, onClick: () => void toggle() }),
   )
 }
@@ -39,7 +39,7 @@ const rowControls = (kit: Kit, account: LoginAccount, control: LoginControl, fix
   if (account.env) return []
   const server = account.kind === 'server'
   return [
-    server && account.error ? quietButton({ size: 'sm', surface: 'group', onClick: () => fix(account) }, 'Edit') : null,
+    server && account.error ? quietButton({ size: 'sm', onClick: () => fix(account) }, 'Edit') : null,
     account.app ? null : shareSwitch(kit, account, control),
     rowAction({ label: removeLabel(account), danger: true, run: () => void control.run(loginLogout, { account: account.id }) }),
   ]
@@ -79,9 +79,9 @@ export const localSection = (kit: Kit, control: LoginControl, add: () => void, f
       }),
       () => {
         const state = control.state.get()
-        if (!state) return loadingState({ surface: 'group' })
+        if (!state) return loadingState()
         const list = shown(state)
-        if (!list.length) return emptyState({ surface: 'group', text: emptyText(state) })
+        if (!list.length) return emptyState({ text: emptyText(state) })
         return div(
           { class: 'contents' },
           list.map(account => (account.signedIn ? signedInRow(kit, account, control, fix, menu) : brokenRow(kit, account, fix))),
