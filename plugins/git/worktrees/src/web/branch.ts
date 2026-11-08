@@ -11,7 +11,8 @@ const samePath = (a: string, b: string) => a.replace(/\\/g, '/').toLowerCase() =
 export const branchPart = (ctx: Context, kit: Kit, wire: Wire, threads: Threads): RowPart => {
   const branches = folderFacts(ctx, threads, async ({ cwd, device }) => {
     const list = await wire.call(worktreesList, { cwd }, device)
-    return list.find(worktree => samePath(worktree.path, cwd))?.branch
+    const found = list.find(worktree => samePath(worktree.path, cwd))
+    return found && !samePath(found.path, found.main) ? found.branch : undefined
   })
   ctx.effect(() => wire.on(worktreesChange, branches.reload, { from: 'all' }))
   return {

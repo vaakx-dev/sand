@@ -24,7 +24,7 @@ import { branchPart } from './branch'
 
 export default definePlugin({
   name: 'worktrees',
-  description: "Reaches thread worktrees for the page: lists, creates, moves into, removes, restores, sizes and sets them up on the PC that holds the repo, with their progress; shows each thread's branch on its row",
+  description: "Reaches thread worktrees for the page: lists, creates, moves into, removes, restores, sizes and sets them up on the PC that holds the repo, with their progress; shows the branch of a thread in its own worktree on its row",
   inject: { wire, threads, kit },
   apply(ctx) {
     ctx.provide(worktreesClient, {
