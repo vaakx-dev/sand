@@ -6,7 +6,7 @@ import { palette } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { byOrder } from '@sand/util'
 import { kit } from '@sand/ui-kit/contract'
-import { shell } from '@sand/ui-shell/contract'
+import { homeRoute, shell } from '@sand/ui-shell/contract'
 import { projects, projectsChange, threadSelect, threads, threadsChange } from '@sand/web-client/contract'
 import { clock, sig } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
@@ -42,7 +42,7 @@ export default definePlugin({
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
     const launched = { ...parts, pulse: events }
     launch(launched)
-    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, run: () => newChat(launched) }))
+    ctx.effect(() => ctx.shell.nav({ id: 'new-chat', label: 'New chat', icon: 'compose', order: -10, run: () => newChat(launched), current: () => ctx.shell.state() !== 'phone' && ctx.shell.current().kind === homeRoute }))
     ctx.watch(palette, found => found?.source(sessionSource(ctx, ctx.kit, ctx.shell, ctx.threads)))
     wakeTimer(ctx, ctx.threads, events.bump)
   },

@@ -25,7 +25,8 @@ const rowMenu = (menu: ContextMenu, row: () => ShellRow, open: () => void) =>
   }, open)
 
 const navCurrent = (model: Model, item: Sig<NavItem>) => () => {
-  const to = item.get().to
+  const { to, current } = item.get()
+  if (current) return current()
   return Boolean(to && model.isCurrent(to))
 }
 

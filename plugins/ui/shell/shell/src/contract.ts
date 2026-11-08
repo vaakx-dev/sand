@@ -92,9 +92,11 @@ interface NavBase {
   keys?: string
   count?(): number
   dot?(): boolean
+  /** Whether the item is marked current, for one that runs but stands for a screen, such as New chat. */
+  current?(): boolean
 }
 
-/** A sidebar nav item. One that opens a route is marked current while that route is open; one that runs, such as Search, isn't. */
+/** A sidebar nav item. One that opens a route is marked current while that route is open; one that runs, such as Search, isn't unless `current` says so. */
 export type NavItem = NavBase & ({ to: Route; run?: never } | { run(): void; to?: never })
 
 export interface GroupAction {
