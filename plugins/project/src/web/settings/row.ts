@@ -11,7 +11,6 @@ import { groupSpec } from './specs'
 const menuButton = ({ icon, iconButton }: Kit, menu: ContextMenu, spec: () => ReturnType<typeof groupSpec>) =>
   iconButton(
     {
-      surface: 'group',
       title: 'Project actions',
       'aria-label': 'Project actions',
       'aria-haspopup': 'menu',

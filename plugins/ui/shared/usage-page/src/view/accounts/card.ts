@@ -47,7 +47,7 @@ export const limitCard = (account: Account, props: CardProps) => {
       ? dynamicChild(panel, ({ found, chosen }) =>
           found
             ? rowDetail(forecastPanel(kit, { windows, forecasts: found, chosen, choose: window => props.setWindow(account.key, window), color }))
-            : loadingState({ surface: 'group' }),
+            : loadingState(),
         )
       : null,
   )

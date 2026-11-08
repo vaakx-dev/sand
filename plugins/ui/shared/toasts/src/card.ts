@@ -23,7 +23,7 @@ export const toastCard = (kit: Kit, entry: Entry, dismiss: () => void) => {
     {
       role: () => (toast().tone === 'danger' ? 'alert' : 'status'),
       class: [
-        'pointer-events-auto flex max-w-md gap-2 rounded-xl bg-neutral-800 px-3 py-2 text-sm text-neutral-100 shadow-xl ring-1 ring-neutral-700 animate-rise',
+        'pointer-events-auto flex max-w-md gap-2 rounded-xl bg-neutral-800 px-3 py-2 shadow-xl animate-rise',
         () => (isOneLine(toast()) ? 'items-center' : 'items-start'),
       ],
       onMouseEnter: () => hovered.set(true),
@@ -35,7 +35,7 @@ export const toastCard = (kit: Kit, entry: Entry, dismiss: () => void) => {
     div(
       { class: 'flex min-w-0 flex-1 flex-col gap-1' },
       span({ class: 'wrap-anywhere' }, () => toast().title),
-      dynamicChild(() => toast().detail, detail => (detail ? span({ class: 'text-xs text-neutral-400 wrap-anywhere whitespace-pre-wrap' }, detail) : null)),
+      dynamicChild(() => toast().detail, detail => (detail ? div({ class: 'wrap-anywhere whitespace-pre-wrap' }, kit.secondaryText(detail)) : null)),
       dynamicChild(() => toast().output, output => (output ? outputBlock(kit, output) : null)),
       dynamicChild(() => toast().actions, actions => (actions?.length ? actionRow(kit, actions, dismiss) : null)),
     ),

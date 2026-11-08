@@ -26,11 +26,11 @@ export const installedSection = (kit: Kit, source: SyncSource) => {
       rowList(plugins, plugin => plugin.name, plugin => pluginRow(kit, source, plugin)),
       show(
         () => source.state.get() === undefined,
-        () => loadingState({ surface: 'group' }),
+        () => loadingState({ flush: true }),
       ),
       show(
         () => source.state.get()?.plugins.length === 0,
-        () => emptyState({ surface: 'group', text: 'Plugins you customise or add are shared with your other PCs' }),
+        () => emptyState({ flush: true, text: 'Plugins you customise or add are shared with your other PCs' }),
       ),
     ),
   )

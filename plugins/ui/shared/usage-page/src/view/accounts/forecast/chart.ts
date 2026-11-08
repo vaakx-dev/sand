@@ -1,5 +1,6 @@
 import type { LimitWindow } from '@sand/accounts/contract'
 import { percent } from '@sand/util'
+import type { Kit } from '@sand/ui-kit/contract'
 import { colorVar, div, line, path, rect, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { Forecast, Point } from '../../../data/forecast/project'
 import { chartFrame, gridLine, guideLine } from '../../chart/frame'
@@ -21,24 +22,22 @@ const nearest = (points: Point[], at: number) =>
 
 const pointAt = (forecast: Forecast, at: number) => nearest(at > forecast.now ? forecast.ahead : forecast.past, at)
 
-const tag = (text: string, at: string, look: string) => span({ class: ['pointer-events-none absolute top-0 text-xs text-neutral-500', look], style: { left: at } }, text)
+const tag = ({ metaLine }: Kit, text: string, at: string, look: string) => span({ class: ['pointer-events-none absolute top-0', look], style: { left: at } }, metaLine(text))
 
-export const readout = (forecast: Forecast, hovered: Sig<number | undefined>) => {
+export const readout = ({ metaLine }: Kit, forecast: Forecast, hovered: Sig<number | undefined>) => {
   const point = () => pointAt(forecast, hovered.get() ?? forecast.now)
   const when = () => {
     const at = hovered.get()
     if (at === undefined) return 'Now'
     return at > forecast.now ? `${timeText(point().at)} · forecast` : timeText(point().at)
   }
-  return span(
-    { class: 'text-xs text-neutral-500 tabular-nums', 'aria-live': 'polite' },
-    when,
-    ' · ',
-    span({ class: 'font-medium text-neutral-100' }, () => `${percent(point().left)} left`),
+  return div(
+    { class: 'flex min-w-0 tabular-nums', 'aria-live': 'polite' },
+    metaLine(when, ' · ', span({ class: 'font-medium text-neutral-100' }, () => `${percent(point().left)} left`)),
   )
 }
 
-export const forecastChart = (window: LimitWindow, forecast: Forecast, color: string, hovered: Sig<number | undefined>) => {
+export const forecastChart = (kit: Kit, window: LimitWindow, forecast: Forecast, color: string, hovered: Sig<number | undefined>) => {
   const { start, now, reset, outAt } = forecast
   const toX = (at: number) => ((at - start) / (reset - start)) * width
   const toY = (left: number) => height - left * (height - top)
@@ -61,6 +60,7 @@ export const forecastChart = (window: LimitWindow, forecast: Forecast, color: st
   const stroke = { fill: 'none', stroke: color, strokeWidth: 2, strokeLinejoin: 'round', vectorEffect: 'non-scaling-stroke' } as const
 
   return chartFrame(
+    kit,
     {
       width,
       height,
@@ -81,13 +81,13 @@ export const forecastChart = (window: LimitWindow, forecast: Forecast, color: st
       guideLine(() => toX(hovered.get() ?? start), top, height, () => hovered.get() !== undefined),
     ],
     [
-      tag('Now', at(now), toX(now) / width > nowFlip ? '-translate-x-full pr-1' : 'translate-x-1'),
+      tag(kit, 'Now', at(now), toX(now) / width > nowFlip ? '-translate-x-full pr-1' : 'translate-x-1'),
       outAt ? div({ class: 'pointer-events-none absolute bottom-0 h-2 w-2 -translate-x-1/2 translate-y-1/2 rounded-full bg-warning-400', style: { left: at(outAt) } }) : null,
       show(
         () => hovered.get() !== undefined,
         () =>
           div({
-            class: 'pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-neutral-800',
+            class: 'pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-neutral-900',
             style: { backgroundColor: color, left: () => at(marked().at), top: () => cssPercent(toY(marked().left) / height) },
           }),
       ),
@@ -95,8 +95,8 @@ export const forecastChart = (window: LimitWindow, forecast: Forecast, color: st
     [
       ...ticksOf(start, reset)
         .filter(tick => toX(tick.at) / width < lastTick)
-        .map(tick => span({ class: 'absolute -translate-x-1/2 whitespace-nowrap', style: { left: at(tick.at) } }, tick.label)),
-      span({ class: 'absolute right-0 whitespace-nowrap' }, 'Reset'),
+        .map(tick => span({ class: 'absolute -translate-x-1/2 whitespace-nowrap', style: { left: at(tick.at) } }, kit.metaLine(tick.label))),
+      span({ class: 'absolute right-0 whitespace-nowrap' }, kit.metaLine('Reset')),
     ],
   )
 }

@@ -23,21 +23,21 @@ const placement = ({ x, y }: Pick<Hover, 'x' | 'y'>) => {
   }
 }
 
-export const tipRow = (label: Child, value: string) =>
-  div({ class: 'flex items-center justify-between gap-4' }, span({ class: 'text-neutral-500' }, label), span({ class: 'text-neutral-100 tabular-nums' }, value))
+const tipRow = ({ metaLine, rowTitle }: Kit, label: Child, value: string) =>
+  div({ class: 'flex items-center justify-between gap-4' }, metaLine(label), span({ class: 'tabular-nums' }, rowTitle(value)))
 
-export const tipBox = ({ layer }: Kit, at: Pick<Hover, 'x' | 'y'>, title: string, ...rows: Child[]) =>
+const tipBox = ({ layer, metaLine }: Kit, at: Pick<Hover, 'x' | 'y'>, title: string, ...rows: Child[]) =>
   portal(
     document.body,
     div(
       {
         class: [
           layer.tooltip,
-          'pointer-events-none fixed flex min-w-40 flex-col gap-1 rounded-xl bg-neutral-800 px-3 py-2 text-xs whitespace-nowrap shadow-lg ring-1 ring-neutral-700',
+          'pointer-events-none fixed flex min-w-40 flex-col gap-1 rounded-xl bg-neutral-800 px-3 py-2 whitespace-nowrap shadow-xl',
         ],
         style: placement(at),
       },
-      span({ class: 'mb-1 text-neutral-500' }, title),
+      div({ class: 'mb-1 flex' }, metaLine(title)),
       ...rows,
     ),
   )
@@ -49,7 +49,7 @@ export const tooltip = (kit: Kit, hover: Hover, key: string, bucket: UsageBucket
     kit,
     hover,
     periodTitle(key, bucket),
-    series.map(line => tipRow(seriesName(kit, line), metricText(valueAt(line), metric))),
-    series.length > 1 ? div({ class: 'mt-1 border-t border-neutral-700 pt-1' }, tipRow('Total', metricText(total, metric))) : null,
+    series.map(line => tipRow(kit, seriesName(kit, line), metricText(valueAt(line), metric))),
+    series.length > 1 ? div({ class: 'mt-2 font-medium' }, tipRow(kit, 'Total', metricText(total, metric))) : null,
   )
 }

@@ -55,8 +55,8 @@ export const latestSection = (kit: Kit, fleet: Fleet, open: () => void) => {
     ),
     dynamicChild(
       changes.map(list => list.map(change => change.commit).join()),
-      () => (changes.get().length ? changesRow(kit, changes.get()) : null),
+      () => (changes.get().length ? changesRow(kit, changes.get(), 'page') : null),
     ),
-    show(() => !!checkError(), () => errorState({ surface: 'group', text: checkError })),
+    show(() => !!checkError(), () => errorState({ text: checkError })),
   )
 }

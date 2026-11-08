@@ -39,7 +39,7 @@ export const groupsSection = (ctx: ProjectsContext, menu: ContextMenu, changes: 
     const groups = ctx.projects.groups({ hidden })
     return settingsSection(
       { title: heading(groups), action: [hiddenToggle(ctx, showHidden), addButton(ctx, changes)] },
-      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ surface: 'group', text: 'No projects yet' })]),
+      ...(groups.length ? groups.map(group => groupRow(ctx, menu, group, picking)) : [emptyState({ text: 'No projects yet. Add a project to start threads in its folder.' })]),
     )
   })
 }
