@@ -4,7 +4,6 @@ import type { Kit } from '@sand/ui-kit/contract'
 import type { Threads } from '@sand/web-client/contract'
 import { span } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { quickName } from '../items/lookup'
 import { currentPlace, places, type Place } from '../palette/places'
 import { newThreadPage, openDraft } from '../palette/projects'
 
@@ -35,7 +34,7 @@ const more = (ctx: Context, kit: Kit, threads: Threads, close: () => void) => {
 const choices = (ctx: Context, kit: Kit, threads: Threads, close: () => void) => {
   const here = currentPlace(ctx, threads).id
   const device = threads.device()
-  const quick = { id: `${device}\0quick`, name: quickName, path: '', device }
+  const quick = { id: `${device}\0quick`, name: 'No project', path: '', device }
   return [
     ...places(ctx, threads)
       .slice(0, shown)

@@ -16,7 +16,7 @@ export interface ChipParts {
   threads: Threads
   pulse: Pulse
   now(): number
-  changes?: Changes
+  changes: Changes
 }
 
 const titleOf = (thread: Thread) => thread.info.title || 'Untitled thread'
@@ -41,12 +41,12 @@ const waiting = (parts: ChipParts): ChipSource => ({
   status: 'waiting',
   items: scope =>
     scoped(parts, scope).flatMap(thread => {
-      const note = thread.waiting?.title ?? mergeTrouble(parts.changes?.get(thread.id))
+      const note = thread.waiting?.title ?? mergeTrouble(parts.changes.get(thread.id))
       return note ? [item(parts, thread, { status: 'waiting', meta: note })] : []
     }),
 })
 
-const ready = (parts: ChipParts, changes: Changes): ChipSource => ({
+const ready = (parts: ChipParts): ChipSource => ({
   key: 'ready',
   label: 'Ready',
   title: 'Ready to merge',
@@ -54,7 +54,7 @@ const ready = (parts: ChipParts, changes: Changes): ChipSource => ({
   status: 'ready',
   items: scope =>
     scoped(parts, scope).flatMap(thread => {
-      const change = changes.get(thread.id)
+      const change = parts.changes.get(thread.id)
       if (thread.running || (change?.state !== 'ready' && change?.state !== 'merging')) return []
       const merging = change.state === 'merging'
       return [
@@ -64,7 +64,7 @@ const ready = (parts: ChipParts, changes: Changes): ChipSource => ({
           action: {
             label: merging ? 'Merging' : 'Merge',
             busy: () => merging,
-            run: () => attempt(parts.ctx, "Couldn't merge", () => changes.merge(thread)),
+            run: () => attempt(parts.ctx, "Couldn't merge", () => parts.changes.merge(thread)),
           },
         }),
       ]
@@ -83,4 +83,4 @@ const working = (parts: ChipParts): ChipSource => ({
       .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (thread.started ?? parts.now()))) })),
 })
 
-export const chipSources = (parts: ChipParts) => [waiting(parts), ...(parts.changes ? [ready(parts, parts.changes)] : []), working(parts)]
+export const chipSources = (parts: ChipParts) => [waiting(parts), ready(parts), working(parts)]

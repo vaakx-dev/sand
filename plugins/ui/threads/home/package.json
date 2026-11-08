@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Threads in the sidebar by day with pin and snooze, Home with the launch composer and a project picker, the Waiting, Ready and Working chips, and threads and projects in Search",
   "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
   "sand": {
     "feature": "threads",
     "web": "./src/index.ts",

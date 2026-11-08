@@ -131,6 +131,10 @@ export interface ShellRow {
   trail?(): Child
   to: Route
   menu?(): MenuAction[]
+  /** Line 2, left: where the row's work lives, such as its project. */
+  place?: { label: string; mark?(): Child }
+  /** Line 2, right, built in the row's scope. */
+  trail?(): Child
 }
 
 export interface ShellGroup {

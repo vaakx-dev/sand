@@ -1,7 +1,7 @@
 {
   "name": "@sand/github",
   "version": "0.0.0",
-  "description": "GitHub's API through this PC's gh sign-in or GH_TOKEN",
+  "description": "GitHub's API through this PC's gh sign-in or GH_TOKEN, and each thread's pull requests on its row",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,11 +10,19 @@
     "feature": "git",
     "runtime": "./src/runtime.ts",
     "print": "./src/runtime.ts",
+    "web": "./src/web/index.ts",
     "label": "GitHub",
-    "summary": "Reaches GitHub with this PC's sign-in"
+    "summary": "Reaches GitHub with this PC's sign-in, and shows each thread's pull requests"
   },
   "dependencies": {
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git-runner": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/threads-home": "workspace:*",
     "@sand/util": "workspace:*",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+    "@sand/web-client": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
   }
 }
