@@ -1,6 +1,6 @@
 import type { ContextMenu } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
-import type { NavItem, ShellGroup, ShellRow } from './contract'
+import { button, derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
+import type { GroupAction, NavItem, ShellGroup, ShellRow } from './contract'
 import { monogramOf } from './marks'
 import type { Model } from './model'
 
@@ -120,17 +120,42 @@ export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, loo
   )
 }
 
+const foldHeading = (model: Model, key: string, group: () => ShellGroup) => {
+  const { icon, sectionHeading } = model.kit
+  const open = () => model.foldOpen(key)
+  return button(
+    { type: 'button', class: 'group w-full text-left', 'aria-expanded': () => String(open()), onClick: () => model.toggleFold(key) },
+    sectionHeading(
+      span({ class: 'min-w-0 truncate group-hover:text-neutral-200' }, () => group().label),
+      span({ class: 'tabular-nums text-neutral-600' }, () => String(group().rows.length)),
+      span({ class: 'ml-auto inline-flex text-neutral-600 group-hover:text-neutral-200' }, dynamicChild(open, shown => icon(shown ? 'down' : 'right', 'sm'))),
+    ),
+  )
+}
+
+const foldAction = (model: Model, action: GroupAction) =>
+  model.kit.navButton(
+    { class: 'group w-full shrink-0', onClick: () => action.run() },
+    span({ class: 'inline-flex shrink-0 text-neutral-500 group-hover:text-neutral-100' }, model.kit.icon(action.icon)),
+    span({ class: 'min-w-0 flex-1 truncate text-left text-neutral-500 group-hover:text-neutral-100' }, action.label),
+  )
+
 const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, look: RowLook) => {
-  const action = listed.get().group.action
+  const { key, group } = listed.get()
+  const action = group.action
+  const shown = () => !listed.get().group.folded || model.foldOpen(key)
   return div(
     { class: 'flex flex-col' },
-    model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
+    group.folded
+      ? foldHeading(model, key, () => listed.get().group)
+      : model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
     list(
-      derive(() => listed.get().group.rows),
+      derive(() => (shown() ? listed.get().group.rows : [])),
       row => row.id,
       row => rowView(model, menu, row, look),
       div({ class: 'flex flex-col gap-px' }),
     ),
+    group.folded && action ? show(shown, () => foldAction(model, action)) : null,
   )
 }
 

@@ -2435,6 +2435,7 @@
         "@sand/picker": "workspace:*",
         "@sand/project": "workspace:*",
         "@sand/reactive": "workspace:*",
+        "@sand/settings": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",

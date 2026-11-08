@@ -9,7 +9,7 @@ import { detailSheet } from './detail'
 import { formSheet, type FormParts } from './form'
 import { headView } from './head'
 import { calendarModel } from './model'
-import { calendarKind, calendarRoute, calendarSection } from './section'
+import { calendarKind } from './section'
 import { subscribeSheet } from './subscribe'
 import { weekView } from './week'
 
@@ -21,7 +21,7 @@ const targetOf = (event: Occurrence): Target => ({ calendar: event.calendar, id:
 
 export default definePlugin({
   name: 'calendar-space',
-  description: 'The Calendar section and screen: your events as an agenda or a week, quick add, and the details of each event',
+  description: 'Calendar in the sidebar and its screen: your events as an agenda or a week, quick add, and the details of each event',
   inject,
   apply(ctx) {
     const { kit } = ctx
@@ -97,7 +97,7 @@ export default definePlugin({
     ctx.watch(shell, found =>
       found
         ? joinDisposers(
-            found.section(calendarSection(model, () => found.open(calendarRoute()))),
+            found.nav({ id: 'calendar', label: 'Calendar', icon: 'calendar', order: 20, to: { kind: calendarKind } }),
             found.route({ kind: calendarKind, render: route => screen(found, route) }),
             found.route({ kind: homeRoute, order: homeOrder, render: route => screen(found, route) }),
           )
