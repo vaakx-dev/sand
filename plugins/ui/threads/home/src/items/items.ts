@@ -4,7 +4,7 @@ import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
 import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { Thread } from '@sand/web-client/contract'
-import { changeStatus, mergeTrouble, type Changes } from '../changes'
+import { changeStatus, type Changes } from '../changes'
 import type { RowPart, RowThread } from '../contract'
 import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
@@ -31,16 +31,6 @@ const statusOf = (thread: Thread, agents: number, change: ThreadChanges | undefi
   return changeStatus(change)
 }
 
-const noteOf = (thread: Thread, agents: number, snoozed: number | undefined, change: ThreadChanges | undefined) => {
-  if (thread.waiting) return thread.waiting.title
-  const trouble = mergeTrouble(change)
-  if (trouble) return trouble
-  if (snoozed) return backLabel(snoozed)
-  if (isBack(thread)) return 'Back from snooze'
-  if (!thread.running && agents) return agents === 1 ? '1 agent running' : `${agents} agents running`
-  return undefined
-}
-
 export interface RowSources {
   changes: Changes
   trail: RowPart[]
@@ -63,10 +53,9 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
     row: {
       id: thread.id,
       label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
-      detail: noteOf(thread, agents, snoozed, change),
       place: placeOf(parts, project, thread.device),
       trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
-      at: snoozed ? undefined : (started ?? thread.info.updated),
+      ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
       status: statusOf(thread, agents, change),
       to: { kind: threadRoute, id: thread.id },
       menu: () => threadMenu(parts, thread.id),
@@ -83,7 +72,7 @@ const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup:
   row: {
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
-    detail: 'Draft',
+    end: 'Draft',
     place: placeOf(parts, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device), draft.device),
     at: draft.updated,
     to: { kind: draftRoute, id: draft.id },
