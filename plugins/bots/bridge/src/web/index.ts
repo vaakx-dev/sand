@@ -17,7 +17,7 @@ const botOf = (data: Record<string, unknown>) => (typeof data.id === 'string' ? 
 
 export default definePlugin({
   name: 'bot-bridge-web',
-  description: "Lets @ in the composer hand a message to a bot, shows its reply as a card in the thread, marks threads a bot started, and picks the project a bot's threads start in",
+  description: "Lets @ in the composer hand a message to a bot, shows its reply as a card in the thread, marks threads a bot started, and picks the projects a bot manages",
   inject,
   apply(ctx) {
     const roster = createRoster(ctx)

@@ -779,6 +779,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/bots": "workspace:*",
+        "@sand/chat": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/mcp-server": "workspace:*",
         "@sand/orchestrator": "workspace:*",
@@ -830,6 +831,7 @@
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
         "@sand/model": "workspace:*",
+        "@sand/project": "workspace:*",
         "@sand/prompt": "workspace:*",
         "@sand/provider-threads": "workspace:*",
         "@sand/server": "workspace:*",

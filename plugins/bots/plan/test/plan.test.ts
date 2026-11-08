@@ -15,7 +15,7 @@ const said = (text: string): Reply => [{ type: 'text', text }]
 
 const use = (name: string, input: Record<string, unknown>): Reply => [{ type: 'call', name, input }]
 
-const plan = '## In progress\n- Booking the Lisbon flights: thread "Lisbon trip", comparing fares\n'
+const plan = '- [Book the Lisbon flights](thread:0b6c2e1a): comparing fares\n'
 
 const start = async (replies: Reply[]) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
@@ -53,9 +53,9 @@ test('a bot writes and reads its plan through its tools, the user sees each chan
   await talk(bot.id, 'How is it going?')
   const bodies = sand.requests('fake').map(body => JSON.parse(body))
   expect(bodies[0].tools.map((tool: { name: string }) => tool.name)).toContain('bot_plan_write')
-  expect(JSON.stringify(bodies[2].messages.at(-1))).toContain('Booking the Lisbon flights')
-  for (const body of bodies) expect(JSON.stringify(body.system)).not.toContain('Booking the Lisbon flights')
-  expect(JSON.stringify(bodies[3].messages.at(-1))).not.toContain('Booking the Lisbon flights')
+  expect(JSON.stringify(bodies[2].messages.at(-1))).toContain('Book the Lisbon flights')
+  for (const body of bodies) expect(JSON.stringify(body.system)).not.toContain('Book the Lisbon flights')
+  expect(JSON.stringify(bodies[3].messages.at(-1))).not.toContain('Book the Lisbon flights')
 })
 
 test('the user edits a plan by bot, and a plan with no bot named fails', async () => {

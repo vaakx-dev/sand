@@ -36,4 +36,9 @@ export const schema = [
     'alter table bots add column budget real',
     'create index bot_entries_type on bot_entries (bot, type, at)',
   ],
+  [
+    "alter table bots add column projects text not null default '[]'",
+    'update bots set projects = json_array(project) where project is not null',
+    'alter table bots drop column project',
+  ],
 ]

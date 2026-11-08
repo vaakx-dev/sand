@@ -1,4 +1,4 @@
-import type { BotHold, BotStatus } from '@sand/bots/contract'
+import { type BotHold, type BotStatus, projectIds } from '@sand/bots/contract'
 import { type HistoryPage, historyReading } from '@sand/chats/contract'
 import type { TurnStatus } from '@sand/engine/contract'
 import { request, type } from '@sand/host-hub/contract'
@@ -11,7 +11,7 @@ export interface BotRow {
   job: string
   status: BotStatus
   hold?: BotHold
-  project: string | null
+  projects: string[]
   budget: number | null
   spent: number
 }
@@ -55,7 +55,7 @@ const setInput = z.object({
   bot: z.string().optional(),
   name: z.string().trim().min(1).max(60).optional(),
   job: z.string().trim().min(1).max(jobLimit).optional(),
-  project: z.string().min(1).nullable().optional(),
+  projects: projectIds.optional(),
   paused: z.boolean().optional(),
   budget: z.number().positive().max(1_000_000).nullable().optional(),
 })

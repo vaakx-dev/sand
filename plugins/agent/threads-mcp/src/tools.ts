@@ -30,7 +30,7 @@ const readInput = z.object({ thread: z.string().optional().describe('The thread 
 const startInput = z.object({
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
   pc: z.string().optional().describe('Another of your PCs to start it on, by name; cwd is then a folder on that PC (default: this PC)'),
-  cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (default: yours; a bot with a project starts it there)'),
+  cwd: z.string().optional().describe('The folder the thread works in, on the PC it starts on (default: yours; a bot with one project starts it there)'),
   project: z.string().optional().describe('A project id to work in instead of a folder, from project_list'),
   title: z.string().optional(),
   model: z.string().optional().describe('A model id or name (default: sand’s default model)'),

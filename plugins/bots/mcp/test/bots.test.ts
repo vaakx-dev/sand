@@ -164,7 +164,7 @@ test('an outside agent lists bots, hands one a task, reads its reply and renames
     return first?.type === 'text' ? JSON.parse(first.text) : undefined
   }
 
-  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', project: null, budget: null, spent: 0 }])
+  expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
   const page = await value('bot_read', { bot: bot.id })
   expect(page.items.map(({ role }: { role: string }) => role)).toEqual(['user', 'assistant'])

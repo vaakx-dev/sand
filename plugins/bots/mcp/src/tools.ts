@@ -28,12 +28,12 @@ const updateInput = z.object({
   bot: self,
   name: z.string().min(1).max(60).optional().describe('Rename it'),
   job: z.string().min(1).max(jobLimit).optional().describe(`Its whole job, replacing the one it has; at most ${jobLimit.toLocaleString('en')} characters`),
-  project: z.string().min(1).nullable().optional().describe('The project its new threads start in, from project_list, or null for none'),
+  projects: z.array(z.string().min(1)).optional().describe('Every project it manages, from project_list, replacing the ones it has; [] for none'),
   paused: z.boolean().optional().describe('Pause it, or resume it with false'),
   budget: z.number().positive().max(1_000_000).nullable().optional().describe('Its spend limit per calendar month in US dollars, or null for none'),
 })
 
-const updateRules = `Rename a bot, write its job, set the project it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
+const updateRules = `Rename a bot, write its job, set the projects it manages, pause or resume it, or set its monthly spend limit; returns the bot as bot_list shows it. A bot leaves out bot to update itself.
 
 A paused bot starts no turns: its running turn stops, and messages, routines and watches for it wait until it is resumed. A bot whose API spend this month reaches its limit is held the same way until next month or a higher limit; usage on a subscription plan doesn't count. A bot can't change its own limit.
 
@@ -47,7 +47,7 @@ When you are a bot with no job yet:
 export const botTools: McpTool[] = [
   {
     name: 'bot_list',
-    description: "List the user's bots with each one's job, whether it is working or held (paused, or at its monthly limit), the project it manages, its monthly spend limit in US dollars and what it spent this month",
+    description: "List the user's bots with each one's job, whether it is working or held (paused, or at its monthly limit), the projects it manages, its monthly spend limit in US dollars and what it spent this month",
     input: listInput,
     access: 'read',
     group: group.name,

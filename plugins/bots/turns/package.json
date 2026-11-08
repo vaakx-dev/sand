@@ -20,6 +20,7 @@
     "@sand/engine": "workspace:*",
     "@sand/host-hub": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/project": "workspace:*",
     "@sand/prompt": "workspace:*",
     "@sand/provider-threads": "workspace:*",
     "@sand/server": "workspace:*",

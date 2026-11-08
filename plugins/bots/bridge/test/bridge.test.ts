@@ -116,7 +116,7 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
   const bot = await createBot('Calendar')
   const thread = sand.chat('fake/t')
 
-  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', project: null, budget: null, spent: 0 }])
+  expect(await use(thread, 'bot_list', {})).toEqual([{ bot: bot.id, name: 'Calendar', job: 'Be Calendar.', status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await use(thread, 'bot_send', { bot: bot.id, prompt: "What's on tomorrow?" })).toEqual({ bot: bot.id, turn: expect.any(String), status: 'running', reported: true })
   const [asked] = userMessages((await sand.ask(botConversation, { bot: bot.id })).entries)
   expect(textOf(asked!.content)).toContain("from the agent working in the user's thread")
@@ -141,13 +141,14 @@ test('a thread hands a bot a task without waiting and hears its reply, and an @ 
   expect(await sand.ask(botAwait, { bot: bot.id, turn: second.turn!, timeoutMs: 5000 })).toMatchObject({ status: 'completed', reply: 'Booked.' })
 })
 
-test('a bot starts a thread in its project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
+test('a bot starts a thread in its only project, which says the bot sent it and tells the bot its final reply, but not after turns the user starts', async () => {
   await start([said('README fixed.'), said('Glad to help.'), said('Hi back.')], [said('The README is fixed.')])
   await sand.ask(defaultsSet, { patch: { model: 'fake/t' } })
   const bot = await createBot('Builder')
 
   expect(await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })).toEqual({ error: expect.stringContaining('Give either cwd or project') })
-  expect(await use(asBot(bot.id), 'bot_update', { project: 'p1' })).toMatchObject({ bot: bot.id, project: 'p1' })
+  expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1', 'elsewhere'] })).toEqual({ error: expect.stringContaining('Project elsewhere has no folder on this PC') })
+  expect(await use(asBot(bot.id), 'bot_update', { projects: ['p1'] })).toMatchObject({ bot: bot.id, projects: ['p1'] })
   const started = await use(asBot(bot.id), 'thread_start', { prompt: 'Fix the README' })
   const thread = sand.sessions.require(started.thread)
   expect(thread.project).toBe('p1')
