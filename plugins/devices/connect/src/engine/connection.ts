@@ -21,7 +21,7 @@ export const connect: Connect = options => {
     pc: options.target.id,
     status: life.status,
     freshness: life.freshness,
-    diagnosis: () => ({ status: life.status(), routes: book.entries(options.secure), attempts: attempts.list() }),
+    diagnosis: () => ({ status: life.status(), routes: book.entries(options), attempts: attempts.list() }),
     identity: life.identity,
     tag: life.tag,
     call<I, O>(request: Request<I, O>, input: I, call?: CallOptions) {

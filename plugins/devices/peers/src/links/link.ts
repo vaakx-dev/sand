@@ -34,6 +34,7 @@ export const openPeerLink = (record: DeviceRecord, seeds: Route[], key: string, 
     wake: setup.wake,
     store: setup.store,
     secure: false,
+    onPc: false,
     visible: () => true,
     greeting: () => ({ since: null }),
     greeted(reply) {
