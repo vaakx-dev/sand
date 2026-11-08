@@ -55,13 +55,18 @@ const formats = {
 
 export const dayLabel = (at: number) => formats.day.format(at)
 
+const nearDays = ['Today', 'Tomorrow']
+
+export const dayHeading = (day: number) => nearDays[Math.round((day - startOfDay(Date.now())) / dayMs)] ?? dayLabel(day)
+
 export const weekdayLabel = (at: number) => formats.weekday.format(at)
 
-export const monthLabel = (at: number) => formats.month.format(at)
+const sameMonth = (from: number, to: number) => new Date(from).getMonth() === new Date(to - 1).getMonth()
 
-export const shortMonthLabel = (at: number) => formats.shortMonth.format(at)
-
-export const rangeLabel = (from: number, to: number) => formats.range.formatRange(from, to - 1)
+export const monthsLabel = (from: number, to: number, short: boolean) => {
+  if (sameMonth(from, to)) return (short ? formats.shortMonth : formats.month).format(from)
+  return formats.shortMonth.formatRange(from, to - 1)
+}
 
 export const clockLabel = (at: number) => formats.clock.format(at)
 

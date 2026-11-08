@@ -111,7 +111,7 @@ export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, loo
         title: shown.label,
         large: look.phone,
         ...(shown.mark && { mark: monogramOf(model.kit, shown.mark) }),
-        end: workStatus(shown.status, shown.at),
+        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : workStatus(shown.status, shown.at),
         ...(shown.place && { place: { label: shown.place.label, mark: shown.place.mark?.() } }),
         ...(shown.trail && { trail: shown.trail() }),
       }),

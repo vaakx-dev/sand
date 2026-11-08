@@ -120,6 +120,8 @@ export interface ShellRow {
   label: string
   detail?: string
   meta?: string
+  /** A short label at the right of the title line, such as an event's time; drawn as meta. */
+  end?: string
   /** When the row's state began, in epoch ms; drawn as a short age such as "4m". */
   at?: number
   mark?: Monogram
