@@ -2,7 +2,7 @@ import type { MenuAction } from '@sand/ui-shell/contract'
 import type { MenuSpec } from '@sand/ui-kit/contract'
 import type { ProjectEntry, ProjectGroup } from '@sand/web-client/contract'
 import type { ProjectsContext } from '../context'
-import { copyEntries, projectEntries, openAt, startable, visibilityEntry, type Entry } from './actions'
+import { bringEntry, copyEntries, projectEntries, openAt, startable, visibilityEntry, type Entry } from './actions'
 import { shorten } from './places'
 
 const quietly = (work: () => void | Promise<unknown>) => () => (async () => work())().catch(() => {})
@@ -16,7 +16,7 @@ export const groupSpec = (ctx: ProjectsContext, group: ProjectGroup, looks: Entr
   actions: [
     ...fromEntries(projectEntries(ctx, group), 'project'),
     ...fromEntries(looks, 'look'),
-    ...fromEntries(copyEntries(ctx, group), 'copies'),
+    ...fromEntries([...bringEntry(ctx, group), ...copyEntries(ctx, group)], 'copies'),
     ...fromEntries([visibilityEntry(ctx, group)], 'manage'),
     {
       id: 'delete',
