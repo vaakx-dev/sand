@@ -76,6 +76,7 @@ export default definePlugin({
         model.showSheet(spec)
         return { close: () => model.closeSheet(spec) }
       },
+      cover: close => model.cover(close),
       chip: source => model.chips.add(source),
       chipBar: scope => chipBar(ctx.kit, model.chips.items, scope),
       mount: (where, view, order = 0) => model.places[where].add({ view, order }),

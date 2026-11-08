@@ -42,7 +42,12 @@ const write = (change: () => void) => {
   history.back()
 }
 
-export const pushLayer = (layer: string) => write(() => history.pushState({ ...addressState(), [layerKey]: layer }, '', location.href))
+const layered = (layer: string) => ({ ...addressState(), [layerKey]: layer })
+
+export const pushLayer = (layer: string) => {
+  if (!waiting && addressLayer()) return history.replaceState(layered(layer), '', location.href)
+  write(() => history.pushState(layered(layer), '', location.href))
+}
 
 export const leaveLayer = () => {
   if (waiting || !addressLayer()) return

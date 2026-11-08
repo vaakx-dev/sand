@@ -259,6 +259,11 @@ export interface Shell {
   current(): Route
   state(): ShellState
   sheet(spec: SheetSpec): SheetHandle
+  /**
+   * Gives an overlay the shell doesn't draw, such as the palette, the history layer a sheet gets: browser back,
+   * opening a route and opening a sheet call `close`. Call the returned function when the overlay closes by itself.
+   */
+  cover(close: () => void): () => void
   chip(source: ChipSource): Dispose
   /** The chips for a scope, for a composer's `above` slot. Call inside the caller's scope; disposing it removes the bar. */
   chipBar(scope: ChipScope): HTMLElement

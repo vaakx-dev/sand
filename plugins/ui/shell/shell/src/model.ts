@@ -20,7 +20,7 @@ export const deskWidth = 1000
 
 export const drawerReach = 256
 
-const layers = { drawer: 'drawer', sheet: 'sheet' } as const
+const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover' } as const
 
 const home: Route = { kind: homeRoute }
 
@@ -65,9 +65,18 @@ export const shellModel = (kit: Kit) => {
   const sideHidden = (kind: string) => hiddenSides.get().includes(kind)
   const showSide = (kind: string, shown: boolean) => hiddenSides.update(kinds => [...kinds.filter(other => other !== kind), ...(shown ? [] : [kind])])
 
+  let uncover: (() => void) | undefined
+  const followCover = () => {
+    const close = uncover
+    if (!close || layer.get() === layers.cover) return
+    uncover = undefined
+    close()
+  }
+
   const enter = (name: string) => {
     pushLayer(name)
     layer.set(addressLayer())
+    followCover()
   }
 
   const leave = () => {
@@ -87,6 +96,16 @@ export const shellModel = (kit: Kit) => {
     sheet.set(spec)
   }
   const sheetShown = derive(() => (layer.get() === layers.sheet ? sheet.get() : undefined))
+
+  const cover = (close: () => void) => {
+    enter(layers.cover)
+    uncover = close
+    return () => {
+      if (uncover !== close) return
+      uncover = undefined
+      if (layer.get() === layers.cover) leave()
+    }
+  }
 
   return {
     kit,
@@ -110,6 +129,7 @@ export const shellModel = (kit: Kit) => {
     setDrawer,
     sheetShown,
     showSheet,
+    cover,
     closeSheet: (spec: SheetSpec) => {
       if (sheet.get() === spec) leave()
     },
@@ -124,6 +144,7 @@ export const shellModel = (kit: Kit) => {
     follow() {
       layer.set(addressLayer())
       if (!layer.get()) sheet.set(undefined)
+      followCover()
       backDrag.set(undefined)
       nav.follow()
     },
