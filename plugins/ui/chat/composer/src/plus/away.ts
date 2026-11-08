@@ -12,7 +12,7 @@ export const awayChip = (kit: Kit, { entries }: Plus) => {
   const part = (entry: PlusEntry, index: number) => [
     index ? span({ class: 'text-neutral-500' }, '·') : null,
     plainButton(
-      { ...pressOpens(entry.open, entry.open.toggle()), title: entry.label, class: 'flex min-w-0 items-center gap-1 rounded-full hover:text-neutral-100' },
+      { ...pressOpens(entry.open, entry.open.toggle()), title: entry.label, class: 'flex min-w-0 items-center gap-1 rounded-sm hover:text-neutral-100' },
       icon(entry.icon(), 'xs'),
       span({ class: 'min-w-0 truncate' }, () => entry.unusual() ?? ''),
     ),
@@ -22,10 +22,10 @@ export const awayChip = (kit: Kit, { entries }: Plus) => {
 
   const chip = (list: PlusEntry[]) =>
     span(
-      { class: 'flex h-6 min-w-0 items-center gap-1 rounded-full bg-neutral-700/60 pr-1 pl-2 text-xs text-neutral-400' },
+      { class: 'flex h-6 min-w-0 items-center gap-1 text-xs text-neutral-400' },
       ...list.flatMap(part),
       plainButton(
-        { title: resetTitle, 'aria-label': resetTitle, class: 'inline-flex shrink-0 rounded-full p-px text-neutral-500 hover:text-neutral-100', onClick: reset },
+        { title: resetTitle, 'aria-label': resetTitle, class: 'inline-flex shrink-0 rounded-sm p-px text-neutral-500 hover:text-neutral-100', onClick: reset },
         icon('x', 'xs'),
       ),
     )

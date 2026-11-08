@@ -26,6 +26,6 @@ export default definePlugin({
     if (ctx.wire.ready()) void load()
     ctx.effect(() => ctx.wire.on(toolsChangeWire, value => groups.set(value)))
     ctx.watch(settings, found => found?.page({ id: 'tools', label: 'Tools', icon: 'wrench', group: 'agents', order: 22, render: () => toolsPage(ctx.kit, groups, choose) }))
-    ctx.watch(toolViews, views => views && ctx.watch(transcript, found => found?.tool('find_tools', foundRenderer(views))))
+    ctx.watch(toolViews, views => views && ctx.watch(transcript, found => found?.tool('find_tools', foundRenderer(ctx.kit, views))))
   },
 })

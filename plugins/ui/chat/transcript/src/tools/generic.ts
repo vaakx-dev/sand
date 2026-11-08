@@ -1,14 +1,12 @@
-import type { ToolBadge, ToolRenderer, ToolView } from '../contract'
+import type { ToolRenderer, ToolView } from '../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
 import { resultText } from '../items/results'
 import { toolLabel } from './label'
-import { outputText } from './notes'
 
 const clipAt = 8000
 
-const preview = ({ statusLabel }: Kit, tool: ToolView) => {
-  if (tool.status === 'running') return statusLabel('running')
+const preview = (tool: ToolView) => {
   if (!tool.result) return tool.call.malformed ? 'malformed input' : ''
   if (tool.result.isError) return ''
   const lines = resultText(tool.result).split('\n')
@@ -27,13 +25,11 @@ const inputText = (input: unknown) => {
     .join('\n')
 }
 
-const failedBadge = ({ statusLabel }: Kit, tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: statusLabel('failed'), tone: 'danger' } : undefined)
-
 const clip = (value: string) => (value.length > clipAt ? `${value.slice(0, clipAt)}\n… ${value.length - clipAt} more characters` : value)
 
-const section = ({ fold }: Kit, body: string, error = false) => {
+const section = ({ codeBlock, fold }: Kit, body: string, danger = false) => {
   const text = clip(body)
-  return fold({ lines: text.split('\n').length, chars: text.length }, outputText(text, error))
+  return fold({ lines: text.split('\n').length, chars: text.length }, codeBlock({ danger }, text))
 }
 
 const resultSection = (kit: Kit, tool: ToolView) => {
@@ -46,9 +42,9 @@ export const genericRenderer = (kit: Kit, name: string): Required<ToolRenderer> 
   verb: name,
   activeVerb: name,
   label: toolLabel,
-  meta: tool => preview(kit, tool),
-  badge: tool => failedBadge(kit, tool),
+  meta: preview,
+  badge: () => undefined,
   copy: toolLabel,
-  body: tool => div({ class: 'flex flex-col gap-3' }, section(kit, tool.call.malformed ?? inputText(tool.call.input)), resultSection(kit, tool)),
+  body: tool => div({ class: 'flex flex-col gap-2' }, section(kit, tool.call.malformed ?? inputText(tool.call.input)), resultSection(kit, tool)),
   actions: () => [],
 })

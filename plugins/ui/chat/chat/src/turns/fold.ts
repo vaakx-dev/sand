@@ -1,15 +1,13 @@
 import type { Item } from '@sand/transcript/contract'
-import { currentKind, kindsIn } from './kinds'
+
+export type TurnPhase = 'thinking' | 'working' | 'waiting' | 'done'
 
 export interface TurnHead {
   kind: 'turn'
   key: string
-  running: boolean
-  waiting: boolean
+  phase: TurnPhase
   start: number | undefined
   end: number
-  kinds: string[]
-  current: string | undefined
 }
 
 export interface ShownItem {
@@ -17,6 +15,7 @@ export interface ShownItem {
   key: string
   item: Item
   rail: boolean
+  last: boolean
 }
 
 export type Shown = ShownItem | TurnHead
@@ -68,42 +67,50 @@ const visibleFrom = (body: Item[]) => {
   return answered(body) ? from - 1 : from
 }
 
-const headOf = (turn: Turn, work: Item[], running: boolean, options: FoldOptions): TurnHead => {
+const begun = (body: Item[]) => body.some(item => item.kind === 'text' || item.kind === 'tools')
+
+const phaseOf = (body: Item[], running: boolean, options: FoldOptions): TurnPhase => {
+  if (!running) return 'done'
+  if (options.waiting) return 'waiting'
+  return begun(body) ? 'working' : 'thinking'
+}
+
+const headOf = (turn: Turn, running: boolean, options: FoldOptions): TurnHead => {
   const items = turn.head ? [turn.head, ...turn.body] : turn.body
   const times = items.flatMap(item => timeOf(item) ?? [])
   const first = turn.head ? timeOf(turn.head) : times[0]
   return {
     kind: 'turn',
     key: `turn:${items[0]!.key}`,
-    running,
-    waiting: running && options.waiting,
+    phase: phaseOf(turn.body, running, options),
     start: running ? (options.started ?? first) : first,
     end: Math.max(0, ...times),
-    kinds: kindsIn(work),
-    current: currentKind(work),
   }
 }
 
 const shownTurn = (turn: Turn, running: boolean, options: FoldOptions): Shown[] => {
   const from = visibleFrom(turn.body)
   const isWork = (item: Item, index: number) => index < from && !pinned(item)
-  const work = turn.body.filter(isWork)
   const cut = !turn.head && options.older
-  const head = !cut && (running || work.length) ? headOf(turn, work, running, options) : undefined
+  const head = !cut && (running || turn.body.some(isWork)) ? headOf(turn, running, options) : undefined
   const expanded = head !== undefined && options.open(head.key)
   const shown: Shown[] = []
-  if (turn.head) shown.push({ kind: 'item', key: turn.head.key, item: turn.head, rail: false })
+  if (turn.head) shown.push({ kind: 'item', key: turn.head.key, item: turn.head, rail: false, last: false })
   if (head) shown.push(head)
   turn.body.forEach((item, index) => {
     const rail = isWork(item, index)
-    if (!rail || expanded) shown.push({ kind: 'item', key: item.key, item, rail })
+    if (!rail || expanded) shown.push({ kind: 'item', key: item.key, item, rail, last: false })
   })
   return shown
 }
 
 const isRunning = (turn: Turn, last: boolean, options: FoldOptions) => last && options.running && (options.streaming || !answered(turn.body))
 
+const isReply = (entry: Shown) => entry.kind === 'item' && entry.item.kind === 'text' && !entry.rail
+
 export const foldTurns = (items: Item[], options: FoldOptions): Shown[] => {
   const turns = split(items)
-  return turns.flatMap((turn, index) => shownTurn(turn, isRunning(turn, index === turns.length - 1, options), options))
+  const shown = turns.flatMap((turn, index) => shownTurn(turn, isRunning(turn, index === turns.length - 1, options), options))
+  const last = shown.findLastIndex(isReply)
+  return shown.map((entry, index) => (index === last && entry.kind === 'item' ? { ...entry, last: true } : entry))
 }

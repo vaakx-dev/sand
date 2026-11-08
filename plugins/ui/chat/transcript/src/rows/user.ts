@@ -1,11 +1,11 @@
 import { contextLinks, promptLabel, type ContextLink, type ContextRecord, type FileBlock, type UserPart } from '@sand/chats/contract'
 import { contextFormats, copyContext } from '@sand/context/contract'
-import type { TextMenu, UserItem } from '../contract'
+import type { UserItem } from '../contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { IconName, Kit } from '@sand/ui-kit/contract'
 import { bytes, isArchiveName, quoteBlocks, quotedText } from '@sand/util'
-import { div, show, span, type Child } from '@vaakx-dev/vrui'
-import { actionRow, row, type RowContext, type RowMaker } from './row'
+import { derive, div, dynamicChild, show, span, type Child, type Props } from '@vaakx-dev/vrui'
+import { actionRow, row, tapReveal, type RowContext, type RowMaker } from './row'
 
 const chip = ({ icon }: Kit, name: string, iconName: IconName, size?: number) =>
   span(
@@ -71,43 +71,62 @@ const copySelection = (records: ContextRecord[]) => (event: ClipboardEvent) => {
   if (copyContext(event.clipboardData, selectedMarkdown(selection.getRangeAt(0)), records)) event.preventDefault()
 }
 
-const bubble = (text: string, records: ContextRecord[], press: TextMenu, context: RowContext) =>
+const sentBy = (records: ContextRecord[]) => (link: ContextLink) =>
+  records.some(record => record.id === link.id && record.kind === link.kind && record.data.sent === true)
+
+const withoutSent = (text: string, records: ContextRecord[]) =>
+  contextLinks(text)
+    .filter(sentBy(records))
+    .reduceRight((rest, link) => rest.slice(0, link.start) + rest.slice(link.end), text)
+    .trim()
+
+const bubble = (text: string, records: ContextRecord[], props: Props<HTMLDivElement>, context: RowContext) =>
   div(
     {
-      class: 'rounded-xl bg-neutral-800 px-4 py-4 text-sm text-box-trim text-neutral-100 whitespace-pre-wrap wrap-anywhere',
+      ...props,
+      class: 'min-w-0 rounded-xl bg-neutral-800 px-3 py-2 text-sm text-neutral-100 whitespace-pre-wrap wrap-anywhere',
       'data-quote': '',
-      ...press.props,
       onCopy: copySelection(records),
     },
     blocks(text, records, context),
   )
 
-const message = (...children: Child[]) =>
-  div({ class: 'chat-row group mt-6 mb-3 flex justify-end' }, div({ class: 'flex min-w-0 max-w-2xl flex-col items-end gap-2' }, ...children))
-
 export const userMessage = (item: UserItem, context: RowContext, actions: (text: string) => MenuAction[], note?: () => Child) =>
-  row(`user:${item.key}`, item, () => {
+  row(`user:${item.key}`, context.sender?.(item.key), from => {
+    const { copyButton, metaLine } = context.kit
     const text = item.parts.flatMap(part => (part.kind === 'text' ? [part.text] : [])).join('\n\n')
     const records = item.parts.flatMap(part => (part.kind === 'context' ? part.records : []))
     const attachments = item.parts.map(part => attachment(part, context)).filter(Boolean)
+    const shown = derive(() => (from.get() ? withoutSent(text, records) : text))
     const { menus } = context
-    const spec = () => ({ title: 'Message', subtitle: promptLabel(text).slice(0, 80), actions: actions(text) })
+    const spec = () => ({ title: 'Message', subtitle: promptLabel(shown.get()).slice(0, 80), actions: actions(shown.get()) })
     const press = menus.text(context.menu, spec)
-    return message(
+    const reveal = tapReveal()
+    return div(
+      { class: 'chat-row group mt-5 mb-3 flex flex-col items-end gap-2 pl-12 md:pl-24' },
+      show(
+        () => Boolean(from.get()),
+        () => div({ class: '-mb-1 flex min-w-0 max-w-full px-1' }, metaLine(() => `From ${from.get()}`)),
+      ),
       attachments.length > 0 && div({ class: 'flex flex-wrap justify-end gap-2' }, attachments),
-      text && bubble(text, records, press, context),
-      note?.(),
       div(
-        { class: '-mt-1 flex items-center gap-1' },
-        actionRow([
-          text && context.kit.copyButton({ text: () => text, formats: () => contextFormats(text, records), size: 'sm' }),
+        { class: 'flex min-w-0 max-w-full items-end gap-1' },
+        actionRow(
+          () => reveal.tapped.get(),
+          '',
+          show(
+            () => Boolean(shown.get()),
+            () => copyButton({ text: () => shown.get(), formats: () => contextFormats(shown.get(), records), size: 'sm' }),
+          ),
           show(
             () => spec().actions.length > 0,
             () => menus.more(context.menu, spec),
           ),
-        ]),
-        !item.steer && context.branchSwitch?.(item.key),
+        ),
+        dynamicChild(shown, value => (value ? bubble(value, records, { ...press.props, onClick: reveal.onClick }, context) : null)),
       ),
+      note?.(),
+      !item.steer && context.branchSwitch?.(item.key),
     )
   })
 

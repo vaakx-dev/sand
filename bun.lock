@@ -1950,9 +1950,12 @@
       "name": "@sand/chat",
       "version": "0.0.0",
       "dependencies": {
+        "@sand/changes": "workspace:*",
         "@sand/chats": "workspace:*",
         "@sand/composer": "workspace:*",
-        "@sand/palette": "workspace:*",
+        "@sand/devices-contract": "workspace:*",
+        "@sand/features": "workspace:*",
+        "@sand/markdown": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/project": "workspace:*",
         "@sand/reactive": "workspace:*",

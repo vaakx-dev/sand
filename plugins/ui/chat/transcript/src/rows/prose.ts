@@ -1,42 +1,36 @@
 import { oneLine } from '@sand/util'
-import { div, effect, show, span } from '@vaakx-dev/vrui'
+import { div, effect, show } from '@vaakx-dev/vrui'
 import { streamedMarkdown } from '../integrations/streamed'
-import { actionRow, row, workFrame, type RowMaker } from './row'
-import { thinkingCard } from './thinking'
+import { actionRow, row, tapReveal, workFrame, type RowMaker } from './row'
+import { thinkingStep } from './thinking'
 
 export const textRow: RowMaker<'text'> = (item, context) =>
-  row(`text:${item.key}`, item, (data, railed) => {
+  row(`text:${item.key}`, item, (data, place) => {
     const { copyButton } = context.kit
     const text = data.map(value => value.text)
     const streaming = data.map(value => value.streaming)
-    const node = div({ class: ['leading-relaxed wrap-anywhere', () => (railed?.get() ? 'text-neutral-400' : 'text-neutral-100')], 'data-quote': '' })
+    const railed = () => place?.get().railed ?? false
+    const node = div({ class: ['leading-relaxed wrap-anywhere', () => (railed() ? 'text-neutral-400' : 'text-neutral-100')], 'data-quote': '' })
     const render = streamedMarkdown(node, context.markdown, context.image)
     effect(() => render(text.get(), streaming.get()))
     const { menus } = context
     const spec = () => ({ title: 'Message', subtitle: oneLine(text.get()).slice(0, 80), actions: context.reply?.(text.get()) ?? [] })
     const press = menus.text(context.menu, spec)
+    const reveal = tapReveal()
     return div(
-      { class: 'chat-row group mb-3 text-sm', ...press.props },
+      { class: ['chat-row group text-sm', () => (railed() ? 'my-1' : 'mt-2 mb-3')], ...press.props, onClick: reveal.onClick },
       node,
       show(
-        () => !railed?.get(),
+        () => !railed() && !streaming.get(),
         () =>
           actionRow(
-            [
-              show(
-                () => !streaming.get(),
-                () =>
-                  span(
-                    { class: 'flex items-center gap-1' },
-                    copyButton({ text: () => text.get(), size: 'sm' }),
-                    show(
-                      () => spec().actions.length > 0,
-                      () => menus.more(context.menu, spec),
-                    ),
-                  ),
-              ),
-            ],
-            'mt-1',
+            () => (place?.get().last ?? false) || reveal.tapped.get(),
+            '-ml-1 mt-1',
+            copyButton({ text: () => text.get(), size: 'sm' }),
+            show(
+              () => spec().actions.length > 0,
+              () => menus.more(context.menu, spec),
+            ),
           ),
       ),
     )
@@ -44,5 +38,5 @@ export const textRow: RowMaker<'text'> = (item, context) =>
 
 export const thinkingRow: RowMaker<'thinking'> = (item, context) =>
   row(`thinking:${item.key}`, item, data =>
-    workFrame(thinkingCard(context.kit, { streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) })),
+    workFrame(thinkingStep(context.kit, { streaming: data.map(value => value.streaming), text: data.map(value => value.text), ...context.states.get(item.key) })),
   )

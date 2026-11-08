@@ -23,10 +23,14 @@ export const markdown = service<Markdown>('markdown')
 
 /**
  * Draws links in one scheme, such as `thread`: `[Fix the cache](thread:abc)` calls `render('abc', label)`.
- * Applies to markdown drawn after it registers, everywhere: transcripts, bot chats and plans.
+ * Applies to markdown drawn after it registers, everywhere: transcripts, bot chats and plans; markdown already drawn
+ * keeps its old look. Schemes match without regard to case. When several plugins register the same scheme, the lowest
+ * `order` wins (default 0), so a plugin can stand in for one that's off: chat's threads-only `thread` links sit
+ * behind the bots bridge's.
  */
 export interface LinkScheme {
   scheme: string
+  order?: number
   render(target: string, label: (Node | string)[]): Node
 }
 

@@ -13,9 +13,12 @@
     "summary": "Messages with markdown, and tool steps grouped under each reply"
   },
   "dependencies": {
+    "@sand/changes": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
-    "@sand/palette": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/markdown": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/project": "workspace:*",
     "@sand/reactive": "workspace:*",

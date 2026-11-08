@@ -32,7 +32,7 @@ const output = (tool: ToolView, { resultText }: ToolViews) => {
 }
 
 const hitRow = (line: string, text: string, pattern: RegExp | undefined) =>
-  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, line), span({ class: 'wrap-anywhere' }, marked(text, pattern)))
+  div({ class: 'flex gap-2' }, span({ class: 'min-w-8 shrink-0 text-right text-neutral-500' }, line), span({ class: 'text-neutral-400 wrap-anywhere' }, marked(text, pattern)))
 
 const matches = (tool: ToolView, views: ToolViews) => {
   const pattern = regex(tool, views)
@@ -52,20 +52,21 @@ const matches = (tool: ToolView, views: ToolViews) => {
 
 const empty = (tool: ToolView, { resultText }: ToolViews) => /^No (matches|files found)$/.test(resultText(tool.result))
 
-const box = ({ fold }: Kit, tool: ToolView, content: Child, views: ToolViews) => {
+const box = ({ codeBlock, fold, metaLine }: Kit, tool: ToolView, content: Child, views: ToolViews) => {
   const { rows, stop } = output(tool, views)
   const hidden = rows.length - shownRows
   return div(
-    fold({ lines: Math.min(rows.length, shownRows) }, views.outputText(content, false)),
+    fold({ lines: Math.min(rows.length, shownRows) }, codeBlock({}, content)),
     hidden > 0 && views.truncatedNote(hidden, 'after'),
-    stop && div({ class: 'mt-1 text-xs text-neutral-500' }, stop),
+    stop && div({ class: 'mt-1 flex' }, metaLine(stop)),
   )
 }
 
 const body = (kit: Kit, tool: ToolView, content: () => Child, none: string, views: ToolViews) => {
   if (!tool.result) return undefined
   if (tool.result.isError) return views.errorBody(tool)
-  return box(kit, tool, empty(tool, views) ? none : content(), views)
+  if (empty(tool, views)) return div({ class: 'flex' }, kit.metaLine(none))
+  return box(kit, tool, content(), views)
 }
 
 export const grepRenderer = (kit: Kit, views: ToolViews): ToolRenderer => ({

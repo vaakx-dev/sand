@@ -1,7 +1,7 @@
 {
   "name": "@sand/composer",
   "version": "0.0.0",
-  "description": "Floating prompt card: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls",
+  "description": "Prompt field: send, pending messages, completion, attachments, context, unsent drafts, slots for other controls",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

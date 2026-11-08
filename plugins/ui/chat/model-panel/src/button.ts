@@ -1,13 +1,13 @@
 import type { PickerTarget } from '@sand/model-picker/contract'
 import type { Pulse } from '@sand/reactive'
-import { div, dynamicChild, show, sig, SPACE, span } from '@vaakx-dev/vrui'
+import { div, show, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
 import type { ShownState } from './shown'
 
 const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
 
-export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Pulse, shownState: ShownState) => {
-  const { chipButton, chipPopover, icon, modelLogo, pressOpens, shrinkBadge } = ctx.kit
+export const modelButton = (ctx: PanelContext, target: PickerTarget, changes: Pulse, shownState: ShownState) => {
+  const { chipPopover, icon, pressOpens, quietButton } = ctx.kit
   const open = sig(false)
   let flash = false
   const close = () => open.set(false)
@@ -32,7 +32,7 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
     const pc = source.get()?.pc
     return pc ? ctx.modelPicker.online(pc) === false : false
   }
-  const pillTip = () => {
+  const tip = () => {
     if (!current.get()) return ''
     return [modelLabel(), offline() && 'offline', effortLabel() && `${effortLabel()} effort`, current.get()?.speed === 'fast' && 'Fast mode'].filter(Boolean).join(' · ')
   }
@@ -40,31 +40,24 @@ export const modelPill = (ctx: PanelContext, target: PickerTarget, changes: Puls
   const view = () =>
     div(
       { class: 'flex min-w-0 items-center gap-1', hidden: current.map(value => !value) },
-      chipButton(
-        { active: open, menu: true, warning: () => !chosen.get(), class: 'max-w-full', title: pillTip, ...pressOpens(open, toggle) },
-        dynamicChild(
-          model.map(value => value?.provider),
-          provider => (provider ? modelLogo(provider, 14) : null),
-        ),
-        span({ class: 'min-w-0 truncate' }, modelLabel),
+      quietButton(
+        { surface: 'raised', active: open, title: tip, class: 'min-w-0 shrink gap-1 px-2', ...pressOpens(open, toggle) },
+        span({ class: ['min-w-0 truncate font-medium', () => (chosen.get() ? 'text-neutral-100' : 'text-warning-400')] }, modelLabel),
         show(
           current.map(value => Boolean(value?.effort)),
-          () => span({ class: 'hidden shrink-0 sm:inline' }, () => `· ${effortLabel()}`),
+          () => span({ class: 'hidden shrink-0 sm:inline' }, effortLabel),
         ),
         show(
           current.map(value => value?.speed === 'fast'),
           () => span({ class: 'inline-flex shrink-0' }, icon('zap', 'sm')),
         ),
+        span({ class: 'inline-flex shrink-0 text-neutral-500' }, icon('down', 'sm')),
       ),
       show(next.map(Boolean), () =>
         span(
-          { class: 'inline-flex min-w-0', title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : '') },
-          shrinkBadge(
-            'neutral',
-            icon('clock', 12),
-            span({ class: 'shrink-0' }, 'Next'),
-            span({ class: 'hidden min-w-0 truncate sm:inline' }, () => (next.get() ? `: ${nextLabel()}` : '')),
-          ),
+          { class: 'hidden shrink-0 items-center gap-1 text-xs text-neutral-500 sm:flex', title: () => (next.get() ? `Switches to ${nextLabel()} when this turn finishes` : '') },
+          icon('clock', 12),
+          () => `Next: ${nextLabel()}`,
         ),
       ),
       show(open, () =>

@@ -3,11 +3,11 @@ import { colorVar, SPACE } from '@vaakx-dev/vrui'
 
 export const theme = EditorView.theme(
   {
-    '&': { maxHeight: SPACE['64'] },
+    '&': { maxHeight: `min(${SPACE['64']}, 40dvh)` },
     '&.cm-focused': { outline: 'none' },
     '.cm-scroller': { fontFamily: 'inherit', lineHeight: 'inherit', overflowY: 'auto' },
-    '.cm-content': { minHeight: SPACE['8'], padding: '0', caretColor: 'currentColor' },
-    '.cm-line': { padding: `0 ${SPACE['1']}` },
+    '.cm-content': { padding: '0', caretColor: 'currentColor' },
+    '.cm-line': { padding: '0' },
     '.cm-placeholder': { color: colorVar('neutral', 500) },
   },
   { dark: true },

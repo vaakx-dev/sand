@@ -1,6 +1,6 @@
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
 import type { SessionSettings } from '@sand/model/contract'
-import { modelPill } from '@sand/model-panel/contract'
+import { modelButton } from '@sand/model-panel/contract'
 import { pulse } from '@sand/reactive'
 import { models, modelsChange, outbox, outboxChange, threadChange, threadSelect } from '@sand/web-client/contract'
 import type { ComposerContext } from './context'
@@ -38,9 +38,9 @@ export const threadTarget = (ctx: ComposerContext): Target => {
       return thread ? ctx.threads.path(thread.id) : []
     },
     ready(picked) {
-      const pill = ctx.get(modelPill)
-      if (!pill || !modelMissing(ctx, threadSettings(ctx, picked))) return true
-      pill.open()
+      const button = ctx.get(modelButton)
+      if (!button || !modelMissing(ctx, threadSettings(ctx, picked))) return true
+      button.open()
       return false
     },
     send: (text, content, picked, options) => submit(ctx, text, content, threadSettings(ctx, picked), options),

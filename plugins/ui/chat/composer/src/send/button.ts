@@ -16,11 +16,10 @@ const titles: Record<Look, string> = {
   busy: 'Sending',
 }
 
-const tone = (kit: Kit, look: Look) => {
-  const { actionTones } = kit
-  if (look === 'busy' || look === 'off') return 'cursor-default bg-neutral-700/60 text-neutral-500'
-  return look === 'stop' ? actionTones.secondary : actionTones.primary
-}
+const idle = 'cursor-default bg-neutral-600 text-neutral-500'
+const live = 'bg-info-500 text-neutral-100 hover:bg-info-400'
+
+const tones: Record<Look, string> = { off: idle, busy: idle, send: live, steer: live, stop: 'bg-neutral-600 text-neutral-100' }
 
 const lookOf = (model: Model, sending: Sig<boolean>): Look => {
   if (sending.get()) return 'busy'
@@ -65,7 +64,7 @@ export const sendControl = (kit: Kit, model: Model, actions: () => MenuAction[])
         title: () => titleOf(model, look.get()),
         'aria-label': () => (look.get() === 'off' ? titles.off : titleOf(model, look.get())),
         'aria-disabled': () => String(look.get() === 'off' || look.get() === 'busy'),
-        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tone(kit, look.get())],
+        class: ['inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors', () => tones[look.get()]],
         ...context.target(
           () => menuOf(model, actions),
           () => void model.send(),

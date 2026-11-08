@@ -14,7 +14,7 @@ const screenshotOf = (tool: ToolView) => tool.result?.content.find(block => bloc
 
 const consoleLines = (lines: string[]) => lines.map(line => span({ class: isErrorLine(line) ? 'text-danger-400' : '' }, `${line}\n`))
 
-export const previewView = ({ fold }: Kit, { errorBody, field, image, outputText }: ToolViews): ToolRenderer => ({
+export const previewView = ({ codeBlock, fold, metaLine }: Kit, { errorBody, field, image }: ToolViews): ToolRenderer => ({
   icon: 'chart',
   verb: 'Checked',
   activeVerb: 'Checking',
@@ -35,9 +35,8 @@ export const previewView = ({ fold }: Kit, { errorBody, field, image, outputText
     const screenshot = screenshotOf(tool)
     const { logged } = report(tool)
     return div(
-      { class: 'flex flex-col items-start gap-2' },
-      screenshot && image(screenshot, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: thumbnailHeight }),
-      logged.length ? fold({ lines: logged.length }, outputText(consoleLines(logged), false)) : outputText('No console output', false),
+      screenshot && div({ class: 'mb-2' }, image(screenshot, tool.thread, { class: 'block max-h-80 max-w-full rounded-md', maxHeight: thumbnailHeight })),
+      logged.length ? fold({ lines: logged.length }, codeBlock({}, consoleLines(logged))) : metaLine('No console output'),
     )
   },
 })

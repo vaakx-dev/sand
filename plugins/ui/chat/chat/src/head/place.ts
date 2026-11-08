@@ -3,8 +3,6 @@ import { folderName } from '@sand/util'
 import { projects, type Thread } from '@sand/web-client/contract'
 import type { ChatContext } from '../context'
 
-const quickName = 'Quick thread'
-
 export interface Place {
   cwd: string
   device: string
@@ -23,20 +21,17 @@ const groupOf = (ctx: ChatContext, { cwd, device, project }: Place) => {
   return (project && found?.get(project)) || found?.group(cwd, device)
 }
 
-export const projectName = (ctx: ChatContext, place: Place | undefined) => {
-  if (place?.quick) return quickName
-  if (!place?.cwd) return ''
+export const projectName = (ctx: ChatContext, place: Place) => {
+  if (!place.cwd) return ''
   return groupOf(ctx, place)?.name || (ctx.get(projects)?.name(place.cwd, place.device) ?? folderName(place.cwd))
 }
 
-export const projectLook = (ctx: ChatContext, place: Place | undefined): ProjectLook | undefined => {
-  if (place?.quick) return { quick: true }
-  if (!place?.cwd) return undefined
+export const projectLook = (ctx: ChatContext, place: Place): ProjectLook | undefined => {
   const group = groupOf(ctx, place)
   return group ? ctx.get(projects)?.groupIcon(group) : ctx.get(projects)?.icon(place.cwd, place.device)
 }
 
 export const threadTitle = (thread: Thread | undefined) => {
   if (!thread) return 'New thread'
-  return thread.info.title || (thread.info.kind === 'quick' ? quickName : 'Untitled thread')
+  return thread.info.title || 'Untitled thread'
 }

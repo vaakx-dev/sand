@@ -15,7 +15,7 @@ export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) 
     iconButton(
       {
         size: 'sm',
-        class: 'touch:h-10 touch:w-10',
+        class: 'touch:h-8 touch:w-8',
         title,
         'aria-label': title,
         disabled: () => branches.running.get() || !at(step),
@@ -31,7 +31,7 @@ export const branchSwitch = (ctx: ChatContext, view: ThreadView, entry: string) 
     () => all().length > 1,
     () =>
       div(
-        { class: 'flex items-center text-xs text-neutral-400 tabular-nums' },
+        { class: '-mr-1 flex items-center text-xs text-neutral-500 tabular-nums' },
         arrow(-1, 'left', 'Previous version'),
         span(() => `${index() + 1}/${all().length}`),
         arrow(1, 'right', 'Next version'),

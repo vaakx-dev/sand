@@ -1,10 +1,10 @@
 import { type Dispose, service } from 'drydock'
 
-export interface ModelPill {
+export interface ModelButton {
   open(effort?: boolean): void
 }
 
-export const modelPill = service<ModelPill>('modelPill')
+export const modelButton = service<ModelButton>('modelButton')
 
 export type DefaultsView = () => HTMLElement
 

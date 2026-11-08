@@ -9,9 +9,9 @@ export type Emphasis = 'em' | 'strong' | 'del'
 const block = 'mb-3 last:mb-0'
 
 const headings = [
-  { tag: h1, size: 'text-xl' },
-  { tag: h2, size: 'text-lg' },
-  { tag: h3, size: 'text-base' },
+  { tag: h1, size: 'text-lg' },
+  { tag: h2, size: 'text-base' },
+  { tag: h3 },
   { tag: h4 },
   { tag: h5 },
   { tag: h6 },
@@ -23,7 +23,7 @@ export const paragraph = (children: Inline[]) => p({ class: block }, children)
 
 export const heading = (level: number, children: Inline[]) => {
   const { tag, size } = headings[level - 1] ?? { tag: h6 }
-  return tag({ class: ['mt-5 mb-2 first:mt-0 last:mb-0 font-semibold', size] }, children)
+  return tag({ class: ['mt-5 mb-2 first:mt-0 last:mb-0 font-semibold leading-snug', size] }, children)
 }
 
 export const thematicBreak = () => el('hr', { class: 'my-5 border-t border-neutral-800 first:mt-0 last:mb-0' })
@@ -46,12 +46,12 @@ const cellWidth = (children: Inline[]) => (cellText(children).length <= 32 ? 'wh
 
 export const tableCell = (head: boolean, align: Align | undefined, children: Inline[]) =>
   (head ? th : td)(
-    { class: ['border-b border-neutral-800 px-3 py-2 align-top', cellWidth(children), alignments[align ?? 'left'], head && 'font-medium'] },
+    { class: ['py-1.5 pr-6 align-top last:pr-0', cellWidth(children), alignments[align ?? 'left'], head && 'font-semibold'] },
     children,
   )
 
 export const tableBlock = (head: HTMLElement[], rows: HTMLElement[][]) =>
-  div({ class: [block, 'overflow-auto'] }, table({ class: 'w-full border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr(cells)))))
+  div({ class: [block, 'overflow-auto'] }, table({ class: 'border-collapse break-words' }, thead(tr(head)), tbody(rows.map(cells => tr({ class: 'border-t border-neutral-800' }, cells)))))
 
 export const inlineCode = (value: string, error?: string) =>
   el('code', { class: ['rounded-md bg-neutral-800 px-1 py-px font-mono text-xs', error && 'text-danger-400'], ...(error && { title: error }) }, value)

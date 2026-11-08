@@ -127,10 +127,15 @@ export interface MenuKit {
   more(menu: ContextMenu, spec: () => MenuSpec | undefined): HTMLElement
 }
 
+export interface Place {
+  railed: boolean
+  last: boolean
+}
+
 export interface Row<T = unknown> {
   key: string
   data: T
-  view(data: Sig<T>, railed?: Sig<boolean>): HTMLElement
+  view(data: Sig<T>, place?: Sig<Place>): HTMLElement
 }
 
 export type UserItem = Extract<Item, { kind: 'user' }>
@@ -144,6 +149,7 @@ export interface Surface {
   reply?(text: string): MenuAction[]
   rewrite?(entry: string, text: string): MenuAction[]
   branchSwitch?(entry: string): Child
+  sender?(entry: string): string | undefined
 }
 
 export interface Rows {
@@ -159,7 +165,6 @@ export interface TranscriptParts {
   rows(surface: Surface): Rows
   openStates(): OpenStates
   quoteJump(owner: Node): (root: Element, from: Element, quote: string) => void
-  workFrame(...children: Child[]): HTMLElement
 }
 
 export type ImageOptions = Omit<ShownImageOptions, 'open'>

@@ -59,7 +59,7 @@ export const createEditor = (kit: Kit, text: Sig<string>, options: EditorOptions
     })
 
   return {
-    node: div({ class: 'text-base text-neutral-100 md:text-sm leading-relaxed' }, view.dom),
+    node: div({ class: 'text-neutral-100 leading-relaxed' }, view.dom),
     focus: () => view.focus(),
     focusEnd,
     replace,

@@ -71,6 +71,8 @@ export interface Composer {
   quote(text: string): void
   attach(content: UserContent[]): void
   slot(where: ComposerSlot, view: SlotView, order?: number): Dispose
+  /** Shows its text instead of the default placeholder while it returns one; the latest source wins. */
+  placeholder(text: () => string | undefined): Dispose
   hold(reason: SendHold): Dispose
   snapshot(): Promise<ComposerContent | undefined>
   restore(saved: ComposerContent): void

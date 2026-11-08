@@ -10,7 +10,7 @@ import { settledItems, userItems, type DescribeSettings } from './items/settled'
 import { menuKit } from './menus'
 import { openStates } from './open'
 import { itemRows } from './rows'
-import { workFrame, type RowContext } from './rows/row'
+import type { RowContext } from './rows/row'
 import { userMessage } from './rows/user'
 import { errorBody, outputText, truncatedNote } from './tools/notes'
 
@@ -34,7 +34,6 @@ export const createParts = (ctx: TranscriptContext, registry: RendererRegistry, 
     },
     openStates,
     quoteJump,
-    workFrame,
   }
 }
 
