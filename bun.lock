@@ -833,6 +833,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@sand/accounts": "workspace:*",
+        "@sand/advanced": "workspace:*",
         "@sand/approvals": "workspace:*",
         "@sand/bot-memory": "workspace:*",
         "@sand/bot-plan": "workspace:*",
@@ -844,6 +845,8 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/features": "workspace:*",
         "@sand/markdown": "workspace:*",
+        "@sand/model": "workspace:*",
+        "@sand/model-picker": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",

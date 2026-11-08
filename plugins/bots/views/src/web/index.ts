@@ -1,9 +1,10 @@
+import { advanced } from '@sand/advanced/contract'
 import { botAutomations, botName, botProfile, botRoute, botTabs, botViews, jobEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type JobEntry } from '@sand/bots/contract'
 import { palette } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { transcript } from '@sand/transcript/contract'
 import { homeRoute, type ChipSource } from '@sand/ui-shell/contract'
-import { projects, projectsChange } from '@sand/web-client/contract'
+import { models, modelsChange, projects, projectsChange } from '@sand/web-client/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { automationsScreen } from './automations/page'
@@ -11,6 +12,7 @@ import { jobNote } from './chat/job'
 import { inject } from './context'
 import { openNewBot } from './create/sheet'
 import { homeScreen } from './home'
+import { effective } from './models'
 import { automationsOf, projectNames, type Parts } from './parts'
 import { openProfile } from './profile/sheet'
 import { registry } from './registry'
@@ -51,6 +53,8 @@ export default definePlugin({
       work: work(tabSources),
       tabs: openTabs(),
       projects: owned(ctx, () => known.read(() => ctx.get(projects)?.groups({ hidden: true }) ?? [])),
+      defaults: owned(ctx, () => pulse(ctx, [modelsChange], [models]).read(() => effective({}, ctx.get(models)?.defaults() ?? {}))),
+      advanced: owned(ctx, () => pulse(ctx, [], [advanced]).read(() => ctx.get(advanced)?.on() ?? false)),
       sections,
       automationSources,
       open(bot, tab) {

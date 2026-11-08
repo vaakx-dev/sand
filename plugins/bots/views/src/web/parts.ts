@@ -1,4 +1,4 @@
-import type { BotAutomation, BotAutomationSource, BotProfileSection } from '@sand/bots/contract'
+import type { BotAutomation, BotAutomationSource, BotProfileSection, ModelChoice } from '@sand/bots/contract'
 import type { ProjectGroup } from '@sand/web-client/contract'
 import type { Derive } from '@vaakx-dev/vrui'
 import type { BotsContext } from './context'
@@ -13,6 +13,8 @@ export interface Parts {
   work: Work
   tabs: OpenTabs
   projects: Derive<ProjectGroup[]>
+  advanced: Derive<boolean>
+  defaults: Derive<ModelChoice>
   sections: Registry<BotProfileSection>
   automationSources: Registry<BotAutomationSource>
   open(bot: string, tab?: string): void

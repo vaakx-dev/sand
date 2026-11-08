@@ -1,4 +1,4 @@
-import { botName, botRoute } from '@sand/bots/contract'
+import { botName, botRoute, type BotPatch } from '@sand/bots/contract'
 import type { Route, Screen } from '@sand/ui-shell/contract'
 import { derive, div, dynamicChild, effect, list, show, sig, untrack } from '@vaakx-dev/vrui'
 import { chatView } from '../chat/view'
@@ -86,6 +86,7 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
   const tab = () => route().tab
   const known = () => Boolean(parts.store.find(id))
   const refs = () => parts.tabs.of(id).filter(ref => parts.work.source(ref))
+  const save = (patch: BotPatch) => void parts.store.update(id, patch).catch(error => parts.ctx.report(error))
   effect(() => {
     const ref = tab()
     if (ref) untrack(() => parts.tabs.add(id, ref))
@@ -106,7 +107,7 @@ export const botScreen = (parts: Parts, route: () => Route): Screen => {
         show(known, () =>
           div(
             { class: fill },
-            div({ class: () => (tab() ? 'hidden' : fill) }, chatView({ ctx: parts.ctx, id, bot: () => parts.store.find(id), profile: () => parts.profile(id), resume: () => void parts.store.update(id, { paused: false }).catch(error => parts.ctx.report(error)) })),
+            div({ class: () => (tab() ? 'hidden' : fill) }, chatView({ ctx: parts.ctx, id, bot: () => parts.store.find(id), profile: () => parts.profile(id), resume: () => save({ paused: false }), save, defaults: () => parts.defaults.get() })),
             tabBodies(parts, tab, refs),
           ),
         ),
