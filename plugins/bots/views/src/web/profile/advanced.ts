@@ -1,7 +1,6 @@
 import { botPatch, type BotPatch, type BotSummary, type Computer, type ModelPolicy } from '@sand/bots/contract'
 import { pcs } from '@sand/devices-contract'
 import { modelPicker, type PickerTarget } from '@sand/model-picker/contract'
-import type { Choice } from '@sand/ui-kit/contract'
 import { dollars } from '@sand/util'
 import { div, dynamicChild, sig, span } from '@vaakx-dev/vrui'
 import { applyChoice, effective } from '../models'
@@ -37,18 +36,42 @@ const modelRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void, { tie
   return kit.settingsRow({ title, detail }, picker ? picker.button(target(picker), title) : kit.metaLine(() => plainChoice(parts, bot(), tier)))
 }
 
-const computerChoices = (parts: Parts): Choice<Computer>[] => [
+interface ComputerChoice {
+  value: Computer
+  label: string
+}
+
+const computerChoices = (parts: Parts): ComputerChoice[] => [
   { value: 'none', label: 'None' },
-  { value: 'own', label: 'Browser', title: 'The browser sand controls' },
-  { value: 'this-pc', label: 'This PC', title: "The screen, mouse and keyboard of the PC sand runs on" },
-  ...(parts.ctx.get(pcs)?.list() ?? []).filter(pc => !pc.home).map(pc => ({ value: `pc:${pc.id}` as const, label: pc.name, title: `${pc.name}'s screen, mouse and keyboard` })),
+  { value: 'own', label: 'Browser' },
+  { value: 'this-pc', label: 'This PC' },
+  ...(parts.ctx.get(pcs)?.list() ?? []).filter(pc => !pc.home).map(pc => ({ value: `pc:${pc.id}` as const, label: pc.name })),
 ]
+
+const computerLabel = (choices: ComputerChoice[], computer: Computer | undefined) => choices.find(choice => choice.value === computer)?.label ?? 'Unknown PC'
 
 const computerRow = (parts: Parts, bot: Bot, save: (patch: BotPatch) => void) => {
   const { kit } = parts.ctx
+  const pick = (close: () => void, computer: Computer) => () => {
+    close()
+    if (computer !== bot()?.computer) save({ computer })
+  }
   return kit.settingsRow(
     { title: 'Computer', detail: 'What its computer tools use when it names none' },
-    kit.segmented(computerChoices(parts), () => bot()?.computer, computer => save({ computer }), { label: 'Computer' }),
+    kit.dropdown({
+      placement: 'below-right',
+      trigger: (press, open) =>
+        kit.controlButton(
+          kit.actionTones.secondary,
+          { ...press, 'aria-label': 'Computer', class: ['max-w-full min-w-40 justify-start pr-2', () => (open.get() ? 'bg-neutral-700' : '')] },
+          span({ class: 'min-w-0 flex-1 truncate text-left' }, () => computerLabel(computerChoices(parts), bot()?.computer)),
+          span({ class: 'inline-flex shrink-0 text-neutral-400' }, kit.icon('down', 'sm')),
+        ),
+      items: close =>
+        computerChoices(parts).map(choice =>
+          kit.choiceItem({ selected: () => bot()?.computer === choice.value, onClick: pick(close, choice.value) }, span({ class: 'flex-1 truncate' }, choice.label)),
+        ),
+    }),
   )
 }
 
