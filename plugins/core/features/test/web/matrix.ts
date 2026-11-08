@@ -132,9 +132,11 @@ for (const combo of combos)
         await visitAll(page)
         if (fillingShell.every(id => combo.off.includes(id))) {
           await page.getByText('Nothing here yet').waitFor()
+          await page.getByRole('button', { name: 'Settings' }).first().waitFor()
           await page.setViewportSize({ width: 390, height: 844 })
+          await page.waitForFunction(() => window.sand.get<Shell>({ id: 'shell' })?.state() === 'phone')
           await page.getByText('Nothing here yet').waitFor()
-          expect(await shellState(page)).toBe('phone')
+          await page.getByRole('button', { name: 'Settings' }).first().waitFor()
         } else expect(await page.getByText('Nothing here yet').count()).toBe(0)
         await Bun.sleep(500)
 
