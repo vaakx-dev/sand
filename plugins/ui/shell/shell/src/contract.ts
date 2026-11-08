@@ -137,6 +137,8 @@ export interface ShellGroup {
   id: string
   label: string
   action?: GroupAction
+  /** Starts collapsed behind its heading and row count; the shell remembers when it's opened. */
+  folded?: boolean
   rows: ShellRow[]
 }
 

@@ -35,6 +35,7 @@ export const shellModel = (kit: Kit) => {
   const layer = sig(addressLayer())
   const sheet = sig<SheetSpec | undefined>(undefined)
   const hiddenSides = stored<string[]>('sand.shell.hidden-sides', [])
+  const openFolds = stored<string[]>('sand.shell.open-groups', [])
   const drawerDrag = sig<number | undefined>(undefined)
   const stackDrag = sig<StackDrag>(undefined)
   const leaving = sig<Route[]>([])
@@ -149,6 +150,8 @@ export const shellModel = (kit: Kit) => {
     },
     sideHidden,
     showSide,
+    foldOpen: (key: string) => openFolds.get().includes(key),
+    toggleFold: (key: string) => openFolds.update(keys => (keys.includes(key) ? keys.filter(other => other !== key) : [...keys, key])),
     isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())) && (to.tab === undefined || to.tab === current.get().tab),
     open,
     leaveNav: () => open(before.get()),

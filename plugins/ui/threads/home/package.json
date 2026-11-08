@@ -15,6 +15,7 @@
   "dependencies": {
     "@sand/changes": "workspace:*",
     "@sand/chat": "workspace:*",
+    "@sand/settings": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
     "@sand/features": "workspace:*",

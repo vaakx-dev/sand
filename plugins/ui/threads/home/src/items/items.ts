@@ -1,5 +1,5 @@
 import type { ThreadChanges } from '@sand/changes/contract'
-import { draftRoute, threadRoute } from '@sand/chat/contract'
+import { draftRoute, threadOwners, threadRoute } from '@sand/chat/contract'
 import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
 import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
@@ -17,8 +17,8 @@ import { draftMenu, threadMenu, type MenuParts } from './menu'
 export interface Entry {
   row: ShellRow
   moved: number
-  pinned?: boolean
   snoozed?: number
+  settled?: boolean
 }
 
 const positionOf = (thread: Thread) => thread.info.position ?? thread.info.created
@@ -36,8 +36,8 @@ export interface RowSources {
   trail: RowPart[]
 }
 
-const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
-  label: [project.quick ? 'No project' : project.name, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
+const placeOf = (parts: MenuParts, project: ProjectInfo, device: string, owner?: string) => ({
+  label: [owner, project.quick ? 'No project' : project.name, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
   mark: () => parts.kit.projectIcon(project.name, project.icon, 14),
 })
 
@@ -53,7 +53,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
     row: {
       id: thread.id,
       label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
-      place: placeOf(parts, project, thread.device),
+      place: placeOf(parts, project, thread.device, parts.ctx.get(threadOwners)?.owner(thread.id)?.label),
       trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
       ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
       status: statusOf(thread, agents, change),
@@ -61,8 +61,8 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
       menu: () => threadMenu(parts, thread.id),
     },
     moved: isBack(thread) ? Math.max(thread.info.updated, thread.info.snoozed ?? 0) : thread.info.updated,
-    pinned: thread.info.pinned,
     snoozed,
+    settled: Boolean(thread.info.settled),
   }
 }
 
@@ -81,11 +81,11 @@ const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup:
   moved: draft.updated,
 })
 
-export const threadEntries = (parts: MenuParts, sources: RowSources): Entry[] => {
+export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: boolean): Entry[] => {
   const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
   const agentsOf = runningAgents(parts.ctx, parts.threads)
-  const listed = visibleThreads(parts.threads.list()).filter(thread => !thread.info.settled && !owned(parts.ctx, thread.id))
+  const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
   return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
 }

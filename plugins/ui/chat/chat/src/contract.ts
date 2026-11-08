@@ -53,7 +53,7 @@ export interface ThreadOwner extends Monogram {
 
 /**
  * Who owns which thread. Provided by the bots bridge, so it is absent with bots off; reads are reactive.
- * Recent chats leave out owned threads, breadcrumbs read "owner / title", and owned threads open through their owner.
+ * The sidebar can mark or leave out owned threads, breadcrumbs read "owner / title", and owned threads open through their owner.
  */
 export interface ThreadOwners {
   owner(thread: string): ThreadOwner | undefined
