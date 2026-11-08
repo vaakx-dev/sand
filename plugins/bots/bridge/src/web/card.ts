@@ -1,8 +1,8 @@
-import { botChangeWire, botViews } from '@sand/bots/contract'
+import { botChangeWire, type BotViews } from '@sand/bots/contract'
 import { wireHello } from '@sand/devices-contract'
 import { markdown } from '@sand/markdown/contract'
 import { joinDisposers } from '@sand/util'
-import { div, dynamicChild, resource, show, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, resource, span, type Sig } from '@vaakx-dev/vrui'
 import { type BotAnswer, botAwait } from '@sand/bots-mcp/contract'
 import type { BotReplyEntry } from '../contract'
 import type { BridgeWeb } from './context'
@@ -11,7 +11,7 @@ import type { Roster } from './roster'
 
 const notes: Partial<Record<BotAnswer['status'], string>> = {
   queued: 'Waiting its turn',
-  waiting: 'Waiting for you in Bots',
+  waiting: 'Waiting for you in its chat',
   interrupted: 'Stopped',
   failed: "Couldn't answer",
   lost: "Couldn't answer",
@@ -31,13 +31,15 @@ const bodyOf = (ctx: BridgeWeb, answer: BotAnswer | undefined): HTMLElement => {
 
 const ongoing = new Set<BotAnswer['status']>(['running', 'queued', 'waiting'])
 
-const openButton = (ctx: BridgeWeb, bot: string) =>
-  show(
-    () => Boolean(ctx.get(botViews)),
-    () => ctx.kit.quietButton({ size: 'sm', onClick: () => ctx.get(botViews)?.open(bot) }, 'Open in Bots'),
+const byline = (ctx: BridgeWeb, roster: Roster, screens: Sig<BotViews | undefined>, bot: string) => {
+  const look = 'flex min-w-0 items-center gap-2 text-xs'
+  const who = () => [botFace(ctx, roster, bot, 16), span({ class: 'truncate' }, () => roster.find(bot)?.name || 'Bot')]
+  return dynamicChild(screens, views =>
+    views ? ctx.kit.linkButton({ class: look, onClick: () => views.open(bot) }, ...who()) : span({ class: [look, 'text-neutral-400'] }, ...who()),
   )
+}
 
-export const replyCard = (ctx: BridgeWeb, roster: Roster, { bot, turn }: BotReplyEntry) => {
+export const replyCard = (ctx: BridgeWeb, roster: Roster, screens: Sig<BotViews | undefined>, { bot, turn }: BotReplyEntry) => {
   const answer = resource(() => (turn ? ctx.wire.call(botAwait, { bot, turn, timeoutMs: 0 }) : Promise.resolve<BotAnswer>({ bot, status: 'queued' })), { lazy: true })
   const unsettled = () => {
     const found = answer.data.get()
@@ -51,16 +53,8 @@ export const replyCard = (ctx: BridgeWeb, roster: Roster, { bot, turn }: BotRepl
     )
   }
   return div(
-    {
-      class: 'my-3 max-w-2xl rounded-xl border border-neutral-800 bg-neutral-900/60 px-3 py-2 text-sm text-neutral-100',
-      onMount: follow,
-    },
-    div(
-      { class: 'mb-1.5 flex h-6 items-center gap-2 text-xs text-neutral-400' },
-      botFace(ctx, roster, bot, 20),
-      span({ class: 'min-w-0 flex-1 truncate font-medium text-neutral-100' }, () => roster.find(bot)?.name || 'Bot'),
-      openButton(ctx, bot),
-    ),
+    { class: 'my-4 flex max-w-2xl flex-col items-start gap-1.5 text-sm text-neutral-100', onMount: follow },
+    byline(ctx, roster, screens, bot),
     dynamicChild(answer.data, found => bodyOf(ctx, found)),
   )
 }
