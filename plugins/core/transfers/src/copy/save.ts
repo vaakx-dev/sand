@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
 import type { SaveInput } from '../contract'
 import { pullFrom } from '../pull'
+import { unpack } from '../tar/unpack'
 import type { TransferStore } from '../transfers'
 
 export const saveFrom = (transfers: TransferStore, peers: () => Peers | undefined) => {
@@ -14,7 +15,7 @@ export const saveFrom = (transfers: TransferStore, peers: () => Peers | undefine
       const received = await transfers.received(file.transfer, file.chunks, file.size)
       if (folder && received) {
         await mkdir(path, { recursive: true })
-        await new Bun.Archive(await Bun.file(received).bytes()).extract(path)
+        await unpack(received, path)
       } else {
         await Bun.write(path, received ? Bun.file(received) : '')
       }
