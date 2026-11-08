@@ -1,4 +1,4 @@
-import { botProfile, botTabs, botViews, type BotViews } from '@sand/bots/contract'
+import { botTabs, botViews, type BotViews } from '@sand/bots/contract'
 import { threadOwners, threadView } from '@sand/chat/contract'
 import { composer } from '@sand/composer/contract'
 import { contextChips } from '@sand/context/contract'
@@ -12,7 +12,6 @@ import { replyCard } from './card'
 import { inject } from './context'
 import { botFace } from './face'
 import { threadOwnersOf } from './owners'
-import { projectSection } from './project'
 import { threadLinks } from './reference'
 import { createRoster } from './roster'
 import { threadTabs } from './tabs'
@@ -41,8 +40,6 @@ export default definePlugin({
           ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view))),
         ),
     )
-    const project = projectSection(ctx, roster)
-    ctx.watch(botProfile, found => found?.section({ id: 'project', order: 5, render: project }))
     ctx.watch(composer, found => found?.trigger(botTrigger(roster), 5))
     ctx.watch(contextChips, found =>
       found?.register({
