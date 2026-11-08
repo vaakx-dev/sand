@@ -19,10 +19,20 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
   const setHead = db.query('update chats set head = $head where id = $id')
   const load = db.query<Row, { session: string }>(`select ${entryColumns} from entries e where e.session = $session`)
   let entries: Map<string, Entry> | undefined
+  let known = info.head
   const unload = () => {
     entries = undefined
   }
+  const current = () => {
+    const head = headOf.get({ id: info.id })?.head ?? null
+    if (head !== known) {
+      unload()
+      known = head
+    }
+    return head
+  }
   const all = () => {
+    current()
     const map = (entries ??= new Map(load.all({ session: info.id }).map(row => [row.id, parseRow(row)])))
     cache.touch(info.id, unload)
     return map
@@ -30,12 +40,12 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
 
   const write = db
     .transaction((type: string, data: unknown, { id = Bun.randomUUIDv7(), at = Date.now(), turn }: AppendMeta): Entry => {
-      const parent = headOf.get({ id: info.id })?.head ?? null
-      if (parent !== session.head) unload()
+      const parent = current()
       const { seq } = nextSeq.get({ session: info.id })!
       const json = JSON.stringify(data)
       insert.run({ id, session: info.id, parent, at, type, data: json, size: json.length, seq, turn: turn ?? null })
       setHead.run({ head: id, id: info.id })
+      known = id
       return { id, session: info.id, parent, at, type, data, seq, ...(turn && { turn }) }
     })
     .immediate
@@ -43,17 +53,19 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
   const session: Session = {
     ...info,
     owner: 'thread',
+    get head() {
+      return current()
+    },
     append(type, data, meta = {}) {
       const entry = write(type, data, meta)
       all().set(entry.id, entry)
-      session.head = entry.id
       hooks.entry(session, entry)
       return entry
     },
     path() {
       const path: Entry[] = []
       const map = all()
-      for (let entry = session.head ? map.get(session.head) : undefined; entry; entry = map.get(entry.parent ?? '')) {
+      for (let entry = known ? map.get(known) : undefined; entry; entry = map.get(entry.parent ?? '')) {
         path.push(entry)
       }
       return path.reverse()
@@ -63,13 +75,16 @@ export const createSession = (db: Database, info: SessionInfo, hooks: SessionHoo
     },
     since: after => paging.since(info.id, session.head, after),
     carried: (before, types) => paging.carried(info.id, before, types),
-    latest: type => (session.head ? paging.latest(info.id, session.head, type) : undefined),
+    latest(type) {
+      const head = current()
+      return head ? paging.latest(info.id, head, type) : undefined
+    },
     branches: entry => branchesOf(session.entries(), entry),
     entries: () => [...all().values()].sort((a, b) => a.seq - b.seq),
     messages: () => session.path().flatMap(entry => (entry.type === 'message' ? [entry.data as Message] : [])),
     checkout(entry) {
       setHead.run({ head: entry, id: info.id })
-      session.head = entry
+      known = entry
       hooks.update(session)
     },
   }
