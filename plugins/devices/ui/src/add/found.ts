@@ -1,5 +1,5 @@
 import type { DiscoveredPc } from '@sand/devices-contract'
-import { derive, div, dynamicChild, sig, span, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, show, sig, span, type Sig } from '@vaakx-dev/vrui'
 import { kindIcon, platformWords } from '../requests/words'
 import { command } from '../shared/parts'
 import { pinCode } from '../shared/pin'
@@ -65,21 +65,29 @@ export const foundSection = (ui: Ui, useLink: () => void) => {
   const waiting = derive(() => pcs.get().map(pc => ui.data.joins.joinOf(pc.id)).find(Boolean))
   return div(
     { class: 'flex flex-col gap-3' },
-    settingsSection(
-      { title: 'PCs found on your network', action: span({ class: 'inline-flex', title: 'Still looking' }, spinner('xs')) },
-      rowList(pcs, pc => pc.id, pc => foundRow(ui, pc)),
-      dynamicChild(
-        derive(() => !pcs.get().length && !found.error.get()),
-        empty => (empty ? emptyState({ flush: true, text: 'No PCs found yet. Still looking…' }) : null),
-      ),
-      dynamicChild(found.error, error =>
-        error ? errorState({ flush: true, text: `Couldn’t look for PCs: ${error}`, retry: () => void found.refresh() }) : null,
-      ),
+    show(
+      () => !found.missing.get(),
+      () =>
+        settingsSection(
+          { title: 'PCs found on your network', action: span({ class: 'inline-flex', title: 'Still looking' }, spinner('xs')) },
+          rowList(pcs, pc => pc.id, pc => foundRow(ui, pc)),
+          dynamicChild(
+            derive(() => !pcs.get().length && !found.error.get()),
+            empty => (empty ? emptyState({ flush: true, text: 'No PCs found yet. Still looking…' }) : null),
+          ),
+          dynamicChild(found.error, error =>
+            error ? errorState({ flush: true, text: `Couldn’t look for PCs: ${error}`, retry: () => void found.refresh() }) : null,
+          ),
+        ),
     ),
-    dynamicChild(waiting, join =>
-      join
-        ? sheetText(`${join.name} shows the same code on its own screen and on devices paired with it. Nothing paired with it? Run `, command(`sand devices approve ${join.code}`), ' on it.')
-        : sheetText('Not listed? Check that sand is running on it and it’s on the same wifi or Tailscale. ', linkButton({ onClick: useLink }, 'Use a link instead')),
+    dynamicChild(
+      derive(() => ({ join: waiting.get(), missing: found.missing.get() })),
+      ({ join, missing }) =>
+        join
+          ? sheetText(`${join.name} shows the same code on its own screen and on devices paired with it. Nothing paired with it? Run `, command(`sand devices approve ${join.code}`), ' on it.')
+          : missing
+            ? linkButton({ onClick: useLink }, 'Pair it with a link')
+            : sheetText('Not listed? Check that sand is running on it and it’s on the same wifi or Tailscale. ', linkButton({ onClick: useLink }, 'Use a link instead')),
     ),
   )
 }

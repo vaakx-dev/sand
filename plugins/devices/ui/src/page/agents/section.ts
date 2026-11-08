@@ -9,7 +9,7 @@ export const agentsSection = (ui: Ui) => {
   const list = derive(() => devices.live().filter(device => device.kind === 'agent'))
   const served = () => ui.ctx.get(featureState)?.on('mcp-server') !== false
   return settingsSection(
-    { title: 'Agents', action: show(served, () => quietButton({ size: 'sm', onClick: () => ui.open.agent() }, icon('plus', 'sm'), 'Add an agent')) },
+    { title: 'Agents', action: show(served, () => quietButton({ size: 'sm', 'aria-label': 'Add an agent', onClick: () => ui.open.agent() }, icon('plus', 'sm'), 'Add')) },
     rowList(list, device => device.id, device => agentRow(ui, device)),
     show(
       () => devices.records.loaded.get() && !list.get().length,

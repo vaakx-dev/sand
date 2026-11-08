@@ -59,7 +59,6 @@ const content = (kit: Kit, parts: ListParts, state: Sig<LoginsState | undefined>
 export const listPage = (kit: Kit, parts: ListParts) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.pageHead('Website logins and keys your bots and threads can use. Agents sign in and run commands with them without ever seeing a password or key.'),
     dynamicChild(
       parts.model.state.map(value => value === undefined),
       loading => (loading ? kit.loadingState() : content(kit, parts, parts.model.state)),

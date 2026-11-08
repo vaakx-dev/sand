@@ -13,7 +13,7 @@ export const pcsSection = (ui: Ui) => {
   const running = derive(() => data.installs.running(data.now.get()))
   const waiting = derive(() => data.installs.waiting(data.now.get()))
   return settingsSection(
-    { title: 'PCs', action: quietButton({ size: 'sm', onClick: () => ui.open.add('list') }, icon('plus', 'sm'), 'Add a PC') },
+    { title: 'PCs', action: quietButton({ size: 'sm', 'aria-label': 'Add a PC', onClick: () => ui.open.add('list') }, icon('plus', 'sm'), 'Add') },
     rowList(pcs, pc => pc.id, view => pcRow(ui, view)),
     rowList(running, entry => entry.install, entry => installRow(ui, entry)),
     rowList(waiting, grant => grant.id, grant => waitingRow(ui, grant)),

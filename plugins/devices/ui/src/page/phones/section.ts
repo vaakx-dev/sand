@@ -15,7 +15,7 @@ export const phonesSection = (ui: Ui) => {
       .sort(selfFirst(ui.ctx.pcs.self())),
   )
   return settingsSection(
-    { title: 'Phones and browsers', action: quietButton({ size: 'sm', onClick: () => ui.open.add('phone') }, icon('plus', 'sm'), 'Add a phone or browser') },
+    { title: 'Phones and browsers', action: quietButton({ size: 'sm', 'aria-label': 'Add a phone or browser', onClick: () => ui.open.add('phone') }, icon('plus', 'sm'), 'Add') },
     show(
       () => !devices.records.loaded.get() && !devices.records.error.get(),
       () => loadingState({ flush: true }),

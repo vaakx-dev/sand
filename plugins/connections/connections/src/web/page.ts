@@ -83,7 +83,6 @@ const content = (kit: Kit, model: ConnectionsModel, state: Sig<ConnectionState |
 export const connectionsPage = (kit: Kit, model: ConnectionsModel) =>
   div(
     { class: 'flex flex-col gap-6' },
-    kit.pageHead('Accounts at other services that plugins like Calendar use. Agents work through them without ever seeing a password or token.'),
     dynamicChild(
       model.state.map(value => value === undefined),
       loading => (loading ? kit.loadingState() : content(kit, model, model.state)),

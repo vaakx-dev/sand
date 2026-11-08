@@ -17,7 +17,7 @@ const heading = (groups: ProjectGroup[]) => {
 const addButton = (ctx: ProjectsContext, changes: Pulse) => {
   const { icon, quietButton } = ctx.kit
   const frame = ctx.get(shell)
-  return frame ? quietButton({ size: 'sm', onClick: () => frame.sheet(addSheet(ctx, changes)) }, icon('plus', 'sm'), 'Add a project') : null
+  return frame ? quietButton({ size: 'sm', 'aria-label': 'Add a project', onClick: () => frame.sheet(addSheet(ctx, changes)) }, icon('plus', 'sm'), 'Add') : null
 }
 
 const hiddenToggle = (ctx: ProjectsContext, showHidden: Sig<boolean>) => {

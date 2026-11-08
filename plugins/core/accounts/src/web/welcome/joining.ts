@@ -1,4 +1,5 @@
 import { type DiscoveredPc, discoverChange, type OutgoingJoin, type OutgoingOutcome, pairCancelJoin, pairJoin, pairJoinResult, pcsDiscover, type wire } from '@sand/devices-contract'
+import { unanswered } from '@sand/host-hub/contract'
 import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
@@ -37,7 +38,7 @@ export const pcJoining = (ctx: Context<{ wire: typeof wire }>, joined: (pc: Join
     error.set('')
     void ctx.wire.call(pcsDiscover, {}).then(
       list => found.set(list),
-      failure => error.set(errorMessage(failure)),
+      failure => error.set(unanswered(failure) ? '' : errorMessage(failure)),
     )
   }
 
