@@ -28,10 +28,10 @@ export const networkRows = (ui: Ui, settings: PcSettings, name: () => string) =>
   return [
     show(
       () => !network.loaded.get() && !network.error.get(),
-      () => loadingState({ surface: 'group' }),
+      () => loadingState({ flush: true }),
     ),
     dynamicChild(network.error, error =>
-      error ? errorState({ surface: 'group', text: `Couldn’t check ${name()}’s network setting: ${error}`, retry: () => void network.refresh() }) : null,
+      error ? errorState({ flush: true, text: `Couldn’t check ${name()}’s network setting: ${error}`, retry: () => void network.refresh() }) : null,
     ),
     show(network.loaded, () =>
       settingsRow(

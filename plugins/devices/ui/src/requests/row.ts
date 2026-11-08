@@ -21,7 +21,7 @@ export const requestRow = (ui: Ui, request: Sig<JoinRequest>, { compact = false,
   const { closeButton, icon, primaryAction, secondaryAction, settingsRow } = ui.kit
   const { busy, allow, deny } = deciding(ui, () => request.get(), allowed)
   const denyButton = compact
-    ? closeButton({ title: 'Deny', size: 'sm', surface: 'group', disabled: busy, onClick: deny })
+    ? closeButton({ title: 'Deny', size: 'sm', surface: 'raised', disabled: busy, onClick: deny })
     : secondaryAction({ size: 'sm', disabled: busy, onClick: deny }, 'Deny')
   return settingsRow(
     {

@@ -21,7 +21,7 @@ const follow = (text: string) => {
 }
 
 export const pasteLink = (ui: Ui) => {
-  const { errorText, secondaryAction, sheetText, textInput } = ui.kit
+  const { errorText, secondaryAction, secondaryText, textInput } = ui.kit
   const open = sig(false)
   const text = sig('')
   const wrong = sig(false)
@@ -31,9 +31,8 @@ export const pasteLink = (ui: Ui) => {
     if (followed) text.set('')
   }
   return div(
-    { class: 'flex flex-col gap-3' },
-    div({ class: 'mb-1 h-px bg-neutral-700' }),
-    div({ class: 'flex flex-wrap items-center gap-2' }, div({ class: 'min-w-0 flex-1' }, sheetText('Have a link?')), show(() => !open.get(), () => secondaryAction({ onClick: () => open.set(true) }, 'Paste it'))),
+    { class: 'flex flex-col gap-3 pt-2' },
+    div({ class: 'flex flex-wrap items-center gap-2' }, div({ class: 'min-w-0 flex-1' }, secondaryText('Have a link?')), show(() => !open.get(), () => secondaryAction({ onClick: () => open.set(true) }, 'Paste it'))),
     show(open, () =>
       div(
         { class: 'flex flex-col gap-2' },

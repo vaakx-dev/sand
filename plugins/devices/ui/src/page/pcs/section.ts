@@ -18,7 +18,7 @@ export const pcsSection = (ui: Ui) => {
     rowList(running, entry => entry.install, entry => installRow(ui, entry)),
     rowList(waiting, grant => grant.id, grant => waitingRow(ui, grant)),
     dynamicChild(data.installs.progress.error, error =>
-      error ? errorState({ surface: 'group', text: `Couldn’t load installs: ${error}`, retry: () => void data.installs.progress.refresh() }) : null,
+      error ? errorState({ flush: true, text: `Couldn’t load installs: ${error}`, retry: () => void data.installs.progress.refresh() }) : null,
     ),
   )
 }

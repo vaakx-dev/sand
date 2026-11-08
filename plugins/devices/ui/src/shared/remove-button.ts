@@ -18,6 +18,6 @@ export const removeButton = (kit: Kit, label: string, run: () => void) => {
           },
           `${label}?`,
         )
-      : iconButton({ size: 'sm', surface: 'group', title: label, 'aria-label': label, onClick: () => armed.set(true) }, icon('trash', 'sm')),
+      : iconButton({ size: 'sm', title: label, 'aria-label': label, onClick: () => armed.set(true) }, icon('trash', 'sm')),
   )
 }

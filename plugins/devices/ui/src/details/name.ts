@@ -33,6 +33,7 @@ export const nameField = (ui: Ui, pc: string) => {
   return div(
     { class: 'flex flex-col gap-1' },
     field(
+      ui.kit,
       'Name',
       textInput({
         'aria-label': 'Name',

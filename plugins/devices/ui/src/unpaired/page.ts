@@ -23,9 +23,9 @@ const autoAsk = (state: PagePairing) => state.phase === 'expired' || (state.phas
 
 const cover = (ui: Ui, parts: CardParts, state: () => PagePairing, error: () => string) =>
   div(
-    { class: [ui.kit.layer.dialog, 'fixed inset-0 flex justify-center overflow-auto bg-neutral-900 px-3 py-4 md:px-4 md:py-8'], style: ui.kit.stableGutter },
+    { class: [ui.kit.layer.dialog, 'fixed inset-0 flex justify-center overflow-auto bg-neutral-900 px-4 py-10 md:py-16'], style: ui.kit.stableGutter },
     div(
-      { class: 'flex h-fit w-full max-w-xl flex-col gap-4 rounded-xl bg-neutral-800 p-4', role: 'dialog', 'aria-label': 'Pair this browser' },
+      { class: 'flex h-fit w-full max-w-xl flex-col', role: 'dialog', 'aria-label': 'Pair this browser' },
       dynamicChild(
         derive(() => ({ state: state(), error: error() })),
         current => cardOf(parts, current.state, current.error),

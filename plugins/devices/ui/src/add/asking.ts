@@ -13,7 +13,7 @@ const joinedRow = (ui: Ui, device: Sig<DeviceRecord>) => {
       title: () => ui.data.devices.get(device.get().id)?.name ?? device.get().name,
       detail: span({ class: 'inline-flex items-center gap-1.5 text-success-400' }, icon('check', 'xs'), 'Joined'),
     },
-    canRename(ui) ? quietButton({ size: 'sm', surface: 'group', onClick: () => void renameDevice(ui, device.get()) }, 'Rename…') : null,
+    canRename(ui) ? quietButton({ size: 'sm', surface: 'raised', onClick: () => void renameDevice(ui, device.get()) }, 'Rename…') : null,
   )
 }
 

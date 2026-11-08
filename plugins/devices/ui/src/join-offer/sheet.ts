@@ -4,7 +4,7 @@ import { type FoundPc, groupFound } from '../add/found'
 import { othersThan } from '../add/joining'
 import { joinedText, sourceWords } from '../add/words'
 import { kindIcon, platformWords } from '../requests/words'
-import { centered, doneBlock, heading } from '../shared/parts'
+import { centered, doneBlock } from '../shared/parts'
 import { pinCode } from '../shared/pin'
 import { leftWords } from '../shared/time'
 import type { Ui } from '../ui'
@@ -21,7 +21,7 @@ const foundRow = (ui: Ui, found: Sig<FoundPc>, join: (pc: FoundPc) => void, busy
 }
 
 export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void) => {
-  const { overlay, primaryAction, quietButton, rowList, secondaryAction, settingsSection, sheet, sheetBody, sheetText, waitingLine } = ui.kit
+  const { overlay, primaryAction, quietButton, rowList, secondaryAction, sectionTitle, settingsSection, sheet, sheetBody, sheetText, waitingLine } = ui.kit
   const state = sig<Offer>({ step: 'offer' })
   const busy = sig(false)
   const found = derive(() => groupFound(ui.data.joins.unpaired()))
@@ -50,16 +50,16 @@ export const joinOfferSheet = (ui: Ui, dismiss: () => void, close: () => void) =
       { class: 'flex flex-col gap-4' },
       div(
         { class: 'flex flex-col gap-1' },
-        heading(() => `Join ${found.get()[0]?.name ?? 'your'}’s PCs?`),
+        sectionTitle(() => `Join ${found.get()[0]?.name ?? 'your'}’s PCs?`),
         sheetText('sand found your other PCs on this wifi. Join them to use their threads and accounts from here, and this PC from them.'),
       ),
       settingsSection({}, rowList(found, pc => pc.id, pc => foundRow(ui, pc, pc => void join(pc), busy))),
-      div(quietButton({ class: '-ml-3', onClick: dismiss }, () => `Use ${here()} on its own`)),
+      div(quietButton({ surface: 'raised', class: '-ml-3', onClick: dismiss }, () => `Use ${here()} on its own`)),
     )
 
   const waitView = (pending: OutgoingJoin) =>
     centered(
-      heading('Tap Allow on any of your devices'),
+      sectionTitle('Tap Allow on any of your devices'),
       sheetText('Your phone and browsers will ask. Check they show this code:'),
       div({ class: 'py-1' }, pinCode(pending.code)),
       waitingLine(() => `Waiting for Allow… ${leftWords(pending.expires, ui.data.now.get())}`),

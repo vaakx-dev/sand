@@ -21,7 +21,7 @@ const routeOver = (routes: PublishedRoute[], over: Over) => {
 const commandView = (ui: Ui, grant: InstallGrant, platform: InstallPlatform) =>
   div(
     { class: 'flex flex-col gap-4' },
-    field(platform === 'win32' ? 'Paste this into PowerShell on the new PC' : 'Paste this into a terminal on the new PC', copyBox(ui.kit, grant.command)),
+    field(ui.kit, platform === 'win32' ? 'Paste this into PowerShell on the new PC' : 'Paste this into a terminal on the new PC', copyBox(ui.kit, grant.command)),
     ui.kit.sheetText(
       `It downloads sand from GitHub and joins your PCs, no Allow needed. The command works once, for ${lifeWords(grant.expires)}, even if you close this. Progress shows in your PCs list.`,
     ),
@@ -65,8 +65,9 @@ export const installStep = (ui: Ui) => {
 
   return div(
     { class: 'flex flex-col gap-4' },
-    field('What does the new PC run?', segmented(systems, platform, value => platform.set(value), { inset: true, label: 'System of the new PC', class: 'w-fit' })),
+    field(ui.kit, 'What does the new PC run?', segmented(systems, platform, value => platform.set(value), { inset: true, label: 'System of the new PC', class: 'w-fit' })),
     field(
+      ui.kit,
       () => `The new PC reaches ${name()} over`,
       dynamicChild(routes, list =>
         segmented(

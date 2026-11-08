@@ -1,5 +1,5 @@
 import type { RouteEntry } from '@sand/devices-contract'
-import { derive, div, show, span } from '@vaakx-dev/vrui'
+import { derive, div, show } from '@vaakx-dev/vrui'
 import type { Ui } from '../../ui'
 import { moveIndex, routeDrag } from './drag'
 import { dropMarker, routeRow } from './row'
@@ -10,7 +10,7 @@ const prefsOf = (entries: RouteEntry[]) => ({
 })
 
 export const routesSection = (ui: Ui, pc: string) => {
-  const { emptyState, icon, quietButton, rowList, sectionHeading, settingsSection, sheetText } = ui.kit
+  const { emptyState, icon, quietButton, rowList, settingsSection } = ui.kit
   const diagnosis = ui.data.changes.read(() => ui.ctx.pcs.diagnosis(pc))
   const entries = derive(() => [...(diagnosis.get()?.routes ?? [])].sort((a, b) => a.rank - b.rank))
   const save = (next: RouteEntry[]) => ui.ctx.pcs.setRoutePrefs(pc, prefsOf(next))
@@ -32,40 +32,32 @@ export const routesSection = (ui: Ui, pc: string) => {
     save(moveIndex(entries.get(), from, delta > 0 ? to + 1 : to))
   }
 
-  return div(
-    { class: 'flex flex-col gap-2' },
-    sectionHeading(
-      span({ class: 'min-w-0 flex-1' }, 'Ways to connect'),
-      quietButton({ size: 'sm', onClick: () => ui.ctx.pcs.retry(pc) }, icon('reload', 'sm'), 'Test again'),
+  return settingsSection(
+    { title: 'Ways to connect', action: quietButton({ size: 'sm', surface: 'raised', onClick: () => ui.ctx.pcs.retry(pc) }, icon('reload', 'sm'), 'Test again') },
+    div(
+      { class: 'contents', onMount: drag.bind },
+      rowList(
+        entries,
+        entry => entry.route.key,
+        entry =>
+          routeRow(
+            {
+              ui,
+              diagnosis: () => diagnosis.get(),
+              dragging: drag.dragging,
+              index: () => indexOf(entry.get().route.key),
+              press: event => drag.press(indexOf(entry.get().route.key), event),
+              shift: delta => shift(entry.get().route.key, delta),
+              toggle: () => toggle(entry.get().route.key),
+            },
+            entry,
+          ),
+      ),
     ),
-    sheetText('sand tries these from the top and uses the first that answers. Drag to change the order.'),
-    settingsSection(
-      {},
-      div(
-        { class: 'contents', onMount: drag.bind },
-        rowList(
-          entries,
-          entry => entry.route.key,
-          entry =>
-            routeRow(
-              {
-                ui,
-                diagnosis: () => diagnosis.get(),
-                dragging: drag.dragging,
-                index: () => indexOf(entry.get().route.key),
-                press: event => drag.press(indexOf(entry.get().route.key), event),
-                shift: delta => shift(entry.get().route.key, delta),
-                toggle: () => toggle(entry.get().route.key),
-              },
-              entry,
-            ),
-        ),
-      ),
-      dropMarker(drag.dragging, () => entries.get().length),
-      show(
-        () => !entries.get().length,
-        () => emptyState({ surface: 'group', text: 'sand doesn’t know any way to reach this PC yet.' }),
-      ),
+    dropMarker(drag.dragging, () => entries.get().length),
+    show(
+      () => !entries.get().length,
+      () => emptyState({ flush: true, text: 'sand doesn’t know any way to reach this PC yet.' }),
     ),
   )
 }

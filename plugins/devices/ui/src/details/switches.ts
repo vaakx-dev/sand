@@ -14,9 +14,9 @@ export const pcSwitches = (ui: Ui, pc: string) => {
     if (online.get()) untrack(() => void settings.refresh())
   })
   const whenOnline = (rows: () => Child[]) =>
-    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ surface: 'group', text: `Connect to ${name()} to change this.` })))
+    dynamicChild(online, on => (on ? div({ class: 'contents' }, ...rows()) : emptyState({ flush: true, text: `Connect to ${name()} to change this.` })))
   return [
-    settingsSection({ title: 'Reach from anywhere' }, whenOnline(() => anywhereRows(ui, settings, name))),
+    settingsSection({ title: 'Reach from anywhere' }, whenOnline(() => anywhereRows(ui, settings, name, 'raised'))),
     settingsSection({ title: 'Network' }, whenOnline(() => networkRows(ui, settings, name))),
   ]
 }

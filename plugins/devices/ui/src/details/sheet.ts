@@ -1,4 +1,3 @@
-import { div, span } from '@vaakx-dev/vrui'
 import { platformWords } from '../requests/words'
 import { dateWords } from '../shared/time'
 import { toneDot } from '../status/dot'
@@ -22,15 +21,11 @@ const statusBlock = (ui: Ui, pc: string) => {
     const when = record && `added ${dateWords(record.added)} by ${ui.data.nameOf(record.addedBy)}`
     return [platform, when].filter(Boolean).join(' · ')
   }
-  return div(
-    { class: 'flex flex-col gap-1' },
-    div(
-      { class: 'flex items-center gap-2 text-sm text-neutral-100' },
-      toneDot(ui.kit, () => (view.get() ? toneOf(view.get()!.status) : 'off'), words),
-      span({ class: 'min-w-0' }, words),
-    ),
-    div({ class: 'text-xs text-neutral-400' }, added),
-  )
+  return ui.kit.settingsRow({
+    lead: toneDot(ui.kit, () => (view.get() ? toneOf(view.get()!.status) : 'off'), words),
+    title: words,
+    detail: added,
+  })
 }
 
 const removeSection = (ui: Ui, pc: string, close: () => void) => {
