@@ -1,16 +1,45 @@
-import { botProfile } from '@sand/bots/contract'
+import { botAutomations, type BotAutomation } from '@sand/bots/contract'
 import { wire } from '@sand/devices-contract'
 import { transcript } from '@sand/transcript/contract'
-import { kit } from '@sand/ui-kit/contract'
+import { oneLine } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { routinesSection } from './section'
+import { routineDelete, routinePause, type Routine } from '../contract'
+import { createRoutines } from './store'
+import { describe } from './when'
+
+const failure = ({ next, last }: Routine) => (next === undefined && last?.outcome === 'failed' ? (last.error ?? 'Failed') : undefined)
 
 export default definePlugin({
   name: 'routines-web',
-  description: "The Routines section of a bot's profile, with each routine's timing, pause and delete, and a clock on its wakes in the chat",
-  inject: { kit, wire },
+  description: "Each bot's routines, with their schedule, pause and delete, for the bots UI's automations, and a clock on their wakes in the chat",
+  inject: { wire },
   apply(ctx) {
-    ctx.watch(botProfile, found => found?.section({ id: 'routines', order: 10, render: bot => routinesSection(ctx, bot) }))
+    const routines = createRoutines(ctx)
+    const automation = (routine: Routine): BotAutomation => ({
+      id: routine.id,
+      icon: 'clock',
+      title: routine.name,
+      when: describe(routine.when),
+      detail: oneLine(routine.instructions),
+      paused: routine.paused,
+      error: failure(routine),
+      actions: () => [
+        {
+          id: 'pause',
+          label: routine.paused ? 'Resume' : 'Pause',
+          run: () => ctx.wire.call(routinePause, { routine: routine.id, paused: !routine.paused }),
+        },
+        {
+          id: 'delete',
+          label: 'Delete',
+          icon: 'trash',
+          danger: true,
+          confirm: 'Delete this routine?',
+          run: () => ctx.wire.call(routineDelete, { routine: routine.id }),
+        },
+      ],
+    })
+    ctx.watch(botAutomations, found => found?.source({ id: 'routines', order: 10, list: bot => routines(bot).map(automation) }))
     ctx.watch(transcript, found => found?.notice('routine', { icon: 'clock' }))
   },
 })

@@ -20,7 +20,7 @@ export default definePlugin({
   apply(ctx) {
     const live = createLive((bot, event) => ctx.get(server)?.broadcast(botStreamWire, [bot, event]))
     ctx.effect(() => live.stop)
-    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context, () => ctx.get(projectFiles)?.copies() ?? [])
+    const { brief, stale } = botBrief(ctx.bots, ctx.botMemory, ctx.tools, ctx.context, () => ctx.get(projectFiles))
     ctx.effect(() => ctx.providerThreads.brief('bot', brief))
     ctx.on(stepPrepare, async (_request, conversation) => (conversation.owner === 'bot' && stale(conversation.id)) || undefined)
     ctx.effect(() => ctx.tools.offer('bot', () => offered))

@@ -95,6 +95,7 @@ export interface LocalCopy {
 export interface ProjectFiles {
   copies(): LocalCopy[]
   ofFolder(dir: string): string | null
+  name(project: string): string | undefined
 }
 
 export const projectFiles = service<ProjectFiles>('projectFiles')

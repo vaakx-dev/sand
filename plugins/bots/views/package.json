@@ -1,0 +1,36 @@
+{
+  "name": "@sand/bot-views",
+  "version": "0.0.0",
+  "description": "Bots in the sidebar, each bot's screen with its chat, work tabs and Project page, its profile, New bot and Automations",
+  "type": "module",
+  "sand": {
+    "feature": "bots",
+    "web": "./src/web/index.ts",
+    "label": "Bots",
+    "summary": "Your bots: their chats, the work they started, their plans, profiles and automations"
+  },
+  "dependencies": {
+    "@sand/accounts": "workspace:*",
+    "@sand/approvals": "workspace:*",
+    "@sand/bot-memory": "workspace:*",
+    "@sand/bot-plan": "workspace:*",
+    "@sand/bot-turns": "workspace:*",
+    "@sand/bots": "workspace:*",
+    "@sand/chats": "workspace:*",
+    "@sand/composer": "workspace:*",
+    "@sand/changes": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
+    "@sand/markdown": "workspace:*",
+    "@sand/palette": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/transcript": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

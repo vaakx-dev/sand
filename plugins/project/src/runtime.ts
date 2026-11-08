@@ -18,7 +18,7 @@ export default definePlugin({
   async apply(ctx) {
     const { home } = ctx.cli
     const local = localCopies(home, (await loadPcIdentity(home)).id)
-    ctx.provide(projectFiles, { copies: local.copies, ofFolder: local.ofFolder })
+    ctx.provide(projectFiles, { copies: local.copies, ofFolder: local.ofFolder, name: local.name })
     const git = () => ctx.get(gitRunner)
     ctx.watch(server, found => found && joinDisposers(serveFiles(found, git), serveFolders(found), serveIcons(found, home, local, () => ctx.get(peers))))
   },

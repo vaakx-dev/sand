@@ -5,7 +5,7 @@ import { type Caller, createHandlers, type Request } from '@sand/host-hub/contra
 import { hostChannel, runtime } from '@sand/host-runtimes/contract'
 import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
-import { type LocalCopy, projectFiles } from '@sand/project/contract'
+import { type LocalCopy, type ProjectFiles, projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
 import { server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
@@ -97,9 +97,10 @@ const loadConfig = async (app: Context, home: string, sources: Source[], config:
   app.load(join(builtins, 'core', 'config', 'src', 'index.ts'))
 }
 
-const copiesStub = (projects: LocalCopy[]) => ({
+const copiesStub = (projects: TestProject[]): ProjectFiles => ({
   copies: () => projects,
   ofFolder: (folder: string) => projects.find(copy => resolve(folder).startsWith(resolve(copy.path)))?.project ?? null,
+  name: project => projects.find(copy => copy.project === project)?.name,
 })
 
 const boot = async (app: Context, home: string, models: Models, { plugins: extra = [], options = {}, projects = [], sections = {}, config }: SandOptions) => {
@@ -122,11 +123,13 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
 
 type PluginOptions = Record<string, Record<string, unknown>>
 
+type TestProject = LocalCopy & { name?: string }
+
 export interface SandOptions {
   home?: string
   plugins?: string[]
   options?: PluginOptions
-  projects?: LocalCopy[]
+  projects?: TestProject[]
   sections?: Record<string, unknown>
   config?: string
 }

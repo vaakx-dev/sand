@@ -1,4 +1,4 @@
-import { botProfile, botTabs, botViews, type BotViews } from '@sand/bots/contract'
+import { botTabs, botViews, type BotViews } from '@sand/bots/contract'
 import { threadOwners, threadView } from '@sand/chat/contract'
 import { composer } from '@sand/composer/contract'
 import { contextChips } from '@sand/context/contract'
@@ -6,13 +6,13 @@ import { markdownLinks } from '@sand/markdown/contract'
 import { transcript } from '@sand/transcript/contract'
 import { joinDisposers } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
+import { threads } from '@sand/web-client/contract'
 import { definePlugin } from 'drydock'
 import { botKind, botReplyEntry, type BotReplyEntry } from '../contract'
 import { replyCard } from './card'
 import { inject } from './context'
 import { botFace } from './face'
 import { threadOwnersOf } from './owners'
-import { projectSection } from './project'
 import { threadLinks } from './reference'
 import { createRoster } from './roster'
 import { threadTabs } from './tabs'
@@ -37,12 +37,10 @@ export default definePlugin({
       view =>
         view &&
         joinDisposers(
-          ctx.watch(botTabs, found => found?.source(threadTabs(roster, view))),
+          ctx.watch(botTabs, found => found?.source(threadTabs(roster, view, thread => ctx.get(threads)?.get(thread)?.info.project ?? null))),
           ctx.watch(markdownLinks, found => found?.scheme(threadLinks(ctx.kit, view))),
         ),
     )
-    const project = projectSection(ctx, roster)
-    ctx.watch(botProfile, found => found?.section({ id: 'project', order: 5, render: project }))
     ctx.watch(composer, found => found?.trigger(botTrigger(roster), 5))
     ctx.watch(contextChips, found =>
       found?.register({
