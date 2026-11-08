@@ -1405,6 +1405,9 @@
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
       },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+      },
     },
     "plugins/core/watch": {
       "name": "@sand/watch",
@@ -1947,11 +1950,13 @@
         "@sand/git-runner": "workspace:*",
         "@sand/host-daemon": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/host-runtimes": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/reactive": "workspace:*",
         "@sand/server": "workspace:*",
         "@sand/settings": "workspace:*",
+        "@sand/transfers": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/ui-shell": "workspace:*",
         "@sand/util": "workspace:*",

@@ -4,7 +4,7 @@ const newProject = (open: () => void, group?: string): PaletteItem => ({
   id: 'project:new',
   group,
   icon: 'folder-plus',
-  label: 'New project',
+  label: 'Add project',
   search: 'new add project folder pc create',
   run: open,
 })

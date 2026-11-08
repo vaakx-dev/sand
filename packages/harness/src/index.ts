@@ -7,7 +7,7 @@ import { media } from '@sand/media/contract'
 import { modelSettings } from '@sand/model/contract'
 import { type LocalCopy, type ProjectFiles, projectFiles } from '@sand/project/contract'
 import { replayRequests, type Source } from '@sand/replay/contract'
-import { server } from '@sand/server/contract'
+import { type RouteHandler, server } from '@sand/server/contract'
 import { type ToolContext, tools } from '@sand/tools/contract'
 import { turns } from '@sand/turns-contract/contract'
 import { type Context, createApp, scopeError, type ContextCore, type Service } from 'drydock'
@@ -113,12 +113,17 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
     app.provide(sandConfig, { path: join(home, 'sand.toml'), section: name => sections[name] })
   }
   const wire = createHandlers()
-  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route: () => () => {}, pages: () => 0, ask: wire.ask })
+  const routes = new Map<string, RouteHandler>()
+  const route = (path: string, handler: RouteHandler) => {
+    routes.set(path, handler)
+    return () => void routes.delete(path)
+  }
+  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]
   await modelsReady(app, models.ids)
-  return wire
+  return { wire, routes }
 }
 
 type PluginOptions = Record<string, Record<string, unknown>>
@@ -142,10 +147,15 @@ const start = async (models: Models, options: SandOptions) => {
     await app.dispose()
     if (!shared) rmSync(home, { recursive: true, force: true })
   }
-  const wire = await boot(app, home, models, options).catch(async (error: unknown) => {
+  const { wire, routes } = await boot(app, home, models, options).catch(async (error: unknown) => {
     await stop()
     throw error
   })
+  const fetch = async (path: string, init?: RequestInit) => {
+    const url = new URL(path, 'http://sand')
+    const handler = routes.get(url.pathname)
+    return handler ? handler(new Request(url, init)) : new Response('Not found', { status: 404 })
+  }
   const askAs =
     (caller: Caller) =>
     <I, O>(request: Request<I, O>, input: I) =>
@@ -176,6 +186,7 @@ const start = async (models: Models, options: SandOptions) => {
     native: (source: string) => need(app, replayRequests).native(source),
     ask: askAs({ device: 'page', kind: 'browser' }),
     askAs,
+    fetch,
     tool(name: string, run: (input: Record<string, unknown>, context: ToolContext) => string | Promise<string>) {
       need(app, tools).register({ name, description: name, input: z.record(z.string(), z.unknown()), run })
     },
