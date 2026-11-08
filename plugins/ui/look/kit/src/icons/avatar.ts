@@ -1,7 +1,7 @@
 import type { ProjectLook } from '@sand/project/contract'
-import { circle, derive, dynamicChild, img, read, span, svg, textEl, type ReactiveValue } from '@vaakx-dev/vrui'
+import { circle, derive, dynamicChild, img, read, svg, type ReactiveValue } from '@vaakx-dev/vrui'
 import { appIcon } from '../heads/app-icon'
-import { duneHue, duneIcon } from './dunes'
+import { duneIcon } from './dunes'
 
 const quickMark = (size: number) =>
   svg(
@@ -16,23 +16,6 @@ export const projectIcon = (name: string, look: ProjectLook = {}, size = 16) => 
   if (look.quick) return quickMark(size)
   if (look.app) return appIcon(size)
   return picture(look.file || duneIcon(name, look), size)
-}
-
-const initialOf = (name: string) => (Array.from(name.trim())[0] ?? '').toUpperCase()
-
-export const projectMark = (name: string, look: ProjectLook = {}, size = 14) => {
-  if (look.file || look.app || look.quick) return projectIcon(name, look, size)
-  return span(
-    {
-      'aria-hidden': 'true',
-      class: ['inline-flex shrink-0 font-bold text-black', size > 20 ? 'rounded-md' : 'rounded-sm'],
-      style: { width: `${size}px`, height: `${size}px`, backgroundColor: `hsl(${duneHue(name, look)} 70% 70%)` },
-    },
-    svg(
-      { viewBox: '0 0 14 14', width: size, height: size },
-      textEl({ x: 7, y: 7, textAnchor: 'middle', dominantBaseline: 'central', fill: 'currentColor', fontSize: 9 }, initialOf(name)),
-    ),
-  )
 }
 
 export const projectAvatar = (name: ReactiveValue<string>, look: ReactiveValue<ProjectLook | undefined>, size = 16) =>

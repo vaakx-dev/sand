@@ -4,9 +4,9 @@ import { div, read, span, stopThen, type MaybeReactive } from '@vaakx-dev/vrui'
 import { actionsMenu } from './actions'
 import type { PageModel } from './model'
 
-const lead = ({ icon, projectMark, working }: Kit, item: PaletteItem) => {
+const lead = ({ icon, projectIcon, working }: Kit, item: PaletteItem) => {
   if (item.busy) return working(16)
-  if (item.avatar) return projectMark(item.avatar, item.avatarIcon, 16)
+  if (item.avatar) return projectIcon(item.avatar, item.avatarIcon)
   return item.icon ? icon(item.icon, 16) : undefined
 }
 
