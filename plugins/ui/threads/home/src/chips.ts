@@ -79,7 +79,7 @@ const working = (parts: ChipParts): ChipSource => ({
   status: 'running',
   items: scope =>
     scoped(parts, scope)
-      .filter(thread => thread.running)
+      .filter(thread => thread.running && !thread.waiting)
       .map(thread => item(parts, thread, { status: 'running', meta: () => duration(Math.max(0, parts.now() - (thread.started ?? parts.now()))) })),
 })
 
