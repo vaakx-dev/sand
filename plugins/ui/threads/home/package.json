@@ -1,7 +1,7 @@
 {
   "name": "@sand/threads-home",
   "version": "0.0.0",
-  "description": "Threads in the sidebar by day with pin and snooze, Home with the launch composer and a project picker, the Waiting, Ready and Working chips, and threads and projects in Search",
+  "description": "Open threads in the sidebar, newest first, with pin and snooze, Home with the launch composer and a project picker, the Waiting, Ready and Working chips, and threads and projects in Search",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,7 +10,7 @@
     "feature": "threads",
     "web": "./src/index.ts",
     "label": "Threads home",
-    "summary": "Your threads in the sidebar by day, New chat with a project picker, and chips for what's waiting, ready or working"
+    "summary": "Your open threads in the sidebar, newest first, New chat with a project picker, and chips for what's waiting, ready or working"
   },
   "dependencies": {
     "@sand/changes": "workspace:*",

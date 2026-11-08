@@ -141,7 +141,7 @@ export interface ShellGroup {
 }
 
 /**
- * A source of sidebar groups, such as Bots or the days of recent chats. Sections sort by `order`;
+ * A source of sidebar groups, such as Bots or recent chats. Sections sort by `order`;
  * the shell reads `groups()` reactively, so back it with signals and the sidebar redraws as it changes.
  * On phones the same groups fill the home screen.
  */
@@ -300,7 +300,7 @@ export interface Shell {
   /** The chips for a scope, for a composer's `above` slot. Call inside the caller's scope; disposing it removes the bar. */
   chipBar(scope: ChipScope): HTMLElement
   mount(where: Place, view: HTMLElement, order?: number): Dispose
-  /** The edge swipe the shell would start now: back on a pushed phone screen, the drawer otherwise, or none. */
+  /** The edge swipe the shell would start now: back or forward through the phone stack, the drawer otherwise, or none. */
   swipe(): Swipe | undefined
 }
 
