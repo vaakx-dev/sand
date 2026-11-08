@@ -6,12 +6,12 @@ import { floatingEdge } from '../surface'
 
 export const menuSeparator = () => div({ role: 'separator', class: 'h-2' })
 
-export const popover = (close: () => void, { class: extra, onMount: mounted, ...props }: Props<HTMLDivElement>, ...children: Child[]) =>
+export const popover = (close: () => void, { class: extra, onMount: mounted, flat = false, ...props }: Props<HTMLDivElement> & { flat?: boolean }, ...children: Child[]) =>
   div(
     {
       role: 'menu',
       ...props,
-      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-lg bg-neutral-800 p-1 animate-fade', floatingEdge, extra],
+      class: [layer.menu, 'absolute flex min-w-48 flex-col rounded-lg bg-neutral-800 p-1 animate-fade', !flat && floatingEdge, extra],
       onMount: node => {
         const stops = [dismissible(node, close), onPressOutside(node, close)]
         const unmount = mounted?.(node)
