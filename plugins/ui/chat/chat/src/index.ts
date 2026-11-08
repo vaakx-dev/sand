@@ -23,11 +23,7 @@ export default definePlugin({
         version.get()
         untrack(chat.refresh)
       })
-      const body = div(
-        { class: 'flex min-h-0 flex-1 flex-col' },
-        chat.root,
-        dynamicChild(dock, view => view ?? null),
-      )
+      const body = dynamicChild(dock, view => view ?? null, div({ class: 'flex min-h-0 flex-1 flex-col' }, chat.root))
       return { chat, body }
     })
     ctx.watch(composer, found => {
