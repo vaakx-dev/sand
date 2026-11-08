@@ -3,7 +3,7 @@ import { turnStart } from '@sand/turns-contract/contract'
 import { subModel } from '@sand/sub-model/contract'
 import { errorMessage } from '@sand/util'
 import { definePlugin } from 'drydock'
-import { askTitle, titleJob } from './ask'
+import { askTitle } from './ask'
 
 const deadline = 15_000
 
@@ -14,7 +14,6 @@ export default definePlugin({
   apply(ctx) {
     const unloaded = new AbortController()
     ctx.effect(() => () => unloaded.abort())
-    ctx.watch(subModel, found => found?.job(titleJob))
 
     const retitle = async (session: Session, message: Message, quick: string, signal: AbortSignal) => {
       const sub = ctx.get(subModel)

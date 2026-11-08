@@ -1,15 +1,14 @@
 import { noteBlock, type Session } from '@sand/chats/contract'
 import { errorMessage } from '@sand/util'
-import type { WorktreePulls } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import { notRestoredNote } from '../remove/notes'
 import { restoreRecord, waitingThreads } from '../remove/restore'
 import { tidyWorktree } from './tidy'
 
-const parkNow = async (deps: WorktreeDeps, pulls: WorktreePulls | undefined, session: Session) => {
+const parkNow = async (deps: WorktreeDeps, session: Session) => {
   await deps.store.ready()
   const record = deps.store.containing(session.cwd)
-  if (record) await tidyWorktree(deps, pulls, record, Date.now())
+  if (record) await tidyWorktree(deps, record, Date.now())
 }
 
 const parkedFor = (deps: WorktreeDeps, session: Session) =>
@@ -29,12 +28,12 @@ const resumeNow = async (deps: WorktreeDeps, session: Session) => {
   }
 }
 
-export const createParking = (deps: WorktreeDeps, pulls: () => WorktreePulls | undefined) => {
+export const createParking = (deps: WorktreeDeps) => {
   const parking = new Map<string, Promise<void>>()
 
   const settled = (session: Session) => {
     if (session.kind !== 'thread' || !session.settled) return
-    const run = parkNow(deps, pulls(), session)
+    const run = parkNow(deps, session)
       .catch(error => deps.report(new Error(`Kept the worktree of a settled thread: ${errorMessage(error)}`)))
       .finally(() => parking.delete(session.id))
     parking.set(session.id, run)

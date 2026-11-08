@@ -9,11 +9,9 @@ const system = `You name git branches. Given the task a developer is starting, r
 
 const named = z.object({ branch: z.string().min(1) })
 
-export const branchJob = { id: 'branch-name', label: 'Branch names' }
-
 export const askBranchName = async (sub: SubModel, session: Session, prompt: string) => {
   const task = [session.title && `Thread title: ${session.title}`, `Task:\n${prompt.slice(0, mostPromptChars)}`].filter(Boolean).join('\n\n')
-  const { branch } = await sub.json({ job: branchJob.id, tier: 'fast', system, prompt: task, cwd: session.cwd, session: session.id }, named)
+  const { branch } = await sub.json({ tier: 'fast', system, prompt: task, session: session.id }, named)
   const slug = slugOf(branch)
   if (!slug) throw new Error(`the suggested name "${branch}" has no letters or digits`)
   return slug
