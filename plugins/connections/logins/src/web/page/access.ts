@@ -26,7 +26,7 @@ const threadRows = ({ kit, threads }: PageParts, login: Derive<Login>, change: (
   const given = derive(() => login.get().threads)
   const threadRow = (thread: Sig<string>) =>
     settingsRow(
-      { title: () => threads.get(thread.get())?.info.title || 'Untitled thread' },
+      { title: () => threads()?.get(thread.get())?.info.title || 'Untitled thread' },
       quietButton(
         { size: 'sm', surface: 'group', onClick: () => change({ threads: login.get().threads.filter(other => other !== thread.get()) }) },
         'Remove',

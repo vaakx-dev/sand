@@ -8,13 +8,13 @@ export interface Responsible {
 }
 
 export const responsibleFor =
-  (sessions: Sessions, orchestrator: () => Orchestrator | undefined) =>
+  (sessions: () => Sessions | undefined, orchestrator: () => Orchestrator | undefined) =>
   (conversation: ConversationRef): Responsible => {
     const threads: string[] = []
     let at: ConversationRef | undefined = conversation
     while (at?.owner === 'thread' && !threads.includes(at.id)) {
       threads.push(at.id)
-      const session = sessions.open(at.id)
+      const session = sessions()?.open(at.id)
       at = session?.kind === 'agent' && session.parent ? { owner: 'thread', id: session.parent } : orchestrator()?.starterOf(at.id)
     }
     return { ...(at?.owner === 'bot' && { bot: at.id }), threads }

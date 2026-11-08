@@ -57,7 +57,7 @@ export type LoginsModel = ReturnType<typeof loginsModel>
 export interface PageParts {
   kit: Kit
   wire: Wire
-  threads: Threads
+  threads(): Threads | undefined
   model: LoginsModel
   bots(): boolean
 }
