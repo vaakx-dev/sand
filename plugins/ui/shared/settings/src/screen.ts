@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Route, Screen, Shell } from '@sand/ui-shell/contract'
-import { derive, div, dynamicChild, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild } from '@vaakx-dev/vrui'
 import { listView } from './list'
 import { pageView } from './page'
 import type { PageStore } from './pages'
@@ -17,18 +17,14 @@ export const settingsScreen = (kit: Kit, { store, shell, choose }: ScreenParts, 
   const page = derive(() => (phone.get() && !id ? undefined : store.pick(id)))
   const titled = () => !phone.get()
   const current = () => page.get()?.id
-  const list = (look: string) => listView(kit, { store, current, choose, class: look })
+  const list = (onPhone: boolean) => listView(kit, { store, current, choose, phone: onPhone })
   return {
-    split: true,
-    head: () => span({ class: 'ml-2 flex min-w-0 flex-1' }, kit.barTitle(() => (phone.get() && id ? (page.get()?.label ?? '') : 'Settings'))),
+    head: () => dynamicChild(phone, onPhone => (onPhone ? kit.barTitle(() => (id ? (page.get()?.label ?? '') : 'Settings')) : null)),
+    nav: { label: 'Settings', render: () => list(false) },
     main: () =>
       div(
         { class: 'flex min-h-0 min-w-0 flex-1' },
-        dynamicChild(phone, onPhone => {
-          if (onPhone && !id) return list('flex-1')
-          const shown = pageView(kit, { store, page, titled, choose })
-          return onPhone ? shown : div({ class: 'flex min-h-0 min-w-0 flex-1' }, list('w-48 shrink-0 lg:w-64'), shown)
-        }),
+        dynamicChild(phone, onPhone => (onPhone && !id ? list(true) : pageView(kit, { store, page, titled, choose }))),
       ),
   }
 }

@@ -1,17 +1,17 @@
 import type { ThemePalette } from './contract'
 
 const neutral = {
-  '50': '#0a0a0a',
-  '100': '#171717',
-  '200': '#262626',
-  '300': '#404040',
-  '400': '#525252',
-  '500': '#6b6b6b',
-  '600': '#d4d4d4',
-  '700': '#e5e5e5',
-  '800': '#efefef',
+  '50': '#09090b',
+  '100': '#18181b',
+  '200': '#3f3f46',
+  '300': '#48484f',
+  '400': '#52525b',
+  '500': '#71717a',
+  '600': '#a1a1aa',
+  '700': '#e4e4e7',
+  '800': '#eeeef0',
   '900': '#ffffff',
-  '950': '#f8f8f8',
+  '950': '#f4f4f5',
 }
 
 const accent = {
@@ -112,4 +112,18 @@ const info = {
   '950': '#eff6ff',
 }
 
-export const sandLightPalette = { accent, neutral, success, warning, danger, info, orange, sky } satisfies ThemePalette
+const violet = {
+  '50': '#1e0b4b',
+  '100': '#2e1065',
+  '200': '#4c1d95',
+  '300': '#5b21b6',
+  '400': '#6d28d9',
+  '500': '#7c3aed',
+  '600': '#8b5cf6',
+  '700': '#a78bfa',
+  '800': '#c4b5fd',
+  '900': '#ddd6fe',
+  '950': '#f5f3ff',
+}
+
+export const sandLightPalette = { accent, neutral, success, warning, danger, info, orange, sky, violet } satisfies ThemePalette

@@ -11,7 +11,7 @@ const kind = 'settings'
 
 export default definePlugin({
   name: 'settings',
-  description: 'Settings: a sidebar item that opens the settings pages, listed beside the chosen one',
+  description: 'Settings: a sidebar item that opens the settings pages; their list takes over the sidebar while one is open',
   inject: { kit },
   apply(ctx) {
     const store = pageStore()

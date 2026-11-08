@@ -9,7 +9,7 @@ const sheetView = ({ kit, closeSheet }: Model, spec: SheetSpec) => {
     kit.sheet(
       { size: 'md', 'aria-label': spec.label },
       div(
-        { class: 'flex min-h-12 shrink-0 items-center gap-2 py-2 pr-2 pl-4' },
+        { class: 'flex min-h-12 shrink-0 items-center gap-2 overflow-hidden py-2 pr-2 pl-4', style: kit.stableGutter },
         div({ class: 'flex min-w-0 flex-1 items-center gap-2' }, spec.head(close)),
         kit.closeButton({ surface: 'raised', onClick: close }),
       ),

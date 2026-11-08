@@ -4,7 +4,7 @@ import { service } from 'drydock'
 export * from './palette'
 export * from './palette-light'
 
-export type ThemeRole = 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'orange' | 'sky'
+export type ThemeRole = 'accent' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'orange' | 'sky' | 'violet'
 
 export type ThemePalette = ColorThemeInput & Record<ThemeRole, ColorThemeInput[string]>
 

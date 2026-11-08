@@ -1,20 +1,18 @@
 import type { SettingsGroup, SettingsPage } from './contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, keys, list, nav, show, sig, span, type Child, type ClassValue, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, keys, list, nav, show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
 import { groupOf, groups, type PageStore } from './pages'
 
 export interface ListParts {
   store: PageStore
   current(): string | undefined
   choose(id: string): void
-  class: ClassValue
+  phone: boolean
 }
 
 const label = (text: Child) => span({ class: 'min-w-0 flex-1 truncate text-left' }, text)
 
-const pageIcon = ({ icon }: Kit, name: string | undefined) => (name ? icon(name) : span({ class: 'h-4 w-4 shrink-0' }))
-
-const pageButton = (kit: Kit, page: Sig<SettingsPage>, { store, current, choose }: ListParts) => {
+const pageButton = (kit: Kit, page: Sig<SettingsPage>, { store, current, choose, phone }: ListParts) => {
   const active = () => {
     const shown = current()
     return shown === page.get().id || store.pages.get().some(other => other.id === shown && other.parent === page.get().id)
@@ -23,13 +21,10 @@ const pageButton = (kit: Kit, page: Sig<SettingsPage>, { store, current, choose 
     {
       active,
       'aria-current': () => (active() ? 'page' : 'false'),
+      size: phone ? 'lg' : 'md',
       class: 'w-full shrink-0',
       onClick: () => choose(page.get().id),
     },
-    dynamicChild(
-      page.map(value => value.icon),
-      name => pageIcon(kit, name),
-    ),
     label(page.map(value => value.label)),
     show(
       () => page.get().dot?.() ?? false,
@@ -43,7 +38,7 @@ const groupView = (kit: Kit, title: string, pages: Sig<SettingsPage[]>, parts: L
     () => pages.get().length > 0,
     () =>
       div(
-        { class: 'flex flex-col gap-1' },
+        { class: 'flex flex-col' },
         kit.sectionHeading(title),
         list(pages, page => page.id, page => pageButton(kit, page, parts), div({ class: 'flex flex-col gap-px' })),
       ),
@@ -58,9 +53,9 @@ export const listView = (kit: Kit, parts: ListParts) => {
   })
   const inGroup = (id: SettingsGroup) => derive(() => shown.get().filter(page => groupOf(page) === id))
   return nav(
-    { 'aria-label': 'Settings pages', class: ['flex min-h-0 flex-col', parts.class] },
+    { 'aria-label': 'Settings pages', class: ['flex min-h-0 flex-1 flex-col', parts.phone && 'px-2'] },
     div(
-      { class: 'flex shrink-0 px-2 py-2' },
+      { class: 'flex shrink-0 py-2' },
       kit.searchField({
         placeholder: 'Search settings',
         'aria-label': 'Search settings',
@@ -75,7 +70,7 @@ export const listView = (kit: Kit, parts: ListParts) => {
       }),
     ),
     div(
-      { class: 'flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-2 pb-2' },
+      { class: 'flex min-h-0 flex-1 flex-col overflow-auto pb-2' },
       ...groups.map(group => groupView(kit, group.label, inGroup(group.id), parts)),
       show(
         () => !shown.get().length,

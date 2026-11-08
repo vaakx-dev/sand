@@ -1,72 +1,18 @@
-import { clock, derive, div, dynamicChild, list, span, type Sig } from '@vaakx-dev/vrui'
-import type { ContextMenu } from '@sand/ui-kit/contract'
-import type { NavItem, ShellRow } from './contract'
-import { bar } from './frames'
-import { age, monogramOf, statusIcon, statusName, urgent } from './marks'
+import { div, h1, list } from '@vaakx-dev/vrui'
 import type { Model } from './model'
-import { activate, groupsOf, rowMenu, type ListedGroup } from './sidebar'
-
-const navButton = (model: Model, item: Sig<NavItem>) => {
-  const { icon, iconButton, withDot } = model.kit
-  const { label } = item.get()
-  return iconButton(
-    { title: label, 'aria-label': label, onClick: () => activate(model, item.get()) },
-    withDot(icon(item.get().icon), () => item.get().dot?.() ?? false),
-  )
-}
-
-const trail = (model: Model, row: ShellRow, now: () => number) => {
-  const { status, at } = row
-  if (status && urgent(status)) return [statusIcon(model.kit, status), span({ class: 'text-neutral-100' }, statusName(status))]
-  return [status ? statusIcon(model.kit, status) : null, at === undefined ? null : span({ class: 'tabular-nums' }, () => age(now() - at))]
-}
-
-const metaOf = ({ meta, detail }: ShellRow) => [meta, detail].filter(Boolean).join(' · ') || undefined
-
-const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, now: () => number) =>
-  div(
-    { class: 'contents' },
-    dynamicChild(row, shown =>
-      model.kit.listRow({
-        title: shown.label,
-        meta: metaOf(shown),
-        touch: true,
-        lead: shown.mark ? monogramOf(model.kit, shown.mark) : undefined,
-        trail: trail(model, shown, now),
-        ...rowMenu(menu, () => row.get(), () => model.open(row.get().to)),
-      }),
-    ),
-  )
-
-const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, now: () => number) => {
-  const action = listed.get().group.action
-  return div(
-    { class: 'mt-6 flex flex-col first:mt-0' },
-    model.kit.groupHeading(() => listed.get().group.label, action && { icon: action.icon, label: action.label, onClick: () => action.run() }),
-    list(
-      derive(() => listed.get().group.rows),
-      row => row.id,
-      row => rowView(model, menu, row, now),
-      div({ class: 'flex flex-col' }),
-    ),
-  )
-}
+import { brandLook, footRow, groupList, navList } from './rows'
 
 export const homeScreen = (model: Model) => {
   const menu = model.kit.contextMenu()
-  const now = clock(60_000)
   return div(
     { class: 'flex min-h-0 flex-1 flex-col' },
-    bar(
-      div({ class: 'ml-2 min-w-0 flex-1 truncate' }, model.kit.barTitle('sand')),
-      list(
-        derive(() => model.navs.items.get().filter(item => item.phone !== false)),
-        item => item.id,
-        item => navButton(model, item),
-        div({ class: 'flex shrink-0 items-center gap-1' }),
-      ),
+    div(
+      { class: 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-2 pt-2' },
+      h1({ class: [brandLook, 'text-lg'] }, 'sand'),
+      navList(model, true),
+      groupList(model, menu, { phone: true }),
+      div({ class: 'mt-auto pb-2' }, footRow(model, true)),
     ),
-    list(groupsOf(model), listed => listed.key, listed => groupView(model, menu, listed, () => now.get()), div({ class: 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-2 py-2' })),
     list(
       model.places.home.items,
       placed => placed.view,

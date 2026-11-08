@@ -1,6 +1,6 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import { addressLayer, leaveLayer, pushLayer } from '@sand/web-client/contract'
-import { derive, sig, stored, untrack } from '@vaakx-dev/vrui'
+import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import { sameScreen, screenKey } from './address'
 import { homeRoute, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState } from './contract'
 import { navigation } from './navigation'
@@ -18,7 +18,7 @@ export const phoneWidth = 600
 
 export const deskWidth = 1000
 
-export const drawerReach = 256
+export const drawerReach = 288
 
 const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover' } as const
 
@@ -47,6 +47,13 @@ export const shellModel = (kit: Kit) => {
   const current = derive(() => {
     const { route } = nav.place.get()
     return known(route.kind) ? route : home
+  })
+  const before = sig<Route>(home)
+  let last = home
+  effect(() => {
+    const now = current.get()
+    if (now.kind !== last.kind) untrack(() => before.set(last))
+    last = now
   })
   const pushed = derive(() => (current.get().kind === homeRoute ? [] : nav.place.get().stack.filter(route => known(route.kind))))
 
@@ -97,6 +104,11 @@ export const shellModel = (kit: Kit) => {
   }
   const sheetShown = derive(() => (layer.get() === layers.sheet ? sheet.get() : undefined))
 
+  const open = (route: Route, replace = false) => {
+    if (layer.get()) leave()
+    nav.go(route, replace)
+  }
+
   const cover = (close: () => void) => {
     enter(layers.cover)
     uncover = close
@@ -136,10 +148,8 @@ export const shellModel = (kit: Kit) => {
     sideHidden,
     showSide,
     isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())),
-    open(route: Route, replace = false) {
-      if (layer.get()) leave()
-      nav.go(route, replace)
-    },
+    open,
+    leaveNav: () => open(before.get()),
     back: nav.back,
     follow() {
       layer.set(addressLayer())

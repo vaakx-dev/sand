@@ -16,23 +16,18 @@ export interface SegmentedOptions {
   class?: ClassValue
 }
 
-const picked = (inset: boolean) => (inset ? 'bg-neutral-700 text-neutral-100' : 'bg-neutral-900 text-neutral-100 shadow-xs dark:bg-neutral-600')
+const picked = 'bg-neutral-700 text-neutral-100'
 
-export const segmented = <T>(
-  choices: Choice<T>[],
-  active: MaybeReactive<T | undefined>,
-  choose: (value: T) => void,
-  { label, inset = false, fill = false, class: extra }: SegmentedOptions = {},
-) =>
+export const segmented = <T>(choices: Choice<T>[], active: MaybeReactive<T | undefined>, choose: (value: T) => void, { label, fill = false, class: extra }: SegmentedOptions = {}) =>
   div(
     {
-      class: ['flex flex-wrap gap-1 rounded-md p-1', inset ? 'bg-neutral-900' : 'bg-neutral-800', extra],
+      class: ['flex flex-wrap rounded-lg bg-neutral-950 p-px', extra],
       role: 'radiogroup',
       ...(label && { 'aria-label': label }),
     },
     choices.map(choice =>
       controlButton(
-        ['text-neutral-400 hover:text-neutral-100', () => (read(active) === choice.value ? picked(inset) : '')],
+        ['gap-1.5 text-xs font-medium text-neutral-500 hover:text-neutral-100', () => (read(active) === choice.value ? picked : '')],
         {
           size: 'sm',
           role: 'radio',

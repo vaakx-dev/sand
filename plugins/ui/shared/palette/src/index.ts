@@ -41,6 +41,6 @@ export default definePlugin({
     const toggle = () => (isOpen.get() ? host.close() : host.open())
     ctx.provide(palette, host)
     ctx.watch(keys, found => found?.bind({ key: 'mod+k', global: true, passthrough: true, run: toggle }))
-    ctx.watch(shell, found => found?.nav({ id: 'search', label: 'Search', icon: 'search', order: 0, run: () => host.open() }))
+    ctx.watch(shell, found => found?.nav({ id: 'search', label: 'Search', icon: 'search', order: 0, keys: 'mod+k', run: () => host.open() }))
   },
 })

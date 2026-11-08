@@ -12,7 +12,7 @@ export const badge = (tone: Tone, ...children: Child[]) => span({ class: [badgeL
 
 export const shrinkBadge = (tone: Tone, ...children: Child[]) => span({ class: [badgeLook, 'min-w-0 max-w-full', toneText[tone]] }, ...children)
 
-export const dot = (tone: Tone) => span({ class: ['h-2 w-2 shrink-0 rounded-full bg-current', toneText[tone]] })
+export const dot = (tone: Tone) => span({ class: ['h-1.5 w-1.5 shrink-0 rounded-full bg-current', toneText[tone]] })
 
 export const withDot = (glyph: Child, on: () => boolean) =>
   span({ class: 'relative inline-flex shrink-0' }, glyph, show(on, () => span({ class: 'absolute -top-1 -right-1 flex' }, dot('accent'))))
@@ -24,7 +24,7 @@ export const spinner = (size: IconSize = 'sm') =>
     span({ class: 'hidden motion-reduce:inline-flex' }, icon('working', size)),
   )
 
-export const working = (size: IconSize = 'sm', title: MaybeReactive<string> = 'Working') => span({ class: 'inline-flex shrink-0 text-accent-400', title }, icon('working', size))
+export const working = (size: IconSize = 'sm', title: MaybeReactive<string> = 'Working') => span({ class: ['inline-flex shrink-0', toneText.run], title }, icon('working', size))
 
 export const elapsed = (start: MaybeReactive<number | undefined>) => {
   const now = clock()
@@ -65,7 +65,7 @@ export const checkMark = (on: () => boolean, extra?: ClassValue) =>
 export const progressSteps = (count: number, reached: number) =>
   div(
     { class: 'flex items-center gap-1', role: 'progressbar', 'aria-label': `Step ${reached} of ${count}`, 'aria-valuemin': '1', 'aria-valuemax': String(count), 'aria-valuenow': String(reached) },
-    Array.from({ length: count }, (_, index) => span({ class: ['h-1 w-5 rounded-full', index < reached ? 'bg-accent-400' : 'bg-neutral-700'] })),
+    Array.from({ length: count }, (_, index) => span({ class: ['h-1 w-5 rounded-full', index < reached ? 'bg-neutral-100' : 'bg-neutral-700'] })),
   )
 
 export interface StatusLineProps {

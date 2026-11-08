@@ -17,7 +17,7 @@ export default definePlugin({
       await finished
     }
     const press = () => reload().catch(error => console.error(error))
-    ctx.watch(shell, found => found?.nav({ id: 'reload', label: 'Reload plugins', icon: 'reload', order: 200, place: 'foot', run: press }))
+    ctx.watch(shell, found => found?.nav({ id: 'reload', label: 'Reload plugins', icon: 'reload', order: 200, place: 'foot-end', run: press }))
     ctx.watch(composer, found => found?.command({ name: 'reload', description: 'Restart the sand plugins', run: reload }))
   },
 })

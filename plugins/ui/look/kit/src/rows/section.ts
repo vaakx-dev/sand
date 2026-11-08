@@ -1,17 +1,18 @@
-import { div, section, span, type Child } from '@vaakx-dev/vrui'
-import { sectionTitle } from '../heads/text'
+import { div, p, section, span, type Child } from '@vaakx-dev/vrui'
+import { metaLook, sectionTitle } from '../heads/text'
 
 export interface SectionProps {
   title?: Child
+  note?: Child
   action?: Child
 }
 
-const sectionHead = ({ title, action }: SectionProps) =>
+const sectionHead = ({ title, note, action }: SectionProps) =>
   div(
-    { class: 'flex min-h-8 min-w-0 items-center gap-2' },
-    title ? sectionTitle(title) : null,
-    action ? span({ class: 'ml-auto flex shrink-0 items-center gap-2' }, action) : null,
+    { class: 'mb-2 flex min-w-0 items-center gap-2' },
+    div({ class: 'flex min-w-0 flex-1 flex-col gap-1' }, title ? sectionTitle(title) : null, note ? p({ class: metaLook }, note) : null),
+    action ? span({ class: 'flex shrink-0 items-center gap-2' }, action) : null,
   )
 
 export const pageSection = (head: SectionProps, ...rows: Child[]) =>
-  section({ class: 'flex min-w-0 flex-col gap-2' }, head.title || head.action ? sectionHead(head) : null, div({ class: 'flex min-w-0 flex-col' }, ...rows))
+  section({ class: 'flex min-w-0 flex-col' }, head.title || head.note || head.action ? sectionHead(head) : null, div({ class: 'flex min-w-0 flex-col' }, ...rows))

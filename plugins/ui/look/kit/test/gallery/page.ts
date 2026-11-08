@@ -90,9 +90,10 @@ const sheetSample = () =>
 const settings = () => {
   const on = sig(true)
   return kit.settingsSection(
-    { title: 'Notifications' },
+    { title: 'Notifications', note: 'When sand tells you that work needs you.' },
     kit.settingsRow({ title: 'Ask before merging', detail: 'Each bot asks first' }, kit.toggleSwitch({ on, onClick: () => on.set(!on.get()), 'aria-label': 'Ask before merging' })),
     kit.settingsRow({ title: 'Sound' }, kit.segmented([{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }], 'on', () => {}, { label: 'Sound' })),
+    kit.settingsRow({ title: 'Default model', detail: 'Used when a thread does not pick one' }, kit.pickerButton({ 'aria-label': 'Default model' }, 'Opus 5.5 · High')),
     kit.listRow({ surface: 'group', title: 'Quiet hours', meta: 'From 22:00 to 7:00', trail: kit.chevron(() => false), onClick: () => {} }),
     kit.emptyState({ surface: 'group', text: 'No devices muted' }),
   )
@@ -107,6 +108,7 @@ const roles = () =>
     kit.sectionHeading('Group label'),
     kit.secondaryText('Secondary text for descriptions and captions.'),
     line(kit.metaLine('Meta line, 3m ago'), kit.countMark(12)),
+    line(kit.projectMark('harbor'), kit.metaLine('harbor'), kit.monoMeta('tide-retry', ' ', kit.badge('success', '#214')), kit.monoMeta(kit.badge('merged', '#209')), kit.shortcutHint('mod+k')),
     kit.textRule('Using script'),
   )
 
@@ -123,7 +125,7 @@ const pageSections = () =>
 
 const gallery = () =>
   kit.pageBody(
-    { title: 'Kit' },
+    { title: 'Kit', intro: 'Every piece the screens draw with, on the approved roles.' },
     block('Type roles', roles()),
     block(
       'Buttons',
@@ -137,7 +139,7 @@ const gallery = () =>
     ),
     block(
       'State icons',
-      line(...(['running', 'waiting', 'ready', 'settled', 'idle'] as const).map(state => span({ class: 'flex items-center gap-1 text-xs text-neutral-400' }, kit.stateIcon(state), state))),
+      line(...(['running', 'waiting', 'ready', 'merged', 'settled', 'idle'] as const).map(state => span({ class: 'flex items-center gap-1 text-xs text-neutral-400' }, kit.stateIcon(state), state))),
     ),
     block('Count chips', chips()),
     block('Group heading', kit.groupHeading('Bots', { icon: 'plus', label: 'New bot', onClick: () => {} })),
