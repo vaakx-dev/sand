@@ -40,7 +40,14 @@ const chips = () =>
       label: 'Waiting',
       count: 1,
       lead: kit.stateIcon('waiting'),
-      items: () => [kit.chipRow({ title: 'Add the refund webhook', lead: kit.stateIcon('waiting', 'sm', true), meta: 'partial refunds?', onClick: () => {} })],
+      items: () => [kit.chipRow({ title: 'Add the refund webhook', lead: kit.stateIcon('waiting', 'sm', true), meta: 'partial refunds?', onClick: () => {} }),
+        kit.chipRow({
+          title: "These files changed in the project too and don't merge cleanly with this thread's changes",
+          lead: kit.stateIcon('waiting', 'sm', true),
+          meta: 'Which version should win when both sides edited the same lines?',
+          onClick: () => {},
+        }),
+      ],
     }),
     kit.countChip({
       label: 'Ready',

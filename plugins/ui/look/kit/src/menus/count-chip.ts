@@ -17,5 +17,5 @@ export const countChip = ({ label, count, items, lead, placement = 'above-left' 
     flat: true,
     items,
     menuClass: 'w-80 max-h-80 overflow-y-auto *:first:pt-1.5',
-    trigger: (press, open) => chipButton({ ...press, active: open }, lead ?? null, label, countMark(count)),
+    trigger: (press, open) => chipButton({ ...press, active: open, inset: true }, lead ?? null, label, countMark(count)),
   })
