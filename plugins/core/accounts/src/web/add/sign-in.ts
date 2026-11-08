@@ -1,4 +1,4 @@
-import type { Kit } from '@sand/ui-kit/contract'
+import type { Kit, Surface } from '@sand/ui-kit/contract'
 import { clock, div, keys, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
 import { loginFinish, type LoginAccount, type LoginPending } from '../../contract'
 import { planName } from '../names'
@@ -23,13 +23,8 @@ export const phaseOf = (account: LoginAccount | undefined): Phase => {
   return account?.error ? 'error' : 'starting'
 }
 
-const step = (number: string, text: string, ...extra: Child[]) =>
-  div(
-    { class: 'flex items-center gap-3 text-sm text-neutral-100' },
-    span({ class: 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-700 text-xs text-neutral-400' }, number),
-    span({ class: 'min-w-0 flex-1' }, text),
-    ...extra,
-  )
+const step = ({ countMark, secondaryText }: Kit, number: number, text: string, ...extra: Child[]) =>
+  div({ class: 'flex items-center gap-3' }, countMark(number), div({ class: 'min-w-0 flex-1' }, secondaryText(text)), ...extra)
 
 const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) => {
   const pc = account.conflict?.pc ?? 'Another PC'
@@ -46,7 +41,7 @@ const conflictView = ({ callout, primaryAction, secondaryAction, sheetStep }: Ki
   )
 }
 
-const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy) => {
+const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefined, pending: Paste, control: LoginControl, busy: Busy, surface: Surface) => {
   const { copyButton, primaryAction, sheetStep, textInput } = kit
   const code = sig('')
   const ready = () => !busy.get() && !!code.get().trim()
@@ -55,8 +50,8 @@ const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefin
   }
   return sheetStep(
     [
-      step('1', 'Approve sand in your browser', openLink(kit, pending.url)),
-      step('2', 'Paste the code it shows'),
+      step(kit, 1, 'Approve sand in your browser', openLink(kit, pending.url)),
+      step(kit, 2, 'Paste the code it shows'),
       textInput({
         placeholder: `Code from ${hostOf(pending.url)}`,
         'aria-label': 'Sign-in code',
@@ -65,7 +60,7 @@ const pasteView = (kit: Kit, kind: string, account: () => LoginAccount | undefin
       }),
       problem(kit, () => account()?.error ?? ''),
     ],
-    copyButton({ text: () => pending.url, label: 'Copy link', size: 'md' }),
+    copyButton({ text: () => pending.url, label: 'Copy link', size: 'md', surface }),
     primaryAction({ disabled: () => !ready(), onClick: submit }, 'Sign in'),
   )
 }
@@ -99,12 +94,12 @@ const browserView = (kit: Kit, account: LoginAccount, url: string) => {
 const errorView = ({ errorText, primaryAction, sheetStep }: Kit, account: LoginAccount, actionsFor: SignInActions, busy: Busy) =>
   sheetStep(errorText(account.error ?? "Couldn't sign in. Try again."), primaryAction({ disabled: busy, onClick: actionsFor.retry }, 'Retry'))
 
-export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy) => {
+export const signInView = (kit: Kit, kind: string, phase: Phase, control: LoginControl, actionsFor: SignInActions, busy: Busy, surface: Surface) => {
   const { loadingState, sheetStep } = kit
   const account = () => control.account(kind)
   const current = untrack(account)
   if (phase === 'conflict' && current) return conflictView(kit, current, actionsFor, busy)
-  if (current?.pending?.kind === 'paste') return pasteView(kit, kind, account, current.pending, control, busy)
+  if (current?.pending?.kind === 'paste') return pasteView(kit, kind, account, current.pending, control, busy, surface)
   if (current?.pending?.kind === 'device') return deviceView(kit, current.pending)
   if (current?.pending?.kind === 'browser') return browserView(kit, current, current.pending.url)
   if (phase === 'error' && current) return errorView(kit, current, actionsFor, busy)

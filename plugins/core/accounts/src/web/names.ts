@@ -29,5 +29,5 @@ export const removeLabel = (account: { kind: AccountKind; app?: LoginApp }) => {
   return account.kind === 'server' ? 'Remove' : 'Sign out'
 }
 
-export const presence = ({ dot }: Kit, online: boolean) =>
-  span({ class: 'flex items-center gap-2 text-xs text-neutral-400' }, dot(online ? 'success' : 'neutral'), online ? 'Ready' : 'Offline')
+export const presence = ({ dot, metaLine }: Kit, online: boolean) =>
+  span({ class: 'flex items-center gap-2' }, dot(online ? 'success' : 'neutral'), metaLine(online ? 'Ready' : 'Offline'))

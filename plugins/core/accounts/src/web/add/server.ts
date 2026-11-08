@@ -12,7 +12,7 @@ const added = (control: LoginControl, before: Set<string>, url: string): LoginAc
 }
 
 export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, saved: () => void) => {
-  const { primaryAction, sheetStep, textInput } = kit
+  const { metaLine, primaryAction, sheetStep, textInput } = kit
   const name = sig(draft.name)
   const url = sig(draft.url)
   const key = sig('')
@@ -46,7 +46,7 @@ export const serverStep = (kit: Kit, control: LoginControl, draft: ServerDraft, 
   }
 
   const field = (value: Sig<string>, placeholder: string, title: string, type = 'text') =>
-    label({ class: 'flex flex-col gap-1 text-xs text-neutral-400' }, title, textInput({ type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) }))
+    label({ class: 'flex flex-col gap-1' }, metaLine(title), textInput({ type, placeholder, bindValue: value, onKeyDown: keys({ Enter: submit }) }))
 
   return sheetStep(
     [

@@ -21,7 +21,7 @@ const sheetView = (kit: Kit, control: LoginControl, done: () => void, first?: St
     sheet(
       { 'aria-label': 'Add an account', size: 'md' },
       sheetHead({ title: add.title, close, back: add.back, backShown: () => add.step.get().kind !== 'choose' }),
-      add.view(kit),
+      add.view(kit, 'raised'),
     ),
   )
 }
