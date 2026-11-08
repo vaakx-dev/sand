@@ -4,6 +4,7 @@ import { effect, untrack } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import type { ChatContext } from '../context'
 import { draftRoute, threadRoute } from '../contract'
+import { draftHead } from '../head/draft'
 import { breadcrumb } from '../head/view'
 import type { ThreadScreens } from '../screens'
 import { clearOnHome } from './select'
@@ -17,7 +18,7 @@ export const threadRoutes = (ctx: ChatContext, shell: Shell, screens: ThreadScre
     }
   }
   const draftScreen = (route: () => Route): Screen => ({
-    head: () => null,
+    head: () => draftHead(ctx, changes),
     main: () => screens.draft(untrack(route)),
   })
   let first = true

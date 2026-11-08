@@ -1,27 +1,25 @@
-import { composer } from '@sand/composer/contract'
 import { pcs } from '@sand/devices-contract'
 import { palette, type PaletteItem, type PaletteItemAction, type PalettePage } from '@sand/palette/contract'
 import { picker } from '@sand/picker/contract'
 import { oneLine } from '@sand/util'
-import { projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
+import { projects, type ProjectEntry, type ProjectGroup } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { quickName } from '../items/lookup'
-import { otherLocations, pcName, pcNames, places, shortPath, type Place } from './places'
+import { startChat, type StartParts } from '../launch/start'
+import { otherLocations, pcName, pcNames, places, type Place } from './places'
 
-export const openDraft = (ctx: Context, threads: Threads, path: string, device: string) => {
-  const drafting = threads.drafting()
-  return threads.draft(path, device, drafting?.id, { replace: Boolean(drafting) }).then(() => ctx.get(composer)?.focus())
-}
+const severalPcs = (ctx: Context) => (ctx.get(pcs)?.list().length ?? 0) > 1
 
-const awayDetail = (ctx: Context, threads: Threads, place: Place) => {
+const awayDetail = ({ ctx, threads }: StartParts, place: Place) => {
   const here = pcName(ctx, threads.device())
   const others = pcNames(ctx, place).filter(name => name !== here)
   if (!others.length) return `No copy on ${here}`
   return `No copy on ${here} · on ${others.join(', ')}`
 }
 
-const placeDetail = (ctx: Context, threads: Threads, place: Place) =>
-  place.away ? awayDetail(ctx, threads, place) : `${pcNames(ctx, place).join(', ')} · ${shortPath(ctx, place.path, place.device)}`
+const placeDetail = (parts: StartParts, place: Place) => {
+  if (place.away) return awayDetail(parts, place)
+  return severalPcs(parts.ctx) ? pcNames(parts.ctx, place).join(', ') : undefined
+}
 
 const hideAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => ({
   label: 'Hide project',
@@ -41,51 +39,55 @@ const renameAction = (ctx: Context, group: ProjectGroup): PaletteItemAction => (
   },
 })
 
-const startAction = (ctx: Context, threads: Threads, location: ProjectEntry): PaletteItemAction => ({
-  label: `Start on ${pcName(ctx, location.device)}`,
-  icon: ctx.get(pcs)?.get(location.device)?.home === false ? 'monitor' : 'laptop',
-  run: () => openDraft(ctx, threads, location.path, location.device),
+const startAction = (parts: StartParts, location: ProjectEntry): PaletteItemAction => ({
+  label: `Start on ${pcName(parts.ctx, location.device)}`,
+  icon: parts.ctx.get(pcs)?.get(location.device)?.home === false ? 'monitor' : 'laptop',
+  run: () => startChat(parts, location.path, location.device),
 })
 
-const actionsOf = (ctx: Context, threads: Threads, place: Place) => {
+const actionsOf = (parts: StartParts, place: Place) => {
+  const { ctx, threads } = parts
   const group = place.group
   if (!group || !ctx.get(projects)) return undefined
-  const starts = otherLocations(ctx, group, threads.device()).map(location => startAction(ctx, threads, location))
+  const starts = otherLocations(ctx, group, threads.device()).map(location => startAction(parts, location))
   const rename = ctx.get(picker) ? [renameAction(ctx, group)] : []
   return [...starts, ...rename, hideAction(ctx, group)]
 }
 
-const projectItem = (ctx: Context, threads: Threads, place: Place): PaletteItem => ({
-  id: `project:${place.id}`,
-  group: 'Projects',
-  avatar: place.name,
-  avatarIcon: place.group ? ctx.get(projects)?.groupIcon(place.group) : ctx.get(projects)?.icon(place.path, place.device),
-  label: place.name,
-  detail: placeDetail(ctx, threads, place),
-  search: `${place.name} ${(place.group?.locations ?? [place]).map(location => location.path).join(' ')} ${pcNames(ctx, place).join(' ')}`,
-  actions: actionsOf(ctx, threads, place),
-  run: () => openDraft(ctx, threads, place.path, place.device),
-})
+const projectItem = (parts: StartParts, place: Place): PaletteItem => {
+  const { ctx } = parts
+  return {
+    id: `project:${place.id}`,
+    group: 'Projects',
+    avatar: place.name,
+    avatarIcon: place.group ? ctx.get(projects)?.groupIcon(place.group) : ctx.get(projects)?.icon(place.path, place.device),
+    label: place.name,
+    detail: placeDetail(parts, place),
+    search: `${place.name} ${(place.group?.locations ?? [place]).map(location => location.path).join(' ')} ${pcNames(ctx, place).join(' ')}`,
+    actions: actionsOf(parts, place),
+    run: () => startChat(parts, place.path, place.device),
+  }
+}
 
-export const projectItems = (ctx: Context, threads: Threads) => places(ctx, threads).map(place => projectItem(ctx, threads, place))
+export const projectItems = (parts: StartParts) => places(parts.ctx, parts.threads).map(place => projectItem(parts, place))
 
-const quickThreadItem = (ctx: Context, threads: Threads): PaletteItem => ({
-  id: 'quick-thread',
-  label: quickName,
-  avatar: quickName,
+const noProjectItem = (parts: StartParts): PaletteItem => ({
+  id: 'no-project',
+  label: 'No project',
+  avatar: 'No project',
   avatarIcon: { quick: true },
-  detail: 'No project, in its own scratch folder',
-  search: 'quick thread task scratch no project',
-  run: () => openDraft(ctx, threads, '', threads.device()),
+  search: 'no project quick scratch',
+  run: () => startChat(parts, '', parts.threads.device()),
 })
 
-export const newThreadPage = (ctx: Context, threads: Threads): PalettePage => ({
+export const newChatPage = (parts: StartParts): PalettePage => ({
   id: 'new-thread',
-  title: 'New thread in…',
+  title: 'New chat',
   placeholder: 'Search projects…',
   empty: 'No matches',
-  items(query) {
-    const found = projectItems(ctx, threads).map(item => ({ ...item, group: undefined }))
-    return [...found.slice(0, 1), quickThreadItem(ctx, threads), ...(ctx.get(palette)?.items('new-thread', query) ?? []), ...found.slice(1)]
-  },
+  items: query => [
+    ...projectItems(parts).map(item => ({ ...item, group: undefined })),
+    noProjectItem(parts),
+    ...(parts.ctx.get(palette)?.items('new-thread', query) ?? []),
+  ],
 })
