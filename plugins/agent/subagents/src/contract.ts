@@ -1,5 +1,6 @@
 import type { Effort } from '@sand/accounts/contract'
 import type { Session } from '@sand/chats/contract'
+import type { TurnResult } from '@sand/turns-contract/contract'
 import type { Tier } from '@sand/sub-model/contract'
 import { service } from 'drydock'
 
@@ -21,6 +22,10 @@ export interface AgentRequest {
   model?: string
   effort?: Effort
   origin?: string
+}
+
+export interface AgentResult extends TurnResult {
+  session: Session
 }
 
 export interface AgentMeta {

@@ -24,7 +24,7 @@ test('an outside agent starts a thread where it is once per request id, waits fo
   const { thread, turn } = z.object({ thread: z.string(), turn: z.string() }).parse(started)
   expect(sand.turns.get(turn)?.origin).toBe('mcp')
 
-  expect(await run('thread_wait', { threads: [thread] })).toEqual([{ thread, turn, status: 'completed', reply: 'pong' }])
+  expect(await run('thread_wait', { thread })).toEqual({ thread, turn, status: 'completed', reply: 'pong' })
   expect(await run('history_read', { thread })).toMatchObject({
     items: [
       { role: 'user', text: 'ping' },

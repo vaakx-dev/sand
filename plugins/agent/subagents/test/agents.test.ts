@@ -1,6 +1,7 @@
 import { type Message, type Session, textOf } from '@sand/chats/contract'
 import { startSand, type Sand } from '@sand/harness'
 import type { Reply } from '@sand/replay/contract'
+import { tools } from '@sand/tools/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { join } from 'node:path'
 
@@ -18,7 +19,7 @@ const start = async (parent: Reply[], child: Reply[], maxAgents?: number) => {
       { id: 'parent', models: ['m'], replies: parent, api: 'anthropic' },
       { id: 'child', models: ['m'], replies: child, api: 'anthropic' },
     ],
-    { plugins: ['core/watch', 'agent/subagents', 'agent/mcp-server', 'agent/threads-mcp'], ...(maxAgents && { options: { subagents: { max_agents: maxAgents } } }) },
+    { plugins: ['core/watch', 'agent/jobs', 'agent/subagents'], ...(maxAgents && { options: { subagents: { max_agents: maxAgents } } }) },
   )
 }
 
@@ -43,19 +44,34 @@ type Body = { system: { text: string }[]; tools: { name: string; description: st
 
 const bodies = (source: string) => sand.requests(source).map(body => JSON.parse(body) as Body)
 
-test('an agent works in a thread of its own and reports back to its parent as a task notification', async () => {
-  await start([delegate(), said('Started it.'), said('Got it.')], [said('Found it.')])
+const use = async (session: Session, name: string, input: Record<string, unknown>) => {
+  const call = { type: 'tool_call', id: `${name}-call`, name, input } as const
+  const result = await sand.app.get(tools)!.run(call, { cwd: session.cwd, signal: new AbortController().signal, conversation: session, turn: 'test', progress() {}, wait: () => () => {} })
+  return textOf(result.content)
+}
+
+const notices = (session: Session) => prompts(session).filter(text => text.startsWith('<task-notification>'))
+
+test('an agent runs as a background job of its parent, reports back as a task notification and takes a follow-up', async () => {
+  await start([delegate(), said('Started it.'), said('Got it.'), said('Got more.')], [said('Found it.'), said('Found more.')])
   const parent = sand.chat('parent/m')
   await sand.turns.run(parent, 'Go')
 
   const [child] = sand.sessions.children(parent.id)
   expect(child).toMatchObject({ kind: 'agent', title: 'Dig', origin: expect.any(String) })
   expect(sand.sessions.require(child!.id).latest('agent')?.data).toEqual({ depth: 1 })
-  expect(results(parent)[0]).toStartWith(`Started agent thread ${child!.id}.`)
-  const notice = await until(() => prompts(parent).find(text => text.startsWith('<task-notification>')))
-  expect(notice).toContain(`<thread>${child!.id}</thread>`)
+  const [, job, thread] = /^Started background agent (\S+) in thread (\S+)\./.exec(results(parent)[0]!) ?? []
+  expect(thread).toBe(child!.id)
+  const [notice] = await until(() => notices(parent).length === 1 && notices(parent))
+  expect(notice).toContain(`<job>${job}</job>`)
   expect(notice).toContain('<status>done</status>')
   expect(notice).toContain('Found it.')
+
+  await until(() => !running(parent.id))
+  expect(await use(parent, 'job_send', { job, message: 'Dig deeper' })).toContain('working on your follow-up')
+  const [, followed] = await until(() => notices(parent).length === 2 && notices(parent))
+  expect(followed).toContain('Found more.')
+  expect(sand.sessions.children(parent.id)).toHaveLength(1)
 })
 
 test('interrupting the parent stops its running agents, which then send no notification', async () => {

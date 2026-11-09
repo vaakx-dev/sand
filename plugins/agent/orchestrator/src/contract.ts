@@ -21,7 +21,6 @@ export interface ThreadState {
   waiting?: WaitReason
   reply?: string
   error?: string
-  userWrote?: true
 }
 
 export type Sent = SendResult & { thread: string }
@@ -88,7 +87,6 @@ export interface Orchestrator {
   wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
   read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
   item(conversation: ConversationRef, item: string, offset?: number): ItemRead
-  stop(thread: string, by?: ConversationRef): Promise<boolean>
   starterOf(thread: string): ConversationRef | undefined
   started(owner: Owner): Record<string, string>
   notify(thread: string, notice: Notice): Promise<boolean>
@@ -218,6 +216,6 @@ export const waitThread = async (call: Call, session: string, until: WaitUntil, 
     signal?.throwIfAborted()
     const timeoutMs = Math.max(0, Math.min(slice, deadline - Date.now()))
     const state = await call(threadWait, { session, until, timeoutMs }, { timeout: timeoutMs + answerGrace })
-    if (settled(state.status, until) || state.userWrote || Date.now() >= deadline) return state
+    if (settled(state.status, until) || Date.now() >= deadline) return state
   }
 }

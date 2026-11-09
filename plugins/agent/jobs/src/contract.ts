@@ -3,10 +3,13 @@ import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
+export type JobKind = 'agent' | 'command'
+
 export type JobStatus = 'running' | 'done' | 'failed' | 'cancelled'
 
 export interface Job {
   id: string
+  kind: JobKind
   label: string
   parent: string
   origin?: string
@@ -20,15 +23,18 @@ export interface Job {
 export type JobWork = (signal: AbortSignal, job: Job) => Promise<string>
 
 export interface JobSpec {
+  kind: JobKind
   parent: Session
   label: string
   origin?: string
   work: JobWork
-  read(cursor?: number): string
+  read?(cursor?: number): string | Promise<string>
+  send?(message: string, job: Job): string | Promise<string>
 }
 
 export interface BackgroundJobs {
   start(spec: JobSpec): Job
+  resume(job: Job, work: JobWork): void
   list(parent?: string): Job[]
 }
 

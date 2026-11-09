@@ -12,11 +12,12 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Agents",
-    "summary": "Sub-agents the agent starts, each in a thread of its own"
+    "summary": "Sub-agents the agent can start as background jobs"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
+    "@sand/jobs": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/prompt": "workspace:*",

@@ -5,7 +5,7 @@ import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
-export const group: McpGroup = { name: 'threads', label: 'Threads', summary: 'list, start, message, wait for, stop and manage threads' }
+export const group: McpGroup = { name: 'threads', label: 'Threads', summary: 'list, start, message, wait for, stop and manage threads, the user-facing work in sand' }
 
 const waitSeconds = 600
 const mostWaitSeconds = 3600
@@ -21,12 +21,12 @@ const prompt = z.string().min(1).describe('The message')
 const listInput = z.object({
   cwd: z.string().optional().describe('Only threads in this folder'),
   project: z.string().optional().describe('Only threads in this project'),
-  mine: z.boolean().optional().describe("Only threads you started, your subagents included (sand's own threads and bots)"),
+  mine: z.boolean().optional().describe("Only threads you started (sand's own threads and bots)"),
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 
 const historyInput = z.object({
-  thread: z.string().optional().describe('A thread id, subagents included'),
+  thread: z.string().optional().describe('A thread id'),
   bot: z.string().optional().describe('A bot id'),
   ...historyReading.shape,
   ...historyItem.shape,
@@ -74,9 +74,9 @@ const updateInput = z.object({
 })
 
 const waitInput = z.object({
-  threads: z.array(z.string()).min(1).describe('The thread ids'),
-  until: z.enum(['attention', 'end']).optional().describe('attention (default): also return when a thread waits on the user; end: only when it is done'),
-  timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Give up after this long (default ${waitSeconds}); the threads keep running`),
+  thread,
+  until: z.enum(['attention', 'end']).optional().describe('attention (default): also return when the thread waits on the user; end: only when it is done'),
+  timeoutSeconds: z.number().int().min(0).max(mostWaitSeconds).optional().describe(`Give up after this long (default ${waitSeconds}); the thread keeps running`),
 })
 
 const requestId = (given: string | undefined) => given ?? Bun.randomUUIDv7()
@@ -101,7 +101,7 @@ export const threadTools: McpTool[] = [
   {
     name: 'thread_start',
     description: [
-      'Start a new sand thread with a first message. It works on its own. Returns its id at once.',
+      'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
       'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
       `${reported}; otherwise use thread_wait`,
     ].join(' '),
@@ -113,7 +113,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',
-    description: `Send a message to a thread, subagents included: a running one takes it at its next step, a finished one starts a new turn on it. Returns at once. ${reported}; otherwise use thread_wait or history_read for its reply`,
+    description: `Send a message to a thread. Returns at once. ${reported}; otherwise use history_read or thread_wait for its reply`,
     input: sendInput,
     access: 'operate',
     group: group.name,
@@ -121,24 +121,18 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof sendInput>,
   {
     name: 'thread_wait',
-    description: [
-      "Wait until threads, such as your subagents, are done or wait on the user, and get each one's status and reply.",
-      "A status is running when the wait timed out, waiting when the thread needs the user's answer in sand.",
-      'For a sand thread the wait also ends when the user sends it a message, marked userWrote; the threads keep running.',
-      'A reply this returns does not also come as a <task-notification>',
-    ].join(' '),
+    description:
+      "Wait until a thread is done or waits on the user, and get its status and reply. The status is running when it timed out, waiting when it needs the user's answer in sand",
     input: waitInput,
     access: 'read',
     group: group.name,
     agents: ['thread'],
-    run: ({ threads, until = 'attention', timeoutSeconds = waitSeconds }, { call, signal }) => {
-      const deadline = Date.now() + timeoutSeconds * 1000
-      return Promise.all(threads.map(thread => waitThread(call, thread, until, deadline, signal)))
-    },
+    run: ({ thread, until = 'attention', timeoutSeconds = waitSeconds }, { call, signal }) =>
+      waitThread(call, thread, until, Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof waitInput>,
   {
     name: 'thread_stop',
-    description: "Stop a thread's running turn and the subagents it runs. Stopping a thread you started sends you no <task-notification>",
+    description: "Stop a thread's running turn",
     input: stopInput,
     access: 'operate',
     group: group.name,

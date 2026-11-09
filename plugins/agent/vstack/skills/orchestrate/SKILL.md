@@ -38,7 +38,7 @@ For questions and investigations, brief an agent to read only and change nothing
 
 - Never sleep or poll. End your turn; reports arrive on their own.
 - Steer a running agent with a message. If another agent's work will touch its files, warn it.
-- Send a finished agent a follow-up in its own thread instead of starting a new one.
+- Send a finished agent a follow-up with `job_send` instead of starting a new one.
 
 ## Review each report
 

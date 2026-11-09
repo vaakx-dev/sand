@@ -16,7 +16,7 @@ const defaultLimit = 50
 export const newestFirst = (rows: ThreadRow[], limit = defaultLimit) => rows.sort((a, b) => b.updated - a.updated).slice(0, limit)
 
 const matches = ({ cwd, project, ids }: ListFilter) => (summary: SessionSummary) =>
-  (summary.kind === 'thread' || (summary.kind === 'agent' && ids !== undefined)) &&
+  summary.kind === 'thread' &&
   (cwd === undefined || samePath(summary.cwd, cwd)) &&
   (project === undefined || summary.project === project) &&
   (ids === undefined || ids.has(summary.id))

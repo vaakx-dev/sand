@@ -13,4 +13,4 @@ const modelList = (llm: LLM | undefined) => {
 }
 
 export const describeAgents = (definitions: AgentDefinition[], llm: LLM | undefined) =>
-  `Delegate a task to a subagent. Use for broad searches, parallel work, or anything that would flood your context. Only its final report comes back. Several calls in one response run in parallel. Each subagent is a thread: message it with thread_send, wait for it with thread_wait and stop it with thread_stop.${agentList(definitions)}${modelList(llm)}`
+  `Start a subagent: background work that runs on its own and reports only its final result back to you. Suits broad searches, parallel work, or anything that would flood your context. Several calls in one response run in parallel.${agentList(definitions)}${modelList(llm)}`

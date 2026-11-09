@@ -12,7 +12,7 @@ export default definePlugin({
   apply(ctx) {
     ctx.effect(() => ctx.tools.register(backgroundTool(ctx, ctx.backgroundJobs, ctx.shellRunner, ctx.sessions)))
     ctx.effect(() => () => {
-      for (const job of ctx.backgroundJobs.list()) if (job.status === 'running') job.cancel()
+      for (const job of ctx.backgroundJobs.list()) if (job.kind === 'command' && job.status === 'running') job.cancel()
     })
   },
 })

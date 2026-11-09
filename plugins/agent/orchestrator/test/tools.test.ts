@@ -11,14 +11,10 @@ afterEach(() => sand.stop())
 
 const said = (text: string): Reply => [{ type: 'text', text }]
 
-const start = async (replies = [said('child done'), said('Noted.'), said('Noted again.')], other: Reply[] = []) => {
-  sand = await startSand(
-    [
-      { id: 'fake', models: ['m'], replies },
-      { id: 'other', models: ['m'], replies: other },
-    ],
-    { plugins: ['core/watch', 'agent/subagents', 'agent/mcp-server', 'agent/threads-mcp'] },
-  )
+const start = async (replies = [said('child done'), said('Noted.'), said('Noted again.')]) => {
+  sand = await startSand([{ id: 'fake', models: ['m'], replies }], {
+    plugins: ['core/watch', 'agent/jobs', 'agent/subagents', 'agent/mcp-server', 'agent/threads-mcp'],
+  })
 }
 
 const agent = (depth: number) => {
@@ -45,8 +41,8 @@ test("a thread an agent starts runs with the agent's tool limits one level deepe
   expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['alpha', 'beta'] })
   expect(sand.turns.get(sent.turn)?.origin).toBe('agent')
 
-  const waited = await use(parent, 'thread_wait', { threads: [sent.thread] })
-  expect(JSON.parse(waited.text)).toMatchObject([{ thread: sent.thread, status: 'completed', reply: 'child done' }])
+  const waited = await use(parent, 'thread_wait', { thread: sent.thread })
+  expect(JSON.parse(waited.text)).toMatchObject({ thread: sent.thread, status: 'completed', reply: 'child done' })
 })
 
 test('an agent can neither start a thread past the deepest nesting nor message a thread with wider tools', async () => {
@@ -110,23 +106,13 @@ test('a thread waiting on a thread it started gets the reply from the wait, not 
   parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
 
   const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })).text)
-  const waited = use(parent, 'thread_wait', { threads: [thread] })
+  const waited = use(parent, 'thread_wait', { thread })
   await Bun.sleep(50)
   sand.turns.interrupt(sand.sessions.require(thread))
-  expect(JSON.parse((await waited).text)).toMatchObject([{ thread, status: 'interrupted' }])
+  expect(JSON.parse((await waited).text)).toMatchObject({ thread, status: 'interrupted' })
   await Bun.sleep(100)
   expect(await heard(parent, 0)).toEqual([])
 })
-
-const until = async (check: () => boolean) => {
-  for (let tries = 0; tries < 300; tries++) {
-    if (check()) return
-    await Bun.sleep(10)
-  }
-  throw new Error('It never happened')
-}
-
-const running = (thread: string) => Boolean(sand.turns.current(sand.sessions.require(thread)))
 
 test('a thread reads one item of its history in full, a long one in parts', async () => {
   await start()
@@ -144,43 +130,4 @@ test('a thread reads one item of its history in full, a long one in parts', asyn
   expect(first.text + rest.text).toBe(`[read] {"path":"a.txt"}\n[read result] ${long}`)
   expect(await read({ item: String(result.seq) })).toMatchObject({ seq: result.seq, role: 'user', text: expect.stringMatching(/^\[read result\] x+$/), nextOffset: 8_000 })
   expect(await use(chat, 'history_read', { item: 'missing' })).toEqual({ isError: true, text: expect.stringContaining('No item missing') })
-})
-
-test('a wait on threads ends early, with them still running, when the user writes to the waiting thread', async () => {
-  await start([[{ type: 'hold' }]], [[{ type: 'hold' }]])
-  const parent = agent(2)
-  await sand.turns.send(parent, { prompt: 'work', origin: 'user', clientRequestId: 'work' })
-  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'other/m' })).text)
-
-  const waited = use(parent, 'thread_wait', { threads: [thread] })
-  await Bun.sleep(50)
-  await sand.turns.send(parent, { prompt: 'stop waiting', origin: 'user', clientRequestId: 'steer' })
-  expect(JSON.parse((await waited).text)).toEqual([{ thread, turn: expect.any(String), status: 'running', userWrote: true }])
-  expect(running(thread)).toBe(true)
-  sand.turns.interrupt(sand.sessions.require(thread))
-  sand.turns.interrupt(parent)
-})
-
-test('a wait that gets a reply already sent as a notice withdraws the notice', async () => {
-  await start([[{ type: 'hold' }]], [said('child done')])
-  const parent = agent(2)
-  await sand.turns.send(parent, { prompt: 'work', origin: 'user', clientRequestId: 'work' })
-  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'other/m' })).text)
-  await until(() => sand.turns.pending(parent).length === 1)
-
-  expect(JSON.parse((await use(parent, 'thread_wait', { threads: [thread] })).text)).toMatchObject([{ thread, status: 'completed', reply: 'child done' }])
-  await until(() => sand.turns.pending(parent).length === 0)
-  sand.turns.interrupt(parent)
-})
-
-test('stopping a thread you started sends you no notice', async () => {
-  await start([], [[{ type: 'hold' }]])
-  const parent = agent(2)
-  parent.append('message', { role: 'user', content: [{ type: 'text', text: 'Start a child' }] })
-  const { thread } = JSON.parse((await use(parent, 'thread_start', { prompt: 'child work', model: 'other/m' })).text)
-  await until(() => running(thread))
-
-  expect(JSON.parse((await use(parent, 'thread_stop', { thread })).text)).toEqual({ thread, stopped: true })
-  await Bun.sleep(100)
-  expect(await heard(parent, 0)).toEqual([])
 })

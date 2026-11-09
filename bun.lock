@@ -335,6 +335,7 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",
@@ -480,6 +481,7 @@
       "dependencies": {
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/prompt": "workspace:*",
@@ -2431,6 +2433,7 @@
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/features": "workspace:*",
+        "@sand/jobs": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/project": "workspace:*",
