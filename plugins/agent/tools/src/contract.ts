@@ -39,6 +39,7 @@ export interface Tool<S extends ZodType = ZodType> {
   description: string
   environment?: string
   group?: string
+  always?: Owner[]
   parallel?: boolean
   timeoutMs?: number
   input: S

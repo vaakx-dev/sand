@@ -9,7 +9,7 @@ import type { Meta } from './meta'
 
 const recursive = new Set(['agent'])
 
-const unrestricted = new Set(['thread_read'])
+const unrestricted = new Set(['history_read'])
 
 const loaded = ({ deferred: _, ...tool }: ToolSpec): ToolSpec => tool
 

@@ -24,10 +24,11 @@ export interface OpenedAgent {
 export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: RunOptions) => {
   const take = slots(maxAgents)
 
-  const definitionOf = async (name: string, { cwd, project }: Session) => {
+  const definitionOf = async (name: string | undefined, { cwd, project }: Session) => {
+    if (name === undefined) return undefined
     const definitions = await resolve(cwd, project)
     const definition = definitions.get(name)
-    if (!definition) throw new Error(`Unknown agent "${name}". Available: ${[...definitions.keys()].join(', ')}`)
+    if (!definition) throw new Error(`Unknown agent "${name}". ${definitions.size ? `Available: ${[...definitions.keys()].join(', ')}` : 'Leave out agent for a plain one.'}`)
     return definition
   }
 
@@ -36,11 +37,12 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
     return effective && { model: effective.model, effort: effective.effort, speed: effective.speed }
   }
 
-  const create = async (request: AgentRequest, definition: AgentDefinition, scope: AgentMeta) => {
+  const create = async (request: AgentRequest, definition: AgentDefinition | undefined, scope: AgentMeta) => {
     const { parent, task, label, origin } = request
     const sub = ctx.get(subModel)
-    const tier = request.model || definition.model ? undefined : definition.tier
-    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...definition } : definition
+    const tier = request.model || definition?.model ? undefined : definition?.tier
+    const own = definition ?? {}
+    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...own } : own
     const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
@@ -58,8 +60,8 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
   }
 
   const open = async (request: AgentRequest): Promise<OpenedAgent> => {
-    const definition = await definitionOf(request.agent ?? 'general', request.parent)
-    const session = await create(request, definition, limits.child(request.parent, definition.name, definition.tools))
+    const definition = await definitionOf(request.agent, request.parent)
+    const session = await create(request, definition, limits.child(request.parent, definition?.name, definition?.tools))
     return {
       session,
       run: signal => drive(session, request.task, signal),

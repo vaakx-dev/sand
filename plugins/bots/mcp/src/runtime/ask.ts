@@ -1,6 +1,6 @@
-import { type HistoryReading, type Prompt, readHistory } from '@sand/chats/contract'
+import type { Prompt } from '@sand/chats/contract'
 import type { SendResult, TurnInfo, TurnOrigin } from '@sand/engine/contract'
-import type { BotAnswer, BotPage } from '../contract'
+import type { BotAnswer } from '../contract'
 import type { BotsMcpContext } from './context'
 
 export interface Asking {
@@ -30,7 +30,6 @@ export const createAsk = (ctx: BotsMcpContext) => {
       if (info.conversation !== answer.bot) throw new Error(`No turn ${answer.turn} of bot ${answer.bot}`)
       return answerOf(answer.bot, info)
     },
-    read: (bot: string, reading: HistoryReading): BotPage => ({ bot, ...readHistory(ctx.bots.conversation(bot).entries(), reading) }),
   }
 }
 

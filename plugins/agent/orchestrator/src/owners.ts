@@ -26,6 +26,7 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
         return session && ctx.turns.send(session, { prompt: text, origin: 'job', clientRequestId })
       },
       label: id => ctx.sessions.open(id)?.title,
+      history: id => ctx.sessions.open(id)?.path(),
     }),
   )
 
@@ -44,6 +45,11 @@ export const createOwners = (ctx: OrchestratorContext, starters: Starters) => {
       const kind = kinds.get(from.owner)
       if (!kind) throw failure('invalid_request', `Nothing speaks for ${from.owner} conversations`)
       return signed(prompt, { v: 1, id: uuid(), kind: from.owner, label: kind.label(from.id) || from.owner, data: { id: from.id, sent: true } })
+    },
+    history({ owner, id }: ConversationRef) {
+      const entries = kinds.get(owner)?.history(id)
+      if (!entries) throw failure('not_found', `No ${owner} ${id}`)
+      return entries
     },
     home: (from: ConversationRef | undefined) => from && kinds.get(from.owner)?.project?.(from.id),
     async notify(thread: string, notice: Notice) {

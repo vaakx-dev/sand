@@ -5,7 +5,7 @@ import { failure, originOf } from '@sand/orchestrator/contract'
 import { projectFiles } from '@sand/project/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
-import { botAsk, botAwait, botRead, botRoster, type BotRow, botSet, type BotSet, waitLimit } from '../contract'
+import { botAsk, botAwait, botRoster, type BotRow, botSet, type BotSet, waitLimit } from '../contract'
 import { type Ask, sentAnswer } from './ask'
 import type { BotsMcpContext } from './context'
 import { type Sender, toBot } from './relay'
@@ -86,7 +86,6 @@ export const serveBots = (ctx: BotsMcpContext, ask: Ask, replies: Replies) => {
         return sentAnswer(bot, await ask.send(bot, asking))
       }),
       found.handle(botAwait, ({ bot, turn, timeoutMs = waitLimit }) => ask.wait({ bot, turn, status: 'running' }, AbortSignal.timeout(timeoutMs))),
-      found.handle(botRead, ({ bot, ...reading }, { actor }) => ask.read(botOf(bot, actor).id, reading)),
       found.handle(botSet, (input, { actor }) => set(input, actor)),
     )
   })

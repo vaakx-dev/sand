@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { describeAgents } from './catalog'
 import type { AgentsContext } from './context'
 import type { AgentRequest } from './contract'
-import { builtins } from './definitions'
 import type { OpenedAgent } from './run'
 import { agentTitle } from './title'
 import { readThread } from './transcript'
@@ -20,7 +19,7 @@ const inputSchema = (ctx: AgentsContext) =>
   z.object({
     label: z.string().describe('A short title, 3 to 6 words'),
     task: z.string().describe("Full instructions. The subagent can't see this chat."),
-    agent: z.string().optional().describe('Which agent to use (default: general)'),
+    agent: z.string().optional().describe('A named agent from the list (default: a plain agent with your tools)'),
     model: z.string().optional().describe("Model for this agent, from the available models (default: the agent's own model, else yours)"),
     effort: effortInput(ctx).optional().describe('Reasoning effort (default: inherited)'),
   })
@@ -44,7 +43,7 @@ const messenger = (ctx: AgentsContext, agent: OpenedAgent) => async (message: st
 export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<typeof inputSchema>> => ({
   name: 'agent',
   get description() {
-    return describeAgents(builtins, ctx.get(llm))
+    return describeAgents([], ctx.get(llm))
   },
   parallel: true,
   get input() {
@@ -57,7 +56,7 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
     const job = ctx.backgroundJobs.start({
       kind: 'agent',
       parent: session,
-      label: `${agent ?? 'general'}: ${agentTitle(label, task)}`,
+      label: agent ? `${agent}: ${agentTitle(label, task)}` : agentTitle(label, task),
       origin: call.id,
       work: jobSignal => opened.run(jobSignal).then(report),
       read: cursor => readThread(opened.session, cursor),

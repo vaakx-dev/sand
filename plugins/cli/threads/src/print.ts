@@ -1,6 +1,4 @@
-import type { ThreadPage, ThreadRow, ThreadState, ThreadStatus } from '@sand/orchestrator/contract'
-
-type Item = ThreadPage['items'][number]
+import type { HistoryItem as Item, ThreadRow, ThreadState, ThreadStatus } from '@sand/orchestrator/contract'
 
 const exits: Record<ThreadStatus, number> = { idle: 0, running: 0, completed: 0, waiting: 3, interrupted: 130, failed: 1, lost: 1 }
 

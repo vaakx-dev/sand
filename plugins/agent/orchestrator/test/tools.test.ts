@@ -19,7 +19,7 @@ const start = async (replies = [said('child done'), said('Noted.'), said('Noted 
 
 const agent = (depth: number) => {
   const chat = sand.chat('fake/m')
-  chat.append('agent', { name: 'general', depth, tools: ['thread_start', 'thread_send', 'thread_wait'] })
+  chat.append('agent', { depth, tools: ['alpha', 'beta'] })
   return chat
 }
 
@@ -38,7 +38,7 @@ test("a thread an agent starts runs with the agent's tool limits one level deepe
   const started = await use(parent, 'thread_start', { prompt: 'child work', model: 'fake/m' })
   expect(started.isError).toBe(false)
   const sent = JSON.parse(started.text)
-  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['thread_start', 'thread_send', 'thread_wait'] })
+  expect(sand.sessions.require(sent.thread).latest('agent')?.data).toEqual({ name: 'thread', depth: 3, tools: ['alpha', 'beta'] })
   expect(sand.turns.get(sent.turn)?.origin).toBe('agent')
 
   const waited = await use(parent, 'thread_wait', { thread: sent.thread })
@@ -65,7 +65,7 @@ test('a thread looks up its own past: what it did, and when', async () => {
   chat.append('message', { role: 'user', content: [{ type: 'tool_result', callId: 'search-1', content: [{ type: 'text', text: 'Otters hold hands.' }] }] })
   chat.append('message', { role: 'assistant', content: [{ type: 'text', text: 'They hold hands.' }] })
 
-  const found = JSON.parse((await use(chat, 'thread_read', { view: 'activity', query: 'otters' })).text)
+  const found = JSON.parse((await use(chat, 'history_read', { view: 'activity', query: 'otters' })).text)
   expect(found).toMatchObject({ thread: chat.id, more: false })
   expect(found.items.map(({ text }: { text: string }) => text)).toEqual(['Find otters', '[web_search] {"query":"otters"}', '[web_search result] Otters hold hands.'])
   expect(found.items[0].at).toMatch(/^\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d$/)
@@ -112,4 +112,22 @@ test('a thread waiting on a thread it started gets the reply from the wait, not 
   expect(JSON.parse((await waited).text)).toMatchObject({ thread, status: 'interrupted' })
   await Bun.sleep(100)
   expect(await heard(parent, 0)).toEqual([])
+})
+
+test('a thread reads one item of its history in full, a long one in parts', async () => {
+  await start()
+  const chat = sand.chat('fake/m')
+  const long = 'x'.repeat(9_000)
+  const call = chat.append('message', { role: 'assistant', content: [{ type: 'tool_call', id: 'read-1', name: 'read', input: { path: 'a.txt' } }] })
+  const result = chat.append('message', { role: 'user', content: [{ type: 'tool_result', callId: 'read-1', content: [{ type: 'text', text: long }] }] })
+  const read = async (input: Record<string, unknown>) => JSON.parse((await use(chat, 'history_read', input)).text)
+
+  const first = await read({ item: `${call.id}#read-1` })
+  expect(first).toMatchObject({ thread: chat.id, seq: call.seq, role: 'assistant', nextOffset: 8_000 })
+  expect(first.text).toStartWith('[read] {"path":"a.txt"}\n[read result] xxx')
+  const rest = await read({ item: `${call.id}#read-1`, offset: first.nextOffset })
+  expect(rest.nextOffset).toBeUndefined()
+  expect(first.text + rest.text).toBe(`[read] {"path":"a.txt"}\n[read result] ${long}`)
+  expect(await read({ item: String(result.seq) })).toMatchObject({ seq: result.seq, role: 'user', text: expect.stringMatching(/^\[read result\] x+$/), nextOffset: 8_000 })
+  expect(await use(chat, 'history_read', { item: 'missing' })).toEqual({ isError: true, text: expect.stringContaining('No item missing') })
 })

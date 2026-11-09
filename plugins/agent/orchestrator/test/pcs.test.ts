@@ -1,6 +1,6 @@
 import { type Peers, type PeerView, peers } from '@sand/devices-contract'
 import { startSand, type Sand } from '@sand/harness'
-import { threadList, threadRead, threadSend, threadStart, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, threadList, threadSend, threadStart, waitThread } from '@sand/orchestrator/contract'
 import { afterEach, expect, test } from 'bun:test'
 
 let sands: Sand[] = []
@@ -62,7 +62,7 @@ test('a PC starts, finds, waits for, reads and lists threads on another PC over 
 
   expect(await waitThread(near.ask, there.thread, 'attention')).toMatchObject({ status: 'completed', reply: 'From the box.' })
   expect(await waitThread(near.ask, here.thread, 'attention')).toMatchObject({ status: 'completed', reply: 'From here.' })
-  expect((await near.ask(threadRead, { session: there.thread })).items.map(item => item.text)).toEqual(['hi', 'From the box.'])
+  expect((await near.ask(historyRead, { session: there.thread })).items.map(item => item.text)).toEqual(['hi', 'From the box.'])
 
   const unseen = await far.ask(threadStart, { ...base, cwd: far.home, clientRequestId: 'unseen' })
   expect(await waitThread(near.ask, unseen.thread, 'attention')).toMatchObject({ status: 'completed', reply: 'Started on the box.' })

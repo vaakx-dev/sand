@@ -8,7 +8,6 @@ import type { Path } from '../view/path'
 import type { Producers } from '../view/producers'
 import { itemsOf } from './items'
 import { coverageText, handoffText, renderItem } from './render'
-import { readsHistory } from '../tools/thread-read'
 import { select } from './select'
 
 export interface HandoffInput {
@@ -40,7 +39,7 @@ export const handOff = (handoffs: HandoffStore, { conversation, turn, path, thre
   const models = [...new Set(items.flatMap(item => (item.model && item.model !== thread.model ? [item.model] : [])))]
   const first = covered.reduce((low, entry) => Math.min(low, entry.seq), Infinity)
   const last = covered.reduce((high, entry) => Math.max(high, entry.seq), 0)
-  const coverage = { models, first, last, reads: strategy === 'full' || readsHistory(thread) }
+  const coverage = { models, first, last }
   const selected = select(items.map(renderItem), coverageText(coverage), budget)
   const text = handoffText(selected.context, selected.items)
   const id = handoffs.create({

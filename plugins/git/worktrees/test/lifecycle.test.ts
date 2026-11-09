@@ -1,5 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
-import { worktreesRemove, worktreesRestore, worktreesThread } from '@sand/worktrees/contract'
+import { worktrees, worktreesRemove, worktreesRestore, worktreesThread } from '@sand/worktrees/contract'
 import { afterEach, expect, test } from 'bun:test'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -48,4 +48,18 @@ test('a thread started on an existing branch gets its own worktree, and removing
   expect(await Bun.file(join(path, 'tracked.txt')).text()).toBe('changed\n')
   expect(await Bun.file(join(path, 'new.txt')).text()).toBe('untracked\n')
   expect(git(repo, 'for-each-ref', 'refs/sand')).toBe('')
+})
+
+test('an idle thread moves into a new worktree and branch, taking its uncommitted changes', async () => {
+  sand = await startSand([], { plugins: ['core/watch', 'git/runner', 'git/git', 'git/worktrees'] })
+  const repo = await makeRepo(sand.home)
+  await Bun.write(join(repo, 'tracked.txt'), 'changed\n')
+  const thread = sand.sessions.thread(repo)
+
+  await sand.app.get(worktrees)!.move(thread.id, 'moved')
+  const { cwd } = sand.sessions.require(thread.id)
+  expect(cwd.startsWith(join(sand.home, 'worktrees'))).toBe(true)
+  expect(git(cwd, 'branch', '--show-current')).toBe('moved')
+  expect(await Bun.file(join(cwd, 'tracked.txt')).text()).toBe('changed\n')
+  expect(git(repo, 'status', '--porcelain')).toBe('')
 })

@@ -1,5 +1,5 @@
 import { startSand, type Sand } from '@sand/harness'
-import { threadList, threadRead, threadSend, threadStart, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, threadList, threadSend, threadStart, waitThread } from '@sand/orchestrator/contract'
 import type { Source } from '@sand/replay/contract'
 import { afterEach, expect, test } from 'bun:test'
 
@@ -27,7 +27,7 @@ test('a started thread runs to its reply, reads back in order, and a retried sta
   const next = await sand.ask(threadSend, { session: sent.thread, prompt: 'again', origin: 'mcp', clientRequestId: 'second' })
   expect(await waitThread(sand.ask, sent.thread, 'end')).toMatchObject({ turn: next.turn, status: 'completed', reply: 'Second answer.' })
 
-  const page = await sand.ask(threadRead, { session: sent.thread, after: 0 })
+  const page = await sand.ask(historyRead, { session: sent.thread, after: 0 })
   expect(page.items.map(({ role, text }) => [role, text])).toEqual([
     ['user', 'hi'],
     ['assistant', 'Hello back.'],
@@ -35,7 +35,7 @@ test('a started thread runs to its reply, reads back in order, and a retried sta
     ['assistant', 'Second answer.'],
   ])
   expect(page.more).toBe(false)
-  expect(await sand.ask(threadRead, { session: sent.thread, after: page.items[1]!.seq, limit: 1 })).toMatchObject({
+  expect(await sand.ask(historyRead, { session: sent.thread, after: page.items[1]!.seq, limit: 1 })).toMatchObject({
     items: [{ role: 'user', text: 'again' }],
     more: true,
   })

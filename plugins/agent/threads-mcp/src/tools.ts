@@ -1,11 +1,11 @@
-import { historyReading } from '@sand/chats/contract'
+import { historyItem, historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool } from '@sand/mcp-server/contract'
-import { readLimit, threadList, threadRead, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
+import { historyRead, itemRead, readLimit, threadList, threadSend, threadStart, threadStop, threadUpdate, waitThread } from '@sand/orchestrator/contract'
 import { sendModes } from '@sand/turns-contract/contract'
 import { resolve } from 'node:path'
 import { z } from 'zod'
 
-export const group: McpGroup = { name: 'threads', label: 'Threads', summary: 'list, start, message, read, wait for and manage threads' }
+export const group: McpGroup = { name: 'threads', label: 'Threads', summary: 'list, start, message, wait for, stop and manage threads, the user-facing work in sand' }
 
 const waitSeconds = 600
 const mostWaitSeconds = 3600
@@ -25,7 +25,12 @@ const listInput = z.object({
   limit: z.number().int().min(1).max(readLimit).optional().describe('At most this many, newest first (default 50)'),
 })
 
-const readInput = z.object({ thread: z.string().optional().describe('The thread id (default: you, when you are a thread)'), ...historyReading.shape })
+const historyInput = z.object({
+  thread: z.string().optional().describe('A thread id'),
+  bot: z.string().optional().describe('A bot id'),
+  ...historyReading.shape,
+  ...historyItem.shape,
+})
 
 const startInput = z.object({
   prompt: z.string().min(1).describe('The first message: the task, with what the thread needs to know'),
@@ -61,6 +66,11 @@ const updateInput = z.object({
   pinned: z.boolean().optional().describe('Pin it to the top of the sidebar, or unpin it'),
   snoozeUntil: z.iso.datetime({ offset: true }).nullable().optional().describe('Hide it until this time (ISO 8601), or null to bring it back now'),
   settled: z.boolean().optional().describe('Settle it once its work is done, which stops it and moves it out of the open list; false reopens it'),
+  worktree: z
+    .literal(true)
+    .optional()
+    .describe('Move it into its own new git worktree and branch, taking its uncommitted changes. A thread in a turn, such as you, moves when the turn ends'),
+  branch: z.string().min(1).optional().describe('A name for the new branch of its worktree (default: named from its work). Implies worktree'),
 })
 
 const waitInput = z.object({
@@ -89,18 +99,9 @@ export const threadTools: McpTool[] = [
     run: (input, { call }) => call(threadList, input),
   } satisfies McpTool<typeof listInput>,
   {
-    name: 'thread_read',
-    description:
-      "Read or search a thread's whole conversation, including what compaction took out of its context. Each item has its seq, when it happened and its turn. A thread leaves out thread to look up its own past: what the user said and when, what it did, and the notifications it got. more says there are items past the page: older ones, or newer ones when after is set",
-    input: readInput,
-    access: 'read',
-    group: group.name,
-    run: ({ thread, ...input }, { call }) => call(threadRead, { session: thread, ...input }),
-  } satisfies McpTool<typeof readInput>,
-  {
     name: 'thread_start',
     description: [
-      'Start a new sand thread with a first message. It works on its own. Returns its id at once.',
+      'Start a new sand thread with a first message: user-facing work that the user sees in their thread list and can join. It works on its own. Returns its id at once.',
       'For work in parallel or on its own branch, set worktree so sand gives it its own checkout; never have it run git worktree add.',
       `${reported}; otherwise use thread_wait`,
     ].join(' '),
@@ -112,7 +113,7 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof startInput>,
   {
     name: 'thread_send',
-    description: `Send a message to a thread. Returns at once. ${reported}; otherwise use thread_read or thread_wait for its reply`,
+    description: `Send a message to a thread. Returns at once. ${reported}; otherwise use history_read or thread_wait for its reply`,
     input: sendInput,
     access: 'operate',
     group: group.name,
@@ -139,11 +140,25 @@ export const threadTools: McpTool[] = [
   } satisfies McpTool<typeof stopInput>,
   {
     name: 'thread_update',
-    description: 'Rename, pin, snooze or settle a thread; returns the thread as thread_list shows it',
+    description: 'Rename, pin, snooze or settle a thread, or move it into its own git worktree; returns the thread as thread_list shows it',
     input: updateInput,
     access: 'operate',
     group: group.name,
     run: ({ thread, snoozeUntil, ...patch }, { call }) =>
       call(threadUpdate, { session: thread, ...patch, ...(snoozeUntil !== undefined && { snoozed: snoozeUntil === null ? null : Date.parse(snoozeUntil) }) }),
   } satisfies McpTool<typeof updateInput>,
+  {
+    name: 'history_read',
+    description: [
+      'Read or search the history of a thread, a bot, or, leaving both out, your own: what was said and when, what was done, and the notifications that came in, including what compaction or a model switch left out of your context.',
+      'Each item has its seq, when it happened and its turn; more says there are items past the page: older ones, or newer ones when after is set.',
+      'Pass item to read one item in full; a long one comes in parts, continued from nextOffset',
+    ].join(' '),
+    input: historyInput,
+    access: 'read',
+    run: ({ thread, bot, item, offset, ...reading }, { call }) => {
+      const conversation = { ...(thread !== undefined && { session: thread }), ...(bot !== undefined && { bot }) }
+      return item === undefined ? call(historyRead, { ...conversation, ...reading }) : call(itemRead, { ...conversation, item, offset })
+    },
+  } satisfies McpTool<typeof historyInput>,
 ]

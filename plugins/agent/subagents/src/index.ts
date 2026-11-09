@@ -14,7 +14,7 @@ import { agentTool } from './tool'
 
 export default definePlugin({
   name: 'subagents',
-  description: 'Sub-agents: the agent tool, agent definitions from builtins, ~/.sand/agents and .sand/agents, tool limits and the models tool',
+  description: 'Sub-agents: the agent tool, agent definitions from ~/.sand/agents and .sand/agents, tool limits and the models tool',
   inject,
   config: z.object({
     max_depth: z.number().int().min(0).default(6),

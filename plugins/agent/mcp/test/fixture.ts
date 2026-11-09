@@ -17,6 +17,8 @@ server.registerTool('grow', { description: 'Add the shout tool' }, () => {
 
 server.registerTool('fail', { description: 'Answer with a tool error' }, () => ({ content: [{ type: 'text', text: 'it broke' }], isError: true }))
 
+for (const twin of ['twin.a', 'twin_a']) server.registerTool(twin, { description: `Answer ${twin}` }, () => ({ content: [{ type: 'text', text: twin }] }))
+
 server.registerTool('crash', { description: 'Exit the server process' }, () => process.exit(1))
 
 await server.connect(new StdioServerTransport())

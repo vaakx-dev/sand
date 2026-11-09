@@ -29,13 +29,13 @@ export interface AgentResult extends TurnResult {
 }
 
 export interface AgentMeta {
-  name: string
+  name?: string
   depth: number
   tools?: string[]
 }
 
 export interface AgentLimits {
-  child(parent: Session, name: string, tools?: string[]): AgentMeta
+  child(parent: Session, name?: string, tools?: string[]): AgentMeta
   give(session: Session, meta: AgentMeta): void
   covers(caller: Session, target: Session): boolean
 }

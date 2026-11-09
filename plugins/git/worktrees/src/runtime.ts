@@ -16,6 +16,7 @@ import { config } from './config'
 import { worktrees, worktreesChange, worktreesProgress, worktreesProposed } from './contract'
 import { threadIn } from './create/thread'
 import type { WorktreeDeps } from './deps'
+import { createMoves } from './move/queue'
 import { nameOnFirstTurn } from './naming/name'
 import { createParking } from './park/park'
 import { startSweep } from './park/sweep'
@@ -25,7 +26,6 @@ import { serveWorktrees } from './requests'
 import { createSetups } from './setup/setups'
 import { createSurvey } from './status/survey'
 import { registerTools } from './tools'
-import { createMoves } from './tools/move'
 
 export default definePlugin({
   name: 'worktrees',
@@ -81,9 +81,9 @@ export default definePlugin({
     const survey = createSurvey(deps)
     const moves = createMoves(deps, () => ctx.get(turns), () => ctx.busy())
 
-    ctx.provide(worktrees, { thread: input => threadIn(deps, input) })
+    ctx.provide(worktrees, { thread: input => threadIn(deps, input), move: moves.move })
     ctx.on(turnEnd, (session, result) => moves.ended(session, result))
-    ctx.watch(tools, found => (found ? registerTools(found, deps, survey, moves, () => ctx.get(turns)) : undefined))
+    ctx.watch(tools, found => (found ? registerTools(found, deps, survey) : undefined))
     ctx.on(shellReady, (cwd, signal, progress) => setups.ready(cwd, signal, () => progress('Waiting for the worktree setup to finish…')).catch(report))
     const parking = createParking(deps)
     ctx.on(sessionSettle, parking.settled)

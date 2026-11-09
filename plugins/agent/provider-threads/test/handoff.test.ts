@@ -23,7 +23,7 @@ test('a prompt costs its text plus a fixed allowance per image and attachment', 
 
 const item = (id: string, role: Rendered['role'], size: number): Rendered => ({ id, role, text: `[Historical ${role}; item=${id}]\n${'x'.repeat(size)}` })
 
-const coverage = coverageText({ models: ['a/m'], first: 1, last: 9, reads: true })
+const coverage = coverageText({ models: ['a/m'], first: 1, last: 9 })
 
 test('a handoff keeps whole items, newest and the first prompt first, skips what does not fit, and reads in order', () => {
   const items = [item('first', 'user', 10), item('old', 'assistant', 100), item('huge', 'assistant', 5_000), item('ask', 'user', 100), item('reply', 'assistant', 10), item('last', 'user', 10)]

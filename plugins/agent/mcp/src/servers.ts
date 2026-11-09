@@ -20,9 +20,18 @@ export const mountServer = ({ tools, media, changed, report }: Needs, name: stri
   let link: Link | undefined
   let registered: Dispose[] = []
 
+  const registerOrReport = (tool: Tool) => {
+    try {
+      return [tools.register(tool)]
+    } catch (error) {
+      report(error)
+      return []
+    }
+  }
+
   const replace = (next: Tool[]) => {
     for (const dispose of registered) dispose()
-    registered = next.map(tool => tools.register(tool))
+    registered = next.flatMap(registerOrReport)
   }
 
   const start = () => {

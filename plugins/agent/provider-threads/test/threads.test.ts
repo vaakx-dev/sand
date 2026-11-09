@@ -33,8 +33,6 @@ const expectPrefix = (before: Body, after: Body) => {
 
 const texts = (body: Body) => body.messages.map(message => message.content.map(block => block.text ?? block.type).join('|'))
 
-const names = (body: Body) => (body.tools ?? []).map(tool => tool.name)
-
 test('a model gets the same growing prefix every step and turn, so its cache stays warm', async () => {
   sand = await startSand([api('a', [[said('one')], [{ type: 'call', name: 'echo', input: { word: 'x' } }], [said('two')], [said('three')]])])
   sand.tool('echo', ({ word }) => String(word))
@@ -95,7 +93,6 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   expect(handoff!.text).toMatch(/\[Historical user; prompt; item=[^;]+; seq=\d+; model=a\/m\]\none/)
   expect(handoff!.text).toMatch(/\[Historical assistant; reply; item=[^;]+; seq=\d+; model=a\/m\]\na1/)
   expect(prompt).toEqual(said('two'))
-  expect(names(switched!)).toContain('thread_read')
 
   expectPrefix(first!, back!)
   expect(back!.messages).toHaveLength(3)
@@ -104,7 +101,6 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
   expect(delta!.text).toContain('b1')
   expect(delta!.text).not.toContain(']\na1')
   expect(again).toEqual(said('three'))
-  expect(names(back!)).not.toContain('thread_read')
 
   await turn('b/m', 'four')
   sand.app.get(ledger)!.db.run("update provider_threads set used = used - 3600000 where model = 'a/m'")
@@ -122,7 +118,9 @@ test('a switch hands the new model its own system prompt and a budgeted handoff;
 })
 
 test('a model brought up to date can read the chat history itself', async () => {
-  sand = await startSand([api('a', [[said('a1')]]), api('b', [[{ type: 'call', name: 'thread_read', input: { after: 0 } }], [said('b1')]])])
+  sand = await startSand([api('a', [[said('a1')]]), api('b', [[{ type: 'call', name: 'history_read', input: { after: 0 } }], [said('b1')]])], {
+    plugins: ['agent/mcp-server', 'agent/threads-mcp'],
+  })
   const chat = sand.chat('a/m')
   await sand.turns.run(chat, 'one')
   use(chat, 'b/m')
@@ -131,7 +129,14 @@ test('a model brought up to date can read the chat history itself', async () => 
   const [, answered] = sent('b')
   const [result] = answered!.messages.at(-1)!.content as { type: string; content: { text: string }[] }[]
   expect(result!.type).toBe('tool_result')
-  expect(result!.content[0]!.text).toMatch(/\[Historical user; prompt; item=[^\]]+\]\none\n\n\[Historical assistant; reply; item=[^\]]+\]\na1/)
+  expect(JSON.parse(result!.content[0]!.text)).toMatchObject({
+    thread: chat.id,
+    items: [
+      { role: 'user', text: 'one' },
+      { role: 'assistant', text: 'a1' },
+      { role: 'user', text: 'two' },
+    ],
+  })
 })
 
 test('after going back to an earlier message, the model is sent the shared start and the new branch only', async () => {

@@ -12,7 +12,7 @@ export const createLimits = (meta: Meta, maxDepth: number): AgentLimits => ({
     const depth = (inherited?.depth ?? 0) + 1
     if (depth > maxDepth) throw new Error(`Agents can only nest ${maxDepth} levels deep`)
     const tools = narrowed(inherited?.tools, own)
-    return { name, depth, ...(tools && { tools }) }
+    return { ...(name && { name }), depth, ...(tools && { tools }) }
   },
   give: (session, limits) => void session.append('agent', limits),
   covers(caller, target) {

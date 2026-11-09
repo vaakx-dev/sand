@@ -9,10 +9,11 @@ const waitGrace = 60_000
 
 const callerOf = ({ owner, id }: Conversation) => ({ device: 'sand', kind: 'agent', actor: { owner, id } }) as const
 
-export const agentTool = <S extends ZodObject>(server: Server, { name, description, group, input, access, agents, run }: McpTool<S>): Tool<S> => ({
+export const agentTool = <S extends ZodObject>(server: Server, { name, description, group, always, input, access, agents, run }: McpTool<S>): Tool<S> => ({
   name,
   description,
   ...(group && { group }),
+  ...(always && { always }),
   input,
   effect: access === 'read' ? 'read' : 'run',
   parallel: access === 'read',

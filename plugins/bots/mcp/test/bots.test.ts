@@ -19,9 +19,9 @@ const said = (text: string): Reply => [{ type: 'text', text }]
 
 const update = (input: Record<string, unknown>): Reply => [{ type: 'call', name: 'bot_update', input }]
 
-const start = async (replies: Reply[]) => {
+const start = async (replies: Reply[], plugins: string[] = []) => {
   sand = await startSand([{ id: 'fake', models: ['b'], replies, api: 'anthropic' }], {
-    plugins: ['agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp'],
+    plugins: ['agent/mcp-server', 'bots/bots', 'bots/memory', 'bots/turns', 'bots/mcp', ...plugins],
   })
   return sand
 }
@@ -110,14 +110,15 @@ test('a bot hands another bot a task without waiting, and hears its reply as a t
   expect(notice).toMatch(/<at>\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d<\/at>/)
 })
 
-test('a bot looks up its own past: what was said and done, and when', async () => {
-  await start([[{ type: 'call', name: 'bot_list', input: {} }], said('You have one bot.'), said('Noted.')])
+test('a bot looks up its own past with history_read: what was said and done, and when', async () => {
+  await start([[{ type: 'call', name: 'bot_list', input: {} }], said('You have one bot.'), said('Noted.')], ['bots/bridge', 'agent/threads-mcp'])
   const bot = await createBot('Clerk')
   await answered(bot.id, 'Which bots do I have?')
   await answered(bot.id, 'Thanks')
-  const read = (input: Record<string, unknown>) => use(asBot(bot.id), 'bot_read', input)
+  const read = (input: Record<string, unknown>) => use(asBot(bot.id), 'history_read', input)
 
   const talk = await read({})
+  expect(talk.bot).toBe(bot.id)
   expect(talk.items.map(({ text }: { text: string }) => text)).toEqual(['Which bots do I have?', 'You have one bot.', 'Thanks', 'Noted.'])
   expect(talk.items[0].at).toMatch(/^\w{3} \d{4}-\d\d-\d\d \d\d:\d\d [+-]\d\d:\d\d$/)
 
@@ -126,6 +127,7 @@ test('a bot looks up its own past: what was said and done, and when', async () =
 
   const older = await read({ before: talk.items[2].seq, limit: 1 })
   expect(older).toMatchObject({ items: [{ text: 'You have one bot.' }], more: true })
+  expect(await read({ item: String(done.items[1].seq) })).toMatchObject({ bot: bot.id, seq: done.items[1].seq, text: expect.stringMatching(/^\[bot_list result\] .*Clerk/) })
 })
 
 test('a bot with no job writes its own job, works to it from its next step, and keeps the jobs it replaced', async () => {
@@ -146,7 +148,7 @@ test('a bot with no job writes its own job, works to it from its next step, and 
   expect((await sand.ask(botJobs, { bot: bot.id })).map(version => version.job)).toEqual(['You file notes.', job])
 })
 
-test('an outside agent lists bots, hands one a task, reads its reply and renames it over MCP', async () => {
+test('an outside agent lists bots, hands one a task, gets its reply and renames it over MCP', async () => {
   await start([said('Booked for Friday.')])
   const bot = await createBot('Travel')
   const call: Call = sand.askAs({ device: 'outside', kind: 'agent' })
@@ -166,9 +168,6 @@ test('an outside agent lists bots, hands one a task, reads its reply and renames
 
   expect(await value('bot_list', {})).toEqual([{ bot: bot.id, name: 'Travel', job: 'Be Travel.', status: 'idle', projects: [], budget: null, spent: 0 }])
   expect(await value('bot_send', { bot: bot.id, prompt: 'Book Friday' })).toMatchObject({ status: 'completed', reply: 'Booked for Friday.' })
-  const page = await value('bot_read', { bot: bot.id })
-  expect(page.items.map(({ role }: { role: string }) => role)).toEqual(['user', 'assistant'])
-  expect(page.items[0].text).toContain('from an outside agent')
   expect(await value('bot_update', { bot: bot.id, name: 'Trips' })).toMatchObject({ bot: bot.id, name: 'Trips', job: 'Be Travel.' })
   await client.close()
 })
