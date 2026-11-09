@@ -32,16 +32,21 @@ export const threadState = (ctx: OrchestratorContext, session: Session): ThreadS
   }
 }
 
-export const waitThread = (ctx: OrchestratorContext, session: Session, until: WaitUntil, signal: AbortSignal) =>
+const userWrote = (ctx: OrchestratorContext, waiter: Session | undefined) =>
+  Boolean(waiter && ctx.turns.pending(waiter).some(item => item.kind === 'steer' && item.origin === 'user'))
+
+export const waitThread = (ctx: OrchestratorContext, session: Session, until: WaitUntil, signal: AbortSignal, waiter?: Session) =>
   new Promise<ThreadState>(resolve => {
     const check = () => {
-      if (!settled(threadStatus(ctx, session), until) && !signal.aborted) return
+      const done = settled(threadStatus(ctx, session), until)
+      const wrote = !done && userWrote(ctx, waiter)
+      if (!done && !wrote && !signal.aborted) return
       stop()
-      resolve(threadState(ctx, session))
+      resolve({ ...threadState(ctx, session), ...(wrote && { userWrote: true }) })
     }
     const stops = [
       ctx.on(turnChange, info => void (info.session === session.id && check())),
-      ctx.on(turnPending, changed => void (changed.id === session.id && check())),
+      ctx.on(turnPending, changed => void ((changed.id === session.id || changed.id === waiter?.id) && check())),
     ]
     const stop = () => {
       for (const dispose of stops) void dispose()

@@ -17,6 +17,7 @@ export interface McpTool<S extends ZodObject = ZodObject> {
   access: AgentAccess
   group?: string
   agents?: Actor['owner'][]
+  always?: Actor['owner'][]
   run(input: output<S>, context: McpToolContext): Promise<unknown>
 }
 

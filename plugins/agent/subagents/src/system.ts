@@ -11,6 +11,6 @@ export const agentPrompt = (ctx: Context, resolve: Resolve, meta: Meta) =>
   ctx.on(promptBase, async (_, session) => {
     const info = meta(session)
     if (!info || session.kind !== 'agent') return undefined
-    const role = (await resolve(session.cwd, session.project)).get(info.name)?.prompt
+    const role = info.name && (await resolve(session.cwd, session.project)).get(info.name)?.prompt
     return role ? [preamble, `# Your role\n\n${role}`] : [preamble]
   })

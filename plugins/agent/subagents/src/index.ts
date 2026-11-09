@@ -3,18 +3,19 @@ import { definePlugin } from 'drydock'
 import { z } from 'zod'
 import { inject } from './context'
 import { agentLimits } from './contract'
+import { capAgents } from './cap'
 import { agentLayers } from './layers'
 import { createLimits } from './limits'
 import { createMeta } from './meta'
 import { group, modelsTool } from './models'
 import { restrictContext } from './restrict'
-import { createRun } from './run'
+import { createOpen } from './run'
 import { agentPrompt } from './system'
 import { agentTool } from './tool'
 
 export default definePlugin({
   name: 'subagents',
-  description: 'Sub-agents: the agent tool, agent definitions from builtins, ~/.sand/agents and .sand/agents, tool limits and the models tool',
+  description: 'Sub-agents: the agent tool, which starts each one as a thread, agent definitions from ~/.sand/agents and .sand/agents, tool limits and the models tool',
   inject,
   config: z.object({
     max_depth: z.number().int().min(0).default(6),
@@ -26,10 +27,10 @@ export default definePlugin({
     const resolve = agentLayers(ctx, efforts)
     const limits = createLimits(meta, config.max_depth)
     ctx.provide(agentLimits, limits)
-    const open = createRun(ctx, { resolve, limits, maxAgents: config.max_agents })
     ctx.effect(() => ctx.tools.group({ name: group, label: 'Agents', summary: 'list the models agents can use', load: 'on-demand' }))
-    ctx.effect(() => ctx.tools.register(agentTool(ctx, open)))
+    ctx.effect(() => ctx.tools.register(agentTool(ctx, createOpen(ctx, resolve, limits))))
     ctx.effect(() => ctx.tools.register(modelsTool(ctx)))
+    capAgents(ctx, config.max_agents)
     restrictContext(ctx, resolve, meta, config.max_depth)
     agentPrompt(ctx, resolve, meta)
   },

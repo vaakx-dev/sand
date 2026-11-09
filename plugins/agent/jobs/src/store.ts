@@ -1,8 +1,7 @@
 import { sessionRemove, type Session } from '@sand/chats/contract'
-import { turnEnd } from '@sand/turns-contract/contract'
 import { errorMessage, untilAborted } from '@sand/util'
 import type { JobsContext } from './context'
-import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus, type JobWork } from './contract'
+import { jobEnd, jobNote, jobStart, type Job, type JobSpec, type JobStatus } from './contract'
 import type { Delivery } from './deliver'
 import { notification } from './notice'
 
@@ -36,11 +35,6 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     for (const { job, spec } of stopped) delivery.record(spec.parent, notification({ ...job, status: 'cancelled' }, restarted))
   })
 
-  ctx.on(turnEnd, (session, result) => {
-    if (result.stopReason !== 'interrupted') return
-    for (const { job } of entries.values()) if (job.parent === session.id && job.kind === 'agent') stop(job)
-  })
-
   ctx.on(sessionRemove, id => {
     for (const { job } of entries.values()) {
       if (job.parent !== id) continue
@@ -65,25 +59,20 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     else delivery.post(job, parent, text)
   }
 
-  const launch = (entry: Entry, work: JobWork) => {
+  const launch = (entry: Entry) => {
     const { job, spec } = entry
     const controller = new AbortController()
-    const release = job.kind === 'agent' ? ctx.busy() : () => {}
-    job.status = 'running'
     job.cancel = () => controller.abort()
-    delete job.ended
-    delete entry.output
     ctx.emit(jobStart, job)
     const finish = (status: JobStatus, output: string) => {
       job.status = status
       job.ended = Date.now()
       entry.output = output
-      release()
       ctx.emit(jobEnd, job, output)
       prune()
       if (!silenced.delete(job.id) && !disposing) deliver(job, spec.parent, output)
     }
-    untilAborted(work(controller.signal, job), controller.signal)
+    untilAborted(spec.work(controller.signal, job), controller.signal)
       .then(
         output => finish(controller.signal.aborted ? 'cancelled' : 'done', output),
         error => finish(controller.signal.aborted ? 'cancelled' : 'failed', errorMessage(error)),
@@ -94,7 +83,6 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
   const start = (spec: JobSpec) => {
     const job: Job = {
       id: `job_${Bun.randomUUIDv7().slice(-8)}`,
-      kind: spec.kind,
       label: spec.label,
       parent: spec.parent.id,
       ...(spec.origin && { origin: spec.origin }),
@@ -104,15 +92,8 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     }
     const entry: Entry = { job, spec }
     entries.set(job.id, entry)
-    launch(entry, spec.work)
+    launch(entry)
     return job
-  }
-
-  const resume = (job: Job, work: JobWork) => {
-    const entry = entries.get(job.id)
-    if (!entry) throw new Error(`Unknown job ${job.id}`)
-    if (job.status === 'running') throw new Error(`${job.id} is still running`)
-    launch(entry, work)
   }
 
   const list = (parent?: string) => [...entries.values()].map(({ job }) => job).filter(job => !parent || job.parent === parent)
@@ -123,7 +104,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
     return entry
   }
 
-  return { start, resume, list, own, stop }
+  return { start, list, own, stop }
 }
 
 export type Store = ReturnType<typeof createStore>

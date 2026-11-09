@@ -87,7 +87,7 @@ export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: 
   const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
-  const agentsOf = runningAgents(parts.ctx, parts.threads)
+  const agentsOf = runningAgents(parts.threads)
   const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
   return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
 }

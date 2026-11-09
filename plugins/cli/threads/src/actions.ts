@@ -1,10 +1,10 @@
 import type { CliValues } from '@sand/config/contract'
 import {
   type Call,
+  type HistoryItem,
+  historyRead,
   type Sent,
   threadList,
-  type ThreadPage,
-  threadRead,
   threadSend,
   threadStart,
   threadStop,
@@ -68,9 +68,9 @@ const wait: Parse = ([session, ...rest], flags) => {
 const show: Parse = ([session, ...rest], flags) => {
   if (!session || rest.length) return undefined
   return async call => {
-    const items: ThreadPage['items'] = []
+    const items: HistoryItem[] = []
     for (let more = true; more; ) {
-      const page = await call(threadRead, { session, after: items.at(-1)?.seq ?? 0 })
+      const page = await call(historyRead, { session, after: items.at(-1)?.seq ?? 0 })
       items.push(...page.items)
       more = page.more
     }

@@ -1,10 +1,9 @@
-import { historyReading } from '@sand/chats/contract'
 import type { McpGroup, McpTool, McpTools } from '@sand/mcp-server/contract'
 import { joinDisposers } from '@sand/util'
 import { z } from 'zod'
-import { awaitBot, botAsk, botRead, botRoster, botSet, jobLimit } from './contract'
+import { awaitBot, botAsk, botRoster, botSet, jobLimit } from './contract'
 
-const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task and read its replies" }
+const group: McpGroup = { name: 'bots', label: 'Bots', summary: "list the user's bots, hand one a task, read its replies and change its job or limits" }
 
 const waitSeconds = 300
 const mostWaitSeconds = 3600
@@ -21,8 +20,6 @@ const sendInput = z.object({
 const listInput = z.object({})
 
 const self = z.string().optional().describe('The bot id (default: you, when you are a bot)')
-
-const readInput = z.object({ bot: self, ...historyReading.shape })
 
 const updateInput = z.object({
   bot: self,
@@ -55,7 +52,7 @@ export const botTools: McpTool[] = [
   } satisfies McpTool<typeof listInput>,
   {
     name: 'bot_send',
-    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply comes to you as a <task-notification>; don't wait or poll for it. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with bot_read",
+    description: "Hand one of the user's bots a task or question. From sand's own threads and bots it returns at once and the bot's final reply comes to you as a <task-notification>; don't wait or poll for it. From outside sand it returns the reply, or the turn as a handle once timeoutSeconds passes; then read the reply later with history_read",
     input: sendInput,
     access: 'operate',
     group: group.name,
@@ -63,19 +60,12 @@ export const botTools: McpTool[] = [
       awaitBot(call, await call(botAsk, { bot, prompt, origin: 'mcp', clientRequestId }), Date.now() + timeoutSeconds * 1000, signal),
   } satisfies McpTool<typeof sendInput>,
   {
-    name: 'bot_read',
-    description:
-      "Read or search a bot's whole conversation, including what compaction took out of its context. Each item has its seq, when it happened and its turn. A bot leaves out bot to look up its own past: what the user said and when, what it did, and the notifications it got. more says there are items past the page: older ones, or newer ones when after is set",
-    input: readInput,
-    access: 'read',
-    group: group.name,
-    run: (input, { call }) => call(botRead, input),
-  } satisfies McpTool<typeof readInput>,
-  {
     name: 'bot_update',
     description: updateRules,
     input: updateInput,
     access: 'operate',
+    group: group.name,
+    always: ['bot'],
     run: (input, { call }) => call(botSet, input),
   } satisfies McpTool<typeof updateInput>,
 ]

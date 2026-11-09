@@ -12,12 +12,11 @@
     "print": "./src/index.ts",
     "web": "./src/web/index.ts",
     "label": "Agents",
-    "summary": "Sub-agents the agent can start as background jobs"
+    "summary": "Sub-agents the agent starts, each in a thread of its own"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/chats": "workspace:*",
-    "@sand/jobs": "workspace:*",
     "@sand/model": "workspace:*",
     "@sand/paths": "workspace:*",
     "@sand/prompt": "workspace:*",
@@ -34,5 +33,9 @@
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@sand/harness": "workspace:*",
+    "@sand/replay": "workspace:*"
   }
 }

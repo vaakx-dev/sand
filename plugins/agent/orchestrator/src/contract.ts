@@ -1,4 +1,4 @@
-import { type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt } from '@sand/chats/contract'
+import { type HistoryEntry, type HistoryItem, type HistoryItemPage, type HistoryPage, type HistoryReading, historyReading, notificationText, type Prompt } from '@sand/chats/contract'
 import type { ConversationRef, Owner } from '@sand/engine/contract'
 import { type Actor, request, type Request, type } from '@sand/host-hub/contract'
 import { type SendMode, type SendResult, sendModes, type TurnOrigin, type TurnStatus, type WaitReason, type WaitUntil } from '@sand/turns-contract/contract'
@@ -21,13 +21,18 @@ export interface ThreadState {
   waiting?: WaitReason
   reply?: string
   error?: string
+  userWrote?: true
 }
 
 export type Sent = SendResult & { thread: string }
 
-export interface ThreadPage extends HistoryPage {
-  thread: string
-}
+export type { HistoryItem }
+
+type Named = Partial<Record<Owner, string>>
+
+export type HistoryRead = Named & HistoryPage
+
+export type ItemRead = Named & HistoryItemPage
 
 export interface StartInput {
   cwd?: string
@@ -73,6 +78,7 @@ export interface SendInput {
 export interface OwnerKind {
   deliver(id: string, notice: Notice): Promise<unknown> | undefined
   label(id: string): string | undefined
+  history(id: string): HistoryEntry[] | undefined
   project?(id: string): string | undefined
 }
 
@@ -80,7 +86,9 @@ export interface Orchestrator {
   start(input: StartInput): Promise<Sent>
   send(thread: string, input: SendInput): Promise<Sent>
   wait(thread: string, until: WaitUntil, signal: AbortSignal, by?: ConversationRef): Promise<ThreadState>
-  read(thread: string, reading: HistoryReading): ThreadPage
+  read(conversation: ConversationRef, reading: HistoryReading): HistoryRead
+  item(conversation: ConversationRef, item: string, offset?: number): ItemRead
+  stop(thread: string, by?: ConversationRef): Promise<boolean>
   starterOf(thread: string): ConversationRef | undefined
   started(owner: Owner): Record<string, string>
   notify(thread: string, notice: Notice): Promise<boolean>
@@ -163,9 +171,12 @@ export const threadWait = request('thread.wait', {
   callers,
   place,
 })
-export const threadRead = request('thread.read', {
-  input: historyReading.extend({ session: z.string().optional() }),
-  output: type<ThreadPage>(),
+const conversation = z.object({ session: z.string().optional(), bot: z.string().optional() })
+
+export const historyRead = request('history.read', { input: historyReading.extend(conversation.shape), output: type<HistoryRead>(), callers, place })
+export const itemRead = request('history.item', {
+  input: conversation.extend({ item: z.string().min(1), offset: z.number().int().min(0).optional() }),
+  output: type<ItemRead>(),
   callers,
   place,
 })
@@ -187,6 +198,8 @@ export const threadUpdate = request('thread.update', {
     pinned: z.boolean().optional(),
     snoozed: z.number().int().positive().nullable().optional(),
     settled: z.boolean().optional(),
+    worktree: z.literal(true).optional(),
+    branch: z.string().min(1).optional(),
   }),
   output: type<ThreadRow>(),
   callers,
@@ -205,6 +218,6 @@ export const waitThread = async (call: Call, session: string, until: WaitUntil, 
     signal?.throwIfAborted()
     const timeoutMs = Math.max(0, Math.min(slice, deadline - Date.now()))
     const state = await call(threadWait, { session, until, timeoutMs }, { timeout: timeoutMs + answerGrace })
-    if (settled(state.status, until) || Date.now() >= deadline) return state
+    if (settled(state.status, until) || state.userWrote || Date.now() >= deadline) return state
   }
 }

@@ -6,7 +6,6 @@ import type { ThreadsContext } from './context'
 import type { Brief, ProviderThreadInfo, Segment } from './contract'
 import type { HandoffStore } from './store/handoffs'
 import { currentPath, madeBy } from './current'
-import { readsHistory, threadReadName } from './tools/thread-read'
 import { covered, headOf, threadBasis } from './view/basis'
 import { renderView } from './view/render'
 
@@ -45,9 +44,8 @@ export const buildRequest = async (
   const path = currentPath(ctx, conversation)
   const basis = threadBasis(thread.id, thread.seen, path, lookupOf(conversation))
   const { messages, delta } = renderView(basis, path, { source: thread.source, made: madeBy(ctx, path, conversation.owner), handoff: handoffs.text })
-  const offered = await brief.tools(conversation, messages)
+  const tools = await brief.tools(conversation, messages)
   const kind = brief.kind?.(conversation)
-  const tools = readsHistory(thread) ? offered : offered.filter(tool => tool.name !== threadReadName)
   const handoff = handoffs.pending(thread.id)
   return {
     request: {

@@ -1,7 +1,8 @@
 import type { LLM } from '@sand/accounts/contract'
 import type { AgentDefinition } from './contract'
 
-const agentList = (definitions: AgentDefinition[]) => definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')
+const agentList = (definitions: AgentDefinition[]) =>
+  definitions.length ? `\n\nAgents you can name:\n${definitions.map(definition => `- ${definition.name}: ${definition.description}`).join('\n')}` : ''
 
 const modelList = (llm: LLM | undefined) => {
   const models = (llm?.models?.() ?? []).filter(model => !model.hidden)
@@ -12,7 +13,4 @@ const modelList = (llm: LLM | undefined) => {
 }
 
 export const describeAgents = (definitions: AgentDefinition[], llm: LLM | undefined) =>
-  `Delegate a task to a subagent. Use for broad searches, parallel work, or anything that would flood your context. Only its final report comes back. Several calls in one response run in parallel.
-
-Available agents:
-${agentList(definitions)}${modelList(llm)}`
+  `Delegate a task to a subagent. Use for broad searches, parallel work, or anything that would flood your context. Only its final report comes back. Several calls in one response run in parallel. Each subagent is a thread: message it with thread_send, wait for it with thread_wait and stop it with thread_stop.${agentList(definitions)}${modelList(llm)}`

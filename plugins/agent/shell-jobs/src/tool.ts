@@ -23,7 +23,6 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
   run({ command, label }, { conversation, cwd, call }) {
     const output = outputTail()
     const job = jobs.start({
-      kind: 'command',
       parent: sessions.require(conversation.id),
       label: label ?? oneLine(command, 80),
       origin: call.id,

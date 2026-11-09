@@ -19,7 +19,7 @@ const input = z.object({
 })
 
 const allDone = 'All finished.'
-const userSpoke = 'The user sent a message; running jobs keep running.'
+const userSpoke = 'The user sent a message; running commands keep running.'
 
 const finished = (entries: Entry[]) => entries.every(({ job }) => job.status !== 'running')
 
@@ -33,7 +33,7 @@ const settle = (ctx: JobsContext, entries: Entry[], session: Session, timeout: n
       resolve(reason)
     }
     const abort = () => finish('Interrupted.')
-    const timer = setTimeout(() => finish(`Timed out after ${duration(timeout)}; running jobs keep running.`), timeout)
+    const timer = setTimeout(() => finish(`Timed out after ${duration(timeout)}; running commands keep running.`), timeout)
     const stops = [
       ctx.on(jobEnd, () => {
         if (finished(entries)) finish(allDone)
@@ -50,7 +50,7 @@ const settle = (ctx: JobsContext, entries: Entry[], session: Session, timeout: n
 export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): Tool<typeof input> => ({
   name: 'job_wait',
   description:
-    "Wait for background jobs to finish and get their results: an agent's report, or a command's exit code and last output. Returns early on timeout or when the user sends a message; jobs keep running then. Jobs whose results it returns send no <task-notification>.",
+    'Wait for background commands to finish and get their exit code and last output. Returns early on timeout or when the user sends a message; the commands keep running then. Commands whose results it returns send no <task-notification>.',
   group,
   input,
   effect: 'read',
@@ -62,9 +62,9 @@ export const waitTool = (ctx: JobsContext, store: Store, delivery: Delivery): To
     const reason = await settle(ctx, entries, session, timeout_ms, signal)
     signal.throwIfAborted()
     const reports = entries.map(({ job, output }) => {
-      if (job.status === 'running') return jobLine(ctx.sessions, job)
+      if (job.status === 'running') return jobLine(job)
       delivery.withdraw(job.id)
-      return `${jobLine(ctx.sessions, job)}\n${clipResult(output ?? '')}`
+      return `${jobLine(job)}\n${clipResult(output ?? '')}`
     })
     return [reason, ...reports].join('\n\n')
   },

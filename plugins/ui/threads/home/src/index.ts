@@ -1,7 +1,6 @@
 import { threadOwners } from '@sand/chat/contract'
 import { draftsChange, drafts } from '@sand/composer/contract'
 import { pcs, pcsChange, wire } from '@sand/devices-contract'
-import { jobs, jobsChange } from '@sand/jobs/contract'
 import { palette } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { byOrder } from '@sand/util'
@@ -25,7 +24,7 @@ export default definePlugin({
   description: 'Threads in the sidebar grouped Active, Working, Snoozed and Settled, newest first; New chat through a list of projects in Search; Home with the launch composer; the Waiting, Ready and Working chips; threads and projects in Search',
   inject: { kit, threads, shell, wire, pcs },
   apply(ctx) {
-    const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange, jobsChange], [projects, pcs, drafts, jobs, threadOwners])
+    const events = pulse(ctx, [projectsChange, threadsChange, threadSelect, pcsChange, draftsChange], [projects, pcs, drafts, threadOwners])
     const changes = owned(ctx, () => changesModel(ctx, ctx.wire, ctx.pcs))
     const parts = { ctx, kit: ctx.kit, threads: ctx.threads, shell: ctx.shell }
     const limit = sig(pageSize)

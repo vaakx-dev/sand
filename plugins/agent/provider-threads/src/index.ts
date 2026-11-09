@@ -7,7 +7,6 @@ import { createThreads } from './prepare'
 import { createHandoffStore } from './store/handoffs'
 import { schema } from './store/schema'
 import { createThreadStore } from './store/threads'
-import { threadRead } from './tools/thread-read'
 
 export default definePlugin({
   name: 'provider-threads',
@@ -24,6 +23,5 @@ export default definePlugin({
     ctx.ledger.migrate('provider-threads', schema)
     const stores = { threads: createThreadStore(ctx.ledger.db), handoffs: createHandoffStore(ctx.ledger.db) }
     ctx.provide(providerThreads, createThreads(ctx, stores, config.handoff_tokens))
-    ctx.effect(() => ctx.tools.register(threadRead(ctx)))
   },
 })

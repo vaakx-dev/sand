@@ -1,21 +1,28 @@
 import type { ToolBadge, ToolRenderer, ToolView, ToolViews } from '@sand/transcript/contract'
-import type { WireJob } from '@sand/jobs/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { duration, oneLine } from '@sand/util'
-import type { Threads } from '@sand/web-client/contract'
-import type { JobWatch } from './jobs'
+import type { Thread, Threads } from '@sand/web-client/contract'
 
 const firstSentence = (text: string) => oneLine(/^[^\n]*?[.!?](?=\s|$)/.exec(text.trim())?.[0] ?? text, 80)
 
+export interface Agents {
+  of(tool: ToolView): Thread | undefined
+  now(): number
+  open(id: string): void
+  stop(id: string): void
+}
+
 export const subAgentOf = (chats: Threads | undefined, thread: string, call: string) => chats?.children(thread).find(chat => chat.info.origin === call)
 
-export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats: () => Threads | undefined): ToolRenderer => {
-  const outcomes: Record<WireJob['status'], ToolBadge | undefined> = {
-    running: undefined,
-    done: undefined,
-    failed: { text: kit.statusLabel('failed'), tone: 'danger' },
-    cancelled: { text: kit.statusLabel('cancelled'), tone: 'neutral' },
+export const agentRenderer = (kit: Kit, views: ToolViews, agents: Agents): ToolRenderer => {
+  const failed: ToolBadge = { text: kit.statusLabel('failed'), tone: 'danger' }
+  const cancelled: ToolBadge = { text: kit.statusLabel('cancelled'), tone: 'neutral' }
+
+  const outcome = (agent: Thread) => {
+    if (agent.turn || !agent.ended) return undefined
+    if (agent.ended.stopReason === 'interrupted') return cancelled
+    return agent.ended.error ? failed : undefined
   }
 
   const plainMeta = (tool: ToolView) => {
@@ -23,14 +30,10 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
     return tool.call.malformed ? 'malformed input' : ''
   }
 
-  const plainBadge = (tool: ToolView): ToolBadge | undefined => (tool.status === 'failed' ? { text: kit.statusLabel('failed'), tone: 'danger' } : undefined)
-
-  const stop = (job: WireJob): MenuAction => ({ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => watch.cancel(job.id) })
-
-  const open = (tool: ToolView): MenuAction[] => {
-    const chat = subAgentOf(chats(), tool.thread, tool.call.id)
-    return chat ? [{ id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => chats()?.select(chat.id) }] : []
-  }
+  const actions = (agent: Thread): MenuAction[] => [
+    { id: 'open', label: 'Open sub-agent', icon: 'right', group: 'open', tile: true, run: () => agents.open(agent.id) },
+    ...(agent.turn ? [{ id: 'stop', label: 'Stop', icon: 'stop', group: 'run', danger: true, tile: true, run: () => agents.stop(agent.id) }] : []),
+  ]
 
   return {
     icon: 'bot',
@@ -38,19 +41,19 @@ export const agentRenderer = (kit: Kit, views: ToolViews, watch: JobWatch, chats
     activeVerb: 'Agent',
     label: ({ call }) => views.field(call.input, 'label') || firstSentence(views.field(call.input, 'task')),
     meta(tool) {
-      watch.tick()
-      const job = watch.of(tool.call.id)
-      if (!job) return plainMeta(tool)
-      const took = duration((job.ended ?? Date.now()) - job.started)
-      return job.status === 'running' ? `Running in background Â· ${took}` : `Ran in background Â· ${took}`
+      const agent = agents.of(tool)
+      if (!agent) return plainMeta(tool)
+      const took = duration((agent.turn ? agents.now() : agent.info.updated) - agent.info.created)
+      return agent.turn ? `Running in background · ${took}` : `Ran in background · ${took}`
     },
     badge(tool) {
-      const job = watch.of(tool.call.id)
-      return job ? outcomes[job.status] : plainBadge(tool)
+      const agent = agents.of(tool)
+      if (agent) return outcome(agent)
+      return tool.status === 'failed' ? failed : undefined
     },
     actions(tool) {
-      const job = watch.of(tool.call.id)
-      return [...open(tool), ...(job?.status === 'running' ? [stop(job)] : [])]
+      const agent = agents.of(tool)
+      return agent ? actions(agent) : []
     },
   }
 }

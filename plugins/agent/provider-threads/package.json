@@ -21,7 +21,6 @@
     "@sand/engine": "workspace:*",
     "@sand/ledger": "workspace:*",
     "@sand/model": "workspace:*",
-    "@sand/tools": "workspace:*",
     "@sand/transcript": "workspace:*",
     "@sand/ui-kit": "workspace:*",
     "@sand/web-client": "workspace:*",

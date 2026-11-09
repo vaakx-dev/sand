@@ -75,6 +75,7 @@ export interface WorktreeThreadInput {
 
 export interface Worktrees {
   thread(input: WorktreeThreadInput): Promise<SessionInfo>
+  move(session: string, branch?: string): Promise<void>
 }
 
 export const worktrees = service<Worktrees>('worktrees')

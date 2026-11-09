@@ -3,31 +3,17 @@ import type { Session } from '@sand/chats/contract'
 import { modelSettings, type SessionSettings } from '@sand/model/contract'
 import { subModel } from '@sand/sub-model/contract'
 import type { AgentsContext } from './context'
-import type { AgentDefinition, AgentLimits, AgentMeta, AgentRequest, AgentResult } from './contract'
+import type { AgentLimits, AgentRequest } from './contract'
 import type { Resolve } from './layers'
 import { childSettings } from './settings'
-import { slots } from './slots'
 import { agentTitle } from './title'
 
-export interface RunOptions {
-  resolve: Resolve
-  limits: AgentLimits
-  maxAgents: number
-}
-
-export interface OpenedAgent {
-  session: Session
-  run(signal: AbortSignal): Promise<AgentResult>
-  follow(task: string, signal: AbortSignal): Promise<AgentResult>
-}
-
-export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: RunOptions) => {
-  const take = slots(maxAgents)
-
-  const definitionOf = async (name: string, { cwd, project }: Session) => {
+export const createOpen = (ctx: AgentsContext, resolve: Resolve, limits: AgentLimits) => {
+  const definitionOf = async (name: string | undefined, { cwd, project }: Session) => {
+    if (name === undefined) return undefined
     const definitions = await resolve(cwd, project)
     const definition = definitions.get(name)
-    if (!definition) throw new Error(`Unknown agent "${name}". Available: ${[...definitions.keys()].join(', ')}`)
+    if (!definition) throw new Error(`Unknown agent "${name}". ${definitions.size ? `Available: ${[...definitions.keys()].join(', ')}` : 'Leave out agent for a plain one.'}`)
     return definition
   }
 
@@ -36,36 +22,20 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
     return effective && { model: effective.model, effort: effective.effort, speed: effective.speed }
   }
 
-  const create = async (request: AgentRequest, definition: AgentDefinition, scope: AgentMeta) => {
+  return async (request: AgentRequest) => {
     const { parent, task, label, origin } = request
+    const definition = await definitionOf(request.agent, parent)
+    const scope = limits.child(parent, definition?.name, definition?.tools)
     const sub = ctx.get(subModel)
-    const tier = request.model || definition.model ? undefined : definition.tier
-    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...definition } : definition
+    const tier = request.model || definition?.model ? undefined : definition?.tier
+    const own = definition ?? {}
+    const preset = tier && sub?.has(tier) ? { ...sub.settings(tier), ...own } : own
     const settings = childSettings(request, preset, parentSettings(parent), ctx.get(llm))
     const session = ctx.sessions.agent({ parent: parent.id, title: agentTitle(label, task), ...(origin && { origin }) })
     if (settings) ctx.get(modelSettings)?.update(session, settings)
     limits.give(session, scope)
     return session
   }
-
-  const drive = async (session: Session, task: string, signal: AbortSignal): Promise<AgentResult> => {
-    const release = await take(signal)
-    try {
-      return { ...(await ctx.turns.run(session, task, { origin: 'agent', signal })), session }
-    } finally {
-      release()
-    }
-  }
-
-  const open = async (request: AgentRequest): Promise<OpenedAgent> => {
-    const definition = await definitionOf(request.agent ?? 'general', request.parent)
-    const session = await create(request, definition, limits.child(request.parent, definition.name, definition.tools))
-    return {
-      session,
-      run: signal => drive(session, request.task, signal),
-      follow: (task, signal) => drive(session, task, signal),
-    }
-  }
-
-  return open
 }
+
+export type OpenAgent = ReturnType<typeof createOpen>

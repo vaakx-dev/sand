@@ -7,6 +7,7 @@ import { actOf, run } from '../run'
 import type { Choices } from './choices'
 import { findName, findTool } from './find'
 import { foundIn } from './found'
+import { callerSite, checkName } from './names'
 import { inScope } from './scope'
 import type { Candidate } from './search'
 
@@ -18,7 +19,7 @@ const spec = (tool: Tool): ToolSpec => {
 const byName = (a: Tool, b: Tool) => a.name.localeCompare(b.name)
 
 export const createCatalog = (choices: Choices, changed: () => void) => {
-  const tools: Tool[] = []
+  const registered = new Map<Tool, string>()
   const groups = new Map<string, ToolGroup>()
   const offers = new Map<Owner, Offer>()
   let gated: Gate | undefined
@@ -27,7 +28,10 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const groupOf = (tool: Tool) => (tool.group ? groups.get(tool.group) : undefined)
 
-  const loadOf = (tool: Tool): ToolLoad => {
+  const tools = () => [...registered.keys()]
+
+  const loadOf = (tool: Tool, conversation: Conversation): ToolLoad => {
+    if (tool.always?.includes(conversation.owner)) return 'always'
     const group = groupOf(tool)
     return group ? chosen(group) : 'always'
   }
@@ -38,12 +42,12 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
       .map(group => ({
         ...group,
         chosen: chosen(group),
-        tools: [...new Set(tools.filter(tool => tool.group === group.name).map(tool => tool.name))].sort(),
+        tools: [...new Set(tools().filter(tool => tool.group === group.name).map(tool => tool.name))].sort(),
       }))
 
-  const find = (scoped: Tool[]) => {
+  const find = (deferred: Tool[]) => {
     const open = states().filter(group => group.chosen === 'on-demand')
-    const candidates: Candidate[] = open.flatMap(group => scoped.filter(tool => tool.group === group.name).map(tool => ({ tool, group })))
+    const candidates: Candidate[] = open.flatMap(group => deferred.filter(tool => tool.group === group.name).map(tool => ({ tool, group })))
     const used = new Set(candidates.map(({ group }) => group.name))
     return findTool(
       open.filter(group => used.has(group.name)),
@@ -57,8 +61,10 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   }
 
   const register = (tool: Tool) => {
-    changes(() => tools.push(tool))
-    return () => changes(() => tools.includes(tool) && tools.splice(tools.indexOf(tool), 1))
+    const site = callerSite()
+    checkName(tool, site, registered)
+    changes(() => registered.set(tool, site))
+    return () => changes(() => registered.delete(tool))
   }
 
   const group = (value: ToolGroup) => {
@@ -66,26 +72,26 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     return () => changes(() => groups.get(value.name) === value && groups.delete(value.name))
   }
 
-  const listed = (scoped: Tool[], load: ToolLoad) => scoped.filter(tool => loadOf(tool) === load).sort(byName)
+  const listed = (scoped: Tool[], load: ToolLoad, conversation: Conversation) => scoped.filter(tool => loadOf(tool, conversation) === load).sort(byName)
 
   const offered = (conversation: Conversation) => offers.get(conversation.owner)?.(conversation) ?? []
 
-  const usable = (conversation: Conversation) => inScope(tools.filter(tool => loadOf(tool) !== 'off'), conversation, offered(conversation))
+  const usable = (conversation: Conversation) => inScope(tools().filter(tool => loadOf(tool, conversation) !== 'off'), conversation, offered(conversation))
 
   const specs = (messages: Message[], conversation: Conversation) => {
     const scoped = usable(conversation)
-    const deferred = listed(scoped, 'on-demand')
+    const deferred = listed(scoped, 'on-demand', conversation)
     const found = foundIn(messages)
     return [
-      ...listed(scoped, 'always').map(spec),
-      ...(deferred.length ? [spec(find(scoped))] : []),
+      ...listed(scoped, 'always', conversation).map(spec),
+      ...(deferred.length ? [spec(find(deferred))] : []),
       ...deferred.map(tool => ({ ...spec(tool), deferred: { found: found.has(tool.name) } })),
     ]
   }
 
   const resolve = (name: string, conversation: Conversation) => {
     const scoped = usable(conversation)
-    return name === findName ? find(scoped) : scoped.find(tool => tool.name === name)
+    return name === findName ? find(listed(scoped, 'on-demand', conversation)) : scoped.find(tool => tool.name === name)
   }
 
   const effect = (call: ToolCallBlock, conversation: Conversation) => {

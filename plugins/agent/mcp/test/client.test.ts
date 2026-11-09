@@ -56,7 +56,7 @@ test("an MCP server's tools join sand as an on-demand group, with the server's i
 
   expect(registry().groups().find(group => group.name === 'mcp_fixture')).toMatchObject({
     chosen: 'on-demand',
-    tools: ['mcp_fixture_crash', 'mcp_fixture_echo', 'mcp_fixture_fail', 'mcp_fixture_grow'],
+    tools: ['mcp_fixture_crash', 'mcp_fixture_echo', 'mcp_fixture_fail', 'mcp_fixture_grow', 'mcp_fixture_twin_a'],
   })
   expect(registry().specs([], chat).find(spec => spec.name === 'mcp_fixture_echo')).toMatchObject({
     description: 'Echo the text back',
@@ -64,6 +64,13 @@ test("an MCP server's tools join sand as an on-demand group, with the server's i
   })
   expect(await turn()).toMatchObject(answer('echo: hi'))
   expect(await turn()).toMatchObject(answer('it broke', true))
+})
+
+test('of two server tools whose names clash once sanitized, the first registers and the rest of the server still works', async () => {
+  await start([call('mcp_fixture_twin_a'), call('mcp_fixture_echo', { text: 'still here' })])
+
+  expect(await turn()).toMatchObject(answer('twin.a'))
+  expect(await turn()).toMatchObject(answer('echo: still here'))
 })
 
 test('tools a server adds later can be called once it says its list changed', async () => {

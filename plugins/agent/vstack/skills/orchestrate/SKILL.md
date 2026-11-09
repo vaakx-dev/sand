@@ -21,17 +21,18 @@ Agents can't see the chat. Each brief says:
 - the goal and why;
 - the user's decisions that bind it, in their words;
 - what to read first and what not to touch;
+- what it may change: read only, write without building or testing, or build and fix;
 - the report length.
 
 Don't teach agents to suck eggs. They already know how to code, use git and load skills. Leave out how-tos, coding rules and anything in the skills or project instructions. Give only what they can't know.
 
 ## Phases
 
-1. Write: `writer` agents change code without building or testing.
-2. Verify: one `verifier` agent builds, fixes what doesn't fit, and checks it runs.
+1. Write: agents change code without building or testing. Tell each to do the work itself, without subagents, and to re-read files before editing since others work in the same tree.
+2. Verify: one agent builds, fixes what doesn't fit where the pieces meet, and runs the program once.
 3. Test further only when the user asks.
 
-Use `explore` for read-only questions and investigations.
+For questions and investigations, brief an agent to read only and change nothing.
 
 ## While agents run
 

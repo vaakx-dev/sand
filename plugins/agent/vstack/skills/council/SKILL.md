@@ -19,7 +19,7 @@ Ask several models the same question, each on its own, and act where they agree.
 
 ## Brief
 
-- Start each reviewer as a read-only `explore` agent, all in one message so they run in parallel.
+- Start each reviewer as an agent told to read only and change nothing, all in one message so they run in parallel.
 - Give every reviewer the same brief: the request, what to read, the categories and a 1 to 10 scale.
 - Never tell reviewers the target score, earlier scores or what other reviewers said.
 - When comparing versions, label them A, B, C in a new random order each round, and don't say which one is ours.

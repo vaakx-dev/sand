@@ -335,7 +335,6 @@
         "@sand/devices-contract": "workspace:*",
         "@sand/engine": "workspace:*",
         "@sand/host-hub": "workspace:*",
-        "@sand/jobs": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/project": "workspace:*",
@@ -394,7 +393,6 @@
         "@sand/engine": "workspace:*",
         "@sand/ledger": "workspace:*",
         "@sand/model": "workspace:*",
-        "@sand/tools": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
         "@sand/web-client": "workspace:*",
@@ -482,7 +480,6 @@
       "dependencies": {
         "@sand/accounts": "workspace:*",
         "@sand/chats": "workspace:*",
-        "@sand/jobs": "workspace:*",
         "@sand/model": "workspace:*",
         "@sand/paths": "workspace:*",
         "@sand/prompt": "workspace:*",
@@ -499,6 +496,10 @@
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
         "zod": "^4.6.5",
+      },
+      "devDependencies": {
+        "@sand/harness": "workspace:*",
+        "@sand/replay": "workspace:*",
       },
     },
     "plugins/agent/thread-titles": {
@@ -2430,7 +2431,6 @@
         "@sand/composer": "workspace:*",
         "@sand/devices-contract": "workspace:*",
         "@sand/features": "workspace:*",
-        "@sand/jobs": "workspace:*",
         "@sand/palette": "workspace:*",
         "@sand/picker": "workspace:*",
         "@sand/project": "workspace:*",

@@ -1,7 +1,7 @@
 import { findPc, isPcUnavailable, noSuchPc, type PeerOutcome, peers } from '@sand/devices-contract'
 import type { InputOf, Request } from '@sand/host-hub/contract'
 import type { OrchestratorContext } from './context'
-import { failure, threadList, threadRead, type ThreadRow, threadStart } from './contract'
+import { failure, historyRead, threadList, type ThreadRow, threadStart } from './contract'
 import { type ListFilter, listThreads, newestFirst } from './list'
 
 export const createPcs = (ctx: OrchestratorContext) => {
@@ -29,7 +29,7 @@ export const createPcs = (ctx: OrchestratorContext) => {
   const locate = async (thread: string) => {
     const known = owners.get(thread)
     if (known) return known
-    const outcomes = (await linked()?.callEach(threadRead, { session: thread, limit: 1 })) ?? []
+    const outcomes = (await linked()?.callEach(historyRead, { session: thread, limit: 1 })) ?? []
     const owner = outcomes.find(outcome => outcome.ok)?.pc
     if (!owner) throw failure('not_found', `No thread ${thread}`)
     owners.set(thread, owner)

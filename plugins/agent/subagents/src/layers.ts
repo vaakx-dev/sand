@@ -4,7 +4,7 @@ import type { watcher } from '@sand/watch/contract'
 import type { Context } from 'drydock'
 import { join } from 'node:path'
 import type { AgentDefinition } from './contract'
-import { builtins, loadDefinitions } from './definitions'
+import { loadDefinitions } from './definitions'
 
 export type Resolve = (cwd?: string, project?: string | null) => Promise<Map<string, AgentDefinition>>
 
@@ -27,7 +27,7 @@ export const agentLayers = (ctx: Context<{ paths: typeof paths; watcher: typeof 
 
   const resolve: Resolve = async (cwd, id) => {
     const [own, project] = await Promise.all([home.get(homeDir), projectLayer(cwd, id)])
-    return new Map([...builtins, ...own, ...project].map(definition => [definition.name, definition]))
+    return new Map([...own, ...project].map(definition => [definition.name, definition]))
   }
 
   return resolve
