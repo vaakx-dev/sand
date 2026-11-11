@@ -1,4 +1,4 @@
-import { canonicalModel, type ModelInfo } from '../contract'
+import { canonicalModel, type ModelInfo, rankSources } from '../contract'
 import { isKeyKind, keyLabels, signInError } from '../auth/kinds'
 import { split, unknownModel } from './build'
 import { cached } from './cached'
@@ -30,9 +30,13 @@ export const viewOf = (entries: () => Entry[]) => {
   const models = () => [...index.get().shown]
   const entry = (source: string) => index.get().sources.get(source)
 
+  const billing = (source: string) => entry(source)?.meta.billing
+
+  const named = (models: ModelInfo[], name: string) => rankSources(models.filter(model => model.name === name), { billing })[0]
+
   const lookup = (id: string) => {
     const { ids, shown } = index.get()
-    return ids.get(id) ?? shown.find(model => model.name === id)
+    return ids.get(id) ?? named(shown, id)
   }
 
   const find = (id: string) => lookup(id) ?? lookup(canonicalModel(id))
@@ -40,7 +44,7 @@ export const viewOf = (entries: () => Entry[]) => {
   const resolve = (wanted?: string): ModelInfo | undefined => {
     if (!wanted) return undefined
     const id = canonicalModel(wanted)
-    const found = find(wanted) ?? index.get().all.find(model => model.name === wanted || model.name === id)
+    const found = find(wanted) ?? named(index.get().all, wanted) ?? named(index.get().all, id)
     if (found) return found
     const parts = split(id)
     if (!parts) return undefined

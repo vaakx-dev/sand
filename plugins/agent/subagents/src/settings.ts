@@ -1,4 +1,4 @@
-import { type Effort, type LLM, matchModel, type ModelInfo } from '@sand/accounts/contract'
+import { sourceBilling, type Effort, type LLM, matchModel, modelSource, type ModelInfo } from '@sand/accounts/contract'
 import type { SessionSettings } from '@sand/model/contract'
 import type { AgentRequest } from './contract'
 
@@ -8,16 +8,17 @@ export const parseEffort = (value: unknown, efforts: Effort[]) => {
   return String(value) as Effort
 }
 
-const resolveModel = (query: string | undefined, models: ModelInfo[], llm: LLM | undefined) => {
+const resolveModel = (query: string | undefined, models: ModelInfo[], llm: LLM | undefined, caller: string | undefined) => {
   if (!query || !models.length) return query
-  return matchModel(query, models, llm?.find)
+  const own = caller ? (llm?.find?.(caller) ?? models.find(model => model.id === caller)) : undefined
+  return matchModel(query, models, { find: llm?.find, prefer: own && modelSource(own), billing: sourceBilling(llm) })
 }
 
 const supportedEffort = (effort: Effort | undefined, model: ModelInfo | undefined) => (effort && model && !model.efforts.includes(effort) ? undefined : effort)
 
 export const childSettings = (request: AgentRequest, preset: SessionSettings, inherited: SessionSettings | undefined, llm: LLM | undefined): SessionSettings | undefined => {
   const models = llm?.models?.() ?? []
-  const model = resolveModel(request.model ?? preset.model, models, llm) ?? inherited?.model
+  const model = resolveModel(request.model ?? preset.model, models, llm, inherited?.model) ?? inherited?.model
   const effort = supportedEffort(
     request.effort ?? preset.effort ?? inherited?.effort,
     models.find(candidate => candidate.id === model),

@@ -2,7 +2,7 @@ import { isRecord, joinDisposers } from '@sand/util'
 import type { RouteCaller } from '@sand/host-gateway/contract'
 import type { Media } from '@sand/media/contract'
 import type { Server } from '@sand/server/contract'
-import type { LLMRequest, ThreadRef } from '../contract'
+import { type LLMRequest, type ModelInfo, rankSources, type ThreadRef } from '../contract'
 import type { Accounts } from '../auth/accounts'
 import type { LocalLLM } from '../local'
 import { shareInfo, sharedIds, sharePaths } from './info'
@@ -36,10 +36,12 @@ const sharedModel = (local: LocalLLM, accounts: Accounts, wanted: string) => {
   const shared = new Set(sharedIds(accounts))
   const offered = local.view.entries().filter(entry => shared.has(entry.meta.id))
   const models = offered.flatMap(entry => entry.models)
+  const billing = (source: string) => local.view.entry(source)?.meta.billing
+  const named = (list: ModelInfo[]) => rankSources(list.filter(model => model.name === wanted), { billing })[0]
   return (
     models.find(model => model.id === wanted) ??
-    models.find(model => !model.hidden && model.name === wanted) ??
-    models.find(model => model.name === wanted) ??
+    named(models.filter(model => !model.hidden)) ??
+    named(models) ??
     local.view.resolve(wanted)
   )
 }
