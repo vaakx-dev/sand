@@ -14,7 +14,7 @@ const retryDelay = 600
 
 const wait = (ms: number) => new Promise<void>(resolve => after(ms, resolve))
 
-export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void>) => {
+export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (id: string) => Promise<void> | undefined) => {
   const loading = new Map<string, Promise<Thread | undefined>>()
 
   const apply = (thread: Thread, opened: OpenedSession) => {
@@ -52,23 +52,28 @@ export const threadLoader = (ctx: Context, wire: Wire, store: Store, hydrate: (i
     store.changed(id)
   }
 
-  const resume = async (id: string) => {
-    const thread = store.threads.get(id)
-    if (!thread?.cursor || !thread.entries.size) return undefined
-    const after = thread.entries.get(thread.cursor)?.seq ?? thread.cursor
-    const delta = await wire.call(sessionSince, { session: id, after }).catch(() => null)
-    return delta ? apply(store.upsert(delta.info, thread.device), delta) : undefined
-  }
-
   const open = async (id: string) => {
     const request = () => wire.call(sessionOpen, { session: id })
     const opened = await request().catch(error => (reconnecting(id) ? Promise.reject(error) : wait(retryDelay).then(request)))
     return install(opened)
   }
 
-  const fetchThread = async (id: string) => {
-    await hydrate(id).catch(() => {})
-    return (await resume(id)) ?? open(id)
+  const resume = (thread: Thread, cursor: string) => {
+    const after = thread.entries.get(cursor)?.seq ?? cursor
+    return wire.call(sessionSince, { session: thread.id, after }).then(
+      delta => (delta ? apply(store.upsert(delta.info, thread.device), delta) : open(thread.id)),
+      () => open(thread.id),
+    )
+  }
+
+  const request = (id: string) => {
+    const thread = store.threads.get(id)
+    return thread?.cursor && thread.entries.size ? resume(thread, thread.cursor) : open(id)
+  }
+
+  const fetchThread = (id: string) => {
+    const reading = hydrate(id)
+    return reading ? reading.then(() => request(id)) : request(id)
   }
 
   const load = (id: string) => {

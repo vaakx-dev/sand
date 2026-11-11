@@ -1,18 +1,27 @@
 import { type Pcs, pcsChange, type Wire } from '@sand/devices-contract'
+import { onIdle } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
-import { threadSelect } from '../contract'
+import { type Thread, threadSelect } from '../contract'
 import { after } from '../detached'
 import { onPcHello } from '../greeted'
 import { requestedSession } from '../threads/address'
 import type { Store } from '../threads/store'
 import { autosave } from './autosave'
 import { createDevice } from './device'
-import { readScope, readThread } from './reads'
+import { readScope, readThreads } from './reads'
+import type { CachedThread, Meta } from './records'
 import { fillThread, restoreScope } from './restore'
 import { wipeScope } from './scope'
 import { createWriter } from './writer'
 
 const restoreWait = 1500
+
+const preloaded = 5
+
+const recentlyOpened = (meta: Meta) =>
+  Object.entries(meta.opened)
+    .sort(([, a], [, b]) => b - a)
+    .map(([id]) => id)
 
 const unpaired = (pcs: Pcs) => {
   const { phase } = pcs.pairing()
@@ -36,6 +45,7 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
     if (thread && cached.asked) fillThread(thread, cached.asked)
     writer.adopt(scope, cached.meta)
     if (thread && cached.asked) writer.hydrated(thread, cached.asked)
+    onIdle(() => preload(recentlyOpened(cached.meta)))
   }
 
   const ready = Promise.race([restore().catch(() => {}), new Promise<void>(resolve => after(restoreWait, resolve))]).then(() => {
@@ -51,18 +61,31 @@ export const createCache = (ctx: Context, store: Store, wire: Wire, pcs: Pcs) =>
     void wipeScope(scope).catch(() => {})
   }
 
-  const hydrate = async (id: string) => {
+  const unread = (thread: Thread | undefined): thread is Thread => Boolean(thread && !thread.loaded && !thread.cursor && writer.has(thread.id))
+
+  const fill = (scope: string, id: string, cached: CachedThread | undefined) => {
+    const thread = store.threads.get(id)
+    if (!cached || !unread(thread) || writer.scope() !== scope) return
+    fillThread(thread, cached)
+    writer.hydrated(thread, cached)
+    store.changed(id, true)
+  }
+
+  const read = (ids: string[]) => {
+    const current = writer.scope()
+    if (!current || !writer.usable() || !ids.length) return undefined
+    return readThreads(current, ids).then(
+      found => ids.forEach(id => fill(current, id, found.get(id))),
+      () => {},
+    )
+  }
+
+  const preload = (opened: string[]) => void read(opened.filter(id => unread(store.threads.get(id))).slice(0, preloaded))
+
+  const hydrate = (id: string) => {
     writer.touch(id)
     schedule()
-    const current = writer.scope()
-    const thread = store.threads.get(id)
-    if (!current || !writer.usable() || !thread || thread.loaded || thread.cursor || !writer.has(id)) return
-    const cached = await readThread(current, id).catch(() => undefined)
-    const now = store.threads.get(id)
-    if (!cached || !now || now.loaded || now.cursor || writer.scope() !== current) return
-    fillThread(now, cached)
-    writer.hydrated(now, cached)
-    store.changed(id, true)
+    return unread(store.threads.get(id)) ? read([id]) : undefined
   }
 
   ctx.on(threadSelect, id => {
