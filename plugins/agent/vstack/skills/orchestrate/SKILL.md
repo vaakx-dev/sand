@@ -36,7 +36,7 @@ For questions and investigations, brief an agent to read only and change nothing
 
 ## While agents run
 
-- Never sleep or poll. End your turn; reports arrive on their own.
+- Never sleep or poll. End your turn; reports arrive on their own. If you must block, use `job_wait` with `any` and review each report as it lands.
 - Steer a running agent with a message. If another agent's work will touch its files, warn it.
 - Send a finished agent a follow-up with `job_send` instead of starting a new one.
 
