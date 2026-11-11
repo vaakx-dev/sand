@@ -30,7 +30,9 @@ const shellView = (model: Model) => {
       style: () => ({ overflow: 'clip', ...fitArea(keyboard.get()) }),
       onMount: node => {
         resizeObserver(node, ([entry]) => {
-          if (entry) model.width.set(entry.contentRect.width)
+          if (!entry) return
+          model.width.set(entry.contentRect.width)
+          model.height.set(entry.contentRect.height)
         })
       },
     },
