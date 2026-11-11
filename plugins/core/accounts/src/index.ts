@@ -33,11 +33,14 @@ const refreshEvery = 60_000
 const discoverEvery = 6 * 3_600_000
 const maxTokens = 64_000
 const retries = 4
+const streamIdleMs = 20 * 60_000
 
 export default definePlugin({
   name: 'accounts',
   inject: { cli, media },
-  config: z.object({ prices: z.record(z.string(), priceSchema).default({}) }).default({ prices: {} }),
+  config: z
+    .object({ prices: z.record(z.string(), priceSchema).default({}), stream_idle_ms: z.number().int().positive().default(streamIdleMs) })
+    .default({ prices: {}, stream_idle_ms: streamIdleMs }),
   async apply(ctx, options) {
     let server: Server | undefined
     let live = true
@@ -73,7 +76,7 @@ export default definePlugin({
     await Promise.all([accounts.ready, catalog.ready])
     const local = createLocal({ accounts, plans, catalog, claude, openai, compat, bridges, limits })
     const peers = createPeers({ home, media: ctx.media, links: () => ctx.get(pcLinks), changed, limitsChanged: parsed => ctx.emit(llmLimits, parsed) })
-    const merged = mergeLLM(local, peers, accounts, catalog)
+    const merged = mergeLLM(local, peers, accounts, catalog, options.stream_idle_ms)
     const state = () => loginState(accounts, peers, users)
     const signature = () => JSON.stringify([merged.llm.models(), merged.llm.sources()])
     let offered = signature()

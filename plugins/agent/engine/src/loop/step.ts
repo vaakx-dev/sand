@@ -1,4 +1,4 @@
-import type { LLMEvent } from '@sand/accounts/contract'
+import { type LLMEvent, StreamStalled } from '@sand/accounts/contract'
 import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 import type { Conversation, Step, TurnOrigin } from '../contract'
@@ -41,7 +41,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
 
   const retries = async (step: Step, error: unknown, again: boolean) => {
     if (signal.aborted) return false
-    const lost = step.lost(error)
+    const lost = step.lost(error) || error instanceof StreamStalled
     return again && (lost || Boolean(await conversations.overflow?.(conversation, info, error, signal)))
   }
 
