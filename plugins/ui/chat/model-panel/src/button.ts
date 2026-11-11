@@ -9,7 +9,7 @@ const popoverWidth = `calc(${SPACE['96']} + ${SPACE['12']})`
 type Placement = 'popover' | 'inline'
 
 const rowView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, opened: boolean, mounted: (open: () => void) => () => void) => {
-  const { cardItem, chipPopover, icon, pressOpens } = ctx.kit
+  const { cardItem, chipPopover, modelLogo, pressOpens } = ctx.kit
   const open = sig(opened)
   const close = () => open.set(false)
   const picker = pickerTarget(ctx, changes, target)
@@ -41,7 +41,10 @@ const rowView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, opened:
   const node = div(
     { class: 'relative flex min-w-0 flex-col' },
     cardItem(
-      { title: tip, 'aria-label': tip, lead: icon('sparkles', 'sm'), menu: true, ...pressOpens(open, () => open.update(value => !value)) },
+      { title: tip, 'aria-label': tip, lead: dynamicChild(
+          model.map(value => value?.provider),
+          provider => modelLogo(provider, 16),
+        ), menu: true, ...pressOpens(open, () => open.update(value => !value)) },
       span({ class: () => (chosen.get() ? '' : 'text-warning-400') }, label),
     ),
     dynamicChild(placement, place => (place ? placements[place]() : null)),
