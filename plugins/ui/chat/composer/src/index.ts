@@ -16,6 +16,8 @@ import { createSlots } from './dock/slots'
 import { dockDrafts } from './drafts/dock'
 import { draftSession } from './drafts/session'
 import { spacedLink } from './editor/chips/place'
+import { onIdle } from './editor/idle'
+import { loadEditor } from './editor/view'
 import { createTurnErrors, turnErrorBanner } from './errors/turn'
 import { createHandoff } from './handoff'
 import { createModel } from './model'
@@ -158,5 +160,6 @@ export default definePlugin({
     ctx.provide(drafts, session.drafts)
     ctx.provide(typingService, typing)
     ctx.effect(() => typing.stop)
+    ctx.effect(() => onIdle(() => void loadEditor()))
   },
 })

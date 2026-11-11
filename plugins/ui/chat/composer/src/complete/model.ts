@@ -1,5 +1,4 @@
-import { Prec } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import type { EditorView } from '@codemirror/view'
 import { contextLink } from '@sand/chats/contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { derive, sig, type KeyMap } from '@vaakx-dev/vrui'
@@ -130,16 +129,7 @@ export const createCompletion = ({ listbox }: Kit, triggers: () => Source[], rec
     })
   }
 
-  const extension = [
-    EditorView.updateListener.of(change => {
-      if (!change.docChanged && !change.selectionSet && !change.focusChanged) return
-      if (change.view.hasFocus) update(change.view)
-      else close()
-    }),
-    Prec.highest(EditorView.domEventHandlers({ keydown })),
-  ]
-
-  return { items, hint, visible, box, close, extension }
+  return { items, hint, visible, box, close, update, keydown }
 }
 
 export type Completion = ReturnType<typeof createCompletion>

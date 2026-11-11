@@ -1,70 +1,111 @@
-import { history, historyKeymap, insertNewline, standardKeymap } from '@codemirror/commands'
-import { EditorState, Transaction, type Extension } from '@codemirror/state'
-import { EditorView, keymap, placeholder as placeholderText } from '@codemirror/view'
 import type { Kit } from '@sand/ui-kit/contract'
-import { quoteRuns } from '@sand/util'
-import { div, effect, scoped, span, type Sig } from '@vaakx-dev/vrui'
-import { placeLink } from './chips/place'
-import { quote } from './quotes/commands'
-import { added, quoteState } from './quotes/field'
-import { quoteKeys } from './quotes/keys'
-import { quoteWidgets } from './quotes/widget'
-import { theme } from './theme'
+import { div, dynamicChild, effect, scoped, sig, span, untrack, type Sig } from '@vaakx-dev/vrui'
+import type { Completion } from '../complete/model'
+import type { Records } from '../records'
+import type { DrawChip } from './chips/widget'
+import type { Mounted } from './codemirror'
 
-export interface EditorOptions {
-  placeholder: () => string
-  extensions: Extension[]
+export interface EditorKeys {
+  keydown(event: KeyboardEvent): boolean
+  keyup(event: KeyboardEvent): boolean
+  paste(event: ClipboardEvent): boolean
+  drop(event: DragEvent): boolean
 }
 
-const attributes = EditorView.contentAttributes.of({ 'aria-label': 'Message', enterkeyhint: 'enter', autocapitalize: 'sentences', autocorrect: 'on', spellcheck: 'true' })
+export interface EditorParts {
+  kit: Kit
+  text: Sig<string>
+  placeholder: () => string
+  keys: EditorKeys
+  typed(): void
+  completion: Completion
+  records: Records
+  chip: DrawChip
+}
 
-export const createEditor = (kit: Kit, text: Sig<string>, options: EditorOptions) => {
-  const hint = span(options.placeholder)
-  const extensions = [
-    history(),
-    keymap.of([{ key: 'Enter', run: insertNewline, shift: insertNewline }, ...standardKeymap, ...historyKeymap]),
-    EditorView.lineWrapping,
-    attributes,
-    theme,
-    placeholderText(() => hint),
-    quoteState,
-    quoteKeys,
-    quoteWidgets(kit),
-    EditorView.updateListener.of(update => {
-      if (update.docChanged) text.set(update.state.doc.toString())
-    }),
-    options.extensions,
-  ]
-  const view = new EditorView({ state: EditorState.create({ extensions }) })
-  scoped(() => view.destroy())
+type Module = typeof import('./codemirror')
 
-  effect(() => {
-    const value = text.get()
-    if (value === view.state.doc.toString()) return
-    view.setState(EditorState.create({ doc: value, extensions }))
-    view.dispatch({ selection: { anchor: value.length }, annotations: Transaction.addToHistory.of(false) })
-  })
+let loaded: Module | undefined
+let loading: Promise<Module> | undefined
 
-  const focusEnd = () => {
-    view.dispatch({ selection: { anchor: view.state.doc.length }, scrollIntoView: true })
-    view.focus()
+export const loadEditor = () =>
+  (loading ??= import('./codemirror').then(module => {
+    loaded = module
+    return module
+  }))
+
+const insertedText = (event: InputEvent) => event.data ?? event.dataTransfer?.getData('text/plain') ?? ''
+
+export const createEditor = (parts: EditorParts) => {
+  const mounted = sig<Mounted | undefined>(undefined)
+  const made = () => untrack(() => mounted.get())
+  let early = ''
+  let focused = false
+
+  const mount = (module: Module) => {
+    const existing = made()
+    if (existing) return existing
+    const doc = untrack(() => parts.text.get()) + early
+    early = ''
+    const editor = untrack(() => module.mountEditor(parts, doc))
+    mounted.set(editor)
+    if (focused) editor.focusEnd()
+    return editor
   }
 
-  const replace = (value: string) =>
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: value },
-      selection: { anchor: value.length },
-      effects: quoteRuns(value).map(run => added.of(run)),
-      scrollIntoView: true,
-    })
+  const ready = () => made() ?? (loaded && mount(loaded))
+
+  const run = (act: (editor: Mounted) => void) => {
+    const editor = ready()
+    if (editor) return act(editor)
+    void loadEditor().then(module => act(mount(module)))
+  }
+
+  const wake = () => {
+    focused = true
+    run(editor => editor.focus())
+  }
+
+  const hold = (event: InputEvent) => {
+    if (made()) return
+    event.preventDefault()
+    early += insertedText(event)
+  }
+
+  const standIn = div(
+    {
+      class: 'text-neutral-500 outline-none',
+      contentEditable: 'true',
+      role: 'textbox',
+      'aria-label': 'Message',
+      'aria-multiline': 'true',
+      onFocus: wake,
+      onBlur: () => (focused = false),
+      onBeforeInput: hold,
+    },
+    span(parts.placeholder),
+  )
+  const node = div(
+    { class: 'text-neutral-100 leading-relaxed' },
+    dynamicChild(mounted, editor => editor?.dom ?? standIn),
+  )
+  void loadEditor()
+  scoped(() => made()?.destroy())
+
+  effect(() => {
+    const value = parts.text.get()
+    const editor = made()
+    if (editor) return editor.show(value)
+    if (value) run(created => created.show(untrack(() => parts.text.get())))
+  })
 
   return {
-    node: div({ class: 'text-neutral-100 leading-relaxed' }, view.dom),
-    focus: () => view.focus(),
-    focusEnd,
-    replace,
-    insert: (value: string) => view.dispatch(view.state.replaceSelection(value), { scrollIntoView: true, userEvent: 'input' }),
-    quote: (value: string) => quote(view, value),
-    reference: (link: string) => placeLink(view, link, view.state.selection.main.from, view.state.selection.main.to),
+    node,
+    focus: () => run(editor => editor.focus()),
+    focusEnd: () => run(editor => editor.focusEnd()),
+    replace: (value: string) => run(editor => editor.replace(value)),
+    insert: (value: string) => run(editor => editor.insert(value)),
+    quote: (value: string) => run(editor => editor.quote(value)),
+    reference: (link: string) => run(editor => editor.reference(link)),
   }
 }

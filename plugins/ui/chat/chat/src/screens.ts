@@ -5,10 +5,13 @@ import { claims } from './claims'
 import type { ChatContext } from './context'
 import { threadRoute } from './contract'
 import { chatController } from './controller'
+import { keptViews } from './kept'
 import { claimRoute } from './route/select'
 
 export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefined>) => {
   const claim = claims()
+  const chats = keptViews(id => chatController(ctx, id))
+  ctx.effect(() => chats.clear)
   const dock = () => dynamicChild(composer, found => found?.view() ?? null)
 
   const screen = (route: Route, look: string, ...children: Child[]) => {
@@ -18,7 +21,7 @@ export const threadScreens = (ctx: ChatContext, composer: Sig<Composer | undefin
   }
 
   return {
-    thread: (id: string) => screen({ kind: threadRoute, id }, '', chatController(ctx, id)),
+    thread: (id: string) => screen({ kind: threadRoute, id }, '', chats.view(id)),
     draft: (route: Route) => screen(route, 'justify-center'),
   }
 }
