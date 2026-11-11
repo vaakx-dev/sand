@@ -1,9 +1,9 @@
 import type { GitRunner } from '@sand/git-runner/contract'
-import { existsSync } from 'node:fs'
 import type { WorktreeStatus } from '../contract'
 import type { WorktreeDeps } from '../deps'
 import type { WorktreeRecord } from '../records/schema'
 import { removeCheck } from '../remove/check'
+import { isWorktree } from '../remove/leftover'
 import { currentBranch } from '../repo/refs'
 
 export const liveRecords = async (deps: WorktreeDeps) => {
@@ -18,7 +18,7 @@ const beyondBase = async (git: GitRunner, { path, base }: WorktreeRecord) => {
 }
 
 const statusOf = async (deps: WorktreeDeps, record: WorktreeRecord): Promise<WorktreeStatus> => {
-  const exists = existsSync(record.path)
+  const exists = isWorktree(record.path)
   const [check, branch, ahead] = await Promise.all([
     removeCheck(deps, record),
     exists ? currentBranch(deps.git, record.path) : record.branch,
