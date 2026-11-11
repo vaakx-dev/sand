@@ -1,36 +1,44 @@
+import { ASSETS, type Bundle } from '../bundle/build'
 import { offlinePage } from './offline'
 
-const workerScript = `const offline = ${JSON.stringify(offlinePage)}
-const store = 'sand-shell-v1'
+const workerScript = (assets: string[]) => `const offline = ${JSON.stringify(offlinePage)}
+const assets = ${JSON.stringify(assets)}
+const store = 'sand-shell-v2'
 const options = { ignoreVary: true }
 
-self.addEventListener('install', () => self.skipWaiting())
+const isAsset = url => url.origin === location.origin && url.pathname.startsWith(${JSON.stringify(ASSETS)})
+const isFresh = response => response.ok && response.type === 'basic' && /immutable/.test(response.headers.get('cache-control') || '')
+
+const precache = async () => {
+  const cache = await caches.open(store)
+  const kept = new Set((await cache.keys()).map(key => new URL(key.url).pathname))
+  await cache.addAll(assets.filter(asset => !kept.has(asset)))
+}
+
+const prune = async () => {
+  const cache = await caches.open(store)
+  const wanted = new Set(assets)
+  const stale = (await cache.keys()).filter(key => isAsset(new URL(key.url)) && !wanted.has(new URL(key.url).pathname))
+  await Promise.all(stale.map(key => cache.delete(key)))
+}
+
+self.addEventListener('install', event => event.waitUntil(precache().then(() => self.skipWaiting())))
 
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(key => key !== store).map(key => caches.delete(key))))
+      .then(prune)
       .then(() => self.clients.claim()),
   )
 })
 
-const isScript = url => url.origin === location.origin && url.pathname === '/app.js' && url.searchParams.has('build')
-const isFresh = response => response.ok && response.type === 'basic' && /immutable/.test(response.headers.get('cache-control') || '')
-
-const keepOnly = async (cache, url) => {
-  const keys = await cache.keys()
-  await Promise.all(keys.filter(key => new URL(key.url).pathname === '/app.js' && key.url !== url).map(key => cache.delete(key)))
-}
-
-const script = async request => {
+const asset = async request => {
   const cache = await caches.open(store)
   const hit = await cache.match(request, options)
   if (hit) return hit
   const response = await fetch(request)
-  if (isFresh(response)) {
-    await cache.put(request, response.clone())
-    await keepOnly(cache, request.url)
-  }
+  if (isFresh(response)) await cache.put(request, response.clone())
   return response
 }
 
@@ -52,7 +60,7 @@ self.addEventListener('fetch', event => {
   const request = event.request
   if (request.method !== 'GET') return
   if (request.mode === 'navigate') return event.respondWith(navigate(request))
-  if (isScript(new URL(request.url))) event.respondWith(script(request))
+  if (isAsset(new URL(request.url))) event.respondWith(asset(request))
 })
 
 const pages = () => self.clients.matchAll({ type: 'window', includeUncontrolled: true })
@@ -86,8 +94,8 @@ self.addEventListener('notificationclick', event => {
 })
 `
 
-export const workerRoute = () =>
-  new Response(workerScript, {
+export const workerResponse = ({ assets }: Bundle) =>
+  new Response(workerScript([...assets.keys()]), {
     headers: {
       'content-type': 'text/javascript; charset=utf-8',
       'cache-control': 'no-store',

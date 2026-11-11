@@ -1,8 +1,9 @@
 import { kit } from '@sand/ui-kit/contract'
 import { definePlugin } from 'drydock'
 import { math, type MathRenderer } from '../contract'
+import { onIdle } from './integrations/idle'
 import { mathCss } from './style'
-import { typeset } from './typeset'
+import { loadRenderer, typeset } from './typeset'
 
 const renderer: MathRenderer = {
   inline: tex => typeset(tex, false),
@@ -16,5 +17,6 @@ export default definePlugin({
   apply(ctx) {
     ctx.kit.style(ctx, mathCss)
     ctx.provide(math, renderer)
+    ctx.effect(() => onIdle(() => void loadRenderer()))
   },
 })

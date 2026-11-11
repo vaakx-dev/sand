@@ -1,10 +1,13 @@
 import { homePcMeta } from '@sand/devices-contract'
+import type { Bundle } from '../bundle/build'
 import { pluginsOffMeta } from '../contract'
 import { firstPaintStyle, themeColors } from './first-paint'
 
 const attribute = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
 
-export const page = (build: string, pc: string, off: string[]) => `<!doctype html>
+const preloads = (paths: string[]) => paths.map(path => `<link rel="modulepreload" href="${attribute(path)}">`).join('\n  ')
+
+export const page = ({ entry, preload }: Bundle, pc: string, off: string[]) => `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -24,8 +27,9 @@ export const page = (build: string, pc: string, off: string[]) => `<!doctype htm
   <link rel="apple-touch-icon" href="/icons/192x192.png">
   <link rel="manifest" href="/manifest.webmanifest">
   ${firstPaintStyle}
+  ${preloads(preload)}
 </head>
 <body>
-  <script type="module" src="/app.js?build=${encodeURIComponent(build)}"></script>
+  <script type="module" src="${attribute(entry)}"></script>
 </body>
 </html>`
