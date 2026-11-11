@@ -11,6 +11,6 @@ export const createIdentityRoute = (thisPc: ThisPc, nonces: Nonces) => async (re
   if (!clientNonce || clientNonce.length > nonceLimit) return textReply(`expected ?${deviceParams.nonce}=`, 400)
   const { secret: nonce } = nonces.issue(true)
   const identity = await thisPc.identity()
-  const reply: IdentityReply = { ...identity, nonce, signature: thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)) }
+  const reply: IdentityReply = { ...identity, nonce, signature: await thisPc.signer.sign(identityProof(clientNonce, nonce, identity.id)) }
   return json(reply)
 }

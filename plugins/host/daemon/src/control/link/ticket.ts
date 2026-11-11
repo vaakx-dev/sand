@@ -17,7 +17,7 @@ const isGrant = (value: unknown): value is TicketGrant => isRecord(value) && typ
 const refusalOf = (value: unknown) => (isRecord(value) && typeof value.reason === 'string' && refusals.get(value.reason)) || refusedKey
 
 export const requestTicket = async (url: string, keys: PcKeys, nonce: string) => {
-  const body: TicketBody = { publicKey: keys.publicKey, nonce, signature: sign(ticketProof(nonce, keys.id, keys.publicKey), keys.secretKey) }
+  const body: TicketBody = { publicKey: keys.publicKey, nonce, signature: await sign(ticketProof(nonce, keys.id, keys.publicKey), keys.secretKey) }
   const response = await fetch(`${trimSlash(url)}${devicePaths.ticket}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

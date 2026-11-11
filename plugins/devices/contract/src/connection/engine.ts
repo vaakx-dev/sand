@@ -6,7 +6,7 @@ import type { ConnectionStatus, Diagnosis, Freshness } from './status'
 
 export interface Signer {
   publicKey: string
-  sign(payload: string): string
+  sign(payload: string): Promise<string>
 }
 
 export interface ConnectTarget {

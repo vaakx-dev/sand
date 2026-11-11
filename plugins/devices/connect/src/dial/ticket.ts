@@ -14,7 +14,7 @@ const isRefusal = (value: unknown): value is TicketRefusal =>
 const bodyOf = (response: Response): Promise<unknown> => response.json().catch(() => undefined)
 
 export const requestTicket = async (transport: Transport, signer: Signer, pc: string, nonce: string, timeout: number) => {
-  const body: TicketBody = { publicKey: signer.publicKey, nonce, signature: signer.sign(ticketProof(nonce, pc, signer.publicKey)) }
+  const body: TicketBody = { publicKey: signer.publicKey, nonce, signature: await signer.sign(ticketProof(nonce, pc, signer.publicKey)) }
   const response = await transport.fetch(devicePaths.ticket, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

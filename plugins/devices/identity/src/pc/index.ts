@@ -3,7 +3,7 @@ import { errorMessage } from '@sand/util'
 import { writePrivateJson } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { deviceIdOf, generateKeyPair, isKeyPair } from '../keys'
+import { deviceIdOf, generateKeyPair, isKeyPair, keysMatch } from '../keys'
 
 export interface PcKeys extends KeyPair {
   id: string
@@ -17,7 +17,7 @@ const readKeys = async (file: string): Promise<KeyPair> => {
     .catch((error: unknown) => {
       throw new Error(`${file} is not valid JSON: ${errorMessage(error)}`)
     })
-  if (!isKeyPair(saved)) throw new Error(`${file} does not hold a matching publicKey and secretKey`)
+  if (!isKeyPair(saved) || !keysMatch(saved)) throw new Error(`${file} does not hold a matching publicKey and secretKey`)
   return { publicKey: saved.publicKey, secretKey: saved.secretKey }
 }
 

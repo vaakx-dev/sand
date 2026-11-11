@@ -1,14 +1,12 @@
-import { div, dynamicChild, nav, span, type Props } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, nav, span, type Derive, type Props } from '@vaakx-dev/vrui'
 import type { Model } from './model'
 import { brand, footRow, groupList, navList, quietNavList } from './rows'
-import type { Nav } from './screens'
+import type { Built, Nav } from './screens'
 
-const screenNav = (model: Model) => () => model.screen.get()?.nav
-
-const appList = (model: Model, phone: boolean) => {
+const appList = (model: Model, screenNav: Derive<Nav | undefined>, phone: boolean) => {
   const menu = model.kit.contextMenu()
   return div(
-    { class: () => (screenNav(model)() ? 'hidden' : 'flex min-h-0 flex-1 flex-col') },
+    { class: () => (screenNav.get() ? 'hidden' : 'flex min-h-0 flex-1 flex-col') },
     brand(model, phone),
     navList(model, phone),
     div(
@@ -36,9 +34,11 @@ const screenList = (model: Model, { label, body }: Nav) => {
   )
 }
 
-export const sidebar = (model: Model, { class: extra, ...props }: Props<HTMLElement>) =>
-  nav(
+export const sidebar = (model: Model, screen: Derive<Built | undefined>, { class: extra, ...props }: Props<HTMLElement>) => {
+  const screenNav = derive(() => screen.get()?.nav)
+  return nav(
     { ...props, 'aria-label': 'Sidebar', class: ['flex h-full shrink-0 flex-col bg-neutral-950 px-2 py-2', extra], style: { width: '18rem' } },
-    appList(model, false),
-    dynamicChild(screenNav(model), shown => (shown ? screenList(model, shown) : null)),
+    appList(model, screenNav, false),
+    dynamicChild(screenNav, shown => (shown ? screenList(model, shown) : null)),
   )
+}

@@ -30,7 +30,7 @@ export const createTicketRoute =
     if (!parsed.success) return textReply('expected {publicKey, nonce, signature} as JSON', 400)
     const { publicKey, nonce, signature } = parsed.data
     if (!nonces.take(nonce)) return refuse({ reason: 'nonce' })
-    if (!verify(ticketProof(nonce, thisPc.id, publicKey), signature, publicKey)) return refuse({ reason: 'unknown' })
+    if (!(await verify(ticketProof(nonce, thisPc.id, publicKey), signature, publicKey))) return refuse({ reason: 'unknown' })
     const verdict = auth.identify(publicKey, visitor.source.local)
     if (!verdict.ok) return refuse(verdict.reason === 'removed' ? { reason: 'removed', at: verdict.at, by: verdict.by } : { reason: 'unknown' })
     const { secret, expires } = tickets.issue({ ...verdict.caller, name: verdict.name })

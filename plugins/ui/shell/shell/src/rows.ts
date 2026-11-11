@@ -178,12 +178,32 @@ export const footRow = (model: Model, phone: boolean) =>
     ),
   )
 
+const sameLook = (shown: ShellRow, next: ShellRow) =>
+  shown.label === next.label &&
+  shown.end === next.end &&
+  shown.at === next.at &&
+  shown.status === next.status &&
+  shown.lead === next.lead &&
+  shown.detail === next.detail &&
+  shown.trail === next.trail &&
+  shown.place?.label === next.place?.label &&
+  shown.place?.mark === next.place?.mark
+
+const looksOf = (row: Sig<ShellRow>) => {
+  let shown: ShellRow | undefined
+  return derive(() => {
+    const next = row.get()
+    if (!shown || !sameLook(shown, next)) shown = next
+    return shown
+  })
+}
+
 export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, look: RowLook) => {
   const { workRow, workRowBody } = model.kit
   const current = () => model.isCurrent(row.get().to)
   return workRow(
     { current, large: look.phone, ...rowMenu(menu, () => row.get(), () => model.open(row.get().to)) },
-    dynamicChild(row, shown =>
+    dynamicChild(looksOf(row), shown =>
       workRowBody({
         title: shown.label,
         large: look.phone,

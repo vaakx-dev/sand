@@ -1,4 +1,4 @@
-import { div, dynamicChild, effect, untrack } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, effect, untrack } from '@vaakx-dev/vrui'
 import { deskFrames } from './frames'
 import { drawerReach, type Model } from './model'
 import { sidebar } from './sidebar'
@@ -32,11 +32,12 @@ const scrim = (model: Model) => {
 }
 
 export const deskView = (model: Model) => {
+  const screen = derive(model.screen)
   const view = div(
     { class: 'relative flex min-h-0 min-w-0 flex-1' },
     scrim(model),
-    sidebar(model, { class: () => drawerLook(model), style: () => drawerOffset(model) }),
-    dynamicChild(model.screen, built => (built ? deskFrames(model, built) : div({ class: 'flex-1' }))),
+    sidebar(model, screen, { class: () => drawerLook(model), style: () => drawerOffset(model) }),
+    dynamicChild(screen, built => (built ? deskFrames(model, built) : div({ class: 'flex-1' }))),
   )
   effect(() => {
     if (!model.drawerOpen.get()) return

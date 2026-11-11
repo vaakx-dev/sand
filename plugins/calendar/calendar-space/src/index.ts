@@ -34,6 +34,7 @@ export default definePlugin({
     }
 
     const screen = (found: Shell, route: () => Route) => {
+      model.open()
       const form = (parts: Pick<FormParts, 'edit' | 'at'>) => found.sheet(formSheet(kit, { ...parts, calendars: model.writable.get(), create: model.create }))
       const add = (at?: number) => form(at === undefined ? {} : { at })
       const edit = (event: Occurrence) => form({ edit: { event, update: (patch, scope) => model.update(targetOf(event), patch, scope) } })
