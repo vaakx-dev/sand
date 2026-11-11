@@ -1,3 +1,4 @@
+import { writeAtomic } from '@sand/util/fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { z } from 'zod'
@@ -13,7 +14,7 @@ export const loadMoments = async (home: string) => {
     const rest = off.filter(other => other !== kind)
     off = on ? rest : [...rest, kind]
     await mkdir(dirname(file), { recursive: true })
-    await Bun.write(file, JSON.stringify({ off }))
+    await writeAtomic(file, JSON.stringify({ off }))
   }
 
   return { off: () => off, wanted: (kind: MomentKind) => !off.includes(kind), set }

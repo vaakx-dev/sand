@@ -1,4 +1,5 @@
 import { serial } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 import { chosenModel, tiers } from './contract'
 
@@ -27,7 +28,7 @@ export const createStore = async (file: string) => {
     get: () => current,
     async save(next: Saved) {
       current = next
-      await queue(() => Bun.write(file, `${JSON.stringify(next, null, 2)}\n`))
+      await queue(() => writeAtomic(file, `${JSON.stringify(next, null, 2)}\n`))
     },
   }
 }

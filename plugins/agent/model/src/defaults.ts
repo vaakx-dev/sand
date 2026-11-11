@@ -1,4 +1,5 @@
 import { isRecord, serial } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { SessionSettings, SettingsPatch } from './contract'
 import { clean } from './settings'
@@ -25,7 +26,7 @@ export const createDefaults = async (home: string): Promise<Defaults> => {
     get: () => saved,
     async save(patch) {
       saved = clean({ ...saved, ...patch })
-      await queue(() => Bun.write(file, `${JSON.stringify(saved, null, 2)}\n`))
+      await queue(() => writeAtomic(file, `${JSON.stringify(saved, null, 2)}\n`))
     },
   }
 }

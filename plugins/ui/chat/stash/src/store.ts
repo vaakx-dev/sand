@@ -1,4 +1,5 @@
 import { serial } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { z } from 'zod'
 import { entry, type Entry } from './contract'
 
@@ -9,7 +10,7 @@ export const createStore = async (file: string, changed: (entries: Entry[]) => v
   const save = async (next: Entry[]) => {
     entries = next
     changed(entries)
-    await queue(() => Bun.write(file, JSON.stringify(entries)))
+    await queue(() => writeAtomic(file, JSON.stringify(entries)))
   }
   return {
     list: () => entries,
