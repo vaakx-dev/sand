@@ -15,3 +15,8 @@ They want to know what the pieces are, how they fit together, what's missing and
 - Name the risks and open questions.
 
 Ask yourself: "Could a technical manager who hasn't opened the code follow this?" If not, step back a level.
+
+## Bugs found and work beyond the ask
+
+- For each bug you found, say what it breaks and whether you fixed it. If you didn't, offer to.
+- For anything you built beyond the request, say in one line why the change needed it.
