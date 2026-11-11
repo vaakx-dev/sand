@@ -157,6 +157,7 @@ describe.each(phones)('on a $name', size => {
     expect(await until(() => sheet.count(), count => count === 0)).toBe(0)
     expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
     await tap(page, 'Back')
+    expect(await screen(page, 'home')).toBe('home')
   })
 
   test('Settings pushes its list, then a page, and Back walks out', async () => {

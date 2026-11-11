@@ -13,7 +13,7 @@ const label = 'Needs you'
 
 export default definePlugin({
   name: 'needs-you',
-  description: "Everything waiting on you in one place: questions and work ready to merge, each settled where it shows",
+  description: "Everything waiting on you in one place: questions, sign-ins and work ready to merge, each settled where it shows",
   inject: { kit, shell },
   apply(ctx) {
     const host = createList()
@@ -23,7 +23,7 @@ export default definePlugin({
 
     ctx.provide(needs, host)
     ctx.watch(keys, found => found?.bind({ key: 'mod+j', global: true, passthrough: true, run: () => host.open() }))
-    ctx.watch(palette, found => found?.source({ id: 'needs', order: 5, items: () => [{ id: 'needs:open', group: 'Actions', icon: 'inbox', label, search: 'needs waiting questions review', run: () => host.open() }] }))
+    ctx.watch(palette, found => found?.source({ id: 'needs', order: 5, items: () => [{ id: 'needs:open', group: 'Actions', icon: 'inbox', label, search: 'needs waiting questions sign-in key review', run: () => host.open() }] }))
     ctx.effect(() =>
       ctx.shell.nav({
         id: 'needs',

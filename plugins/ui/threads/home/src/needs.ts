@@ -163,3 +163,32 @@ export const questionNeeds = (parts: NeedsParts) => ({
     })
   },
 })
+
+export const secretNeeds = (parts: NeedsParts) => ({
+  id: 'secrets',
+  items: (): Need[] => {
+    parts.pulse.version.get()
+    return visibleThreads(parts.threads.list()).flatMap(thread => {
+      const waiting = thread.waiting
+      if (waiting?.kind !== 'secret') return []
+      const open = () => openThread(parts.ctx, parts.shell, thread.id)
+      return [
+        {
+          id: `secret:${thread.id}:${waiting.call}`,
+          kind: 'secret' as const,
+          who: titleOf(thread),
+          title: waiting.title,
+          at: thread.started ?? thread.info.updated,
+          thread: thread.id,
+          open,
+          render: () =>
+            div(
+              { class: 'flex flex-col gap-2' },
+              div({ class: 'text-sm wrap-anywhere text-neutral-200' }, waiting.title),
+              div({ class: 'flex justify-end' }, parts.kit.primaryAction({ size: 'sm', onClick: open }, 'Open thread')),
+            ),
+        },
+      ]
+    })
+  },
+})

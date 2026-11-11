@@ -18,7 +18,7 @@ import { chipSources } from './chips'
 import { pageSize, threadGroups } from './groups'
 import { threadEntries } from './items/items'
 import { launch, newThread } from './launch/launch'
-import { questionNeeds, reviewNeeds } from './needs'
+import { questionNeeds, reviewNeeds, secretNeeds } from './needs'
 import { sessionSource } from './palette/source'
 import { wakeTimer } from './snooze/wake'
 
@@ -63,7 +63,7 @@ export default definePlugin({
     for (const source of chipSources({ ...parts, pulse: events, now: () => now.get(), changes })) ctx.effect(() => ctx.shell.chip(source))
     ctx.watch(needs, found => {
       if (!found) return
-      const sources = [reviewNeeds({ ...parts, wire: ctx.wire, changes, pulse: events }), questionNeeds({ ...parts, wire: ctx.wire, changes, pulse: events })]
+      const sources = [reviewNeeds({ ...parts, wire: ctx.wire, changes, pulse: events }), questionNeeds({ ...parts, wire: ctx.wire, changes, pulse: events }), secretNeeds({ ...parts, wire: ctx.wire, changes, pulse: events })]
       const stops = sources.map(source => found.source(source))
       return () => stops.forEach(stop => stop())
     })

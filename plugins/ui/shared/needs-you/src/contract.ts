@@ -1,7 +1,7 @@
 import type { Child } from '@vaakx-dev/vrui'
 import { service, type Dispose } from 'drydock'
 
-export type NeedKind = 'question' | 'review'
+export type NeedKind = 'question' | 'secret' | 'review'
 
 export interface Need {
   id: string

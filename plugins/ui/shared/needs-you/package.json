@@ -1,7 +1,7 @@
 {
   "name": "@sand/needs-you",
   "version": "0.0.0",
-  "description": "Everything waiting on you in one place: questions and work ready to merge, each settled where it shows",
+  "description": "Everything waiting on you in one place: questions, sign-ins and work ready to merge, each settled where it shows",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"

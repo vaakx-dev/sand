@@ -5,6 +5,7 @@ import type { Need, NeedKind } from './contract'
 
 const groups: { kind: NeedKind; label: string }[] = [
   { kind: 'question', label: 'Questions' },
+  { kind: 'secret', label: 'Sign-ins and keys' },
   { kind: 'review', label: 'Ready to review' },
 ]
 
