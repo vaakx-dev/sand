@@ -43,9 +43,18 @@ export type BotHold = 'paused' | 'limit'
 export type BotStatus = 'idle' | 'working' | 'waiting' | 'failed'
 
 export interface LastLine {
+  entry: string
   role: 'user' | 'assistant'
   text: string
   at: number
+  gist?: string
+}
+
+export const gistEntry = 'bot-gist'
+
+export interface GistEntry {
+  entry: string
+  text: string
 }
 
 export const botName = (bot: Pick<Bot, 'name'>) => bot.name || 'New bot'
