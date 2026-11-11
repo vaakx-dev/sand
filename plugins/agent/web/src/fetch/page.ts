@@ -1,3 +1,4 @@
+import { charStart } from '@sand/util'
 import type { Download } from './download'
 import { htmlToMarkdown } from './markdown'
 
@@ -17,7 +18,8 @@ export const pageOf = ({ url, type, body }: Download): Page => {
 
 export const pagePart = ({ url, title, text }: Page, offset: number) => {
   if (offset > 0 && offset >= text.length) throw new Error(`The page has ${text.length} characters, so offset ${offset} is past the end`)
-  const end = offset + partLength
+  const start = charStart(text, offset)
+  const end = charStart(text, offset + partLength)
   const more = end < text.length ? `\n\n[Characters ${offset} to ${end} of ${text.length}. Call web_fetch with offset ${end} for more.]` : ''
-  return `${title ? `Title: ${title}\n` : ''}URL: ${url}\n\n${text.slice(offset, end) || '(The page has no readable text.)'}${more}`
+  return `${title ? `Title: ${title}\n` : ''}URL: ${url}\n\n${text.slice(start, end) || '(The page has no readable text.)'}${more}`
 }

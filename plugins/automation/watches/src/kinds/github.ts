@@ -1,5 +1,5 @@
 import type { GitHub } from '@sand/github/contract'
-import { oneLine, plural } from '@sand/util'
+import { clip, oneLine, plural } from '@sand/util'
 import { z } from 'zod'
 import type { Change, Kind, KindContext } from '../contract'
 
@@ -71,7 +71,6 @@ const normal = (type: string) => type.toLowerCase().replace(/[^a-z]/g, '').repla
 
 const later = (id: string, than: string | undefined) => than === undefined || BigInt(id) > BigInt(than)
 
-const clip = (text: string) => (text.length > detailMost ? `${text.slice(0, detailMost)}…` : text)
 
 const branch = (ref: string | null | undefined) => ref?.replace(/^refs\/(heads|tags)\//, '') ?? ''
 
@@ -109,7 +108,7 @@ const detailOf = ({ commits, pull_request, issue, comment, review, release }: Pa
     pull_request?.html_url ?? issue?.html_url,
   ]
   const text = parts.filter(part => part?.trim()).join('\n\n')
-  return text ? clip(text) : undefined
+  return text ? clip(text, detailMost) : undefined
 }
 
 const eventChange = (repo: string, event: Event): Change => {

@@ -1,12 +1,13 @@
 import { type Block, type DocumentBlock, fileText, type Message, type ToolResultContent, unavailableText } from '@sand/chats/contract'
 import type { Media } from '@sand/media/contract'
+import { head } from '@sand/util'
 
 const textLimit = 16_000
 const resultLimit = 2_000
 const inputLimit = 800
 
 const clip = (text: string, limit: number) =>
-  text.length <= limit ? text : `${text.slice(0, limit)}\n[… ${text.length - limit} more characters]`
+  text.length <= limit ? text : `${head(text, limit)}\n[… ${text.length - limit} more characters]`
 
 const documentText = (block: DocumentBlock, media: Media) =>
   block.mediaType === 'text/plain' ? (media.data(block) ?? unavailableText(block)) : `[pdf${block.name ? ` ${block.name}` : ''}]`

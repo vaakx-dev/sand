@@ -1,4 +1,5 @@
 import { findBrowser, launch, type Browser, type CdpEvent } from '@sand/cdp'
+import { clip } from '@sand/util'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -50,7 +51,7 @@ const textOf = ({ type, value, description, preview }: RemoteObject) =>
   preview ? `{ ${preview.properties.map(property => `${property.name}: ${property.value}`).join(', ')} }` : String(value ?? description ?? type)
 
 const message = (level: ConsoleLevel | undefined, text: string): ConsoleMessage | undefined =>
-  level && { level, text: text.length > maxConsoleText ? `${text.slice(0, maxConsoleText)}…` : text }
+  level && { level, text: clip(text, maxConsoleText) }
 
 const consoleMessage = (event: PageEvent) => {
   if (event.method === 'Runtime.consoleAPICalled') return message(levels[event.params.type], event.params.args.map(textOf).join(' '))

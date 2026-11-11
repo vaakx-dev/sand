@@ -1,3 +1,4 @@
+import { head } from '@sand/util'
 import type { ToolRenderer, ToolView } from '../contract'
 import type { Kit } from '@sand/ui-kit/contract'
 import { div } from '@vaakx-dev/vrui'
@@ -25,7 +26,7 @@ const inputText = (input: unknown) => {
     .join('\n')
 }
 
-const clip = (value: string) => (value.length > clipAt ? `${value.slice(0, clipAt)}\n… ${value.length - clipAt} more characters` : value)
+const clip = (value: string) => (value.length > clipAt ? `${head(value, clipAt)}\n… ${value.length - clipAt} more characters` : value)
 
 const section = ({ codeBlock, fold }: Kit, body: string, danger = false) => {
   const text = clip(body)

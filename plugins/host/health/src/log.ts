@@ -1,3 +1,4 @@
+import { head } from '@sand/util'
 import { join } from 'node:path'
 
 const tailBytes = 64 * 1024
@@ -12,7 +13,7 @@ export const serverLogTail = async (home: string): Promise<string[]> => {
     const lines = (await source.slice(start).text()).split(/\r?\n/)
     if (start > 0) lines.shift()
     while (lines.length && !lines.at(-1)) lines.pop()
-    return lines.slice(-tailLines).map(line => line.replace(ansi, '').slice(0, maxLine))
+    return lines.slice(-tailLines).map(line => head(line.replace(ansi, ''), maxLine))
   } catch {
     return []
   }

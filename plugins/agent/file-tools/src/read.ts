@@ -1,5 +1,6 @@
 import type { Attachments } from '@sand/attachments/contract'
 import type { Tool } from '@sand/tools/contract'
+import { head } from '@sand/util'
 import { isFolder } from '@sand/util/fs'
 import { resolve } from 'node:path'
 import { z } from 'zod'
@@ -27,7 +28,7 @@ export const readTool = (attachments: () => Attachments): Tool<typeof input> => 
     if (text.slice(0, 8192).includes('\0')) throw new Error(`${path} is a binary file`)
     const lines = text.split(/\r?\n/)
     const shown = lines.slice(offset - 1, offset - 1 + limit)
-    const numbered = shown.map((line, index) => `${String(offset + index).padStart(6)}\t${line.slice(0, 2000)}`)
+    const numbered = shown.map((line, index) => `${String(offset + index).padStart(6)}\t${head(line, 2000)}`)
     const remaining = lines.length - (offset - 1 + shown.length)
     return numbered.join('\n') + (remaining > 0 ? `\n… ${remaining} more lines` : '')
   },

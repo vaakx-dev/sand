@@ -396,6 +396,7 @@
         "@sand/model": "workspace:*",
         "@sand/transcript": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
         "@sand/web-client": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
@@ -1146,6 +1147,7 @@
         "@sand/harness": "workspace:*",
         "@sand/report": "workspace:*",
         "@sand/usage": "workspace:*",
+        "@sand/util": "workspace:*",
       },
     },
     "plugins/connections/connections": {
@@ -2388,6 +2390,7 @@
       "dependencies": {
         "@sand/reactive": "workspace:*",
         "@sand/ui-kit": "workspace:*",
+        "@sand/util": "workspace:*",
         "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
         "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
       },

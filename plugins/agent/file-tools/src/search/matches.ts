@@ -1,3 +1,4 @@
+import { head } from '@sand/util'
 import { isFolder } from '@sand/util/fs'
 import { basename, dirname, resolve } from 'node:path'
 import { lines, ripgrep, scope } from './ripgrep'
@@ -14,7 +15,7 @@ interface Query {
   signal: AbortSignal
 }
 
-const matchLine = (file: string, line: number | string, text: string) => `${file}:${line}: ${text.trim().slice(0, 300)}`
+const matchLine = (file: string, line: number | string, text: string) => `${file}:${line}: ${head(text.trim(), 300)}`
 
 async function* withRipgrep(binary: string, { pattern, root, glob, ignoreCase, includeIgnored, signal }: Query) {
   const directory = await isFolder(root)

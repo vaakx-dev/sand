@@ -1,5 +1,5 @@
 import type { ShellRunner } from '@sand/shell/contract'
-import { oneLine } from '@sand/util'
+import { head, oneLine } from '@sand/util'
 import { expandHome } from '@sand/util/fs'
 import { homedir } from 'node:os'
 import { z } from 'zod'
@@ -41,15 +41,15 @@ export const command = (runner: ShellRunner): Kind<typeof input> => ({
       const hash = String(Bun.hash(`${outcome.code}\n${output}`))
       const seen = seenSchema.parse(context.state)
       if (seen?.hash === hash) return
-      context.save({ hash, code: outcome.code, output: output.slice(0, keptLength) })
+      context.save({ hash, code: outcome.code, output: head(output, keptLength) })
       if (!seen) return
       const exit = seen.code === outcome.code ? `Exit code ${outcome.code}` : `Exit code went from ${seen.code} to ${outcome.code}`
-      const diff = lineDiff(seen.output, output.slice(0, keptLength))
+      const diff = lineDiff(seen.output, head(output, keptLength))
       context.emit({
         at: Date.now(),
         from: command,
         summary: `The output of ${oneLine(command, 80)} changed`,
-        detail: [exit, diff && `Changed lines:\n${diff}`, `Output now:\n${output.slice(0, shownLength)}`].filter(Boolean).join('\n\n'),
+        detail: [exit, diff && `Changed lines:\n${diff}`, `Output now:\n${head(output, shownLength)}`].filter(Boolean).join('\n\n'),
       })
     })
   },
