@@ -1,4 +1,4 @@
-import { derive, div, effect, list, onTimeout, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, effect, list, onTimeout, sig, untrack, type Sig } from '@vaakx-dev/vrui'
 import { sameScreen, screenKey } from './address'
 import type { Route } from './contract'
 import { phoneFrame } from './frames'
@@ -62,11 +62,17 @@ export const phoneView = (model: Model) => {
   const slotView = (slot: Sig<Slot>, index: Sig<number>) => {
     const depth = () => (slot.get().leaving ? -1 : top() - index.get())
     const entering = fresh.delete(slot.get().key)
+    const settledBelow = sig(false)
+    effect(() => {
+      if (depth() > 0) onTimeout(() => settledBelow.set(true), settleMs)
+      else settledBelow.set(false)
+    })
+    const covered = () => settledBelow.get() && (depth() > 1 || model.stackDrag.get() === undefined)
     return div(
       {
         class: () => ['absolute inset-0 flex flex-col bg-neutral-900', motion(model, depth())],
-        style: () => ({ overflow: 'clip', ...offset(model, depth()) }),
-        inert: () => depth() !== 0,
+        style: () => ({ overflow: 'clip', ...offset(model, depth()), ...(covered() && { contentVisibility: 'hidden' }) }),
+        inert: () => depth() < 0,
         ...(entering && { onMount: slideIn }),
       },
       screenOf(model, slot.get()),

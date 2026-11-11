@@ -31,7 +31,7 @@ export interface ThreadService extends Threads {
   restored(): void
 }
 
-export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void>): ThreadService => {
+export const createThreads = (ctx: Context, wire: Wire, pcs: Pcs, store: Store, hydrate: (id: string) => Promise<void> | undefined): ThreadService => {
   const { install, load } = threadLoader(ctx, wire, store, hydrate)
   const pages = threadPages(wire, store)
   const creators = threadCreators()

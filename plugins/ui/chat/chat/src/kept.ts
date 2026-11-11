@@ -1,4 +1,4 @@
-import { collectScope, disposeAll, div, list, mount, onMount, scoped, sig, untrack, type Disposer } from '@vaakx-dev/vrui'
+import { collectScope, disposeAll, div, list, mount, onIdle, onMount, scoped, sig, untrack, type Disposer } from '@vaakx-dev/vrui'
 import type { ChatView } from './controller'
 
 interface Kept {
@@ -21,6 +21,7 @@ const holder = (chat: ChatView, leave: () => void) => {
 
 export const keptViews = (build: (id: string) => ChatView) => {
   const kept = new Map<string, Kept>()
+  const preparing = new Map<string, () => void>()
   const parked = sig<Kept[]>([])
   const unmount = mount(
     document.body,
@@ -69,10 +70,30 @@ export const keptViews = (build: (id: string) => ChatView) => {
     return holder(entry.chat, () => park(entry))
   }
 
+  const prepareNow = (id: string) => {
+    if (kept.has(id) || kept.size >= keptChats) return
+    const entry = keep(id)
+    park(entry)
+    entry.chat.prepare()
+  }
+
+  const prepare = (id: string) => {
+    if (kept.has(id) || preparing.has(id)) return
+    const stop = collectScope(() =>
+      onIdle(() => {
+        preparing.delete(id)
+        prepareNow(id)
+      }),
+    ).value
+    preparing.set(id, stop)
+  }
+
   const clear = () => {
+    for (const stop of preparing.values()) stop()
+    preparing.clear()
     for (const entry of [...kept.values()]) drop(entry)
     unmount()
   }
 
-  return { view, clear }
+  return { view, prepare, clear }
 }

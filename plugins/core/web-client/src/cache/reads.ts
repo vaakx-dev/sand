@@ -19,7 +19,11 @@ const cachedThread = (pick: PickStore, scope: string, id: string) => {
   }
 }
 
-export const readThread = (scope: string, id: string) => transact('readonly', pick => cachedThread(pick, scope, id))
+export const readThreads = (scope: string, ids: string[]) =>
+  transact('readonly', pick => {
+    const reads = ids.map(id => [id, cachedThread(pick, scope, id)] as const)
+    return () => new Map(reads.map(([id, read]) => [id, read()]))
+  })
 
 export const readScope = (scope: string, asked: string | undefined) =>
   transact('readonly', pick => {

@@ -187,7 +187,7 @@ export const chatController = (ctx: ChatContext, id: string) => {
     unqueue()
   }
 
-  return { node: root, show, hide }
+  return { node: root, show, hide, prepare: render }
 }
 
 export type ChatView = ReturnType<typeof chatController>
