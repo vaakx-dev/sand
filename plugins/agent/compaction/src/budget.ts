@@ -1,6 +1,7 @@
-import type { LLM } from '@sand/accounts/contract'
+import type { LLM, LLMRequest } from '@sand/accounts/contract'
 import type { ContextUsage } from './contract'
 import type { CompactionConfig } from './config'
+import { partsOf } from './measure/parts'
 
 const fallbackWindow = 200_000
 
@@ -19,9 +20,10 @@ export const budgetOf = (llm: LLM, config: CompactionConfig, model?: string): Bu
   return { window, start: limit - Math.min(config.background, quarter), limit, keep: Math.min(config.keep, quarter) }
 }
 
-export const usageOf = ({ window, limit }: Budget, used: number, compacting = false): ContextUsage => ({
+export const usageOf = ({ window, limit }: Budget, request: LLMRequest, used: number, compacting = false): ContextUsage => ({
   used,
   limit,
   window,
   ...(compacting && { compacting }),
+  parts: partsOf(request, used),
 })

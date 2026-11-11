@@ -33,7 +33,6 @@
           "shell",
           "web-tools",
           "logins",
-          "approvals",
           "usage",
           "palette",
           "picker",
@@ -88,7 +87,6 @@
           "shell",
           "web-tools",
           "logins",
-          "approvals",
           "usage",
           "palette",
           "mcp",
@@ -319,15 +317,6 @@
           "transcript"
         ]
       },
-      "approvals": {
-        "kind": "capability",
-        "label": "Approvals",
-        "summary": "Asks you before agents act",
-        "stops": "Agents stop asking before they act.",
-        "needs": [
-          "engine"
-        ]
-      },
       "schedules": {
         "kind": "capability",
         "label": "Schedules",
@@ -401,7 +390,6 @@
   },
   "devDependencies": {
     "@sand/accounts": "workspace:*",
-    "@sand/approvals": "workspace:*",
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
     "@sand/calendar": "workspace:*",

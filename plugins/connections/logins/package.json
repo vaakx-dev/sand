@@ -37,7 +37,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@sand/approvals": "workspace:*",
     "@sand/bot-turns": "workspace:*",
     "@sand/harness": "workspace:*",
     "@sand/replay": "workspace:*"

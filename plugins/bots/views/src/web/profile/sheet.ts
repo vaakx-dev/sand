@@ -166,7 +166,6 @@ const foot = (parts: Parts, id: string, bot: Bot, close: () => void) => {
   const pause = () => void parts.store.update(id, { paused: !paused() }).catch(error => parts.ctx.report(error))
   const remove = () => {
     close()
-    parts.tabs.forget(id)
     parts.ctx.shell.open({ kind: homeRoute }, { replace: true })
     void parts.store.remove(id).catch(error => parts.ctx.report(error))
   }

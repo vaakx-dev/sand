@@ -59,11 +59,10 @@ export interface Stale {
   thread?: string
   partial?: Message
   outputs: Record<string, string>
-  waits: WaitReason[]
   recoveries: number
 }
 
-type StaleRow = Pick<Row, 'id' | 'owner' | 'conversation' | 'provider_thread' | 'partial' | 'outputs' | 'waiting' | 'recoveries'>
+type StaleRow = Pick<Row, 'id' | 'owner' | 'conversation' | 'provider_thread' | 'partial' | 'outputs' | 'recoveries'>
 
 const waitsOf = (waiting: string | null): WaitReason[] => (waiting ? JSON.parse(waiting) : [])
 
@@ -97,7 +96,6 @@ const staleOf = (row: StaleRow): Stale => ({
   ...(row.provider_thread && { thread: row.provider_thread }),
   ...(row.partial && { partial: JSON.parse(row.partial) }),
   outputs: row.outputs ? JSON.parse(row.outputs) : {},
-  waits: waitsOf(row.waiting),
   recoveries: row.recoveries,
 })
 
@@ -133,9 +131,8 @@ export const createTurnStore = (db: Database) => {
     'update turns set lease = $lease where holder = $holder and ended is null returning id, cancel',
   )
   const cancelled = db.query('update turns set cancel = 1 where id = $id and ended is null')
-  const released = db.query("update turns set holder = '', lease = 0, recoveries = 0 where id = $id and holder = $holder and ended is null")
   const expired = db.query<StaleRow, { owner: Owner; holder: string; now: number }>(
-    'select id, owner, conversation, provider_thread, partial, outputs, waiting, recoveries from turns where owner = $owner and ended is null and lease <= $now and holder != $holder',
+    'select id, owner, conversation, provider_thread, partial, outputs, recoveries from turns where owner = $owner and ended is null and lease <= $now and holder != $holder',
   )
   const adopted = db.query<Row, { id: string; holder: string; lease: number; now: number }>(
     `update turns set holder = $holder, lease = $lease, status = 'running', waiting = null, recoveries = recoveries + 1
@@ -202,7 +199,6 @@ export const createTurnStore = (db: Database) => {
       }).changes > 0,
     renew: (holder: string, lease: number) => renewed.all({ holder, lease }),
     cancel: (id: string) => void cancelled.run({ id }),
-    release: (id: string, holder: string) => void released.run({ id, holder }),
     expired: (owner: Owner, holder: string) => expired.all({ owner, holder, now: Date.now() }).map(staleOf),
     lose: (id: string) => lost.run({ id, now: Date.now() }).changes > 0,
     adopt(id: string, holder: string, lease: number) {

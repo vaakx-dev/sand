@@ -1,0 +1,21 @@
+{
+  "name": "@sand/inspector-helpers",
+  "version": "0.0.0",
+  "description": "The inspector's helpers row: the sub-agents a thread has running",
+  "type": "module",
+  "sand": {
+    "feature": "threads",
+    "web": "./src/index.ts",
+    "label": "Helpers row",
+    "summary": "Shows the sub-agents a thread has running"
+  },
+  "dependencies": {
+    "@sand/inspector": "workspace:*",
+    "@sand/jobs": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

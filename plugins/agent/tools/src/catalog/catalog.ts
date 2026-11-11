@@ -1,9 +1,9 @@
 import type { ToolSpec } from '@sand/accounts/contract'
 import type { Message, ToolCallBlock } from '@sand/chats/contract'
 import type { Conversation, Owner } from '@sand/engine/contract'
-import type { Gate, GroupState, Offer, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
+import type { GroupState, Offer, Tool, ToolGroup, ToolLoad, Tools } from '../contract'
 import { z } from 'zod'
-import { actOf, run } from '../run'
+import { run } from '../run'
 import type { Choices } from './choices'
 import { findName, findTool } from './find'
 import { foundIn } from './found'
@@ -22,7 +22,6 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
   const registered = new Map<Tool, string>()
   const groups = new Map<string, ToolGroup>()
   const offers = new Map<Owner, Offer>()
-  let gated: Gate | undefined
 
   const chosen = (group: ToolGroup) => choices.get(group.name) ?? group.load
 
@@ -96,9 +95,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
 
   const effect = (call: ToolCallBlock, conversation: Conversation) => {
     const tool = resolve(call.name, conversation)
-    if (!tool || call.malformed !== undefined) return undefined
-    const parsed = tool.input.safeParse(call.input)
-    return parsed.success ? actOf(tool, parsed.data, conversation).effect : undefined
+    return tool && call.malformed === undefined ? (tool.effect ?? 'run') : undefined
   }
 
   const service: Tools = {
@@ -108,13 +105,6 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
       if (offers.has(owner)) throw new Error(`${owner} conversations already say what they offer tools`)
       changes(() => offers.set(owner, offer))
       return () => changes(() => offers.get(owner) === offer && offers.delete(owner))
-    },
-    gate(gate) {
-      if (gated) throw new Error('Tool calls already have a gate')
-      gated = gate
-      return () => {
-        if (gated === gate) gated = undefined
-      }
     },
     groups: states,
     async choose(name, load) {
@@ -126,7 +116,7 @@ export const createCatalog = (choices: Choices, changed: () => void) => {
     notes: conversation => usable(conversation).flatMap(tool => (tool.environment ? [tool.environment] : [])),
     parallel: (call, conversation) => resolve(call.name, conversation)?.parallel === true,
     effect,
-    run: (call, context) => run(resolve(call.name, context.conversation), call, context, gated),
+    run: (call, context) => run(resolve(call.name, context.conversation), call, context),
   }
   return service
 }

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { answerEntry, type AskAnswer, codeEntry, type CodeRequest } from '../contract'
 import { type Saved, websiteOf } from '../service'
 import type { Unanswered } from '../waits'
-import { computerInput, fillerOf, group, loginAct, loginInput, type ToolDeps } from './deps'
+import { computerInput, fillerOf, group, loginInput, type ToolDeps } from './deps'
 import { filledText } from './fill'
 
 const answerTimeout = 10 * 60_000
@@ -54,7 +54,7 @@ export const codeTool = (deps: ToolDeps): Tool<typeof input> => ({
   input,
   needs: ['computer'],
   timeoutMs: answerTimeout + settleGrace,
-  act: ({ login }, conversation) => (deps.logins.find(login).totp ? loginAct(deps, login, conversation) : { effect: 'read' }),
+  effect: 'read',
   async run({ login, prompt, ref, computer }, context) {
     const entry = deps.logins.find(login)
     const site = websiteOf(entry)

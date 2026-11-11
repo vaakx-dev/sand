@@ -33,12 +33,12 @@ export default definePlugin({
     ctx.on(stepSettle, (request, conversation, _turn, usage) => {
       const used = tokensOf(usage)
       tracker.done(conversation.id, request, used)
-      ctx.emit(contextUsage, conversation, usageOf(compactor.budget(request), used))
+      ctx.emit(contextUsage, conversation, usageOf(compactor.budget(request), request, used))
     })
 
     const read = async (session: Session) => {
       const request = await ctx.get(providerThreads)?.view(session)
-      return request && usageOf(budget(session), tracker.project(session.id, request))
+      return request && usageOf(budget(session), request, tracker.project(session.id, request))
     }
     ctx.watch(server, found => (found ? serveUsage(ctx, found, read) : undefined))
   },

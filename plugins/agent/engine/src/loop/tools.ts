@@ -1,7 +1,7 @@
 import { errorResult, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import type { ToolContext } from '@sand/tools/contract'
 import { errorMessage, untilAborted } from '@sand/util'
-import { type Conversation, type Conversations, HandedOver, toolContent } from '../contract'
+import { type Conversation, type Conversations, toolContent } from '../contract'
 import type { EngineContext } from '../context'
 
 export interface Report {
@@ -25,7 +25,6 @@ const settle = async <C extends Conversation>(
   try {
     return await untilAborted(ctx.tools.run(call, { ...context, progress }), context.signal)
   } catch (error) {
-    if (context.signal.reason instanceof HandedOver) throw error
     if (context.signal.aborted) return errorResult(call, 'Interrupted: the user stopped the turn before this call finished.')
     return errorResult(call, errorMessage(error))
   }

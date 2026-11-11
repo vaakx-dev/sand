@@ -22,6 +22,7 @@ import { layer } from './layer'
 import { fileKindMark } from './marks/file-kind'
 import { lineStat } from './marks/line-stat'
 import { markerLine } from './marks/marker'
+import { botFace } from './marks/face'
 import { monogram } from './marks/monogram'
 import { badge, checkMark, chevron, doneMark, dot, elapsed, okMark, progressSteps, shrinkBadge, spinner, starMark, statusLine, withDot, working } from './marks/marks'
 import { keycap } from './marks/keycap'
@@ -47,11 +48,12 @@ import { checkRow } from './rows/check-row'
 import { choiceList } from './rows/choice-list'
 import { expandRow, expandToggle } from './rows/expand'
 import { listRow } from './rows/list-row'
+import { cardCaption, cardItem, cardRule } from './rows/card-item'
 import { dayDivider, shortAge, workRow, workRowBody, workStatus } from './rows/work-row'
 import { rowDetail, rowList, rowWarning, sectionRow, settingsRow } from './rows/rows'
 import { pageSection } from './rows/section'
 import { segmented } from './rows/settings'
-import { dockFade, topFade } from './scroll/fade'
+import { dockFade, scrollFade, topFade } from './scroll/fade'
 import { stableGutter } from './scroll/gutter'
 import { jumpButton } from './scroll/jump'
 import { deviceCode, waitingLine } from './setup/device-code'
@@ -91,6 +93,7 @@ export const kit = {
   bannerTitle,
   barTitle,
   bottomSheet,
+  botFace,
   callout,
   card,
   checkMark,
@@ -228,6 +231,9 @@ export const kit = {
   sheetTitle,
   shine,
   shortAge,
+  cardCaption,
+  cardItem,
+  cardRule,
   shortcutHint,
   showSideButton,
   shrinkBadge,
@@ -253,6 +259,7 @@ export const kit = {
   toneText,
   toolBody,
   toolCard,
+  scrollFade,
   topFade,
   viewerBar,
   viewerShell,

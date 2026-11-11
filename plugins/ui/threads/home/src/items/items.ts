@@ -1,17 +1,17 @@
 import type { ThreadChanges } from '@sand/changes/contract'
-import { draftRoute, threadOwners, threadRoute } from '@sand/chat/contract'
+import { draftRoute, threadRoute } from '@sand/chat/contract'
 import { drafts, type Drafts, type ThreadDraft } from '@sand/composer/contract'
 import type { ShellRow, Status } from '@sand/ui-shell/contract'
 import { plural } from '@sand/util'
 import type { Thread } from '@sand/web-client/contract'
 import { changeStatus, type Changes } from '../changes'
 import type { RowPart, RowThread } from '../contract'
+import { projectLookup, quick, type ProjectInfo, type ProjectLookup } from '../contract'
 import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
 import { runningAgents, type AgentsOf } from './agents'
-import { projectLookup, quick, type ProjectInfo, type ProjectLookup } from './lookup'
 import { draftMenu, threadMenu, type MenuParts } from './menu'
 
 export interface Entry {
@@ -37,9 +37,14 @@ export interface RowSources {
   trail: RowPart[]
 }
 
-const placeOf = (parts: MenuParts, project: ProjectInfo, device: string, owner?: string) => ({
-  label: [owner, project.quick ? 'No project' : project.name, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
+const projectPlaceOf = (parts: MenuParts, project: ProjectInfo) => ({
+  label: project.quick ? 'No project' : project.name,
   mark: () => parts.kit.projectIcon(project.name, project.icon, 14),
+})
+
+const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
+  ...projectPlaceOf(parts, project),
+  label: [projectPlaceOf(parts, project).label, awayPcName(parts.ctx, device)].filter(Boolean).join(' · '),
 })
 
 const trailOf = (trail: RowPart[], folder: RowThread) => (trail.length ? () => trail.map(part => part.render(folder)) : undefined)
@@ -54,7 +59,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
     row: {
       id: thread.id,
       label: thread.info.title || (project.quick ? project.name : 'Untitled thread'),
-      place: placeOf(parts, project, thread.device, parts.ctx.get(threadOwners)?.owner(thread.id)?.label),
+      place: placeOf(parts, project, thread.device),
       trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
       ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
       status: statusOf(thread, agents, change),
@@ -75,7 +80,7 @@ const draftEntry = (parts: MenuParts, saved: Drafts, draft: ThreadDraft, lookup:
     id: `draft:${draft.id}`,
     label: draftTitle(draft),
     end: 'Draft',
-    place: placeOf(parts, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device), draft.device),
+    place: projectPlaceOf(parts, draft.cwd ? lookup(draft.cwd, draft.device) : quick(draft.device)),
     at: draft.updated,
     to: { kind: draftRoute, id: draft.id },
     menu: () => draftMenu(saved, draft.id),

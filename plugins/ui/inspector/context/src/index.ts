@@ -1,0 +1,97 @@
+import type { ContextParts, ContextUsage } from '@sand/compaction/contract'
+import { inspector } from '@sand/inspector/contract'
+import { pulse } from '@sand/reactive'
+import { kit } from '@sand/ui-kit/contract'
+import { tokens } from '@sand/util'
+import { threadChange, threads, threadsChange } from '@sand/web-client/contract'
+import { derive, div, list, show, sig, span, type Child, type Sig } from '@vaakx-dev/vrui'
+import { definePlugin } from 'drydock'
+
+interface Look {
+  name: string
+  swatch: string
+  segment: string
+}
+
+interface Part extends Look {
+  size: number
+}
+
+const looks: Record<keyof ContextParts, Look> = {
+  system: { name: 'Instructions', swatch: 'bg-violet-400', segment: 'group-hover:bg-violet-400 group-aria-expanded:bg-violet-400' },
+  tools: { name: 'Tools', swatch: 'bg-info-400', segment: 'group-hover:bg-info-400 group-aria-expanded:bg-info-400' },
+  conversation: { name: 'Conversation', swatch: 'bg-accent-400', segment: 'group-hover:bg-accent-400 group-aria-expanded:bg-accent-400' },
+  results: { name: 'Tool results', swatch: 'bg-success-400', segment: 'group-hover:bg-success-400 group-aria-expanded:bg-success-400' },
+}
+
+const order: (keyof ContextParts)[] = ['system', 'tools', 'conversation', 'results']
+
+const partsOf = ({ used, parts }: ContextUsage): Part[] =>
+  parts ? order.map(key => ({ ...looks[key], size: parts[key] })) : [{ ...looks.conversation, name: 'Used', size: used }]
+
+const empty: ContextUsage = { used: 0, limit: 0, window: 0 }
+
+const percent = (size: number, window: number) => `${window ? (size / window) * 100 : 0}%`
+
+export default definePlugin({
+  name: 'inspector-context',
+  description: "The inspector's context row: how full a thread's context window is and what fills it",
+  inject: { inspector, kit, threads },
+  apply(ctx) {
+    const changes = pulse(ctx, [threadChange, threadsChange])
+    const usageOf = (session: string) => {
+      changes.version.get()
+      return ctx.threads.get(session)?.context
+    }
+
+    const breakdownLine = (swatch: string, name: string, size: Child) =>
+      div({ class: 'flex items-center gap-2 py-px' }, span({ class: ['h-1 w-2 shrink-0 rounded-full', swatch] }), span(name), span({ class: 'ml-auto text-neutral-500 tabular-nums' }, size))
+
+    const render = (session: () => string) => {
+      const open = sig(false)
+      const usage = () => usageOf(session()) ?? empty
+      const parts = derive(() => partsOf(usage()))
+      const segment = (part: Sig<Part>) =>
+        span({ class: () => ['h-full shrink-0 bg-neutral-600 transition-colors', part.get().segment], style: () => `width:${percent(part.get().size, usage().window)}` })
+      const breakdown = () =>
+        div(
+          { class: 'flex flex-col px-2 pb-2 text-xs text-neutral-400' },
+          list(
+            parts,
+            part => part.name,
+            part => breakdownLine(part.get().swatch, part.get().name, () => tokens(part.get().size)),
+            div({ class: 'flex flex-col' }),
+          ),
+          breakdownLine('bg-neutral-800', 'Free', () => tokens(Math.max(0, usage().window - usage().used))),
+          div({ class: 'py-px text-neutral-500' }, () => `Compacts at ${tokens(usage().limit)}`),
+        )
+      return div(
+        { class: 'rounded-lg hover:bg-neutral-700' },
+        ctx.kit.plainButton(
+          { class: 'group flex w-full flex-col gap-2 p-2 text-left', 'aria-expanded': () => String(open.get()), onClick: () => open.update(shown => !shown) },
+          div(
+            { class: 'flex w-full items-center justify-between text-xs text-neutral-400' },
+            span('Context'),
+            span(span({ class: 'font-medium text-neutral-100' }, () => tokens(usage().used)), () => ` of ${tokens(usage().window)}`),
+          ),
+          div(
+            { class: 'relative h-1 w-full' },
+            list(parts, part => part.name, segment, div({ class: 'flex h-full w-full gap-px overflow-hidden rounded-full bg-neutral-800' })),
+            span({ class: 'absolute -top-1 h-3 w-px bg-neutral-600', style: () => `left:${percent(usage().limit, usage().window)}`, title: () => `Compacts at ${tokens(usage().limit)}` }),
+          ),
+        ),
+        show(open, breakdown),
+      )
+    }
+
+    ctx.effect(() =>
+      ctx.inspector.row({
+        id: 'context',
+        group: 'context',
+        order: 70,
+        shows: subject => (usageOf(subject.session)?.used ?? 0) > 0,
+        render: subject => render(() => subject().session),
+      }),
+    )
+  },
+})

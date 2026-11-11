@@ -23,18 +23,9 @@ export const turnOrigins = ['user', 'job', 'wake', 'review', 'agent', 'routine',
 export type TurnOrigin = (typeof turnOrigins)[number]
 
 export interface WaitReason {
-  kind: 'secret' | 'question' | 'approval'
+  kind: 'secret' | 'question'
   call: string
   title: string
-  durable?: boolean
-}
-
-export class HandedOver extends Error {
-  override name = 'HandedOver'
-
-  constructor() {
-    super('This turn moved to the next runtime')
-  }
 }
 
 export interface TurnResult {

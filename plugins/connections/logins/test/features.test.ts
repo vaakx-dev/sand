@@ -29,7 +29,7 @@ test('with threads off and bots on, logins loads, serves its state and saves a s
     expect(saved.map(found => found.status)).toEqual(['saved'])
     const [login] = (await sand.ask(loginsState, {})).logins
     expect(login).toMatchObject({ id: saved[0]!.login, name: 'Deploy token', bots: [bot.id], threads: [] })
-    expect(sand.app.get(logins)!.access(login!.id, { owner: 'bot', id: bot.id })).toBe('allowed')
+    expect(sand.app.get(logins)!.list({ owner: 'bot', id: bot.id })).toMatchObject([{ id: login!.id, access: 'allowed' }])
   } finally {
     await sand.stop()
   }

@@ -170,13 +170,28 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
   }
 
   const grantOf = (entry: Saved, conversation: ConversationRef): Grant | undefined => {
-    if (entry.ask) return undefined
     const { bot, threads } = deps.responsible(conversation)
     if (bot && entry.bots.includes(bot)) return 'bot'
     return threads.some(thread => entry.threads.includes(thread)) ? 'thread' : undefined
   }
 
-  const accessOf = (entry: Saved, conversation: ConversationRef): Access => (grantOf(entry, conversation) ? 'allowed' : 'ask')
+  const accessOf = (entry: Saved, conversation: ConversationRef): Access => {
+    if (entry.ask) return 'ask'
+    return grantOf(entry, conversation) ? 'allowed' : 'unshared'
+  }
+
+  const refusals: Record<Exclude<Access, 'allowed'>, (name: string, owner: ConversationRef['owner']) => string> = {
+    ask: name =>
+      `Not used: the login ${name} is set to "Ask me every time", so agents can't use it. Tell the user: they can turn that off in the login's settings (Settings → Logins), or use it themselves.`,
+    unshared: (name, owner) =>
+      `Not used: the login ${name} isn't shared with this ${owner}. Tell the user: they can let it use the login in the login's settings (Settings → Logins), or use it themselves.`,
+  }
+
+  const granted = (entry: Saved, conversation: ConversationRef): Grant => {
+    const grant = entry.ask ? undefined : grantOf(entry, conversation)
+    if (grant) return grant
+    throw new Error(refusals[entry.ask ? 'ask' : 'unshared'](entry.name, conversation.owner))
+  }
 
   const record = async (entry: Saved, { conversation, action, site }: UseRequest, grant: Grant) => {
     if (once.has(entry.id)) return
@@ -217,20 +232,22 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
 
   const use = async (id: string, request: UseRequest) => {
     const entry = find(id)
+    const grant = granted(entry, request.conversation)
     const one = once.get(id)
     if (one) {
       once.delete(id)
       return one.entry.values
     }
     const values = await valuesOf(entry)
-    await record(entry, request, grantOf(entry, request.conversation) ?? 'user')
+    await record(entry, request, grant)
     return values
   }
 
   const code = async (id: string, request: UseRequest) => {
     const entry = find(id)
+    const grant = granted(entry, request.conversation)
     const found = await codeOf(entry)
-    await record(entry, request, grantOf(entry, request.conversation) ?? 'user')
+    await record(entry, request, grant)
     return found
   }
 
@@ -318,7 +335,6 @@ export const createLogins = (vault: Vault<Data>, data: Data | undefined, deps: D
 
   const service: Logins = {
     list: conversation => saved.map(entry => ({ ...loginOf(entry), access: accessOf(entry, conversation) })),
-    access: (id, conversation) => accessOf(find(id), conversation),
     use,
     redact,
   }

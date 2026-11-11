@@ -29,11 +29,6 @@ export const whenText = ({ start, from, to }: { start: When; from: number; to: n
 
 export const spanText = (start: When, end: When, zone: string) => whenText({ start, from: instant(start, zone), to: instant(end, zone) }, zone)
 
-export const momentText = (when: When, zone: string) => {
-  const at = instant(when, zone)
-  return isDate(when) ? `${dayText(at, zone)}, all day` : `${dayText(at, zone)} ${clockText(at, zone)}`
-}
-
 export const originalText = (when: When) => (isDate(when) ? when.date : when.time)
 
 const responseText = { 'needs-action': 'invited, not answered yet', accepted: 'you accepted', declined: 'you declined', tentative: 'you said maybe' }

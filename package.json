@@ -63,6 +63,8 @@
       "plugins/ui/git/*/src/**",
       "plugins/ui/shared/*/src/**",
       "plugins/ui/threads/*/src/**",
+      "plugins/ui/inspector/*/src/*.ts",
+      "plugins/ui/panel/*/src/**",
       "plugins/ui/chat/chat/src/**",
       "plugins/ui/chat/composer/src/**",
       "plugins/ui/chat/markdown/src/**",

@@ -90,7 +90,7 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page)).toBe('home')
   })
 
-  test('a swipe left goes forward to the screen just left, and a short one springs back', async () => {
+  test('a swipe left never goes forward', async () => {
     const { page } = phone
     await pushPlain()
     await tap(page, 'Back')
@@ -98,10 +98,7 @@ describe.each(phones)('on a $name', size => {
     await swipe(phone, [size.width - 60, mid()], [size.width - 110, mid()])
     expect(await screen(page)).toBe('home')
     await swipe(phone, [size.width - 60, mid()], [30, mid()])
-    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
-    await swipe(phone, [size.width - 60, mid()], [30, mid()])
-    expect(await screen(page)).toBe('fixture/plain')
-    await tap(page, 'Back')
+    expect(await screen(page)).toBe('home')
   })
 
   test('the screen edge belongs to the browser in a tab, and swipes back in the installed app', async () => {
@@ -138,17 +135,28 @@ describe.each(phones)('on a $name', size => {
     expect(await screen(page, 'home')).toBe('home')
   })
 
-  test('a screen with a side frame switches between its parts', async () => {
+  test('a swipe started while editing text never fires', async () => {
     const { page } = phone
-    await page.getByRole('button', { name: /Split screen/ }).click()
-    expect(await screen(page, 'fixture/split')).toBe('fixture/split')
-    await page.getByRole('radio', { name: 'Project' }).click()
-    expect(await page.getByText('Side content').isVisible()).toBe(true)
-    expect(await page.getByText('Fixture split').isVisible()).toBe(false)
-    await page.getByRole('radio', { name: 'Chat' }).click()
-    expect(await page.getByText('Fixture split').isVisible()).toBe(true)
+    await pushPlain()
+    const field = page.getByRole('textbox', { name: 'Message' }).filter({ visible: true })
+    await field.click()
+    const box = (await field.boundingBox())!
+    await swipe(phone, [box.x + 10, box.y + box.height / 2], [size.width - 30, box.y + box.height / 2])
+    expect(await screen(page)).toBe('fixture/plain')
+    await tap(page, 'Back')
+  })
+
+  test('the header button opens the card as a sheet, and back closes it', async () => {
+    const { page } = phone
+    await pushPlain()
+    await tap(page, 'Fixture details')
+    const sheet = page.getByRole('dialog', { name: 'Fixture details' })
+    await sheet.waitFor()
+    expect(await sheet.getByText('Details content').isVisible()).toBe(true)
     await page.goBack()
-    expect(await screen(page, 'home')).toBe('home')
+    expect(await until(() => sheet.count(), count => count === 0)).toBe(0)
+    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await tap(page, 'Back')
   })
 
   test('Settings pushes its list, then a page, and Back walks out', async () => {

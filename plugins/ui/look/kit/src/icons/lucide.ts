@@ -39,6 +39,7 @@ import {
   FileBraces,
   FileCode,
   FileCog,
+  FileDiff,
   FileImage,
   FileLock,
   FileMusic,
@@ -112,6 +113,7 @@ const nodes = {
   pin: Pin,
   sidebar: PanelLeft,
   panel: PanelRight,
+ 
   menu: Menu,
   up: ArrowUp,
   plus: Plus,
@@ -140,6 +142,7 @@ const nodes = {
   'file-code': FileCode,
   'file-braces': FileBraces,
   'file-cog': FileCog,
+  'file-diff': FileDiff,
   'file-lock': FileLock,
   'file-music': FileMusic,
   'file-video': FileVideoCamera,

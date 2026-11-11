@@ -7,7 +7,7 @@ export const pauseTool = (routines: Routines): Tool => ({
   description: 'Pause one of your reminders or routines so it stops running, or resume it with paused false.',
   needs: ['routines'],
   input: z.object({ id: z.string().describe('The routine id from routine_list'), paused: z.boolean() }),
-  act: ({ paused }: { paused: boolean }, { cwd }) => ({ effect: 'write', paths: [cwd], summary: paused ? 'Pause a routine' : 'Resume a routine' }),
+  effect: 'write',
   run({ id, paused }: { id: string; paused: boolean }, { conversation }) {
     const routine = routines.pause(id, paused, conversation.id)
     return `${paused ? 'Paused' : 'Resumed'} "${routine.name}"`

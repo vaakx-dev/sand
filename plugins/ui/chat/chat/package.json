@@ -16,8 +16,6 @@
     "@sand/changes": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
-    "@sand/devices-contract": "workspace:*",
-    "@sand/features": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/picker": "workspace:*",
     "@sand/reactive": "workspace:*",
@@ -28,7 +26,8 @@
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
-    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "@sand/model-panel": "workspace:*"
   },
   "devDependencies": {
     "playwright": "^1.64.1"

@@ -59,6 +59,7 @@ export const agentTool = (ctx: AgentsContext, open: OpenAgent): Tool<ReturnType<
       parent: session,
       label: agent ? `${agent}: ${agentTitle(label, task)}` : agentTitle(label, task),
       origin: call.id,
+      model: opened.model,
       work: jobSignal => opened.run(jobSignal).then(report),
       read: cursor => readThread(opened.session, cursor),
       send: messenger(ctx, opened),

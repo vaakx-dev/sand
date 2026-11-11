@@ -5,7 +5,7 @@ import { ago } from '@sand/util'
 import type { Thread, Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
 import { visibleThreads } from '../items/items'
-import { projectLookup, quickName, type ProjectLookup } from '../items/lookup'
+import { projectLookup, quickName, type ProjectLookup } from '../contract'
 import { openThread } from '../owners'
 import { awayPcName } from './places'
 

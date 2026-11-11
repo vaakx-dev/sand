@@ -59,8 +59,7 @@ export const threadTarget = (ctx: ComposerContext): Target => {
     ready(picked) {
       const button = ctx.get(modelButton)
       if (!button || !modelMissing(ctx, threadSettings(ctx, picked))) return true
-      button.open()
-      return false
+      return !button.open()
     },
     send: (text, content, picked, options) => submit(ctx, text, content, threadSettings(ctx, picked), options),
     interrupt: () => interrupt(ctx),

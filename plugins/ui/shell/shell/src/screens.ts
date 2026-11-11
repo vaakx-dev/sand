@@ -1,16 +1,9 @@
-import { collectScope, derive, disposeAll, sig, span, untrack, type Child, type Sig } from '@vaakx-dev/vrui'
+import { collectScope, derive, disposeAll, span, untrack, type Child } from '@vaakx-dev/vrui'
 import type { Dispose } from 'drydock'
 import { screenKey } from './address'
-import type { Route, RouteSpec, ScreenNav, SideFrame } from './contract'
+import type { Route, RouteSpec, ScreenNav } from './contract'
 
 type Title = (text: string) => HTMLElement
-
-export interface Side {
-  label: string
-  mainLabel: string
-  actions?: HTMLElement
-  body: HTMLElement
-}
 
 export interface Nav {
   label: string
@@ -23,18 +16,9 @@ export interface Built {
   head: HTMLElement
   main: HTMLElement
   nav?: Nav
-  side?: Side
   split: boolean
-  showing: Sig<'main' | 'side'>
   scope: Dispose[]
 }
-
-const sideOf = ({ label, mainLabel, actions, render }: SideFrame): Side => ({
-  label,
-  mainLabel,
-  ...(actions && { actions: span({ class: 'flex shrink-0 items-center gap-1' }, actions()) }),
-  body: render(),
-})
 
 const navOf = ({ label, render }: ScreenNav): Nav => ({ label, body: render() })
 
@@ -58,10 +42,9 @@ export const screenCache = (specFor: (kind: string) => RouteSpec | undefined, ro
         main: screen.main(),
         ...(screen.nav && { nav: navOf(screen.nav) }),
         split: Boolean(screen.split),
-        ...(screen.side && { side: sideOf(screen.side) }),
       }
     })
-    return { key, spec, ...value, showing: sig('main'), scope }
+    return { key, spec, ...value, scope }
   }
 
   const get = (route: Route) => {

@@ -103,6 +103,7 @@ const accountPc = async (caps: ProviderCapabilities, replies: Reply[]): Promise<
   const server: Server = {
     handle: () => () => {},
     broadcast() {},
+    tell() {},
     hello: () => () => {},
     pages: () => 0,
     ask: () => Promise.reject(new Error('No requests in this test')),

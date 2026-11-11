@@ -16,11 +16,6 @@ export const statuses = ['waiting', 'ready', 'merging', 'running', 'merged', 'do
 
 export type Status = (typeof statuses)[number]
 
-export interface Monogram {
-  initial: string
-  color: string
-}
-
 export interface MenuAction {
   id: string
   label: string
@@ -59,7 +54,10 @@ interface NavBase {
   label: string
   icon: string
   order?: number
-  place?: 'top' | 'foot' | 'foot-end'
+  place?: 'top' | 'nav' | 'foot' | 'foot-end'
+  look?: 'row' | 'field' | 'alert'
+  summary?(): string
+  detail?(): string
   keys?: string
   count?(): number
   dot?(): boolean
@@ -84,7 +82,8 @@ export interface ShellRow {
   label: string
   end?: string
   at?: number
-  mark?: Monogram
+  lead?(): Child
+  detail?(): Child
   status?: Status
   place?: RowPlace
   trail?(): Child
@@ -106,12 +105,26 @@ export interface ShellSection {
   groups(): ShellGroup[]
 }
 
-export interface SideFrame {
+export type AsideKind = 'card' | 'panel' | 'drawer'
+
+export interface Aside {
+  id: string
+  kind: AsideKind
   label: string
-  mainLabel: string
-  actions?(): Child
-  render(): HTMLElement
+  icon: string
+  order?: number
+  shows(route: Route): boolean
+  render(route: () => Route): HTMLElement
 }
+
+export interface Subject {
+  session: string
+  device: string
+  cwd?: string
+  draft?: boolean
+}
+
+export type SubjectSource = (route: Route) => Subject | undefined
 
 export interface ScreenNav {
   label: string
@@ -122,7 +135,6 @@ export interface Screen {
   head(): Child
   main(): HTMLElement
   nav?: ScreenNav
-  side?: SideFrame
   split?: boolean
 }
 
@@ -190,6 +202,10 @@ export interface Shell {
   state(): ShellState
   sheet(spec: SheetSpec): SheetHandle
   cover(close: () => void): () => void
+  aside(spec: Aside): Dispose
+  showAside(id: string, open: boolean): void
+  subject(source: SubjectSource): Dispose
+  subjectOf(route: Route): Subject | undefined
   chip(source: ChipSource): Dispose
   chipBar(scope: ChipScope): HTMLElement
   mount(where: Place, view: HTMLElement, order?: number): Dispose

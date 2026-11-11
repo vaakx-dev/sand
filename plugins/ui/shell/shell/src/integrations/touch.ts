@@ -55,9 +55,14 @@ export const swipeGesture = (kit: Kit, begin: () => Swipe | undefined) => {
         press.drag.move(touch.clientX, event.timeStamp)
         return
       }
-      const way = kit.gesture.direction(touch.clientX - press.x, touch.clientY - press.y)
+      const dx = touch.clientX - press.x
+      const way = kit.gesture.direction(dx, touch.clientY - press.y)
       if (way === 'undecided') return
-      press.drag = way === 'sideways' ? startDrag(kit, press, touch, event.timeStamp, begin) : undefined
+      if (way !== 'sideways') {
+        press = undefined
+        return
+      }
+      press.drag = startDrag(kit, press, touch, event.timeStamp, begin)
       if (!press.drag) press = undefined
     },
     passive,

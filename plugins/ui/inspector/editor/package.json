@@ -1,0 +1,29 @@
+{
+  "name": "@sand/inspector-editor",
+  "version": "0.0.0",
+  "description": "The inspector's editor row: opens a thread's folder in an editor, the file manager or a terminal",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/web/index.ts",
+    "runtime": "./src/runtime/index.ts",
+    "label": "Editor row",
+    "summary": "Opens the thread's folder in an editor, the file manager or a terminal"
+  },
+  "dependencies": {
+    "@sand/inspector": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/host-hub": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/server": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
+    "zod": "^4.6.5"
+  }
+}

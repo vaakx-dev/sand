@@ -26,52 +26,43 @@ afterAll(async () => {
   await sand?.stop()
 })
 
+const asideShown = (page: import('playwright').Page) =>
+  page.evaluate(() => {
+    const card = document.querySelector('div[aria-label="Fixture details"]')
+    return Boolean(card && card.getBoundingClientRect().width > 0)
+  })
+
+const roomFor = (page: import('playwright').Page) =>
+  page.evaluate(() => {
+    const field = [...document.querySelectorAll('textarea[aria-label="Message"]')].find(node => node.getBoundingClientRect().width > 0)
+    const card = document.querySelector('div[aria-label="Fixture details"]')
+    return Boolean(field && card && field.getBoundingClientRect().right <= card.getBoundingClientRect().left)
+  })
+
 describe('at 736 wide', () => {
   let phone: Phone
   const mid = tablet.height / 2
 
   beforeAll(async () => {
-    phone = await openAt(context, `${origin}/?view=fixture&id=split`, tablet)
+    phone = await openAt(context, `${origin}/?view=fixture&id=plain`, tablet)
   }, 30_000)
   afterAll(() => phone.page.close())
 
-  test('a screen without a side frame keeps the sidebar, and one with it turns the sidebar into a drawer', async () => {
+  test('the card floats over the screen and keeps the sidebar', async () => {
     const { page } = phone
-    expect(await state(page)).toBe('drawer')
-    expect(await drawer(page)).toBe(false)
-    await page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.open({ kind: 'fixture', id: 'plain' }))
-    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
+    await page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.showAside('fixture-aside', true))
+    expect(await until(() => asideShown(page), shown => shown === true)).toBe(true)
     expect(await state(page)).toBe('wide')
-    expect(await drawer(page)).toBe(true)
-    await page.goBack()
-    expect(await screen(page, 'fixture/split')).toBe('fixture/split')
-    expect(await state(page)).toBe('drawer')
-  })
-
-  test('Back closes the open drawer before it leaves the screen', async () => {
-    const { page } = phone
-    const before = page.url()
-    await tap(page, 'Show the sidebar')
     expect(await drawer(page, true)).toBe(true)
-    await page.goBack()
-    expect(await drawer(page, false)).toBe(false)
-    expect(page.url()).toBe(before)
-    expect(await screen(page)).toBe('fixture/split')
-  })
-
-  test('picking a row in the drawer closes it, and Back returns to the screen before', async () => {
-    const { page } = phone
-    await tap(page, 'Show the sidebar')
-    expect(await drawer(page, true)).toBe(true)
-    await page.getByRole('button', { name: /Plain screen/ }).click()
-    expect(await screen(page, 'fixture/plain')).toBe('fixture/plain')
-    await page.goBack()
-    expect(await screen(page, 'fixture/split')).toBe('fixture/split')
-    expect(await drawer(page, false)).toBe(false)
+    expect(await roomFor(page)).toBe(false)
+    await page.evaluate(() => window.sand.get<Shell>({ id: 'shell' })?.showAside('fixture-aside', false))
+    expect(await until(() => asideShown(page), shown => shown === false)).toBe(false)
   })
 
   test('swipes pull the drawer open and push it shut', async () => {
     const { page } = phone
+    await page.goto(`${origin}/?view=fixture&id=split`)
+    expect(await until(() => state(page), shown => shown === 'drawer')).toBe('drawer')
     await swipe(phone, [60, mid], [400, mid])
     expect(await drawer(page, true)).toBe(true)
     await swipe(phone, [400, mid], [40, mid], flick)
@@ -81,18 +72,20 @@ describe('at 736 wide', () => {
 })
 
 describe('at 1280 wide', () => {
-  test('hiding the side frame is remembered for its kind, and the header can show it again', async () => {
-    const { page } = await openAt(context, `${origin}/?view=fixture&id=split`, { width: 1280, height: 800 })
-    expect(await state(page)).toBe('wide')
-    const side = page.getByRole('complementary', { name: 'Project' })
-    await side.waitFor()
-    await tap(page, 'Hide Project')
-    expect(await until(() => side.count(), count => count === 0)).toBe(0)
+  test('the header button shows and hides the card, a roomy screen makes room for it, and the choice survives a reload', async () => {
+    const { page } = await openAt(context, `${origin}/?view=fixture&id=plain`, { width: 1280, height: 800 })
+    if (await asideShown(page)) await tap(page, 'Fixture details')
+    expect(await until(() => asideShown(page), shown => shown === false)).toBe(false)
+    await tap(page, 'Fixture details')
+    expect(await until(() => asideShown(page), shown => shown === true)).toBe(true)
+    expect(await roomFor(page)).toBe(true)
     await page.reload()
-    await page.getByText('Fixture split').waitFor()
-    expect(await side.count()).toBe(0)
-    await tap(page, 'Show Project')
-    await side.waitFor()
+    await page.getByText('Fixture plain').waitFor()
+    expect(await until(() => asideShown(page), shown => shown === true)).toBe(true)
+    await tap(page, 'Fixture details')
+    expect(await until(() => asideShown(page), shown => shown === false)).toBe(false)
+    await page.goto(origin)
+    expect(await page.getByRole('button', { name: 'Fixture details' }).count()).toBe(0)
     await page.close()
   })
 

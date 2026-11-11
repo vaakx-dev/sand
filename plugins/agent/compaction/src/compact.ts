@@ -104,10 +104,11 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
     const path = conversation.path()
     if (!fits(summary, path, request)) return false
     const before = tracker.project(conversation.id, request)
-    const after = requestTokens({ ...request, messages: compactedMessages([...path, draft(conversation, path, summary.record)]) })
+    const compacted = { ...request, messages: compactedMessages([...path, draft(conversation, path, summary.record)]) }
+    const after = requestTokens(compacted)
     conversation.append('compaction', { ...summary.record, before, after } satisfies CompactionRecord)
     tracker.reset(conversation.id)
-    ctx.emit(contextUsage, conversation, usageOf(budget(request), after))
+    ctx.emit(contextUsage, conversation, usageOf(budget(request), compacted, after))
     return true
   }
 
@@ -127,11 +128,11 @@ export const createCompactor = (ctx: CompactionContext, config: CompactionConfig
       else if (take(conversation, request)) return true
       const job = jobs.get(conversation.id) ?? run(conversation, request, reason)
       const before = tracker.project(conversation.id, request)
-      ctx.emit(contextUsage, conversation, usageOf(budget(request), before, true))
+      ctx.emit(contextUsage, conversation, usageOf(budget(request), request, before, true))
       const summary = await untilAborted(job.work, signal).catch(() => undefined)
       if (summary && jobs.get(conversation.id) === job) jobs.delete(conversation.id)
       if (summary && place(conversation, request, summary)) return true
-      ctx.emit(contextUsage, conversation, usageOf(budget(request), before))
+      ctx.emit(contextUsage, conversation, usageOf(budget(request), request, before))
       return false
     },
   }

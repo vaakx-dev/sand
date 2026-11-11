@@ -3,7 +3,8 @@ import { sameScreen, screenKey } from './address'
 import type { Route } from './contract'
 import { phoneFrame } from './frames'
 import { homeScreen } from './home'
-import type { Model } from './model'
+import { asideKind, type Model } from './model'
+import { asideScreen } from './aside'
 
 interface Slot {
   key: string
@@ -39,6 +40,7 @@ const slideIn = (node: Element) => {
 
 const screenOf = (model: Model, slot: Slot) => {
   if (!slot.route) return homeScreen(model)
+  if (slot.route.kind === asideKind) return asideScreen(model, slot.route.id ?? '')
   const built = model.screens.get(slot.route)
   return built ? phoneFrame(model, built) : div({ class: 'flex-1' })
 }

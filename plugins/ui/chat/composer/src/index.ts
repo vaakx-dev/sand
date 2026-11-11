@@ -1,7 +1,5 @@
-import { advanced as advancedService, type Advanced } from '@sand/advanced/contract'
 import { shelves, type Shelves } from '@sand/attachments/web/contract'
 import { contextLink } from '@sand/chats/contract'
-import { modelButton, type ModelButton } from '@sand/model-panel/contract'
 import { composer as composerService, drafts, draftStore, typing as typingService, type Chat, type ChatDock, type Composer, type DockOptions, type DraftStore } from './contract'
 import { fileIndex, skillIndex, threadSelect, type SkillIndex } from '@sand/web-client/contract'
 import { owned, pulse } from '@sand/reactive'
@@ -45,16 +43,8 @@ export default definePlugin({
     const threadOnly = createTriggers()
     const skills = sig<SkillIndex | undefined>(undefined)
     const shelf = sig<Shelves | undefined>(undefined)
-    const button = sig<ModelButton | undefined>(undefined)
-    const advanced = sig<Advanced | undefined>(undefined)
     ctx.watch(shelves, found => {
       shelf.set(found)
-    })
-    ctx.watch(modelButton, found => {
-      button.set(found)
-    })
-    ctx.watch(advancedService, found => {
-      advanced.set(found)
     })
 
     const mounted: Field[] = []
@@ -75,13 +65,12 @@ export default definePlugin({
       return { model, session, errors: createTurnErrors(ctx), placeholders: createPlaceholders(() => (inThread.get() ? 'Reply' : 'Ask anything')) }
     })
 
-    const chatDock = (chat: Chat, { kind = 'thread', placeholder }: DockOptions = {}): ChatDock => {
+    const chatDock = (chat: Chat, { placeholder }: DockOptions = {}): ChatDock => {
       const own = createSlots(shared)
       const chatOnly = createTriggers()
       chatOnly.add(skillTrigger(() => skills.get()?.of(chat.skills) ?? []))
       const model = createModel(chatTarget(chat), [triggers, chatOnly], shelf)
       dockDrafts(chat.key, model, () => store.get())
-      const shown = () => kind !== 'bot' || Boolean(advanced.get()?.on())
       const parts = {
         ctx,
         model,
@@ -91,7 +80,6 @@ export default definePlugin({
         typed: typing.typed,
         asides,
         placeholder: placeholder ?? (() => (chat.path().length ? 'Reply' : 'Ask anything')),
-        ...(chat.settings && chat.choose && { choice: { target: { settings: chat.settings, choose: chat.choose, running: chat.running }, button: () => (shown() ? button.get() : undefined) } }),
       }
       return { view: dock(parts, field(parts)), slot: own.add }
     }
@@ -107,7 +95,6 @@ export default definePlugin({
       typed: typing.typed,
       asides,
       placeholder: () => placeholders.text.get(),
-      choice: { target: { settings, choose, running: () => model.running.get() }, button: () => button.get() },
     }
 
     const composer: Composer = {

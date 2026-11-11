@@ -1,77 +1,76 @@
-import { draftRoute } from '@sand/chat/contract'
-import { composer, type Composer } from '@sand/composer/contract'
+import { composer as composerService, type Composer } from '@sand/composer/contract'
+import { modelTargets } from '@sand/model-panel/contract'
 import { palette } from '@sand/palette/contract'
-import type { Pulse } from '@sand/reactive'
+import { owned, type Pulse } from '@sand/reactive'
 import type { Kit } from '@sand/ui-kit/contract'
-import { homeRoute, type Screen } from '@sand/ui-shell/contract'
-import type { Threads } from '@sand/web-client/contract'
-import { div, dynamicChild, effect, h1, sig, untrack, type Child } from '@vaakx-dev/vrui'
-import type { Context } from 'drydock'
-import { currentPlace } from '../palette/places'
+import { homeRoute } from '@sand/ui-shell/contract'
+import { dynamicChild, effect, sig, untrack } from '@vaakx-dev/vrui'
 import { newChatPage } from '../palette/projects'
-import { lastChosen, startChat, type StartParts } from './start'
+import { newThreadHome, type HomeHeadPart } from '../contract'
+import { currentPick } from './picks'
+import { newThreadScreen } from './screen'
+import { newThreadRoute, startChat, type StartParts } from './start'
 
 export interface LaunchParts extends StartParts {
   kit: Kit
   pulse: Pulse
 }
 
-const homeScreen = ({ ctx, kit, threads, pulse }: LaunchParts, composerHere: Child): Screen => ({
-  head: () => [h1({ class: 'sr-only' }, 'New chat'), kit.barTitle(pulse.read(() => projectOf(ctx, threads)))],
-  main: () =>
-    div(
-      { class: 'flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 pb-24' },
-      div({ class: [kit.pageColumn, 'flex flex-col'] }, composerHere),
-    ),
-})
-
-const projectOf = (ctx: Context, threads: Threads) => {
-  const place = currentPlace(ctx, threads)
-  return place.path ? place.name : ''
-}
-
-const startInLastChosen = ({ threads }: LaunchParts) => {
-  const draft = threads.drafting()
-  if (!draft) return
-  const { path, device } = lastChosen(threads)
-  if (draft.cwd !== path || draft.device !== device) void threads.draft(path, device, draft.id, { replace: true })
-}
-
-const chipsWhileDrafting = ({ ctx, shell, threads, pulse }: LaunchParts) => {
-  const drafting = pulse.read(() => !threads.current())
-  return ctx.watch(composer, found => {
-    if (!found) return
-    return effect(() => {
-      if (!drafting.get()) return
-      const off = found.slot('above', () => shell.chipBar({ kind: 'general' }))
-      return () => void off()
-    })
-  })
-}
-
-export const newChat = (parts: LaunchParts) => {
+export const newThread = (parts: StartParts) => {
   const found = parts.ctx.get(palette)
   if (found) return found.open(newChatPage(parts))
-  const { path, device } = lastChosen(parts.threads)
-  void startChat(parts, path, device)
-}
-
-export const isNewChat = ({ shell }: LaunchParts) => {
-  const { kind } = shell.current()
-  return shell.state() !== 'phone' && (kind === homeRoute || kind === draftRoute)
+  const { path, device } = currentPick(parts.ctx, parts.threads)
+  startChat(parts, path, device)
 }
 
 export const launch = (parts: LaunchParts) => {
-  const { ctx, shell } = parts
+  const { ctx, kit, shell, threads, pulse } = parts
+  const pick = owned(ctx, () => pulse.read(() => currentPick(ctx, threads)))
+  const showing = () => [homeRoute, newThreadRoute].includes(shell.current().kind)
   const found = sig<Composer | undefined>(undefined)
-  const composerView = () => dynamicChild(found, composer => composer?.view() ?? null)
-  ctx.watch(composer, service => found.set(service))
+  const head = sig<HomeHeadPart[]>([])
+  ctx.watch(composerService, service => found.set(service))
+  ctx.watch(composerService, service => service?.placeholder(() => (showing() ? 'Describe the change.' : undefined)))
+
   ctx.effect(() =>
     effect(() => {
-      parts.pulse.version.get()
-      if (shell.current().kind === homeRoute && shell.state() !== 'phone') untrack(() => startInLastChosen(parts))
+      if (!showing()) return
+      const { path, device } = pick.get()
+      const draft = threads.drafting()
+      if (threads.current() || (draft?.cwd === path && draft.device === device)) return
+      untrack(() => void threads.draft(path, device, draft?.id, { replace: Boolean(draft) }))
     }),
   )
-  ctx.effect(() => shell.route({ kind: homeRoute, render: () => homeScreen(parts, composerView()) }))
-  chipsWhileDrafting(parts)
+
+  const screen = () =>
+    newThreadScreen({
+      kit,
+      head,
+      composer: () => dynamicChild(found, service => service?.view() ?? null),
+      counts: scope => shell.chipBar(scope),
+    })
+  ctx.provide(newThreadHome, {
+    project: () => pick.get(),
+    chooseProject: () => newThread(parts),
+    head(part) {
+      head.update(all => [...all, part])
+      return () => head.update(all => all.filter(other => other !== part))
+    },
+  })
+  ctx.effect(() =>
+    shell.subject(({ kind }) => {
+      pulse.version.get()
+      const draft = threads.drafting()
+      return [homeRoute, newThreadRoute].includes(kind) && draft ? { session: draft.id, device: draft.device, ...(draft.cwd && { cwd: draft.cwd }), draft: true } : undefined
+    }),
+  )
+  ctx.watch(modelTargets, targets =>
+    targets?.source(({ session }) => {
+      pulse.version.get()
+      const composer = found.get()
+      return composer && threads.drafting()?.id === session ? { settings: composer.settings, choose: composer.choose } : undefined
+    }),
+  )
+  ctx.effect(() => shell.route({ kind: homeRoute, render: screen }))
+  ctx.effect(() => shell.route({ kind: newThreadRoute, render: screen }))
 }

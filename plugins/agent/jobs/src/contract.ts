@@ -13,6 +13,7 @@ export interface Job {
   label: string
   parent: string
   origin?: string
+  model?: string
   status: JobStatus
   started: number
   ended?: number
@@ -27,6 +28,7 @@ export interface JobSpec {
   parent: Session
   label: string
   origin?: string
+  model?: string
   work: JobWork
   read?(cursor?: number): string | Promise<string>
   send?(message: string, job: Job): string | Promise<string>

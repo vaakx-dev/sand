@@ -1,5 +1,4 @@
 import { llm } from '@sand/accounts/contract'
-import { approvals } from '@sand/approvals/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { botConversation, botCreate, botGet, bots } from '@sand/bots/contract'
 import { calendars } from '@sand/calendar/contract'
@@ -20,7 +19,7 @@ const topLevel = ['threads', 'bots', 'calendar', 'computers', 'pcs', 'notificati
 
 const model = { id: 'fake', models: ['m'], replies: [[{ type: 'text' as const, text: 'Hello from the bot' }]] }
 
-const watched = { sessions, bots, calendars, computers, engine, llm, tools, approvals, schedules, connections, gitRepo, gitRunner, htmlPages }
+const watched = { sessions, bots, calendars, computers, engine, llm, tools, schedules, connections, gitRepo, gitRunner, htmlPages }
 
 type Name = keyof typeof watched
 
@@ -34,12 +33,11 @@ const running = (sand: Awaited<ReturnType<typeof boot>>) =>
 
 const combinations: [string, string[], string[], Name[]][] = [
   ['the kernel alone', [], [], []],
-  ['Threads alone', ['threads'], [], ['sessions', 'engine', 'llm', 'tools', 'approvals', 'gitRepo', 'gitRunner', 'htmlPages']],
-  ['Threads without git', ['threads'], ['git'], ['sessions', 'engine', 'llm', 'tools', 'approvals', 'htmlPages']],
-  ['Bots alone', ['bots'], [], ['bots', 'engine', 'llm', 'tools', 'approvals', 'schedules', 'htmlPages']],
-  ['Bots without HTML pages', ['bots'], ['html'], ['bots', 'engine', 'llm', 'tools', 'approvals', 'schedules']],
-  ['Bots without notifications, schedules or connections', ['bots'], ['notifications', 'schedules', 'connections'], ['bots', 'engine', 'llm', 'tools', 'approvals', 'htmlPages']],
-  ['Bots without approvals', ['bots'], ['approvals'], ['bots', 'engine', 'llm', 'tools', 'schedules', 'htmlPages']],
+  ['Threads alone', ['threads'], [], ['sessions', 'engine', 'llm', 'tools', 'gitRepo', 'gitRunner', 'htmlPages']],
+  ['Threads without git', ['threads'], ['git'], ['sessions', 'engine', 'llm', 'tools', 'htmlPages']],
+  ['Bots alone', ['bots'], [], ['bots', 'engine', 'llm', 'tools', 'schedules', 'htmlPages']],
+  ['Bots without HTML pages', ['bots'], ['html'], ['bots', 'engine', 'llm', 'tools', 'schedules']],
+  ['Bots without notifications, schedules or connections', ['bots'], ['notifications', 'schedules', 'connections'], ['bots', 'engine', 'llm', 'tools', 'htmlPages']],
   ['Calendar alone', ['calendar'], [], ['calendars', 'connections']],
   ['Computer use alone', ['computers'], [], ['computers', 'engine', 'llm', 'tools']],
   ['Several PCs & phone alone', ['pcs'], [], []],
@@ -78,9 +76,9 @@ test('with only Bots on, a bot answers', async () => {
   }
 }, 60_000)
 
-test("with Approvals off, a bot's shell call runs without asking", async () => {
+test("with only Bots on, a bot's shell call runs without asking", async () => {
   const replies = [[{ type: 'call' as const, name: 'shell', input: { command: 'echo ran' } }], [{ type: 'text' as const, text: 'Done' }]]
-  const sand = await boot(['bots'], ['approvals'], [{ ...model, replies }])
+  const sand = await boot(['bots'], [], [{ ...model, replies }])
   try {
     expect(sand.problems()).toEqual([])
     const bot = await sand.ask(botCreate, { name: 'Helper', models: { main: { model: 'fake/m' }, quick: {} } })

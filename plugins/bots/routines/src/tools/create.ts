@@ -36,7 +36,7 @@ export const createTool = (routines: Routines): Tool => ({
     'Set yourself a reminder or a routine: when it comes due, you act on its instructions in this chat, even while the user is away. Use at or in_minutes for one time, or repeat for a recurring schedule.',
   needs: ['routines'],
   input: fields,
-  act: ({ name }: Input, { cwd }) => ({ effect: 'write', paths: [cwd], summary: `Set the routine ${name}` }),
+  effect: 'write',
   run(input: Input, { conversation }) {
     const when = whenOf(input)
     const routine = routines.create(conversation.id, {

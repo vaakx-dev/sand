@@ -3,9 +3,8 @@ import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { hasFiles } from '@sand/attachments/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
-import type { ModelButton, ModelTarget } from '@sand/model-panel/contract'
 import { errorMessage } from '@sand/util'
-import { derive, div, dynamicChild, listen, media, onTimeout, sig, span } from '@vaakx-dev/vrui'
+import { div, dynamicChild, listen, media, onTimeout, sig, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { createCompletion } from '../complete/model'
 import { chipClipboard } from '../editor/chips/clipboard'
@@ -18,12 +17,8 @@ import { plusView } from '../plus/view'
 import type { Asides } from '../send/aside'
 import { sendControl } from '../send/button'
 import { lastPrompt } from '../send/submit'
+import type { Source } from '../complete/registry'
 import type { Slots } from './slots'
-
-export interface ModelChoice {
-  target: ModelTarget
-  button(): ModelButton | undefined
-}
 
 export interface FieldParts {
   ctx: ComposerContext
@@ -34,7 +29,6 @@ export interface FieldParts {
   typed: () => void
   placeholder: () => string
   asides: Asides
-  choice?: ModelChoice
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
@@ -45,13 +39,18 @@ const onButton = (event: MouseEvent) => event.target instanceof Element && Boole
 
 const holdMs = 450
 
+const shortcuts = (sources: Source[]) => {
+  const byChar = new Map<string, string[]>()
+  for (const { char, label } of sources) byChar.set(char, [...(byChar.get(char) ?? []), label])
+  return [...byChar].map(([char, labels]) => `${char} ${labels.join(', ')}`).join(' · ')
+}
+
 const saveKey = (event: KeyboardEvent) => (event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 's'
 
-export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, asides, choice }: FieldParts) => {
+export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, asides }: FieldParts) => {
   const { hasOpenLayer } = ctx.kit
   const coarse = media('(pointer: coarse)')
   const within = sig(false)
-  const rest = derive(() => coarse.get() && !within.get() && model.empty.get())
 
   const escape = () => {
     if (hasOpenLayer() || !model.running.get()) return false
@@ -128,8 +127,7 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const node = div(
     {
       class: [
-        'flex rounded-2xl bg-neutral-800 pr-2 pb-2',
-        () => (rest.get() ? 'items-end' : 'flex-col pt-3 pl-4'),
+        'flex flex-col rounded-2xl bg-neutral-800 pt-3 pr-2 pb-2 pl-4',
         () => (coarse.get() ? 'text-base' : 'text-sm'),
       ],
       onMouseDown: keepFocus,
@@ -142,18 +140,17 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
           void asides.run(model)
         }),
     },
-    dynamicChild(model.shelf, shelf => (shelf ? div({ class: () => (rest.get() ? 'px-4 pt-3' : 'pr-2 pb-3'), hidden: model.attached.map(held => !held.length) }, shelf.view()) : null)),
-    div({ class: ['min-w-0 flex-1 cursor-text', () => (rest.get() ? 'pt-3 pr-2 pb-1 pl-4' : 'pr-2')], onMouseDown: focusText }, editor.node),
+    dynamicChild(model.shelf, shelf => (shelf ? div({ class: 'pr-2 pb-3', hidden: model.attached.map(held => !held.length) }, shelf.view()) : null)),
+    div({ class: 'min-w-0 flex-1 cursor-text pr-2', onMouseDown: focusText }, editor.node),
     div(
-      { class: ['flex min-w-0 items-center gap-1', () => (rest.get() ? '' : '-ml-2 mt-4')] },
+      { class: '-ml-2 mt-4 flex min-w-0 items-center gap-1' },
+      plusView(ctx.kit, plus, choose, () => Boolean(model.shelf.get()?.attachable())),
+      slots.host('start', 'flex min-w-0 shrink items-center gap-1', here),
       span(
-        { class: 'contents', hidden: rest },
-        plusView(ctx.kit, plus, choose, () => Boolean(model.shelf.get()?.attachable())),
-        slots.host('start', 'flex min-w-0 shrink items-center gap-1', here),
-        span({ class: 'min-w-2 flex-1' }),
-        slots.host('end', 'flex min-w-0 shrink items-center gap-1', here),
-        choice ? dynamicChild(derive(choice.button), found => (found ? found.view(choice.target) : null)) : null,
+        { class: 'min-w-2 flex-1 truncate px-1 text-xs text-neutral-600', 'aria-hidden': 'true' },
+        () => (model.empty.get() ? shortcuts(model.triggers.list.get()) : ''),
       ),
+      slots.host('end', 'flex min-w-0 shrink items-center gap-1', here),
       sendControl(ctx.kit, model, actions, () => (asides.ready() ? () => void asides.run(model) : undefined)),
     ),
   )

@@ -2,7 +2,7 @@ import type { Filled } from '@sand/computers/contract'
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
 import { websiteOf } from '../service'
-import { computerInput, fillerOf, group, loginAct, loginInput, type ToolDeps } from './deps'
+import { computerInput, fillerOf, group, loginInput, type ToolDeps } from './deps'
 
 const input = z.object({ login: loginInput, computer: computerInput })
 
@@ -15,7 +15,7 @@ export const fillTool = (deps: ToolDeps): Tool<typeof input> => ({
     "Fill a saved website login's username and password into the sign-in form open in the browser; you never see them. The page must be on the login's site. Submit the form yourself, then use login_code if it asks for a code.",
   input,
   needs: ['computer'],
-  act: ({ login }, conversation) => loginAct(deps, login, conversation),
+  effect: 'read',
   async run({ login, computer }, { conversation }) {
     const site = websiteOf(deps.logins.find(login))
     const fill = fillerOf(deps, computer)

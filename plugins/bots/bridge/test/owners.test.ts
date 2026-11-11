@@ -17,14 +17,16 @@ const prompt = (content: UserContent[]): Entry => ({ id: 'e1', session: 't1', pa
 
 const botRecord = (data: Record<string, unknown>): UserContent => ({ type: 'context', records: [{ v: 1, id: 'r1', kind: 'bot', label: 'Atlas', data }] })
 
-test("a bot owns the threads it started, opens them as its tabs, and signs only the prompts it sent", () => {
+test("a bot owns the threads it started, opens them as its own thread screen when the shell is there, and signs only the prompts it sent", () => {
   const opened: [string, string | undefined][] = []
-  const owners = threadOwnersOf(roster, { open: (bot, tab) => void opened.push([bot, tab]) })
+  const owners = threadOwnersOf(roster, { open: (bot, tab) => void opened.push([bot, tab]) }, {
+    open: (route: { id?: string; tab?: string }) => void opened.push([route.id ?? '', route.tab]),
+  } as never)
 
   const owner = owners.owner('t1')
-  expect(owner).toMatchObject({ id: 'b1', label: 'Atlas', initial: 'A', color: 'sky' })
+  expect(owner).toMatchObject({ id: 'b1', label: 'Atlas', color: 'sky' })
   owner?.open('t1')
-  expect(opened).toEqual([['b1', 'thread:t1']])
+  expect(opened).toEqual([['t1', undefined]])
   expect(owners.owner('t2')).toBeUndefined()
   expect(owners.owner('t3')).toBeUndefined()
 

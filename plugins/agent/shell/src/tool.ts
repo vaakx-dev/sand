@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { shellReady } from './contract'
 import type { Shell } from './detect'
 import { liveTail } from './live'
-import { loginEnv, loginsAct, loginsField } from './logins'
+import { loginEnv, loginsField } from './logins'
 import { agentEnv } from './process'
 import { run, type Stop, type Timeouts } from './run'
 
@@ -69,8 +69,7 @@ export const shellTool = (
     description: `${spec.description} ${rules(limits)}`,
     input: inputOf(limits, logins !== undefined),
     needs: ['pc'],
-    act: ({ command, logins: wanted }, conversation) =>
-      logins && wanted ? loginsAct(logins, wanted, conversation, command) : { effect: 'run', summary: command },
+    effect: 'run',
     timeoutMs: limits.limit_ms + stopGrace,
     async run({ command, silence_ms: silence = limits.silence_ms, logins: wanted }, context) {
       await ctx.waterfall(shellReady, context.cwd, context.signal, context.progress)

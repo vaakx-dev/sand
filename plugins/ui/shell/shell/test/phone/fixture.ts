@@ -1,5 +1,5 @@
-import { shell, type Route, type Screen } from '@sand/ui-shell/contract'
-import { button, div, h2, p, span, table, td, textarea, tr } from '@vaakx-dev/vrui'
+import { shell, type Aside, type Route, type Screen } from '@sand/ui-shell/contract'
+import { div, h2, p, span, table, td, textarea, tr } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 
 const unbroken = 'x'.repeat(300)
@@ -25,15 +25,17 @@ const screen = (route: () => Route): Screen => {
   return {
     head: () => h2({ class: 'ml-2 truncate text-sm font-medium' }, titles[id] ?? id, span({ class: 'ml-2 text-neutral-500' }, () => route().tab ?? '')),
     main: () => body(id),
-    ...(id === 'split' && {
-      side: {
-        label: 'Project',
-        mainLabel: 'Chat',
-        actions: () => button({ class: 'text-sm', 'aria-label': 'Side action' }, 'Act'),
-        render: () => div({ class: 'p-4' }, 'Side content'),
-      },
-    }),
+    split: id === 'split',
   }
+}
+
+const aside: Aside = {
+  id: 'fixture-aside',
+  kind: 'card',
+  label: 'Fixture details',
+  icon: 'eye',
+  shows: route => route.kind === 'fixture',
+  render: route => div({ class: 'p-2' }, div({}, () => `Details of ${route().kind}/${route().id ?? ''}`), div({ class: 'mt-2' }, 'Details content')),
 }
 
 export default definePlugin({
@@ -58,12 +60,13 @@ export default definePlugin({
             label: 'Fixtures',
             rows: [
               { id: 'plain', label: 'Plain screen', status: 'running', at: Date.now() - 4 * 60_000, to: { kind: 'fixture', id: 'plain' } },
-              { id: 'split', label: 'Split screen', detail: 'Has a side frame', mark: { initial: 'SP', color: 'sky' }, status: 'waiting', to: { kind: 'fixture', id: 'split' } },
+              { id: 'split', label: 'Split screen', status: 'waiting', to: { kind: 'fixture', id: 'split' } },
             ],
           },
         ],
       }),
     )
     ctx.effect(() => frame.route({ kind: 'fixture', render: screen }))
+    ctx.effect(() => frame.aside(aside))
   },
 })

@@ -55,10 +55,7 @@ export const createRecovery = <C extends Conversation>(
     announce.pending(conversation)
   }
 
-  const rerunnable = (conversation: C, stale: Stale) => {
-    const durable = new Set(stale.waits.flatMap(reason => (reason.durable ? [reason.call] : [])))
-    return (call: ToolCallBlock) => durable.has(call.id) || ctx.tools.effect(call, conversation) === 'read'
-  }
+  const rerunnable = (conversation: C) => (call: ToolCallBlock) => ctx.tools.effect(call, conversation) === 'read'
 
   const resume = (stale: Stale) => {
     const conversation = conversations.open(stale.conversation)
@@ -66,7 +63,7 @@ export const createRecovery = <C extends Conversation>(
     const resumed = ctx.ledger.tx(() => {
       const info = stores.turns.adopt(stale.id, leases.holder, leases.until())
       if (!info) return undefined
-      const rerun = rerunnable(conversation, stale)
+      const rerun = rerunnable(conversation)
       const { calls, replied } = settle(conversation, stale, rerun)
       if (stale.thread && !calls.length && !replied) conversations.abandon?.(stale.thread)
       return { conversation, info, calls: calls.filter(rerun), replied }

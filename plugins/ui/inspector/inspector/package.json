@@ -1,0 +1,21 @@
+{
+  "name": "@sand/inspector",
+  "version": "0.0.0",
+  "description": "A small card at a chat's top right with rows about where and how its thread runs",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Inspector",
+    "summary": "A card at a chat's top right: where it runs, its branch and changes, helpers and context"
+  },
+  "dependencies": {
+    "@sand/util": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

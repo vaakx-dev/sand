@@ -1,0 +1,18 @@
+{
+  "name": "@sand/inspector-model",
+  "version": "0.0.0",
+  "description": "The inspector's model row: the model and effort a thread or bot runs with, opening the model picker",
+  "type": "module",
+  "sand": {
+    "feature": "models",
+    "web": "./src/index.ts",
+    "label": "Model row",
+    "summary": "Shows the model and effort a chat runs with and opens the model picker"
+  },
+  "dependencies": {
+    "@sand/inspector": "workspace:*",
+    "@sand/model-panel": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

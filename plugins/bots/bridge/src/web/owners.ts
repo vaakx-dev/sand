@@ -1,8 +1,8 @@
 import { botName, type BotViews } from '@sand/bots/contract'
-import type { ThreadOwner, ThreadOwners } from '@sand/chat/contract'
+import { threadRoute, type ThreadOwner, type ThreadOwners } from '@sand/chat/contract'
 import type { Entry, Message } from '@sand/chats/contract'
+import type { Shell } from '@sand/ui-shell/contract'
 import { botKind } from '../contract'
-import { threadRef } from './refs'
 import type { Roster } from './roster'
 
 const senderOf = (entry: Entry) => {
@@ -13,11 +13,19 @@ const senderOf = (entry: Entry) => {
   return typeof record?.data.id === 'string' ? record.data.id : undefined
 }
 
-export const threadOwnersOf = (roster: Roster, views: BotViews): ThreadOwners => {
+export const threadOwnersOf = (roster: Roster, views: BotViews, shell?: Shell): ThreadOwners => {
   const ownerOf = (bot: string | undefined): ThreadOwner | undefined => {
     const found = bot === undefined ? undefined : roster.find(bot)
     if (!found) return undefined
-    return { id: found.id, label: botName(found), initial: found.initial, color: found.color, open: thread => views.open(found.id, threadRef(thread)) }
+    return {
+      id: found.id,
+      label: botName(found),
+      color: found.color,
+      open: thread => {
+        if (shell) shell.open({ kind: threadRoute, id: thread })
+        else views.open(found.id)
+      },
+    }
   }
   return {
     owner: thread => ownerOf(roster.starterOf(thread)),

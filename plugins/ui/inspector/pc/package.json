@@ -1,0 +1,18 @@
+{
+  "name": "@sand/inspector-pc",
+  "version": "0.0.0",
+  "description": "The inspector's PC row: the PC a thread runs on and its folder",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "PC row",
+    "summary": "Shows the PC and folder a thread runs in"
+  },
+  "dependencies": {
+    "@sand/inspector": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

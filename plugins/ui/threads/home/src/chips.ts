@@ -35,8 +35,8 @@ const item = (parts: ChipParts, thread: Thread, rest: Omit<ChipItem, 'id' | 'lab
 
 const waiting = (parts: ChipParts): ChipSource => ({
   key: 'waiting',
-  label: 'Waiting',
-  title: 'Waiting for you',
+  label: 'needs you',
+  title: 'Needs you',
   order: 10,
   status: 'waiting',
   items: scope =>
@@ -48,8 +48,8 @@ const waiting = (parts: ChipParts): ChipSource => ({
 
 const ready = (parts: ChipParts): ChipSource => ({
   key: 'ready',
-  label: 'Ready',
-  title: 'Ready to merge',
+  label: 'ready to review',
+  title: 'Ready to review',
   order: 20,
   status: 'ready',
   items: scope =>
@@ -73,8 +73,8 @@ const ready = (parts: ChipParts): ChipSource => ({
 
 const working = (parts: ChipParts): ChipSource => ({
   key: 'working',
-  label: 'Working',
-  title: 'Working',
+  label: 'running',
+  title: 'Running',
   order: 30,
   status: 'running',
   items: scope =>
