@@ -20,7 +20,7 @@ export const createMemory = (bots: Bots, changed: { memory(bot: string, text: st
     return files
       .filter(file => file.endsWith(extension))
       .map(file => file.slice(0, -extension.length))
-      .filter(name => noteName.safeParse(name).success)
+      .filter(name => noteName().safeParse(name).success)
       .sort()
   }
 
@@ -38,7 +38,7 @@ export const createMemory = (bots: Bots, changed: { memory(bot: string, text: st
       return Promise.all((await names(bot)).map(async name => ({ name, text: await Bun.file(join(notesFolder(bot), `${name}${extension}`)).text() })))
     },
     async writeNote(bot, note) {
-      const path = join(notesFolder(bot), `${noteName.parse(note.name)}${extension}`)
+      const path = join(notesFolder(bot), `${noteName().parse(note.name)}${extension}`)
       if (note.text.trim()) {
         await mkdir(notesFolder(bot), { recursive: true })
         await writeAtomic(path, note.text)

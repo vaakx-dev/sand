@@ -18,13 +18,13 @@ export interface Pull {
 }
 
 export const githubPulls = request('github.pulls', {
-  input: z.object({ cwd: z.string() }),
+  input: () => z.object({ cwd: z.string() }),
   output: type<Pull[] | null>(),
   place: 'thread',
 })
 
 export const githubOpenPull = request('github.openPull', {
-  input: z.object({ cwd: z.string(), title: z.string().trim().min(1) }),
+  input: () => z.object({ cwd: z.string(), title: z.string().trim().min(1) }),
   output: type<Pull>(),
   place: 'thread',
 })

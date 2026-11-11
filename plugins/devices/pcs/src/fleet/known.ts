@@ -14,7 +14,7 @@ export interface KnownPc {
 const knownKey = 'sand.pcs'
 const seenPrecision = 30_000
 
-const optionalIcon = (value: unknown) => value === undefined || pcIconSchema.safeParse(value).success
+const optionalIcon = (value: unknown) => value === undefined || pcIconSchema().safeParse(value).success
 
 const isKnown = (value: unknown): value is KnownPc =>
   isRecord(value) &&

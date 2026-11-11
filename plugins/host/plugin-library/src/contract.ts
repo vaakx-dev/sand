@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { z } from 'zod'
 
 export type PluginOrigin = 'builtin' | 'customised' | 'yours'
@@ -21,11 +22,11 @@ export interface PluginEntry {
   changed: boolean
 }
 
-export const pluginName = z.string().regex(/^(?!\.)(?!node_modules$)[^/\\:]+$/, 'plugin must be a plugin folder name')
+export const pluginName = lazy(() => z.string().regex(/^(?!\.)(?!node_modules$)[^/\\:]+$/, 'plugin must be a plugin folder name'))
 
-const plugin = z.object({ plugin: pluginName })
+const plugin = lazy(() => z.object({ plugin: pluginName() }))
 
-export const pluginsLibrary = request('plugins.library', { input: z.object({}), output: type<PluginEntry[]>() })
+export const pluginsLibrary = request('plugins.library', { input: () => z.object({}), output: type<PluginEntry[]>() })
 export const pluginsCustomise = request('plugins.customise', { input: plugin, output: type<PluginEntry[]>() })
 export const pluginsKeep = request('plugins.keep', { input: plugin, output: type<PluginEntry[]>() })
 export const pluginsRestore = request('plugins.restore', { input: plugin, output: type<PluginEntry[]>() })

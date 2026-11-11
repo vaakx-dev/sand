@@ -6,7 +6,7 @@ import { relayed } from './outcome'
 const known = new Map<string, Request<unknown, unknown>>()
 
 const requestOf = (id: string) => {
-  const found = known.get(id) ?? request(id, { input: z.unknown(), output: type<unknown>() })
+  const found = known.get(id) ?? request(id, { input: () => z.unknown(), output: type<unknown>() })
   known.set(id, found)
   return found
 }

@@ -1,4 +1,4 @@
-import { charStart, head, oneLine, timestamp } from '@sand/util'
+import { charStart, head, lazy, oneLine, timestamp } from '@sand/util'
 import { z } from 'zod'
 import type { Entry } from './entry'
 import type { Block, Message } from './message'
@@ -12,20 +12,20 @@ const callLimit = 500
 const resultLimit = 2_000
 const itemChars = 8_000
 
-export const historyReading = z.object({
+export const historyReading = lazy(() => z.object({
   query: z.string().min(1).optional().describe('Only items whose text holds this, ignoring case'),
   view: z.enum(historyViews).optional().describe('messages (default): what was said, notifications included; activity: tool calls and results too'),
   after: z.number().int().min(0).optional().describe('Return the items after this seq, oldest first'),
   before: z.number().int().min(1).optional().describe('Return the items before this seq; without after, the newest of them'),
   limit: z.number().int().min(1).max(mostItems).optional().describe(`At most this many items (default ${defaultLimit})`),
-})
+}))
 
-export type HistoryReading = z.infer<typeof historyReading>
+export type HistoryReading = z.infer<ReturnType<typeof historyReading>>
 
-export const historyItem = z.object({
+export const historyItem = lazy(() => z.object({
   item: z.string().min(1).optional().describe('Read one item in full instead of a page: its seq, or an item id from a [Historical …] header'),
   offset: z.number().int().min(0).optional().describe('Where to go on reading the item: the nextOffset it returned'),
-})
+}))
 
 export interface HistoryItem {
   seq: number

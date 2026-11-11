@@ -20,21 +20,21 @@ const callers = 'any'
 const place = 'thread'
 
 export const changesList = request('changes.list', {
-  input: z.object({ sessions: z.array(z.string()).optional(), project: z.string().optional() }),
+  input: () => z.object({ sessions: z.array(z.string()).optional(), project: z.string().optional() }),
   output: type<ThreadChanges[]>(),
   callers,
   place,
 })
 
 export const changesPatch = request('changes.patch', {
-  input: z.object({ session: z.string(), path: z.string(), from: z.string().optional() }),
+  input: () => z.object({ session: z.string(), path: z.string(), from: z.string().optional() }),
   output: type<DiffPatch>(),
   callers,
   place,
 })
 
 export const changesMerge = request('changes.merge', {
-  input: z.object({ session: z.string().optional() }),
+  input: () => z.object({ session: z.string().optional() }),
   output: type<ThreadChanges>(),
   callers,
   place,

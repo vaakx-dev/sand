@@ -8,7 +8,7 @@ const describe = (issue: Issue) => {
 }
 
 export const parseInput = async <I>(request: Request<I, unknown>, input: unknown) => {
-  const result = await request.input['~standard'].validate(input)
+  const result = await request.input()['~standard'].validate(input)
   if (result.issues) throw new Error(`Invalid input for ${request.id}: ${result.issues.map(describe).join('; ')}`)
   return result.value as I
 }

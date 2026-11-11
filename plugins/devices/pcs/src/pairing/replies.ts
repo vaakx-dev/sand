@@ -3,7 +3,7 @@ import { isRecord } from '@sand/util'
 
 export const deviceOf = (body: unknown): DeviceRecord | undefined => {
   if (!isRecord(body)) return undefined
-  const parsed = deviceRecordSchema.safeParse(body.device)
+  const parsed = deviceRecordSchema().safeParse(body.device)
   return parsed.success ? parsed.data : undefined
 }
 

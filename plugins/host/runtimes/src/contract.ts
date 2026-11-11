@@ -102,7 +102,7 @@ export const hostEvent = event<(event: WireEvent<unknown>, payload: unknown) => 
 export const runtimeDrain = event<() => void>('runtime.drain')
 export const runtimeRelease = event<(sessions: string[]) => void>('runtime.release')
 
-export const runtimesSafe = request('runtimes.safe', { input: z.object({ on: z.boolean() }), output: type<boolean>() })
+export const runtimesSafe = request('runtimes.safe', { input: () => z.object({ on: z.boolean() }), output: type<boolean>() })
 
 export const runtimeChanged = wireEvent<RuntimeChange>('runtime.changed')
 export const runtimeFailed = wireEvent<string>('runtime.failed')

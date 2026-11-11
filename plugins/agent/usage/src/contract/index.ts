@@ -71,6 +71,6 @@ export interface UsageSummary extends UsageQuery {
 }
 
 export const usageSummary = request('usage.summary', {
-  input: z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),
+  input: () => z.object({ since: z.number(), bucket: z.enum(['hour', 'day']), zone: z.string() }),
   output: type<UsageSummary>(),
 })

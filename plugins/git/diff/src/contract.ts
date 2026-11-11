@@ -1,5 +1,6 @@
 import type { FileKind } from '@sand/git/contract'
 import { request, type } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -46,17 +47,17 @@ export interface DiffPatch {
   tooLarge?: boolean
 }
 
-const scope = z.discriminatedUnion('kind', [
+const scope = lazy(() => z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('all'), base: z.string().optional() }),
   z.object({ kind: z.literal('uncommitted') }),
   z.object({ kind: z.literal('commit'), commit: z.string() }),
   z.object({ kind: z.literal('range'), from: z.string(), to: z.string() }),
-])
+]))
 
-export const gitDiff = request('git.diff', { input: z.object({ cwd: z.string(), scope }), output: type<DiffList>(), place: 'thread' })
+export const gitDiff = request('git.diff', { input: () => z.object({ cwd: z.string(), scope: scope() }), output: type<DiffList>(), place: 'thread' })
 
 export const gitPatch = request('git.patch', {
-  input: z.object({ cwd: z.string(), scope, path: z.string(), from: z.string().optional() }),
+  input: () => z.object({ cwd: z.string(), scope: scope(), path: z.string(), from: z.string().optional() }),
   output: type<DiffPatch>(),
   place: 'thread',
 })

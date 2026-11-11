@@ -9,7 +9,7 @@ const input = z.object({
   title: z.string().min(1),
   start: moment.describe('A day (2026-11-07) for an all-day event, or a time (2026-11-07T13:00)'),
   end: moment.optional().describe('When it ends (default: an hour after a time, or the end of the day)'),
-  zone: timeZone.optional().describe("Time zone of start and end, like Europe/Berlin (default: the user's)"),
+  zone: timeZone().optional().describe("Time zone of start and end, like Europe/Berlin (default: the user's)"),
   repeat: z.string().optional().describe('An iCalendar RRULE like FREQ=WEEKLY;BYDAY=MO,WE'),
   calendar: calendarField,
   ...eventFields,

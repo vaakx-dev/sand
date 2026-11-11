@@ -32,9 +32,9 @@ export interface HostVersions {
 
 export const hostVersions = service<HostVersions>('hostVersions')
 
-export const versionsList = request('versions.list', { input: z.object({}), output: type<VersionTarget[]>() })
+export const versionsList = request('versions.list', { input: () => z.object({}), output: type<VersionTarget[]>() })
 export const versionsRestore = request('versions.restore', {
-  input: z.object({ target: z.string().min(1), version: z.string().min(1) }),
+  input: () => z.object({ target: z.string().min(1), version: z.string().min(1) }),
   output: type<VersionTarget>(),
 })
 

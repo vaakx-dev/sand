@@ -28,7 +28,7 @@ export const iconPicker = (ui: Ui, view: Sig<PcView>, close: () => void) => {
     { class: 'pb-3 pl-12' },
     div(
       { class: 'grid max-w-80 grid-cols-4 gap-1.5', role: 'group', 'aria-label': 'Icon' },
-      ...pcIconSchema.options.map(kind => option(ui, view, kind, choose)),
+      ...pcIconSchema().options.map(kind => option(ui, view, kind, choose)),
     ),
   )
 }

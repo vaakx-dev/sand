@@ -24,6 +24,7 @@ import {
 } from '@sand/engine/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SessionSettings, sessionSettings } from '@sand/model/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
@@ -83,31 +84,31 @@ export const helloTurns = helloField<Record<string, TurnInfo>>('turns')
 export const helloTurnsApi = helloField<number>('turnsApi')
 
 const place = 'thread'
-const session = z.object({ session: z.string() })
+const session = lazy(() => z.object({ session: z.string() }))
 
 export const turnSend = request('turn.send', {
-  input: session.extend({
-    prompt: promptInput,
+  input: () => session().extend({
+    prompt: promptInput(),
     mode: z.enum(sendModes).optional(),
     label: z.string().optional(),
     origin: z.enum(turnOrigins).optional(),
     clientRequestId: z.string().min(1),
-    settings: sessionSettings.optional(),
+    settings: sessionSettings().optional(),
   }),
   output: type<SendResult>(),
   place,
 })
-export const turnInterrupt = request('turn.interrupt', { input: session.extend({ turn: z.string().optional() }), output: type<boolean>(), place })
-export const turnWithdraw = request('turn.withdraw', { input: session.extend({ pending: z.string() }), output: type<boolean>(), place })
-export const turnHold = request('turn.hold', { input: session.extend({ pending: z.string(), held: z.boolean() }), output: type<boolean>(), place })
-export const turnGet = request('turn.get', { input: session.extend({ turn: z.string().optional() }), output: type<TurnInfo | null>(), place })
+export const turnInterrupt = request('turn.interrupt', { input: () => session().extend({ turn: z.string().optional() }), output: type<boolean>(), place })
+export const turnWithdraw = request('turn.withdraw', { input: () => session().extend({ pending: z.string() }), output: type<boolean>(), place })
+export const turnHold = request('turn.hold', { input: () => session().extend({ pending: z.string(), held: z.boolean() }), output: type<boolean>(), place })
+export const turnGet = request('turn.get', { input: () => session().extend({ turn: z.string().optional() }), output: type<TurnInfo | null>(), place })
 export const turnList = request('turn.list', {
-  input: session.extend({ before: z.number().int().optional(), limit: z.number().int().min(1).max(50).optional() }),
+  input: () => session().extend({ before: z.number().int().optional(), limit: z.number().int().min(1).max(50).optional() }),
   output: type<TurnInfo[]>(),
   place,
 })
 export const turnWait = request('turn.wait', {
-  input: session.extend({ turn: z.string(), until: z.enum(['end', 'attention']), timeoutMs: z.number().int().min(0).max(25_000).optional() }),
+  input: () => session().extend({ turn: z.string(), until: z.enum(['end', 'attention']), timeoutMs: z.number().int().min(0).max(25_000).optional() }),
   output: type<TurnInfo>(),
   place,
 })

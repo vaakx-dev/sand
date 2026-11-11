@@ -1,3 +1,4 @@
+import './jitless'
 import { div, mount } from '@vaakx-dev/vrui'
 import { createApp, inspectorPlugin, scopeError } from 'drydock'
 import { extensions, problems } from 'sand:extensions'

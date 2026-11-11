@@ -76,8 +76,8 @@ export const toolsChange = event<() => void>('tools.change')
 
 export const toolsChangeWire = wireEvent<GroupState[]>('tools.change')
 
-export const toolsGroups = request('tools.groups', { input: z.object({}), output: type<GroupState[]>() })
+export const toolsGroups = request('tools.groups', { input: () => z.object({}), output: type<GroupState[]>() })
 export const toolsChoose = request('tools.choose', {
-  input: z.object({ group: z.string(), load: z.enum(['always', 'on-demand', 'off']) }),
+  input: () => z.object({ group: z.string(), load: z.enum(['always', 'on-demand', 'off']) }),
   output: type<GroupState[]>(),
 })

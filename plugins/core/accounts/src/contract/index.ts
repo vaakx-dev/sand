@@ -1,5 +1,6 @@
 import type { Session } from '@sand/chats/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 import type { LLM, LLMEvent, Limits } from './llm'
@@ -35,22 +36,22 @@ export const loginChange = wireEvent<LoginState>('login.change')
 
 export const helloLimits = helloField<Limits>('limits')
 
-const account = z.object({ account: z.string() })
-const source = z.object({ source: z.string() })
-const model = z.object({ model: z.string() })
+const account = lazy(() => z.object({ account: z.string() }))
+const source = lazy(() => z.object({ source: z.string() }))
+const model = lazy(() => z.object({ model: z.string() }))
 const login = type<LoginState>()
 
-export const limitsRefresh = request('limits.refresh', { input: z.object({}), output: type<Limits | undefined>() })
+export const limitsRefresh = request('limits.refresh', { input: () => z.object({}), output: type<Limits | undefined>() })
 
-export const loginStatus = request('login.status', { input: z.object({}), output: login })
-export const loginStart = request('login.start', { input: account.extend({ anyway: z.boolean().optional() }), output: login })
-export const loginFinish = request('login.finish', { input: account.extend({ code: z.string() }), output: login })
+export const loginStatus = request('login.status', { input: () => z.object({}), output: login })
+export const loginStart = request('login.start', { input: () => account().extend({ anyway: z.boolean().optional() }), output: login })
+export const loginFinish = request('login.finish', { input: () => account().extend({ code: z.string() }), output: login })
 export const loginKey = request('login.key', {
-  input: z.object({ account: z.enum(['anthropic', 'openai', 'openrouter']), key: z.string(), baseUrl: z.string().optional() }),
+  input: () => z.object({ account: z.enum(['anthropic', 'openai', 'openrouter']), key: z.string(), baseUrl: z.string().optional() }),
   output: login,
 })
 export const loginServer = request('login.server', {
-  input: z.object({
+  input: () => z.object({
     id: z.string().optional(),
     name: z.string(),
     url: z.string(),
@@ -59,18 +60,18 @@ export const loginServer = request('login.server', {
   }),
   output: login,
 })
-export const loginDetect = request('login.detect', { input: z.object({}), output: type<DetectedServer[]>() })
+export const loginDetect = request('login.detect', { input: () => z.object({}), output: type<DetectedServer[]>() })
 export const loginCancel = request('login.cancel', { input: account, output: login })
 export const loginLogout = request('login.logout', { input: account, output: login })
-export const loginShared = request('login.shared', { input: account.extend({ shared: z.boolean() }), output: login })
+export const loginShared = request('login.shared', { input: () => account().extend({ shared: z.boolean() }), output: login })
 
 export const modelsCatalog = request('models.catalog', { input: source, output: type<ModelInfo[]>() })
 export const modelsPref = request('models.pref', {
-  input: model.extend({ hidden: z.boolean().optional(), favourite: z.boolean().optional() }),
+  input: () => model().extend({ hidden: z.boolean().optional(), favourite: z.boolean().optional() }),
   output: type<void>(),
 })
-export const modelsAdd = request('models.add', { input: source.extend({ name: z.string() }), output: type<ModelInfo>() })
+export const modelsAdd = request('models.add', { input: () => source().extend({ name: z.string() }), output: type<ModelInfo>() })
 export const modelsRemove = request('models.remove', { input: model, output: type<void>() })
-export const modelsNewModels = request('models.newModels', { input: source.extend({ mode: z.enum(['show', 'hide']) }), output: type<void>() })
+export const modelsNewModels = request('models.newModels', { input: () => source().extend({ mode: z.enum(['show', 'hide']) }), output: type<void>() })
 export const modelsSeen = request('models.seen', { input: source, output: type<void>() })
-export const modelsRefresh = request('models.refresh', { input: z.object({ source: z.string().optional() }), output: type<void>() })
+export const modelsRefresh = request('models.refresh', { input: () => z.object({ source: z.string().optional() }), output: type<void>() })

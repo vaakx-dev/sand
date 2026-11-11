@@ -1,4 +1,5 @@
 import { wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 import type { Entry } from './entry'
@@ -32,7 +33,7 @@ const isBlock = (block: unknown) =>
 
 const isPrompt = (value: unknown) => typeof value === 'string' || (Array.isArray(value) && value.every(isBlock))
 
-export const promptInput = z.custom<Prompt>(isPrompt, 'Expected a prompt')
+export const promptInput = lazy(() => z.custom<Prompt>(isPrompt, 'Expected a prompt'))
 
 export const sessions = service<Sessions>('sessions')
 

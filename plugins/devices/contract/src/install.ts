@@ -47,14 +47,14 @@ export const installParams = {
 } as const
 
 export const installCreate = request('install.create', {
-  input: z.object({
+  input: () => z.object({
     platform: z.enum(['linux', 'darwin', 'win32']),
     route: z.string().min(1),
     channel: z.enum(['release', 'nightly', 'dev']).optional(),
   }),
   output: type<InstallGrant>(),
 })
-export const installCancel = request('install.cancel', { input: z.object({ id: z.string().min(1) }), output: type<void>() })
-export const installList = request('install.list', { input: z.object({}), output: type<InstallProgress[]>() })
+export const installCancel = request('install.cancel', { input: () => z.object({ id: z.string().min(1) }), output: type<void>() })
+export const installList = request('install.list', { input: () => z.object({}), output: type<InstallProgress[]>() })
 
 export const installProgress = wireEvent<InstallProgress>('install.progress')

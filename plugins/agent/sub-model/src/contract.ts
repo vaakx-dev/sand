@@ -1,6 +1,7 @@
 import type { AskRequest } from '@sand/ask/contract'
 import { helloField, request, type, wireEvent } from '@sand/host-hub/contract'
 import { type SessionSettings, sessionSettings } from '@sand/model/contract'
+import { lazy } from '@sand/util'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -21,9 +22,9 @@ export interface SubModel {
 
 export const subModel = service<SubModel>('subModel')
 
-export const chosenModel = sessionSettings.required({ model: true })
+export const chosenModel = lazy(() => sessionSettings().required({ model: true }))
 
-export type ChosenModel = z.output<typeof chosenModel>
+export type ChosenModel = z.output<ReturnType<typeof chosenModel>>
 
 export interface SubModelState {
   models: Partial<Record<Tier, ChosenModel>>
@@ -34,6 +35,6 @@ export const helloSubModel = helloField<SubModelState>('subModel')
 export const subModelChange = wireEvent<SubModelState>('subModel.change')
 
 export const subModelSet = request('subModel.set', {
-  input: z.object({ tier: z.enum(tiers), model: chosenModel.nullable() }),
+  input: () => z.object({ tier: z.enum(tiers), model: chosenModel().nullable() }),
   output: type<void>(),
 })

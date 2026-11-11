@@ -28,8 +28,8 @@ const listInput = z.object({
 const historyInput = z.object({
   thread: z.string().optional().describe('A thread id'),
   bot: z.string().optional().describe('A bot id'),
-  ...historyReading.shape,
-  ...historyItem.shape,
+  ...historyReading().shape,
+  ...historyItem().shape,
 })
 
 const startInput = z.object({

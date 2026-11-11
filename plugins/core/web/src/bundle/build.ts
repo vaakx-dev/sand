@@ -23,6 +23,8 @@ type Modules = Record<string, string>
 
 const ASSETS = '/assets/'
 
+const COMPILE_ON_LOAD = '//# allFunctionsCalledOnLoad'
+
 const shared = (extensions: Extension[], modules: Modules) => ({
   drydock: Bun.resolveSync('drydock/browser', import.meta.dir),
   '@vaakx-dev/vrui': Bun.resolveSync('@vaakx-dev/vrui', import.meta.dir),
@@ -36,6 +38,7 @@ const compile = async (extensions: Extension[], bundled: Extension[], problems: 
     target: 'browser',
     conditions: ['browser'],
     minify: true,
+    banner: COMPILE_ON_LOAD,
     splitting: true,
     naming: { entry: 'app-[hash].[ext]', chunk: 'chunk-[hash].[ext]' },
     publicPath: ASSETS,

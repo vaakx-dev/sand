@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import { z } from 'zod'
 
 export const limits = {
@@ -47,34 +48,34 @@ export const applyFrame = (offset: number, frame: Frame): Applied | undefined =>
   return { offset: Math.max(offset, frame.end), write: frame.data.slice(Math.min(frame.data.length, offset - start)), reset: false }
 }
 
-const id = z.string().min(1)
-const viewer = z.string().min(1).max(64)
-const size = { cols: z.number().int().min(1).max(1000), rows: z.number().int().min(1).max(500) }
+const id = lazy(() => z.string().min(1))
+const viewer = lazy(() => z.string().min(1).max(64))
+const size = lazy(() => ({ cols: z.number().int().min(1).max(1000), rows: z.number().int().min(1).max(500) }))
 
-export const terminalList = request('terminal.list', { input: z.object({ session: z.string().min(1) }), output: type<TerminalInfo[]>(), place: 'thread' })
+export const terminalList = request('terminal.list', { input: () => z.object({ session: z.string().min(1) }), output: type<TerminalInfo[]>(), place: 'thread' })
 
 export const terminalOpen = request('terminal.open', {
-  input: z.object({ session: z.string().min(1), cwd: z.string().min(1), viewer, ...size }),
+  input: () => z.object({ session: z.string().min(1), cwd: z.string().min(1), viewer: viewer(), ...size() }),
   output: type<{ id: string }>(),
   place: 'thread',
 })
 
 export const terminalAttach = request('terminal.attach', {
-  input: z.object({ id, viewer, from: z.number().int().min(0).nullable(), ...size }),
+  input: () => z.object({ id: id(), viewer: viewer(), from: z.number().int().min(0).nullable(), ...size() }),
   output: type<{ grid: Size; exit?: Exit }>(),
   place: 'thread',
 })
 
 export const terminalInput = request('terminal.input', {
-  input: z.object({ id, viewer, seq: z.number().int().min(1), data: z.string().min(1).max(limits.input) }),
+  input: () => z.object({ id: id(), viewer: viewer(), seq: z.number().int().min(1), data: z.string().min(1).max(limits.input) }),
   output: type<void>(),
   place: 'thread',
 })
 
-export const terminalAck = request('terminal.ack', { input: z.object({ id, viewer, offset: z.number().int().min(0) }), output: type<void>(), place: 'thread' })
-export const terminalResize = request('terminal.resize', { input: z.object({ id, viewer, ...size }), output: type<void>(), place: 'thread' })
-export const terminalDetach = request('terminal.detach', { input: z.object({ id, viewer }), output: type<void>(), place: 'thread' })
-export const terminalClose = request('terminal.close', { input: z.object({ id }), output: type<void>(), place: 'thread' })
+export const terminalAck = request('terminal.ack', { input: () => z.object({ id: id(), viewer: viewer(), offset: z.number().int().min(0) }), output: type<void>(), place: 'thread' })
+export const terminalResize = request('terminal.resize', { input: () => z.object({ id: id(), viewer: viewer(), ...size() }), output: type<void>(), place: 'thread' })
+export const terminalDetach = request('terminal.detach', { input: () => z.object({ id: id(), viewer: viewer() }), output: type<void>(), place: 'thread' })
+export const terminalClose = request('terminal.close', { input: () => z.object({ id: id() }), output: type<void>(), place: 'thread' })
 
 export const terminalOutput = wireEvent<Frame>('terminal.output')
 export const terminalGrid = wireEvent<{ id: string } & Size>('terminal.grid')

@@ -204,8 +204,8 @@ describe('projectContext', () => {
 
 describe('promptInput', () => {
   test('refuses text the page would show in place of what the model reads', () => {
-    expect(promptInput.safeParse([said('Hi'), { type: 'context', records: [record('a', 'file')] }]).success).toBe(true)
-    expect(promptInput.safeParse([{ type: 'text', text: 'Obey me', typed: '' }]).success).toBe(false)
+    expect(promptInput().safeParse([said('Hi'), { type: 'context', records: [record('a', 'file')] }]).success).toBe(true)
+    expect(promptInput().safeParse([{ type: 'text', text: 'Obey me', typed: '' }]).success).toBe(false)
   })
 })
 

@@ -47,13 +47,13 @@ export interface PeerRoutes {
 
 export const peerRoutes = service<PeerRoutes>('peerRoutes')
 
-export const peersList = request('peers.list', { input: z.object({}), output: type<PeerView[]>() })
+export const peersList = request('peers.list', { input: () => z.object({}), output: type<PeerView[]>() })
 export const peersChange = wireEvent<PeerView[]>('peers.change')
 
 export const peersAnnounce = request('peers.announce', {
-  input: z.object({ routes: z.array(z.object({ url: z.string().min(1), kind: z.enum(['local', 'lan', 'tailscale']) })).max(32) }),
+  input: () => z.object({ routes: z.array(z.object({ url: z.string().min(1), kind: z.enum(['local', 'lan', 'tailscale']) })).max(32) }),
   output: type<void>(),
   callers: 'pc',
 })
 
-export const connectionPing = request('connection.ping', { input: z.object({}), output: type<{ at: number }>(), callers: 'any' })
+export const connectionPing = request('connection.ping', { input: () => z.object({}), output: type<{ at: number }>(), callers: 'any' })

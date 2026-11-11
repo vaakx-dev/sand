@@ -124,6 +124,6 @@ export const computersChange = event<() => void>('computers.change')
 
 export const computersChangeWire = wireEvent<ComputerInfo[]>('computers.change')
 
-export const computersList = request('computers.list', { input: z.object({}), output: type<ComputerInfo[]>() })
+export const computersList = request('computers.list', { input: () => z.object({}), output: type<ComputerInfo[]>() })
 
 export const center = ({ left, top, right, bottom }: Box): Point => ({ x: (left + right) / 2, y: (top + bottom) / 2 })

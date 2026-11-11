@@ -1,4 +1,5 @@
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { lazy } from '@sand/util'
 import type { BuildChange, BuildInfo } from '@sand/util/release'
 import { z } from 'zod'
 
@@ -38,18 +39,18 @@ export interface PcRepairResult {
   error?: string
 }
 
-const channel = z.enum(['release', 'nightly', 'dev'] satisfies UpdateChannel[])
-const build = z.string().min(1)
-const none = z.object({})
+const channel = lazy(() => z.enum(['release', 'nightly', 'dev'] satisfies UpdateChannel[]))
+const build = lazy(() => z.string().min(1))
+const none = lazy(() => z.object({}))
 
 export const updatesState = request('updates.state', { input: none, output: type<UpdateState>(), callers: 'any' })
 export const updatesCheck = request('updates.check', { input: none, output: type<UpdateState>() })
 export const updatesLater = request('updates.later', { input: none, output: type<UpdateState>() })
-export const updatesApply = request('updates.apply', { input: z.object({ build }), output: type<UpdateState>() })
+export const updatesApply = request('updates.apply', { input: () => z.object({ build: build() }), output: type<UpdateState>() })
 export const updatesRestart = request('updates.restart', { input: none, output: type<UpdateState>() })
-export const updatesHeard = request('updates.heard', { input: z.object({ channel, build }), output: type<UpdateState>(), callers: 'pc' })
-export const updatesChannel = request('updates.channel', { input: z.object({ channel }), output: type<UpdateState>() })
+export const updatesHeard = request('updates.heard', { input: () => z.object({ channel: channel(), build: build() }), output: type<UpdateState>(), callers: 'pc' })
+export const updatesChannel = request('updates.channel', { input: () => z.object({ channel: channel() }), output: type<UpdateState>() })
 export const updatesRepair = request('updates.repair', { input: none, output: type<UpdateState & { target: BuildInfo }>(), callers: 'pc' })
-export const pcRepair = request('pc.repair', { input: z.object({ device: z.string().min(1), resume: z.boolean().optional() }), output: type<PcRepairResult>() })
+export const pcRepair = request('pc.repair', { input: () => z.object({ device: z.string().min(1), resume: z.boolean().optional() }), output: type<PcRepairResult>() })
 
 export const updatesChange = wireEvent<UpdateState>('updates.change')
