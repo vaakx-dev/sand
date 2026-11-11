@@ -1,4 +1,4 @@
-import { div, dynamicChild, list } from '@vaakx-dev/vrui'
+import { div, dynamicChild, list, listen } from '@vaakx-dev/vrui'
 import { bar } from './bar'
 import { panelWidth, type Model } from './model'
 
@@ -9,7 +9,7 @@ export const asideToggles = (model: Model) => {
     spec => spec.id,
     spec => {
       const shown = () => model.asideShown(spec.get())
-      return iconButton(
+      const button = iconButton(
         {
           title: () => spec.get().label,
           'aria-label': () => spec.get().label,
@@ -19,12 +19,31 @@ export const asideToggles = (model: Model) => {
         },
         icon(spec.get().icon),
       )
+      if (spec.get().kind !== 'card') return button
+      const anchor: HTMLElement = div({ class: 'relative flex' }, button, popover(model, () => anchor))
+      return anchor
     },
     div({ class: 'flex shrink-0 items-center gap-1' }),
   )
 }
 
 const beside = (model: Model) => () => model.beside.get()
+
+const popover = (model: Model, anchor: () => HTMLElement) =>
+  dynamicChild(model.openPop, spec => {
+    if (!spec) return null
+    listen(document, 'pointerdown', (event: PointerEvent) => {
+      if (!anchor().contains(event.target as Node)) model.showAside(spec.id, false)
+    })
+    return div(
+      {
+        'aria-label': spec.label,
+        class: [model.kit.layer.sticky, 'absolute top-full right-0 mt-1 flex flex-col overflow-auto rounded-2xl bg-neutral-800 p-1.5 shadow-xl'],
+        style: () => ({ width: '18rem', maxHeight: `${Math.max(model.height.get() - 64, 160)}px` }),
+      },
+      spec.render(beside(model)),
+    )
+  })
 
 export const asideCard = (model: Model) =>
   dynamicChild(model.openCard, spec =>

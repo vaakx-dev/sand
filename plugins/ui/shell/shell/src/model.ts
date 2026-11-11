@@ -26,6 +26,8 @@ export const sideWidth = 288
 
 export const panelWidth = 352
 
+export const cardHeight = 360
+
 export const asideKind = 'aside'
 
 const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover' } as const
@@ -42,6 +44,7 @@ export const shellModel = (kit: Kit) => {
   const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry(), home: registry() }
 
   const width = sig(window.innerWidth)
+  const height = sig(window.innerHeight)
   const layer = sig(addressLayer())
   const sheet = sig<SheetSpec | undefined>(undefined)
   const openFolds = stored<string[]>('sand.shell.open-groups', [])
@@ -80,7 +83,10 @@ export const shellModel = (kit: Kit) => {
       const id = picked[kind].get()
       return shownAsides.get().find(spec => spec.kind === kind && (id === null || spec.id === id))
     })
-  const openCard = openOf('card')
+  const threadKey = derive(() => screenKey(beside.get()))
+  const cardsOpen = stored<Record<string, boolean>>('sand.shell.card-open', {})
+  const popsOpen = sig<Record<string, boolean>>({})
+  const cardSpec = openOf('card')
   const openPanel = openOf('panel')
   const openDrawer = openOf('drawer')
   const pushedAside = derive(() => (current.get().kind === asideKind ? asides.items.get().find(spec => spec.id === current.get().id) : undefined))
@@ -145,10 +151,12 @@ export const shellModel = (kit: Kit) => {
     }
   }
 
-  const roomy = derive(() => {
-    if (state.get() !== 'wide' || !openCard.get()) return false
-    return width.get() - sideWidth - (openPanel.get() ? panelWidth : 0) >= roomyMain
-  })
+  const chatWidth = derive(() => width.get() - (state.get() === 'wide' ? sideWidth : 0) - (openPanel.get() ? panelWidth : 0))
+  const floats = derive(() => chatWidth.get() >= roomyMain && height.get() >= cardHeight)
+  const openCard = derive(() => (floats.get() && cardsOpen.get()[threadKey.get()] !== false ? cardSpec.get() : undefined))
+  const openPop = derive(() => (!floats.get() && popsOpen.get()[threadKey.get()] ? cardSpec.get() : undefined))
+  const setCardOpen = (show: boolean) => (floats.get() ? cardsOpen : popsOpen).update(all => ({ ...all, [threadKey.get()]: show }))
+  const roomy = derive(() => Boolean(openCard.get()))
 
   const asideSheets = new Map<string, SheetSpec>()
   const asideSheet = (spec: Aside) => {
@@ -161,7 +169,7 @@ export const shellModel = (kit: Kit) => {
   const opened: Record<AsideKind, typeof openCard> = { card: openCard, panel: openPanel, drawer: openDrawer }
 
   const asideShown = (spec: Aside) => {
-    if (!phone.get()) return opened[spec.kind].get()?.id === spec.id
+    if (!phone.get()) return (spec.kind === 'card' && !floats.get() ? openPop : opened[spec.kind]).get()?.id === spec.id
     if (spec.kind !== 'card') return pushedAside.get()?.id === spec.id
     const shown = sheetShown.get()
     return shown !== undefined && shown === asideSheets.get(spec.id)
@@ -170,6 +178,7 @@ export const shellModel = (kit: Kit) => {
   const showAside = (id: string, show: boolean) => {
     const spec = asides.items.get().find(found => found.id === id)
     if (!spec) return
+    if (!phone.get() && spec.kind === 'card') return setCardOpen(show)
     if (!phone.get()) return picked[spec.kind].set(show ? id : '')
     if (spec.kind !== 'card') {
       if (show) open({ kind: asideKind, id })
@@ -211,6 +220,8 @@ export const shellModel = (kit: Kit) => {
     },
     shownAsides,
     openCard,
+    openPop,
+    height,
     openPanel,
     openDrawer,
     pushedAside,
