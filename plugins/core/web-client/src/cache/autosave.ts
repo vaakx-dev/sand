@@ -1,6 +1,6 @@
+import { onIdle } from '@vaakx-dev/vrui'
 import type { Context } from 'drydock'
 import { after } from '../detached'
-import { onIdle } from '../integrations/idle'
 import { askPersistence } from '../integrations/storage'
 import type { Store } from '../threads/store'
 import { onLeave } from './leave'
