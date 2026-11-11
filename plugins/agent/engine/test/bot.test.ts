@@ -192,3 +192,14 @@ test('an empty reply gets one nudge, then the turn ends', async () => {
   expect(nudges).toHaveLength(1)
   expect(sand.requests('fake')).toHaveLength(2)
 })
+
+test('an empty reply to a notice ends the turn without a nudge', async () => {
+  const sand = await start([[{ type: 'thinking', text: 'hmm' }]], { api: 'anthropic' })
+  const memory = remember('grok', sand.home)
+  const runner = attachBots(sand, new Map([[memory.id, memory]]))
+
+  const result = await runner.run(memory, '<task-notification>done</task-notification>', { origin: 'job' })
+
+  expect(result).toMatchObject({ stopReason: 'end_turn', text: '', steps: 1 })
+  expect(sand.requests('fake')).toHaveLength(1)
+})
