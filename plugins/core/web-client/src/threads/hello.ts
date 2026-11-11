@@ -31,7 +31,7 @@ export const applyHello = (store: Store, read: HelloRead, device: string) => {
   const running = runningOf(read)
   const jobs = Map.groupBy((read(helloJobs) ?? []).filter(job => job.status === 'running'), job => job.parent)
   for (const thread of owned()) {
-    thread.jobs = new Set(jobs.get(thread.id)?.map(job => job.id))
+    thread.jobs = new Map(jobs.get(thread.id)?.map(job => [job.id, job.started]))
     const turn = running.get(thread.id)
     thread.turn = turn !== undefined
     if (!turn) clearTurn(thread)
