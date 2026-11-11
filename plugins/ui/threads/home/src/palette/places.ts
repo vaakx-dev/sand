@@ -2,7 +2,7 @@ import { pcs } from '@sand/devices-contract'
 import { folderName } from '@sand/util'
 import { projects, type ProjectEntry, type ProjectGroup, type Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { findGroup, quickName } from '../items/lookup'
+import { findGroup, quickName } from '../contract'
 
 export interface Place {
   id: string

@@ -39,7 +39,7 @@ const alone = (id: string, pages: string[] = []): Combo => ({
 const combos: Combo[] = [
   { name: 'kernel only', off: topLevel, pages: kernelPages, exact: true },
   alone('threads', ['Models', 'Projects']),
-  alone('bots', ['Models', 'Approvals']),
+  alone('bots', ['Models']),
   alone('calendar', ['Connections']),
   alone('computers', ['Models']),
   alone('pcs', ['Devices']),
@@ -48,7 +48,6 @@ const combos: Combo[] = [
   alone('updates', ['Updates']),
   { name: 'threads without git', off: [...topLevel.filter(id => id !== 'threads'), 'git'] },
   { name: 'bots without notifications, schedules and connections', off: [...topLevel.filter(id => id !== 'bots'), 'schedules', 'connections'], absent: ['Notifications', 'Connections'] },
-  { name: 'bots without approvals', off: [...topLevel.filter(id => id !== 'bots'), 'approvals'], absent: ['Approvals'] },
 ]
 
 const withModel = '[features]\n\n[[plugins.replay.sources]]\nid = "replay"\nmodels = ["script"]\nreplies = []\n'

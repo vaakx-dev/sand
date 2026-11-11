@@ -1,6 +1,6 @@
 import { type Message, textOf } from '@sand/chats/contract'
 import { errorMessage, isRecord, joinDisposers } from '@sand/util'
-import { type Conversation, HandedOver, type TurnEnding, type TurnResult, type TurnStatus } from '../contract'
+import { type Conversation, type TurnEnding, type TurnResult, type TurnStatus } from '../contract'
 import type { EngineContext } from '../context'
 import { createPartial } from '../loop/partial'
 import { runReact } from '../loop/react'
@@ -71,23 +71,17 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
     return result
   }
 
-  const drive = async (begun: Begun<C>, external: AbortSignal | undefined, movable: boolean): Promise<Driven> => {
+  const drive = async (begun: Begun<C>, external?: AbortSignal): Promise<Driven> => {
     const { conversation, info } = begun
     const controller = new AbortController()
     const signal = external ? AbortSignal.any([external, controller.signal]) : controller.signal
     const partial = createPartial(message => stores.turns.partial(info.id, message))
     const run: TurnRun<C> = { info, conversation, signal, partial, usage: info.usage, reply: '', steps: info.step }
     const hooks = createHooks(ctx, owned, run)
-    const parked = movable ? hooks.parked : () => false
-    const release = joinDisposers(leases.hold(info.id, { controller, parked }), ctx.busy(), ctx.effect(() => run.partial.stop))
+    const release = joinDisposers(leases.hold(info.id, controller), ctx.busy(), ctx.effect(() => run.partial.stop))
     if ('user' in begun) conversations.started?.(conversation, begun.user, info)
     announce.turn(info.id)
     const outcome = await react(run, hooks, begun)
-    if (signal.reason instanceof HandedOver) {
-      release()
-      announce.turn(info.id)
-      throw signal.reason
-    }
     let result: TurnResult
     try {
       result = end(run, outcome)
@@ -101,11 +95,9 @@ export const createDriver = <C extends Conversation>(ctx: EngineContext, owned: 
   }
 
   return {
-    run: (begun: Begun<C>, signal?: AbortSignal) => drive(begun, signal, false),
+    run: drive,
     start(begun: Begun<C>) {
-      drive(begun, undefined, true).catch(error => {
-        if (!(error instanceof HandedOver)) ctx.report(error)
-      })
+      drive(begun).catch(error => ctx.report(error))
     },
   }
 }

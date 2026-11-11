@@ -1,0 +1,23 @@
+{
+  "name": "@sand/panel-changes",
+  "version": "0.0.0",
+  "description": "The side panel's changes tab: the files a thread changed and each file's patch",
+  "type": "module",
+  "sand": {
+    "feature": "git",
+    "web": "./src/index.ts",
+    "label": "Changes tab",
+    "summary": "Shows the files a thread changed and their patches in the side panel"
+  },
+  "dependencies": {
+    "@sand/changes": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/git-diff": "workspace:*",
+    "@sand/git-diff-view": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

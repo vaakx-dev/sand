@@ -1,6 +1,6 @@
 import type { LiveEvent } from '@sand/accounts/contract'
 import type { Session, WireSession, WireSessionRef } from '@sand/chats/contract'
-import { wireEvent } from '@sand/host-hub/contract'
+import { type Caller, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import type { EntryHead, LiveSnapshot, Mark, OpenedSession } from './relay'
 import type { Server } from './server'
@@ -14,6 +14,8 @@ export * from './requests'
 export const server = service<Server>('server')
 
 export const pagesChange = event<(pages: number) => void>('server.pages')
+
+export const pageLeft = event<(caller: Caller) => void>('server.page.left')
 
 export const userWrote = event<(session: Session) => void>('user.wrote')
 

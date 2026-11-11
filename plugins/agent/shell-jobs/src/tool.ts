@@ -19,7 +19,7 @@ export const backgroundTool = (ctx: Context, jobs: BackgroundJobs, runner: Shell
     'Start a long-running shell command, like a dev server, watcher or long build, in the background, in the working directory and the same shell as the shell tool. Returns its job id at once. Read its output with job_read, wait for it with job_wait and stop it with job_stop. When it exits, a <task-notification> brings its exit code and last output.',
   input,
   needs: ['thread', 'pc'],
-  act: ({ command }) => ({ effect: 'run', summary: command }),
+  effect: 'run',
   run({ command, label }, { conversation, cwd, call }) {
     const output = outputTail()
     const job = jobs.start({

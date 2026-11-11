@@ -1,0 +1,22 @@
+{
+  "name": "@sand/inspector-context",
+  "version": "0.0.0",
+  "description": "The inspector's context row: how full a thread's context window is and what fills it",
+  "type": "module",
+  "sand": {
+    "feature": "compaction",
+    "web": "./src/index.ts",
+    "label": "Context row",
+    "summary": "Shows how full a thread's context window is"
+  },
+  "dependencies": {
+    "@sand/compaction": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/reactive": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/util": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

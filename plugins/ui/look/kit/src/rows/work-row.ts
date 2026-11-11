@@ -1,5 +1,5 @@
 import type { Status } from '@sand/ui-shell/contract'
-import { clock, div, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
+import { div, p, read, span, type Child, type MaybeReactive, type Props } from '@vaakx-dev/vrui'
 import { rowButton } from '../buttons/button'
 import { largeRowTitle, rowTitle } from '../heads/text'
 import { dot, spinner } from '../marks/marks'
@@ -17,21 +17,17 @@ export const shortAge = (ms: number) => {
 }
 
 const attention: Partial<Record<Status, { label: string; tone: 'run' | 'warning' | 'success' }>> = {
-  running: { label: 'Working', tone: 'run' },
+  running: { label: 'Running', tone: 'run' },
   merging: { label: 'Merging', tone: 'run' },
   waiting: { label: 'Needs you', tone: 'warning' },
   ready: { label: 'Ready', tone: 'success' },
 }
 
-export const workStatus = (status: Status | undefined, at?: number) => {
+export const workStatus = (status: Status | undefined) => {
   const shown = status && attention[status]
-  if (shown) {
-    const lead = shown.tone === 'run' ? spinner('xs') : dot(shown.tone)
-    return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', toneText[shown.tone]] }, lead, shown.label)
-  }
-  if (at === undefined) return null
-  const now = clock(minute)
-  return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => shortAge(now.get() - at))
+  if (!shown) return null
+  const lead = shown.tone === 'run' ? spinner('xs') : dot(shown.tone)
+  return span({ class: ['flex shrink-0 items-center gap-1.5 text-xs', toneText[shown.tone]] }, lead, shown.label)
 }
 
 export interface RowPlaceProps {
@@ -41,9 +37,11 @@ export interface RowPlaceProps {
 
 export interface WorkRowBody {
   title: Child
-  mark?: Child
+  lead?: Child
   end?: Child
+  detail?: Child
   place?: RowPlaceProps
+  status?: Status
   trail?: Child
   large?: boolean
 }
@@ -54,26 +52,23 @@ export type WorkRowProps = Props<HTMLButtonElement> & {
   surface?: Surface
 }
 
-const secondLine = (large: boolean, place?: RowPlaceProps, trail?: Child) =>
-  place || trail
-    ? div(
-        { class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] },
-        place?.mark ?? null,
-        span({ class: 'max-w-1/2 shrink-0 truncate' }, place?.label ?? ''),
-        trail ? span({ class: 'ml-auto flex min-w-0 items-center justify-end gap-2' }, trail) : null,
-      )
-    : null
+const secondLine = (large: boolean, { detail, place, status, trail }: Pick<WorkRowBody, 'detail' | 'place' | 'status' | 'trail'>) => {
+  if (!detail && !place && !status && !trail) return null
+  const left = detail ?? (place ? span({ class: 'inline-flex min-w-0 items-center gap-1.5' }, place.mark ?? null, span({ class: 'min-w-0 truncate' }, place.label)) : null)
+  const right = status || trail ? span({ class: 'ml-auto flex min-w-0 shrink-0 items-center justify-end gap-2' }, workStatus(status), trail) : null
+  return div({ class: ['flex min-w-0 items-center gap-1.5 text-neutral-500', large ? 'text-sm' : 'text-xs'] }, left, right)
+}
 
-export const workRowBody = ({ title, mark, end, place, trail, large = false }: WorkRowBody) =>
+export const workRowBody = ({ title, lead, end, large = false, ...rest }: WorkRowBody) =>
   div(
     { class: 'flex min-w-0 flex-1 flex-col gap-px' },
     div(
       { class: 'flex min-w-0 items-center gap-2' },
-      mark ?? null,
+      lead ?? null,
       span({ class: 'flex min-w-0 flex-1' }, large ? largeRowTitle(title) : rowTitle(title)),
       end ?? null,
     ),
-    secondLine(large, place, trail),
+    secondLine(large, rest),
   )
 
 export const workRow = ({ current = false, large = false, surface = 'page', class: extra, ...props }: WorkRowProps, body: Child) =>

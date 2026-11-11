@@ -1,8 +1,7 @@
-import { approvalViews } from '@sand/approvals/contract'
 import { botName, type BotPatch, type BotStatus, type BotSummary, type ModelChoice } from '@sand/bots/contract'
 import type { Row } from '@sand/transcript/contract'
 import type { Kit } from '@sand/ui-kit/contract'
-import { derive, div, dynamicChild, effect, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, list, onMount, show, untrack, type Sig } from '@vaakx-dev/vrui'
 import type { BotsContext } from '../context'
 import { applyChoice, effective } from '../models'
 import { conversation, type Conversation } from './conversation'
@@ -17,6 +16,7 @@ export interface ChatParts {
   resume(): void
   save(patch: BotPatch): void
   defaults(): ModelChoice
+  advanced(): boolean
 }
 
 const olderEdge = 240
@@ -116,11 +116,9 @@ export const chatView = (parts: ChatParts) => {
         if (models) parts.save({ models: { ...models, main: applyChoice(models.main, patch) } })
       },
     },
-    { kind: 'bot', placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
+    { placeholder: () => `Message ${botName(bot() ?? { name: '' })}` },
   )
   dock.slot('above', () => ctx.shell.chipBar({ kind: 'owner', owner: id }))
-  const approvals = ctx.get(approvalViews)?.banner('bot', id)
-  if (approvals) effect(() => (approvals.asking() ? dock.slot('banner', approvals.view) : undefined))
   holdSlot(kit, { bot, resume: parts.resume, profile: parts.profile }, dock)
 
   return div(

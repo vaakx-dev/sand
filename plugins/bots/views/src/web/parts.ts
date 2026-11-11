@@ -4,20 +4,18 @@ import type { Derive } from '@vaakx-dev/vrui'
 import type { BotsContext } from './context'
 import type { Registry } from './registry'
 import type { BotStore } from './store'
-import type { OpenTabs } from './tabs'
 import type { Work } from './work'
 
 export interface Parts {
   ctx: BotsContext
   store: BotStore
   work: Work
-  tabs: OpenTabs
   projects: Derive<ProjectGroup[]>
   advanced: Derive<boolean>
   defaults: Derive<ModelChoice>
   sections: Registry<BotProfileSection>
   automationSources: Registry<BotAutomationSource>
-  open(bot: string, tab?: string): void
+  open(bot: string): void
   profile(bot: string): void
   create(): void
 }

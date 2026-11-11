@@ -1,7 +1,7 @@
 {
   "name": "@sand/model-panel",
   "version": "0.0.0",
-  "description": "One button for model, effort and fast mode that opens one panel, plus palette rows",
+  "description": "One row for model, effort and fast mode that opens one panel, where screens name each subject's model settings, plus palette rows",
   "type": "module",
   "exports": {
     "./contract": "./src/contract.ts"
@@ -10,7 +10,7 @@
     "feature": "models",
     "web": "./src/index.ts",
     "label": "Model button",
-    "summary": "One button in the composer that opens the model picker, plus the Models settings page"
+    "summary": "The model row that opens the model picker, plus the Models settings page"
   },
   "dependencies": {
     "@sand/accounts": "workspace:*",
@@ -23,6 +23,7 @@
     "@sand/reactive": "workspace:*",
     "@sand/settings": "workspace:*",
     "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
     "@sand/util": "workspace:*",
     "@sand/web-client": "workspace:*",
     "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",

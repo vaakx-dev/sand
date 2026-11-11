@@ -1,5 +1,5 @@
 import type { RouteCaller } from '@sand/host-gateway/contract'
-import type { Caller, HelloField, Request as WireRequest, WireHost } from '@sand/host-hub/contract'
+import type { Caller, HelloField, Request as WireRequest, WireEvent, WireHost } from '@sand/host-hub/contract'
 import type { Dispose } from 'drydock'
 
 export type RouteHandler = (request: Request, caller?: RouteCaller) => Response | Promise<Response>
@@ -19,4 +19,5 @@ export interface Server extends WireHost {
   hello<T>(field: HelloField<T>, value: HelloValue<T>, options?: HelloOptions): Dispose
   pages(): number
   ask<I, O>(request: WireRequest<I, O>, input: I, caller: Caller): Promise<O>
+  tell<P>(caller: Caller, event: WireEvent<P>, payload: P): void
 }

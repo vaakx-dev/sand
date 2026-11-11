@@ -1,7 +1,7 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { answers, notifies, type Calendars } from '../contract'
-import { calendarField, locate, matches } from './find'
+import { answers, type Calendars } from '../contract'
+import { calendarField, locate } from './find'
 
 const input = z.object({
   id: z.string().describe('The event id from calendar_agenda'),
@@ -16,11 +16,7 @@ export const respondTool = (service: Calendars): Tool<typeof input> => ({
   description: 'Answer an invitation: accept, decline or maybe. The organizer hears back when the calendar can tell them.',
   group: 'calendar',
   input,
-  act({ id, calendar, response }) {
-    const [found] = matches(service, id, calendar)
-    const notify = notifies(found?.calendar, found?.event)
-    return { effect: notify ? 'send' : 'write', summary: `${said[response]} "${found?.event.title ?? id}"${notify ? ' and tell the organizer' : ''}` }
-  },
+  effect: 'send',
   async run({ id, calendar, response }) {
     const found = locate(service, id, calendar)
     const event = await service.respond({ calendar: found.calendar.id, id: found.event.id }, response)

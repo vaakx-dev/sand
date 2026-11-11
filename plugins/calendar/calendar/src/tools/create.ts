@@ -1,8 +1,8 @@
 import type { Tool } from '@sand/tools/contract'
 import { z } from 'zod'
-import { notifies, timeZone, type Calendars } from '../contract'
+import { timeZone, type Calendars } from '../contract'
 import { defaultEnd } from '../edit'
-import { calendarField, eventFields, findCalendar, guestsOf, localZone, moment, pickCalendar, whenFrom } from './find'
+import { calendarField, eventFields, guestsOf, localZone, moment, pickCalendar, whenFrom } from './find'
 import { spanText } from './format'
 
 const input = z.object({
@@ -35,16 +35,7 @@ export const createTool = (service: Calendars): Tool<typeof input> => ({
   description: "Add an event to the user's calendar. Adding guests sends them invitations when the calendar can.",
   group: 'calendar',
   input,
-  act(given) {
-    const target = given.calendar ? findCalendar(service, given.calendar) : service.preferred()
-    const draft = draftOf(given)
-    const invite = notifies(target, draft)
-    const guests = invite ? ` and invite ${given.attendees?.join(', ')}` : ''
-    return {
-      effect: invite ? 'send' : 'write',
-      summary: `Add "${draft.title}", ${spanText(draft.start, draft.end, localZone())}, to ${target?.name ?? 'the calendar'}${guests}`,
-    }
-  },
+  effect: 'write',
   async run(given) {
     const target = pickCalendar(service, given.calendar)
     const event = await service.create(target?.id, draftOf(given))

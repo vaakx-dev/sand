@@ -7,12 +7,12 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
 
 const passes = (px: number, velocity: number, reach: number) => px + velocity * projection > reach / 2
 
-const stackSwipe = (model: Model, back: boolean, forward: boolean): Swipe => {
+const stackSwipe = (model: Model): Swipe => {
   const reach = model.width.get()
   let px = 0
   return {
     move(dx) {
-      px = clamp(dx, forward ? -reach : 0, back ? reach : 0)
+      px = clamp(dx, 0, reach)
       model.stackDrag.set(px)
     },
     end(velocity) {
@@ -20,7 +20,6 @@ const stackSwipe = (model: Model, back: boolean, forward: boolean): Swipe => {
         model.stackDrag.set('back')
         return model.back()
       }
-      if (px < 0 && passes(-px, -velocity, reach)) return model.forward()
       model.stackDrag.set(undefined)
     },
   }
@@ -46,7 +45,6 @@ export const edgeSwipe = (model: Model): Swipe | undefined => {
   const state = model.state.get()
   if (state === 'drawer') return drawerSwipe(model)
   if (state !== 'phone') return undefined
-  const back = model.pushed.get().length > 0
-  const forward = model.ahead.get() > 0
-  return back || forward ? stackSwipe(model, back, forward) : undefined
+  if (model.pushed.get().length === 0) return undefined
+  return stackSwipe(model)
 }

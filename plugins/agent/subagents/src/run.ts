@@ -17,6 +17,7 @@ export interface RunOptions {
 
 export interface OpenedAgent {
   session: Session
+  model?: string
   run(signal: AbortSignal): Promise<AgentResult>
   follow(task: string, signal: AbortSignal): Promise<AgentResult>
 }
@@ -64,6 +65,7 @@ export const createRun = (ctx: AgentsContext, { resolve, limits, maxAgents }: Ru
     const session = await create(request, definition, limits.child(request.parent, definition?.name, definition?.tools))
     return {
       session,
+      model: ctx.get(modelSettings)?.effective(session).model,
       run: signal => drive(session, request.task, signal),
       follow: (task, signal) => drive(session, task, signal),
     }

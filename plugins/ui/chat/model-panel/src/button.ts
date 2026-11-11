@@ -1,16 +1,19 @@
 import type { Pulse } from '@sand/reactive'
-import { div, onMount, show, sig, SPACE, span } from '@vaakx-dev/vrui'
+import { derive, div, dynamicChild, media, onMount, sig, SPACE, span } from '@vaakx-dev/vrui'
 import type { PanelContext } from './context'
 import type { ModelButton, ModelTarget } from './contract'
 import { pickerTarget } from './target'
 
-const panelWidth = `min(calc(${SPACE['96']} + ${SPACE['12']}), 100%)`
+const popoverWidth = `calc(${SPACE['96']} + ${SPACE['12']})`
 
-const buttonView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, mounted: (open: () => void) => () => void) => {
-  const { chipPopover, plainButton, pressOpens } = ctx.kit
-  const open = sig(false)
+type Placement = 'popover' | 'inline'
+
+const rowView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, opened: boolean, mounted: (open: () => void) => () => void) => {
+  const { cardItem, chipPopover, icon, pressOpens } = ctx.kit
+  const open = sig(opened)
   const close = () => open.set(false)
   const picker = pickerTarget(ctx, changes, target)
+  const phone = media('(max-width: 37.5rem)')
 
   const current = changes.read(() => ctx.modelPicker.resolve(target.settings()))
   const model = changes.read(() => ctx.models.info(current.get().model))
@@ -26,32 +29,56 @@ const buttonView = (ctx: PanelContext, changes: Pulse, target: ModelTarget, moun
   }
   const tip = () => [modelLabel(), offline() && 'offline', effortLabel() && `${effortLabel()} effort`, fast() && 'Fast mode'].filter(Boolean).join(' · ')
 
+  const placements: Record<Placement, () => HTMLElement> = {
+    popover: () => chipPopover(close, { class: 'top-full right-0 mt-1', width: popoverWidth }, ctx.modelPicker.panel(picker, close)),
+    inline: () => div({ class: 'flex min-w-0 flex-col px-1 pb-1' }, ctx.modelPicker.panel(picker, close)),
+  }
+  const placement = derive<Placement | undefined>(() => {
+    if (!open.get()) return undefined
+    return phone.get() ? 'inline' : 'popover'
+  })
+
   const node = div(
-    { class: 'flex min-w-0 items-center' },
-    plainButton(
-      {
-        title: tip,
-        class: ['flex min-w-0 shrink items-center rounded-md px-2 py-1 text-xs transition-colors', () => (open.get() ? 'text-neutral-200' : 'text-neutral-500 hover:text-neutral-200')],
-        ...pressOpens(open, () => open.update(value => !value)),
-      },
-      span({ class: ['min-w-0 truncate', () => (chosen.get() ? '' : 'text-warning-400')] }, label),
+    { class: 'relative flex min-w-0 flex-col' },
+    cardItem(
+      { title: tip, 'aria-label': tip, lead: icon('sparkles', 'sm'), menu: true, ...pressOpens(open, () => open.update(value => !value)) },
+      span({ class: () => (chosen.get() ? '' : 'text-warning-400') }, label),
     ),
-    show(open, () => chipPopover(close, { class: 'right-0', width: panelWidth }, ctx.modelPicker.panel(picker, close))),
+    dynamicChild(placement, place => (place ? placements[place]() : null)),
   )
   onMount(node, () => mounted(() => open.set(true)))
   return node
 }
 
+const added = <T>(all: T[], item: T) => {
+  all.push(item)
+  return () => {
+    all.splice(all.indexOf(item), 1)
+  }
+}
+
 export const modelButton = (ctx: PanelContext, changes: Pulse): ModelButton => {
   const live: (() => void)[] = []
-  const mounted = (open: () => void) => {
-    live.push(open)
-    return () => {
-      live.splice(live.indexOf(open), 1)
-    }
-  }
+  const reveals: (() => void)[] = []
+  let wanted = false
   return {
-    view: target => buttonView(ctx, changes, target, mounted),
-    open: () => live.at(-1)?.(),
+    view(target) {
+      const node = rowView(ctx, changes, target, wanted, open => added(live, open))
+      wanted = false
+      return node
+    },
+    open() {
+      const last = live.at(-1)
+      if (last) {
+        last()
+        return true
+      }
+      wanted = true
+      for (const show of reveals) show()
+      const shown = !wanted
+      wanted = false
+      return shown
+    },
+    reveal: show => added(reveals, show),
   }
 }

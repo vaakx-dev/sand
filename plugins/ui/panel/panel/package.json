@@ -1,0 +1,21 @@
+{
+  "name": "@sand/panel",
+  "version": "0.0.0",
+  "description": "A full-height panel at a chat's right with tabs that other plugins add",
+  "type": "module",
+  "exports": {
+    "./contract": "./src/contract.ts"
+  },
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Side panel",
+    "summary": "A full-height panel at a chat's right with tabs, such as the thread's changes"
+  },
+  "dependencies": {
+    "@sand/util": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

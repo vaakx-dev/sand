@@ -98,6 +98,7 @@ export const createStore = (ctx: JobsContext, delivery: Delivery) => {
       label: spec.label,
       parent: spec.parent.id,
       ...(spec.origin && { origin: spec.origin }),
+      ...(spec.model && { model: spec.model }),
       status: 'running',
       started: Date.now(),
       cancel: () => {},

@@ -1,0 +1,24 @@
+{
+  "name": "@sand/inspector-git",
+  "version": "0.0.0",
+  "description": "The inspector's git actions row: commit, merge, push, open a PR, update from the default branch or discard, with the most useful next step up front",
+  "type": "module",
+  "sand": {
+    "web": "./src/index.ts",
+    "label": "Git actions row",
+    "summary": "Commits, pushes, merges and opens a PR for the thread's folder"
+  },
+  "dependencies": {
+    "@sand/changes": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/github": "workspace:*",
+    "@sand/toasts": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@sand/web-client": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

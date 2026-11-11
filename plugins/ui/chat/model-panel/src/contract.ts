@@ -1,4 +1,5 @@
 import type { SessionSettings, SettingsPatch } from '@sand/model/contract'
+import type { Subject } from '@sand/ui-shell/contract'
 import { type Dispose, service } from 'drydock'
 
 export interface ModelTarget {
@@ -9,10 +10,20 @@ export interface ModelTarget {
 
 export interface ModelButton {
   view(target: ModelTarget): HTMLElement
-  open(): void
+  open(): boolean
+  reveal(show: () => void): Dispose
 }
 
 export const modelButton = service<ModelButton>('modelButton')
+
+export type TargetSource = (subject: Subject) => ModelTarget | undefined
+
+export interface ModelTargets {
+  source(source: TargetSource): Dispose
+  of(subject: Subject): ModelTarget | undefined
+}
+
+export const modelTargets = service<ModelTargets>('modelTargets')
 
 export type DefaultsView = () => HTMLElement
 

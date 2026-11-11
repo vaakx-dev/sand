@@ -1,5 +1,6 @@
 import type { DiffFile, DiffPatch } from '@sand/git-diff/contract'
 import { request, type, wireEvent } from '@sand/host-hub/contract'
+import { service } from 'drydock'
 import { z } from 'zod'
 
 export type ChangeState = 'none' | 'ready' | 'merging' | 'merged' | 'conflict' | 'failed'
@@ -40,3 +41,9 @@ export const changesMerge = request('changes.merge', {
 })
 
 export const changesChange = wireEvent<ThreadChanges>('changes.change')
+
+export interface ChangesLive {
+  get(session: string, device?: string): ThreadChanges | undefined
+}
+
+export const changesLive = service<ChangesLive>('changesLive')

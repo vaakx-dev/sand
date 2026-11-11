@@ -2,7 +2,7 @@ import type { Kit } from '@sand/ui-kit/contract'
 import { addressLayer, addressSettled, leaveLayer, pushLayer } from '@sand/web-client/contract'
 import { derive, effect, sig, stored, untrack } from '@vaakx-dev/vrui'
 import { sameScreen, screenKey } from './address'
-import { homeRoute, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState } from './contract'
+import { homeRoute, type Aside, type AsideKind, type ChipSource, type NavItem, type Place, type Route, type RouteSpec, type SheetSpec, type ShellSection, type ShellState, type SubjectSource } from './contract'
 import { navigation } from './navigation'
 import { registry } from './registry'
 import { screenCache } from './screens'
@@ -20,6 +20,14 @@ export const deskWidth = 1000
 
 export const drawerReach = 288
 
+export const roomyMain = 912
+
+export const sideWidth = 288
+
+export const panelWidth = 352
+
+export const asideKind = 'aside'
+
 const layers = { drawer: 'drawer', sheet: 'sheet', cover: 'cover' } as const
 
 const home: Route = { kind: homeRoute }
@@ -29,19 +37,25 @@ export const shellModel = (kit: Kit) => {
   const sections = registry<ShellSection>()
   const routes = registry<RouteSpec>()
   const chips = registry<ChipSource>()
+  const asides = registry<Aside>()
+  const subjects = sig<SubjectSource[]>([])
   const places: Record<Place, ReturnType<typeof registry<Placed>>> = { overlay: registry(), top: registry(), home: registry() }
 
   const width = sig(window.innerWidth)
   const layer = sig(addressLayer())
   const sheet = sig<SheetSpec | undefined>(undefined)
-  const hiddenSides = stored<string[]>('sand.shell.hidden-sides', [])
   const openFolds = stored<string[]>('sand.shell.open-groups', [])
+  const picked: Record<AsideKind, ReturnType<typeof stored<string | null>>> = {
+    card: stored<string | null>('sand.shell.card', null),
+    panel: stored<string | null>('sand.shell.panel', ''),
+    drawer: stored<string | null>('sand.shell.drawer', ''),
+  }
   const drawerDrag = sig<number | undefined>(undefined)
   const stackDrag = sig<StackDrag>(undefined)
   const leaving = sig<Route[]>([])
 
   const specFor = (kind: string) => routes.items.get().find(spec => spec.kind === kind)
-  const known = (kind: string) => Boolean(specFor(kind))
+  const known = (kind: string) => (kind === asideKind ? phone.get() : Boolean(specFor(kind)))
   const phone = derive(() => width.get() < phoneWidth)
   const nav = navigation(kind => untrack(() => known(kind)), () => untrack(() => phone.get()))
 
@@ -58,6 +72,19 @@ export const shellModel = (kit: Kit) => {
   })
   const pushed = derive(() => (current.get().kind === homeRoute ? [] : nav.place.get().stack.filter(route => known(route.kind))))
 
+  const beside = derive(() => (current.get().kind === asideKind ? (pushed.get().at(-2) ?? home) : current.get()))
+  const shownAsides = derive(() => asides.items.get().filter(spec => spec.shows(beside.get())))
+  const openOf = (kind: AsideKind) =>
+    derive(() => {
+      if (phone.get()) return undefined
+      const id = picked[kind].get()
+      return shownAsides.get().find(spec => spec.kind === kind && (id === null || spec.id === id))
+    })
+  const openCard = openOf('card')
+  const openPanel = openOf('panel')
+  const openDrawer = openOf('drawer')
+  const pushedAside = derive(() => (current.get().kind === asideKind ? asides.items.get().find(spec => spec.id === current.get().id) : undefined))
+
   const routeOf = (key: string) => (phone.get() ? pushed.get() : [current.get()]).find(route => screenKey(route) === key)
   const screens = screenCache(specFor, routeOf, text => kit.barTitle(text))
   const screen = derive(() => screens.get(current.get()))
@@ -67,11 +94,8 @@ export const shellModel = (kit: Kit) => {
     const size = width.get()
     if (size < phoneWidth) return 'phone'
     const built = screen.get()
-    return size < deskWidth && (built?.side || built?.split) ? 'drawer' : 'wide'
+    return size < deskWidth && (openPanel.get() || built?.split) ? 'drawer' : 'wide'
   })
-
-  const sideHidden = (kind: string) => hiddenSides.get().includes(kind)
-  const showSide = (kind: string, shown: boolean) => hiddenSides.update(kinds => [...kinds.filter(other => other !== kind), ...(shown ? [] : [kind])])
 
   let uncover: (() => void) | undefined
   const followCover = () => {
@@ -82,7 +106,6 @@ export const shellModel = (kit: Kit) => {
   }
 
   const enter = (name: string) => {
-    nav.ahead.set(0)
     pushLayer(name)
     layer.set(addressSettled() ? addressLayer() : undefined)
     followCover()
@@ -122,12 +145,50 @@ export const shellModel = (kit: Kit) => {
     }
   }
 
+  const roomy = derive(() => {
+    if (state.get() !== 'wide' || !openCard.get()) return false
+    return width.get() - sideWidth - (openPanel.get() ? panelWidth : 0) >= roomyMain
+  })
+
+  const asideSheets = new Map<string, SheetSpec>()
+  const asideSheet = (spec: Aside) => {
+    const found = asideSheets.get(spec.id)
+    if (found) return found
+    const made: SheetSpec = { label: spec.label, look: 'list', head: () => null, body: () => spec.render(() => beside.get()) }
+    asideSheets.set(spec.id, made)
+    return made
+  }
+  const opened: Record<AsideKind, typeof openCard> = { card: openCard, panel: openPanel, drawer: openDrawer }
+
+  const asideShown = (spec: Aside) => {
+    if (!phone.get()) return opened[spec.kind].get()?.id === spec.id
+    if (spec.kind !== 'card') return pushedAside.get()?.id === spec.id
+    const shown = sheetShown.get()
+    return shown !== undefined && shown === asideSheets.get(spec.id)
+  }
+
+  const showAside = (id: string, show: boolean) => {
+    const spec = asides.items.get().find(found => found.id === id)
+    if (!spec) return
+    if (!phone.get()) return picked[spec.kind].set(show ? id : '')
+    if (spec.kind !== 'card') {
+      if (show) open({ kind: asideKind, id })
+      else if (pushedAside.get()?.id === id) nav.back()
+      return
+    }
+    if (show) showSheet(asideSheet(spec))
+    else if (sheetShown.get() === asideSheets.get(id)) leave()
+  }
+
+  const subjectOf = (route: Route) => subjects.get().reduce<ReturnType<SubjectSource>>((found, source) => found ?? source(route), undefined)
+
   return {
     kit,
     navs,
     sections,
     routes,
     chips,
+    asides,
     places,
     width,
     phone,
@@ -148,16 +209,26 @@ export const shellModel = (kit: Kit) => {
     closeSheet: (spec: SheetSpec) => {
       if (sheet.get() === spec) leave()
     },
-    sideHidden,
-    showSide,
+    shownAsides,
+    openCard,
+    openPanel,
+    openDrawer,
+    pushedAside,
+    beside,
+    asideShown,
+    showAside,
+    roomy,
+    subjectOf,
+    addSubject(source: SubjectSource) {
+      subjects.update(all => [...all, source])
+      return () => subjects.update(all => all.filter(other => other !== source))
+    },
     foldOpen: (key: string) => openFolds.get().includes(key),
     toggleFold: (key: string) => openFolds.update(keys => (keys.includes(key) ? keys.filter(other => other !== key) : [...keys, key])),
     isCurrent: (to: Route) => (to.id === undefined ? to.kind === current.get().kind : sameScreen(to, current.get())) && (to.tab === undefined || to.tab === current.get().tab),
     open,
     leaveNav: () => open(before.get()),
     back: nav.back,
-    ahead: nav.ahead,
-    forward: nav.forward,
     follow() {
       layer.set(addressLayer())
       if (!layer.get()) sheet.set(undefined)

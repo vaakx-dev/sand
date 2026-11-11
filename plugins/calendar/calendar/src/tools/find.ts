@@ -15,7 +15,7 @@ export const calendarField = z.string().optional().describe('Calendar name or id
 
 const named = (calendar: Calendar, name: string) => calendar.id === name || calendar.name.toLowerCase() === name.trim().toLowerCase()
 
-export const findCalendar = (service: Calendars, name: string) => service.list().find(calendar => named(calendar, name))
+const findCalendar = (service: Calendars, name: string) => service.list().find(calendar => named(calendar, name))
 
 export const pickCalendar = (service: Calendars, name: string | undefined): Calendar | undefined => {
   if (!name) return
@@ -29,7 +29,7 @@ export interface Found {
   event: CalendarEvent
 }
 
-export const matches = (service: Calendars, id: string, calendar?: string): Found[] =>
+const matches = (service: Calendars, id: string, calendar?: string): Found[] =>
   service
     .list()
     .filter(other => !calendar || named(other, calendar))

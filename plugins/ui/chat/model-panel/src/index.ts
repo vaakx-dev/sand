@@ -5,20 +5,22 @@ import { definePlugin } from 'drydock'
 import { modelButton } from './button'
 import { modelChanges } from './changes'
 import { inject } from './context'
-import { modelDefaults, modelButton as modelButtonService } from './contract'
+import { modelDefaults, modelButton as modelButtonService, modelTargets as modelTargetsService } from './contract'
 import { modelSource } from './palette'
 import { modelsPage } from './settings'
 import { createSlots } from './settings/slots'
+import { modelTargets } from './targets'
 
 export default definePlugin({
   name: 'model-panel',
-  description: 'The model button the composer places beside send, which opens the model picker. Also adds palette rows and the Models settings page.',
+  description: 'The model row that opens the model picker, and the slot where screens say which model settings a subject runs with. Also adds palette rows and the Models settings page.',
   inject,
   apply(ctx) {
     const changes = modelChanges(ctx)
     const slots = createSlots()
 
     ctx.provide(modelButtonService, modelButton(ctx, changes))
+    ctx.provide(modelTargetsService, modelTargets())
     ctx.watch(paletteService, palette => (palette ? ctx.watch(composerService, composer => composer && palette.source(modelSource(ctx, composer))) : undefined))
     ctx.provide(modelDefaults, { slot: slots.add })
     ctx.watch(settingsService, settings =>

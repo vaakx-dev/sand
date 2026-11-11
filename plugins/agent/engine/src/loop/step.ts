@@ -23,10 +23,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
   const { conversation, signal, info } = run
   const turn = { turn: info.id }
   const open = new Map<string, string>()
-  const waiting = createWaiting(stores.turns, info.id, leases.holder, () => {
-    announce.turn(info.id)
-    leases.check(info.id)
-  })
+  const wait = createWaiting(stores.turns, info.id, leases.holder, () => announce.turn(info.id))
 
   const append = (message: Message) => conversation.append('message', message, turn)
 
@@ -106,11 +103,10 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     },
     tools(calls) {
       for (const call of calls) open.set(call.id, '')
-      return runTools(ctx, conversations, calls, { cwd: conversation.cwd, signal, conversation, turn: info.id, wait: waiting.wait }, { answer: result => answer([result]), output })
+      return runTools(ctx, conversations, calls, { cwd: conversation.cwd, signal, conversation, turn: info.id, wait }, { answer: result => answer([result]), output })
     },
     answer,
     steer,
     nudge,
-    parked: () => waiting.durable([...open.keys()]),
   }
 }

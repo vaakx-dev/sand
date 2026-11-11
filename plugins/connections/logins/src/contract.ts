@@ -62,7 +62,7 @@ export interface Use {
   grant: Grant
 }
 
-export type Access = 'allowed' | 'ask'
+export type Access = 'allowed' | 'ask' | 'unshared'
 
 export interface UseRequest {
   conversation: ConversationRef
@@ -72,7 +72,6 @@ export interface UseRequest {
 
 export interface Logins {
   list(conversation: ConversationRef): (Login & { access: Access })[]
-  access(login: string, conversation: ConversationRef): Access
   use(login: string, request: UseRequest): Promise<LoginValues>
   redact(text: string): string
 }

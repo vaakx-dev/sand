@@ -24,7 +24,6 @@ export interface TurnHooks {
   answer(results: ToolResultBlock[]): void
   steer(): Promise<boolean>
   nudge(): boolean
-  parked(): boolean
 }
 
 export interface Resumption {

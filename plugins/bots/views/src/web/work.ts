@@ -10,6 +10,24 @@ export const urgent = (status: Status | undefined) => status === 'waiting' || st
 
 export const settled = (status: Status) => status === 'merged' || status === 'done'
 
+export const runningCount = (tabs: BotTab[]) => tabs.filter(tab => tab.status === 'running' || tab.status === 'merging').length
+
+const statusLineOf = (list: (bot: string) => BotTab[], leadOf: (bot: string) => BotTab | undefined, bot: BotSummary) => {
+  const lead = leadOf(bot.id)
+  const running = runningCount(list(bot.id))
+  if (lead?.status === 'waiting') return { text: 'Waiting on you', waiting: true }
+  if (running > 1) return { text: `Running ${running} parts`, waiting: false }
+  if (lead?.status === 'running' || lead?.status === 'merging' || bot.status === 'working') {
+    const step = lead?.note?.trim()
+    return { text: step || 'Working', waiting: false }
+  }
+  if (bot.status === 'waiting' || bot.status === 'failed') return { text: 'Waiting on you', waiting: true }
+  const last = bot.last?.text?.trim()
+  if (last) return { text: last, waiting: false }
+  if (lead?.note?.trim()) return { text: lead.note.trim(), waiting: false }
+  return undefined
+}
+
 export const work = (sources: Registry<BotTabSource & { order?: number }>) => {
   const source = (ref: string) => sources.items.get().find(found => ref.startsWith(`${found.scheme}:`))
   const list = (bot: string) => sources.items.get().flatMap(found => found.list(bot))
@@ -27,7 +45,9 @@ export const work = (sources: Registry<BotTabSource & { order?: number }>) => {
     return theirs && rank(theirs) < rank(mine) ? theirs : mine
   }
 
-  return { source, list, get, lead, status, schemes: () => sources.items.get().map(found => found.scheme) }
+  const detailOf = (bot: BotSummary) => statusLineOf(list, lead, bot)
+
+  return { source, list, get, lead, status, detailOf, schemes: () => sources.items.get().map(found => found.scheme) }
 }
 
 export type Work = ReturnType<typeof work>

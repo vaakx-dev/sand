@@ -1,4 +1,3 @@
-import { approvalAsked, approvals, type Decision } from '@sand/approvals/contract'
 import { botCreate } from '@sand/bots/contract'
 import { botSend } from '@sand/bot-turns/contract'
 import { orchestrator } from '@sand/orchestrator/contract'
@@ -7,7 +6,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loginAdd, loginChange, loginUses } from '../src/contract'
-import { browser, call, idle, models, plugins, said, type Sand, start } from './fixture'
+import { botEntries, browser, call, idle, models, plugins, resultText, said, start, threadEntries } from './fixture'
 
 let home: string
 
@@ -24,42 +23,32 @@ const setUp = async () => {
   return { bot: bot.id, key: key.id, site: site.id, chat: chat.id }
 }
 
-const asks = (sand: Sand) => {
-  const asked: Decision[] = []
-  sand.app.on(approvalAsked, decision => void asked.push(decision))
-  return asked
-}
+const asksEveryTime = (name: string) =>
+  `Not used: the login ${name} is set to "Ask me every time", so agents can't use it. Tell the user: they can turn that off in the login's settings (Settings → Logins), or use it themselves.`
 
-const answered = async (asked: Decision[], count: number) => {
-  for (let tries = 0; tries < 500 && asked.length < count; tries++) await Bun.sleep(10)
-  return asked[count - 1]!
-}
-
-test("a bot and the threads it starts use the bot's logins freely; anyone else, or ask: true, asks once each time; a deny rule wins", async () => {
+test("a bot and the threads it starts use the bot's logins; any other thread, or anyone once a login asks every time, is refused and told how to allow it", async () => {
   home = mkdtempSync(join(tmpdir(), 'sand-logins-access-'))
   const ids = await setUp()
   const useKey = call('shell', { command: 'echo used', logins: { TOKEN: ids.key } })
+  const fillSite = call('login_fill', { login: ids.site })
   const sand = await start(
     [
       [useKey],
-      [call('login_fill', { login: ids.site })],
+      [fillSite],
       [said('Bot used both.')],
       [useKey],
       [said('Started thread used it.')],
       [said('Bot heard back.')],
       [useKey],
-      [said('User thread used it.')],
+      [said('User thread was refused.')],
       [useKey],
-      [said('Bot asked.')],
-      [useKey],
-      [said('Bot was denied.')],
+      [fillSite],
+      [said('Bot was refused.')],
     ],
     { home, plugins: [...plugins, 'bots/bridge'] },
   )
   try {
     const fills = browser(sand)
-    const asked = asks(sand)
-    const gate = sand.app.get(approvals)!
 
     await sand.ask(botSend, { bot: ids.bot, prompt: 'Deploy', clientRequestId: 'bot' })
     await idle(sand, ids.bot)
@@ -77,38 +66,26 @@ test("a bot and the threads it starts use the bot's logins freely; anyone else, 
     expect(await sand.turns.wait(started.turn, 'end')).toMatchObject({ status: 'completed' })
     for (let tries = 0; tries < 500 && sand.requests('fake').length < 6; tries++) await Bun.sleep(10)
     await idle(sand, ids.bot)
-    expect(asked).toEqual([])
 
     const chat = sand.sessions.require(ids.chat)
-    const user = sand.turns.run(chat, 'Deploy')
-    const decision = await answered(asked, 1)
-    expect(decision).toMatchObject({ owner: 'thread', conversation: chat.id, tool: 'shell', once: true, summary: 'With logins Deploy key: echo used' })
-    gate.answer(decision.id, 'always')
-    expect(await user).toMatchObject({ text: 'User thread used it.' })
-    expect(gate.rules()).toEqual([])
+    expect(await sand.turns.run(chat, 'Deploy')).toMatchObject({ text: 'User thread was refused.' })
+    expect(resultText(threadEntries(sand, chat.id)(), 'shell')).toBe(
+      "Not used: the login Deploy key isn't shared with this thread. Tell the user: they can let it use the login in the login's settings (Settings → Logins), or use it themselves.",
+    )
 
-    await sand.ask(loginChange, { id: ids.key, ask: true })
+    for (const id of [ids.key, ids.site]) await sand.ask(loginChange, { id, ask: true })
     await sand.ask(botSend, { bot: ids.bot, prompt: 'Deploy again', clientRequestId: 'bot-ask' })
-    const askedBot = await answered(asked, 2)
-    expect(askedBot).toMatchObject({ owner: 'bot', conversation: ids.bot, once: true })
-    gate.answer(askedBot.id, 'once')
     await idle(sand, ids.bot)
-
-    await sand.ask(loginChange, { id: ids.key, ask: false })
-    gate.addRule({ owner: 'bot', tool: 'shell', verdict: 'deny' })
-    await sand.ask(botSend, { bot: ids.bot, prompt: 'Deploy once more', clientRequestId: 'bot-deny' })
-    await idle(sand, ids.bot)
-    expect(asked).toHaveLength(2)
-    expect(gate.decisions({ conversation: ids.bot })[0]).toMatchObject({ tool: 'shell', outcome: 'denied', by: 'rule' })
+    const asked = await botEntries(sand, ids.bot)()
+    expect(resultText(asked, 'shell')).toEndWith(asksEveryTime('Deploy key'))
+    expect(resultText(asked, 'login_fill')).toEndWith(asksEveryTime('Northbank'))
+    expect(fills).toHaveLength(1)
 
     const uses = await sand.ask(loginUses, { id: ids.key })
     expect(uses).toEqual([
-      { login: ids.key, at: expect.any(Number), action: 'env', owner: 'bot', conversation: ids.bot, title: 'Deployer', bot: ids.bot, grant: 'user' },
-      { login: ids.key, at: expect.any(Number), action: 'env', owner: 'thread', conversation: chat.id, title: expect.any(String), grant: 'user' },
       { login: ids.key, at: expect.any(Number), action: 'env', owner: 'thread', conversation: started.thread, title: expect.any(String), bot: ids.bot, grant: 'bot' },
       { login: ids.key, at: expect.any(Number), action: 'env', owner: 'bot', conversation: ids.bot, title: 'Deployer', bot: ids.bot, grant: 'bot' },
     ])
-    expect(uses.map(use => use.at)).toEqual(uses.map(use => use.at).toSorted((a, b) => b - a))
     expect(await sand.ask(loginUses, { id: ids.site })).toEqual([
       { login: ids.site, at: expect.any(Number), action: 'fill', owner: 'bot', conversation: ids.bot, title: 'Deployer', bot: ids.bot, site: 'northbank.example', grant: 'bot' },
     ])

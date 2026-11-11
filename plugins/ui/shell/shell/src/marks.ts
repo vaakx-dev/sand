@@ -1,14 +1,13 @@
-import type { Kit, Tint, WorkState } from '@sand/ui-kit/contract'
-import type { Monogram, Status } from './contract'
+import type { Kit, WorkState } from '@sand/ui-kit/contract'
+import { clock, span } from '@vaakx-dev/vrui'
+import type { Status } from './contract'
 
 const workStates: Record<Status, WorkState> = { waiting: 'waiting', ready: 'ready', merging: 'running', running: 'running', merged: 'settled', done: 'settled' }
 
-const tints: Record<Tint, true> = { gold: true, sky: true, orange: true, green: true, red: true, grey: true }
+export const statusIcon = (kit: Kit, status: Status) => kit.stateIcon(workStates[status], 'sm', status === 'waiting' || status === 'ready' || status === 'merging')
 
-const isTint = (color: string): color is Tint => Object.hasOwn(tints, color)
-
-export const urgent = (status: Status | undefined) => status === 'waiting' || status === 'ready' || status === 'merging'
-
-export const statusIcon = (kit: Kit, status: Status) => kit.stateIcon(workStates[status], 'sm', urgent(status))
-
-export const monogramOf = (kit: Kit, { initial, color }: Monogram) => kit.monogram(initial, isTint(color) ? color : 'grey')
+export const ageEnd = (kit: Kit, at?: number) => {
+  if (at === undefined) return null
+  const now = clock(60_000)
+  return span({ class: 'shrink-0 text-xs text-neutral-500 tabular-nums' }, () => kit.shortAge(Math.max(0, now.get() - at)))
+}

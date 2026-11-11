@@ -11,11 +11,14 @@
     "runtime": "./src/runtime.ts",
     "host": "./src/mcp.ts",
     "cli": "./src/mcp.ts",
+    "web": "./src/web/index.ts",
     "label": "Merge",
     "summary": "Shows which threads have work ready to merge, and merges it into the project on this PC"
   },
   "dependencies": {
     "@sand/chats": "workspace:*",
+    "@sand/devices-contract": "workspace:*",
+    "@sand/features": "workspace:*",
     "@sand/git": "workspace:*",
     "@sand/git-diff": "workspace:*",
     "@sand/git-runner": "workspace:*",
@@ -25,6 +28,7 @@
     "@sand/server": "workspace:*",
     "@sand/turns-contract": "workspace:*",
     "@sand/util": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
     "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1",
     "zod": "^4.6.5"
   },

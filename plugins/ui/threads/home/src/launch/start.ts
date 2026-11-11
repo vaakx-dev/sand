@@ -1,9 +1,8 @@
-import { draftRoute } from '@sand/chat/contract'
 import { composer } from '@sand/composer/contract'
-import type { Shell } from '@sand/ui-shell/contract'
+import { homeRoute, type Shell } from '@sand/ui-shell/contract'
 import type { Threads } from '@sand/web-client/contract'
 import type { Context } from 'drydock'
-import { readChosen, writeChosen } from '../integrations/chosen'
+import { chosen } from '../integrations/chosen'
 
 export interface StartParts {
   ctx: Context
@@ -11,15 +10,12 @@ export interface StartParts {
   threads: Threads
 }
 
-export const lastChosen = (threads: Threads) => readChosen() ?? { path: '', device: threads.device() }
+export const newThreadRoute = 'new-thread'
 
-export const startChat = ({ ctx, shell, threads }: StartParts, path: string, device: string) => {
-  writeChosen({ path, device })
-  const drafting = threads.drafting()
-  return threads.draft(path, device, drafting?.id, { replace: Boolean(drafting) }).then(() => {
-    const draft = threads.drafting()
-    const now = shell.current()
-    if (draft && (now.kind !== draftRoute || now.id !== draft.id)) shell.open({ kind: draftRoute, id: draft.id })
-    ctx.get(composer)?.focus()
-  })
+export const openNewThread = ({ shell }: StartParts) => shell.open({ kind: shell.state() === 'phone' ? newThreadRoute : homeRoute })
+
+export const startChat = (parts: StartParts, path: string, device: string) => {
+  chosen.set({ path, device })
+  openNewThread(parts)
+  parts.ctx.get(composer)?.focus()
 }

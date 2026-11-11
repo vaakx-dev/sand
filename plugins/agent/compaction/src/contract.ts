@@ -3,11 +3,19 @@ import { request, type, wireEvent } from '@sand/host-hub/contract'
 import { event, service } from 'drydock'
 import { z } from 'zod'
 
+export interface ContextParts {
+  system: number
+  tools: number
+  conversation: number
+  results: number
+}
+
 export interface ContextUsage {
   used: number
   limit: number
   window: number
   compacting?: boolean
+  parts?: ContextParts
 }
 
 export type CompactionReason = 'threshold' | 'overflow' | 'idle'

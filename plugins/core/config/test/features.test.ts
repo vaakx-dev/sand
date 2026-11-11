@@ -10,14 +10,14 @@ const feature = (id: string, more: Partial<FeatureDefinition> = {}): FeatureDefi
 const capability = (id: string, more: Partial<FeatureDefinition> = {}) => feature(id, { kind: 'capability', ...more })
 
 const definitions = [
-  feature('threads', { needs: ['engine'], uses: ['approvals'] }),
+  feature('threads', { needs: ['engine'], uses: ['compaction'] }),
   feature('git', { parent: 'threads' }),
   feature('worktrees', { parent: 'git' }),
   feature('bots', { needs: ['engine'] }),
   feature('calendar'),
   capability('engine', { needs: ['models'] }),
   capability('models'),
-  capability('approvals', { needs: ['engine'] }),
+  capability('compaction', { needs: ['engine'] }),
   capability('schedules'),
 ]
 
@@ -28,7 +28,7 @@ test('a feature that is off turns off its children and their children, and comin
   expect(onIds(catalog)).toEqual(['bots', 'calendar', 'engine', 'models'])
   expect(catalog.list().find(found => found.id === 'git')?.chosen).toBe(true)
   catalog.choose({ threads: true })
-  expect(onIds(catalog)).toEqual(['threads', 'git', 'worktrees', 'bots', 'calendar', 'engine', 'models', 'approvals'])
+  expect(onIds(catalog)).toEqual(['threads', 'git', 'worktrees', 'bots', 'calendar', 'engine', 'models', 'compaction'])
 })
 
 test('a capability loads only while an enabled feature needs or uses it', () => {
@@ -42,7 +42,7 @@ test('a capability loads only while an enabled feature needs or uses it', () => 
 test('switching off a capability turns off the features that need it, but not those that only use it', () => {
   const catalog = createCatalog(definitions, { models: false })
   expect(onIds(catalog)).toEqual(['calendar'])
-  catalog.choose({ models: true, approvals: false })
+  catalog.choose({ models: true, compaction: false })
   expect(onIds(catalog)).toEqual(['threads', 'git', 'worktrees', 'bots', 'calendar', 'engine', 'models'])
 })
 

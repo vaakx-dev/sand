@@ -7,18 +7,14 @@ export const createWaiting = (store: TurnStore, turn: string, holder: string, ch
     store.wait(turn, holder, reasons)
     changed()
   }
-  return {
-    wait(reason: WaitReason) {
-      reasons.push(reason)
+  return (reason: WaitReason) => {
+    reasons.push(reason)
+    write()
+    return () => {
+      const index = reasons.indexOf(reason)
+      if (index < 0) return
+      reasons.splice(index, 1)
       write()
-      return () => {
-        const index = reasons.indexOf(reason)
-        if (index < 0) return
-        reasons.splice(index, 1)
-        write()
-      }
-    },
-    durable: (calls: string[]) =>
-      calls.length > 0 && reasons.every(reason => reason.durable) && calls.every(call => reasons.some(reason => reason.call === call)),
+    }
   }
 }

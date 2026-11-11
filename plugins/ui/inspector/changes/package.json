@@ -1,0 +1,22 @@
+{
+  "name": "@sand/inspector-changes",
+  "version": "0.0.0",
+  "description": "The inspector's changes row: how many lines a thread added and removed",
+  "type": "module",
+  "sand": {
+    "feature": "git",
+    "web": "./src/index.ts",
+    "label": "Changes row",
+    "summary": "Shows how many lines a thread changed"
+  },
+  "dependencies": {
+    "@sand/changes": "workspace:*",
+    "@sand/inspector": "workspace:*",
+    "@sand/git": "workspace:*",
+    "@sand/panel": "workspace:*",
+    "@sand/ui-kit": "workspace:*",
+    "@sand/ui-shell": "workspace:*",
+    "@vaakx-dev/vrui": "github:vaakx-dev/vrui#v0.1.0-alpha.8",
+    "drydock": "github:vaakx-dev/drydock#v0.2.0-alpha.1"
+  }
+}

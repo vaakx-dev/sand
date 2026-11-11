@@ -35,7 +35,7 @@ export const edit: Tool<typeof input> = {
     'Replace exact text in a file. old_string must match exactly once unless replace_all is set. Read the file first.',
   input,
   needs: ['pc'],
-  act: ({ path }) => ({ effect: 'write', paths: [path], summary: `Edit ${path}` }),
+  effect: 'write',
   run(args, { cwd }) {
     const full = resolve(cwd, args.path)
     return exclusive(full, () => replace(full, args))

@@ -3,7 +3,7 @@ import { type Block, fileText, type Message, type ToolReferenceBlock } from '@sa
 
 const imageChars = 1600 * 4
 
-const charsOf = (block: Block | ToolReferenceBlock): number => {
+export const charsOf = (block: Block | ToolReferenceBlock): number => {
   switch (block.type) {
     case 'text':
       return block.text.length

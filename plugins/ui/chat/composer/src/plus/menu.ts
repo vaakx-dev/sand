@@ -1,5 +1,5 @@
-import type { IconName, Kit } from '@sand/ui-kit/contract'
-import { dynamicChild, show, sig, span } from '@vaakx-dev/vrui'
+import type { Kit } from '@sand/ui-kit/contract'
+import { show, sig, span } from '@vaakx-dev/vrui'
 import type { PlusEntry } from '../contract'
 import type { Plus } from './entries'
 
@@ -48,10 +48,7 @@ export const plusMenu = (kit: Kit, { entries }: Plus, choose: () => void, attach
             ...pressOpens(open, toggle),
             'aria-haspopup': () => (entries.get().length ? 'menu' : 'false'),
           },
-          dynamicChild(
-            entries.map((list): IconName => (list.length ? 'plus' : 'paperclip')),
-            glyph => icon(glyph, 'sm'),
-          ),
+          icon('plus', 'sm'),
         ),
     ),
     show(open, menu),

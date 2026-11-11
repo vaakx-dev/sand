@@ -5,7 +5,7 @@ import { group, type ToolDeps } from './deps'
 
 const input = z.object({})
 
-const asks: Record<Access, string> = { allowed: 'used freely', ask: 'asks the user each time' }
+const asks: Record<Access, string> = { allowed: 'yours to use', ask: 'set to ask every time: only the user can use it', unshared: 'not shared with you: only the user can use it' }
 
 const line = ({ id, name, kind, site, totp, access }: Login & { access: Access }) =>
   [`${id}: ${name}`, kind === 'website' ? `website login for ${site}${totp ? ', with authenticator' : ''}` : 'key', asks[access]].join(' · ')

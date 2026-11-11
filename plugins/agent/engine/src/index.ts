@@ -51,7 +51,6 @@ export default definePlugin({
     if (!stopped) {
       ctx.on(runtimeDrain, () => {
         stopped = true
-        leases.drain()
       })
       every(dispatchEvery, () => attached.forEach(found => found.sweep()))
     }

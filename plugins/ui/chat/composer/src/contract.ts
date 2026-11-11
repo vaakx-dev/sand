@@ -85,7 +85,6 @@ export interface Chat {
 }
 
 export interface DockOptions {
-  kind?: 'thread' | 'bot'
   placeholder?: () => string
 }
 

@@ -118,7 +118,7 @@ const boot = async (app: Context, home: string, models: Models, { plugins: extra
     routes.set(path, handler)
     return () => void routes.delete(path)
   }
-  app.provide(server, { handle: wire.handle, broadcast() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
+  app.provide(server, { handle: wire.handle, broadcast() {}, tell() {}, hello: () => () => {}, route, pages: () => 0, ask: wire.ask })
   await (config === undefined ? loadPlugins(app, models, extra, options) : loadConfig(app, home, models.replay ?? [], config))
   await app.settled()
   if (errors.length && config === undefined) throw errors[0]

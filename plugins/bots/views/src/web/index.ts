@@ -1,26 +1,25 @@
 import { advanced } from '@sand/advanced/contract'
 import { botAutomations, botName, botProfile, botRoute, botTabs, botViews, jobEntry, type BotAutomationSource, type BotProfileSection, type BotTabSource, type JobEntry } from '@sand/bots/contract'
-import { palette } from '@sand/palette/contract'
+import { modelTargets } from '@sand/model-panel/contract'
+import { palette, type PaletteItem } from '@sand/palette/contract'
 import { owned, pulse } from '@sand/reactive'
 import { transcript } from '@sand/transcript/contract'
-import { homeRoute, type ChipSource } from '@sand/ui-shell/contract'
-import { models, modelsChange, projects, projectsChange } from '@sand/web-client/contract'
+import type { ChipSource } from '@sand/ui-shell/contract'
+import { models, modelsChange, projects, projectsChange, threads } from '@sand/web-client/contract'
 import { effect, untrack } from '@vaakx-dev/vrui'
 import { definePlugin } from 'drydock'
 import { automationsScreen } from './automations/page'
 import { jobNote } from './chat/job'
 import { inject } from './context'
 import { openNewBot } from './create/sheet'
-import { homeScreen } from './home'
 import { effective } from './models'
 import { automationsOf, projectNames, type Parts } from './parts'
 import { openProfile } from './profile/sheet'
 import { registry } from './registry'
 import { botScreen } from './screen/bot'
-import { botTabRoute, tabScreen } from './screen/tab'
 import { botsGroup } from './sidebar'
 import { botStore } from './store'
-import { openTabs } from './tabs'
+import { modelTarget } from './target'
 import { work } from './work'
 
 const automationsRoute = 'automations'
@@ -38,9 +37,14 @@ const listening = (parts: Parts): ChipSource => ({
       : [],
 })
 
+const nextRun = (parts: Parts) => {
+  const times = (parts.store.bots.get() ?? []).flatMap(bot => automationsOf(parts, bot.id).flatMap(item => (item.when ? [item.when] : [])))
+  return times[0]
+}
+
 export default definePlugin({
   name: 'bot-views',
-  description: "Bots in the sidebar; each bot's screen with its chat, work tabs and Project page; its profile, New bot, Automations and the Listening chip",
+  description: "Bots in the sidebar; each bot's screen with its chat and the model it runs with; its profile, New bot, Automations and the Listening chip",
   inject,
   apply(ctx) {
     const tabSources = registry<BotTabSource & { order?: number }>()
@@ -51,16 +55,13 @@ export default definePlugin({
       ctx,
       store: botStore(ctx),
       work: work(tabSources),
-      tabs: openTabs(),
       projects: owned(ctx, () => known.read(() => ctx.get(projects)?.groups({ hidden: true }) ?? [])),
       defaults: owned(ctx, () => pulse(ctx, [modelsChange], [models]).read(() => effective({}, ctx.get(models)?.defaults() ?? {}))),
       advanced: owned(ctx, () => pulse(ctx, [], [advanced]).read(() => ctx.get(advanced)?.on() ?? false)),
       sections,
       automationSources,
-      open(bot, tab) {
-        if (!tab) return ctx.shell.open({ kind: botRoute, id: bot })
-        parts.tabs.add(bot, tab)
-        ctx.shell.open(ctx.shell.state() === 'phone' ? { kind: botTabRoute, id: bot, tab } : { kind: botRoute, id: bot, tab })
+      open(bot) {
+        ctx.shell.open({ kind: botRoute, id: bot })
       },
       profile: bot => openProfile(parts, bot),
       create: () => openNewBot(parts),
@@ -73,14 +74,22 @@ export default definePlugin({
 
     ctx.effect(() => ctx.shell.section({ id: 'bots', order: 10, groups: () => [botsGroup(parts)] }))
     ctx.effect(() => ctx.shell.route({ kind: botRoute, render: route => botScreen(parts, route) }))
-    ctx.effect(() => ctx.shell.route({ kind: botTabRoute, render: route => tabScreen(parts, route) }))
-    ctx.effect(() => ctx.shell.route({ kind: homeRoute, order: 100, render: () => homeScreen(parts) }))
     ctx.effect(() => ctx.shell.route({ kind: automationsRoute, render: () => automationsScreen(parts) }))
     ctx.effect(() => ctx.shell.chip(listening(parts)))
+    ctx.effect(() =>
+      ctx.shell.subject(({ kind, id }) => {
+        const device = ctx.get(threads)?.device()
+        return kind === botRoute && id && device ? { session: id, device } : undefined
+      }),
+    )
+    ctx.watch(modelTargets, targets =>
+      targets?.source(({ session }) => (parts.advanced.get() && parts.store.find(session) ? modelTarget(parts, session) : undefined)),
+    )
     owned(ctx, () =>
       effect(() => {
         if (!automationSources.items.get().length) return undefined
-        return untrack(() => ctx.shell.nav({ id: 'automations', label: 'Automations', icon: 'clock', order: 10, to: { kind: automationsRoute } }))
+        const next = nextRun(parts)
+        return untrack(() => ctx.shell.nav({ id: 'automations', label: 'Automations', icon: 'clock', order: 10, place: 'nav', detail: next ? () => `Next ${next}` : undefined, to: { kind: automationsRoute } }))
       }),
     )
 
@@ -94,15 +103,18 @@ export default definePlugin({
         items: query =>
           query.startsWith('/')
             ? []
-            : (parts.store.bots.get() ?? []).map(bot => ({
-                id: `bot:${bot.id}`,
-                group: 'Bots',
-                icon: 'bot',
-                label: botName(bot),
-                detail: projectNames(parts, bot.projects),
-                search: bot.job,
-                run: () => parts.open(bot.id),
-              })),
+            : [
+                ...(parts.store.bots.get() ?? []).map<PaletteItem>(bot => ({
+                  id: `bot:${bot.id}`,
+                  group: 'Bots',
+                  icon: 'bot',
+                  label: botName(bot),
+                  detail: projectNames(parts, bot.projects),
+                  search: bot.job,
+                  run: () => parts.open(bot.id),
+                })),
+                { id: 'bot:new', group: 'Bots', icon: 'plus', label: 'New bot…', run: () => parts.create() },
+              ],
       }),
     )
   },

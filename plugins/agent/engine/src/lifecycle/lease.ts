@@ -1,26 +1,19 @@
-import { HandedOver } from '../contract'
 import type { EngineContext } from '../context'
 import type { TurnStore } from '../store/turns'
 
 const leaseFor = 20_000
 const beatEvery = 5_000
 
-export interface Held {
-  controller: AbortController
-  parked(): boolean
-}
-
 export const createLeases = (ctx: EngineContext, store: TurnStore) => {
   const holder = `${ctx.cli.place}-${process.pid}-${Bun.randomUUIDv7().slice(-8)}`
-  const held = new Map<string, Held>()
+  const held = new Map<string, AbortController>()
   let timer: Timer | undefined
-  let draining = false
 
   const until = () => Date.now() + leaseFor
 
   const beat = () => {
     const kept = new Set(store.renew(holder, until()).flatMap(turn => (turn.cancel ? [] : [turn.id])))
-    for (const [id, run] of held) if (!kept.has(id)) run.controller.abort()
+    for (const [id, controller] of held) if (!kept.has(id)) controller.abort()
   }
 
   const stop = () => {
@@ -28,20 +21,13 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
     timer = undefined
   }
 
-  const handOver = (turn: string, run: Held) => {
-    if (!draining || !run.parked()) return
-    held.delete(turn)
-    store.release(turn, holder)
-    run.controller.abort(new HandedOver())
-  }
-
   ctx.effect(() => stop)
 
   return {
     holder,
     until,
-    hold(turn: string, run: Held) {
-      held.set(turn, run)
+    hold(turn: string, controller: AbortController) {
+      held.set(turn, controller)
       timer ??= setInterval(beat, beatEvery)
       return () => {
         held.delete(turn)
@@ -49,17 +35,9 @@ export const createLeases = (ctx: EngineContext, store: TurnStore) => {
       }
     },
     interrupt(turn: string) {
-      const run = held.get(turn)
-      if (run) run.controller.abort()
+      const controller = held.get(turn)
+      if (controller) controller.abort()
       else store.cancel(turn)
-    },
-    check(turn: string) {
-      const run = held.get(turn)
-      if (run) handOver(turn, run)
-    },
-    drain() {
-      draining = true
-      held.forEach((run, turn) => handOver(turn, run))
     },
   }
 }

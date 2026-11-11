@@ -1,5 +1,5 @@
 import type { Entry } from '@sand/chats/contract'
-import type { Monogram, Status } from '@sand/ui-shell/contract'
+import type { Status } from '@sand/ui-shell/contract'
 import { service } from 'drydock'
 
 export const threadRoute = 'thread'
@@ -24,9 +24,10 @@ export interface ThreadView {
 
 export const threadView = service<ThreadView>('threadView')
 
-export interface ThreadOwner extends Monogram {
+export interface ThreadOwner {
   id: string
   label: string
+  color: string
   open(thread: string): void
 }
 

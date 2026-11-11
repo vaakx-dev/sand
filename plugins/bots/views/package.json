@@ -1,7 +1,7 @@
 {
   "name": "@sand/bot-views",
   "version": "0.0.0",
-  "description": "Bots in the sidebar, each bot's screen with its chat, work tabs and Project page, its profile, New bot and Automations",
+  "description": "Bots in the sidebar, each bot's screen with its chat, its profile, New bot and Automations",
   "type": "module",
   "sand": {
     "feature": "bots",
@@ -12,18 +12,15 @@
   "dependencies": {
     "@sand/accounts": "workspace:*",
     "@sand/advanced": "workspace:*",
-    "@sand/approvals": "workspace:*",
     "@sand/bot-memory": "workspace:*",
-    "@sand/bot-plan": "workspace:*",
     "@sand/bot-turns": "workspace:*",
     "@sand/bots": "workspace:*",
-    "@sand/changes": "workspace:*",
     "@sand/chats": "workspace:*",
     "@sand/composer": "workspace:*",
     "@sand/devices-contract": "workspace:*",
-    "@sand/features": "workspace:*",
     "@sand/markdown": "workspace:*",
     "@sand/model": "workspace:*",
+    "@sand/model-panel": "workspace:*",
     "@sand/model-picker": "workspace:*",
     "@sand/palette": "workspace:*",
     "@sand/reactive": "workspace:*",

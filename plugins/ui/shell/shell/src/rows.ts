@@ -1,7 +1,7 @@
 import type { ContextMenu } from '@sand/ui-kit/contract'
 import { button, derive, div, dynamicChild, list, show, span, type Sig } from '@vaakx-dev/vrui'
 import type { GroupAction, NavItem, ShellGroup, ShellRow } from './contract'
-import { monogramOf } from './marks'
+import { ageEnd } from './marks'
 import type { Model } from './model'
 
 export interface ListedGroup {
@@ -30,8 +30,32 @@ const navCurrent = (model: Model, item: Sig<NavItem>) => () => {
   return Boolean(to && model.isCurrent(to))
 }
 
-export const navRow = (model: Model, item: Sig<NavItem>, phone: boolean) => {
-  const { countMark, dot, icon, navButton, shortcutHint } = model.kit
+export const brand = (model: Model, phone: boolean) =>
+  div({ class: ['flex items-center gap-2 px-2 font-semibold tracking-tight text-neutral-100', phone ? 'pt-2 pb-3 text-lg' : 'pt-2 pb-3 text-base'] }, model.kit.appIcon(18), span({}, 'sand'))
+
+const plainNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+  const { navButton, shortcutHint } = model.kit
+  const current = navCurrent(model, item)
+  const dot = () => item.get().dot?.() ?? false
+  return navButton(
+    {
+      active: current,
+      'aria-current': () => (current() ? 'page' : 'false'),
+      size: phone ? 'lg' : 'md',
+      class: 'group w-full shrink-0',
+      onClick: () => activate(model, item.get()),
+    },
+    span({ class: 'inline-flex shrink-0 text-neutral-500 group-hover:text-neutral-100 group-aria-current:text-neutral-100' }, model.kit.withDot(model.kit.icon(item.get().icon), dot)),
+    span({ class: 'min-w-0 flex-1 truncate text-left' }, () => item.get().label),
+    dynamicChild(
+      () => (phone ? undefined : item.get().keys),
+      keys => (keys ? shortcutHint(keys) : null),
+    ),
+  )
+}
+
+const quietNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+  const { icon, navButton } = model.kit
   const current = navCurrent(model, item)
   return navButton(
     {
@@ -41,21 +65,69 @@ export const navRow = (model: Model, item: Sig<NavItem>, phone: boolean) => {
       class: 'group w-full shrink-0',
       onClick: () => activate(model, item.get()),
     },
-    span({ class: 'inline-flex shrink-0 text-neutral-500 group-hover:text-neutral-100 group-aria-current:text-neutral-100' }, icon(item.get().icon)),
-    span({ class: 'min-w-0 flex-1 truncate text-left' }, () => item.get().label),
-    show(
-      () => (item.get().count?.() ?? 0) > 0,
-      () => countMark(() => item.get().count?.() ?? 0),
+    span({ class: 'inline-flex shrink-0 text-neutral-400 group-hover:text-neutral-200 group-aria-current:text-neutral-100' }, icon(item.get().icon)),
+    span({ class: 'min-w-0 flex-1 truncate text-left text-sm font-normal text-neutral-200 group-hover:text-neutral-100 group-aria-current:text-neutral-100' }, () => item.get().label),
+    dynamicChild(
+      () => item.get().detail?.(),
+      detail => (detail ? span({ class: 'shrink-0 truncate text-xs text-neutral-500' }, detail) : null),
     ),
-    show(
-      () => item.get().dot?.() ?? false,
-      () => dot('accent'),
-    ),
+  )
+}
+
+const fieldNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+  const { icon, navButton, shortcutHint } = model.kit
+  const current = navCurrent(model, item)
+  return navButton(
+    {
+      active: current,
+      'aria-current': () => (current() ? 'page' : 'false'),
+      size: phone ? 'lg' : 'md',
+      class: 'group w-full shrink-0 text-neutral-500 hover:text-neutral-200',
+      onClick: () => activate(model, item.get()),
+    },
+    span({ class: 'inline-flex shrink-0' }, icon(item.get().icon)),
+    span({ class: 'min-w-0 flex-1 truncate text-left font-normal' }, () => item.get().label),
     dynamicChild(
       () => (phone ? undefined : item.get().keys),
       keys => (keys ? shortcutHint(keys) : null),
     ),
   )
+}
+
+const alertNav = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+  const { dot, navButton, shortcutHint } = model.kit
+  const current = navCurrent(model, item)
+  const summary = () => item.get().summary?.() ?? `${item.get().count?.() ?? 0} ${item.get().label}`
+  return show(
+    () => (item.get().count?.() ?? 0) > 0,
+    () =>
+      navButton(
+        {
+          active: current,
+          'aria-current': () => (current() ? 'page' : 'false'),
+          size: phone ? 'lg' : 'md',
+          class: 'group w-full shrink-0 bg-warning-950/60 hover:bg-warning-950',
+          onClick: () => activate(model, item.get()),
+        },
+        span({ class: 'inline-flex shrink-0' }, dot('warning')),
+        span({ class: 'shrink-0 font-semibold whitespace-nowrap text-neutral-100' }, summary),
+        dynamicChild(
+          () => item.get().detail?.(),
+          detail => (detail ? span({ class: 'min-w-0 flex-1 truncate text-left font-normal text-neutral-400' }, () => `· ${item.get().detail?.() ?? ''}`) : null),
+        ),
+        dynamicChild(
+          () => (phone ? undefined : item.get().keys),
+          keys => (keys ? shortcutHint(keys) : null),
+        ),
+      ),
+  )
+}
+
+export const navRow = (model: Model, item: Sig<NavItem>, phone: boolean) => {
+  const look = item.get().look ?? 'row'
+  if (look === 'field') return fieldNav(model, item, phone)
+  if (look === 'alert') return alertNav(model, item, phone)
+  return plainNav(model, item, phone)
 }
 
 const footButton = (model: Model, item: Sig<NavItem>, phone: boolean) => {
@@ -85,6 +157,14 @@ export const navList = (model: Model, phone: boolean) =>
     div({ class: 'flex flex-col gap-px' }),
   )
 
+export const quietNavList = (model: Model, phone: boolean) =>
+  list(
+    navsAt(model, 'nav'),
+    item => item.id,
+    item => quietNav(model, item, phone),
+    div({ class: 'flex flex-col gap-px' }),
+  )
+
 export const footRow = (model: Model, phone: boolean) =>
   div(
     { class: 'flex shrink-0 items-center gap-px pt-2' },
@@ -103,7 +183,7 @@ export const footRow = (model: Model, phone: boolean) =>
   )
 
 export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, look: RowLook) => {
-  const { workRow, workRowBody, workStatus } = model.kit
+  const { workRow, workRowBody } = model.kit
   const current = () => model.isCurrent(row.get().to)
   return workRow(
     { current, large: look.phone, ...rowMenu(menu, () => row.get(), () => model.open(row.get().to)) },
@@ -111,25 +191,24 @@ export const rowView = (model: Model, menu: ContextMenu, row: Sig<ShellRow>, loo
       workRowBody({
         title: shown.label,
         large: look.phone,
-        ...(shown.mark && { mark: monogramOf(model.kit, shown.mark) }),
-        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : workStatus(shown.status, shown.at),
-        ...(shown.place && { place: { label: shown.place.label, mark: shown.place.mark?.() } }),
-        ...(shown.trail && { trail: shown.trail() }),
+        lead: shown.lead?.(),
+        end: shown.end ? span({ class: 'flex shrink-0 tabular-nums' }, model.kit.metaLine(shown.end)) : ageEnd(model.kit, shown.at),
+        detail: shown.detail?.(),
+        place: shown.place && { label: shown.place.label, mark: shown.place.mark?.() },
+        status: shown.status,
+        trail: shown.trail?.(),
       }),
     ),
   )
 }
 
 const foldHeading = (model: Model, key: string, group: () => ShellGroup) => {
-  const { icon, sectionHeading } = model.kit
   const open = () => model.foldOpen(key)
   return button(
-    { type: 'button', class: 'group w-full text-left', 'aria-expanded': () => String(open()), onClick: () => model.toggleFold(key) },
-    sectionHeading(
-      span({ class: 'min-w-0 truncate group-hover:text-neutral-200' }, () => group().label),
-      span({ class: 'tabular-nums text-neutral-600' }, () => String(group().rows.length)),
-      span({ class: 'ml-auto inline-flex text-neutral-600 group-hover:text-neutral-200' }, dynamicChild(open, shown => icon(shown ? 'down' : 'right', 'sm'))),
-    ),
+    { type: 'button', class: 'group flex w-full min-w-0 items-center gap-2 px-2 pt-5 pb-1.5 text-left text-xs font-medium text-neutral-500', 'aria-expanded': () => String(open()), onClick: () => model.toggleFold(key) },
+    span({ class: 'min-w-0 truncate group-hover:text-neutral-200' }, () => group().label),
+    span({ class: 'tabular-nums text-neutral-600' }, () => String(group().rows.length)),
+    span({ class: 'ml-auto inline-flex text-neutral-600 group-hover:text-neutral-200' }, dynamicChild(open, shown => model.kit.icon(shown ? 'down' : 'right', 'sm'))),
   )
 }
 
@@ -161,5 +240,3 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
 
 export const groupList = (model: Model, menu: ContextMenu, look: RowLook) =>
   list(groupsOf(model), listed => listed.key, listed => groupView(model, menu, listed, look), div({ class: 'flex flex-col' }))
-
-export const brandLook = 'px-2 pt-2 pb-3 font-semibold tracking-tight text-neutral-100'
