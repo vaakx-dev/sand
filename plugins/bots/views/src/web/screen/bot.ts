@@ -25,19 +25,11 @@ const headerOf = (parts: Parts, id: string) => {
   const { kit } = parts.ctx
   const bot = () => parts.store.find(id)
   const faceState = () => faceStateOf(parts, bot())
-  const detail = () => (bot() ? parts.work.detailOf(bot()!) : undefined)
   const title = () => botName(bot() ?? { name: '' })
   return div(
     { class: 'flex min-w-0 flex-1 items-center gap-3' },
     span({ class: 'shrink-0' }, kit.botFace(id, bot()?.color ?? 'grey', 26, faceState() ? { state: faceState(), label: title() } : { label: title() })),
-    div(
-      { class: 'flex min-w-0 flex-1 flex-col' },
-      kit.barTitle(title),
-      show(
-        () => Boolean(detail()?.text),
-        () => span({ class: detail()?.waiting ? 'text-xs text-warning-400' : 'text-xs text-neutral-500' }, () => detail()?.text ?? ''),
-      ),
-    ),
+    kit.barTitle(title),
   )
 }
 

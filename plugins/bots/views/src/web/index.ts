@@ -37,11 +37,6 @@ const listening = (parts: Parts): ChipSource => ({
       : [],
 })
 
-const nextRun = (parts: Parts) => {
-  const times = (parts.store.bots.get() ?? []).flatMap(bot => automationsOf(parts, bot.id).flatMap(item => (item.when ? [item.when] : [])))
-  return times[0]
-}
-
 export default definePlugin({
   name: 'bot-views',
   description: "Bots in the sidebar; each bot's screen with its chat and the model it runs with; its profile, New bot, Automations and the Listening chip",
@@ -88,8 +83,7 @@ export default definePlugin({
     owned(ctx, () =>
       effect(() => {
         if (!automationSources.items.get().length) return undefined
-        const next = nextRun(parts)
-        return untrack(() => ctx.shell.nav({ id: 'automations', label: 'Automations', icon: 'clock', order: 10, place: 'nav', detail: next ? () => `Next ${next}` : undefined, to: { kind: automationsRoute } }))
+        return untrack(() => ctx.shell.nav({ id: 'automations', label: 'Automations', icon: 'clock', order: 10, place: 'nav', to: { kind: automationsRoute } }))
       }),
     )
 
