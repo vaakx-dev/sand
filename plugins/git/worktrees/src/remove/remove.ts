@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import type { RemoveCheck, RemoveResult } from '../contract'
 import { rolledBack } from '../create/rollback'
 import type { WorktreeDeps } from '../deps'
@@ -10,6 +9,7 @@ import { threadsIn, withSessions } from '../sessions/inside'
 import { relocateAll } from '../sessions/relocate'
 import { lossMessage, removeCheck } from './check'
 import { dropKeptHead, keepHead } from './kept-head'
+import { clearLeftover, isWorktree } from './leftover'
 import { keptNote, removedNote } from './notes'
 
 export interface RemoveRequest {
@@ -38,6 +38,7 @@ const moveThreadsOut = async (deps: WorktreeDeps, record: WorktreeRecord, branch
 const detach = async (deps: WorktreeDeps, record: WorktreeRecord, exists: boolean) => {
   const args = exists ? ['worktree', 'remove', '--force', record.path] : ['worktree', 'prune']
   await deps.git.ok(record.main, args, { timeoutMs: longGitMs, what: "Couldn't remove the worktree" })
+  await clearLeftover(record.path)
 }
 
 const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: string) => {
@@ -47,7 +48,7 @@ const deleteBranch = async (deps: WorktreeDeps, record: WorktreeRecord, branch: 
 const removeNow = async (deps: WorktreeDeps, record: WorktreeRecord, force: boolean, note: RemovedNote): Promise<RemoveResult> => {
   const check = await removeCheck(deps, record)
   if (check.running || (loses(check) && !force)) return { removed: false, check, message: lossMessage(check, deps.keepDays.removed) }
-  const exists = existsSync(record.path)
+  const exists = isWorktree(record.path)
   const head = (await lastHead(deps, record, exists)) || record.head
   const branch = exists ? await currentBranch(deps.git, record.path) : record.branch
   const saved = check.uncommitted ? await stashChanges(deps.git, record.path) : undefined
