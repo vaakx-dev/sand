@@ -235,4 +235,4 @@ const groupView = (model: Model, menu: ContextMenu, listed: Sig<ListedGroup>, lo
 }
 
 export const groupList = (model: Model, menu: ContextMenu, look: RowLook) =>
-  list(groupsOf(model), listed => listed.key, listed => groupView(model, menu, listed, look), div({ class: 'flex flex-col' }))
+  list(groupsOf(model), listed => listed.key, listed => groupView(model, menu, listed, look), div({ class: 'flex flex-col gap-5' }))
