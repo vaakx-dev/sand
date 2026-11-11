@@ -1,7 +1,7 @@
 import type { GitRunner } from '@sand/git-runner/contract'
-import { githubHost } from './api/endpoint'
 import type { Client } from './api/client'
 import type { Pull, PullState } from './contract'
+import { repoOf } from './repo'
 
 interface Listed {
   number: number
@@ -13,8 +13,6 @@ interface Listed {
 }
 
 export type PullGit = Pick<GitRunner, 'remoteUrl' | 'maybe' | 'ok'>
-
-const repoPattern = new RegExp(`${githubHost.replace('.', '\\.')}[:/]([^/]+)/([^/]+?)(?:\\.git)?/?$`)
 
 const read = { read: true }
 
@@ -29,11 +27,9 @@ const stateOf = ({ state, draft, merged_at }: Listed): PullState => {
 const pullOf = (pull: Listed): Pull => ({ number: pull.number, title: pull.title, state: stateOf(pull), url: pull.html_url })
 
 const branchOnGitHub = async (git: PullGit, cwd: string) => {
-  const [remote, branch] = await Promise.all([git.remoteUrl(cwd), git.maybe(cwd, ['symbolic-ref', '--quiet', '--short', 'HEAD'], read)])
-  const match = remote && repoPattern.exec(remote)
-  if (!match || !branch) return undefined
-  const [, owner, repo] = match
-  return { path: `/repos/${owner}/${repo}`, owner, branch }
+  const [repo, branch] = await Promise.all([repoOf(git, cwd), git.maybe(cwd, ['symbolic-ref', '--quiet', '--short', 'HEAD'], read)])
+  if (!repo || !branch) return undefined
+  return { ...repo, branch }
 }
 
 export const pullsOf = async (git: PullGit, client: Client, cwd: string): Promise<Pull[] | null> => {

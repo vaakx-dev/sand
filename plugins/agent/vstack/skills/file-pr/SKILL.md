@@ -37,6 +37,8 @@ Leave out the table when nothing is visual. Use Desktop and Phone columns when t
 
 Create it with `gh pr create --title "<title>" --body-file <file>`. Link interactive pages with the postplan skill.
 
+To wait for CI, call the `pr_checks` tool after pushing. It returns when the checks finish or one fails. Never `sleep` and poll `gh pr checks`.
+
 Reply with the URL. This skill doesn't authorize merging.
 
 ## Images
