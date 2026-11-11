@@ -1,5 +1,3 @@
-import { Prec } from '@codemirror/state'
-import { EditorView, type ViewUpdate } from '@codemirror/view'
 import { hasFiles } from '@sand/attachments/web/contract'
 import type { MenuAction } from '@sand/ui-shell/contract'
 import { drawChip } from '@sand/context/contract'
@@ -7,8 +5,6 @@ import { errorMessage } from '@sand/util'
 import { div, dynamicChild, listen, media, onTimeout, sig, span } from '@vaakx-dev/vrui'
 import type { ComposerContext } from '../context'
 import { createCompletion } from '../complete/model'
-import { chipClipboard } from '../editor/chips/clipboard'
-import { chipWidgets } from '../editor/chips/widget'
 import { createEditor } from '../editor/view'
 import { createHandoff } from '../handoff'
 import type { Model } from '../model'
@@ -32,8 +28,6 @@ export interface FieldParts {
 }
 
 const modified = (event: KeyboardEvent) => event.shiftKey || event.altKey || event.ctrlKey || event.metaKey
-
-const edited = (update: ViewUpdate) => update.transactions.some(tr => tr.isUserEvent('input') || tr.isUserEvent('delete'))
 
 const onButton = (event: MouseEvent) => event.target instanceof Element && Boolean(event.target.closest('button'))
 
@@ -95,17 +89,15 @@ export const field = ({ ctx, model, slots, plus, actions, typed, placeholder, as
   const paste = (event: ClipboardEvent) => model.shelf.get()?.paste(event.clipboardData?.getData('text/plain') ?? '') ?? false
 
   const completion = createCompletion(ctx.kit, () => model.triggers.list.get(), model.records)
-  const editor = createEditor(ctx.kit, model.text, {
+  const editor = createEditor({
+    kit: ctx.kit,
+    text: model.text,
     placeholder,
-    extensions: [
-      completion.extension,
-      chipWidgets(model.records, drawChip(ctx)),
-      chipClipboard(model.records),
-      Prec.high(EditorView.domEventHandlers({ keydown, keyup, paste, drop: hasFiles })),
-      EditorView.updateListener.of(update => {
-        if (edited(update)) typed()
-      }),
-    ],
+    keys: { keydown, keyup, paste, drop: hasFiles },
+    typed,
+    completion,
+    records: model.records,
+    chip: drawChip(ctx),
   })
 
   const here = { restore: createHandoff(model, () => editor.focusEnd()).restore }

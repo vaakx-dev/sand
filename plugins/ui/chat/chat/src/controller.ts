@@ -1,6 +1,6 @@
 import { joinDisposers } from '@sand/util'
 import { modelsChange, threadChange, threadsChange, type Thread } from '@sand/web-client/contract'
-import { div, effect, onMount, untrack } from '@vaakx-dev/vrui'
+import { collectScope, div, effect, onRaf, untrack } from '@vaakx-dev/vrui'
 import { branchLists } from './branches'
 import type { ChatContext } from './context'
 import { threadOwners } from './contract'
@@ -11,7 +11,7 @@ import { pendingRows } from './rows/pending'
 import { replyActions } from './rows/reply'
 import { rewriteActions } from './rows/rewrite'
 import { slotHost } from './slot'
-import { failed, loading } from './states'
+import { failed } from './states'
 import { foldTurns } from './turns/fold'
 import { shownRows, type TurnContext } from './turns/rows'
 import { threadColumn, threadView, type ThreadView } from './view'
@@ -19,6 +19,8 @@ import { fetchWithin, growStep, resetToEnd, trimAt, windowed } from './window'
 
 const screensKeptAbove = 3
 const fewestTrimmed = 20
+
+const blank = (thread: Thread) => !thread.entries.size && !(thread.loaded && thread.live.length)
 
 export const chatController = (ctx: ChatContext, id: string) => {
   const { kit, transcriptParts: parts } = ctx
@@ -124,16 +126,21 @@ export const chatController = (ctx: ChatContext, id: string) => {
     keepAnchor(scroller, view.rowList, () => paint(thread, view))
   }
 
+  let queued: (() => void) | undefined
+
+  const unqueue = () => {
+    queued?.()
+    queued = undefined
+  }
+
   const render = (): void => {
+    unqueue()
     const thread = ctx.threads.get(id)
-    if (thread?.loaded && !thread.entries.size && !thread.live.length) {
+    const problem = thread?.failed
+    if (problem && !thread.loaded && !thread.entries.size) return showSlot(`failed:${problem}`, () => failed(kit, problem, () => void ctx.threads.load(id)))
+    if (!thread || blank(thread)) {
       hideThread()
       return slot.clear()
-    }
-    if (!thread || (!thread.loaded && !thread.entries.size)) {
-      const problem = thread?.failed
-      if (!problem) return showSlot('loading', () => loading(kit))
-      return showSlot(`failed:${problem}`, () => failed(kit, problem, () => void ctx.threads.load(id)))
     }
     const tail = !showing() || follow.pinned()
     slot.clear()
@@ -146,14 +153,19 @@ export const chatController = (ctx: ChatContext, id: string) => {
     edge.pump()
   }
 
+  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
+
   const refresh = () => {
     cache.reset()
-    render()
+    queued ??= collectScope(() => onRaf(render)).value
   }
 
-  const root = div({ class: 'relative flex min-h-0 flex-1 flex-col' }, scroller, jumpButton(follow.away, follow.toEnd), menu.view())
-  onMount(root, () =>
-    joinDisposers(
+  let stop: (() => void) | undefined
+
+  const show = () => {
+    if (stop) return
+    follow.restore()
+    stop = joinDisposers(
       ctx.threads.watch(id),
       ctx.on(threadChange, changed => {
         if (changed === id) render()
@@ -165,7 +177,17 @@ export const chatController = (ctx: ChatContext, id: string) => {
         parts.version.get()
         untrack(refresh)
       }),
-    ),
-  )
-  return root
+    )
+    render()
+  }
+
+  const hide = () => {
+    stop?.()
+    stop = undefined
+    unqueue()
+  }
+
+  return { node: root, show, hide }
 }
+
+export type ChatView = ReturnType<typeof chatController>

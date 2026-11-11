@@ -23,6 +23,9 @@ export const followEnd = (scroller: HTMLElement) => {
       else settle(pinned && now >= top)
     },
     measure: () => settle(nearEnd(scroller)),
+    restore() {
+      if (!pinned) scroller.scrollTop = top
+    },
     toEnd() {
       toEnd(scroller)
       settle(true)
