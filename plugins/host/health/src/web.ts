@@ -16,11 +16,14 @@ const get = async (runtime: RuntimeView, path: string) => {
   return { status: response.status, body: await response.text() }
 }
 
+const scriptOf = (page: string) => page.match(/<script type="module" src="([^"]+)"/)?.[1]
+
 const checkPage = async (runtime: RuntimeView): Promise<string | undefined> => {
   const page = await get(runtime, '/')
   if (page.status !== 200) return `the web page answered ${page.status}`
-  if (!page.body.includes('/app.js')) return 'the web page does not load the app'
-  const script = await get(runtime, '/app.js')
+  const app = scriptOf(page.body)
+  if (!app) return 'the web page does not load the app'
+  const script = await get(runtime, app)
   if (script.status !== 200) return `the app script answered ${script.status}`
   if (!script.body.trim()) return 'the app script is empty'
 }

@@ -1,7 +1,7 @@
 import type { Kit } from '@sand/ui-kit/contract'
 import type { Route, Shell, Subject } from '@sand/ui-shell/contract'
 import { type Child, derive, div, dynamicChild, show, span } from '@vaakx-dev/vrui'
-import { clipboardText } from './integrations/xterm'
+import { clipboardText } from './integrations/page'
 import type { Modifier } from './keys'
 import type { Shelf } from './shelf'
 import type { Tab } from './tab'

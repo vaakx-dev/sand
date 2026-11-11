@@ -1,24 +1,19 @@
-import { errorMessage } from '@sand/util'
-import { span } from '@vaakx-dev/vrui'
-import katex from 'katex'
-import 'katex/contrib/mhchem'
 import type { Typeset } from '../contract'
-import { preloadMathFonts } from './integrations/fonts'
+import { frame } from './frame'
+
+type Renderer = typeof import('./render')
+
+type Render = Renderer['render']
 
 const kept = 500
 
 const rendered = new Map<string, Typeset>()
 
-const render = (tex: string, displayMode: boolean): Typeset => {
-  preloadMathFonts()
-  const node = span({ class: displayMode && 'mb-3 block overflow-x-auto overflow-y-hidden p-1 last:mb-0' })
-  try {
-    katex.render(tex, node, { displayMode, throwOnError: true, strict: 'ignore', trust: false, macros: { '\\label': { tokens: [], numArgs: 1 } } })
-  } catch (error) {
-    return { error: errorMessage(error) }
-  }
-  return node
-}
+let renderer: Renderer | undefined
+
+let loading: Promise<Renderer> | undefined
+
+const loadRenderer = () => (loading ??= import('./render').then(module => (renderer = module)))
 
 const remember = (key: string, result: Typeset) => {
   rendered.delete(key)
@@ -29,9 +24,19 @@ const remember = (key: string, result: Typeset) => {
   }
 }
 
-export const typeset = (tex: string, displayMode: boolean): Typeset => {
+const typesetWith = (draw: Render, tex: string, displayMode: boolean): Typeset => {
   const key = `${displayMode ? 'display' : 'inline'}:${tex}`
-  const result = rendered.get(key) ?? render(tex, displayMode)
+  const result = rendered.get(key) ?? draw(tex, displayMode)
   remember(key, result)
   return result instanceof Node ? result.cloneNode(true) : result
 }
+
+const typesetLater = (tex: string, displayMode: boolean) => {
+  const placeholder = frame(displayMode)
+  void loadRenderer().then(loaded => loaded.renderInto(placeholder, tex, displayMode))
+  return placeholder
+}
+
+const typeset = (tex: string, displayMode: boolean): Typeset => (renderer ? typesetWith(renderer.render, tex, displayMode) : typesetLater(tex, displayMode))
+
+export { loadRenderer, typeset }

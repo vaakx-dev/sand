@@ -3,12 +3,17 @@ import { type TerminalInfo, terminalList } from '@sand/devices-terminal/contract
 import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { ITheme } from '@xterm/xterm'
+import type { CreateScreen } from './integrations/xterm'
 import { createTab, type Place, type Tab } from './tab'
 
 interface Held {
   tab: Tab
   born: number
 }
+
+let xterm: Promise<CreateScreen> | undefined
+
+const screens = () => (xterm ??= import('./integrations/xterm').then(module => module.createScreen))
 
 export const createShelf = (place: Place, wire: Wire, colors: () => ITheme) => {
   const held = sig<Held[]>([])
@@ -28,31 +33,36 @@ export const createShelf = (place: Place, wire: Wire, colors: () => ITheme) => {
     if (selected.get() === tab) pick(tabs()[Math.max(0, index - 1)])
   }
 
-  const make = (known?: TerminalInfo) => {
-    const tab: Tab = createTab(place, wire, colors(), () => remove(tab), known)
+  const make = (createScreen: CreateScreen, known?: TerminalInfo) => {
+    const tab: Tab = createTab({ place, wire, createScreen, colors: colors(), closed: () => remove(tab), known })
     held.set([...held.get(), { tab, born: ++born }])
     return tab
   }
 
-  const add = () => pick(make())
+  const add = () =>
+    void screens().then(
+      createScreen => pick(make(createScreen)),
+      error => failure.set(errorMessage(error)),
+    )
 
-  const reconcile = (listed: TerminalInfo[], asked: number) => {
+  const reconcile = (listed: TerminalInfo[], asked: number, createScreen: CreateScreen) => {
     const ids = new Set(listed.map(info => info.id))
     for (const { tab, born: when } of held.get()) {
       const id = tab.id()
       if (id && when <= asked && !ids.has(id)) remove(tab)
     }
     const kept = new Set(tabs().map(tab => tab.id()))
-    for (const info of listed) if (!kept.has(info.id)) make(info)
+    for (const info of listed) if (!kept.has(info.id)) make(createScreen, info)
     const current = selected.get()
     if (!current || !tabs().includes(current)) pick(tabs()[0])
-    if (!tabs().length) add()
+    if (!tabs().length) pick(make(createScreen))
   }
 
   const load = async () => {
     const asked = born
     try {
-      reconcile(await wire.call(terminalList, { session: place.session }, place.device), asked)
+      const [listed, createScreen] = await Promise.all([wire.call(terminalList, { session: place.session }, place.device), screens()])
+      reconcile(listed, asked, createScreen)
       failure.set('')
       loaded = true
     } catch (error) {

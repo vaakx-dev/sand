@@ -3,10 +3,11 @@ import { terminalExit, terminalGrid, terminalOutput, terminalsChange } from '@sa
 import { kit } from '@sand/ui-kit/contract'
 import { shell, type Subject } from '@sand/ui-shell/contract'
 import { sand, type Theme, theme } from '@sand/ui-theme/contract'
+import xtermCss from '@xterm/xterm/css/xterm.css' with { type: 'text' }
 import { definePlugin } from 'drydock'
 import { terminalColors } from './colors'
 import { drawer } from './drawer'
-import { onPageShown, xtermCss } from './integrations/xterm'
+import { onPageShown } from './integrations/page'
 import { createShelf, type Shelf } from './shelf'
 
 const shelfKey = (session: string, device: string) => `${session}\u0000${device}`

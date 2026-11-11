@@ -9,8 +9,7 @@ export interface Encoded {
 const brotli = promisify(brotliCompress)
 const gzipped = promisify(gzip)
 
-export const compress = async (script: string): Promise<Encoded> => {
-  const source = Buffer.from(script)
+export const compress = async (source: Uint8Array): Promise<Encoded> => {
   const [br, gz] = await Promise.all([
     brotli(source, {
       params: {

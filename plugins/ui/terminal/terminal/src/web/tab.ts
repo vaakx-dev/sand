@@ -18,7 +18,7 @@ import { errorMessage } from '@sand/util'
 import { sig } from '@vaakx-dev/vrui'
 import type { ITheme } from '@xterm/xterm'
 import { createInput } from './input'
-import { createScreen } from './integrations/xterm'
+import type { CreateScreen } from './integrations/xterm'
 import { arrowKey, type Modifier, modified } from './keys'
 import { latest } from './latest'
 
@@ -28,6 +28,14 @@ export interface Place {
   cwd(): string
 }
 
+export interface TabOptions {
+  place: Place
+  wire: Wire
+  createScreen: CreateScreen
+  colors: ITheme
+  closed(): void
+  known?: { id: string; exit?: Exit }
+}
 
 type Link = 'idle' | 'joining' | 'joined'
 
@@ -37,7 +45,7 @@ const sameSize = (a: Size, b: Size) => a.cols === b.cols && a.rows === b.rows
 
 const focusReport = /^\x1b\[[IO]$/
 
-export const createTab = (place: Place, wire: Wire, colors: ITheme, closed: () => void, known?: { id: string; exit?: Exit }) => {
+export const createTab = ({ place, wire, createScreen, colors, closed, known }: TabOptions) => {
   let id = known?.id
   let exit = known?.exit
   let viewer = crypto.randomUUID()

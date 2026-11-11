@@ -5,16 +5,17 @@ import { expandHome, packageExports, pluginContracts } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { join } from 'node:path'
 import { z } from 'zod'
+import { ASSETS } from './bundle/build'
 import { webBuild, webExtensions, webExtensionsReport, webPluginsOff } from './contract'
 import { discover } from './extensions/discover'
 import { createSite } from './extensions/site'
 import { createStates } from './extensions/states'
+import { assetResponse } from './page/asset'
 import { headers } from './page/headers'
 import { iconRoutes } from './page/icons'
 import { page } from './page/page'
-import { scriptResponse } from './page/script'
 import { manifestRoute, schemeHint } from './pwa/manifest'
-import { workerRoute } from './pwa/worker'
+import { workerResponse } from './pwa/worker'
 
 export default definePlugin({
   name: 'web',
@@ -38,16 +39,16 @@ export default definePlugin({
     ctx.provide(webExtensions, { list: states.list })
     const { id: pc } = await loadPcIdentity(home)
     const routes = {
-      '/': () => new Response(page(site.current().id, pc, states.unmounted()), { headers: { ...headers('text/html'), 'accept-ch': schemeHint } }),
-      '/app.js': (request: Request) => scriptResponse(request, site.current()),
-      '/build': () => new Response(site.current().id, { headers: headers('text/plain') }),
+      '/': () => new Response(page(site.current(), pc, states.unmounted()), { headers: { ...headers('text/html'), 'accept-ch': schemeHint } }),
+      [ASSETS]: (request: Request) => assetResponse(request, site.current()),
+      '/build': () => new Response(site.current().entry, { headers: headers('text/plain') }),
       '/manifest.webmanifest': manifestRoute,
-      '/sw.js': workerRoute,
+      '/sw.js': () => workerResponse(site.current()),
       ...iconRoutes,
     }
     for (const [path, handler] of Object.entries(routes)) ctx.effect(() => ctx.server.route(path, handler, { public: true }))
     ctx.effect(() => ctx.server.handle(webExtensionsReport, request => states.report(request.states)))
     ctx.effect(() => ctx.server.handle(webPluginsOff, () => states.off()))
-    ctx.server.broadcast(webBuild, site.current().id)
+    ctx.server.broadcast(webBuild, site.current().entry)
   },
 })

@@ -9,7 +9,6 @@ declare module 'sand:extensions' {
     plugin?: AnyPlugin
   }
 
-  export const build: string
   export const problems: string[]
   export const extensions: BundledExtension[]
 }

@@ -2,9 +2,6 @@ import type { Size } from '@sand/devices-terminal/contract'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { type ITheme, Terminal } from '@xterm/xterm'
-import css from '@xterm/xterm/css/xterm.css' with { type: 'text' }
-
-export const xtermCss = css
 
 export interface ScreenEvents {
   input(data: string): void
@@ -75,12 +72,4 @@ export const createScreen = (colors: ITheme, events: ScreenEvents) => {
 
 export type Screen = ReturnType<typeof createScreen>
 
-export const pageShown = () => document.visibilityState === 'visible'
-
-export const onPageShown = (listener: (shown: boolean) => void) => {
-  const changed = () => listener(pageShown())
-  document.addEventListener('visibilitychange', changed)
-  return () => document.removeEventListener('visibilitychange', changed)
-}
-
-export const clipboardText = () => (navigator.clipboard?.readText ? () => navigator.clipboard.readText() : undefined)
+export type CreateScreen = typeof createScreen
