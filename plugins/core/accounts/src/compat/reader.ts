@@ -33,6 +33,7 @@ export async function* readCompat(stream: AsyncIterable<CompatChunk>, model: str
   const collector = new Collector()
   let started = false
   let finish: string | undefined
+  let generation: string | undefined
   let usage: CompatUsage | undefined
 
   for await (const chunk of stream) {
@@ -42,6 +43,7 @@ export async function* readCompat(stream: AsyncIterable<CompatChunk>, model: str
       yield { type: 'start', model: chunk.model || model }
     }
     if (chunk.usage) usage = chunk.usage
+    if (chunk.id) generation = chunk.id
     for (const choice of chunk.choices ?? []) {
       if ((choice.index ?? 0) !== 0) continue
       const delta = choice.delta ?? {}
@@ -67,5 +69,6 @@ export async function* readCompat(stream: AsyncIterable<CompatChunk>, model: str
     stopReason: stopOf(finish, collector.hasCalls),
     usage: used,
     ...(cacheTtlMs && { cacheTtlMs }),
+    finish: { reason: finish, ...(generation && { generation }) },
   }
 }

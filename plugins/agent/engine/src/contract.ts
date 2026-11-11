@@ -41,6 +41,7 @@ export interface TurnResult {
   stopReason: StopReason | 'interrupted' | 'error'
   usage: Usage
   text: string
+  steps: number
   error?: string
   detail?: string
 }

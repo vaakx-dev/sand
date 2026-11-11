@@ -24,6 +24,7 @@ interface Choice {
 }
 
 export interface CompatChunk {
+  id?: string
   error?: unknown
   model?: string
   usage?: CompatUsage | null

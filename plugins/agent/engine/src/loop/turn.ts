@@ -10,6 +10,7 @@ export interface TurnRun<C extends Conversation> {
   partial: PartialReply
   usage: Usage
   reply: string
+  steps: number
 }
 
 export interface StepDone {
@@ -22,6 +23,7 @@ export interface TurnHooks {
   tools(calls: ToolCallBlock[]): Promise<void>
   answer(results: ToolResultBlock[]): void
   steer(): Promise<boolean>
+  nudge(): boolean
   parked(): boolean
 }
 

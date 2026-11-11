@@ -21,6 +21,7 @@ export interface OpenAIUsage {
 }
 
 export interface OpenAIResponse {
+  id?: string
   model?: string
   status?: string
   incomplete_details?: { reason?: string }

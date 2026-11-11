@@ -179,3 +179,16 @@ test('a bot turn whose process stopped mid-reply carries on when bots attach aga
   ])
   expect(again.list(memory)).toHaveLength(1)
 })
+
+test('an empty reply gets one nudge, then the turn ends', async () => {
+  const sand = await start([[{ type: 'thinking', text: 'hmm' }], [{ type: 'thinking', text: 'still hmm' }]], { api: 'anthropic' })
+  const memory = remember('grok', sand.home)
+  const runner = attachBots(sand, new Map([[memory.id, memory]]))
+
+  const result = await runner.run(memory, 'hello')
+
+  expect(result).toMatchObject({ stopReason: 'end_turn', text: '', steps: 2 })
+  const nudges = memory.messages().filter(message => message.role === 'user' && JSON.stringify(message).includes('empty'))
+  expect(nudges).toHaveLength(1)
+  expect(sand.requests('fake')).toHaveLength(2)
+})

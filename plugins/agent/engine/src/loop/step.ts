@@ -1,5 +1,5 @@
 import type { LLMEvent } from '@sand/accounts/contract'
-import { type Message, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
+import { type Message, noteBlock, promptContent, textOf, type ToolCallBlock, type ToolResultBlock } from '@sand/chats/contract'
 import { sumUsage, tokensOf, usageRecord } from '@sand/usage/contract'
 import type { Conversation, Step } from '../contract'
 import type { EngineContext } from '../context'
@@ -57,10 +57,11 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     }
   }
 
-  const record = ({ step, done: { message, usage, cacheTtlMs, source, native, delivered } }: Sent) => {
+  const record = ({ step, done: { message, usage, cacheTtlMs, source, native, delivered, finish } }: Sent) => {
     const { model } = step.request
     ctx.ledger.tx(() => {
       const reply = append(message)
+      if (finish) conversation.append('finish', finish, turn)
       if (tokensOf(usage)) conversation.append('usage', usageRecord(ctx.llm.provider?.(model), model, usage, source), turn)
       run.usage = sumUsage(run.usage, usage)
       stores.turns.usage(info.id, run.usage)
@@ -82,9 +83,18 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     return taken
   }
 
+  let nudged = false
+  const nudge = () => {
+    if (nudged) return false
+    nudged = true
+    append({ role: 'user', content: [noteBlock('sand', 'Your last reply was empty. Continue the task or give your answer. If you meant to say nothing, end your turn again without writing anything.')] })
+    return true
+  }
+
   return {
     async step() {
       stores.turns.step(info.id)
+      run.steps++
       const sent = await send()
       record(sent)
       run.partial.clear()
@@ -98,6 +108,7 @@ export const createHooks = <C extends Conversation>(ctx: EngineContext, { conver
     },
     answer,
     steer,
+    nudge,
     parked: () => waiting.durable([...open.keys()]),
   }
 }
