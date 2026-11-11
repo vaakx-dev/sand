@@ -17,7 +17,7 @@ export const threadGroups = (entries: Entry[], limit: number, more: () => void, 
   const hidden = settled.length - limit
   return [
     { id: 'active', label: 'Threads', action: { label: 'New thread', icon: 'plus', run: start }, rows: active.map(entry => entry.row) },
-    ...group('working', 'Working', working, { folded: true }),
+    ...group('working', 'Working', working),
     ...group('snoozed', 'Snoozed', snoozed, { folded: true }),
     ...group('settled', 'Settled', settled.slice(0, limit), {
       folded: true,
