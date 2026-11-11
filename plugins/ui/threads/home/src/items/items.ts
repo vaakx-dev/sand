@@ -11,7 +11,7 @@ import { owned } from '../owners'
 import { awayPcName } from '../palette/places'
 import { isBack, snoozedUntil } from '../snooze/actions'
 import { backLabel } from '../snooze/when'
-import { runningAgents, type AgentsOf } from './agents'
+import { runningJobs, type JobsOf } from './jobs'
 import { draftMenu, threadMenu, type MenuParts } from './menu'
 
 export interface Entry {
@@ -26,9 +26,9 @@ const positionOf = (thread: Thread) => thread.info.position ?? thread.info.creat
 
 export const visibleThreads = (threads: Thread[]) => threads.filter(thread => thread.info.kind !== 'agent').sort((a, b) => positionOf(b) - positionOf(a))
 
-const statusOf = (thread: Thread, agents: number, change: ThreadChanges | undefined): Status | undefined => {
+const statusOf = (thread: Thread, jobs: number, change: ThreadChanges | undefined): Status | undefined => {
   if (thread.waiting) return 'waiting'
-  if (thread.running || agents) return 'running'
+  if (thread.running || jobs) return 'running'
   return changeStatus(change)
 }
 
@@ -49,10 +49,10 @@ const placeOf = (parts: MenuParts, project: ProjectInfo, device: string) => ({
 
 const trailOf = (trail: RowPart[], folder: RowThread) => (trail.length ? () => trail.map(part => part.render(folder)) : undefined)
 
-const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, agentsOf: AgentsOf, { changes, trail }: RowSources): Entry => {
+const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, jobsOf: JobsOf, { changes, trail }: RowSources): Entry => {
   const change = changes.get(thread.id)
   const project = thread.info.kind === 'quick' ? quick(thread.device) : lookup(thread.info.cwd, thread.device, thread.info.project)
-  const { agents, since } = agentsOf(thread.id)
+  const { jobs, since } = jobsOf(thread.id)
   const snoozed = snoozedUntil(thread)
   const started = thread.running ? thread.started : since
   return {
@@ -62,7 +62,7 @@ const threadEntry = (parts: MenuParts, thread: Thread, lookup: ProjectLookup, ag
       place: placeOf(parts, project, thread.device),
       trail: trailOf(trail, { id: thread.id, cwd: thread.info.cwd, device: thread.device }),
       ...(snoozed ? { end: backLabel(snoozed) } : { at: started ?? thread.info.updated }),
-      status: statusOf(thread, agents, change),
+      status: statusOf(thread, jobs, change),
       to: { kind: threadRoute, id: thread.id },
       menu: () => threadMenu(parts, thread.id),
     },
@@ -92,7 +92,7 @@ export const threadEntries = (parts: MenuParts, sources: RowSources, withOwned: 
   const lookup = projectLookup(parts.ctx)
   const saved = parts.ctx.get(drafts)
   const draftEntries = saved ? saved.list().map(draft => draftEntry(parts, saved, draft, lookup)) : []
-  const agentsOf = runningAgents(parts.ctx, parts.threads)
+  const jobsOf = runningJobs(parts.ctx, parts.threads)
   const listed = visibleThreads(parts.threads.list()).filter(thread => withOwned || !owned(parts.ctx, thread.id))
-  return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, agentsOf, sources))]
+  return [...draftEntries, ...listed.map(thread => threadEntry(parts, thread, lookup, jobsOf, sources))]
 }

@@ -10,10 +10,11 @@ const entry = (id: string, moved: number, extra: Partial<Entry> & { running?: bo
 
 const shape = (groups: ReturnType<typeof threadGroups>) => groups.map(group => [group.id, Boolean(group.folded), group.rows.map(row => row.id)])
 
-test('open threads, running or not, share one group newest first, and empty folded groups are skipped', () => {
+test('threads group by state, newest first, with running work in Working and empty folded groups skipped', () => {
   const entries = [entry('old', 1), entry('new', 3), entry('busy', 2, { running: true }), entry('done', 5, { settled: true }), entry('later', 4, { snoozed: 9 })]
   expect(shape(threadGroups(entries, 50, () => {}, () => {}))).toEqual([
-    ['active', false, ['new', 'busy', 'old']],
+    ['active', false, ['new', 'old']],
+    ['working', true, ['busy']],
     ['snoozed', true, ['later']],
     ['settled', true, ['done']],
   ])
