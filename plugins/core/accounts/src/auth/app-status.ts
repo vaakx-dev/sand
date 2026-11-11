@@ -1,5 +1,6 @@
 import type { AppStatus } from '../contract'
 import { isRecord } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 
 export type AppStatuses = Record<string, AppStatus>
@@ -11,7 +12,8 @@ const statusOf = (value: unknown): AppStatus | undefined => {
 }
 
 export const appStatusFile = (folder: string) => {
-  const file = Bun.file(join(folder, 'status.json'))
+  const path = join(folder, 'status.json')
+  const file = Bun.file(path)
   return {
     async read(): Promise<AppStatuses> {
       try {
@@ -27,6 +29,6 @@ export const appStatusFile = (folder: string) => {
         return {}
       }
     },
-    write: (statuses: AppStatuses) => Bun.write(file, JSON.stringify(statuses, null, 2)).then(() => {}),
+    write: (statuses: AppStatuses) => writeAtomic(path, JSON.stringify(statuses, null, 2)),
   }
 }

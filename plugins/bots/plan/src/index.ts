@@ -4,6 +4,7 @@ import { mcpTools } from '@sand/mcp-server/contract'
 import { failure } from '@sand/orchestrator/contract'
 import { server } from '@sand/server/contract'
 import { joinDisposers } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { definePlugin } from 'drydock'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -30,7 +31,7 @@ export default definePlugin({
     const write = async (bot: string, text: string) => {
       const folder = ctx.bots.folder(bot)
       await mkdir(folder, { recursive: true })
-      await Bun.write(join(folder, 'plan.md'), text)
+      await writeAtomic(join(folder, 'plan.md'), text)
     }
 
     ctx.watch(mcpTools, found => found && offerPlanTools(found))

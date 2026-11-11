@@ -1,5 +1,5 @@
 import { isRecord } from '@sand/util'
-import { expandHome } from '@sand/util/fs'
+import { expandHome, writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 
 const savedRoot = async (file: string) => {
@@ -16,7 +16,7 @@ export const projectRoot = async (home: string) => {
       const clean = next.trim()
       if (!clean) throw new Error('Give a folder')
       root = expandHome(clean)
-      await Bun.write(file, `${JSON.stringify({ root })}\n`)
+      await writeAtomic(file, `${JSON.stringify({ root })}\n`)
       return root
     },
   }

@@ -1,4 +1,5 @@
 import type { Bots } from '@sand/bots/contract'
+import { writeAtomic } from '@sand/util/fs'
 import { existsSync } from 'node:fs'
 import { mkdir, readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -30,7 +31,7 @@ export const createMemory = (bots: Bots, changed: { memory(bot: string, text: st
     },
     async write(bot, text) {
       await mkdir(folder(bot), { recursive: true })
-      await Bun.write(join(folder(bot), 'memory.md'), text)
+      await writeAtomic(join(folder(bot), 'memory.md'), text)
       changed.memory(bot, text)
     },
     async notes(bot) {
@@ -40,7 +41,7 @@ export const createMemory = (bots: Bots, changed: { memory(bot: string, text: st
       const path = join(notesFolder(bot), `${noteName.parse(note.name)}${extension}`)
       if (note.text.trim()) {
         await mkdir(notesFolder(bot), { recursive: true })
-        await Bun.write(path, note.text)
+        await writeAtomic(path, note.text)
       } else await rm(path, { force: true })
       changed.note(bot, note)
     },

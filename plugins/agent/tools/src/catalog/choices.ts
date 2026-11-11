@@ -1,4 +1,5 @@
 import { isRecord, serial } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 import { join } from 'node:path'
 import type { ToolLoad } from '../contract'
 
@@ -19,7 +20,7 @@ export const loadChoices = async (home: string) => {
     get: (group: string): ToolLoad | undefined => saved[group],
     async set(group: string, load: ToolLoad) {
       saved = { ...saved, [group]: load }
-      await queue(() => Bun.write(file, `${JSON.stringify({ groups: saved }, null, 2)}\n`))
+      await queue(() => writeAtomic(file, `${JSON.stringify({ groups: saved }, null, 2)}\n`))
     },
   }
 }

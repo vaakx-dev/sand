@@ -1,4 +1,5 @@
 import { isRecord } from '@sand/util'
+import { writeAtomic } from '@sand/util/fs'
 
 const header = /^\s*\[\s*features\s*\]\s*(#.*)?$/
 const anyHeader = /^\s*\[/
@@ -36,5 +37,5 @@ export const writeFeatures = async (path: string, changes: Record<string, boolea
   const file = Bun.file(path)
   const text = edited((await file.exists()) ? await file.text() : '', changes)
   if (!matches(text, changes)) throw new Error(`Couldn't update [features] in ${path}; set them there by hand`)
-  await Bun.write(path, text)
+  await writeAtomic(path, text)
 }
