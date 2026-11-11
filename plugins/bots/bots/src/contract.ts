@@ -134,44 +134,27 @@ export interface Bots {
 
 export const bots = service<Bots>('bots')
 
-/**
- * The shell route of a bot's screen: `{ kind: botRoute, id: bot, tab }`. With no `tab` it shows the bot's own chat;
- * `tab` is a `<scheme>:<id>` reference from a `BotTabSource`, such as `thread:abc`.
- */
 export const botRoute = 'bot'
 
-/** Opens the bots UI. Provided by it, so it is absent with bots off. */
 export interface BotViews {
-  /** Opens a bot's screen, on one of its tabs when `tab` is given; on phones a tab opens on its own screen. */
   open(bot: string, tab?: string): void
 }
 
 export const botViews = service<BotViews>('botViews')
 
-/** One piece of a bot's work as its tab, the Project page and its sidebar row show it. */
 export interface BotTab {
-  /** A `<scheme>:<id>` reference, as plan links write it. */
   ref: string
   title: string
   status: Status
   note: string
-  /** When `status` began, in epoch ms. */
   at: number
-  /** The project it works in, if any; the Project page groups work by it. */
   project?: string | null
 }
 
-/**
- * Work that opens as tabs in a bot's screen, such as the threads it started. The bots UI keeps which tabs are
- * open; a source only describes its work and draws it. Plan links in `scheme` group on the Project page by
- * their live status, and the bot's sidebar row shows its most urgent one. Reads are reactive.
- */
 export interface BotTabSource {
   scheme: string
-  /** The bot's work, newest first. */
   list(bot: string): BotTab[]
   get(ref: string): BotTab | undefined
-  /** The tab's body. Call inside a scope the caller owns; disposing it removes the view. */
   render(ref: string): HTMLElement
 }
 
@@ -193,30 +176,23 @@ export interface BotProfile {
 
 export const botProfile = service<BotProfile>('botProfile')
 
-/** Something that wakes a bot by itself, such as a routine on a schedule or a watch on a page. */
 export interface BotAutomation {
   id: string
-  /** A kit icon name, such as `clock` for routines and `eye` for watches. */
   icon: string
   title: string
-  /** When it wakes the bot, short enough for a chip's list: "Weekdays 9:00", "On changes". */
   when: string
-  /** What it does or follows, in one line. */
   detail?: string
   paused?: boolean
-  /** Why it stopped working, when it did. */
   error?: string
   actions(): MenuAction[]
 }
 
-/** A kind of automation, such as routines. Sources sort by `order`; `list` is read reactively. */
 export interface BotAutomationSource {
   id: string
   order?: number
   list(bot: string): BotAutomation[]
 }
 
-/** Collects every bot's automations for its profile, the Automations page and the Listening chip. Provided by the bots UI. */
 export interface BotAutomations {
   source(source: BotAutomationSource): Dispose
 }

@@ -8,9 +8,7 @@ export interface ModelTarget {
 }
 
 export interface ModelButton {
-  /** A new button for the target, built in the caller's scope. */
   view(target: ModelTarget): HTMLElement
-  /** Opens the picker of the button mounted last. */
   open(): void
 }
 
