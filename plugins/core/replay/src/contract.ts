@@ -1,3 +1,4 @@
+import { efforts } from '@sand/accounts/contract'
 import { service } from 'drydock'
 import { z } from 'zod'
 
@@ -11,11 +12,16 @@ const part = z.discriminatedUnion('type', [
   z.object({ type: z.literal('crash') }),
 ])
 
+const model = z.union([
+  z.string(),
+  z.object({ name: z.string(), label: z.string().optional(), efforts: z.array(z.enum(efforts)).optional() }),
+])
+
 export const sourceSchema = z.object({
   id: z.string(),
   label: z.string().optional(),
   api: z.literal('anthropic').optional(),
-  models: z.array(z.string()).min(1),
+  models: z.array(model).min(1),
   price: z.object({ input: z.number(), output: z.number(), cacheRead: z.number(), cacheWrite: z.number() }).optional(),
   replies: z.array(z.array(part)).default([]),
   resume: z.boolean().default(true),

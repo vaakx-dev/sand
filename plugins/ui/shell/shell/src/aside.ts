@@ -41,7 +41,13 @@ export const asideCard = (model: Model) =>
 
 const docked = (model: Model, open: Model['openPanel'], look: { class: string; style?: Record<string, string> }) =>
   dynamicChild(open, spec =>
-    spec ? div({ 'aria-label': spec.label, class: ['flex min-h-0 min-w-0 shrink-0 flex-col bg-neutral-950', look.class], style: look.style ?? null }, spec.render(beside(model))) : null,
+    spec
+      ? div(
+          { 'aria-label': spec.label, class: ['flex min-h-0 min-w-0 shrink-0 flex-col bg-neutral-950', look.class], style: look.style ?? null },
+          spec.head ? bar(spec.head(beside(model))) : null,
+          spec.render(beside(model)),
+        )
+      : null,
   )
 
 export const asidePanel = (model: Model) => docked(model, model.openPanel, { class: '', style: { width: `${panelWidth}px` } })
@@ -53,7 +59,7 @@ export const asideScreen = (model: Model, id: string) => {
   const spec = model.asides.items.get().find(found => found.id === id)
   return div(
     { 'aria-label': spec?.label ?? '', class: 'flex min-h-0 min-w-0 flex-1 flex-col bg-neutral-950' },
-    bar(iconButton({ title: 'Back', 'aria-label': 'Back', onClick: () => model.back() }, icon('back')), barTitle(spec?.label ?? '')),
+    bar(iconButton({ title: 'Back', 'aria-label': 'Back', onClick: () => model.back() }, icon('back')), spec?.head ? spec.head(beside(model)) : barTitle(spec?.label ?? '')),
     spec ? spec.render(beside(model)) : null,
   )
 }

@@ -33,28 +33,33 @@ export default definePlugin({
         ctx.kit.icon(tab.get().icon),
       )
 
-    const frame = (subject: () => Subject) => {
+    const tabBar = (subject: () => Subject) => {
       const active = derive(() => activeOf(subject()))
-      return div(
-        { class: 'scrollbars-thin min-h-0 min-w-0 flex-1 overflow-y-auto' },
-        list(
-          derive(() => shownTabs(subject())),
-          tab => tab.id,
-          tab => tabButton(tab, () => active.get() === tab.get()),
-          div({ role: 'tablist', 'aria-label': 'Panel tabs', class: [ctx.kit.layer.sticky, 'sticky top-0 flex h-12 items-center gap-1 bg-neutral-950 px-2'] }),
-        ),
-        dynamicChild(active, tab => (tab ? tab.render(subject) : null)),
+      return list(
+        derive(() => shownTabs(subject())),
+        tab => tab.id,
+        tab => tabButton(tab, () => active.get() === tab.get()),
+        div({ role: 'tablist', 'aria-label': 'Panel tabs', class: 'flex min-w-0 flex-1 items-center gap-1' }),
       )
     }
 
-    const body = (route: () => Route) => {
+    const frame = (subject: () => Subject) =>
+      div(
+        { class: 'scrollbars-thin min-h-0 min-w-0 flex-1 overflow-y-auto' },
+        dynamicChild(
+          derive(() => activeOf(subject())),
+          tab => (tab ? tab.render(subject) : null),
+        ),
+      )
+
+    const forSubject = (route: () => Route, view: (subject: () => Subject) => HTMLElement) => {
       const subjectNow = () => ctx.shell.subjectOf(route())
       return dynamicChild(
         derive(() => keyOf(subjectNow())),
         key => {
           const first = key ? subjectNow() : undefined
           if (!first) return null
-          return frame(() => subjectNow() ?? first)
+          return view(() => subjectNow() ?? first)
         },
       )
     }
@@ -70,7 +75,8 @@ export default definePlugin({
           const subject = ctx.shell.subjectOf(route)
           return subject ? shownTabs(subject).length > 0 : false
         },
-        render: route => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, body(route)),
+        head: route => forSubject(route, tabBar),
+        render: route => div({ class: 'flex min-h-0 min-w-0 flex-1 flex-col' }, forSubject(route, frame)),
       }),
     )
     ctx.provide(panel, {

@@ -114,6 +114,7 @@ export interface Aside {
   icon: string
   order?: number
   shows(route: Route): boolean
+  head?(route: () => Route): Child
   render(route: () => Route): HTMLElement
 }
 
